@@ -203,8 +203,11 @@ public final class SwordAuraRenderer {
         ItemDisplayContext displayContext = isLeft ? ItemDisplayContext.THIRD_PERSON_LEFT_HAND : ItemDisplayContext.THIRD_PERSON_RIGHT_HAND;
         Minecraft mc = Minecraft.getInstance();
         BakedModel bakedModel = mc.getItemRenderer().getModel(stack, player.level(), player, 0);
-        if (bakedModel != null) {
-            bakedModel.getTransforms().getTransform(displayContext).apply(isLeft, poseStack);
+        if (bakedModel != null && bakedModel.getTransforms() != null) {
+            net.minecraft.client.renderer.block.model.ItemTransform transform = bakedModel.getTransforms().getTransform(displayContext);
+            if (transform != null) {
+                transform.apply(isLeft, poseStack);
+            }
         }
         poseStack.translate(-0.5F, -0.5F, -0.5F);
 
@@ -237,8 +240,11 @@ public final class SwordAuraRenderer {
         ItemDisplayContext displayContext = isLeft ? ItemDisplayContext.FIRST_PERSON_LEFT_HAND : ItemDisplayContext.FIRST_PERSON_RIGHT_HAND;
 
         BakedModel bakedModel = mc.getItemRenderer().getModel(stack, player.level(), player, 0);
-        if (bakedModel != null) {
-            bakedModel.getTransforms().getTransform(displayContext).apply(isLeft, poseStack);
+        if (bakedModel != null && bakedModel.getTransforms() != null) {
+            net.minecraft.client.renderer.block.model.ItemTransform transform = bakedModel.getTransforms().getTransform(displayContext);
+            if (transform != null) {
+                transform.apply(isLeft, poseStack);
+            }
         }
         poseStack.translate(-0.5F, -0.5F, -0.5F);
 

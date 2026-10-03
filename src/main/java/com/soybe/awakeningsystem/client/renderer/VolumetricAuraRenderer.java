@@ -79,11 +79,6 @@ public final class VolumetricAuraRenderer {
                 }
             }
 
-            boolean hasCreatorSword = player.getMainHandItem().getItem() instanceof CreatorClaymoreItem
-                    || player.getOffhandItem().getItem() instanceof CreatorClaymoreItem
-                    || player.getMainHandItem().getItem() instanceof LaDoncellaSwordItem
-                    || player.getOffhandItem().getItem() instanceof LaDoncellaSwordItem;
-
             boolean inCombatTrance = player.getPersistentData().getLong("system_trance_until") > mc.level.getGameTime();
             boolean inSkillBurst = player.getPersistentData().getLong("active_skill_aura_until") > mc.level.getGameTime();
 
@@ -92,12 +87,8 @@ public final class VolumetricAuraRenderer {
                 // 1. AURA DE CULTIVO KI (Manto espiritual completo en cúpula que envuelve al meditador de pies a cabeza)
                 renderKiCultivationAura(poseStack, bufferSource, dx, dy, dz, time);
             } else if (inCombatTrance || inSkillBurst) {
-                // 2. AURA DE HABILIDAD DESPIERTA / TRANCE (Durante habilidades activas)
-                if (hasCreatorSword) {
-                    renderCreatorDivineAura(poseStack, bufferSource, dx, dy, dz, time, true);
-                } else {
-                    renderAwakenedSkillAura(poseStack, bufferSource, dx, dy, dz, time);
-                }
+                // 2. AURA DE HABILIDAD DESPIERTA / TRANCE (Manto etéreo azul ceñido al cuerpo durante habilidades activas)
+                renderAwakenedSkillAura(poseStack, bufferSource, dx, dy, dz, time);
             }
         }
     }
