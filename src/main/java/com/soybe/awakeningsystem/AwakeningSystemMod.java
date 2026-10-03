@@ -121,6 +121,8 @@ public final class AwakeningSystemMod {
             if (net.neoforged.fml.ModList.get().isLoaded("terrablender")) {
                 com.soybe.awakeningsystem.worldgen.TerraBlenderCompat.registerRegions();
             }
+            com.soybe.awakeningsystem.config.CustomLootConfigManager.init();
+            com.soybe.awakeningsystem.config.BossCompatibilityManager.init();
         });
     }
 

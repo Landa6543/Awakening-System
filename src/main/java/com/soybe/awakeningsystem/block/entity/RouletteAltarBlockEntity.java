@@ -62,80 +62,9 @@ public class RouletteAltarBlockEntity extends BlockEntity {
 
         RandomSource rand = level != null ? level.random : RandomSource.create();
 
-        // Slot 0: Gran Premio Mítico (Armas Legendarias y Míticas de las Series)
-        ItemStack[] pool0 = new ItemStack[]{
-                itemOr(SystemItems.PLUM_BLOSSOM_SWORD, 1, Items.NETHERITE_SWORD),
-                itemOr(SystemItems.SKY_DEMON_SWORD, 1, Items.NETHERITE_SWORD),
-                itemOr(SystemItems.ASRAHAN_HOLY_SWORD, 1, Items.NETHERITE_SWORD),
-                itemOr(SystemItems.BLACK_DRAGON_SCYTHE, 1, Items.NETHERITE_SWORD),
-                itemOr(SystemItems.HEAVEN_SHAKING_SWORD, 1, Items.NETHERITE_SWORD),
-                itemOr(SystemItems.DAWNS_BALLAD, 1, Items.NETHERITE_SWORD),
-                itemOr(SystemItems.RADIANT_LIGHT_SWORD, 1, Items.NETHERITE_SWORD),
-                itemOr(SystemItems.GIGANTIC_GREATSWORD, 1, Items.NETHERITE_AXE)
-        };
-        slotItems.set(0, pool0[rand.nextInt(pool0.length)].copy());
-
-        // Slot 1: Reliquias Celestiales / Dagas de Rango Nacional
-        ItemStack[] pool1 = new ItemStack[]{
-                itemOr(SystemItems.CELESTIAL_DRAGON_PEARL, 1, Items.ENCHANTED_GOLDEN_APPLE),
-                itemOr(SystemItems.DEATH_KING_CLOCK, 1, Items.CLOCK),
-                itemOr(SystemItems.SHADOW_DAGGERS, 1, Items.NETHERITE_SWORD),
-                itemOr(SystemItems.TRANSCENDENT_THORN, 1, Items.TRIDENT),
-                itemOr(SystemItems.RADIANT_LIGHT_SWORD, 1, Items.NETHERITE_SWORD),
-                new ItemStack(Items.NETHER_STAR, 1)
-        };
-        slotItems.set(1, pool1[rand.nextInt(pool1.length)].copy());
-
-        // Slot 2: Escudos y Tótems de Inmortalidad
-        ItemStack[] pool2 = new ItemStack[]{
-                itemOr(SystemItems.UNBREAKABLE_FAITH, 1, Items.SHIELD),
-                new ItemStack(Items.TOTEM_OF_UNDYING, 1),
-                new ItemStack(Items.ENCHANTED_GOLDEN_APPLE, 2),
-                itemOr(SystemItems.BOTTLED_MANA_PIXIE, 1, Items.EXPERIENCE_BOTTLE)
-        };
-        slotItems.set(2, pool2[rand.nextInt(pool2.length)].copy());
-
-        // Slot 3: Escamas Ancestrales y Talismanes
-        ItemStack[] pool3 = new ItemStack[]{
-                itemOr(SystemItems.IMMORTAL_DRAGON_SCALE, 2, Items.NETHERITE_UPGRADE_SMITHING_TEMPLATE),
-                itemOr(SystemItems.ASTRAL_CRYSTAL_SCALE, 2, Items.AMETHYST_SHARD),
-                itemOr(SystemItems.MURIM_ASCENSION_TALISMAN, 1, Items.PAPER),
-                new ItemStack(Items.NETHERITE_BLOCK, 1)
-        };
-        slotItems.set(3, pool3[rand.nextInt(pool3.length)].copy());
-
-        // Slot 4: Elixires y Hierbas Sagradas de Mil Años
-        ItemStack[] pool4 = new ItemStack[]{
-                itemOr(SystemItems.THOUSAND_YEAR_GINSENG, 2, Items.GOLDEN_APPLE),
-                itemOr(SystemItems.SNOW_LOTUS, 2, Items.GOLDEN_APPLE),
-                itemOr(SystemItems.WILD_GINSENG, 3, Items.GOLDEN_CARROT),
-                itemOr(SystemItems.MANDRAKE_ROOT, 3, Items.BEETROOT),
-                new ItemStack(Items.GOLDEN_APPLE, 4)
-        };
-        slotItems.set(4, pool4[rand.nextInt(pool4.length)].copy());
-
-        // Slot 5: Minerales y Bloques de Tesoro
-        ItemStack[] pool5 = new ItemStack[]{
-                new ItemStack(Items.NETHERITE_INGOT, 2 + rand.nextInt(2)),
-                new ItemStack(Items.DIAMOND_BLOCK, 2 + rand.nextInt(2)),
-                new ItemStack(Items.GOLD_BLOCK, 4 + rand.nextInt(5)),
-                new ItemStack(Items.EMERALD_BLOCK, 4 + rand.nextInt(5)),
-                new ItemStack(Items.ANCIENT_DEBRIS, 3 + rand.nextInt(3))
-        };
-        slotItems.set(5, pool5[rand.nextInt(pool5.length)].copy());
-
-        // Slot 6: Fichas de Ruleta y Recursos Especiales
-        ItemStack[] pool6 = new ItemStack[]{
-                itemOr(SystemItems.ROULETTE_TOKEN, 2 + rand.nextInt(2), Items.NETHER_STAR),
-                new ItemStack(Items.EXPERIENCE_BOTTLE, 16 + rand.nextInt(17)),
-                new ItemStack(Items.ENDER_PEARL, 8 + rand.nextInt(9)),
-                new ItemStack(Items.GOLDEN_APPLE, 3 + rand.nextInt(4))
-        };
-        slotItems.set(6, pool6[rand.nextInt(pool6.length)].copy());
-
-        // Slot 7: Bolsa de Monedas del Sistema (Límite seguro de Minecraft: máximo 64)
-        int coins = 32 + rand.nextInt(33); // 32 a 64 monedas físicas
-        slotItems.set(7, itemOr(SystemItems.AWAKENING_COIN, coins, Items.DIAMOND));
+        for (int i = 0; i < 8; i++) {
+            slotItems.set(i, com.soybe.awakeningsystem.config.CustomLootConfigManager.getRouletteSlotItem(i, rand));
+        }
 
         setChanged();
         if (level != null && !level.isClientSide) {

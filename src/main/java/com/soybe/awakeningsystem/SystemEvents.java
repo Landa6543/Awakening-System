@@ -1002,14 +1002,12 @@ public final class SystemEvents {
                     || event.getEntity().getType().builtInRegistryHolder().key().location().getNamespace().equals("eclipse")) {
                 data.learn("eclipse", 5);
             }
-            boolean isBoss = !event.getEntity().canChangeDimensions(player.level(), player.level())
-                    || event.getEntity().getMaxHealth() >= 100.0F
-                    || event.getEntity().getType().is(net.minecraft.tags.EntityTypeTags.RAIDERS);
+            boolean isBoss = com.soybe.awakeningsystem.config.BossCompatibilityManager.isBoss(event.getEntity());
 
-            // Experiencia de combate balanceada según salud y tipo de criatura (máx 35 para monstruos normales, máx 250 para jefes)
+            // Experiencia de combate balanceada según salud y tipo de criatura (máx 35 para monstruos normales, máx 500 para jefes)
             int killExp;
             if (isBoss) {
-                killExp = Math.min(250, Math.max(30, (int) (event.getEntity().getMaxHealth() * 0.10F)));
+                killExp = Math.min(500, Math.max(50, (int) (event.getEntity().getMaxHealth() * 0.15F)));
             } else {
                 killExp = Math.min(35, Math.max(5, (int) (event.getEntity().getMaxHealth() * 0.15F)));
             }
@@ -1020,6 +1018,7 @@ public final class SystemEvents {
                 reward = (int) Math.round(reward * SystemConfig.BOSS_COIN_MULTIPLIER.get());
                 data.recordStatistic("boss_kills", 1);
                 triggerConstellationReaction(player, ConstellationDefinitions.ReactionType.BOSS_KILL);
+                com.soybe.awakeningsystem.config.BossCompatibilityManager.handleBossDefeat(event.getEntity(), player, data);
 
                 if (event.getEntity() instanceof net.minecraft.world.entity.boss.enderdragon.EnderDragon) {
                     if (!grantFable(player, "first_ender_dragon")) {
@@ -3807,97 +3806,17 @@ public final class SystemEvents {
     }
 
     private static BoxLootResult giveBoxLoot(ServerPlayer player, SystemData data, int tier) {
-        int roll = player.getRandom().nextInt(100);
-        List<String> ids = new ArrayList<>();
-        List<Integer> counts = new ArrayList<>();
-        switch (tier) {
-            case 1 -> {
-                if (roll < 40) {
-                    addLootItem(player, ids, counts, Items.IRON_INGOT, 6);
-                    return new BoxLootResult("Lingote de Hierro x6", 0, ids, counts);
-                } else if (roll < 70) {
-                    addLootItem(player, ids, counts, Items.COAL, 16);
-                    return new BoxLootResult("Carbon x16", 0, ids, counts);
-                } else if (roll < 90) {
-                    addLootItem(player, ids, counts, Items.COOKED_BEEF, 12);
-                    return new BoxLootResult("Carne Cocinada x12", 0, ids, counts);
-                } else {
-                    addLootItem(player, ids, counts, Items.GOLD_INGOT, 5);
-                    return new BoxLootResult("Lingote de Oro x5", 0, ids, counts);
-                }
-            }
-            case 2 -> {
-                if (roll < 40) {
-                    addLootItem(player, ids, counts, Items.GOLD_INGOT, 10);
-                    return new BoxLootResult("Lingote de Oro x10", 0, ids, counts);
-                } else if (roll < 75) {
-                    addLootItem(player, ids, counts, Items.DIAMOND, 3);
-                    return new BoxLootResult("Diamante x3", 0, ids, counts);
-                } else if (roll < 90) {
-                    addLootItem(player, ids, counts, Items.ENDER_PEARL, 6);
-                    return new BoxLootResult("Perlas Ender x6", 0, ids, counts);
-                } else {
-                    addLootItem(player, ids, counts, Items.GOLDEN_APPLE, 2);
-                    return new BoxLootResult("Manzana Dorada x2", 0, ids, counts);
-                }
-            }
-            case 3 -> {
-                if (roll < 40) {
-                    addLootItem(player, ids, counts, Items.DIAMOND, 6);
-                    return new BoxLootResult("Diamante x6", 0, ids, counts);
-                } else if (roll < 70) {
-                    addLootItem(player, ids, counts, Items.NETHERITE_SCRAP, 2);
-                    return new BoxLootResult("Fragmento de Netherite x2", 0, ids, counts);
-                } else if (roll < 90) {
-                    addLootItem(player, ids, counts, Items.GOLDEN_APPLE, 4);
-                    return new BoxLootResult("Manzana Dorada x4", 0, ids, counts);
-                } else {
-                    addLootItem(player, ids, counts, Items.ENCHANTED_GOLDEN_APPLE, 1);
-                    return new BoxLootResult("Manzana Dorada Encantada x1", 0, ids, counts);
-                }
-            }
-            case 4 -> {
-                if (roll < 30) {
-                    addLootItem(player, ids, counts, Items.NETHERITE_INGOT, 2);
-                    return new BoxLootResult("Lingote de Netherite x2", 0, ids, counts);
-                } else if (roll < 55) {
-                    addLootItem(player, ids, counts, Items.TOTEM_OF_UNDYING, 1);
-                    return new BoxLootResult("Totem de la Inmortalidad x1", 0, ids, counts);
-                } else if (roll < 75) {
-                    addLootItem(player, ids, counts, Items.ENCHANTED_GOLDEN_APPLE, 2);
-                    return new BoxLootResult("Manzana Dorada Encantada x2", 0, ids, counts);
-                } else if (roll < 90) {
-                    addLootItem(player, ids, counts, Items.DIAMOND_BLOCK, 2);
-                    return new BoxLootResult("Bloque de Diamante x2", 0, ids, counts);
-                } else {
-                    addLootItem(player, ids, counts, Items.NETHER_STAR, 1);
-                    return new BoxLootResult("Estrella del Nether x1", 0, ids, counts);
-                }
-            }
-            default -> {
-                addLootItem(player, ids, counts, Items.IRON_INGOT, 4);
-                return new BoxLootResult("Hierro x4", 0, ids, counts);
-            }
-        }
+        String boxId = switch (tier) {
+            case 2 -> "box_rare";
+            case 3 -> "box_epic";
+            case 4 -> "box_legendary";
+            default -> "box_common";
+        };
+        return com.soybe.awakeningsystem.config.CustomLootConfigManager.rollBoxLoot(boxId, player, player.getRandom());
     }
 
     private static BoxLootResult giveRandomLoot(ServerPlayer player, SystemData data) {
-        int roll = player.getRandom().nextInt(100);
-        List<String> ids = new ArrayList<>();
-        List<Integer> counts = new ArrayList<>();
-        if (roll < 40) {
-            addLootItem(player, ids, counts, Items.IRON_INGOT, 5);
-            return new BoxLootResult("Hierro x5", 0, ids, counts);
-        } else if (roll < 70) {
-            addLootItem(player, ids, counts, Items.GOLD_INGOT, 6);
-            return new BoxLootResult("Oro x6", 0, ids, counts);
-        } else if (roll < 90) {
-            addLootItem(player, ids, counts, Items.DIAMOND, 2);
-            return new BoxLootResult("Diamante x2", 0, ids, counts);
-        } else {
-            addLootItem(player, ids, counts, Items.ENCHANTED_GOLDEN_APPLE, 1);
-            return new BoxLootResult("Manzana Dorada Encantada x1", 0, ids, counts);
-        }
+        return com.soybe.awakeningsystem.config.CustomLootConfigManager.rollBoxLoot("lucky_box", player, player.getRandom());
     }
 
     public static boolean equipTitle(ServerPlayer player, String titleId) {
