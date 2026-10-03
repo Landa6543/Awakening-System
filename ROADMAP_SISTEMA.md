@@ -133,3 +133,24 @@ Este documento contiene la lista detallada y centralizada de todas las caracter�
 - [x] **I.1. Filtro en Pestañas Creativas (`BuildCreativeModeTabContentsEvent`)**:
   - Filtrado y eliminación automática de cualquier objeto relacionado al Wither (`wither_spawn_egg`, etc.) en todas las pestañas creativas y pestaña de búsqueda.
   - Ocultamiento de ítems incompletos en pestañas del mod para evitar que jugadores los vean o generen hasta rehacer el modelo completamente en una versión posterior.
+
+---
+
+## ⚡ MÓDULO J: RENOVACIÓN DE HABILIDADES V2, VFX/SFX Y REFERENCIAS DE MODS DE MAGIA
+> *Documento completo detallado disponible en: `PLAN_RENOVACION_HABILIDADES_Y_ARMAS.md`*
+
+- [ ] **J.1. Pulido de Subida de Nivel de Armas (`WeaponLevelManager.java`)**:
+  - Cambiar el mensaje de chat intrusivo a la **Action Bar** (`true`) para evitar inundar el chat al farmear hordas.
+  - Reemplazar el sonido estridente de XP (`PLAYER_LEVELUP`) por una resonancia mística de acero templado (`ENCHANTMENT_TABLE_USE` / forja de yunque en tono agudo).
+  - Títulos épicos en pantalla (Title / Subtitle) únicamente para hitos legendarios (Lv. 10, 25, 50, 75, 100).
+- [ ] **J.2. Motor de Habilidades V2 (Inspirado en Iron's Spells y Mahou Tsukai)**:
+  - Crear clase base de proyectil de corte físico: `SlashWaveEntity` (malla orientada, colisión rectangular y penetración).
+  - Integrar sacudidas cinemáticas de cámara (`CameraShake`) al asestar golpes definitivos.
+- [ ] **J.3. Rework de Habilidades de Armas SAO**:
+  - **Elucidator:** *Starburst Stream V2* con ráfaga de 16 cortes cinemáticos, cuchillas de vacío y corte en **X** explosivo.
+  - **Dark Repulser:** *Crystalline Resonance* con púas de cristal congelantes que brotan del suelo y sinergia dual con Elucidator (*Dual Eclipse*).
+  - **Lambent Light:** *Linear V2* con embestida relámpago que atraviesa enemigos ignorando armadura y detona la estela de luz residual.
+- [ ] **J.4. Rework de La Doncella**:
+  - *Jardines del Silencio:* Prisión de espinas en el suelo que inmoviliza enemigos.
+  - *Trono de Ceniza / Luna Carmesí:* Corte colosal de sangre con lluvia de pétalos negros marchitos y robo de vida.
+
