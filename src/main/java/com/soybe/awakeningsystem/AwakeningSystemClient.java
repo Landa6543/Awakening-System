@@ -608,7 +608,6 @@ public final class AwakeningSystemClient {
             }
         }
         if (minecraft.player != null) {
-            com.soybe.awakeningsystem.client.renderer.SwordAuraRenderer.tickParticles(minecraft);
             SystemData clientData = minecraft.player.getData(AwakeningSystemMod.PLAYER_SYSTEM);
             clientData.tickCombat();
 

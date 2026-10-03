@@ -14,6 +14,7 @@ import net.minecraft.client.renderer.texture.OverlayTexture;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.util.Mth;
 import net.minecraft.world.entity.player.Player;
+import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.phys.Vec3;
 import net.neoforged.neoforge.client.event.RenderLevelStageEvent;
 import org.joml.Matrix4f;
@@ -79,15 +80,32 @@ public final class VolumetricAuraRenderer {
                 }
             }
 
+            ItemStack mainStack = player.getMainHandItem();
+            ItemStack offStack = player.getOffhandItem();
+
+            boolean hasCreatorSword = mainStack.getItem() instanceof CreatorClaymoreItem
+                    || offStack.getItem() instanceof CreatorClaymoreItem;
+
+            boolean hasDoncella = mainStack.getItem() instanceof LaDoncellaSwordItem
+                    || offStack.getItem() instanceof LaDoncellaSwordItem;
+
             boolean inCombatTrance = player.getPersistentData().getLong("system_trance_until") > mc.level.getGameTime();
             boolean inSkillBurst = player.getPersistentData().getLong("active_skill_aura_until") > mc.level.getGameTime();
 
-            // Determinar estilo de aura corporal (solo meditador o trance activo, las armas tienen su propio Qi de espada 3D)
+            // Determinar estilo de aura corporal predominante
             if (isMeditating) {
                 // 1. AURA DE CULTIVO KI (Manto espiritual completo en cúpula que envuelve al meditador de pies a cabeza)
                 renderKiCultivationAura(poseStack, bufferSource, dx, dy, dz, time);
+            } else if (hasDoncella) {
+                // 2. AURA DE LA DONCELLA (Manto celestial de Rosas / Luna Carmesí al portar la espada mítica)
+                ItemStack dStack = (mainStack.getItem() instanceof LaDoncellaSwordItem) ? mainStack : offStack;
+                boolean transformed = LaDoncellaSwordItem.isTransformed(dStack);
+                renderDoncellaAura(poseStack, bufferSource, dx, dy, dz, time, transformed, inCombatTrance || inSkillBurst);
+            } else if (hasCreatorSword) {
+                // 3. AURA CELESTIAL DEL CREADOR (Permanente al empuñar el mandoble mítico, intensificada en combate)
+                renderCreatorDivineAura(poseStack, bufferSource, dx, dy, dz, time, inCombatTrance || inSkillBurst);
             } else if (inCombatTrance || inSkillBurst) {
-                // 2. AURA DE HABILIDAD DESPIERTA / TRANCE (Manto etéreo azul ceñido al cuerpo durante habilidades activas)
+                // 4. AURA DE HABILIDAD DESPIERTA / TRANCE (Manto etéreo azul ceñido al cuerpo durante habilidades activas)
                 renderAwakenedSkillAura(poseStack, bufferSource, dx, dy, dz, time);
             }
         }
@@ -249,6 +267,73 @@ public final class VolumetricAuraRenderer {
         // 5. Disco cósmico en el suelo
         renderGroundDisc(poseStack, bufferSource.getBuffer(RenderType.entityTranslucent(TEX_AURA_RING)),
                 1.20F + 0.06F * (float) Math.sin(time * 0.15F), 210, 130, 255, intensified ? 145 : 110);
+
+        poseStack.popPose();
+    }
+
+    /**
+     * Renderiza el Aura de La Doncella: Manto espiritual celestial de rosas y pétalos eternos
+     * que envuelve por completo al portador (Púrpura/Rosa en forma pura, Carmesí Luna Sangrienta en Trono de Ceniza).
+     */
+    private static void renderDoncellaAura(PoseStack poseStack, net.minecraft.client.renderer.MultiBufferSource bufferSource,
+                                           double x, double y, double z, float time, boolean transformed, boolean intensified) {
+        poseStack.pushPose();
+        poseStack.translate(x, y, z);
+
+        VertexConsumer flameBuffer = bufferSource.getBuffer(RenderType.entityTranslucent(TEX_AURA_FLAME));
+
+        int coreAlpha = intensified ? 180 : 140;
+        int shroudAlpha = intensified ? 170 : 130;
+        int outerAlpha = intensified ? 115 : 85;
+
+        int rCore, gCore, bCore;
+        int rMid, gMid, bMid;
+        int rOut, gOut, bOut;
+        int rLit, gLit, bLit;
+        int rRing, gRing, bRing;
+
+        if (transformed) {
+            // Luna Carmesí / Trono de Ceniza (Carmesí rubí vibrante y pétalos de sangre eterna)
+            rCore = 255; gCore = 35; bCore = 60;
+            rMid = 210; gMid = 20; bMid = 50;
+            rOut = 255; gOut = 95; bOut = 130;
+            rLit = 255; gLit = 65; bLit = 95;
+            rRing = 255; gRing = 30; bRing = 60;
+        } else {
+            // Jardines del Silencio / Doncella Pura (Rosa plateado etéreo y flor eterna)
+            rCore = 255; gCore = 175; bCore = 215;
+            rMid = 235; gMid = 130; bMid = 180;
+            rOut = 255; gOut = 215; bOut = 240;
+            rLit = 255; gLit = 190; bLit = 225;
+            rRing = 255; gRing = 145; bRing = 195;
+        }
+
+        // 1. Llamas interiores que cruzan el cuerpo del portador
+        renderInteriorCoreFlames(poseStack, flameBuffer, 0.90F, 2.20F, time * (intensified ? 0.16F : 0.10F),
+                rCore, gCore, bCore, coreAlpha);
+
+        // 2. Manto espiritual ceñido en cúpula
+        renderBodyAuraShroud(poseStack, flameBuffer, 0.60F, 2.22F, time * 0.09F, 0.08F,
+                rMid, gMid, bMid, shroudAlpha, false, false);
+
+        // 3. Capa externa ondulante
+        poseStack.mulPose(Axis.YP.rotationDegrees(-time * 1.5F));
+        renderBodyAuraShroud(poseStack, flameBuffer, 0.78F, 2.38F, -time * 0.11F, 0.10F,
+                rOut, gOut, bOut, outerAlpha, false, false);
+
+        // 4. Relámpagos arcanos de pétalos/energía
+        if (intensified || Math.sin(time * 0.25F) > 0.15D) {
+            VertexConsumer lightningBuf = bufferSource.getBuffer(RenderType.entityTranslucent(TEX_AURA_LIGHTNING));
+            poseStack.pushPose();
+            poseStack.mulPose(Axis.YP.rotationDegrees(time * 2.8F));
+            renderBodyAuraShroud(poseStack, lightningBuf, 0.68F, 2.25F, time * 0.18F, 0.05F,
+                    rLit, gLit, bLit, intensified ? 145 : 105, false, false);
+            poseStack.popPose();
+        }
+
+        // 5. Disco de pétalos/energía en el suelo
+        renderGroundDisc(poseStack, bufferSource.getBuffer(RenderType.entityTranslucent(TEX_AURA_RING)),
+                1.22F + 0.06F * (float) Math.sin(time * 0.15F), rRing, gRing, bRing, intensified ? 150 : 115);
 
         poseStack.popPose();
     }
