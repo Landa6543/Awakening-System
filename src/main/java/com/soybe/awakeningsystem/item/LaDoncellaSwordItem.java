@@ -243,14 +243,6 @@ public class LaDoncellaSwordItem extends SwordItem implements AwakeningWeaponIte
     }
 
     @Override
-    public Component getName(ItemStack stack) {
-        if (isTransformed(stack)) {
-            return Component.literal("§d§lMandoble de Mahiro");
-        }
-        return super.getName(stack);
-    }
-
-    @Override
     public void appendHoverText(ItemStack stack, TooltipContext context, List<Component> tooltip, TooltipFlag flag) {
         boolean transformed = isTransformed(stack);
 
