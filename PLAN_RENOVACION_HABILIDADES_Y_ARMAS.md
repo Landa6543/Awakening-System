@@ -1,18 +1,20 @@
-# ⚔️ PLAN MAESTRO: RENOVACIÓN DE HABILIDADES, VFX/SFX Y SISTEMA DE ARMAS V2
+# ⚔️ PLAN MAESTRO: RENOVACIÓN ESTÉTICA TOTAL DE HABILIDADES, VFX/SFX Y SISTEMA DE ARMAS V2
 > **Documento de Especificación y Hoja de Ruta para Awakening System**  
-> **Fecha de creación:** 3 de Octubre de 2026  
-> **Objetivo:** Transformar las habilidades básicas de armas en experiencias dinámicas, visualmente espectaculares e inmersivas inspiradas en la arquitectura de los mejores mods de magia (*Iron's Spells 'n Spellbooks, Ars Nouveau, Mahou Tsukai*).
+> **Fecha de actualización:** 3 de Octubre de 2026  
+> **Directiva Principal del Usuario:** *"Es para TODAS las armas, quiero cosas mucho más estéticas y cinemáticas, no cosas simples o básicas como están ahora (efectos de pociones vanilla y partículas aleatorias)."*
 
 ---
 
 ## 📋 RESUMEN EJECUTIVO
 
-Las habilidades actuales de las armas del mod operan bajo mecánicas elementales: detección por radio `getEntitiesOfClass`, aplicación de `MobEffectInstance` vanilla y partículas de partículas simples.  
-Este plan detalla:
-1. **Solución inmediata al sonido y mensaje de subida de nivel de armas** (eliminar spam de chat y sonido estridente de XP).
-2. **Análisis técnico y lecciones de arquitectura de mods de magia consagrados**.
-3. **Catálogo de habilidades V2 para armas míticas y de SAO** (proyectiles de vacío, cortes cinemáticos, embestidas estelares, prisiones de espinas).
-4. **Infraestructura de renderizado: VFX, Slash Arcs, Shakes de pantalla y Raycasting**.
+Actualmente, las armas del mod operan con una lógica técnica elemental:
+* Al hacer clic derecho, aplican un `MobEffectInstance` vanilla (Fuerza, Velocidad, Absorción).
+* Detectan entidades mediante `getEntitiesOfClass` en una esfera/cono invisible instantáneo.
+* Emiten unas cuantas partículas vanilla (`CRIT`, `SMOKE`, `PORTAL`) dispersadas al azar.
+* Al subir de nivel, disparan el sonido estándar estridente de XP (`PLAYER_LEVELUP`) e inundan el chat de texto.
+
+**El Nuevo Paradigma V2:**  
+Inspirándonos en la arquitectura visual de **Iron's Spells 'n Spellbooks, Mahou Tsukai y Ars Nouveau**, crearemos un **Motor de Habilidades Cinematográficas** aplicable a **TODAS LAS ARMAS** del mod. Cada arma poseerá identidad visual propia, proyectiles y ondas de corte físicas modeladas en 3D, arcos de corte luminosos (slash arcs), sacudidas de cámara e impactos contundentes.
 
 ---
 
@@ -20,96 +22,115 @@ Este plan detalla:
 
 ### 1.1. Sonido de Nivel de Arma (`WeaponLevelManager.java`)
 * **Problema actual:**  
-  Usa `SoundEvents.PLAYER_LEVELUP` y `SoundEvents.UI_TOAST_CHALLENGE_COMPLETE`. Es el sonido de nivel de jugador vainilla de Minecraft, fuerte y estridente cada vez que se derrota un mob.
-* **Solución propuesta:**
-  - Reemplazar por un sonido de **resonancia mística de acero**:
-    - `SoundEvents.ENCHANTMENT_TABLE_USE` (tono $1.3F$) + `SoundEvents.EXPERIENCE_ORB_PICKUP` (tono $1.8F$, volumen bajo $0.4F$) para niveles ordinarios.
-    - Para **Hitos legendarios** (niveles 10, 25, 50, 75, 100): Sonido de forja divina `SoundEvents.ANVIL_USE` (tono $1.6F$) + destello místico.
-    - Opcionalmente registrar un evento sonoro personalizado: `awakening_system:weapon_resonate`.
+  Usa `SoundEvents.PLAYER_LEVELUP` y `SoundEvents.UI_TOAST_CHALLENGE_COMPLETE`. Es el sonido de subir nivel de jugador de Minecraft vainilla, estridente y molesto al matar hordas.
+* **Solución V2:**
+  - **Niveles ordinarios:** Resonancia mística de acero templado (`SoundEvents.ENCHANTMENT_TABLE_USE` a tono agudo $1.3F$ + `SoundEvents.EXPERIENCE_ORB_PICKUP` a tono $1.8F$ con volumen suave $0.4F$).
+  - **Hitos Legendarios (Lv. 10, 25, 50, 75, 100):** Sonido de forja divina `SoundEvents.ANVIL_USE` (tono $1.6F$) acompañado de un acorde celestial y destello visual.
+  - Registro de sonido personalizado: `awakening_system:weapon_resonate`.
 
-### 1.2. Mensaje en el Chat (`WeaponLevelManager.java`)
+### 1.2. Notificación en Pantalla (`WeaponLevelManager.java`)
 * **Problema actual:**  
-  `player.displayClientMessage(..., false);` imprime un mensaje dorado en el registro de chat cada vez que el arma sube de nivel, inundando el chat durante combates con hordas.
-* **Solución propuesta:**
-  - Cambiar el segundo argumento a `true`:  
-    `player.displayClientMessage(Component.literal("§6§l✦ " + weaponName + " §eLv. " + currentLevel + "§7/100"), true);`  
-    Esto envía la notificación de forma limpia a la **Action Bar** (sobre la hotbar), sin ensuciar el chat.
-  - Para **Hitos Decisivos** (Lv. 50, 75, 100): Mostrar un banner de Sistema en pantalla con título grande (`Title / Subtitle`) de color dorado/amatista:  
-    `[DESPERTAR DE ARMA: TRASCENDENCIA]`.
+  `player.displayClientMessage(..., false);` inunda el chat de texto con líneas doradas.
+* **Solución V2:**
+  - **Action Bar (`true`):** Toda subida de nivel ordinaria aparecerá sutilmente sobre la hotbar:  
+    `§6§l✦ [Elucidator] §eNivel 24/100 §7(+0.5 ATK)`
+  - **Banners de Sistema (Title / Subtitle):** Únicamente en los hitos decisivos (Lv. 10, 25, 50, 75, 100), la pantalla mostrará un banner estilo Solo Leveling:  
+    `§6§l✦ HITO ALCANZADO ✦`  
+    `§eEl arma ha despertado un nuevo rasgo divino`
 
 ---
 
-## 🔮 SECCIÓN 2: ANÁLISIS DE MODS DE MAGIA Y ARQUITECTURA TÉCNICA
+## 🔮 SECCIÓN 2: PILARES DE DISEÑO ESTÉTICO V2 (REFERENCIA MODS DE MAGIA)
 
-| Mod de Referencia | Mecánicas Clave | Lo que debemos adaptar a Awakening System |
+| Pilar Estético | Cómo lo implementan los mejores mods | Cómo se aplicará a TODO el arsenal |
 | :--- | :--- | :--- |
-| **Iron's Spells 'n Spellbooks** | Proyectiles con entidades personalizadas (`AbstractSpellEntity`), `GeoEntityRenderer`, partículas con vectores de arrastre, tiempo de canalización (cast time). | Reemplazar daño instantáneo en cono por entidades de corte (`SlashWaveEntity`) y proyectiles físicos con trayectorias visibles. |
-| **Mahou Tsukai** | Cortes dimensionales, rayos continuos por raycast (`ClipContext`), círculos mágicos en el plano de corte, retroceso cinemático. | Habilidades de estocada y cortes de vacío que atraviesan enemigos y cortan el espacio-tiempo. |
-| **Ars Nouveau** | Encadenamiento de efectos, zonas de suelo telegrafiadas (runas en el suelo antes de la explosión). | Indicadores de área en el suelo para habilidades definitivas (como el Trono de Ceniza). |
-| **Epic Fight / SlashBlade** | Mallas de corte en arco (Slash Arcs) con texturas translúcidas que siguen la curva del golpe. | Arcos de corte visibles en el aire al activar las habilidades de armas de espada. |
+| **Entidades de Corte Físicas (`SlashWaveEntity`)** | *Iron's Spells* genera proyectiles móviles (`GeoEntityRenderer`) con mallas orientadas y transparencias. | Reemplazar daño invisible en cono por tajos voladores de energía que viajan, tienen volumen 3D y cortan a los enemigos a su paso. |
+| **Cortes Dimensionales y Raycast** | *Mahou Tsukai* traza líneas matemáticas de corte exacto con planos luminosos que rajan el espacio. | Habilidades de estocada y cortes de vacío que dejan grietas en el aire antes de detonar. |
+| **Impacto y Sacudida (`CameraShake`)** | Shakes controlados de cámara según la fuerza del impacto. | Micro-sacudida de pantalla ($0.15\text{s}$) al asestar habilidades definitivas para dar peso real al golpe. |
+| **Zonas Telegrafiadas en Suelo** | *Ars Nouveau* proyecta runas y sellos mágicos en el terreno antes de la detonación. | Sellos luminosos en el suelo al invocar tempestades, prisiones de espinas o pilares ígneos. |
+| **Hit-Stop y Micro-Pausa** | Juegos de acción estilo *Devil May Cry* / *Genshin Impact*. | Pausa imperceptible de 2 ticks ($0.1\text{s}$) en el objetivo alcanzado por un golpe crítico definitivo. |
 
 ---
 
-## ⚔️ SECCIÓN 3: CATÁLOGO DE HABILIDADES V2 PARA ARMAS
+## ⚔️ SECCIÓN 3: CATÁLOGO DE RENOVACIÓN ESTÉTICA POR ARMA (TODO EL ARSENAL)
 
-### 3.1. 🗡️ Elucidator (Kirito) — *Starburst Stream V2*
-* **Mecánica Antigua:** Otorga Fuerza III temporal y empuje simple.
-* **Mecánica V2:**
-  1. **Secuencia de 16 Cortes:** Al hacer clic derecho, el jugador entra en postura de asalto. Durante 1.8 segundos, el arma ejecuta ráfagas de cortes rápidos automáticos.
-  2. **Proyectiles de Vacío (Shadow Blades):** Cada corte emite una cuchilla de energía negra y plata (`SlashWaveEntity`) que viaja 5 bloques hacia adelante, dañando y ralentizando enemigos.
-  3. **16º Golpe Cruzado (Cross Burst):** El golpe final desata una onda expansiva en cruz (forma de **X**) de fuego oscuro que inflige daño crítico masivo y empuja a los enemigos contra las paredes.
-  4. **SFX:** Sonido de zumbido de acero sónico por cada golpe y explosión de corte final.
-
-### 3.2. 💎 Dark Repulser (Kirito) — *Crystalline Resonance & Ice Dragon Slash*
-* **Mecánica Antigua:** Buffs de velocidad y absorción con sinergia pasiva estática.
-* **Mecánica V2:**
-  1. **Púas de Cristal del Dragón:** El jugador clava o barre la espada hacia adelante; una hilera de cristales de aguamarina (`CrystalSpikeEntity`) brota del suelo en línea recta, empalando y congelando a los objetivos durante 2 segundos.
-  2. **Sinergia Activa con Elucidator (Dual Wielding):**
-     - Si se empuña Elucidator en mano principal y Dark Repulser en secundaria (o viceversa):
-     - La habilidad se transforma en **[Dual Eclipse]**: Una danza torbellino de 360° combinando fuego de sombra negro y cristales de hielo esmeralda, atrayendo a los enemigos hacia el centro y despedazándolos.
-
-### 3.3. ✨ Lambent Light (Asuna) — *Linear / Flashing Penetrator V2*
-* **Mecánica Antigua:** Daño en línea y salto básico.
-* **Mecánica V2:**
-  1. **Embestida a la Velocidad de la Luz (Light Dash):** El jugador se desvanece en un haz de luz dorada y turquesa, teletransportándose o avanzando 12 bloques instantáneamente.
-  2. **Línea de Estocada Perforante:** Todos los enemigos en la trayectoria son atravesados (daño que ignora el 50% de la armadura).
-  3. **Detonación de Brillo:** Tras 0.5s de la embestida, la estela de luz que quedó en el aire detona en múltiples explosiones de estocada sonora.
-
-### 3.4. 🌹 La Doncella que Contempló el Fin de las Rosas — *Trono de Ceniza V2*
-* **Mecánica Antigua:** Potion effects con buffs de stats y empuje genérico.
-* **Mecánica V2:**
-  1. **Forma Pura — [Jardín del Silencio]:** Al hacer clic derecho, invoca una corona de raíces y rosas plateadas en el suelo que enraízan a todos los enemigos cercanos y purifica al portador.
-  2. **Forma Despierta — [Trono de Ceniza / Luna Carmesí]:**
-     - La espada genera un tajo horizontal titánico de sangre carmesí de 10 bloques de alcance.
-     - Lluvia de pétalos negros ardientes que caen del cielo sobre el área afectada, provocando marchitamiento y drenando vida hacia el jugador (robo de vida del 15% del daño infligido).
-  3. **Efecto de Niebla de Ceniza:** La zona se cubre momentáneamente de una neblina oscura con partículas de ceniza y pétalos carmesíes flotantes.
+### 3.1. 🗡️ Armas de Sword Art Online (SAO)
+* **Elucidator — *Starburst Stream V2*:**
+  - *VFX:* Postura cinemática donde el jugador realiza 16 tajos rápidos automáticos. Cada golpe dispara una **cuchilla de vacío negra con filo plateado** (`SlashWaveEntity`) que vuela 5 bloques hacia adelante.
+  - *Finalizador:* El 16º golpe cruza ambas espadas en una **X titánica de fuego oscuro** que estalla hacia adelante, empujando a los enemigos contra bloques con sonido de impacto sónico y sacudida de pantalla.
+* **Dark Repulser — *Crystalline Resonance & Dual Eclipse*:**
+  - *VFX:* Al clavar la espada en el suelo, una hilera de **púas de cristal de dragón aguamarina** brota del terreno en línea recta empalando y congelando a los objetivos.
+  - *Sinergia Dual:* Al empuñar Elucidator + Dark Repulser, clic derecho desata **[Dual Eclipse]**: Un vórtice de 360° combinando fuego de sombra negro y cristales de hielo esmeralda que atrae enemigos al centro y los despedaza.
+* **Lambent Light — *Linear / Flashing Penetrator V2*:**
+  - *VFX:* El jugador se desvanece en un **haz de luz estelar dorada y turquesa**, teletransportándose o embistiendo 12 bloques hacia adelante.
+  - *Detonación:* Los enemigos atravesados sufren daño perforante que ignora el 50% de armadura. Tras 0.4s, la estela de luz residual en el aire estalla en una cascada de estocadas sónicas.
 
 ---
 
-## 🛠️ SECCIÓN 4: HOJA DE RUTA DE IMPLEMENTACIÓN TÉCNICA
-
-### Fase 1: Limpieza de HUD y Audio (Prioridad Inmediata)
-- [ ] Modificar `WeaponLevelManager.java`:
-  - Cambiar notificación de chat a Action Bar (`true`).
-  - Cambiar sonido de `SoundEvents.PLAYER_LEVELUP` a resonancia de acero templado (`ENCHANTMENT_TABLE_USE` + tono agudo).
-  - Agregar banner en pantalla para hitos importantes (Lv. 10, 25, 50, 75, 100).
-
-### Fase 2: Motor de Proyectiles y Cortes Físicos
-- [ ] Crear clase base de entidad de corte: `com.soybe.awakeningsystem.entity.projectile.SlashWaveEntity`:
-  - Entidad móvil orientable con hitbox rectangular (caja de colisión OBB/AABB).
-  - Renderizado 3D de quad con textura brillante y aditiva (hoja de vacío, cristal, tajo de sangre).
-  - Detección de impacto que penetra o se detiene al impactar contra bloques.
-
-### Fase 3: Animaciones de Habilidad y Shakes de Cámara
-- [ ] Implementar `CameraShakePacket` para dar impacto físico a los golpes definitivos (estilo Solo Leveling / Manhwa).
-- [ ] Conectar partículas direccionales generadas mediante raycast exacto en vez de dispersión aleatoria.
-
-### Fase 4: Habilidades Específicas de SAO y La Doncella
-- [ ] Programar *Starburst Stream V2* en `ElucidatorItem.java`.
-- [ ] Programar *Crystalline Resonance* y combo dual en `DarkRepulserItem.java`.
-- [ ] Programar *Flashing Penetrator* en `LambentLightItem.java`.
-- [ ] Programar *Trono de Ceniza V2* en `LaDoncellaSwordItem.java`.
+### 3.2. 🌸 Armas Murim & Cultivo Ki
+* **Plum Blossom Sword (Espada de la Flor de Ciruelo — Mount Hua / Chung Myung):**
+  - *VFX:* En vez de buffs invisibles, desata **[Danza de los Veinticuatro Pétalos]**: Un torbellino huracanado de pétalos de flor de ciruelo rosados y cuchillas de Qi en 360°.
+  - *Estética:* Los pétalos giran en espiral alrededor del jugador mientras cortes curvos rosados cortan el aire con ráfagas de viento cortante.
+* **Sky Demon Sword (Espada del Demonio Celestial):**
+  - *VFX:* Desata **[Tajo del Dragón Demoniaco Carmesí]**: La espada se envuelve en llamas carmesí y negras, liberando una cabeza de dragón de Qi oscuro que viaja por el suelo levantando bloques de tierra y dejando un rastro ardiente.
+* **Soul Solid Sword (Espada de Alma Sólida):**
+  - *VFX:* **[Desgarro del Espíritu]**: Corte horizontal que libera una onda de choque etérea translúcida que atraviesa escudos y separa momentáneamente el "alma" de los enemigos, inmovilizándolos durante 2 segundos.
 
 ---
 
-> 📌 **Estado:** Lista consolidada y lista para ejecución cuando reanudes tus sesiones de trabajo.
+### 3.3. 👥 Armas de Solo Leveling / Cazadores
+* **Shadow Daggers (Dagas de Sombra de Sung Jin-woo / Kamish):**
+  - *VFX:* **[Paso de las Sombras & Degüello]**: El jugador se disuelve en humo de sombras negras y relámpagos púrpuras, apareciendo instantáneamente a la espalda del objetivo más cercano en 8 bloques.
+  - *Estética:* Corte en cruz sangriento con estelas de sombras oscuras y ojos brillantes azules/rojos que parpadean en la pantalla.
+* **Radiant Light Sword (Espada de Luz Radiante — Cha Hae-In):**
+  - *VFX:* **[Danza de la Espada de Luz V2]**: El jugador ejecuta 3 estocadas de esgrima a la velocidad de la luz; cada estocada genera un haz de luz solar dorada que perfora enemigos y finaliza con un loto de luz divina en el suelo que cura a aliados y ciega a los enemigos.
+
+---
+
+### 3.4. 🌹 Armas Celestiales y Míticas
+* **La Doncella que Contempló el Fin de las Rosas:**
+  - *Forma Pura [Jardín del Silencio]:* Invoca una **corona de raíces y rosas plateadas** que brotan del suelo en un radio de 6 bloques, inmovilizando (root) a todos los enemigos y purificando cualquier estado negativo del portador.
+  - *Forma Despierta [Trono de Ceniza / Luna Carmesí]:*
+    - Tajo colosal de sangre carmesí de 10 bloques de longitud que rasga el aire.
+    - Lluvia de pétalos negros y carmesíes ardientes que caen del cielo sobre el área afectada, drenando la sangre de los enemigos hacia el portador (robo de vida del 15%).
+    - Neblina de cenizas y pétalos oscuros flotantes en el ambiente.
+* **Creator Claymore (Mandoble del Creador):**
+  - *VFX:* **[Fisura del Génesis Cósmico]**: Al blandir el mandoble, se abre una grieta dimensional cósmica en el aire con fondo de constelaciones y amatista cósmica. De la grieta caen 3 meteoros estelares que explotan en ondas de choque divinas.
+
+---
+
+### 3.5. 🔱 Armas de Genshin Impact & Fantasía
+* **Staff of Homa (Báculo de Homa — Hu Tao):**
+  - *VFX:* Desata un vuelo de **mariposas de fuego espectral carmesí** que orbitan al jugador. Al atacar, las mariposas se lanzan contra los enemigos explotando en pilares de fuego espiritual.
+* **Wolf's Gravestone (Lápida del Lobo):**
+  - *VFX:* **[Aullido del Viento Helado]**: Al golpear a un enemigo con menos del 30% de vida, se escucha el aullido del Lobo del Norte y se despliega una tormenta de ventisca y sangre en 8 bloques, otorgando +40% de ataque a todo el equipo.
+* **Verdict (Veredicto):**
+  - *VFX:* **[Juicio Geotécnico]**: Impacto pesado contra el suelo que resquebraja el terreno con esquirlas de roca y oro flotante, liberando una onda de choque sísmica.
+* **Vortex Vanquisher (Perforanubes):**
+  - *VFX:* Invoca una lanza de roca dorada que cae del cielo clavándose en el suelo y emitiendo pulsos de resonancia Geo que dañan y atraen a los monstruos.
+
+---
+
+## 🛠️ SECCIÓN 4: HOJA DE RUTA TÉCNICA PASO A PASO
+
+```
+[FASE 1: Audio & Action Bar]
+  ├── Cambiar chat spam -> Action Bar (true) en WeaponLevelManager
+  ├── Reemplazar sonido de XP -> Resonancia de acero templado
+  └── Títulos épicos en pantalla en hitos (Lv. 10, 25, 50, 75, 100)
+       │
+[FASE 2: Infraestructura VFX & Proyectiles Físicos]
+  ├── Crear entidad base de corte: SlashWaveEntity (3D render, velocidad, penetración)
+  ├── Sistema de sacudida de cámara (CameraShakePacket)
+  └── Motor de indicadores y sellos mágicos en el suelo (GroundDecal / MagicSeal)
+       │
+[FASE 3: Implementación por Bloques de Armas]
+  ├── Bloque A: Armas de SAO (Elucidator, Dark Repulser, Lambent Light)
+  ├── Bloque B: La Doncella (Jardín de Espinas & Trono de Ceniza)
+  ├── Bloque C: Armas Murim & Cazadores (Flor de Ciruelo, Dagas de Sombra, Luz Radiante)
+  └── Bloque D: Armas Míticas y de Genshin (Mandoble del Creador, Homa, Wolf's Gravestone)
+```
+
+---
+
+> 📌 **Estado:** Plan consolidado para **TODAS LAS ARMAS** del mod. Todo preparado y documentado para comenzar la implementación cuando enciendas la PC.
