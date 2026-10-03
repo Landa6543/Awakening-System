@@ -34,7 +34,7 @@ public class MasterlessStardustItem extends Item {
             stack.shrink(count);
             AwakeningSystemMod.sync(sp);
             sp.playNotifySound(SoundEvents.EXPERIENCE_ORB_PICKUP, SoundSource.PLAYERS, 0.8F, 1.6F);
-            sp.displayClientMessage(Component.literal("§b§l✦ [POLVO ESTELAR] §fHas depositado §b+" + count + " Polvo Estelar sin Dueño §f(Saldo: §b" + data.stardust() + "§f)"), true);
+            sp.displayClientMessage(Component.translatable("awakening_system.item.stardust.deposited", count, data.stardust()), true);
             return InteractionResultHolder.consume(stack);
         }
         return InteractionResultHolder.sidedSuccess(stack, level.isClientSide());
@@ -42,9 +42,9 @@ public class MasterlessStardustItem extends Item {
 
     @Override
     public void appendHoverText(ItemStack stack, TooltipContext context, List<Component> tooltip, TooltipFlag flag) {
-        tooltip.add(Component.literal("§7Remanente cósmico obtenido tras realizar Deseos de 3★.").withStyle(ChatFormatting.GRAY));
-        tooltip.add(Component.literal("§7Canjeable en las §eGangas de Paimon §7por Destinos y materiales.").withStyle(ChatFormatting.DARK_GRAY));
-        tooltip.add(Component.literal("§b▸ Clic derecho: §fDepositar en el saldo de Gangas").withStyle(ChatFormatting.AQUA));
-        tooltip.add(Component.literal("§b▸ Shift + Clic derecho: §fDepositar todo el stack").withStyle(ChatFormatting.AQUA));
+        tooltip.add(Component.translatable("awakening_system.item.stardust.desc1").withStyle(ChatFormatting.GRAY));
+        tooltip.add(Component.translatable("awakening_system.item.stardust.desc2").withStyle(ChatFormatting.DARK_GRAY));
+        tooltip.add(Component.translatable("awakening_system.item.stardust.use1").withStyle(ChatFormatting.AQUA));
+        tooltip.add(Component.translatable("awakening_system.item.stardust.use2").withStyle(ChatFormatting.AQUA));
     }
 }

@@ -35,7 +35,7 @@ public class MoraItem extends Item {
             stack.shrink(count);
             AwakeningSystemMod.sync(sp);
             sp.playNotifySound(SoundEvents.EXPERIENCE_ORB_PICKUP, SoundSource.PLAYERS, 0.9F, 1.4F);
-            sp.displayClientMessage(Component.literal("§e§l✦ [MORA] §fHas depositado §e+" + String.format("%,d", totalMora) + " Mora §f(Saldo: §6" + String.format("%,d", data.mora()) + " Mora§f)"), true);
+            sp.displayClientMessage(Component.translatable("awakening_system.item.mora.deposited", String.format(java.util.Locale.US, "%,d", totalMora), String.format(java.util.Locale.US, "%,d", data.mora())), true);
             return InteractionResultHolder.consume(stack);
         }
         return InteractionResultHolder.sidedSuccess(stack, level.isClientSide());
@@ -43,11 +43,11 @@ public class MoraItem extends Item {
 
     @Override
     public void appendHoverText(ItemStack stack, TooltipContext context, List<Component> tooltip, TooltipFlag flag) {
-        tooltip.add(Component.literal("§7Moneda universal acuñada por el Señor del Geo Morax.").withStyle(ChatFormatting.GRAY));
-        tooltip.add(Component.literal("§7El catalizador de toda transacción comercial, forja y mejora en Teyvat.").withStyle(ChatFormatting.DARK_GRAY));
+        tooltip.add(Component.translatable("awakening_system.item.mora.desc1").withStyle(ChatFormatting.GRAY));
+        tooltip.add(Component.translatable("awakening_system.item.mora.desc2").withStyle(ChatFormatting.DARK_GRAY));
         tooltip.add(Component.empty());
-        tooltip.add(Component.literal("§e▸ Clic derecho: §fDepositar §e1,000 Mora §fen tu monedero").withStyle(ChatFormatting.GOLD));
-        tooltip.add(Component.literal("§e▸ Shift + Clic derecho: §fDepositar todo el stack").withStyle(ChatFormatting.GOLD));
-        tooltip.add(Component.literal("§b▸ Se utiliza en las Gangas de Paimon y mejoras").withStyle(ChatFormatting.AQUA));
+        tooltip.add(Component.translatable("awakening_system.item.mora.use1").withStyle(ChatFormatting.GOLD));
+        tooltip.add(Component.translatable("awakening_system.item.mora.use2").withStyle(ChatFormatting.GOLD));
+        tooltip.add(Component.translatable("awakening_system.item.mora.use3").withStyle(ChatFormatting.AQUA));
     }
 }

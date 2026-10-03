@@ -428,9 +428,9 @@ public final class GachaManager {
                 if (data.spendStardust(cost)) {
                     data.addIntertwinedFates(count);
                     player.playNotifySound(SoundEvents.PLAYER_LEVELUP, SoundSource.PLAYERS, 0.8F, 1.8F);
-                    player.displayClientMessage(Component.literal("§b✦ [GANGAS DE PAIMON] §fHas canjeado §b" + count + " Destino(s) Entrelazado(s) §fpor §e" + cost + " Polvo Estelar§f."), true);
+                    player.displayClientMessage(Component.translatable("awakening_system.gacha.bargain.intertwined_stardust", count, cost), true);
                 } else {
-                    player.displayClientMessage(Component.literal("§c[Gangas de Paimon] ¡No tienes suficiente Polvo Estelar (" + cost + " requerido)!"), true);
+                    player.displayClientMessage(Component.translatable("awakening_system.gacha.bargain.need_stardust", cost), true);
                     player.playNotifySound(SoundEvents.VILLAGER_NO, SoundSource.PLAYERS, 0.8F, 1.0F);
                     return;
                 }
@@ -440,9 +440,9 @@ public final class GachaManager {
                 if (data.spendStardust(cost)) {
                     data.addAcquaintFates(count);
                     player.playNotifySound(SoundEvents.PLAYER_LEVELUP, SoundSource.PLAYERS, 0.8F, 1.8F);
-                    player.displayClientMessage(Component.literal("§b✦ [GANGAS DE PAIMON] §fHas canjeado §b" + count + " Destino(s) del Encuentro §fpor §e" + cost + " Polvo Estelar§f."), true);
+                    player.displayClientMessage(Component.translatable("awakening_system.gacha.bargain.acquaint_stardust", count, cost), true);
                 } else {
-                    player.displayClientMessage(Component.literal("§c[Gangas de Paimon] ¡No tienes suficiente Polvo Estelar (" + cost + " requerido)!"), true);
+                    player.displayClientMessage(Component.translatable("awakening_system.gacha.bargain.need_stardust", cost), true);
                     player.playNotifySound(SoundEvents.VILLAGER_NO, SoundSource.PLAYERS, 0.8F, 1.0F);
                     return;
                 }
@@ -452,9 +452,9 @@ public final class GachaManager {
                 if (data.spendStarglitter(cost)) {
                     data.addIntertwinedFates(count);
                     player.playNotifySound(SoundEvents.PLAYER_LEVELUP, SoundSource.PLAYERS, 0.8F, 1.8F);
-                    player.displayClientMessage(Component.literal("§6✦ [GANGAS DE PAIMON] §fHas canjeado §6" + count + " Destino(s) Entrelazado(s) §fpor §6" + cost + " Brillo Estelar§f."), true);
+                    player.displayClientMessage(Component.translatable("awakening_system.gacha.bargain.intertwined_starglitter", count, cost), true);
                 } else {
-                    player.displayClientMessage(Component.literal("§c[Gangas de Paimon] ¡No tienes suficiente Brillo Estelar (" + cost + " requerido)!"), true);
+                    player.displayClientMessage(Component.translatable("awakening_system.gacha.bargain.need_starglitter", cost), true);
                     player.playNotifySound(SoundEvents.VILLAGER_NO, SoundSource.PLAYERS, 0.8F, 1.0F);
                     return;
                 }
@@ -464,9 +464,9 @@ public final class GachaManager {
                 if (data.spendStarglitter(cost)) {
                     data.addAcquaintFates(count);
                     player.playNotifySound(SoundEvents.PLAYER_LEVELUP, SoundSource.PLAYERS, 0.8F, 1.8F);
-                    player.displayClientMessage(Component.literal("§6✦ [GANGAS DE PAIMON] §fHas canjeado §6" + count + " Destino(s) del Encuentro §fpor §6" + cost + " Brillo Estelar§f."), true);
+                    player.displayClientMessage(Component.translatable("awakening_system.gacha.bargain.acquaint_starglitter", count, cost), true);
                 } else {
-                    player.displayClientMessage(Component.literal("§c[Gangas de Paimon] ¡No tienes suficiente Brillo Estelar (" + cost + " requerido)!"), true);
+                    player.displayClientMessage(Component.translatable("awakening_system.gacha.bargain.need_starglitter", cost), true);
                     player.playNotifySound(SoundEvents.VILLAGER_NO, SoundSource.PLAYERS, 0.8F, 1.0F);
                     return;
                 }
@@ -477,9 +477,9 @@ public final class GachaManager {
                     ItemStack contract = CompanionContractItem.createContract(CompanionProfile.NOELLE);
                     deliverGachaReward(player, data, contract);
                     player.playNotifySound(SoundEvents.UI_TOAST_CHALLENGE_COMPLETE, SoundSource.PLAYERS, 0.9F, 1.2F);
-                    player.displayClientMessage(Component.literal("§6✦ [GANGAS DE PAIMON] §f¡Has adquirido el §ePacto de Invocación: Noelle 4★§f!"), false);
+                    player.displayClientMessage(Component.translatable("awakening_system.gacha.bargain.pact_noelle"), false);
                 } else {
-                    player.displayClientMessage(Component.literal("§c[Gangas de Paimon] ¡No tienes suficiente Brillo Estelar (" + cost + " requerido)!"), true);
+                    player.displayClientMessage(Component.translatable("awakening_system.gacha.bargain.need_starglitter", cost), true);
                     player.playNotifySound(SoundEvents.VILLAGER_NO, SoundSource.PLAYERS, 0.8F, 1.0F);
                     return;
                 }
@@ -490,9 +490,9 @@ public final class GachaManager {
                     ItemStack contract = CompanionContractItem.createContract(CompanionProfile.CHA_HAEIN);
                     deliverGachaReward(player, data, contract);
                     player.playNotifySound(SoundEvents.UI_TOAST_CHALLENGE_COMPLETE, SoundSource.PLAYERS, 0.9F, 1.2F);
-                    player.displayClientMessage(Component.literal("§6✦ [GANGAS DE PAIMON] §f¡Has adquirido el §ePacto de Invocación: Cha Hae-In 4★§f!"), false);
+                    player.displayClientMessage(Component.translatable("awakening_system.gacha.bargain.pact_cha"), false);
                 } else {
-                    player.displayClientMessage(Component.literal("§c[Gangas de Paimon] ¡No tienes suficiente Brillo Estelar (" + cost + " requerido)!"), true);
+                    player.displayClientMessage(Component.translatable("awakening_system.gacha.bargain.need_starglitter", cost), true);
                     player.playNotifySound(SoundEvents.VILLAGER_NO, SoundSource.PLAYERS, 0.8F, 1.0F);
                     return;
                 }
@@ -502,9 +502,9 @@ public final class GachaManager {
                 if (data.spendStardust(cost)) {
                     data.addMora(15000 * count);
                     player.playNotifySound(SoundEvents.EXPERIENCE_ORB_PICKUP, SoundSource.PLAYERS, 0.8F, 1.5F);
-                    player.displayClientMessage(Component.literal("§e✦ [GANGAS DE PAIMON] §fHas canjeado §e+" + String.format("%,d", 15000 * count) + " Mora§f."), true);
+                    player.displayClientMessage(Component.translatable("awakening_system.gacha.bargain.mora_stardust", String.format(java.util.Locale.US, "%,d", 15000 * count)), true);
                 } else {
-                    player.displayClientMessage(Component.literal("§c[Gangas de Paimon] ¡No tienes suficiente Polvo Estelar (" + cost + " requerido)!"), true);
+                    player.displayClientMessage(Component.translatable("awakening_system.gacha.bargain.need_stardust", cost), true);
                     player.playNotifySound(SoundEvents.VILLAGER_NO, SoundSource.PLAYERS, 0.8F, 1.0F);
                     return;
                 }
@@ -515,9 +515,9 @@ public final class GachaManager {
                     ItemStack exp = new ItemStack(Items.EXPERIENCE_BOTTLE, 8 * count);
                     deliverGachaReward(player, data, exp);
                     player.playNotifySound(SoundEvents.EXPERIENCE_ORB_PICKUP, SoundSource.PLAYERS, 0.8F, 1.5F);
-                    player.displayClientMessage(Component.literal("§a✦ [GANGAS DE PAIMON] §fHas canjeado §a+" + (8 * count) + " Botellas de Experiencia§f."), true);
+                    player.displayClientMessage(Component.translatable("awakening_system.gacha.bargain.exp_stardust", (8 * count)), true);
                 } else {
-                    player.displayClientMessage(Component.literal("§c[Gangas de Paimon] ¡No tienes suficiente Polvo Estelar (" + cost + " requerido)!"), true);
+                    player.displayClientMessage(Component.translatable("awakening_system.gacha.bargain.need_stardust", cost), true);
                     player.playNotifySound(SoundEvents.VILLAGER_NO, SoundSource.PLAYERS, 0.8F, 1.0F);
                     return;
                 }
@@ -527,9 +527,9 @@ public final class GachaManager {
                 if (data.spendStarglitter(cost)) {
                     data.addMora(50000 * count);
                     player.playNotifySound(SoundEvents.EXPERIENCE_ORB_PICKUP, SoundSource.PLAYERS, 0.8F, 1.5F);
-                    player.displayClientMessage(Component.literal("§6✦ [GANGAS DE PAIMON] §fHas canjeado §6+" + String.format("%,d", 50000 * count) + " Mora§f."), true);
+                    player.displayClientMessage(Component.translatable("awakening_system.gacha.bargain.mora_starglitter", String.format(java.util.Locale.US, "%,d", 50000 * count)), true);
                 } else {
-                    player.displayClientMessage(Component.literal("§c[Gangas de Paimon] ¡No tienes suficiente Brillo Estelar (" + cost + " requerido)!"), true);
+                    player.displayClientMessage(Component.translatable("awakening_system.gacha.bargain.need_starglitter", cost), true);
                     player.playNotifySound(SoundEvents.VILLAGER_NO, SoundSource.PLAYERS, 0.8F, 1.0F);
                     return;
                 }
@@ -539,9 +539,9 @@ public final class GachaManager {
                 if (data.spendMora(cost)) {
                     data.addAcquaintFates(count);
                     player.playNotifySound(SoundEvents.PLAYER_LEVELUP, SoundSource.PLAYERS, 0.8F, 1.8F);
-                    player.displayClientMessage(Component.literal("§b✦ [GANGAS DE PAIMON] §fHas adquirido §b" + count + " Destino(s) del Encuentro §fpor §e" + String.format("%,d", cost) + " Mora§f."), true);
+                    player.displayClientMessage(Component.translatable("awakening_system.gacha.bargain.acquaint_mora", count, String.format(java.util.Locale.US, "%,d", cost)), true);
                 } else {
-                    player.displayClientMessage(Component.literal("§c[Gangas de Paimon] ¡No tienes suficiente Mora (" + String.format("%,d", cost) + " requerida)!"), true);
+                    player.displayClientMessage(Component.translatable("awakening_system.gacha.bargain.need_mora", String.format(java.util.Locale.US, "%,d", cost)), true);
                     player.playNotifySound(SoundEvents.VILLAGER_NO, SoundSource.PLAYERS, 0.8F, 1.0F);
                     return;
                 }

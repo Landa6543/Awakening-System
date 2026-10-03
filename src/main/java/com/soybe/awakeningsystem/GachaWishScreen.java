@@ -1140,7 +1140,7 @@ public final class GachaWishScreen extends Screen {
         int histH = 26;
         graphics.fill(histX, bottomY, histX + histW, bottomY + histH, hoverHist ? 0xFF283B68 : 0xDD141F36);
         graphics.renderOutline(histX, bottomY, histW, histH, hoverHist ? 0xFF64B5F6 : 0xFF2A3D66);
-        graphics.drawCenteredString(this.font, "✦ Historial", histX + histW / 2, bottomY + 8, hoverHist ? 0xFFFFFF : 0xBBDEFB);
+        graphics.drawCenteredString(this.font, "✦ " + Component.translatable("awakening_system.gacha.btn.history").getString(), histX + histW / 2, bottomY + 8, hoverHist ? 0xFFFFFF : 0xBBDEFB);
 
         // Botón Gangas de Paimon
         boolean hoverShop = isShopBtnHover(mouseX, mouseY);
@@ -1149,7 +1149,7 @@ public final class GachaWishScreen extends Screen {
         int shopH = 26;
         graphics.fill(shopX, bottomY, shopX + shopW, bottomY + shopH, hoverShop ? 0xFF4A1F52 : 0xDD28102E);
         graphics.renderOutline(shopX, bottomY, shopW, shopH, hoverShop ? 0xFFDA70D6 : 0xFF5C246B);
-        renderCenteredFittedText(graphics, "✦ Gangas Paimon", shopX + shopW / 2, bottomY + 8, shopW - 6, hoverShop ? 0xFFFFFF : 0xE1BEE7);
+        renderCenteredFittedText(graphics, "✦ " + Component.translatable("awakening_system.gacha.btn.shop").getString(), shopX + shopW / 2, bottomY + 8, shopW - 6, hoverShop ? 0xFFFFFF : 0xE1BEE7);
 
         // Botón Senda Divina (Sólo en Banner de Armas)
         if (activeBanner == 0) {
@@ -1159,7 +1159,9 @@ public final class GachaWishScreen extends Screen {
             int pathH = 26;
             graphics.fill(pathX, bottomY, pathX + pathW, bottomY + pathH, hoverPath ? 0xFF5D4037 : 0xDD3E2723);
             graphics.renderOutline(pathX, bottomY, pathW, pathH, hoverPath ? 0xFFFFD700 : 0xFF8D6E63);
-            String pathLabel = weaponBannerTarget > 0 ? ("✦ Senda (" + weaponBannerFatePoints + "/1)") : "✦ Senda Divina";
+            String pathLabel = weaponBannerTarget > 0
+                    ? ("✦ " + Component.translatable("awakening_system.gacha.btn.path_short").getString() + " (" + weaponBannerFatePoints + "/1)")
+                    : ("✦ " + Component.translatable("awakening_system.gacha.btn.path").getString());
             renderCenteredFittedText(graphics, pathLabel, pathX + pathW / 2, bottomY + 8, pathW - 4, hoverPath ? 0xFFFFFF : 0xFFFFD700);
         }
 
@@ -1170,7 +1172,7 @@ public final class GachaWishScreen extends Screen {
         int subspaceH = 26;
         graphics.fill(subspaceX, bottomY, subspaceX + subspaceW, bottomY + subspaceH, hoverSubspace ? 0xFF1B4F72 : 0xDD0E2E47);
         graphics.renderOutline(subspaceX, bottomY, subspaceW, subspaceH, hoverSubspace ? 0xFF5DADE2 : 0xFF2874A6);
-        renderCenteredFittedText(graphics, "✦ Subespacio", subspaceX + subspaceW / 2, bottomY + 8, subspaceW - 4, hoverSubspace ? 0xFFFFFFFF : 0xFF85C1E9);
+        renderCenteredFittedText(graphics, "✦ " + Component.translatable("awakening_system.gacha.btn.subspace").getString(), subspaceX + subspaceW / 2, bottomY + 8, subspaceW - 4, hoverSubspace ? 0xFFFFFFFF : 0xFF85C1E9);
 
         // Botones de Tirada a la Derecha
         ItemStack currentFate = (usesIntertwined && SystemItems.INTERTWINED_FATE.isBound())
@@ -1188,9 +1190,9 @@ public final class GachaWishScreen extends Screen {
             graphics.renderOutline(wish10X, bottomY - 1, wish10W, wish10H, hover10 ? 0xFFFFFFFF : 0xFFFFE082);
             if (hover10) graphics.renderOutline(wish10X - 1, bottomY - 2, wish10W + 2, wish10H + 2, 0x66FFE082);
             graphics.renderItem(currentFate, wish10X + 6, bottomY + 5);
-            graphics.drawString(this.font, "Deseo x10", wish10X + 26, bottomY + 3, 0xFFFFFFFF, true);
+            graphics.drawString(this.font, Component.translatable("awakening_system.gacha.btn.wish_10").getString(), wish10X + 26, bottomY + 3, 0xFFFFFFFF, true);
             boolean hasFates10 = acquaintFates >= 8;
-            String cost10Text = hasFates10 ? "×8 Destinos" : "1280 Primos";
+            String cost10Text = hasFates10 ? Component.translatable("awakening_system.gacha.cost_fates", 8).getString() : Component.translatable("awakening_system.gacha.cost_primos", 1280).getString();
             renderFittedText(graphics, cost10Text, wish10X + 26, bottomY + 15, wish10W - 28, hasFates10 ? 0xFF80D8FF : 0xFFFFE082, false);
 
             // Cinta de Descuento -20%
@@ -1207,9 +1209,9 @@ public final class GachaWishScreen extends Screen {
             graphics.fillGradient(wish1X, bottomY - 1, wish1X + wish1W, bottomY - 1 + wish10H, hover1 ? 0xFF2A3D66 : 0xDD14203A, hover1 ? 0xFF1B2945 : 0xDD0D1526);
             graphics.renderOutline(wish1X, bottomY - 1, wish1W, wish10H, hover1 ? 0xFFFFFFFF : 0xFF354C75);
             graphics.renderItem(currentFate, wish1X + 6, bottomY + 5);
-            graphics.drawString(this.font, "Deseo x1", wish1X + 26, bottomY + 3, 0xFFFFFFFF, true);
+            graphics.drawString(this.font, Component.translatable("awakening_system.gacha.btn.wish_1").getString(), wish1X + 26, bottomY + 3, 0xFFFFFFFF, true);
             boolean hasFates1 = (usesIntertwined ? intertwinedFates : acquaintFates) >= 1;
-            String cost1Text = hasFates1 ? "×1 Destino" : "160 Primos";
+            String cost1Text = hasFates1 ? Component.translatable("awakening_system.gacha.cost_fates", 1).getString() : Component.translatable("awakening_system.gacha.cost_primos", 160).getString();
             renderFittedText(graphics, cost1Text, wish1X + 26, bottomY + 15, wish1W - 28, hasFates1 ? 0xFF80D8FF : 0xFFFFE082, false);
 
             // Deseo x10
@@ -1217,9 +1219,9 @@ public final class GachaWishScreen extends Screen {
             graphics.renderOutline(wish10X, bottomY - 1, wish10W, wish10H, hover10 ? 0xFFFFFFFF : 0xFFFFE082);
             if (hover10) graphics.renderOutline(wish10X - 1, bottomY - 2, wish10W + 2, wish10H + 2, 0x66FFE082);
             graphics.renderItem(currentFate, wish10X + 6, bottomY + 5);
-            graphics.drawString(this.font, "Deseo x10", wish10X + 26, bottomY + 3, 0xFFFFFFFF, true);
+            graphics.drawString(this.font, Component.translatable("awakening_system.gacha.btn.wish_10").getString(), wish10X + 26, bottomY + 3, 0xFFFFFFFF, true);
             boolean hasFates10 = (usesIntertwined ? intertwinedFates : acquaintFates) >= 10;
-            String cost10Text = hasFates10 ? "×10 Destinos" : "1600 Primos";
+            String cost10Text = hasFates10 ? Component.translatable("awakening_system.gacha.cost_fates", 10).getString() : Component.translatable("awakening_system.gacha.cost_primos", 1600).getString();
             renderFittedText(graphics, cost10Text, wish10X + 26, bottomY + 15, wish10W - 28, hasFates10 ? 0xFF80D8FF : 0xFFFFE082, false);
         }
 
@@ -1262,18 +1264,24 @@ public final class GachaWishScreen extends Screen {
         // Tooltips de Cápsulas Superiores (Destinos, Protogemas, Polvo/Brillo, Mora)
         if (mouseY >= pillY && mouseY <= pillY + pillH) {
             if (mouseX >= pill1X && mouseX <= pill1X + pill1W) {
-                String fateName = usesIntertwined ? "Destino Entrelazado" : "Destino del Encuentro";
+                String fateName = usesIntertwined
+                        ? (SystemItems.INTERTWINED_FATE.isBound() ? Component.translatable(SystemItems.INTERTWINED_FATE.get().getDescriptionId()).getString() : "Intertwined Fate")
+                        : (SystemItems.ACQUAINT_FATE.isBound() ? Component.translatable(SystemItems.ACQUAINT_FATE.get().getDescriptionId()).getString() : "Acquaint Fate");
                 graphics.renderTooltip(this.font, Component.literal("§e✦ " + fateName + ": §f" + fateCount), (int) mouseX, (int) mouseY);
             } else if (mouseX >= pill2X && mouseX <= pill2X + pill2W) {
-                graphics.renderTooltip(this.font, Component.literal("§6✦ Protogemas: §f" + String.format(java.util.Locale.US, "%,d", primogems)), (int) mouseX, (int) mouseY);
+                String primoName = Component.translatable("awakening_system.gacha.currency.primogems").getString();
+                graphics.renderTooltip(this.font, Component.literal("§6✦ " + primoName + ": §f" + String.format(java.util.Locale.US, "%,d", primogems)), (int) mouseX, (int) mouseY);
             } else if (mouseX >= pill3X && mouseX <= pill3X + pill3W && pill3X > totalSubModeW + 8) {
                 if (mouseX < glitterX) {
-                    graphics.renderTooltip(this.font, Component.literal("§b✦ Polvo Estelar: §f" + String.format(java.util.Locale.US, "%,d", stardust)), (int) mouseX, (int) mouseY);
+                    String sdName = SystemItems.MASTERLESS_STARDUST.isBound() ? Component.translatable(SystemItems.MASTERLESS_STARDUST.get().getDescriptionId()).getString() : "Masterless Stardust";
+                    graphics.renderTooltip(this.font, Component.literal("§b✦ " + sdName + ": §f" + String.format(java.util.Locale.US, "%,d", stardust)), (int) mouseX, (int) mouseY);
                 } else {
-                    graphics.renderTooltip(this.font, Component.literal("§6✦ Brillo Estelar: §f" + String.format(java.util.Locale.US, "%,d", starglitter)), (int) mouseX, (int) mouseY);
+                    String sgName = SystemItems.MASTERLESS_STARGLITTER.isBound() ? Component.translatable(SystemItems.MASTERLESS_STARGLITTER.get().getDescriptionId()).getString() : "Masterless Starglitter";
+                    graphics.renderTooltip(this.font, Component.literal("§6✦ " + sgName + ": §f" + String.format(java.util.Locale.US, "%,d", starglitter)), (int) mouseX, (int) mouseY);
                 }
             } else if (mouseX >= pill4X && mouseX <= pill4X + pill4W && pill4X > totalSubModeW + 8) {
-                graphics.renderTooltip(this.font, Component.literal("§6🪙 Mora: §f" + String.format(java.util.Locale.US, "%,d", mora)), (int) mouseX, (int) mouseY);
+                String moraName = SystemItems.MORA.isBound() ? Component.translatable(SystemItems.MORA.get().getDescriptionId()).getString() : "Mora";
+                graphics.renderTooltip(this.font, Component.literal("§6🪙 " + moraName + ": §f" + String.format(java.util.Locale.US, "%,d", mora)), (int) mouseX, (int) mouseY);
             }
         }
     }
@@ -1577,7 +1585,7 @@ public final class GachaWishScreen extends Screen {
         graphics.renderOutline(mX + 2, mY + 2, mW - 4, mH - 4, 0x33FFFFFF);
 
         // Cabecera sin colisiones
-        graphics.drawString(this.font, "§d§l✦ GANGAS DE PAIMON ✦", mX + 14, mY + 12, 0xFFDA70D6, false);
+        graphics.drawString(this.font, Component.translatable("awakening_system.gacha.shop.title").getString(), mX + 14, mY + 12, 0xFFDA70D6, false);
 
         // Botón [X] Cerrar
         int closeX = mX + mW - 22;
@@ -1618,11 +1626,11 @@ public final class GachaWishScreen extends Screen {
                 SystemItems.MORA.isBound() ? new ItemStack(SystemItems.MORA.get()) : ItemStack.EMPTY,
                 new ItemStack(net.minecraft.world.item.Items.EXPERIENCE_BOTTLE)
         };
-        String[] leftNames = {
-                "1x Destino Entrelazado",
-                "1x Destino del Encuentro",
-                "15,000 Mora",
-                "8x Botellas de EXP"
+        Component[] leftNames = {
+                Component.translatable("awakening_system.gacha.shop.item.intertwined"),
+                Component.translatable("awakening_system.gacha.shop.item.acquaint"),
+                Component.translatable("awakening_system.gacha.shop.item.mora"),
+                Component.translatable("awakening_system.gacha.shop.item.exp_bottles")
         };
         int[] leftCosts = {75, 75, 15, 10};
 
@@ -1632,11 +1640,11 @@ public final class GachaWishScreen extends Screen {
                 CompanionContractItem.createContract(CompanionProfile.NOELLE),
                 CompanionContractItem.createContract(CompanionProfile.CHA_HAEIN)
         };
-        String[] rightNames = {
-                "1x Destino Entrelazado",
-                "1x Destino del Encuentro",
-                "Pacto: Noelle (4★)",
-                "Pacto: Cha Hae-In (4★)"
+        Component[] rightNames = {
+                Component.translatable("awakening_system.gacha.shop.item.intertwined"),
+                Component.translatable("awakening_system.gacha.shop.item.acquaint"),
+                Component.translatable("awakening_system.gacha.shop.item.pact_noelle"),
+                Component.translatable("awakening_system.gacha.shop.item.pact_cha")
         };
         int[] rightCosts = {5, 5, 34, 34};
 
@@ -1647,7 +1655,7 @@ public final class GachaWishScreen extends Screen {
         if (!stardustStack.isEmpty()) {
             graphics.renderItem(stardustStack, mX + 14, startY - 4);
         }
-        graphics.drawString(this.font, "Canje de Polvo Estelar (3★):", mX + 34, startY, 0x80D8FF, false);
+        graphics.drawString(this.font, Component.translatable("awakening_system.gacha.shop.stardust_section").getString(), mX + 34, startY, 0x80D8FF, false);
         for (int i = 0; i < 4; i++) {
             int y = startY + 14 + i * 48;
             int offerId = (i == 0) ? 0 : ((i == 1) ? 1 : ((i == 2) ? 6 : 7));
@@ -1661,18 +1669,20 @@ public final class GachaWishScreen extends Screen {
                 graphics.renderItem(leftItemStacks[i], mX + 18, y + 13);
             }
 
-            renderFittedText(graphics, "§f" + leftNames[i], mX + 38, y + 6, colW - 95, 0xFFFFFF, false);
-            graphics.drawString(this.font, "§bCoste: " + leftCosts[i], mX + 38, y + 24, 0x80D8FF, false);
-            int cNumW = this.font.width("§bCoste: " + leftCosts[i]);
+            renderFittedText(graphics, "§f" + leftNames[i].getString(), mX + 38, y + 6, colW - 95, 0xFFFFFF, false);
+            String costLabel = Component.translatable("awakening_system.gacha.shop.cost", leftCosts[i]).getString();
+            graphics.drawString(this.font, "§b" + costLabel, mX + 38, y + 24, 0x80D8FF, false);
+            int cNumW = this.font.width("§b" + costLabel);
+            String stardustName = Component.translatable("awakening_system.gacha.shop.stardust").getString();
             if (!stardustStack.isEmpty()) {
                 graphics.pose().pushPose();
                 graphics.pose().translate(mX + 38 + cNumW + 3, y + 22, 0);
                 graphics.pose().scale(0.7F, 0.7F, 0.7F);
                 graphics.renderItem(stardustStack, 0, 0);
                 graphics.pose().popPose();
-                graphics.drawString(this.font, "Polvo", mX + 38 + cNumW + 16, y + 24, 0x80D8FF, false);
+                graphics.drawString(this.font, stardustName, mX + 38 + cNumW + 16, y + 24, 0x80D8FF, false);
             } else {
-                graphics.drawString(this.font, "Polvo", mX + 38 + cNumW + 4, y + 24, 0x80D8FF, false);
+                graphics.drawString(this.font, stardustName, mX + 38 + cNumW + 4, y + 24, 0x80D8FF, false);
             }
 
             int bX = mX + 14 + colW - 68;
@@ -1681,7 +1691,8 @@ public final class GachaWishScreen extends Screen {
             int btnColor = canAfford ? (hoverBuy ? 0xFF3558A8 : 0xFF1B2F63) : 0xFF222233;
             graphics.fill(bX, bY, bX + 60, bY + 22, btnColor);
             graphics.renderOutline(bX, bY, 60, 22, canAfford ? (hoverBuy ? 0xFFFFFFFF : 0xFF4A7BD4) : 0xFF444455);
-            graphics.drawCenteredString(this.font, canAfford ? "Canjear" : "Falta", bX + 30, bY + 7, canAfford ? 0xFFFFFF : 0x777788);
+            String btnText = canAfford ? Component.translatable("awakening_system.gacha.shop.exchange").getString() : Component.translatable("awakening_system.gacha.shop.insufficient").getString();
+            graphics.drawCenteredString(this.font, btnText, bX + 30, bY + 7, canAfford ? 0xFFFFFF : 0x777788);
         }
 
         // Columna Derecha: Brillo Estelar
@@ -1689,7 +1700,7 @@ public final class GachaWishScreen extends Screen {
         if (!starglitterStack.isEmpty()) {
             graphics.renderItem(starglitterStack, rightColX, startY - 4);
         }
-        graphics.drawString(this.font, "Canje de Brillo Estelar (4★/5★):", rightColX + 20, startY, 0xFFE082, false);
+        graphics.drawString(this.font, Component.translatable("awakening_system.gacha.shop.starglitter_section").getString(), rightColX + 20, startY, 0xFFE082, false);
         for (int i = 0; i < 4; i++) {
             int y = startY + 14 + i * 48;
             int offerId = (i == 0) ? 2 : ((i == 1) ? 3 : ((i == 2) ? 4 : 5));
@@ -1703,18 +1714,20 @@ public final class GachaWishScreen extends Screen {
                 graphics.renderItem(rightItemStacks[i], rightColX + 4, y + 13);
             }
 
-            renderFittedText(graphics, "§f" + rightNames[i], rightColX + 24, y + 6, colW - 85, 0xFFFFFF, false);
-            graphics.drawString(this.font, "§6Coste: " + rightCosts[i], rightColX + 24, y + 24, 0xFFFFD700, false);
-            int cNumW2 = this.font.width("§6Coste: " + rightCosts[i]);
+            renderFittedText(graphics, "§f" + rightNames[i].getString(), rightColX + 24, y + 6, colW - 85, 0xFFFFFF, false);
+            String costLabel = Component.translatable("awakening_system.gacha.shop.cost", rightCosts[i]).getString();
+            graphics.drawString(this.font, "§6" + costLabel, rightColX + 24, y + 24, 0xFFFFD700, false);
+            int cNumW2 = this.font.width("§6" + costLabel);
+            String glitterName = Component.translatable("awakening_system.gacha.shop.starglitter").getString();
             if (!starglitterStack.isEmpty()) {
                 graphics.pose().pushPose();
                 graphics.pose().translate(rightColX + 24 + cNumW2 + 3, y + 22, 0);
                 graphics.pose().scale(0.7F, 0.7F, 0.7F);
                 graphics.renderItem(starglitterStack, 0, 0);
                 graphics.pose().popPose();
-                graphics.drawString(this.font, "Brillo", rightColX + 24 + cNumW2 + 16, y + 24, 0xFFFFD700, false);
+                graphics.drawString(this.font, glitterName, rightColX + 24 + cNumW2 + 16, y + 24, 0xFFFFD700, false);
             } else {
-                graphics.drawString(this.font, "Brillo", rightColX + 24 + cNumW2 + 4, y + 24, 0xFFFFD700, false);
+                graphics.drawString(this.font, glitterName, rightColX + 24 + cNumW2 + 4, y + 24, 0xFFFFD700, false);
             }
 
             int bX = rightColX + colW - 68;
@@ -1723,7 +1736,8 @@ public final class GachaWishScreen extends Screen {
             int btnColor = canAfford ? (hoverBuy ? 0xFFA07825 : 0xFF664810) : 0xFF2B2222;
             graphics.fill(bX, bY, bX + 60, bY + 22, btnColor);
             graphics.renderOutline(bX, bY, 60, 22, canAfford ? (hoverBuy ? 0xFFFFFFFF : 0xFFFFD700) : 0xFF554444);
-            graphics.drawCenteredString(this.font, canAfford ? (i >= 2 ? "Reclutar" : "Canjear") : "Falta", bX + 30, bY + 7, canAfford ? 0xFFFFD700 : 0x887777);
+            String btnText = canAfford ? (i >= 2 ? Component.translatable("awakening_system.gacha.shop.recruit").getString() : Component.translatable("awakening_system.gacha.shop.exchange").getString()) : Component.translatable("awakening_system.gacha.shop.insufficient").getString();
+            graphics.drawCenteredString(this.font, btnText, bX + 30, bY + 7, canAfford ? 0xFFFFD700 : 0x887777);
         }
 
         // Tooltips de los objetos canjeables
@@ -1754,7 +1768,7 @@ public final class GachaWishScreen extends Screen {
         graphics.renderOutline(mX + 2, mY + 2, mW - 4, mH - 4, 0x33FFE082);
 
         // Cabecera
-        graphics.drawString(this.font, "§6§l✦ SENDA DIVINA (EPITOMIZED PATH) ✦", mX + 14, mY + 12, 0xFFFFD700, false);
+        graphics.drawString(this.font, Component.translatable("awakening_system.gacha.path.title").getString(), mX + 14, mY + 12, 0xFFFFD700, false);
 
         // Botón [X] Cerrar
         int closeX = mX + mW - 22;
@@ -1767,16 +1781,16 @@ public final class GachaWishScreen extends Screen {
         graphics.fill(mX + 12, statY, mX + mW - 12, statY + 36, 0xFF2A1C0A);
         graphics.renderOutline(mX + 12, statY, mW - 24, 36, 0xFF5D4037);
 
-        String fateStr = "§fPuntos de Destino acumulados: §e" + weaponBannerFatePoints + " / 1 §7(Máx. 1 punto)";
+        String fateStr = Component.translatable("awakening_system.gacha.path.fate_points", weaponBannerFatePoints).getString();
         graphics.drawString(this.font, fateStr, mX + 18, statY + 6, 0xFFFFFF, false);
 
         String statusNotice;
         if (weaponBannerTarget <= 0) {
-            statusNotice = "§7No has fijado ningún rumbo todavía. ¡Elige un arma para comenzar!";
+            statusNotice = Component.translatable("awakening_system.gacha.path.no_target").getString();
         } else if (weaponBannerFatePoints >= 1) {
-            statusNotice = "§a✦ ¡GARANTÍA ACTIVA! Tu siguiente arma 5★ será la que elegiste al 100%.";
+            statusNotice = Component.translatable("awakening_system.gacha.path.guaranteed").getString();
         } else {
-            statusNotice = "§eSi tu siguiente arma 5★ no es la elegida, obtendrás 1 Punto de Destino.";
+            statusNotice = Component.translatable("awakening_system.gacha.path.not_guaranteed").getString();
         }
         graphics.drawString(this.font, statusNotice, mX + 18, statY + 20, 0xFFFFFF, false);
 
@@ -1797,7 +1811,7 @@ public final class GachaWishScreen extends Screen {
         }
 
         // Pie explicativo
-        graphics.drawCenteredString(this.font, "§8Al obtener el arma fijada, los puntos de destino se reiniciarán a 0.", mX + mW / 2, mY + mH - 14, 0x888888);
+        graphics.drawCenteredString(this.font, Component.translatable("awakening_system.gacha.path.footer").getString(), mX + mW / 2, mY + mH - 14, 0x888888);
     }
 
     private void renderPathWeaponCard(GuiGraphics graphics, ItemStack weapon, int targetIdx, int x, int y, int w, int h, int mouseX, int mouseY) {
@@ -1819,7 +1833,7 @@ public final class GachaWishScreen extends Screen {
 
         // Nombre
         renderCenteredFittedText(graphics, weapon.getHoverName().getString(), x + w / 2, y + 68, w - 12, isSelected ? 0xFFFFD700 : 0xFFFFFF);
-        graphics.drawCenteredString(this.font, "§6★★★★★ Arma", x + w / 2, y + 80, 0xFFFFD700);
+        graphics.drawCenteredString(this.font, Component.translatable("awakening_system.gacha.path.weapon_5star").getString(), x + w / 2, y + 80, 0xFFFFD700);
 
         // Botón Fijar Rumbo
         int btnW = 120;
@@ -1831,11 +1845,11 @@ public final class GachaWishScreen extends Screen {
         if (isSelected) {
             graphics.fill(btnX, btnY, btnX + btnW, btnY + btnH, 0xFF2E7D32);
             graphics.renderOutline(btnX, btnY, btnW, btnH, 0xFF81C784);
-            graphics.drawCenteredString(this.font, "§a✔ Rumbo Fijado", btnX + btnW / 2, btnY + 6, 0xFFFFFF);
+            graphics.drawCenteredString(this.font, Component.translatable("awakening_system.gacha.path.selected").getString(), btnX + btnW / 2, btnY + 6, 0xFFFFFF);
         } else {
             graphics.fill(btnX, btnY, btnX + btnW, btnY + btnH, hoverBtn ? 0xFFB8860B : 0xFF5D4037);
             graphics.renderOutline(btnX, btnY, btnW, btnH, hoverBtn ? 0xFFFFD700 : 0xFF8D6E63);
-            graphics.drawCenteredString(this.font, "✦ Fijar Rumbo", btnX + btnW / 2, btnY + 6, hoverBtn ? 0xFFFFFF : 0xFFE082);
+            graphics.drawCenteredString(this.font, Component.translatable("awakening_system.gacha.path.select_btn").getString(), btnX + btnW / 2, btnY + 6, hoverBtn ? 0xFFFFFF : 0xFFE082);
         }
     }
 
@@ -2109,10 +2123,10 @@ public final class GachaWishScreen extends Screen {
         int paimonW = Math.min(520, getVirtW() - 32);
         int paimonX = getVirtW() / 2 - paimonW / 2;
         String paimonReaction = highestWonRarity == 5
-                ? "§d§l[Paimon] §f\"¡¡INCREÍBLE VIAJERO!! ¡¡UNA RECOMPENSA DE 5 ESTRELLAS!! ¡Paimon sabía que hoy triunfarías!\""
+                ? Component.translatable("awakening_system.gacha.paimon.reaction_5star").getString()
                 : (highestWonRarity == 4
-                ? "§d§l[Paimon] §f\"¡Vaya, un objeto o compañero de 4 estrellas! ¡Nada mal, seguro te servirá mucho!\""
-                : "§d§l[Paimon] §f\"¡No te desanimes! ¡El pity está acumulado y la próxima tirada será la dorada!\"");
+                ? Component.translatable("awakening_system.gacha.paimon.reaction_4star").getString()
+                : Component.translatable("awakening_system.gacha.paimon.reaction_3star").getString());
         graphics.fill(paimonX, paimonSummaryY, paimonX + paimonW, paimonSummaryY + 24, 0xFF140D26);
         graphics.renderOutline(paimonX, paimonSummaryY, paimonW, 24, highestWonRarity == 5 ? 0xFFFFD700 : 0xFFDA70D6);
         renderFittedText(graphics, paimonReaction, paimonX + 12, paimonSummaryY + 8, paimonW - 24, 0xFFFFFF, false);

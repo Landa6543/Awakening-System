@@ -47,7 +47,7 @@ public class MoraPouchItem extends Item {
                 sl.sendParticles(ParticleTypes.HAPPY_VILLAGER, sp.getX(), sp.getY() + 1.0D, sp.getZ(), 20, 0.4D, 0.6D, 0.4D, 0.1D);
             }
             sp.playNotifySound(ModSounds.GENSHIN_CHEST_OPEN.get(), SoundSource.PLAYERS, 1.0F, 1.0F);
-            sp.displayClientMessage(Component.literal("§6§l✦ [" + tierTitle.toUpperCase() + "] §f¡Has recibido §e+" + String.format("%,d", totalMora) + " Mora §f(Saldo: §6" + String.format("%,d", data.mora()) + "§f)!"), true);
+            sp.displayClientMessage(Component.translatable("awakening_system.item.mora_pouch.opened", Component.translatable(this.getDescriptionId()).getString().toUpperCase(), String.format(java.util.Locale.US, "%,d", totalMora), String.format(java.util.Locale.US, "%,d", data.mora())), true);
 
             return InteractionResultHolder.consume(stack);
         }
@@ -56,9 +56,9 @@ public class MoraPouchItem extends Item {
 
     @Override
     public void appendHoverText(ItemStack stack, TooltipContext context, List<Component> tooltip, TooltipFlag flag) {
-        tooltip.add(Component.literal("§6✦ " + tierTitle).withStyle(ChatFormatting.GOLD, ChatFormatting.BOLD));
-        tooltip.add(Component.literal("§7Contiene §e" + String.format("%,d", moraAmount) + " Mora §7acuñada por Morax.").withStyle(ChatFormatting.GRAY));
-        tooltip.add(Component.literal("§a▸ Clic derecho: §fAbrir y depositar en tu monedero del Sistema.").withStyle(ChatFormatting.GREEN));
-        tooltip.add(Component.literal("§a▸ Shift + Clic derecho: §fAbrir todo el lote de golpe.").withStyle(ChatFormatting.DARK_GREEN));
+        tooltip.add(Component.translatable(this.getDescriptionId()).withStyle(ChatFormatting.GOLD, ChatFormatting.BOLD));
+        tooltip.add(Component.translatable("awakening_system.item.mora_pouch.desc", String.format(java.util.Locale.US, "%,d", moraAmount)).withStyle(ChatFormatting.GRAY));
+        tooltip.add(Component.translatable("awakening_system.item.mora_pouch.use1").withStyle(ChatFormatting.GREEN));
+        tooltip.add(Component.translatable("awakening_system.item.mora_pouch.use2").withStyle(ChatFormatting.DARK_GREEN));
     }
 }

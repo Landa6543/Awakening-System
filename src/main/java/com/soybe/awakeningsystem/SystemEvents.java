@@ -186,6 +186,7 @@ public final class SystemEvents {
             if (restored) {
                 newPlayer.getPersistentData().putBoolean("dungeon_loot_preserved", true);
             }
+            com.soybe.awakeningsystem.compat.CuriosCompatHandler.restoreCuriosOnRespawn(oldPlayer, newPlayer);
         }
     }
 
@@ -246,6 +247,7 @@ public final class SystemEvents {
                 player.displayClientMessage(Component.translatable("awakening_system.dungeon.inventory_preserved"), false);
                 player.playNotifySound(SoundEvents.PLAYER_LEVELUP, SoundSource.PLAYERS, 0.8F, 1.2F);
             }
+            com.soybe.awakeningsystem.compat.CuriosCompatHandler.restoreCuriosOnRespawn(player, player);
             refreshPlayer(player);
             player.setHealth(player.getMaxHealth());
             data.setMana(data.maxMana());
@@ -982,6 +984,7 @@ public final class SystemEvents {
                 }
                 SAVED_DUNGEON_DEATH_INVENTORIES.put(player.getUUID(), saved);
                 player.getPersistentData().put("dungeon_preserved_inventory", listTag);
+                com.soybe.awakeningsystem.compat.CuriosCompatHandler.saveCuriosOnDeath(player);
             }
         }
         if (event.getSource().getEntity() instanceof ServerPlayer player && event.getEntity() != player) {

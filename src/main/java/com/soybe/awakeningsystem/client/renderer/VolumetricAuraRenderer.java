@@ -120,11 +120,13 @@ public final class VolumetricAuraRenderer {
                 240, 248, 255, 140, true, true);
 
         // 3. Manto exterior ondulante de condensación de Qi (Celeste translúcido)
+        poseStack.pushPose();
         poseStack.mulPose(Axis.YP.rotationDegrees(-time * 1.2F));
         renderBodyAuraShroud(poseStack, kiBuffer, 1.15F, 1.80F, -time * 0.05F, 0.04F,
                 160, 230, 255, 90, true, true);
+        poseStack.popPose();
 
-        // 4. Círculo Mágico de Cultivo Murim en el suelo (sincronizado al 100% con la cúpula de Ki)
+        // 4. Círculo Mágico de Cultivo Murim en el suelo (elevado de forma segura para eliminar z-fighting y parpadeos)
         renderCultivationMurimCircle(poseStack, bufferSource, time);
 
         poseStack.popPose();
@@ -132,22 +134,29 @@ public final class VolumetricAuraRenderer {
 
     /**
      * Renderiza la formación de cultivo Murim en el suelo con doble sello concéntrico contra-rotante.
+     * Los sellos se sitúan con holgura vertical sobre el terreno para prevenir parpadeos (Z-fighting).
      */
     private static void renderCultivationMurimCircle(PoseStack poseStack, net.minecraft.client.renderer.MultiBufferSource bufferSource, float time) {
         poseStack.pushPose();
         VertexConsumer murimBuffer = bufferSource.getBuffer(RenderType.entityTranslucent(com.soybe.awakeningsystem.AwakeningSystemClient.MAGIC_CIRCLE_MURIM));
 
         float outerRadius = 1.95F + 0.05F * (float) Math.sin(time * 0.08F);
-        float y = 0.025F;
+        // Elevación segura a 0.065 bloques sobre el suelo para evitar coplanaridad con bloques de césped
+        float y = 0.065F;
 
         // Sello exterior giratorio (Verde espiritual esmeralda / turquesa celestial)
+        poseStack.pushPose();
         poseStack.mulPose(Axis.YP.rotationDegrees(time * 0.9F));
         renderGroundDiscDirect(poseStack, murimBuffer, outerRadius, y, 90, 245, 175, 210);
+        poseStack.popPose();
 
         // Sello interior concéntrico contra-rotante (Blanco perlado / celeste)
+        // Separación vertical de +0.02 bloques para evitar interferencia entre ambos sellos en rotación
+        poseStack.pushPose();
         poseStack.mulPose(Axis.YP.rotationDegrees(-time * 2.2F));
         float innerRadius = outerRadius * 0.65F;
-        renderGroundDiscDirect(poseStack, murimBuffer, innerRadius, y + 0.005F, 190, 255, 240, 230);
+        renderGroundDiscDirect(poseStack, murimBuffer, innerRadius, y + 0.02F, 190, 255, 240, 230);
+        poseStack.popPose();
 
         poseStack.popPose();
     }
@@ -155,6 +164,7 @@ public final class VolumetricAuraRenderer {
     private static void renderGroundDiscDirect(PoseStack poseStack, VertexConsumer builder, float radius, float y, int r, int g, int b, int a) {
         Matrix4f matrix = poseStack.last().pose();
 
+        // Cara superior visible hacia arriba
         builder.addVertex(matrix, -radius, y, -radius).setColor(r, g, b, a).setUv(0.0F, 0.0F)
                 .setOverlay(OverlayTexture.NO_OVERLAY).setLight(LightTexture.FULL_BRIGHT).setNormal(0, 1, 0);
         builder.addVertex(matrix, radius, y, -radius).setColor(r, g, b, a).setUv(1.0F, 0.0F)
@@ -164,13 +174,15 @@ public final class VolumetricAuraRenderer {
         builder.addVertex(matrix, -radius, y, radius).setColor(r, g, b, a).setUv(0.0F, 1.0F)
                 .setOverlay(OverlayTexture.NO_OVERLAY).setLight(LightTexture.FULL_BRIGHT).setNormal(0, 1, 0);
 
-        builder.addVertex(matrix, -radius, y, radius).setColor(r, g, b, a).setUv(0.0F, 1.0F)
+        // Cara inferior visible si la cámara se encuentra bajo el suelo
+        float yDown = y - 0.002F;
+        builder.addVertex(matrix, -radius, yDown, radius).setColor(r, g, b, a).setUv(0.0F, 1.0F)
                 .setOverlay(OverlayTexture.NO_OVERLAY).setLight(LightTexture.FULL_BRIGHT).setNormal(0, -1, 0);
-        builder.addVertex(matrix, radius, y, radius).setColor(r, g, b, a).setUv(1.0F, 1.0F)
+        builder.addVertex(matrix, radius, yDown, radius).setColor(r, g, b, a).setUv(1.0F, 1.0F)
                 .setOverlay(OverlayTexture.NO_OVERLAY).setLight(LightTexture.FULL_BRIGHT).setNormal(0, -1, 0);
-        builder.addVertex(matrix, radius, y, -radius).setColor(r, g, b, a).setUv(1.0F, 0.0F)
+        builder.addVertex(matrix, radius, yDown, -radius).setColor(r, g, b, a).setUv(1.0F, 0.0F)
                 .setOverlay(OverlayTexture.NO_OVERLAY).setLight(LightTexture.FULL_BRIGHT).setNormal(0, -1, 0);
-        builder.addVertex(matrix, -radius, y, -radius).setColor(r, g, b, a).setUv(0.0F, 0.0F)
+        builder.addVertex(matrix, -radius, yDown, -radius).setColor(r, g, b, a).setUv(0.0F, 0.0F)
                 .setOverlay(OverlayTexture.NO_OVERLAY).setLight(LightTexture.FULL_BRIGHT).setNormal(0, -1, 0);
     }
 
