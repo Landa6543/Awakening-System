@@ -111,6 +111,7 @@ public final class AwakeningSystemMod {
             NeoForge.EVENT_BUS.addListener(AwakeningSystemClient::registerClientCommands);
             NeoForge.EVENT_BUS.addListener(AwakeningSystemClient::onMouseButtonPre);
             NeoForge.EVENT_BUS.addListener(AwakeningSystemClient::onItemTooltip);
+            NeoForge.EVENT_BUS.addListener(AwakeningSystemClient::onRenderHand);
         }
         NeoForge.EVENT_BUS.register(SystemEvents.class);
         NeoForge.EVENT_BUS.addListener(SystemCommands::register);

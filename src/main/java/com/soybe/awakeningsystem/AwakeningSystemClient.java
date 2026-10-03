@@ -608,6 +608,7 @@ public final class AwakeningSystemClient {
             }
         }
         if (minecraft.player != null) {
+            com.soybe.awakeningsystem.client.renderer.SwordAuraRenderer.tickParticles(minecraft);
             SystemData clientData = minecraft.player.getData(AwakeningSystemMod.PLAYER_SYSTEM);
             clientData.tickCombat();
 
@@ -1647,6 +1648,13 @@ public final class AwakeningSystemClient {
     }
 
     public static void onRenderLivingPost(net.neoforged.neoforge.client.event.RenderLivingEvent.Post<?, ?> event) {
+        if (event.getEntity() instanceof net.minecraft.world.entity.player.Player player) {
+            com.soybe.awakeningsystem.client.renderer.SwordAuraRenderer.renderThirdPerson(player, event);
+        }
+    }
+
+    public static void onRenderHand(net.neoforged.neoforge.client.event.RenderHandEvent event) {
+        com.soybe.awakeningsystem.client.renderer.SwordAuraRenderer.renderFirstPerson(event);
     }
 
     public record PlayerBadgeData(

@@ -87,16 +87,17 @@ public final class VolumetricAuraRenderer {
             boolean inCombatTrance = player.getPersistentData().getLong("system_trance_until") > mc.level.getGameTime();
             boolean inSkillBurst = player.getPersistentData().getLong("active_skill_aura_until") > mc.level.getGameTime();
 
-            // Determinar estilo de aura predominante
+            // Determinar estilo de aura corporal (solo meditador o trance activo, las armas tienen su propio Qi de espada 3D)
             if (isMeditating) {
                 // 1. AURA DE CULTIVO KI (Manto espiritual completo en cúpula que envuelve al meditador de pies a cabeza)
                 renderKiCultivationAura(poseStack, bufferSource, dx, dy, dz, time);
-            } else if (hasCreatorSword) {
-                // 2. AURA CELESTIAL DEL CREADOR (Permanente al empuñar el mandoble mítico, intensificada en combate)
-                renderCreatorDivineAura(poseStack, bufferSource, dx, dy, dz, time, inCombatTrance || inSkillBurst);
             } else if (inCombatTrance || inSkillBurst) {
-                // 3. AURA DE HABILIDAD DESPIERTA / TRANCE (Manto etéreo azul ceñido al cuerpo)
-                renderAwakenedSkillAura(poseStack, bufferSource, dx, dy, dz, time);
+                // 2. AURA DE HABILIDAD DESPIERTA / TRANCE (Durante habilidades activas)
+                if (hasCreatorSword) {
+                    renderCreatorDivineAura(poseStack, bufferSource, dx, dy, dz, time, true);
+                } else {
+                    renderAwakenedSkillAura(poseStack, bufferSource, dx, dy, dz, time);
+                }
             }
         }
     }
