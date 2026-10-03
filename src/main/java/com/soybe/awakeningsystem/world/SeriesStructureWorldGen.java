@@ -1,23 +1,37 @@
 package com.soybe.awakeningsystem.world;
 
+import com.soybe.awakeningsystem.AwakeningSystemMod;
+import com.soybe.awakeningsystem.entity.ModEntities;
+import com.soybe.awakeningsystem.entity.NpcProfile;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Holder;
 import net.minecraft.core.HolderLookup;
+import net.minecraft.core.registries.Registries;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.nbt.ListTag;
+import net.minecraft.nbt.NbtAccounter;
+import net.minecraft.nbt.NbtIo;
 import net.minecraft.nbt.Tag;
+import net.minecraft.resources.ResourceLocation;
 import net.minecraft.server.MinecraftServer;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.tags.BlockTags;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.level.biome.Biome;
 import net.minecraft.world.level.block.Blocks;
+import net.minecraft.world.level.block.Mirror;
+import net.minecraft.world.level.block.Rotation;
 import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.level.levelgen.Heightmap;
+import net.minecraft.world.level.levelgen.structure.templatesystem.StructurePlaceSettings;
+import net.minecraft.world.level.levelgen.structure.templatesystem.StructureTemplate;
+import net.minecraft.world.level.levelgen.structure.templatesystem.StructureTemplateManager;
 import net.minecraft.world.level.saveddata.SavedData;
 
+import java.io.InputStream;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Optional;
 
 public final class SeriesStructureWorldGen {
     private SeriesStructureWorldGen() {}
@@ -179,12 +193,85 @@ public final class SeriesStructureWorldGen {
         }
     }
 
+    public static boolean placeSeriesNbtStructure(ServerLevel level, BlockPos center, String templateName, int clearRadiusX, int clearHeightY, int clearRadiusZ, Runnable fallback) {
+        try {
+            ResourceLocation id = ResourceLocation.fromNamespaceAndPath(AwakeningSystemMod.MOD_ID, templateName);
+            StructureTemplateManager stm = level.getStructureManager();
+            Optional<StructureTemplate> opt = stm.get(id);
+
+            StructureTemplate template = null;
+            if (opt.isPresent()) {
+                template = opt.get();
+            } else {
+                String[] paths = {
+                        "/data/awakening_system/structures/" + templateName + ".nbt",
+                        "/data/awakening_system/structure/" + templateName + ".nbt"
+                };
+                for (String p : paths) {
+                    try (InputStream in = SeriesStructureWorldGen.class.getResourceAsStream(p)) {
+                        if (in != null) {
+                            CompoundTag tag = NbtIo.readCompressed(in, NbtAccounter.unlimitedHeap());
+                            template = new StructureTemplate();
+                            template.load(level.holderLookup(Registries.BLOCK), tag);
+                            break;
+                        }
+                    } catch (Exception ignored) {}
+                }
+            }
+
+            if (template != null) {
+                net.minecraft.core.Vec3i size = template.getSize();
+                int offX = -size.getX() / 2;
+                int offZ = -size.getZ() / 2;
+                BlockPos origin = center.offset(offX, 0, offZ);
+
+                // 1. Limpiar vegetación circundante
+                clearStructureVegetation(level, center, Math.max(clearRadiusX, size.getX() / 2 + 1), Math.max(clearHeightY, size.getY() + 2), Math.max(clearRadiusZ, size.getZ() / 2 + 1));
+
+                // 2. Cimientos para terrenos irregulares
+                for (int x = 0; x < size.getX(); x++) {
+                    for (int z = 0; z < size.getZ(); z++) {
+                        BlockPos colPos = origin.offset(x, -1, z);
+                        for (int dy = 0; dy <= 6; dy++) {
+                            BlockPos downPos = colPos.below(dy);
+                            BlockState bs = level.getBlockState(downPos);
+                            if (bs.isAir() || bs.is(BlockTags.REPLACEABLE) || bs.is(BlockTags.LEAVES) || !bs.getFluidState().isEmpty()) {
+                                level.setBlock(downPos, Blocks.COBBLESTONE.defaultBlockState(), 2);
+                            } else {
+                                break;
+                            }
+                        }
+                    }
+                }
+
+                // 3. Colocación limpia con entidades y bloques especiales
+                StructurePlaceSettings settings = new StructurePlaceSettings()
+                        .setIgnoreEntities(false)
+                        .setKnownShape(true)
+                        .setMirror(Mirror.NONE)
+                        .setRotation(Rotation.NONE);
+
+                template.placeInWorld(level, origin, origin, settings, level.getRandom(), 2 | 16);
+                return true;
+            }
+        } catch (Exception e) {
+            AwakeningSystemMod.LOGGER.error("Error al colocar estructura NBT {}: {}", templateName, e.getMessage());
+        }
+
+        fallback.run();
+        return true;
+    }
+
     public static boolean generateStructure(ServerLevel level, BlockPos pos, String structureType) {
         String type = structureType.toLowerCase(java.util.Locale.ROOT);
         switch (type) {
             case "solo_leveling", "solo", "jinwoo", "hunter" -> {
-                clearStructureVegetation(level, pos, 9, 12, 9);
-                SeriesStructureBuilder.buildHunterOffice(level, pos);
+                placeSeriesNbtStructure(level, pos, "hunter_office", 9, 12, 9, () -> {
+                    clearStructureVegetation(level, pos, 9, 12, 9);
+                    SeriesStructureBuilder.buildHunterOffice(level, pos);
+                });
+                SeriesStructureBuilder.spawnNpcIfAbsent(level, new BlockPos(pos.getX(), pos.getY() + 1, pos.getZ() + 4), ModEntities.SUNG_JINWOO.get(), NpcProfile.SUNG_JINWOO);
+                SeriesStructureBuilder.spawnNpcIfAbsent(level, new BlockPos(pos.getX() + 4, pos.getY() + 1, pos.getZ() - 3), ModEntities.CHA_HAEIN.get(), NpcProfile.CHA_HAEIN);
                 recordPlaced(level, "solo_leveling", pos);
                 return true;
             }
@@ -193,49 +280,73 @@ public final class SeriesStructureWorldGen {
                 int actualY = pos.getY() > 45 ? Math.min(25, pos.getY() - 35) : pos.getY();
                 if (actualY < 8) actualY = 15;
                 BlockPos subwayPos = new BlockPos(pos.getX(), actualY, pos.getZ());
-                SeriesStructureBuilder.buildSubwayCarriage(level, subwayPos);
+                placeSeriesNbtStructure(level, subwayPos, "orv_subway_carriage", 8, 10, 10, () -> SeriesStructureBuilder.buildSubwayCarriage(level, subwayPos));
+                SeriesStructureBuilder.spawnNpcIfAbsent(level, new BlockPos(subwayPos.getX(), subwayPos.getY() + 3, subwayPos.getZ() - 2), ModEntities.KIM_DOKJA.get(), NpcProfile.KIM_DOKJA);
+                SeriesStructureBuilder.spawnNpcIfAbsent(level, new BlockPos(subwayPos.getX() + 1, subwayPos.getY() + 3, subwayPos.getZ() + 2), ModEntities.YOO_JOONGHYUK.get(), NpcProfile.YOO_JOONGHYUK);
                 recordPlaced(level, "orv", subwayPos);
                 return true;
             }
             case "estate", "lloyd", "frontera", "engineering" -> {
-                clearStructureVegetation(level, pos, 14, 20, 14);
-                SeriesStructureBuilder.buildFronteraEstate(level, pos);
+                placeSeriesNbtStructure(level, pos, "frontera_estate", 14, 20, 14, () -> {
+                    clearStructureVegetation(level, pos, 14, 20, 14);
+                    SeriesStructureBuilder.buildFronteraEstate(level, pos);
+                });
+                SeriesStructureBuilder.spawnNpcIfAbsent(level, new BlockPos(pos.getX() - 4, pos.getY() + 1, pos.getZ() + 3), ModEntities.LLOYD_FRONTERA.get(), NpcProfile.LLOYD_FRONTERA);
+                SeriesStructureBuilder.spawnNpcIfAbsent(level, new BlockPos(pos.getX() + 4, pos.getY() + 1, pos.getZ() - 3), ModEntities.JAVIER_ASRAHAN.get(), NpcProfile.JAVIER_ASRAHAN);
                 recordPlaced(level, "estate", pos);
                 return true;
             }
             case "nano", "nano_machine", "cult", "demon" -> {
-                clearStructureVegetation(level, pos, 11, 30, 11);
-                SeriesStructureBuilder.buildDemonPagoda(level, pos);
+                placeSeriesNbtStructure(level, pos, "demon_pagoda", 11, 30, 11, () -> {
+                    clearStructureVegetation(level, pos, 11, 30, 11);
+                    SeriesStructureBuilder.buildDemonPagoda(level, pos);
+                });
+                SeriesStructureBuilder.spawnNpcIfAbsent(level, new BlockPos(pos.getX(), pos.getY() + 2, pos.getZ() + 2), ModEntities.CHEON_YEOWOON.get(), NpcProfile.CHEON_YEOWOON);
                 recordPlaced(level, "nano", pos);
                 return true;
             }
             case "tbate", "arthur", "aether" -> {
-                clearStructureVegetation(level, pos, 11, 16, 11);
-                SeriesStructureBuilder.buildAetherSanctuary(level, pos);
+                placeSeriesNbtStructure(level, pos, "aether_sanctuary", 11, 16, 11, () -> {
+                    clearStructureVegetation(level, pos, 11, 16, 11);
+                    SeriesStructureBuilder.buildAetherSanctuary(level, pos);
+                });
+                SeriesStructureBuilder.spawnNpcIfAbsent(level, new BlockPos(pos.getX(), pos.getY() + 1, pos.getZ() + 2), ModEntities.ARTHUR_LEYWIN.get(), NpcProfile.ARTHUR_LEYWIN);
                 recordPlaced(level, "tbate", pos);
                 return true;
             }
             case "ranker", "second_life", "slr", "cain", "yeonwoo", "tower", "obelisk" -> {
-                clearStructureVegetation(level, pos, 12, 40, 12);
-                SeriesStructureBuilder.buildRankerTower(level, pos);
+                placeSeriesNbtStructure(level, pos, "ranker_tower", 12, 40, 12, () -> {
+                    clearStructureVegetation(level, pos, 12, 40, 12);
+                    SeriesStructureBuilder.buildRankerTower(level, pos);
+                });
+                SeriesStructureBuilder.spawnNpcIfAbsent(level, new BlockPos(pos.getX(), pos.getY() + 2, pos.getZ() + 2), ModEntities.CHA_YEONWOO.get(), NpcProfile.CHA_YEONWOO);
                 recordPlaced(level, "ranker", pos);
                 return true;
             }
             case "mount_hua", "chung_myung", "plum", "hua", "mount_hua_pavilion" -> {
-                clearStructureVegetation(level, pos, 11, 18, 11);
-                SeriesStructureBuilder.buildMountHuaPavilion(level, pos);
+                placeSeriesNbtStructure(level, pos, "mount_hua_pavilion", 11, 18, 11, () -> {
+                    clearStructureVegetation(level, pos, 11, 18, 11);
+                    SeriesStructureBuilder.buildMountHuaPavilion(level, pos);
+                });
+                SeriesStructureBuilder.spawnNpcIfAbsent(level, new BlockPos(pos.getX(), pos.getY() + 2, pos.getZ() + 1), ModEntities.CHUNG_MYUNG.get(), NpcProfile.CHUNG_MYUNG);
                 recordPlaced(level, "mount_hua", pos);
                 return true;
             }
             case "valter", "hanbin", "barbarian", "rock_dimension", "valter_camp", "sword_king" -> {
-                clearStructureVegetation(level, pos, 12, 14, 12);
-                SeriesStructureBuilder.buildValterCamp(level, pos);
+                placeSeriesNbtStructure(level, pos, "valter_camp", 12, 14, 12, () -> {
+                    clearStructureVegetation(level, pos, 12, 14, 12);
+                    SeriesStructureBuilder.buildValterCamp(level, pos);
+                });
+                SeriesStructureBuilder.spawnNpcIfAbsent(level, new BlockPos(pos.getX() + 2, pos.getY() + 2, pos.getZ() - 1), ModEntities.RYU_HANBIN.get(), NpcProfile.RYU_HANBIN);
                 recordPlaced(level, "valter", pos);
                 return true;
             }
             case "tower_of_god", "baam", "shinsoo", "floor_of_tests", "tog", "shinsoo_shrine" -> {
-                clearStructureVegetation(level, pos, 12, 18, 12);
-                SeriesStructureBuilder.buildShinsooShrine(level, pos);
+                placeSeriesNbtStructure(level, pos, "shinsoo_shrine", 12, 18, 12, () -> {
+                    clearStructureVegetation(level, pos, 12, 18, 12);
+                    SeriesStructureBuilder.buildShinsooShrine(level, pos);
+                });
+                SeriesStructureBuilder.spawnNpcIfAbsent(level, new BlockPos(pos.getX(), pos.getY() + 3, pos.getZ() + 1), ModEntities.TWENTY_FIFTH_BAAM.get(), NpcProfile.TWENTY_FIFTH_BAAM);
                 recordPlaced(level, "tower_of_god", pos);
                 return true;
             }
