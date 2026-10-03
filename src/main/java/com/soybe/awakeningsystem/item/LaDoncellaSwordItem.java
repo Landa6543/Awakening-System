@@ -89,8 +89,8 @@ public class LaDoncellaSwordItem extends SwordItem implements AwakeningWeaponIte
                     sl.sendParticles(ParticleTypes.CHERRY_LEAVES, sp.getX(), sp.getY() + 1.2D, sp.getZ(), 30, 1.2D, 0.8D, 1.2D, 0.08D);
                     sl.sendParticles(ParticleTypes.LARGE_SMOKE, sp.getX(), sp.getY() + 0.5D, sp.getZ(), 25, 1.0D, 0.6D, 1.0D, 0.08D);
 
-                    sp.addEffect(new MobEffectInstance(MobEffects.DAMAGE_BOOST, 240, 2, false, true)); // Fuerza III
-                    sp.addEffect(new MobEffectInstance(MobEffects.ABSORPTION, 360, 2, false, true));
+                    sp.addEffect(new MobEffectInstance(MobEffects.DAMAGE_BOOST, 240, 2, false, false, true)); // Fuerza III (sin remolinos)
+                    sp.addEffect(new MobEffectInstance(MobEffects.ABSORPTION, 360, 2, false, false, true)); // Absorción (sin remolinos)
 
                     sp.displayClientMessage(Component.literal("§4§l🌹 [LA DONCELLA] §c¡El Trono de Ceniza despierta bajo la Luna Carmesí! Las espinas han brotado."), true);
                 } else {
@@ -192,9 +192,9 @@ public class LaDoncellaSwordItem extends SwordItem implements AwakeningWeaponIte
                 sp.removeEffect(MobEffects.WEAKNESS);
                 sp.removeEffect(MobEffects.BLINDNESS);
 
-                sp.addEffect(new MobEffectInstance(MobEffects.MOVEMENT_SPEED, 220, 1, false, true)); // Velocidad II
-                sp.addEffect(new MobEffectInstance(MobEffects.DAMAGE_RESISTANCE, 220, 1, false, true)); // Resistencia II
-                sp.addEffect(new MobEffectInstance(MobEffects.REGENERATION, 160, 1, false, true)); // Regeneración II
+                sp.addEffect(new MobEffectInstance(MobEffects.MOVEMENT_SPEED, 220, 1, false, false, true)); // Velocidad II (sin remolinos)
+                sp.addEffect(new MobEffectInstance(MobEffects.DAMAGE_RESISTANCE, 220, 1, false, false, true)); // Resistencia II (sin remolinos)
+                sp.addEffect(new MobEffectInstance(MobEffects.REGENERATION, 160, 1, false, false, true)); // Regeneración II (sin remolinos)
 
                 sp.displayClientMessage(Component.literal("§d§l✦ [FRAGANCIA DEL SILENCIO] §fLa fragancia purifica tu espíritu y bendice tus sentidos (65 daño en cono)."), true);
                 return InteractionResultHolder.consume(stack);

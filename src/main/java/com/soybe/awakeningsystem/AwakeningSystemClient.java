@@ -1647,16 +1647,6 @@ public final class AwakeningSystemClient {
         }
     }
 
-    public static void onRenderLivingPost(net.neoforged.neoforge.client.event.RenderLivingEvent.Post<?, ?> event) {
-        if (event.getEntity() instanceof net.minecraft.world.entity.player.Player player) {
-            com.soybe.awakeningsystem.client.renderer.SwordAuraRenderer.renderThirdPerson(player, event);
-        }
-    }
-
-    public static void onRenderHand(net.neoforged.neoforge.client.event.RenderHandEvent event) {
-        com.soybe.awakeningsystem.client.renderer.SwordAuraRenderer.renderFirstPerson(event);
-    }
-
     public record PlayerBadgeData(
             java.util.UUID playerId,
             String hunterClass,

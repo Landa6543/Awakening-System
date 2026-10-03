@@ -103,7 +103,6 @@ public final class AwakeningSystemMod {
             NeoForge.EVENT_BUS.addListener(AwakeningSystemClient::onClientTick);
             NeoForge.EVENT_BUS.addListener(AwakeningSystemClient::onRenderLevelStage);
             NeoForge.EVENT_BUS.addListener(AwakeningSystemClient::onRenderLivingPre);
-            NeoForge.EVENT_BUS.addListener(AwakeningSystemClient::onRenderLivingPost);
             NeoForge.EVENT_BUS.addListener(AwakeningSystemClient::onRenderPlayerPre);
             NeoForge.EVENT_BUS.addListener(AwakeningSystemClient::onMovementInputUpdate);
             NeoForge.EVENT_BUS.addListener(AwakeningSystemClient::onComputeCameraAngles);
@@ -111,7 +110,6 @@ public final class AwakeningSystemMod {
             NeoForge.EVENT_BUS.addListener(AwakeningSystemClient::registerClientCommands);
             NeoForge.EVENT_BUS.addListener(AwakeningSystemClient::onMouseButtonPre);
             NeoForge.EVENT_BUS.addListener(AwakeningSystemClient::onItemTooltip);
-            NeoForge.EVENT_BUS.addListener(AwakeningSystemClient::onRenderHand);
         }
         NeoForge.EVENT_BUS.register(SystemEvents.class);
         NeoForge.EVENT_BUS.addListener(SystemCommands::register);
