@@ -1,0 +1,12 @@
+{
+  "type": "neoforge:add_spawns",
+  "biomes": "#awakening_system:is_murim",
+  "spawners": [
+    {
+      "type": "awakening_system:screaming_mandrake",
+      "weight": 25,
+      "minCount": 1,
+      "maxCount": 2
+    }
+  ]
+}

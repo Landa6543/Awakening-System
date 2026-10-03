@@ -1,0 +1,9 @@
+{
+  "parent": "awakening_system:custom/cyno_plushie",
+  "textures": {
+    "all": "awakening_system:block/cyno_plushie",
+    "particle": "awakening_system:block/cyno_plushie",
+    "0": "awakening_system:block/cyno_plushie"
+  },
+  "render_type": "cutout"
+}

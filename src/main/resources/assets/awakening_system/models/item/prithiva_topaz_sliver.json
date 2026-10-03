@@ -1,0 +1,6 @@
+{
+    "textures":  {
+                     "layer0":  "awakening_system:item/prithiva_topaz_sliver"
+                 },
+    "parent":  "item/generated"
+}

@@ -1,0 +1,108 @@
+{
+  "has_precipitation": false,
+  "temperature": 0.8,
+  "downfall": 0.5,
+  "effects": {
+    "sky_color": 7848447,
+    "fog_color": 12443647,
+    "water_color": 3836136,
+    "water_fog_color": 3836136,
+    "grass_color": 5884216,
+    "foliage_color": 16744654,
+    "ambient_sound": "minecraft:ambient.underwater.loop",
+    "mood_sound": {
+      "sound": "minecraft:ambient.cave",
+      "tick_delay": 6000,
+      "block_search_extent": 8,
+      "offset": 2.0
+    },
+    "particle": {
+      "options": {
+        "type": "minecraft:cherry_leaves"
+      },
+      "probability": 0.012
+    }
+  },
+  "spawners": {
+    "monster": [
+      {
+        "type": "awakening_system:isekai_slime",
+        "weight": 80,
+        "minCount": 2,
+        "maxCount": 4
+      }
+    ],
+    "creature": [
+      {
+        "type": "awakening_system:astral_dragon",
+        "weight": 20,
+        "minCount": 1,
+        "maxCount": 2
+      },
+      {
+        "type": "awakening_system:shadow_direwolf",
+        "weight": 25,
+        "minCount": 1,
+        "maxCount": 3
+      },
+      {
+        "type": "awakening_system:white_thunder_tiger",
+        "weight": 20,
+        "minCount": 1,
+        "maxCount": 2
+      },
+      {
+        "type": "awakening_system:cloud_crane",
+        "weight": 22,
+        "minCount": 1,
+        "maxCount": 3
+      },
+      {
+        "type": "minecraft:allay",
+        "weight": 12,
+        "minCount": 1,
+        "maxCount": 3
+      },
+      {
+        "type": "minecraft:fox",
+        "weight": 8,
+        "minCount": 2,
+        "maxCount": 4
+      },
+      {
+        "type": "minecraft:rabbit",
+        "weight": 8,
+        "minCount": 2,
+        "maxCount": 4
+      },
+      {
+        "type": "minecraft:sniffer",
+        "weight": 3,
+        "minCount": 1,
+        "maxCount": 2
+      }
+    ]
+  },
+  "spawn_costs": {},
+  "carvers": {},
+  "features": [
+    [],
+    [],
+    [],
+    [],
+    [],
+    [],
+    [],
+    [],
+    [],
+    [
+      "minecraft:patch_tall_grass_2",
+      "minecraft:patch_grass_forest",
+      "minecraft:flower_cherry",
+      "minecraft:trees_cherry",
+      "awakening_system:giant_fantasy_tree",
+      "minecraft:patch_berry_bush"
+    ],
+    []
+  ]
+}

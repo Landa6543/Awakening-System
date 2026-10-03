@@ -1,0 +1,7 @@
+{
+  "variants": {
+    "": {
+      "model": "awakening_system:block/crystal_chunk_block"
+    }
+  }
+}

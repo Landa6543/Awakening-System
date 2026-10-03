@@ -1,0 +1,7 @@
+{
+  "type": "minecraft:smithing_transform",
+  "template": { "item": "awakening_system:adamantite_upgrade_smithing_template" },
+  "base": { "item": "awakening_system:mithril_shovel" },
+  "addition": { "item": "awakening_system:adamantite_ingot" },
+  "result": { "id": "awakening_system:adamantite_shovel" }
+}

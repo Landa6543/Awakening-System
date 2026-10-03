@@ -1,0 +1,9 @@
+{
+  "parent": "awakening_system:custom/tighnari_plushie",
+  "textures": {
+    "all": "awakening_system:block/tighnari_plushie",
+    "particle": "awakening_system:block/tighnari_plushie",
+    "0": "awakening_system:block/tighnari_plushie"
+  },
+  "render_type": "cutout"
+}

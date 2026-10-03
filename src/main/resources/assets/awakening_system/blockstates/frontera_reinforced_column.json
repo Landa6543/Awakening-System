@@ -1,0 +1,16 @@
+{
+  "variants": {
+    "axis=y": {
+      "model": "awakening_system:block/frontera_reinforced_column"
+    },
+    "axis=z": {
+      "model": "awakening_system:block/frontera_reinforced_column_horizontal",
+      "x": 90
+    },
+    "axis=x": {
+      "model": "awakening_system:block/frontera_reinforced_column_horizontal",
+      "x": 90,
+      "y": 90
+    }
+  }
+}

@@ -1,0 +1,9 @@
+﻿=======================================================
+REPORTE DE ESTADO: AWAKENING MONARCH'S ASCENSION
+Minecraft: 1.21.1
+Loader: NeoForge 21.1.65+
+Total de Mods Listados: 250+
+NÃºcleo: Awakening System 0.1.0 (Compilado y Verificado)
+=======================================================
+Fecha: 2026-09-21 00:01:13
+Directorio de Mods: C:\Users\soybe\Desktop\Mods NeoForge\Sistema\Modpack_Awakening_System\overrides\mods

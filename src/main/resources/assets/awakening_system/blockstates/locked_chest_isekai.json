@@ -1,0 +1,34 @@
+{
+  "variants": {
+    "facing=north,locked=true": {
+      "model": "awakening_system:block/locked_chest_isekai"
+    },
+    "facing=east,locked=true": {
+      "model": "awakening_system:block/locked_chest_isekai",
+      "y": 90
+    },
+    "facing=south,locked=true": {
+      "model": "awakening_system:block/locked_chest_isekai",
+      "y": 180
+    },
+    "facing=west,locked=true": {
+      "model": "awakening_system:block/locked_chest_isekai",
+      "y": 270
+    },
+    "facing=north,locked=false": {
+      "model": "awakening_system:block/locked_chest_isekai"
+    },
+    "facing=east,locked=false": {
+      "model": "awakening_system:block/locked_chest_isekai",
+      "y": 90
+    },
+    "facing=south,locked=false": {
+      "model": "awakening_system:block/locked_chest_isekai",
+      "y": 180
+    },
+    "facing=west,locked=false": {
+      "model": "awakening_system:block/locked_chest_isekai",
+      "y": 270
+    }
+  }
+}

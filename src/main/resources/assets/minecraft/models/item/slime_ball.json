@@ -1,0 +1,15 @@
+{
+  "parent": "item/generated",
+  "textures": {
+    "layer0": "item/slime_ball"
+  },
+
+  "overrides": [
+    {"predicate": {"custom_model_data":1}, "model": "item/lift"},
+    {"predicate": {"custom_model_data":2}, "model": "item/globe"},
+    {"predicate": {"custom_model_data":3}, "model": "item/globeshell"},
+    {"predicate": {"custom_model_data":4}, "model": "item/globerimm"},
+    {"predicate": {"custom_model_data":5}, "model": "item/akademiadoor1a"},
+    {"predicate": {"custom_model_data":6}, "model": "item/akademiadoor1b"}
+  ]
+}

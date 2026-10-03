@@ -1,0 +1,17 @@
+{
+  "type": "awakening_system:subspace_realm",
+  "generator": {
+    "type": "minecraft:flat",
+    "settings": {
+      "biome": "minecraft:the_end",
+      "lakes": false,
+      "features": false,
+      "layers": [
+        {
+          "block": "minecraft:air",
+          "height": 1
+        }
+      ]
+    }
+  }
+}

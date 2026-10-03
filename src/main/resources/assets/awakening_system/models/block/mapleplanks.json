@@ -1,0 +1,12 @@
+{
+  "parent": "block/cube",
+  "textures": {
+    "down": "awakening_system:block/maple_planks_final",
+    "up": "awakening_system:block/maple_planks_final",
+    "north": "awakening_system:block/maple_planks_final",
+    "east": "awakening_system:block/maple_planks_final",
+    "south": "awakening_system:block/maple_planks_final",
+    "west": "awakening_system:block/maple_planks_final",
+    "particle": "awakening_system:block/maple_planks_final"
+  }
+}

@@ -1,0 +1,18 @@
+{
+  "type": "minecraft:crafting_shaped",
+  "category": "building",
+  "pattern": [
+    "###",
+    "###",
+    "###"
+  ],
+  "key": {
+    "#": {
+      "item": "awakening_system:mora_pouch"
+    }
+  },
+  "result": {
+    "id": "awakening_system:mora_block",
+    "count": 1
+  }
+}

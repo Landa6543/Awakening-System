@@ -1,0 +1,46 @@
+{
+  "parent": "minecraft:block/block",
+  "ambientocclusion": true,
+  "textures": {
+    "particle": "awakening_system:block/subway_screen_left",
+    "frame": "minecraft:block/deepslate_tiles",
+    "mount": "minecraft:block/iron_block",
+    "back": "minecraft:block/blast_furnace_top",
+    "screen": "awakening_system:block/subway_screen_left"
+  },
+  "elements": [
+    {
+      "from": [ 6.5, 13, 7.5 ],
+      "to": [ 7.5, 16, 8.5 ],
+      "faces": {
+        "up": { "texture": "#mount", "cullface": "up" },
+        "north": { "texture": "#mount" },
+        "south": { "texture": "#mount" },
+        "west": { "texture": "#mount" },
+        "east": { "texture": "#mount" }
+      }
+    },
+    {
+      "from": [ 1.0, 5, 6.5 ],
+      "to": [ 16.0, 13, 9.5 ],
+      "faces": {
+        "up": { "texture": "#frame" },
+        "down": { "texture": "#frame" },
+        "north": { "texture": "#frame" },
+        "south": { "texture": "#back" },
+        "west": { "texture": "#frame" },
+        "east": { "texture": "#frame", "cullface": "east" }
+      }
+    },
+    {
+      "from": [ 1.5, 5.5, 6.4 ],
+      "to": [ 16.0, 12.5, 6.5 ],
+      "faces": {
+        "north": {
+          "texture": "#screen",
+          "uv": [ 0, 0, 16, 16 ]
+        }
+      }
+    }
+  ]
+}

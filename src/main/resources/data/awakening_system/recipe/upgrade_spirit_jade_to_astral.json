@@ -1,0 +1,24 @@
+{
+  "type": "minecraft:crafting_shaped",
+  "category": "misc",
+  "pattern": [
+    "#S#",
+    "SJS",
+    "#S#"
+  ],
+  "key": {
+    "#": {
+      "item": "awakening_system:astral_ingot"
+    },
+    "S": {
+      "item": "minecraft:nether_star"
+    },
+    "J": {
+      "item": "awakening_system:spirit_jade"
+    }
+  },
+  "result": {
+    "count": 1,
+    "id": "awakening_system:upgrade_spirit_jade_to_astral"
+  }
+}

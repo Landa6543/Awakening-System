@@ -1,0 +1,17 @@
+package com.soybe.awakeningsystem;
+
+import net.minecraft.network.RegistryFriendlyByteBuf;
+import net.minecraft.network.codec.ByteBufCodecs;
+import net.minecraft.network.codec.StreamCodec;
+import net.minecraft.network.protocol.common.custom.CustomPacketPayload;
+import net.minecraft.resources.ResourceLocation;
+
+public record SelectConstellationPayload(String constellationId) implements CustomPacketPayload {
+    public static final Type<SelectConstellationPayload> TYPE = new Type<>(
+            ResourceLocation.fromNamespaceAndPath(AwakeningSystemMod.MOD_ID, "select_constellation"));
+    public static final StreamCodec<RegistryFriendlyByteBuf, SelectConstellationPayload> STREAM_CODEC = StreamCodec.composite(
+            ByteBufCodecs.stringUtf8(48), SelectConstellationPayload::constellationId, SelectConstellationPayload::new);
+
+    @Override
+    public Type<? extends CustomPacketPayload> type() { return TYPE; }
+}

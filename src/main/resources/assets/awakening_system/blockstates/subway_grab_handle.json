@@ -1,0 +1,19 @@
+{
+  "variants": {
+    "facing=north": {
+      "model": "awakening_system:block/subway_grab_handle"
+    },
+    "facing=south": {
+      "model": "awakening_system:block/subway_grab_handle",
+      "y": 180
+    },
+    "facing=west": {
+      "model": "awakening_system:block/subway_grab_handle",
+      "y": 270
+    },
+    "facing=east": {
+      "model": "awakening_system:block/subway_grab_handle",
+      "y": 90
+    }
+  }
+}

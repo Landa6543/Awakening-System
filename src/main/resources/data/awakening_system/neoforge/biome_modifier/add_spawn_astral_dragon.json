@@ -1,0 +1,12 @@
+{
+  "type": "neoforge:add_spawns",
+  "biomes": "#awakening_system:is_isekai",
+  "spawners": [
+    {
+      "type": "awakening_system:astral_dragon",
+      "weight": 5,
+      "minCount": 1,
+      "maxCount": 1
+    }
+  ]
+}

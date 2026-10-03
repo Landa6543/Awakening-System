@@ -1,0 +1,12 @@
+{
+  "type": "minecraft:blasting",
+  "category": "misc",
+  "cookingtime": 100,
+  "experience": 1.6,
+  "ingredient": {
+    "item": "awakening_system:adamantite_ore"
+  },
+  "result": {
+    "id": "awakening_system:adamantite_ingot"
+  }
+}

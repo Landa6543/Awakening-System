@@ -1,0 +1,12 @@
+{
+  "type": "minecraft:smelting",
+  "category": "misc",
+  "cookingtime": 200,
+  "experience": 2.0,
+  "ingredient": {
+    "item": "awakening_system:raw_spirit_jade"
+  },
+  "result": {
+    "id": "awakening_system:spirit_jade"
+  }
+}

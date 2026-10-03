@@ -1,0 +1,6 @@
+{
+  "parent": "minecraft:block/fence_post",
+  "textures": {
+    "texture": "awakening_system:block/yumemiru_planks"
+  }
+}

@@ -1,0 +1,7 @@
+{
+  "variants": {
+    "type=bottom": { "model": "awakening_system:block/maple_slab" },
+    "type=top": { "model": "awakening_system:block/maple_slab_top" },
+    "type=double": { "model": "awakening_system:block/maple_planks" }
+  }
+}

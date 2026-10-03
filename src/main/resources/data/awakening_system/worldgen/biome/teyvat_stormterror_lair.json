@@ -1,0 +1,67 @@
+{
+  "has_precipitation": true,
+  "temperature": 0.3,
+  "downfall": 0.5,
+  "effects": {
+    "sky_color": 4545124,
+    "fog_color": 3622735,
+    "water_color": 2503224,
+    "water_fog_color": 1056807,
+    "grass_color": 5533306,
+    "foliage_color": 3622735,
+    "particle": {
+      "options": {
+        "type": "minecraft:cloud"
+      },
+      "probability": 0.02
+    }
+  },
+  "spawners": {
+    "monster": [
+      {
+        "type": "awakening_system:genshin_slime",
+        "weight": 50,
+        "minCount": 2,
+        "maxCount": 4
+      },
+      {
+        "type": "awakening_system:hilichurl",
+        "weight": 45,
+        "minCount": 2,
+        "maxCount": 5
+      },
+      {
+        "type": "awakening_system:mitachurl",
+        "weight": 2,
+        "minCount": 1,
+        "maxCount": 1
+      }
+    ],
+    "creature": []
+  },
+  "spawn_costs": {},
+  "carvers": {},
+  "features": [
+    [],
+    [],
+    [],
+    [],
+    [
+      "awakening_system:teyvat_hilichurl_camp",
+      "awakening_system:teyvat_shrine_of_depths",
+      "awakening_system:teyvat_teleport_waypoint",
+      "awakening_system:teyvat_regional_structure"
+    ],
+    [],
+    [
+      "awakening_system:ore_vayuda_turquoise",
+      "awakening_system:ore_white_iron"
+    ],
+    [],
+    [],
+    [
+      "awakening_system:teyvat_cuihua_tree"
+    ],
+    []
+  ]
+}

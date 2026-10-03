@@ -1,0 +1,24 @@
+{
+  "type": "minecraft:crafting_shaped",
+  "category": "misc",
+  "pattern": [
+    "#M#",
+    "MNM",
+    "#M#"
+  ],
+  "key": {
+    "#": {
+      "item": "awakening_system:abyssal_ingot"
+    },
+    "M": {
+      "item": "minecraft:crying_obsidian"
+    },
+    "N": {
+      "item": "minecraft:netherite_ingot"
+    }
+  },
+  "result": {
+    "count": 1,
+    "id": "awakening_system:upgrade_netherite_to_abyssal"
+  }
+}

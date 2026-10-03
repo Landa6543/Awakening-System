@@ -1,0 +1,6 @@
+{
+    "textures":  {
+                     "all":  "awakening_system:block/vayuda_turquoise_ore"
+                 },
+    "parent":  "minecraft:block/cube_all"
+}

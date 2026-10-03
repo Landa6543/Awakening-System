@@ -1,0 +1,7 @@
+{
+  "variants": {
+    "eggs=0": { "model": "awakening_system:block/dragon_nest" },
+    "eggs=1": { "model": "awakening_system:block/dragon_nest" },
+    "eggs=2": { "model": "awakening_system:block/dragon_nest" }
+  }
+}

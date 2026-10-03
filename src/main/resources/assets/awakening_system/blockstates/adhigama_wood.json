@@ -1,0 +1,16 @@
+{
+  "variants": {
+    "axis=y": {
+      "model": "awakening_system:block/adhigama_wood"
+    },
+    "axis=z": {
+      "model": "awakening_system:block/adhigama_wood",
+      "x": 90
+    },
+    "axis=x": {
+      "model": "awakening_system:block/adhigama_wood",
+      "x": 90,
+      "y": 90
+    }
+  }
+}

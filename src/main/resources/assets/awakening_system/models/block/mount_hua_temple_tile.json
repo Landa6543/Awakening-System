@@ -1,0 +1,6 @@
+{
+  "parent": "minecraft:block/cube_all",
+  "textures": {
+    "all": "awakening_system:block/mount_hua_temple_tile"
+  }
+}

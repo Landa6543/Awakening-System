@@ -1,0 +1,68 @@
+{
+  "has_precipitation": false,
+  "temperature": 0.7,
+  "downfall": 0.6,
+  "effects": {
+    "sky_color": 10551248,
+    "fog_color": 13434863,
+    "water_color": 2529986,
+    "water_fog_color": 2529986,
+    "grass_color": 4828786,
+    "foliage_color": 5424500,
+    "ambient_sound": "minecraft:ambient.underwater.loop",
+    "particle": {
+      "options": {
+        "type": "minecraft:spore_blossom_air"
+      },
+      "probability": 0.025
+    }
+  },
+  "spawners": {
+    "monster": [],
+    "creature": [
+      {
+        "type": "minecraft:allay",
+        "weight": 15,
+        "minCount": 2,
+        "maxCount": 4
+      },
+      {
+        "type": "minecraft:rabbit",
+        "weight": 10,
+        "minCount": 2,
+        "maxCount": 4
+      },
+      {
+        "type": "awakening_system:spirit_fox",
+        "weight": 14,
+        "minCount": 1,
+        "maxCount": 3
+      }
+    ]
+  },
+  "spawn_costs": {},
+  "carvers": {},
+  "features": [
+    [],
+    [],
+    [],
+    [],
+    [],
+    [],
+    [],
+    [],
+    [],
+    [
+      "minecraft:flower_flower_forest",
+      "minecraft:patch_grass_taiga",
+      "minecraft:lush_caves_vegetation",
+      "minecraft:spore_blossom",
+      "minecraft:trees_cherry",
+      "minecraft:patch_sugar_cane",
+      "awakening_system:patch_wild_ginseng",
+      "awakening_system:super_giant_plum",
+      "minecraft:patch_berry_bush"
+    ],
+    []
+  ]
+}

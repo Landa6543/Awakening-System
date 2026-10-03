@@ -1,0 +1,8 @@
+{
+  "parent": "block/template_orientable_trapdoor_bottom",
+  "textures": {
+    "texture": "awakening_system:block/sandbearer_trapdoor",
+    "particle": "awakening_system:block/sandbearer_trapdoor"
+  },
+  "render_type": "minecraft:cutout"
+}

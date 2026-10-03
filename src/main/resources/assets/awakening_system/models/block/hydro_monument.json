@@ -1,0 +1,8 @@
+{
+  "parent": "awakening_system:custom/hydro_monument",
+  "textures": {
+    "all": "awakening_system:block/hydro_monument",
+    "particle": "awakening_system:block/hydro_monument",
+    "0": "awakening_system:block/hydro_monument"
+  }
+}

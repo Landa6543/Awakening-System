@@ -1,0 +1,7 @@
+{
+  "parent": "minecraft:block/cube_column",
+  "textures": {
+    "end": "awakening_system:block/valterian_carved_bone_pillar_top",
+    "side": "awakening_system:block/valterian_carved_bone_pillar"
+  }
+}

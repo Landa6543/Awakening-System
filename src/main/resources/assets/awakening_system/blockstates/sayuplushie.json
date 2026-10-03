@@ -1,0 +1,19 @@
+{
+  "variants": {
+    "facing=north": {
+      "model": "awakening_system:block/sayuplushie"
+    },
+    "facing=east": {
+      "model": "awakening_system:block/sayuplushie",
+      "y": 90
+    },
+    "facing=south": {
+      "model": "awakening_system:block/sayuplushie",
+      "y": 180
+    },
+    "facing=west": {
+      "model": "awakening_system:block/sayuplushie",
+      "y": 270
+    }
+  }
+}

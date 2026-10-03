@@ -1,0 +1,17 @@
+{
+  "type": "awakening_system:pagoda_realm",
+  "generator": {
+    "type": "minecraft:flat",
+    "settings": {
+      "biome": "awakening_system:murim_celestial_peaks",
+      "lakes": false,
+      "features": false,
+      "layers": [
+        {
+          "block": "minecraft:bedrock",
+          "height": 1
+        }
+      ]
+    }
+  }
+}

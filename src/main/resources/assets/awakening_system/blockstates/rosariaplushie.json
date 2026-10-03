@@ -1,0 +1,19 @@
+{
+  "variants": {
+    "facing=north": {
+      "model": "awakening_system:block/rosariaplushie"
+    },
+    "facing=east": {
+      "model": "awakening_system:block/rosariaplushie",
+      "y": 90
+    },
+    "facing=south": {
+      "model": "awakening_system:block/rosariaplushie",
+      "y": 180
+    },
+    "facing=west": {
+      "model": "awakening_system:block/rosariaplushie",
+      "y": 270
+    }
+  }
+}

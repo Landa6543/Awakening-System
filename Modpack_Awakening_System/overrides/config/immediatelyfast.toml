@@ -1,0 +1,7 @@
+# ImmediatelyFast Configuration for NeoForge 1.21.1
+[hud]
+	fast_text_lookup = true
+[font]
+	fast_font_renderer = true
+[experimental_screen_batching]
+	enabled = true

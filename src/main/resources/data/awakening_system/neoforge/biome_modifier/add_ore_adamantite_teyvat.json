@@ -1,0 +1,6 @@
+{
+  "type": "neoforge:add_features",
+  "biomes": "#awakening_system:is_teyvat",
+  "features": "awakening_system:ore_adamantite",
+  "step": "underground_ores"
+}

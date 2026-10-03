@@ -1,0 +1,9 @@
+{
+  "parent": "awakening_system:custom/qiqi_plushie",
+  "textures": {
+    "all": "awakening_system:block/qiqi_plushie",
+    "particle": "awakening_system:block/qiqi_plushie",
+    "0": "awakening_system:block/qiqi_plushie"
+  },
+  "render_type": "cutout"
+}

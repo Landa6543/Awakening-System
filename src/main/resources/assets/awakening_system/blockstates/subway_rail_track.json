@@ -1,0 +1,41 @@
+{
+  "variants": {
+    "shape=north_south": {
+      "model": "awakening_system:block/subway_rail_track"
+    },
+    "shape=east_west": {
+      "model": "awakening_system:block/subway_rail_track",
+      "y": 90
+    },
+    "shape=ascending_north": {
+      "model": "awakening_system:block/subway_rail_track"
+    },
+    "shape=ascending_south": {
+      "model": "awakening_system:block/subway_rail_track",
+      "y": 180
+    },
+    "shape=ascending_east": {
+      "model": "awakening_system:block/subway_rail_track",
+      "y": 90
+    },
+    "shape=ascending_west": {
+      "model": "awakening_system:block/subway_rail_track",
+      "y": 270
+    },
+    "shape=south_east": {
+      "model": "awakening_system:block/subway_rail_track_curve"
+    },
+    "shape=south_west": {
+      "model": "awakening_system:block/subway_rail_track_curve",
+      "y": 90
+    },
+    "shape=north_west": {
+      "model": "awakening_system:block/subway_rail_track_curve",
+      "y": 180
+    },
+    "shape=north_east": {
+      "model": "awakening_system:block/subway_rail_track_curve",
+      "y": 270
+    }
+  }
+}

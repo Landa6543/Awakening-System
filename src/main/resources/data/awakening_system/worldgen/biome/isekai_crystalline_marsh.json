@@ -1,0 +1,69 @@
+{
+  "has_precipitation": true,
+  "temperature": 0.8,
+  "downfall": 0.9,
+  "effects": {
+    "sky_color": 5240292,
+    "fog_color": 8378598,
+    "water_color": 3200968,
+    "water_fog_color": 3200968,
+    "grass_color": 4897140,
+    "foliage_color": 4897140,
+    "ambient_sound": "minecraft:ambient.underwater.loop",
+    "particle": {
+      "options": {
+        "type": "minecraft:spore_blossom_air"
+      },
+      "probability": 0.015
+    }
+  },
+  "spawners": {
+    "monster": [
+      {
+        "type": "awakening_system:isekai_slime",
+        "weight": 60,
+        "minCount": 2,
+        "maxCount": 4
+      }
+    ],
+    "creature": [
+      {
+        "type": "minecraft:frog",
+        "weight": 20,
+        "minCount": 2,
+        "maxCount": 4
+      },
+      {
+        "type": "awakening_system:mana_pixie",
+        "weight": 15,
+        "minCount": 1,
+        "maxCount": 3
+      },
+      {
+        "type": "minecraft:allay",
+        "weight": 12,
+        "minCount": 2,
+        "maxCount": 4
+      }
+    ]
+  },
+  "spawn_costs": {},
+  "carvers": {},
+  "features": [
+    [],
+    [],
+    [],
+    [],
+    [],
+    [],
+    [],
+    [],
+    [],
+    [
+      "minecraft:trees_swamp",
+      "minecraft:patch_waterlily",
+      "minecraft:seagrass_swamp"
+    ],
+    []
+  ]
+}

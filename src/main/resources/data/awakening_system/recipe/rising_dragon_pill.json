@@ -1,0 +1,16 @@
+{
+  "type": "minecraft:crafting_shapeless",
+  "category": "misc",
+  "ingredients": [
+    {
+      "item": "awakening_system:snow_lotus"
+    },
+    {
+      "item": "awakening_system:thousand_year_ginseng"
+    }
+  ],
+  "result": {
+    "count": 1,
+    "id": "awakening_system:rising_dragon_pill"
+  }
+}

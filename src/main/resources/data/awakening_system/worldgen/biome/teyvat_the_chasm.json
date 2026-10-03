@@ -1,0 +1,78 @@
+{
+  "has_precipitation": false,
+  "temperature": 0.9,
+  "downfall": 0.05,
+  "effects": {
+    "sky_color": 9268835,
+    "fog_color": 5125166,
+    "water_color": 4073251,
+    "water_fog_color": 1769472,
+    "grass_color": 7951688,
+    "foliage_color": 6111287,
+    "particle": {
+      "options": {
+        "type": "minecraft:ash"
+      },
+      "probability": 0.003
+    }
+  },
+  "spawners": {
+    "monster": [
+      {
+        "type": "awakening_system:genshin_slime",
+        "weight": 50,
+        "minCount": 2,
+        "maxCount": 4
+      },
+      {
+        "type": "awakening_system:hilichurl",
+        "weight": 45,
+        "minCount": 2,
+        "maxCount": 5
+      },
+      {
+        "type": "awakening_system:mitachurl",
+        "weight": 2,
+        "minCount": 1,
+        "maxCount": 1
+      }
+    ],
+    "creature": [
+      {
+        "type": "minecraft:bat",
+        "weight": 10,
+        "minCount": 2,
+        "maxCount": 6
+      }
+    ]
+  },
+  "spawn_costs": {},
+  "carvers": {},
+  "features": [
+    [],
+    [],
+    [],
+    [],
+    [
+      "awakening_system:teyvat_hilichurl_camp",
+      "awakening_system:teyvat_shrine_of_depths",
+      "awakening_system:teyvat_teleport_waypoint",
+      "awakening_system:teyvat_regional_structure"
+    ],
+    [],
+    [
+      "awakening_system:ore_adamantite",
+      "awakening_system:ore_prithiva_topaz",
+      "awakening_system:ore_white_iron"
+    ],
+    [],
+    [],
+    [
+      "awakening_system:teyvat_sandbearer_tree",
+      "minecraft:patch_dead_bush",
+      "minecraft:forest_rock"
+    ],
+    [],
+    []
+  ]
+}

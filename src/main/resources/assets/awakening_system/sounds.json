@@ -1,0 +1,2137 @@
+{
+  "npc_interact": {
+    "category": "voice",
+    "subtitle": "subtitles.awakening_system.npc_interact",
+    "sounds": [
+      "awakening_system:npc_interact"
+    ]
+  },
+  "npc_blessing": {
+    "category": "player",
+    "subtitle": "subtitles.awakening_system.npc_blessing",
+    "sounds": [
+      "awakening_system:npc_blessing"
+    ]
+  },
+  "ant_soldier_ambient": {
+    "category": "hostile",
+    "subtitle": "subtitles.awakening_system.ant_soldier_ambient",
+    "sounds": [
+      "awakening_system:ant_soldier_ambient"
+    ]
+  },
+  "ant_soldier_hurt": {
+    "category": "hostile",
+    "subtitle": "subtitles.awakening_system.ant_soldier_hurt",
+    "sounds": [
+      "awakening_system:ant_soldier_hurt"
+    ]
+  },
+  "ant_soldier_death": {
+    "category": "hostile",
+    "subtitle": "subtitles.awakening_system.ant_soldier_death",
+    "sounds": [
+      "awakening_system:ant_soldier_death"
+    ]
+  },
+  "ant_soldier_step": {
+    "category": "hostile",
+    "subtitle": "subtitles.awakening_system.ant_soldier_step",
+    "sounds": [
+      "awakening_system:ant_soldier_step"
+    ]
+  },
+  "ant_soldier_screech": {
+    "category": "hostile",
+    "subtitle": "subtitles.awakening_system.ant_soldier_screech",
+    "sounds": [
+      "awakening_system:ant_soldier_screech"
+    ]
+  },
+  "abyssal_beholder_ambient": {
+    "category": "hostile",
+    "subtitle": "subtitles.awakening_system.abyssal_beholder_ambient",
+    "sounds": [
+      "awakening_system:abyssal_beholder_ambient"
+    ]
+  },
+  "abyssal_beholder_hurt": {
+    "category": "hostile",
+    "subtitle": "subtitles.awakening_system.abyssal_beholder_hurt",
+    "sounds": [
+      "awakening_system:abyssal_beholder_hurt"
+    ]
+  },
+  "abyssal_beholder_death": {
+    "category": "hostile",
+    "subtitle": "subtitles.awakening_system.abyssal_beholder_death",
+    "sounds": [
+      "awakening_system:abyssal_beholder_death"
+    ]
+  },
+  "abyssal_beholder_beam": {
+    "category": "hostile",
+    "subtitle": "subtitles.awakening_system.abyssal_beholder_beam",
+    "sounds": [
+      "awakening_system:abyssal_beholder_beam"
+    ]
+  },
+  "abyssal_beholder_roar": {
+    "category": "hostile",
+    "subtitle": "subtitles.awakening_system.abyssal_beholder_roar",
+    "sounds": [
+      "awakening_system:abyssal_beholder_roar"
+    ]
+  },
+  "mana_pixie_ambient": {
+    "category": "neutral",
+    "subtitle": "subtitles.awakening_system.mana_pixie_ambient",
+    "sounds": [
+      "awakening_system:mana_pixie_ambient"
+    ]
+  },
+  "mana_pixie_hurt": {
+    "category": "neutral",
+    "subtitle": "subtitles.awakening_system.mana_pixie_hurt",
+    "sounds": [
+      "awakening_system:mana_pixie_hurt"
+    ]
+  },
+  "mana_pixie_death": {
+    "category": "neutral",
+    "subtitle": "subtitles.awakening_system.mana_pixie_death",
+    "sounds": [
+      "awakening_system:mana_pixie_death"
+    ]
+  },
+  "mana_pixie_bless": {
+    "category": "neutral",
+    "subtitle": "subtitles.awakening_system.mana_pixie_bless",
+    "sounds": [
+      "awakening_system:mana_pixie_bless"
+    ]
+  },
+  "mandrake_ambient": {
+    "category": "neutral",
+    "subtitle": "subtitles.awakening_system.mandrake_ambient",
+    "sounds": [
+      "awakening_system:mandrake_ambient"
+    ]
+  },
+  "mandrake_scream": {
+    "category": "hostile",
+    "subtitle": "subtitles.awakening_system.mandrake_scream",
+    "sounds": [
+      "awakening_system:mandrake_scream"
+    ]
+  },
+  "mandrake_hurt": {
+    "category": "neutral",
+    "subtitle": "subtitles.awakening_system.mandrake_hurt",
+    "sounds": [
+      "awakening_system:mandrake_hurt"
+    ]
+  },
+  "mandrake_death": {
+    "category": "neutral",
+    "subtitle": "subtitles.awakening_system.mandrake_death",
+    "sounds": [
+      "awakening_system:mandrake_death"
+    ]
+  },
+  "celestial_dragon_ambient": {
+    "category": "hostile",
+    "subtitle": "subtitles.awakening_system.celestial_dragon_ambient",
+    "sounds": [
+      "awakening_system:celestial_dragon_ambient"
+    ]
+  },
+  "celestial_dragon_roar": {
+    "category": "hostile",
+    "subtitle": "subtitles.awakening_system.celestial_dragon_roar",
+    "sounds": [
+      "awakening_system:celestial_dragon_roar"
+    ]
+  },
+  "celestial_dragon_breath": {
+    "category": "hostile",
+    "subtitle": "subtitles.awakening_system.celestial_dragon_breath",
+    "sounds": [
+      "awakening_system:celestial_dragon_breath"
+    ]
+  },
+  "celestial_dragon_hurt": {
+    "category": "hostile",
+    "subtitle": "subtitles.awakening_system.celestial_dragon_hurt",
+    "sounds": [
+      "awakening_system:celestial_dragon_hurt"
+    ]
+  },
+  "celestial_dragon_death": {
+    "category": "hostile",
+    "subtitle": "subtitles.awakening_system.celestial_dragon_death",
+    "sounds": [
+      "awakening_system:celestial_dragon_death"
+    ]
+  },
+  "goblin_ambient": {
+    "category": "hostile",
+    "subtitle": "subtitles.awakening_system.goblin_ambient",
+    "sounds": [
+      "awakening_system:goblin_ambient"
+    ]
+  },
+  "goblin_hurt": {
+    "category": "hostile",
+    "subtitle": "subtitles.awakening_system.goblin_hurt",
+    "sounds": [
+      "awakening_system:goblin_hurt"
+    ]
+  },
+  "goblin_death": {
+    "category": "hostile",
+    "subtitle": "subtitles.awakening_system.goblin_death",
+    "sounds": [
+      "awakening_system:goblin_death"
+    ]
+  },
+  "goblin_chant": {
+    "category": "hostile",
+    "subtitle": "subtitles.awakening_system.goblin_chant",
+    "sounds": [
+      "awakening_system:goblin_chant"
+    ]
+  },
+  "cultivator_ambient": {
+    "category": "hostile",
+    "subtitle": "subtitles.awakening_system.cultivator_ambient",
+    "sounds": [
+      "awakening_system:cultivator_ambient_1",
+      "awakening_system:cultivator_ambient_2"
+    ]
+  },
+  "cultivator_slash": {
+    "category": "hostile",
+    "subtitle": "subtitles.awakening_system.cultivator_slash",
+    "sounds": [
+      "awakening_system:cultivator_slash_1",
+      "awakening_system:cultivator_slash_2"
+    ]
+  },
+  "cultivator_dash": {
+    "category": "hostile",
+    "subtitle": "subtitles.awakening_system.cultivator_dash",
+    "sounds": [
+      "awakening_system:cultivator_dash_1",
+      "awakening_system:cultivator_dash_2"
+    ]
+  },
+  "cultivator_hurt": {
+    "category": "hostile",
+    "subtitle": "subtitles.awakening_system.cultivator_hurt",
+    "sounds": [
+      "awakening_system:cultivator_hurt_1",
+      "awakening_system:cultivator_hurt_2"
+    ]
+  },
+  "cultivator_death": {
+    "category": "hostile",
+    "subtitle": "subtitles.awakening_system.cultivator_death",
+    "sounds": [
+      "awakening_system:cultivator_death"
+    ]
+  },
+  "jade_beast_ambient": {
+    "category": "hostile",
+    "subtitle": "subtitles.awakening_system.jade_beast_ambient",
+    "sounds": [
+      "awakening_system:jade_beast_ambient"
+    ]
+  },
+  "jade_beast_roar": {
+    "category": "hostile",
+    "subtitle": "subtitles.awakening_system.jade_beast_roar",
+    "sounds": [
+      "awakening_system:jade_beast_roar"
+    ]
+  },
+  "jade_beast_charge": {
+    "category": "hostile",
+    "subtitle": "subtitles.awakening_system.jade_beast_charge",
+    "sounds": [
+      "awakening_system:jade_beast_charge"
+    ]
+  },
+  "jade_beast_hurt": {
+    "category": "hostile",
+    "subtitle": "subtitles.awakening_system.jade_beast_hurt",
+    "sounds": [
+      "awakening_system:jade_beast_hurt"
+    ]
+  },
+  "jade_beast_death": {
+    "category": "hostile",
+    "subtitle": "subtitles.awakening_system.jade_beast_death",
+    "sounds": [
+      "awakening_system:jade_beast_death"
+    ]
+  },
+  "white_tiger_ambient": {
+    "category": "neutral",
+    "subtitle": "subtitles.awakening_system.white_tiger_ambient",
+    "sounds": [
+      "awakening_system:white_tiger_ambient"
+    ]
+  },
+  "white_tiger_roar": {
+    "category": "hostile",
+    "subtitle": "subtitles.awakening_system.white_tiger_roar",
+    "sounds": [
+      "awakening_system:white_tiger_roar"
+    ]
+  },
+  "white_tiger_hurt": {
+    "category": "neutral",
+    "subtitle": "subtitles.awakening_system.white_tiger_hurt",
+    "sounds": [
+      "awakening_system:white_tiger_hurt"
+    ]
+  },
+  "white_tiger_death": {
+    "category": "neutral",
+    "subtitle": "subtitles.awakening_system.white_tiger_death",
+    "sounds": [
+      "awakening_system:white_tiger_death"
+    ]
+  },
+  "shadow_wolf_ambient": {
+    "category": "hostile",
+    "subtitle": "subtitles.awakening_system.shadow_wolf_ambient",
+    "sounds": [
+      "awakening_system:shadow_wolf_ambient"
+    ]
+  },
+  "shadow_wolf_howl": {
+    "category": "hostile",
+    "subtitle": "subtitles.awakening_system.shadow_wolf_howl",
+    "sounds": [
+      "awakening_system:shadow_wolf_howl"
+    ]
+  },
+  "shadow_wolf_bite": {
+    "category": "hostile",
+    "subtitle": "subtitles.awakening_system.shadow_wolf_bite",
+    "sounds": [
+      "awakening_system:shadow_wolf_bite"
+    ]
+  },
+  "shadow_wolf_hurt": {
+    "category": "hostile",
+    "subtitle": "subtitles.awakening_system.shadow_wolf_hurt",
+    "sounds": [
+      "awakening_system:shadow_wolf_hurt"
+    ]
+  },
+  "shadow_wolf_death": {
+    "category": "hostile",
+    "subtitle": "subtitles.awakening_system.shadow_wolf_death",
+    "sounds": [
+      "awakening_system:shadow_wolf_death"
+    ]
+  },
+  "beastman_ambient": {
+    "category": "hostile",
+    "subtitle": "subtitles.awakening_system.beastman_ambient",
+    "sounds": [
+      "awakening_system:beastman_ambient"
+    ]
+  },
+  "beastman_attack": {
+    "category": "hostile",
+    "subtitle": "subtitles.awakening_system.beastman_attack",
+    "sounds": [
+      "awakening_system:beastman_attack"
+    ]
+  },
+  "beastman_hurt": {
+    "category": "hostile",
+    "subtitle": "subtitles.awakening_system.beastman_hurt",
+    "sounds": [
+      "awakening_system:beastman_hurt"
+    ]
+  },
+  "beastman_death": {
+    "category": "hostile",
+    "subtitle": "subtitles.awakening_system.beastman_death",
+    "sounds": [
+      "awakening_system:beastman_death"
+    ]
+  },
+  "goblin_scout_screech": {
+    "category": "hostile",
+    "subtitle": "subtitles.awakening_system.goblin_scout_screech",
+    "sounds": [
+      "awakening_system:goblin_scout_screech"
+    ]
+  },
+  "goblin_warrior_grunt": {
+    "category": "hostile",
+    "subtitle": "subtitles.awakening_system.goblin_warrior_grunt",
+    "sounds": [
+      "awakening_system:goblin_warrior_grunt"
+    ]
+  },
+  "system_open": {
+    "category": "player",
+    "subtitle": "subtitles.awakening_system.system_open",
+    "sounds": [
+      "awakening_system:system_open"
+    ]
+  },
+  "system_close": {
+    "category": "player",
+    "subtitle": "subtitles.awakening_system.system_close",
+    "sounds": [
+      "awakening_system:system_close"
+    ]
+  },
+  "system_click": {
+    "category": "player",
+    "subtitle": "subtitles.awakening_system.system_click",
+    "sounds": [
+      "awakening_system:system_click"
+    ]
+  },
+  "system_stat_up": {
+    "category": "player",
+    "subtitle": "subtitles.awakening_system.system_stat_up",
+    "sounds": [
+      "awakening_system:system_stat_up"
+    ]
+  },
+  "system_skill_unlock": {
+    "category": "player",
+    "subtitle": "subtitles.awakening_system.system_skill_unlock",
+    "sounds": [
+      "awakening_system:system_skill_unlock"
+    ]
+  },
+  "system_error": {
+    "category": "player",
+    "subtitle": "subtitles.awakening_system.system_error",
+    "sounds": [
+      "awakening_system:system_error"
+    ]
+  },
+  "system_level_up": {
+    "category": "player",
+    "subtitle": "subtitles.awakening_system.system_level_up",
+    "sounds": [
+      "awakening_system:system_level_up"
+    ]
+  },
+  "system_awakening": {
+    "category": "player",
+    "subtitle": "subtitles.awakening_system.system_awakening",
+    "sounds": [
+      "awakening_system:system_awakening"
+    ]
+  },
+  "system_rank_up": {
+    "category": "player",
+    "subtitle": "subtitles.awakening_system.system_rank_up",
+    "sounds": [
+      "awakening_system:system_rank_up"
+    ]
+  },
+  "system_quest_alert": {
+    "category": "player",
+    "subtitle": "subtitles.awakening_system.system_quest_alert",
+    "sounds": [
+      "awakening_system:system_quest_alert"
+    ]
+  },
+  "system_quest_complete": {
+    "category": "player",
+    "subtitle": "subtitles.awakening_system.system_quest_complete",
+    "sounds": [
+      "awakening_system:system_quest_complete"
+    ]
+  },
+  "dantian_breakthrough": {
+    "category": "player",
+    "subtitle": "subtitles.awakening_system.dantian_breakthrough",
+    "sounds": [
+      "awakening_system:dantian_breakthrough"
+    ]
+  },
+  "celestial_tribulation": {
+    "category": "weather",
+    "subtitle": "subtitles.awakening_system.celestial_tribulation",
+    "sounds": [
+      "awakening_system:celestial_tribulation"
+    ]
+  },
+  "martial_skill_activate": {
+    "category": "player",
+    "subtitle": "subtitles.awakening_system.martial_skill_activate",
+    "sounds": [
+      "awakening_system:martial_skill_activate"
+    ]
+  },
+  "talisman_seal": {
+    "category": "player",
+    "subtitle": "subtitles.awakening_system.talisman_seal",
+    "sounds": [
+      "awakening_system:talisman_seal"
+    ]
+  },
+  "shadow_extract": {
+    "category": "player",
+    "subtitle": "subtitles.awakening_system.shadow_extract",
+    "sounds": [
+      "awakening_system:shadow_extract"
+    ]
+  },
+  "roulette_spin": {
+    "category": "block",
+    "subtitle": "subtitles.awakening_system.roulette_spin",
+    "sounds": [
+      "awakening_system:roulette_spin"
+    ]
+  },
+  "roulette_win": {
+    "category": "player",
+    "subtitle": "subtitles.awakening_system.roulette_win",
+    "sounds": [
+      "awakening_system:roulette_win"
+    ]
+  },
+  "system_coins": {
+    "category": "player",
+    "subtitle": "subtitles.awakening_system.system_coins",
+    "sounds": [
+      "awakening_system:system_coins"
+    ]
+  },
+  "dungeon_gate_open": {
+    "category": "ambient",
+    "subtitle": "subtitles.awakening_system.dungeon_gate_open",
+    "sounds": [
+      "awakening_system:dungeon_gate_open"
+    ]
+  },
+  "ancient_dragon_ambient": {
+    "category": "neutral",
+    "subtitle": "subtitles.awakening_system.ancient_dragon_ambient",
+    "sounds": [
+      "awakening_system:ancient_dragon_ambient",
+      "awakening_system:ancient_dragon_growl2",
+      "awakening_system:ancient_dragon_growl3",
+      "awakening_system:ancient_dragon_growl4"
+    ]
+  },
+  "ancient_dragon_roar": {
+    "category": "hostile",
+    "subtitle": "subtitles.awakening_system.ancient_dragon_roar",
+    "sounds": [
+      "awakening_system:ancient_dragon_roar",
+      "awakening_system:ancient_dragon_roar2"
+    ]
+  },
+  "ancient_dragon_breath": {
+    "category": "hostile",
+    "subtitle": "subtitles.awakening_system.ancient_dragon_breath",
+    "sounds": [
+      "awakening_system:ancient_dragon_breath"
+    ]
+  },
+  "ancient_dragon_flap": {
+    "category": "neutral",
+    "subtitle": "subtitles.awakening_system.ancient_dragon_flap",
+    "sounds": [
+      "awakening_system:ancient_dragon_flap",
+      "awakening_system:ancient_dragon_wings2",
+      "awakening_system:ancient_dragon_wings3",
+      "awakening_system:ancient_dragon_wings4",
+      "awakening_system:ancient_dragon_wings5",
+      "awakening_system:ancient_dragon_wings6"
+    ]
+  },
+  "ancient_dragon_hurt": {
+    "category": "neutral",
+    "subtitle": "subtitles.awakening_system.ancient_dragon_hurt",
+    "sounds": [
+      "awakening_system:ancient_dragon_hurt",
+      "awakening_system:ancient_dragon_hit2",
+      "awakening_system:ancient_dragon_hit3",
+      "awakening_system:ancient_dragon_hit4"
+    ]
+  },
+  "ancient_dragon_death": {
+    "category": "neutral",
+    "subtitle": "subtitles.awakening_system.ancient_dragon_death",
+    "sounds": [
+      "awakening_system:ancient_dragon_death",
+      "awakening_system:ancient_dragon_death2"
+    ]
+  },
+  "gate_ambient": {
+    "category": "ambient",
+    "subtitle": "subtitles.awakening_system.gate_ambient",
+    "sounds": [
+      "awakening_system:gate_ambient"
+    ]
+  },
+  "gate_travel": {
+    "category": "player",
+    "subtitle": "subtitles.awakening_system.gate_travel",
+    "sounds": [
+      "awakening_system:gate_travel"
+    ]
+  },
+  "dungeon_break": {
+    "category": "hostile",
+    "subtitle": "subtitles.awakening_system.dungeon_break",
+    "sounds": [
+      "awakening_system:dungeon_break"
+    ]
+  },
+  "paimon_spawn": {
+    "category": "voice",
+    "subtitle": "subtitles.awakening_system.paimon_spawn",
+    "sounds": [
+      "awakening_system:paimon/paimon_spawn_0"
+    ]
+  },
+  "paimon_talk": {
+    "category": "voice",
+    "subtitle": "subtitles.awakening_system.paimon_talk",
+    "sounds": [
+      "awakening_system:paimon/paimon_0",
+      "awakening_system:paimon/paimon_1",
+      "awakening_system:paimon/paimon_2",
+      "awakening_system:paimon/paimon_3",
+      "awakening_system:paimon/paimon_4",
+      "awakening_system:paimon/paimon_5",
+      "awakening_system:paimon/paimon_6",
+      "awakening_system:paimon/paimon_7",
+      "awakening_system:paimon/paimon_8",
+      "awakening_system:paimon/paimon_9",
+      "awakening_system:paimon/paimon_10",
+      "awakening_system:paimon/paimon_11",
+      "awakening_system:paimon/paimon_12",
+      "awakening_system:paimon/paimon_13"
+    ]
+  },
+  "paimon_thank": {
+    "category": "voice",
+    "subtitle": "subtitles.awakening_system.paimon_thank",
+    "sounds": [
+      "awakening_system:paimon/paimon_thank_0",
+      "awakening_system:paimon/paimon_thank_1",
+      "awakening_system:paimon/paimon_thank_2"
+    ]
+  },
+  "paimon_tp": {
+    "category": "voice",
+    "subtitle": "subtitles.awakening_system.paimon_tp",
+    "sounds": [
+      "awakening_system:paimon/paimon_tp_0",
+      "awakening_system:paimon/paimon_tp_1",
+      "awakening_system:paimon/paimon_tp_2",
+      "awakening_system:paimon/paimon_tp_3"
+    ]
+  },
+  "paimon_vanish": {
+    "category": "voice",
+    "subtitle": "subtitles.awakening_system.paimon_vanish",
+    "sounds": [
+      "awakening_system:paimon/paimon_vanish_0",
+      "awakening_system:paimon/paimon_vanish_1",
+      "awakening_system:paimon/paimon_vanish_2",
+      "awakening_system:paimon/paimon_vanish_3",
+      "awakening_system:paimon/paimon_vanish_4",
+      "awakening_system:paimon/paimon_vanish_5",
+      "awakening_system:paimon/paimon_vanish_6"
+    ]
+  },
+  "wyvern_ambient": {
+    "category": "hostile",
+    "subtitle": "subtitles.awakening_system.wyvern_ambient",
+    "sounds": [
+      "awakening_system:ancient_dragon_ambient"
+    ]
+  },
+  "wyvern_roar": {
+    "category": "hostile",
+    "subtitle": "subtitles.awakening_system.wyvern_roar",
+    "sounds": [
+      "awakening_system:ancient_dragon_roar"
+    ]
+  },
+  "wyvern_hurt": {
+    "category": "hostile",
+    "subtitle": "subtitles.awakening_system.wyvern_hurt",
+    "sounds": [
+      "awakening_system:ancient_dragon_hurt"
+    ]
+  },
+  "wyvern_death": {
+    "category": "hostile",
+    "subtitle": "subtitles.awakening_system.wyvern_death",
+    "sounds": [
+      "awakening_system:ancient_dragon_death"
+    ]
+  },
+  "wyvern_breath": {
+    "category": "hostile",
+    "subtitle": "subtitles.awakening_system.wyvern_breath",
+    "sounds": [
+      "awakening_system:ancient_dragon_breath"
+    ]
+  },
+  "herta_swing": {
+    "category": "player",
+    "subtitle": "subtitles.awakening_system.herta_swing",
+    "sounds": [
+      "awakening_system:herta_swing"
+    ]
+  },
+  "herta_hit": {
+    "category": "player",
+    "subtitle": "subtitles.awakening_system.herta_hit",
+    "sounds": [
+      "awakening_system:herta_hit"
+    ]
+  },
+  "herta_kuru": {
+    "category": "voice",
+    "subtitle": "subtitles.awakening_system.herta_kuru",
+    "sounds": [
+      "awakening_system:herta_kuru"
+    ]
+  },
+  "herta_kururin": {
+    "category": "voice",
+    "subtitle": "subtitles.awakening_system.herta_kururin",
+    "sounds": [
+      "awakening_system:herta_kururin"
+    ]
+  },
+  "domain_of_sanction_slash": {
+    "category": "player",
+    "subtitle": "subtitles.awakening_system.domain_of_sanction_slash",
+    "sounds": [
+      "awakening_system:domain_of_sanction_slash"
+    ]
+  },
+  "wish_meteor_5star": {
+    "category": "player",
+    "subtitle": "subtitles.awakening_system.wish_meteor_5star",
+    "sounds": [
+      "awakening_system:wish_meteor_5star"
+    ]
+  },
+  "wish_meteor_4star": {
+    "category": "player",
+    "subtitle": "subtitles.awakening_system.wish_meteor_4star",
+    "sounds": [
+      "awakening_system:wish_meteor_4star"
+    ]
+  },
+  "wish_meteor_3star": {
+    "category": "player",
+    "subtitle": "subtitles.awakening_system.wish_meteor_3star",
+    "sounds": [
+      "awakening_system:wish_meteor_3star"
+    ]
+  },
+  "wish_reveal_5star": {
+    "category": "player",
+    "subtitle": "subtitles.awakening_system.wish_reveal_5star",
+    "sounds": [
+      "awakening_system:wish_reveal_5star"
+    ]
+  },
+  "wish_reveal_4star": {
+    "category": "player",
+    "subtitle": "subtitles.awakening_system.wish_reveal_4star",
+    "sounds": [
+      "awakening_system:wish_reveal_4star"
+    ]
+  },
+  "wish_reveal_3star": {
+    "category": "player",
+    "subtitle": "subtitles.awakening_system.wish_reveal_3star",
+    "sounds": [
+      "awakening_system:wish_reveal_3star"
+    ]
+  },
+  "wish_result_list": {
+    "category": "player",
+    "subtitle": "subtitles.awakening_system.wish_result_list",
+    "sounds": [
+      "awakening_system:wish_result_list"
+    ]
+  },
+  "wish_ambient": {
+    "category": "player",
+    "subtitle": "subtitles.awakening_system.wish_ambient",
+    "sounds": [
+      {
+        "name": "awakening_system:wish_ambient",
+        "stream": true
+      }
+    ]
+  },
+  "welkin_open": {
+    "category": "player",
+    "subtitle": "subtitles.awakening_system.welkin_open",
+    "sounds": [
+      "awakening_system:welkin_open"
+    ]
+  },
+  "welkin_claim": {
+    "category": "player",
+    "subtitle": "subtitles.awakening_system.welkin_claim",
+    "sounds": [
+      "awakening_system:welkin_claim"
+    ]
+  },
+  "welkin_bgm": {
+    "category": "record",
+    "subtitle": "subtitles.awakening_system.welkin_bgm",
+    "sounds": [
+      {
+        "name": "awakening_system:welkin_bgm",
+        "stream": true
+      }
+    ]
+  },
+  "childe_battle_bgm": {
+    "category": "record",
+    "subtitle": "subtitles.awakening_system.childe_battle_bgm",
+    "sounds": [
+      {
+        "name": "awakening_system:music_disc_waters_poem",
+        "stream": true
+      }
+    ]
+  },
+  "raiden_battle_bgm": {
+    "category": "record",
+    "subtitle": "subtitles.awakening_system.raiden_battle_bgm",
+    "sounds": [
+      {
+        "name": "awakening_system:music_disc_divine_fox",
+        "stream": true
+      }
+    ]
+  },
+  "music_disc_take_the_journey": {
+    "category": "record",
+    "subtitle": "subtitles.awakening_system.music_disc_take_the_journey",
+    "sounds": [
+      {
+        "name": "awakening_system:music_disc_take_the_journey",
+        "stream": true
+      }
+    ]
+  },
+  "music_disc_space_walk": {
+    "category": "record",
+    "subtitle": "subtitles.awakening_system.music_disc_space_walk",
+    "sounds": [
+      {
+        "name": "awakening_system:music_disc_space_walk",
+        "stream": true
+      }
+    ]
+  },
+  "music_disc_qingce_night": {
+    "category": "record",
+    "subtitle": "subtitles.awakening_system.music_disc_qingce_night",
+    "sounds": [
+      {
+        "name": "awakening_system:music_disc_qingce_night",
+        "stream": true
+      }
+    ]
+  },
+  "music_disc_windrise_night": {
+    "category": "record",
+    "subtitle": "subtitles.awakening_system.music_disc_windrise_night",
+    "sounds": [
+      {
+        "name": "awakening_system:music_disc_windrise_night",
+        "stream": true
+      }
+    ]
+  },
+  "music_disc_divine_fox": {
+    "category": "record",
+    "subtitle": "subtitles.awakening_system.music_disc_divine_fox",
+    "sounds": [
+      {
+        "name": "awakening_system:music_disc_divine_fox",
+        "stream": true
+      }
+    ]
+  },
+  "music_disc_waters_poem": {
+    "category": "record",
+    "subtitle": "subtitles.awakening_system.music_disc_waters_poem",
+    "sounds": [
+      {
+        "name": "awakening_system:music_disc_waters_poem",
+        "stream": true
+      }
+    ]
+  },
+  "music_disc_day_of_hope": {
+    "category": "record",
+    "subtitle": "subtitles.awakening_system.music_disc_day_of_hope",
+    "sounds": [
+      {
+        "name": "awakening_system:music_disc_day_of_hope",
+        "stream": true
+      }
+    ]
+  },
+  "music_disc_chasing_stars": {
+    "category": "record",
+    "subtitle": "subtitles.awakening_system.music_disc_chasing_stars",
+    "sounds": [
+      {
+        "name": "awakening_system:music_disc_chasing_stars",
+        "stream": true
+      }
+    ]
+  },
+  "music_disc_salted_moon": {
+    "category": "record",
+    "subtitle": "subtitles.awakening_system.music_disc_salted_moon",
+    "sounds": [
+      {
+        "name": "awakening_system:music_disc_salted_moon",
+        "stream": true
+      }
+    ]
+  },
+  "curio_break": {
+    "category": "player",
+    "subtitle": "subtitles.awakening_system.curio_break",
+    "sounds": [
+      "awakening_system:curio_break"
+    ]
+  },
+  "companion_furina_summon": {
+    "category": "voice",
+    "subtitle": "subtitles.awakening_system.companion_furina_summon",
+    "sounds": [
+      "awakening_system:companion/companion_furina_summon"
+    ]
+  },
+  "companion_furina_skill": {
+    "category": "voice",
+    "subtitle": "subtitles.awakening_system.companion_furina_skill",
+    "sounds": [
+      "awakening_system:companion/companion_furina_skill"
+    ]
+  },
+  "companion_furina_ambient": {
+    "category": "voice",
+    "subtitle": "subtitles.awakening_system.companion_furina_ambient",
+    "sounds": [
+      "awakening_system:companion/companion_furina_ambient"
+    ]
+  },
+  "companion_furina_hurt": {
+    "category": "voice",
+    "subtitle": "subtitles.awakening_system.companion_furina_hurt",
+    "sounds": [
+      "awakening_system:companion/companion_furina_hurt"
+    ]
+  },
+  "companion_raiden_shogun_summon": {
+    "category": "voice",
+    "subtitle": "subtitles.awakening_system.companion_raiden_shogun_summon",
+    "sounds": [
+      "awakening_system:companion/companion_raiden_shogun_summon"
+    ]
+  },
+  "companion_raiden_shogun_skill": {
+    "category": "voice",
+    "subtitle": "subtitles.awakening_system.companion_raiden_shogun_skill",
+    "sounds": [
+      "awakening_system:companion/companion_raiden_shogun_skill"
+    ]
+  },
+  "companion_raiden_shogun_ambient": {
+    "category": "voice",
+    "subtitle": "subtitles.awakening_system.companion_raiden_shogun_ambient",
+    "sounds": [
+      "awakening_system:companion/companion_raiden_shogun_ambient"
+    ]
+  },
+  "companion_raiden_shogun_hurt": {
+    "category": "voice",
+    "subtitle": "subtitles.awakening_system.companion_raiden_shogun_hurt",
+    "sounds": [
+      "awakening_system:companion/companion_raiden_shogun_hurt"
+    ]
+  },
+  "companion_hu_tao_summon": {
+    "category": "voice",
+    "subtitle": "subtitles.awakening_system.companion_hu_tao_summon",
+    "sounds": [
+      "awakening_system:companion/companion_hu_tao_summon"
+    ]
+  },
+  "companion_hu_tao_skill": {
+    "category": "voice",
+    "subtitle": "subtitles.awakening_system.companion_hu_tao_skill",
+    "sounds": [
+      "awakening_system:companion/companion_hu_tao_skill"
+    ]
+  },
+  "companion_hu_tao_ambient": {
+    "category": "voice",
+    "subtitle": "subtitles.awakening_system.companion_hu_tao_ambient",
+    "sounds": [
+      "awakening_system:companion/companion_hu_tao_ambient"
+    ]
+  },
+  "companion_hu_tao_hurt": {
+    "category": "voice",
+    "subtitle": "subtitles.awakening_system.companion_hu_tao_hurt",
+    "sounds": [
+      "awakening_system:companion/companion_hu_tao_hurt"
+    ]
+  },
+  "companion_zhongli_summon": {
+    "category": "voice",
+    "subtitle": "subtitles.awakening_system.companion_zhongli_summon",
+    "sounds": [
+      "awakening_system:companion/companion_zhongli_summon"
+    ]
+  },
+  "companion_zhongli_skill": {
+    "category": "voice",
+    "subtitle": "subtitles.awakening_system.companion_zhongli_skill",
+    "sounds": [
+      "awakening_system:companion/companion_zhongli_skill"
+    ]
+  },
+  "companion_zhongli_ambient": {
+    "category": "voice",
+    "subtitle": "subtitles.awakening_system.companion_zhongli_ambient",
+    "sounds": [
+      "awakening_system:companion/companion_zhongli_ambient"
+    ]
+  },
+  "companion_zhongli_hurt": {
+    "category": "voice",
+    "subtitle": "subtitles.awakening_system.companion_zhongli_hurt",
+    "sounds": [
+      "awakening_system:companion/companion_zhongli_hurt"
+    ]
+  },
+  "companion_nahida_summon": {
+    "category": "voice",
+    "subtitle": "subtitles.awakening_system.companion_nahida_summon",
+    "sounds": [
+      "awakening_system:companion/companion_nahida_summon"
+    ]
+  },
+  "companion_nahida_skill": {
+    "category": "voice",
+    "subtitle": "subtitles.awakening_system.companion_nahida_skill",
+    "sounds": [
+      "awakening_system:companion/companion_nahida_skill"
+    ]
+  },
+  "companion_nahida_ambient": {
+    "category": "voice",
+    "subtitle": "subtitles.awakening_system.companion_nahida_ambient",
+    "sounds": [
+      "awakening_system:companion/companion_nahida_ambient"
+    ]
+  },
+  "companion_nahida_hurt": {
+    "category": "voice",
+    "subtitle": "subtitles.awakening_system.companion_nahida_hurt",
+    "sounds": [
+      "awakening_system:companion/companion_nahida_hurt"
+    ]
+  },
+  "companion_kazuha_summon": {
+    "category": "voice",
+    "subtitle": "subtitles.awakening_system.companion_kazuha_summon",
+    "sounds": [
+      "awakening_system:companion/companion_kazuha_summon"
+    ]
+  },
+  "companion_kazuha_skill": {
+    "category": "voice",
+    "subtitle": "subtitles.awakening_system.companion_kazuha_skill",
+    "sounds": [
+      "awakening_system:companion/companion_kazuha_skill"
+    ]
+  },
+  "companion_kazuha_ambient": {
+    "category": "voice",
+    "subtitle": "subtitles.awakening_system.companion_kazuha_ambient",
+    "sounds": [
+      "awakening_system:companion/companion_kazuha_ambient"
+    ]
+  },
+  "companion_kazuha_hurt": {
+    "category": "voice",
+    "subtitle": "subtitles.awakening_system.companion_kazuha_hurt",
+    "sounds": [
+      "awakening_system:companion/companion_kazuha_hurt"
+    ]
+  },
+  "companion_noelle_summon": {
+    "category": "voice",
+    "subtitle": "subtitles.awakening_system.companion_noelle_summon",
+    "sounds": [
+      "awakening_system:companion/companion_noelle_summon"
+    ]
+  },
+  "companion_noelle_skill": {
+    "category": "voice",
+    "subtitle": "subtitles.awakening_system.companion_noelle_skill",
+    "sounds": [
+      "awakening_system:companion/companion_noelle_skill"
+    ]
+  },
+  "companion_noelle_ambient": {
+    "category": "voice",
+    "subtitle": "subtitles.awakening_system.companion_noelle_ambient",
+    "sounds": [
+      "awakening_system:companion/companion_noelle_ambient"
+    ]
+  },
+  "companion_noelle_hurt": {
+    "category": "voice",
+    "subtitle": "subtitles.awakening_system.companion_noelle_hurt",
+    "sounds": [
+      "awakening_system:companion/companion_noelle_hurt"
+    ]
+  },
+  "companion_gojo_satoru_summon": {
+    "category": "voice",
+    "subtitle": "subtitles.awakening_system.companion_gojo_satoru_summon",
+    "sounds": [
+      "awakening_system:companion/companion_gojo_satoru_summon"
+    ]
+  },
+  "companion_gojo_satoru_skill": {
+    "category": "voice",
+    "subtitle": "subtitles.awakening_system.companion_gojo_satoru_skill",
+    "sounds": [
+      "awakening_system:companion/companion_gojo_satoru_skill"
+    ]
+  },
+  "companion_gojo_satoru_ambient": {
+    "category": "voice",
+    "subtitle": "subtitles.awakening_system.companion_gojo_satoru_ambient",
+    "sounds": [
+      "awakening_system:companion/companion_gojo_satoru_ambient"
+    ]
+  },
+  "companion_gojo_satoru_hurt": {
+    "category": "voice",
+    "subtitle": "subtitles.awakening_system.companion_gojo_satoru_hurt",
+    "sounds": [
+      "awakening_system:companion/companion_gojo_satoru_hurt"
+    ]
+  },
+  "companion_sung_jinwoo_summon": {
+    "category": "voice",
+    "subtitle": "subtitles.awakening_system.companion_sung_jinwoo_summon",
+    "sounds": [
+      "awakening_system:companion/companion_sung_jinwoo_summon"
+    ]
+  },
+  "companion_sung_jinwoo_skill": {
+    "category": "voice",
+    "subtitle": "subtitles.awakening_system.companion_sung_jinwoo_skill",
+    "sounds": [
+      "awakening_system:companion/companion_sung_jinwoo_skill"
+    ]
+  },
+  "companion_sung_jinwoo_ambient": {
+    "category": "voice",
+    "subtitle": "subtitles.awakening_system.companion_sung_jinwoo_ambient",
+    "sounds": [
+      "awakening_system:companion/companion_sung_jinwoo_ambient"
+    ]
+  },
+  "companion_sung_jinwoo_hurt": {
+    "category": "voice",
+    "subtitle": "subtitles.awakening_system.companion_sung_jinwoo_hurt",
+    "sounds": [
+      "awakening_system:companion/companion_sung_jinwoo_hurt"
+    ]
+  },
+  "companion_cha_haein_summon": {
+    "category": "voice",
+    "subtitle": "subtitles.awakening_system.companion_cha_haein_summon",
+    "sounds": [
+      "awakening_system:companion/companion_cha_haein_summon"
+    ]
+  },
+  "companion_cha_haein_skill": {
+    "category": "voice",
+    "subtitle": "subtitles.awakening_system.companion_cha_haein_skill",
+    "sounds": [
+      "awakening_system:companion/companion_cha_haein_skill"
+    ]
+  },
+  "companion_cha_haein_ambient": {
+    "category": "voice",
+    "subtitle": "subtitles.awakening_system.companion_cha_haein_ambient",
+    "sounds": [
+      "awakening_system:companion/companion_cha_haein_ambient"
+    ]
+  },
+  "companion_cha_haein_hurt": {
+    "category": "voice",
+    "subtitle": "subtitles.awakening_system.companion_cha_haein_hurt",
+    "sounds": [
+      "awakening_system:companion/companion_cha_haein_hurt"
+    ]
+  },
+  "companion_diluc_summon": {
+    "category": "voice",
+    "subtitle": "subtitles.awakening_system.companion_diluc_summon",
+    "sounds": [
+      "awakening_system:companion/companion_diluc_summon"
+    ]
+  },
+  "companion_diluc_skill": {
+    "category": "voice",
+    "subtitle": "subtitles.awakening_system.companion_diluc_skill",
+    "sounds": [
+      "awakening_system:companion/companion_diluc_skill"
+    ]
+  },
+  "companion_diluc_ambient": {
+    "category": "voice",
+    "subtitle": "subtitles.awakening_system.companion_diluc_ambient",
+    "sounds": [
+      "awakening_system:companion/companion_diluc_ambient"
+    ]
+  },
+  "companion_diluc_hurt": {
+    "category": "voice",
+    "subtitle": "subtitles.awakening_system.companion_diluc_hurt",
+    "sounds": [
+      "awakening_system:companion/companion_diluc_hurt"
+    ]
+  },
+  "companion_jean_summon": {
+    "category": "voice",
+    "subtitle": "subtitles.awakening_system.companion_jean_summon",
+    "sounds": [
+      "awakening_system:companion/companion_jean_summon"
+    ]
+  },
+  "companion_jean_skill": {
+    "category": "voice",
+    "subtitle": "subtitles.awakening_system.companion_jean_skill",
+    "sounds": [
+      "awakening_system:companion/companion_jean_skill"
+    ]
+  },
+  "companion_jean_ambient": {
+    "category": "voice",
+    "subtitle": "subtitles.awakening_system.companion_jean_ambient",
+    "sounds": [
+      "awakening_system:companion/companion_jean_ambient"
+    ]
+  },
+  "companion_jean_hurt": {
+    "category": "voice",
+    "subtitle": "subtitles.awakening_system.companion_jean_hurt",
+    "sounds": [
+      "awakening_system:companion/companion_jean_hurt"
+    ]
+  },
+  "companion_bennett_summon": {
+    "category": "voice",
+    "subtitle": "subtitles.awakening_system.companion_bennett_summon",
+    "sounds": [
+      "awakening_system:companion/companion_bennett_summon"
+    ]
+  },
+  "companion_bennett_skill": {
+    "category": "voice",
+    "subtitle": "subtitles.awakening_system.companion_bennett_skill",
+    "sounds": [
+      "awakening_system:companion/companion_bennett_skill"
+    ]
+  },
+  "companion_bennett_ambient": {
+    "category": "voice",
+    "subtitle": "subtitles.awakening_system.companion_bennett_ambient",
+    "sounds": [
+      "awakening_system:companion/companion_bennett_ambient"
+    ]
+  },
+  "companion_bennett_hurt": {
+    "category": "voice",
+    "subtitle": "subtitles.awakening_system.companion_bennett_hurt",
+    "sounds": [
+      "awakening_system:companion/companion_bennett_hurt"
+    ]
+  },
+  "casino_insert_coin": {
+    "category": "block",
+    "subtitle": "subtitles.awakening_system.casino_insert_coin",
+    "sounds": [
+      "awakening_system:inserting_coin"
+    ]
+  },
+  "casino_reels_spinning": {
+    "category": "block",
+    "subtitle": "subtitles.awakening_system.casino_reels_spinning",
+    "sounds": [
+      "awakening_system:reels_spinning"
+    ]
+  },
+  "casino_win": {
+    "category": "block",
+    "subtitle": "subtitles.awakening_system.casino_win",
+    "sounds": [
+      "awakening_system:win"
+    ]
+  },
+  "casino_jackpot": {
+    "category": "block",
+    "subtitle": "subtitles.awakening_system.casino_jackpot",
+    "sounds": [
+      "awakening_system:jackpot"
+    ]
+  },
+  "casino_lose": {
+    "category": "block",
+    "subtitle": "subtitles.awakening_system.casino_lose",
+    "sounds": [
+      "awakening_system:lose"
+    ]
+  },
+  "casino_bonus_prize": {
+    "category": "block",
+    "subtitle": "subtitles.awakening_system.casino_bonus_prize",
+    "sounds": [
+      "awakening_system:bonus_prize"
+    ]
+  },
+  "gacha_common_prize": {
+    "category": "block",
+    "subtitle": "subtitles.awakening_system.gacha_common_prize",
+    "sounds": [
+      "awakening_system:common_prize"
+    ]
+  },
+  "gacha_uncommon_prize": {
+    "category": "block",
+    "subtitle": "subtitles.awakening_system.gacha_uncommon_prize",
+    "sounds": [
+      "awakening_system:uncommon_prize"
+    ]
+  },
+  "gacha_rare_prize": {
+    "category": "block",
+    "subtitle": "subtitles.awakening_system.gacha_rare_prize",
+    "sounds": [
+      "awakening_system:rare_prize"
+    ]
+  },
+  "gacha_ultrarare_prize": {
+    "category": "block",
+    "subtitle": "subtitles.awakening_system.gacha_ultrarare_prize",
+    "sounds": [
+      "awakening_system:ultrarare_prize"
+    ]
+  },
+  "gacha_legendary_prize": {
+    "category": "block",
+    "subtitle": "subtitles.awakening_system.gacha_legendary_prize",
+    "sounds": [
+      "awakening_system:legendary_prize"
+    ]
+  },
+  "gacha_open_prize": {
+    "category": "player",
+    "subtitle": "subtitles.awakening_system.gacha_open_prize",
+    "sounds": [
+      "awakening_system:open_prize"
+    ]
+  },
+  "casino_button": {
+    "category": "player",
+    "subtitle": "subtitles.awakening_system.casino_button",
+    "sounds": [
+      "awakening_system:button"
+    ]
+  },
+  "genshin_slime_ambient": {
+    "category": "hostile",
+    "subtitle": "subtitles.awakening_system.genshin_slime_ambient",
+    "sounds": [
+      "awakening_system:genshin_slime_ambient1",
+      "awakening_system:genshin_slime_ambient2",
+      "awakening_system:genshin_slime_ambient3"
+    ]
+  },
+  "genshin_slime_hurt": {
+    "category": "hostile",
+    "subtitle": "subtitles.awakening_system.genshin_slime_hurt",
+    "sounds": [
+      "awakening_system:genshin_slime_hurt"
+    ]
+  },
+  "genshin_slime_death": {
+    "category": "hostile",
+    "subtitle": "subtitles.awakening_system.genshin_slime_death",
+    "sounds": [
+      "awakening_system:genshin_slime_death"
+    ]
+  },
+  "genshin_slime_jump": {
+    "category": "hostile",
+    "subtitle": "subtitles.awakening_system.genshin_slime_jump",
+    "sounds": [
+      "awakening_system:genshin_slime_jump"
+    ]
+  },
+  "hilichurl_ambient": {
+    "category": "hostile",
+    "subtitle": "subtitles.awakening_system.hilichurl_ambient",
+    "sounds": [
+      "awakening_system:hilichurl_ambient1",
+      "awakening_system:hilichurl_ambient2",
+      "awakening_system:hilichurl_ambient3"
+    ]
+  },
+  "hilichurl_hurt": {
+    "category": "hostile",
+    "subtitle": "subtitles.awakening_system.hilichurl_hurt",
+    "sounds": [
+      "awakening_system:hilichurl_hurt1",
+      "awakening_system:hilichurl_hurt2"
+    ]
+  },
+  "hilichurl_death": {
+    "category": "hostile",
+    "subtitle": "subtitles.awakening_system.hilichurl_death",
+    "sounds": [
+      "awakening_system:hilichurl_death1",
+      "awakening_system:hilichurl_death2"
+    ]
+  },
+  "hilichurl_attack": {
+    "category": "hostile",
+    "subtitle": "subtitles.awakening_system.hilichurl_attack",
+    "sounds": [
+      "awakening_system:hilichurl_attack"
+    ]
+  },
+  "mitachurl_ambient": {
+    "category": "hostile",
+    "subtitle": "subtitles.awakening_system.mitachurl_ambient",
+    "sounds": [
+      "awakening_system:mitachurl_ambient1",
+      "awakening_system:mitachurl_ambient2"
+    ]
+  },
+  "mitachurl_hurt": {
+    "category": "hostile",
+    "subtitle": "subtitles.awakening_system.mitachurl_hurt",
+    "sounds": [
+      "awakening_system:mitachurl_hurt1",
+      "awakening_system:mitachurl_hurt2"
+    ]
+  },
+  "mitachurl_death": {
+    "category": "hostile",
+    "subtitle": "subtitles.awakening_system.mitachurl_death",
+    "sounds": [
+      "awakening_system:mitachurl_death1",
+      "awakening_system:mitachurl_death2"
+    ]
+  },
+  "mitachurl_axe_slam": {
+    "category": "hostile",
+    "subtitle": "subtitles.awakening_system.mitachurl_axe_slam",
+    "sounds": [
+      "awakening_system:mitachurl_axe_slam"
+    ]
+  },
+  "mitachurl_shield_charge": {
+    "category": "hostile",
+    "subtitle": "subtitles.awakening_system.mitachurl_shield_charge",
+    "sounds": [
+      "awakening_system:mitachurl_shield_charge"
+    ]
+  },
+  "abyss_enter": {
+    "category": "player",
+    "subtitle": "subtitles.awakening_system.abyss_enter",
+    "sounds": [
+      "awakening_system:abyss_enter"
+    ]
+  },
+  "companion_xiao_summon": {
+    "category": "voice",
+    "subtitle": "subtitles.awakening_system.companion_xiao_summon",
+    "sounds": [
+      "awakening_system:companion/companion_xiao_summon"
+    ]
+  },
+  "companion_xiao_skill": {
+    "category": "voice",
+    "subtitle": "subtitles.awakening_system.companion_xiao_skill",
+    "sounds": [
+      "awakening_system:companion/companion_xiao_skill"
+    ]
+  },
+  "companion_xiao_ambient": {
+    "category": "voice",
+    "subtitle": "subtitles.awakening_system.companion_xiao_ambient",
+    "sounds": [
+      "awakening_system:companion/companion_xiao_ambient"
+    ]
+  },
+  "companion_xiao_hurt": {
+    "category": "voice",
+    "subtitle": "subtitles.awakening_system.companion_xiao_hurt",
+    "sounds": [
+      "awakening_system:companion/companion_xiao_hurt"
+    ]
+  },
+  "companion_arlecchino_summon": {
+    "category": "voice",
+    "subtitle": "subtitles.awakening_system.companion_arlecchino_summon",
+    "sounds": [
+      "awakening_system:companion/companion_arlecchino_summon"
+    ]
+  },
+  "companion_arlecchino_skill": {
+    "category": "voice",
+    "subtitle": "subtitles.awakening_system.companion_arlecchino_skill",
+    "sounds": [
+      "awakening_system:companion/companion_arlecchino_skill"
+    ]
+  },
+  "companion_arlecchino_ambient": {
+    "category": "voice",
+    "subtitle": "subtitles.awakening_system.companion_arlecchino_ambient",
+    "sounds": [
+      "awakening_system:companion/companion_arlecchino_ambient"
+    ]
+  },
+  "companion_arlecchino_hurt": {
+    "category": "voice",
+    "subtitle": "subtitles.awakening_system.companion_arlecchino_hurt",
+    "sounds": [
+      "awakening_system:companion/companion_arlecchino_hurt"
+    ]
+  },
+  "companion_acheron_summon": {
+    "category": "voice",
+    "subtitle": "subtitles.awakening_system.companion_acheron_summon",
+    "sounds": [
+      "awakening_system:companion/companion_acheron_summon"
+    ]
+  },
+  "companion_acheron_skill": {
+    "category": "voice",
+    "subtitle": "subtitles.awakening_system.companion_acheron_skill",
+    "sounds": [
+      "awakening_system:companion/companion_acheron_skill"
+    ]
+  },
+  "companion_acheron_ambient": {
+    "category": "voice",
+    "subtitle": "subtitles.awakening_system.companion_acheron_ambient",
+    "sounds": [
+      "awakening_system:companion/companion_acheron_ambient"
+    ]
+  },
+  "companion_acheron_hurt": {
+    "category": "voice",
+    "subtitle": "subtitles.awakening_system.companion_acheron_hurt",
+    "sounds": [
+      "awakening_system:companion/companion_acheron_hurt"
+    ]
+  },
+  "companion_kafka_summon": {
+    "category": "voice",
+    "subtitle": "subtitles.awakening_system.companion_kafka_summon",
+    "sounds": [
+      "awakening_system:companion/companion_kafka_summon"
+    ]
+  },
+  "companion_kafka_skill": {
+    "category": "voice",
+    "subtitle": "subtitles.awakening_system.companion_kafka_skill",
+    "sounds": [
+      "awakening_system:companion/companion_kafka_skill"
+    ]
+  },
+  "companion_kafka_ambient": {
+    "category": "voice",
+    "subtitle": "subtitles.awakening_system.companion_kafka_ambient",
+    "sounds": [
+      "awakening_system:companion/companion_kafka_ambient"
+    ]
+  },
+  "companion_kafka_hurt": {
+    "category": "voice",
+    "subtitle": "subtitles.awakening_system.companion_kafka_hurt",
+    "sounds": [
+      "awakening_system:companion/companion_kafka_hurt"
+    ]
+  },
+  "companion_firefly_summon": {
+    "category": "voice",
+    "subtitle": "subtitles.awakening_system.companion_firefly_summon",
+    "sounds": [
+      "awakening_system:companion/companion_firefly_summon"
+    ]
+  },
+  "companion_firefly_skill": {
+    "category": "voice",
+    "subtitle": "subtitles.awakening_system.companion_firefly_skill",
+    "sounds": [
+      "awakening_system:companion/companion_firefly_skill"
+    ]
+  },
+  "companion_firefly_ambient": {
+    "category": "voice",
+    "subtitle": "subtitles.awakening_system.companion_firefly_ambient",
+    "sounds": [
+      "awakening_system:companion/companion_firefly_ambient"
+    ]
+  },
+  "companion_firefly_hurt": {
+    "category": "voice",
+    "subtitle": "subtitles.awakening_system.companion_firefly_hurt",
+    "sounds": [
+      "awakening_system:companion/companion_firefly_hurt"
+    ]
+  },
+  "companion_ellen_joe_summon": {
+    "category": "voice",
+    "subtitle": "subtitles.awakening_system.companion_ellen_joe_summon",
+    "sounds": [
+      "awakening_system:companion/companion_ellen_joe_summon"
+    ]
+  },
+  "companion_ellen_joe_skill": {
+    "category": "voice",
+    "subtitle": "subtitles.awakening_system.companion_ellen_joe_skill",
+    "sounds": [
+      "awakening_system:companion/companion_ellen_joe_skill"
+    ]
+  },
+  "companion_ellen_joe_ambient": {
+    "category": "voice",
+    "subtitle": "subtitles.awakening_system.companion_ellen_joe_ambient",
+    "sounds": [
+      "awakening_system:companion/companion_ellen_joe_ambient"
+    ]
+  },
+  "companion_ellen_joe_hurt": {
+    "category": "voice",
+    "subtitle": "subtitles.awakening_system.companion_ellen_joe_hurt",
+    "sounds": [
+      "awakening_system:companion/companion_ellen_joe_hurt"
+    ]
+  },
+  "companion_igris_summon": {
+    "category": "voice",
+    "subtitle": "subtitles.awakening_system.companion_igris_summon",
+    "sounds": [
+      "awakening_system:companion/companion_igris_summon"
+    ]
+  },
+  "companion_igris_skill": {
+    "category": "voice",
+    "subtitle": "subtitles.awakening_system.companion_igris_skill",
+    "sounds": [
+      "awakening_system:companion/companion_igris_skill"
+    ]
+  },
+  "companion_igris_ambient": {
+    "category": "voice",
+    "subtitle": "subtitles.awakening_system.companion_igris_ambient",
+    "sounds": [
+      "awakening_system:companion/companion_igris_ambient"
+    ]
+  },
+  "companion_igris_hurt": {
+    "category": "voice",
+    "subtitle": "subtitles.awakening_system.companion_igris_hurt",
+    "sounds": [
+      "awakening_system:companion/companion_igris_hurt"
+    ]
+  },
+  "companion_beru_summon": {
+    "category": "voice",
+    "subtitle": "subtitles.awakening_system.companion_beru_summon",
+    "sounds": [
+      "awakening_system:companion/companion_beru_summon"
+    ]
+  },
+  "companion_beru_skill": {
+    "category": "voice",
+    "subtitle": "subtitles.awakening_system.companion_beru_skill",
+    "sounds": [
+      "awakening_system:companion/companion_beru_skill"
+    ]
+  },
+  "companion_beru_ambient": {
+    "category": "voice",
+    "subtitle": "subtitles.awakening_system.companion_beru_ambient",
+    "sounds": [
+      "awakening_system:companion/companion_beru_ambient"
+    ]
+  },
+  "companion_beru_hurt": {
+    "category": "voice",
+    "subtitle": "subtitles.awakening_system.companion_beru_hurt",
+    "sounds": [
+      "awakening_system:companion/companion_beru_hurt"
+    ]
+  },
+  "companion_sukuna_summon": {
+    "category": "voice",
+    "subtitle": "subtitles.awakening_system.companion_sukuna_summon",
+    "sounds": [
+      "awakening_system:companion/companion_sukuna_summon"
+    ]
+  },
+  "companion_sukuna_skill": {
+    "category": "voice",
+    "subtitle": "subtitles.awakening_system.companion_sukuna_skill",
+    "sounds": [
+      "awakening_system:companion/companion_sukuna_skill"
+    ]
+  },
+  "companion_sukuna_ambient": {
+    "category": "voice",
+    "subtitle": "subtitles.awakening_system.companion_sukuna_ambient",
+    "sounds": [
+      "awakening_system:companion/companion_sukuna_ambient"
+    ]
+  },
+  "companion_sukuna_hurt": {
+    "category": "voice",
+    "subtitle": "subtitles.awakening_system.companion_sukuna_hurt",
+    "sounds": [
+      "awakening_system:companion/companion_sukuna_hurt"
+    ]
+  },
+  "companion_yuji_itadori_summon": {
+    "category": "voice",
+    "subtitle": "subtitles.awakening_system.companion_yuji_itadori_summon",
+    "sounds": [
+      "awakening_system:companion/companion_yuji_itadori_summon"
+    ]
+  },
+  "companion_yuji_itadori_skill": {
+    "category": "voice",
+    "subtitle": "subtitles.awakening_system.companion_yuji_itadori_skill",
+    "sounds": [
+      "awakening_system:companion/companion_yuji_itadori_skill"
+    ]
+  },
+  "companion_yuji_itadori_ambient": {
+    "category": "voice",
+    "subtitle": "subtitles.awakening_system.companion_yuji_itadori_ambient",
+    "sounds": [
+      "awakening_system:companion/companion_yuji_itadori_ambient"
+    ]
+  },
+  "companion_yuji_itadori_hurt": {
+    "category": "voice",
+    "subtitle": "subtitles.awakening_system.companion_yuji_itadori_hurt",
+    "sounds": [
+      "awakening_system:companion/companion_yuji_itadori_hurt"
+    ]
+  },
+  "companion_megumi_summon": {
+    "category": "voice",
+    "subtitle": "subtitles.awakening_system.companion_megumi_summon",
+    "sounds": [
+      "awakening_system:companion/companion_megumi_summon"
+    ]
+  },
+  "companion_megumi_skill": {
+    "category": "voice",
+    "subtitle": "subtitles.awakening_system.companion_megumi_skill",
+    "sounds": [
+      "awakening_system:companion/companion_megumi_skill"
+    ]
+  },
+  "companion_megumi_ambient": {
+    "category": "voice",
+    "subtitle": "subtitles.awakening_system.companion_megumi_ambient",
+    "sounds": [
+      "awakening_system:companion/companion_megumi_ambient"
+    ]
+  },
+  "companion_megumi_hurt": {
+    "category": "voice",
+    "subtitle": "subtitles.awakening_system.companion_megumi_hurt",
+    "sounds": [
+      "awakening_system:companion/companion_megumi_hurt"
+    ]
+  },
+  "companion_artoria_pendragon_summon": {
+    "category": "voice",
+    "subtitle": "subtitles.awakening_system.companion_artoria_pendragon_summon",
+    "sounds": [
+      "awakening_system:companion/companion_artoria_pendragon_summon"
+    ]
+  },
+  "companion_artoria_pendragon_skill": {
+    "category": "voice",
+    "subtitle": "subtitles.awakening_system.companion_artoria_pendragon_skill",
+    "sounds": [
+      "awakening_system:companion/companion_artoria_pendragon_skill"
+    ]
+  },
+  "companion_artoria_pendragon_ambient": {
+    "category": "voice",
+    "subtitle": "subtitles.awakening_system.companion_artoria_pendragon_ambient",
+    "sounds": [
+      "awakening_system:companion/companion_artoria_pendragon_ambient"
+    ]
+  },
+  "companion_artoria_pendragon_hurt": {
+    "category": "voice",
+    "subtitle": "subtitles.awakening_system.companion_artoria_pendragon_hurt",
+    "sounds": [
+      "awakening_system:companion/companion_artoria_pendragon_hurt"
+    ]
+  },
+  "companion_gilgamesh_summon": {
+    "category": "voice",
+    "subtitle": "subtitles.awakening_system.companion_gilgamesh_summon",
+    "sounds": [
+      "awakening_system:companion/companion_gilgamesh_summon"
+    ]
+  },
+  "companion_gilgamesh_skill": {
+    "category": "voice",
+    "subtitle": "subtitles.awakening_system.companion_gilgamesh_skill",
+    "sounds": [
+      "awakening_system:companion/companion_gilgamesh_skill"
+    ]
+  },
+  "companion_gilgamesh_ambient": {
+    "category": "voice",
+    "subtitle": "subtitles.awakening_system.companion_gilgamesh_ambient",
+    "sounds": [
+      "awakening_system:companion/companion_gilgamesh_ambient"
+    ]
+  },
+  "companion_gilgamesh_hurt": {
+    "category": "voice",
+    "subtitle": "subtitles.awakening_system.companion_gilgamesh_hurt",
+    "sounds": [
+      "awakening_system:companion/companion_gilgamesh_hurt"
+    ]
+  },
+  "companion_archer_summon": {
+    "category": "voice",
+    "subtitle": "subtitles.awakening_system.companion_archer_summon",
+    "sounds": [
+      "awakening_system:companion/companion_archer_summon"
+    ]
+  },
+  "companion_archer_skill": {
+    "category": "voice",
+    "subtitle": "subtitles.awakening_system.companion_archer_skill",
+    "sounds": [
+      "awakening_system:companion/companion_archer_skill"
+    ]
+  },
+  "companion_archer_ambient": {
+    "category": "voice",
+    "subtitle": "subtitles.awakening_system.companion_archer_ambient",
+    "sounds": [
+      "awakening_system:companion/companion_archer_ambient"
+    ]
+  },
+  "companion_archer_hurt": {
+    "category": "voice",
+    "subtitle": "subtitles.awakening_system.companion_archer_hurt",
+    "sounds": [
+      "awakening_system:companion/companion_archer_hurt"
+    ]
+  },
+  "companion_rengoku_summon": {
+    "category": "voice",
+    "subtitle": "subtitles.awakening_system.companion_rengoku_summon",
+    "sounds": [
+      "awakening_system:companion/companion_rengoku_summon"
+    ]
+  },
+  "companion_rengoku_skill": {
+    "category": "voice",
+    "subtitle": "subtitles.awakening_system.companion_rengoku_skill",
+    "sounds": [
+      "awakening_system:companion/companion_rengoku_skill"
+    ]
+  },
+  "companion_rengoku_ambient": {
+    "category": "voice",
+    "subtitle": "subtitles.awakening_system.companion_rengoku_ambient",
+    "sounds": [
+      "awakening_system:companion/companion_rengoku_ambient"
+    ]
+  },
+  "companion_rengoku_hurt": {
+    "category": "voice",
+    "subtitle": "subtitles.awakening_system.companion_rengoku_hurt",
+    "sounds": [
+      "awakening_system:companion/companion_rengoku_hurt"
+    ]
+  },
+  "companion_tanjiro_summon": {
+    "category": "voice",
+    "subtitle": "subtitles.awakening_system.companion_tanjiro_summon",
+    "sounds": [
+      "awakening_system:companion/companion_tanjiro_summon"
+    ]
+  },
+  "companion_tanjiro_skill": {
+    "category": "voice",
+    "subtitle": "subtitles.awakening_system.companion_tanjiro_skill",
+    "sounds": [
+      "awakening_system:companion/companion_tanjiro_skill"
+    ]
+  },
+  "companion_tanjiro_ambient": {
+    "category": "voice",
+    "subtitle": "subtitles.awakening_system.companion_tanjiro_ambient",
+    "sounds": [
+      "awakening_system:companion/companion_tanjiro_ambient"
+    ]
+  },
+  "companion_tanjiro_hurt": {
+    "category": "voice",
+    "subtitle": "subtitles.awakening_system.companion_tanjiro_hurt",
+    "sounds": [
+      "awakening_system:companion/companion_tanjiro_hurt"
+    ]
+  },
+  "companion_nezuko_summon": {
+    "category": "voice",
+    "subtitle": "subtitles.awakening_system.companion_nezuko_summon",
+    "sounds": [
+      "awakening_system:companion/companion_nezuko_summon"
+    ]
+  },
+  "companion_nezuko_skill": {
+    "category": "voice",
+    "subtitle": "subtitles.awakening_system.companion_nezuko_skill",
+    "sounds": [
+      "awakening_system:companion/companion_nezuko_skill"
+    ]
+  },
+  "companion_nezuko_ambient": {
+    "category": "voice",
+    "subtitle": "subtitles.awakening_system.companion_nezuko_ambient",
+    "sounds": [
+      "awakening_system:companion/companion_nezuko_ambient"
+    ]
+  },
+  "companion_nezuko_hurt": {
+    "category": "voice",
+    "subtitle": "subtitles.awakening_system.companion_nezuko_hurt",
+    "sounds": [
+      "awakening_system:companion/companion_nezuko_hurt"
+    ]
+  },
+  "genshin_levelup": {
+    "category": "player",
+    "sounds": [
+      "awakening_system:genshin_levelup"
+    ]
+  },
+  "genshin_chest_open": {
+    "category": "player",
+    "sounds": [
+      "awakening_system:genshin_chest_open"
+    ]
+  },
+  "anemo_hypostasis_clap": {
+    "category": "hostile",
+    "subtitle": "subtitles.awakening_system.anemo_hypostasis_clap",
+    "sounds": [
+      "awakening_system:anemo_hypostasis_clap"
+    ]
+  },
+  "anemo_hypostasis_missiles": {
+    "category": "hostile",
+    "subtitle": "subtitles.awakening_system.anemo_hypostasis_missiles",
+    "sounds": [
+      "awakening_system:anemo_hypostasis_missiles"
+    ]
+  },
+  "anemo_hypostasis_tornadoes": {
+    "category": "hostile",
+    "subtitle": "subtitles.awakening_system.anemo_hypostasis_tornadoes",
+    "sounds": [
+      "awakening_system:anemo_hypostasis_tornadoes"
+    ]
+  },
+  "anemo_hypostasis_butterfly": {
+    "category": "hostile",
+    "subtitle": "subtitles.awakening_system.anemo_hypostasis_butterfly",
+    "sounds": [
+      "awakening_system:anemo_hypostasis_butterfly"
+    ]
+  },
+  "anemo_hypostasis_vacuum": {
+    "category": "hostile",
+    "subtitle": "subtitles.awakening_system.anemo_hypostasis_vacuum",
+    "sounds": [
+      "awakening_system:anemo_hypostasis_vacuum"
+    ]
+  },
+  "electro_hypostasis_clap": {
+    "category": "hostile",
+    "subtitle": "subtitles.awakening_system.electro_hypostasis_clap",
+    "sounds": [
+      "awakening_system:electro_hypostasis_clap"
+    ]
+  },
+  "electro_hypostasis_drill": {
+    "category": "hostile",
+    "subtitle": "subtitles.awakening_system.electro_hypostasis_drill",
+    "sounds": [
+      "awakening_system:electro_hypostasis_drill"
+    ]
+  },
+  "electro_hypostasis_lasers": {
+    "category": "hostile",
+    "subtitle": "subtitles.awakening_system.electro_hypostasis_lasers",
+    "sounds": [
+      "awakening_system:electro_hypostasis_lasers"
+    ]
+  },
+  "electro_hypostasis_rps": {
+    "category": "hostile",
+    "subtitle": "subtitles.awakening_system.electro_hypostasis_rps",
+    "sounds": [
+      "awakening_system:electro_hypostasis_rps"
+    ]
+  },
+  "electro_hypostasis_rebirth": {
+    "category": "hostile",
+    "subtitle": "subtitles.awakening_system.electro_hypostasis_rebirth",
+    "sounds": [
+      "awakening_system:electro_hypostasis_rebirth"
+    ]
+  },
+  "hypostasis_collapse": {
+    "category": "hostile",
+    "subtitle": "subtitles.awakening_system.hypostasis_collapse",
+    "sounds": [
+      "awakening_system:hypostasis_collapse"
+    ]
+  },
+  "hypostasis_reform": {
+    "category": "hostile",
+    "subtitle": "subtitles.awakening_system.hypostasis_reform",
+    "sounds": [
+      "awakening_system:hypostasis_reform"
+    ]
+  },
+  "entity.wildfire.ambient": {
+    "category": "hostile",
+    "subtitle": "subtitles.awakening_system.wildfire.ambient",
+    "sounds": [
+      "awakening_system:entity/wildfire/ambient1",
+      "awakening_system:entity/wildfire/ambient2",
+      "awakening_system:entity/wildfire/ambient3",
+      "awakening_system:entity/wildfire/ambient4"
+    ]
+  },
+  "entity.wildfire.hurt": {
+    "category": "hostile",
+    "subtitle": "subtitles.awakening_system.wildfire.hurt",
+    "sounds": [
+      "awakening_system:entity/wildfire/hurt1",
+      "awakening_system:entity/wildfire/hurt2",
+      "awakening_system:entity/wildfire/hurt3"
+    ]
+  },
+  "entity.wildfire.death": {
+    "category": "hostile",
+    "subtitle": "subtitles.awakening_system.wildfire.death",
+    "sounds": [
+      "awakening_system:entity/wildfire/death1",
+      "awakening_system:entity/wildfire/death2",
+      "awakening_system:entity/wildfire/death3"
+    ]
+  },
+  "entity.wildfire.shield_break": {
+    "category": "hostile",
+    "subtitle": "subtitles.awakening_system.wildfire.shield_break",
+    "sounds": [
+      "awakening_system:entity/wildfire/shield_break1",
+      "awakening_system:entity/wildfire/shield_break2",
+      "awakening_system:entity/wildfire/shield_break3"
+    ]
+  },
+  "entity.wildfire.shockwave": {
+    "category": "hostile",
+    "subtitle": "subtitles.awakening_system.wildfire.shockwave",
+    "sounds": [
+      "awakening_system:entity/wildfire/shockwave1",
+      "awakening_system:entity/wildfire/shockwave2",
+      "awakening_system:entity/wildfire/shockwave3"
+    ]
+  },
+  "entity.wildfire.shoot": {
+    "category": "hostile",
+    "subtitle": "subtitles.awakening_system.wildfire.shoot",
+    "sounds": [
+      "awakening_system:entity/wildfire/shoot1",
+      "awakening_system:entity/wildfire/shoot2",
+      "awakening_system:entity/wildfire/shoot3",
+      "awakening_system:entity/wildfire/shoot4"
+    ]
+  },
+  "entity.wildfire.summon_blaze": {
+    "category": "hostile",
+    "subtitle": "subtitles.awakening_system.wildfire.summon_blaze",
+    "sounds": [
+      "awakening_system:entity/wildfire/summon_blaze1",
+      "awakening_system:entity/wildfire/summon_blaze2",
+      "awakening_system:entity/wildfire/summon_blaze3"
+    ]
+  },
+  "plushie_squish": {
+    "category": "block",
+    "subtitle": "subtitles.awakening_system.plushie_squish",
+    "sounds": [
+      "awakening_system:plushie_squish1",
+      "awakening_system:plushie_squish2",
+      "awakening_system:plushie_squish3"
+    ]
+  }
+}

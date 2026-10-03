@@ -1,0 +1,6 @@
+{
+  "parent": "minecraft:block/cube_all",
+  "textures": {
+    "all": "awakening_system:block/plum_blossom_carved_wood"
+  }
+}

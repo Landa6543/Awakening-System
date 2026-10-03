@@ -1,0 +1,75 @@
+{
+  "has_precipitation": true,
+  "temperature": 0.65,
+  "downfall": 0.7,
+  "effects": {
+    "sky_color": 8432639,
+    "fog_color": 13426140,
+    "water_color": 3254940,
+    "water_fog_color": 3254940,
+    "grass_color": 6140995,
+    "foliage_color": 4167735,
+    "ambient_sound": "minecraft:ambient.underwater.loop",
+    "particle": {
+      "options": {
+        "type": "minecraft:cherry_leaves"
+      },
+      "probability": 0.02
+    }
+  },
+  "spawners": {
+    "monster": [
+      {
+        "type": "awakening_system:genshin_slime",
+        "weight": 40,
+        "minCount": 2,
+        "maxCount": 4
+      },
+      {
+        "type": "awakening_system:hilichurl",
+        "weight": 20,
+        "minCount": 1,
+        "maxCount": 3
+      }
+    ],
+    "creature": [
+      {
+        "type": "awakening_system:cloud_crane",
+        "weight": 25,
+        "minCount": 1,
+        "maxCount": 3
+      },
+      {
+        "type": "awakening_system:spirit_fox",
+        "weight": 20,
+        "minCount": 2,
+        "maxCount": 4
+      }
+    ]
+  },
+  "spawn_costs": {},
+  "carvers": {},
+  "features": [
+    [],
+    [],
+    [],
+    [],
+    [
+      "awakening_system:teyvat_hilichurl_camp",
+      "awakening_system:teyvat_shrine_of_depths",
+      "awakening_system:teyvat_statue_of_the_seven",
+      "awakening_system:teyvat_teleport_waypoint",
+      "awakening_system:teyvat_regional_structure"
+    ],
+    [],
+    [],
+    [],
+    [],
+    [
+      "awakening_system:teyvat_sandbearer_tree",
+      "minecraft:flower_flower_forest",
+      "minecraft:trees_cherry"
+    ],
+    []
+  ]
+}

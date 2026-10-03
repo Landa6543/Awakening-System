@@ -1,0 +1,6 @@
+{
+    "textures":  {
+                     "layer0":  "awakening_system:item/shivada_jade_sliver"
+                 },
+    "parent":  "item/generated"
+}

@@ -1,0 +1,12 @@
+{
+  "replace": false,
+  "values": [
+    "awakening_system:cuihua_planks",
+    "awakening_system:adhigama_planks",
+    "awakening_system:sandbearer_planks",
+    "awakening_system:mana_wood_planks",
+    "awakening_system:eldoria_planks",
+    "awakening_system:spirit_plum_planks",
+    "awakening_system:celestial_pine_planks"
+  ]
+}

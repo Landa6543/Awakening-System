@@ -1,0 +1,59 @@
+{
+  "has_precipitation": false,
+  "temperature": 1.2,
+  "downfall": 0.05,
+  "effects": {
+    "sky_color": 2626590,
+    "fog_color": 1837072,
+    "water_color": 14431522,
+    "water_fog_color": 5243160,
+    "grass_color": 3942425,
+    "foliage_color": 3942425,
+    "ambient_sound": "minecraft:ambient.nether_wastes.loop",
+    "mood_sound": {
+      "sound": "minecraft:ambient.basalt_deltas.mood",
+      "tick_delay": 6000,
+      "block_search_extent": 8,
+      "offset": 2.0
+    },
+    "additions_sound": {
+      "sound": "minecraft:ambient.basalt_deltas.additions",
+      "tick_chance": 0.011
+    },
+    "particle": {
+      "options": {
+        "type": "minecraft:lava"
+      },
+      "probability": 0.008
+    }
+  },
+  "spawners": {
+    "monster": [
+      {
+        "type": "minecraft:magma_cube",
+        "weight": 20,
+        "minCount": 1,
+        "maxCount": 3
+      }
+    ],
+    "creature": []
+  },
+  "spawn_costs": {},
+  "carvers": {},
+  "features": [
+    [],
+    [],
+    [],
+    [],
+    [],
+    [],
+    [],
+    [],
+    [],
+    [
+      "awakening_system:dragon_nest",
+      "minecraft:patch_fire"
+    ],
+    []
+  ]
+}

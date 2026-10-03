@@ -1,0 +1,12 @@
+{
+  "replace": false,
+  "values": [
+    "awakening_system:cuihua_sapling",
+    "awakening_system:adhigama_sapling",
+    "awakening_system:sandbearer_sapling",
+    "awakening_system:mana_wood_sapling",
+    "awakening_system:eldoria_sapling",
+    "awakening_system:spirit_plum_sapling",
+    "awakening_system:celestial_pine_sapling"
+  ]
+}

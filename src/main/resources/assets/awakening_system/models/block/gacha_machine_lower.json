@@ -1,0 +1,318 @@
+{
+  "credit": "Awakening System - Canonical Gashapon Dispenser (Lower)",
+  "textures": {
+    "base": "awakening_system:block/gacha_machine_base",
+    "particle": "awakening_system:block/gacha_machine_base"
+  },
+  "elements": [
+    {
+      "name": "base_stand",
+      "from": [
+        2,
+        0,
+        2
+      ],
+      "to": [
+        14,
+        2,
+        14
+      ],
+      "faces": {
+        "north": {
+          "uv": [
+            0,
+            6,
+            8,
+            8
+          ],
+          "texture": "#base"
+        },
+        "south": {
+          "uv": [
+            0,
+            6,
+            8,
+            8
+          ],
+          "texture": "#base"
+        },
+        "east": {
+          "uv": [
+            0,
+            6,
+            8,
+            8
+          ],
+          "texture": "#base"
+        },
+        "west": {
+          "uv": [
+            0,
+            6,
+            8,
+            8
+          ],
+          "texture": "#base"
+        },
+        "down": {
+          "uv": [
+            0,
+            6,
+            8,
+            8
+          ],
+          "texture": "#base"
+        },
+        "up": {
+          "uv": [
+            0,
+            0,
+            8,
+            8
+          ],
+          "texture": "#base"
+        }
+      }
+    },
+    {
+      "name": "cabinet_body",
+      "from": [
+        2.5,
+        2,
+        2.5
+      ],
+      "to": [
+        13.5,
+        16,
+        13.5
+      ],
+      "faces": {
+        "north": {
+          "uv": [
+            0,
+            0,
+            8,
+            8
+          ],
+          "texture": "#base"
+        },
+        "south": {
+          "uv": [
+            0,
+            0,
+            8,
+            8
+          ],
+          "texture": "#base"
+        },
+        "east": {
+          "uv": [
+            0,
+            0,
+            8,
+            8
+          ],
+          "texture": "#base"
+        },
+        "west": {
+          "uv": [
+            0,
+            0,
+            8,
+            8
+          ],
+          "texture": "#base"
+        },
+        "up": {
+          "uv": [
+            0,
+            0,
+            8,
+            8
+          ],
+          "texture": "#base"
+        }
+      }
+    },
+    {
+      "name": "dispenser_pocket",
+      "from": [
+        4,
+        2.5,
+        1.8
+      ],
+      "to": [
+        12,
+        6.5,
+        2.5
+      ],
+      "faces": {
+        "north": {
+          "uv": [
+            0,
+            8,
+            8,
+            16
+          ],
+          "texture": "#base"
+        },
+        "east": {
+          "uv": [
+            0,
+            8,
+            2,
+            16
+          ],
+          "texture": "#base"
+        },
+        "west": {
+          "uv": [
+            6,
+            8,
+            8,
+            16
+          ],
+          "texture": "#base"
+        },
+        "up": {
+          "uv": [
+            0,
+            8,
+            8,
+            10
+          ],
+          "texture": "#base"
+        },
+        "down": {
+          "uv": [
+            0,
+            14,
+            8,
+            16
+          ],
+          "texture": "#base"
+        }
+      }
+    },
+    {
+      "name": "dial_plate",
+      "from": [
+        4.5,
+        8,
+        1.8
+      ],
+      "to": [
+        11.5,
+        14,
+        2.5
+      ],
+      "faces": {
+        "north": {
+          "uv": [
+            8,
+            0,
+            16,
+            8
+          ],
+          "texture": "#base"
+        },
+        "east": {
+          "uv": [
+            8,
+            0,
+            10,
+            8
+          ],
+          "texture": "#base"
+        },
+        "west": {
+          "uv": [
+            14,
+            0,
+            16,
+            8
+          ],
+          "texture": "#base"
+        },
+        "up": {
+          "uv": [
+            8,
+            0,
+            16,
+            2
+          ],
+          "texture": "#base"
+        },
+        "down": {
+          "uv": [
+            8,
+            6,
+            16,
+            8
+          ],
+          "texture": "#base"
+        }
+      }
+    },
+    {
+      "name": "dial_handle",
+      "from": [
+        6.5,
+        9.5,
+        1.0
+      ],
+      "to": [
+        9.5,
+        12.5,
+        1.8
+      ],
+      "faces": {
+        "north": {
+          "uv": [
+            9,
+            2,
+            15,
+            6
+          ],
+          "texture": "#base"
+        },
+        "east": {
+          "uv": [
+            9,
+            2,
+            11,
+            4
+          ],
+          "texture": "#base"
+        },
+        "west": {
+          "uv": [
+            9,
+            2,
+            11,
+            4
+          ],
+          "texture": "#base"
+        },
+        "up": {
+          "uv": [
+            9,
+            2,
+            13,
+            4
+          ],
+          "texture": "#base"
+        },
+        "down": {
+          "uv": [
+            9,
+            2,
+            13,
+            4
+          ],
+          "texture": "#base"
+        }
+      }
+    }
+  ]
+}

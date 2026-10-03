@@ -1,0 +1,12 @@
+{
+  "type": "minecraft:blasting",
+  "category": "misc",
+  "cookingtime": 100,
+  "experience": 1.2,
+  "ingredient": {
+    "item": "awakening_system:deepslate_mithril_ore"
+  },
+  "result": {
+    "id": "awakening_system:mithril_ingot"
+  }
+}

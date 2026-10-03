@@ -1,0 +1,6 @@
+{
+    "textures":  {
+                     "all":  "awakening_system:block/shivada_jade_ore"
+                 },
+    "parent":  "minecraft:block/cube_all"
+}

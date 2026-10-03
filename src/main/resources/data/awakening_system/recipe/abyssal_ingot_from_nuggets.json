@@ -1,0 +1,16 @@
+{
+  "type": "minecraft:crafting_shaped",
+  "category": "misc",
+  "pattern": [
+    "###",
+    "###",
+    "###"
+  ],
+  "key": {
+    "#": { "item": "awakening_system:abyssal_nugget" }
+  },
+  "result": {
+    "count": 1,
+    "id": "awakening_system:abyssal_ingot"
+  }
+}

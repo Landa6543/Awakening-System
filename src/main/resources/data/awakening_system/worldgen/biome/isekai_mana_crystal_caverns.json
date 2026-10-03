@@ -1,0 +1,66 @@
+{
+  "has_precipitation": false,
+  "temperature": 0.4,
+  "downfall": 0.5,
+  "effects": {
+    "sky_color": 1315865,
+    "fog_color": 1973805,
+    "water_color": 6835660,
+    "water_fog_color": 6835660,
+    "ambient_sound": "minecraft:ambient.cave",
+    "particle": {
+      "options": {
+        "type": "minecraft:warped_spore"
+      },
+      "probability": 0.03
+    }
+  },
+  "spawners": {
+    "monster": [
+      {
+        "type": "awakening_system:isekai_slime",
+        "weight": 50,
+        "minCount": 2,
+        "maxCount": 4
+      },
+      {
+        "type": "awakening_system:abyssal_orc",
+        "weight": 25,
+        "minCount": 1,
+        "maxCount": 3
+      }
+    ],
+    "creature": [
+      {
+        "type": "minecraft:glow_squid",
+        "weight": 20,
+        "minCount": 2,
+        "maxCount": 4
+      },
+      {
+        "type": "minecraft:bat",
+        "weight": 15,
+        "minCount": 1,
+        "maxCount": 3
+      }
+    ]
+  },
+  "spawn_costs": {},
+  "carvers": {},
+  "features": [
+    [],
+    [],
+    [],
+    [],
+    [],
+    [],
+    [],
+    [],
+    [],
+    [
+      "minecraft:glow_lichen",
+      "minecraft:amethyst_geode"
+    ],
+    []
+  ]
+}

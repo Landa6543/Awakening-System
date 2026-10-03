@@ -1,0 +1,9 @@
+{
+  "parent": "awakening_system:custom/chongyun_plushie",
+  "textures": {
+    "all": "awakening_system:block/chongyun_plushie",
+    "particle": "awakening_system:block/chongyun_plushie",
+    "0": "awakening_system:block/chongyun_plushie"
+  },
+  "render_type": "cutout"
+}

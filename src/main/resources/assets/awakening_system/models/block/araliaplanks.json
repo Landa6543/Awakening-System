@@ -1,0 +1,12 @@
+{
+  "parent": "block/cube",
+  "textures": {
+    "down": "awakening_system:block/aralia_planks",
+    "up": "awakening_system:block/aralia_planks",
+    "north": "awakening_system:block/aralia_planks",
+    "east": "awakening_system:block/aralia_planks",
+    "south": "awakening_system:block/aralia_planks",
+    "west": "awakening_system:block/aralia_planks",
+    "particle": "awakening_system:block/aralia_planks"
+  }
+}

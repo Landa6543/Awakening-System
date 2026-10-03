@@ -1,0 +1,9 @@
+{
+  "parent": "awakening_system:custom/electro_crystal",
+  "render_type": "minecraft:cutout",
+  "textures": {
+    "all": "awakening_system:block/electrocrystal",
+    "particle": "awakening_system:block/electrocrystal",
+    "0": "awakening_system:block/electrocrystal"
+  }
+}

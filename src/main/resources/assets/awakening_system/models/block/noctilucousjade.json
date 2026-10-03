@@ -1,0 +1,9 @@
+{
+  "parent": "awakening_system:custom/noctilucous_jade",
+  "render_type": "minecraft:cutout",
+  "textures": {
+    "all": "awakening_system:block/noctilucousjade",
+    "particle": "awakening_system:block/noctilucousjade",
+    "0": "awakening_system:block/noctilucousjade"
+  }
+}

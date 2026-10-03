@@ -1,0 +1,10 @@
+{
+  "variants": {
+    "lit=true": {
+      "model": "awakening_system:block/liuli_pavilion_sandbearer_floor_lamp"
+    },
+    "lit=false": {
+      "model": "awakening_system:block/liuli_pavilion_sandbearer_floor_lamp"
+    }
+  }
+}

@@ -1,0 +1,27 @@
+{
+  "type": "minecraft:crafting_shaped",
+  "category": "misc",
+  "key": {
+    "#": {
+      "item": "minecraft:copper_ingot"
+    },
+    "W": {
+      "item": "minecraft:oak_planks"
+    },
+    "R": {
+      "item": "minecraft:fishing_rod"
+    },
+    "C": {
+      "item": "minecraft:crafting_table"
+    }
+  },
+  "pattern": [
+    "#R#",
+    "WCW",
+    "WWW"
+  ],
+  "result": {
+    "count": 1,
+    "id": "awakening_system:fishing_guild_station"
+  }
+}

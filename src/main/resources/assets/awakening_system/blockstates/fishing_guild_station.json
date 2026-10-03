@@ -1,0 +1,8 @@
+{
+  "variants": {
+    "facing=north": { "model": "awakening_system:block/fishing_guild_station" },
+    "facing=south": { "model": "awakening_system:block/fishing_guild_station", "y": 180 },
+    "facing=west":  { "model": "awakening_system:block/fishing_guild_station", "y": 270 },
+    "facing=east":  { "model": "awakening_system:block/fishing_guild_station", "y": 90 }
+  }
+}

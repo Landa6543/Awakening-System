@@ -1,0 +1,6 @@
+{
+  "type": "neoforge:add_features",
+  "biomes": "#awakening_system:is_isekai",
+  "features": "awakening_system:ore_mithril",
+  "step": "underground_ores"
+}

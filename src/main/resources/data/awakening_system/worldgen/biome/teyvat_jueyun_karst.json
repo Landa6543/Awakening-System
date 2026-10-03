@@ -1,0 +1,88 @@
+{
+  "has_precipitation": false,
+  "temperature": 0.8,
+  "downfall": 0.2,
+  "effects": {
+    "sky_color": 9489145,
+    "fog_color": 16775393,
+    "water_color": 5093036,
+    "water_fog_color": 35195,
+    "grass_color": 12634675,
+    "foliage_color": 16088064,
+    "particle": {
+      "options": {
+        "type": "minecraft:wax_on"
+      },
+      "probability": 0.01
+    }
+  },
+  "spawners": {
+    "monster": [
+      {
+        "type": "awakening_system:genshin_slime",
+        "weight": 50,
+        "minCount": 2,
+        "maxCount": 4
+      },
+      {
+        "type": "awakening_system:hilichurl",
+        "weight": 45,
+        "minCount": 2,
+        "maxCount": 5
+      },
+      {
+        "type": "awakening_system:mitachurl",
+        "weight": 2,
+        "minCount": 1,
+        "maxCount": 1
+      }
+    ],
+    "creature": [
+      {
+        "type": "minecraft:goat",
+        "weight": 10,
+        "minCount": 2,
+        "maxCount": 4
+      },
+      {
+        "type": "minecraft:llama",
+        "weight": 8,
+        "minCount": 2,
+        "maxCount": 4
+      },
+      {
+        "type": "minecraft:armadillo",
+        "weight": 6,
+        "minCount": 1,
+        "maxCount": 3
+      }
+    ]
+  },
+  "spawn_costs": {},
+  "carvers": {},
+  "features": [
+    [],
+    [],
+    [],
+    [],
+    [
+      "awakening_system:teyvat_hilichurl_camp",
+      "awakening_system:teyvat_shrine_of_depths",
+      "awakening_system:teyvat_statue_of_the_seven",
+      "awakening_system:teyvat_teleport_waypoint",
+      "awakening_system:teyvat_regional_structure"
+    ],
+    [],
+    [],
+    [],
+    [],
+    [
+      "minecraft:patch_tall_grass",
+      "awakening_system:teyvat_sandbearer_tree",
+      "minecraft:flower_flower_forest",
+      "minecraft:trees_cherry",
+      "awakening_system:patch_wild_ginseng"
+    ],
+    []
+  ]
+}

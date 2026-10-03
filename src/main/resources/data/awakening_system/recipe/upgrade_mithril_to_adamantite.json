@@ -1,0 +1,24 @@
+{
+  "type": "minecraft:crafting_shaped",
+  "category": "misc",
+  "pattern": [
+    "#A#",
+    "AMA",
+    "#A#"
+  ],
+  "key": {
+    "#": {
+      "item": "awakening_system:adamantite_ingot"
+    },
+    "A": {
+      "item": "minecraft:blaze_rod"
+    },
+    "M": {
+      "item": "awakening_system:mithril_ingot"
+    }
+  },
+  "result": {
+    "count": 1,
+    "id": "awakening_system:upgrade_mithril_to_adamantite"
+  }
+}

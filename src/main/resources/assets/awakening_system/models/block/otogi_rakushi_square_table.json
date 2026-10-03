@@ -1,0 +1,9 @@
+{
+  "parent": "awakening_system:custom/otogi_rakushi_square_table",
+  "render_type": "minecraft:cutout",
+  "textures": {
+    "all": "awakening_system:block/otogi_rakushi_square_table",
+    "particle": "awakening_system:block/otogi_rakushi_square_table",
+    "0": "awakening_system:block/otogi_rakushi_square_table"
+  }
+}

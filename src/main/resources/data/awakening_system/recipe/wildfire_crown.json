@@ -1,0 +1,17 @@
+{
+  "type": "minecraft:crafting_shaped",
+  "category": "equipment",
+  "pattern": [
+    "F F",
+    "FFF"
+  ],
+  "key": {
+    "F": {
+      "item": "awakening_system:wildfire_crown_fragment"
+    }
+  },
+  "result": {
+    "count": 1,
+    "id": "awakening_system:wildfire_crown"
+  }
+}

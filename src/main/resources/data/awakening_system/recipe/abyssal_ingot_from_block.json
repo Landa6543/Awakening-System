@@ -1,0 +1,11 @@
+{
+  "type": "minecraft:crafting_shapeless",
+  "category": "misc",
+  "ingredients": [
+    { "item": "awakening_system:abyssal_block" }
+  ],
+  "result": {
+    "count": 9,
+    "id": "awakening_system:abyssal_ingot"
+  }
+}

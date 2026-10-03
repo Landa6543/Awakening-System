@@ -1,0 +1,6 @@
+{
+    "textures":  {
+                     "layer0":  "awakening_system:item/white_iron_chunk"
+                 },
+    "parent":  "item/generated"
+}

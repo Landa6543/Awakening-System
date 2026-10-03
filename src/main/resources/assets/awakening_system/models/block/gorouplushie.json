@@ -1,0 +1,9 @@
+{
+  "parent": "awakening_system:custom/gorou_plushie",
+  "textures": {
+    "all": "awakening_system:block/gorou_plushie",
+    "particle": "awakening_system:block/gorou_plushie",
+    "0": "awakening_system:block/gorou_plushie"
+  },
+  "render_type": "cutout"
+}

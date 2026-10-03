@@ -1,0 +1,13 @@
+{
+  "type": "minecraft:blasting",
+  "category": "misc",
+  "cookingtime": 100,
+  "experience": 2.0,
+  "ingredient": {
+    "item": "awakening_system:abyssal_ore"
+  },
+  "result": {
+    "count": 1,
+    "id": "awakening_system:abyssal_ingot"
+  }
+}

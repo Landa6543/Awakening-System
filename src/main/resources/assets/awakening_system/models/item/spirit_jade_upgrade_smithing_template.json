@@ -1,0 +1,6 @@
+{
+  "parent": "minecraft:item/generated",
+  "textures": {
+    "layer0": "awakening_system:item/spirit_jade_upgrade_smithing_template"
+  }
+}

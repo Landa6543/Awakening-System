@@ -1,0 +1,24 @@
+{
+  "type": "minecraft:crafting_shaped",
+  "category": "misc",
+  "pattern": [
+    "SGS",
+    "GPG",
+    "SGS"
+  ],
+  "key": {
+    "S": {
+      "item": "awakening_system:immortal_dragon_scale"
+    },
+    "G": {
+      "item": "minecraft:gold_block"
+    },
+    "P": {
+      "item": "awakening_system:celestial_dragon_pearl"
+    }
+  },
+  "result": {
+    "count": 1,
+    "id": "awakening_system:celestial_dragon_tribute"
+  }
+}

@@ -1,0 +1,8 @@
+{
+  "comparator_output": 15,
+  "description": {
+    "translate": "jukebox_song.awakening_system.take_the_journey"
+  },
+  "length_in_seconds": 65,
+  "sound_event": "awakening_system:music_disc_take_the_journey"
+}

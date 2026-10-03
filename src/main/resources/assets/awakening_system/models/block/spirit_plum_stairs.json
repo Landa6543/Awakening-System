@@ -1,0 +1,8 @@
+{
+  "parent": "minecraft:block/stairs",
+  "textures": {
+    "bottom": "awakening_system:block/spirit_plum_planks",
+    "top": "awakening_system:block/spirit_plum_planks",
+    "side": "awakening_system:block/spirit_plum_planks"
+  }
+}

@@ -1,0 +1,689 @@
+{
+  "credit": "Awakening System - Canonical Gashapon Dispenser (Item Showcase)",
+  "textures": {
+    "base": "awakening_system:block/gacha_machine_base",
+    "glass": "awakening_system:block/gacha_machine_glass",
+    "capsule_gold": "awakening_system:block/gacha_capsule_gold",
+    "capsule_blue": "awakening_system:block/gacha_capsule_blue",
+    "capsule_purple": "awakening_system:block/gacha_capsule_purple",
+    "particle": "awakening_system:block/gacha_machine_base"
+  },
+  "elements": [
+    {
+      "name": "base_stand",
+      "from": [
+        3,
+        0,
+        3
+      ],
+      "to": [
+        13,
+        1.2,
+        13
+      ],
+      "faces": {
+        "north": {
+          "uv": [
+            0,
+            6,
+            8,
+            8
+          ],
+          "texture": "#base"
+        },
+        "south": {
+          "uv": [
+            0,
+            6,
+            8,
+            8
+          ],
+          "texture": "#base"
+        },
+        "east": {
+          "uv": [
+            0,
+            6,
+            8,
+            8
+          ],
+          "texture": "#base"
+        },
+        "west": {
+          "uv": [
+            0,
+            6,
+            8,
+            8
+          ],
+          "texture": "#base"
+        },
+        "down": {
+          "uv": [
+            0,
+            6,
+            8,
+            8
+          ],
+          "texture": "#base"
+        },
+        "up": {
+          "uv": [
+            0,
+            0,
+            8,
+            8
+          ],
+          "texture": "#base"
+        }
+      }
+    },
+    {
+      "name": "cabinet",
+      "from": [
+        3.5,
+        1.2,
+        3.5
+      ],
+      "to": [
+        12.5,
+        7.5,
+        12.5
+      ],
+      "faces": {
+        "north": {
+          "uv": [
+            0,
+            0,
+            8,
+            8
+          ],
+          "texture": "#base"
+        },
+        "south": {
+          "uv": [
+            0,
+            0,
+            8,
+            8
+          ],
+          "texture": "#base"
+        },
+        "east": {
+          "uv": [
+            0,
+            0,
+            8,
+            8
+          ],
+          "texture": "#base"
+        },
+        "west": {
+          "uv": [
+            0,
+            0,
+            8,
+            8
+          ],
+          "texture": "#base"
+        },
+        "up": {
+          "uv": [
+            0,
+            0,
+            8,
+            8
+          ],
+          "texture": "#base"
+        }
+      }
+    },
+    {
+      "name": "dispenser",
+      "from": [
+        5,
+        1.8,
+        2.8
+      ],
+      "to": [
+        11,
+        4.0,
+        3.5
+      ],
+      "faces": {
+        "north": {
+          "uv": [
+            0,
+            8,
+            8,
+            16
+          ],
+          "texture": "#base"
+        },
+        "east": {
+          "uv": [
+            0,
+            8,
+            2,
+            16
+          ],
+          "texture": "#base"
+        },
+        "west": {
+          "uv": [
+            6,
+            8,
+            8,
+            16
+          ],
+          "texture": "#base"
+        }
+      }
+    },
+    {
+      "name": "dial",
+      "from": [
+        5.2,
+        4.6,
+        2.8
+      ],
+      "to": [
+        10.8,
+        7.0,
+        3.5
+      ],
+      "faces": {
+        "north": {
+          "uv": [
+            8,
+            0,
+            16,
+            8
+          ],
+          "texture": "#base"
+        }
+      }
+    },
+    {
+      "name": "crank",
+      "from": [
+        6.8,
+        5.2,
+        2.2
+      ],
+      "to": [
+        9.2,
+        6.4,
+        2.8
+      ],
+      "faces": {
+        "north": {
+          "uv": [
+            9,
+            2,
+            15,
+            6
+          ],
+          "texture": "#base"
+        },
+        "east": {
+          "uv": [
+            9,
+            2,
+            11,
+            4
+          ],
+          "texture": "#base"
+        },
+        "west": {
+          "uv": [
+            9,
+            2,
+            11,
+            4
+          ],
+          "texture": "#base"
+        }
+      }
+    },
+    {
+      "name": "glass",
+      "from": [
+        4,
+        7.5,
+        4
+      ],
+      "to": [
+        12,
+        13.5,
+        12
+      ],
+      "faces": {
+        "north": {
+          "uv": [
+            0,
+            0,
+            16,
+            16
+          ],
+          "texture": "#glass"
+        },
+        "south": {
+          "uv": [
+            0,
+            0,
+            16,
+            16
+          ],
+          "texture": "#glass"
+        },
+        "east": {
+          "uv": [
+            0,
+            0,
+            16,
+            16
+          ],
+          "texture": "#glass"
+        },
+        "west": {
+          "uv": [
+            0,
+            0,
+            16,
+            16
+          ],
+          "texture": "#glass"
+        },
+        "up": {
+          "uv": [
+            0,
+            0,
+            16,
+            16
+          ],
+          "texture": "#glass"
+        },
+        "down": {
+          "uv": [
+            0,
+            0,
+            16,
+            16
+          ],
+          "texture": "#glass"
+        }
+      }
+    },
+    {
+      "name": "c1",
+      "from": [
+        5,
+        7.5,
+        5
+      ],
+      "to": [
+        7.5,
+        10,
+        7.5
+      ],
+      "faces": {
+        "north": {
+          "uv": [
+            0,
+            0,
+            16,
+            16
+          ],
+          "texture": "#capsule_gold"
+        },
+        "south": {
+          "uv": [
+            0,
+            0,
+            16,
+            16
+          ],
+          "texture": "#capsule_gold"
+        },
+        "east": {
+          "uv": [
+            0,
+            0,
+            16,
+            16
+          ],
+          "texture": "#capsule_gold"
+        },
+        "west": {
+          "uv": [
+            0,
+            0,
+            16,
+            16
+          ],
+          "texture": "#capsule_gold"
+        },
+        "up": {
+          "uv": [
+            0,
+            0,
+            16,
+            16
+          ],
+          "texture": "#capsule_gold"
+        }
+      }
+    },
+    {
+      "name": "c2",
+      "from": [
+        8.5,
+        7.5,
+        6
+      ],
+      "to": [
+        11,
+        10,
+        8.5
+      ],
+      "faces": {
+        "north": {
+          "uv": [
+            0,
+            0,
+            16,
+            16
+          ],
+          "texture": "#capsule_blue"
+        },
+        "south": {
+          "uv": [
+            0,
+            0,
+            16,
+            16
+          ],
+          "texture": "#capsule_blue"
+        },
+        "east": {
+          "uv": [
+            0,
+            0,
+            16,
+            16
+          ],
+          "texture": "#capsule_blue"
+        },
+        "west": {
+          "uv": [
+            0,
+            0,
+            16,
+            16
+          ],
+          "texture": "#capsule_blue"
+        },
+        "up": {
+          "uv": [
+            0,
+            0,
+            16,
+            16
+          ],
+          "texture": "#capsule_blue"
+        }
+      }
+    },
+    {
+      "name": "c3",
+      "from": [
+        6.5,
+        7.5,
+        8.5
+      ],
+      "to": [
+        9,
+        10,
+        11
+      ],
+      "faces": {
+        "north": {
+          "uv": [
+            0,
+            0,
+            16,
+            16
+          ],
+          "texture": "#capsule_purple"
+        },
+        "south": {
+          "uv": [
+            0,
+            0,
+            16,
+            16
+          ],
+          "texture": "#capsule_purple"
+        },
+        "east": {
+          "uv": [
+            0,
+            0,
+            16,
+            16
+          ],
+          "texture": "#capsule_purple"
+        },
+        "west": {
+          "uv": [
+            0,
+            0,
+            16,
+            16
+          ],
+          "texture": "#capsule_purple"
+        },
+        "up": {
+          "uv": [
+            0,
+            0,
+            16,
+            16
+          ],
+          "texture": "#capsule_purple"
+        }
+      }
+    },
+    {
+      "name": "lid",
+      "from": [
+        3.5,
+        13.5,
+        3.5
+      ],
+      "to": [
+        12.5,
+        15.5,
+        12.5
+      ],
+      "faces": {
+        "north": {
+          "uv": [
+            8,
+            8,
+            16,
+            16
+          ],
+          "texture": "#base"
+        },
+        "south": {
+          "uv": [
+            8,
+            8,
+            16,
+            12
+          ],
+          "texture": "#base"
+        },
+        "east": {
+          "uv": [
+            8,
+            8,
+            16,
+            12
+          ],
+          "texture": "#base"
+        },
+        "west": {
+          "uv": [
+            8,
+            8,
+            16,
+            12
+          ],
+          "texture": "#base"
+        },
+        "up": {
+          "uv": [
+            8,
+            8,
+            16,
+            16
+          ],
+          "texture": "#base"
+        },
+        "down": {
+          "uv": [
+            8,
+            8,
+            16,
+            16
+          ],
+          "texture": "#base"
+        }
+      }
+    }
+  ],
+  "display": {
+    "gui": {
+      "rotation": [
+        30,
+        225,
+        0
+      ],
+      "translation": [
+        0,
+        -0.5,
+        0
+      ],
+      "scale": [
+        0.65,
+        0.65,
+        0.65
+      ]
+    },
+    "ground": {
+      "rotation": [
+        0,
+        0,
+        0
+      ],
+      "translation": [
+        0,
+        3,
+        0
+      ],
+      "scale": [
+        0.35,
+        0.35,
+        0.35
+      ]
+    },
+    "thirdperson_righthand": {
+      "rotation": [
+        75,
+        45,
+        0
+      ],
+      "translation": [
+        0,
+        2.5,
+        0
+      ],
+      "scale": [
+        0.38,
+        0.38,
+        0.38
+      ]
+    },
+    "thirdperson_lefthand": {
+      "rotation": [
+        75,
+        45,
+        0
+      ],
+      "translation": [
+        0,
+        2.5,
+        0
+      ],
+      "scale": [
+        0.38,
+        0.38,
+        0.38
+      ]
+    },
+    "firstperson_righthand": {
+      "rotation": [
+        0,
+        45,
+        0
+      ],
+      "translation": [
+        0,
+        0,
+        0
+      ],
+      "scale": [
+        0.4,
+        0.4,
+        0.4
+      ]
+    },
+    "firstperson_lefthand": {
+      "rotation": [
+        0,
+        225,
+        0
+      ],
+      "translation": [
+        0,
+        0,
+        0
+      ],
+      "scale": [
+        0.4,
+        0.4,
+        0.4
+      ]
+    },
+    "fixed": {
+      "rotation": [
+        0,
+        0,
+        0
+      ],
+      "translation": [
+        0,
+        0,
+        0
+      ],
+      "scale": [
+        0.5,
+        0.5,
+        0.5
+      ]
+    }
+  }
+}

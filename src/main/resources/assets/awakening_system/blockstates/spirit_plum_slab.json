@@ -1,0 +1,7 @@
+{
+  "variants": {
+    "type=bottom": { "model": "awakening_system:block/spirit_plum_slab" },
+    "type=top": { "model": "awakening_system:block/spirit_plum_slab_top" },
+    "type=double": { "model": "awakening_system:block/spirit_plum_planks" }
+  }
+}

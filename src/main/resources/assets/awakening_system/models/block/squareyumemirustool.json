@@ -1,0 +1,8 @@
+{
+  "parent": "awakening_system:block/custom/square_yumemiru_stool",
+  "textures": {
+    "all": "awakening_system:block/square_yumemiru_stool",
+    "particle": "awakening_system:block/square_yumemiru_stool",
+    "0": "awakening_system:block/square_yumemiru_stool"
+  }
+}

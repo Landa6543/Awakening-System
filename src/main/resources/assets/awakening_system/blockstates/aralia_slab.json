@@ -1,0 +1,7 @@
+{
+  "variants": {
+    "type=bottom": { "model": "awakening_system:block/aralia_slab" },
+    "type=top": { "model": "awakening_system:block/aralia_slab_top" },
+    "type=double": { "model": "awakening_system:block/aralia_planks" }
+  }
+}

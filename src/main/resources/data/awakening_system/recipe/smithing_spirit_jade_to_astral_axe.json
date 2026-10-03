@@ -1,0 +1,7 @@
+{
+  "type": "minecraft:smithing_transform",
+  "template": { "item": "awakening_system:astral_upgrade_smithing_template" },
+  "base": { "item": "awakening_system:spirit_jade_axe" },
+  "addition": { "item": "awakening_system:astral_ingot" },
+  "result": { "id": "awakening_system:astral_axe" }
+}

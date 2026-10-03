@@ -1,0 +1,7 @@
+{
+  "type": "minecraft:smithing_transform",
+  "template": { "item": "awakening_system:abyssal_upgrade_smithing_template" },
+  "base": { "item": "minecraft:netherite_axe" },
+  "addition": { "item": "awakening_system:abyssal_ingot" },
+  "result": { "id": "awakening_system:abyssal_axe" }
+}

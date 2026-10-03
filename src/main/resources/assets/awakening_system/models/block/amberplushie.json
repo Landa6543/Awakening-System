@@ -1,0 +1,9 @@
+{
+  "parent": "awakening_system:custom/amber_plushie",
+  "textures": {
+    "all": "awakening_system:block/amber_plushie",
+    "particle": "awakening_system:block/amber_plushie",
+    "0": "awakening_system:block/amber_plushie"
+  },
+  "render_type": "cutout"
+}

@@ -1,0 +1,14 @@
+{
+  "type": "minecraft:crafting_shapeless",
+  "category": "building",
+  "group": "planks",
+  "ingredients": [
+    {
+      "item": "awakening_system:mana_wood_log"
+    }
+  ],
+  "result": {
+    "count": 4,
+    "id": "awakening_system:mana_wood_planks"
+  }
+}

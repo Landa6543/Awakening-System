@@ -1,0 +1,19 @@
+{
+  "variants": {
+    "facing=north": {
+      "model": "awakening_system:block/yaemikoplushie"
+    },
+    "facing=east": {
+      "model": "awakening_system:block/yaemikoplushie",
+      "y": 90
+    },
+    "facing=south": {
+      "model": "awakening_system:block/yaemikoplushie",
+      "y": 180
+    },
+    "facing=west": {
+      "model": "awakening_system:block/yaemikoplushie",
+      "y": 270
+    }
+  }
+}

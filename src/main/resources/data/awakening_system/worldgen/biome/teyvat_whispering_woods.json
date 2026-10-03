@@ -1,0 +1,95 @@
+{
+  "has_precipitation": true,
+  "temperature": 0.6,
+  "downfall": 0.6,
+  "effects": {
+    "sky_color": 6056896,
+    "fog_color": 12962537,
+    "water_color": 48340,
+    "water_fog_color": 38823,
+    "grass_color": 4432071,
+    "foliage_color": 3046706,
+    "particle": {
+      "options": {
+        "type": "minecraft:spore_blossom_air"
+      },
+      "probability": 0.015
+    }
+  },
+  "spawners": {
+    "monster": [
+      {
+        "type": "awakening_system:genshin_slime",
+        "weight": 50,
+        "minCount": 2,
+        "maxCount": 4
+      },
+      {
+        "type": "awakening_system:hilichurl",
+        "weight": 55,
+        "minCount": 2,
+        "maxCount": 5
+      },
+      {
+        "type": "awakening_system:mitachurl",
+        "weight": 2,
+        "minCount": 1,
+        "maxCount": 1
+      }
+    ],
+    "creature": [
+      {
+        "type": "minecraft:fox",
+        "weight": 8,
+        "minCount": 1,
+        "maxCount": 3
+      },
+      {
+        "type": "minecraft:wolf",
+        "weight": 6,
+        "minCount": 2,
+        "maxCount": 4
+      },
+      {
+        "type": "minecraft:rabbit",
+        "weight": 8,
+        "minCount": 2,
+        "maxCount": 4
+      },
+      {
+        "type": "minecraft:allay",
+        "weight": 4,
+        "minCount": 1,
+        "maxCount": 2
+      }
+    ]
+  },
+  "spawn_costs": {},
+  "carvers": {},
+  "features": [
+    [],
+    [],
+    [],
+    [],
+    [
+      "awakening_system:teyvat_hilichurl_camp",
+      "awakening_system:teyvat_shrine_of_depths",
+      "awakening_system:teyvat_statue_of_the_seven",
+      "awakening_system:teyvat_teleport_waypoint",
+      "awakening_system:teyvat_regional_structure"
+    ],
+    [],
+    [],
+    [],
+    [],
+    [
+      "minecraft:flower_forest_flowers",
+      "minecraft:patch_tall_grass",
+      "minecraft:trees_cherry",
+      "awakening_system:teyvat_cuihua_tree",
+      "awakening_system:patch_wild_ginseng",
+      "minecraft:patch_berry_bush"
+    ],
+    []
+  ]
+}

@@ -1,0 +1,16 @@
+{
+  "type": "minecraft:crafting_shapeless",
+  "category": "misc",
+  "ingredients": [
+    {
+      "item": "awakening_system:crystal_core"
+    },
+    {
+      "item": "awakening_system:primogem"
+    }
+  ],
+  "result": {
+    "id": "awakening_system:condensed_resin",
+    "count": 1
+  }
+}

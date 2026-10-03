@@ -1,0 +1,9 @@
+{
+  "parent": "awakening_system:custom/starsilver_chunk",
+  "render_type": "minecraft:cutout",
+  "textures": {
+    "all": "awakening_system:block/starsilver",
+    "particle": "awakening_system:block/starsilver",
+    "0": "awakening_system:block/starsilver"
+  }
+}

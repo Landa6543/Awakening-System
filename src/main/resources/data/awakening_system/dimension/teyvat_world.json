@@ -1,0 +1,582 @@
+{
+  "type": "awakening_system:teyvat_world",
+  "generator": {
+    "type": "minecraft:noise",
+    "settings": "minecraft:overworld",
+    "biome_source": {
+      "type": "minecraft:multi_noise",
+      "biomes": [
+        {
+          "biome": "awakening_system:teyvat_windrise_plains",
+          "parameters": {
+            "temperature": [
+              -0.35,
+              0.45
+            ],
+            "humidity": [
+              -0.4,
+              0.35
+            ],
+            "continentalness": [
+              0.05,
+              0.65
+            ],
+            "erosion": [
+              -0.3,
+              0.8
+            ],
+            "weirdness": [
+              -0.6,
+              0.6
+            ],
+            "depth": 0.0,
+            "offset": 0.0
+          }
+        },
+        {
+          "biome": "awakening_system:teyvat_windrise_plains",
+          "parameters": {
+            "temperature": [
+              -0.5,
+              0.3
+            ],
+            "humidity": [
+              -0.4,
+              0.4
+            ],
+            "continentalness": [
+              0.55,
+              1.1
+            ],
+            "erosion": [
+              -0.2,
+              0.8
+            ],
+            "weirdness": [
+              -0.5,
+              0.5
+            ],
+            "depth": 0.0,
+            "offset": 0.0
+          }
+        },
+        {
+          "biome": "awakening_system:teyvat_whispering_woods",
+          "parameters": {
+            "temperature": [
+              -0.35,
+              0.35
+            ],
+            "humidity": [
+              0.25,
+              0.85
+            ],
+            "continentalness": [
+              0.1,
+              0.7
+            ],
+            "erosion": [
+              -0.4,
+              0.6
+            ],
+            "weirdness": [
+              -0.6,
+              0.5
+            ],
+            "depth": 0.0,
+            "offset": 0.0
+          }
+        },
+        {
+          "biome": "awakening_system:teyvat_cider_lake",
+          "parameters": {
+            "temperature": [
+              -0.2,
+              0.5
+            ],
+            "humidity": [
+              0.1,
+              0.9
+            ],
+            "continentalness": [
+              -0.55,
+              -0.05
+            ],
+            "erosion": [
+              0.2,
+              1.0
+            ],
+            "weirdness": [
+              -0.6,
+              0.6
+            ],
+            "depth": 0.0,
+            "offset": 0.0
+          }
+        },
+        {
+          "biome": "awakening_system:teyvat_dawn_winery",
+          "parameters": {
+            "temperature": [
+              0.1,
+              0.55
+            ],
+            "humidity": [
+              -0.2,
+              0.3
+            ],
+            "continentalness": [
+              0.1,
+              0.6
+            ],
+            "erosion": [
+              -0.1,
+              0.5
+            ],
+            "weirdness": [
+              0.2,
+              0.8
+            ],
+            "depth": 0.0,
+            "offset": 0.0
+          }
+        },
+        {
+          "biome": "awakening_system:teyvat_stormterror_lair",
+          "parameters": {
+            "temperature": [
+              -0.3,
+              0.2
+            ],
+            "humidity": [
+              -0.3,
+              0.4
+            ],
+            "continentalness": [
+              0.4,
+              1.0
+            ],
+            "erosion": [
+              -1.0,
+              -0.4
+            ],
+            "weirdness": [
+              -0.9,
+              -0.2
+            ],
+            "depth": 0.0,
+            "offset": 0.0
+          }
+        },
+        {
+          "biome": "awakening_system:teyvat_dragonspine",
+          "parameters": {
+            "temperature": [
+              -1.0,
+              -0.55
+            ],
+            "humidity": [
+              -0.4,
+              0.6
+            ],
+            "continentalness": [
+              0.65,
+              1.2
+            ],
+            "erosion": [
+              -1.0,
+              -0.3
+            ],
+            "weirdness": [
+              -0.5,
+              0.5
+            ],
+            "depth": 0.0,
+            "offset": 0.0
+          }
+        },
+        {
+          "biome": "awakening_system:teyvat_jueyun_karst",
+          "parameters": {
+            "temperature": [
+              0.3,
+              0.7
+            ],
+            "humidity": [
+              -0.6,
+              0.1
+            ],
+            "continentalness": [
+              0.5,
+              1.1
+            ],
+            "erosion": [
+              -1.0,
+              -0.3
+            ],
+            "weirdness": [
+              0.1,
+              0.8
+            ],
+            "depth": 0.0,
+            "offset": 0.0
+          }
+        },
+        {
+          "biome": "awakening_system:teyvat_dihua_marsh",
+          "parameters": {
+            "temperature": [
+              0.35,
+              0.75
+            ],
+            "humidity": [
+              0.3,
+              0.85
+            ],
+            "continentalness": [
+              -0.2,
+              0.3
+            ],
+            "erosion": [
+              0.3,
+              1.0
+            ],
+            "weirdness": [
+              -0.5,
+              0.4
+            ],
+            "depth": 0.0,
+            "offset": 0.0
+          }
+        },
+        {
+          "biome": "awakening_system:teyvat_guyun_stone_forest",
+          "parameters": {
+            "temperature": [
+              0.4,
+              0.85
+            ],
+            "humidity": [
+              0.0,
+              0.6
+            ],
+            "continentalness": [
+              -1.1,
+              -0.35
+            ],
+            "erosion": [
+              -1.0,
+              0.1
+            ],
+            "weirdness": [
+              0.1,
+              0.8
+            ],
+            "depth": 0.0,
+            "offset": 0.0
+          }
+        },
+        {
+          "biome": "awakening_system:teyvat_the_chasm",
+          "parameters": {
+            "temperature": [
+              0.4,
+              0.8
+            ],
+            "humidity": [
+              -1.0,
+              -0.3
+            ],
+            "continentalness": [
+              0.4,
+              1.0
+            ],
+            "erosion": [
+              -0.9,
+              -0.2
+            ],
+            "weirdness": [
+              -0.9,
+              -0.3
+            ],
+            "depth": 0.0,
+            "offset": 0.0
+          }
+        },
+        {
+          "biome": "awakening_system:teyvat_narukami_island",
+          "parameters": {
+            "temperature": [
+              0.2,
+              0.6
+            ],
+            "humidity": [
+              0.2,
+              0.7
+            ],
+            "continentalness": [
+              -0.65,
+              -0.05
+            ],
+            "erosion": [
+              -0.3,
+              0.6
+            ],
+            "weirdness": [
+              -0.8,
+              -0.1
+            ],
+            "depth": 0.0,
+            "offset": 0.0
+          }
+        },
+        {
+          "biome": "awakening_system:teyvat_watatsumi_island",
+          "parameters": {
+            "temperature": [
+              0.3,
+              0.7
+            ],
+            "humidity": [
+              0.65,
+              1.1
+            ],
+            "continentalness": [
+              -0.9,
+              -0.2
+            ],
+            "erosion": [
+              0.0,
+              0.8
+            ],
+            "weirdness": [
+              -0.6,
+              0.3
+            ],
+            "depth": 0.0,
+            "offset": 0.0
+          }
+        },
+        {
+          "biome": "awakening_system:teyvat_yashiori_island",
+          "parameters": {
+            "temperature": [
+              0.1,
+              0.5
+            ],
+            "humidity": [
+              0.3,
+              0.85
+            ],
+            "continentalness": [
+              -0.7,
+              -0.1
+            ],
+            "erosion": [
+              -0.8,
+              0.0
+            ],
+            "weirdness": [
+              0.3,
+              0.8
+            ],
+            "depth": 0.0,
+            "offset": 0.0
+          }
+        },
+        {
+          "biome": "awakening_system:teyvat_dharma_forest",
+          "parameters": {
+            "temperature": [
+              0.6,
+              1.05
+            ],
+            "humidity": [
+              0.4,
+              1.05
+            ],
+            "continentalness": [
+              0.1,
+              0.7
+            ],
+            "erosion": [
+              -0.4,
+              0.6
+            ],
+            "weirdness": [
+              -0.4,
+              0.6
+            ],
+            "depth": 0.0,
+            "offset": 0.0
+          }
+        },
+        {
+          "biome": "awakening_system:teyvat_hypostyle_desert",
+          "parameters": {
+            "temperature": [
+              0.65,
+              1.1
+            ],
+            "humidity": [
+              -1.1,
+              -0.25
+            ],
+            "continentalness": [
+              0.15,
+              0.8
+            ],
+            "erosion": [
+              0.0,
+              0.8
+            ],
+            "weirdness": [
+              -0.7,
+              0.7
+            ],
+            "depth": 0.0,
+            "offset": 0.0
+          }
+        },
+        {
+          "biome": "awakening_system:teyvat_fontaine_waters",
+          "parameters": {
+            "temperature": [
+              0.15,
+              0.55
+            ],
+            "humidity": [
+              0.5,
+              1.0
+            ],
+            "continentalness": [
+              -0.35,
+              0.25
+            ],
+            "erosion": [
+              -0.2,
+              0.7
+            ],
+            "weirdness": [
+              0.1,
+              0.7
+            ],
+            "depth": 0.0,
+            "offset": 0.0
+          }
+        },
+        {
+          "biome": "awakening_system:teyvat_chenyu_vale",
+          "parameters": {
+            "temperature": [
+              0.4,
+              0.8
+            ],
+            "humidity": [
+              0.5,
+              0.9
+            ],
+            "continentalness": [
+              0.2,
+              0.7
+            ],
+            "erosion": [
+              -0.5,
+              0.2
+            ],
+            "weirdness": [
+              0.1,
+              0.8
+            ],
+            "depth": 0.0,
+            "offset": 0.0
+          }
+        },
+        {
+          "biome": "awakening_system:teyvat_enkanomiya_depths",
+          "parameters": {
+            "temperature": [
+              -0.6,
+              0.0
+            ],
+            "humidity": [
+              -0.5,
+              0.1
+            ],
+            "continentalness": [
+              -1.2,
+              -0.6
+            ],
+            "erosion": [
+              -0.8,
+              0.4
+            ],
+            "weirdness": [
+              -1.0,
+              -0.2
+            ],
+            "depth": 0.0,
+            "offset": 0.0
+          }
+        },
+        {
+          "biome": "awakening_system:teyvat_luminescent_abyss_caves",
+          "parameters": {
+            "temperature": [
+              -1.0,
+              1.0
+            ],
+            "humidity": [
+              -1.0,
+              1.0
+            ],
+            "continentalness": [
+              -1.0,
+              1.0
+            ],
+            "erosion": [
+              -1.0,
+              1.0
+            ],
+            "weirdness": [
+              -1.0,
+              1.0
+            ],
+            "depth": [
+              0.3,
+              1.5
+            ],
+            "offset": 0.0
+          }
+        },
+        {
+          "biome": "awakening_system:teyvat_snezhnaya_tundra",
+          "parameters": {
+            "temperature": [
+              -1.0,
+              -0.65
+            ],
+            "humidity": [
+              0.3,
+              1.0
+            ],
+            "continentalness": [
+              0.2,
+              0.9
+            ],
+            "erosion": [
+              -0.4,
+              0.4
+            ],
+            "weirdness": [
+              -0.6,
+              0.6
+            ],
+            "depth": 0.0,
+            "offset": 0.0
+          }
+        }
+      ]
+    }
+  }
+}

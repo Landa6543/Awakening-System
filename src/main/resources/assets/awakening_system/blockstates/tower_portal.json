@@ -1,0 +1,10 @@
+{
+  "variants": {
+    "axis=x": {
+      "model": "awakening_system:block/tower_portal_ns"
+    },
+    "axis=z": {
+      "model": "awakening_system:block/tower_portal_ew"
+    }
+  }
+}

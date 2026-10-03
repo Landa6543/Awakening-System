@@ -1,0 +1,13 @@
+{
+  "parent": "block/cube",
+  "textures": {
+    "down": "awakening_system:block/lootbox",
+    "up": "awakening_system:block/lootbox",
+    "north": "awakening_system:block/lootbox",
+    "east": "awakening_system:block/lootbox",
+    "south": "awakening_system:block/lootbox",
+    "west": "awakening_system:block/lootbox",
+    "particle": "awakening_system:block/lootbox"
+  },
+  "render_type": "cutout"
+}

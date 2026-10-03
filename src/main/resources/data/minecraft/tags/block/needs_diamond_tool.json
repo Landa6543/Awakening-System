@@ -1,0 +1,21 @@
+{
+  "replace": false,
+  "values": [
+    "awakening_system:abyssal_ore",
+    "awakening_system:deepslate_abyssal_ore",
+    "awakening_system:abyssal_block",
+    "awakening_system:mithril_ore",
+    "awakening_system:deepslate_mithril_ore",
+    "awakening_system:mithril_block",
+    "awakening_system:mithril_furnace",
+    "awakening_system:adamantite_ore",
+    "awakening_system:adamantite_block",
+    "awakening_system:adamantite_furnace",
+    "awakening_system:spirit_jade_ore",
+    "awakening_system:spirit_jade_block",
+    "awakening_system:spirit_jade_furnace",
+    "awakening_system:astral_ore",
+    "awakening_system:astral_block",
+    "awakening_system:astral_furnace"
+  ]
+}

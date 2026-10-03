@@ -1,0 +1,24 @@
+{
+  "type": "minecraft:crafting_shaped",
+  "category": "misc",
+  "pattern": [
+    "J J",
+    "ICI",
+    "III"
+  ],
+  "key": {
+    "J": {
+      "item": "awakening_system:spirit_jade_shard"
+    },
+    "I": {
+      "item": "minecraft:iron_ingot"
+    },
+    "C": {
+      "item": "minecraft:cauldron"
+    }
+  },
+  "result": {
+    "count": 1,
+    "id": "awakening_system:murim_alchemy_cauldron"
+  }
+}

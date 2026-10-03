@@ -1,0 +1,7 @@
+{
+  "parent": "minecraft:block/cube_column",
+  "textures": {
+    "end": "awakening_system:block/mount_hua_paper_lantern_top",
+    "side": "awakening_system:block/mount_hua_paper_lantern"
+  }
+}

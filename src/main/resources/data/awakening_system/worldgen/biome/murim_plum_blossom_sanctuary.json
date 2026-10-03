@@ -1,0 +1,71 @@
+{
+  "has_precipitation": false,
+  "temperature": 0.6,
+  "downfall": 0.7,
+  "effects": {
+    "sky_color": 15785215,
+    "fog_color": 16248316,
+    "water_color": 3450596,
+    "water_fog_color": 3450596,
+    "grass_color": 6072430,
+    "foliage_color": 16755401,
+    "ambient_sound": "minecraft:ambient.underwater.loop",
+    "particle": {
+      "options": {
+        "type": "minecraft:cherry_leaves"
+      },
+      "probability": 0.03
+    }
+  },
+  "spawners": {
+    "monster": [],
+    "creature": [
+      {
+        "type": "awakening_system:spirit_fox",
+        "weight": 20,
+        "minCount": 2,
+        "maxCount": 4
+      },
+      {
+        "type": "awakening_system:cloud_crane",
+        "weight": 18,
+        "minCount": 1,
+        "maxCount": 3
+      },
+      {
+        "type": "awakening_system:mount_hua_disciple",
+        "weight": 12,
+        "minCount": 1,
+        "maxCount": 2
+      },
+      {
+        "type": "minecraft:allay",
+        "weight": 15,
+        "minCount": 2,
+        "maxCount": 4
+      }
+    ]
+  },
+  "spawn_costs": {},
+  "carvers": {},
+  "features": [
+    [],
+    [],
+    [],
+    [],
+    [],
+    [],
+    [],
+    [],
+    [],
+    [
+      "minecraft:flower_flower_forest",
+      "minecraft:patch_grass_forest",
+      "minecraft:flower_cherry",
+      "minecraft:trees_cherry",
+      "awakening_system:patch_wild_ginseng",
+      "awakening_system:super_giant_plum"
+    ],
+    []
+  ]
+}

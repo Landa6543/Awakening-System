@@ -1,0 +1,60 @@
+{
+  "has_precipitation": false,
+  "temperature": 0.5,
+  "downfall": 0.5,
+  "effects": {
+    "sky_color": 1315865,
+    "fog_color": 2631720,
+    "water_color": 3426420,
+    "water_fog_color": 3426420,
+    "ambient_sound": "minecraft:ambient.cave",
+    "particle": {
+      "options": {
+        "type": "minecraft:glow"
+      },
+      "probability": 0.03
+    }
+  },
+  "spawners": {
+    "monster": [
+      {
+        "type": "awakening_system:genshin_slime",
+        "weight": 45,
+        "minCount": 2,
+        "maxCount": 4
+      },
+      {
+        "type": "awakening_system:abyssal_necromancer",
+        "weight": 20,
+        "minCount": 1,
+        "maxCount": 2
+      }
+    ],
+    "creature": [
+      {
+        "type": "minecraft:glow_squid",
+        "weight": 25,
+        "minCount": 2,
+        "maxCount": 4
+      }
+    ]
+  },
+  "spawn_costs": {},
+  "carvers": {},
+  "features": [
+    [],
+    [],
+    [],
+    [],
+    [],
+    [],
+    [],
+    [],
+    [],
+    [
+      "minecraft:glow_lichen",
+      "minecraft:lush_caves_clay"
+    ],
+    []
+  ]
+}

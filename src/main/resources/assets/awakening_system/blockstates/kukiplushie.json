@@ -1,0 +1,19 @@
+{
+  "variants": {
+    "facing=north": {
+      "model": "awakening_system:block/kukiplushie"
+    },
+    "facing=east": {
+      "model": "awakening_system:block/kukiplushie",
+      "y": 90
+    },
+    "facing=south": {
+      "model": "awakening_system:block/kukiplushie",
+      "y": 180
+    },
+    "facing=west": {
+      "model": "awakening_system:block/kukiplushie",
+      "y": 270
+    }
+  }
+}

@@ -1,0 +1,69 @@
+{
+  "has_precipitation": false,
+  "temperature": 0.3,
+  "downfall": 0.4,
+  "effects": {
+    "sky_color": 10208482,
+    "fog_color": 13821685,
+    "water_color": 4159204,
+    "water_fog_color": 329011,
+    "grass_color": 4749911,
+    "foliage_color": 3043136,
+    "ambient_sound": "minecraft:ambient.underwater.loop",
+    "particle": {
+      "options": {
+        "type": "minecraft:spore_blossom_air"
+      },
+      "probability": 0.015
+    }
+  },
+  "spawners": {
+    "monster": [],
+    "creature": [
+      {
+        "type": "awakening_system:cloud_crane",
+        "weight": 22,
+        "minCount": 2,
+        "maxCount": 4
+      },
+      {
+        "type": "awakening_system:white_thunder_tiger",
+        "weight": 14,
+        "minCount": 1,
+        "maxCount": 2
+      },
+      {
+        "type": "awakening_system:spirit_fox",
+        "weight": 16,
+        "minCount": 1,
+        "maxCount": 3
+      },
+      {
+        "type": "minecraft:allay",
+        "weight": 10,
+        "minCount": 1,
+        "maxCount": 3
+      }
+    ]
+  },
+  "spawn_costs": {},
+  "carvers": {},
+  "features": [
+    [],
+    [],
+    [],
+    [],
+    [],
+    [],
+    [],
+    [],
+    [],
+    [
+      "minecraft:trees_taiga",
+      "minecraft:patch_grass_taiga",
+      "awakening_system:patch_wild_ginseng",
+      "awakening_system:super_giant_murim_pine"
+    ],
+    []
+  ]
+}

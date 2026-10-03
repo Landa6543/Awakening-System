@@ -1,0 +1,13 @@
+{
+  "type": "minecraft:crafting_shapeless",
+  "category": "misc",
+  "ingredients": [
+    {
+      "item": "awakening_system:adamantite_ingot"
+    }
+  ],
+  "result": {
+    "count": 9,
+    "id": "awakening_system:adamantite_nugget"
+  }
+}

@@ -1,0 +1,19 @@
+{
+  "variants": {
+    "facing=north": {
+      "model": "awakening_system:block/hellcatplushie"
+    },
+    "facing=east": {
+      "model": "awakening_system:block/hellcatplushie",
+      "y": 90
+    },
+    "facing=south": {
+      "model": "awakening_system:block/hellcatplushie",
+      "y": 180
+    },
+    "facing=west": {
+      "model": "awakening_system:block/hellcatplushie",
+      "y": 270
+    }
+  }
+}

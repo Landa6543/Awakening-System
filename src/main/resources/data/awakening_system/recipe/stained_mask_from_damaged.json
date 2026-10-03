@@ -1,0 +1,19 @@
+{
+  "type": "minecraft:crafting_shapeless",
+  "category": "misc",
+  "ingredients": [
+    {
+      "item": "awakening_system:damaged_mask"
+    },
+    {
+      "item": "awakening_system:damaged_mask"
+    },
+    {
+      "item": "awakening_system:damaged_mask"
+    }
+  ],
+  "result": {
+    "id": "awakening_system:stained_mask",
+    "count": 1
+  }
+}

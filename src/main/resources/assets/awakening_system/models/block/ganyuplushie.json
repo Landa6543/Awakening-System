@@ -1,0 +1,9 @@
+{
+  "parent": "awakening_system:custom/ganyu_plushie",
+  "textures": {
+    "all": "awakening_system:block/ganyu_plushie",
+    "particle": "awakening_system:block/ganyu_plushie",
+    "0": "awakening_system:block/ganyu_plushie"
+  },
+  "render_type": "cutout"
+}

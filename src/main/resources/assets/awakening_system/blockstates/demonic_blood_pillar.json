@@ -1,0 +1,16 @@
+{
+  "variants": {
+    "axis=y": {
+      "model": "awakening_system:block/demonic_blood_pillar"
+    },
+    "axis=z": {
+      "model": "awakening_system:block/demonic_blood_pillar_horizontal",
+      "x": 90
+    },
+    "axis=x": {
+      "model": "awakening_system:block/demonic_blood_pillar_horizontal",
+      "x": 90,
+      "y": 90
+    }
+  }
+}

@@ -1,0 +1,6 @@
+{
+    "textures":  {
+                     "all":  "awakening_system:block/vajrada_amethyst_ore"
+                 },
+    "parent":  "minecraft:block/cube_all"
+}

@@ -1,0 +1,24 @@
+{
+  "type": "minecraft:crafting_shaped",
+  "category": "misc",
+  "pattern": [
+    "PPP",
+    "WSW",
+    " W "
+  ],
+  "key": {
+    "P": {
+      "item": "minecraft:paper"
+    },
+    "W": {
+      "item": "minecraft:oak_planks"
+    },
+    "S": {
+      "item": "minecraft:iron_sword"
+    }
+  },
+  "result": {
+    "id": "awakening_system:guild_hunting_board",
+    "count": 1
+  }
+}

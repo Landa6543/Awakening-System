@@ -1,0 +1,6 @@
+{
+  "type": "neoforge:add_features",
+  "biomes": "#minecraft:is_end",
+  "features": "awakening_system:ore_astral",
+  "step": "underground_ores"
+}

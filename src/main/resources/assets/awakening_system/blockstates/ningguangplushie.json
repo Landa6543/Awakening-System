@@ -1,0 +1,19 @@
+{
+  "variants": {
+    "facing=north": {
+      "model": "awakening_system:block/ningguangplushie"
+    },
+    "facing=east": {
+      "model": "awakening_system:block/ningguangplushie",
+      "y": 90
+    },
+    "facing=south": {
+      "model": "awakening_system:block/ningguangplushie",
+      "y": 180
+    },
+    "facing=west": {
+      "model": "awakening_system:block/ningguangplushie",
+      "y": 270
+    }
+  }
+}

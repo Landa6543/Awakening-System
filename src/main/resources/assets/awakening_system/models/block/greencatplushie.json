@@ -1,0 +1,9 @@
+{
+  "parent": "awakening_system:custom/greencatplushie",
+  "textures": {
+    "all": "awakening_system:block/greencatplushie",
+    "particle": "awakening_system:block/greencatplushie",
+    "0": "awakening_system:block/greencatplushie"
+  },
+  "render_type": "cutout"
+}

@@ -1,0 +1,12 @@
+{
+  "parent": "minecraft:block/cube",
+  "textures": {
+    "particle": "awakening_system:block/subway_platform_edge",
+    "up": "awakening_system:block/subway_platform_edge",
+    "down": "awakening_system:block/subway_platform",
+    "north": "awakening_system:block/subway_platform_side",
+    "south": "awakening_system:block/subway_platform",
+    "west": "awakening_system:block/subway_platform",
+    "east": "awakening_system:block/subway_platform"
+  }
+}

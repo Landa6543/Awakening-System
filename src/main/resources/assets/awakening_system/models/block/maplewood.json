@@ -1,0 +1,12 @@
+{
+  "parent": "block/cube",
+  "textures": {
+    "down": "awakening_system:block/maple_wood_top",
+    "up": "awakening_system:block/maple_wood_top",
+    "north": "awakening_system:block/maple_wood",
+    "east": "awakening_system:block/maple_wood",
+    "south": "awakening_system:block/maple_wood",
+    "west": "awakening_system:block/maple_wood",
+    "particle": "awakening_system:block/maple_wood_top"
+  }
+}

@@ -1,0 +1,13 @@
+{
+  "type": "minecraft:crafting_shapeless",
+  "category": "building",
+  "ingredients": [
+    {
+      "item": "awakening_system:celestial_pine_log"
+    }
+  ],
+  "result": {
+    "count": 4,
+    "id": "awakening_system:celestial_pine_planks"
+  }
+}

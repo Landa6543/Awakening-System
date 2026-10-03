@@ -1,0 +1,27 @@
+{
+  "type": "minecraft:crafting_shaped",
+  "category": "misc",
+  "pattern": [
+    "NDN",
+    "WSW",
+    "NDN"
+  ],
+  "key": {
+    "S": {
+      "item": "minecraft:nether_star"
+    },
+    "N": {
+      "item": "minecraft:netherite_block"
+    },
+    "D": {
+      "item": "awakening_system:immortal_dragon_scale"
+    },
+    "W": {
+      "item": "awakening_system:wyvern_fang"
+    }
+  },
+  "result": {
+    "count": 1,
+    "id": "awakening_system:primordial_rebirth_pill"
+  }
+}

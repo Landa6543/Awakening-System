@@ -1,0 +1,16 @@
+{
+  "variants": {
+    "axis=x": {
+      "model": "awakening_system:block/maplewood",
+      "x": 90,
+      "y": 90
+    },
+    "axis=y": {
+      "model": "awakening_system:block/maplewood"
+    },
+    "axis=z": {
+      "model": "awakening_system:block/maplewood",
+      "x": 90
+    }
+  }
+}

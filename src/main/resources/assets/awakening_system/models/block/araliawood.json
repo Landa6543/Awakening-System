@@ -1,0 +1,12 @@
+{
+  "parent": "block/cube",
+  "textures": {
+    "down": "awakening_system:block/aralia_wood_top",
+    "up": "awakening_system:block/aralia_wood_top",
+    "north": "awakening_system:block/aralia_wood",
+    "east": "awakening_system:block/aralia_wood",
+    "south": "awakening_system:block/aralia_wood",
+    "west": "awakening_system:block/aralia_wood",
+    "particle": "awakening_system:block/aralia_wood_top"
+  }
+}

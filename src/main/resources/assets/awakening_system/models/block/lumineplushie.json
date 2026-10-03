@@ -1,0 +1,9 @@
+{
+  "parent": "awakening_system:custom/lumine_plushie",
+  "textures": {
+    "all": "awakening_system:block/lumine_plushie",
+    "particle": "awakening_system:block/lumine_plushie",
+    "0": "awakening_system:block/lumine_plushie"
+  },
+  "render_type": "cutout"
+}

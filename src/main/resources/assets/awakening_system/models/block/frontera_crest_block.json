@@ -1,0 +1,7 @@
+{
+  "parent": "minecraft:block/cube_column",
+  "textures": {
+    "end": "awakening_system:block/frontera_reinforced_column_top",
+    "side": "awakening_system:block/frontera_crest_block"
+  }
+}

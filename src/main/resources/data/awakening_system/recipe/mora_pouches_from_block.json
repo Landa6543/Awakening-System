@@ -1,0 +1,13 @@
+{
+  "type": "minecraft:crafting_shapeless",
+  "category": "misc",
+  "ingredients": [
+    {
+      "item": "awakening_system:mora_block"
+    }
+  ],
+  "result": {
+    "id": "awakening_system:mora_pouch",
+    "count": 9
+  }
+}

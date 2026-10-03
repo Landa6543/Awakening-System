@@ -1,0 +1,6 @@
+{
+  "type": "neoforge:add_features",
+  "biomes": "#minecraft:is_nether",
+  "features": "awakening_system:ore_adamantite",
+  "step": "underground_ores"
+}

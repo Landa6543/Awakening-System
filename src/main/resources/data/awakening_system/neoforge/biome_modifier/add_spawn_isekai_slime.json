@@ -1,0 +1,12 @@
+{
+  "type": "neoforge:add_spawns",
+  "biomes": "#awakening_system:is_isekai",
+  "spawners": [
+    {
+      "type": "awakening_system:isekai_slime",
+      "weight": 15,
+      "minCount": 1,
+      "maxCount": 3
+    }
+  ]
+}

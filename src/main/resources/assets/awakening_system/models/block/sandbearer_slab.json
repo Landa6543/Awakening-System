@@ -1,0 +1,8 @@
+{
+  "parent": "minecraft:block/slab",
+  "textures": {
+    "bottom": "awakening_system:block/sandbearer_planks",
+    "top": "awakening_system:block/sandbearer_planks",
+    "side": "awakening_system:block/sandbearer_planks"
+  }
+}

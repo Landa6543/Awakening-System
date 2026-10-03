@@ -1,0 +1,24 @@
+{
+  "type": "minecraft:crafting_shaped",
+  "category": "equipment",
+  "pattern": [
+    " M ",
+    " D ",
+    " S "
+  ],
+  "key": {
+    "M": {
+      "item": "awakening_system:mithril_ingot"
+    },
+    "D": {
+      "item": "minecraft:diamond"
+    },
+    "S": {
+      "item": "minecraft:iron_sword"
+    }
+  },
+  "result": {
+    "count": 1,
+    "id": "awakening_system:lambent_light"
+  }
+}

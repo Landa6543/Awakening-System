@@ -1,0 +1,9 @@
+{
+  "parent": "awakening_system:custom/kokomi_plushie",
+  "textures": {
+    "all": "awakening_system:block/kokomi_plushie",
+    "particle": "awakening_system:block/kokomi_plushie",
+    "0": "awakening_system:block/kokomi_plushie"
+  },
+  "render_type": "cutout"
+}

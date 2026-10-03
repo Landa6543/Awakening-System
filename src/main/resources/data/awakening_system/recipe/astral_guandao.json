@@ -1,0 +1,24 @@
+{
+  "type": "minecraft:crafting_shaped",
+  "category": "equipment",
+  "pattern": [
+    " #D",
+    " S#",
+    "S  "
+  ],
+  "key": {
+    "#": {
+      "item": "awakening_system:astral_ingot"
+    },
+    "D": {
+      "item": "awakening_system:immortal_dragon_scale"
+    },
+    "S": {
+      "item": "minecraft:blaze_rod"
+    }
+  },
+  "result": {
+    "count": 1,
+    "id": "awakening_system:astral_guandao"
+  }
+}

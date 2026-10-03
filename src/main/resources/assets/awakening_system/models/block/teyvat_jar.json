@@ -1,0 +1,9 @@
+{
+  "parent": "awakening_system:custom/teyvat_jar",
+  "textures": {
+    "all": "awakening_system:block/teyvat_jar",
+    "particle": "awakening_system:block/teyvat_jar",
+    "0": "awakening_system:block/teyvat_jar"
+  },
+  "render_type": "cutout"
+}

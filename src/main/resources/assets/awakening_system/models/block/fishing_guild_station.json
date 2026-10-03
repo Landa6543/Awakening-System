@@ -1,0 +1,12 @@
+{
+  "parent": "minecraft:block/cube",
+  "textures": {
+    "particle": "awakening_system:block/fishing_station_front",
+    "up": "awakening_system:block/fishing_station_top",
+    "down": "awakening_system:block/fishing_station_bottom",
+    "north": "awakening_system:block/fishing_station_front",
+    "east": "awakening_system:block/fishing_station_side",
+    "south": "awakening_system:block/fishing_station_side",
+    "west": "awakening_system:block/fishing_station_side"
+  }
+}

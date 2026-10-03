@@ -1,0 +1,12 @@
+{
+  "parent": "block/cube",
+  "textures": {
+    "down": "awakening_system:block/electro_shrine_block_final",
+    "up": "awakening_system:block/electro_shrine_block_final",
+    "north": "awakening_system:block/electro_shrine_block_final",
+    "east": "awakening_system:block/electro_shrine_block_final",
+    "south": "awakening_system:block/electro_shrine_block_final",
+    "west": "awakening_system:block/electro_shrine_block_final",
+    "particle": "awakening_system:block/electro_shrine_block_final"
+  }
+}

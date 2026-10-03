@@ -1,0 +1,19 @@
+{
+  "variants": {
+    "facing=north": {
+      "model": "awakening_system:block/trilunar_altar"
+    },
+    "facing=south": {
+      "model": "awakening_system:block/trilunar_altar",
+      "y": 180
+    },
+    "facing=west": {
+      "model": "awakening_system:block/trilunar_altar",
+      "y": 270
+    },
+    "facing=east": {
+      "model": "awakening_system:block/trilunar_altar",
+      "y": 90
+    }
+  }
+}

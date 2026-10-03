@@ -1,0 +1,50 @@
+{
+  "has_precipitation": false,
+  "temperature": 0.9,
+  "downfall": 0.1,
+  "effects": {
+    "sky_color": 3151928,
+    "fog_color": 2496796,
+    "water_color": 4141639,
+    "water_fog_color": 4141639,
+    "grass_color": 3947320,
+    "foliage_color": 4862534,
+    "ambient_sound": "minecraft:ambient.nether_wastes.loop",
+    "particle": {
+      "options": {
+        "type": "minecraft:soul_fire_flame"
+      },
+      "probability": 0.015
+    }
+  },
+  "spawners": {
+    "monster": [
+      {
+        "type": "minecraft:wither_skeleton",
+        "weight": 8,
+        "minCount": 1,
+        "maxCount": 2
+      }
+    ],
+    "creature": []
+  },
+  "spawn_costs": {},
+  "carvers": {},
+  "features": [
+    [],
+    [],
+    [],
+    [],
+    [],
+    [],
+    [],
+    [],
+    [],
+    [
+      "minecraft:weeping_vines",
+      "minecraft:crimson_fungi",
+      "minecraft:patch_soul_fire"
+    ],
+    []
+  ]
+}

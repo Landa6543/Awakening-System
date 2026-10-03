@@ -1,0 +1,12 @@
+{
+  "parent": "block/cube",
+  "textures": {
+    "down": "awakening_system:block/otogi_leaves",
+    "up": "awakening_system:block/otogi_leaves",
+    "north": "awakening_system:block/otogi_leaves",
+    "east": "awakening_system:block/otogi_leaves",
+    "south": "awakening_system:block/otogi_leaves",
+    "west": "awakening_system:block/otogi_leaves",
+    "particle": "awakening_system:block/otogi_leaves"
+  }
+}

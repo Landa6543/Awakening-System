@@ -1,0 +1,6 @@
+{
+  "parent": "item/generated",
+  "textures": {
+    "layer0": "awakening_system:item/crown_of_the_brave"
+  }
+}

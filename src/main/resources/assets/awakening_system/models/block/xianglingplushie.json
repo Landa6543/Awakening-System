@@ -1,0 +1,9 @@
+{
+  "parent": "awakening_system:custom/xiangling_plushie",
+  "textures": {
+    "all": "awakening_system:block/xiangling_plushie",
+    "particle": "awakening_system:block/xiangling_plushie",
+    "0": "awakening_system:block/xiangling_plushie"
+  },
+  "render_type": "cutout"
+}

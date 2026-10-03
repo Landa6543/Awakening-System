@@ -1,0 +1,19 @@
+{
+  "variants": {
+    "facing=north": {
+      "model": "awakening_system:block/jeanplushie"
+    },
+    "facing=east": {
+      "model": "awakening_system:block/jeanplushie",
+      "y": 90
+    },
+    "facing=south": {
+      "model": "awakening_system:block/jeanplushie",
+      "y": 180
+    },
+    "facing=west": {
+      "model": "awakening_system:block/jeanplushie",
+      "y": 270
+    }
+  }
+}

@@ -1,0 +1,68 @@
+{
+  "has_precipitation": true,
+  "temperature": -0.5,
+  "downfall": 0.9,
+  "effects": {
+    "sky_color": 10467570,
+    "fog_color": 13160408,
+    "water_color": 4159204,
+    "water_fog_color": 329011,
+    "grass_color": 8432320,
+    "foliage_color": 8432320,
+    "ambient_sound": "minecraft:ambient.cave",
+    "particle": {
+      "options": {
+        "type": "minecraft:snowflake"
+      },
+      "probability": 0.035
+    }
+  },
+  "spawners": {
+    "monster": [
+      {
+        "type": "awakening_system:demonic_cultivator",
+        "weight": 35,
+        "minCount": 1,
+        "maxCount": 2
+      },
+      {
+        "type": "awakening_system:frost_elf_assassin",
+        "weight": 25,
+        "minCount": 1,
+        "maxCount": 2
+      }
+    ],
+    "creature": [
+      {
+        "type": "awakening_system:white_thunder_tiger",
+        "weight": 18,
+        "minCount": 1,
+        "maxCount": 2
+      },
+      {
+        "type": "awakening_system:spirit_fox",
+        "weight": 15,
+        "minCount": 1,
+        "maxCount": 3
+      }
+    ]
+  },
+  "spawn_costs": {},
+  "carvers": {},
+  "features": [
+    [],
+    [],
+    [],
+    [],
+    [],
+    [],
+    [],
+    [],
+    [],
+    [
+      "minecraft:trees_taiga",
+      "minecraft:freeze_top_layer"
+    ],
+    []
+  ]
+}

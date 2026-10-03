@@ -1,0 +1,9 @@
+{
+  "parent": "awakening_system:custom/razor_plushie",
+  "textures": {
+    "all": "awakening_system:block/razor_plushie",
+    "particle": "awakening_system:block/razor_plushie",
+    "0": "awakening_system:block/razor_plushie"
+  },
+  "render_type": "cutout"
+}

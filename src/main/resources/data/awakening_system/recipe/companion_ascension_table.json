@@ -1,0 +1,30 @@
+{
+  "type": "minecraft:crafting_shaped",
+  "category": "misc",
+  "pattern": [
+    "GAG",
+    "MEM",
+    "PPP"
+  ],
+  "key": {
+    "G": {
+      "item": "awakening_system:genesis_crystal"
+    },
+    "A": {
+      "item": "awakening_system:stellar_jade"
+    },
+    "M": {
+      "item": "awakening_system:astral_ingot"
+    },
+    "E": {
+      "item": "minecraft:enchanting_table"
+    },
+    "P": {
+      "item": "awakening_system:mana_wood_planks"
+    }
+  },
+  "result": {
+    "count": 1,
+    "id": "awakening_system:companion_ascension_table"
+  }
+}

@@ -1,0 +1,9 @@
+{
+  "parent": "awakening_system:custom/square_yumemiru_stool",
+  "render_type": "minecraft:cutout",
+  "textures": {
+    "all": "awakening_system:block/square_yumemiru_stool",
+    "particle": "awakening_system:block/square_yumemiru_stool",
+    "0": "awakening_system:block/square_yumemiru_stool"
+  }
+}

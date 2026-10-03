@@ -1,0 +1,82 @@
+{
+  "has_precipitation": true,
+  "temperature": 0.8,
+  "downfall": 0.7,
+  "effects": {
+    "sky_color": 9095397,
+    "fog_color": 14743546,
+    "water_color": 2533018,
+    "water_fog_color": 19776,
+    "grass_color": 10275941,
+    "foliage_color": 8172354,
+    "particle": {
+      "options": {
+        "type": "minecraft:happy_villager"
+      },
+      "probability": 0.009
+    }
+  },
+  "spawners": {
+    "monster": [
+      {
+        "type": "awakening_system:genshin_slime",
+        "weight": 50,
+        "minCount": 2,
+        "maxCount": 4
+      },
+      {
+        "type": "awakening_system:hilichurl",
+        "weight": 45,
+        "minCount": 2,
+        "maxCount": 5
+      },
+      {
+        "type": "awakening_system:mitachurl",
+        "weight": 2,
+        "minCount": 1,
+        "maxCount": 1
+      }
+    ],
+    "creature": [
+      {
+        "type": "minecraft:frog",
+        "weight": 10,
+        "minCount": 2,
+        "maxCount": 5
+      },
+      {
+        "type": "minecraft:tropical_fish",
+        "weight": 8,
+        "minCount": 3,
+        "maxCount": 6
+      }
+    ]
+  },
+  "spawn_costs": {},
+  "carvers": {},
+  "features": [
+    [],
+    [],
+    [],
+    [],
+    [
+      "awakening_system:teyvat_hilichurl_camp",
+      "awakening_system:teyvat_shrine_of_depths",
+      "awakening_system:teyvat_teleport_waypoint",
+      "awakening_system:teyvat_regional_structure"
+    ],
+    [],
+    [
+      "awakening_system:ore_varunada_lazurite"
+    ],
+    [],
+    [],
+    [
+      "minecraft:patch_tall_grass",
+      "awakening_system:teyvat_cuihua_tree",
+      "minecraft:patch_sugar_cane",
+      "minecraft:seagrass_swamp"
+    ],
+    []
+  ]
+}

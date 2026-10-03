@@ -1,0 +1,75 @@
+{
+  "has_precipitation": true,
+  "temperature": 0.6,
+  "downfall": 0.8,
+  "effects": {
+    "sky_color": 6600182,
+    "fog_color": 12312315,
+    "water_color": 1804504,
+    "water_fog_color": 937338,
+    "grass_color": 6732650,
+    "foliage_color": 4431943,
+    "particle": {
+      "options": {
+        "type": "minecraft:falling_water"
+      },
+      "probability": 0.006
+    }
+  },
+  "spawners": {
+    "monster": [
+      {
+        "type": "awakening_system:genshin_slime",
+        "weight": 50,
+        "minCount": 2,
+        "maxCount": 4
+      },
+      {
+        "type": "awakening_system:hilichurl",
+        "weight": 45,
+        "minCount": 2,
+        "maxCount": 5
+      },
+      {
+        "type": "awakening_system:mitachurl",
+        "weight": 2,
+        "minCount": 1,
+        "maxCount": 1
+      }
+    ],
+    "creature": [
+      {
+        "type": "minecraft:salmon",
+        "weight": 12,
+        "minCount": 3,
+        "maxCount": 6
+      },
+      {
+        "type": "minecraft:squid",
+        "weight": 6,
+        "minCount": 1,
+        "maxCount": 3
+      }
+    ]
+  },
+  "spawn_costs": {},
+  "carvers": {},
+  "features": [
+    [],
+    [],
+    [],
+    [],
+    [],
+    [],
+    [
+      "awakening_system:ore_varunada_lazurite"
+    ],
+    [],
+    [],
+    [
+      "minecraft:seagrass_simple",
+      "minecraft:kelp_cold"
+    ],
+    []
+  ]
+}

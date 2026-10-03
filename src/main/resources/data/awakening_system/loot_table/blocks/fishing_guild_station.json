@@ -1,0 +1,15 @@
+{
+  "type": "minecraft:block",
+  "pools": [
+    {
+      "bonus_rolls": 0.0,
+      "entries": [
+        {
+          "type": "minecraft:item",
+          "name": "awakening_system:fishing_guild_station"
+        }
+      ],
+      "rolls": 1.0
+    }
+  ]
+}

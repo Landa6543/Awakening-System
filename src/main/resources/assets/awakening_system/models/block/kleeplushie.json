@@ -1,0 +1,9 @@
+{
+  "parent": "awakening_system:custom/klee_plushie",
+  "textures": {
+    "all": "awakening_system:block/klee_plushie",
+    "particle": "awakening_system:block/klee_plushie",
+    "0": "awakening_system:block/klee_plushie"
+  },
+  "render_type": "cutout"
+}

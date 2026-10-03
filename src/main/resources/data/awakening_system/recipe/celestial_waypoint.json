@@ -1,0 +1,57 @@
+{
+  "type": "minecraft:crafting_shaped",
+  "category": "misc",
+  "pattern": [
+    "JCJ",
+    "YEP",
+    "OBO"
+  ],
+  "key": {
+    "C": {
+      "item": "awakening_system:chaos_mana_core"
+    },
+    "Y": {
+      "item": "awakening_system:yggdrasil_heart_seed"
+    },
+    "J": {
+      "item": "awakening_system:spirit_jade"
+    },
+    "P": [
+      {
+        "item": "awakening_system:realm_breakthrough_pill"
+      },
+      {
+        "item": "awakening_system:marrow_cleansing_pill"
+      },
+      {
+        "item": "awakening_system:rising_dragon_pill"
+      },
+      {
+        "item": "awakening_system:soul_transformation_pill"
+      }
+    ],
+    "B": {
+      "item": "awakening_system:spirit_jade_block"
+    },
+    "E": [
+      {
+        "item": "awakening_system:primogem"
+      },
+      {
+        "item": "minecraft:eye_of_ender"
+      }
+    ],
+    "O": [
+      {
+        "item": "minecraft:crying_obsidian"
+      },
+      {
+        "item": "minecraft:obsidian"
+      }
+    ]
+  },
+  "result": {
+    "count": 1,
+    "id": "awakening_system:celestial_waypoint"
+  }
+}

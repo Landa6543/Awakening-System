@@ -1,0 +1,49 @@
+{
+  "variants": {
+    "facing=north,type=single": {
+      "model": "awakening_system:block/subway_digital_screen"
+    },
+    "facing=east,type=single": {
+      "model": "awakening_system:block/subway_digital_screen",
+      "y": 90
+    },
+    "facing=south,type=single": {
+      "model": "awakening_system:block/subway_digital_screen",
+      "y": 180
+    },
+    "facing=west,type=single": {
+      "model": "awakening_system:block/subway_digital_screen",
+      "y": 270
+    },
+    "facing=north,type=left": {
+      "model": "awakening_system:block/subway_digital_screen_left"
+    },
+    "facing=east,type=left": {
+      "model": "awakening_system:block/subway_digital_screen_left",
+      "y": 90
+    },
+    "facing=south,type=left": {
+      "model": "awakening_system:block/subway_digital_screen_left",
+      "y": 180
+    },
+    "facing=west,type=left": {
+      "model": "awakening_system:block/subway_digital_screen_left",
+      "y": 270
+    },
+    "facing=north,type=right": {
+      "model": "awakening_system:block/subway_digital_screen_right"
+    },
+    "facing=east,type=right": {
+      "model": "awakening_system:block/subway_digital_screen_right",
+      "y": 90
+    },
+    "facing=south,type=right": {
+      "model": "awakening_system:block/subway_digital_screen_right",
+      "y": 180
+    },
+    "facing=west,type=right": {
+      "model": "awakening_system:block/subway_digital_screen_right",
+      "y": 270
+    }
+  }
+}

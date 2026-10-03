@@ -1,0 +1,9 @@
+{
+  "parent": "awakening_system:custom/thoma_plushie",
+  "textures": {
+    "all": "awakening_system:block/thoma_plushie",
+    "particle": "awakening_system:block/thoma_plushie",
+    "0": "awakening_system:block/thoma_plushie"
+  },
+  "render_type": "cutout"
+}

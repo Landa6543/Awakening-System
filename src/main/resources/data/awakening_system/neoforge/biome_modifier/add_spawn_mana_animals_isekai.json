@@ -1,0 +1,30 @@
+{
+  "type": "neoforge:add_spawns",
+  "biomes": "#awakening_system:is_isekai",
+  "spawners": [
+    {
+      "type": "awakening_system:mana_cow",
+      "weight": 25,
+      "minCount": 2,
+      "maxCount": 5
+    },
+    {
+      "type": "awakening_system:mana_pig",
+      "weight": 25,
+      "minCount": 2,
+      "maxCount": 5
+    },
+    {
+      "type": "awakening_system:mana_sheep",
+      "weight": 25,
+      "minCount": 2,
+      "maxCount": 5
+    },
+    {
+      "type": "awakening_system:mana_chicken",
+      "weight": 28,
+      "minCount": 3,
+      "maxCount": 6
+    }
+  ]
+}

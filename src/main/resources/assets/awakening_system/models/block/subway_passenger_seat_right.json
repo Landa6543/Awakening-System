@@ -1,0 +1,57 @@
+{
+  "parent": "minecraft:block/block",
+  "ambientocclusion": true,
+  "textures": {
+    "particle": "minecraft:block/blue_concrete",
+    "cushion": "minecraft:block/blue_concrete",
+    "frame": "awakening_system:block/subway_seat_frame",
+    "metal": "minecraft:block/iron_block"
+  },
+  "elements": [
+    {
+      "from": [ 0, 0, 1 ],
+      "to": [ 15, 6, 13 ],
+      "faces": {
+        "down": { "texture": "#frame", "cullface": "down" },
+        "north": { "texture": "#frame" },
+        "south": { "texture": "#frame" },
+        "west": { "texture": "#frame", "cullface": "west" },
+        "east": { "texture": "#frame" }
+      }
+    },
+    {
+      "from": [ 0, 6, 0 ],
+      "to": [ 16, 8, 14 ],
+      "faces": {
+        "up": { "texture": "#cushion" },
+        "down": { "texture": "#frame" },
+        "north": { "texture": "#cushion" },
+        "south": { "texture": "#cushion" },
+        "west": { "texture": "#cushion", "cullface": "west" },
+        "east": { "texture": "#frame" }
+      }
+    },
+    {
+      "from": [ 0, 8, 12 ],
+      "to": [ 16, 16, 15 ],
+      "faces": {
+        "up": { "texture": "#frame" },
+        "north": { "texture": "#cushion" },
+        "south": { "texture": "#frame" },
+        "west": { "texture": "#cushion", "cullface": "west" },
+        "east": { "texture": "#frame" }
+      }
+    },
+    {
+      "from": [ 14.5, 8, 2 ],
+      "to": [ 16, 12, 13 ],
+      "faces": {
+        "up": { "texture": "#metal" },
+        "north": { "texture": "#metal" },
+        "south": { "texture": "#metal" },
+        "west": { "texture": "#metal" },
+        "east": { "texture": "#metal" }
+      }
+    }
+  ]
+}

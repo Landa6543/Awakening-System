@@ -1,0 +1,7 @@
+{
+  "type": "minecraft:smithing_transform",
+  "template": { "item": "awakening_system:mithril_upgrade_smithing_template" },
+  "base": { "item": "awakening_system:abyssal_hoe" },
+  "addition": { "item": "awakening_system:mithril_ingot" },
+  "result": { "id": "awakening_system:mithril_hoe" }
+}

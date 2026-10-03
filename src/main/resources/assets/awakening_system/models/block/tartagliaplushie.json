@@ -1,0 +1,9 @@
+{
+  "parent": "awakening_system:custom/tartaglia_plushie",
+  "textures": {
+    "all": "awakening_system:block/tartaglia_plushie",
+    "particle": "awakening_system:block/tartaglia_plushie",
+    "0": "awakening_system:block/tartaglia_plushie"
+  },
+  "render_type": "cutout"
+}

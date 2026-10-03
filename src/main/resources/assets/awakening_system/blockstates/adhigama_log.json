@@ -1,0 +1,16 @@
+{
+  "variants": {
+    "axis=y": {
+      "model": "awakening_system:block/adhigama_log"
+    },
+    "axis=z": {
+      "model": "awakening_system:block/adhigama_log_horizontal",
+      "x": 90
+    },
+    "axis=x": {
+      "model": "awakening_system:block/adhigama_log_horizontal",
+      "x": 90,
+      "y": 90
+    }
+  }
+}

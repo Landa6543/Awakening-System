@@ -1,0 +1,8 @@
+{
+  "comparator_output": 6,
+  "description": {
+    "translate": "jukebox_song.awakening_system.salted_moon"
+  },
+  "length_in_seconds": 43,
+  "sound_event": "awakening_system:music_disc_salted_moon"
+}

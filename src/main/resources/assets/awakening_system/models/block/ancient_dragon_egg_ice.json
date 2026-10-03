@@ -1,0 +1,6 @@
+{
+  "parent": "block/block",
+  "textures": {
+    "particle": "awakening_system:block/dragon_egg_ice"
+  }
+}

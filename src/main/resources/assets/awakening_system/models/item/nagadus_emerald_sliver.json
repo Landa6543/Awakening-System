@@ -1,0 +1,6 @@
+{
+    "textures":  {
+                     "layer0":  "awakening_system:item/nagadus_emerald_sliver"
+                 },
+    "parent":  "item/generated"
+}

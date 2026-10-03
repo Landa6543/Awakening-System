@@ -1,0 +1,12 @@
+{
+  "parent": "block/cube",
+  "textures": {
+    "down": "awakening_system:block/yumemiru_leaves",
+    "up": "awakening_system:block/yumemiru_leaves",
+    "north": "awakening_system:block/yumemiru_leaves",
+    "east": "awakening_system:block/yumemiru_leaves",
+    "south": "awakening_system:block/yumemiru_leaves",
+    "west": "awakening_system:block/yumemiru_leaves",
+    "particle": "awakening_system:block/yumemiru_leaves"
+  }
+}

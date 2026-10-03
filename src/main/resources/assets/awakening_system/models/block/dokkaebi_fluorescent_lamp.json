@@ -1,0 +1,7 @@
+{
+  "parent": "minecraft:block/cube_column",
+  "textures": {
+    "end": "awakening_system:block/dokkaebi_fluorescent_lamp_top",
+    "side": "awakening_system:block/dokkaebi_fluorescent_lamp"
+  }
+}

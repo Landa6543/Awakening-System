@@ -1,0 +1,96 @@
+{
+  "type": "awakening_system:murim_world",
+  "generator": {
+    "type": "minecraft:noise",
+    "settings": "minecraft:floating_islands",
+    "biome_source": {
+      "type": "minecraft:multi_noise",
+      "biomes": [
+        {
+          "biome": "awakening_system:murim_celestial_peaks",
+          "parameters": {
+            "temperature": 0.2,
+            "humidity": 0.3,
+            "continentalness": 0.0,
+            "erosion": 0.5,
+            "weirdness": 0.0,
+            "depth": 0.0,
+            "offset": 0.0
+          }
+        },
+        {
+          "biome": "awakening_system:murim_spirit_gardens",
+          "parameters": {
+            "temperature": 0.6,
+            "humidity": 0.8,
+            "continentalness": 0.2,
+            "erosion": 0.2,
+            "weirdness": 0.3,
+            "depth": 0.0,
+            "offset": 0.0
+          }
+        },
+        {
+          "biome": "awakening_system:murim_plum_blossom_sanctuary",
+          "parameters": {
+            "temperature": 0.5,
+            "humidity": 0.5,
+            "continentalness": 0.4,
+            "erosion": -0.2,
+            "weirdness": 0.5,
+            "depth": 0.0,
+            "offset": 0.0
+          }
+        },
+        {
+          "biome": "awakening_system:murim_ancient_pine_peaks",
+          "parameters": {
+            "temperature": -0.2,
+            "humidity": 0.1,
+            "continentalness": -0.1,
+            "erosion": 0.8,
+            "weirdness": -0.2,
+            "depth": 0.0,
+            "offset": 0.0
+          }
+        },
+        {
+          "biome": "awakening_system:murim_demonic_domain",
+          "parameters": {
+            "temperature": 0.9,
+            "humidity": -0.5,
+            "continentalness": -0.3,
+            "erosion": 0.7,
+            "weirdness": -0.4,
+            "depth": 0.0,
+            "offset": 0.0
+          }
+        },
+        {
+          "biome": "awakening_system:murim_bamboo_sea",
+          "parameters": {
+            "temperature": 0.7,
+            "humidity": 0.6,
+            "continentalness": 0.1,
+            "erosion": 0.1,
+            "weirdness": 0.6,
+            "depth": 0.0,
+            "offset": 0.0
+          }
+        },
+        {
+          "biome": "awakening_system:murim_frozen_dao_plateau",
+          "parameters": {
+            "temperature": -0.7,
+            "humidity": 0.2,
+            "continentalness": 0.5,
+            "erosion": 0.9,
+            "weirdness": -0.6,
+            "depth": 0.0,
+            "offset": 0.0
+          }
+        }
+      ]
+    }
+  }
+}

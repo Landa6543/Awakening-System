@@ -1,0 +1,9 @@
+{
+  "parent": "awakening_system:custom/diona_plushie",
+  "textures": {
+    "all": "awakening_system:block/diona_plushie",
+    "particle": "awakening_system:block/diona_plushie",
+    "0": "awakening_system:block/diona_plushie"
+  },
+  "render_type": "cutout"
+}

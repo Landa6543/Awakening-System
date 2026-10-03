@@ -1,0 +1,140 @@
+{
+  "parent": "minecraft:block/block",
+  "ambientocclusion": true,
+  "textures": {
+    "particle": "awakening_system:block/subway_wheel",
+    "wheel": "awakening_system:block/subway_wheel",
+    "frame": "awakening_system:block/subway_bogie",
+    "spring": "awakening_system:block/subway_bogie",
+    "axle": "minecraft:block/deepslate",
+    "steel": "awakening_system:block/subway_stainless_steel"
+  },
+  "elements": [
+    {
+      "from": [
+        0.0,
+        -2.5,
+        6.5
+      ],
+      "to": [
+        16.0,
+        0.5,
+        9.5
+      ],
+      "faces": {
+        "up": {
+          "texture": "#axle"
+        },
+        "down": {
+          "texture": "#axle"
+        },
+        "north": {
+          "texture": "#axle"
+        },
+        "south": {
+          "texture": "#axle"
+        },
+        "west": {
+          "texture": "#axle",
+          "cullface": "west"
+        },
+        "east": {
+          "texture": "#axle",
+          "cullface": "east"
+        }
+      }
+    },
+    {
+      "from": [
+        3.5,
+        -1.0,
+        5.5
+      ],
+      "to": [
+        12.5,
+        1.5,
+        10.5
+      ],
+      "faces": {
+        "up": {
+          "texture": "#frame"
+        },
+        "down": {
+          "texture": "#frame"
+        },
+        "north": {
+          "texture": "#frame"
+        },
+        "south": {
+          "texture": "#frame"
+        }
+      }
+    },
+    {
+      "from": [
+        4.5,
+        1.5,
+        6.0
+      ],
+      "to": [
+        11.5,
+        7.0,
+        10.0
+      ],
+      "faces": {
+        "up": {
+          "texture": "#spring"
+        },
+        "down": {
+          "texture": "#spring"
+        },
+        "north": {
+          "texture": "#spring"
+        },
+        "south": {
+          "texture": "#spring"
+        },
+        "west": {
+          "texture": "#spring"
+        },
+        "east": {
+          "texture": "#spring"
+        }
+      }
+    },
+    {
+      "from": [
+        0.0,
+        7.0,
+        4.0
+      ],
+      "to": [
+        16.0,
+        13.0,
+        12.0
+      ],
+      "faces": {
+        "up": {
+          "texture": "#frame"
+        },
+        "down": {
+          "texture": "#frame"
+        },
+        "north": {
+          "texture": "#frame"
+        },
+        "south": {
+          "texture": "#frame"
+        },
+        "west": {
+          "texture": "#frame",
+          "cullface": "west"
+        },
+        "east": {
+          "texture": "#frame",
+          "cullface": "east"
+        }
+      }
+    }
+  ]
+}

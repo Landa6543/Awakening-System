@@ -1,0 +1,9 @@
+{
+  "parent": "awakening_system:custom/magical_crystal_chunk",
+  "render_type": "minecraft:cutout",
+  "textures": {
+    "all": "awakening_system:block/magical_crystal_chunk_block",
+    "particle": "awakening_system:block/magical_crystal_chunk_block",
+    "0": "awakening_system:block/magical_crystal_chunk_block"
+  }
+}

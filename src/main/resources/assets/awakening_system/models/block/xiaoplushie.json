@@ -1,0 +1,9 @@
+{
+  "parent": "awakening_system:custom/xiao_plushie_new",
+  "textures": {
+    "all": "awakening_system:block/xiao_plushie_new",
+    "particle": "awakening_system:block/xiao_plushie_new",
+    "0": "awakening_system:block/xiao_plushie_new"
+  },
+  "render_type": "cutout"
+}

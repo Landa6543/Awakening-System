@@ -1,0 +1,8 @@
+{
+  "parent": "awakening_system:custom/geo_monument",
+  "textures": {
+    "all": "awakening_system:block/geo_monument",
+    "particle": "awakening_system:block/geo_monument",
+    "0": "awakening_system:block/geo_monument"
+  }
+}

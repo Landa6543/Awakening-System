@@ -1,0 +1,19 @@
+{
+  "variants": {
+    "facing=north": {
+      "model": "awakening_system:block/dilucplushie"
+    },
+    "facing=east": {
+      "model": "awakening_system:block/dilucplushie",
+      "y": 90
+    },
+    "facing=south": {
+      "model": "awakening_system:block/dilucplushie",
+      "y": 180
+    },
+    "facing=west": {
+      "model": "awakening_system:block/dilucplushie",
+      "y": 270
+    }
+  }
+}

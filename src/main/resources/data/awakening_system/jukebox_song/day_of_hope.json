@@ -1,0 +1,8 @@
+{
+  "comparator_output": 8,
+  "description": {
+    "translate": "jukebox_song.awakening_system.day_of_hope"
+  },
+  "length_in_seconds": 103,
+  "sound_event": "awakening_system:music_disc_day_of_hope"
+}

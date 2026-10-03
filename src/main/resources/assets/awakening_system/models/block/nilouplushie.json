@@ -1,0 +1,9 @@
+{
+  "parent": "awakening_system:custom/nilou_plushie",
+  "textures": {
+    "all": "awakening_system:block/nilou_plushie",
+    "particle": "awakening_system:block/nilou_plushie",
+    "0": "awakening_system:block/nilou_plushie"
+  },
+  "render_type": "cutout"
+}

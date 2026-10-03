@@ -1,0 +1,8 @@
+{
+  "comparator_output": 12,
+  "description": {
+    "translate": "jukebox_song.awakening_system.windrise_night"
+  },
+  "length_in_seconds": 153,
+  "sound_event": "awakening_system:music_disc_windrise_night"
+}

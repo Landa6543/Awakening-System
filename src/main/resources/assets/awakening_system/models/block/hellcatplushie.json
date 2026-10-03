@@ -1,0 +1,9 @@
+{
+  "parent": "awakening_system:custom/hellcatplushie",
+  "textures": {
+    "all": "awakening_system:block/hellcatplushie",
+    "particle": "awakening_system:block/hellcatplushie",
+    "0": "awakening_system:block/hellcatplushie"
+  },
+  "render_type": "cutout"
+}

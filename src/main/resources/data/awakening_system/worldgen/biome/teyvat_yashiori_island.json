@@ -1,0 +1,71 @@
+{
+  "has_precipitation": true,
+  "temperature": 0.7,
+  "downfall": 0.7,
+  "effects": {
+    "sky_color": 6174129,
+    "fog_color": 3218322,
+    "water_color": 3754411,
+    "water_fog_color": 1713022,
+    "grass_color": 5320104,
+    "foliage_color": 4532128,
+    "particle": {
+      "options": {
+        "type": "minecraft:witch"
+      },
+      "probability": 0.015
+    }
+  },
+  "spawners": {
+    "monster": [
+      {
+        "type": "awakening_system:genshin_slime",
+        "weight": 50,
+        "minCount": 2,
+        "maxCount": 4
+      },
+      {
+        "type": "awakening_system:hilichurl",
+        "weight": 45,
+        "minCount": 2,
+        "maxCount": 5
+      },
+      {
+        "type": "awakening_system:mitachurl",
+        "weight": 2,
+        "minCount": 1,
+        "maxCount": 1
+      }
+    ],
+    "creature": []
+  },
+  "spawn_costs": {},
+  "carvers": {},
+  "features": [
+    [],
+    [],
+    [],
+    [],
+    [
+      "awakening_system:teyvat_hilichurl_camp",
+      "awakening_system:teyvat_shrine_of_depths",
+      "awakening_system:teyvat_teleport_waypoint",
+      "awakening_system:teyvat_regional_structure"
+    ],
+    [],
+    [
+      "awakening_system:ore_vajrada_amethyst",
+      "awakening_system:ore_white_iron"
+    ],
+    [],
+    [],
+    [
+      "awakening_system:teyvat_cuihua_tree",
+      "awakening_system:teyvat_aralia_tree",
+      "awakening_system:teyvat_otogi_tree",
+      "awakening_system:teyvat_yumemiru_tree",
+      "awakening_system:teyvat_maple_tree"
+    ],
+    []
+  ]
+}

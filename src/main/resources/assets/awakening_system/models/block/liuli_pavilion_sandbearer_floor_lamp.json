@@ -1,0 +1,9 @@
+{
+  "parent": "awakening_system:custom/liuli_pavilion_sandbearer_floor_lamp",
+  "render_type": "minecraft:cutout",
+  "textures": {
+    "all": "awakening_system:block/liuli_pavilion_sandbearer_floor_lamp",
+    "particle": "awakening_system:block/liuli_pavilion_sandbearer_floor_lamp",
+    "0": "awakening_system:block/liuli_pavilion_sandbearer_floor_lamp"
+  }
+}

@@ -1,0 +1,7 @@
+{
+  "type": "minecraft:smithing_transform",
+  "template": { "item": "awakening_system:spirit_jade_upgrade_smithing_template" },
+  "base": { "item": "awakening_system:adamantite_pickaxe" },
+  "addition": { "item": "awakening_system:spirit_jade" },
+  "result": { "id": "awakening_system:spirit_jade_pickaxe" }
+}

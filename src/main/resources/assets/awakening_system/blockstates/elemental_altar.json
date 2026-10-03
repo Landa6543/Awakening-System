@@ -1,0 +1,28 @@
+{
+  "variants": {
+    "active=false,element=fire": {
+      "model": "awakening_system:block/elemental_altar"
+    },
+    "active=false,element=frost": {
+      "model": "awakening_system:block/elemental_altar"
+    },
+    "active=false,element=storm": {
+      "model": "awakening_system:block/elemental_altar"
+    },
+    "active=false,element=wind": {
+      "model": "awakening_system:block/elemental_altar"
+    },
+    "active=true,element=fire": {
+      "model": "awakening_system:block/elemental_altar"
+    },
+    "active=true,element=frost": {
+      "model": "awakening_system:block/elemental_altar"
+    },
+    "active=true,element=storm": {
+      "model": "awakening_system:block/elemental_altar"
+    },
+    "active=true,element=wind": {
+      "model": "awakening_system:block/elemental_altar"
+    }
+  }
+}

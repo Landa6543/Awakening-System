@@ -1,0 +1,9 @@
+{
+  "parent": "awakening_system:custom/barbara_plushie",
+  "textures": {
+    "all": "awakening_system:block/barbara_plushie",
+    "particle": "awakening_system:block/barbara_plushie",
+    "0": "awakening_system:block/barbara_plushie"
+  },
+  "render_type": "cutout"
+}

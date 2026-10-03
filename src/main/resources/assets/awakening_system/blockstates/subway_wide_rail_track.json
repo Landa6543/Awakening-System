@@ -1,0 +1,109 @@
+{
+  "variants": {
+    "section=left_rail,shape=north_south": {
+      "model": "awakening_system:block/subway_wide_rail_left"
+    },
+    "section=tie_1,shape=north_south": {
+      "model": "awakening_system:block/subway_wide_rail_center"
+    },
+    "section=tie_center,shape=north_south": {
+      "model": "awakening_system:block/subway_wide_rail_center"
+    },
+    "section=tie_2,shape=north_south": {
+      "model": "awakening_system:block/subway_wide_rail_center"
+    },
+    "section=right_rail,shape=north_south": {
+      "model": "awakening_system:block/subway_wide_rail_right"
+    },
+    "section=left_rail,shape=east_west": {
+      "model": "awakening_system:block/subway_wide_rail_left",
+      "y": 90
+    },
+    "section=tie_1,shape=east_west": {
+      "model": "awakening_system:block/subway_wide_rail_center",
+      "y": 90
+    },
+    "section=tie_center,shape=east_west": {
+      "model": "awakening_system:block/subway_wide_rail_center",
+      "y": 90
+    },
+    "section=tie_2,shape=east_west": {
+      "model": "awakening_system:block/subway_wide_rail_center",
+      "y": 90
+    },
+    "section=right_rail,shape=east_west": {
+      "model": "awakening_system:block/subway_wide_rail_right",
+      "y": 90
+    },
+    "section=left_rail,shape=south_east": {
+      "model": "awakening_system:block/subway_wide_rail_left"
+    },
+    "section=tie_1,shape=south_east": {
+      "model": "awakening_system:block/subway_wide_rail_center"
+    },
+    "section=tie_center,shape=south_east": {
+      "model": "awakening_system:block/subway_wide_rail_center"
+    },
+    "section=tie_2,shape=south_east": {
+      "model": "awakening_system:block/subway_wide_rail_center"
+    },
+    "section=right_rail,shape=south_east": {
+      "model": "awakening_system:block/subway_wide_rail_right"
+    },
+    "section=left_rail,shape=south_west": {
+      "model": "awakening_system:block/subway_wide_rail_left",
+      "y": 90
+    },
+    "section=tie_1,shape=south_west": {
+      "model": "awakening_system:block/subway_wide_rail_center",
+      "y": 90
+    },
+    "section=tie_center,shape=south_west": {
+      "model": "awakening_system:block/subway_wide_rail_center",
+      "y": 90
+    },
+    "section=tie_2,shape=south_west": {
+      "model": "awakening_system:block/subway_wide_rail_center",
+      "y": 90
+    },
+    "section=right_rail,shape=south_west": {
+      "model": "awakening_system:block/subway_wide_rail_right",
+      "y": 90
+    },
+    "section=left_rail,shape=north_west": {
+      "model": "awakening_system:block/subway_wide_rail_left"
+    },
+    "section=tie_1,shape=north_west": {
+      "model": "awakening_system:block/subway_wide_rail_center"
+    },
+    "section=tie_center,shape=north_west": {
+      "model": "awakening_system:block/subway_wide_rail_center"
+    },
+    "section=tie_2,shape=north_west": {
+      "model": "awakening_system:block/subway_wide_rail_center"
+    },
+    "section=right_rail,shape=north_west": {
+      "model": "awakening_system:block/subway_wide_rail_right"
+    },
+    "section=left_rail,shape=north_east": {
+      "model": "awakening_system:block/subway_wide_rail_left",
+      "y": 90
+    },
+    "section=tie_1,shape=north_east": {
+      "model": "awakening_system:block/subway_wide_rail_center",
+      "y": 90
+    },
+    "section=tie_center,shape=north_east": {
+      "model": "awakening_system:block/subway_wide_rail_center",
+      "y": 90
+    },
+    "section=tie_2,shape=north_east": {
+      "model": "awakening_system:block/subway_wide_rail_center",
+      "y": 90
+    },
+    "section=right_rail,shape=north_east": {
+      "model": "awakening_system:block/subway_wide_rail_right",
+      "y": 90
+    }
+  }
+}

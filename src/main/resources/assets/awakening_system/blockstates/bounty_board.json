@@ -1,0 +1,19 @@
+{
+  "variants": {
+    "facing=north": {
+      "model": "awakening_system:block/bounty_board"
+    },
+    "facing=east": {
+      "model": "awakening_system:block/bounty_board",
+      "y": 90
+    },
+    "facing=south": {
+      "model": "awakening_system:block/bounty_board",
+      "y": 180
+    },
+    "facing=west": {
+      "model": "awakening_system:block/bounty_board",
+      "y": 270
+    }
+  }
+}

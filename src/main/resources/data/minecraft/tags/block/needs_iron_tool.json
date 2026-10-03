@@ -1,0 +1,14 @@
+{
+  "replace": false,
+  "values": [
+    "awakening_system:primogem_ore",
+    "awakening_system:deepslate_primogem_ore",
+    "awakening_system:agnidus_agate_ore",
+    "awakening_system:shivada_jade_ore",
+    "awakening_system:varunada_lazurite_ore",
+    "awakening_system:vajrada_amethyst_ore",
+    "awakening_system:vayuda_turquoise_ore",
+    "awakening_system:prithiva_topaz_ore",
+    "awakening_system:nagadus_emerald_ore"
+  ]
+}

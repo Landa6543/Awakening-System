@@ -1,0 +1,64 @@
+{
+  "variants": {
+    "facing=north,type=dual": {
+      "model": "awakening_system:block/subway_train_wheel_dual"
+    },
+    "facing=north,type=left": {
+      "model": "awakening_system:block/subway_train_wheel_left"
+    },
+    "facing=north,type=right": {
+      "model": "awakening_system:block/subway_train_wheel_right"
+    },
+    "facing=north,type=axle": {
+      "model": "awakening_system:block/subway_train_wheel_axle"
+    },
+    "facing=east,type=dual": {
+      "model": "awakening_system:block/subway_train_wheel_dual",
+      "y": 90
+    },
+    "facing=east,type=left": {
+      "model": "awakening_system:block/subway_train_wheel_left",
+      "y": 90
+    },
+    "facing=east,type=right": {
+      "model": "awakening_system:block/subway_train_wheel_right",
+      "y": 90
+    },
+    "facing=east,type=axle": {
+      "model": "awakening_system:block/subway_train_wheel_axle",
+      "y": 90
+    },
+    "facing=south,type=dual": {
+      "model": "awakening_system:block/subway_train_wheel_dual",
+      "y": 180
+    },
+    "facing=south,type=left": {
+      "model": "awakening_system:block/subway_train_wheel_left",
+      "y": 180
+    },
+    "facing=south,type=right": {
+      "model": "awakening_system:block/subway_train_wheel_right",
+      "y": 180
+    },
+    "facing=south,type=axle": {
+      "model": "awakening_system:block/subway_train_wheel_axle",
+      "y": 180
+    },
+    "facing=west,type=dual": {
+      "model": "awakening_system:block/subway_train_wheel_dual",
+      "y": 270
+    },
+    "facing=west,type=left": {
+      "model": "awakening_system:block/subway_train_wheel_left",
+      "y": 270
+    },
+    "facing=west,type=right": {
+      "model": "awakening_system:block/subway_train_wheel_right",
+      "y": 270
+    },
+    "facing=west,type=axle": {
+      "model": "awakening_system:block/subway_train_wheel_axle",
+      "y": 270
+    }
+  }
+}

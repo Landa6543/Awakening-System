@@ -1,0 +1,68 @@
+### Gradle ###
+.gradle
+build/
+!gradle/wrapper/gradle-wrapper.jar
+!**/src/**/build/
+
+### IntelliJ IDEA ###
+.idea/
+*.iws
+*.iml
+*.ipr
+out/
+!**/src/**/out/
+
+.run/
+
+### Eclipse ###
+.apt_generated
+.classpath
+.eclipse/
+.factorypath
+.project
+.settings
+.springBeans
+.sts4-cache
+bin/
+!**/src/**/bin/
+
+### VS Code ###
+.vscode/
+
+### Mac OS ###
+.DS_Store
+
+### Minecraft Modding ###
+run/
+!**/src/**/run/
+**/src/generated/**/.cache/
+repo/
+!**/src/**/repo/
+
+### Python & Scratch Dev Files ###
+__pycache__/
+*.py[cod]
+*$py.class
+scratch/
+scratch_*.py
+scratch_*.txt
+javap_*.txt
+*.class
+
+### Root temporary debug previews & models ###
+/*.png
+!/purple_slime_icon.png
+/*.jpg
+/*.webm
+/*.bbmodel
+/*.nbt
+/*.txt
+/*.java
+/*.json
+/*.py
+implementation_plan.md
+walkthrough.md
+
+### Large archives ###
+Modpack_Awakening_System/*.zip
+Modpack_Awakening_System/overrides/mods/

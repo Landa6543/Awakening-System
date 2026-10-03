@@ -1,0 +1,7 @@
+{
+  "parent": "minecraft:block/cube_column",
+  "textures": {
+    "end": "awakening_system:block/subway_stainless_steel",
+    "side": "awakening_system:block/subway_warning_crest"
+  }
+}

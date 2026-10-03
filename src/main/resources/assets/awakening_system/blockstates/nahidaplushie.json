@@ -1,0 +1,19 @@
+{
+  "variants": {
+    "facing=north": {
+      "model": "awakening_system:block/nahidaplushie"
+    },
+    "facing=east": {
+      "model": "awakening_system:block/nahidaplushie",
+      "y": 90
+    },
+    "facing=south": {
+      "model": "awakening_system:block/nahidaplushie",
+      "y": 180
+    },
+    "facing=west": {
+      "model": "awakening_system:block/nahidaplushie",
+      "y": 270
+    }
+  }
+}

@@ -1,0 +1,7 @@
+{
+  "parent": "minecraft:block/cube_column",
+  "textures": {
+    "end": "awakening_system:block/adhigama_planks",
+    "side": "awakening_system:block/adhigama_planks"
+  }
+}

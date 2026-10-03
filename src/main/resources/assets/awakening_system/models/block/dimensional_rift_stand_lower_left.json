@@ -1,0 +1,55 @@
+{
+  "parent": "minecraft:block/block",
+  "ambientocclusion": true,
+  "render_type": "cutout",
+  "textures": {
+    "particle": "awakening_system:block/dimensional_rift",
+    "base": "minecraft:block/crying_obsidian",
+    "pillar": "minecraft:block/polished_blackstone_bricks",
+    "arm": "minecraft:block/netherite_block",
+    "portal": "awakening_system:block/dimensional_rift"
+  },
+  "elements": [
+    {
+      "from": [ 0, 0, 3 ],
+      "to": [ 6, 6, 13 ],
+      "faces": {
+        "down": { "texture": "#base", "cullface": "down" },
+        "up": { "texture": "#base" },
+        "north": { "texture": "#base" },
+        "south": { "texture": "#base" },
+        "west": { "texture": "#base" },
+        "east": { "texture": "#base" }
+      }
+    },
+    {
+      "from": [ 1, 6, 4 ],
+      "to": [ 5, 16, 12 ],
+      "faces": {
+        "north": { "texture": "#pillar" },
+        "south": { "texture": "#pillar" },
+        "west": { "texture": "#pillar" },
+        "east": { "texture": "#pillar" }
+      }
+    },
+    {
+      "from": [ 6, 0, 6 ],
+      "to": [ 16, 2, 10 ],
+      "faces": {
+        "down": { "texture": "#base", "cullface": "down" },
+        "up": { "texture": "#base" },
+        "north": { "texture": "#base" },
+        "south": { "texture": "#base" },
+        "east": { "texture": "#base", "cullface": "east" }
+      }
+    },
+    {
+      "from": [ 5, 2, 7.9 ],
+      "to": [ 16, 16, 8.1 ],
+      "faces": {
+        "north": { "texture": "#portal", "uv": [ 1.5, 10.5, 8.0, 15.5 ] },
+        "south": { "texture": "#portal", "uv": [ 8.0, 10.5, 14.5, 15.5 ] }
+      }
+    }
+  ]
+}

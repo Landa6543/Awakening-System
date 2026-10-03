@@ -1,0 +1,8 @@
+{
+  "comparator_output": 14,
+  "description": {
+    "translate": "jukebox_song.awakening_system.space_walk"
+  },
+  "length_in_seconds": 116,
+  "sound_event": "awakening_system:music_disc_space_walk"
+}

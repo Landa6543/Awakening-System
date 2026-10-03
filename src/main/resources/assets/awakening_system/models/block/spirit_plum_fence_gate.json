@@ -1,0 +1,6 @@
+{
+  "parent": "minecraft:block/template_fence_gate",
+  "textures": {
+    "texture": "awakening_system:block/spirit_plum_planks"
+  }
+}

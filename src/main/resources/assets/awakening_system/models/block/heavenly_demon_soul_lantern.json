@@ -1,0 +1,7 @@
+{
+  "parent": "minecraft:block/cube_column",
+  "textures": {
+    "end": "awakening_system:block/demonic_blood_pillar_top",
+    "side": "awakening_system:block/heavenly_demon_soul_lantern"
+  }
+}

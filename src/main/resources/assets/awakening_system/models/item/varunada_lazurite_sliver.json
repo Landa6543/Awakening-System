@@ -1,0 +1,6 @@
+{
+    "textures":  {
+                     "layer0":  "awakening_system:item/varunada_lazurite_sliver"
+                 },
+    "parent":  "item/generated"
+}

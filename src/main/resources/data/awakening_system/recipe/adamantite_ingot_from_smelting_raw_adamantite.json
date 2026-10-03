@@ -1,0 +1,12 @@
+{
+  "type": "minecraft:smelting",
+  "category": "misc",
+  "cookingtime": 200,
+  "experience": 1.6,
+  "ingredient": {
+    "item": "awakening_system:raw_adamantite"
+  },
+  "result": {
+    "id": "awakening_system:adamantite_ingot"
+  }
+}

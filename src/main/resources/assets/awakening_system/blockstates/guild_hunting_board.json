@@ -1,0 +1,19 @@
+{
+  "variants": {
+    "facing=north": {
+      "model": "awakening_system:block/guild_hunting_board"
+    },
+    "facing=south": {
+      "model": "awakening_system:block/guild_hunting_board",
+      "y": 180
+    },
+    "facing=west": {
+      "model": "awakening_system:block/guild_hunting_board",
+      "y": 270
+    },
+    "facing=east": {
+      "model": "awakening_system:block/guild_hunting_board",
+      "y": 90
+    }
+  }
+}

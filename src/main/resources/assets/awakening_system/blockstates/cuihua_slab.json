@@ -1,0 +1,7 @@
+{
+  "variants": {
+    "type=bottom": { "model": "awakening_system:block/cuihua_slab" },
+    "type=top": { "model": "awakening_system:block/cuihua_slab_top" },
+    "type=double": { "model": "awakening_system:block/cuihua_planks" }
+  }
+}

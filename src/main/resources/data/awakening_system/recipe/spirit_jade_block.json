@@ -1,0 +1,18 @@
+{
+  "type": "minecraft:crafting_shaped",
+  "category": "building",
+  "pattern": [
+    "###",
+    "###",
+    "###"
+  ],
+  "key": {
+    "#": {
+      "item": "awakening_system:spirit_jade"
+    }
+  },
+  "result": {
+    "count": 1,
+    "id": "awakening_system:spirit_jade_block"
+  }
+}

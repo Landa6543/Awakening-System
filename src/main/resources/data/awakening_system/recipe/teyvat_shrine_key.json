@@ -1,0 +1,24 @@
+{
+  "type": "minecraft:crafting_shaped",
+  "category": "misc",
+  "pattern": [
+    "SGS",
+    "GPG",
+    "SGS"
+  ],
+  "key": {
+    "S": {
+      "item": "awakening_system:masterless_stardust"
+    },
+    "G": {
+      "item": "minecraft:gold_ingot"
+    },
+    "P": {
+      "item": "awakening_system:primogem"
+    }
+  },
+  "result": {
+    "count": 1,
+    "id": "awakening_system:teyvat_shrine_key"
+  }
+}

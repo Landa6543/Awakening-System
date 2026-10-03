@@ -1,0 +1,8 @@
+{
+  "parent": "awakening_system:custom/dendro_monument",
+  "textures": {
+    "all": "awakening_system:block/dendro_monument",
+    "particle": "awakening_system:block/dendro_monument",
+    "0": "awakening_system:block/dendro_monument"
+  }
+}

@@ -1,0 +1,85 @@
+{
+  "has_precipitation": true,
+  "temperature": 0.8,
+  "downfall": 0.8,
+  "effects": {
+    "sky_color": 8445674,
+    "fog_color": 11725810,
+    "water_color": 44225,
+    "water_fog_color": 24676,
+    "grass_color": 5099745,
+    "foliage_color": 2541274,
+    "particle": {
+      "options": {
+        "type": "minecraft:bubble_pop"
+      },
+      "probability": 0.02
+    }
+  },
+  "spawners": {
+    "monster": [
+      {
+        "type": "awakening_system:genshin_slime",
+        "weight": 50,
+        "minCount": 2,
+        "maxCount": 4
+      },
+      {
+        "type": "awakening_system:hilichurl",
+        "weight": 45,
+        "minCount": 2,
+        "maxCount": 5
+      },
+      {
+        "type": "awakening_system:mitachurl",
+        "weight": 2,
+        "minCount": 1,
+        "maxCount": 1
+      }
+    ],
+    "creature": [
+      {
+        "type": "minecraft:glow_squid",
+        "weight": 8,
+        "minCount": 2,
+        "maxCount": 4
+      },
+      {
+        "type": "minecraft:tropical_fish",
+        "weight": 10,
+        "minCount": 4,
+        "maxCount": 8
+      }
+    ]
+  },
+  "spawn_costs": {},
+  "carvers": {},
+  "features": [
+    [],
+    [],
+    [],
+    [],
+    [
+      "awakening_system:teyvat_hilichurl_camp",
+      "awakening_system:teyvat_shrine_of_depths",
+      "awakening_system:teyvat_teleport_waypoint",
+      "awakening_system:teyvat_regional_structure"
+    ],
+    [],
+    [
+      "awakening_system:ore_vajrada_amethyst",
+      "awakening_system:ore_varunada_lazurite"
+    ],
+    [],
+    [],
+    [
+      "awakening_system:teyvat_cuihua_tree",
+      "minecraft:seagrass_simple",
+      "awakening_system:teyvat_aralia_tree",
+      "awakening_system:teyvat_otogi_tree",
+      "awakening_system:teyvat_yumemiru_tree",
+      "awakening_system:teyvat_maple_tree"
+    ],
+    []
+  ]
+}

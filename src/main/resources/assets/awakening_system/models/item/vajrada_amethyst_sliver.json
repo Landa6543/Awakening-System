@@ -1,0 +1,6 @@
+{
+    "textures":  {
+                     "layer0":  "awakening_system:item/vajrada_amethyst_sliver"
+                 },
+    "parent":  "item/generated"
+}

@@ -1,0 +1,74 @@
+{
+  "has_precipitation": false,
+  "temperature": 0.85,
+  "downfall": 0.3,
+  "effects": {
+    "sky_color": 7780584,
+    "fog_color": 11789820,
+    "water_color": 1989002,
+    "water_fog_color": 865110,
+    "grass_color": 9159498,
+    "foliage_color": 5606191,
+    "particle": {
+      "options": {
+        "type": "minecraft:falling_water"
+      },
+      "probability": 0.005
+    }
+  },
+  "spawners": {
+    "monster": [
+      {
+        "type": "awakening_system:genshin_slime",
+        "weight": 50,
+        "minCount": 2,
+        "maxCount": 4
+      },
+      {
+        "type": "awakening_system:hilichurl",
+        "weight": 45,
+        "minCount": 2,
+        "maxCount": 5
+      },
+      {
+        "type": "awakening_system:mitachurl",
+        "weight": 2,
+        "minCount": 1,
+        "maxCount": 1
+      }
+    ],
+    "creature": [
+      {
+        "type": "minecraft:turtle",
+        "weight": 8,
+        "minCount": 1,
+        "maxCount": 3
+      }
+    ]
+  },
+  "spawn_costs": {},
+  "carvers": {},
+  "features": [
+    [],
+    [],
+    [],
+    [],
+    [
+      "awakening_system:teyvat_hilichurl_camp",
+      "awakening_system:teyvat_shrine_of_depths",
+      "awakening_system:teyvat_teleport_waypoint",
+      "awakening_system:teyvat_regional_structure"
+    ],
+    [],
+    [
+      "awakening_system:ore_prithiva_topaz",
+      "awakening_system:ore_white_iron"
+    ],
+    [],
+    [],
+    [
+      "awakening_system:teyvat_sandbearer_tree"
+    ],
+    []
+  ]
+}

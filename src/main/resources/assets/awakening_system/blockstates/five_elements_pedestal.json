@@ -1,0 +1,34 @@
+{
+  "variants": {
+    "element=wood,active=false": {
+      "model": "awakening_system:block/five_elements_pedestal_wood"
+    },
+    "element=wood,active=true": {
+      "model": "awakening_system:block/five_elements_pedestal_wood"
+    },
+    "element=fire,active=false": {
+      "model": "awakening_system:block/five_elements_pedestal_fire"
+    },
+    "element=fire,active=true": {
+      "model": "awakening_system:block/five_elements_pedestal_fire"
+    },
+    "element=earth,active=false": {
+      "model": "awakening_system:block/five_elements_pedestal_earth"
+    },
+    "element=earth,active=true": {
+      "model": "awakening_system:block/five_elements_pedestal_earth"
+    },
+    "element=metal,active=false": {
+      "model": "awakening_system:block/five_elements_pedestal_metal"
+    },
+    "element=metal,active=true": {
+      "model": "awakening_system:block/five_elements_pedestal_metal"
+    },
+    "element=water,active=false": {
+      "model": "awakening_system:block/five_elements_pedestal_water"
+    },
+    "element=water,active=true": {
+      "model": "awakening_system:block/five_elements_pedestal_water"
+    }
+  }
+}

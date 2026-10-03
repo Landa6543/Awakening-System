@@ -1,0 +1,16 @@
+{
+  "type": "minecraft:crafting_shapeless",
+  "category": "misc",
+  "ingredients": [
+    {
+      "item": "awakening_system:wild_ginseng"
+    },
+    {
+      "item": "awakening_system:mandrake_root"
+    }
+  ],
+  "result": {
+    "count": 1,
+    "id": "awakening_system:marrow_cleansing_pill"
+  }
+}

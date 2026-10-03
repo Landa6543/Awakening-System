@@ -1,0 +1,20 @@
+{
+  "multipart": [
+    {
+      "when": {
+        "has_fruit": "false"
+      },
+      "apply": {
+        "model": "awakening_system:block/spirit_plum_leaves"
+      }
+    },
+    {
+      "when": {
+        "has_fruit": "true"
+      },
+      "apply": {
+        "model": "awakening_system:block/spirit_plum_leaves_fruited"
+      }
+    }
+  ]
+}

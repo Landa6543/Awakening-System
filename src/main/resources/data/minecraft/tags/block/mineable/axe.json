@@ -1,0 +1,23 @@
+{
+  "replace": false,
+  "values": [
+    "awakening_system:cuihua_log",
+    "awakening_system:cuihua_planks",
+    "awakening_system:adhigama_log",
+    "awakening_system:adhigama_planks",
+    "awakening_system:sandbearer_log",
+    "awakening_system:sandbearer_planks",
+    "awakening_system:mana_wood_log",
+    "awakening_system:mana_wood_planks",
+    "awakening_system:eldoria_log",
+    "awakening_system:eldoria_planks",
+    "awakening_system:spirit_plum_log",
+    "awakening_system:spirit_plum_planks",
+    "awakening_system:celestial_pine_log",
+    "awakening_system:celestial_pine_planks",
+    "awakening_system:association_reception_counter",
+    "awakening_system:plum_blossom_carved_wood",
+    "awakening_system:mount_hua_paper_lantern",
+    "awakening_system:architect_drafting_table"
+  ]
+}

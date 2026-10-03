@@ -1,0 +1,19 @@
+{
+  "variants": {
+    "facing=north": {
+      "model": "awakening_system:block/greencatplushie"
+    },
+    "facing=east": {
+      "model": "awakening_system:block/greencatplushie",
+      "y": 90
+    },
+    "facing=south": {
+      "model": "awakening_system:block/greencatplushie",
+      "y": 180
+    },
+    "facing=west": {
+      "model": "awakening_system:block/greencatplushie",
+      "y": 270
+    }
+  }
+}

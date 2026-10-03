@@ -1,0 +1,6 @@
+{
+    "textures":  {
+                     "all":  "awakening_system:block/agnidus_agate_ore"
+                 },
+    "parent":  "minecraft:block/cube_all"
+}

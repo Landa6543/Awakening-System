@@ -1,0 +1,9 @@
+{
+  "parent": "awakening_system:custom/collei_plushie",
+  "textures": {
+    "all": "awakening_system:block/collei_plushie",
+    "particle": "awakening_system:block/collei_plushie",
+    "0": "awakening_system:block/collei_plushie"
+  },
+  "render_type": "cutout"
+}

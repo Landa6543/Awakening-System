@@ -1,0 +1,12 @@
+{
+  "type": "neoforge:add_spawns",
+  "biomes": "#awakening_system:is_murim",
+  "spawners": [
+    {
+      "type": "awakening_system:jade_armored_beast",
+      "weight": 6,
+      "minCount": 1,
+      "maxCount": 1
+    }
+  ]
+}

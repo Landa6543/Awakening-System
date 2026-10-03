@@ -1,0 +1,638 @@
+{
+  "parent": "block/block",
+  "textures": {
+    "particle": "minecraft:block/dark_oak_planks",
+    "wood": "minecraft:block/stripped_dark_oak_log",
+    "frame": "minecraft:block/dark_oak_planks",
+    "paper": "minecraft:block/cartography_table_top",
+    "pin": "minecraft:block/gold_block",
+    "seal_red": "minecraft:block/red_concrete",
+    "seal_green": "minecraft:block/green_concrete",
+    "seal_blue": "minecraft:block/blue_concrete",
+    "seal_purple": "minecraft:block/purple_concrete"
+  },
+  "elements": [
+    {
+      "name": "backing",
+      "from": [
+        0,
+        0,
+        13
+      ],
+      "to": [
+        16,
+        16,
+        16
+      ],
+      "faces": {
+        "north": {
+          "uv": [
+            0,
+            0,
+            16,
+            16
+          ],
+          "texture": "#frame"
+        },
+        "south": {
+          "uv": [
+            0,
+            0,
+            16,
+            16
+          ],
+          "texture": "#frame",
+          "cullface": "south"
+        },
+        "up": {
+          "uv": [
+            0,
+            13,
+            16,
+            16
+          ],
+          "texture": "#frame"
+        },
+        "down": {
+          "uv": [
+            0,
+            0,
+            16,
+            3
+          ],
+          "texture": "#frame"
+        },
+        "west": {
+          "uv": [
+            13,
+            0,
+            16,
+            16
+          ],
+          "texture": "#frame"
+        },
+        "east": {
+          "uv": [
+            0,
+            0,
+            3,
+            16
+          ],
+          "texture": "#frame"
+        }
+      }
+    },
+    {
+      "name": "cork",
+      "from": [
+        0,
+        0,
+        12
+      ],
+      "to": [
+        16,
+        14.5,
+        13
+      ],
+      "faces": {
+        "north": {
+          "uv": [
+            0,
+            1.5,
+            16,
+            16
+          ],
+          "texture": "#wood"
+        },
+        "south": {
+          "uv": [
+            0,
+            1.5,
+            16,
+            16
+          ],
+          "texture": "#wood"
+        },
+        "up": {
+          "uv": [
+            0,
+            12,
+            16,
+            13
+          ],
+          "texture": "#wood"
+        },
+        "down": {
+          "uv": [
+            0,
+            3,
+            16,
+            4
+          ],
+          "texture": "#wood"
+        },
+        "west": {
+          "uv": [
+            12,
+            1.5,
+            13,
+            16
+          ],
+          "texture": "#wood"
+        },
+        "east": {
+          "uv": [
+            3,
+            1.5,
+            4,
+            16
+          ],
+          "texture": "#wood"
+        }
+      }
+    },
+    {
+      "name": "frame_top",
+      "from": [
+        0,
+        14.5,
+        11.5
+      ],
+      "to": [
+        16,
+        16,
+        13.5
+      ],
+      "faces": {
+        "north": {
+          "uv": [
+            0,
+            0,
+            16,
+            1.5
+          ],
+          "texture": "#frame"
+        },
+        "south": {
+          "uv": [
+            0,
+            0,
+            16,
+            1.5
+          ],
+          "texture": "#frame"
+        },
+        "up": {
+          "uv": [
+            0,
+            11.5,
+            16,
+            13.5
+          ],
+          "texture": "#frame"
+        },
+        "down": {
+          "uv": [
+            0,
+            2.5,
+            16,
+            4.5
+          ],
+          "texture": "#frame"
+        },
+        "west": {
+          "uv": [
+            11.5,
+            0,
+            13.5,
+            1.5
+          ],
+          "texture": "#frame"
+        },
+        "east": {
+          "uv": [
+            2.5,
+            0,
+            4.5,
+            1.5
+          ],
+          "texture": "#frame"
+        }
+      }
+    },
+    {
+      "name": "banner_plaque",
+      "from": [
+        1,
+        9.5,
+        11.6
+      ],
+      "to": [
+        15,
+        13.5,
+        12.4
+      ],
+      "faces": {
+        "north": {
+          "uv": [
+            1,
+            2.5,
+            15,
+            6.5
+          ],
+          "texture": "#frame"
+        },
+        "south": {
+          "uv": [
+            1,
+            2.5,
+            15,
+            6.5
+          ],
+          "texture": "#frame"
+        },
+        "up": {
+          "uv": [
+            1,
+            11.6,
+            15,
+            12.4
+          ],
+          "texture": "#frame"
+        },
+        "down": {
+          "uv": [
+            1,
+            3.5999999999999996,
+            15,
+            4.4
+          ],
+          "texture": "#frame"
+        },
+        "west": {
+          "uv": [
+            11.6,
+            2.5,
+            12.4,
+            6.5
+          ],
+          "texture": "#frame"
+        },
+        "east": {
+          "uv": [
+            3.5999999999999996,
+            2.5,
+            4.4,
+            6.5
+          ],
+          "texture": "#frame"
+        }
+      }
+    },
+    {
+      "name": "banner_pin_l",
+      "from": [
+        2,
+        11,
+        11.2
+      ],
+      "to": [
+        3,
+        12,
+        11.7
+      ],
+      "faces": {
+        "north": {
+          "uv": [
+            2,
+            4,
+            3,
+            5
+          ],
+          "texture": "#pin"
+        },
+        "south": {
+          "uv": [
+            13,
+            4,
+            14,
+            5
+          ],
+          "texture": "#pin"
+        },
+        "up": {
+          "uv": [
+            2,
+            11.2,
+            3,
+            11.7
+          ],
+          "texture": "#pin"
+        },
+        "down": {
+          "uv": [
+            2,
+            4.300000000000001,
+            3,
+            4.800000000000001
+          ],
+          "texture": "#pin"
+        },
+        "west": {
+          "uv": [
+            11.2,
+            4,
+            11.7,
+            5
+          ],
+          "texture": "#pin"
+        },
+        "east": {
+          "uv": [
+            4.300000000000001,
+            4,
+            4.800000000000001,
+            5
+          ],
+          "texture": "#pin"
+        }
+      }
+    },
+    {
+      "name": "banner_pin_r",
+      "from": [
+        13,
+        11,
+        11.2
+      ],
+      "to": [
+        14,
+        12,
+        11.7
+      ],
+      "faces": {
+        "north": {
+          "uv": [
+            13,
+            4,
+            14,
+            5
+          ],
+          "texture": "#pin"
+        },
+        "south": {
+          "uv": [
+            2,
+            4,
+            3,
+            5
+          ],
+          "texture": "#pin"
+        },
+        "up": {
+          "uv": [
+            13,
+            11.2,
+            14,
+            11.7
+          ],
+          "texture": "#pin"
+        },
+        "down": {
+          "uv": [
+            13,
+            4.300000000000001,
+            14,
+            4.800000000000001
+          ],
+          "texture": "#pin"
+        },
+        "west": {
+          "uv": [
+            11.2,
+            4,
+            11.7,
+            5
+          ],
+          "texture": "#pin"
+        },
+        "east": {
+          "uv": [
+            4.300000000000001,
+            4,
+            4.800000000000001,
+            5
+          ],
+          "texture": "#pin"
+        }
+      }
+    },
+    {
+      "name": "parchment_mid",
+      "from": [
+        2.5,
+        1,
+        11.7
+      ],
+      "to": [
+        13.5,
+        8.5,
+        12.1
+      ],
+      "faces": {
+        "north": {
+          "uv": [
+            2.5,
+            7.5,
+            13.5,
+            15
+          ],
+          "texture": "#paper"
+        },
+        "south": {
+          "uv": [
+            2.5,
+            7.5,
+            13.5,
+            15
+          ],
+          "texture": "#paper"
+        },
+        "up": {
+          "uv": [
+            2.5,
+            11.7,
+            13.5,
+            12.1
+          ],
+          "texture": "#paper"
+        },
+        "down": {
+          "uv": [
+            2.5,
+            3.9000000000000004,
+            13.5,
+            4.300000000000001
+          ],
+          "texture": "#paper"
+        },
+        "west": {
+          "uv": [
+            11.7,
+            7.5,
+            12.1,
+            15
+          ],
+          "texture": "#paper"
+        },
+        "east": {
+          "uv": [
+            3.9000000000000004,
+            7.5,
+            4.300000000000001,
+            15
+          ],
+          "texture": "#paper"
+        }
+      }
+    },
+    {
+      "name": "paper_pin_mid",
+      "from": [
+        7.5,
+        8,
+        11.2
+      ],
+      "to": [
+        9,
+        9,
+        11.8
+      ],
+      "faces": {
+        "north": {
+          "uv": [
+            7.5,
+            7,
+            9,
+            8
+          ],
+          "texture": "#pin"
+        },
+        "south": {
+          "uv": [
+            7,
+            7,
+            8.5,
+            8
+          ],
+          "texture": "#pin"
+        },
+        "up": {
+          "uv": [
+            7.5,
+            11.2,
+            9,
+            11.8
+          ],
+          "texture": "#pin"
+        },
+        "down": {
+          "uv": [
+            7.5,
+            4.199999999999999,
+            9,
+            4.800000000000001
+          ],
+          "texture": "#pin"
+        },
+        "west": {
+          "uv": [
+            11.2,
+            7,
+            11.8,
+            8
+          ],
+          "texture": "#pin"
+        },
+        "east": {
+          "uv": [
+            4.199999999999999,
+            7,
+            4.800000000000001,
+            8
+          ],
+          "texture": "#pin"
+        }
+      }
+    },
+    {
+      "name": "wax_seal_gold",
+      "from": [
+        7,
+        2,
+        11.3
+      ],
+      "to": [
+        9.5,
+        4.5,
+        11.8
+      ],
+      "faces": {
+        "north": {
+          "uv": [
+            7,
+            11.5,
+            9.5,
+            14
+          ],
+          "texture": "#pin"
+        },
+        "south": {
+          "uv": [
+            6.5,
+            11.5,
+            9,
+            14
+          ],
+          "texture": "#pin"
+        },
+        "up": {
+          "uv": [
+            7,
+            11.3,
+            9.5,
+            11.8
+          ],
+          "texture": "#pin"
+        },
+        "down": {
+          "uv": [
+            7,
+            4.199999999999999,
+            9.5,
+            4.699999999999999
+          ],
+          "texture": "#pin"
+        },
+        "west": {
+          "uv": [
+            11.3,
+            11.5,
+            11.8,
+            14
+          ],
+          "texture": "#pin"
+        },
+        "east": {
+          "uv": [
+            4.199999999999999,
+            11.5,
+            4.699999999999999,
+            14
+          ],
+          "texture": "#pin"
+        }
+      }
+    }
+  ]
+}

@@ -1,0 +1,6 @@
+{
+  "parent": "minecraft:block/fence_inventory",
+  "textures": {
+    "texture": "awakening_system:block/spirit_plum_planks"
+  }
+}

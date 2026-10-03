@@ -1,0 +1,24 @@
+{
+  "type": "minecraft:crafting_shaped",
+  "category": "equipment",
+  "pattern": [
+    "  I",
+    " B ",
+    "S  "
+  ],
+  "key": {
+    "I": {
+      "item": "minecraft:blue_ice"
+    },
+    "B": {
+      "item": "minecraft:iron_ingot"
+    },
+    "S": {
+      "item": "minecraft:soul_sand"
+    }
+  },
+  "result": {
+    "count": 1,
+    "id": "awakening_system:soul_solid"
+  }
+}
