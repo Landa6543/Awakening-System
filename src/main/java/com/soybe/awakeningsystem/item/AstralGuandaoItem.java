@@ -1,6 +1,7 @@
 package com.soybe.awakeningsystem.item;
 
 import com.soybe.awakeningsystem.entity.AstralDragonCrescentEntity;
+import com.soybe.awakeningsystem.entity.SlashWaveEntity;
 import net.minecraft.core.particles.ParticleTypes;
 import net.minecraft.network.chat.Component;
 import net.minecraft.server.level.ServerLevel;
@@ -59,18 +60,34 @@ public class AstralGuandaoItem extends SwordItem implements AwakeningWeaponItem 
             sp.getCooldowns().addCooldown(this, 80);
 
             Vec3 look = sp.getLookAngle();
-            AstralDragonCrescentEntity crescent = new AstralDragonCrescentEntity(level, sp);
-            crescent.setPos(sp.getX(), sp.getEyeY() - 0.15D, sp.getZ());
-            crescent.shoot(look.x, look.y, look.z, 1.4F, 0.1F);
+
+            // 1. Sello vertical del Dragón Astral en el aire
+            net.neoforged.neoforge.network.PacketDistributor.sendToPlayersNear(
+                    (ServerLevel) level, null, sp.getX(), sp.getY(), sp.getZ(), 64.0D,
+                    new com.soybe.awakeningsystem.SpawnMagicCirclePayload(
+                            sp.getId(), sp.getX(), sp.getY(), sp.getZ(),
+                            (float) look.x, (float) look.y, (float) look.z,
+                            3.5F, 30, 0x9933FF, 3, false
+                    )
+            );
+
+            // 2. Creciente Astral de Dragón Celestial (SlashWaveEntity Cósmica)
+            float dmg = (float) (28.0D * WeaponLevelManager.getDamageMultiplier(stack));
+            SlashWaveEntity crescent = new SlashWaveEntity(level, sp, SlashWaveEntity.TYPE_COSMIC_AMETHYST, dmg, 4.8F, 1.8F, 0.0F, 26, 10);
+            crescent.setDeltaMovement(look.scale(2.2D));
             level.addFreshEntity(crescent);
 
+            com.soybe.awakeningsystem.CameraShakePayload.sendToNearby((ServerLevel) level, sp.getX(), sp.getY(), sp.getZ(), 28.0D, 0.60F, 9);
+
             level.playSound(null, sp.getX(), sp.getY(), sp.getZ(),
-                    SoundEvents.PLAYER_ATTACK_SWEEP, SoundSource.PLAYERS, 1.4F, 0.7F);
+                    SoundEvents.PLAYER_ATTACK_SWEEP, SoundSource.PLAYERS, 1.5F, 0.7F);
             level.playSound(null, sp.getX(), sp.getY(), sp.getZ(),
                     SoundEvents.ENDER_DRAGON_GROWL, SoundSource.PLAYERS, 0.9F, 1.7F);
 
             sp.swing(hand, true);
-            sp.displayClientMessage(Component.translatable("awakening_system.item.guandao.slash"), true);
+            WeaponLevelManager.addExp(stack, 30, sp);
+
+            sp.displayClientMessage(Component.literal("§d§l✦ [CRECIENTE DRACÓNICO] §5¡Corte cósmico del Dragón Celestial desatado!"), true);
             return InteractionResultHolder.sidedSuccess(stack, level.isClientSide());
         }
 

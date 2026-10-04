@@ -270,6 +270,15 @@ public final class ModEntities {
                             .updateInterval(1)
                             .build("astral_dragon_crescent"));
 
+    // Onda de Corte 3D y Tajos Cinemáticos (Iron's Spells / Mahou Tsukai Style)
+    public static final Supplier<EntityType<SlashWaveEntity>> SLASH_WAVE =
+            ENTITY_TYPES.register("slash_wave", () ->
+                    EntityType.Builder.<SlashWaveEntity>of(SlashWaveEntity::new, MobCategory.MISC)
+                            .sized(2.4F, 0.6F)
+                            .clientTrackingRange(64)
+                            .updateInterval(1)
+                            .build("slash_wave"));
+
     // Bestia Acorazada de Jade Espiritual de Murim
     public static final Supplier<EntityType<JadeArmoredBeastEntity>> JADE_ARMORED_BEAST =
             ENTITY_TYPES.register("jade_armored_beast", () ->

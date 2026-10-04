@@ -20,6 +20,11 @@ import net.minecraft.world.item.Tiers;
 import net.minecraft.world.item.TooltipFlag;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.phys.AABB;
+import net.minecraft.world.phys.Vec3;
+import com.soybe.awakeningsystem.entity.SlashWaveEntity;
+import com.soybe.awakeningsystem.CameraShakePayload;
+import com.soybe.awakeningsystem.SpawnMagicCirclePayload;
+import net.neoforged.neoforge.network.PacketDistributor;
 
 import java.util.List;
 
@@ -59,19 +64,41 @@ public class GiganticGreatswordItem extends SwordItem implements AwakeningWeapon
             sp.hurtMarked = true;
 
             if (level instanceof ServerLevel sl) {
-                sl.sendParticles(ParticleTypes.EXPLOSION, sp.getX(), sp.getY(), sp.getZ(), 4, 1.5D, 0.5D, 1.5D, 0.1D);
-                sl.sendParticles(ParticleTypes.CAMPFIRE_COSY_SMOKE, sp.getX(), sp.getY(), sp.getZ(), 50, 2.5D, 0.5D, 2.5D, 0.1D);
-                sl.playSound(null, sp.getX(), sp.getY(), sp.getZ(), SoundEvents.GENERIC_EXPLODE.value(), SoundSource.PLAYERS, 1.5F, 0.8F);
-                sl.playSound(null, sp.getX(), sp.getY(), sp.getZ(), SoundEvents.ANVIL_LAND, SoundSource.PLAYERS, 1.3F, 0.6F);
+                Vec3 look = sp.getLookAngle();
+                // 1. Sello Arcano Tectónico en el punto de impacto
+                PacketDistributor.sendToPlayersNear(
+                        sl, null, sp.getX(), sp.getY(), sp.getZ(), 64.0D,
+                        new SpawnMagicCirclePayload(
+                                sp.getId(), sp.getX(), sp.getY() + 0.05D, sp.getZ(),
+                                0.0F, 1.0F, 0.0F,
+                                5.5F, 50, 0xDAA520, 0, false
+                        )
+                );
+
+                sl.sendParticles(ParticleTypes.EXPLOSION, sp.getX(), sp.getY(), sp.getZ(), 5, 1.5D, 0.5D, 1.5D, 0.1D);
+                sl.sendParticles(ParticleTypes.LAVA, sp.getX(), sp.getY() + 0.5D, sp.getZ(), 35, 1.8D, 0.4D, 1.8D, 0.1D);
+                sl.playSound(null, sp.getX(), sp.getY(), sp.getZ(), SoundEvents.GENERIC_EXPLODE.value(), SoundSource.PLAYERS, 1.6F, 0.7F);
+                sl.playSound(null, sp.getX(), sp.getY(), sp.getZ(), SoundEvents.ANVIL_LAND, SoundSource.PLAYERS, 1.5F, 0.5F);
+
+                // Sacudida sísmica pesada
+                CameraShakePayload.sendToNearby(sl, sp.getX(), sp.getY(), sp.getZ(), 36.0D, 0.85F, 14);
+
+                // 2. Onda Sísmica Titánica de Choque Terrestre
+                float dmg = (float) (28.0D * WeaponLevelManager.getDamageMultiplier(stack));
+                SlashWaveEntity seismicWave = new SlashWaveEntity(sl, sp, SlashWaveEntity.TYPE_PYRO_FLAME, dmg, 5.2F, 1.6F, 0.0F, 24, 10);
+                seismicWave.setDeltaMovement(look.scale(2.0D));
+                sl.addFreshEntity(seismicWave);
 
                 AABB box = sp.getBoundingBox().inflate(6.0D, 3.0D, 6.0D);
                 for (LivingEntity nearby : level.getEntitiesOfClass(LivingEntity.class, box)) {
                     if (nearby != sp && (nearby instanceof Enemy || nearby != player)) {
-                        nearby.hurt(nearby.damageSources().playerAttack(sp), 26.0F);
+                        nearby.hurt(nearby.damageSources().playerAttack(sp), dmg * 0.8F);
                         nearby.setDeltaMovement(0.0D, 0.85D, 0.0D); // Launch into air
                         nearby.addEffect(new MobEffectInstance(MobEffects.MOVEMENT_SLOWDOWN, 100, 2));
                     }
                 }
+
+                WeaponLevelManager.addExp(stack, 30, sp);
             }
 
             sp.addEffect(new MobEffectInstance(MobEffects.DAMAGE_RESISTANCE, 160, 1, false, true));

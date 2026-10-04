@@ -21,6 +21,7 @@ import net.minecraft.world.item.TooltipFlag;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.phys.AABB;
 import net.minecraft.world.phys.Vec3;
+import com.soybe.awakeningsystem.entity.SlashWaveEntity;
 
 import java.util.List;
 
@@ -87,16 +88,23 @@ public class ShadowDaggersItem extends SwordItem implements AwakeningWeaponItem 
 
                     // Estallido de sombra al reaparecer
                     sl.sendParticles(ParticleTypes.SQUID_INK, destX, destY + 0.8D, destZ, 45, 0.5D, 0.6D, 0.5D, 0.05D);
-                    sl.sendParticles(ParticleTypes.SWEEP_ATTACK, destX, destY + 1.0D, destZ, 3, 0.3D, 0.3D, 0.3D, 0.0D);
-                    sl.sendParticles(ParticleTypes.CRIT, destX, destY + 1.0D, destZ, 25, 0.4D, 0.5D, 0.4D, 0.2D);
-                    sl.playSound(null, destX, destY, destZ, SoundEvents.PLAYER_ATTACK_CRIT, SoundSource.PLAYERS, 1.4F, 1.4F);
-                    sl.playSound(null, destX, destY, destZ, SoundEvents.WARDEN_SONIC_BOOM, SoundSource.PLAYERS, 0.55F, 1.8F);
+                    sl.playSound(null, destX, destY, destZ, SoundEvents.PLAYER_ATTACK_CRIT, SoundSource.PLAYERS, 1.6F, 1.4F);
+                    sl.playSound(null, destX, destY, destZ, SoundEvents.WARDEN_SONIC_BOOM, SoundSource.PLAYERS, 0.65F, 1.8F);
 
-                    // Puñalada por la espalda y ejecución
-                    float backstabDmg = 24.0F;
+                    com.soybe.awakeningsystem.CameraShakePayload.sendToNearby(sl, destX, destY, destZ, 28.0D, 0.70F, 10);
+
+                    // Puñalada por la espalda y Cruz de Sombras
+                    float backstabDmg = (float) (28.0D * WeaponLevelManager.getDamageMultiplier(stack));
                     if (target.getHealth() < target.getMaxHealth() * 0.5F) {
-                        backstabDmg += 10.0F; // Golpe de ejecución letal
+                        backstabDmg += 14.0F; // Golpe de ejecución letal
                     }
+
+                    // Tajo Cruzado 'X' de Vacío a la Espalda
+                    SlashWaveEntity crossSlice = new SlashWaveEntity(sl, sp, SlashWaveEntity.TYPE_DARK_VOID, backstabDmg, 3.2F, 3.2F, 0.0F, 16, 4);
+                    crossSlice.setCross(true);
+                    crossSlice.setDeltaMovement(targetLook.scale(1.8D));
+                    sl.addFreshEntity(crossSlice);
+
                     target.hurt(target.damageSources().playerAttack(sp), backstabDmg);
                     target.addEffect(new MobEffectInstance(MobEffects.WITHER, 100, 1));
                     target.addEffect(new MobEffectInstance(MobEffects.BLINDNESS, 60, 0));
@@ -104,8 +112,10 @@ public class ShadowDaggersItem extends SwordItem implements AwakeningWeaponItem 
                     sp.addEffect(new MobEffectInstance(MobEffects.INVISIBILITY, 60, 0, false, true));
                     sp.addEffect(new MobEffectInstance(MobEffects.MOVEMENT_SPEED, 80, 2, false, true));
 
+                    WeaponLevelManager.addExp(stack, 35, sp);
+
                     String targetName = target.getCustomName() != null ? target.getCustomName().getString() : target.getType().getDescription().getString();
-                    sp.displayClientMessage(Component.translatable("awakening_system.item.shadow_daggers.backstab", targetName, (int)backstabDmg), true);
+                    sp.displayClientMessage(Component.literal("§8§l✦ [DEGÜELLO DE SOMBRAS] §5¡Degüello en Cruz ejecutado tras §f" + targetName + " §5(§c" + (int)backstabDmg + " daño§5)!"), true);
                 } else {
                     // --- PARPADEO SOMBRÍO (SHADOW DASH) SI NO HAY OBJETIVO ---
                     Vec3 dashDest = eyePos.add(lookVec.scale(8.0D));
@@ -117,15 +127,15 @@ public class ShadowDaggersItem extends SwordItem implements AwakeningWeaponItem 
                         sp.hurtMarked = true;
                     }
 
-                    for (double d = 0; d <= 8.0D; d += 0.8D) {
-                        Vec3 p = eyePos.add(lookVec.scale(d));
-                        sl.sendParticles(ParticleTypes.SQUID_INK, p.x, p.y, p.z, 6, 0.2D, 0.2D, 0.2D, 0.02D);
-                        sl.sendParticles(ParticleTypes.SOUL_FIRE_FLAME, p.x, p.y, p.z, 2, 0.1D, 0.1D, 0.1D, 0.01D);
-                    }
+                    // Disparar onda cortante de sombra frontal en el parpadeo
+                    SlashWaveEntity dashWave = new SlashWaveEntity(sl, sp, SlashWaveEntity.TYPE_DARK_VOID, 20.0F, 3.4F, 1.2F, 0.0F, 22, 6);
+                    dashWave.setDeltaMovement(lookVec.scale(2.2D));
+                    sl.addFreshEntity(dashWave);
+
+                    com.soybe.awakeningsystem.CameraShakePayload.sendToNearby(sl, sp.getX(), sp.getY(), sp.getZ(), 20.0D, 0.4F, 6);
                     sl.playSound(null, sp.getX(), sp.getY(), sp.getZ(), SoundEvents.ENDERMAN_TELEPORT, SoundSource.PLAYERS, 1.0F, 1.2F);
-                    sp.addEffect(new MobEffectInstance(MobEffects.INVISIBILITY, 80, 0, false, true));
-                    sp.addEffect(new MobEffectInstance(MobEffects.MOVEMENT_SPEED, 80, 2, false, true));
-                    sp.displayClientMessage(Component.translatable("item.awakening_system.shadow_daggers.shadow_step_msg"), true);
+                    sp.addEffect(new MobEffectInstance(MobEffects.MOVEMENT_SPEED, 60, 2, false, true));
+                    sp.displayClientMessage(Component.literal("§8§l✦ [PASO DE SOMBRAS] §7¡Parpadeo sombrío ejecutado con cuchilla de vacío!"), true);
                 }
             }
             return InteractionResultHolder.sidedSuccess(stack, level.isClientSide());

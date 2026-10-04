@@ -20,6 +20,8 @@ import net.minecraft.world.item.Tiers;
 import net.minecraft.world.item.TooltipFlag;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.phys.AABB;
+import net.minecraft.world.phys.Vec3;
+import com.soybe.awakeningsystem.entity.SlashWaveEntity;
 
 import java.util.List;
 
@@ -58,24 +60,37 @@ public class BlackDragonScytheItem extends SwordItem implements AwakeningWeaponI
             sp.hurtMarked = true;
 
             if (level instanceof ServerLevel sl) {
-                sl.sendParticles(ParticleTypes.DRAGON_BREATH, sp.getX(), sp.getY() + 1.0D, sp.getZ(), 80, 2.5D, 1.0D, 2.5D, 0.1D);
-                sl.sendParticles(ParticleTypes.LAVA, sp.getX(), sp.getY() + 1.0D, sp.getZ(), 30, 1.8D, 0.8D, 1.8D, 0.1D);
-                sl.sendParticles(ParticleTypes.EXPLOSION, sp.getX(), sp.getY() + 1.0D, sp.getZ(), 5, 2.0D, 0.5D, 2.0D, 0.1D);
+                Vec3 look = sp.getLookAngle();
+
+                // 1. Sello arcano del Dragón Negro en el suelo
+                net.neoforged.neoforge.network.PacketDistributor.sendToPlayersNear(
+                        sl, null, sp.getX(), sp.getY(), sp.getZ(), 64.0D,
+                        new com.soybe.awakeningsystem.SpawnMagicCirclePayload(
+                                sp.getId(), sp.getX(), sp.getY(), sp.getZ(),
+                                (float) look.x, (float) look.y, (float) look.z,
+                                4.5F, 40, 0x4B0082, 0, false
+                        )
+                );
+
                 sl.playSound(null, sp.getX(), sp.getY(), sp.getZ(), SoundEvents.GENERIC_EXPLODE.value(), SoundSource.PLAYERS, 1.4F, 0.8F);
                 sl.playSound(null, sp.getX(), sp.getY(), sp.getZ(), SoundEvents.ENDER_DRAGON_HURT, SoundSource.PLAYERS, 1.2F, 0.9F);
+                sl.playSound(null, sp.getX(), sp.getY(), sp.getZ(), SoundEvents.PLAYER_ATTACK_SWEEP, SoundSource.PLAYERS, 1.6F, 0.8F);
 
-                AABB box = sp.getBoundingBox().inflate(6.0D, 3.0D, 6.0D);
-                for (LivingEntity nearby : level.getEntitiesOfClass(LivingEntity.class, box)) {
-                    if (nearby != sp && (nearby instanceof Enemy || nearby != player)) {
-                        nearby.hurt(nearby.damageSources().playerAttack(sp), 26.0F);
-                        nearby.igniteForSeconds(6);
-                        nearby.addEffect(new MobEffectInstance(MobEffects.WITHER, 100, 1));
-                    }
-                }
+                com.soybe.awakeningsystem.CameraShakePayload.sendToNearby(sl, sp.getX(), sp.getY(), sp.getZ(), 32.0D, 0.70F, 11);
+
+                float dmg = (float) (32.0D * WeaponLevelManager.getDamageMultiplier(stack));
+
+                // 2. Tajo Creciente de la Guadaña del Dragón Negro (SlashWaveEntity de Fuego de Dragón)
+                SlashWaveEntity scytheWave = new SlashWaveEntity(sl, sp, SlashWaveEntity.TYPE_DARK_VOID, dmg, 5.2F, 2.0F, -25.0F, 26, 12);
+                scytheWave.setDeltaMovement(look.scale(2.2D));
+                sl.addFreshEntity(scytheWave);
+
+                WeaponLevelManager.addExp(stack, 35, sp);
             }
 
             sp.addEffect(new MobEffectInstance(MobEffects.FIRE_RESISTANCE, 200, 0, false, true));
             sp.addEffect(new MobEffectInstance(MobEffects.DAMAGE_RESISTANCE, 160, 1, false, true));
+            sp.displayClientMessage(Component.literal("§5§l✦ [COSECHA DEL DRAGÓN NEGRO] §4¡Tajo devastador de guadaña y fuego de dragón desatado!"), true);
             return InteractionResultHolder.sidedSuccess(stack, false);
         }
 

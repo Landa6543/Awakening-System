@@ -1,6 +1,8 @@
 package com.soybe.awakeningsystem.item;
 
 import com.soybe.awakeningsystem.SpawnMagicCirclePayload;
+import com.soybe.awakeningsystem.CameraShakePayload;
+import com.soybe.awakeningsystem.entity.SlashWaveEntity;
 import net.minecraft.ChatFormatting;
 import net.minecraft.core.particles.ParticleTypes;
 import net.minecraft.network.chat.Component;
@@ -108,10 +110,16 @@ public class DreadScytheItem extends SwordItem implements AwakeningWeaponItem {
             sp.addEffect(new MobEffectInstance(MobEffects.ABSORPTION, 240, 2, false, true));
             sp.addEffect(new MobEffectInstance(MobEffects.MOVEMENT_SPEED, 160, 1, false, true));
 
-            com.soybe.awakeningsystem.SystemData sData = com.soybe.awakeningsystem.SystemEvents.data(sp);
-            if (sData != null) {
-                sData.restoreEnergy(50);
-            }
+            // Sacudida cinemática de almas
+            CameraShakePayload.sendToNearby(sl, sp.getX(), sp.getY(), sp.getZ(), 36.0D, 0.85F, 12);
+
+            // Tajo de Segado Espectral de Vacío (Ángulo de guadaña -30 grados)
+            Vec3 look = sp.getLookAngle();
+            SlashWaveEntity scytheWave = new SlashWaveEntity(sl, sp, SlashWaveEntity.TYPE_DARK_VOID, 60.0F, 5.4F, 2.0F, -30.0F, 28, 12);
+            scytheWave.setDeltaMovement(look.scale(2.2D));
+            sl.addFreshEntity(scytheWave);
+
+            WeaponLevelManager.addExp(stack, 40, sp);
 
             sp.displayClientMessage(Component.literal("§5§l☠ [VÓRTICE DEL TERROR] §d¡Cosechaste las almas de " + hitCount + " enemigos! (+Salud restaurada)"), true);
             return InteractionResultHolder.consume(stack);

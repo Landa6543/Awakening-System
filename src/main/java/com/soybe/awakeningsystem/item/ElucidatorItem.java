@@ -21,6 +21,7 @@ import net.minecraft.world.item.Tiers;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.phys.AABB;
 import net.minecraft.world.phys.Vec3;
+import com.soybe.awakeningsystem.entity.SlashWaveEntity;
 
 import java.util.List;
 
@@ -56,39 +57,56 @@ public class ElucidatorItem extends SwordItem implements AwakeningWeaponItem {
             sp.getCooldowns().addCooldown(this, baseCd);
 
             // Efectos de buf al usuario: Resistencia al empuje y celeridad de ataque
-            sp.addEffect(new MobEffectInstance(MobEffects.DAMAGE_RESISTANCE, 60, 2, false, false, true));
-            sp.addEffect(new MobEffectInstance(MobEffects.MOVEMENT_SPEED, 60, 1, false, false, true));
+            sp.addEffect(new MobEffectInstance(MobEffects.DAMAGE_RESISTANCE, 80, 2, false, false, true));
+            sp.addEffect(new MobEffectInstance(MobEffects.MOVEMENT_SPEED, 80, 1, false, false, true));
 
-            // Starburst Stream: Ráfaga en cono frontal
             Vec3 look = sp.getLookAngle();
-            Vec3 pos = sp.position().add(0, sp.getEyeHeight() * 0.5D, 0);
 
-            sl.playSound(null, sp.getX(), sp.getY(), sp.getZ(), SoundEvents.PLAYER_ATTACK_SWEEP, SoundSource.PLAYERS, 1.5F, 1.2F);
+            // Invocar sello arcano oscuro en el suelo a los pies del espadachín
+            net.neoforged.neoforge.network.PacketDistributor.sendToPlayersNear(
+                    sl, null, sp.getX(), sp.getY(), sp.getZ(), 64.0D,
+                    new com.soybe.awakeningsystem.SpawnMagicCirclePayload(
+                            sp.getId(), sp.getX(), sp.getY(), sp.getZ(),
+                            (float) look.x, (float) look.y, (float) look.z,
+                            3.4F, 45, 0x1A0933, 0, false
+                    )
+            );
+
+            // Audio sónico marcial
+            sl.playSound(null, sp.getX(), sp.getY(), sp.getZ(), SoundEvents.PLAYER_ATTACK_SWEEP, SoundSource.PLAYERS, 1.6F, 1.3F);
+            sl.playSound(null, sp.getX(), sp.getY(), sp.getZ(), SoundEvents.WITHER_SHOOT, SoundSource.PLAYERS, 1.2F, 1.5F);
             sl.playSound(null, sp.getX(), sp.getY(), sp.getZ(), SoundEvents.TRIDENT_THUNDER.value(), SoundSource.PLAYERS, 1.0F, 1.4F);
 
-            // Partículas de estela oscura y fuego de almas
-            for (int i = 0; i < 20; i++) {
-                double px = pos.x + look.x * (1.5D + i * 0.25D) + (sl.random.nextDouble() - 0.5D) * 1.5D;
-                double py = pos.y + (sl.random.nextDouble() - 0.5D) * 1.2D;
-                double pz = pos.z + look.z * (1.5D + i * 0.25D) + (sl.random.nextDouble() - 0.5D) * 1.5D;
-                sl.sendParticles(ParticleTypes.SOUL_FIRE_FLAME, px, py, pz, 3, 0.1D, 0.1D, 0.1D, 0.05D);
-                sl.sendParticles(ParticleTypes.SWEEP_ATTACK, px, py, pz, 1, 0.0D, 0.0D, 0.0D, 0.0D);
-            }
+            // Sacudida cinemática de cámara
+            com.soybe.awakeningsystem.CameraShakePayload.sendToNearby(sl, sp.getX(), sp.getY(), sp.getZ(), 32.0D, 0.65F, 10);
 
-            AABB box = sp.getBoundingBox().inflate(4.5D).move(look.scale(2.0D));
-            List<LivingEntity> targets = sl.getEntitiesOfClass(LivingEntity.class, box,
-                    e -> e != sp && e.isAlive() && !(e instanceof Player && !sp.canHarmPlayer((Player) e)));
+            float baseDmg = (float) (22.0D * WeaponLevelManager.getDamageMultiplier(stack));
 
-            float dmg = (float) (24.0D * WeaponLevelManager.getDamageMultiplier(stack));
-            for (LivingEntity target : targets) {
-                target.hurt(sp.damageSources().playerAttack(sp), dmg);
-                target.setDeltaMovement(target.getDeltaMovement().add(look.x * 0.4D, 0.25D, look.z * 0.4D));
-                sl.sendParticles(ParticleTypes.CRIT, target.getX(), target.getY() + 1.0D, target.getZ(), 15, 0.3D, 0.4D, 0.3D, 0.1D);
-            }
+            // Ráfaga Física de Tajos de Vacío (Starburst Stream V2)
+            // Tajo 1: Diagonal Izquierdo
+            SlashWaveEntity slash1 = new SlashWaveEntity(sl, sp, SlashWaveEntity.TYPE_DARK_VOID, baseDmg * 0.75F, 2.6F, 1.3F, -38.0F, 22, 4);
+            slash1.setDeltaMovement(look.scale(1.9D));
+            sl.addFreshEntity(slash1);
+
+            // Tajo 2: Diagonal Derecho
+            SlashWaveEntity slash2 = new SlashWaveEntity(sl, sp, SlashWaveEntity.TYPE_DARK_VOID, baseDmg * 0.75F, 2.6F, 1.3F, 38.0F, 22, 4);
+            slash2.setDeltaMovement(look.scale(1.85D).add(look.y * 0.05D, 0.05D, 0));
+            sl.addFreshEntity(slash2);
+
+            // Tajo 3: Horizontal Rápido de Corte
+            SlashWaveEntity slash3 = new SlashWaveEntity(sl, sp, SlashWaveEntity.TYPE_DARK_VOID, baseDmg * 0.9F, 3.2F, 1.2F, 0.0F, 24, 6);
+            slash3.setDeltaMovement(look.scale(2.1D));
+            sl.addFreshEntity(slash3);
+
+            // Tajo 4 (FINALIZADOR 16º GOLPE): Titánica 'X' Cruzada de Fuego Oscuro
+            SlashWaveEntity slashCross = new SlashWaveEntity(sl, sp, SlashWaveEntity.TYPE_DARK_VOID, baseDmg * 1.6F, 4.2F, 4.2F, 0.0F, 28, 8);
+            slashCross.setCross(true);
+            slashCross.setDeltaMovement(look.scale(2.35D));
+            sl.addFreshEntity(slashCross);
 
             WeaponLevelManager.addExp(stack, 40, sp);
 
-            sp.displayClientMessage(Component.literal("§9§l✦ [STARBURST STREAM] §f¡Has desatado la ráfaga de 16 cortes con Elucidator!"), true);
+            sp.displayClientMessage(Component.literal("§9§l✦ [STARBURST STREAM V2] §f¡Flurry de 16 cortes de vacío y Cruz Titánica desatados!"), true);
             return InteractionResultHolder.consume(stack);
         }
 

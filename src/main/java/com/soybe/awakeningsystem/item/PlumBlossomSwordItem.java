@@ -21,6 +21,7 @@ import net.minecraft.world.item.TooltipFlag;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.phys.AABB;
 import net.minecraft.world.phys.Vec3;
+import com.soybe.awakeningsystem.entity.SlashWaveEntity;
 
 import java.util.List;
 
@@ -52,38 +53,44 @@ public class PlumBlossomSwordItem extends SwordItem implements AwakeningWeaponIt
             sp.getCooldowns().addCooldown(this, 200);
 
             if (level instanceof ServerLevel sl) {
-                // Vórtice giratorio de 360 grados de pétalos de ciruelo en espiral
-                for (double r = 1.0; r <= 5.5; r += 0.9D) {
-                    int count = (int) (r * 12);
-                    for (int i = 0; i < count; i++) {
-                        double angle = (2.0 * Math.PI * i / count) + (r * 0.4D);
-                        double px = sp.getX() + r * Math.cos(angle);
-                        double pz = sp.getZ() + r * Math.sin(angle);
-                        sl.sendParticles(ParticleTypes.CHERRY_LEAVES, px, sp.getY() + 0.1D + (r * 0.25D), pz, 1, 0, 0.04D, 0, 0.02D);
-                    }
-                }
+                Vec3 look = sp.getLookAngle();
 
-                // Efecto de vacío y corte masivo a los enemigos en el área
-                AABB area = sp.getBoundingBox().inflate(6.5D, 3.0D, 6.5D);
-                for (LivingEntity nearby : level.getEntitiesOfClass(LivingEntity.class, area)) {
-                    if (nearby != sp && (nearby instanceof Enemy || (nearby.isAlive() && !nearby.getTags().contains("shadow_soldier")))) {
-                        Vec3 pull = sp.position().subtract(nearby.position()).normalize().scale(0.38D);
-                        nearby.setDeltaMovement(nearby.getDeltaMovement().add(pull.x, 0.15D, pull.z));
-                        nearby.hurtMarked = true;
-                        nearby.hurt(nearby.damageSources().playerAttack(sp), 20.0F);
-                        nearby.addEffect(new MobEffectInstance(MobEffects.MOVEMENT_SLOWDOWN, 80, 1));
-                    }
-                }
+                // 1. Sello sagrado de la Secta del Monte Hua en el suelo (Círculo de Qi de Murim)
+                net.neoforged.neoforge.network.PacketDistributor.sendToPlayersNear(
+                        sl, null, sp.getX(), sp.getY(), sp.getZ(), 64.0D,
+                        new com.soybe.awakeningsystem.SpawnMagicCirclePayload(
+                                sp.getId(), sp.getX(), sp.getY(), sp.getZ(),
+                                (float) look.x, (float) look.y, (float) look.z,
+                                3.8F, 40, 0xFFB7C5, 2, false // circleType = 2 (Ground Murim)
+                        )
+                );
 
-                // Explosión floral culminante
-                sl.sendParticles(ParticleTypes.FIREWORK, sp.getX(), sp.getY() + 1.2D, sp.getZ(), 40, 1.0D, 0.8D, 1.0D, 0.15D);
-                sl.sendParticles(ParticleTypes.SWEEP_ATTACK, sp.getX(), sp.getY() + 1.0D, sp.getZ(), 8, 1.0D, 0.5D, 1.0D, 0.0D);
-                sl.playSound(null, sp.getX(), sp.getY(), sp.getZ(), SoundEvents.CHERRY_WOOD_BREAK, SoundSource.PLAYERS, 1.4F, 1.6F);
-                sl.playSound(null, sp.getX(), sp.getY(), sp.getZ(), SoundEvents.FIREWORK_ROCKET_BLAST, SoundSource.PLAYERS, 1.0F, 1.2F);
-                sl.playSound(null, sp.getX(), sp.getY(), sp.getZ(), SoundEvents.PLAYER_ATTACK_SWEEP, SoundSource.PLAYERS, 1.4F, 0.8F);
+                sl.playSound(null, sp.getX(), sp.getY(), sp.getZ(), SoundEvents.CHERRY_WOOD_BREAK, SoundSource.PLAYERS, 1.5F, 1.5F);
+                sl.playSound(null, sp.getX(), sp.getY(), sp.getZ(), SoundEvents.PLAYER_ATTACK_SWEEP, SoundSource.PLAYERS, 1.5F, 1.2F);
+                sl.playSound(null, sp.getX(), sp.getY(), sp.getZ(), SoundEvents.AMETHYST_BLOCK_CHIME, SoundSource.PLAYERS, 1.4F, 1.6F);
 
-                sp.addEffect(new MobEffectInstance(MobEffects.MOVEMENT_SPEED, 140, 1, false, true));
-                sp.displayClientMessage(Component.translatable("awakening_system.item.plum_blossom.whirlwind"), true);
+                com.soybe.awakeningsystem.CameraShakePayload.sendToNearby(sl, sp.getX(), sp.getY(), sp.getZ(), 30.0D, 0.55F, 9);
+
+                float dmg = (float) (24.0D * WeaponLevelManager.getDamageMultiplier(stack));
+
+                // 2. Danza de los 24 Pétalos del Monte Hua (Cuchillas Físicas de Qi Floral)
+                // Tajo Horizontal Amplio
+                SlashWaveEntity waveH = new SlashWaveEntity(sl, sp, SlashWaveEntity.TYPE_CHERRY_BLOSSOM, dmg * 1.1F, 4.2F, 1.4F, 0.0F, 24, 8);
+                waveH.setDeltaMovement(look.scale(2.1D));
+                sl.addFreshEntity(waveH);
+
+                // Tajo Diagonal Izquierdo
+                SlashWaveEntity waveD1 = new SlashWaveEntity(sl, sp, SlashWaveEntity.TYPE_CHERRY_BLOSSOM, dmg * 0.85F, 3.2F, 1.2F, -40.0F, 22, 6);
+                waveD1.setDeltaMovement(look.scale(1.95D));
+                sl.addFreshEntity(waveD1);
+
+                // Tajo Diagonal Derecho
+                SlashWaveEntity waveD2 = new SlashWaveEntity(sl, sp, SlashWaveEntity.TYPE_CHERRY_BLOSSOM, dmg * 0.85F, 3.2F, 1.2F, 40.0F, 22, 6);
+                waveD2.setDeltaMovement(look.scale(1.95D));
+                sl.addFreshEntity(waveD2);
+
+                sp.addEffect(new MobEffectInstance(MobEffects.MOVEMENT_SPEED, 160, 1, false, true));
+                sp.displayClientMessage(Component.literal("§d§l✦ [DANZA DE LOS 24 PÉTALOS] §f¡Cuchillas de Qi de Flor de Ciruelo desatadas!"), true);
             }
             return InteractionResultHolder.sidedSuccess(stack, level.isClientSide());
         }

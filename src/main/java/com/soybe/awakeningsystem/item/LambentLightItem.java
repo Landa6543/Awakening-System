@@ -19,6 +19,7 @@ import net.minecraft.world.item.Tiers;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.phys.AABB;
 import net.minecraft.world.phys.Vec3;
+import com.soybe.awakeningsystem.entity.SlashWaveEntity;
 
 import java.util.List;
 
@@ -55,39 +56,38 @@ public class LambentLightItem extends SwordItem implements AwakeningWeaponItem {
             Vec3 look = sp.getLookAngle();
             Vec3 start = sp.position();
 
-            // Propulsión instantánea hacia adelante (Dash veloz de 10 bloques)
-            Vec3 dashVec = new Vec3(look.x * 2.2D, 0.2D, look.z * 2.2D);
+            // 1. Sello vertical de estocada estelar en frente del estoque
+            net.neoforged.neoforge.network.PacketDistributor.sendToPlayersNear(
+                    sl, null, sp.getX(), sp.getY(), sp.getZ(), 64.0D,
+                    new com.soybe.awakeningsystem.SpawnMagicCirclePayload(
+                            sp.getId(), sp.getX(), sp.getY(), sp.getZ(),
+                            (float) look.x, (float) look.y, (float) look.z,
+                            2.6F, 25, 0xFFE680, 1, false
+                    )
+            );
+
+            // 2. Propulsión física ultrarrápida del usuario
+            Vec3 dashVec = new Vec3(look.x * 2.2D, 0.22D, look.z * 2.2D);
             sp.setDeltaMovement(dashVec);
             sp.hurtMarked = true;
 
-            sl.playSound(null, sp.getX(), sp.getY(), sp.getZ(), SoundEvents.PLAYER_ATTACK_CRIT, SoundSource.PLAYERS, 1.5F, 1.5F);
-            sl.playSound(null, sp.getX(), sp.getY(), sp.getZ(), SoundEvents.CROSSBOW_SHOOT, SoundSource.PLAYERS, 1.2F, 1.6F);
+            sl.playSound(null, sp.getX(), sp.getY(), sp.getZ(), SoundEvents.TRIDENT_RIPTIDE_2.value(), SoundSource.PLAYERS, 1.6F, 1.5F);
+            sl.playSound(null, sp.getX(), sp.getY(), sp.getZ(), SoundEvents.PLAYER_ATTACK_CRIT, SoundSource.PLAYERS, 1.5F, 1.6F);
+            sl.playSound(null, sp.getX(), sp.getY(), sp.getZ(), SoundEvents.CROSSBOW_SHOOT, SoundSource.PLAYERS, 1.3F, 1.7F);
 
-            // Estela de luz blanca y destellos
-            for (int i = 0; i < 25; i++) {
-                double t = i * 0.4D;
-                double px = start.x + look.x * t;
-                double py = start.y + 0.8D + look.y * t;
-                double pz = start.z + look.z * t;
-                sl.sendParticles(ParticleTypes.END_ROD, px, py, pz, 2, 0.05D, 0.05D, 0.05D, 0.02D);
-                sl.sendParticles(ParticleTypes.FLASH, px, py, pz, 1, 0.0D, 0.0D, 0.0D, 0.0D);
-            }
-
-            AABB box = sp.getBoundingBox().inflate(3.0D).expandTowards(look.scale(9.0D));
-            List<LivingEntity> targets = sl.getEntitiesOfClass(LivingEntity.class, box,
-                    e -> e != sp && e.isAlive() && !(e instanceof Player && !sp.canHarmPlayer((Player) e)));
+            com.soybe.awakeningsystem.CameraShakePayload.sendToNearby(sl, sp.getX(), sp.getY(), sp.getZ(), 28.0D, 0.5F, 7);
 
             float dmg = (float) (28.0D * WeaponLevelManager.getDamageMultiplier(stack));
 
-            for (LivingEntity target : targets) {
-                target.hurt(sp.damageSources().playerAttack(sp), dmg);
-                target.addEffect(new MobEffectInstance(MobEffects.MOVEMENT_SLOWDOWN, 60, 2, false, true, true));
-                sl.sendParticles(ParticleTypes.CRIT, target.getX(), target.getY() + 1.0D, target.getZ(), 20, 0.3D, 0.4D, 0.3D, 0.2D);
-            }
+            // 3. Proyectil Físico de Haz Perforante (Flashing Penetrator / Linear V2)
+            SlashWaveEntity thrustBeam = new SlashWaveEntity(sl, sp, SlashWaveEntity.TYPE_SOLAR_LIGHT, dmg, 1.4F, 3.6F, 0.0F, 20, 10);
+            thrustBeam.setDeltaMovement(look.scale(2.8D));
+            thrustBeam.setArmorPenetration(0.50F); // Perfora 50% armadura
+            sl.addFreshEntity(thrustBeam);
 
             WeaponLevelManager.addExp(stack, 35, sp);
 
-            sp.displayClientMessage(Component.literal("§b§l✦ [LINEAR] §f¡Estocada a la velocidad de la luz desatada con Lambent Light!"), true);
+            sp.displayClientMessage(Component.literal("§e§l✦ [LINEAR / FLASHING PENETRATOR] §f¡Haz de estocada a la velocidad de la luz disparado!"), true);
             return InteractionResultHolder.consume(stack);
         }
 

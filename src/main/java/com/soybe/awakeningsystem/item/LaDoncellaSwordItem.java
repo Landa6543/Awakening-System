@@ -25,6 +25,7 @@ import net.minecraft.world.item.component.CustomData;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.phys.AABB;
 import net.minecraft.world.phys.Vec3;
+import com.soybe.awakeningsystem.entity.SlashWaveEntity;
 
 import java.util.List;
 
@@ -120,7 +121,7 @@ public class LaDoncellaSwordItem extends SwordItem implements AwakeningWeaponIte
             long gameTime = level.getGameTime();
 
             if (transformed) {
-                // Habilidad Despierta: "Jardín del Silencio: Cataclismo de Espinas" (Potenciada)
+                // ==================== [FORMA DESPIERTA: TRONO DE CENIZA / CATACLISMO DE ESPINAS] ====================
                 long cdUntil = sp.getPersistentData().getLong("doncella_briar_cataclysm_cd");
                 if (gameTime < cdUntil) {
                     long sec = (cdUntil - gameTime) / 20;
@@ -131,34 +132,43 @@ public class LaDoncellaSwordItem extends SwordItem implements AwakeningWeaponIte
                 sp.getPersistentData().putLong("doncella_briar_cataclysm_cd", gameTime + 240L); // 12s cd
                 sp.getCooldowns().addCooldown(this, 240);
 
-                sl.playSound(null, sp.getX(), sp.getY(), sp.getZ(), SoundEvents.GENERIC_EXPLODE.value(), SoundSource.PLAYERS, 1.6F, 0.85F);
-                sl.playSound(null, sp.getX(), sp.getY(), sp.getZ(), SoundEvents.MACE_SMASH_GROUND, SoundSource.PLAYERS, 1.6F, 0.65F);
-                sl.playSound(null, sp.getX(), sp.getY(), sp.getZ(), SoundEvents.WITHER_SHOOT, SoundSource.PLAYERS, 1.2F, 1.35F);
+                Vec3 look = sp.getLookAngle();
 
-                sl.sendParticles(ParticleTypes.CRIMSON_SPORE, sp.getX(), sp.getY() + 0.5D, sp.getZ(), 140, 5.0D, 1.5D, 5.0D, 0.25D);
-                sl.sendParticles(ParticleTypes.ASH, sp.getX(), sp.getY() + 0.5D, sp.getZ(), 90, 4.0D, 1.5D, 4.0D, 0.1D);
-                sl.sendParticles(ParticleTypes.EXPLOSION, sp.getX(), sp.getY() + 0.5D, sp.getZ(), 8, 3.0D, 0.8D, 3.0D, 0.1D);
+                // 1. Sello arcano carmesí de sangre en el suelo
+                net.neoforged.neoforge.network.PacketDistributor.sendToPlayersNear(
+                        sl, null, sp.getX(), sp.getY(), sp.getZ(), 64.0D,
+                        new com.soybe.awakeningsystem.SpawnMagicCirclePayload(
+                                sp.getId(), sp.getX(), sp.getY(), sp.getZ(),
+                                (float) look.x, (float) look.y, (float) look.z,
+                                5.0F, 50, 0x880015, 0, false
+                        )
+                );
 
-                AABB area = sp.getBoundingBox().inflate(12.0D, 4.5D, 12.0D);
-                int hitCount = 0;
-                for (LivingEntity nearby : sl.getEntitiesOfClass(LivingEntity.class, area)) {
-                    if (nearby != sp && (nearby instanceof Enemy || nearby != player)) {
-                        nearby.hurt(nearby.damageSources().playerAttack(sp), 95.0F); // 95 de daño devastador
-                        nearby.setDeltaMovement(0.0D, 1.1D, 0.0D);
-                        nearby.addEffect(new MobEffectInstance(MobEffects.MOVEMENT_SLOWDOWN, 180, 3));
-                        nearby.addEffect(new MobEffectInstance(MobEffects.WITHER, 180, 2));
-                        hitCount++;
-                    }
-                }
+                sl.playSound(null, sp.getX(), sp.getY(), sp.getZ(), SoundEvents.MACE_SMASH_GROUND, SoundSource.PLAYERS, 1.8F, 0.65F);
+                sl.playSound(null, sp.getX(), sp.getY(), sp.getZ(), SoundEvents.WITHER_SHOOT, SoundSource.PLAYERS, 1.4F, 1.25F);
+                sl.playSound(null, sp.getX(), sp.getY(), sp.getZ(), SoundEvents.SWEET_BERRY_BUSH_PICK_BERRIES, SoundSource.PLAYERS, 1.6F, 0.6F);
+
+                // Sacudida cinematográfica masiva
+                com.soybe.awakeningsystem.CameraShakePayload.sendToNearby(sl, sp.getX(), sp.getY(), sp.getZ(), 36.0D, 0.85F, 14);
+
+                // 2. Colosal Creciente de Sangre Carmesí y Espinas (SlashWaveEntity Horizontal)
+                SlashWaveEntity bloodWave = new SlashWaveEntity(sl, sp, SlashWaveEntity.TYPE_CRIMSON_BLOOD, 75.0F, 5.4F, 2.2F, 0.0F, 30, 12);
+                bloodWave.setDeltaMovement(look.scale(1.95D));
+                sl.addFreshEntity(bloodWave);
+
+                // 3. Tajo Vertical Ascendente de Fuego Oscuro (SlashWaveEntity Vertical)
+                SlashWaveEntity verticalWave = new SlashWaveEntity(sl, sp, SlashWaveEntity.TYPE_CRIMSON_BLOOD, 45.0F, 3.8F, 2.6F, 90.0F, 24, 6);
+                verticalWave.setDeltaMovement(look.scale(1.85D));
+                sl.addFreshEntity(verticalWave);
 
                 sp.addEffect(new MobEffectInstance(MobEffects.DAMAGE_RESISTANCE, 220, 2, false, true)); // Resistencia III
                 sp.addEffect(new MobEffectInstance(MobEffects.ABSORPTION, 340, 3, false, true)); // Absorción IV
 
-                sp.displayClientMessage(Component.literal("§4§l🌹 [JARDÍN DEL SILENCIO] §c¡El Cataclismo de Espinas devasta a " + hitCount + " enemigos infligiendo 95 de daño!"), true);
+                sp.displayClientMessage(Component.literal("§4§l🌹 [TRONO DE CENIZA] §c¡Creciente colosal carmesí y tajo ascendente desatados con robo de vida!"), true);
                 return InteractionResultHolder.consume(stack);
 
             } else {
-                // Habilidad Pura: "Fragancia del Silencio" (Potenciada)
+                // ==================== [FORMA PURA: JARDÍN DEL SILENCIO / FRAGANCIA PURA] ====================
                 long cdUntil = sp.getPersistentData().getLong("doncella_silence_perfume_cd");
                 if (gameTime < cdUntil) {
                     long sec = (cdUntil - gameTime) / 20;
@@ -169,21 +179,27 @@ public class LaDoncellaSwordItem extends SwordItem implements AwakeningWeaponIte
                 sp.getPersistentData().putLong("doncella_silence_perfume_cd", gameTime + 160L); // 8s cd
                 sp.getCooldowns().addCooldown(this, 160);
 
-                sl.playSound(null, sp.getX(), sp.getY(), sp.getZ(), SoundEvents.PLAYER_ATTACK_SWEEP, SoundSource.PLAYERS, 1.5F, 1.1F);
-                sl.playSound(null, sp.getX(), sp.getY(), sp.getZ(), SoundEvents.AMETHYST_BLOCK_RESONATE, SoundSource.PLAYERS, 1.5F, 1.4F);
-
                 Vec3 look = sp.getLookAngle();
-                sl.sendParticles(ParticleTypes.SWEEP_ATTACK, sp.getX() + look.x * 2.8D, sp.getY() + 1.2D, sp.getZ() + look.z * 2.8D, 8, 0.7D, 0.3D, 0.7D, 0.0D);
-                sl.sendParticles(ParticleTypes.CHERRY_LEAVES, sp.getX() + look.x * 2.8D, sp.getY() + 1.0D, sp.getZ() + look.z * 2.8D, 75, 2.2D, 0.9D, 2.2D, 0.1D);
 
-                AABB cone = sp.getBoundingBox().inflate(9.0D, 3.5D, 9.0D);
-                for (LivingEntity nearby : sl.getEntitiesOfClass(LivingEntity.class, cone)) {
-                    if (nearby != sp && (nearby instanceof Enemy || nearby != player)) {
-                        nearby.hurt(nearby.damageSources().playerAttack(sp), 65.0F); // 65 de daño en cono
-                        nearby.knockback(1.4D, sp.getX() - nearby.getX(), sp.getZ() - nearby.getZ());
-                        nearby.addEffect(new MobEffectInstance(MobEffects.WEAKNESS, 180, 2));
-                    }
-                }
+                // 1. Sello arcano de rosas plateadas en el suelo
+                net.neoforged.neoforge.network.PacketDistributor.sendToPlayersNear(
+                        sl, null, sp.getX(), sp.getY(), sp.getZ(), 64.0D,
+                        new com.soybe.awakeningsystem.SpawnMagicCirclePayload(
+                                sp.getId(), sp.getX(), sp.getY(), sp.getZ(),
+                                (float) look.x, (float) look.y, (float) look.z,
+                                4.0F, 40, 0xFFD1DC, 0, false
+                        )
+                );
+
+                sl.playSound(null, sp.getX(), sp.getY(), sp.getZ(), SoundEvents.AMETHYST_BLOCK_RESONATE, SoundSource.PLAYERS, 1.6F, 1.4F);
+                sl.playSound(null, sp.getX(), sp.getY(), sp.getZ(), SoundEvents.PLAYER_ATTACK_SWEEP, SoundSource.PLAYERS, 1.5F, 1.2F);
+
+                com.soybe.awakeningsystem.CameraShakePayload.sendToNearby(sl, sp.getX(), sp.getY(), sp.getZ(), 28.0D, 0.45F, 8);
+
+                // 2. Tajo de Rosas Plateadas Etereo (SlashWaveEntity Purificante)
+                SlashWaveEntity silverWave = new SlashWaveEntity(sl, sp, SlashWaveEntity.TYPE_SILVER_ROSE, 55.0F, 4.4F, 1.8F, -20.0F, 26, 8);
+                silverWave.setDeltaMovement(look.scale(2.05D));
+                sl.addFreshEntity(silverWave);
 
                 // Purificación del portador con bendición de rosas
                 sp.removeEffect(MobEffects.WITHER);

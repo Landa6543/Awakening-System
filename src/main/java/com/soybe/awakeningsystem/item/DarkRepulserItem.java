@@ -19,6 +19,8 @@ import net.minecraft.world.item.SwordItem;
 import net.minecraft.world.item.Tiers;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.phys.AABB;
+import net.minecraft.world.phys.Vec3;
+import com.soybe.awakeningsystem.entity.SlashWaveEntity;
 
 import java.util.List;
 
@@ -71,39 +73,103 @@ public class DarkRepulserItem extends SwordItem implements AwakeningWeaponItem {
             int baseCd = (lvl >= 50) ? 260 : 400; // 13s o 20s
             sp.getCooldowns().addCooldown(this, baseCd);
 
-            sl.playSound(null, sp.getX(), sp.getY(), sp.getZ(), SoundEvents.PLAYER_ATTACK_SWEEP, SoundSource.PLAYERS, 1.4F, 1.3F);
-            sl.playSound(null, sp.getX(), sp.getY(), sp.getZ(), SoundEvents.AMETHYST_BLOCK_CHIME, SoundSource.PLAYERS, 1.2F, 1.2F);
+            // Comprobación de Sinergia de Doble Empuñadura con Elucidator
+            ItemStack main = sp.getMainHandItem();
+            ItemStack off = sp.getOffhandItem();
+            boolean hasDualBlades = (main.getItem() instanceof ElucidatorItem && off.getItem() instanceof DarkRepulserItem)
+                    || (main.getItem() instanceof DarkRepulserItem && off.getItem() instanceof ElucidatorItem);
 
-            // Ciclón de viento esmeralda en 360 grados
-            for (int i = 0; i < 32; i++) {
-                double angle = (i / 32.0D) * Math.PI * 2.0D;
-                double px = sp.getX() + Math.cos(angle) * 3.5D;
-                double pz = sp.getZ() + Math.sin(angle) * 3.5D;
-                sl.sendParticles(ParticleTypes.HAPPY_VILLAGER, px, sp.getY() + 0.5D, pz, 2, 0.1D, 0.2D, 0.1D, 0.05D);
-                sl.sendParticles(ParticleTypes.ENCHANTED_HIT, px, sp.getY() + 0.8D, pz, 1, 0.0D, 0.0D, 0.0D, 0.0D);
+            Vec3 look = sp.getLookAngle();
+            float baseDmg = (float) (20.0D * WeaponLevelManager.getDamageMultiplier(stack));
+
+            if (hasDualBlades) {
+                // ==================== [DUAL ECLIPSE: ECLIPSE DUAL SUPREMO] ====================
+                // Doble sello mágico: Suelo cian + Sello vertical oscuro
+                net.neoforged.neoforge.network.PacketDistributor.sendToPlayersNear(
+                        sl, null, sp.getX(), sp.getY(), sp.getZ(), 64.0D,
+                        new com.soybe.awakeningsystem.SpawnMagicCirclePayload(
+                                sp.getId(), sp.getX(), sp.getY(), sp.getZ(),
+                                (float) look.x, (float) look.y, (float) look.z,
+                                4.2F, 50, 0x00FFCC, 0, false
+                        )
+                );
+                net.neoforged.neoforge.network.PacketDistributor.sendToPlayersNear(
+                        sl, null, sp.getX(), sp.getY(), sp.getZ(), 64.0D,
+                        new com.soybe.awakeningsystem.SpawnMagicCirclePayload(
+                                sp.getId(), sp.getX(), sp.getY(), sp.getZ(),
+                                (float) look.x, (float) look.y, (float) look.z,
+                                3.2F, 40, 0x1A0933, 1, false
+                        )
+                );
+
+                sl.playSound(null, sp.getX(), sp.getY(), sp.getZ(), SoundEvents.AMETHYST_BLOCK_CHIME, SoundSource.PLAYERS, 1.8F, 1.5F);
+                sl.playSound(null, sp.getX(), sp.getY(), sp.getZ(), SoundEvents.PLAYER_ATTACK_SWEEP, SoundSource.PLAYERS, 1.6F, 1.4F);
+                sl.playSound(null, sp.getX(), sp.getY(), sp.getZ(), SoundEvents.WITHER_SHOOT, SoundSource.PLAYERS, 1.2F, 1.6F);
+
+                com.soybe.awakeningsystem.CameraShakePayload.sendToNearby(sl, sp.getX(), sp.getY(), sp.getZ(), 36.0D, 0.75F, 12);
+
+                // Vórtice gravitational: atraer enemigos hacia el centro del vórtice
+                AABB pullBox = sp.getBoundingBox().inflate(8.5D);
+                for (LivingEntity nearby : sl.getEntitiesOfClass(LivingEntity.class, pullBox,
+                        e -> e != sp && e.isAlive() && !(e instanceof Player && !sp.canHarmPlayer((Player) e)))) {
+                    Vec3 toPlayer = sp.position().subtract(nearby.position()).normalize().scale(0.45D);
+                    nearby.setDeltaMovement(nearby.getDeltaMovement().add(toPlayer.x, 0.2D, toPlayer.z));
+                    nearby.hurtMarked = true;
+                }
+
+                // Tajo Dual 1: Cristal Aguamarina (Dark Repulser)
+                SlashWaveEntity dualCrystal = new SlashWaveEntity(sl, sp, SlashWaveEntity.TYPE_CRYSTAL_AQUA, baseDmg * 1.3F, 3.8F, 1.4F, -30.0F, 26, 6);
+                dualCrystal.setDeltaMovement(look.scale(2.2D));
+                sl.addFreshEntity(dualCrystal);
+
+                // Tajo Dual 2: Fuego de Sombra de Vacío (Elucidator)
+                SlashWaveEntity dualVoid = new SlashWaveEntity(sl, sp, SlashWaveEntity.TYPE_DARK_VOID, baseDmg * 1.4F, 3.8F, 1.4F, 30.0F, 26, 6);
+                dualVoid.setDeltaMovement(look.scale(2.2D));
+                sl.addFreshEntity(dualVoid);
+
+                // Tajo Dual 3: Cruz Colosal 'X' Eclipse
+                SlashWaveEntity dualCross = new SlashWaveEntity(sl, sp, SlashWaveEntity.TYPE_CRYSTAL_AQUA, baseDmg * 1.8F, 4.6F, 4.6F, 0.0F, 30, 8);
+                dualCross.setCross(true);
+                dualCross.setDeltaMovement(look.scale(2.4D));
+                sl.addFreshEntity(dualCross);
+
+                sp.heal(10.0F);
+                WeaponLevelManager.addExp(stack, 50, sp);
+
+                sp.displayClientMessage(Component.literal("§b§l✦ [DUAL ECLIPSE] §f¡Vórtice binario de Cristal y Fuego Oscuro desatado con Doble Empuñadura!"), true);
+
+            } else {
+                // ==================== [CRYSTALLINE RESONANCE: RESONANCIA CRISTALINA] ====================
+                net.neoforged.neoforge.network.PacketDistributor.sendToPlayersNear(
+                        sl, null, sp.getX(), sp.getY(), sp.getZ(), 64.0D,
+                        new com.soybe.awakeningsystem.SpawnMagicCirclePayload(
+                                sp.getId(), sp.getX(), sp.getY(), sp.getZ(),
+                                (float) look.x, (float) look.y, (float) look.z,
+                                3.0F, 35, 0x00FFCC, 0, false
+                        )
+                );
+
+                sl.playSound(null, sp.getX(), sp.getY(), sp.getZ(), SoundEvents.PLAYER_ATTACK_SWEEP, SoundSource.PLAYERS, 1.5F, 1.3F);
+                sl.playSound(null, sp.getX(), sp.getY(), sp.getZ(), SoundEvents.AMETHYST_BLOCK_CHIME, SoundSource.PLAYERS, 1.6F, 1.3F);
+                sl.playSound(null, sp.getX(), sp.getY(), sp.getZ(), SoundEvents.GLASS_BREAK, SoundSource.PLAYERS, 1.1F, 1.6F);
+
+                com.soybe.awakeningsystem.CameraShakePayload.sendToNearby(sl, sp.getX(), sp.getY(), sp.getZ(), 28.0D, 0.5F, 8);
+
+                // Tajo 1: Onda Horizontal de Cristal de Dragón (congela y empala)
+                SlashWaveEntity wave1 = new SlashWaveEntity(sl, sp, SlashWaveEntity.TYPE_CRYSTAL_AQUA, baseDmg * 1.1F, 3.6F, 1.3F, 0.0F, 24, 6);
+                wave1.setDeltaMovement(look.scale(2.1D));
+                sl.addFreshEntity(wave1);
+
+                // Tajo 2: Corte Ascendente Vertical de Cristal
+                SlashWaveEntity wave2 = new SlashWaveEntity(sl, sp, SlashWaveEntity.TYPE_CRYSTAL_AQUA, baseDmg * 0.9F, 2.8F, 1.8F, 90.0F, 22, 4);
+                wave2.setDeltaMovement(look.scale(2.0D));
+                sl.addFreshEntity(wave2);
+
+                sp.heal(6.0F);
+                WeaponLevelManager.addExp(stack, 35, sp);
+
+                sp.displayClientMessage(Component.literal("§a§l✦ [RESONANCIA CRISTALINA] §f¡Cortes de cristal de dragón aguamarina desatados!"), true);
             }
-
-            AABB box = sp.getBoundingBox().inflate(4.5D);
-            List<LivingEntity> targets = sl.getEntitiesOfClass(LivingEntity.class, box,
-                    e -> e != sp && e.isAlive() && !(e instanceof Player && !sp.canHarmPlayer((Player) e)));
-
-            float dmg = (float) (20.0D * WeaponLevelManager.getDamageMultiplier(stack));
-            float totalDamageDealt = 0.0F;
-
-            for (LivingEntity target : targets) {
-                target.hurt(sp.damageSources().playerAttack(sp), dmg);
-                totalDamageDealt += dmg;
-                sl.sendParticles(ParticleTypes.CRIT, target.getX(), target.getY() + 1.0D, target.getZ(), 10, 0.3D, 0.3D, 0.3D, 0.1D);
-            }
-
-            // Regeneración de vida del 15% del daño infligido
-            if (totalDamageDealt > 0) {
-                sp.heal(Math.min(8.0F, totalDamageDealt * 0.15F));
-            }
-
-            WeaponLevelManager.addExp(stack, 35, sp);
-
-            sp.displayClientMessage(Component.literal("§a§l✦ [CICLÓN ESMERALDA] §f¡Corte giratorio de Dark Repulser desatado!"), true);
             return InteractionResultHolder.consume(stack);
         }
 

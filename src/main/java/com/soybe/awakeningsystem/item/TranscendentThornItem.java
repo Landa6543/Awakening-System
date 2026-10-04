@@ -20,6 +20,11 @@ import net.minecraft.world.item.Tiers;
 import net.minecraft.world.item.TooltipFlag;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.phys.AABB;
+import net.minecraft.world.phys.Vec3;
+import com.soybe.awakeningsystem.entity.SlashWaveEntity;
+import com.soybe.awakeningsystem.CameraShakePayload;
+import com.soybe.awakeningsystem.SpawnMagicCirclePayload;
+import net.neoforged.neoforge.network.PacketDistributor;
 
 import java.util.List;
 
@@ -51,20 +56,41 @@ public class TranscendentThornItem extends SwordItem implements AwakeningWeaponI
             sp.getCooldowns().addCooldown(this, 500);
 
             if (level instanceof ServerLevel sl) {
+                Vec3 look = sp.getLookAngle();
+
+                // 1. Sello de Ignición de Shinsoo (Carmesí Rubí Trascendente)
+                PacketDistributor.sendToPlayersNear(
+                        sl, null, sp.getX(), sp.getY(), sp.getZ(), 64.0D,
+                        new SpawnMagicCirclePayload(
+                                sp.getId(), sp.getX(), sp.getY() + 0.05D, sp.getZ(),
+                                0.0F, 1.0F, 0.0F,
+                                5.0F, 50, 0xDC143C, 0, false
+                        )
+                );
+
                 sl.sendParticles(ParticleTypes.SONIC_BOOM, sp.getX(), sp.getY() + 1.2D, sp.getZ(), 1, 0, 0, 0, 0);
                 sl.sendParticles(ParticleTypes.FLAME, sp.getX(), sp.getY() + 1.0D, sp.getZ(), 80, 2.0D, 1.5D, 2.0D, 0.2D);
-                sl.sendParticles(ParticleTypes.ENCHANTED_HIT, sp.getX(), sp.getY() + 1.0D, sp.getZ(), 60, 1.5D, 1.0D, 1.5D, 0.2D);
                 sl.playSound(null, sp.getX(), sp.getY(), sp.getZ(), SoundEvents.BEACON_ACTIVATE, SoundSource.PLAYERS, 1.5F, 1.2F);
-                sl.playSound(null, sp.getX(), sp.getY(), sp.getZ(), SoundEvents.WARDEN_SONIC_BOOM, SoundSource.PLAYERS, 1.2F, 1.4F);
+                sl.playSound(null, sp.getX(), sp.getY(), sp.getZ(), SoundEvents.WARDEN_SONIC_BOOM, SoundSource.PLAYERS, 1.3F, 1.4F);
+
+                CameraShakePayload.sendToNearby(sl, sp.getX(), sp.getY(), sp.getZ(), 36.0D, 0.80F, 12);
+
+                // 2. Tajo Creciente de Ignición de Shinsoo Trascendente
+                float dmg = (float) (32.0D * WeaponLevelManager.getDamageMultiplier(stack));
+                SlashWaveEntity thornSlash = new SlashWaveEntity(sl, sp, SlashWaveEntity.TYPE_CRIMSON_BLOOD, dmg, 4.8F, 1.6F, 0.0F, 28, 10);
+                thornSlash.setDeltaMovement(look.scale(2.3D));
+                sl.addFreshEntity(thornSlash);
 
                 AABB blast = sp.getBoundingBox().inflate(9.0D, 4.0D, 9.0D);
                 for (LivingEntity nearby : sl.getEntitiesOfClass(LivingEntity.class, blast)) {
                     if (nearby != sp && (nearby instanceof Enemy || nearby != player)) {
-                        nearby.hurt(nearby.damageSources().playerAttack(sp), 24.0F);
+                        nearby.hurt(nearby.damageSources().playerAttack(sp), dmg * 0.75F);
                         nearby.knockback(1.5D, sp.getX() - nearby.getX(), sp.getZ() - nearby.getZ());
                         nearby.setRemainingFireTicks(100);
                     }
                 }
+
+                WeaponLevelManager.addExp(stack, 35, sp);
             }
 
             // Buffs

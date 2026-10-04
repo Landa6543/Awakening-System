@@ -21,6 +21,7 @@ import net.minecraft.world.item.TooltipFlag;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.phys.AABB;
 import net.minecraft.world.phys.Vec3;
+import com.soybe.awakeningsystem.entity.SlashWaveEntity;
 
 import java.util.List;
 
@@ -55,48 +56,37 @@ public class SkyDemonSwordItem extends SwordItem implements AwakeningWeaponItem 
             Vec3 pos = sp.getEyePosition();
 
             if (level instanceof ServerLevel sl) {
+                // 1. Sello sagrado del Culto Demoníaco (Qi Carmesí vertical de Murim)
+                net.neoforged.neoforge.network.PacketDistributor.sendToPlayersNear(
+                        sl, null, sp.getX(), sp.getY(), sp.getZ(), 64.0D,
+                        new com.soybe.awakeningsystem.SpawnMagicCirclePayload(
+                                sp.getId(), sp.getX(), sp.getY(), sp.getZ(),
+                                (float) look.x, (float) look.y, (float) look.z,
+                                3.6F, 35, 0x8B0000, 3, false // circleType = 3 (Vertical Murim)
+                        )
+                );
+
                 sl.playSound(null, sp.getX(), sp.getY(), sp.getZ(), SoundEvents.WARDEN_SONIC_BOOM, SoundSource.PLAYERS, 1.5F, 1.2F);
+                sl.playSound(null, sp.getX(), sp.getY(), sp.getZ(), SoundEvents.WITHER_SHOOT, SoundSource.PLAYERS, 1.3F, 1.3F);
                 sl.playSound(null, sp.getX(), sp.getY(), sp.getZ(), SoundEvents.LIGHTNING_BOLT_THUNDER, SoundSource.PLAYERS, 1.0F, 1.5F);
-                sl.playSound(null, sp.getX(), sp.getY(), sp.getZ(), SoundEvents.ANVIL_LAND, SoundSource.PLAYERS, 0.8F, 1.4F);
 
-                // Onda de choque masiva de 14 bloques: Qi Carmesí y Oscuro de Demonio Celestial
-                for (double d = 1.0D; d <= 14.0D; d += 0.5D) {
-                    Vec3 beamPos = pos.add(look.scale(d));
-                    if (d % 2.0 == 0) {
-                        sl.sendParticles(ParticleTypes.SONIC_BOOM, beamPos.x, beamPos.y, beamPos.z, 1, 0, 0, 0, 0);
-                    }
-                    sl.sendParticles(ParticleTypes.SQUID_INK, beamPos.x, beamPos.y, beamPos.z, 4, 0.15D, 0.15D, 0.15D, 0.02D);
-                    sl.sendParticles(ParticleTypes.CRIMSON_SPORE, beamPos.x, beamPos.y, beamPos.z, 6, 0.2D, 0.2D, 0.2D, 0.05D);
-                    sl.sendParticles(ParticleTypes.ELECTRIC_SPARK, beamPos.x, beamPos.y, beamPos.z, 5, 0.15D, 0.15D, 0.15D, 0.05D);
-                    sl.sendParticles(ParticleTypes.SCULK_SOUL, beamPos.x, beamPos.y, beamPos.z, 2, 0.1D, 0.1D, 0.1D, 0.01D);
-                }
+                com.soybe.awakeningsystem.CameraShakePayload.sendToNearby(sl, sp.getX(), sp.getY(), sp.getZ(), 36.0D, 0.75F, 12);
 
-                AABB hitBox = sp.getBoundingBox().expandTowards(look.scale(14.0D)).inflate(2.5D, 2.0D, 2.5D);
-                int hitCount = 0;
-                for (LivingEntity nearby : level.getEntitiesOfClass(LivingEntity.class, hitBox)) {
-                    if (nearby != sp && (nearby instanceof Enemy || (nearby.isAlive() && !nearby.getTags().contains("shadow_soldier")))) {
-                        Vec3 toEntity = nearby.getEyePosition().subtract(pos).normalize();
-                        if (look.dot(toEntity) > 0.35D || nearby.distanceToSqr(sp) <= 9.0D) {
-                            // Levantamiento aéreo violento (Knockup)
-                            Vec3 currVel = nearby.getDeltaMovement();
-                            nearby.setDeltaMovement(currVel.x, 0.62D, currVel.z);
-                            nearby.hurtMarked = true;
+                float dmg = (float) (28.0D * WeaponLevelManager.getDamageMultiplier(stack));
 
-                            // Cálculo balístico de Nano: Perforación de blindaje del 40%
-                            float armorBonus = Math.min(12.0F, nearby.getArmorValue() * 0.4F);
-                            float totalDmg = 26.0F + armorBonus;
-                            nearby.hurt(nearby.damageSources().playerAttack(sp), totalDmg);
+                // 2. Creciente del Dragón Demoníaco Carmesí (SlashWaveEntity Horizontal)
+                SlashWaveEntity demonCrescent = new SlashWaveEntity(sl, sp, SlashWaveEntity.TYPE_CRIMSON_BLOOD, dmg * 1.25F, 4.8F, 1.8F, 0.0F, 28, 12);
+                demonCrescent.setDeltaMovement(look.scale(2.35D));
+                demonCrescent.setArmorPenetration(0.40F);
+                sl.addFreshEntity(demonCrescent);
 
-                            nearby.addEffect(new MobEffectInstance(MobEffects.WITHER, 120, 1));
-                            nearby.addEffect(new MobEffectInstance(MobEffects.WEAKNESS, 120, 1));
-                            nearby.addEffect(new MobEffectInstance(MobEffects.MOVEMENT_SLOWDOWN, 100, 1));
-                            hitCount++;
-                        }
-                    }
-                }
+                // 3. Tajo Perforante Vertical del Demonio Celestial (SlashWaveEntity Vertical)
+                SlashWaveEntity verticalCutter = new SlashWaveEntity(sl, sp, SlashWaveEntity.TYPE_DARK_VOID, dmg * 0.9F, 3.4F, 2.2F, 90.0F, 24, 8);
+                verticalCutter.setDeltaMovement(look.scale(2.2D));
+                sl.addFreshEntity(verticalCutter);
 
-                sp.addEffect(new MobEffectInstance(MobEffects.DAMAGE_RESISTANCE, 100, 1, false, true));
-                sp.displayClientMessage(Component.translatable("item.awakening_system.sky_demon_sword.nano_calc", hitCount), true);
+                sp.addEffect(new MobEffectInstance(MobEffects.DAMAGE_RESISTANCE, 120, 1, false, true));
+                sp.displayClientMessage(Component.literal("§4§l✦ [TAJO DEL DRAGÓN DEMONIACO] §c¡Qi carmesí devastador desatado con perforación de armadura!"), true);
             }
             return InteractionResultHolder.sidedSuccess(stack, level.isClientSide());
         }

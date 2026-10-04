@@ -2,6 +2,7 @@ package com.soybe.awakeningsystem.item;
 
 import com.soybe.awakeningsystem.AwakeningSystemClient;
 import com.soybe.awakeningsystem.SpawnMagicCirclePayload;
+import com.soybe.awakeningsystem.entity.SlashWaveEntity;
 import net.minecraft.ChatFormatting;
 import net.minecraft.core.particles.ParticleTypes;
 import net.minecraft.network.chat.Component;
@@ -90,9 +91,14 @@ public class CreatorClaymoreItem extends SwordItem implements AwakeningWeaponIte
             sl.sendParticles(ParticleTypes.FLASH, sp.getX(), sp.getY() + 1.5D, sp.getZ(), 12, 0, 0, 0, 0);
             sl.sendParticles(ParticleTypes.END_ROD, sp.getX(), sp.getY() + 1.0D, sp.getZ(), 220, 9.0D, 2.5D, 9.0D, 0.25D);
             sl.sendParticles(ParticleTypes.DRAGON_BREATH, sp.getX(), sp.getY() + 1.0D, sp.getZ(), 140, 8.0D, 2.0D, 8.0D, 0.18D);
-            sl.sendParticles(ParticleTypes.WITCH, sp.getX(), sp.getY() + 1.0D, sp.getZ(), 100, 7.0D, 2.0D, 7.0D, 0.2D);
-            sl.sendParticles(ParticleTypes.ELECTRIC_SPARK, sp.getX(), sp.getY() + 0.5D, sp.getZ(), 160, 8.0D, 2.0D, 8.0D, 0.3D);
-            sl.sendParticles(ParticleTypes.TOTEM_OF_UNDYING, sp.getX(), sp.getY() + 1.0D, sp.getZ(), 140, 7.0D, 2.5D, 7.0D, 0.35D);
+
+            // Sacudida de cámara masiva de cataclismo cósmico
+            com.soybe.awakeningsystem.CameraShakePayload.sendToNearby(sl, sp.getX(), sp.getY(), sp.getZ(), 48.0D, 1.0F, 18);
+
+            // Tajo Colosal Cósmico del Génesis (SlashWaveEntity Cósmica)
+            SlashWaveEntity genesisSlash = new SlashWaveEntity(sl, sp, SlashWaveEntity.TYPE_COSMIC_AMETHYST, 120.0F, 6.4F, 2.8F, 0.0F, 36, 20);
+            genesisSlash.setDeltaMovement(look.scale(2.4D));
+            sl.addFreshEntity(genesisSlash);
 
             // 2. Onda Radial de Juicio Primordial (18 bloques)
             AABB cataclysmArea = sp.getBoundingBox().inflate(18.0D, 6.0D, 18.0D);
@@ -126,6 +132,8 @@ public class CreatorClaymoreItem extends SwordItem implements AwakeningWeaponIte
                 sData.restoreEnergy(120);
                 sData.addCultivationQi(60);
             }
+
+            WeaponLevelManager.addExp(stack, 50, sp);
 
             sp.displayClientMessage(Component.literal("§6§l👑 [JUICIO DEL GÉNESIS] §f¡La autoridad suprema del Creador desintegra la realidad! " + hitCount + " enemigos purgados con 160 de daño verdadero."), true);
             return InteractionResultHolder.consume(stack);

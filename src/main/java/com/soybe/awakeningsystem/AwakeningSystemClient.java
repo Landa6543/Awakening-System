@@ -102,6 +102,14 @@ public final class AwakeningSystemClient {
             ACTIVE_MAGIC_CIRCLES.removeIf(c -> c.casterEntityId == payload.casterEntityId() && c.isCharging);
         }
     }
+
+    public static int cameraShakeTicks = 0;
+    public static float cameraShakeIntensity = 0.0F;
+
+    public static void triggerCameraShake(float intensity, int durationTicks) {
+        cameraShakeIntensity = Math.max(cameraShakeIntensity, intensity);
+        cameraShakeTicks = Math.max(cameraShakeTicks, durationTicks);
+    }
     private static String notificationTitle;
     private static String notificationMessage;
     private static int notificationColor;
@@ -356,6 +364,7 @@ public final class AwakeningSystemClient {
         event.registerEntityRenderer(com.soybe.awakeningsystem.entity.ModEntities.DEMONIC_SWORD_QI.get(), com.soybe.awakeningsystem.entity.client.DemonicSwordQiRenderer::new);
         event.registerEntityRenderer(com.soybe.awakeningsystem.entity.ModEntities.JADE_FEIJIAN.get(), com.soybe.awakeningsystem.entity.client.JadeFeijianRenderer::new);
         event.registerEntityRenderer(com.soybe.awakeningsystem.entity.ModEntities.ASTRAL_DRAGON_CRESCENT.get(), com.soybe.awakeningsystem.entity.client.AstralDragonCrescentRenderer::new);
+        event.registerEntityRenderer(com.soybe.awakeningsystem.entity.ModEntities.SLASH_WAVE.get(), com.soybe.awakeningsystem.entity.client.SlashWaveRenderer::new);
         event.registerEntityRenderer(com.soybe.awakeningsystem.entity.ModEntities.JADE_ARMORED_BEAST.get(), com.soybe.awakeningsystem.entity.client.JadeArmoredBeastRenderer::new);
         event.registerEntityRenderer(com.soybe.awakeningsystem.entity.ModEntities.MOUNT_HUA_DISCIPLE.get(), com.soybe.awakeningsystem.entity.client.MountHuaDiscipleRenderer::new);
         event.registerEntityRenderer(com.soybe.awakeningsystem.entity.ModEntities.MANA_COW.get(), com.soybe.awakeningsystem.entity.client.ManaCowRenderer::new);
@@ -632,6 +641,12 @@ public final class AwakeningSystemClient {
             }
         }
         if (minecraft.level != null && minecraft.player != null) {
+            if (cameraShakeTicks > 0) {
+                cameraShakeTicks--;
+                if (cameraShakeTicks <= 0) {
+                    cameraShakeIntensity = 0.0F;
+                }
+            }
             if (!ACTIVE_MAGIC_CIRCLES.isEmpty()) {
                 for (ActiveMagicCircle circle : ACTIVE_MAGIC_CIRCLES) {
                     circle.currentTick++;
@@ -2201,6 +2216,17 @@ public final class AwakeningSystemClient {
     }
 
     public static void onComputeCameraAngles(net.neoforged.neoforge.client.event.ViewportEvent.ComputeCameraAngles event) {
+        if (cameraShakeTicks > 0) {
+            float factor = Math.min(1.0F, (float) cameraShakeTicks / 8.0F);
+            float currentIntensity = cameraShakeIntensity * factor;
+            float yawShake = (float) ((Math.random() - 0.5D) * 2.0D * currentIntensity);
+            float pitchShake = (float) ((Math.random() - 0.5D) * 2.0D * currentIntensity);
+            float rollShake = (float) ((Math.random() - 0.5D) * 1.5D * currentIntensity);
+            event.setYaw(event.getYaw() + yawShake);
+            event.setPitch(event.getPitch() + pitchShake);
+            event.setRoll(event.getRoll() + rollShake);
+        }
+
         if (!bossCinematicActive) {
             cinematicAnglesInitialized = false;
             return;

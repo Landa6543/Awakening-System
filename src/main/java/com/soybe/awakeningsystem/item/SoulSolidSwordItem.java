@@ -21,6 +21,7 @@ import net.minecraft.world.item.TooltipFlag;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.phys.AABB;
 import net.minecraft.world.phys.Vec3;
+import com.soybe.awakeningsystem.entity.SlashWaveEntity;
 
 import java.util.List;
 
@@ -70,31 +71,31 @@ public class SoulSolidSwordItem extends SwordItem implements AwakeningWeaponItem
         if (!level.isClientSide() && player instanceof ServerPlayer sp) {
             ServerLevel sl = (ServerLevel) level;
 
+            // 1. Sello arcano de hielo de inframundo vertical
+            net.neoforged.neoforge.network.PacketDistributor.sendToPlayersNear(
+                    sl, null, sp.getX(), sp.getY(), sp.getZ(), 64.0D,
+                    new com.soybe.awakeningsystem.SpawnMagicCirclePayload(
+                            sp.getId(), sp.getX(), sp.getY(), sp.getZ(),
+                            (float) forward.x, (float) forward.y, (float) forward.z,
+                            2.8F, 30, 0x88EEFF, 1, false
+                    )
+            );
+
             // Sonidos cortantes de hielo de inframundo
             sl.playSound(null, sp.blockPosition(), SoundEvents.PLAYER_ATTACK_SWEEP, SoundSource.PLAYERS, 1.8F, 1.6F);
             sl.playSound(null, sp.blockPosition(), SoundEvents.GLASS_BREAK, SoundSource.PLAYERS, 1.5F, 1.4F);
             sl.playSound(null, sp.blockPosition(), SoundEvents.SOUL_ESCAPE.value(), SoundSource.PLAYERS, 1.6F, 1.2F);
 
-            // Trazado de partículas y daño a lo largo del avance (hasta 8 bloques)
-            Vec3 start = sp.position();
-            for (int i = 1; i <= 8; i++) {
-                Vec3 p = start.add(forward.scale(i));
-                sl.sendParticles(ParticleTypes.SOUL_FIRE_FLAME, p.x, p.y + 0.9D, p.z, 6, 0.2D, 0.2D, 0.2D, 0.02D);
-                sl.sendParticles(ParticleTypes.SNOWFLAKE, p.x, p.y + 0.9D, p.z, 10, 0.3D, 0.3D, 0.3D, 0.05D);
-                sl.sendParticles(ParticleTypes.SWEEP_ATTACK, p.x, p.y + 0.9D, p.z, 1, 0, 0, 0, 0);
+            com.soybe.awakeningsystem.CameraShakePayload.sendToNearby(sl, sp.getX(), sp.getY(), sp.getZ(), 26.0D, 0.50F, 8);
 
-                AABB hitBox = new AABB(p.x - 1.2D, p.y - 0.5D, p.z - 1.2D, p.x + 1.2D, p.y + 1.8D, p.z + 1.2D);
-                List<LivingEntity> enemies = sl.getEntitiesOfClass(LivingEntity.class, hitBox, e -> e != sp && e.isAlive());
+            float dmg = (float) (24.0D * WeaponLevelManager.getDamageMultiplier(stack));
 
-                for (LivingEntity enemy : enemies) {
-                    enemy.hurt(sl.damageSources().playerAttack(sp), 22.0F);
-                    enemy.setTicksFrozen(360);
-                    enemy.addEffect(new MobEffectInstance(MobEffects.MOVEMENT_SLOWDOWN, 120, 3, false, true, true));
-                    enemy.addEffect(new MobEffectInstance(MobEffects.WEAKNESS, 120, 1, false, true, true));
+            // 2. Estocada y Creciente Glacial del Inframundo (SlashWaveEntity Gélida)
+            SlashWaveEntity frostBeam = new SlashWaveEntity(sl, sp, SlashWaveEntity.TYPE_FROST_WIND, dmg, 3.4F, 1.3F, 0.0F, 22, 8);
+            frostBeam.setDeltaMovement(forward.scale(2.4D));
+            sl.addFreshEntity(frostBeam);
 
-                    sl.sendParticles(ParticleTypes.FLASH, enemy.getX(), enemy.getY() + 1.0D, enemy.getZ(), 1, 0, 0, 0, 0);
-                }
-            }
+            WeaponLevelManager.addExp(stack, 30, sp);
 
             sp.displayClientMessage(Component.literal("§b✦ [Soul Solid] §f¡Aubade Coup Droit! Estocada de Hielo del Inframundo desatada."), true);
         }

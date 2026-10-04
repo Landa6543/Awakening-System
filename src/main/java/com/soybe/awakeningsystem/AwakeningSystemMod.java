@@ -327,6 +327,8 @@ public final class AwakeningSystemMod {
                 (payload, context) -> context.enqueueWork(() -> AwakeningSystemClient.spawnMagicCircle(payload)));
         registrar.playToClient(CancelMagicCirclePayload.TYPE, CancelMagicCirclePayload.STREAM_CODEC,
                 (payload, context) -> context.enqueueWork(() -> AwakeningSystemClient.cancelMagicCircle(payload)));
+        registrar.playToClient(CameraShakePayload.TYPE, CameraShakePayload.STREAM_CODEC,
+                (payload, context) -> context.enqueueWork(() -> AwakeningSystemClient.triggerCameraShake(payload.intensity(), payload.durationTicks())));
         registrar.playToServer(DonateConstellationPayload.TYPE, DonateConstellationPayload.STREAM_CODEC,
                 (payload, context) -> context.enqueueWork(() -> {
                     if (context.player() instanceof net.minecraft.server.level.ServerPlayer player) {

@@ -21,6 +21,10 @@ import net.minecraft.world.item.TooltipFlag;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.phys.AABB;
 import net.minecraft.world.phys.Vec3;
+import com.soybe.awakeningsystem.entity.SlashWaveEntity;
+import com.soybe.awakeningsystem.CameraShakePayload;
+import com.soybe.awakeningsystem.SpawnMagicCirclePayload;
+import net.neoforged.neoforge.network.PacketDistributor;
 
 import java.util.List;
 
@@ -56,19 +60,38 @@ public class UnbreakableFaithItem extends SwordItem implements AwakeningWeaponIt
             sp.hurtMarked = true;
 
             if (level instanceof ServerLevel sl) {
-                sl.sendParticles(ParticleTypes.END_ROD, sp.getX(), sp.getY() + 1.0D, sp.getZ(), 40, 1.2D, 0.8D, 1.2D, 0.1D);
-                sl.sendParticles(ParticleTypes.ENCHANT, sp.getX(), sp.getY() + 1.0D, sp.getZ(), 60, 1.5D, 1.0D, 1.5D, 0.2D);
-                sl.sendParticles(ParticleTypes.FIREWORK, sp.getX(), sp.getY() + 1.0D, sp.getZ(), 25, 0.8D, 0.5D, 0.8D, 0.05D);
-                sl.playSound(null, sp.getX(), sp.getY(), sp.getZ(), SoundEvents.BEACON_POWER_SELECT, SoundSource.PLAYERS, 1.4F, 1.3F);
-                sl.playSound(null, sp.getX(), sp.getY(), sp.getZ(), SoundEvents.PLAYER_ATTACK_SWEEP, SoundSource.PLAYERS, 1.2F, 1.4F);
+                // 1. Sello Divino del Cuarto Muro (Blanco Radiante / Cian Celestial)
+                PacketDistributor.sendToPlayersNear(
+                        sl, null, sp.getX(), sp.getY(), sp.getZ(), 64.0D,
+                        new SpawnMagicCirclePayload(
+                                sp.getId(), sp.getX(), sp.getY() + 0.05D, sp.getZ(),
+                                0.0F, 1.0F, 0.0F,
+                                4.2F, 40, 0xE0F7FA, 0, false
+                        )
+                );
+
+                sl.sendParticles(ParticleTypes.END_ROD, sp.getX(), sp.getY() + 1.0D, sp.getZ(), 45, 1.2D, 0.8D, 1.2D, 0.1D);
+                sl.sendParticles(ParticleTypes.ENCHANT, sp.getX(), sp.getY() + 1.0D, sp.getZ(), 50, 1.5D, 1.0D, 1.5D, 0.2D);
+                sl.playSound(null, sp.getX(), sp.getY(), sp.getZ(), SoundEvents.BEACON_POWER_SELECT, SoundSource.PLAYERS, 1.5F, 1.4F);
+                sl.playSound(null, sp.getX(), sp.getY(), sp.getZ(), SoundEvents.PLAYER_ATTACK_SWEEP, SoundSource.PLAYERS, 1.3F, 1.5F);
+
+                CameraShakePayload.sendToNearby(sl, sp.getX(), sp.getY(), sp.getZ(), 28.0D, 0.55F, 8);
+
+                // 2. Onda Sagrada Cortante de la Fe
+                float dmg = (float) (22.0D * WeaponLevelManager.getDamageMultiplier(stack));
+                SlashWaveEntity holyWave = new SlashWaveEntity(sl, sp, SlashWaveEntity.TYPE_SOLAR_LIGHT, dmg, 4.0F, 1.4F, 0.0F, 24, 8);
+                holyWave.setDeltaMovement(look.scale(2.1D));
+                sl.addFreshEntity(holyWave);
 
                 AABB box = sp.getBoundingBox().inflate(5.0D, 2.0D, 5.0D);
                 for (LivingEntity nearby : level.getEntitiesOfClass(LivingEntity.class, box)) {
                     if (nearby != sp && (nearby instanceof Enemy || nearby != player)) {
-                        nearby.hurt(nearby.damageSources().playerAttack(sp), 18.0F);
+                        nearby.hurt(nearby.damageSources().playerAttack(sp), dmg * 0.75F);
                         nearby.addEffect(new MobEffectInstance(MobEffects.GLOWING, 100, 0));
                     }
                 }
+
+                WeaponLevelManager.addExp(stack, 30, sp);
             }
 
             // Fourth Wall Barrier: massive resistance for 3s

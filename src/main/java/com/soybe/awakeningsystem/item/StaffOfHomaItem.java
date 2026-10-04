@@ -19,6 +19,8 @@ import net.minecraft.world.item.SwordItem;
 import net.minecraft.world.item.Tiers;
 import net.minecraft.world.item.TooltipFlag;
 import net.minecraft.world.level.Level;
+import net.minecraft.world.phys.Vec3;
+import com.soybe.awakeningsystem.entity.SlashWaveEntity;
 
 import java.util.List;
 
@@ -56,15 +58,35 @@ public class StaffOfHomaItem extends SwordItem implements AwakeningWeaponItem {
             sp.addEffect(new MobEffectInstance(MobEffects.MOVEMENT_SPEED, 240, 1, false, false, true));
 
             if (level instanceof ServerLevel sl) {
-                sl.sendParticles(ParticleTypes.FLAME, sp.getX(), sp.getY() + 1.0D, sp.getZ(), 45, 0.8D, 1.0D, 0.8D, 0.08D);
-                sl.sendParticles(ParticleTypes.CRIMSON_SPORE, sp.getX(), sp.getY() + 1.2D, sp.getZ(), 35, 0.6D, 0.8D, 0.6D, 0.1D);
-                sl.sendParticles(ParticleTypes.FLASH, sp.getX(), sp.getEyeY(), sp.getZ(), 1, 0, 0, 0, 0);
-                sl.playSound(null, sp.getX(), sp.getY(), sp.getZ(), SoundEvents.FIRECHARGE_USE, SoundSource.PLAYERS, 1.4F, 1.1F);
-                sl.playSound(null, sp.getX(), sp.getY(), sp.getZ(), SoundEvents.BLAZE_SHOOT, SoundSource.PLAYERS, 1.2F, 0.8F);
-                sl.playSound(null, sp.getX(), sp.getY(), sp.getZ(), SoundEvents.GENERIC_EXPLODE.value(), SoundSource.PLAYERS, 0.8F, 1.6F);
+                Vec3 look = sp.getLookAngle();
+
+                // 1. Sello arcano de llamas espectrales en el suelo
+                net.neoforged.neoforge.network.PacketDistributor.sendToPlayersNear(
+                        sl, null, sp.getX(), sp.getY(), sp.getZ(), 64.0D,
+                        new com.soybe.awakeningsystem.SpawnMagicCirclePayload(
+                                sp.getId(), sp.getX(), sp.getY(), sp.getZ(),
+                                (float) look.x, (float) look.y, (float) look.z,
+                                3.8F, 40, 0xFF4500, 0, false
+                        )
+                );
+
+                sl.playSound(null, sp.getX(), sp.getY(), sp.getZ(), SoundEvents.FIRECHARGE_USE, SoundSource.PLAYERS, 1.5F, 1.1F);
+                sl.playSound(null, sp.getX(), sp.getY(), sp.getZ(), SoundEvents.BLAZE_SHOOT, SoundSource.PLAYERS, 1.4F, 0.9F);
+                sl.playSound(null, sp.getX(), sp.getY(), sp.getZ(), SoundEvents.GENERIC_EXPLODE.value(), SoundSource.PLAYERS, 1.0F, 1.5F);
+
+                com.soybe.awakeningsystem.CameraShakePayload.sendToNearby(sl, sp.getX(), sp.getY(), sp.getZ(), 28.0D, 0.60F, 10);
+
+                float dmg = (float) (32.0D * WeaponLevelManager.getDamageMultiplier(stack));
+
+                // 2. Creciente de Fuego Espectral de la Mariposa del Averno (SlashWaveEntity Ígnea)
+                SlashWaveEntity pyroSlash = new SlashWaveEntity(sl, sp, SlashWaveEntity.TYPE_PYRO_FLAME, dmg, 4.6F, 1.6F, 0.0F, 26, 10);
+                pyroSlash.setDeltaMovement(look.scale(2.3D));
+                sl.addFreshEntity(pyroSlash);
+
+                WeaponLevelManager.addExp(stack, 35, sp);
             }
 
-            sp.displayClientMessage(Component.literal("§6§l✦ [BÁCULO DE HOMA] §c§l¡GUÍA DEL MÁS ALLÁ ACTIVADA! §e(+45% ATQ)"), true);
+            sp.displayClientMessage(Component.literal("§6§l✦ [BÁCULO DE HOMA] §c§l¡MARIPOSA DEL AVERNO DESATADA! §e(Tajo ígneo espectral +45% ATQ)"), true);
             return InteractionResultHolder.consume(stack);
         }
         return InteractionResultHolder.sidedSuccess(stack, level.isClientSide());

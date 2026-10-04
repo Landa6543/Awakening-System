@@ -127,13 +127,7 @@ public final class WeaponLevelManager {
         // Efectos y mensajes si subió de nivel
         if (leveledUp && player != null) {
             ServerLevel level = player.serverLevel();
-            level.sendParticles(ParticleTypes.TOTEM_OF_UNDYING, player.getX(), player.getY() + 1.2D, player.getZ(), 45, 0.5D, 0.6D, 0.5D, 0.15D);
-            level.sendParticles(ParticleTypes.ENCHANTED_HIT, player.getX(), player.getY() + 1.5D, player.getZ(), 35, 0.4D, 0.5D, 0.4D, 0.2D);
-            player.playNotifySound(SoundEvents.PLAYER_LEVELUP, SoundSource.PLAYERS, 1.0F, 1.1F);
-            player.playNotifySound(SoundEvents.UI_TOAST_CHALLENGE_COMPLETE, SoundSource.PLAYERS, 0.9F, 1.3F);
-
             String weaponName = stack.getHoverName().getString();
-            player.displayClientMessage(Component.literal("§6§l✦ ¡ARMA MEJORADA! §f" + weaponName + " §eha alcanzado el §6§lNivel " + currentLevel + "§e/100!"), false);
 
             // Anuncio si alcanza un hito legendario
             if (currentLevel == 10 || currentLevel == 25 || currentLevel == 50 || currentLevel == 75 || currentLevel == 100) {
@@ -145,8 +139,33 @@ public final class WeaponLevelManager {
                     case 100 -> "§e§l✦ [HITO SUPREMO: TRASCENDENCIA DIVINA] ✦";
                     default -> "";
                 };
-                player.displayClientMessage(Component.literal("§6§l✦ ¡NUEVO RASGO DESBLOQUEADO! " + milestoneTitle + " §7(Revisa las propiedades del arma)"), false);
+
+                // Partículas rúnicas de hito
                 level.sendParticles(ParticleTypes.FLASH, player.getX(), player.getY() + 1.2D, player.getZ(), 2, 0.1D, 0.1D, 0.1D, 0.0D);
+                level.sendParticles(ParticleTypes.TOTEM_OF_UNDYING, player.getX(), player.getY() + 1.2D, player.getZ(), 50, 0.6D, 0.7D, 0.6D, 0.15D);
+
+                // Sonido épico de forja rúnica y campana astral
+                player.playNotifySound(SoundEvents.ANVIL_USE, SoundSource.PLAYERS, 0.85F, 1.6F);
+                player.playNotifySound(SoundEvents.BEACON_ACTIVATE, SoundSource.PLAYERS, 0.9F, 1.35F);
+                player.playNotifySound(SoundEvents.PLAYER_LEVELUP, SoundSource.PLAYERS, 0.55F, 1.7F);
+
+                // Título cinemático en pantalla
+                player.connection.send(new net.minecraft.network.protocol.game.ClientboundSetTitlesAnimationPacket(8, 45, 15));
+                player.connection.send(new net.minecraft.network.protocol.game.ClientboundSetTitleTextPacket(Component.literal(milestoneTitle)));
+                player.connection.send(new net.minecraft.network.protocol.game.ClientboundSetSubtitleTextPacket(
+                        Component.literal("§f" + weaponName + " §8▸ §6Nivel " + currentLevel + "/100")
+                ));
+
+                // Action bar y mensaje solemne en chat (sólo en hitos)
+                player.displayClientMessage(Component.literal("§6§l✦ ¡HITO DESBLOQUEADO! §e" + milestoneTitle + " §8(§f" + weaponName + " §eLv. " + currentLevel + "§8)"), true);
+                player.displayClientMessage(Component.literal("§6§l[Awakening] §e¡Tu arma §f" + weaponName + " §eha desbloqueado el " + milestoneTitle + " §7(Lv. " + currentLevel + "/100)!"), false);
+            } else {
+                // Nivel regular: audio de acero resonante sutil y limpio en Action Bar sin ensuciar el chat
+                level.sendParticles(ParticleTypes.ENCHANTED_HIT, player.getX(), player.getY() + 1.1D, player.getZ(), 20, 0.4D, 0.4D, 0.4D, 0.15D);
+                player.playNotifySound(SoundEvents.ENCHANTMENT_TABLE_USE, SoundSource.PLAYERS, 0.75F, 1.45F);
+                player.playNotifySound(SoundEvents.EXPERIENCE_ORB_PICKUP, SoundSource.PLAYERS, 0.6F, 1.85F);
+
+                player.displayClientMessage(Component.literal("§6✦ §f" + weaponName + " §7→ §e§lNivel " + currentLevel + "§8/100 §6✦"), true);
             }
         }
 

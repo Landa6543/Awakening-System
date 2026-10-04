@@ -21,6 +21,7 @@ import net.minecraft.world.item.TooltipFlag;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.phys.AABB;
 import net.minecraft.world.phys.Vec3;
+import com.soybe.awakeningsystem.entity.SlashWaveEntity;
 
 import java.util.List;
 
@@ -52,23 +53,36 @@ public class HeavenShakingSwordItem extends SwordItem implements AwakeningWeapon
             sp.getCooldowns().addCooldown(this, 280);
 
             if (level instanceof ServerLevel sl) {
-                sl.sendParticles(ParticleTypes.SWEEP_ATTACK, sp.getX(), sp.getY() + 1.0D, sp.getZ(), 8, 1.2D, 0.4D, 1.2D, 0.0D);
-                sl.sendParticles(ParticleTypes.DRAGON_BREATH, sp.getX(), sp.getY() + 1.0D, sp.getZ(), 60, 2.0D, 0.6D, 2.0D, 0.08D);
-                sl.sendParticles(ParticleTypes.LARGE_SMOKE, sp.getX(), sp.getY() + 1.0D, sp.getZ(), 30, 1.5D, 0.5D, 1.5D, 0.05D);
-                sl.playSound(null, sp.getX(), sp.getY(), sp.getZ(), SoundEvents.WITHER_BREAK_BLOCK, SoundSource.PLAYERS, 1.3F, 0.8F);
-                sl.playSound(null, sp.getX(), sp.getY(), sp.getZ(), SoundEvents.PLAYER_ATTACK_STRONG, SoundSource.PLAYERS, 1.5F, 0.9F);
+                Vec3 look = sp.getLookAngle();
 
-                AABB box = sp.getBoundingBox().inflate(5.5D, 2.5D, 5.5D);
-                for (LivingEntity nearby : level.getEntitiesOfClass(LivingEntity.class, box)) {
-                    if (nearby != sp && (nearby instanceof Enemy || nearby != player)) {
-                        nearby.hurt(nearby.damageSources().playerAttack(sp), 22.0F);
-                        nearby.setDeltaMovement(0.0D, 0.7D, 0.0D);
-                        nearby.addEffect(new MobEffectInstance(MobEffects.MOVEMENT_SLOWDOWN, 100, 2));
-                    }
-                }
+                // 1. Sello sagrado de Murim en el suelo
+                net.neoforged.neoforge.network.PacketDistributor.sendToPlayersNear(
+                        sl, null, sp.getX(), sp.getY(), sp.getZ(), 64.0D,
+                        new com.soybe.awakeningsystem.SpawnMagicCirclePayload(
+                                sp.getId(), sp.getX(), sp.getY(), sp.getZ(),
+                                (float) look.x, (float) look.y, (float) look.z,
+                                4.0F, 35, 0xFF8C00, 2, false
+                        )
+                );
+
+                sl.playSound(null, sp.getX(), sp.getY(), sp.getZ(), SoundEvents.WITHER_BREAK_BLOCK, SoundSource.PLAYERS, 1.4F, 0.8F);
+                sl.playSound(null, sp.getX(), sp.getY(), sp.getZ(), SoundEvents.PLAYER_ATTACK_STRONG, SoundSource.PLAYERS, 1.6F, 0.9F);
+                sl.playSound(null, sp.getX(), sp.getY(), sp.getZ(), SoundEvents.LIGHTNING_BOLT_THUNDER, SoundSource.PLAYERS, 1.0F, 1.4F);
+
+                com.soybe.awakeningsystem.CameraShakePayload.sendToNearby(sl, sp.getX(), sp.getY(), sp.getZ(), 34.0D, 0.70F, 12);
+
+                float dmg = (float) (28.0D * WeaponLevelManager.getDamageMultiplier(stack));
+
+                // 2. Tajo que Sacude los Cielos (SlashWaveEntity Devastadora)
+                SlashWaveEntity heavenWave = new SlashWaveEntity(sl, sp, SlashWaveEntity.TYPE_COSMIC_AMETHYST, dmg, 4.8F, 1.8F, 0.0F, 26, 10);
+                heavenWave.setDeltaMovement(look.scale(2.2D));
+                sl.addFreshEntity(heavenWave);
+
+                WeaponLevelManager.addExp(stack, 35, sp);
             }
 
             sp.addEffect(new MobEffectInstance(MobEffects.DAMAGE_RESISTANCE, 120, 1, false, true));
+            sp.displayClientMessage(Component.literal("§6§l✦ [ESPADA QUE SACUDE LOS CIELOS] §e¡Tajo destructor de los nueve cielos desatado!"), true);
             return InteractionResultHolder.sidedSuccess(stack, level.isClientSide());
         }
         return InteractionResultHolder.sidedSuccess(stack, level.isClientSide());

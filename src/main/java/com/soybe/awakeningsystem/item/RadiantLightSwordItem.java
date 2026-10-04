@@ -21,6 +21,7 @@ import net.minecraft.world.item.TooltipFlag;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.phys.AABB;
 import net.minecraft.world.phys.Vec3;
+import com.soybe.awakeningsystem.entity.SlashWaveEntity;
 
 import java.util.List;
 
@@ -56,38 +57,34 @@ public class RadiantLightSwordItem extends SwordItem implements AwakeningWeaponI
             sp.hurtMarked = true;
 
             if (level instanceof ServerLevel sl) {
-                // Haz de luz radiante deslumbrante en la trayectoria
-                Vec3 eyePos = sp.getEyePosition();
-                for (double d = 0; d <= 10.0D; d += 0.5D) {
-                    Vec3 beam = eyePos.add(look.scale(d));
-                    sl.sendParticles(ParticleTypes.END_ROD, beam.x, beam.y, beam.z, 3, 0.12D, 0.12D, 0.12D, 0.02D);
-                    sl.sendParticles(ParticleTypes.GLOW, beam.x, beam.y, beam.z, 2, 0.1D, 0.1D, 0.1D, 0.01D);
-                    if (d % 2.0 == 0) {
-                        sl.sendParticles(ParticleTypes.FLASH, beam.x, beam.y, beam.z, 1, 0, 0, 0, 0);
-                    }
-                }
+                // 1. Sello divino solar en el suelo
+                net.neoforged.neoforge.network.PacketDistributor.sendToPlayersNear(
+                        sl, null, sp.getX(), sp.getY(), sp.getZ(), 64.0D,
+                        new com.soybe.awakeningsystem.SpawnMagicCirclePayload(
+                                sp.getId(), sp.getX(), sp.getY(), sp.getZ(),
+                                (float) look.x, (float) look.y, (float) look.z,
+                                3.6F, 35, 0xFFD700, 0, false
+                        )
+                );
 
-                // Paisaje sonoro sacro y cortante
                 sl.playSound(null, sp.getX(), sp.getY(), sp.getZ(), SoundEvents.AMETHYST_BLOCK_CHIME, SoundSource.PLAYERS, 1.8F, 1.5F);
-                sl.playSound(null, sp.getX(), sp.getY(), sp.getZ(), SoundEvents.TRIDENT_RIPTIDE_3.value(), SoundSource.PLAYERS, 1.2F, 1.3F);
-                sl.playSound(null, sp.getX(), sp.getY(), sp.getZ(), SoundEvents.PLAYER_ATTACK_SWEEP, SoundSource.PLAYERS, 1.3F, 1.4F);
+                sl.playSound(null, sp.getX(), sp.getY(), sp.getZ(), SoundEvents.TRIDENT_RIPTIDE_3.value(), SoundSource.PLAYERS, 1.3F, 1.4F);
+                sl.playSound(null, sp.getX(), sp.getY(), sp.getZ(), SoundEvents.PLAYER_ATTACK_SWEEP, SoundSource.PLAYERS, 1.4F, 1.5F);
 
-                AABB box = sp.getBoundingBox().inflate(6.0D, 2.5D, 6.0D);
-                for (LivingEntity nearby : level.getEntitiesOfClass(LivingEntity.class, box)) {
-                    if (nearby != sp && (nearby instanceof Enemy || (nearby.isAlive() && !nearby.getTags().contains("shadow_soldier")))) {
-                        float dmg = 22.0F;
-                        // +75% daño sagrado letal contra no-muertos
-                        if (nearby.isInvertedHealAndHarm()) {
-                            dmg = 38.5F;
-                            nearby.igniteForSeconds(5);
-                            sl.sendParticles(ParticleTypes.SOUL_FIRE_FLAME, nearby.getX(), nearby.getY() + 1.0D, nearby.getZ(), 20, 0.3D, 0.4D, 0.3D, 0.05D);
-                        }
-                        nearby.hurt(nearby.damageSources().playerAttack(sp), dmg);
-                        nearby.addEffect(new MobEffectInstance(MobEffects.GLOWING, 160, 0));
-                        nearby.addEffect(new MobEffectInstance(MobEffects.BLINDNESS, 80, 0));
-                        nearby.addEffect(new MobEffectInstance(MobEffects.MOVEMENT_SLOWDOWN, 80, 1));
-                    }
-                }
+                com.soybe.awakeningsystem.CameraShakePayload.sendToNearby(sl, sp.getX(), sp.getY(), sp.getZ(), 28.0D, 0.55F, 8);
+
+                float dmg = (float) (25.0D * WeaponLevelManager.getDamageMultiplier(stack));
+
+                // 2. Danza de la Espada de Luz V2: Tajo Solar Horizontal
+                SlashWaveEntity solarWave = new SlashWaveEntity(sl, sp, SlashWaveEntity.TYPE_SOLAR_LIGHT, dmg, 4.2F, 1.4F, 0.0F, 24, 8);
+                solarWave.setDeltaMovement(look.scale(2.2D));
+                sl.addFreshEntity(solarWave);
+
+                // 3. Estocada de Luz Perforante (Solar Thrust Beam)
+                SlashWaveEntity solarBeam = new SlashWaveEntity(sl, sp, SlashWaveEntity.TYPE_SOLAR_LIGHT, dmg * 1.2F, 1.4F, 3.6F, 0.0F, 20, 10);
+                solarBeam.setDeltaMovement(look.scale(2.7D));
+                solarBeam.setArmorPenetration(0.40F);
+                sl.addFreshEntity(solarBeam);
 
                 // Purificación absoluta de estados negativos
                 sp.removeEffect(MobEffects.POISON);
@@ -99,9 +96,12 @@ public class RadiantLightSwordItem extends SwordItem implements AwakeningWeaponI
                 sp.removeEffect(MobEffects.CONFUSION);
 
                 // Curación y bendición radiante
-                sp.heal(4.0F);
+                sp.heal(6.0F);
                 sp.addEffect(new MobEffectInstance(MobEffects.REGENERATION, 80, 1, false, true));
                 sp.addEffect(new MobEffectInstance(MobEffects.MOVEMENT_SPEED, 100, 1, false, true));
+
+                WeaponLevelManager.addExp(stack, 35, sp);
+                sp.displayClientMessage(Component.literal("§e§l✦ [DANZA DE LA ESPADA DE LUZ] §6¡Tajo solar radiante y haz purificador desatados!"), true);
             }
             return InteractionResultHolder.sidedSuccess(stack, false);
         }

@@ -21,6 +21,9 @@ import net.minecraft.world.item.TooltipFlag;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.phys.AABB;
 import net.minecraft.world.phys.Vec3;
+import com.soybe.awakeningsystem.CameraShakePayload;
+import com.soybe.awakeningsystem.SpawnMagicCirclePayload;
+import net.neoforged.neoforge.network.PacketDistributor;
 
 import java.util.List;
 
@@ -128,9 +131,22 @@ public class AdamantiteWarHammerItem extends SwordItem implements AwakeningWeapo
         double py = player.getY();
         double pz = player.getZ();
 
-        level.playSound(null, px, py, pz, SoundEvents.GENERIC_EXPLODE.value(), SoundSource.PLAYERS, 1.4F, 0.7F);
-        level.playSound(null, px, py, pz, SoundEvents.ANVIL_LAND, SoundSource.PLAYERS, 1.6F, 0.6F);
+        level.playSound(null, px, py, pz, SoundEvents.GENERIC_EXPLODE.value(), SoundSource.PLAYERS, 1.5F, 0.7F);
+        level.playSound(null, px, py, pz, SoundEvents.ANVIL_LAND, SoundSource.PLAYERS, 1.6F, 0.5F);
         level.playSound(null, px, py, pz, SoundEvents.MUD_BREAK, SoundSource.PLAYERS, 1.5F, 0.5F);
+
+        // Sello Tectónico de Magma Ardiente en el suelo
+        PacketDistributor.sendToPlayersNear(
+                level, null, px, py, pz, 64.0D,
+                new SpawnMagicCirclePayload(
+                        player.getId(), px, py + 0.05D, pz,
+                        0.0F, 1.0F, 0.0F,
+                        (float)(radius * 0.9F), 45, 0xFF4500, 0, false
+                )
+        );
+
+        // Sacudida sísmica colosal
+        CameraShakePayload.sendToNearby(level, px, py, pz, radius + 16.0D, 0.95F * powerMultiplier, (int)(12 * powerMultiplier));
 
         for (double r = 1.0D; r <= radius; r += 1.2D) {
             int count = (int) (r * 8);
@@ -158,6 +174,7 @@ public class AdamantiteWarHammerItem extends SwordItem implements AwakeningWeapo
             enemy.hurtMarked = true;
         }
 
+        WeaponLevelManager.addExp(player.getMainHandItem(), (int)(25 * powerMultiplier), player);
         player.displayClientMessage(Component.translatable("awakening_system.item.hammer.earthquake", enemies.size()), true);
     }
 

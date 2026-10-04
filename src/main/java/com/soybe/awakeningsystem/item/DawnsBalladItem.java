@@ -21,6 +21,7 @@ import net.minecraft.world.item.TooltipFlag;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.phys.AABB;
 import net.minecraft.world.phys.Vec3;
+import com.soybe.awakeningsystem.entity.SlashWaveEntity;
 
 import java.util.List;
 
@@ -62,27 +63,35 @@ public class DawnsBalladItem extends SwordItem implements AwakeningWeaponItem {
             sp.hurtMarked = true;
 
             if (level instanceof ServerLevel sl) {
-                sl.sendParticles(ParticleTypes.SOUL_FIRE_FLAME, origin.x, origin.y + 1.0D, origin.z, 40, 0.8D, 1.0D, 0.8D, 0.05D);
-                sl.sendParticles(ParticleTypes.PORTAL, sp.getX(), sp.getY() + 1.0D, sp.getZ(), 60, 1.0D, 1.0D, 1.0D, 0.1D);
-                sl.sendParticles(ParticleTypes.DRAGON_BREATH, sp.getX(), sp.getY() + 1.0D, sp.getZ(), 30, 0.8D, 0.8D, 0.8D, 0.05D);
-                
-                sl.playSound(null, origin.x, origin.y, origin.z, SoundEvents.ENDERMAN_TELEPORT, SoundSource.PLAYERS, 1.2F, 1.4F);
-                sl.playSound(null, sp.getX(), sp.getY(), sp.getZ(), SoundEvents.AMETHYST_BLOCK_RESONATE, SoundSource.PLAYERS, 1.5F, 1.5F);
-                sl.playSound(null, sp.getX(), sp.getY(), sp.getZ(), SoundEvents.PLAYER_ATTACK_SWEEP, SoundSource.PLAYERS, 1.2F, 1.2F);
+                // 1. Sello arcano del alba en el punto de origen
+                net.neoforged.neoforge.network.PacketDistributor.sendToPlayersNear(
+                        sl, null, origin.x, origin.y, origin.z, 64.0D,
+                        new com.soybe.awakeningsystem.SpawnMagicCirclePayload(
+                                sp.getId(), origin.x, origin.y, origin.z,
+                                (float) look.x, (float) look.y, (float) look.z,
+                                3.2F, 30, 0x9370DB, 0, false
+                        )
+                );
 
-                AABB box = sp.getBoundingBox().inflate(4.5D, 2.0D, 4.5D);
-                for (LivingEntity nearby : level.getEntitiesOfClass(LivingEntity.class, box)) {
-                    if (nearby != sp && (nearby instanceof Enemy || nearby != player)) {
-                        nearby.hurt(nearby.damageSources().playerAttack(sp), 18.0F);
-                        nearby.igniteForSeconds(4);
-                        Vec3 knock = nearby.position().subtract(sp.position()).normalize().scale(0.8D);
-                        nearby.setDeltaMovement(knock.x, 0.4D, knock.z);
-                    }
-                }
+                sl.playSound(null, origin.x, origin.y, origin.z, SoundEvents.ENDERMAN_TELEPORT, SoundSource.PLAYERS, 1.2F, 1.4F);
+                sl.playSound(null, sp.getX(), sp.getY(), sp.getZ(), SoundEvents.AMETHYST_BLOCK_RESONATE, SoundSource.PLAYERS, 1.6F, 1.5F);
+                sl.playSound(null, sp.getX(), sp.getY(), sp.getZ(), SoundEvents.PLAYER_ATTACK_SWEEP, SoundSource.PLAYERS, 1.5F, 1.3F);
+
+                com.soybe.awakeningsystem.CameraShakePayload.sendToNearby(sl, sp.getX(), sp.getY(), sp.getZ(), 26.0D, 0.45F, 7);
+
+                float dmg = (float) (24.0D * WeaponLevelManager.getDamageMultiplier(stack));
+
+                // 2. Tajo de la Balada del Alba (SlashWaveEntity de Luz Crepuscular)
+                SlashWaveEntity dawnWave = new SlashWaveEntity(sl, sp, SlashWaveEntity.TYPE_COSMIC_AMETHYST, dmg, 4.0F, 1.5F, -15.0F, 24, 8);
+                dawnWave.setDeltaMovement(look.scale(2.2D));
+                sl.addFreshEntity(dawnWave);
+
+                WeaponLevelManager.addExp(stack, 30, sp);
             }
 
             sp.addEffect(new MobEffectInstance(MobEffects.DAMAGE_RESISTANCE, 100, 0, false, true));
             sp.addEffect(new MobEffectInstance(MobEffects.MOVEMENT_SPEED, 120, 1, false, true));
+            sp.displayClientMessage(Component.literal("§d§l✦ [BALADA DEL ALBA] §5¡Finta dimensional y corte crepuscular desatados!"), true);
             return InteractionResultHolder.sidedSuccess(stack, level.isClientSide());
         }
         return InteractionResultHolder.sidedSuccess(stack, level.isClientSide());

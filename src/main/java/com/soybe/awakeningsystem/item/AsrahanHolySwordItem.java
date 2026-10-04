@@ -20,6 +20,8 @@ import net.minecraft.world.item.Tiers;
 import net.minecraft.world.item.TooltipFlag;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.phys.AABB;
+import net.minecraft.world.phys.Vec3;
+import com.soybe.awakeningsystem.entity.SlashWaveEntity;
 
 import java.util.List;
 
@@ -51,26 +53,41 @@ public class AsrahanHolySwordItem extends SwordItem implements AwakeningWeaponIt
             sp.getCooldowns().addCooldown(this, 280);
 
             if (level instanceof ServerLevel sl) {
-                sl.sendParticles(ParticleTypes.SPLASH, sp.getX(), sp.getY() + 1.0D, sp.getZ(), 80, 2.0D, 1.0D, 2.0D, 0.2D);
-                sl.sendParticles(ParticleTypes.NAUTILUS, sp.getX(), sp.getY() + 1.0D, sp.getZ(), 40, 1.5D, 1.0D, 1.5D, 0.1D);
-                sl.sendParticles(ParticleTypes.ENCHANTED_HIT, sp.getX(), sp.getY() + 1.0D, sp.getZ(), 50, 1.8D, 1.0D, 1.8D, 0.15D);
-                sl.playSound(null, sp.getX(), sp.getY(), sp.getZ(), SoundEvents.CONDUIT_ATTACK_TARGET, SoundSource.PLAYERS, 1.4F, 1.2F);
-                sl.playSound(null, sp.getX(), sp.getY(), sp.getZ(), SoundEvents.GENERIC_EXPLODE.value(), SoundSource.PLAYERS, 1.2F, 1.1F);
+                Vec3 look = sp.getLookAngle();
 
-                AABB box = sp.getBoundingBox().inflate(6.0D, 2.5D, 6.0D);
-                for (LivingEntity nearby : level.getEntitiesOfClass(LivingEntity.class, box)) {
-                    if (nearby != sp && (nearby instanceof Enemy || nearby != player)) {
-                        nearby.hurt(nearby.damageSources().playerAttack(sp), 20.0F);
-                        nearby.addEffect(new MobEffectInstance(MobEffects.MOVEMENT_SLOWDOWN, 80, 1));
-                    }
-                }
+                // 1. Sello arcano de aguas sagradas en el suelo
+                net.neoforged.neoforge.network.PacketDistributor.sendToPlayersNear(
+                        sl, null, sp.getX(), sp.getY(), sp.getZ(), 64.0D,
+                        new com.soybe.awakeningsystem.SpawnMagicCirclePayload(
+                                sp.getId(), sp.getX(), sp.getY(), sp.getZ(),
+                                (float) look.x, (float) look.y, (float) look.z,
+                                3.8F, 35, 0x00E5FF, 0, false
+                        )
+                );
+
+                sl.playSound(null, sp.getX(), sp.getY(), sp.getZ(), SoundEvents.CONDUIT_ATTACK_TARGET, SoundSource.PLAYERS, 1.5F, 1.2F);
+                sl.playSound(null, sp.getX(), sp.getY(), sp.getZ(), SoundEvents.GENERIC_EXPLODE.value(), SoundSource.PLAYERS, 1.1F, 1.3F);
+                sl.playSound(null, sp.getX(), sp.getY(), sp.getZ(), SoundEvents.PLAYER_ATTACK_SWEEP, SoundSource.PLAYERS, 1.4F, 1.3F);
+
+                com.soybe.awakeningsystem.CameraShakePayload.sendToNearby(sl, sp.getX(), sp.getY(), sp.getZ(), 28.0D, 0.50F, 8);
+
+                float dmg = (float) (28.0D * WeaponLevelManager.getDamageMultiplier(stack));
+
+                // 2. Maremoto Cortante Sagrado (SlashWaveEntity de Marea Bendita)
+                SlashWaveEntity tidalWave = new SlashWaveEntity(sl, sp, SlashWaveEntity.TYPE_CRYSTAL_AQUA, dmg, 4.4F, 1.6F, 0.0F, 26, 10);
+                tidalWave.setDeltaMovement(look.scale(2.2D));
+                sl.addFreshEntity(tidalWave);
+
+                WeaponLevelManager.addExp(stack, 35, sp);
             }
 
             sp.clearFire();
             sp.addEffect(new MobEffectInstance(MobEffects.ABSORPTION, 200, 2, false, true));
             sp.addEffect(new MobEffectInstance(MobEffects.REGENERATION, 100, 1, false, true));
             sp.addEffect(new MobEffectInstance(MobEffects.DAMAGE_RESISTANCE, 160, 1, false, true));
-            return InteractionResultHolder.sidedSuccess(stack, level.isClientSide());
+
+            sp.displayClientMessage(Component.literal("§b§l✦ [MAREMOTO SAGRADO] §f¡Marea purificadora de Asrahan desatada con bendición acuática!"), true);
+            return InteractionResultHolder.consume(stack);
         }
         return InteractionResultHolder.sidedSuccess(stack, level.isClientSide());
     }
