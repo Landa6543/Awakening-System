@@ -1,4 +1,0 @@
-# Controlling configuration
-[options]
-	# Automatically show conflicts in the keybind menu if any appear
-	show_conflicts = true

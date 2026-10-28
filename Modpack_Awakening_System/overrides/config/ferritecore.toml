@@ -1,9 +1,0 @@
-# FerriteCore Configuration (Reduces RAM usage by 40-50%)
-[compact_fast_map]
-	enabled = true
-[predicates]
-	enabled = true
-[mrl]
-	enabled = true
-[deduplicate]
-	enabled = true
