@@ -66,10 +66,8 @@ public class RuinSerpentModel extends EntityModel<RuinSerpentBossEntity> {
         this.head.yRot = netHeadYaw * ((float) Math.PI / 180F);
         this.head.xRot = headPitch * ((float) Math.PI / 180F);
 
-        // Giro continuo de la broca perforadora
         this.drill.zRot = ageInTicks * 0.6F;
 
-        // Ondulación serpenteante
         float wave = Mth.sin(ageInTicks * 0.15F) * 0.3F;
         this.body1.yRot = wave;
         this.body2.yRot = -wave * 1.2F;

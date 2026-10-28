@@ -42,57 +42,57 @@ public class JadeArmoredBeastModel extends HierarchicalModel<JadeArmoredBeastEnt
         MeshDefinition mesh = new MeshDefinition();
         PartDefinition root = mesh.getRoot();
 
-        // Cuerpo con caparazón de Jade Espiritual facetado y faldones acorazados
         PartDefinition body = root.addOrReplaceChild("body", CubeListBuilder.create()
                 .texOffs(0, 0).addBox(-5.0F, -4.0F, -7.0F, 10.0F, 8.0F, 14.0F, new CubeDeformation(0.0F))
-                // Placas dorsales de Jade facetadas superiores
                 .texOffs(0, 22).addBox(-6.0F, -6.5F, -6.5F, 12.0F, 4.0F, 13.0F, new CubeDeformation(0.2F))
-                // Cresta de jade central con espinas
                 .texOffs(0, 40).addBox(-1.5F, -8.5F, -5.0F, 3.0F, 3.5F, 10.0F, new CubeDeformation(0.0F))
-                // Faldones de jade laterales protectores en los flancos
                 .texOffs(50, 22).addBox(5.2F, -2.0F, -6.0F, 1.5F, 5.0F, 12.0F, new CubeDeformation(0.0F))
                 .texOffs(50, 22).mirror().addBox(-6.7F, -2.0F, -6.0F, 1.5F, 5.0F, 12.0F, new CubeDeformation(0.0F)),
                 PartPose.offset(0.0F, 14.0F, 0.0F));
 
-        // Cabeza acorazada con placa frontal, mandíbula y cuerno de jade
+        // Head skull base: solid foundation connected to torso
         PartDefinition head = body.addOrReplaceChild("head", CubeListBuilder.create()
-                .texOffs(50, 0).addBox(-3.5F, -3.5F, -6.0F, 7.0F, 6.0F, 6.0F, new CubeDeformation(0.0F))
-                // Placa blindada de la frente y cejas
-                .texOffs(76, 0).addBox(-4.0F, -4.5F, -6.5F, 8.0F, 3.0F, 4.0F, new CubeDeformation(0.1F))
-                // Mandíbula inferior acorazada
-                .texOffs(76, 8).addBox(-3.0F, 1.5F, -5.5F, 6.0F, 2.0F, 5.0F, new CubeDeformation(0.0F))
-                // Cuerno frontal de Jade Espiritual
-                .texOffs(102, 0).addBox(-1.0F, -7.5F, -7.5F, 2.0F, 5.0F, 3.0F, new CubeDeformation(0.0F))
-                // Espinas laterales de la cresta craneal
-                .texOffs(102, 9).addBox(3.0F, -5.5F, -2.5F, 1.5F, 3.0F, 2.0F, new CubeDeformation(0.0F))
-                .texOffs(102, 9).mirror().addBox(-4.5F, -5.5F, -2.5F, 1.5F, 3.0F, 2.0F, new CubeDeformation(0.0F)),
+                .texOffs(50, 0).addBox(-3.5F, -4.0F, -5.0F, 7.0F, 6.0F, 5.0F, new CubeDeformation(0.0F))
+                .texOffs(74, 0).addBox(-3.0F, -1.5F, -9.0F, 6.0F, 3.5F, 4.0F, new CubeDeformation(0.0F))
+                .texOffs(94, 0).addBox(-4.0F, -5.5F, -6.0F, 8.0F, 2.0F, 5.0F, new CubeDeformation(0.0F))
+                .texOffs(74, 8).addBox(-2.5F, 2.0F, -8.5F, 5.0F, 1.5F, 4.0F, new CubeDeformation(0.0F))
+                .texOffs(100, 8).addBox(-1.0F, -7.5F, -7.0F, 2.0F, 3.0F, 2.5F, new CubeDeformation(0.0F))
+                .texOffs(92, 8).addBox(-3.2F, -0.5F, -8.0F, 0.8F, 2.5F, 1.2F, new CubeDeformation(0.0F))
+                .texOffs(92, 8).mirror().addBox(2.4F, -0.5F, -8.0F, 0.8F, 2.5F, 1.2F, new CubeDeformation(0.0F))
+                .texOffs(116, 8).addBox(3.5F, -6.0F, -3.0F, 1.5F, 3.0F, 3.0F, new CubeDeformation(0.0F))
+                .texOffs(116, 8).mirror().addBox(-5.0F, -6.0F, -3.0F, 1.5F, 3.0F, 3.0F, new CubeDeformation(0.0F)),
                 PartPose.offset(0.0F, -0.5F, -7.0F));
 
-        // Cola acorazada con maza de jade al final
         body.addOrReplaceChild("tail", CubeListBuilder.create()
                 .texOffs(76, 16).addBox(-1.5F, -1.5F, 0.0F, 3.0F, 3.0F, 7.0F, new CubeDeformation(0.0F))
-                // Maza esférica de jade en la punta
-                .texOffs(96, 16).addBox(-2.5F, -2.5F, 5.5F, 5.0F, 5.0F, 4.0F, new CubeDeformation(0.0F)),
+                .texOffs(96, 16).addBox(-2.5F, -2.5F, 5.5F, 5.0F, 5.0F, 4.0F, new CubeDeformation(0.0F))
+                .texOffs(114, 16).addBox(-1.0F, -4.0F, 6.5F, 2.0F, 2.0F, 2.0F, new CubeDeformation(0.0F))
+                .texOffs(114, 16).addBox(-1.0F, 2.0F, 6.5F, 2.0F, 2.0F, 2.0F, new CubeDeformation(0.0F))
+                .texOffs(114, 16).addBox(-4.0F, -1.0F, 6.5F, 2.0F, 2.0F, 2.0F, new CubeDeformation(0.0F))
+                .texOffs(114, 16).addBox(2.0F, -1.0F, 6.5F, 2.0F, 2.0F, 2.0F, new CubeDeformation(0.0F)),
                 PartPose.offset(0.0F, -1.0F, 7.0F));
 
-        // 4 Patas robustas con placas y garras de jade
         root.addOrReplaceChild("right_front_leg", CubeListBuilder.create()
-                .texOffs(28, 40).addBox(-2.0F, 0.0F, -2.0F, 4.0F, 7.0F, 4.0F, new CubeDeformation(0.0F)),
+                .texOffs(0, 56).addBox(-2.0F, 0.0F, -2.0F, 4.0F, 7.0F, 4.0F, new CubeDeformation(0.0F))
+                .texOffs(64, 56).addBox(-2.5F, 5.0F, -3.5F, 5.0F, 2.0F, 2.0F, new CubeDeformation(0.0F)),
                 PartPose.offset(-4.0F, 17.0F, -5.0F));
 
         root.addOrReplaceChild("left_front_leg", CubeListBuilder.create()
-                .texOffs(28, 40).mirror().addBox(-2.0F, 0.0F, -2.0F, 4.0F, 7.0F, 4.0F, new CubeDeformation(0.0F)),
+                .texOffs(16, 56).mirror().addBox(-2.0F, 0.0F, -2.0F, 4.0F, 7.0F, 4.0F, new CubeDeformation(0.0F))
+                .texOffs(64, 56).mirror().addBox(-2.5F, 5.0F, -3.5F, 5.0F, 2.0F, 2.0F, new CubeDeformation(0.0F)),
                 PartPose.offset(4.0F, 17.0F, -5.0F));
 
         root.addOrReplaceChild("right_hind_leg", CubeListBuilder.create()
-                .texOffs(46, 40).addBox(-2.0F, 0.0F, -2.0F, 4.0F, 7.0F, 4.0F, new CubeDeformation(0.0F)),
+                .texOffs(32, 56).addBox(-2.0F, 0.0F, -2.0F, 4.0F, 7.0F, 4.0F, new CubeDeformation(0.0F))
+                .texOffs(78, 56).addBox(-2.5F, 5.0F, -3.5F, 5.0F, 2.0F, 2.0F, new CubeDeformation(0.0F)),
                 PartPose.offset(-4.0F, 17.0F, 5.0F));
 
         root.addOrReplaceChild("left_hind_leg", CubeListBuilder.create()
-                .texOffs(46, 40).mirror().addBox(-2.0F, 0.0F, -2.0F, 4.0F, 7.0F, 4.0F, new CubeDeformation(0.0F)),
+                .texOffs(48, 56).mirror().addBox(-2.0F, 0.0F, -2.0F, 4.0F, 7.0F, 4.0F, new CubeDeformation(0.0F))
+                .texOffs(78, 56).mirror().addBox(-2.5F, 5.0F, -3.5F, 5.0F, 2.0F, 2.0F, new CubeDeformation(0.0F)),
                 PartPose.offset(4.0F, 17.0F, 5.0F));
 
-        return LayerDefinition.create(mesh, 128, 64);
+        return LayerDefinition.create(mesh, 128, 128);
     }
 
     @Override
@@ -104,13 +104,14 @@ public class JadeArmoredBeastModel extends HierarchicalModel<JadeArmoredBeastEnt
     public void setupAnim(JadeArmoredBeastEntity entity, float limbSwing, float limbSwingAmount, float ageInTicks, float netHeadYaw, float headPitch) {
         this.root().getAllParts().forEach(ModelPart::resetPose);
         this.head.yRot = netHeadYaw * (Mth.PI / 180F);
-        this.head.xRot = headPitch * (Mth.PI / 180F);
+        this.head.xRot = headPitch * (Mth.PI / 180F) + Mth.sin(ageInTicks * 0.08F) * 0.04F;
 
         this.rightFrontLeg.xRot = Mth.cos(limbSwing * 0.6F) * 1.0F * limbSwingAmount;
         this.leftFrontLeg.xRot = Mth.cos(limbSwing * 0.6F + Mth.PI) * 1.0F * limbSwingAmount;
         this.rightHindLeg.xRot = Mth.cos(limbSwing * 0.6F + Mth.PI) * 1.0F * limbSwingAmount;
         this.leftHindLeg.xRot = Mth.cos(limbSwing * 0.6F) * 1.0F * limbSwingAmount;
 
-        this.tail.yRot = Mth.cos(ageInTicks * 0.2F) * 0.25F;
+        this.tail.yRot = Mth.cos(ageInTicks * 0.15F) * 0.35F;
+        this.tail.zRot = Mth.sin(ageInTicks * 0.15F) * 0.10F;
     }
 }

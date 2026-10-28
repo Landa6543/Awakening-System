@@ -1,6 +1,6 @@
 {
-  "parent": "bettercombat:hammer",
+  "parent": "bettercombat:mace",
   "attributes": {
-    "attack_range": 3.4
+    "attack_range": 3.2
   }
 }

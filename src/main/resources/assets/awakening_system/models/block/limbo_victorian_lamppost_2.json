@@ -1,0 +1,187 @@
+{
+  "credit": "Victorian Gothic Lamppost Mid Shaft (Awakening System)",
+  "ambientocclusion": true,
+  "textures": {
+    "particle": "awakening_system:block/limbo_victorian_lamppost",
+    "iron": "awakening_system:block/limbo_victorian_lamppost",
+    "fluted": "awakening_system:block/limbo_victorian_lamppost",
+    "brass": "awakening_system:block/limbo_victorian_lamppost"
+  },
+  "elements": [
+    {
+      "name": "fluted_column_mid_bottom",
+      "from": [
+        5,
+        0,
+        5
+      ],
+      "to": [
+        11,
+        6,
+        11
+      ],
+      "faces": {
+        "north": {
+          "uv": [
+            8,
+            0,
+            12,
+            5
+          ],
+          "texture": "#fluted"
+        },
+        "east": {
+          "uv": [
+            8,
+            0,
+            12,
+            5
+          ],
+          "texture": "#fluted"
+        },
+        "south": {
+          "uv": [
+            8,
+            0,
+            12,
+            5
+          ],
+          "texture": "#fluted"
+        },
+        "west": {
+          "uv": [
+            8,
+            0,
+            12,
+            5
+          ],
+          "texture": "#fluted"
+        }
+      }
+    },
+    {
+      "name": "central_medallion_ring",
+      "from": [
+        4,
+        6,
+        4
+      ],
+      "to": [
+        12,
+        10,
+        12
+      ],
+      "faces": {
+        "north": {
+          "uv": [
+            12,
+            0,
+            16,
+            4
+          ],
+          "texture": "#brass"
+        },
+        "east": {
+          "uv": [
+            12,
+            0,
+            16,
+            4
+          ],
+          "texture": "#brass"
+        },
+        "south": {
+          "uv": [
+            12,
+            0,
+            16,
+            4
+          ],
+          "texture": "#brass"
+        },
+        "west": {
+          "uv": [
+            12,
+            0,
+            16,
+            4
+          ],
+          "texture": "#brass"
+        },
+        "up": {
+          "uv": [
+            12,
+            0,
+            16,
+            4
+          ],
+          "texture": "#brass"
+        },
+        "down": {
+          "uv": [
+            12,
+            0,
+            16,
+            4
+          ],
+          "texture": "#brass"
+        }
+      }
+    },
+    {
+      "name": "fluted_column_mid_top",
+      "from": [
+        5,
+        10,
+        5
+      ],
+      "to": [
+        11,
+        16,
+        11
+      ],
+      "faces": {
+        "north": {
+          "uv": [
+            8,
+            0,
+            12,
+            5
+          ],
+          "texture": "#fluted"
+        },
+        "east": {
+          "uv": [
+            8,
+            0,
+            12,
+            5
+          ],
+          "texture": "#fluted"
+        },
+        "south": {
+          "uv": [
+            8,
+            0,
+            12,
+            5
+          ],
+          "texture": "#fluted"
+        },
+        "west": {
+          "uv": [
+            8,
+            0,
+            12,
+            5
+          ],
+          "texture": "#fluted"
+        }
+      }
+    }
+  ],
+  "texture_size": [
+    32,
+    32
+  ]
+}

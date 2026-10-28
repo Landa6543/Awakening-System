@@ -63,6 +63,17 @@ Key Features:
 [[mixins]]
 config="${mod_id}.mixins.json"
 
+[[mixins]]
+config="diorama.mixins.json"
+
+[[mods]]
+modId="diorama"
+version="0.2.1"
+displayName="Diorama 3D Map Engine"
+credits="Created by Dara Adedeji, MIT License. Integrated into Awakening System."
+authors="Dara Adedeji, LanderAlo"
+description="Diorama angled 3D ray-traced voxel minimap and world map engine."
+
 # The [[accessTransformers]] block allows you to declare where your AT file is.
 # If this block is omitted, a fallback attempt will be made to load an AT from META-INF/accesstransformer.cfg
 #[[accessTransformers]]
@@ -93,6 +104,13 @@ config="${mod_id}.mixins.json"
     type="required"
     # This version range declares a minimum of the current minecraft version up to but not including the next major version
     versionRange="${minecraft_version_range}"
+    ordering="NONE"
+    side="BOTH"
+
+[[dependencies.${mod_id}]]
+    modId="geckolib"
+    type="required"
+    versionRange="[4.7.4,)"
     ordering="NONE"
     side="BOTH"
 

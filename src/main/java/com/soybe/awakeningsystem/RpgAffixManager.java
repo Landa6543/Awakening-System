@@ -18,12 +18,12 @@ public final class RpgAffixManager {
 
     public enum Prefix {
         NONE("", 0.0F),
-        FEROCIOUS("Feroz", 0.25F), // +25% Daño físico
-        MYSTIC("Místico", 0.35F), // +35% Daño mágico
-        COLOSSAL("Colosal", 6.0F), // +6 HP
-        VAMPIRIC("Vampírico", 0.06F), // 6% robo de vida (balanceado para evitar inmortalidad)
-        TITANIC("Titánico", 4.0F), // +4 armadura
-        SWIFT("Raudo", 0.15F); // +15% velocidad
+        FEROCIOUS("Ferocious", 0.25F),
+        MYSTIC("Mystic", 0.35F),
+        COLOSSAL("Colossal", 6.0F),
+        VAMPIRIC("Vampiric", 0.06F),
+        TITANIC("Titanic", 4.0F),
+        SWIFT("Swift", 0.15F);
 
         public final String title;
         public final float value;
@@ -36,10 +36,10 @@ public final class RpgAffixManager {
 
     public enum Suffix {
         NONE("", 0.0F),
-        OF_THE_TEMPEST("de la Tempestad", 0.25F), // +25% velocidad de ataque
-        OF_THE_ARCHON("del Arconte", 0.40F), // +40% regeneración de maná
-        OF_DESTINY("del Destino", 0.20F), // +20% crítico
-        OF_SHADOWS("de las Sombras", 0.35F); // +35% daño furtivo
+        OF_THE_TEMPEST("of the Tempest", 0.25F),
+        OF_THE_ARCHON("of the Archon", 0.40F),
+        OF_DESTINY("of Destiny", 0.20F),
+        OF_SHADOWS("of Shadows", 0.35F);
 
         public final String title;
         public final float value;
@@ -51,11 +51,11 @@ public final class RpgAffixManager {
     }
 
     public enum Rarity {
-        COMMON("Común", ChatFormatting.GRAY),
-        RARE("Raro", ChatFormatting.BLUE),
-        EPIC("Épico", ChatFormatting.DARK_PURPLE),
-        LEGENDARY("Legendario", ChatFormatting.GOLD),
-        MYTHIC("Mítico", ChatFormatting.RED);
+        COMMON("Common", ChatFormatting.GRAY),
+        RARE("Rare", ChatFormatting.BLUE),
+        EPIC("Epic", ChatFormatting.DARK_PURPLE),
+        LEGENDARY("Legendary", ChatFormatting.GOLD),
+        MYTHIC("Mythic", ChatFormatting.RED);
 
         public final String displayName;
         public final ChatFormatting format;
@@ -96,7 +96,6 @@ public final class RpgAffixManager {
 
         stack.set(DataComponents.CUSTOM_DATA, CustomData.of(tag));
 
-        // Aplicar nombre decorativo
         String original = stack.getHoverName().getString();
         String newName = rarity.format + "[" + rarity.displayName.toUpperCase() + "] " + pre.title + " " + original + " " + suf.title;
         stack.set(DataComponents.CUSTOM_NAME, Component.literal(newName));
@@ -114,7 +113,9 @@ public final class RpgAffixManager {
         try {
             Prefix p = Prefix.valueOf(tag.getString("rpg_prefix"));
             if (p == Prefix.FEROCIOUS) return p.value;
-        } catch (Exception ignored) {}
+        } catch (Exception e) {
+            AwakeningSystemMod.LOGGER.debug("Invalid prefix in getDamageBonus: {}", tag.getString("rpg_prefix"), e);
+        }
         return 0.0F;
     }
 
@@ -124,7 +125,9 @@ public final class RpgAffixManager {
         try {
             Prefix p = Prefix.valueOf(tag.getString("rpg_prefix"));
             if (p == Prefix.VAMPIRIC) return p.value;
-        } catch (Exception ignored) {}
+        } catch (Exception e) {
+            AwakeningSystemMod.LOGGER.debug("Invalid prefix in getLifesteal: {}", tag.getString("rpg_prefix"), e);
+        }
         return 0.0F;
     }
 }

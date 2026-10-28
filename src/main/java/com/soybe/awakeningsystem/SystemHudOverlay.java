@@ -5,6 +5,7 @@ import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.network.chat.Component;
 import net.minecraft.world.entity.LivingEntity;
 import net.minecraft.world.entity.player.Player;
+import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.phys.EntityHitResult;
 
 public final class SystemHudOverlay {
@@ -24,25 +25,19 @@ public final class SystemHudOverlay {
 
     public static SkillBarPosition SKILL_BAR_POSITION = SkillBarPosition.BOTTOM_LEFT;
 
-    // Escala del HUD y comportamiento adaptativo según resolución / GUI Scale
-    public static float CUSTOM_HUD_SCALE = 0.0F; // 0.0F = Automático dinámico
+    public static float CUSTOM_HUD_SCALE = 0.0F;
 
     public static float getEffectiveHudScale(int screenW, int screenH) {
         float userFactor = com.soybe.awakeningsystem.client.gui.GuiConfig.hudScale;
         if (CUSTOM_HUD_SCALE > 0.05F) {
             return Math.max(0.4F, Math.min(2.0F, CUSTOM_HUD_SCALE * userFactor));
         }
-        // Cálculo adaptativo:
-        // Pantallas compactas (427x240 o 512x288): escala suave a 0.72x - 0.85x
-        // Pantallas medianas (640x360 a 854x480): escala 0.90x - 1.0x
-        // Pantallas grandes o GUI scale baja: hasta 1.15x
         float scaleX = (float) screenW / 620.0F;
         float scaleY = (float) screenH / 350.0F;
         float factor = Math.min(scaleX, scaleY);
         return Math.max(0.4F, Math.min(2.0F, factor * userFactor));
     }
 
-    // Interpolación suave y daño/consumo rezagado (Damage & Resource Lag / Ghost Bar)
     private static float displayHealth = -1.0F;
     private static float damageLagHealth = -1.0F;
     private static float displayMp = -1.0F;
@@ -69,17 +64,14 @@ public final class SystemHudOverlay {
         boolean isSys20 = (data.systemUpdated() || data.isSystemUpdating()) && !isSys30 && !isSys40;
         boolean hasCultivation = (data.dantianRealm() > 0 || data.cultivationQi() > 0 || data.cultivationSubLevel() > 1
                 || "demonic_cultivator".equals(data.hunterClass()) || "sword_saint".equals(data.hunterClass())
-                || data.murimUnlocked() || data.system30Updated());
+                || data.murimUnlocked() || data.system30Updated() || data.getOpenedMeridiansCount() > 0 || (mc.player != null && mc.player.level().dimension().location().getPath().contains("murim")));
 
-        // Actualizar daño y suavizado de vida, maná y qi
         updateBarInterpolation(mc.player, data);
 
-        // 0. Banner de Actualización del Sistema 2.0 / 3.0 (si está en mantenimiento o ascensión)
         if (data.isAnySystemUpdating()) {
             renderSystemUpdatingBanner(mc, graphics, data, width);
         }
 
-        // 1. Tarjeta HUD del Cazador o Modos Compactos de Salud/Maná
         if (com.soybe.awakeningsystem.client.gui.GuiConfig.showHudStatusCard) {
             switch (com.soybe.awakeningsystem.client.gui.GuiConfig.healthDisplayMode) {
                 case CARD -> renderHunterStatusCard(mc, graphics, data, width, height, isSys40, isSys30, isSys20, hasCultivation);
@@ -88,23 +80,19 @@ public final class SystemHudOverlay {
             }
         }
 
-        // 2. Barra de Habilidades Activas (Abajo adaptativa y protegida contra solapamiento)
         if (com.soybe.awakeningsystem.client.gui.GuiConfig.showHudSkillBar) {
             renderSkillHotbar(mc, graphics, data, width, height, isSys40, isSys30, isSys20);
         }
 
-        // 3. Visor de Análisis Holográfico (Centro Superior al mirar un mob)
         if (com.soybe.awakeningsystem.client.gui.GuiConfig.showHudAppraisal) {
             renderEntityAppraisal(mc, graphics, data, width, isSys40, isSys30, isSys20);
         }
 
-        // 3. Racha de Combate & Modo Trance (Ubicado a la DERECHA, sin solapar)
         if (com.soybe.awakeningsystem.client.gui.GuiConfig.showHudCombo) {
             renderCombatCombo(mc, graphics, data, width, height);
         }
 
-        // 4. Temporizador de Escenario Forzado del Dokkaebi (ORV)
-        if (data.isDokkaebiScenarioActive()) {
+        if (com.soybe.awakeningsystem.client.gui.GuiConfig.showHudDokkaebiScenario && data.isDokkaebiScenarioActive()) {
             renderDokkaebiScenario(mc, graphics, data, width);
         }
     }
@@ -130,7 +118,6 @@ public final class SystemHudOverlay {
         float dt = Math.min(0.1F, (now - lastHealthTime) / 1000.0F);
         lastHealthTime = now;
 
-        // Salud
         if (actualHp < displayHealth) {
             displayHealth = actualHp;
         } else if (actualHp > displayHealth) {
@@ -145,7 +132,6 @@ public final class SystemHudOverlay {
             }
         }
 
-        // Maná
         if (actualMp < displayMp) {
             displayMp = actualMp;
         } else if (actualMp > displayMp) {
@@ -160,7 +146,6 @@ public final class SystemHudOverlay {
             }
         }
 
-        // Qi
         if (actualQi < displayQi) {
             displayQi = actualQi;
         } else if (actualQi > displayQi) {
@@ -180,27 +165,27 @@ public final class SystemHudOverlay {
         if (rank == null || rank.isEmpty()) return 0xFFB0BEC5;
         String r = rank.toUpperCase(java.util.Locale.ROOT);
         if (r.contains("GOD") || r.contains("CREATOR") || r.contains("ABSOLUTE") || r.contains("LIMITLESS") || r.contains("SINGULARITY") || r.contains("NATIONAL") || r.contains("RULER") || r.contains("MONARCH") || r.contains("SOVEREIGN") || r.contains("ASTRAL") || r.contains("DEITY") || r.contains("COSMIC") || r.contains("TRANSCENDENT") || r.contains("OMNIPOTENT") || r.contains("INFINITE") || r.contains("OMNIVERSAL") || r.contains("MULTIVERSAL") || r.contains("PRIMORDIAL")) {
-            return 0xFFFFD700; // Dorado legendario / Deidad
+            return 0xFFFFD700;
         }
         if (r.contains("SSS") || r.contains("SS") || r.contains("UR") || r.contains("LR") || r.contains("MR") || r.contains("DEMIGOD")) {
-            return 0xFFB388FF; // Púrpura místico
+            return 0xFFB388FF;
         }
         if (r.contains("S") || r.contains("EX")) {
-            return 0xFFFF3366; // Carmesí rango S
+            return 0xFFFF3366;
         }
         if (r.contains("A")) {
-            return 0xFFFF9900; // Ámbar rango A
+            return 0xFFFF9900;
         }
         if (r.contains("B")) {
-            return 0xFF00E5FF; // Azul cian rango B
+            return 0xFF00E5FF;
         }
         if (r.contains("C")) {
-            return 0xFF50FA7B; // Verde esmeralda rango C
+            return 0xFF50FA7B;
         }
         if (r.contains("D")) {
-            return 0xFF8BE9FD; // Celeste rango D
+            return 0xFF8BE9FD;
         }
-        return 0xFFB0BEC5; // Gris acero rango E / F
+        return 0xFFB0BEC5;
     }
 
     private static void renderHunterStatusCard(Minecraft mc, GuiGraphics graphics, SystemData data, int screenW, int screenH, boolean isSys40, boolean isSys30, boolean isSys20, boolean hasCultivation) {
@@ -209,8 +194,64 @@ public final class SystemHudOverlay {
 
         float scale = getEffectiveHudScale(screenW, screenH);
 
-        int cardW = 160;
-        int cardH = hasCultivation ? 86 : 70;
+        String rank = data.rank();
+        int rankColor = getRankColor(rank);
+
+        String rankTag = "[" + rank + "]";
+        int rankTagW = mc.font.width(rankTag);
+        String lvlPrefix = Component.translatable("awakening_system.hud.level_prefix").getString();
+        String headRight = "\u00A76" + lvlPrefix + " " + data.level() + " \u00A7f" + player.getScoreboardName();
+        int headerRequiredW = 12 + rankTagW + mc.font.width(headRight) + 12;
+
+        float curHp = player.getHealth();
+        float maxHp = Math.max(1.0F, player.getMaxHealth());
+        float absorp = player.getAbsorptionAmount();
+
+        String hpNumStr = (int) Math.ceil(curHp) + "/" + (int) Math.ceil(maxHp);
+        if (absorp > 0) {
+            hpNumStr += " \u00A76[+" + (int) Math.ceil(absorp) + "]";
+        }
+        int hpRequiredW = mc.font.width("\u00A7c\u2764 HP") + mc.font.width(hpNumStr) + 24;
+
+        int curMp = data.mana();
+        int maxMp = Math.max(1, data.maxMana());
+        String mpNumStr = curMp + "/" + maxMp;
+        int mpRequiredW = mc.font.width("\u00A7b\u2726 MP") + mc.font.width(mpNumStr) + 24;
+
+        int qiRequiredW = 0;
+        String qiNumStr = "";
+        if (hasCultivation) {
+            int curQi = data.cultivationQi();
+            int maxQi = Math.max(1, data.maxCultivationQi());
+            String compactRealm = Component.translatable("awakening_system.realm.compact." + data.dantianRealm()).getString();
+            qiNumStr = curQi + "/" + maxQi + " (" + compactRealm + ")";
+            qiRequiredW = mc.font.width("\u00A7e\u262F QI") + mc.font.width(qiNumStr) + 24;
+        }
+
+        boolean showFood = com.soybe.awakeningsystem.client.gui.GuiConfig.isHudFoodBarVisible();
+        int foodRequiredW = 0;
+        String foodNumStr = "";
+        if (showFood) {
+            var foodData = player.getFoodData();
+            int foodLvl = foodData.getFoodLevel();
+            float satLvl = foodData.getSaturationLevel();
+            foodNumStr = foodLvl + "/20";
+            if (satLvl > 0) {
+                foodNumStr += " \u00A7e[+" + (int) Math.ceil(satLvl) + "]";
+            }
+            foodRequiredW = mc.font.width("\u00A76\u25C6 " + Component.translatable("awakening_system.hud.food").getString()) + mc.font.width(foodNumStr) + 24;
+        }
+
+        int maxContentW = Math.max(headerRequiredW, Math.max(hpRequiredW, Math.max(mpRequiredW, Math.max(qiRequiredW, foodRequiredW))));
+        int cardW = Math.max(168, maxContentW);
+        int maxScreenW = (int) (screenW / scale) - 16;
+        if (maxScreenW > 168) {
+            cardW = Math.min(cardW, maxScreenW);
+        }
+
+        int cardH = 72;
+        if (hasCultivation) cardH += 16;
+        if (showFood) cardH += 16;
 
         int cardX;
         int cardY;
@@ -244,83 +285,95 @@ public final class SystemHudOverlay {
         graphics.pose().pushPose();
         graphics.pose().scale(scale, scale, 1.0F);
 
-        // Marco y cristal translúcido oscuro (Estética Solo Leveling / Manhwa)
-        int borderColor = isSys40 ? 0xC0DFB76C : (isSys30 ? 0xB0D4AF37 : (isSys20 ? 0xB09D4EDD : 0xB0276A82));
-        int glowColor = isSys40 ? 0x304EE2EC : (isSys30 ? 0x20D4AF37 : (isSys20 ? 0x209D4EDD : 0x2000E5FF));
-        int bgColor = isSys40 ? 0xD808111D : (isSys30 ? 0xD0081210 : (isSys20 ? 0xD012081E : 0xD0070F16));
+        // Modern Glassmorphism & Cybernetic Arcane Framing
+        int borderColor = isSys40 ? 0xD0DFB76C : (isSys30 ? 0xC000FF88 : (isSys20 ? 0xC09D4EDD : 0xC000E5FF));
+        int glowColor = isSys40 ? 0x404EE2EC : (isSys30 ? 0x3000FF88 : (isSys20 ? 0x309D4EDD : 0x3000E5FF));
+        int bgTop = isSys40 ? 0xEE0B1828 : (isSys30 ? 0xEE081A16 : (isSys20 ? 0xEE180C2A : 0xEE091422));
+        int bgBottom = isSys40 ? 0xF6050C16 : (isSys30 ? 0xF6040F0D : (isSys20 ? 0xF60D0518 : 0xF6040810));
 
-        graphics.fill(cardX - 1, cardY - 1, cardX + cardW + 1, cardY + cardH + 1, glowColor);
+        // Double soft outer aura
+        graphics.fill(cardX - 2, cardY - 2, cardX + cardW + 2, cardY + cardH + 2, (glowColor & 0x00FFFFFF) | 0x12000000);
+        graphics.fill(cardX - 1, cardY - 1, cardX + cardW + 1, cardY + cardH + 1, (glowColor & 0x00FFFFFF) | 0x2A000000);
+
+        // High-tech border frame
         graphics.fill(cardX, cardY, cardX + cardW, cardY + cardH, borderColor);
-        graphics.fill(cardX + 1, cardY + 1, cardX + cardW - 1, cardY + cardH - 1, bgColor);
 
-        // Esquinas cibernéticas biseladas
-        int cornerCol = isSys40 ? 0xFFDFB76C : (isSys30 ? 0xFFFFD700 : (isSys20 ? 0xFFE0AAFF : 0xFF00E5FF));
-        graphics.fill(cardX, cardY, cardX + 3, cardY + 1, cornerCol);
-        graphics.fill(cardX, cardY, cardX + 1, cardY + 3, cornerCol);
-        graphics.fill(cardX + cardW - 3, cardY, cardX + cardW, cardY + 1, cornerCol);
-        graphics.fill(cardX + cardW - 1, cardY, cardX + cardW, cardY + 3, cornerCol);
-        graphics.fill(cardX, cardY + cardH - 1, cardX + 3, cardY + cardH, cornerCol);
-        graphics.fill(cardX, cardY + cardH - 3, cardX + 1, cardY + cardH, cornerCol);
-        graphics.fill(cardX + cardW - 3, cardY + cardH - 1, cardX + cardW, cardY + cardH, cornerCol);
-        graphics.fill(cardX + cardW - 1, cardY + cardH - 3, cardX + cardW, cardY + cardH, cornerCol);
+        // Frosted glass vertical gradient
+        graphics.fillGradient(cardX + 1, cardY + 1, cardX + cardW - 1, cardY + cardH - 1, bgTop, bgBottom);
+
+        // Subtle top glass specular shine
+        graphics.fill(cardX + 2, cardY + 1, cardX + cardW - 2, cardY + 2, 0x40FFFFFF);
+
+        // Left glowing rank accent stripe
+        graphics.fill(cardX + 1, cardY + 1, cardX + 3, cardY + cardH - 1, rankColor);
+
+        // Stylized cybernetic corner L-brackets
+        int cornerCol = isSys40 ? 0xFFFFD700 : (isSys30 ? 0xFF00FF88 : (isSys20 ? 0xFFE0AAFF : 0xFF70E8FF));
+        graphics.fill(cardX, cardY, cardX + 5, cardY + 1, cornerCol);
+        graphics.fill(cardX, cardY, cardX + 1, cardY + 5, cornerCol);
+        graphics.fill(cardX + cardW - 5, cardY, cardX + cardW, cardY + 1, cornerCol);
+        graphics.fill(cardX + cardW - 1, cardY, cardX + cardW, cardY + 5, cornerCol);
+        graphics.fill(cardX, cardY + cardH - 1, cardX + 5, cardY + cardH, cornerCol);
+        graphics.fill(cardX, cardY + cardH - 5, cardX + 1, cardY + cardH, cornerCol);
+        graphics.fill(cardX + cardW - 5, cardY + cardH - 1, cardX + cardW, cardY + cardH, cornerCol);
+        graphics.fill(cardX + cardW - 1, cardY + cardH - 5, cardX + cardW, cardY + cardH, cornerCol);
 
         int curY = cardY + 5;
 
-        // 1. Cabecera de Perfil: [RANGO] Nv. X Nombre (Estilo insignia limpia)
-        String rank = data.rank();
-        int rankColor = getRankColor(rank);
+        // Rank pill badge
+        int badgeX = cardX + 6;
+        int badgeW = rankTagW + 6;
+        graphics.fill(badgeX, curY - 1, badgeX + badgeW, curY + 10, 0xEE0D1520);
+        graphics.renderOutline(badgeX, curY - 1, badgeW, 11, (rankColor & 0x00FFFFFF) | 0xDD000000);
+        graphics.drawString(mc.font, rankTag, badgeX + 3, curY + 1, rankColor, false);
 
-        String rankTag = "[" + rank + "]";
-        int rankTagW = mc.font.width(rankTag);
-        graphics.fill(cardX + 6, curY - 1, cardX + 8 + rankTagW, curY + 9, 0xD0101820);
-        graphics.renderOutline(cardX + 6, curY - 1, rankTagW + 2, 10, rankColor);
-        graphics.drawString(mc.font, rankTag, cardX + 7, curY, rankColor, false);
+        // Level & Name
+        int headX = badgeX + badgeW + 5;
+        String lvlStr = "\u00A76" + lvlPrefix + " " + data.level() + " ";
+        graphics.drawString(mc.font, lvlStr, headX, curY + 1, 0xFFFFD700, false);
+        graphics.drawString(mc.font, player.getScoreboardName(), headX + mc.font.width(lvlStr), curY + 1, 0xFFFFFFFF, false);
 
-        int headX = cardX + 12 + rankTagW;
-        String lvlPrefix = Component.translatable("awakening_system.hud.level_prefix").getString();
-        graphics.drawString(mc.font, "§6" + lvlPrefix + " " + data.level() + " §f" + player.getScoreboardName(), headX, curY, 0xFFFFFFFF, false);
-        curY += 12;
+        // Top-right Armor Badge (if armor > 0)
+        int armor = player.getArmorValue();
+        if (armor > 0) {
+            String armorHeader = "§b🛡 " + armor;
+            graphics.drawString(mc.font, armorHeader, cardX + cardW - 7 - mc.font.width(armorHeader), curY + 1, 0xFF00E5FF, false);
+        }
+        curY += 13;
 
-        // Separador sutil
-        graphics.fill(cardX + 6, curY, cardX + cardW - 6, curY + 1, isSys40 ? 0x50DFB76C : (isSys30 ? 0x40D4AF37 : (isSys20 ? 0x409D4EDD : 0x40276A82)));
+        // Elegant separator line
+        graphics.fill(cardX + 6, curY, cardX + cardW - 6, curY + 1, isSys40 ? 0x60DFB76C : (isSys30 ? 0x5000FF88 : (isSys20 ? 0x509D4EDD : 0x5000E5FF)));
         curY += 4;
 
-        // 2. Barra de Salud (HP) con daño fantasma suave
-        float curHp = player.getHealth();
-        float maxHp = Math.max(1.0F, player.getMaxHealth());
-        float absorp = player.getAbsorptionAmount();
-
-        String hpNumStr = (int) Math.ceil(curHp) + "/" + (int) Math.ceil(maxHp);
-        if (absorp > 0) {
-            hpNumStr += " §6[+" + (int) Math.ceil(absorp) + "]";
-        }
-        graphics.drawString(mc.font, "§c❤ HP", cardX + 7, curY, 0xFFFF4D4D, false);
-        graphics.drawString(mc.font, hpNumStr, cardX + cardW - 7 - mc.font.width(hpNumStr), curY, 0xFFE0E0E0, false);
+        // HP Label & Numbers
+        graphics.drawString(mc.font, "\u00A7c\u2764 HP", cardX + 7, curY, 0xFFFF4D4D, false);
+        graphics.drawString(mc.font, hpNumStr, cardX + cardW - 7 - mc.font.width(hpNumStr), curY, 0xFFF0F0F0, false);
         curY += 9;
 
         int barX = cardX + 7;
         int barW = cardW - 14;
         int hpBarH = 5;
 
+        // HP Dark track
         graphics.fill(barX - 1, curY - 1, barX + barW + 1, curY + hpBarH + 1, 0xFF350E14);
         graphics.fill(barX, curY, barX + barW, curY + hpBarH, 0xE0150406);
 
-        // Barra de daño rezagado (naranja/ámbar suave)
+        // Lag damage trail
         float lagRatio = Math.max(0.0F, Math.min(1.0F, damageLagHealth / maxHp));
         int lagW = (int) (barW * lagRatio);
         if (lagW > 0) {
             graphics.fill(barX, curY, barX + lagW, curY + hpBarH, 0xFFFF9F43);
         }
 
-        // Barra de salud actual (carmesí vibrante con brillo superior)
+        // Current HP fill + Top gloss
         float hpRatio = Math.max(0.0F, Math.min(1.0F, curHp / maxHp));
         int curHpW = (int) (barW * hpRatio);
         if (curHpW > 0) {
-            graphics.fill(barX, curY, barX + curHpW, curY + hpBarH, 0xFFFF2D55);
-            graphics.fill(barX, curY, barX + curHpW, curY + 1, 0xFFFF6B81);
+            graphics.fillGradient(barX, curY, barX + curHpW, curY + hpBarH, 0xFFFF385C, 0xFFD6183C);
+            graphics.fill(barX, curY, barX + curHpW, curY + 1, 0xFFFF85A1);
         }
 
-        // Capa de absorción dorada
+        // Absorption bar
         if (absorp > 0) {
             float absRatio = Math.max(0.0F, Math.min(1.0F, absorp / maxHp));
             int absW = (int) (barW * absRatio);
@@ -330,12 +383,8 @@ public final class SystemHudOverlay {
         }
         curY += 8;
 
-        // 3. Barra de Maná (MP) con barra fantasma suave
-        int curMp = data.mana();
-        int maxMp = Math.max(1, data.maxMana());
-        String mpNumStr = curMp + "/" + maxMp;
-
-        graphics.drawString(mc.font, "§b✦ MP", cardX + 7, curY, 0xFF00E5FF, false);
+        // MP Label & Numbers
+        graphics.drawString(mc.font, "\u00A7b\u2726 MP", cardX + 7, curY, 0xFF00E5FF, false);
         graphics.drawString(mc.font, mpNumStr, cardX + cardW - 7 - mc.font.width(mpNumStr), curY, 0xFFB0E0E6, false);
         curY += 9;
 
@@ -343,7 +392,6 @@ public final class SystemHudOverlay {
         graphics.fill(barX - 1, curY - 1, barX + barW + 1, curY + mpBarH + 1, 0xFF0B2538);
         graphics.fill(barX, curY, barX + barW, curY + mpBarH, 0xE005111B);
 
-        // Barra fantasma de consumo de Maná (ámbar/azul según sistema)
         float lagMpRatio = Math.max(0.0F, Math.min(1.0F, damageLagMp / maxMp));
         int lagMpW = (int) (barW * lagMpRatio);
         if (lagMpW > 0) {
@@ -354,29 +402,25 @@ public final class SystemHudOverlay {
         float mpRatio = Math.max(0.0F, Math.min(1.0F, (float) curMp / maxMp));
         int curMpW = (int) (barW * mpRatio);
         if (curMpW > 0) {
-            int mpFill = isSys20 ? 0xFFB388FF : (isSys30 ? 0xFF38EF7D : 0xFF00C6FF);
-            int mpTop = isSys20 ? 0xFFD1B3FF : (isSys30 ? 0xFF88FFB2 : 0xFF70E8FF);
-            graphics.fill(barX, curY, barX + curMpW, curY + mpBarH, mpFill);
-            graphics.fill(barX, curY, barX + curMpW, curY + 1, mpTop);
+            int mpFillTop = isSys20 ? 0xFFD1B3FF : (isSys30 ? 0xFF50FA7B : 0xFF00E5FF);
+            int mpFillBot = isSys20 ? 0xFF8A2BE2 : (isSys30 ? 0xFF1DB954 : 0xFF0080FF);
+            graphics.fillGradient(barX, curY, barX + curMpW, curY + mpBarH, mpFillTop, mpFillBot);
+            graphics.fill(barX, curY, barX + curMpW, curY + 1, isSys20 ? 0xFFE8D7FF : (isSys30 ? 0xFFA8FFD1 : 0xFF88F2FF));
         }
         curY += 8;
 
-        // 4. Barra de Qi con barra fantasma suave (si ha desbloqueado cultivo / Murim)
+        // QI Bar (Cultivation)
         if (hasCultivation) {
             int curQi = data.cultivationQi();
             int maxQi = Math.max(1, data.maxCultivationQi());
-            String compactRealm = Component.translatable("awakening_system.realm.compact." + data.dantianRealm()).getString();
-            String qiNumStr = curQi + "/" + maxQi + " (" + compactRealm + ")";
-
-            graphics.drawString(mc.font, "§e☯ QI", cardX + 7, curY, 0xFFFFD700, false);
+            graphics.drawString(mc.font, "\u00A7e\u262F QI", cardX + 7, curY, 0xFFFFD700, false);
             graphics.drawString(mc.font, qiNumStr, cardX + cardW - 7 - mc.font.width(qiNumStr), curY, 0xFFFFF0A0, false);
             curY += 9;
 
-            int qiBarH = 4;
+            int qiBarH = 5;
             graphics.fill(barX - 1, curY - 1, barX + barW + 1, curY + qiBarH + 1, 0xFF382A0B);
             graphics.fill(barX, curY, barX + barW, curY + qiBarH, 0xE0181205);
 
-            // Barra fantasma de Qi consumido
             float lagQiRatio = Math.max(0.0F, Math.min(1.0F, damageLagQi / maxQi));
             int lagQiW = (int) (barW * lagQiRatio);
             if (lagQiW > 0) {
@@ -386,26 +430,74 @@ public final class SystemHudOverlay {
             float qiRatio = Math.max(0.0F, Math.min(1.0F, (float) curQi / maxQi));
             int curQiW = (int) (barW * qiRatio);
             if (curQiW > 0) {
-                graphics.fill(barX, curY, barX + curQiW, curY + qiBarH, 0xFFFFB703);
-                graphics.fill(barX, curY, barX + curQiW, curY + 1, 0xFFFFE066);
+                graphics.fillGradient(barX, curY, barX + curQiW, curY + qiBarH, 0xFFFFD700, 0xFFFF8C00);
+                graphics.fill(barX, curY, barX + curQiW, curY + 1, 0xFFFFF5B8);
             }
             curY += 8;
         }
 
-        // 5. Mini Estadísticas compactas (Armadura, Daño, Monedas formateadas y distribuidas uniformemente)
-        int armor = player.getArmorValue();
+        // FOOD Bar (Integrated Hunger)
+        if (showFood) {
+            var foodData = player.getFoodData();
+            int foodLvl = foodData.getFoodLevel();
+            float satLvl = foodData.getSaturationLevel();
+
+            boolean isStarving = foodLvl <= 6;
+            int foodLabelCol = isStarving ? 0xFFFF4444 : 0xFFFF9800;
+            String foodLabel = Component.translatable("awakening_system.hud.food").getString();
+
+            graphics.drawString(mc.font, "\u00A76\u25C6 " + foodLabel, cardX + 7, curY, foodLabelCol, false);
+            graphics.drawString(mc.font, foodNumStr, cardX + cardW - 7 - mc.font.width(foodNumStr), curY, 0xFFFFE082, false);
+            curY += 9;
+
+            int foodBarH = 5;
+            graphics.fill(barX - 1, curY - 1, barX + barW + 1, curY + foodBarH + 1, 0xFF351F0A);
+            graphics.fill(barX, curY, barX + barW, curY + foodBarH, 0xE01A0E04);
+
+            float foodRatio = Math.max(0.0F, Math.min(1.0F, foodLvl / 20.0F));
+            int curFoodW = (int) (barW * foodRatio);
+            if (curFoodW > 0) {
+                graphics.fillGradient(barX, curY, barX + curFoodW, curY + foodBarH, 0xFFFF9800, 0xFFE65100);
+                graphics.fill(barX, curY, barX + curFoodW, curY + 1, 0xFFFFD084);
+            }
+
+            // Saturation layer overlay
+            if (satLvl > 0) {
+                float satRatio = Math.max(0.0F, Math.min(1.0F, satLvl / 20.0F));
+                int satW = (int) (barW * satRatio);
+                if (satW > 0) {
+                    graphics.fill(barX, curY + foodBarH - 2, barX + Math.min(barW, satW), curY + foodBarH, 0xFFFFEE58);
+                }
+            }
+
+            // Starving alert pulse outline
+            if (isStarving) {
+                float pulse = (float) (Math.sin(System.currentTimeMillis() * 0.009) * 0.5 + 0.5);
+                int pulseAlpha = (int) (pulse * 200);
+                if (pulseAlpha > 30) {
+                    graphics.renderOutline(barX - 1, curY - 1, barW + 2, foodBarH + 2, (pulseAlpha << 24) | 0xFF3333);
+                }
+            }
+            curY += 8;
+        }
+
+        // Modern Glass Pill Footer: Defense | Attack | Gold/Primos
         int attack = (int) player.getAttributeValue(net.minecraft.world.entity.ai.attributes.Attributes.ATTACK_DAMAGE);
         int coins = data.coins();
         String coinStr = coins >= 1000000 ? String.format(java.util.Locale.US, "%.1fM", coins / 1000000.0) :
                 (coins >= 1000 ? String.format(java.util.Locale.US, "%.1fK", coins / 1000.0) : String.valueOf(coins));
 
+        int footerH = 11;
+        graphics.fill(cardX + 6, curY, cardX + cardW - 6, curY + footerH, 0xD0081018);
+        graphics.renderOutline(cardX + 6, curY, cardW - 12, footerH, 0x50276A82);
+
         int colW = (cardW - 14) / 3;
-        graphics.drawString(mc.font, "§b🛡 " + armor, cardX + 7, curY, 0xFFFFFFFF, false);
-        graphics.drawString(mc.font, "§c⚔ " + attack, cardX + 7 + colW, curY, 0xFFFFFFFF, false);
+        graphics.drawString(mc.font, "§b🛡 " + armor, cardX + 9, curY + 2, 0xFFFFFFFF, false);
+        graphics.drawString(mc.font, "§c⚔ " + attack, cardX + 9 + colW, curY + 2, 0xFFFFFFFF, false);
         if (isSys40 && data.primogems() > 0) {
-            graphics.drawString(mc.font, "§b✦ " + data.primogems(), cardX + 7 + colW * 2, curY, 0xFFFFFFFF, false);
+            graphics.drawString(mc.font, "§b✦ " + data.primogems(), cardX + 9 + colW * 2, curY + 2, 0xFFFFFFFF, false);
         } else {
-            graphics.drawString(mc.font, "§e🪙 " + coinStr, cardX + 7 + colW * 2, curY, 0xFFFFFFFF, false);
+            graphics.drawString(mc.font, "§e🪙 " + coinStr, cardX + 9 + colW * 2, curY + 2, 0xFFFFFFFF, false);
         }
 
         graphics.pose().popPose();
@@ -415,7 +507,6 @@ public final class SystemHudOverlay {
         if (data == null) return;
         int barW = 81;
         int barH = 5;
-        // Posición estándar sobre la barra de comida (lado derecho de la hotbar)
         int barX = screenW / 2 + 10;
         int barY = screenH - 49;
 
@@ -426,7 +517,6 @@ public final class SystemHudOverlay {
         graphics.fill(barX - 1, barY - 1, barX + barW + 1, barY + barH + 1, 0xFF0B2538);
         graphics.fill(barX, barY, barX + barW, barY + barH, 0xE005111B);
 
-        // Barra fantasma lag
         float lagMpRatio = Math.max(0.0F, Math.min(1.0F, damageLagMp / maxMp));
         int lagMpW = (int) (barW * lagMpRatio);
         if (lagMpW > 0) {
@@ -436,16 +526,15 @@ public final class SystemHudOverlay {
 
         int filledW = (int) (barW * mpRatio);
         if (filledW > 0) {
-            int mpFill = isSys20 ? 0xFFB388FF : (isSys30 ? 0xFF38EF7D : 0xFF00C6FF);
-            int mpTop = isSys20 ? 0xFFD1B3FF : (isSys30 ? 0xFF88FFB2 : 0xFF70E8FF);
-            graphics.fill(barX, barY, barX + filledW, barY + barH, mpFill);
-            graphics.fill(barX, barY, barX + filledW, barY + 1, mpTop);
+            int mpFillTop = isSys20 ? 0xFFD1B3FF : (isSys30 ? 0xFF50FA7B : 0xFF00E5FF);
+            int mpFillBot = isSys20 ? 0xFF8A2BE2 : (isSys30 ? 0xFF1DB954 : 0xFF0080FF);
+            graphics.fillGradient(barX, barY, barX + filledW, barY + barH, mpFillTop, mpFillBot);
+            graphics.fill(barX, barY, barX + filledW, barY + 1, isSys20 ? 0xFFE8D7FF : (isSys30 ? 0xFFA8FFD1 : 0xFF88F2FF));
         }
 
-        String mpText = "✦ " + curMp + "/" + maxMp;
+        String mpText = "\u2726 " + curMp + "/" + maxMp;
         graphics.drawString(mc.font, mpText, barX + (barW - mc.font.width(mpText)) / 2, barY - 8, 0xFFB0E0E6, true);
 
-        // Si tiene cultivo de Qi, barra dorada arriba
         if (hasCultivation) {
             int qiY = barY - 14;
             int curQi = data.cultivationQi();
@@ -457,9 +546,9 @@ public final class SystemHudOverlay {
 
             int curQiW = (int) (barW * qiRatio);
             if (curQiW > 0) {
-                graphics.fill(barX, qiY, barX + curQiW, qiY + 3, 0xFFFFB703);
+                graphics.fillGradient(barX, qiY, barX + curQiW, qiY + 3, 0xFFFFD700, 0xFFFF8C00);
             }
-            String qiText = "☯ " + curQi + "/" + maxQi;
+            String qiText = "\u262F " + curQi + "/" + maxQi;
             graphics.drawString(mc.font, qiText, barX + (barW - mc.font.width(qiText)) / 2, qiY - 8, 0xFFFFF0A0, true);
         }
     }
@@ -471,7 +560,6 @@ public final class SystemHudOverlay {
         int barW = 81;
         int barH = 6;
 
-        // 1. Barra de Salud (HP) sobre el lado izquierdo de la hotbar (donde van los corazones vanilla)
         int hpX = screenW / 2 - 91;
         int hpY = screenH - 39;
 
@@ -482,7 +570,6 @@ public final class SystemHudOverlay {
         graphics.fill(hpX - 1, hpY - 1, hpX + barW + 1, hpY + barH + 1, 0xFF350E14);
         graphics.fill(hpX, hpY, hpX + barW, hpY + barH, 0xE0150406);
 
-        // Daño fantasma
         float lagRatio = Math.max(0.0F, Math.min(1.0F, damageLagHealth / maxHp));
         int lagW = (int) (barW * lagRatio);
         if (lagW > 0) {
@@ -492,8 +579,8 @@ public final class SystemHudOverlay {
         float hpRatio = Math.max(0.0F, Math.min(1.0F, curHp / maxHp));
         int curHpW = (int) (barW * hpRatio);
         if (curHpW > 0) {
-            graphics.fill(hpX, hpY, hpX + curHpW, hpY + barH, 0xFFFF2D55);
-            graphics.fill(hpX, hpY, hpX + curHpW, hpY + 1, 0xFFFF6B81);
+            graphics.fillGradient(hpX, hpY, hpX + curHpW, hpY + barH, 0xFFFF385C, 0xFFD6183C);
+            graphics.fill(hpX, hpY, hpX + curHpW, hpY + 1, 0xFFFF85A1);
         }
         if (absorp > 0) {
             float absRatio = Math.max(0.0F, Math.min(1.0F, absorp / maxHp));
@@ -503,18 +590,48 @@ public final class SystemHudOverlay {
             }
         }
 
-        String hpText = "❤ " + (int) Math.ceil(curHp) + "/" + (int) Math.ceil(maxHp);
-        if (absorp > 0) hpText += " §6[+" + (int) Math.ceil(absorp) + "]";
+        String hpText = "\u2764 " + (int) Math.ceil(curHp) + "/" + (int) Math.ceil(maxHp);
+        if (absorp > 0) hpText += " \u00A76[+" + (int) Math.ceil(absorp) + "]";
         graphics.drawString(mc.font, hpText, hpX + 2, hpY - 8, 0xFFFF85A1, true);
 
-        // Insignia de armadura y nivel sobre HP
         int armor = player.getArmorValue();
         if (armor > 0) {
-            String armText = "🛡 " + armor + "  §6Nv." + data.level();
+            String armText = "§b🛡 " + armor + "  §6Nv." + data.level();
             graphics.drawString(mc.font, armText, hpX + 2, hpY - 16, 0xFFFFFFFF, true);
         }
 
-        // 2. Barra de Maná (MP) sobre la comida (lado derecho)
+        // Compact Hunger Bar on right side of hotbar (mirrors HP on left)
+        boolean showFood = com.soybe.awakeningsystem.client.gui.GuiConfig.isHudFoodBarVisible();
+        if (showFood) {
+            int foodX = screenW / 2 + 10;
+            int foodY = screenH - 39;
+            var foodData = player.getFoodData();
+            int foodLvl = foodData.getFoodLevel();
+            float satLvl = foodData.getSaturationLevel();
+
+            graphics.fill(foodX - 1, foodY - 1, foodX + barW + 1, foodY + barH + 1, 0xFF351F0A);
+            graphics.fill(foodX, foodY, foodX + barW, foodY + barH, 0xE01A0E04);
+
+            float foodRatio = Math.max(0.0F, Math.min(1.0F, foodLvl / 20.0F));
+            int curFoodW = (int) (barW * foodRatio);
+            if (curFoodW > 0) {
+                graphics.fillGradient(foodX, foodY, foodX + curFoodW, foodY + barH, 0xFFFF9800, 0xFFE65100);
+                graphics.fill(foodX, foodY, foodX + curFoodW, foodY + 1, 0xFFFFD084);
+            }
+
+            if (satLvl > 0) {
+                float satRatio = Math.max(0.0F, Math.min(1.0F, satLvl / 20.0F));
+                int satW = (int) (barW * satRatio);
+                if (satW > 0) {
+                    graphics.fill(foodX, foodY + barH - 2, foodX + Math.min(barW, satW), foodY + barH, 0xFFFFEE58);
+                }
+            }
+
+            String foodText = "\u25C6 " + foodLvl + "/20";
+            if (satLvl > 0) foodText += " \u00A7e[+" + (int) Math.ceil(satLvl) + "]";
+            graphics.drawString(mc.font, foodText, foodX + 2, foodY - 8, 0xFFFFD084, true);
+        }
+
         renderCompactManaBar(mc, graphics, data, screenW, screenH, isSys40, isSys30, isSys20, hasCultivation);
     }
 
@@ -552,13 +669,18 @@ public final class SystemHudOverlay {
         int bossBottom = getBossBarOffset(mc);
         int y = bossBottom > 0 ? (bossBottom + 6) : 8;
 
+        if (com.soybe.awakeningsystem.client.map.HunterMinimapRenderer.isDangerAlertActive()) {
+            int dangerBottom = com.soybe.awakeningsystem.client.map.HunterMinimapRenderer.getDangerAlertBottom(mc);
+            y = Math.max(y, dangerBottom + 5);
+        }
+
         if (data != null && data.isAnySystemUpdating()) {
             int bannerBottom = (bossBottom > 0 ? (bossBottom + 6) : 8) + 16;
             y = Math.max(y, bannerBottom + 6);
         }
 
         if (data != null && data.isDokkaebiScenarioActive()) {
-            int bannerOffset = data.isAnySystemUpdating() ? 32 : 0;
+            int bannerOffset = (data.isAnySystemUpdating() ? 32 : 0) + (com.soybe.awakeningsystem.client.map.HunterMinimapRenderer.isDangerAlertActive() ? 18 : 0);
             int dokkaebiBottom = Math.max(12, bossBottom + bannerOffset + 8) + 28;
             y = Math.max(y, dokkaebiBottom + 6);
         }
@@ -575,11 +697,19 @@ public final class SystemHudOverlay {
         if (mc.hitResult instanceof EntityHitResult entityHit
                 && entityHit.getEntity() instanceof LivingEntity living
                 && living.isAlive()) {
+            if (living instanceof com.soybe.awakeningsystem.entity.LimboStalkerCreature) {
+                return;
+            }
             Component name = living.getName();
+            if (!living.hasCustomName() && living instanceof net.minecraft.world.entity.monster.Enemy && !(living instanceof com.soybe.awakeningsystem.entity.LimboOphanimEntity)) {
+                int clientLevel = data != null ? Math.max(1, data.level()) : 1;
+                int perceived = AwakeningSystemClient.getPerceivedMobLevel(living, clientLevel);
+                net.minecraft.ChatFormatting color = perceived >= 80 ? net.minecraft.ChatFormatting.DARK_RED : (perceived >= 50 ? net.minecraft.ChatFormatting.RED : (perceived >= 25 ? net.minecraft.ChatFormatting.GOLD : (perceived >= 15 ? net.minecraft.ChatFormatting.YELLOW : net.minecraft.ChatFormatting.GREEN)));
+                name = Component.literal("[Nv. " + perceived + "] ").withStyle(color)
+                        .append(living.getType().getDescription().copy().withStyle(net.minecraft.ChatFormatting.WHITE));
+            }
 
-            boolean isBoss = !living.getType().getCategory().isFriendly() && (living.getMaxHealth() >= 80.0F
-                    || living instanceof net.minecraft.world.entity.boss.wither.WitherBoss
-                    || living instanceof net.minecraft.world.entity.boss.enderdragon.EnderDragon);
+            boolean isBoss = com.soybe.awakeningsystem.config.BossCompatibilityManager.isBoss(living);
             boolean isFriendly = living.getType().getCategory().isFriendly() || living instanceof net.minecraft.world.entity.animal.Animal || living instanceof net.minecraft.world.entity.npc.Npc;
 
             long now = System.currentTimeMillis();
@@ -589,10 +719,10 @@ public final class SystemHudOverlay {
 
             float targetY = (float) calculateDesiredTargetHudY(mc, data);
             if (isBoss) {
-                targetY += 4.0F; // Margen adicional de separación para jefes principales
+                targetY += 4.0F;
             }
             if (animatedCardY < 0.0F) {
-                animatedCardY = targetY; // Ajuste instantáneo sin atravesar la barra del jefe
+                animatedCardY = targetY;
             } else {
                 animatedCardY += (targetY - animatedCardY) * Math.min(1.0F, dt * 14.0F);
             }
@@ -609,7 +739,10 @@ public final class SystemHudOverlay {
                 Component hpComp = Component.literal("§a" + (int) hp + "§7/§2" + (int) maxHp + " §a(" + hpPercent + "%)");
                 int fullHpW = mc.font.width(hpComp);
 
-                int cardW = Math.min(Math.max(160, fullTitleW + fullHpW + 28), width - 16);
+                int maxFriendlyW = (com.soybe.awakeningsystem.client.map.HunterMinimapRenderer.isMinimapActive() && width < 500)
+                        ? Math.min(width - 32, 210)
+                        : width - 16;
+                int cardW = Math.min(Math.max(150, fullTitleW + fullHpW + 28), maxFriendlyW);
                 int cardH = 24;
                 int cardX = (com.soybe.awakeningsystem.client.gui.GuiConfig.appraisalX >= 0)
                         ? com.soybe.awakeningsystem.client.gui.GuiConfig.appraisalX
@@ -658,7 +791,7 @@ public final class SystemHudOverlay {
 
                 int minW = isBoss ? 240 : 190;
                 int neededW = Math.max(fullTitleW, fullHpW) + 24;
-                int cardW = Math.min(Math.max(minW, neededW), width - 16);
+                int cardW = Math.min(Math.max(minW, neededW), (com.soybe.awakeningsystem.client.map.HunterMinimapRenderer.isMinimapActive() && width < 500) ? Math.min(width - 32, 210) : width - 16);
                 int cardH = isBoss ? 32 : 28;
                 int cardX = (com.soybe.awakeningsystem.client.gui.GuiConfig.appraisalX >= 0)
                         ? com.soybe.awakeningsystem.client.gui.GuiConfig.appraisalX
@@ -679,7 +812,6 @@ public final class SystemHudOverlay {
                 graphics.fill(cardX + cardW - 5, cardY, cardX + cardW, cardY + 2, accentCol);
                 graphics.fill(cardX + cardW - 2, cardY, cardX + cardW, cardY + 5, accentCol);
 
-                // Nombre del objetivo en la línea superior (espacio completo sin colisión)
                 graphics.drawString(mc.font, titleComp, cardX + 8, cardY + 4, 0xFFFFFFFF);
 
                 int barW = cardW - 16;
@@ -697,7 +829,6 @@ public final class SystemHudOverlay {
                     graphics.fill(barX, barY, barX + filled, barY + 1, 0xFFFF85A1);
                 }
 
-                // Cifras de vida y porcentaje centradas nítidamente dentro de la barra de salud con sombra
                 int textX = barX + (barW - fullHpW) / 2;
                 int textY = barY + (barH - 8) / 2;
                 graphics.drawString(mc.font, hpText, textX, textY, 0xFFFFFFFF, true);
@@ -746,7 +877,9 @@ public final class SystemHudOverlay {
                         break;
                     }
                 }
-            } catch (Throwable ignored) {}
+            } catch (Throwable t) {
+                AwakeningSystemMod.LOGGER.debug("Error reflecting BossHealthOverlay: {}", t.getMessage());
+            }
         }
         if (BOSS_EVENTS_FIELD != null && mc.gui != null) {
             try {
@@ -757,16 +890,17 @@ public final class SystemHudOverlay {
                         count = map.size();
                     }
                 }
-            } catch (Throwable ignored) {}
+            } catch (Throwable t) {
+                AwakeningSystemMod.LOGGER.debug("Error obtaining active boss bar count: {}", t.getMessage());
+            }
         }
         if (count > 0) {
-            // Cada BossBar vanilla ocupa 19px a partir de y=12, más margen seguro de 14px
             return 12 + Math.min(count, 4) * 19 + 14;
         }
         if (mc.level != null) {
             String path = mc.level.dimension().location().getPath();
             if (path.contains("tower") || path.contains("dungeon") || path.contains("pagoda")) {
-                return 48; // Margen garantizado para mazmorras y torres
+                return 48;
             }
         }
         return 0;
@@ -802,7 +936,18 @@ public final class SystemHudOverlay {
         if (extraKills > 0) {
             progress = Component.translatable("awakening_system.hud.dokkaebi_extra_kills", timeStr, data.dokkaebiScenarioKills(), data.dokkaebiScenarioTargetKills(), extraKills);
         } else {
-            progress = Component.translatable("awakening_system.hud.dokkaebi_objective", timeStr, data.dokkaebiScenarioKills(), data.dokkaebiScenarioTargetKills());
+            String titleKey = data.dokkaebiScenarioTitle();
+            if (titleKey != null && titleKey.contains("iron")) {
+                progress = Component.translatable("awakening_system.hud.dokkaebi_objective_iron", timeStr, data.dokkaebiScenarioKills(), data.dokkaebiScenarioTargetKills());
+            } else if (titleKey != null && titleKey.contains("diamonds")) {
+                progress = Component.translatable("awakening_system.hud.dokkaebi_objective_diamonds", timeStr, data.dokkaebiScenarioKills(), data.dokkaebiScenarioTargetKills());
+            } else if (titleKey != null && titleKey.contains("combo")) {
+                progress = Component.translatable("awakening_system.hud.dokkaebi_objective_combo", timeStr, data.dokkaebiScenarioKills(), data.dokkaebiScenarioTargetKills());
+            } else if (titleKey != null && titleKey.contains("survive")) {
+                progress = Component.translatable("awakening_system.hud.dokkaebi_objective_survive", timeStr, data.dokkaebiScenarioKills(), data.dokkaebiScenarioTargetKills());
+            } else {
+                progress = Component.translatable("awakening_system.hud.dokkaebi_objective_kills", timeStr, data.dokkaebiScenarioKills(), data.dokkaebiScenarioTargetKills());
+            }
         }
         graphics.drawCenteredString(mc.font, progress, cardX + cardW / 2, cardY + 14, 0xFFFFFFFF);
     }
@@ -839,10 +984,11 @@ public final class SystemHudOverlay {
         String[] defaultKeys = {"V", "R", "G", "B", "X"};
 
         boolean hasStigma = data.sponsorConstellation() != null && !data.sponsorConstellation().isEmpty();
+        boolean hasAnyActiveRune = !data.getActiveRune(0).isEmpty() || !data.getActiveRune(1).isEmpty();
         int slotW = 20;
         int slotH = 19;
         int gap = 3;
-        int totalSlots = hasStigma ? 6 : 5;
+        int totalSlots = 5 + (hasStigma ? 1 : 0) + (hasAnyActiveRune ? 2 : 0);
         int hotbarW = totalSlots * slotW + (totalSlots - 1) * gap;
 
         int vanillaHotbarLeft = (screenW - 182) / 2;
@@ -873,7 +1019,7 @@ public final class SystemHudOverlay {
                 float cardScale = getEffectiveHudScale(screenW, screenH);
                 boolean hasCultivation = (data.dantianRealm() > 0 || data.cultivationQi() > 0 || data.cultivationSubLevel() > 1
                         || "demonic_cultivator".equals(data.hunterClass()) || "sword_saint".equals(data.hunterClass())
-                        || data.murimUnlocked() || data.system30Updated());
+                        || data.murimUnlocked() || data.system30Updated() || data.getOpenedMeridiansCount() > 0 || (mc.player != null && mc.player.level().dimension().location().getPath().contains("murim")));
                 int cardH = hasCultivation ? 86 : 70;
                 int effectiveCardH = (int) (cardH * cardScale);
                 startY = screenH - effectiveCardH - (int) (slotH * skillScale) - 14;
@@ -939,7 +1085,6 @@ public final class SystemHudOverlay {
             }
         }
 
-        // Estigma de Constelación (Slot Y)
         String sponsor = data.sponsorConstellation();
         if (sponsor != null && !sponsor.isEmpty()) {
             int stigmaX = 5 * (slotW + gap);
@@ -971,8 +1116,60 @@ public final class SystemHudOverlay {
             }
         }
 
+        if (hasAnyActiveRune) {
+            int runeStartIndex = 5 + (hasStigma ? 1 : 0);
+            net.minecraft.client.KeyMapping[] runeMappings = {
+                    AwakeningSystemClient.ACTIVATE_RUNE_1,
+                    AwakeningSystemClient.ACTIVATE_RUNE_2
+            };
+            String[] defaultRuneKeys = {"N", "M"};
+
+            for (int r = 0; r < 2; r++) {
+                int rx = (runeStartIndex + r) * (slotW + gap);
+                ItemStack runeStack = data.getActiveRune(r);
+                boolean hasRune = !runeStack.isEmpty();
+                int cd = hasRune ? data.getActiveRuneCooldownSeconds(r, gameTime) : 0;
+
+                int borderColor = hasRune ? (cd > 0 ? 0xFF883333 : 0xFF9D4EDD) : 0x80554477;
+                int bgColor = hasRune ? (cd > 0 ? 0xD0200808 : 0xD0170A24) : 0x60120B1C;
+                graphics.fill(rx, 0, rx + slotW, slotH, borderColor);
+                graphics.fill(rx + 1, 1, rx + slotW - 1, slotH - 1, bgColor);
+
+                String keyLabel = defaultRuneKeys[r];
+                if (runeMappings[r] != null && !runeMappings[r].isUnbound()) {
+                    String k = runeMappings[r].getTranslatedKeyMessage().getString().toUpperCase(java.util.Locale.ROOT);
+                    if (!k.isEmpty()) {
+                        keyLabel = k.length() > 2 ? k.substring(0, 2) : k;
+                    }
+                }
+
+                if (hasRune) {
+                    graphics.renderItem(runeStack, rx + 2, 2);
+                    if (cd > 0) {
+                        graphics.fill(rx + 1, 1, rx + slotW - 1, slotH - 1, 0x88000000);
+                        String cdStr = cd >= 60 ? (cd / 60) + "m" : cd + "s";
+                        graphics.pose().pushPose();
+                        graphics.pose().translate(0, 0, 200.0F);
+                        graphics.drawString(mc.font, cdStr, rx + (slotW - mc.font.width(cdStr)) / 2, 6, 0xFFFF5555, false);
+                        graphics.pose().popPose();
+                    }
+                } else {
+                    int symW = mc.font.width("◇");
+                    graphics.drawString(mc.font, "◇", rx + (slotW - symW) / 2, 6, 0x669D4EDD, false);
+                }
+
+                graphics.pose().pushPose();
+                graphics.pose().translate(0, 0, 200.0F);
+                graphics.drawString(mc.font, keyLabel, rx + 2, 1, hasRune ? 0xFF00E5FF : 0xFF777777, false);
+                graphics.pose().popPose();
+
+                if (data.isSystemUpdating() || data.isSystem30Updating()) {
+                    renderLockOverlay(graphics, rx, 0, slotW, slotH);
+                }
+            }
+        }
+
         graphics.pose().popPose();
     }
 }
-
 

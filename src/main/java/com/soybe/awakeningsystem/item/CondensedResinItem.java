@@ -39,13 +39,11 @@ public class CondensedResinItem extends Item {
         if (!level.isClientSide() && player instanceof ServerPlayer sp) {
             stack.shrink(1);
 
-            // Bendición de Dominio: 15 minutos (18000 ticks)
             sp.addEffect(new MobEffectInstance(MobEffects.DIG_SPEED, 18000, 1, false, true, true));
             sp.addEffect(new MobEffectInstance(MobEffects.MOVEMENT_SPEED, 18000, 0, false, true, true));
             sp.addEffect(new MobEffectInstance(MobEffects.REGENERATION, 600, 1, false, true, true));
             sp.getFoodData().eat(20, 20.0F);
 
-            // Marcar en datos persistentes que el jugador tiene el buff de Resina Concentrada
             sp.getPersistentData().putLong("condensed_resin_until", sp.level().getGameTime() + 18000L);
 
             if (level instanceof ServerLevel sl) {
@@ -55,7 +53,7 @@ public class CondensedResinItem extends Item {
                 sl.playSound(null, sp.getX(), sp.getY(), sp.getZ(), SoundEvents.PLAYER_BURP, SoundSource.PLAYERS, 0.7F, 1.2F);
             }
 
-            sp.displayClientMessage(Component.literal("§6✦ [RESINA CONCENTRADA] §e¡Bendición de Dominio activada! EXP y botín multiplicados por 15 minutos."), true);
+            sp.displayClientMessage(Component.translatable("item.awakening_system.condensed_resin.use_message"), true);
             return InteractionResultHolder.sidedSuccess(stack, level.isClientSide());
         }
 
@@ -64,12 +62,12 @@ public class CondensedResinItem extends Item {
 
     @Override
     public void appendHoverText(ItemStack stack, TooltipContext context, List<Component> tooltip, TooltipFlag flag) {
-        tooltip.add(Component.literal("§6⭐⭐⭐⭐ [Energía de Dominio]").withStyle(ChatFormatting.GOLD));
-        tooltip.add(Component.literal("§7Un cristal ámbar que almacena un inmenso flujo de resina original.").withStyle(ChatFormatting.GRAY));
+        tooltip.add(Component.translatable("item.awakening_system.condensed_resin.badge").withStyle(ChatFormatting.GOLD));
+        tooltip.add(Component.translatable("item.awakening_system.condensed_resin.desc").withStyle(ChatFormatting.GRAY));
         tooltip.add(Component.literal(""));
-        tooltip.add(Component.literal("§e✦ Clic Derecho: Bendición de Dominio").withStyle(ChatFormatting.YELLOW, ChatFormatting.BOLD));
-        tooltip.add(Component.literal("  §f• Otorga 15 minutos de Prisa Minera, Velocidad y Saciedad."));
-        tooltip.add(Component.literal("  §f• Duplica el botín y la experiencia en mazmorras y dominios."));
-        tooltip.add(Component.literal("§8✦ Receta: 1 Núcleo de Cristal + 40 Protogemas."));
+        tooltip.add(Component.translatable("item.awakening_system.condensed_resin.blessing_title").withStyle(ChatFormatting.YELLOW, ChatFormatting.BOLD));
+        tooltip.add(Component.translatable("item.awakening_system.condensed_resin.blessing_desc1"));
+        tooltip.add(Component.translatable("item.awakening_system.condensed_resin.blessing_desc2"));
+        tooltip.add(Component.translatable("item.awakening_system.condensed_resin.recipe"));
     }
 }

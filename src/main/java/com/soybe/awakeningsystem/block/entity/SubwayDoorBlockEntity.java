@@ -40,7 +40,6 @@ public class SubwayDoorBlockEntity extends BlockEntity {
         be.prevSlideProgress = be.slideProgress;
         boolean targetOpen = state.hasProperty(DoorBlock.OPEN) && state.getValue(DoorBlock.OPEN);
 
-        // Velocidad de deslizamiento neumático (~8-9 ticks = ~0.42s de apertura suave)
         float speed = 0.12F;
         if (targetOpen && be.slideProgress < 1.0F) {
             be.slideProgress = Math.min(1.0F, be.slideProgress + speed);

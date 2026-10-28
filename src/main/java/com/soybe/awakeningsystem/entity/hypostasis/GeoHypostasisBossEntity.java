@@ -34,7 +34,7 @@ public class GeoHypostasisBossEntity extends HypostasisBaseBossEntity {
 
     @Override
     protected Component getBossTitle() {
-        return Component.literal("§6✦ Gimel — Hipóstasis Geo ✦");
+        return Component.translatable("boss.awakening_system.hypostasis.geo");
     }
 
     @Override
@@ -49,7 +49,7 @@ public class GeoHypostasisBossEntity extends HypostasisBaseBossEntity {
 
     @Override
     public int getElementalColorHex() {
-        return 0xDDAA00; // Ámbar / Dorado Geo
+        return 0xDDAA00;
     }
 
     @Override
@@ -122,7 +122,7 @@ public class GeoHypostasisBossEntity extends HypostasisBaseBossEntity {
     protected void spawnRevivalObjects(ServerLevel sl) {
         sl.playSound(null, this.getX(), this.getY(), this.getZ(), SoundEvents.ANVIL_PLACE, SoundSource.HOSTILE, 2.0F, 0.6F);
         for (ServerPlayer player : sl.getPlayers(p -> p.distanceToSqr(this) < 1600.0D)) {
-            player.displayClientMessage(Component.literal("§6§l✦ [GIMEL EN CRISIS] §f¡Ataca rápidamente el núcleo de Geo expuesto antes de que canalice su defensa terrestre!"), true);
+            player.displayClientMessage(Component.translatable("boss.awakening_system.geo_hypostasis.crisis"), true);
         }
     }
 
@@ -144,12 +144,12 @@ public class GeoHypostasisBossEntity extends HypostasisBaseBossEntity {
                     data.addMora(60000);
                     data.addPrimogems(30);
                     com.soybe.awakeningsystem.AwakeningSystemMod.sync(sp);
-                    sp.displayClientMessage(Component.literal("§6§l✦ ¡HIPÓSTASIS GEO DERROTADO! §eHas ganado §6+60,000 Mora §ey §b+30 Protogemas§e."), false);
+                    sp.displayClientMessage(Component.translatable("boss.awakening_system.geo_hypostasis.defeated_teyvat"), false);
                 } else {
                     if (SystemItems.AWAKENING_COIN.isBound()) {
                         sp.addItem(new ItemStack(SystemItems.AWAKENING_COIN.get(), 24));
                     }
-                    sp.displayClientMessage(Component.literal("§6§l✦ ¡HIPÓSTASIS GEO DERROTADO! §6+24 Monedas de Despertar§e."), false);
+                    sp.displayClientMessage(Component.translatable("boss.awakening_system.geo_hypostasis.defeated_vanilla"), false);
                 }
             }
         }

@@ -128,18 +128,16 @@ public class SubwayWideRailTrackBlock extends Block {
     protected InteractionResult useWithoutItem(BlockState state, Level level, BlockPos pos, Player player, BlockHitResult hitResult) {
         if (!level.isClientSide()) {
             if (player.isShiftKeyDown()) {
-                // Shift + Clic: Alternar orientación (Norte-Sur <-> Este-Oeste)
                 WideTrackShape currentShape = state.getValue(SHAPE);
                 WideTrackShape nextShape = currentShape.nextStraight();
                 level.setBlock(pos, state.setValue(SHAPE, nextShape), 3);
                 level.playSound(null, pos, SoundEvents.ANVIL_USE, SoundSource.BLOCKS, 0.5F, 1.4F);
-                player.displayClientMessage(Component.literal("§e[Vía Decorativa ORV] §7Orientación: §f" + (nextShape == WideTrackShape.NORTH_SOUTH ? "Norte - Sur" : "Este - Oeste")), true);
+                player.displayClientMessage(Component.translatable("block.awakening_system.subway_track.orientation", (nextShape == WideTrackShape.NORTH_SOUTH ? "North - South" : "East - West")), true);
             } else {
-                // Clic normal: Alternar sección del modelo (Riel Izquierdo -> Durmientes -> Riel Derecho)
                 TrackSection nextSection = state.getValue(SECTION).next();
                 level.setBlock(pos, state.setValue(SECTION, nextSection), 3);
                 level.playSound(null, pos, SoundEvents.ARMOR_EQUIP_IRON.value(), SoundSource.BLOCKS, 0.8F, 1.2F);
-                player.displayClientMessage(Component.literal("§b[Vía Decorativa ORV] §7Sección: §f" + nextSection.getLabel()), true);
+                player.displayClientMessage(Component.translatable("block.awakening_system.subway_track.section_set", nextSection.getLabel()), true);
             }
         }
         return InteractionResult.sidedSuccess(level.isClientSide());

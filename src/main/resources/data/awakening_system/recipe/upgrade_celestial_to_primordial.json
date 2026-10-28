@@ -1,0 +1,24 @@
+{
+  "type": "minecraft:crafting_shaped",
+  "category": "misc",
+  "pattern": [
+    "#S#",
+    "SJS",
+    "#S#"
+  ],
+  "key": {
+    "#": {
+      "item": "awakening_system:primordial_ingot"
+    },
+    "S": {
+      "item": "minecraft:nether_star"
+    },
+    "J": {
+      "item": "awakening_system:celestial_ingot"
+    }
+  },
+  "result": {
+    "count": 1,
+    "id": "awakening_system:upgrade_celestial_to_primordial"
+  }
+}

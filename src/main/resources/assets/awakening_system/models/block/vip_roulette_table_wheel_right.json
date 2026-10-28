@@ -1,0 +1,69 @@
+{
+  "credit": "Awakening System - VIP Roulette Multiblock Wheel Right",
+  "textures": {
+    "wood": "awakening_system:block/casino_table_wood",
+    "felt": "awakening_system:block/casino_table_felt_vip_roulette",
+    "brass": "awakening_system:block/casino_table_brass",
+    "particle": "awakening_system:block/casino_table_brass"
+  },
+  "elements": [
+    {
+      "name": "leg_se",
+      "from": [12, 0, 12],
+      "to": [15, 12, 15],
+      "faces": {
+        "north": { "texture": "#wood" },
+        "east":  { "texture": "#wood" },
+        "south": { "texture": "#wood" },
+        "west":  { "texture": "#wood" },
+        "down":  { "texture": "#wood" }
+      }
+    },
+    {
+      "name": "base",
+      "from": [0, 11, 0],
+      "to": [15, 13.5, 15],
+      "faces": {
+        "east":  { "texture": "#wood" },
+        "south": { "texture": "#wood" },
+        "down":  { "texture": "#wood" },
+        "up":    { "texture": "#wood" }
+      }
+    },
+    {
+      "name": "rim_e",
+      "from": [14, 13.5, 0],
+      "to": [16, 15.5, 14],
+      "faces": {
+        "east":  { "texture": "#wood" },
+        "up":    { "texture": "#brass" },
+        "down":  { "texture": "#wood" },
+        "west":  { "texture": "#brass" }
+      }
+    },
+    {
+      "name": "rim_s",
+      "from": [0, 13.5, 14],
+      "to": [16, 15.5, 16],
+      "faces": {
+        "south": { "texture": "#wood" },
+        "up":    { "texture": "#brass" },
+        "down":  { "texture": "#wood" },
+        "north": { "texture": "#brass" },
+        "west":  { "texture": "#wood" },
+        "east":  { "texture": "#wood" }
+      }
+    },
+    {
+      "name": "wheel_bed",
+      "from": [0, 13.5, 0],
+      "to": [14, 13.8, 14],
+      "faces": {
+        "up": {
+          "uv": [8, 8, 16, 16],
+          "texture": "#wood"
+        }
+      }
+    }
+  ]
+}

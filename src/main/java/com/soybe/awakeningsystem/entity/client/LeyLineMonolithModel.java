@@ -42,40 +42,28 @@ public class LeyLineMonolithModel extends HierarchicalModel<LeyLineMonolithEntit
         MeshDefinition mesh = new MeshDefinition();
         PartDefinition root = mesh.getRoot();
 
-        // 1. Pedestal de piedra rúnica anclado al suelo (Y = 24.0)
         PartDefinition pedestal = root.addOrReplaceChild("pedestal", CubeListBuilder.create()
-                // Plinto 1 (inferior amplio - 24x2x24)
                 .texOffs(0, 0).addBox(-12.0F, -2.0F, -12.0F, 24.0F, 2.0F, 24.0F, new CubeDeformation(0.0F))
-                // Plinto 2 (intermedio - 20x2x20)
                 .texOffs(0, 28).addBox(-10.0F, -4.0F, -10.0F, 20.0F, 2.0F, 20.0F, new CubeDeformation(0.0F))
-                // Plinto 3 (collar del pedestal - 14x3x14)
                 .texOffs(0, 52).addBox(-7.0F, -7.0F, -7.0F, 14.0F, 3.0F, 14.0F, new CubeDeformation(0.0F))
-                // Brackets rúnicos de las 4 esquinas
                 .texOffs(0, 72).addBox(-9.0F, -6.0F, -9.0F, 3.0F, 4.0F, 3.0F, new CubeDeformation(0.0F))
                 .texOffs(0, 72).addBox(6.0F, -6.0F, -9.0F, 3.0F, 4.0F, 3.0F, new CubeDeformation(0.0F))
                 .texOffs(0, 72).addBox(-9.0F, -6.0F, 6.0F, 3.0F, 4.0F, 3.0F, new CubeDeformation(0.0F))
                 .texOffs(0, 72).addBox(6.0F, -6.0F, 6.0F, 3.0F, 4.0F, 3.0F, new CubeDeformation(0.0F)),
                 PartPose.offset(0.0F, 24.0F, 0.0F));
 
-        // 2. Obelisco levitante central (flota sobre el pedestal)
         PartDefinition obelisk = root.addOrReplaceChild("obelisk", CubeListBuilder.create()
-                // Pilar inferior principal (10x16x10)
                 .texOffs(58, 52).addBox(-5.0F, -16.0F, -5.0F, 10.0F, 16.0F, 10.0F, new CubeDeformation(0.0F))
-                // Cúspide cónica escalonada (8x14x8)
                 .texOffs(0, 80).addBox(-4.0F, -30.0F, -4.0F, 8.0F, 14.0F, 8.0F, new CubeDeformation(0.0F))
-                // Ápice superior (5x6x5)
                 .texOffs(34, 80).addBox(-2.5F, -36.0F, -2.5F, 5.0F, 6.0F, 5.0F, new CubeDeformation(0.0F))
-                // Aletas/nervaduras verticales rúnicas (Norte/Sur: 2x20x14, Este/Oeste: 14x20x2)
                 .texOffs(64, 0).addBox(-1.0F, -26.0F, -7.0F, 2.0F, 20.0F, 14.0F, new CubeDeformation(0.0F))
                 .texOffs(96, 0).addBox(-7.0F, -26.0F, -1.0F, 14.0F, 20.0F, 2.0F, new CubeDeformation(0.0F)),
                 PartPose.offset(0.0F, 8.0F, 0.0F));
 
-        // Núcleo interno de energía de Líneas Ley
         obelisk.addOrReplaceChild("core", CubeListBuilder.create()
                 .texOffs(42, 94).addBox(-3.0F, -22.0F, -3.0F, 6.0F, 12.0F, 6.0F, new CubeDeformation(0.0F)),
                 PartPose.ZERO);
 
-        // 3. Anillo rúnico inferior flotante (gira horariamente)
         root.addOrReplaceChild("ring_lower", CubeListBuilder.create()
                 .texOffs(60, 94).addBox(-8.0F, -1.0F, -10.0F, 16.0F, 2.0F, 2.0F, new CubeDeformation(0.0F))
                 .texOffs(60, 94).addBox(-8.0F, -1.0F, 8.0F, 16.0F, 2.0F, 2.0F, new CubeDeformation(0.0F))
@@ -83,7 +71,6 @@ public class LeyLineMonolithModel extends HierarchicalModel<LeyLineMonolithEntit
                 .texOffs(68, 100).addBox(8.0F, -1.0F, -6.0F, 2.0F, 2.0F, 12.0F, new CubeDeformation(0.0F)),
                 PartPose.offset(0.0F, 6.0F, 0.0F));
 
-        // 4. Anillo rúnico superior flotante (gira antihorariamente e inclinado)
         root.addOrReplaceChild("ring_upper", CubeListBuilder.create()
                 .texOffs(0, 106).addBox(-6.0F, -1.0F, -8.0F, 12.0F, 2.0F, 2.0F, new CubeDeformation(0.0F))
                 .texOffs(0, 106).addBox(-6.0F, -1.0F, 6.0F, 12.0F, 2.0F, 2.0F, new CubeDeformation(0.0F))
@@ -91,7 +78,6 @@ public class LeyLineMonolithModel extends HierarchicalModel<LeyLineMonolithEntit
                 .texOffs(0, 112).addBox(6.0F, -1.0F, -5.0F, 2.0F, 2.0F, 10.0F, new CubeDeformation(0.0F)),
                 PartPose.offset(0.0F, -10.0F, 0.0F));
 
-        // 5. Fragmentos de cristal ley flotantes en la cúspide
         root.addOrReplaceChild("crystals", CubeListBuilder.create()
                 .texOffs(26, 112).addBox(5.0F, -10.0F, 0.0F, 2.0F, 5.0F, 2.0F, new CubeDeformation(0.0F))
                 .texOffs(26, 112).addBox(-7.0F, -10.0F, 0.0F, 2.0F, 5.0F, 2.0F, new CubeDeformation(0.0F))
@@ -112,11 +98,9 @@ public class LeyLineMonolithModel extends HierarchicalModel<LeyLineMonolithEntit
                           float ageInTicks, float netHeadYaw, float headPitch) {
         this.root().getAllParts().forEach(ModelPart::resetPose);
 
-        // 1. Levitación sinusoidal suave del obelisco central
         float floatOffset = Mth.sin(ageInTicks * 0.05F) * 1.8F;
         this.obelisk.y = 8.0F + floatOffset;
 
-        // 2. Rotación de los anillos rúnicos
         this.ringLower.yRot = ageInTicks * 0.035F;
         this.ringLower.y = 6.0F + floatOffset * 0.5F;
 
@@ -124,10 +108,8 @@ public class LeyLineMonolithModel extends HierarchicalModel<LeyLineMonolithEntit
         this.ringUpper.xRot = 0.10F * Mth.sin(ageInTicks * 0.03F);
         this.ringUpper.y = -10.0F + floatOffset * 0.7F;
 
-        // 3. Rotación del núcleo interno
         this.core.yRot = ageInTicks * 0.08F;
 
-        // 4. Órbita de los cristales superiores
         this.crystals.yRot = ageInTicks * 0.05F;
         this.crystals.y = -20.0F + floatOffset + Mth.cos(ageInTicks * 0.07F) * 1.2F;
     }

@@ -25,8 +25,6 @@ public class DragonNestRenderer implements BlockEntityRenderer<DragonNestBlockEn
 
     @Override
     public void render(DragonNestBlockEntity nest, float partialTick, PoseStack poseStack, MultiBufferSource buffer, int packedLight, int packedOverlay) {
-        // 1. Renderizar el Nido de ramas y paja apoyado firmemente en el suelo
-        // Escala ampliada a 1.55x en planta para una cuna amplia, espaciosa y majestuosa
         poseStack.pushPose();
         poseStack.translate(0.5D, 1.5D, 0.5D);
         poseStack.mulPose(Axis.XP.rotationDegrees(180.0F));
@@ -36,21 +34,16 @@ public class DragonNestRenderer implements BlockEntityRenderer<DragonNestBlockEn
         this.nestModel.renderToBuffer(poseStack, nestConsumer, packedLight, packedOverlay, 0xFFFFFFFF);
         poseStack.popPose();
 
-        // 2. Renderizar 1 o 2 huevos 3D descansando naturalmente sobre el lecho de paja
         int eggCount = nest.getEggCount();
         if (eggCount == 1) {
-            // Un solo huevo: perfectamente centrado en el lecho con una suave inclinación orgánica
             renderEgg(poseStack, buffer, packedLight, packedOverlay,
                     nest.getEggVariant1(), 0.0D, 0.14D, 0.0D,
                     4.0F, 15.0F, 6.0F, 0.80F);
         } else if (eggCount >= 2) {
-            // Dos huevos: separados con holgura y espacio visible de paja entre ellos
-            // Huevo 1: descanso lateral izquierdo con inclinación hacia afuera
             renderEgg(poseStack, buffer, packedLight, packedOverlay,
                     nest.getEggVariant1(), -0.32D, 0.14D, -0.08D,
                     5.0F, -20.0F, -14.0F, 0.64F);
 
-            // Huevo 2: descanso lateral derecho con inclinación opuesta y rotación diferente
             renderEgg(poseStack, buffer, packedLight, packedOverlay,
                     nest.getEggVariant2(), 0.32D, 0.14D, 0.08D,
                     -5.0F, 25.0F, 14.0F, 0.64F);
@@ -66,18 +59,14 @@ public class DragonNestRenderer implements BlockEntityRenderer<DragonNestBlockEn
                            float rotX, float rotY, float rotZ, float scale) {
         poseStack.pushPose();
 
-        // A. Posicionar la base del huevo en las coordenadas del bloque
         poseStack.translate(0.5D + offsetX, offsetY, 0.5D + offsetZ);
 
-        // B. Inclinaciones y orientaciones orgánicas en el nido
         poseStack.mulPose(Axis.YP.rotationDegrees(rotY));
         poseStack.mulPose(Axis.XP.rotationDegrees(rotX));
         poseStack.mulPose(Axis.ZP.rotationDegrees(rotZ));
 
-        // C. Escalar el huevo con su pivote exactamente en la base
         poseStack.scale(scale, scale, scale);
 
-        // D. Alinear con el sistema de coordenadas de AncientDragonEggModel (offset base Y=24, origen Y=1.5 con XP 180)
         poseStack.translate(0.0D, 1.5D, 0.0D);
         poseStack.mulPose(Axis.XP.rotationDegrees(180.0F));
 

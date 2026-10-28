@@ -1,0 +1,12 @@
+{
+  "type": "minecraft:smelting",
+  "category": "misc",
+  "cookingtime": 200,
+  "experience": 2.5,
+  "ingredient": {
+    "item": "awakening_system:astralite_ore"
+  },
+  "result": {
+    "id": "awakening_system:astralite_ingot"
+  }
+}

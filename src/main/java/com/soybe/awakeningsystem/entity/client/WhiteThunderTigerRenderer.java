@@ -27,7 +27,6 @@ public class WhiteThunderTigerRenderer extends MobRenderer<WhiteThunderTigerEnti
 
     @Override
     protected void scale(WhiteThunderTigerEntity entity, PoseStack poseStack, float partialTickTime) {
-        // Escala regia de bestia espiritual felina (1.3x)
         poseStack.scale(1.3F, 1.3F, 1.3F);
     }
 }

@@ -49,7 +49,7 @@ public class EldoriaFruitItem extends Item {
             }
 
             player.addEffect(new MobEffectInstance(MobEffects.NIGHT_VISION, 600, 0, false, true));
-            player.addEffect(new MobEffectInstance(MobEffects.MOVEMENT_SPEED, 300, 1, false, true)); // Velocidad II
+            player.addEffect(new MobEffectInstance(MobEffects.MOVEMENT_SPEED, 300, 1, false, true));
 
             if (level instanceof ServerLevel sl) {
                 sl.sendParticles(ParticleTypes.END_ROD, player.getX(), player.getY() + 1.0D, player.getZ(), 25, 0.5D, 0.6D, 0.5D, 0.08D);
@@ -57,18 +57,18 @@ public class EldoriaFruitItem extends Item {
             }
 
             player.playNotifySound(SoundEvents.EXPERIENCE_ORB_PICKUP, SoundSource.PLAYERS, 1.0F, 1.6F);
-            player.displayClientMessage(Component.literal("§e§l⭐ [FRUTA DE ELDORIA] §fLa esencia astral agudiza tu visión y restaura +50 de Maná."), true);
+            player.displayClientMessage(Component.translatableWithFallback("item.awakening_system.eldoria_fruit.msg", "§e§l⭐ [ELDORIA FRUIT] §fThe astral essence sharpens your vision and restores +50 Mana."), true);
         }
         return result;
     }
 
     @Override
     public void appendHoverText(ItemStack stack, TooltipContext context, List<Component> tooltip, TooltipFlag flag) {
-        tooltip.add(Component.literal("§e§lFruta Estelar de Eldoria").withStyle(ChatFormatting.YELLOW));
-        tooltip.add(Component.literal("§7Fruto luminiscente que crece en las ramas más altas del Árbol Sagrado de Eldoria."));
-        tooltip.add(Component.literal(""));
-        tooltip.add(Component.literal("§e▪ Al Consumir:"));
-        tooltip.add(Component.literal("  §b▪ +50 Energía de Maná y +35 EXP"));
-        tooltip.add(Component.literal("  §e▪ Visión Nocturna (30s) y Velocidad II (15s)"));
+        tooltip.add(Component.translatable("item.awakening_system.eldoria_fruit.title").withStyle(ChatFormatting.YELLOW));
+        tooltip.add(Component.translatable("item.awakening_system.eldoria_fruit.desc"));
+        tooltip.add(Component.empty());
+        tooltip.add(Component.translatable("item.awakening_system.eldoria_fruit.on_consume"));
+        tooltip.add(Component.translatable("item.awakening_system.eldoria_fruit.effect1"));
+        tooltip.add(Component.translatable("item.awakening_system.eldoria_fruit.effect2"));
     }
 }

@@ -1,0 +1,9 @@
+{
+  "parent": "awakening_system:custom/aether_plushie",
+  "textures": {
+    "all": "awakening_system:block/tomcraftplushie",
+    "particle": "awakening_system:block/tomcraftplushie",
+    "0": "awakening_system:block/tomcraftplushie"
+  },
+  "render_type": "cutout"
+}

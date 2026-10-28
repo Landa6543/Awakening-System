@@ -33,7 +33,6 @@ public final class SkillDetailScreen extends Screen {
 
     @Override
     public void renderBackground(GuiGraphics graphics, int mouseX, int mouseY, float partialTick) {
-        // Deliberately avoids vanilla blur
     }
 
     @Override
@@ -46,8 +45,42 @@ public final class SkillDetailScreen extends Screen {
         minecraft.setScreen(new SystemScreen(1));
     }
 
+    public float getGuiScale() {
+        float scaleX = (float) this.width / (W + 20.0F);
+        float scaleY = (float) this.height / (H + 20.0F);
+        float scale = Math.min(scaleX, scaleY);
+        return Math.min(1.0F, Math.max(0.35F, scale));
+    }
+
+    public double transformMouseX(double mouseX) {
+        float scale = getGuiScale();
+        if (scale >= 1.0F) return mouseX;
+        double cx = this.width / 2.0;
+        return (mouseX - cx) / scale + cx;
+    }
+
+    public double transformMouseY(double mouseY) {
+        float scale = getGuiScale();
+        if (scale >= 1.0F) return mouseY;
+        double cy = this.height / 2.0;
+        return (mouseY - cy) / scale + cy;
+    }
+
+    @Override
+    public boolean mouseReleased(double mouseX, double mouseY, int button) {
+        return super.mouseReleased(transformMouseX(mouseX), transformMouseY(mouseY), button);
+    }
+
+    @Override
+    public boolean mouseDragged(double mouseX, double mouseY, int button, double dragX, double dragY) {
+        return super.mouseDragged(transformMouseX(mouseX), transformMouseY(mouseY), button, dragX, dragY);
+    }
+
     @Override
     public boolean mouseClicked(double mouseX, double mouseY, int button) {
+        mouseX = transformMouseX(mouseX);
+        mouseY = transformMouseY(mouseY);
+
         int left = (width - W) / 2;
         int top = (height - H) / 2;
 
@@ -81,6 +114,19 @@ public final class SkillDetailScreen extends Screen {
 
     @Override
     public void render(GuiGraphics graphics, int mouseX, int mouseY, float partialTick) {
+        float scale = getGuiScale();
+        int mX = (int) Math.round(transformMouseX(mouseX));
+        int mY = (int) Math.round(transformMouseY(mouseY));
+
+        graphics.pose().pushPose();
+        if (scale < 1.0F) {
+            float cxF = this.width / 2.0F;
+            float cyF = this.height / 2.0F;
+            graphics.pose().translate(cxF, cyF, 0.0F);
+            graphics.pose().scale(scale, scale, 1.0F);
+            graphics.pose().translate(-cxF, -cyF, 0.0F);
+        }
+
         SystemData currentData = Minecraft.getInstance().player == null ? new SystemData()
                 : Minecraft.getInstance().player.getData(AwakeningSystemMod.PLAYER_SYSTEM);
         boolean sys30 = currentData.system30Updated();
@@ -93,21 +139,17 @@ public final class SkillDetailScreen extends Screen {
         List<net.minecraft.util.FormattedCharSequence> description = font.split(definition.description(), contentWidth);
         List<net.minecraft.util.FormattedCharSequence> effect = font.split(definition.effect(), contentWidth);
 
-        // Fondo y Marco Principal
         graphics.fill(0, 0, width, height, sys30 ? 0x600B1513 : (isSys20 ? 0x60140B22 : 0x40101A2A));
         graphics.fill(left - 3, top - 3, left + W + 3, top + H + 3, sys30 ? 0x80D4AF37 : (isSys20 ? 0x809D4EDD : 0x802D7691));
         graphics.fill(left - 1, top - 1, left + W + 1, top + H + 1, (sys30 || isSys20) ? 0xFFFFD700 : CYAN);
         graphics.fill(left, top, left + W, top + H, sys30 ? 0xF00B1513 : (isSys20 ? 0xF0140B22 : 0xF0132537));
         graphics.fill(left, top, left + W, top + 3, (sys30 || isSys20) ? 0xFFFFD700 : CYAN);
 
-        // Cabecera de la Habilidad
         graphics.fill(left + 14, top + 14, left + W - 14, top + 76, sys30 ? 0xFF142420 : (isSys20 ? 0xFF28103F : 0xFF17354B));
         graphics.fill(left + 14, top + 74, left + W - 14, top + 76, GOLD);
 
-        // 1. Nombre de la habilidad (Línea 1, Centrado)
         graphics.drawCenteredString(font, definition.name().copy().withStyle(ChatFormatting.BOLD), width / 2, top + 22, GOLD);
 
-        // 2. Tipo y Nivel con color de rareza (Línea 2, Centrado)
         boolean isActive = SkillDefinitions.isActive(skillId);
         Component typeTag = (isActive
                 ? Component.translatable("awakening_system.skill.active_tag")
@@ -118,19 +160,16 @@ public final class SkillDetailScreen extends Screen {
         Component subHeader = typeTag.copy().append(levelComp).append(rarityComp);
         graphics.drawCenteredString(font, subHeader, width / 2, top + 38, isActive ? ((sys30 || isSys20) ? 0xFFFFD700 : CYAN) : 0xFF50FA7B);
 
-        // 3. Dominio / Maestría (Línea 3, Centrado)
         graphics.drawCenteredString(font, Component.translatable("awakening_system.skill.mastery", progress, progressRequired), width / 2, top + 54, sys30 ? 0xFF88C999 : (isSys20 ? 0xFFD1B3E0 : MUTED));
 
-        // 4. Fila de Acciones / Estado (Línea 4, Debajo del encabezado)
         if (isActive) {
             int btnW = 120;
             int btnH = 20;
 
-            // Botón 1: Asignar / Equipar en [V]
             boolean isEquipped = skillId.equals(currentData.equippedSkill());
             int eqX = left + (W / 2) - btnW - 6;
             int eqY = top + 84;
-            boolean eqHovered = mouseX >= eqX && mouseX <= eqX + btnW && mouseY >= eqY && mouseY <= eqY + btnH;
+            boolean eqHovered = mX >= eqX && mX <= eqX + btnW && mY >= eqY && mY <= eqY + btnH;
 
             graphics.fill(eqX, eqY, eqX + btnW, eqY + btnH, isEquipped ? 0xFF163E2A : (eqHovered ? (sys30 ? 0xFF2ECC71 : (isSys20 ? 0xFF9D4EDD : 0xFF70E8FF)) : (sys30 ? 0xFF163E2A : (isSys20 ? 0xFF3A1259 : 0xFF276A82))));
             drawBorder(graphics, eqX, eqY, btnW, btnH, isEquipped ? 0xFF50FA7B : (eqHovered ? 0xFFFFFFFF : ((sys30 || isSys20) ? 0xFFFFD700 : 0xFF50B4D8)));
@@ -139,13 +178,12 @@ public final class SkillDetailScreen extends Screen {
                     : Component.translatable("awakening_system.skill.equip_v");
             graphics.drawCenteredString(font, eqText, eqX + btnW / 2, eqY + 6, isEquipped ? 0xFF50FA7B : (eqHovered ? 0xFF10202D : (sys30 ? 0xFFFFD700 : 0xFFFFFFFF)));
 
-            // Botón 2: Activar (35 EP) / Recarga
             long curGameTime = Minecraft.getInstance().level == null ? 0L : Minecraft.getInstance().level.getGameTime();
             int activeCd = currentData.activeCooldownSeconds(skillId, curGameTime);
             boolean canActivate = activeCd <= 0 && currentData.energy() >= SystemData.ACTIVE_SKILL_COST;
             int actX = left + (W / 2) + 6;
             int actY = top + 84;
-            boolean actHovered = mouseX >= actX && mouseX <= actX + btnW && mouseY >= actY && mouseY <= actY + btnH;
+            boolean actHovered = mX >= actX && mX <= actX + btnW && mY >= actY && mY <= actY + btnH;
 
             graphics.fill(actX, actY, actX + btnW, actY + btnH, activeCd > 0 ? (sys30 ? 0xFF0E261E : (isSys20 ? 0xFF28103F : 0xFF1C3243)) : (actHovered && canActivate ? 0xFF50FA7B : (canActivate ? (sys30 ? 0xFF163E2A : (isSys20 ? 0xFF5B1B7D : 0xFF1D5A40)) : (sys30 ? 0xFF0E261E : (isSys20 ? 0xFF28103F : 0xFF1C3243)))));
             drawBorder(graphics, actX, actY, btnW, btnH, activeCd > 0 ? (sys30 ? 0x40D4AF37 : (isSys20 ? 0x409D4EDD : 0x402D7691)) : (canActivate ? ((sys30 || isSys20) ? 0xFFFFD700 : 0xFF50FA7B) : (sys30 ? 0x40D4AF37 : (isSys20 ? 0x409D4EDD : 0x402D7691))));
@@ -154,7 +192,6 @@ public final class SkillDetailScreen extends Screen {
                     : (canActivate ? Component.translatable("awakening_system.skill.activate") : Component.translatable("awakening_system.skill.no_energy"));
             graphics.drawCenteredString(font, actText, actX + btnW / 2, actY + 6, activeCd > 0 ? (sys30 ? 0xFF88C999 : (isSys20 ? 0xFFD1B3E0 : MUTED)) : (actHovered && canActivate ? 0xFF10202D : (canActivate ? ((sys30 || isSys20) ? 0xFFFFD700 : 0xFF50FA7B) : (sys30 ? 0xFF88C999 : (isSys20 ? 0xFFD1B3E0 : MUTED)))));
         } else {
-            // Insignia de Habilidad Pasiva Permanente
             int passW = 230;
             int passH = 20;
             int passX = left + (W - passW) / 2;
@@ -164,13 +201,11 @@ public final class SkillDetailScreen extends Screen {
             graphics.drawCenteredString(font, Component.translatable("awakening_system.skill.passive_blessing"), passX + passW / 2, passY + 6, (sys30 || isSys20) ? 0xFFFFD700 : 0xFF50FA7B);
         }
 
-        // 5. Bloques de Descripción y Efecto
         int y = top + 112;
         y = drawTextBlock(graphics, Component.translatable("awakening_system.skill.description"), description, contentX, y, sys30 ? 0xFFE0F2E9 : (isSys20 ? 0xFFEDE2FF : 0xFFE9F2F6), sys30 || isSys20);
         y += 8;
         drawTextBlock(graphics, Component.translatable("awakening_system.skill.effect"), effect, contentX, y, GOLD, sys30 || isSys20);
 
-        // 6. Sección de Evolución (Nivel 5)
         if (skillLevel == 5) {
             String affinity = SkillDefinitions.affinity(skillId);
             long gameTime = Minecraft.getInstance().level == null ? 0L : Minecraft.getInstance().level.getGameTime();
@@ -181,7 +216,7 @@ public final class SkillDetailScreen extends Screen {
                     currentData.affinity(affinity), currentData.attributePoints()), width / 2, top + H - 54, sys30 ? 0xFF88C999 : (isSys20 ? 0xFFD1B3E0 : MUTED));
 
             int evY = top + H - 42;
-            boolean evHovered = mouseX >= left + 40 && mouseX <= left + W - 40 && mouseY >= evY && mouseY <= evY + 16;
+            boolean evHovered = mX >= left + 40 && mX <= left + W - 40 && mY >= evY && mY <= evY + 16;
             if (eligible) {
                 graphics.fill(left + 60, evY, left + W - 60, evY + 16, evHovered ? 0xFFFFD866 : 0xFFB8860B);
                 drawBorder(graphics, left + 60, evY, W - 120, 16, evHovered ? 0xFFFFFFFF : 0xFFFFD866);
@@ -194,8 +229,9 @@ public final class SkillDetailScreen extends Screen {
             }
         }
 
-        // 7. Pie de página
         graphics.drawCenteredString(font, Component.translatable("awakening_system.skill.back"), width / 2, top + H - 18, sys30 ? 0xFF88C999 : (isSys20 ? 0xFFD1B3E0 : MUTED));
+
+        graphics.pose().popPose();
     }
 
     private void drawBorder(GuiGraphics g, int x, int y, int w, int h, int color) {
@@ -204,7 +240,6 @@ public final class SkillDetailScreen extends Screen {
         g.fill(x, y, x + 1, y + h, color);
         g.fill(x + w - 1, y, x + w, y + h, color);
     }
-
 
     private net.minecraft.resources.ResourceLocation skillTexture() {
         String base = skillId.endsWith("_evolution") ? skillId.substring(0, skillId.length() - 11) : skillId;

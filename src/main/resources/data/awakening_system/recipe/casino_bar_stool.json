@@ -1,0 +1,21 @@
+{
+  "type": "minecraft:crafting_shaped",
+  "category": "building",
+  "pattern": [
+    " W ",
+    " I ",
+    "I I"
+  ],
+  "key": {
+    "W": {
+      "item": "minecraft:red_wool"
+    },
+    "I": {
+      "item": "minecraft:iron_ingot"
+    }
+  },
+  "result": {
+    "count": 1,
+    "id": "awakening_system:casino_bar_stool"
+  }
+}

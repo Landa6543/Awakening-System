@@ -49,14 +49,12 @@ public class HeavenlyLongevityPeachItem extends Item {
                 AwakeningSystemMod.sync(player);
             }
 
-            // Purificación absoluta de estados nocivos
             player.removeAllEffects();
 
-            // Bendiciones supremas de longevidad
-            player.addEffect(new MobEffectInstance(MobEffects.REGENERATION, 400, 2, false, true)); // Regen III (20s)
-            player.addEffect(new MobEffectInstance(MobEffects.ABSORPTION, 600, 3, false, true)); // Absorción IV (30s)
-            player.addEffect(new MobEffectInstance(MobEffects.DAMAGE_RESISTANCE, 600, 1, false, true)); // Resistencia II (30s)
-            player.addEffect(new MobEffectInstance(MobEffects.FIRE_RESISTANCE, 1200, 0, false, true)); // Inmune fuego 60s
+            player.addEffect(new MobEffectInstance(MobEffects.REGENERATION, 400, 2, false, true));
+            player.addEffect(new MobEffectInstance(MobEffects.ABSORPTION, 600, 3, false, true));
+            player.addEffect(new MobEffectInstance(MobEffects.DAMAGE_RESISTANCE, 600, 1, false, true));
+            player.addEffect(new MobEffectInstance(MobEffects.FIRE_RESISTANCE, 1200, 0, false, true));
 
             if (level instanceof ServerLevel sl) {
                 sl.sendParticles(ParticleTypes.TOTEM_OF_UNDYING, player.getX(), player.getY() + 1.2D, player.getZ(), 60, 0.8D, 1.0D, 0.8D, 0.2D);
@@ -65,25 +63,25 @@ public class HeavenlyLongevityPeachItem extends Item {
             }
 
             player.playNotifySound(SoundEvents.TOTEM_USE, SoundSource.PLAYERS, 0.8F, 1.3F);
-            player.displayClientMessage(Component.literal("§6§l🍑 [MELOCOTÓN DE LA INMORTALIDAD] §e¡La fruta divina regenera tu cuerpo y meridianos (+150 Qi Supremo)!"), true);
+            player.displayClientMessage(Component.translatableWithFallback("item.awakening_system.heavenly_longevity_peach.msg", "§6§l🍑 [PEACH OF IMMORTALITY] §eThe divine fruit regenerates your body and meridians (+150 Supreme Qi)!"), true);
         }
         return result;
     }
 
     @Override
     public boolean isFoil(ItemStack stack) {
-        return true; // Resplandor dorado de reliquia viva
+        return true;
     }
 
     @Override
     public void appendHoverText(ItemStack stack, TooltipContext context, List<Component> tooltip, TooltipFlag flag) {
-        tooltip.add(Component.literal("§6§lMelocotón Celestial de la Inmortalidad (Pantao)").withStyle(ChatFormatting.GOLD));
-        tooltip.add(Component.literal("§dFruta mítica del Jardín Celestial que madura solo una vez cada tres mil años."));
-        tooltip.add(Component.literal("§7Concede longevidad, cura todo mal y nutre el Mar de Qi del cultivador."));
-        tooltip.add(Component.literal(""));
-        tooltip.add(Component.literal("§e▪ Al Consumir:"));
-        tooltip.add(Component.literal("  §b▪ +150 Qi Supremo de Cultivo, +100 EXP y +80 Energía"));
-        tooltip.add(Component.literal("  §a▪ Purificación Total de Maleficios y Efectos Negativos"));
-        tooltip.add(Component.literal("  §6▪ Regeneración III (20s), Absorción IV (30s) y Resistencia II (30s)"));
+        tooltip.add(Component.translatable("item.awakening_system.heavenly_longevity_peach.title").withStyle(ChatFormatting.GOLD));
+        tooltip.add(Component.translatable("item.awakening_system.heavenly_longevity_peach.desc1"));
+        tooltip.add(Component.translatable("item.awakening_system.heavenly_longevity_peach.desc2"));
+        tooltip.add(Component.empty());
+        tooltip.add(Component.translatable("item.awakening_system.heavenly_longevity_peach.on_consume"));
+        tooltip.add(Component.translatable("item.awakening_system.heavenly_longevity_peach.effect1"));
+        tooltip.add(Component.translatable("item.awakening_system.heavenly_longevity_peach.effect2"));
+        tooltip.add(Component.translatable("item.awakening_system.heavenly_longevity_peach.effect3"));
     }
 }

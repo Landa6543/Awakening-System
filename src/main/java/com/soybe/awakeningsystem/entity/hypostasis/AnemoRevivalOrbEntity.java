@@ -48,7 +48,6 @@ public class AnemoRevivalOrbEntity extends Monster {
                     this.getZ() + (random.nextDouble() - 0.5D) * 0.6D,
                     0, 0.05D, 0);
         } else {
-            // Si un jugador la toca físicamente, se absorbe y destruye
             for (Player player : this.level().getEntitiesOfClass(Player.class, this.getBoundingBox().inflate(0.4D))) {
                 destroyOrb();
                 break;

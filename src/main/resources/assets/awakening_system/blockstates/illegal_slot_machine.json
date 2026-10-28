@@ -1,0 +1,12 @@
+{
+  "variants": {
+    "facing=east,part=front":  { "model": "awakening_system:block/illegal_slot_machine" },
+    "facing=east,part=back":   { "model": "awakening_system:block/illegal_slot_machine" },
+    "facing=south,part=front": { "model": "awakening_system:block/illegal_slot_machine", "y": 90 },
+    "facing=south,part=back":  { "model": "awakening_system:block/illegal_slot_machine", "y": 90 },
+    "facing=west,part=front":  { "model": "awakening_system:block/illegal_slot_machine", "y": 180 },
+    "facing=west,part=back":   { "model": "awakening_system:block/illegal_slot_machine", "y": 180 },
+    "facing=north,part=front": { "model": "awakening_system:block/illegal_slot_machine", "y": 270 },
+    "facing=north,part=back":  { "model": "awakening_system:block/illegal_slot_machine", "y": 270 }
+  }
+}

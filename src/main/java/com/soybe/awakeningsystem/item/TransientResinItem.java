@@ -48,7 +48,7 @@ public class TransientResinItem extends Item {
                 sl.playSound(null, sp.getX(), sp.getY(), sp.getZ(), SoundEvents.PLAYER_LEVELUP, SoundSource.PLAYERS, 1.0F, 1.5F);
             }
 
-            sp.displayClientMessage(Component.literal("§d✦ [RESINA EFÍMERA] §a¡Has liberado 60 unidades de Resina Original!"), true);
+            sp.displayClientMessage(Component.translatable("item.awakening_system.transient_resin.use_message"), true);
             return InteractionResultHolder.sidedSuccess(stack, level.isClientSide());
         }
 
@@ -57,8 +57,8 @@ public class TransientResinItem extends Item {
 
     @Override
     public void appendHoverText(ItemStack stack, TooltipContext context, List<Component> tooltip, TooltipFlag flag) {
-        tooltip.add(Component.literal("§d⭐⭐⭐⭐ [Reliquia de Tetera de Relajatetera]").withStyle(ChatFormatting.LIGHT_PURPLE));
-        tooltip.add(Component.literal("§7Un receptáculo de energía pura condensada procedente del reino etéreo.").withStyle(ChatFormatting.GRAY));
-        tooltip.add(Component.literal("§e▸ Clic derecho: §fConsúmela para obtener instantáneamente 60 Resinas Originales.").withStyle(ChatFormatting.YELLOW));
+        tooltip.add(Component.translatable("item.awakening_system.transient_resin.badge").withStyle(ChatFormatting.LIGHT_PURPLE));
+        tooltip.add(Component.translatable("item.awakening_system.transient_resin.desc").withStyle(ChatFormatting.GRAY));
+        tooltip.add(Component.translatable("item.awakening_system.transient_resin.use").withStyle(ChatFormatting.YELLOW));
     }
 }

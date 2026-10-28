@@ -32,7 +32,6 @@ public class AstralBreathProjectileEntity extends ThrowableProjectile {
 
     @Override
     protected void defineSynchedData(SynchedEntityData.Builder builder) {
-        // No additional synced data needed
     }
 
     @Override
@@ -41,7 +40,6 @@ public class AstralBreathProjectileEntity extends ThrowableProjectile {
         lifeTicks++;
 
         if (this.level().isClientSide) {
-            // Rastro de partículas estelares de cristal
             for (int i = 0; i < 2; i++) {
                 double ox = (this.random.nextDouble() - 0.5D) * 0.25D;
                 double oy = (this.random.nextDouble() - 0.5D) * 0.25D;
@@ -54,7 +52,7 @@ public class AstralBreathProjectileEntity extends ThrowableProjectile {
                         0.0D, 0.005D, 0.0D);
             }
         } else {
-            if (lifeTicks > 80) { // Desaparece tras 4 segundos de vuelo
+            if (lifeTicks > 80) {
                 this.discard();
             }
         }

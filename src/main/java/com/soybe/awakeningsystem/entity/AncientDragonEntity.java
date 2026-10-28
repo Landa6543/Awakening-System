@@ -73,10 +73,8 @@ public class AncientDragonEntity extends TamableAnimal implements FlyingAnimal, 
     public static final int VARIANT_LIGHTNING = 4;
     public static final int VARIANT_CELESTIAL = 5;
 
-    // Constante de edad adulta: 144,000 ticks (~2 horas de tiempo real / 6 días de Minecraft)
     public static final int ADULT_AGE_TICKS = 144000;
 
-    // Esqueleto Multipart (Hitboxes para golpear cabeza, cuello, torso y cola)
     public final DragonBodyPart[] subParts;
 
     @Nullable
@@ -108,8 +106,6 @@ public class AncientDragonEntity extends TamableAnimal implements FlyingAnimal, 
         this.setTame(false, false);
         this.xpReward = 1500;
 
-        // Inicialización de las 5 partes del esqueleto de colisión (cabeza, cuello, cuerpo y cola)
-        // Las alas no tienen PartEntity separadas para evitar colisiones estáticas que bloqueen clics del jinete
         this.subParts = new DragonBodyPart[5];
         this.subParts[0] = new DragonBodyPart(this, "head", 3.2F, 3.2F);
         this.subParts[1] = new DragonBodyPart(this, "neck", 3.0F, 3.0F);
@@ -204,7 +200,7 @@ public class AncientDragonEntity extends TamableAnimal implements FlyingAnimal, 
         builder.define(DATA_FLYING, false);
         builder.define(DATA_SADDLED, false);
         builder.define(DATA_ROARING, false);
-        builder.define(DATA_DRAGON_AGE, ADULT_AGE_TICKS); // Por defecto adulto en spawns salvajes
+        builder.define(DATA_DRAGON_AGE, ADULT_AGE_TICKS);
     }
 
     public int getDragonAge() {
@@ -258,7 +254,6 @@ public class AncientDragonEntity extends TamableAnimal implements FlyingAnimal, 
         if (thief != null) {
             this.enragedThiefUUID = thief.getUUID();
             this.setTarget(thief);
-            // Despegue furioso inmediato para perseguir y abalanzarse sobre el ladrón de huevos
             if (!this.isFlying()) {
                 this.setFlying(true);
                 this.setNoGravity(true);
@@ -285,7 +280,6 @@ public class AncientDragonEntity extends TamableAnimal implements FlyingAnimal, 
     public float getVoicePitch() {
         float scale = getDragonScale();
         float progress = Math.min(1.0F, Math.max(0.0F, (scale - 0.85F) / (4.0F - 0.85F)));
-        // Cría: chillido agudo 1.6F | Adulto: rugido profundo 0.85F
         return 1.6F - progress * (1.6F - 0.85F);
     }
 
@@ -342,7 +336,6 @@ public class AncientDragonEntity extends TamableAnimal implements FlyingAnimal, 
                 return !AncientDragonEntity.this.isVehicle() && !AncientDragonEntity.this.isOrderedToSit() && super.canUse();
             }
         });
-        // Metas de Vuelo, Despegue y Vida en el Nido para Dragones Salvajes:
         this.goalSelector.addGoal(5, new AncientDragonWildTakeoffGoal(this));
         this.goalSelector.addGoal(5, new AncientDragonWildLandGoal(this));
         this.goalSelector.addGoal(6, new AncientDragonWildFlightGoal(this));
@@ -360,9 +353,6 @@ public class AncientDragonEntity extends TamableAnimal implements FlyingAnimal, 
             }
         });
 
-        // Comportamiento de Combate:
-        // Los dragones domesticados son totalmente pacíficos de forma autónoma (no atacan monstruos ni animales).
-        // Solo los dragones salvajes atacan monstruos o se defienden de agresores.
         this.targetSelector.addGoal(1, new HurtByTargetGoal(this) {
             @Override
             public boolean canUse() {
@@ -387,7 +377,6 @@ public class AncientDragonEntity extends TamableAnimal implements FlyingAnimal, 
         super.tick();
         this.updateSubPartPositions();
 
-        // Actualización fluida de flyProgress para animaciones en cliente
         this.prevFlyProgress = this.flyProgress;
         if (this.isFlying() && !this.onGround()) {
             this.flyProgress = Math.min(1.0F, this.flyProgress + 0.10F);
@@ -408,7 +397,6 @@ public class AncientDragonEntity extends TamableAnimal implements FlyingAnimal, 
         double cosPitch = Math.cos(pitchRad);
         double sinPitch = Math.sin(pitchRad);
 
-        // Forward and right unit vectors
         double fwdX = -sinYaw * cosPitch;
         double fwdY = -sinPitch;
         double fwdZ = cosYaw * cosPitch;
@@ -416,24 +404,18 @@ public class AncientDragonEntity extends TamableAnimal implements FlyingAnimal, 
         double rightX = cosYaw;
         double rightZ = sinYaw;
 
-        // Base anchor at dragon's position
         double bx = this.getX();
         double by = this.getY();
         double bz = this.getZ();
 
-        // 0: Head (snout tip ~9.0 blocks forward, height +8.5)
         setPartPosition(this.subParts[0], bx + fwdX * 9.0D * scaleFactor, by + (8.5D + fwdY * 9.0D) * scaleFactor, bz + fwdZ * 9.0D * scaleFactor);
 
-        // 1: Neck (midway ~4.8 blocks forward, height +7.8)
         setPartPosition(this.subParts[1], bx + fwdX * 4.8D * scaleFactor, by + (7.8D + fwdY * 4.8D) * scaleFactor, bz + fwdZ * 4.8D * scaleFactor);
 
-        // 2: Body / Torso (center, height +6.5)
         setPartPosition(this.subParts[2], bx, by + 6.5D * scaleFactor, bz);
 
-        // 3: Tail Front (backward -4.8, height +5.5)
         setPartPosition(this.subParts[3], bx - fwdX * 4.8D * scaleFactor, by + 5.5D * scaleFactor, bz - fwdZ * 4.8D * scaleFactor);
 
-        // 4: Tail Rear (backward -9.5, height +4.5)
         setPartPosition(this.subParts[4], bx - fwdX * 9.5D * scaleFactor, by + 4.5D * scaleFactor, bz - fwdZ * 9.5D * scaleFactor);
     }
 
@@ -460,7 +442,6 @@ public class AncientDragonEntity extends TamableAnimal implements FlyingAnimal, 
             this.setTarget(null);
         }
 
-        // Sincronización estricta de gravedad: gravedad real en tierra y flotación solo en vuelo despegado
         if (this.isOrderedToSit()) {
             this.setDeltaMovement(Vec3.ZERO);
             this.setNoGravity(false);
@@ -479,7 +460,6 @@ public class AncientDragonEntity extends TamableAnimal implements FlyingAnimal, 
         }
         this.fallDistance = 0.0F;
 
-        // Sonido de aleteo colosal: SOLO en vuelo activo despegado del piso
         if (this.isFlying() && !this.onGround()) {
             if (this.level().isClientSide && this.tickCount % 32 == 0 && (this.clientSpaceHeld || this.getDeltaMovement().horizontalDistanceSqr() > 0.02D || !this.isVehicle())) {
                 this.level().playLocalSound(this.getX(), this.getY(), this.getZ(),
@@ -499,7 +479,6 @@ public class AncientDragonEntity extends TamableAnimal implements FlyingAnimal, 
         }
 
         if (!this.level().isClientSide) {
-            // Crecimiento continuo fluido estilo Ice and Fire
             int age = getDragonAge();
             if (age < ADULT_AGE_TICKS) {
                 setDragonAge(age + 1);
@@ -513,13 +492,11 @@ public class AncientDragonEntity extends TamableAnimal implements FlyingAnimal, 
                 }
             }
 
-            // Manejo de la furia por robo de huevo (Disparo estilo ARK: persecución implacable, desistimiento a >100 bloques)
             if (this.enragedThiefUUID != null) {
                 Player thief = this.level().getPlayerByUUID(this.enragedThiefUUID);
                 if (thief != null && thief.isAlive() && !this.isTame()) {
                     double dist = this.distanceTo(thief);
                     if (dist > 100.0D) {
-                        // El ladrón logró escapar a más de 100 bloques: disipar la furia y volver a patrullar
                         this.enragedThiefUUID = null;
                         this.setTarget(null);
                         this.getNavigation().stop();
@@ -537,22 +514,18 @@ public class AncientDragonEntity extends TamableAnimal implements FlyingAnimal, 
             }
 
             if (this.isVehicle()) {
-                // Cuando está montado por un jugador, el vuelo se inicia con Espacio y se aterriza al tocar suelo
                 if (this.onGround() && !this.clientSpaceHeld && isFlying()) {
                     setFlying(false);
                 }
             } else {
-                // Dragón salvaje o autónomo:
                 if (this.onGround() && isFlying() && this.takeoffImmunityTicks == 0) {
                     setFlying(false);
                 } else if (!this.isFlying() && !this.onGround() && this.fallDistance > 5.0F && this.getY() - this.level().getMinBuildHeight() > 6) {
-                    // Reflejo de supervivencia si cae de un precipicio alto: desplegar alas
                     setFlying(true);
                     this.setDeltaMovement(this.getDeltaMovement().x, 0.25D, this.getDeltaMovement().z);
                 }
             }
 
-            // Repulsión suave entre dragones (Boids separation) para evitar solapamientos y amontonamiento en nidos/vuelo
             if (!this.isVehicle() && this.tickCount % 2 == 0) {
                 java.util.List<AncientDragonEntity> neighbors = this.level().getEntitiesOfClass(
                         AncientDragonEntity.class,
@@ -579,7 +552,6 @@ public class AncientDragonEntity extends TamableAnimal implements FlyingAnimal, 
             }
         }
 
-        // Partículas elementales en cliente
         if (this.level().isClientSide && this.random.nextInt(3) == 0) {
             double px = this.getX() + (this.random.nextDouble() - 0.5D) * 3.5D;
             double py = this.getY() + 2.5D + this.random.nextDouble() * 2.0D;
@@ -599,16 +571,12 @@ public class AncientDragonEntity extends TamableAnimal implements FlyingAnimal, 
     public InteractionResult mobInteract(Player player, InteractionHand hand) {
         ItemStack stack = player.getItemInHand(hand);
 
-        // Si el jugador está montado sobre este dragón, ninguna interacción con la montura debe interferir con el vuelo
         if (this.hasPassenger(player)) {
             return InteractionResult.PASS;
         }
 
-        // 1. Dragones salvajes: YA NO SE DOMESTICAN CON COMIDA
-        // La domesticación se realiza exclusivamente incubando un huevo robado o mediante impronta al nacer.
         if (!this.isTame()) {
             if (player.getAbilities().instabuild && stack.isEmpty()) {
-                // Atajo en Modo Creativo para depuración
                 if (!this.level().isClientSide) {
                     this.tame(player);
                     this.navigation.stop();
@@ -620,9 +588,7 @@ public class AncientDragonEntity extends TamableAnimal implements FlyingAnimal, 
             return InteractionResult.PASS;
         }
 
-        // 2. Dragón Domesticado perteneciente al jugador
         if (this.isOwnedBy(player)) {
-            // A. Alimentación y Aceleración del Crecimiento (si aún no es adulto)
             if (!this.isAdult() && isGrowthFood(stack)) {
                 if (!player.getAbilities().instabuild) {
                     stack.shrink(1);
@@ -638,7 +604,6 @@ public class AncientDragonEntity extends TamableAnimal implements FlyingAnimal, 
                 return InteractionResult.sidedSuccess(this.level().isClientSide);
             }
 
-            // B. Colocar Montura (EXCLUSIVO PARA DRAGONES ADULTOS)
             if (!this.isSaddled() && stack.is(Items.SADDLE)) {
                 if (!this.isAdult()) {
                     if (!this.level().isClientSide) {
@@ -654,7 +619,6 @@ public class AncientDragonEntity extends TamableAnimal implements FlyingAnimal, 
                 return InteractionResult.sidedSuccess(this.level().isClientSide);
             }
 
-            // C. Cambiar Variante con Catalizador
             int newVariant = getVariantFromItem(stack);
             if (newVariant >= 0 && newVariant != getVariant()) {
                 if (!player.getAbilities().instabuild) {
@@ -665,7 +629,6 @@ public class AncientDragonEntity extends TamableAnimal implements FlyingAnimal, 
                 return InteractionResult.sidedSuccess(this.level().isClientSide);
             }
 
-            // D. Curación de Dragón
             if (this.getHealth() < this.getMaxHealth() && isHealingFood(stack)) {
                 if (!player.getAbilities().instabuild) {
                     stack.shrink(1);
@@ -675,7 +638,6 @@ public class AncientDragonEntity extends TamableAnimal implements FlyingAnimal, 
                 return InteractionResult.sidedSuccess(this.level().isClientSide);
             }
 
-            // E. Sentarse / Pararse (Shift + Clic derecho) - EXCLUSIVO EN TIERRA FIRME
             if (this.onGround() && player.isShiftKeyDown() && stack.isEmpty()) {
                 this.setOrderedToSit(!this.isOrderedToSit());
                 this.jumping = false;
@@ -684,7 +646,6 @@ public class AncientDragonEntity extends TamableAnimal implements FlyingAnimal, 
                 return InteractionResult.sidedSuccess(this.level().isClientSide);
             }
 
-            // F. Montar al dragón (EXCLUSIVO PARA DRAGONES ADULTOS CON MONTURA)
             if (this.isSaddled() && !player.isShiftKeyDown() && stack.isEmpty()) {
                 if (!this.isAdult()) {
                     if (!this.level().isClientSide) {
@@ -735,7 +696,6 @@ public class AncientDragonEntity extends TamableAnimal implements FlyingAnimal, 
         return -1;
     }
 
-    // DISPARO DE ALIENTO ELEMENTAL EXACTAMENTE DESDE LAS FAUCES DEL HOCICO (NO DEL PECHO)
     @Override
     public void performRangedAttack(LivingEntity target, float distanceFactor) {
         if (this.breathCooldown > 0) return;
@@ -746,7 +706,6 @@ public class AncientDragonEntity extends TamableAnimal implements FlyingAnimal, 
         float pitchRad = (float) Math.toRadians(this.getXRot());
 
         float scaleFactor = this.getDragonScale() / 4.0F;
-        // A escala 4.0x, la punta del hocico se proyecta ~15.8 bloques hacia adelante y 5.2 bloques de altura
         double forwardDist = 15.8D * scaleFactor * Math.cos(pitchRad);
         double heightOffset = (5.2D - 15.8D * Math.sin(pitchRad)) * scaleFactor;
 
@@ -784,7 +743,6 @@ public class AncientDragonEntity extends TamableAnimal implements FlyingAnimal, 
         float pitchRad = (float) Math.toRadians(this.getXRot());
 
         float scaleFactor = this.getDragonScale() / 4.0F;
-        // A escala 4.0x, la punta del hocico se proyecta ~15.8 bloques hacia adelante y 5.2 bloques de altura
         double forwardDist = 15.8D * scaleFactor * Math.cos(pitchRad);
         double heightOffset = (5.2D - 15.8D * Math.sin(pitchRad)) * scaleFactor;
 
@@ -819,7 +777,6 @@ public class AncientDragonEntity extends TamableAnimal implements FlyingAnimal, 
         this.playSound(ModSounds.ANCIENT_DRAGON_ROAR.get(), 3.5F, getVoicePitch());
     }
 
-    // FÍSICAS DE VUELO DRAGÓN CELESTIAL ASIÁTICO
     @Override
     public void travel(Vec3 travelVector) {
         if (this.isAlive()) {
@@ -829,7 +786,6 @@ public class AncientDragonEntity extends TamableAnimal implements FlyingAnimal, 
                     return;
                 }
 
-                // Rotación horizontal del dragón sigue suavemente la dirección de la cámara
                 this.setYRot(player.getYRot());
                 this.yBodyRot = this.getYRot();
                 this.yHeadRot = this.getYRot();
@@ -838,7 +794,6 @@ public class AncientDragonEntity extends TamableAnimal implements FlyingAnimal, 
                 float strafe = player.xxa;
                 boolean isSprinting = this.clientSprintHeld || player.isSprinting();
 
-                // 1. Transición a vuelo activada exclusivamente con la tecla Espacio (despegue manual)
                 if (this.clientSpaceHeld && !this.isFlying()) {
                     this.setFlying(true);
                     this.setDeltaMovement(this.getDeltaMovement().x, 0.70D, this.getDeltaMovement().z);
@@ -853,14 +808,6 @@ public class AncientDragonEntity extends TamableAnimal implements FlyingAnimal, 
                 double sideZ = Math.sin(radYaw);
 
                 if (flying) {
-                    // ========================================================
-                    //                      MODO VUELO
-                    // ========================================================
-                    // El cabeceo del torso se rige ÚNICAMENTE por maniobras de vuelo:
-                    // Espacio (ascenso): cabecea suavemente hacia arriba (-20°)
-                    // Shift (descenso/picada): cabecea suavemente hacia abajo (+20°)
-                    // Neutral: torso perfectamente nivelado (0°)
-                    // ¡El ratón NO inclina el torso para permitir mirar libremente en 1ª persona sin desfasar la cámara!
                     float targetPitch = 0.0F;
                     if (this.clientSpaceHeld) {
                         targetPitch = -20.0F;
@@ -889,10 +836,9 @@ public class AncientDragonEntity extends TamableAnimal implements FlyingAnimal, 
                     } else if (this.clientShiftHeld) {
                         vy = -1.20D;
                     } else {
-                        vy = 0.0D; // Flotación firme sin deriva vertical
+                        vy = 0.0D;
                     }
 
-                    // Aterrizaje al tocar el suelo descendiendo
                     if (this.onGround() && !this.clientSpaceHeld) {
                         this.setFlying(false);
                         vy = 0.0D;
@@ -902,11 +848,6 @@ public class AncientDragonEntity extends TamableAnimal implements FlyingAnimal, 
                     this.move(MoverType.SELF, this.getDeltaMovement());
                     this.calculateEntityAnimation(true);
                 } else {
-                    // ========================================================
-                    //                 MODO TIERRA (CAMINATA)
-                    // ========================================================
-                    // En tierra el torso se mantiene horizontal (0°), permitiendo al jugador
-                    // mirar 90° arriba o abajo en 1ª persona con estabilidad absoluta
                     this.setXRot(Mth.rotLerp(0.25F, this.getXRot(), 0.0F));
 
                     double walkSpeed = isSprinting ? 0.95D : 0.60D;
@@ -923,7 +864,6 @@ public class AncientDragonEntity extends TamableAnimal implements FlyingAnimal, 
                         if (Math.abs(vz) < 0.005D) vz = 0.0D;
                     }
 
-                    // Gravedad terrestre firme para adherencia continua a pendientes, colinas y desniveles
                     Vec3 cur = this.getDeltaMovement();
                     double vy = this.onGround() ? -0.06D : Math.max(-0.85D, cur.y - 0.08D);
 
@@ -934,8 +874,6 @@ public class AncientDragonEntity extends TamableAnimal implements FlyingAnimal, 
                 return;
             }
 
-            // Modo Vuelo Autónomo para Dragones Salvajes / Libres (sin jinete)
-            // Conserva impulso proporcional a su envergadura colosal
             if (this.isFlying()) {
                 this.move(MoverType.SELF, this.getDeltaMovement());
                 this.setDeltaMovement(this.getDeltaMovement().scale(0.985D));
@@ -987,14 +925,11 @@ public class AncientDragonEntity extends TamableAnimal implements FlyingAnimal, 
             float pitchRad = this.getXRot() * ((float) Math.PI / 180.0F);
             float yawRad = this.getYRot() * ((float) Math.PI / 180.0F);
 
-            // Altura base calibrada exactamente sobre el cojín de la montura escalada
             double baseSeatHeight = 9.90D * scaleFactor;
 
-            // En vuelo, compensación suave en ascenso (-pitch) o picada (+pitch)
             double pitchLift = -Math.sin(pitchRad) * 0.85D * scaleFactor;
             double dy = Math.max(9.65D * scaleFactor, baseSeatHeight + pitchLift);
 
-            // Posición longitudinal centrada en la montura escalada
             double forwardDist = (0.25D + Math.cos(pitchRad) * 0.10D) * scaleFactor;
 
             double dx = -Math.sin(yawRad) * forwardDist;
@@ -1068,33 +1003,25 @@ public class AncientDragonEntity extends TamableAnimal implements FlyingAnimal, 
     protected void dropCustomDeathLoot(ServerLevel level, DamageSource damageSource, boolean recentlyHit) {
         super.dropCustomDeathLoot(level, damageSource, recentlyHit);
 
-        // 1. Escamas de Dragón Inmortal garantizadas (6 - 12)
         this.spawnAtLocation(new ItemStack(SystemItems.IMMORTAL_DRAGON_SCALE.get(), 6 + this.random.nextInt(7)));
 
-        // 2. Píldoras de Dragón Ascendente (1 - 2)
         this.spawnAtLocation(new ItemStack(SystemItems.RISING_DRAGON_PILL.get(), 1 + this.random.nextInt(2)));
 
-        // 3. Monedas del Despertar abundantes (20 - 45)
         this.spawnAtLocation(new ItemStack(SystemItems.AWAKENING_COIN.get(), 20 + this.random.nextInt(26)));
 
-        // 4. Fichas de Ruleta (3 - 6)
         this.spawnAtLocation(new ItemStack(SystemItems.ROULETTE_TOKEN.get(), 3 + this.random.nextInt(4)));
 
-        // 5. Perla del Dragón Celestial (50% de probabilidad)
         if (this.random.nextFloat() < 0.50F) {
             this.spawnAtLocation(new ItemStack(SystemItems.CELESTIAL_DRAGON_PEARL.get(), 1));
         }
 
-        // 6. Arma Suprema: Guadaña del Dragón Negro (25% de probabilidad)
         if (this.random.nextFloat() < 0.25F) {
             this.spawnAtLocation(new ItemStack(SystemItems.BLACK_DRAGON_SCYTHE.get(), 1));
         }
 
-        // 7. Tesoro en Bloques Preciosos
         this.spawnAtLocation(new ItemStack(net.minecraft.world.level.block.Blocks.DIAMOND_BLOCK, 2 + this.random.nextInt(3)));
         this.spawnAtLocation(new ItemStack(net.minecraft.world.level.block.Blocks.GOLD_BLOCK, 4 + this.random.nextInt(5)));
 
-        // 8. Drops específicos por Variante Elemental y Huevo de Invocación Raro (30%)
         switch (getVariant()) {
             case VARIANT_FIRE -> {
                 this.spawnAtLocation(new ItemStack(Items.BLAZE_ROD, 6 + this.random.nextInt(7)));
@@ -1143,7 +1070,6 @@ public class AncientDragonEntity extends TamableAnimal implements FlyingAnimal, 
             }
         }
 
-        // 9. Lluvia de Experiencia Legendaria (1500 XP)
         ExperienceOrb.award(level, this.position(), 1500);
     }
 
@@ -1174,10 +1100,6 @@ public class AncientDragonEntity extends TamableAnimal implements FlyingAnimal, 
             this.enragedThiefUUID = tag.getUUID("EnragedThief");
         }
     }
-
-    // =========================================================================
-    //              METAS DE IA DE VUELO Y VIDA SALVAJE EN EL NIDO
-    // =========================================================================
 
     /**
      * Despegue autónomo: El dragón en tierra descansa unos momentos y luego bate sus alas
@@ -1251,7 +1173,6 @@ public class AncientDragonEntity extends TamableAnimal implements FlyingAnimal, 
             double dx = this.dragon.getX() - (this.homeRoostPos.getX() + 0.5D);
             double dz = this.dragon.getZ() - (this.homeRoostPos.getZ() + 0.5D);
             this.orbitAngle = Mth.atan2(dz, dx);
-            // Diversificar radio, sentido de giro, velocidad y altitud segun el ID de la entidad
             int id = Math.abs(this.dragon.getId());
             this.orbitDirection = (id % 2 == 0) ? 1.0D : -1.0D;
             this.orbitSpeed = 0.020D + (id % 4) * 0.004D;
@@ -1264,9 +1185,6 @@ public class AncientDragonEntity extends TamableAnimal implements FlyingAnimal, 
             LivingEntity target = this.dragon.getTarget();
 
             if (target != null && target.isAlive()) {
-                // ==========================================
-                // MODO COMBATE AÉREO / CAZA DE LADRÓN
-                // ==========================================
                 double tX = target.getX();
                 double tY = target.getY() + 7.0D;
                 double tZ = target.getZ();
@@ -1286,14 +1204,10 @@ public class AncientDragonEntity extends TamableAnimal implements FlyingAnimal, 
                 }
                 this.dragon.setDeltaMovement(blended);
 
-                // Disparo de aliento en picada
                 if (dist < 32.0D && this.dragon.getBreathCooldown() <= 0) {
                     this.dragon.performRangedAttack(target, 1.0F);
                 }
             } else {
-                // ==========================================
-                // MODO PATRULLA Y CRUCERO MAJESTUOSO
-                // ==========================================
                 if (this.homeRoostPos == null) {
                     this.homeRoostPos = this.dragon.blockPosition();
                 }
@@ -1325,7 +1239,6 @@ public class AncientDragonEntity extends TamableAnimal implements FlyingAnimal, 
                 this.dragon.setDeltaMovement(blended);
             }
 
-            // Orientación de la entidad suavemente alineada al vector de velocidad tridimensional
             Vec3 vel = this.dragon.getDeltaMovement();
             if (vel.horizontalDistanceSqr() > 0.005D) {
                 float targetYaw = (float) (Mth.atan2(vel.z, vel.x) * (180.0D / Math.PI)) - 90.0F;
@@ -1386,7 +1299,6 @@ public class AncientDragonEntity extends TamableAnimal implements FlyingAnimal, 
                 BlockPos candidate = new BlockPos(check.getX(), topY, check.getZ());
                 if (topY > level.getMinBuildHeight() + 5 && level.getBlockState(candidate.below()).isSolid()) {
                     if (!level.getFluidState(candidate.below()).isSource() && !level.getFluidState(candidate).isSource()) {
-                        // Evitar aterrizar pegado o encima de otro dragón
                         boolean hasOtherDragonNearby = !level.getEntitiesOfClass(
                                 AncientDragonEntity.class,
                                 new AABB(candidate).inflate(14.0D),
@@ -1406,7 +1318,6 @@ public class AncientDragonEntity extends TamableAnimal implements FlyingAnimal, 
             if (this.landingSpot == null) return;
 
             if (++this.landingTimeout > 160) {
-                // Si tarda más de 8 segundos en tocar tierra, abortar y reanudar crucero
                 this.landingSpot = null;
                 this.flightTicks = 0;
                 this.landingTimeout = 0;
@@ -1425,7 +1336,6 @@ public class AncientDragonEntity extends TamableAnimal implements FlyingAnimal, 
 
             this.dragon.setDeltaMovement(vel.x * 0.75D + targetVx * 0.25D, targetVy, vel.z * 0.75D + targetVz * 0.25D);
 
-            // ÚNICA CONDICIÓN VÁLIDA PARA DESACTIVAR EL VUELO: TOCAR SUELO FIRME REAL
             if (this.dragon.onGround()) {
                 this.dragon.setFlying(false);
                 this.dragon.setNoGravity(false);

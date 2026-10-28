@@ -25,10 +25,10 @@ import java.util.List;
 public class OculusItem extends Item {
 
     public enum OculusElement {
-        ANEMO("Anemóculus", "Mondstadt", 0xFF55FFAA, ChatFormatting.GREEN),
-        GEO("Geóculus", "Liyue", 0xFFFFD700, ChatFormatting.GOLD),
-        ELECTRO("Electróculus", "Inazuma", 0xFFAA44FF, ChatFormatting.LIGHT_PURPLE),
-        DENDRO("Dendróculus", "Sumeru", 0xFF55DD33, ChatFormatting.DARK_GREEN);
+        ANEMO("Anemoculus", "Mondstadt", 0xFF55FFAA, ChatFormatting.GREEN),
+        GEO("Geoculus", "Liyue", 0xFFFFD700, ChatFormatting.GOLD),
+        ELECTRO("Electroculus", "Inazuma", 0xFFAA44FF, ChatFormatting.LIGHT_PURPLE),
+        DENDRO("Dendroculus", "Sumeru", 0xFF55DD33, ChatFormatting.DARK_GREEN);
 
         public final String title;
         public final String region;
@@ -60,12 +60,11 @@ public class OculusItem extends Item {
 
         if (!level.isClientSide && player instanceof ServerPlayer sp) {
             ServerLevel sl = (ServerLevel) level;
-            // Ofrenda espiritual individual que otorga bendición y experiencia
             sp.giveExperiencePoints(50);
             sl.sendParticles(ParticleTypes.TOTEM_OF_UNDYING, sp.getX(), sp.getY() + 1.2, sp.getZ(), 25, 0.4, 0.6, 0.4, 0.2);
             sl.playSound(null, sp.getX(), sp.getY(), sp.getZ(), SoundEvents.AMETHYST_BLOCK_CHIME, SoundSource.PLAYERS, 1.2F, 1.5F);
 
-            sp.displayClientMessage(Component.literal("§b✦ " + element.format + element.title + " §fresuena con tu alma celestial. (§a+50 EXP§f)"), true);
+            sp.displayClientMessage(Component.translatable("item.awakening_system.oculus.resonates", element.format + element.title), true);
         }
 
         return InteractionResultHolder.sidedSuccess(stack, level.isClientSide());
@@ -73,8 +72,8 @@ public class OculusItem extends Item {
 
     @Override
     public void appendHoverText(ItemStack stack, TooltipContext context, List<Component> tooltip, TooltipFlag flag) {
-        tooltip.add(Component.literal("§7Región: " + element.format + element.region));
-        tooltip.add(Component.literal("§eSustancia de los Siete: §7Ofrenda a las Estatuas de los Siete para recibir bendición divina."));
-        tooltip.add(Component.literal("§8Flota en los cielos y rincones ocultos de Teyvat esperando ser recolectado."));
+        tooltip.add(Component.translatable("item.awakening_system.oculus.region", element.format + element.region));
+        tooltip.add(Component.translatable("item.awakening_system.oculus.substance"));
+        tooltip.add(Component.translatable("item.awakening_system.oculus.lore"));
     }
 }

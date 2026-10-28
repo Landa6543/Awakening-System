@@ -70,41 +70,36 @@ public class AstralDragonModel extends HierarchicalModel<AstralDragonEntity> {
         MeshDefinition mesh = new MeshDefinition();
         PartDefinition root = mesh.getRoot();
 
-        // 1. Torso Dracónico aerodinámico
         PartDefinition body = root.addOrReplaceChild("body", CubeListBuilder.create()
                 .texOffs(0, 0)
-                .addBox(-2.5F, -2.5F, -3.5F, 5.0F, 5.0F, 7.0F, new CubeDeformation(0.0F)) // Torso principal
+                .addBox(-2.5F, -2.5F, -3.5F, 5.0F, 5.0F, 7.0F, new CubeDeformation(0.0F))
                 .texOffs(0, 16)
-                .addBox(-0.5F, -3.5F, -2.5F, 1.0F, 1.0F, 5.0F, new CubeDeformation(0.0F)), // Espinas dorsales del lomo
+                .addBox(-0.5F, -3.5F, -2.5F, 1.0F, 1.0F, 5.0F, new CubeDeformation(0.0F)),
                 PartPose.offset(0.0F, 17.0F, 0.0F));
 
-        // 2. Cuello Arqueado hacia adelante y arriba
         PartDefinition neck = body.addOrReplaceChild("neck", CubeListBuilder.create()
                 .texOffs(30, 0)
-                .addBox(-1.5F, -3.5F, -2.5F, 3.0F, 4.0F, 3.0F, new CubeDeformation(0.0F)) // Cuello
+                .addBox(-1.5F, -3.5F, -2.5F, 3.0F, 4.0F, 3.0F, new CubeDeformation(0.0F))
                 .texOffs(30, 10)
-                .addBox(-0.5F, -4.5F, -2.0F, 1.0F, 1.0F, 2.0F, new CubeDeformation(0.0F)), // Espina dorsal de cuello
+                .addBox(-0.5F, -4.5F, -2.0F, 1.0F, 1.0F, 2.0F, new CubeDeformation(0.0F)),
                 PartPose.offset(0.0F, -0.5F, -3.0F));
 
-        // 3. Cabeza Dracónica
         PartDefinition head = neck.addOrReplaceChild("head", CubeListBuilder.create()
                 .texOffs(50, 0)
-                .addBox(-2.5F, -2.5F, -3.0F, 5.0F, 4.0F, 4.0F, new CubeDeformation(0.0F)) // Cráneo
+                .addBox(-2.5F, -2.5F, -3.0F, 5.0F, 4.0F, 4.0F, new CubeDeformation(0.0F))
                 .texOffs(75, 0)
-                .addBox(-1.5F, -0.5F, -6.5F, 3.0F, 2.0F, 4.0F, new CubeDeformation(0.0F)) // Hocico alargado
+                .addBox(-1.5F, -0.5F, -6.5F, 3.0F, 2.0F, 4.0F, new CubeDeformation(0.0F))
                 .texOffs(95, 10)
-                .addBox(-3.5F, -1.8F, 0.0F, 1.0F, 2.0F, 2.0F, new CubeDeformation(0.0F)) // Aleta / Orejita en esquina lateral trasera
+                .addBox(-3.5F, -1.8F, 0.0F, 1.0F, 2.0F, 2.0F, new CubeDeformation(0.0F))
                 .texOffs(105, 10)
-                .addBox(2.5F, -1.8F, 0.0F, 1.0F, 2.0F, 2.0F, new CubeDeformation(0.0F)), // Aleta / Orejita en esquina lateral trasera
+                .addBox(2.5F, -1.8F, 0.0F, 1.0F, 2.0F, 2.0F, new CubeDeformation(0.0F)),
                 PartPose.offset(0.0F, -2.5F, -2.0F));
 
-        // Mandíbula inferior articulada
         head.addOrReplaceChild("jaw", CubeListBuilder.create()
                 .texOffs(75, 10)
                 .addBox(-1.5F, 0.0F, -3.5F, 3.0F, 1.0F, 3.0F, new CubeDeformation(0.0F)),
                 PartPose.offset(0.0F, 1.5F, -2.5F));
 
-        // Cuernos / Aletas en las esquinas superiores traseras de la cabeza (abiertas en abanico)
         head.addOrReplaceChild("left_horn", CubeListBuilder.create()
                 .texOffs(95, 0)
                 .addBox(-0.5F, -4.0F, -1.0F, 1.0F, 4.0F, 2.0F, new CubeDeformation(0.0F)),
@@ -115,49 +110,43 @@ public class AstralDragonModel extends HierarchicalModel<AstralDragonEntity> {
                 .addBox(-0.5F, -4.0F, -1.0F, 1.0F, 4.0F, 2.0F, new CubeDeformation(0.0F)),
                 PartPose.offsetAndRotation(2.3F, -2.4F, 0.8F, -0.55F, 0.12F, 0.25F));
 
-        // 4. ALAS DE DRAGÓN: HORIZONTALES con parte grande al cuerpo y pequeña al extremo
-        // Ala grande izquierda (adherida al torso): hueso dx=10, membrana horizontal dx=10, dz=10 (dy=0)
         PartDefinition leftWing = body.addOrReplaceChild("left_wing", CubeListBuilder.create()
                 .texOffs(0, 50)
-                .addBox(-10.0F, -1.0F, -1.0F, 10.0F, 2.0F, 2.0F, new CubeDeformation(0.0F)) // Hueso principal grande
+                .addBox(-10.0F, -1.0F, -1.0F, 10.0F, 2.0F, 2.0F, new CubeDeformation(0.0F))
                 .texOffs(0, 58)
-                .addBox(-10.0F, 0.0F, 1.0F, 10.0F, 0.0F, 10.0F, new CubeDeformation(0.0F)), // Membrana horizontal grande
+                .addBox(-10.0F, 0.0F, 1.0F, 10.0F, 0.0F, 10.0F, new CubeDeformation(0.0F)),
                 PartPose.offset(-2.5F, -1.5F, -1.0F));
 
-        // Ala pequeña exterior izquierda (en el extremo exterior): hueso dx=6, membrana horizontal dx=6, dz=6 (dy=0)
         leftWing.addOrReplaceChild("left_wing_tip", CubeListBuilder.create()
                 .texOffs(25, 50)
-                .addBox(-6.0F, -1.0F, -1.0F, 6.0F, 2.0F, 2.0F, new CubeDeformation(0.0F)) // Hueso exterior pequeño
+                .addBox(-6.0F, -1.0F, -1.0F, 6.0F, 2.0F, 2.0F, new CubeDeformation(0.0F))
                 .texOffs(44, 50)
-                .addBox(-0.5F, -2.5F, -0.5F, 1.0F, 2.0F, 1.0F, new CubeDeformation(0.0F)) // Espolón articular
+                .addBox(-0.5F, -2.5F, -0.5F, 1.0F, 2.0F, 1.0F, new CubeDeformation(0.0F))
                 .texOffs(30, 58)
-                .addBox(-6.0F, 0.0F, 1.0F, 6.0F, 0.0F, 6.0F, new CubeDeformation(0.0F)), // Membrana horizontal pequeña que se afina
+                .addBox(-6.0F, 0.0F, 1.0F, 6.0F, 0.0F, 6.0F, new CubeDeformation(0.0F)),
                 PartPose.offset(-10.0F, 0.0F, 0.0F));
 
-        // Ala grande derecha (adherida al torso): hueso dx=10, membrana horizontal dx=10, dz=10 (dy=0)
         PartDefinition rightWing = body.addOrReplaceChild("right_wing", CubeListBuilder.create()
                 .texOffs(65, 50)
-                .addBox(0.0F, -1.0F, -1.0F, 10.0F, 2.0F, 2.0F, new CubeDeformation(0.0F)) // Hueso principal grande
+                .addBox(0.0F, -1.0F, -1.0F, 10.0F, 2.0F, 2.0F, new CubeDeformation(0.0F))
                 .texOffs(65, 58)
-                .addBox(0.0F, 0.0F, 1.0F, 10.0F, 0.0F, 10.0F, new CubeDeformation(0.0F)), // Membrana horizontal grande
+                .addBox(0.0F, 0.0F, 1.0F, 10.0F, 0.0F, 10.0F, new CubeDeformation(0.0F)),
                 PartPose.offset(2.5F, -1.5F, -1.0F));
 
-        // Ala pequeña exterior derecha (en el extremo exterior): hueso dx=6, membrana horizontal dx=6, dz=6 (dy=0)
         rightWing.addOrReplaceChild("right_wing_tip", CubeListBuilder.create()
                 .texOffs(90, 50)
-                .addBox(0.0F, -1.0F, -1.0F, 6.0F, 2.0F, 2.0F, new CubeDeformation(0.0F)) // Hueso exterior pequeño
+                .addBox(0.0F, -1.0F, -1.0F, 6.0F, 2.0F, 2.0F, new CubeDeformation(0.0F))
                 .texOffs(109, 50)
-                .addBox(-0.5F, -2.5F, -0.5F, 1.0F, 2.0F, 1.0F, new CubeDeformation(0.0F)) // Espolón articular
+                .addBox(-0.5F, -2.5F, -0.5F, 1.0F, 2.0F, 1.0F, new CubeDeformation(0.0F))
                 .texOffs(95, 58)
-                .addBox(0.0F, 0.0F, 1.0F, 6.0F, 0.0F, 6.0F, new CubeDeformation(0.0F)), // Membrana horizontal pequeña que se afina
+                .addBox(0.0F, 0.0F, 1.0F, 6.0F, 0.0F, 6.0F, new CubeDeformation(0.0F)),
                 PartPose.offset(10.0F, 0.0F, 0.0F));
 
-        // 5. Patas Delanteras con garras
         body.addOrReplaceChild("leg_front_left", CubeListBuilder.create()
                 .texOffs(0, 30)
                 .addBox(-1.0F, 0.0F, -1.0F, 2.0F, 5.0F, 2.0F, new CubeDeformation(0.0F))
                 .texOffs(0, 30)
-                .addBox(-1.0F, 4.0F, -2.0F, 2.0F, 1.0F, 1.0F, new CubeDeformation(0.0F)), // Garras
+                .addBox(-1.0F, 4.0F, -2.0F, 2.0F, 1.0F, 1.0F, new CubeDeformation(0.0F)),
                 PartPose.offset(-2.0F, 2.0F, -2.0F));
 
         body.addOrReplaceChild("leg_front_right", CubeListBuilder.create()
@@ -167,7 +156,6 @@ public class AstralDragonModel extends HierarchicalModel<AstralDragonEntity> {
                 .addBox(-1.0F, 4.0F, -2.0F, 2.0F, 1.0F, 1.0F, new CubeDeformation(0.0F)),
                 PartPose.offset(2.0F, 2.0F, -2.0F));
 
-        // 6. Patas Traseras Musculosas Digitígradas
         body.addOrReplaceChild("leg_back_left", CubeListBuilder.create()
                 .texOffs(24, 30)
                 .addBox(-1.0F, 0.0F, -1.5F, 2.0F, 5.0F, 3.0F, new CubeDeformation(0.0F))
@@ -182,7 +170,6 @@ public class AstralDragonModel extends HierarchicalModel<AstralDragonEntity> {
                 .addBox(-1.0F, 4.0F, -2.5F, 2.0F, 1.0F, 1.0F, new CubeDeformation(0.0F)),
                 PartPose.offset(2.2F, 2.0F, 2.5F));
 
-        // 7. Cola Larga Serpentina con Hilera de Espinas y Punta de Glaive
         PartDefinition tail1 = body.addOrReplaceChild("tail1", CubeListBuilder.create()
                 .texOffs(55, 30)
                 .addBox(-1.5F, -1.5F, 0.0F, 3.0F, 3.0F, 4.0F, new CubeDeformation(0.0F))
@@ -201,7 +188,7 @@ public class AstralDragonModel extends HierarchicalModel<AstralDragonEntity> {
                 .texOffs(95, 30)
                 .addBox(-0.5F, -0.5F, 0.0F, 1.0F, 1.0F, 4.0F, new CubeDeformation(0.0F))
                 .texOffs(110, 30)
-                .addBox(-1.5F, -1.5F, 3.0F, 3.0F, 3.0F, 3.0F, new CubeDeformation(0.0F)), // Punta de diamante facetado
+                .addBox(-1.5F, -1.5F, 3.0F, 3.0F, 3.0F, 3.0F, new CubeDeformation(0.0F)),
                 PartPose.offset(0.0F, 0.0F, 4.0F));
 
         return LayerDefinition.create(mesh, 128, 128);
@@ -222,35 +209,28 @@ public class AstralDragonModel extends HierarchicalModel<AstralDragonEntity> {
         boolean isSitting = wantsToSit && onGround;
         boolean isFlying = !onGround;
 
-        // Cabeza y cuello
         this.head.xRot = headPitch * ((float) Math.PI / 180F) * 0.7F;
         this.head.yRot = netHeadYaw * ((float) Math.PI / 180F) * 0.7F;
         this.neck.yRot = netHeadYaw * ((float) Math.PI / 180F) * 0.3F;
 
         if (isSitting) {
-            // Animación viva de descanso y confort al estar sentado en tierra:
             float breathe = Mth.sin(ageInTicks * 0.08F);
             float tailSway = Mth.sin(ageInTicks * 0.06F);
 
-            // Asentado dócil en el suelo con suave movimiento de respiración
             this.body.y = 19.8F + breathe * 0.3F;
             this.neck.xRot = -0.12F + breathe * 0.04F;
 
-            // Cabeza: ladea la cabecita con ternura y abre ligeramente la boquita al ronronear
             this.head.zRot = Mth.sin(ageInTicks * 0.04F) * 0.08F;
             this.jaw.xRot = Math.max(0.0F, Mth.sin(ageInTicks * 0.05F)) * 0.08F;
 
-            // Patas traseras flexionadas tipo cachorro/gatito sentado
             this.legBackLeft.xRot = -1.15F;
             this.legBackLeft.yRot = 0.35F;
             this.legBackRight.xRot = -1.15F;
             this.legBackRight.yRot = -0.35F;
 
-            // Patas delanteras firmes y apoyadas al frente
             this.legFrontLeft.xRot = -0.30F;
             this.legFrontRight.xRot = -0.30F;
 
-            // Alas confortablemente plegadas hacia atrás protegiendo los flancos
             this.leftWing.xRot = 0.10F;
             this.leftWing.yRot = 0.85F;
             this.leftWing.zRot = 0.15F + breathe * 0.02F;
@@ -265,17 +245,14 @@ public class AstralDragonModel extends HierarchicalModel<AstralDragonEntity> {
             this.rightWingTip.yRot = 0.15F;
             this.rightWingTip.zRot = 0.05F;
 
-            // Cola recogida al costado con suave ondulación y balanceo rítmico del diamante astral
             this.tail1.yRot = 0.70F + tailSway * 0.08F;
             this.tail2.yRot = 0.90F + tailSway * 0.15F;
             this.tail3.yRot = 0.80F + Mth.sin(ageInTicks * 0.10F) * 0.20F;
             this.tail3.zRot = Mth.cos(ageInTicks * 0.10F) * 0.10F;
         } else if (isFlying) {
-            // Aleteo fluido y potente en el aire: alas rectas hacia los laterales batiendo en sincronía
             float flap = Mth.sin(ageInTicks * 0.45F);
             float tipFlap = Mth.sin(ageInTicks * 0.45F - 0.40F);
 
-            // Ala grande interior
             this.leftWing.xRot = 0.0F;
             this.leftWing.yRot = 0.0F;
             this.leftWing.zRot = flap * 0.40F;
@@ -284,7 +261,6 @@ public class AstralDragonModel extends HierarchicalModel<AstralDragonEntity> {
             this.rightWing.yRot = 0.0F;
             this.rightWing.zRot = -flap * 0.40F;
 
-            // Ala pequeña exterior: acompaña el aleteo con ligera flexibilidad elástica
             this.leftWingTip.xRot = 0.0F;
             this.leftWingTip.yRot = 0.0F;
             this.leftWingTip.zRot = tipFlap * 0.25F;
@@ -293,23 +269,19 @@ public class AstralDragonModel extends HierarchicalModel<AstralDragonEntity> {
             this.rightWingTip.yRot = 0.0F;
             this.rightWingTip.zRot = -tipFlap * 0.25F;
 
-            // Cuello aerodinámico
             this.neck.xRot = -0.35F + Mth.sin(ageInTicks * 0.12F) * 0.05F;
 
-            // Patas recogidas
             this.legFrontLeft.xRot = 0.55F;
             this.legFrontRight.xRot = 0.55F;
             this.legBackLeft.xRot = 0.80F;
             this.legBackRight.xRot = 0.80F;
 
-            // Cola ondulante
             this.tail1.yRot = Mth.cos(ageInTicks * 0.18F) * 0.20F;
             this.tail2.yRot = Mth.cos(ageInTicks * 0.18F - 0.6F) * 0.28F;
             this.tail3.yRot = Mth.cos(ageInTicks * 0.18F - 1.2F) * 0.35F;
 
             this.body.y = 17.0F + Mth.sin(ageInTicks * 0.15F) * 0.75F;
         } else {
-            // En tierra caminando / de pie: alas rectas y alineadas a los lados, sin dobleces extraños
             this.body.y = 17.0F;
             this.neck.xRot = -0.2F;
 
@@ -318,7 +290,6 @@ public class AstralDragonModel extends HierarchicalModel<AstralDragonEntity> {
             this.legBackLeft.xRot = Mth.cos(limbSwing * 0.8F) * 0.75F * limbSwingAmount;
             this.legBackRight.xRot = Mth.cos(limbSwing * 0.8F + (float) Math.PI) * 0.75F * limbSwingAmount;
 
-            // Alas extendidas limpias y rectas (parte grande al cuerpo, parte pequeña al extremo)
             this.leftWing.xRot = 0.0F;
             this.leftWing.yRot = 0.0F;
             this.leftWing.zRot = 0.08F + Mth.sin(ageInTicks * 0.08F) * 0.02F;

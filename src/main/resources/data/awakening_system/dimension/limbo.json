@@ -1,0 +1,21 @@
+{
+  "type": "awakening_system:limbo_type",
+  "generator": {
+    "type": "minecraft:flat",
+    "settings": {
+      "biome": "awakening_system:limbo_monochrome_void",
+      "lakes": false,
+      "features": false,
+      "layers": [
+        {
+          "block": "minecraft:bedrock",
+          "height": 1
+        },
+        {
+          "block": "awakening_system:void_black_path",
+          "height": 1
+        }
+      ]
+    }
+  }
+}

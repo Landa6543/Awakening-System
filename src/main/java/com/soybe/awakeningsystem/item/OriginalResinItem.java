@@ -50,7 +50,7 @@ public class OriginalResinItem extends Item {
                 sl.playSound(null, sp.getX(), sp.getY(), sp.getZ(), SoundEvents.AMETHYST_BLOCK_HIT, SoundSource.PLAYERS, 1.2F, 1.4F);
             }
 
-            sp.displayClientMessage(Component.literal("§b✦ [RESINA ORIGINAL] §7¡Energía primordial de las Líneas Ley absorbida! (+20 Energía)"), true);
+            sp.displayClientMessage(Component.translatable("item.awakening_system.original_resin.use_message"), true);
             return InteractionResultHolder.sidedSuccess(stack, level.isClientSide());
         }
 
@@ -59,9 +59,9 @@ public class OriginalResinItem extends Item {
 
     @Override
     public void appendHoverText(ItemStack stack, TooltipContext context, List<Component> tooltip, TooltipFlag flag) {
-        tooltip.add(Component.literal("§6⭐⭐⭐ [Material Precioso de Teyvat]").withStyle(ChatFormatting.GOLD));
-        tooltip.add(Component.literal("§7Energía condensada procedente de las raíces de los Árboles Petrificados.").withStyle(ChatFormatting.GRAY));
-        tooltip.add(Component.literal("§e▸ Clic derecho: §fRestaura 20 puntos de Energía del Sistema y regenera salud.").withStyle(ChatFormatting.YELLOW));
-        tooltip.add(Component.literal("§b▸ Se utiliza también para sintetizar Resina Concentrada.").withStyle(ChatFormatting.AQUA));
+        tooltip.add(Component.translatable("item.awakening_system.original_resin.badge").withStyle(ChatFormatting.GOLD));
+        tooltip.add(Component.translatable("item.awakening_system.original_resin.desc").withStyle(ChatFormatting.GRAY));
+        tooltip.add(Component.translatable("item.awakening_system.original_resin.use").withStyle(ChatFormatting.YELLOW));
+        tooltip.add(Component.translatable("item.awakening_system.original_resin.craft").withStyle(ChatFormatting.AQUA));
     }
 }

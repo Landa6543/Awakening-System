@@ -53,7 +53,7 @@ public class GoldenWolflordBossEntity extends Monster {
             SynchedEntityData.defineId(GoldenWolflordBossEntity.class, EntityDataSerializers.BOOLEAN);
 
     private final ServerBossEvent bossEvent = (ServerBossEvent) new ServerBossEvent(
-            Component.literal("§6§lRey Acechador Dorado §7- §eMonarca del Abismo"),
+            Component.literal("§6§lGolden Wolflord §7- §eAbyss Monarch"),
             BossEvent.BossBarColor.YELLOW,
             BossEvent.BossBarOverlay.NOTCHED_10
     ).setDarkenScreen(false);
@@ -67,7 +67,7 @@ public class GoldenWolflordBossEntity extends Monster {
         this.xpReward = 450;
         this.moveControl = new FlyingMoveControl(this, 10, true);
         this.setNoGravity(true);
-        this.setCustomName(Component.literal("§6§lRey Acechador Dorado"));
+        this.setCustomName(Component.literal("§6§lGolden Wolflord"));
         this.setCustomNameVisible(true);
     }
 
@@ -125,7 +125,7 @@ public class GoldenWolflordBossEntity extends Monster {
     @Override
     public boolean hurt(DamageSource source, float amount) {
         if (isShieldActive()) {
-            amount *= 0.30F; // 70% de reducción de daño bajo escudo Geo
+            amount *= 0.30F;
         }
 
         boolean result = super.hurt(source, amount);
@@ -147,19 +147,16 @@ public class GoldenWolflordBossEntity extends Monster {
         if (!this.level().isClientSide) {
             this.bossEvent.setProgress(this.getHealth() / this.getMaxHealth());
 
-            // Si está activo el escudo, emitir partículas de Geo brillantes
             if (isShieldActive() && this.tickCount % 5 == 0 && this.level() instanceof ServerLevel sl) {
                 sl.sendParticles(ParticleTypes.WAX_ON, this.getX(), this.getY() + 1.5D, this.getZ(), 8, 1.5D, 1.0D, 1.5D, 0.05D);
             }
 
-            // Manejo de la embestida en picada
             if (diveTicks > 0) {
                 diveTicks--;
                 if (diveTarget != null) {
                     Vec3 dir = diveTarget.subtract(this.position()).normalize().scale(1.1D);
                     this.setDeltaMovement(dir);
 
-                    // Dañar entidades en el trayecto
                     AABB box = this.getBoundingBox().inflate(1.5D);
                     for (LivingEntity target : this.level().getEntitiesOfClass(LivingEntity.class, box)) {
                         if (target != this && !(target instanceof GoldenWolflordBossEntity)) {
@@ -201,7 +198,6 @@ public class GoldenWolflordBossEntity extends Monster {
     public void die(DamageSource source) {
         super.die(source);
         if (!this.level().isClientSide) {
-            // Recompensas legendarias del Wolflord
             if (SystemItems.RIFTBORN_REGALIA.isBound()) {
                 dropItem(new ItemStack(SystemItems.RIFTBORN_REGALIA.get(), 2 + this.random.nextInt(3)));
             }
@@ -218,7 +214,6 @@ public class GoldenWolflordBossEntity extends Monster {
                 dropItem(new ItemStack(SystemItems.AWAKENING_COIN.get(), 25));
             }
 
-            // Artefacto legendario 5 estrellas
             try {
                 var items = net.minecraft.core.registries.BuiltInRegistries.ITEM;
                 java.util.List<GenshinArtifactItem> arts = new java.util.ArrayList<>();
@@ -230,7 +225,9 @@ public class GoldenWolflordBossEntity extends Monster {
                 if (!arts.isEmpty()) {
                     dropItem(new ItemStack(arts.get(this.random.nextInt(arts.size()))));
                 }
-            } catch (Exception ignored) {}
+            } catch (Exception e) {
+                AwakeningSystemMod.LOGGER.debug("Error dropping artifact for Golden Wolflord: {}", e.getMessage(), e);
+            }
         }
     }
 
@@ -252,7 +249,6 @@ public class GoldenWolflordBossEntity extends Monster {
         this.bossEvent.removePlayer(player);
     }
 
-    // --- METAS DE IA PARA VUELO Y COMBATE ---
     static class WolflordCircleHoverGoal extends Goal {
         private final GoldenWolflordBossEntity boss;
         private float angle = 0.0F;
@@ -308,10 +304,8 @@ public class GoldenWolflordBossEntity extends Monster {
             } else {
                 this.boss.attackCooldown = 80 + this.boss.random.nextInt(40);
                 if (this.boss.random.nextBoolean()) {
-                    // Ataque en picada
                     this.boss.triggerDiveAttack(target.position());
                 } else {
-                    // Ráfaga de calaveras de corrosión
                     this.boss.shootCorrosionSkulls(target);
                 }
             }

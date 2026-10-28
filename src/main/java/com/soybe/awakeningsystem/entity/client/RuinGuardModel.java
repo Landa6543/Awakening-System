@@ -313,20 +313,17 @@ public class RuinGuardModel extends EntityModel<RuinGuardEntity> {
 
     @Override
     public void setupAnim(RuinGuardEntity entity, float limbSwing, float limbSwingAmount, float ageInTicks, float netHeadYaw, float headPitch) {
-        // Animación de marcha pesada del autómata
         this.leftLeg.yRot = Mth.cos(limbSwing * 1.0F) * -1.0F * limbSwingAmount;
         this.rightLeg.yRot = Mth.cos(limbSwing * 1.0F) * 1.0F * limbSwingAmount;
         this.leftLeg.xRot = Mth.cos(limbSwing * 0.6662F) * 0.8F * limbSwingAmount;
         this.rightLeg.xRot = Mth.cos(limbSwing * 0.6662F + (float) Math.PI) * 0.8F * limbSwingAmount;
 
-        // Ataques especiales: Giro en torbellino
         if (entity.isSpinning()) {
             float spin = ageInTicks * 0.8F;
             this.ruinGuard.yRot = spin;
-            this.leftArm.xRot = -1.5708F; // Brazos horizontales extendidos
+            this.leftArm.xRot = -1.5708F;
             this.rightArm.xRot = -1.5708F;
         } else if (entity.isStunned()) {
-            // Núcleo ocular dañado: cabeza gacha apagada
             this.ruinGuard.yRot = 0.0F;
             this.ruinGuard.xRot = 0.35F;
             this.leftArm.xRot = 0.5F;

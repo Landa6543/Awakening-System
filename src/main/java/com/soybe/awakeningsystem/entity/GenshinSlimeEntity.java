@@ -155,16 +155,35 @@ public class GenshinSlimeEntity extends Monster {
         updateCustomName();
     }
 
+    @Override
+    public void onSyncedDataUpdated(EntityDataAccessor<?> key) {
+        if (DATA_IS_BIG.equals(key)) {
+            this.refreshDimensions();
+        }
+        super.onSyncedDataUpdated(key);
+    }
+
+    @Override
+    public void refreshDimensions() {
+        double d0 = this.getX();
+        double d1 = this.getY();
+        double d2 = this.getZ();
+        super.refreshDimensions();
+        this.setPos(d0, d1, d2);
+    }
+
     private void updateCustomName() {
         Element el = getElement();
         String sizePrefix = isBig() ? "§lSlime " + el.getDisplayName() + " Gigante" : "Slime " + el.getDisplayName();
         this.setCustomName(Component.literal(sizePrefix));
-        this.setCustomNameVisible(false); // No tapar la barra de vida flotante
+        this.setCustomNameVisible(false);
     }
 
     @Override
     public EntityDimensions getDefaultDimensions(Pose pose) {
-        return isBig() ? EntityDimensions.scalable(1.65F, 1.45F) : EntityDimensions.scalable(0.85F, 0.75F);
+        return isBig()
+                ? EntityDimensions.scalable(1.95F, 1.70F).withEyeHeight(1.25F)
+                : EntityDimensions.scalable(0.90F, 0.80F).withEyeHeight(0.55F);
     }
 
     @Override
@@ -183,7 +202,6 @@ public class GenshinSlimeEntity extends Monster {
 
     @Override
     public boolean causeFallDamage(float fallDistance, float multiplier, DamageSource source) {
-        // Slimes elásticos inmunes al daño por caída
         if (fallDistance > 1.5F) {
             this.targetSquish = isBig() ? -1.45F : -1.25F;
             this.playSound(getSquishSound(), isBig() ? 0.9F : 0.65F, 0.85F);
@@ -233,8 +251,13 @@ public class GenshinSlimeEntity extends Monster {
 
         super.tick();
 
+        if (this.isBig() && this.getDimensions(this.getPose()).width() < 1.2F) {
+            this.refreshDimensions();
+        } else if (!this.isBig() && this.getDimensions(this.getPose()).width() > 1.2F) {
+            this.refreshDimensions();
+        }
+
         boolean onGround = this.onGround();
-        // Al impactar contra el suelo tras un salto:
         if (onGround) {
             if (this.airborneTicks >= 3 && this.getDeltaMovement().y <= 0.05D) {
                 this.targetSquish = isBig() ? -1.45F : -1.25F;
@@ -256,7 +279,6 @@ public class GenshinSlimeEntity extends Monster {
             }
         }
 
-        // Rebotes elásticos fluidos tras el impacto (damping oscilatorio)
         if (this.impactTicks > 0) {
             this.impactTicks--;
             if (this.impactTicks == 10) {
@@ -272,7 +294,6 @@ public class GenshinSlimeEntity extends Monster {
         this.squish += (this.targetSquish - this.squish) * 0.45F;
         this.targetSquish *= 0.8F;
 
-        // Fricción en el suelo para asentarse y lucir la animación squash antes de saltar de nuevo
         if (onGround && !this.isVehicle()) {
             this.setDeltaMovement(this.getDeltaMovement().multiply(0.72D, 1.0D, 0.72D));
         }
@@ -281,7 +302,6 @@ public class GenshinSlimeEntity extends Monster {
             this.attackCooldown--;
         }
 
-        // Mantener aura elemental innata del Slime en el servidor
         if (!this.level().isClientSide && this.tickCount % 40 == 0) {
             com.soybe.awakeningsystem.element.ElementType elemType = com.soybe.awakeningsystem.element.ElementType.fromString(getElement().getName());
             if (elemType != null) {
@@ -292,7 +312,6 @@ public class GenshinSlimeEntity extends Monster {
             }
         }
 
-        // Efectos pasivos de partículas según el Elemento de Teyvat
         if (this.level().isClientSide && this.random.nextInt(6) == 0) {
             double spread = isBig() ? 0.8D : 0.4D;
             double px = this.getX() + (this.random.nextDouble() - 0.5D) * spread;
@@ -306,7 +325,6 @@ public class GenshinSlimeEntity extends Monster {
     public void aiStep() {
         super.aiStep();
 
-        // Estabilización en agua / lava
         if (this.isInWater() || this.isInLava()) {
             if (this.isUnderWater()) {
                 this.setDeltaMovement(this.getDeltaMovement().x, 0.08D, this.getDeltaMovement().z);
@@ -458,7 +476,6 @@ public class GenshinSlimeEntity extends Monster {
         return super.finalizeSpawn(level, difficulty, spawnType, spawnGroupData);
     }
 
-    // --- AI MOVE CONTROL (SALTOS RÍTMICOS DE ISEKAI SLIME) ---
     public static class SlimeMoveControl extends MoveControl {
         private float yRot;
         private int jumpDelay;

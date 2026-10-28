@@ -27,7 +27,18 @@ sourceSets.main.resources {
 }
 
 repositories {
-    // Add here additional repositories if required by some of the dependencies below.
+    maven {
+        name = 'GeckoLib'
+        url 'https://dl.cloudsmith.io/public/geckolib3/geckolib/maven/'
+        content {
+            includeGroupByRegex("software\\.bernie.*")
+            includeGroup("com.eliotlash.mclib")
+        }
+    }
+    maven {
+        name = "KosmX's Maven"
+        url = "https://maven.kosmx.dev/"
+    }
 }
 
 base {
@@ -116,7 +127,11 @@ configurations {
 }
 
 dependencies {
+    compileOnly 'org.jspecify:jspecify:1.0.0'
     implementation files('libs/TerraBlender-neoforge-1.21.1-4.1.0.8.jar')
+    implementation "software.bernie.geckolib:geckolib-neoforge-1.21.1:4.7.4"
+    compileOnly fileTree(dir: 'libs/compileOnly', include: ['*.jar'])
+    compileOnly "dev.kosmx.player-anim:player-animation-lib-forge:2.0.4+1.21.1"
     // Example optional mod dependency with JEI
     // The JEI API is declared for compile time use, while the full JEI artifact is used at runtime
     // compileOnly "mezz.jei:jei-${mc_version}-common-api:${jei_version}"
@@ -182,6 +197,10 @@ tasks.withType(JavaCompile).configureEach {
     options.encoding = 'UTF-8' // Use the UTF-8 charset for Java compilation
 }
 
+tasks.withType(ProcessResources).configureEach {
+    filteringCharset = 'UTF-8'
+}
+
 // IDEA no longer automatically downloads sources/javadoc jars for dependencies, so we need to explicitly enable the behavior.
 idea {
     module {
@@ -189,3 +208,4 @@ idea {
         downloadJavadoc = true
     }
 }
+

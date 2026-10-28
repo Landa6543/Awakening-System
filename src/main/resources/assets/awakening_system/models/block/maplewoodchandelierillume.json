@@ -1,5 +1,5 @@
 {
-  "parent": "awakening_system:block/custom/maple_wood_chandelier_illume",
+  "parent": "minecraft:block/cube_all",
   "textures": {
     "all": "awakening_system:block/maple_wood_chandelier_illume",
     "particle": "awakening_system:block/maple_wood_chandelier_illume",

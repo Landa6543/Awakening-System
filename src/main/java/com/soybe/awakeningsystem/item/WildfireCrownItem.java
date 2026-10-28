@@ -41,7 +41,6 @@ public class WildfireCrownItem extends ArmorItem {
         if (!level.isClientSide() && entity instanceof Player player) {
             ItemStack helmet = player.getItemBySlot(EquipmentSlot.HEAD);
             if (helmet == stack) {
-                // Inmunidad ígnea y visión en lava constante
                 player.addEffect(new MobEffectInstance(MobEffects.FIRE_RESISTANCE, 40, 0, false, false, false));
             }
         }
@@ -49,11 +48,11 @@ public class WildfireCrownItem extends ArmorItem {
 
     @Override
     public void appendHoverText(ItemStack stack, TooltipContext context, List<Component> tooltipComponents, TooltipFlag tooltipFlag) {
-        tooltipComponents.add(Component.literal("§6✦ Corona del Jefe Wildfire").withStyle(ChatFormatting.GOLD, ChatFormatting.BOLD));
-        tooltipComponents.add(Component.literal("§7\"Canaliza la esencia ardiente del coloso de fuego del Nether.\""));
+        tooltipComponents.add(Component.translatable("item.awakening_system.wildfire_crown.title").withStyle(ChatFormatting.GOLD, ChatFormatting.BOLD));
+        tooltipComponents.add(Component.translatable("item.awakening_system.wildfire_crown.lore"));
         tooltipComponents.add(Component.literal(""));
-        tooltipComponents.add(Component.literal("§e✦ Bendición Ígnea Primordial:").withStyle(ChatFormatting.YELLOW));
-        tooltipComponents.add(Component.literal("  §7Otorga resistencia absoluta y permanente al fuego y a la lava mientras se lleve equipada."));
+        tooltipComponents.add(Component.translatable("item.awakening_system.wildfire_crown.blessing_title").withStyle(ChatFormatting.YELLOW));
+        tooltipComponents.add(Component.translatable("item.awakening_system.wildfire_crown.blessing_desc"));
         super.appendHoverText(stack, context, tooltipComponents, tooltipFlag);
     }
 }

@@ -1,6 +1,6 @@
 {
-  "parent": "bettercombat:rapier",
+  "parent": "bettercombat:katana",
   "attributes": {
-    "attack_range": 3.0
+    "attack_range": 3.2
   }
 }

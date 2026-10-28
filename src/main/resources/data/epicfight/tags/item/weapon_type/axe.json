@@ -1,0 +1,15 @@
+{
+    "replace":  false,
+    "values":  [
+                   "awakening_system:verdict",
+                   "awakening_system:herta_hammer",
+                   "awakening_system:adamantite_war_hammer",
+                   "awakening_system:abyssal_axe",
+                   "awakening_system:mithril_axe",
+                   "awakening_system:adamantite_axe",
+                   "awakening_system:spirit_jade_axe",
+                   "awakening_system:astral_axe",
+                   "awakening_system:celestial_axe",
+                   "awakening_system:primordial_axe"
+               ]
+}

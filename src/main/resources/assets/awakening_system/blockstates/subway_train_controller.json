@@ -1,8 +1,0 @@
-{
-  "variants": {
-    "facing=north": { "model": "awakening_system:block/subway_train_controller" },
-    "facing=east": { "model": "awakening_system:block/subway_train_controller", "y": 90 },
-    "facing=south": { "model": "awakening_system:block/subway_train_controller", "y": 180 },
-    "facing=west": { "model": "awakening_system:block/subway_train_controller", "y": 270 }
-  }
-}

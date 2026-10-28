@@ -73,7 +73,7 @@ public class FrostElfAssassinEntity extends Monster {
     public boolean doHurtTarget(net.minecraft.world.entity.Entity target) {
         boolean hurt = super.doHurtTarget(target);
         if (hurt && target instanceof LivingEntity living) {
-            this.level().broadcastEntityEvent(this, (byte) 12); // dual slash
+            this.level().broadcastEntityEvent(this, (byte) 12);
             living.setTicksFrozen(Math.min(living.getTicksRequiredToFreeze() + 160, 240));
             living.addEffect(new MobEffectInstance(MobEffects.MOVEMENT_SLOWDOWN, 80, 2));
             this.playSound(SoundEvents.PLAYER_ATTACK_SWEEP, 1.2F, 1.4F);
@@ -90,7 +90,6 @@ public class FrostElfAssassinEntity extends Monster {
     @Override
     public boolean hurt(DamageSource source, float amount) {
         boolean hurt = super.hurt(source, amount);
-        // Habilidad pasiva: Desvanecimiento en Humo Helado si vida < 50%
         if (hurt && !this.level().isClientSide && vanishCooldown <= 0 && this.getHealth() < this.getMaxHealth() * 0.5F) {
             vanishCooldown = 220;
             this.addEffect(new MobEffectInstance(MobEffects.INVISIBILITY, 60, 0, false, false, false));
@@ -104,7 +103,6 @@ public class FrostElfAssassinEntity extends Monster {
                         30, 0.6D, 0.6D, 0.6D, 0.05D);
             }
 
-            // Reposicionarse a un flanco
             LivingEntity target = this.getTarget();
             if (target != null) {
                 double angle = Math.toRadians(target.getYRot() + (this.random.nextBoolean() ? 90 : -90));
@@ -125,7 +123,6 @@ public class FrostElfAssassinEntity extends Monster {
             if (dualSlashAnimationTimeout > 0) dualSlashAnimationTimeout--;
             if (dashAnimationTimeout > 0) dashAnimationTimeout--;
 
-            // Estela de escarcha
             if (this.random.nextInt(2) == 0) {
                 this.level().addParticle(ParticleTypes.SNOWFLAKE,
                         this.getRandomX(0.5D), this.getY() + 0.2D, this.getRandomZ(0.5D),
@@ -139,10 +136,9 @@ public class FrostElfAssassinEntity extends Monster {
             if (target != null && target.isAlive()) {
                 double distSq = this.distanceToSqr(target);
 
-                // Habilidad activa: Embestida Gélida (Frost Dash)
                 if (dashCooldown <= 0 && distSq >= 36.0D && distSq <= 225.0D) {
                     dashCooldown = 90;
-                    this.level().broadcastEntityEvent(this, (byte) 13); // Dash anim
+                    this.level().broadcastEntityEvent(this, (byte) 13);
                     this.playSound(SoundEvents.PLAYER_ATTACK_KNOCKBACK, 1.3F, 1.6F);
 
                     Vec3 dashVec = target.position().subtract(this.position()).normalize().scale(1.8D);

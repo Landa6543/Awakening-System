@@ -1,0 +1,12 @@
+{
+    "cookingtime":  100,
+    "experience":  0.7,
+    "ingredient":  {
+                       "item":  "awakening_system:abyssal_stone_copper_ore"
+                   },
+    "type":  "minecraft:blasting",
+    "category":  "misc",
+    "result":  {
+                   "id":  "minecraft:copper_ingot"
+               }
+}

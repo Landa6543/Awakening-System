@@ -160,6 +160,23 @@ public class IsekaiSlimeEntity extends Monster implements PlayerRideableJumping,
     }
 
     @Override
+    public void onSyncedDataUpdated(EntityDataAccessor<?> key) {
+        if (DATA_IS_BIG.equals(key)) {
+            this.refreshDimensions();
+        }
+        super.onSyncedDataUpdated(key);
+    }
+
+    @Override
+    public void refreshDimensions() {
+        double d0 = this.getX();
+        double d1 = this.getY();
+        double d2 = this.getZ();
+        super.refreshDimensions();
+        this.setPos(d0, d1, d2);
+    }
+
+    @Override
     public Component getName() {
         if (this.hasCustomName()) {
             return super.getName();
@@ -201,7 +218,9 @@ public class IsekaiSlimeEntity extends Monster implements PlayerRideableJumping,
 
     @Override
     public EntityDimensions getDefaultDimensions(Pose pose) {
-        return isBig() ? EntityDimensions.scalable(1.65F, 1.85F) : super.getDefaultDimensions(pose);
+        return isBig()
+                ? EntityDimensions.scalable(1.95F, 2.15F).withEyeHeight(1.55F)
+                : EntityDimensions.scalable(0.85F, 0.95F).withEyeHeight(0.60F);
     }
 
     public static AttributeSupplier.Builder createAttributes() {
@@ -282,7 +301,6 @@ public class IsekaiSlimeEntity extends Monster implements PlayerRideableJumping,
     public InteractionResult mobInteract(Player player, InteractionHand hand) {
         ItemStack itemstack = player.getItemInHand(hand);
 
-        // 1. Slime Salvaje
         if (!this.isTame()) {
             if (isFavoriteFood(itemstack)) {
                 if (!player.getAbilities().instabuild) {
@@ -299,14 +317,12 @@ public class IsekaiSlimeEntity extends Monster implements PlayerRideableJumping,
                 if (!this.level().isClientSide) {
                     ServerLevel sl = (ServerLevel) this.level();
                     if (!this.isBig()) {
-                        // Slime pequeño que come su manjar preferido: ¡crece a Slime Gigante!
                         this.setBig(true);
                         sl.sendParticles(ParticleTypes.EXPLOSION, this.getX(), this.getY() + 0.8D, this.getZ(), 2, 0.3D, 0.3D, 0.3D, 0.05D);
                         sl.sendParticles(ParticleTypes.ITEM_SLIME, this.getX(), this.getY() + 0.8D, this.getZ(), 20, 0.4D, 0.4D, 0.4D, 0.1D);
                         this.playSound(SoundEvents.PLAYER_LEVELUP, 0.8F, 1.4F);
                         player.displayClientMessage(Component.translatable("awakening_system.slime.grew"), true);
                     } else {
-                        // Slime Gigante salvaje: probabilidad de domesticar (35% o instantáneo para oro mítico)
                         boolean instantGold = (getVariant() == Variant.GOLD && (itemstack.is(Items.GOLDEN_APPLE) || itemstack.is(Items.GOLDEN_CARROT)));
                         boolean success = instantGold || this.random.nextFloat() < 0.35F;
 
@@ -319,14 +335,13 @@ public class IsekaiSlimeEntity extends Monster implements PlayerRideableJumping,
                             player.displayClientMessage(Component.translatable("awakening_system.slime.tamed", getVariantName()), true);
                         } else {
                             sl.sendParticles(ParticleTypes.HAPPY_VILLAGER, this.getX(), this.getY() + 1.0D, this.getZ(), 6, 0.4D, 0.3D, 0.4D, 0.02D);
-                            this.pacifyTicks = 80; // Saciado por 4 segundos
+                            this.pacifyTicks = 80;
                             this.setTarget(null);
                         }
                     }
                 }
                 return InteractionResult.sidedSuccess(this.level().isClientSide);
             } else if (itemstack.has(net.minecraft.core.component.DataComponents.FOOD)) {
-                // Comida no predilecta
                 if (!this.level().isClientSide) {
                     ServerLevel sl = (ServerLevel) this.level();
                     sl.sendParticles(ParticleTypes.SMOKE, this.getX(), this.getY() + 1.0D, this.getZ(), 4, 0.2D, 0.2D, 0.2D, 0.02D);
@@ -337,9 +352,7 @@ public class IsekaiSlimeEntity extends Monster implements PlayerRideableJumping,
             return super.mobInteract(player, hand);
         }
 
-        // 2. Slime Domesticado
         if (this.isOwnedBy(player)) {
-            // Curar con comida favorita
             if (isFavoriteFood(itemstack) && this.getHealth() < this.getMaxHealth()) {
                 if (!player.getAbilities().instabuild) {
                     itemstack.shrink(1);
@@ -352,7 +365,6 @@ public class IsekaiSlimeEntity extends Monster implements PlayerRideableJumping,
                 return InteractionResult.sidedSuccess(this.level().isClientSide);
             }
 
-            // Si es pequeño y domesticado: alimentarlo puede hacerlo crecer a Gigante
             if (!this.isBig() && isFavoriteFood(itemstack)) {
                 if (!player.getAbilities().instabuild) {
                     itemstack.shrink(1);
@@ -367,7 +379,6 @@ public class IsekaiSlimeEntity extends Monster implements PlayerRideableJumping,
                 return InteractionResult.sidedSuccess(this.level().isClientSide);
             }
 
-            // Montar en Slime Gigante con mano vacía o no-comida (¡Sin silla de montar necesaria!)
             if (this.isBig() && !this.isVehicle() && !player.isShiftKeyDown()) {
                 if (!this.level().isClientSide) {
                     player.startRiding(this);
@@ -389,15 +400,14 @@ public class IsekaiSlimeEntity extends Monster implements PlayerRideableJumping,
 
     @Override
     protected Vec3 getPassengerAttachmentPoint(Entity entity, EntityDimensions dimensions, float scale) {
-        double yOff = isBig() ? 1.45D : 0.65D;
+        double yOff = isBig() ? 1.75D : 0.65D;
         return new Vec3(0.0D, yOff * (double) scale, 0.0D);
     }
 
     @Override
     protected void positionRider(Entity passenger, Entity.MoveFunction moveFunction) {
         if (this.hasPassenger(passenger)) {
-            double yOff = isBig() ? 1.45D : 0.65D;
-            // Acompaña el squash & stretch con amortiguación para evitar cualquier temblor de cámara
+            double yOff = isBig() ? 1.75D : 0.65D;
             float clampedSquish = Mth.clamp(this.squish, -0.6F, 0.6F);
             yOff += (double) (clampedSquish * 0.12F);
             moveFunction.accept(passenger, this.getX(), this.getY() + yOff, this.getZ());
@@ -426,11 +436,9 @@ public class IsekaiSlimeEntity extends Monster implements PlayerRideableJumping,
         if (this.isAlive()) {
             LivingEntity passenger = this.getControllingPassenger();
             if (this.isVehicle() && passenger instanceof Player player) {
-                // Sincronizar rotación con la mirada del jugador
                 this.setRot(player.getYRot(), player.getXRot() * 0.5F);
                 this.yRotO = this.yBodyRot = this.yHeadRot = this.getYRot();
 
-                // Súper Salto cargado con barra espaciadora
                 if (this.playerJumpPendingScale > 0.0F) {
                     double jumpPower = 1.30D + 0.65D * (double) this.playerJumpPendingScale;
                     boolean hasDirection = (player.zza != 0.0F || player.xxa != 0.0F);
@@ -460,7 +468,6 @@ public class IsekaiSlimeEntity extends Monster implements PlayerRideableJumping,
                     return;
                 }
 
-                // COMPORTAMIENTO ACUÁTICO: Flotación tranquila en la superficie y deslizamiento suave (SIN saltar)
                 if (this.isInWater() || this.isInLava()) {
                     float forward = player.zza;
                     float strafe = player.xxa;
@@ -472,7 +479,7 @@ public class IsekaiSlimeEntity extends Monster implements PlayerRideableJumping,
 
                         boolean sprinting = player.isSprinting();
                         float rad = moveYaw * ((float) Math.PI / 180.0F);
-                        double glideSpeed = sprinting ? 0.68D : 0.46D; // Deslizador acuático suave
+                        double glideSpeed = sprinting ? 0.68D : 0.46D;
 
                         double vy = this.isUnderWater() ? 0.12D : 0.0D;
                         this.setDeltaMovement(
@@ -482,7 +489,6 @@ public class IsekaiSlimeEntity extends Monster implements PlayerRideableJumping,
                         );
                         this.hasImpulse = true;
 
-                        // Efectos y sonido de deslizamiento sobre agua
                         if (this.level() instanceof ServerLevel sl && this.tickCount % 2 == 0) {
                             sl.sendParticles(ParticleTypes.SPLASH, this.getX(), this.getY() + 0.1D, this.getZ(), 5, 0.35D, 0.05D, 0.35D, 0.08D);
                             sl.sendParticles(ParticleTypes.BUBBLE_POP, this.getX(), this.getY() + 0.1D, this.getZ(), 2, 0.2D, 0.05D, 0.2D, 0.02D);
@@ -491,7 +497,6 @@ public class IsekaiSlimeEntity extends Monster implements PlayerRideableJumping,
                             this.playSound(SoundEvents.BOAT_PADDLE_WATER, 0.6F, 1.1F);
                         }
                     } else {
-                        // Flotando quieto en el agua sin oscilar ni brincar
                         double vy = this.isUnderWater() ? 0.12D : 0.0D;
                         Vec3 cur = this.getDeltaMovement();
                         this.setDeltaMovement(cur.x * 0.72D, vy, cur.z * 0.72D);
@@ -500,7 +505,6 @@ public class IsekaiSlimeEntity extends Monster implements PlayerRideableJumping,
                     return;
                 }
 
-                // COMPORTAMIENTO EN TIERRA FIRME: Saltos rítmicos elásticos largos estilo Terraria
                 if (this.onGround()) {
                     float forward = player.zza;
                     float strafe = player.xxa;
@@ -532,7 +536,6 @@ public class IsekaiSlimeEntity extends Monster implements PlayerRideableJumping,
                         this.setDeltaMovement(this.getDeltaMovement().multiply(0.72D, 1.0D, 0.72D));
                     }
                 } else {
-                    // En el aire: mantener aceleración horizontal para que los saltos cubran largas distancias
                     float forward = player.zza;
                     float strafe = player.xxa;
                     if (forward != 0.0F || strafe != 0.0F) {
@@ -560,7 +563,6 @@ public class IsekaiSlimeEntity extends Monster implements PlayerRideableJumping,
 
     @Override
     public boolean causeFallDamage(float fallDistance, float multiplier, DamageSource source) {
-        // Los slimes son 100% elásticos e inmunes al daño por caída en todos los tamaños y estados
         if (fallDistance > 1.5F) {
             this.targetSquish = -1.4F;
             this.playSound(SoundEvents.SLIME_SQUISH, this.isBig() ? 0.85F : 0.65F, 0.8F);
@@ -606,7 +608,6 @@ public class IsekaiSlimeEntity extends Monster implements PlayerRideableJumping,
                                         MobSpawnType spawnType, @Nullable SpawnGroupData spawnGroupData) {
         RandomSource random = level.getRandom();
 
-        // 30% de probabilidad de spawnear como Slime Gigante
         if (random.nextInt(100) < 30) {
             this.setBig(true);
         }
@@ -632,7 +633,7 @@ public class IsekaiSlimeEntity extends Monster implements PlayerRideableJumping,
         } else if (roll < 99) {
             chosen = Variant.OBSIDIAN;
         } else {
-            chosen = Variant.GOLD; // Mítico 1%
+            chosen = Variant.GOLD;
         }
         setVariant(chosen);
         return super.finalizeSpawn(level, difficulty, spawnType, spawnGroupData);
@@ -672,9 +673,13 @@ public class IsekaiSlimeEntity extends Monster implements PlayerRideableJumping,
 
         super.tick();
 
+        if (this.isBig() && this.getDimensions(this.getPose()).width() < 1.2F) {
+            this.refreshDimensions();
+        } else if (!this.isBig() && this.getDimensions(this.getPose()).width() > 1.2F) {
+            this.refreshDimensions();
+        }
+
         boolean onGround = this.onGround();
-        // Al impactar contra el suelo tras un salto:
-        // airborneTicks >= 3 evita temblor/flickering en esquinas y bordes de bloques
         if (onGround) {
             if (this.airborneTicks >= 3 && this.getDeltaMovement().y <= 0.05D) {
                 this.targetSquish = isBig() ? -1.45F : -1.25F;
@@ -696,7 +701,6 @@ public class IsekaiSlimeEntity extends Monster implements PlayerRideableJumping,
             }
         }
 
-        // Rebotes elásticos fluidos tras el impacto
         if (this.impactTicks > 0) {
             this.impactTicks--;
             if (this.impactTicks == 10) {
@@ -716,7 +720,6 @@ public class IsekaiSlimeEntity extends Monster implements PlayerRideableJumping,
             this.setDeltaMovement(this.getDeltaMovement().multiply(0.72D, 1.0D, 0.72D));
         }
 
-        // Efectos pasivos de partículas según el color del slime
         if (this.level().isClientSide && this.random.nextInt(6) == 0) {
             double spread = isBig() ? 1.2D : 0.6D;
             double px = this.getX() + (this.random.nextDouble() - 0.5D) * spread;
@@ -741,7 +744,6 @@ public class IsekaiSlimeEntity extends Monster implements PlayerRideableJumping,
     public void aiStep() {
         super.aiStep();
 
-        // Estabilización de flotabilidad acuática natural (sin brincos espasmódicos)
         if (this.isInWater() || this.isInLava()) {
             if (this.isUnderWater()) {
                 this.setDeltaMovement(this.getDeltaMovement().x, 0.08D, this.getDeltaMovement().z);
@@ -757,14 +759,12 @@ public class IsekaiSlimeEntity extends Monster implements PlayerRideableJumping,
             }
         }
 
-        // Pisotón / Rebote de enemigos estilo Terraria Slime Mount (Goomba Stomp)
         if (this.isVehicle() && this.getDeltaMovement().y < -0.10D) {
             AABB stompBox = this.getBoundingBox().inflate(0.3D, 0.2D, 0.3D).move(0, -0.4D, 0);
             List<LivingEntity> enemies = this.level().getEntitiesOfClass(LivingEntity.class, stompBox,
                     e -> e != this && !this.hasPassenger(e) && e.isAlive() && (e instanceof Monster || !this.isOwnedBy(e)));
             for (LivingEntity enemy : enemies) {
                 if (enemy.hurt(this.damageSources().mobAttack(this), 14.0F)) {
-                    // Rebotar hacia arriba de nuevo!
                     Vec3 v = this.getDeltaMovement();
                     this.setDeltaMovement(v.x, 0.68D, v.z);
                     this.hasImpulse = true;
@@ -875,7 +875,6 @@ public class IsekaiSlimeEntity extends Monster implements PlayerRideableJumping,
 
         @Override
         public void tick() {
-            // Cuando tiene un jinete montado, las físicas las comanda travel()
             if (this.slime.isVehicle()) {
                 return;
             }

@@ -61,17 +61,15 @@ public class SuperGiantMurimPineFeature extends Feature<NoneFeatureConfiguration
             return false;
         }
 
-        // Espacio vertical de 25 bloques libres
         for (int y = 1; y <= 25; y++) {
             if (level.getBlockState(origin.above(y)).is(BlockTags.LOGS)) {
                 return false;
             }
         }
 
-        int height = 32 + rand.nextInt(15); // 32 a 46 bloques de altura
+        int height = 32 + rand.nextInt(15);
         BlockState logY = SystemBlocks.CELESTIAL_PINE_LOG.get().defaultBlockState().setValue(RotatedPillarBlock.AXIS, Direction.Axis.Y);
 
-        // 1. Contrafuerte de raíces 4x4 en la base
         for (int dx = -1; dx <= 2; dx++) {
             for (int dz = -1; dz <= 2; dz++) {
                 for (int y = -2; y <= 3; y++) {
@@ -80,7 +78,6 @@ public class SuperGiantMurimPineFeature extends Feature<NoneFeatureConfiguration
             }
         }
 
-        // Raíces contrafuerte que descienden en cruz
         for (Direction d : Direction.Plane.HORIZONTAL) {
             for (int dist = 2; dist <= 4; dist++) {
                 BlockPos rPos = origin.relative(d, dist);
@@ -90,7 +87,6 @@ public class SuperGiantMurimPineFeature extends Feature<NoneFeatureConfiguration
             }
         }
 
-        // 2. Tronco masivo 3x3 ascendente con suave inclinación milenaria
         Direction mainLean = Direction.Plane.HORIZONTAL.getRandomDirection(rand);
         BlockPos currentBase = origin;
         for (int y = 3; y < height; y++) {
@@ -100,13 +96,11 @@ public class SuperGiantMurimPineFeature extends Feature<NoneFeatureConfiguration
                 }
             }
 
-            // Inclinación suave cada 6 bloques
             if (y > 10 && y % 7 == 0) {
                 currentBase = currentBase.relative(mainLean);
             }
         }
 
-        // 3. Ramas colosales en voladizo (estilo pintura tradicional china Shanshui)
         int boughCount = 6 + rand.nextInt(4);
         for (int b = 0; b < boughCount; b++) {
             int boughY = 12 + (b * 4) + rand.nextInt(3);
@@ -122,10 +116,9 @@ public class SuperGiantMurimPineFeature extends Feature<NoneFeatureConfiguration
                 bCurr = bCurr.relative(dir);
                 if (step % 3 == 0) bCurr = bCurr.above();
                 setLog(level, bCurr, logAxis);
-                setLog(level, bCurr.below(), logAxis); // Grosor de 2 bloques
+                setLog(level, bCurr.below(), logAxis);
             }
 
-            // Almohadilla horizontal aplanada de hojas de pino en el extremo
             int padRadius = 3 + rand.nextInt(2);
             for (int dx = -padRadius; dx <= padRadius; dx++) {
                 for (int dz = -padRadius; dz <= padRadius; dz++) {
@@ -139,7 +132,6 @@ public class SuperGiantMurimPineFeature extends Feature<NoneFeatureConfiguration
                 }
             }
 
-            // Farol celestial o piedra espiritual colgando debajo de la rama
             if (rand.nextFloat() < 0.7F) {
                 BlockPos underBough = bCurr.below(2);
                 if (level.isEmptyBlock(underBough)) {
@@ -148,7 +140,6 @@ public class SuperGiantMurimPineFeature extends Feature<NoneFeatureConfiguration
             }
         }
 
-        // 4. Gran corona aplanada superior
         BlockPos crownCenter = currentBase.offset(1, height, 1);
         int topRadius = 6 + rand.nextInt(2);
         for (int dx = -topRadius; dx <= topRadius; dx++) {

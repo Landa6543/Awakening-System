@@ -66,18 +66,18 @@ public class LunarAuthorityItem extends Item {
         if (level.isClientSide()) {
             player.playSound(SoundEvents.AMETHYST_BLOCK_CHIME, 1.2F, 1.5F);
         } else {
-            player.displayClientMessage(Component.literal(goddess.getColorCode() + "✦ [" + goddess.getGoddessName() + " - " + goddess.getPhase() + "] §fEsta autoridad cósmica pulsa con energía lunar. Llévala al Altar Trilunar para despertar a Columbina."), true);
+            player.displayClientMessage(Component.translatable("item.awakening_system.lunar_authority.hint", goddess.getColorCode(), goddess.getGoddessName(), goddess.getPhase()), true);
         }
         return InteractionResultHolder.sidedSuccess(stack, level.isClientSide());
     }
 
     @Override
     public void appendHoverText(ItemStack stack, TooltipContext context, List<Component> tooltip, TooltipFlag flag) {
-        tooltip.add(Component.literal(goddess.getColorCode() + "✦ Autoridad de " + goddess.getGoddessName() + " (" + goddess.getPhase() + ")").withStyle(ChatFormatting.BOLD));
+        tooltip.add(Component.literal(goddess.getColorCode()).append(Component.translatable("item.awakening_system.lunar_authority.title", goddess.getGoddessName(), goddess.getPhase())).withStyle(ChatFormatting.BOLD));
         tooltip.add(Component.translatable(goddess.getDescKey()).withStyle(ChatFormatting.GRAY));
         tooltip.add(Component.empty());
-        tooltip.add(Component.literal("§7[Reliquia Sagrada de las Tres Diosas de la Luna]").withStyle(ChatFormatting.DARK_PURPLE));
-        tooltip.add(Component.literal("§e▸ Consagración: §fColoca las 3 autoridades en el §dAltar Trilunar").withStyle(ChatFormatting.YELLOW));
+        tooltip.add(Component.translatable("item.awakening_system.lunar_authority.relic").withStyle(ChatFormatting.DARK_PURPLE));
+        tooltip.add(Component.translatable("item.awakening_system.lunar_authority.altar").withStyle(ChatFormatting.YELLOW));
         super.appendHoverText(stack, context, tooltip, flag);
     }
 }

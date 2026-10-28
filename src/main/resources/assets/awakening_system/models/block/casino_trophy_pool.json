@@ -1,0 +1,223 @@
+{
+  "credit": "Awakening System Mod - Billiards Legend Ball 8 Trophy",
+  "textures": {
+    "particle": "awakening_system:block/casino_trophy_pool",
+    "trophy": "awakening_system:block/casino_trophy_pool"
+  },
+  "elements": [
+    {
+      "name": "walnut_base",
+      "from": [ 4, 0, 4 ],
+      "to": [ 12, 2.5, 12 ],
+      "faces": {
+        "north": { "uv": [ 0, 0, 8, 4 ], "texture": "#trophy" },
+        "south": { "uv": [ 0, 0, 8, 4 ], "texture": "#trophy" },
+        "east":  { "uv": [ 0, 0, 8, 4 ], "texture": "#trophy" },
+        "west":  { "uv": [ 0, 0, 8, 4 ], "texture": "#trophy" },
+        "up":    { "uv": [ 0, 0, 8, 8 ], "texture": "#trophy" },
+        "down":  { "uv": [ 0, 0, 8, 8 ], "texture": "#trophy" }
+      }
+    },
+    {
+      "name": "plaque_front",
+      "from": [ 4.5, 0.4, 3.8 ],
+      "to": [ 11.5, 2.1, 4.0 ],
+      "faces": {
+        "north": { "uv": [ 8, 0, 14, 2 ], "texture": "#trophy" }
+      }
+    },
+    {
+      "name": "green_felt_cloth",
+      "from": [ 4.5, 2.5, 4.5 ],
+      "to": [ 11.5, 3.2, 11.5 ],
+      "faces": {
+        "north": { "uv": [ 0, 4, 8, 5 ], "texture": "#trophy" },
+        "south": { "uv": [ 0, 4, 8, 5 ], "texture": "#trophy" },
+        "east":  { "uv": [ 0, 4, 8, 5 ], "texture": "#trophy" },
+        "west":  { "uv": [ 0, 4, 8, 5 ], "texture": "#trophy" },
+        "up":    { "uv": [ 0, 4, 8, 8 ], "texture": "#trophy" }
+      }
+    },
+    {
+      "name": "triangle_base",
+      "from": [ 5.5, 3.2, 9.8 ],
+      "to": [ 10.5, 4.2, 10.6 ],
+      "faces": {
+        "north": { "uv": [ 8, 2, 16, 4 ], "texture": "#trophy" },
+        "south": { "uv": [ 8, 2, 16, 4 ], "texture": "#trophy" },
+        "east":  { "uv": [ 8, 2, 10, 4 ], "texture": "#trophy" },
+        "west":  { "uv": [ 8, 2, 10, 4 ], "texture": "#trophy" },
+        "up":    { "uv": [ 8, 2, 16, 3 ], "texture": "#trophy" }
+      }
+    },
+    {
+      "name": "triangle_left",
+      "from": [ 5.5, 3.2, 5.8 ],
+      "to": [ 6.3, 4.2, 9.8 ],
+      "faces": {
+        "north": { "uv": [ 8, 2, 10, 4 ], "texture": "#trophy" },
+        "east":  { "uv": [ 8, 2, 14, 4 ], "texture": "#trophy" },
+        "west":  { "uv": [ 8, 2, 14, 4 ], "texture": "#trophy" },
+        "up":    { "uv": [ 8, 2, 10, 4 ], "texture": "#trophy" }
+      }
+    },
+    {
+      "name": "triangle_right",
+      "from": [ 9.7, 3.2, 5.8 ],
+      "to": [ 10.5, 4.2, 9.8 ],
+      "faces": {
+        "north": { "uv": [ 8, 2, 10, 4 ], "texture": "#trophy" },
+        "east":  { "uv": [ 8, 2, 14, 4 ], "texture": "#trophy" },
+        "west":  { "uv": [ 8, 2, 14, 4 ], "texture": "#trophy" },
+        "up":    { "uv": [ 8, 2, 10, 4 ], "texture": "#trophy" }
+      }
+    },
+    {
+      "name": "ball_8_core",
+      "from": [ 6.2, 4.0, 6.2 ],
+      "to": [ 9.8, 7.2, 9.4 ],
+      "faces": {
+        "north": { "uv": [ 0, 8, 6, 14 ], "texture": "#trophy" },
+        "south": { "uv": [ 0, 8, 6, 14 ], "texture": "#trophy" },
+        "east":  { "uv": [ 0, 8, 6, 14 ], "texture": "#trophy" },
+        "west":  { "uv": [ 0, 8, 6, 14 ], "texture": "#trophy" },
+        "up":    { "uv": [ 0, 8, 6, 14 ], "texture": "#trophy" },
+        "down":  { "uv": [ 0, 8, 6, 14 ], "texture": "#trophy" }
+      }
+    },
+    {
+      "name": "ball_8_vert_cap",
+      "from": [ 6.6, 3.5, 6.6 ],
+      "to": [ 9.4, 7.7, 9.0 ],
+      "faces": {
+        "north": { "uv": [ 0, 8, 6, 14 ], "texture": "#trophy" },
+        "south": { "uv": [ 0, 8, 6, 14 ], "texture": "#trophy" },
+        "east":  { "uv": [ 0, 8, 6, 14 ], "texture": "#trophy" },
+        "west":  { "uv": [ 0, 8, 6, 14 ], "texture": "#trophy" },
+        "up":    { "uv": [ 0, 8, 6, 14 ], "texture": "#trophy" },
+        "down":  { "uv": [ 0, 8, 6, 14 ], "texture": "#trophy" }
+      }
+    },
+    {
+      "name": "ball_8_horizontal_cap",
+      "from": [ 5.7, 4.4, 6.6 ],
+      "to": [ 10.3, 6.8, 9.0 ],
+      "faces": {
+        "north": { "uv": [ 0, 8, 6, 14 ], "texture": "#trophy" },
+        "south": { "uv": [ 0, 8, 6, 14 ], "texture": "#trophy" },
+        "east":  { "uv": [ 0, 8, 6, 14 ], "texture": "#trophy" },
+        "west":  { "uv": [ 0, 8, 6, 14 ], "texture": "#trophy" },
+        "up":    { "uv": [ 0, 8, 6, 14 ], "texture": "#trophy" },
+        "down":  { "uv": [ 0, 8, 6, 14 ], "texture": "#trophy" }
+      }
+    },
+    {
+      "name": "ball_8_front_emblem",
+      "from": [ 6.4, 4.2, 5.7 ],
+      "to": [ 9.6, 7.0, 6.3 ],
+      "faces": {
+        "north": { "uv": [ 0, 8, 6, 14 ], "texture": "#trophy" }
+      }
+    },
+    {
+      "name": "cue_left_butt",
+      "from": [ 7.3, 2.5, 9.7 ],
+      "to": [ 8.7, 6.5, 10.7 ],
+      "rotation": { "angle": -22.5, "axis": "z", "origin": [ 8.0, 8.5, 10.2 ] },
+      "faces": {
+        "north": { "uv": [ 10, 5, 13, 9 ], "texture": "#trophy" },
+        "south": { "uv": [ 10, 5, 13, 9 ], "texture": "#trophy" },
+        "east":  { "uv": [ 10, 5, 11, 9 ], "texture": "#trophy" },
+        "west":  { "uv": [ 10, 5, 11, 9 ], "texture": "#trophy" },
+        "down":  { "uv": [ 10, 5, 11, 6 ], "texture": "#trophy" }
+      }
+    },
+    {
+      "name": "cue_left_shaft",
+      "from": [ 7.5, 6.5, 9.8 ],
+      "to": [ 8.5, 13.8, 10.6 ],
+      "rotation": { "angle": -22.5, "axis": "z", "origin": [ 8.0, 8.5, 10.2 ] },
+      "faces": {
+        "north": { "uv": [ 8, 5, 10, 10 ], "texture": "#trophy" },
+        "south": { "uv": [ 8, 5, 10, 10 ], "texture": "#trophy" },
+        "east":  { "uv": [ 8, 5, 9, 10 ], "texture": "#trophy" },
+        "west":  { "uv": [ 8, 5, 9, 10 ], "texture": "#trophy" }
+      }
+    },
+    {
+      "name": "cue_left_ferrule",
+      "from": [ 7.5, 13.8, 9.8 ],
+      "to": [ 8.5, 14.5, 10.6 ],
+      "rotation": { "angle": -22.5, "axis": "z", "origin": [ 8.0, 8.5, 10.2 ] },
+      "faces": {
+        "north": { "uv": [ 13.5, 5, 14.5, 6 ], "texture": "#trophy" },
+        "south": { "uv": [ 13.5, 5, 14.5, 6 ], "texture": "#trophy" },
+        "east":  { "uv": [ 13.5, 5, 14.5, 6 ], "texture": "#trophy" },
+        "west":  { "uv": [ 13.5, 5, 14.5, 6 ], "texture": "#trophy" }
+      }
+    },
+    {
+      "name": "cue_left_tip",
+      "from": [ 7.55, 14.5, 9.85 ],
+      "to": [ 8.45, 14.9, 10.55 ],
+      "rotation": { "angle": -22.5, "axis": "z", "origin": [ 8.0, 8.5, 10.2 ] },
+      "faces": {
+        "north": { "uv": [ 14.5, 5, 16, 6 ], "texture": "#trophy" },
+        "south": { "uv": [ 14.5, 5, 16, 6 ], "texture": "#trophy" },
+        "east":  { "uv": [ 14.5, 5, 15, 6 ], "texture": "#trophy" },
+        "west":  { "uv": [ 14.5, 5, 15, 6 ], "texture": "#trophy" },
+        "up":    { "uv": [ 14.5, 5, 16, 6 ], "texture": "#trophy" }
+      }
+    },
+    {
+      "name": "cue_right_butt",
+      "from": [ 7.3, 2.5, 9.7 ],
+      "to": [ 8.7, 6.5, 10.7 ],
+      "rotation": { "angle": 22.5, "axis": "z", "origin": [ 8.0, 8.5, 10.2 ] },
+      "faces": {
+        "north": { "uv": [ 10, 5, 13, 9 ], "texture": "#trophy" },
+        "south": { "uv": [ 10, 5, 13, 9 ], "texture": "#trophy" },
+        "east":  { "uv": [ 10, 5, 11, 9 ], "texture": "#trophy" },
+        "west":  { "uv": [ 10, 5, 11, 9 ], "texture": "#trophy" },
+        "down":  { "uv": [ 10, 5, 11, 6 ], "texture": "#trophy" }
+      }
+    },
+    {
+      "name": "cue_right_shaft",
+      "from": [ 7.5, 6.5, 9.8 ],
+      "to": [ 8.5, 13.8, 10.6 ],
+      "rotation": { "angle": 22.5, "axis": "z", "origin": [ 8.0, 8.5, 10.2 ] },
+      "faces": {
+        "north": { "uv": [ 8, 5, 10, 10 ], "texture": "#trophy" },
+        "south": { "uv": [ 8, 5, 10, 10 ], "texture": "#trophy" },
+        "east":  { "uv": [ 8, 5, 9, 10 ], "texture": "#trophy" },
+        "west":  { "uv": [ 8, 5, 9, 10 ], "texture": "#trophy" }
+      }
+    },
+    {
+      "name": "cue_right_ferrule",
+      "from": [ 7.5, 13.8, 9.8 ],
+      "to": [ 8.5, 14.5, 10.6 ],
+      "rotation": { "angle": 22.5, "axis": "z", "origin": [ 8.0, 8.5, 10.2 ] },
+      "faces": {
+        "north": { "uv": [ 13.5, 5, 14.5, 6 ], "texture": "#trophy" },
+        "south": { "uv": [ 13.5, 5, 14.5, 6 ], "texture": "#trophy" },
+        "east":  { "uv": [ 13.5, 5, 14.5, 6 ], "texture": "#trophy" },
+        "west":  { "uv": [ 13.5, 5, 14.5, 6 ], "texture": "#trophy" }
+      }
+    },
+    {
+      "name": "cue_right_tip",
+      "from": [ 7.55, 14.5, 9.85 ],
+      "to": [ 8.45, 14.9, 10.55 ],
+      "rotation": { "angle": 22.5, "axis": "z", "origin": [ 8.0, 8.5, 10.2 ] },
+      "faces": {
+        "north": { "uv": [ 14.5, 5, 16, 6 ], "texture": "#trophy" },
+        "south": { "uv": [ 14.5, 5, 16, 6 ], "texture": "#trophy" },
+        "east":  { "uv": [ 14.5, 5, 15, 6 ], "texture": "#trophy" },
+        "west":  { "uv": [ 14.5, 5, 15, 6 ], "texture": "#trophy" },
+        "up":    { "uv": [ 14.5, 5, 16, 6 ], "texture": "#trophy" }
+      }
+    }
+  ]
+}

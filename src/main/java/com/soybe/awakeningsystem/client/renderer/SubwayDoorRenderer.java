@@ -35,12 +35,8 @@ public class SubwayDoorRenderer implements BlockEntityRenderer<SubwayDoorBlockEn
 
         float rawProgress = be.getSlideProgress(partialTick);
         float t = Mth.clamp(rawProgress, 0.0F, 1.0F);
-        // Curva SmoothStep para simular el émbolo de aire comprimido (amortiguación suave en los extremos)
         float smoothProgress = t * t * (3.0F - 2.0F * t);
 
-        // Vector de desplazamiento lateral:
-        // Bisagra izquierda -> se abre hacia la izquierda de la dirección enfrentada (counter-clockwise)
-        // Bisagra derecha   -> se abre hacia la derecha de la dirección enfrentada (clockwise)
         Direction slideDir = (hinge == DoorHingeSide.LEFT) ? facing.getCounterClockWise() : facing.getClockWise();
         double offsetX = slideDir.getStepX() * (14.0D / 16.0D) * smoothProgress;
         double offsetZ = slideDir.getStepZ() * (14.0D / 16.0D) * smoothProgress;
@@ -48,7 +44,6 @@ public class SubwayDoorRenderer implements BlockEntityRenderer<SubwayDoorBlockEn
         poseStack.pushPose();
         poseStack.translate(offsetX, 0.0D, offsetZ);
 
-        // Renderizamos el modelo de la puerta en su geometría cerrada, aplicándole la traslación calculada
         BlockState renderState = state.setValue(DoorBlock.OPEN, false);
         var blockRenderer = Minecraft.getInstance().getBlockRenderer();
         var model = blockRenderer.getBlockModel(renderState);

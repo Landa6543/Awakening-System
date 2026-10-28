@@ -36,7 +36,6 @@ public class AbyssMageHydroEntity extends AbstractAbyssMageEntity {
         if (this.level().isClientSide) return;
 
         if (this.random.nextFloat() < 0.60F) {
-            // Disparo de Burbuja Aprisionadora canónica de Genshin
             AbyssBubbleEntity bubble = new AbyssBubbleEntity(this.level(), this, target);
             bubble.setPos(this.getX(), this.getY() + 1.2D, this.getZ());
             Vec3 dir = target.getEyePosition().subtract(this.getEyePosition()).normalize().scale(0.35D);
@@ -46,7 +45,6 @@ public class AbyssMageHydroEntity extends AbstractAbyssMageEntity {
             this.level().playSound(null, this.getX(), this.getY(), this.getZ(),
                     SoundEvents.BUBBLE_COLUMN_UPWARDS_INSIDE, SoundSource.HOSTILE, 1.8F, 1.2F);
         } else {
-            // Ráfaga de agua a presión
             if (this.level() instanceof ServerLevel sl) {
                 sl.playSound(null, target.getX(), target.getY(), target.getZ(),
                         SoundEvents.PLAYER_SPLASH, SoundSource.HOSTILE, 1.8F, 0.9F);

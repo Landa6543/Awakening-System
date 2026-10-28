@@ -1,0 +1,17 @@
+{
+  "type": "minecraft:crafting_shaped",
+  "category": "equipment",
+  "pattern": [
+    "###",
+    "# #"
+  ],
+  "key": {
+    "#": {
+      "item": "awakening_system:abyssal_ingot"
+    }
+  },
+  "result": {
+    "count": 1,
+    "id": "awakening_system:abyssal_helmet"
+  }
+}

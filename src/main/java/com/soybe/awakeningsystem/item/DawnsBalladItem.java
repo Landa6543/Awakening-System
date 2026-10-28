@@ -49,7 +49,7 @@ public class DawnsBalladItem extends SwordItem implements AwakeningWeaponItem {
                 return InteractionResultHolder.fail(stack);
             }
 
-            sp.getPersistentData().putLong("dawns_ballad_cd", gameTime + 240L); // 12s cooldown
+            sp.getPersistentData().putLong("dawns_ballad_cd", gameTime + 240L);
             sp.getCooldowns().addCooldown(this, 240);
 
             Vec3 origin = sp.position();
@@ -63,7 +63,6 @@ public class DawnsBalladItem extends SwordItem implements AwakeningWeaponItem {
             sp.hurtMarked = true;
 
             if (level instanceof ServerLevel sl) {
-                // 1. Sello arcano del alba en el punto de origen
                 net.neoforged.neoforge.network.PacketDistributor.sendToPlayersNear(
                         sl, null, origin.x, origin.y, origin.z, 64.0D,
                         new com.soybe.awakeningsystem.SpawnMagicCirclePayload(
@@ -81,7 +80,6 @@ public class DawnsBalladItem extends SwordItem implements AwakeningWeaponItem {
 
                 float dmg = (float) (24.0D * WeaponLevelManager.getDamageMultiplier(stack));
 
-                // 2. Tajo de la Balada del Alba (SlashWaveEntity de Luz Crepuscular)
                 SlashWaveEntity dawnWave = new SlashWaveEntity(sl, sp, SlashWaveEntity.TYPE_COSMIC_AMETHYST, dmg, 4.0F, 1.5F, -15.0F, 24, 8);
                 dawnWave.setDeltaMovement(look.scale(2.2D));
                 sl.addFreshEntity(dawnWave);
@@ -91,7 +89,7 @@ public class DawnsBalladItem extends SwordItem implements AwakeningWeaponItem {
 
             sp.addEffect(new MobEffectInstance(MobEffects.DAMAGE_RESISTANCE, 100, 0, false, true));
             sp.addEffect(new MobEffectInstance(MobEffects.MOVEMENT_SPEED, 120, 1, false, true));
-            sp.displayClientMessage(Component.literal("§d§l✦ [BALADA DEL ALBA] §5¡Finta dimensional y corte crepuscular desatados!"), true);
+            sp.displayClientMessage(Component.translatable("item.awakening_system.dawns_ballad.unleashed"), true);
             return InteractionResultHolder.sidedSuccess(stack, level.isClientSide());
         }
         return InteractionResultHolder.sidedSuccess(stack, level.isClientSide());

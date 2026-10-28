@@ -113,7 +113,6 @@ public class ScreamingMandrakeEntity extends PathfinderMob {
         if (this.isBuried()) {
             this.setDeltaMovement(0.0D, this.getDeltaMovement().y < 0 ? this.getDeltaMovement().y : 0.0D, 0.0D);
 
-            // Si un jugador se acerca mucho (< 1.2 bloques), se desentierra
             if (!this.level().isClientSide()) {
                 Player nearest = this.level().getNearestPlayer(this, 1.3D);
                 if (nearest != null && nearest.isAlive()) {
@@ -123,7 +122,6 @@ public class ScreamingMandrakeEntity extends PathfinderMob {
         } else if (this.isScreaming()) {
             this.screamTicks++;
             if (this.level().isClientSide()) {
-                // Partículas sónicas de histeria
                 if (this.screamTicks % 3 == 0) {
                     this.level().addParticle(ParticleTypes.NOTE,
                             this.getX() + (this.random.nextDouble() - 0.5D) * 0.5D,
@@ -147,7 +145,6 @@ public class ScreamingMandrakeEntity extends PathfinderMob {
         this.setScreaming(true);
         this.screamTicks = 0;
 
-        // Salto de sorpresa fuera de la tierra
         this.setDeltaMovement(
                 (this.random.nextDouble() - 0.5D) * 0.25D,
                 0.42D,
@@ -158,7 +155,6 @@ public class ScreamingMandrakeEntity extends PathfinderMob {
         this.level().playSound(null, this.blockPosition(), ModSounds.MANDRAKE_SCREAM.get(),
                 SoundSource.HOSTILE, 1.5F, 1.0F);
 
-        // Efecto del grito sónico: Náusea y Lentitud a entidades cercanas
         if (this.level() instanceof ServerLevel sl) {
             sl.sendParticles(ParticleTypes.EXPLOSION, this.getX(), this.getY() + 0.4D, this.getZ(),
                     1, 0.0D, 0.0D, 0.0D, 0.0D);

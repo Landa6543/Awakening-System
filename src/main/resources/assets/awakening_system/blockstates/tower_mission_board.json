@@ -1,0 +1,8 @@
+{
+  "variants": {
+    "facing=north": { "model": "awakening_system:block/tower_mission_board" },
+    "facing=east":  { "model": "awakening_system:block/tower_mission_board" },
+    "facing=south": { "model": "awakening_system:block/tower_mission_board" },
+    "facing=west":  { "model": "awakening_system:block/tower_mission_board" }
+  }
+}

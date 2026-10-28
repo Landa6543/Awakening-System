@@ -30,7 +30,7 @@ public class HydroHypostasisBossEntity extends HypostasisBaseBossEntity {
 
     @Override
     protected Component getBossTitle() {
-        return Component.literal("§9✦ He — Hipóstasis Hydro ✦");
+        return Component.translatable("boss.awakening_system.hypostasis.hydro");
     }
 
     @Override
@@ -45,7 +45,7 @@ public class HydroHypostasisBossEntity extends HypostasisBaseBossEntity {
 
     @Override
     public int getElementalColorHex() {
-        return 0x0077FF; // Azul Profundo Hydro
+        return 0x0077FF;
     }
 
     @Override
@@ -117,7 +117,7 @@ public class HydroHypostasisBossEntity extends HypostasisBaseBossEntity {
     protected void spawnRevivalObjects(ServerLevel sl) {
         sl.playSound(null, this.getX(), this.getY(), this.getZ(), SoundEvents.GENERIC_SPLASH, SoundSource.HOSTILE, 2.0F, 0.8F);
         for (ServerPlayer player : sl.getPlayers(p -> p.distanceToSqr(this) < 1600.0D)) {
-            player.displayClientMessage(Component.literal("§9§l✦ [HE EN CRISIS] §f¡Interrumpe las gotas de agua con ataques elementales antes de que curen al núcleo!"), true);
+            player.displayClientMessage(Component.translatable("boss.awakening_system.hydro_hypostasis.crisis"), true);
         }
     }
 
@@ -139,12 +139,12 @@ public class HydroHypostasisBossEntity extends HypostasisBaseBossEntity {
                     data.addMora(60000);
                     data.addPrimogems(30);
                     com.soybe.awakeningsystem.AwakeningSystemMod.sync(sp);
-                    sp.displayClientMessage(Component.literal("§9§l✦ ¡HIPÓSTASIS HYDRO DERROTADO! §eHas ganado §6+60,000 Mora §ey §b+30 Protogemas§e."), false);
+                    sp.displayClientMessage(Component.translatable("boss.awakening_system.hydro_hypostasis.defeated_teyvat"), false);
                 } else {
                     if (SystemItems.AWAKENING_COIN.isBound()) {
                         sp.addItem(new ItemStack(SystemItems.AWAKENING_COIN.get(), 24));
                     }
-                    sp.displayClientMessage(Component.literal("§9§l✦ ¡HIPÓSTASIS HYDRO DERROTADO! §6+24 Monedas de Despertar§e."), false);
+                    sp.displayClientMessage(Component.translatable("boss.awakening_system.hydro_hypostasis.defeated_vanilla"), false);
                 }
             }
         }

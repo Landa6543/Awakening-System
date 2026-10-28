@@ -34,7 +34,7 @@ public class AcquaintFateItem extends Item {
             stack.shrink(count);
             AwakeningSystemMod.sync(sp);
             sp.playNotifySound(SoundEvents.AMETHYST_BLOCK_CHIME, SoundSource.PLAYERS, 1.0F, 1.4F);
-            sp.displayClientMessage(Component.literal("§b§l✦ [DESTINO DEL ENCUENTRO] §fHas depositado §b+" + count + " Destino(s) §f(Total: §b" + data.acquaintFates() + "§f)"), true);
+            sp.displayClientMessage(Component.translatable("item.awakening_system.acquaint_fate.deposit_msg", count, data.acquaintFates()), true);
             return InteractionResultHolder.consume(stack);
         }
         return InteractionResultHolder.sidedSuccess(stack, level.isClientSide());
@@ -42,9 +42,9 @@ public class AcquaintFateItem extends Item {
 
     @Override
     public void appendHoverText(ItemStack stack, TooltipContext context, List<Component> tooltip, TooltipFlag flag) {
-        tooltip.add(Component.literal("§7Semilla del destino que brilla con un tenue fulgor celeste.").withStyle(ChatFormatting.GRAY));
-        tooltip.add(Component.literal("§7Se utiliza en el §bBanner Permanente del Errante §7para invocaciones generales.").withStyle(ChatFormatting.DARK_GRAY));
-        tooltip.add(Component.literal("§e▸ Clic derecho: §fDepositar en el monedero de Deseos").withStyle(ChatFormatting.GOLD));
-        tooltip.add(Component.literal("§e▸ Shift + Clic derecho: §fDepositar todo el stack").withStyle(ChatFormatting.GOLD));
+        tooltip.add(Component.translatable("item.awakening_system.acquaint_fate.desc1").withStyle(ChatFormatting.GRAY));
+        tooltip.add(Component.translatable("item.awakening_system.acquaint_fate.desc2").withStyle(ChatFormatting.DARK_GRAY));
+        tooltip.add(Component.translatable("item.awakening_system.acquaint_fate.use1").withStyle(ChatFormatting.GOLD));
+        tooltip.add(Component.translatable("item.awakening_system.acquaint_fate.use2").withStyle(ChatFormatting.GOLD));
     }
 }

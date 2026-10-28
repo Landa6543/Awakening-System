@@ -22,6 +22,12 @@ public final class GuildReceptionScreen extends Screen {
     }
 
     @Override
+    protected void init() {
+        super.init();
+        AwakeningSystemClient.playUiSound(com.soybe.awakeningsystem.entity.NpcProfile.ELENA_RECEPTIONIST.getVoiceSound(), 1.0F, 1.0F);
+    }
+
+    @Override
     public boolean isPauseScreen() {
         return false;
     }
@@ -78,21 +84,17 @@ public final class GuildReceptionScreen extends Screen {
         int left = (this.width - guiW) / 2;
         int top = (this.height - guiH) / 2;
 
-        // 1. Marco exterior de madera de taberna
         g.fill(left - 5, top - 5, left + guiW + 5, top + guiH + 5, 0xFF1C1107);
         g.fill(left - 3, top - 3, left + guiW + 3, top + guiH + 3, 0xFF3D2510);
         g.fill(left, top, left + guiW, top + guiH, 0xFF2A180B);
 
-        // Fondo de pergamino
         g.fill(left + 6, top + 6, left + guiW - 6, top + guiH - 6, 0xFFFAF3E6);
         g.fill(left + 8, top + 8, left + guiW - 8, top + guiH - 8, 0xFFF5EBD7);
 
-        // 2. Cabecera dorada
         g.fill(left + 12, top + 12, left + guiW - 12, top + 34, 0xFF8B2500);
         drawScaledCenteredString(g, Component.translatable("awakening_system.reception.title"), left + guiW / 2, top + 16, guiW - 36, 0xFFFFD700);
         drawScaledCenteredString(g, Component.translatable("awakening_system.reception.subtitle"), left + guiW / 2, top + 25, guiW - 36, 0xFFE0E0E0);
 
-        // 3. Carné de Aventurero
         int cardX = left + 16;
         int cardY = top + 42;
         int cardW = guiW - 32;
@@ -102,7 +104,6 @@ public final class GuildReceptionScreen extends Screen {
         g.fill(cardX, cardY, cardX + 4, cardY + cardH, 0xFFC29B58);
         g.fill(cardX + cardW - 4, cardY, cardX + cardW, cardY + cardH, 0xFFC29B58);
 
-        // Sello de Rango
         int sealColor = switch (payload.guildRank()) {
             case "F" -> 0xFF888888;
             case "E" -> 0xFF55AA55;
@@ -115,12 +116,10 @@ public final class GuildReceptionScreen extends Screen {
         g.fill(cardX + 10, cardY + 10, cardX + 42, cardY + 42, sealColor);
         g.drawCenteredString(this.font, "§l" + payload.guildRank(), cardX + 26, cardY + 22, 0xFFFFFFFF);
 
-        // Datos del Aventurero
         g.drawString(this.font, Component.translatable("awakening_system.reception.record"), cardX + 48, cardY + 10, 0xFF880000, false);
         g.drawString(this.font, Component.translatable("awakening_system.reception.current_rank", payload.guildRank()), cardX + 48, cardY + 22, 0xFF000000, false);
         g.drawString(this.font, Component.translatable("awakening_system.reception.completed", payload.completedBounties()), cardX + 48, cardY + 34, 0xFF000000, false);
 
-        // Barra de progreso hacia el siguiente rango
         if (!payload.guildRank().equals("S")) {
             int need = payload.nextRankNeeded();
             int comp = payload.completedBounties();
@@ -134,7 +133,6 @@ public final class GuildReceptionScreen extends Screen {
             drawScaledCenteredString(g, Component.translatable("awakening_system.reception.rank_s_max"), cardX + cardW / 2, cardY + 58, cardW - 24, 0xFF886600);
         }
 
-        // 4. Botón 1: Solicitar Ascenso de Rango
         int btn1X = left + 16;
         int btn1Y = top + 132;
         int btn1W = guiW - 32;
@@ -153,7 +151,6 @@ public final class GuildReceptionScreen extends Screen {
             drawScaledCenteredString(g, label, btn1X + btn1W / 2, btn1Y + 7, maxBtn1W, 0xFF333333);
         }
 
-        // 5. Botón 2: Bendición Diaria de Elena
         int btn2X = left + 16;
         int btn2Y = top + 160;
         int btn2W = guiW - 32;
@@ -169,7 +166,6 @@ public final class GuildReceptionScreen extends Screen {
             drawScaledCenteredString(g, Component.translatable("awakening_system.reception.btn_claimed"), btn2X + btn2W / 2, btn2Y + 6, maxBtn2W, 0xFF555555);
         }
 
-        // 6. Botón Cerrar
         int closeX = left + guiW - 20;
         int closeY = top + 14;
         boolean hovClose = mX >= closeX && mX <= closeX + 12 && mY >= closeY && mY <= closeY + 12;
@@ -190,34 +186,34 @@ public final class GuildReceptionScreen extends Screen {
         int left = (this.width - guiW) / 2;
         int top = (this.height - guiH) / 2;
 
-        // Botón Cerrar
         int closeX = left + guiW - 20;
         int closeY = top + 14;
         if (mouseX >= closeX && mouseX <= closeX + 12 && mouseY >= closeY && mouseY <= closeY + 12) {
+            AwakeningSystemClient.playButtonClick();
             onClose();
             return true;
         }
 
-        // Botón 1: Ascenso
         int btn1X = left + 16;
         int btn1Y = top + 132;
         int btn1W = guiW - 32;
         int btn1H = 22;
         if (mouseX >= btn1X && mouseX <= btn1X + btn1W && mouseY >= btn1Y && mouseY <= btn1Y + btn1H) {
             if (payload.canPromote()) {
+                AwakeningSystemClient.playButtonClick();
                 PacketDistributor.sendToServer(new GuildReceptionActionPayload(1));
                 onClose();
                 return true;
             }
         }
 
-        // Botón 2: Bendición
         int btn2X = left + 16;
         int btn2Y = top + 160;
         int btn2W = guiW - 32;
         int btn2H = 20;
         if (mouseX >= btn2X && mouseX <= btn2X + btn2W && mouseY >= btn2Y && mouseY <= btn2Y + btn2H) {
             if (payload.canClaimBlessing()) {
+                AwakeningSystemClient.playButtonClick();
                 PacketDistributor.sendToServer(new GuildReceptionActionPayload(2));
                 onClose();
                 return true;

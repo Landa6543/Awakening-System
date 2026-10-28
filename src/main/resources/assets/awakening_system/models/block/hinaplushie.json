@@ -1,0 +1,9 @@
+{
+  "parent": "awakening_system:custom/aether_plushie",
+  "textures": {
+    "all": "awakening_system:block/hinaplushie",
+    "particle": "awakening_system:block/hinaplushie",
+    "0": "awakening_system:block/hinaplushie"
+  },
+  "render_type": "cutout"
+}

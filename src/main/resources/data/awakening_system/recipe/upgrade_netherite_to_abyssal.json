@@ -11,10 +11,10 @@
       "item": "awakening_system:abyssal_ingot"
     },
     "M": {
-      "item": "minecraft:crying_obsidian"
+      "item": "minecraft:smooth_stone"
     },
     "N": {
-      "item": "minecraft:netherite_ingot"
+      "item": "minecraft:copper_ingot"
     }
   },
   "result": {

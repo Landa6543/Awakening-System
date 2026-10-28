@@ -1,0 +1,27 @@
+{
+    "pools":  [
+                  {
+                      "bonus_rolls":  0,
+                      "entries":  [
+                                      {
+                                          "conditions":  [
+                                                             {
+                                                                 "properties": { "half": "lower" },
+                                                                 "condition":  "minecraft:block_state_property",
+                                                                 "block":  "awakening_system:otogi_door"
+                                                             }
+                                                         ],
+                                          "name":  "awakening_system:otogi_door",
+                                          "type":  "minecraft:item"
+                                      }
+                                  ],
+                      "rolls":  1,
+                      "conditions":  [
+                                         {
+                                             "condition":  "minecraft:survives_explosion"
+                                         }
+                                     ]
+                  }
+              ],
+    "type":  "minecraft:block"
+}

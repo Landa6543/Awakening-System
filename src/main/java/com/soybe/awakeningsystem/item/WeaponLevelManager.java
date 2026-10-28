@@ -9,17 +9,28 @@ import net.minecraft.server.level.ServerLevel;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.sounds.SoundEvents;
 import net.minecraft.sounds.SoundSource;
+import net.minecraft.core.registries.BuiltInRegistries;
+import net.minecraft.tags.ItemTags;
 import net.minecraft.world.entity.LivingEntity;
+import net.minecraft.world.entity.ai.attributes.Attributes;
+import net.minecraft.world.item.ArmorItem;
+import net.minecraft.world.item.BlockItem;
 import net.minecraft.world.item.BowItem;
+import net.minecraft.world.item.BundleItem;
+import net.minecraft.world.item.DiggerItem;
+import net.minecraft.world.item.Item;
 import net.minecraft.world.item.ItemStack;
+import net.minecraft.world.item.ShieldItem;
 import net.minecraft.world.item.SwordItem;
 import net.minecraft.world.item.component.CustomData;
+import net.minecraft.world.item.component.ItemAttributeModifiers;
+import com.soybe.awakeningsystem.item.pouch.PouchItem;
 
 import java.util.List;
 
 /**
  * Gestor universal de subida de nivel de armas para Awakening System.
- * Permite que todas las armas del mod suban del nivel 1 al 100, escalen su daño,
+ * Permite que todas las armas del mod, uchigatanas, guantes, espadas y armas moddeadas suban del nivel 1 al 100, escalen su daño,
  * otorguen bonificaciones de crítico y desbloqueen hitos en Lv. 10, 25, 50, 75 y 100.
  */
 public final class WeaponLevelManager {
@@ -32,12 +43,87 @@ public final class WeaponLevelManager {
 
     /**
      * Determina si el objeto califica para subir de nivel de arma.
+     * Compatible con armas de Awakening System, espadas vanilla, arcos, hachas, uchigatanas, guantes/puños y armas moddeadas con daño de ataque.
      */
     public static boolean isLevelableWeapon(ItemStack stack) {
         if (stack == null || stack.isEmpty()) return false;
-        return stack.getItem() instanceof AwakeningWeaponItem
-                || stack.getItem() instanceof SwordItem
-                || stack.getItem() instanceof BowItem;
+
+        // Las armas con niveles e hitos individuales NUNCA son apilables (evita cuencos, lingotes, materiales, etc.)
+        if (stack.getMaxStackSize() > 1) {
+            return false;
+        }
+
+        Item item = stack.getItem();
+
+        // 1. Exclusiones explícitas inmediatas: Bolsas, mochilas, armaduras, consumibles, escudos, herramientas utilitarias, bloques, etc.
+        if (item instanceof PouchItem
+                || item instanceof MoraPouchItem
+                || item instanceof OmnisciencePouchItem
+                || item instanceof BundleItem
+                || item instanceof ArmorItem
+                || item instanceof BlockItem
+                || item instanceof ShieldItem
+                || item instanceof net.minecraft.world.item.BucketItem
+                || item instanceof net.minecraft.world.item.ShearsItem
+                || item instanceof net.minecraft.world.item.FishingRodItem
+                || item instanceof net.minecraft.world.item.FlintAndSteelItem
+                || item instanceof net.minecraft.world.item.PotionItem
+                || item instanceof net.minecraft.world.item.SaddleItem
+                || item instanceof net.minecraft.world.item.NameTagItem
+                || item instanceof net.minecraft.world.item.LeadItem
+                || stack.has(DataComponents.FOOD)) {
+            return false;
+        }
+
+        String path = BuiltInRegistries.ITEM.getKey(item).getPath().toLowerCase(java.util.Locale.ROOT);
+        // Exclusión por nombre de contenedor, bolsa, amuleto, libro, armadura o consumible
+        if (path.contains("pouch") || path.contains("bag") || path.contains("backpack") || path.contains("bundle")
+                || path.contains("wallet") || path.contains("chestplate") || path.contains("helmet") || path.contains("leggings")
+                || path.contains("boots") || path.contains("ring") || path.contains("necklace") || path.contains("amulet")
+                || path.contains("potion") || path.contains("scroll") || path.contains("tome") || path.contains("book")
+                || path.contains("relic") || path.contains("artifact") || path.contains("token") || path.contains("core")
+                || path.contains("bowl") || path.contains("coin") || path.contains("ingot") || path.contains("ore")) {
+            return false;
+        }
+
+        // 2. Armas reconocidas de Awakening System, espadas, arcos, herramientas de minería/tala
+        if (item instanceof AwakeningWeaponItem
+                || item instanceof SwordItem
+                || item instanceof BowItem
+                || item instanceof DiggerItem) {
+            return true;
+        }
+
+        if (stack.is(ItemTags.SWORDS)
+                || stack.is(ItemTags.AXES)) {
+            return true;
+        }
+
+        // 3. Palabras clave precisas de armas (evitar falsos positivos como wand en wanderer, fan en fang, bow en bowl)
+        if (path.contains("katana") || path.contains("uchigatana") || path.contains("sword") || path.contains("blade")
+                || path.contains("glove") || path.contains("guante") || path.contains("fist") || path.contains("claw")
+                || path.contains("dagger") || path.contains("spear") || path.contains("scythe") || path.contains("mace")
+                || path.contains("hammer") || path.contains("rapier") || path.contains("sabre") || path.contains("tachi")
+                || path.contains("nodachi") || path.contains("wakizashi") || path.contains("greatsword") || path.contains("claymore")
+                || (path.endsWith("bow") || path.contains("bow_") || path.contains("_bow")) || path.contains("crossbow")
+                || path.contains("staff")
+                || (path.endsWith("wand") || path.contains("wand_") || path.contains("_wand"))
+                || path.contains("polearm") || path.contains("whip")
+                || (path.endsWith("fan") || path.contains("fan_") || path.contains("_fan"))
+                || path.contains("cestus") || path.contains("gauntlet") || path.contains("knuckle")) {
+            return true;
+        }
+
+        ItemAttributeModifiers attrComponent = stack.get(DataComponents.ATTRIBUTE_MODIFIERS);
+        if (attrComponent != null) {
+            for (var entry : attrComponent.modifiers()) {
+                if (entry.attribute().is(Attributes.ATTACK_DAMAGE) && entry.modifier().amount() > 0.0D) {
+                    return true;
+                }
+            }
+        }
+
+        return false;
     }
 
     /**
@@ -114,58 +200,43 @@ public final class WeaponLevelManager {
         }
 
         if (currentLevel >= MAX_WEAPON_LEVEL) {
-            currentExp = 0; // Cap a nivel 100
+            currentExp = 0;
         }
 
-        // Guardar datos en el ItemStack
         CustomData cd = stack.get(DataComponents.CUSTOM_DATA);
         CompoundTag tag = cd != null ? cd.copyTag() : new CompoundTag();
         tag.putInt(TAG_WEAPON_LEVEL, currentLevel);
         tag.putInt(TAG_WEAPON_EXP, currentExp);
         stack.set(DataComponents.CUSTOM_DATA, CustomData.of(tag));
 
-        // Efectos y mensajes si subió de nivel
         if (leveledUp && player != null) {
             ServerLevel level = player.serverLevel();
             String weaponName = stack.getHoverName().getString();
 
-            // Anuncio si alcanza un hito legendario
             if (currentLevel == 10 || currentLevel == 25 || currentLevel == 50 || currentLevel == 75 || currentLevel == 100) {
-                String milestoneTitle = switch (currentLevel) {
-                    case 10 -> "§a[Hito I: Vínculo de Sangre]";
-                    case 25 -> "§b[Hito II: Resonancia Marcial]";
-                    case 50 -> "§d[Hito III: Despertar de Habilidad]";
-                    case 75 -> "§6[Hito IV: Resplandor del Alma]";
-                    case 100 -> "§e§l✦ [HITO SUPREMO: TRASCENDENCIA DIVINA] ✦";
-                    default -> "";
-                };
+                Component milestoneTitle = Component.translatable("awakening_system.weapon_level.milestone." + currentLevel);
 
-                // Partículas rúnicas de hito
                 level.sendParticles(ParticleTypes.FLASH, player.getX(), player.getY() + 1.2D, player.getZ(), 2, 0.1D, 0.1D, 0.1D, 0.0D);
                 level.sendParticles(ParticleTypes.TOTEM_OF_UNDYING, player.getX(), player.getY() + 1.2D, player.getZ(), 50, 0.6D, 0.7D, 0.6D, 0.15D);
 
-                // Sonido épico de forja rúnica y campana astral
                 player.playNotifySound(SoundEvents.ANVIL_USE, SoundSource.PLAYERS, 0.85F, 1.6F);
                 player.playNotifySound(SoundEvents.BEACON_ACTIVATE, SoundSource.PLAYERS, 0.9F, 1.35F);
                 player.playNotifySound(SoundEvents.PLAYER_LEVELUP, SoundSource.PLAYERS, 0.55F, 1.7F);
 
-                // Título cinemático en pantalla
                 player.connection.send(new net.minecraft.network.protocol.game.ClientboundSetTitlesAnimationPacket(8, 45, 15));
-                player.connection.send(new net.minecraft.network.protocol.game.ClientboundSetTitleTextPacket(Component.literal(milestoneTitle)));
+                player.connection.send(new net.minecraft.network.protocol.game.ClientboundSetTitleTextPacket(milestoneTitle));
                 player.connection.send(new net.minecraft.network.protocol.game.ClientboundSetSubtitleTextPacket(
-                        Component.literal("§f" + weaponName + " §8▸ §6Nivel " + currentLevel + "/100")
+                        Component.translatable("awakening_system.weapon_level.notify.subtitle", weaponName, currentLevel)
                 ));
 
-                // Action bar y mensaje solemne en chat (sólo en hitos)
-                player.displayClientMessage(Component.literal("§6§l✦ ¡HITO DESBLOQUEADO! §e" + milestoneTitle + " §8(§f" + weaponName + " §eLv. " + currentLevel + "§8)"), true);
-                player.displayClientMessage(Component.literal("§6§l[Awakening] §e¡Tu arma §f" + weaponName + " §eha desbloqueado el " + milestoneTitle + " §7(Lv. " + currentLevel + "/100)!"), false);
+                player.displayClientMessage(Component.translatable("awakening_system.weapon_level.notify.actionbar", milestoneTitle, weaponName, currentLevel), true);
+                player.displayClientMessage(Component.translatable("awakening_system.weapon_level.notify.chat", weaponName, milestoneTitle, currentLevel), false);
             } else {
-                // Nivel regular: audio de acero resonante sutil y limpio en Action Bar sin ensuciar el chat
                 level.sendParticles(ParticleTypes.ENCHANTED_HIT, player.getX(), player.getY() + 1.1D, player.getZ(), 20, 0.4D, 0.4D, 0.4D, 0.15D);
                 player.playNotifySound(SoundEvents.ENCHANTMENT_TABLE_USE, SoundSource.PLAYERS, 0.75F, 1.45F);
                 player.playNotifySound(SoundEvents.EXPERIENCE_ORB_PICKUP, SoundSource.PLAYERS, 0.6F, 1.85F);
 
-                player.displayClientMessage(Component.literal("§6✦ §f" + weaponName + " §7→ §e§lNivel " + currentLevel + "§8/100 §6✦"), true);
+                player.displayClientMessage(Component.translatable("awakening_system.weapon_level.notify.level_up", weaponName, currentLevel), true);
             }
         }
 
@@ -228,10 +299,10 @@ public final class WeaponLevelManager {
         int kills = getTotalKills(stack);
 
         tooltip.add(Component.empty());
-        tooltip.add(Component.literal("§6§l✦ PROGRESO DEL ARMA ✦").withStyle(ChatFormatting.GOLD));
+        tooltip.add(Component.translatable("awakening_system.weapon_level.header").withStyle(ChatFormatting.GOLD));
 
         if (lvl >= MAX_WEAPON_LEVEL) {
-            tooltip.add(Component.literal("§e✦ Nivel: §6§lLv. 100 §e(TRASCENDENCIA MÁXIMA)").withStyle(ChatFormatting.YELLOW));
+            tooltip.add(Component.translatable("awakening_system.weapon_level.max").withStyle(ChatFormatting.YELLOW));
             tooltip.add(Component.literal("§8[§6████████████████████§8] §a100%").withStyle(ChatFormatting.DARK_GRAY));
         } else {
             float pct = maxExp > 0 ? (float) exp / (float) maxExp : 0.0F;
@@ -242,35 +313,33 @@ public final class WeaponLevelManager {
             for (int i = filled; i < 20; i++) bar.append("░");
             bar.append("§8] §f").append(String.format("%.1f", pct * 100.0F)).append("%");
 
-            tooltip.add(Component.literal("§e✦ Nivel: §fLv. " + lvl + "§8/§7100").withStyle(ChatFormatting.YELLOW));
+            tooltip.add(Component.translatable("awakening_system.weapon_level.level", lvl).withStyle(ChatFormatting.YELLOW));
             tooltip.add(Component.literal(bar.toString()));
-            tooltip.add(Component.literal("§7EXP: §f" + String.format("%,d", exp) + " §8/ §7" + String.format("%,d", maxExp)).withStyle(ChatFormatting.GRAY));
+            tooltip.add(Component.translatable("awakening_system.weapon_level.exp", String.format("%,d", exp), String.format("%,d", maxExp)).withStyle(ChatFormatting.GRAY));
         }
 
-        // Estadísticas escaladas
         double bonusDmgPct = (lvl - 1) * 1.2D;
-        tooltip.add(Component.literal("§c⚔ Daño Adicional: §a+" + String.format("%.1f", bonusDmgPct) + "%").withStyle(ChatFormatting.RED));
+        tooltip.add(Component.translatable("awakening_system.weapon_level.bonus_dmg", String.format("%.1f", bonusDmgPct)).withStyle(ChatFormatting.RED));
 
         if (lvl > 1) {
             float crit = getBonusCritChance(stack) * 100.0F;
-            tooltip.add(Component.literal("§6★ Probabilidad Crítica: §a+" + String.format("%.1f", crit) + "%").withStyle(ChatFormatting.GOLD));
+            tooltip.add(Component.translatable("awakening_system.weapon_level.crit_chance", String.format("%.1f", crit)).withStyle(ChatFormatting.GOLD));
         }
 
         if (lvl >= 30) {
             float pen = getArmorPenetration(stack) * 100.0F;
-            tooltip.add(Component.literal("§b✦ Perforación de Armadura: §a+" + String.format("%.1f", pen) + "%").withStyle(ChatFormatting.AQUA));
+            tooltip.add(Component.translatable("awakening_system.weapon_level.armor_pen", String.format("%.1f", pen)).withStyle(ChatFormatting.AQUA));
         }
 
         if (kills > 0) {
-            tooltip.add(Component.literal("§8☠ Bajas Totales: §7" + String.format("%,d", kills)).withStyle(ChatFormatting.DARK_GRAY));
+            tooltip.add(Component.translatable("awakening_system.weapon_level.total_kills", String.format("%,d", kills)).withStyle(ChatFormatting.DARK_GRAY));
         }
 
-        // Hitos alcanzados
         tooltip.add(Component.literal("§8────────────────────────"));
-        tooltip.add(Component.literal(lvl >= 10 ? "§a✔ Lv. 10: Vínculo de Sangre (-20% Coste Habilidades)" : "§8✖ Lv. 10: Vínculo de Sangre (Bloqueado)"));
-        tooltip.add(Component.literal(lvl >= 25 ? "§b✔ Lv. 25: Resonancia Marcial (Onda de choque al crítico)" : "§8✖ Lv. 25: Resonancia Marcial (Bloqueado)"));
-        tooltip.add(Component.literal(lvl >= 50 ? "§d✔ Lv. 50: Despertar de Habilidad (+Potencia y -Cooldown)" : "§8✖ Lv. 50: Despertar de Habilidad (Bloqueado)"));
-        tooltip.add(Component.literal(lvl >= 75 ? "§6✔ Lv. 75: Resplandor del Alma (Aura 3D del Arma)" : "§8✖ Lv. 75: Resplandor del Alma (Bloqueado)"));
-        tooltip.add(Component.literal(lvl >= 100 ? "§e✔ Lv. 100: Trascendencia Divina (Daño Final x1.5)" : "§8✖ Lv. 100: Trascendencia Divina (Bloqueado)"));
+        tooltip.add(Component.translatable(lvl >= 10 ? "awakening_system.weapon_level.m10.unlocked" : "awakening_system.weapon_level.m10.locked"));
+        tooltip.add(Component.translatable(lvl >= 25 ? "awakening_system.weapon_level.m25.unlocked" : "awakening_system.weapon_level.m25.locked"));
+        tooltip.add(Component.translatable(lvl >= 50 ? "awakening_system.weapon_level.m50.unlocked" : "awakening_system.weapon_level.m50.locked"));
+        tooltip.add(Component.translatable(lvl >= 75 ? "awakening_system.weapon_level.m75.unlocked" : "awakening_system.weapon_level.m75.locked"));
+        tooltip.add(Component.translatable(lvl >= 100 ? "awakening_system.weapon_level.m100.unlocked" : "awakening_system.weapon_level.m100.locked"));
     }
 }

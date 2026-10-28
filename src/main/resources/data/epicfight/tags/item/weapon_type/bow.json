@@ -1,0 +1,14 @@
+{
+    "replace":  false,
+    "values":  [
+                   "awakening_system:amos_bow",
+                   "awakening_system:aqua_simulacra",
+                   "awakening_system:thundering_pulse",
+                   "awakening_system:astral_archers_bow",
+                   "awakening_system:skyward_harp",
+                   "awakening_system:polar_star",
+                   "awakening_system:hunter_path",
+                   "awakening_system:hamayumi",
+                   "awakening_system:end_of_the_line"
+               ]
+}

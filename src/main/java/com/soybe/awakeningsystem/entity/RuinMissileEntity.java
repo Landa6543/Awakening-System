@@ -43,14 +43,12 @@ public class RuinMissileEntity extends ThrowableProjectile {
         lifeTicks++;
 
         if (this.level().isClientSide) {
-            // Estela de partículas de propulsión de fuego y humo
             double x = this.getX();
             double y = this.getY();
             double z = this.getZ();
             this.level().addParticle(ParticleTypes.FLAME, x, y, z, 0.0D, 0.02D, 0.0D);
             this.level().addParticle(ParticleTypes.SMOKE, x, y, z, 0.0D, 0.01D, 0.0D);
         } else {
-            // Homing suave hacia el objetivo
             if (target != null && target.isAlive() && lifeTicks > 8) {
                 Vec3 targetPos = target.getEyePosition();
                 Vec3 dir = targetPos.subtract(this.position()).normalize();
@@ -92,7 +90,6 @@ public class RuinMissileEntity extends ThrowableProjectile {
             sl.sendParticles(ParticleTypes.FLAME, this.getX(), this.getY(), this.getZ(),
                     15, 0.3, 0.3, 0.3, 0.08);
 
-            // Daño radial de área
             for (LivingEntity nearby : sl.getEntitiesOfClass(LivingEntity.class, this.getBoundingBox().inflate(2.5D))) {
                 if (nearby != this.getOwner()) {
                     nearby.hurt(this.damageSources().mobAttack((LivingEntity) this.getOwner()), 8.0F);

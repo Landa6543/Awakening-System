@@ -42,7 +42,7 @@ public class GiftCardItem extends Item {
             SystemData data = SystemEvents.data(sp);
             boolean has40 = data.system40Updated() || data.isSystem40Updating() || data.teyvatUnlocked();
             if (!has40) {
-                sp.displayClientMessage(Component.literal("§c✦ Las Tarjetas de Regalo requieren la Versión 4.0 (Teyvat) del Sistema."), true);
+                sp.displayClientMessage(Component.translatable("item.awakening_system.gift_card.requires_40"), true);
                 sp.playNotifySound(SoundEvents.VILLAGER_NO, SoundSource.PLAYERS, 1.0F, 1.0F);
                 return InteractionResultHolder.fail(stack);
             }

@@ -45,9 +45,7 @@ public class GenshinLargeSlimeModel extends HierarchicalModel<GenshinSlimeEntity
         MeshDefinition mesh = new MeshDefinition();
         PartDefinition root = mesh.getRoot();
 
-        // Contenedor principal con base anclada al nivel del suelo (Y = 24.0)
         PartDefinition bb_main = root.addOrReplaceChild("bb_main", CubeListBuilder.create()
-                // 26 Cajas base del slime grande redondeado original de Genshin Impact (UV 128x128)
                 .texOffs(0, 110).addBox(-8.0F, -2.0F, -8.0F, 16.0F, 2.0F, 16.0F, new CubeDeformation(0.0F))
                 .texOffs(7, 110).addBox(-6.0F, -22.0F, -8.0F, 12.0F, 2.0F, 16.0F, new CubeDeformation(0.0F))
                 .texOffs(92, 0).addBox(8.0F, -4.0F, -8.0F, 2.0F, 2.0F, 16.0F, new CubeDeformation(0.0F))
@@ -62,14 +60,12 @@ public class GenshinLargeSlimeModel extends HierarchicalModel<GenshinSlimeEntity
                 .texOffs(92, 0).addBox(-14.0F, -14.0F, -8.0F, 2.0F, 8.0F, 16.0F, new CubeDeformation(0.0F))
                 .texOffs(92, 0).mirror().addBox(12.0F, -14.0F, -8.0F, 2.0F, 8.0F, 16.0F, new CubeDeformation(0.0F))
                 .texOffs(73, 0).addBox(-10.0F, -4.0F, -8.0F, 2.0F, 2.0F, 16.0F, new CubeDeformation(0.0F))
-                // Rostro frontal con ojos canónicos de Genshin para Slime Grande (UV 0, 0)
                 .texOffs(0, 0).addBox(-8.0F, -18.0F, -10.0F, 16.0F, 16.0F, 2.0F, new CubeDeformation(0.0F))
                 .texOffs(18, 113).addBox(-6.0F, -20.0F, -10.0F, 12.0F, 2.0F, 2.0F, new CubeDeformation(0.0F))
                 .texOffs(120, 114).addBox(-10.0F, -16.0F, -10.0F, 2.0F, 12.0F, 2.0F, new CubeDeformation(0.0F))
                 .texOffs(120, 114).addBox(8.0F, -16.0F, -10.0F, 2.0F, 12.0F, 2.0F, new CubeDeformation(0.0F))
                 .texOffs(120, 118).addBox(-12.0F, -14.0F, -10.0F, 2.0F, 8.0F, 2.0F, new CubeDeformation(0.0F))
                 .texOffs(120, 118).addBox(10.0F, -14.0F, -10.0F, 2.0F, 8.0F, 2.0F, new CubeDeformation(0.0F))
-                // Dorso y laterales traseros grandes
                 .texOffs(0, 118).addBox(-12.0F, -14.0F, 8.0F, 2.0F, 8.0F, 2.0F, new CubeDeformation(0.0F))
                 .texOffs(0, 114).addBox(-10.0F, -16.0F, 8.0F, 2.0F, 12.0F, 2.0F, new CubeDeformation(0.0F))
                 .texOffs(12, 110).addBox(-8.0F, -18.0F, 8.0F, 16.0F, 16.0F, 2.0F, new CubeDeformation(0.0F))
@@ -78,7 +74,6 @@ public class GenshinLargeSlimeModel extends HierarchicalModel<GenshinSlimeEntity
                 .texOffs(0, 118).addBox(10.0F, -14.0F, 8.0F, 2.0F, 8.0F, 2.0F, new CubeDeformation(0.0F)),
                 PartPose.offset(0.0F, 24.0F, 0.0F));
 
-        // 1. Alas Anemo Grandes (Large Anemo Wings)
         bb_main.addOrReplaceChild("anemo_wings", CubeListBuilder.create()
                 .texOffs(0, 62).addBox(8.0F, -20.0F, -3.0F, 6.0F, 2.0F, 2.0F, new CubeDeformation(0.0F))
                 .texOffs(0, 60).addBox(8.0F, -22.0F, -3.0F, 8.0F, 2.0F, 2.0F, new CubeDeformation(0.0F))
@@ -88,13 +83,11 @@ public class GenshinLargeSlimeModel extends HierarchicalModel<GenshinSlimeEntity
                 .texOffs(0, 72).addBox(-14.0F, -20.0F, -3.0F, 6.0F, 2.0F, 2.0F, new CubeDeformation(0.0F)),
                 PartPose.ZERO);
 
-        // 2. Cresta Llameante Pyro Grande (Large Pyro Flame)
         bb_main.addOrReplaceChild("pyro_flame", CubeListBuilder.create()
                 .texOffs(22, 45).addBox(-1.5F, -30.0F, -1.5F, 3.0F, 8.0F, 3.0F, new CubeDeformation(0.0F))
                 .texOffs(22, 45).addBox(-1.5F, -26.0F, -1.5F, 3.0F, 8.0F, 3.0F, new CubeDeformation(0.0F)),
                 PartPose.ZERO);
 
-        // 3. Casco y Cristales de Hielo Cryo Grandes (Large Cryo Helmet)
         PartDefinition cryoHelmet = bb_main.addOrReplaceChild("cryo_helmet", CubeListBuilder.create()
                 .texOffs(0, 49).addBox(14.0F, -23.0F, -11.0F, 2.0F, 10.0F, 21.0F, new CubeDeformation(0.0F))
                 .texOffs(0, 49).addBox(-16.0F, -23.0F, -11.0F, 2.0F, 10.0F, 21.0F, new CubeDeformation(0.0F))
@@ -108,14 +101,12 @@ public class GenshinLargeSlimeModel extends HierarchicalModel<GenshinSlimeEntity
                 .texOffs(36, 51).addBox(-3.0F, -14.0F, -3.0F, 6.0F, 14.0F, 6.0F, new CubeDeformation(0.0F)),
                 PartPose.offsetAndRotation(0.0F, -25.0F, 0.0F, 0.0F, 0.0F, 0.0F));
 
-        // 4. Pararrayos Electro Grande (Large Electro Antenna)
         bb_main.addOrReplaceChild("electro_antenna", CubeListBuilder.create()
                 .texOffs(60, 66).addBox(-1.0F, -16.0F, -2.0F, 2.0F, 1.0F, 4.0F, new CubeDeformation(0.0F))
                 .texOffs(58, 66).addBox(-2.0F, -15.0F, -2.0F, 4.0F, 4.0F, 4.0F, new CubeDeformation(0.0F))
                 .texOffs(0, 114).addBox(-1.0F, -11.0F, -1.0F, 2.0F, 12.0F, 2.0F, new CubeDeformation(0.0F)),
                 PartPose.offsetAndRotation(0.0F, -21.0F, -1.0F, -0.4363F, 0.0F, 0.0F));
 
-        // 5. Coraza Mineral y Cuernos Geo Grandes (Large Geo Armor)
         PartDefinition geoHelmet = bb_main.addOrReplaceChild("geo_helmet", CubeListBuilder.create()
                 .texOffs(0, 43).addBox(14.0F, -23.0F, -11.0F, 2.0F, 10.0F, 21.0F, new CubeDeformation(0.0F))
                 .texOffs(0, 43).addBox(-16.0F, -23.0F, -11.0F, 2.0F, 10.0F, 21.0F, new CubeDeformation(0.0F))
@@ -132,7 +123,6 @@ public class GenshinLargeSlimeModel extends HierarchicalModel<GenshinSlimeEntity
                 .texOffs(60, 70).mirror().addBox(6.0F, -14.0F, -3.0F, 6.0F, 14.0F, 6.0F, new CubeDeformation(0.0F)),
                 PartPose.offsetAndRotation(0.0F, -24.0F, 0.0F, 0.0F, 0.0F, 0.2618F));
 
-        // 6. Planta Flor Dendro Grande (Large Dendro Foliage)
         PartDefinition dendroLeaves = bb_main.addOrReplaceChild("dendro_leaves", CubeListBuilder.create(), PartPose.ZERO);
         dendroLeaves.addOrReplaceChild("flower1", CubeListBuilder.create()
                 .texOffs(88, 39).addBox(-3.0F, -11.5F, -1.5F, 6.0F, 13.0F, 3.0F, new CubeDeformation(0.0F)),
@@ -158,7 +148,6 @@ public class GenshinLargeSlimeModel extends HierarchicalModel<GenshinSlimeEntity
         this.electroAntenna.resetPose();
         this.dendroLeaves.resetPose();
 
-        // Control de visibilidad elemental
         GenshinSlimeEntity.Element el = entity.getElement();
         this.anemoWings.visible = (el == GenshinSlimeEntity.Element.ANEMO);
         this.pyroFlame.visible = (el == GenshinSlimeEntity.Element.PYRO);
@@ -167,34 +156,28 @@ public class GenshinLargeSlimeModel extends HierarchicalModel<GenshinSlimeEntity
         this.geoHelmet.visible = (el == GenshinSlimeEntity.Element.GEO);
         this.dendroLeaves.visible = (el == GenshinSlimeEntity.Element.DENDRO);
 
-        // Interpolación fluida de squash & stretch idéntica a la del slime Isekai
         float partialTick = ageInTicks - (float) entity.tickCount;
         float squishFactor = Mth.lerp(partialTick, entity.prevSquish, entity.squish);
 
-        // Respiración suave en reposo
         float breathe = 0.0F;
         if (Math.abs(squishFactor) < 0.25F) {
             breathe = Mth.sin(ageInTicks * 0.12F) * 0.035F;
         }
 
-        // Base siempre anclada al suelo (Y = 24.0)
         this.bb_main.y = 24.0F;
 
         if (squishFactor < 0.0F) {
-            // SQUASH: Impacto potente contra el piso (se aplasta y ensancha ampliamente)
-            float s = -squishFactor; // 0.0 a 1.45
+            float s = -squishFactor;
             this.bb_main.yScale = Math.max(0.30F, 1.0F - s * 0.45F) + breathe;
             this.bb_main.xScale = 1.0F + s * 0.40F - breathe * 0.5F;
             this.bb_main.zScale = 1.0F + s * 0.40F - breathe * 0.5F;
         } else {
-            // STRETCH: Salto parabólico en el aire (se estira esbelto hacia arriba)
-            float t = squishFactor; // 0.0 a 1.0
+            float t = squishFactor;
             this.bb_main.yScale = 1.0F + t * 0.55F + breathe;
             this.bb_main.xScale = Math.max(0.60F, 1.0F - t * 0.30F) - breathe * 0.5F;
             this.bb_main.zScale = Math.max(0.60F, 1.0F - t * 0.30F) - breathe * 0.5F;
         }
 
-        // Animación secundaria elemental
         if (el == GenshinSlimeEntity.Element.ANEMO) {
             float flapSpeed = entity.onGround() ? 0.40F : 0.85F;
             float wingFlap = Mth.sin(ageInTicks * flapSpeed) * 0.40F;
@@ -209,4 +192,3 @@ public class GenshinLargeSlimeModel extends HierarchicalModel<GenshinSlimeEntity
     }
 }
 
-

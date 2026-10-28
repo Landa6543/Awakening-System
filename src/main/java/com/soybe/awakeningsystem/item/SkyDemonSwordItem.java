@@ -45,24 +45,23 @@ public class SkyDemonSwordItem extends SwordItem implements AwakeningWeaponItem 
             long cdUntil = sp.getPersistentData().getLong("sky_demon_cd");
             if (gameTime < cdUntil) {
                 long sec = (cdUntil - gameTime) / 20;
-                sp.displayClientMessage(Component.literal("§c⏳ Espada del Demonio Celestial en recarga (" + sec + "s)..."), true);
+                sp.displayClientMessage(Component.translatable("item.awakening_system.sky_demon_sword.cooldown", sec), true);
                 return InteractionResultHolder.fail(stack);
             }
 
-            sp.getPersistentData().putLong("sky_demon_cd", gameTime + 240L); // 12s cooldown
+            sp.getPersistentData().putLong("sky_demon_cd", gameTime + 240L);
             sp.getCooldowns().addCooldown(this, 240);
 
             Vec3 look = sp.getLookAngle();
             Vec3 pos = sp.getEyePosition();
 
             if (level instanceof ServerLevel sl) {
-                // 1. Sello sagrado del Culto Demoníaco (Qi Carmesí vertical de Murim)
                 net.neoforged.neoforge.network.PacketDistributor.sendToPlayersNear(
                         sl, null, sp.getX(), sp.getY(), sp.getZ(), 64.0D,
                         new com.soybe.awakeningsystem.SpawnMagicCirclePayload(
                                 sp.getId(), sp.getX(), sp.getY(), sp.getZ(),
                                 (float) look.x, (float) look.y, (float) look.z,
-                                3.6F, 35, 0x8B0000, 3, false // circleType = 3 (Vertical Murim)
+                                3.6F, 35, 0x8B0000, 3, false
                         )
                 );
 
@@ -74,19 +73,17 @@ public class SkyDemonSwordItem extends SwordItem implements AwakeningWeaponItem 
 
                 float dmg = (float) (28.0D * WeaponLevelManager.getDamageMultiplier(stack));
 
-                // 2. Creciente del Dragón Demoníaco Carmesí (SlashWaveEntity Horizontal)
                 SlashWaveEntity demonCrescent = new SlashWaveEntity(sl, sp, SlashWaveEntity.TYPE_CRIMSON_BLOOD, dmg * 1.25F, 4.8F, 1.8F, 0.0F, 28, 12);
                 demonCrescent.setDeltaMovement(look.scale(2.35D));
                 demonCrescent.setArmorPenetration(0.40F);
                 sl.addFreshEntity(demonCrescent);
 
-                // 3. Tajo Perforante Vertical del Demonio Celestial (SlashWaveEntity Vertical)
                 SlashWaveEntity verticalCutter = new SlashWaveEntity(sl, sp, SlashWaveEntity.TYPE_DARK_VOID, dmg * 0.9F, 3.4F, 2.2F, 90.0F, 24, 8);
                 verticalCutter.setDeltaMovement(look.scale(2.2D));
                 sl.addFreshEntity(verticalCutter);
 
                 sp.addEffect(new MobEffectInstance(MobEffects.DAMAGE_RESISTANCE, 120, 1, false, true));
-                sp.displayClientMessage(Component.literal("§4§l✦ [TAJO DEL DRAGÓN DEMONIACO] §c¡Qi carmesí devastador desatado con perforación de armadura!"), true);
+                sp.displayClientMessage(Component.translatable("item.awakening_system.sky_demon_sword.unleashed"), true);
             }
             return InteractionResultHolder.sidedSuccess(stack, level.isClientSide());
         }
@@ -102,10 +99,10 @@ public class SkyDemonSwordItem extends SwordItem implements AwakeningWeaponItem 
             target.addEffect(new MobEffectInstance(MobEffects.WEAKNESS, 100, 1));
             target.addEffect(new MobEffectInstance(MobEffects.MOVEMENT_SLOWDOWN, 60, 1));
             if (attacker instanceof Player p) {
-                target.hurt(target.damageSources().playerAttack(p), 4.0F); // Daño penetrante extra
+                target.hurt(target.damageSources().playerAttack(p), 4.0F);
             }
         }
-        attacker.heal(2.0F); // Protocolo de bioreparación de nanites
+        attacker.heal(2.0F);
         return super.hurtEnemy(stack, target, attacker);
     }
 

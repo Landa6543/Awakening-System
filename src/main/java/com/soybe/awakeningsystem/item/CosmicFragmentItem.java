@@ -37,7 +37,6 @@ public class CosmicFragmentItem extends Item {
         ItemStack held = player.getItemInHand(hand);
 
         if (!level.isClientSide() && player instanceof ServerPlayer sp) {
-            // Shift + Clic Derecho: Síntesis de Destino Entrelazado
             if (sp.isShiftKeyDown()) {
                 int total = countFragments(sp);
                 if (total >= 160) {
@@ -53,22 +52,21 @@ public class CosmicFragmentItem extends Item {
                         sl.playSound(null, sp.getX(), sp.getY(), sp.getZ(), SoundEvents.UI_TOAST_CHALLENGE_COMPLETE, SoundSource.PLAYERS, 1.2F, 1.0F);
                     }
 
-                    sp.displayClientMessage(Component.literal("§6✦ [SÍNTESIS CÓSMICA] §e¡160 Fragmentos Cósmicos se han condensado en 1 Destino Entrelazado!"), true);
+                    sp.displayClientMessage(Component.translatable("item.awakening_system.cosmic_fragment.synthesis_success"), true);
                     return InteractionResultHolder.sidedSuccess(held, level.isClientSide());
                 } else {
-                    sp.displayClientMessage(Component.literal("§c✦ Necesitas 160 Fragmentos Cósmicos para sintetizar un Destino Entrelazado (tienes: " + total + ")."), true);
+                    sp.displayClientMessage(Component.translatable("item.awakening_system.cosmic_fragment.synthesis_fail", total), true);
                     return InteractionResultHolder.fail(held);
                 }
             }
 
-            // Clic Derecho normal: Reparación del ítem en la mano secundaria (Cosmic Mending)
             ItemStack offhand = sp.getOffhandItem();
             if (!offhand.isEmpty() && offhand.isDamageableItem() && offhand.isDamaged()) {
                 int total = countFragments(sp);
                 if (total >= 16) {
                     removeFragments(sp, 16);
                     int maxDur = offhand.getMaxDamage();
-                    int repairAmount = Math.max(1, maxDur / 4); // 25% de durabilidad
+                    int repairAmount = Math.max(1, maxDur / 4);
                     offhand.setDamageValue(Math.max(0, offhand.getDamageValue() - repairAmount));
 
                     if (level instanceof ServerLevel sl) {
@@ -76,14 +74,14 @@ public class CosmicFragmentItem extends Item {
                         sl.playSound(null, sp.getX(), sp.getY(), sp.getZ(), SoundEvents.ANVIL_USE, SoundSource.PLAYERS, 0.8F, 1.3F);
                     }
 
-                    sp.displayClientMessage(Component.literal("§b✦ [REPARACIÓN CÓSMICA] §f¡Durabilidad restaurada en un +25%! (-16 Fragmentos Cósmicos)."), true);
+                    sp.displayClientMessage(Component.translatable("item.awakening_system.cosmic_fragment.repair_success"), true);
                     return InteractionResultHolder.sidedSuccess(held, level.isClientSide());
                 } else {
-                    sp.displayClientMessage(Component.literal("§c✦ Necesitas al menos 16 Fragmentos Cósmicos para reparar tu objeto."), true);
+                    sp.displayClientMessage(Component.translatable("item.awakening_system.cosmic_fragment.repair_fail"), true);
                     return InteractionResultHolder.fail(held);
                 }
             } else {
-                sp.displayClientMessage(Component.literal("§7✦ Coloca un arma o armadura dañada en tu mano secundaria para repararla (-16), o presiona Shift + Clic Derecho para sintetizar 1 Destino Entrelazado (-160)."), true);
+                sp.displayClientMessage(Component.translatable("item.awakening_system.cosmic_fragment.usage_hint"), true);
             }
         }
 
@@ -114,14 +112,14 @@ public class CosmicFragmentItem extends Item {
 
     @Override
     public void appendHoverText(ItemStack stack, TooltipContext context, List<Component> tooltip, TooltipFlag flag) {
-        tooltip.add(Component.literal("§9⭐⭐⭐⭐ [Moneda y Esencia Estelar]").withStyle(ChatFormatting.BLUE));
-        tooltip.add(Component.literal("§7Fragmentos de memoria y leyes del universo compactados en cristal puro.").withStyle(ChatFormatting.GRAY));
+        tooltip.add(Component.translatable("item.awakening_system.cosmic_fragment.badge").withStyle(ChatFormatting.BLUE));
+        tooltip.add(Component.translatable("item.awakening_system.cosmic_fragment.desc").withStyle(ChatFormatting.GRAY));
         tooltip.add(Component.literal(""));
-        tooltip.add(Component.literal("§e✦ Sinergia con Manto de la Belleza:").withStyle(ChatFormatting.YELLOW));
-        tooltip.add(Component.literal("  §7Otorga +16% de Daño de Ataque por cada 100 fragmentos en inventario."));
-        tooltip.add(Component.literal("§b✦ Clic Derecho: Reparación Cósmica").withStyle(ChatFormatting.AQUA));
-        tooltip.add(Component.literal("  §7Repara 25% de durabilidad del objeto en mano secundaria §8(-16 fragmentos)§7."));
-        tooltip.add(Component.literal("§6✦ Shift + Clic Derecho: Síntesis Estelar").withStyle(ChatFormatting.GOLD));
-        tooltip.add(Component.literal("  §7Condensa 160 fragmentos en §b1 Destino Entrelazado§7."));
+        tooltip.add(Component.translatable("item.awakening_system.cosmic_fragment.synergy_title").withStyle(ChatFormatting.YELLOW));
+        tooltip.add(Component.translatable("item.awakening_system.cosmic_fragment.synergy_desc"));
+        tooltip.add(Component.translatable("item.awakening_system.cosmic_fragment.repair_title").withStyle(ChatFormatting.AQUA));
+        tooltip.add(Component.translatable("item.awakening_system.cosmic_fragment.repair_desc"));
+        tooltip.add(Component.translatable("item.awakening_system.cosmic_fragment.synth_title").withStyle(ChatFormatting.GOLD));
+        tooltip.add(Component.translatable("item.awakening_system.cosmic_fragment.synth_desc"));
     }
 }

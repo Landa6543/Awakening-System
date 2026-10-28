@@ -7,8 +7,10 @@ import net.minecraft.client.renderer.entity.MobRenderer;
 import net.minecraft.resources.ResourceLocation;
 
 public class ShadowInfantryRenderer extends MobRenderer<ShadowInfantryEntity, ShadowInfantryModel> {
-    private static final ResourceLocation TEXTURE =
+    private static final ResourceLocation TEXTURE_CYAN =
             ResourceLocation.fromNamespaceAndPath(AwakeningSystemMod.MOD_ID, "textures/entity/shadow_infantry.png");
+    private static final ResourceLocation TEXTURE_RED =
+            ResourceLocation.fromNamespaceAndPath(AwakeningSystemMod.MOD_ID, "textures/entity/shadow_infantry_red.png");
 
     public ShadowInfantryRenderer(EntityRendererProvider.Context context) {
         super(context, new ShadowInfantryModel(context.bakeLayer(ShadowInfantryModel.LAYER_LOCATION)), 0.5F);
@@ -16,6 +18,9 @@ public class ShadowInfantryRenderer extends MobRenderer<ShadowInfantryEntity, Sh
 
     @Override
     public ResourceLocation getTextureLocation(ShadowInfantryEntity entity) {
-        return TEXTURE;
+        if (entity.isFriendlyShadow()) {
+            return TEXTURE_CYAN;
+        }
+        return TEXTURE_RED;
     }
 }

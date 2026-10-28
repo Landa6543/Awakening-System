@@ -32,7 +32,7 @@ public class TranscendentThornItem extends SwordItem implements AwakeningWeaponI
     public TranscendentThornItem(Properties properties) {
         super(Tiers.NETHERITE, properties
                 .rarity(Rarity.EPIC)
-                .attributes(SwordItem.createAttributes(Tiers.NETHERITE, 10, -2.6F))); // 14 Damage, 1.4 Attack Speed
+                .attributes(SwordItem.createAttributes(Tiers.NETHERITE, 10, -2.6F)));
     }
 
     @Override
@@ -52,13 +52,12 @@ public class TranscendentThornItem extends SwordItem implements AwakeningWeaponI
                 return InteractionResultHolder.fail(stack);
             }
 
-            sp.getPersistentData().putLong("thorn_ignition_cd", gameTime + 500L); // 25s cooldown
+            sp.getPersistentData().putLong("thorn_ignition_cd", gameTime + 500L);
             sp.getCooldowns().addCooldown(this, 500);
 
             if (level instanceof ServerLevel sl) {
                 Vec3 look = sp.getLookAngle();
 
-                // 1. Sello de Ignición de Shinsoo (Carmesí Rubí Trascendente)
                 PacketDistributor.sendToPlayersNear(
                         sl, null, sp.getX(), sp.getY(), sp.getZ(), 64.0D,
                         new SpawnMagicCirclePayload(
@@ -75,7 +74,6 @@ public class TranscendentThornItem extends SwordItem implements AwakeningWeaponI
 
                 CameraShakePayload.sendToNearby(sl, sp.getX(), sp.getY(), sp.getZ(), 36.0D, 0.80F, 12);
 
-                // 2. Tajo Creciente de Ignición de Shinsoo Trascendente
                 float dmg = (float) (32.0D * WeaponLevelManager.getDamageMultiplier(stack));
                 SlashWaveEntity thornSlash = new SlashWaveEntity(sl, sp, SlashWaveEntity.TYPE_CRIMSON_BLOOD, dmg, 4.8F, 1.6F, 0.0F, 28, 10);
                 thornSlash.setDeltaMovement(look.scale(2.3D));
@@ -93,7 +91,6 @@ public class TranscendentThornItem extends SwordItem implements AwakeningWeaponI
                 WeaponLevelManager.addExp(stack, 35, sp);
             }
 
-            // Buffs
             sp.addEffect(new MobEffectInstance(MobEffects.LEVITATION, 30, 0, false, false));
             sp.addEffect(new MobEffectInstance(MobEffects.SLOW_FALLING, 200, 0, false, true));
             sp.addEffect(new MobEffectInstance(MobEffects.DAMAGE_BOOST, 300, 1, false, true));
@@ -112,7 +109,6 @@ public class TranscendentThornItem extends SwordItem implements AwakeningWeaponI
             sl.sendParticles(ParticleTypes.ENCHANTED_HIT, target.getX(), target.getY() + 1.0D, target.getZ(), 20, 0.5D, 0.5D, 0.5D, 0.1D);
             sl.playSound(null, target.getX(), target.getY(), target.getZ(), SoundEvents.PLAYER_ATTACK_CRIT, SoundSource.PLAYERS, 1.0F, 1.2F);
             
-            // Extra Shinsoo piercing pulse
             target.hurt(target.damageSources().magic(), 5.0F);
         }
         return super.hurtEnemy(stack, target, attacker);

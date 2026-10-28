@@ -1,5 +1,5 @@
 {
-  "parent": "awakening_system:block/custom/liuli_pavilion_sandbearer_floor_lamp",
+  "parent": "awakening_system:custom/liuli_pavilion_sandbearer_floor_lamp",
   "textures": {
     "all": "awakening_system:block/liuli_pavilion_sandbearer_floor_lamp",
     "particle": "awakening_system:block/liuli_pavilion_sandbearer_floor_lamp",

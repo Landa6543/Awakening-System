@@ -62,7 +62,6 @@ public class ManaCowEntity extends Cow {
         ItemEntity entity = new ItemEntity(level, this.getX(), this.getY() + 0.5D, this.getZ(), drop);
         level.addFreshEntity(entity);
 
-        // Ocasionalmente cuero curtido con maná
         if (this.random.nextFloat() < 0.65F) {
             level.addFreshEntity(new ItemEntity(level, this.getX(), this.getY() + 0.5D, this.getZ(),
                     new ItemStack(Items.LEATHER, 1 + this.random.nextInt(2))));

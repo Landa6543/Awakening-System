@@ -23,7 +23,7 @@ import java.util.concurrent.ConcurrentHashMap;
 public class DoctorsRobeItem extends Item {
 
     private static final Map<UUID, Long> COOLDOWNS = new ConcurrentHashMap<>();
-    private static final long COOLDOWN_MS = 60_000L; // 60 segundos de recarga
+    private static final long COOLDOWN_MS = 60_000L;
 
     public DoctorsRobeItem() {
         super(new Properties()
@@ -42,33 +42,30 @@ public class DoctorsRobeItem extends Item {
         COOLDOWNS.put(player.getUUID(), now);
         SystemData data = com.soybe.awakeningsystem.SystemEvents.data(player);
 
-        // Restaurar Maná y Qi al 100%
         data.setMana(data.maxMana());
         data.setCultivationQi(data.maxCultivationQi());
 
-        // Otorgar efectos de protección vital
-        player.addEffect(new MobEffectInstance(MobEffects.ABSORPTION, 20 * 25, 2, false, false, true)); // 6 corazones dorados
+        player.addEffect(new MobEffectInstance(MobEffects.ABSORPTION, 20 * 25, 2, false, false, true));
         player.addEffect(new MobEffectInstance(MobEffects.REGENERATION, 20 * 8, 1, false, false, true));
 
-        // Partículas y sonido
         ServerLevel level = player.serverLevel();
         level.sendParticles(ParticleTypes.HAPPY_VILLAGER, player.getX(), player.getY() + 1.0, player.getZ(), 30, 0.6, 0.6, 0.6, 0.2);
         level.sendParticles(ParticleTypes.TOTEM_OF_UNDYING, player.getX(), player.getY() + 1.2, player.getZ(), 25, 0.5, 0.5, 0.5, 0.15);
         level.playSound(null, player.blockPosition(), SoundEvents.BEACON_ACTIVATE, SoundSource.PLAYERS, 1.2F, 1.8F);
 
-        player.sendSystemMessage(Component.literal("§a§l[MANTO DEL DOCTOR] §2¡Canalización cósmica! Maná y Qi restaurados al 100% con escudo vital."));
+        player.sendSystemMessage(Component.translatable("item.awakening_system.doctors_robe.activation"));
         return true;
     }
 
     @Override
     public void appendHoverText(ItemStack stack, TooltipContext context, List<Component> tooltip, TooltipFlag flag) {
-        tooltip.add(Component.literal("§5§l['Curio' Manto del Doctor]").withStyle(ChatFormatting.LIGHT_PURPLE));
-        tooltip.add(Component.literal("§7Vestidura de erudito del cosmos proveniente del Universo Simulado."));
-        tooltip.add(Component.literal("§a✦ Canalización del Sabio:"));
-        tooltip.add(Component.literal("§7  Al recibir daño severo (vida por debajo del 50%):"));
-        tooltip.add(Component.literal("§2  • Regenera instantáneamente el 100% de tu Maná y Qi."));
-        tooltip.add(Component.literal("§e  • Otorga 6 corazones dorados de Absorción y Regeneración."));
-        tooltip.add(Component.literal("§8  (Tiempo de recarga: 60 segundos)"));
+        tooltip.add(Component.translatable("item.awakening_system.doctors_robe.title").withStyle(ChatFormatting.LIGHT_PURPLE));
+        tooltip.add(Component.translatable("item.awakening_system.doctors_robe.desc"));
+        tooltip.add(Component.translatable("item.awakening_system.doctors_robe.skill_title"));
+        tooltip.add(Component.translatable("item.awakening_system.doctors_robe.cond"));
+        tooltip.add(Component.translatable("item.awakening_system.doctors_robe.effect1"));
+        tooltip.add(Component.translatable("item.awakening_system.doctors_robe.effect2"));
+        tooltip.add(Component.translatable("item.awakening_system.doctors_robe.cd"));
         super.appendHoverText(stack, context, tooltip, flag);
     }
 }

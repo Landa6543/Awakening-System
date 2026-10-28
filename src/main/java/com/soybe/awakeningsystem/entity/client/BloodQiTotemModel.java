@@ -32,14 +32,12 @@ public class BloodQiTotemModel extends HierarchicalModel<BloodQiTotemEntity> {
         MeshDefinition mesh = new MeshDefinition();
         PartDefinition root = mesh.getRoot();
 
-        // Pilar central rúnico (8x20x8)
         root.addOrReplaceChild("pillar", CubeListBuilder.create()
                 .texOffs(0, 0).addBox(-4.0F, -10.0F, -4.0F, 8.0F, 20.0F, 8.0F, new CubeDeformation(0.0F))
                 .texOffs(32, 0).addBox(-5.0F, -12.0F, -5.0F, 10.0F, 2.0F, 10.0F, new CubeDeformation(0.0F))
                 .texOffs(32, 12).addBox(-5.0F, 10.0F, -5.0F, 10.0F, 2.0F, 10.0F, new CubeDeformation(0.0F)),
                 PartPose.offset(0.0F, 12.0F, 0.0F));
 
-        // Núcleo de Qi flotante (4x4x4)
         root.addOrReplaceChild("core", CubeListBuilder.create()
                 .texOffs(0, 0).addBox(-2.0F, -2.0F, -2.0F, 4.0F, 4.0F, 4.0F, new CubeDeformation(0.0F)),
                 PartPose.offset(0.0F, 12.0F, 0.0F));

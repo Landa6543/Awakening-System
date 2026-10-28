@@ -1,0 +1,8 @@
+{
+  "variants": {
+    "facing=north": { "model": "awakening_system:block/mountain_stone_rubble" },
+    "facing=south": { "model": "awakening_system:block/mountain_stone_rubble", "y": 180 },
+    "facing=east": { "model": "awakening_system:block/mountain_stone_rubble", "y": 90 },
+    "facing=west": { "model": "awakening_system:block/mountain_stone_rubble", "y": 270 }
+  }
+}

@@ -1,0 +1,27 @@
+{
+  "type": "minecraft:crafting_shaped",
+  "category": "misc",
+  "pattern": [
+    "PPP",
+    "PEP",
+    "#S#"
+  ],
+  "key": {
+    "P": {
+      "item": "minecraft:oak_planks"
+    },
+    "E": {
+      "item": "minecraft:paper"
+    },
+    "#": {
+      "item": "minecraft:oak_fence"
+    },
+    "S": {
+      "item": "minecraft:iron_sword"
+    }
+  },
+  "result": {
+    "count": 1,
+    "id": "awakening_system:bounty_board"
+  }
+}

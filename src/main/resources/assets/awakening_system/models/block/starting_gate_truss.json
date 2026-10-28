@@ -1,0 +1,7 @@
+{
+  "parent": "minecraft:block/cube_all",
+  "textures": {
+    "all": "awakening_system:block/starting_gate_truss"
+  },
+  "render_type": "cutout"
+}

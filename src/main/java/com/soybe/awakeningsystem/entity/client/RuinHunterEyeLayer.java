@@ -28,7 +28,6 @@ public class RuinHunterEyeLayer extends RenderLayer<RuinHunterEntity, RuinHunter
     public void render(PoseStack poseStack, MultiBufferSource buffer, int packedLight, RuinHunterEntity entity,
                        float limbSwing, float limbSwingAmount, float partialTick, float ageInTicks,
                        float netHeadYaw, float headPitch) {
-        // Si el Cazador está aturdido (ojo impactado) o muerto, el núcleo se apaga
         if (entity.isStunned() || !entity.isAlive()) {
             return;
         }

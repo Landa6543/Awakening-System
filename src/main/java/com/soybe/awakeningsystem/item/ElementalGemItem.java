@@ -38,8 +38,8 @@ public class ElementalGemItem extends Item {
     @Override
     public void appendHoverText(ItemStack stack, TooltipContext context, List<Component> tooltip, TooltipFlag flag) {
         String starsStr = "★".repeat(stars);
-        tooltip.add(Component.literal(colorCode + starsStr + " [Material de Ascensión " + elementName + "]").withStyle(ChatFormatting.BOLD));
-        tooltip.add(Component.literal("§7Gema elemental imbuida con la pura esencia " + elementName + " de Teyvat.").withStyle(ChatFormatting.GRAY));
-        tooltip.add(Component.literal("§8▸ Utilizado para ascender armas y habilidades elementales.").withStyle(ChatFormatting.DARK_GRAY));
+        tooltip.add(Component.translatable("item.awakening_system.elemental_gem.header", colorCode, starsStr, elementName).withStyle(ChatFormatting.BOLD));
+        tooltip.add(Component.translatable("item.awakening_system.elemental_gem.desc", elementName).withStyle(ChatFormatting.GRAY));
+        tooltip.add(Component.translatable("item.awakening_system.elemental_gem.use").withStyle(ChatFormatting.DARK_GRAY));
     }
 }

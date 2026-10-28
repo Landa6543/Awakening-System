@@ -37,7 +37,7 @@ public class DendroHypostasisBossEntity extends HypostasisBaseBossEntity {
 
     @Override
     protected Component getBossTitle() {
-        return Component.literal("§a✦ Zayin — Hipóstasis Dendro ✦");
+        return Component.translatable("boss.awakening_system.hypostasis.dendro");
     }
 
     @Override
@@ -52,7 +52,7 @@ public class DendroHypostasisBossEntity extends HypostasisBaseBossEntity {
 
     @Override
     public int getElementalColorHex() {
-        return 0x77E834; // Verde Clorofila / Dendro
+        return 0x77E834;
     }
 
     @Override
@@ -149,7 +149,7 @@ public class DendroHypostasisBossEntity extends HypostasisBaseBossEntity {
         }
 
         for (ServerPlayer player : sl.getPlayers(p -> p.distanceToSqr(this) < 1600.0D)) {
-            player.displayClientMessage(Component.literal("§a§l✦ [ZAYIN EN CRISIS] §f¡Purifica los §a3 Núcleos Restauradores Tri-Lakshana §fantes de que Zayin reviva!"), true);
+            player.displayClientMessage(Component.translatable("boss.awakening_system.dendro_hypostasis.crisis"), true);
         }
     }
 
@@ -179,12 +179,12 @@ public class DendroHypostasisBossEntity extends HypostasisBaseBossEntity {
                     data.addMora(60000);
                     data.addPrimogems(30);
                     com.soybe.awakeningsystem.AwakeningSystemMod.sync(sp);
-                    sp.displayClientMessage(Component.literal("§a§l✦ ¡HIPÓSTASIS DENDRO DERROTADO! §eHas ganado §6+60,000 Mora §ey §b+30 Protogemas§e."), false);
+                    sp.displayClientMessage(Component.translatable("boss.awakening_system.dendro_hypostasis.defeated_teyvat"), false);
                 } else {
                     if (SystemItems.AWAKENING_COIN.isBound()) {
                         sp.addItem(new ItemStack(SystemItems.AWAKENING_COIN.get(), 24));
                     }
-                    sp.displayClientMessage(Component.literal("§a§l✦ ¡HIPÓSTASIS DENDRO DERROTADO! §6+24 Monedas de Despertar§e."), false);
+                    sp.displayClientMessage(Component.translatable("boss.awakening_system.dendro_hypostasis.defeated_vanilla"), false);
                 }
             }
         }

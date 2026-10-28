@@ -49,13 +49,12 @@ public class HeavenShakingSwordItem extends SwordItem implements AwakeningWeapon
                 return InteractionResultHolder.fail(stack);
             }
 
-            sp.getPersistentData().putLong("heaven_shaking_cd", gameTime + 280L); // 14s cooldown
+            sp.getPersistentData().putLong("heaven_shaking_cd", gameTime + 280L);
             sp.getCooldowns().addCooldown(this, 280);
 
             if (level instanceof ServerLevel sl) {
                 Vec3 look = sp.getLookAngle();
 
-                // 1. Sello sagrado de Murim en el suelo
                 net.neoforged.neoforge.network.PacketDistributor.sendToPlayersNear(
                         sl, null, sp.getX(), sp.getY(), sp.getZ(), 64.0D,
                         new com.soybe.awakeningsystem.SpawnMagicCirclePayload(
@@ -73,7 +72,6 @@ public class HeavenShakingSwordItem extends SwordItem implements AwakeningWeapon
 
                 float dmg = (float) (28.0D * WeaponLevelManager.getDamageMultiplier(stack));
 
-                // 2. Tajo que Sacude los Cielos (SlashWaveEntity Devastadora)
                 SlashWaveEntity heavenWave = new SlashWaveEntity(sl, sp, SlashWaveEntity.TYPE_COSMIC_AMETHYST, dmg, 4.8F, 1.8F, 0.0F, 26, 10);
                 heavenWave.setDeltaMovement(look.scale(2.2D));
                 sl.addFreshEntity(heavenWave);
@@ -82,7 +80,7 @@ public class HeavenShakingSwordItem extends SwordItem implements AwakeningWeapon
             }
 
             sp.addEffect(new MobEffectInstance(MobEffects.DAMAGE_RESISTANCE, 120, 1, false, true));
-            sp.displayClientMessage(Component.literal("§6§l✦ [ESPADA QUE SACUDE LOS CIELOS] §e¡Tajo destructor de los nueve cielos desatado!"), true);
+            sp.displayClientMessage(Component.translatable("item.awakening_system.heaven_shaking_sword.unleashed"), true);
             return InteractionResultHolder.sidedSuccess(stack, level.isClientSide());
         }
         return InteractionResultHolder.sidedSuccess(stack, level.isClientSide());
@@ -95,7 +93,6 @@ public class HeavenShakingSwordItem extends SwordItem implements AwakeningWeapon
             sl.sendParticles(ParticleTypes.CRIT, target.getX(), target.getY() + 1.0D, target.getZ(), 10, 0.3D, 0.3D, 0.3D, 0.1D);
             target.addEffect(new MobEffectInstance(MobEffects.MOVEMENT_SLOWDOWN, 60, 1));
             
-            // Regressor's Will bonus when wounded
             if (attacker.getHealth() < attacker.getMaxHealth() * 0.5F && attacker instanceof Player p) {
                 target.hurt(target.damageSources().playerAttack(p), 6.0F);
                 attacker.addEffect(new MobEffectInstance(MobEffects.DAMAGE_RESISTANCE, 60, 1, false, false));

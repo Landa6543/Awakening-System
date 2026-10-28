@@ -16,7 +16,7 @@ import java.util.List;
 
 public final class FablesScreen extends Screen {
     private final Screen parentScreen;
-    private FableDefinitions.Grade selectedGradeFilter = null; // null = TODAS
+    private FableDefinitions.Grade selectedGradeFilter = null;
     private String selectedFableId = "first_netherite";
     private int scrollOffset = 0;
 
@@ -54,7 +54,6 @@ public final class FablesScreen extends Screen {
 
     @Override
     public void renderBackground(GuiGraphics graphics, int mouseX, int mouseY, float partialTick) {
-        // Evita desenfoque vanilla
     }
 
     public float getGuiScale() {
@@ -124,11 +123,9 @@ public final class FablesScreen extends Screen {
         int fableWeight = data != null ? data.fableWeight() : 0;
         boolean isConstellation = data != null && data.isConstellation();
 
-        // Marco y Fondo principal (Estilo Star Stream / Nebulosa cósmica)
         graphics.fill(left - 2, top - 2, left + panelW + 2, top + panelH + 2, 0xC000838F);
         graphics.fill(left, top, left + panelW, top + panelH, 0xF207131D);
 
-        // Esquinas holográficas
         int cornerColor = 0xFFFFD700;
         graphics.fill(left, top, left + 10, top + 2, cornerColor);
         graphics.fill(left, top, left + 2, top + 10, cornerColor);
@@ -139,15 +136,13 @@ public final class FablesScreen extends Screen {
         graphics.fill(left + panelW - 10, top + panelH - 2, left + panelW, top + panelH, cornerColor);
         graphics.fill(left + panelW - 2, top + panelH - 10, left + panelW, top + panelH, cornerColor);
 
-        // 1. Cabecera
         graphics.drawString(font, Component.translatable("awakening_system.fables_screen.header").withStyle(ChatFormatting.BOLD), left + 14, top + 10, 0xFFFFD700);
 
         Component ascComp = isConstellation ? Component.translatable("awakening_system.fables_screen.constellation_ascended") :
-                (unlockedCount >= 5 && fableWeight >= 150 ? Component.translatable("awakening_system.fables_screen.ready_for_ascension") : Component.translatable("awakening_system.fables_screen.req_ascension"));
+                (com.soybe.awakeningsystem.ConstellationAscension.isEligibleForAscension(data) ? Component.translatable("awakening_system.fables_screen.ready_for_ascension") : Component.translatable("awakening_system.fables_screen.req_ascension"));
         Component subHeader = Component.translatable("awakening_system.fables_screen.stats", unlockedCount, fableWeight, ascComp);
         graphics.drawString(font, subHeader, left + 14, top + 22, 0xFFCCE3EC);
 
-        // Botón Cerrar
         int closeBtnW = 60;
         int closeBtnH = 18;
         int closeBtnX = left + panelW - closeBtnW - 10;
@@ -157,18 +152,15 @@ public final class FablesScreen extends Screen {
         drawBorder(graphics, closeBtnX, closeBtnY, closeBtnW, closeBtnH, closeHov ? 0xFFFF5555 : 0xFF2D7691);
         graphics.drawCenteredString(font, Component.translatable("awakening_system.fables_screen.close"), closeBtnX + closeBtnW / 2, closeBtnY + 5, closeHov ? 0xFFFFFFFF : 0xFFCCE3EC);
 
-        // 2. Barra de Filtros de Grado
         int filterY = top + 36;
         renderFilterBar(graphics, left + 12, filterY, panelW - 24, mX, mY);
 
-        // 3. Panel Izquierdo: Lista de Fábulas
         int listX = left + 12;
         int listY = top + 58;
         int listW = panelW - 228;
         int listH = panelH - 68;
         renderFableList(graphics, data, listX, listY, listW, listH, mX, mY);
 
-        // 4. Panel Derecho: "Libro de los Relatos" (Detalle e Inspección)
         int inspX = left + panelW - 210;
         int inspY = top + 58;
         int inspW = 198;
@@ -204,7 +196,13 @@ public final class FablesScreen extends Screen {
             drawBorder(g, bx, y, btnW, btnH, border);
 
             int textColor = selected ? 0xFFFFD700 : (hov ? 0xFFFFFFFF : 0xFF88AABB);
-            g.drawCenteredString(font, filterLabels[i].copy().withStyle(ChatFormatting.BOLD), bx + btnW / 2, y + 4, textColor);
+            var fl = filterLabels[i].copy();
+            int tw = font.width(fl.copy().withStyle(ChatFormatting.BOLD));
+            if (tw <= btnW - 4) {
+                g.drawCenteredString(font, fl.withStyle(ChatFormatting.BOLD), bx + btnW / 2, y + 4, textColor);
+            } else {
+                g.drawCenteredString(font, fl, bx + btnW / 2, y + 4, textColor);
+            }
         }
     }
 
@@ -245,19 +243,16 @@ public final class FablesScreen extends Screen {
             g.fill(x + 2, iy, x + w - 2, iy + itemH - 2, bg);
             drawBorder(g, x + 2, iy, w - 4, itemH - 2, border);
 
-            // Icono
             int iconBoxW = 24;
             int iconBg = isUnlocked ? 0xFF241C06 : 0xFF121416;
             g.fill(x + 4, iy + 2, x + 4 + iconBoxW, iy + itemH - 4, iconBg);
             drawBorder(g, x + 4, iy + 2, iconBoxW, itemH - 6, isUnlocked ? 0xFFFFD700 : 0xFF354450);
             g.drawCenteredString(font, Component.literal(fable.icon()), x + 4 + iconBoxW / 2, iy + 9, isUnlocked ? 0xFFFFD700 : 0xFF778899);
 
-            // Título
             int titleX = x + 34;
             int titleCol = isUnlocked ? fable.grade().hexColor() : 0xFF888888;
             g.drawString(font, fable.getTitleComponent().copy().withStyle(ChatFormatting.BOLD), titleX, iy + 4, titleCol);
 
-            // Sub-línea: Estado y Peso Narrativo
             Component statusComp = isUnlocked ? Component.translatable("awakening_system.fables_screen.unlocked") : Component.translatable("awakening_system.fables_screen.locked");
             Component weightComp = Component.translatable("awakening_system.fables_screen.weight", fable.weight());
             Component firstComp = fable.isWorldFirst() ? Component.translatable("awakening_system.fables_screen.world_first_badge") : Component.empty();
@@ -267,7 +262,6 @@ public final class FablesScreen extends Screen {
 
         g.disableScissor();
 
-        // Barra de Scroll si hay más elementos
         if (fables.size() > maxVisible) {
             int sbX = x + w - 5;
             int sbH = h - 4;
@@ -295,12 +289,10 @@ public final class FablesScreen extends Screen {
         int innerW = w - 16;
         int curY = y + 8;
 
-        // Grado
         Component gradeBadge = Component.translatable("awakening_system.fables_screen.grade_badge", fable.grade().getDisplayName()).withStyle(ChatFormatting.BOLD);
         g.drawString(font, gradeBadge, x + 8, curY, fable.grade().hexColor());
         curY += 12;
 
-        // Título de la Fábula
         List<FormattedCharSequence> titleLines = font.split(fable.getTitleComponent().copy().withStyle(ChatFormatting.BOLD), innerW);
         for (FormattedCharSequence tl : titleLines) {
             g.drawString(font, tl, x + 8, curY, 0xFFFFFFFF);
@@ -308,11 +300,9 @@ public final class FablesScreen extends Screen {
         }
         curY += 3;
 
-        // Peso Narrativo
         g.drawString(font, Component.translatable("awakening_system.fables_screen.weight_detail", fable.weight()), x + 8, curY, 0xFFFFD700);
         curY += 12;
 
-        // Banner de Primacía Mundial si aplica
         if (fable.isWorldFirst()) {
             g.fill(x + 6, curY, x + w - 6, curY + 22, 0x802B1E05);
             drawBorder(g, x + 6, curY, w - 12, 22, 0xFFFFD700);
@@ -321,11 +311,9 @@ public final class FablesScreen extends Screen {
             curY += 26;
         }
 
-        // Separador
         g.fill(x + 8, curY, x + w - 8, curY + 1, 0xFF1D3B4E);
         curY += 6;
 
-        // Descripción / Lore
         g.drawString(font, Component.translatable("awakening_system.fables_screen.recorded_story"), x + 8, curY, 0xFF70E8FF);
         curY += 10;
 
@@ -336,7 +324,6 @@ public final class FablesScreen extends Screen {
         }
         curY += 4;
 
-        // Estado al pie
         int stateBoxY = y + h - 26;
         int stateBg = isUnlocked ? 0xFF162D1D : 0xFF241414;
         int stateBorder = isUnlocked ? 0xFF50FA7B : 0xFF663333;
@@ -357,7 +344,6 @@ public final class FablesScreen extends Screen {
         int left = (width - panelW) / 2;
         int top = (height - panelH) / 2;
 
-        // Botón Cerrar
         int closeBtnW = 60;
         int closeBtnH = 18;
         int closeBtnX = left + panelW - closeBtnW - 10;
@@ -368,14 +354,12 @@ public final class FablesScreen extends Screen {
             return true;
         }
 
-        // Filtros de Grado
         int filterY = top + 36;
         int filterW = panelW - 24;
-        String[] filterNames = {"TODAS", "HISTÓRICAS", "LEGENDARIAS", "SEMI-MÍTICAS", "MÍTICAS", "GIGANTES"};
         FableDefinitions.Grade[] filterGrades = {null, FableDefinitions.Grade.HISTORICAL, FableDefinitions.Grade.LEGENDARY, FableDefinitions.Grade.SEMI_MYTH, FableDefinitions.Grade.MYTH, FableDefinitions.Grade.GIANT_STORY};
-        int btnW = (filterW - (filterNames.length - 1) * 4) / filterNames.length;
+        int btnW = (filterW - (filterGrades.length - 1) * 4) / filterGrades.length;
 
-        for (int i = 0; i < filterNames.length; i++) {
+        for (int i = 0; i < filterGrades.length; i++) {
             int bx = left + 12 + i * (btnW + 4);
             if (mouseX >= bx && mouseX < bx + btnW && mouseY >= filterY && mouseY < filterY + 16) {
                 playClickSound();
@@ -385,7 +369,6 @@ public final class FablesScreen extends Screen {
             }
         }
 
-        // Clic en elementos de la lista de fábulas
         int listX = left + 12;
         int listY = top + 58;
         int listW = panelW - 228;

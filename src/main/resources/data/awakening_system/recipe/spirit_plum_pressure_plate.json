@@ -1,0 +1,16 @@
+{
+  "type": "minecraft:crafting_shaped",
+  "category": "redstone",
+  "pattern": [
+    "##"
+  ],
+  "key": {
+    "#": {
+      "item": "awakening_system:spirit_plum_planks"
+    }
+  },
+  "result": {
+    "count": 1,
+    "id": "awakening_system:spirit_plum_pressure_plate"
+  }
+}

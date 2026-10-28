@@ -44,7 +44,6 @@ public final class SwordAuraRenderer {
         if (item instanceof LaDoncellaSwordItem) {
             boolean transformed = LaDoncellaSwordItem.isTransformed(stack);
             if (transformed) {
-                // Forma Despierta: Trono de Ceniza y Luna Carmesí (Esporas de sangre y ceniza ardiente)
                 return new AuraStyle(
                         ParticleTypes.CRIMSON_SPORE,
                         ParticleTypes.SMOKE,
@@ -52,7 +51,6 @@ public final class SwordAuraRenderer {
                         2
                 );
             } else {
-                // Forma Pura: Acero de las Rosas (Pétalos de cerezo sagrados y destellos estelares)
                 return new AuraStyle(
                         ParticleTypes.CHERRY_LEAVES,
                         ParticleTypes.END_ROD,
@@ -62,7 +60,6 @@ public final class SwordAuraRenderer {
             }
         }
         if (item instanceof CreatorClaymoreItem) {
-            // Mandoble del Creador: Amatista cósmica y partículas astrales de portal
             return new AuraStyle(
                     ParticleTypes.PORTAL,
                     ParticleTypes.ENCHANT,
@@ -71,7 +68,6 @@ public final class SwordAuraRenderer {
             );
         }
         if (item instanceof PlumBlossomSwordItem) {
-            // Monte Hua: Danza de pétalos de ciruelo en flor
             return new AuraStyle(
                     ParticleTypes.CHERRY_LEAVES,
                     ParticleTypes.EFFECT,
@@ -96,7 +92,6 @@ public final class SwordAuraRenderer {
                     2
             );
         }
-        // General para cualquier AwakeningWeaponItem
         return new AuraStyle(
                 ParticleTypes.SOUL_FIRE_FLAME,
                 ParticleTypes.ENCHANTED_HIT,
@@ -106,8 +101,31 @@ public final class SwordAuraRenderer {
     }
 
     /**
-     * Emite partículas de Qi a lo largo de la hoja del arma cada tick.
+     * Emite partículas de Qi a lo largo del arma empuñada cada tick del cliente.
      */
     public static void tickParticles(Minecraft mc) {
+        if (mc.isPaused() || mc.level == null) return;
+        LocalPlayer player = mc.player;
+        if (player == null) return;
+        ItemStack stack = player.getMainHandItem();
+        if (!hasSwordAura(stack)) return;
+        if (player.tickCount % 3 != 0) return;
+        AuraStyle style = getAuraStyle(stack);
+        if (style == null) return;
+
+        double yaw = Math.toRadians(player.yBodyRot);
+        double px = player.getX() - Math.sin(yaw) * 0.45D;
+        double py = player.getY() + 0.75D + (player.getRandom().nextDouble() * 0.45D);
+        double pz = player.getZ() + Math.cos(yaw) * 0.45D;
+        player.level().addParticle(style.primaryParticle(), px, py, pz,
+                (player.getRandom().nextDouble() - 0.5D) * style.speed(),
+                player.getRandom().nextDouble() * style.speed(),
+                (player.getRandom().nextDouble() - 0.5D) * style.speed());
+        if (style.accentParticle() != null && player.getRandom().nextFloat() < 0.35F) {
+            player.level().addParticle(style.accentParticle(), px, py + 0.1D, pz,
+                    (player.getRandom().nextDouble() - 0.5D) * style.speed() * 0.5D,
+                    player.getRandom().nextDouble() * style.speed() * 0.5D,
+                    (player.getRandom().nextDouble() - 0.5D) * style.speed() * 0.5D);
+        }
     }
 }

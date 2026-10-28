@@ -1,0 +1,8 @@
+{
+  "type": "neoforge:add_features",
+  "biomes": "awakening_system:overworld_astral_dripstone_chasm",
+  "features": [
+    "awakening_system:patch_abyssal_tendrils"
+  ],
+  "step": "underground_decoration"
+}

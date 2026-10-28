@@ -26,7 +26,6 @@ public final class ArtifactManager {
         if (slot < 0 || slot >= 5) return;
 
         if (!payload.isCompanion()) {
-            // === EQUIPAR EN EL JUGADOR ===
             SystemData data = SystemEvents.data(player);
             if (payload.invSlot() >= 0 && payload.invSlot() < player.getInventory().items.size()) {
                 ItemStack held = player.getInventory().getItem(payload.invSlot());
@@ -43,7 +42,6 @@ public final class ArtifactManager {
                     }
                 }
             } else if (payload.invSlot() == -1) {
-                // Desequipar
                 ItemStack currentlyEquipped = data.getArtifact(slot);
                 if (!currentlyEquipped.isEmpty()) {
                     data.setArtifact(slot, ItemStack.EMPTY);
@@ -56,7 +54,6 @@ public final class ArtifactManager {
                 }
             }
         } else {
-            // === EQUIPAR EN UN COMPAÑERO ===
             Entity entity = player.level().getEntity(payload.entityId());
             if (entity instanceof CompanionEntity companion && companion.isOwnedBy(player)) {
                 if (payload.invSlot() >= 0 && payload.invSlot() < player.getInventory().items.size()) {
@@ -93,34 +90,48 @@ public final class ArtifactManager {
 
         switch (payload.actionType()) {
             case 0 -> {
-                // Subir de nivel (Ascensión con Ingenio del Héroe y Mora)
-                if (companion.getCompanionLevel() >= 90) {
-                    player.displayClientMessage(Component.literal("§e" + companion.getCompanionProfile().displayName() + " ya alcanzó el nivel máximo (Nv. 90)."), true);
-                    return;
-                }
-                int costMora = companion.getCompanionLevel() * 2500;
-                SystemData data = SystemEvents.data(player);
-                if (data.mora() < costMora) {
-                    player.displayClientMessage(Component.literal("§cMora insuficiente. Necesitas §6" + String.format("%,d", costMora) + " Mora§c."), true);
+                int rankCap = com.soybe.awakeningsystem.entity.CompanionAscensionManager.getRankMaxLevel(companion.getAscensionRank());
+                if (companion.getCompanionLevel() >= rankCap) {
+                    player.displayClientMessage(Component.translatable("companion.awakening_system.phase_cap_reached", rankCap, companion.getCompanionProfile().displayName()), true);
                     return;
                 }
 
-                // Buscar Ingenio del Héroe o Experiencia del Aventurero en inventario
-                ItemStack bookStack = ItemStack.EMPTY;
-                for (int i = 0; i < player.getInventory().items.size(); i++) {
-                    ItemStack it = player.getInventory().getItem(i);
-                    if (!it.isEmpty() && (it.is(SystemItems.HEROS_WIT.get()) || it.is(SystemItems.ADVENTURERS_EXPERIENCE.get()))) {
-                        bookStack = it;
-                        break;
+                if (companion.getCompanionLevel() >= 90) {
+                    player.displayClientMessage(Component.translatable("companion.awakening_system.max_level_reached", companion.getCompanionProfile().displayName()), true);
+                    return;
+                }
+
+                boolean creative = player.isCreative();
+                int costMora = companion.getCompanionLevel() * 1500;
+                SystemData data = SystemEvents.data(player);
+
+                if (!creative) {
+                    ItemStack bookStack = ItemStack.EMPTY;
+                    for (int i = 0; i < player.getInventory().items.size(); i++) {
+                        ItemStack it = player.getInventory().getItem(i);
+                        if (!it.isEmpty() && (it.is(SystemItems.HEROS_WIT.get()) || it.is(SystemItems.ADVENTURERS_EXPERIENCE.get()))) {
+                            bookStack = it;
+                            break;
+                        }
+                    }
+
+                    if (!bookStack.isEmpty()) {
+                        if (data.mora() < costMora) {
+                            player.displayClientMessage(Component.translatable("companion.awakening_system.insufficient_mora_simple", String.format(java.util.Locale.US, "%,d", costMora)), true);
+                            return;
+                        }
+                        data.spendMora(costMora);
+                        bookStack.shrink(1);
+                    } else if (data.mora() >= costMora * 2) {
+                        data.spendMora(costMora * 2);
+                    } else if (data.coins() >= 5) {
+                        data.spendCoins(5);
+                    } else {
+                        player.displayClientMessage(Component.translatable("companion.awakening_system.requires_heros_wit_or_mora", String.format(java.util.Locale.US, "%,d", costMora * 2)), true);
+                        return;
                     }
                 }
-                if (bookStack.isEmpty()) {
-                    player.displayClientMessage(Component.literal("§cRequiere §b1x Ingenio del Héroe §co §aExperiencia del Aventurero §cen el inventario."), true);
-                    return;
-                }
 
-                data.spendMora(costMora);
-                bookStack.shrink(1);
                 companion.setCompanionLevel(companion.getCompanionLevel() + 1);
                 companion.heal(30.0F);
 
@@ -130,24 +141,28 @@ public final class ArtifactManager {
                 }
                 companion.playSound(ModSounds.GENSHIN_LEVELUP.get(), 1.2F, 1.0F);
                 AwakeningSystemMod.sync(player);
-                player.displayClientMessage(Component.literal("§6§l✦ ¡ASCENSIÓN EXITOSA! §f" + companion.getCompanionProfile().displayName() + " subió al §eNv. " + companion.getCompanionLevel() + " §f(-" + String.format("%,d", costMora) + " Mora)."), false);
+                String infoCost = creative ? " §7(Modo Creativo)" : "";
+                player.displayClientMessage(Component.translatable("companion.awakening_system.level_up_info", companion.getCompanionProfile().displayName(), companion.getCompanionLevel(), infoCost), true);
             }
             case 1 -> {
-                // Alternar guardia / seguir
                 boolean nextGuard = !companion.isGuarding();
                 companion.setGuarding(nextGuard);
                 companion.playSound(SoundEvents.VILLAGER_YES, 0.9F, 1.2F);
                 if (nextGuard) {
-                    player.displayClientMessage(Component.literal("§6[Compañero] §f" + companion.getCompanionProfile().displayName() + " montará guardia aquí."), true);
+                    player.displayClientMessage(Component.translatable("companion.awakening_system.guarding_here", companion.getCompanionProfile().displayName()), true);
                 } else {
-                    player.displayClientMessage(Component.literal("§a[Compañero] §f" + companion.getCompanionProfile().displayName() + " te seguirá y protegerá."), true);
+                    player.displayClientMessage(Component.translatable("companion.awakening_system.following_you", companion.getCompanionProfile().displayName()), true);
                 }
             }
             case 2 -> {
-                // Recoger de regreso al contrato con nivel y artefactos equipados intactos
                 ItemStack contract = CompanionContractItem.createContract(companion.getCompanionProfile(), companion.getCompanionLevel());
-                // Guardar artefactos en el contrato
                 net.minecraft.nbt.CompoundTag contractTag = contract.getOrDefault(net.minecraft.core.component.DataComponents.CUSTOM_DATA, net.minecraft.world.item.component.CustomData.EMPTY).copyTag();
+                contractTag.putInt("CompanionConstellation", companion.getConstellation());
+                contractTag.putInt("TalentNormalAttack", companion.getTalentNormalAttack());
+                contractTag.putInt("TalentElementalSkill", companion.getTalentElementalSkill());
+                contractTag.putInt("TalentElementalBurst", companion.getTalentElementalBurst());
+                contractTag.putInt("CompanionAscensionRank", companion.getAscensionRank());
+
                 net.minecraft.nbt.ListTag artList = new net.minecraft.nbt.ListTag();
                 for (int i = 0; i < 5; i++) {
                     ItemStack art = companion.getArtifact(i);
@@ -164,7 +179,7 @@ public final class ArtifactManager {
                     player.drop(contract, false);
                 }
                 companion.playSound(SoundEvents.ITEM_PICKUP, 1.0F, 1.2F);
-                player.displayClientMessage(Component.literal("§e✦ " + companion.getCompanionProfile().displayName() + " guardado en su contrato con todos sus artefactos."), true);
+                player.displayClientMessage(Component.translatable("companion.awakening_system.saved_to_contract", companion.getCompanionProfile().displayName()), true);
                 companion.discard();
             }
         }
@@ -204,7 +219,6 @@ public final class ArtifactManager {
         int costCoins = (curLvl + 1) * 350;
         boolean usedOre = false;
 
-        // Intentar usar Mineral de Mejora primero si existe en inventario
         for (int i = 0; i < player.getInventory().items.size(); i++) {
             ItemStack st = player.getInventory().getItem(i);
             if (!st.isEmpty() && (st.is(SystemItems.ENHANCEMENT_ORE.get()) || st.is(SystemItems.FINE_ENHANCEMENT_ORE.get()) || st.is(SystemItems.MYSTIC_ENHANCEMENT_ORE.get()))) {

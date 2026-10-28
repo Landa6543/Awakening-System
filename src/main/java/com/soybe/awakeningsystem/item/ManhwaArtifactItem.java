@@ -12,20 +12,20 @@ import java.util.List;
 public class ManhwaArtifactItem extends Item {
     public enum ArtifactType {
         DEMON_MONARCH_RING(
-                "§6§l[ANILLO DEL MONARCA DEMONIO BARAN]",
-                "§7En Inventario: §e+20% Energía Máxima (EP) y ataques desatan chispas eléctricas (§6+4 de daño de choque§e)."
+                "§6§l[DEMON MONARCH BARAN RING]",
+                "§7In Inventory: §e+20% Max Energy (EP) and attacks unleash electric sparks (§6+4 shock damage§e)."
         ),
         ASRAHAN_MANA_CHALICE(
-                "§b§l[CÁLIZ DE MANÁ DE ASRAHAN]",
-                "§7En Inventario: §bRegenera 2 EP cada 3 segundos y extingue el fuego sobre el portador automáticamente."
+                "§b§l[ASRAHAN MANA CHALICE]",
+                "§7In Inventory: §bRegenerates 2 EP every 3 seconds and extinguishes fire on the bearer automatically."
         ),
         KING_SLAYER_NECKLACE(
-                "§c§l[COLLAR DEL ASESINO DE REYES]",
-                "§7En Inventario: §4+25% Daño directo contra Jefes de Calabozo y criaturas de más de 100 de salud."
+                "§c§l[KING SLAYER NECKLACE]",
+                "§7In Inventory: §4+25% Direct damage against Dungeon Bosses and creatures with over 100 HP."
         ),
         PHOENIX_FEATHER(
-                "§6§l[PLUMA DEL FÉNIX INMORTAL]",
-                "§7En Inventario: §eAl sufrir daño letal, desafía a la muerte restaurando 50% de salud, otorgando Absorción y Resistencia al Fuego (10 min CD)."
+                "§6§l[IMMORTAL PHOENIX FEATHER]",
+                "§7In Inventory: §eWhen taking lethal damage, defies death restoring 50% HP, granting Absorption and Fire Resistance (10 min CD)."
         );
 
         public final String header;

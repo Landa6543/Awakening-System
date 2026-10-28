@@ -43,10 +43,9 @@ public class NineRevolutionsPillItem extends Item {
                 sp.playNotifySound(SoundEvents.PLAYER_LEVELUP, SoundSource.PLAYERS, 1.0F, 1.4F);
                 sp.displayClientMessage(Component.translatable("awakening_system.cultivation.sublevel_success", data.cultivationSubLevel(), SystemEvents.getDantianRealmComponent(realm)), true);
             } else {
-                sp.displayClientMessage(Component.literal("§6✦ Has refinado la §ePíldora de las Nueve Revoluciones §6(+10,000 Qi)."), true);
+                sp.displayClientMessage(Component.translatable("item.awakening_system.nine_revolutions_pill.refined"), true);
             }
 
-            // Buffs supremos de iluminación
             sp.addEffect(new MobEffectInstance(MobEffects.REGENERATION, 1200, 2));
             sp.addEffect(new MobEffectInstance(MobEffects.DAMAGE_BOOST, 6000, 2));
             sp.addEffect(new MobEffectInstance(MobEffects.ABSORPTION, 6000, 3));
@@ -71,13 +70,13 @@ public class NineRevolutionsPillItem extends Item {
 
     @Override
     public void appendHoverText(ItemStack stack, TooltipContext context, List<Component> tooltipComponents, TooltipFlag tooltipFlag) {
-        tooltipComponents.add(Component.literal("§6✦ Píldora Legendaria de Alquimia Celestial").withStyle(ChatFormatting.GOLD, ChatFormatting.BOLD));
-        tooltipComponents.add(Component.literal("§7\"Refinada a través de nueve ciclos de fuego solar y rocío astral.\""));
-        tooltipComponents.add(Component.literal(""));
-        tooltipComponents.add(Component.literal("§e✦ Efectos de Refinamiento:").withStyle(ChatFormatting.YELLOW));
-        tooltipComponents.add(Component.literal("  §a✔ +10,000 Puntos de Qi de Cultivo Inmediato"));
-        tooltipComponents.add(Component.literal("  §b✔ Estado de Iluminación: Regeneración III y Fuerza III por 5 min"));
-        tooltipComponents.add(Component.literal("  §d✔ Facilita el avance de sub-niveles sin cuello de botella"));
+        tooltipComponents.add(Component.translatable("item.awakening_system.nine_revolutions_pill.title").withStyle(ChatFormatting.GOLD, ChatFormatting.BOLD));
+        tooltipComponents.add(Component.translatable("item.awakening_system.nine_revolutions_pill.quote"));
+        tooltipComponents.add(Component.empty());
+        tooltipComponents.add(Component.translatable("item.awakening_system.nine_revolutions_pill.effects_header").withStyle(ChatFormatting.YELLOW));
+        tooltipComponents.add(Component.translatable("item.awakening_system.nine_revolutions_pill.effect1"));
+        tooltipComponents.add(Component.translatable("item.awakening_system.nine_revolutions_pill.effect2"));
+        tooltipComponents.add(Component.translatable("item.awakening_system.nine_revolutions_pill.effect3"));
         super.appendHoverText(stack, context, tooltipComponents, tooltipFlag);
     }
 }

@@ -1,0 +1,94 @@
+{
+  "variants": {
+    "facing=north,part=wheel_left": {
+      "model": "awakening_system:block/illegal_roulette_table_wheel_left"
+    },
+    "facing=north,part=wheel_right": {
+      "model": "awakening_system:block/illegal_roulette_table_wheel_right"
+    },
+    "facing=north,part=table_mid_left": {
+      "model": "awakening_system:block/illegal_roulette_table_table_mid_left"
+    },
+    "facing=north,part=table_mid_right": {
+      "model": "awakening_system:block/illegal_roulette_table_table_mid_right"
+    },
+    "facing=north,part=table_end_left": {
+      "model": "awakening_system:block/illegal_roulette_table_table_end_left"
+    },
+    "facing=north,part=table_end_right": {
+      "model": "awakening_system:block/illegal_roulette_table_table_end_right"
+    },
+    "facing=east,part=wheel_left": {
+      "model": "awakening_system:block/illegal_roulette_table_wheel_left",
+      "y": 90
+    },
+    "facing=east,part=wheel_right": {
+      "model": "awakening_system:block/illegal_roulette_table_wheel_right",
+      "y": 90
+    },
+    "facing=east,part=table_mid_left": {
+      "model": "awakening_system:block/illegal_roulette_table_table_mid_left",
+      "y": 90
+    },
+    "facing=east,part=table_mid_right": {
+      "model": "awakening_system:block/illegal_roulette_table_table_mid_right",
+      "y": 90
+    },
+    "facing=east,part=table_end_left": {
+      "model": "awakening_system:block/illegal_roulette_table_table_end_left",
+      "y": 90
+    },
+    "facing=east,part=table_end_right": {
+      "model": "awakening_system:block/illegal_roulette_table_table_end_right",
+      "y": 90
+    },
+    "facing=south,part=wheel_left": {
+      "model": "awakening_system:block/illegal_roulette_table_wheel_left",
+      "y": 180
+    },
+    "facing=south,part=wheel_right": {
+      "model": "awakening_system:block/illegal_roulette_table_wheel_right",
+      "y": 180
+    },
+    "facing=south,part=table_mid_left": {
+      "model": "awakening_system:block/illegal_roulette_table_table_mid_left",
+      "y": 180
+    },
+    "facing=south,part=table_mid_right": {
+      "model": "awakening_system:block/illegal_roulette_table_table_mid_right",
+      "y": 180
+    },
+    "facing=south,part=table_end_left": {
+      "model": "awakening_system:block/illegal_roulette_table_table_end_left",
+      "y": 180
+    },
+    "facing=south,part=table_end_right": {
+      "model": "awakening_system:block/illegal_roulette_table_table_end_right",
+      "y": 180
+    },
+    "facing=west,part=wheel_left": {
+      "model": "awakening_system:block/illegal_roulette_table_wheel_left",
+      "y": 270
+    },
+    "facing=west,part=wheel_right": {
+      "model": "awakening_system:block/illegal_roulette_table_wheel_right",
+      "y": 270
+    },
+    "facing=west,part=table_mid_left": {
+      "model": "awakening_system:block/illegal_roulette_table_table_mid_left",
+      "y": 270
+    },
+    "facing=west,part=table_mid_right": {
+      "model": "awakening_system:block/illegal_roulette_table_table_mid_right",
+      "y": 270
+    },
+    "facing=west,part=table_end_left": {
+      "model": "awakening_system:block/illegal_roulette_table_table_end_left",
+      "y": 270
+    },
+    "facing=west,part=table_end_right": {
+      "model": "awakening_system:block/illegal_roulette_table_table_end_right",
+      "y": 270
+    }
+  }
+}

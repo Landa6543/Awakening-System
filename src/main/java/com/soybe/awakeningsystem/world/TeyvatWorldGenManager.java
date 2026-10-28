@@ -63,17 +63,31 @@ public final class TeyvatWorldGenManager {
 
     public static class TeyvatFeaturesData extends SavedData {
         public static final String DATA_NAME = "awakening_teyvat_features";
-        public final List<BlockPos> statues = new ArrayList<>();
-        public final List<BlockPos> waypoints = new ArrayList<>();
-        public final List<BlockPos> updrafts = new ArrayList<>();
-        public final List<BlockPos> regionalStructures = new ArrayList<>();
-        public final List<BlockPos> camps = new ArrayList<>();
-        public final List<BlockPos> chests = new ArrayList<>();
-        public final List<BlockPos> bossArenas = new ArrayList<>();
-        public final List<BlockPos> shrinesOfDepths = new ArrayList<>();
-        public final List<BlockPos> monuments = new ArrayList<>();
+        public final List<BlockPos> statues = Collections.synchronizedList(new ArrayList<>());
+        public final List<BlockPos> waypoints = Collections.synchronizedList(new ArrayList<>());
+        public final List<BlockPos> updrafts = Collections.synchronizedList(new ArrayList<>());
+        public final List<BlockPos> regionalStructures = Collections.synchronizedList(new ArrayList<>());
+        public final List<BlockPos> camps = Collections.synchronizedList(new ArrayList<>());
+        public final List<BlockPos> chests = Collections.synchronizedList(new ArrayList<>());
+        public final List<BlockPos> bossArenas = Collections.synchronizedList(new ArrayList<>());
+        public final List<BlockPos> shrinesOfDepths = Collections.synchronizedList(new ArrayList<>());
+        public final List<BlockPos> monuments = Collections.synchronizedList(new ArrayList<>());
+        public final List<BlockPos> casinos = Collections.synchronizedList(new ArrayList<>());
+        public final List<BlockPos> oculi = Collections.synchronizedList(new ArrayList<>());
         public final Map<String, BlockPos> namedStructures = new ConcurrentHashMap<>();
-        public final Set<Long> evaluatedChunks = new HashSet<>();
+        public final Set<Long> evaluatedChunks = Collections.newSetFromMap(new ConcurrentHashMap<>());
+        private boolean arrivalPlazaBuilt = false;
+        private boolean proceduralCitadelCleaned = false;
+        private boolean proceduralCapitalsCleaned = false;
+
+        public boolean isArrivalPlazaBuilt() { return arrivalPlazaBuilt; }
+        public void setArrivalPlazaBuilt(boolean val) { this.arrivalPlazaBuilt = val; setDirty(); }
+
+        public boolean isProceduralCitadelCleaned() { return proceduralCitadelCleaned; }
+        public void setProceduralCitadelCleaned(boolean val) { this.proceduralCitadelCleaned = val; setDirty(); }
+
+        public boolean isProceduralCapitalsCleaned() { return proceduralCapitalsCleaned; }
+        public void setProceduralCapitalsCleaned(boolean val) { this.proceduralCapitalsCleaned = val; setDirty(); }
 
         public void recordNamedStructure(String name, BlockPos pos) {
             namedStructures.put(name.toLowerCase(Locale.ROOT), pos);
@@ -102,6 +116,8 @@ public final class TeyvatWorldGenManager {
             loadPosList(tag, "BossArenas", data.bossArenas);
             loadPosList(tag, "ShrinesOfDepths", data.shrinesOfDepths);
             loadPosList(tag, "Monuments", data.monuments);
+            loadPosList(tag, "Casinos", data.casinos);
+            loadPosList(tag, "Oculi", data.oculi);
 
             if (tag.contains("NamedStructures", Tag.TAG_COMPOUND)) {
                 CompoundTag ns = tag.getCompound("NamedStructures");
@@ -118,6 +134,9 @@ public final class TeyvatWorldGenManager {
                     EVALUATED_TEYVAT_CHUNKS.add(l);
                 }
             }
+            data.arrivalPlazaBuilt = tag.getBoolean("ArrivalPlazaBuilt");
+            data.proceduralCitadelCleaned = tag.getBoolean("ProceduralCitadelCleaned");
+            data.proceduralCapitalsCleaned = tag.getBoolean("ProceduralCapitalsCleaned");
             return data;
         }
 
@@ -142,6 +161,8 @@ public final class TeyvatWorldGenManager {
             savePosList(tag, "BossArenas", bossArenas);
             savePosList(tag, "ShrinesOfDepths", shrinesOfDepths);
             savePosList(tag, "Monuments", monuments);
+            savePosList(tag, "Casinos", casinos);
+            savePosList(tag, "Oculi", oculi);
 
             CompoundTag ns = new CompoundTag();
             for (Map.Entry<String, BlockPos> e : namedStructures.entrySet()) {
@@ -159,6 +180,9 @@ public final class TeyvatWorldGenManager {
                 arr[idx++] = l;
             }
             tag.putLongArray("EvaluatedChunks", arr);
+            tag.putBoolean("ArrivalPlazaBuilt", arrivalPlazaBuilt);
+            tag.putBoolean("ProceduralCitadelCleaned", proceduralCitadelCleaned);
+            tag.putBoolean("ProceduralCapitalsCleaned", proceduralCapitalsCleaned);
             return tag;
         }
 
@@ -191,16 +215,13 @@ public final class TeyvatWorldGenManager {
         for (ServerPlayer player : players) {
             Vec3 pos = player.position();
 
-            // 1. Proximidad a Estatua de los Siete (Sanación divina y recarga de Maná)
             for (BlockPos statue : data.statues) {
                 if (statue.closerThan(player.blockPosition(), 8.0D)) {
                     Long lastHeal = STATUE_HEAL_COOLDOWNS.get(statue);
-                    if (lastHeal == null || gameTime - lastHeal > 100L) { // Cada 5 segundos
+                    if (lastHeal == null || gameTime - lastHeal > 100L) {
                         STATUE_HEAL_COOLDOWNS.put(statue, gameTime);
 
-                        // Curar vida completa
                         player.heal(player.getMaxHealth());
-                        // Recargar energía / Maná
                         SystemData sysData = SystemEvents.data(player);
                         sysData.setMana(sysData.maxMana());
                         AwakeningSystemMod.sync(player);
@@ -212,13 +233,12 @@ public final class TeyvatWorldGenManager {
                         teyvat.playSound(null, statue, SoundEvents.BEACON_ACTIVATE, SoundSource.BLOCKS, 1.2F, 1.5F);
                         teyvat.playSound(null, statue, SoundEvents.AMETHYST_BLOCK_CHIME, SoundSource.BLOCKS, 1.5F, 1.8F);
 
-                        player.displayClientMessage(Component.literal("§b§l✦ [ESTATUA DE LOS SIETE] §fHas recibido la Bendición y Sanación de los Arcontes."), true);
+                        player.displayClientMessage(Component.translatable("awakening_system.teyvat.statue_blessing"), true);
                     }
                     break;
                 }
             }
 
-            // 2. Corrientes de Viento de Anemo (Updrafts)
             for (BlockPos updraft : data.updrafts) {
                 if (Math.abs(pos.x - (updraft.getX() + 0.5D)) < 1.8D && Math.abs(pos.z - (updraft.getZ() + 0.5D)) < 1.8D && pos.y >= updraft.getY() && pos.y <= updraft.getY() + 24.0D) {
                     player.setDeltaMovement(player.getDeltaMovement().x * 0.8D, 1.35D, player.getDeltaMovement().z * 0.8D);
@@ -234,9 +254,6 @@ public final class TeyvatWorldGenManager {
             }
         }
 
-        // 3. La generación de estructuras y árboles de Teyvat se ejecuta ahora de forma 100% nativa
-        // en el pipeline de generación de chunks (WorldGen Features), eliminando el pop-in al caminar
-        // y erradicando cualquier acceso concurrente a LegacyRandomSource.
     }
 
     private static void tickProceduralGeneration(ServerLevel level, List<ServerPlayer> players, TeyvatFeaturesData data) {
@@ -245,7 +262,6 @@ public final class TeyvatWorldGenManager {
             int pcz = player.chunkPosition().z;
 
             int evaluatedCount = 0;
-            // Evaluamos en un radio razonable alrededor del jugador (dx, dz de 2 a 6)
             for (int r = 2; r <= 6; r++) {
                 for (int dx = -r; dx <= r; dx++) {
                     for (int dz = -r; dz <= r; dz++) {
@@ -255,7 +271,6 @@ public final class TeyvatWorldGenManager {
                         long chunkKey = ChunkPos.asLong(chunkX, chunkZ);
                         if (data.evaluatedChunks.contains(chunkKey)) continue;
 
-                        // Solo procesar chunks que ya estén cargados por el servidor para evitar bloqueos
                         if (!level.hasChunk(chunkX, chunkZ)) continue;
 
                         data.evaluatedChunks.add(chunkKey);
@@ -263,7 +278,7 @@ public final class TeyvatWorldGenManager {
                         attemptGenerateTeyvatFeatures(level, chunkX, chunkZ, data);
                         evaluatedCount++;
                         if (evaluatedCount >= 6) {
-                            return; // Presupuesto de 6 chunks por ciclo para evitar tirones
+                            return;
                         }
                     }
                 }
@@ -275,21 +290,14 @@ public final class TeyvatWorldGenManager {
         int blockX = chunkX * 16 + 8;
         int blockZ = chunkZ * 16 + 8;
 
-        // No generar pegado al spawn (0,0) ni al arrecife de Musk ni a las capitales
-        if (Math.abs(blockX) < 160 && Math.abs(blockZ) < 160) return;
-        if (Math.abs(blockX - TeyvatWorldManager.MUSK_REEF_ISLAND_POS.getX()) < 220 && Math.abs(blockZ - TeyvatWorldManager.MUSK_REEF_ISLAND_POS.getZ()) < 220) return;
-        if (Math.abs(blockX - TeyvatRegionalBuilder.MONDSTADT_POS.getX()) < 180 && Math.abs(blockZ - TeyvatRegionalBuilder.MONDSTADT_POS.getZ()) < 180) return;
-        if (Math.abs(blockX - TeyvatRegionalBuilder.LIYUE_POS.getX()) < 180 && Math.abs(blockZ - TeyvatRegionalBuilder.LIYUE_POS.getZ()) < 180) return;
-        if (Math.abs(blockX - TeyvatRegionalBuilder.INAZUMA_POS.getX()) < 180 && Math.abs(blockZ - TeyvatRegionalBuilder.INAZUMA_POS.getZ()) < 180) return;
-        if (Math.abs(blockX - TeyvatRegionalBuilder.SUMERU_POS.getX()) < 180 && Math.abs(blockZ - TeyvatRegionalBuilder.SUMERU_POS.getZ()) < 180) return;
-        if (Math.abs(blockX - TeyvatRegionalBuilder.FONTAINE_POS.getX()) < 180 && Math.abs(blockZ - TeyvatRegionalBuilder.FONTAINE_POS.getZ()) < 180) return;
+        BlockPos checkPos = new BlockPos(blockX, 70, blockZ);
+        if (!isAreaClearOfBossesAndStructures(level, checkPos, 220.0D)) return;
 
         int surfaceY = level.getHeightmapPos(Heightmap.Types.MOTION_BLOCKING_NO_LEAVES, new BlockPos(blockX, 0, blockZ)).getY();
         if (surfaceY < 60 || surfaceY > 180) return;
 
         BlockPos center = new BlockPos(blockX, surfaceY, blockZ);
 
-        // Descartar si el punto es agua o fluido (océanos, lagos)
         BlockState belowState = level.getBlockState(center.below());
         if (belowState.liquid() || !belowState.isSolid()) return;
         if (level.getFluidState(center).is(net.minecraft.world.level.material.Fluids.WATER)) return;
@@ -299,7 +307,6 @@ public final class TeyvatWorldGenManager {
 
         int roll = rand.nextInt(1000);
 
-        // 1. Estatua de los Siete (0.3% - mín 550 bloques de separación)
         if (roll < 3 && isFarFromList(center, data.statues, 550.0D)) {
             generateStatueOfTheSeven(level, center);
             data.statues.add(center);
@@ -307,7 +314,6 @@ public final class TeyvatWorldGenManager {
             return;
         }
 
-        // 2. Punto de Teletransporte (0.8% - mín 350 bloques de separación)
         if (roll >= 3 && roll < 11 && isFarFromList(center, data.waypoints, 350.0D)) {
             generateTeleportWaypoint(level, center);
             data.waypoints.add(center);
@@ -317,7 +323,6 @@ public final class TeyvatWorldGenManager {
 
         String biomeName = level.getBiome(center).unwrapKey().map(k -> k.location().getPath()).orElse("");
 
-        // 3. Arenas de Hipóstasis Elementales (1.4% - mín 420 bloques de separación)
         if (roll >= 11 && roll < 25 && isFarFromList(center, data.bossArenas, 420.0D)) {
             if (generateHypostasisArena(level, center, biomeName, rand)) {
                 data.bossArenas.add(center);
@@ -326,7 +331,6 @@ public final class TeyvatWorldGenManager {
             }
         }
 
-        // 4. Santuarios de las Profundidades (Shrines of Depths) (1.5% - mín 320 bloques de separación)
         if (roll >= 25 && roll < 40 && isFarFromList(center, data.shrinesOfDepths, 320.0D)) {
             if (generateShrineOfDepths(level, center, biomeName, rand)) {
                 data.shrinesOfDepths.add(center);
@@ -335,7 +339,6 @@ public final class TeyvatWorldGenManager {
             }
         }
 
-        // 5. Estructuras Arquitectónicas Regionales de Teyvat (1.0% - mín 450 bloques de separación)
         if (roll >= 40 && roll < 50 && isFarFromList(center, data.regionalStructures, 450.0D)) {
             if (biomeName.contains("narukami") || biomeName.contains("watatsumi") || biomeName.contains("yashiori")) {
                 TeyvatRegionalBuilder.buildNarukamiGrandShrine(level, center);
@@ -357,11 +360,7 @@ public final class TeyvatWorldGenManager {
                 data.regionalStructures.add(center);
                 data.setDirty();
                 return;
-            } else if (biomeName.contains("fontaine")) {
-                TeyvatRegionalBuilder.buildFontaineGazebo(level, center);
-                data.regionalStructures.add(center);
-                data.setDirty();
-                return;
+
             } else if (biomeName.contains("dawn_winery")) {
                 if (isAreaFlat(level, center, 24, 3)) {
                     boolean placed = TeyvatStructureManager.placeNbtStructure(level, center, "dawn_winery", -24, 0, -24);
@@ -374,8 +373,7 @@ public final class TeyvatWorldGenManager {
             }
         }
 
-        // 6. Campamento Hilichurl (1.4% - mín 220 bloques de separación, solo en terreno suficientemente plano)
-        if (roll >= 50 && roll < 64 && isFarFromList(center, data.camps, 220.0D)) {
+        if (roll >= 50 && roll < 64 && isFarFromList2D(center, data.camps, 220.0D)) {
             if (isAreaFlat(level, center, 6, 2)) {
                 generateHilichurlCamp(level, center, rand);
                 data.camps.add(center);
@@ -384,7 +382,6 @@ public final class TeyvatWorldGenManager {
             }
         }
 
-        // 7. Corriente de Viento de Anemo (0.8% - mín 260 bloques de separación)
         if (roll >= 64 && roll < 72 && isFarFromList(center, data.updrafts, 260.0D)) {
             generateWindUpdraft(level, center);
             data.updrafts.add(center);
@@ -392,7 +389,6 @@ public final class TeyvatWorldGenManager {
             return;
         }
 
-        // 8. Monumento Elemental de Teyvat (1.6% - mín 140 bloques de separación)
         if (roll >= 72 && roll < 88 && isFarFromList(center, data.monuments, 140.0D)) {
             generateElementalMonument(level, center, biomeName, rand);
             data.monuments.add(center);
@@ -400,7 +396,16 @@ public final class TeyvatWorldGenManager {
             return;
         }
 
-        // 9. Cofre del Tesoro de Teyvat (1.4% - mín 120 bloques de separación)
+        // Gran Casino Real de Teyvat (Estructura exploratoria rara, distancia >= 600 bloques del spawn, espaciado >= 1500 bloques)
+        if ((Math.abs(blockX) >= 600 || Math.abs(blockZ) >= 600) && roll >= 95 && roll < 98 && isFarFromList(center, data.casinos, 1500.0D)) {
+            if (com.soybe.awakeningsystem.world.TeyvatCasinoBuilder.isSolidMainlandArea(level, center.getX(), center.getZ())) {
+                com.soybe.awakeningsystem.world.TeyvatCasinoBuilder.buildCasino(level, center);
+                data.casinos.add(center);
+                data.setDirty();
+                return;
+            }
+        }
+
         if (roll >= 88 && roll < 102 && isFarFromList(center, data.chests, 120.0D)) {
             generateWildChest(level, center, rand);
             data.chests.add(center);
@@ -408,7 +413,6 @@ public final class TeyvatWorldGenManager {
             return;
         }
 
-        // 10. Pilares Kársticos de Jueyun en biomas de montaña / karst (1.0% - mín 300 bloques)
         if (biomeName.contains("karst") && roll >= 102 && roll < 112 && isFarFromList(center, data.regionalStructures, 300.0D)) {
             generateJueyunKarstPillars(level, center, rand);
             data.regionalStructures.add(center);
@@ -416,7 +420,6 @@ public final class TeyvatWorldGenManager {
             return;
         }
 
-        // 10. Megaestructuras Épicas, Palacios y Mazmorras Legendarias (1.8% - mín 500 bloques)
         if (roll >= 98 && roll < 116 && isFarFromList(center, data.regionalStructures, 500.0D)) {
             if (biomeName.contains("chasm") || biomeName.contains("mine")) {
                 int deepMineY = Math.min(15, surfaceY - 55);
@@ -450,7 +453,6 @@ public final class TeyvatWorldGenManager {
                         AwakeningSystemMod.LOGGER.info("Casa Dorada generada con Tartaglia/Childe en {}", bossPos);
                     }
                 } else if ((biomeName.contains("karst") || biomeName.contains("mountain")) && rand.nextInt(2) == 0 && isFarFromList(center, data.regionalStructures, 650.0D)) {
-                    // Azhdaha Subterranean Domain (Cueva Sellada de Azhdaha bajo Nantianmen)
                     int azhdahaY = 28;
                     BlockPos azhdahaCenter = new BlockPos(center.getX(), azhdahaY, center.getZ());
                     boolean placed = TeyvatStructureManager.placeNbtStructure(level, azhdahaCenter, "azhdaha_arena_higher", -37, 0, -32);
@@ -496,14 +498,21 @@ public final class TeyvatWorldGenManager {
             }
         }
 
-        // Los árboles se generan ahora 100% de forma nativa mediante el pipeline de worldgen de biomas (minecraft:trees_*)
+        // Óculos Flotantes de Teyvat (Anemóculus, Geóculus, Electróculus, Dendróculus)
+        // Se generan flotando en el aire sobre colinas, árboles o rocas, separados ~110 bloques entre sí
+        if (roll >= 116 && roll < 260 && isFarFromList(center, data.oculi, 110.0D)) {
+            if (generateFloatingOculus(level, center, biomeName, rand)) {
+                data.oculi.add(center);
+                data.setDirty();
+                return;
+            }
+        }
     }
 
     private static void generateTeyvatBiomeTrees(ServerLevel level, int chunkX, int chunkZ, String biomeName, RandomSource rand) {
         int chunkCenterX = chunkX * 16 + 8;
         int chunkCenterZ = chunkZ * 16 + 8;
 
-        // Zona Sagrada de Levantaviento (Windrise): prohibido generar árboles en 120 bloques a la redonda del Gran Roble
         if (Math.abs(chunkCenterX - 90) < 120 && Math.abs(chunkCenterZ - (-140)) < 120) {
             return;
         }
@@ -517,7 +526,6 @@ public final class TeyvatWorldGenManager {
             if (ty < 60 || ty > 190) continue;
             BlockPos treeBase = new BlockPos(tx, ty, tz);
 
-            // Nunca generar árboles encima ni cerca de arenas de jefes, santuarios ni monumentos
             if (!isFarFromList(treeBase, data.bossArenas, 25.0D)
                     || !isFarFromList(treeBase, data.shrinesOfDepths, 18.0D)
                     || !isFarFromList(treeBase, data.monuments, 10.0D)) {
@@ -548,10 +556,93 @@ public final class TeyvatWorldGenManager {
         }
     }
 
-    public static boolean isFarFromList(BlockPos pos, List<BlockPos> list, double minDist) {
+    public static final List<BlockPos> CANONICAL_PROTECTED_POSITIONS = List.of(
+            BlockPos.ZERO,
+            TeyvatWorldManager.MUSK_REEF_ISLAND_POS,
+            TeyvatRegionalBuilder.MONDSTADT_POS,
+            TeyvatRegionalBuilder.LIYUE_POS,
+            TeyvatRegionalBuilder.INAZUMA_POS,
+            TeyvatRegionalBuilder.SUMERU_POS,
+            TeyvatRegionalBuilder.FONTAINE_POS,
+            TeyvatWorldManager.ANEMO_HYPOSTASIS_POS,
+            TeyvatWorldManager.ELECTRO_HYPOSTASIS_POS,
+            TeyvatWorldManager.GEO_HYPOSTASIS_POS,
+            TeyvatWorldManager.CRYO_HYPOSTASIS_POS,
+            TeyvatWorldManager.PYRO_HYPOSTASIS_POS,
+            TeyvatWorldManager.HYDRO_HYPOSTASIS_POS,
+            TeyvatWorldManager.CRYO_REGISVINE_POS,
+            TeyvatWorldManager.GOLDEN_HOUSE_POS,
+            TeyvatWorldManager.TENSHUKAKU_POS,
+            TeyvatWorldManager.WOLFLORD_POS,
+            TeyvatWorldManager.AZHDAHA_POS,
+            TeyvatWorldManager.WINDRISE_POS,
+            TeyvatWorldManager.JADE_CHAMBER_POS,
+            TeyvatWorldManager.WINERY_POS,
+            TeyvatWorldManager.ALCOR_POS,
+            TeyvatWorldManager.CASINO_POS,
+            com.soybe.awakeningsystem.uma.TeyvatRacetrackManager.TRACK_CENTER
+    );
+
+    public static boolean isFarFromList2D(BlockPos pos, List<BlockPos> list, double minDist) {
+        if (pos == null || list == null || list.isEmpty()) return true;
         double sq = minDist * minDist;
-        for (BlockPos p : list) {
-            if (p.distSqr(pos) < sq) return false;
+        int px = pos.getX();
+        int pz = pos.getZ();
+        synchronized (list) {
+            for (BlockPos p : list) {
+                if (p == null) continue;
+                long dx = (long) px - p.getX();
+                long dz = (long) pz - p.getZ();
+                if (dx * dx + dz * dz < sq) return false;
+            }
+        }
+        return true;
+    }
+
+    public static boolean isAreaClearOfBossesAndStructures(ServerLevelAccessor level, BlockPos pos, double minRadius) {
+        if (pos == null) return false;
+        double sq = minRadius * minRadius;
+        int px = pos.getX();
+        int pz = pos.getZ();
+
+        for (BlockPos canonical : CANONICAL_PROTECTED_POSITIONS) {
+            long dx = (long) px - canonical.getX();
+            long dz = (long) pz - canonical.getZ();
+            if (dx * dx + dz * dz < sq) {
+                return false;
+            }
+        }
+
+        try {
+            if (level.getLevel() != null && level.getLevel().getServer() != null) {
+                TeyvatFeaturesData data = TeyvatFeaturesData.get(level.getLevel().getServer());
+                if (data != null) {
+                    if (!isFarFromList2D(pos, data.bossArenas, minRadius)) return false;
+                    if (!isFarFromList2D(pos, data.regionalStructures, minRadius)) return false;
+                    if (!isFarFromList2D(pos, data.shrinesOfDepths, minRadius)) return false;
+                    if (!isFarFromList2D(pos, data.casinos, minRadius)) return false;
+                    synchronized (data.namedStructures) {
+                        for (BlockPos named : data.namedStructures.values()) {
+                            if (named == null) continue;
+                            long dx = (long) px - named.getX();
+                            long dz = (long) pz - named.getZ();
+                            if (dx * dx + dz * dz < sq) return false;
+                        }
+                    }
+                }
+            }
+        } catch (Exception ignored) {}
+
+        return true;
+    }
+
+    public static boolean isFarFromList(BlockPos pos, List<BlockPos> list, double minDist) {
+        if (list == null || list.isEmpty()) return true;
+        double sq = minDist * minDist;
+        synchronized (list) {
+            for (BlockPos p : list) {
+                if (p.distSqr(pos) < sq) return false;
+            }
         }
         return true;
     }
@@ -562,7 +653,6 @@ public final class TeyvatWorldGenManager {
     public static void generateStatueOfTheSeven(ServerLevelAccessor level, BlockPos center) {
         buildSolidFoundation(level, center, 4);
 
-        // Base escalonada de cuarzo y piedra lisa pulida
         for (int dx = -3; dx <= 3; dx++) {
             for (int dz = -3; dz <= 3; dz++) {
                 int distSq = dx * dx + dz * dz;
@@ -575,22 +665,17 @@ public final class TeyvatWorldGenManager {
             }
         }
 
-        // 4 Pilares perimetrales con linternas de almas celestiales
         int[][] corners = {{-2, -2}, {-2, 2}, {2, -2}, {2, 2}};
         for (int[] c : corners) {
-            for (int dy = 1; dy <= 3; dy++) {
-                level.setBlock(center.offset(c[0], dy, c[1]), Blocks.POLISHED_DEEPSLATE_WALL.defaultBlockState(), 2);
-            }
-            level.setBlock(center.offset(c[0], 4, c[1]), Blocks.SOUL_LANTERN.defaultBlockState(), 2);
+            level.setBlock(center.offset(c[0], 1, c[1]), Blocks.POLISHED_DEEPSLATE_WALL.defaultBlockState(), 2);
+            level.setBlock(center.offset(c[0], 2, c[1]), Blocks.SOUL_LANTERN.defaultBlockState(), 2);
         }
 
-        // Pedestal y efigie del Arconte
-        for (int y = 2; y <= 4; y++) {
-            level.setBlock(center.above(y), Blocks.QUARTZ_PILLAR.defaultBlockState(), 2);
+        // Colocar la sagrada Estatua de los Siete en el centro y despejar el espacio superior para sus alas y orbe
+        level.setBlock(center.above(2), SystemBlocks.STATUE_OF_THE_SEVEN.get().defaultBlockState(), 3);
+        for (int dy = 3; dy <= 7; dy++) {
+            level.setBlock(center.above(dy), Blocks.AIR.defaultBlockState(), 2);
         }
-        level.setBlock(center.above(5), Blocks.CHISELED_STONE_BRICKS.defaultBlockState(), 2);
-        level.setBlock(center.above(6), Blocks.SMOOTH_QUARTZ.defaultBlockState(), 2);
-        level.setBlock(center.above(7), Blocks.SEA_LANTERN.defaultBlockState(), 2);
 
         AwakeningSystemMod.LOGGER.info("Estatua de los Siete erigida en Teyvat en {}", center);
     }
@@ -601,7 +686,10 @@ public final class TeyvatWorldGenManager {
     public static void generateTeleportWaypoint(ServerLevelAccessor level, BlockPos center) {
         buildSolidFoundation(level, center, 2);
 
-        // Plataforma circular de adoquín y piedra cincelada
+        if (TeyvatStructureManager.placeNbtStructure(level, center, "teleport_waypoint", -2, 0, -2)) {
+            return;
+        }
+
         for (int dx = -2; dx <= 2; dx++) {
             for (int dz = -2; dz <= 2; dz++) {
                 if (dx * dx + dz * dz <= 4) {
@@ -611,7 +699,6 @@ public final class TeyvatWorldGenManager {
         }
         level.setBlock(center, Blocks.CHISELED_STONE_BRICKS.defaultBlockState(), 2);
 
-        // Bloque del Teletransporte Celestial
         level.setBlock(center.above(), SystemBlocks.CELESTIAL_WAYPOINT.get().defaultBlockState(), 3);
     }
 
@@ -639,7 +726,6 @@ public final class TeyvatWorldGenManager {
      * vasijas y cofres anclados al suelo sólido real y defensores Hilichurl y Mitachurl.
      */
     public static void generateHilichurlCamp(ServerLevelAccessor level, BlockPos center, RandomSource rand) {
-        // 1. Allanado suave y orgánico del terreno (sin levantar columnas artificiales de piedra en el aire)
         for (int dx = -6; dx <= 6; dx++) {
             for (int dz = -6; dz <= 6; dz++) {
                 int distSq = dx * dx + dz * dz;
@@ -662,7 +748,6 @@ public final class TeyvatWorldGenManager {
             }
         }
 
-        // 2. Hoguera Central Apagada (LIT = false) con Caldero y Asientos de Troncos (Inofensiva para los mobs)
         BlockPos firePos = level.getHeightmapPos(Heightmap.Types.WORLD_SURFACE_WG, center);
         level.setBlock(firePos.below(), Blocks.COBBLESTONE.defaultBlockState(), 2);
         level.setBlock(firePos, Blocks.CAMPFIRE.defaultBlockState().setValue(CampfireBlock.LIT, false), 2);
@@ -674,7 +759,6 @@ public final class TeyvatWorldGenManager {
             level.setBlock(seatP, SystemBlocks.CAMPFIRE_LOG_SEAT.get().defaultBlockState(), 2);
         }
 
-        // 3. Choza Tribal Hilichurl adaptada al relieve del suelo
         BlockPos hutBase = level.getHeightmapPos(Heightmap.Types.WORLD_SURFACE_WG, center.offset(4, 0, 2));
         for (int x = 0; x < 4; x++) {
             for (int z = 0; z < 4; z++) {
@@ -687,17 +771,14 @@ public final class TeyvatWorldGenManager {
                 level.setBlock(colBase.above(3), Blocks.HAY_BLOCK.defaultBlockState(), 2);
             }
         }
-        // Entrada despejada
         BlockPos doorPos = level.getHeightmapPos(Heightmap.Types.WORLD_SURFACE_WG, hutBase.offset(1, 0, 0));
         level.setBlock(doorPos, Blocks.AIR.defaultBlockState(), 2);
         level.setBlock(doorPos.above(), Blocks.AIR.defaultBlockState(), 2);
 
-        // Cofre protegido en el fondo de la choza
         BlockPos chestGround = level.getHeightmapPos(Heightmap.Types.WORLD_SURFACE_WG, hutBase.offset(2, 0, 2));
         level.setBlock(chestGround, SystemBlocks.LOCKED_TREASURE_CHEST.get().defaultBlockState().setValue(LockedTreasureChestBlock.LOCKED, true), 3);
         populateChestLoot(level, chestGround, rand);
 
-        // Vasijas Hilichurl ancladas al suelo sólido real (sin flotar)
         BlockPos jar1 = level.getHeightmapPos(Heightmap.Types.WORLD_SURFACE_WG, hutBase.offset(1, 0, 2));
         level.setBlock(jar1, SystemBlocks.TEYVAT_JAR.get().defaultBlockState(), 2);
         BlockPos jar2 = level.getHeightmapPos(Heightmap.Types.WORLD_SURFACE_WG, hutBase.offset(2, 0, 1));
@@ -710,7 +791,6 @@ public final class TeyvatWorldGenManager {
             level.setBlock(moraPos, SystemBlocks.MORA_BLOCK.get().defaultBlockState(), 2);
         }
 
-        // 4. Invocación de patrulla sobre el suelo firme
         int hilichurlCount = 2 + rand.nextInt(2);
         for (int i = 0; i < hilichurlCount; i++) {
             BlockPos hPos = level.getHeightmapPos(Heightmap.Types.WORLD_SURFACE_WG, center.offset(rand.nextInt(5) - 2, 0, rand.nextInt(5) - 2));
@@ -732,7 +812,6 @@ public final class TeyvatWorldGenManager {
     private static void generateChasmQuarryFeatures(ServerLevel level, BlockPos base, RandomSource rand) {
         int roll = rand.nextInt(3);
         if (roll == 0) {
-            // Roca o cúmulo de cantos rodados de cantera
             int rad = 1 + rand.nextInt(2);
             for (int dx = -rad; dx <= rad; dx++) {
                 for (int dz = -rad; dz <= rad; dz++) {
@@ -748,14 +827,12 @@ public final class TeyvatWorldGenManager {
                 }
             }
         } else if (roll == 1) {
-            // Madero minero de soporte con linterna
             int h = 2 + rand.nextInt(2);
             for (int dy = 0; dy < h; dy++) {
                 level.setBlock(base.above(dy), Blocks.DARK_OAK_FENCE.defaultBlockState(), 2);
             }
             level.setBlock(base.above(h), Blocks.LANTERN.defaultBlockState(), 2);
         } else {
-            // Tronco caído / madero descompuesto
             BlockState logSt = Blocks.OAK_LOG.defaultBlockState().setValue(RotatedPillarBlock.AXIS, Direction.Axis.X);
             for (int dx = -1; dx <= 1; dx++) {
                 level.setBlock(base.offset(dx, 0, 0), logSt, 2);
@@ -769,12 +846,67 @@ public final class TeyvatWorldGenManager {
     public static void generateWindUpdraft(ServerLevelAccessor level, BlockPos center) {
         buildSolidFoundation(level, center, 2);
 
+        if (TeyvatStructureManager.placeNbtStructure(level, center, "wind_updraft", -1, 0, -1)) {
+            return;
+        }
+
         for (int dx = -1; dx <= 1; dx++) {
             for (int dz = -1; dz <= 1; dz++) {
                 level.setBlock(center.offset(dx, 0, dz), Blocks.MOSSY_STONE_BRICKS.defaultBlockState(), 2);
             }
         }
         level.setBlock(center, Blocks.CHISELED_STONE_BRICKS.defaultBlockState(), 2);
+    }
+
+    /**
+     * Genera un Óculo Flotante de Teyvat suspendido en el aire (Anemóculus, Geóculus, Electróculus, Dendróculus)
+     */
+    public static boolean generateFloatingOculus(ServerLevel level, BlockPos center, String biomeName, RandomSource rand) {
+        Block oculusBlock;
+        if (biomeName.contains("mondstadt") || biomeName.contains("wind") || biomeName.contains("dawn") || biomeName.contains("whispering")) {
+            oculusBlock = SystemBlocks.ANEMOCULUS_BLOCK.get();
+        } else if (biomeName.contains("liyue") || biomeName.contains("geo") || biomeName.contains("karst") || biomeName.contains("chasm") || biomeName.contains("stone")) {
+            oculusBlock = SystemBlocks.GEOCULUS_BLOCK.get();
+        } else if (biomeName.contains("inazuma") || biomeName.contains("narukami") || biomeName.contains("watatsumi") || biomeName.contains("yashiori") || biomeName.contains("seirai") || biomeName.contains("tsurumi")) {
+            oculusBlock = SystemBlocks.ELECTROCULUS_BLOCK.get();
+        } else if (biomeName.contains("sumeru") || biomeName.contains("dharma") || biomeName.contains("rainforest") || biomeName.contains("jungle") || biomeName.contains("desert")) {
+            oculusBlock = SystemBlocks.DENDROCULUS_BLOCK.get();
+        } else {
+            // Cuadrantes de Teyvat si el bioma no es específico
+            if (center.getX() < 0 && center.getZ() < 0) oculusBlock = SystemBlocks.ANEMOCULUS_BLOCK.get();
+            else if (center.getX() < 0 && center.getZ() >= 0) oculusBlock = SystemBlocks.GEOCULUS_BLOCK.get();
+            else if (center.getX() >= 0 && center.getZ() >= 0) oculusBlock = SystemBlocks.ELECTROCULUS_BLOCK.get();
+            else oculusBlock = SystemBlocks.DENDROCULUS_BLOCK.get();
+        }
+
+        // Flota de 3 a 5 bloques por encima de la superficie
+        int floatHeight = 3 + rand.nextInt(3);
+        BlockPos oculusPos = center.above(floatHeight);
+
+        // Busca espacio de aire libre por si hay árboles o rocas
+        if (!level.getBlockState(oculusPos).isAir()) {
+            for (int dy = 1; dy <= 8; dy++) {
+                BlockPos testPos = center.above(dy);
+                if (level.getBlockState(testPos).isAir() && level.getBlockState(testPos.above()).isAir()) {
+                    oculusPos = testPos;
+                    break;
+                }
+            }
+        }
+
+        if (!level.getBlockState(oculusPos).isAir()) return false;
+
+        level.setBlock(oculusPos, oculusBlock.defaultBlockState(), 3);
+
+        // Si es Anemóculus y está elevado, coloca a veces una corriente de viento cerca para impulsarse con el planeador
+        if (floatHeight >= 4 && rand.nextInt(3) == 0 && oculusBlock == SystemBlocks.ANEMOCULUS_BLOCK.get()) {
+            BlockPos updraftPos = center.offset(rand.nextInt(3) - 1, 0, rand.nextInt(3) - 1);
+            if (level.getBlockState(updraftPos).isAir()) {
+                generateWindUpdraft(level, updraftPos);
+            }
+        }
+
+        return true;
     }
 
     /**
@@ -811,7 +943,6 @@ public final class TeyvatWorldGenManager {
             monumentBlock = SystemBlocks.ANEMO_MONUMENT.get();
         }
 
-        // Construir pedestal de 3x3 de piedra cincelada y musgosa
         for (int dx = -1; dx <= 1; dx++) {
             for (int dz = -1; dz <= 1; dz++) {
                 BlockPos p = center.offset(dx, 0, dz);
@@ -819,18 +950,15 @@ public final class TeyvatWorldGenManager {
             }
         }
 
-        // 4 esquinas con losas de ladrillos de piedra
         level.setBlock(center.offset(-1, 0, -1), Blocks.STONE_BRICK_SLAB.defaultBlockState(), 2);
         level.setBlock(center.offset(1, 0, -1), Blocks.STONE_BRICK_SLAB.defaultBlockState(), 2);
         level.setBlock(center.offset(-1, 0, 1), Blocks.STONE_BRICK_SLAB.defaultBlockState(), 2);
         level.setBlock(center.offset(1, 0, 1), Blocks.STONE_BRICK_SLAB.defaultBlockState(), 2);
 
-        // Despejar el aire sobre el altar
         for (int dy = 1; dy <= 3; dy++) {
             level.setBlock(center.above(dy), Blocks.AIR.defaultBlockState(), 2);
         }
 
-        // Colocar el monumento con orientación aleatoria
         Direction facing = Direction.Plane.HORIZONTAL.getRandomDirection(rand);
         level.setBlock(center.above(1), monumentBlock.defaultBlockState().setValue(ElementalMonumentBlock.FACING, facing), 3);
     }
@@ -855,7 +983,6 @@ public final class TeyvatWorldGenManager {
             }
         }
 
-        // Cima del pilar con césped, árboles de cerezo o ginkgo y cofres
         int topY = center.getY() + pillarHeight + 1;
         for (int dx = -radius; dx <= radius; dx++) {
             for (int dz = -radius; dz <= radius; dz++) {
@@ -866,7 +993,6 @@ public final class TeyvatWorldGenManager {
             }
         }
 
-        // Árbol decorativo en la cima del pilar kárstico
         BlockPos treePos = new BlockPos(center.getX(), topY + 1, center.getZ());
         level.setBlock(treePos, Blocks.CHERRY_LOG.defaultBlockState(), 2);
         level.setBlock(treePos.above(), Blocks.CHERRY_LOG.defaultBlockState(), 2);
@@ -884,7 +1010,6 @@ public final class TeyvatWorldGenManager {
             }
         }
 
-        // Cofre valioso secreto en la cumbre
         BlockPos summitChest = treePos.offset(1, 0, 1);
         level.setBlock(summitChest, SystemBlocks.LOCKED_TREASURE_CHEST.get().defaultBlockState().setValue(LockedTreasureChestBlock.LOCKED, false), 3);
         populateChestLoot(level, summitChest, rand);
@@ -893,25 +1018,20 @@ public final class TeyvatWorldGenManager {
     private static void populateChestLoot(ServerLevelAccessor level, BlockPos pos, RandomSource rand) {
         var be = level.getBlockEntity(pos);
         if (be instanceof LockedTreasureChestBlockEntity chest) {
-            // Protogemas (Primogems)
             int primos = 15 + rand.nextInt(25);
             chest.setItem(0, new ItemStack(SystemItems.PRIMOGEM.get(), primos));
 
-            // Moras / Monedas
             int mora = 3000 + rand.nextInt(7000);
             chest.setItem(1, new ItemStack(SystemItems.MORA.get(), Math.min(64, mora / 200)));
 
-            // Artefacto aleatorio de Genshin Impact
             ItemStack artifact = createRandomGenshinArtifact(rand);
             if (!artifact.isEmpty()) {
                 chest.setItem(2, artifact);
             }
 
-            // Materiales de ascensión o mineral de mejora
             chest.setItem(3, new ItemStack(Items.IRON_INGOT, 2 + rand.nextInt(4)));
             chest.setItem(4, new ItemStack(Items.EMERALD, 1 + rand.nextInt(3)));
 
-            // Materiales de Teyvat (Máscaras, Condensados y Fragmentos Cósmicos)
             if (SystemItems.COSMIC_FRAGMENT.isBound()) {
                 chest.setItem(5, new ItemStack(SystemItems.COSMIC_FRAGMENT.get(), 5 + rand.nextInt(10)));
             }
@@ -919,6 +1039,22 @@ public final class TeyvatWorldGenManager {
                 chest.setItem(6, new ItemStack(SystemItems.STAINED_MASK.get(), 1 + rand.nextInt(2)));
             } else if (SystemItems.DAMAGED_MASK.isBound()) {
                 chest.setItem(6, new ItemStack(SystemItems.DAMAGED_MASK.get(), 2 + rand.nextInt(3)));
+            }
+
+            // 25% de probabilidad de incluir un Óculo elemental de la región en cofres salvajes
+            if (rand.nextInt(4) == 0) {
+                String chestBiome = level.getBiome(pos).unwrapKey().map(k -> k.location().getPath()).orElse("");
+                net.minecraft.world.item.Item oculus;
+                if (chestBiome.contains("liyue") || chestBiome.contains("geo") || chestBiome.contains("karst") || chestBiome.contains("chasm")) {
+                    oculus = SystemItems.GEOCULUS.get();
+                } else if (chestBiome.contains("inazuma") || chestBiome.contains("narukami") || chestBiome.contains("watatsumi")) {
+                    oculus = SystemItems.ELECTROCULUS.get();
+                } else if (chestBiome.contains("sumeru") || chestBiome.contains("dharma") || chestBiome.contains("jungle") || chestBiome.contains("desert")) {
+                    oculus = SystemItems.DENDROCULUS.get();
+                } else {
+                    oculus = SystemItems.ANEMOCULUS.get();
+                }
+                chest.setItem(7, new ItemStack(oculus, 1));
             }
         }
     }
@@ -936,7 +1072,9 @@ public final class TeyvatWorldGenManager {
                 GenshinArtifactItem chosen = arts.get(rand.nextInt(arts.size()));
                 return new ItemStack(chosen);
             }
-        } catch (Exception ignored) {}
+        } catch (Exception e) {
+            AwakeningSystemMod.LOGGER.debug("Error generating random artifact: ", e);
+        }
         return ItemStack.EMPTY;
     }
 
@@ -953,31 +1091,27 @@ public final class TeyvatWorldGenManager {
                 monster.moveTo(groundPos.getX() + 0.5D, groundPos.getY(), groundPos.getZ() + 0.5D, level.getRandom().nextFloat() * 360.0F, 0.0F);
                 level.addFreshEntity(monster);
             }
-        } catch (Exception ignored) {}
+        } catch (Exception e) {
+            AwakeningSystemMod.LOGGER.debug("Error spawning Teyvat monster: ", e);
+        }
     }
 
     public static void buildSolidFoundation(ServerLevelAccessor level, BlockPos center, int radius) {
-        // 1. Limpieza cilíndrica exhaustiva de árboles y vegetación (hasta 35 bloques de altura)
-        TeyvatStructureManager.clearArenaCylinder(level, center, radius, 35);
-
-        for (int dx = -radius; dx <= radius; dx++) {
-            for (int dz = -radius; dz <= radius; dz++) {
-                if (dx * dx + dz * dz <= radius * radius) {
+        int r = Math.min(radius, 5);
+        for (int dx = -r; dx <= r; dx++) {
+            for (int dz = -r; dz <= r; dz++) {
+                if (dx * dx + dz * dz <= r * r) {
                     BlockPos p = center.offset(dx, -1, dz);
-                    // Rellenar suavemente hasta el suelo natural (máximo 8 bloques para no crear columnas gigantes)
-                    for (int dy = 0; dy <= 8; dy++) {
+                    for (int dy = 0; dy <= 4; dy++) {
                         BlockPos down = p.below(dy);
                         BlockState s = level.getBlockState(down);
-                        if (s.isSolid() && !s.is(BlockTags.LEAVES) && !s.is(BlockTags.LOGS) && s.getFluidState().isEmpty() && !s.is(BlockTags.REPLACEABLE)
-                                && !TeyvatStructureManager.isVegetationOrTreeBlock(s)) {
+                        if (s.isSolid() && !s.is(BlockTags.LEAVES) && !s.is(BlockTags.LOGS) && s.getFluidState().isEmpty() && !s.is(BlockTags.REPLACEABLE)) {
                             break;
                         }
                         if (dy == 0) {
                             level.setBlock(down, Blocks.STONE_BRICKS.defaultBlockState(), 2);
-                        } else if (dy <= 2) {
-                            level.setBlock(down, Blocks.DIRT.defaultBlockState(), 2);
                         } else {
-                            level.setBlock(down, Blocks.STONE.defaultBlockState(), 2);
+                            level.setBlock(down, Blocks.DIRT.defaultBlockState(), 2);
                         }
                     }
                 }
@@ -989,11 +1123,13 @@ public final class TeyvatWorldGenManager {
         try {
             if (level.getLevel().getServer() != null) {
                 var data = TeyvatFeaturesData.get(level.getLevel().getServer());
-                if (!isFarFromList(center, data.bossArenas, 420.0D)) {
+                if (!isFarFromList(center, data.bossArenas, 650.0D)) {
                     return false;
                 }
             }
-        } catch (Exception ignored) {}
+        } catch (Exception e) {
+            AwakeningSystemMod.LOGGER.debug("Error checking bossArenas distance: ", e);
+        }
 
         if (biomeName.contains("windrise") || biomeName.contains("stormterror")) {
             buildSolidFoundation(level, center, 16);
@@ -1031,7 +1167,6 @@ public final class TeyvatWorldGenManager {
         } else if (biomeName.contains("dragonspine") || biomeName.contains("snowy") || biomeName.contains("frozen") || biomeName.contains("ice")) {
             buildSolidFoundation(level, center, 14);
             if (rand.nextBoolean()) {
-                // Cueva y Arena Glacial de Regisvid Criogénica (Cryo Regisvine NBT)
                 boolean placed = TeyvatStructureManager.placeNbtStructure(level, center, "cryoregisvine_final", -11, 0, -12);
                 if (placed) {
                     level.setBlock(center, Blocks.BLUE_ICE.defaultBlockState(), 2);
@@ -1054,7 +1189,6 @@ public final class TeyvatWorldGenManager {
         } else if (biomeName.contains("desert")) {
             buildSolidFoundation(level, center, 16);
             if (rand.nextBoolean()) {
-                // Cueva y Arena Magmática de Regisvid Pirotécnica (Pyro Regisvine NBT)
                 boolean placed = TeyvatStructureManager.placeNbtStructure(level, center, "pyroregisvine_final", -11, 0, -12);
                 if (placed) {
                     level.setBlock(center, Blocks.MAGMA_BLOCK.defaultBlockState(), 2);
@@ -1111,20 +1245,23 @@ public final class TeyvatWorldGenManager {
                 data.recordNamedStructure(name, pos);
                 data.setDirty();
             }
-        } catch (Exception ignored) {}
+        } catch (Exception e) {
+            AwakeningSystemMod.LOGGER.debug("Error recording boss arena: ", e);
+        }
     }
 
     public static boolean generateLegendaryDungeon(ServerLevelAccessor level, BlockPos center, String biomeName, RandomSource rand) {
         try {
             if (level.getLevel().getServer() != null) {
                 var data = TeyvatFeaturesData.get(level.getLevel().getServer());
-                if (!isFarFromList(center, data.regionalStructures, 500.0D)) {
+                if (!isFarFromList(center, data.regionalStructures, 850.0D)) {
                     return false;
                 }
             }
-        } catch (Exception ignored) {}
+        } catch (Exception e) {
+            AwakeningSystemMod.LOGGER.debug("Error checking regionalStructures distance: ", e);
+        }
 
-        // 1. Inazuma (Narukami, Yashiori, Watatsumi): Tenshukaku o Plano de la Eutimia de Baal
         if (biomeName.contains("narukami") || biomeName.contains("yashiori") || biomeName.contains("watatsumi")) {
             if (rand.nextBoolean()) {
                 buildSolidFoundation(level, center, 22);
@@ -1146,7 +1283,6 @@ public final class TeyvatWorldGenManager {
                 }
             }
         }
-        // 2. Liyue Karst / Guyun: Casa Dorada o Caverna Subterránea de Azhdaha
         else if (biomeName.contains("karst") || biomeName.contains("guyun") || biomeName.contains("dihua")) {
             if (rand.nextBoolean()) {
                 buildSolidFoundation(level, center, 41);
@@ -1170,7 +1306,6 @@ public final class TeyvatWorldGenManager {
                 }
             }
         }
-        // 3. Desierto de Sumeru: Templo Primigenio del Desierto
         else if (biomeName.contains("desert")) {
             buildSolidFoundation(level, center, 34);
             boolean ok = TeyvatStructureManager.placeNbtStructure(level, center, "primal_temple", -33, 0, -33);
@@ -1181,7 +1316,6 @@ public final class TeyvatWorldGenManager {
                 return true;
             }
         }
-        // 4. Enkanomiya / Océano: Arena Flotante del Wolflord
         else if (biomeName.contains("enkanomiya") || biomeName.contains("ocean") || biomeName.contains("beach")) {
             buildSolidFoundation(level, center, 32);
             boolean ok = TeyvatStructureManager.placeNbtStructure(level, center, "wolflord_structure_final", -31, 0, -29);
@@ -1192,7 +1326,6 @@ public final class TeyvatWorldGenManager {
                 return true;
             }
         }
-        // 5. Bosques oscuros / Chasm / Whispering: Árbol Marchito del Abismo
         else if (biomeName.contains("chasm") || biomeName.contains("whispering") || biomeName.contains("dark")) {
             buildSolidFoundation(level, center, 18);
             boolean ok = TeyvatStructureManager.placeNbtStructure(level, center, "tumor_tree", -17, 0, -17);
@@ -1204,7 +1337,6 @@ public final class TeyvatWorldGenManager {
                 return true;
             }
         }
-        // 6. Mondstadt / Windrise / Cider Lake: Isla Flotante Celestial de Anemo (Y 170-200)
         else if (biomeName.contains("windrise") || biomeName.contains("cider") || biomeName.contains("plains")) {
             int skyY = Math.min(205, Math.max(170, center.getY() + 75));
             BlockPos skyCenter = new BlockPos(center.getX(), skyY, center.getZ());
@@ -1230,7 +1362,9 @@ public final class TeyvatWorldGenManager {
                 data.recordNamedStructure(name, pos);
                 data.setDirty();
             }
-        } catch (Exception ignored) {}
+        } catch (Exception e) {
+            AwakeningSystemMod.LOGGER.debug("Error recording regional structure: ", e);
+        }
     }
 
     public static boolean generateElementalMonumentPuzzle(ServerLevelAccessor level, BlockPos center, String biomeName, RandomSource rand) {
@@ -1241,7 +1375,9 @@ public final class TeyvatWorldGenManager {
                     return false;
                 }
             }
-        } catch (Exception ignored) {}
+        } catch (Exception e) {
+            AwakeningSystemMod.LOGGER.debug("Error checking monument distance: ", e);
+        }
 
         String puzzleNbt;
         String b = biomeName.toLowerCase(java.util.Locale.ROOT);
@@ -1264,7 +1400,6 @@ public final class TeyvatWorldGenManager {
         buildSolidFoundation(level, center, 4);
         boolean placed = TeyvatStructureManager.placeNbtStructure(level, center, puzzleNbt, -2, 0, -2);
         if (placed) {
-            // Asegurar que el bloque central sea el ElementalMonumentBlock del elemento
             generateElementalMonument(level, center, biomeName, rand);
 
             try {
@@ -1274,7 +1409,9 @@ public final class TeyvatWorldGenManager {
                     data.recordNamedStructure(puzzleNbt, center);
                     data.setDirty();
                 }
-            } catch (Exception ignored) {}
+            } catch (Exception e) {
+                AwakeningSystemMod.LOGGER.debug("Error recording monument puzzle: ", e);
+            }
             AwakeningSystemMod.LOGGER.info("Puzzle de Monumento Elemental ({}) generado en {}", puzzleNbt, center);
             return true;
         }
@@ -1286,7 +1423,9 @@ public final class TeyvatWorldGenManager {
                 data.monuments.add(center);
                 data.setDirty();
             }
-        } catch (Exception ignored) {}
+        } catch (Exception e) {
+            AwakeningSystemMod.LOGGER.debug("Error recording fallback monument: ", e);
+        }
         return true;
     }
 
@@ -1302,6 +1441,11 @@ public final class TeyvatWorldGenManager {
             shrineNbt = "dendro_shrine_of_depths_final";
         }
 
+        if (shrineNbt == null) {
+            String[] options = {"anemo_shrine_of_depths_final", "geo_shrine_of_depths_final", "electro_shrine_of_depths_final", "dendro_shrine_of_depths_final"};
+            shrineNbt = options[rand.nextInt(options.length)];
+        }
+
         if (shrineNbt != null) {
             int yC = level.getHeight(Heightmap.Types.MOTION_BLOCKING_NO_LEAVES, center.getX(), center.getZ());
             int y1 = level.getHeight(Heightmap.Types.MOTION_BLOCKING_NO_LEAVES, center.getX() - 5, center.getZ() - 5);
@@ -1311,16 +1455,14 @@ public final class TeyvatWorldGenManager {
 
             int minY = Math.min(yC, Math.min(Math.min(y1, y2), Math.min(y3, y4)));
             int maxY = Math.max(yC, Math.max(Math.max(y1, y2), Math.max(y3, y4)));
-            if (maxY - minY > 4) {
-                // Terreno demasiado empinado, descartar para evitar santuario flotante
+            if (maxY - minY > 10) {
                 return false;
             }
 
             BlockPos solidCenter = new BlockPos(center.getX(), minY, center.getZ());
-            buildSolidFoundation(level, solidCenter, 6);
+            buildSolidFoundation(level, solidCenter, 7);
             boolean placed = TeyvatStructureManager.placeNbtStructure(level, solidCenter, shrineNbt, -6, 0, -6);
             if (placed) {
-                // Colocar y poblar el cofre lujoso sellado en el centro del santuario
                 BlockPos chestPos = solidCenter.above(1);
                 level.setBlock(chestPos, SystemBlocks.LOCKED_TREASURE_CHEST.get().defaultBlockState().setValue(LockedTreasureChestBlock.LOCKED, true), 3);
                 populateShrineChestLoot(level, chestPos, rand);
@@ -1331,37 +1473,57 @@ public final class TeyvatWorldGenManager {
         return false;
     }
 
-    private static void populateShrineChestLoot(ServerLevelAccessor level, BlockPos pos, RandomSource rand) {
+    public static void populateShrineChestLoot(ServerLevelAccessor level, BlockPos pos, RandomSource rand) {
         var be = level.getBlockEntity(pos);
         if (be instanceof LockedTreasureChestBlockEntity chest) {
-            // 40 Protogemas canónicas de Santuario de las Profundidades
             chest.setItem(0, new ItemStack(SystemItems.PRIMOGEM.get(), 40));
 
-            // Destinos Entrelazados / Encuentros del Destino (1 o 2 tiradas de gacha)
             if (SystemItems.INTERTWINED_FATE.isBound()) {
                 chest.setItem(1, new ItemStack(SystemItems.INTERTWINED_FATE.get(), 1 + rand.nextInt(2)));
             } else if (SystemItems.ACQUAINT_FATE.isBound()) {
                 chest.setItem(1, new ItemStack(SystemItems.ACQUAINT_FATE.get(), 1 + rand.nextInt(2)));
             }
 
-            // Monedas de Mora masivas (Bolsa o Fardo de Mora)
             if (SystemItems.MORA_BUNDLE.isBound()) {
                 chest.setItem(2, new ItemStack(SystemItems.MORA_BUNDLE.get(), 1));
             } else {
                 chest.setItem(2, new ItemStack(SystemItems.MORA.get(), 64));
             }
 
-            // Artefacto Dorado (5 estrellas) de Genshin Impact
             ItemStack artifact = createRandomGenshinArtifact(rand);
             if (!artifact.isEmpty()) {
                 chest.setItem(3, artifact);
             }
 
-            // Lingotes y gemas preciosas de ascensión
             chest.setItem(4, new ItemStack(Items.DIAMOND, 2 + rand.nextInt(3)));
             chest.setItem(5, new ItemStack(Items.GOLD_INGOT, 8 + rand.nextInt(9)));
 
-            // Insignias y Fragmentos Cósmicos
+            if (SystemItems.COSMIC_FRAGMENT.isBound()) {
+                chest.setItem(6, new ItemStack(SystemItems.COSMIC_FRAGMENT.get(), 15 + rand.nextInt(15)));
+            }
+        } else if (be instanceof net.minecraft.world.level.block.entity.ChestBlockEntity chest) {
+            chest.setItem(0, new ItemStack(SystemItems.PRIMOGEM.get(), 40));
+
+            if (SystemItems.INTERTWINED_FATE.isBound()) {
+                chest.setItem(1, new ItemStack(SystemItems.INTERTWINED_FATE.get(), 1 + rand.nextInt(2)));
+            } else if (SystemItems.ACQUAINT_FATE.isBound()) {
+                chest.setItem(1, new ItemStack(SystemItems.ACQUAINT_FATE.get(), 1 + rand.nextInt(2)));
+            }
+
+            if (SystemItems.MORA_BUNDLE.isBound()) {
+                chest.setItem(2, new ItemStack(SystemItems.MORA_BUNDLE.get(), 1));
+            } else {
+                chest.setItem(2, new ItemStack(SystemItems.MORA.get(), 64));
+            }
+
+            ItemStack artifact = createRandomGenshinArtifact(rand);
+            if (!artifact.isEmpty()) {
+                chest.setItem(3, artifact);
+            }
+
+            chest.setItem(4, new ItemStack(Items.DIAMOND, 2 + rand.nextInt(3)));
+            chest.setItem(5, new ItemStack(Items.GOLD_INGOT, 8 + rand.nextInt(9)));
+
             if (SystemItems.COSMIC_FRAGMENT.isBound()) {
                 chest.setItem(6, new ItemStack(SystemItems.COSMIC_FRAGMENT.get(), 15 + rand.nextInt(15)));
             }
@@ -1532,11 +1694,14 @@ public final class TeyvatWorldGenManager {
             }
             case "cryo_regisvine", "regisvine", "regisvid", "regisvid_cryo" -> {
                 buildSolidFoundation(level, pos, 16);
-                for (int dx = -14; dx <= 14; dx++) {
-                    for (int dz = -14; dz <= 14; dz++) {
-                        if (dx * dx + dz * dz <= 14 * 14) {
-                            BlockState floor = (dx * dx + dz * dz <= 6 * 6) ? Blocks.BLUE_ICE.defaultBlockState() : Blocks.PACKED_ICE.defaultBlockState();
-                            level.setBlock(pos.offset(dx, 0, dz), floor, 2);
+                boolean ok = TeyvatStructureManager.placeNbtStructure(level, pos, "cryoregisvine_final", -11, 0, -12);
+                if (!ok) {
+                    for (int dx = -14; dx <= 14; dx++) {
+                        for (int dz = -14; dz <= 14; dz++) {
+                            if (dx * dx + dz * dz <= 14 * 14) {
+                                BlockState floor = (dx * dx + dz * dz <= 6 * 6) ? Blocks.BLUE_ICE.defaultBlockState() : Blocks.PACKED_ICE.defaultBlockState();
+                                level.setBlock(pos.offset(dx, 0, dz), floor, 2);
+                            }
                         }
                     }
                 }
@@ -1567,11 +1732,14 @@ public final class TeyvatWorldGenManager {
             }
             case "electro_regisvine", "regisvine_electro", "regisvid_electro" -> {
                 buildSolidFoundation(level, pos, 16);
-                for (int dx = -14; dx <= 14; dx++) {
-                    for (int dz = -14; dz <= 14; dz++) {
-                        if (dx * dx + dz * dz <= 14 * 14) {
-                            BlockState floor = (dx * dx + dz * dz <= 6 * 6) ? Blocks.AMETHYST_BLOCK.defaultBlockState() : Blocks.PURPLE_CONCRETE.defaultBlockState();
-                            level.setBlock(pos.offset(dx, 0, dz), floor, 2);
+                boolean ok = TeyvatStructureManager.placeNbtStructure(level, pos, "arena_electro_regisvine", -15, 0, -15);
+                if (!ok) {
+                    for (int dx = -14; dx <= 14; dx++) {
+                        for (int dz = -14; dz <= 14; dz++) {
+                            if (dx * dx + dz * dz <= 14 * 14) {
+                                BlockState floor = (dx * dx + dz * dz <= 6 * 6) ? Blocks.AMETHYST_BLOCK.defaultBlockState() : Blocks.PURPLE_CONCRETE.defaultBlockState();
+                                level.setBlock(pos.offset(dx, 0, dz), floor, 2);
+                            }
                         }
                     }
                 }
@@ -1583,11 +1751,14 @@ public final class TeyvatWorldGenManager {
             }
             case "snowboar_king", "gran_rey_jabali", "great_snowboar_king" -> {
                 buildSolidFoundation(level, pos, 16);
-                for (int dx = -14; dx <= 14; dx++) {
-                    for (int dz = -14; dz <= 14; dz++) {
-                        if (dx * dx + dz * dz <= 14 * 14) {
-                            BlockState floor = (dx * dx + dz * dz <= 6 * 6) ? Blocks.PACKED_ICE.defaultBlockState() : Blocks.SNOW_BLOCK.defaultBlockState();
-                            level.setBlock(pos.offset(dx, 0, dz), floor, 2);
+                boolean ok = TeyvatStructureManager.placeNbtStructure(level, pos, "arena_snowboar_king", -14, 0, -14);
+                if (!ok) {
+                    for (int dx = -14; dx <= 14; dx++) {
+                        for (int dz = -14; dz <= 14; dz++) {
+                            if (dx * dx + dz * dz <= 14 * 14) {
+                                BlockState floor = (dx * dx + dz * dz <= 6 * 6) ? Blocks.PACKED_ICE.defaultBlockState() : Blocks.SNOW_BLOCK.defaultBlockState();
+                                level.setBlock(pos.offset(dx, 0, dz), floor, 2);
+                            }
                         }
                     }
                 }
@@ -1599,11 +1770,14 @@ public final class TeyvatWorldGenManager {
             }
             case "oceanid", "rhodeia", "oceanida" -> {
                 buildSolidFoundation(level, pos, 18);
-                for (int dx = -16; dx <= 16; dx++) {
-                    for (int dz = -16; dz <= 16; dz++) {
-                        if (dx * dx + dz * dz <= 16 * 16) {
-                            BlockState floor = (dx * dx + dz * dz <= 8 * 8) ? Blocks.WATER.defaultBlockState() : Blocks.PRISMARINE_BRICKS.defaultBlockState();
-                            level.setBlock(pos.offset(dx, 0, dz), floor, 2);
+                boolean ok = TeyvatStructureManager.placeNbtStructure(level, pos, "arena_rhodeia_oceanid", -16, 0, -16);
+                if (!ok) {
+                    for (int dx = -16; dx <= 16; dx++) {
+                        for (int dz = -16; dz <= 16; dz++) {
+                            if (dx * dx + dz * dz <= 16 * 16) {
+                                BlockState floor = (dx * dx + dz * dz <= 8 * 8) ? Blocks.WATER.defaultBlockState() : Blocks.PRISMARINE_BRICKS.defaultBlockState();
+                                level.setBlock(pos.offset(dx, 0, dz), floor, 2);
+                            }
                         }
                     }
                 }
@@ -1615,11 +1789,14 @@ public final class TeyvatWorldGenManager {
             }
             case "perpetual_mechanical_array", "pma", "matriz_mecanica" -> {
                 buildSolidFoundation(level, pos, 16);
-                for (int dx = -14; dx <= 14; dx++) {
-                    for (int dz = -14; dz <= 14; dz++) {
-                        if (dx * dx + dz * dz <= 14 * 14) {
-                            BlockState floor = (dx * dx + dz * dz <= 6 * 6) ? Blocks.POLISHED_DEEPSLATE.defaultBlockState() : Blocks.SMOOTH_STONE.defaultBlockState();
-                            level.setBlock(pos.offset(dx, 0, dz), floor, 2);
+                boolean ok = TeyvatStructureManager.placeNbtStructure(level, pos, "arena_perpetual_mechanical_array", -14, 0, -14);
+                if (!ok) {
+                    for (int dx = -14; dx <= 14; dx++) {
+                        for (int dz = -14; dz <= 14; dz++) {
+                            if (dx * dx + dz * dz <= 14 * 14) {
+                                BlockState floor = (dx * dx + dz * dz <= 6 * 6) ? Blocks.POLISHED_DEEPSLATE.defaultBlockState() : Blocks.SMOOTH_STONE.defaultBlockState();
+                                level.setBlock(pos.offset(dx, 0, dz), floor, 2);
+                            }
                         }
                     }
                 }
@@ -1631,11 +1808,14 @@ public final class TeyvatWorldGenManager {
             }
             case "ruin_serpent", "serpiente_ruinas", "serpiente_de_las_ruinas" -> {
                 buildSolidFoundation(level, pos, 18);
-                for (int dx = -16; dx <= 16; dx++) {
-                    for (int dz = -16; dz <= 16; dz++) {
-                        if (dx * dx + dz * dz <= 16 * 16) {
-                            BlockState floor = (dx * dx + dz * dz <= 7 * 7) ? Blocks.MUD.defaultBlockState() : Blocks.BLACKSTONE.defaultBlockState();
-                            level.setBlock(pos.offset(dx, 0, dz), floor, 2);
+                boolean ok = TeyvatStructureManager.placeNbtStructure(level, pos, "arena_ruin_serpent", -16, 0, -16);
+                if (!ok) {
+                    for (int dx = -16; dx <= 16; dx++) {
+                        for (int dz = -16; dz <= 16; dz++) {
+                            if (dx * dx + dz * dz <= 16 * 16) {
+                                BlockState floor = (dx * dx + dz * dz <= 7 * 7) ? Blocks.MUD.defaultBlockState() : Blocks.BLACKSTONE.defaultBlockState();
+                                level.setBlock(pos.offset(dx, 0, dz), floor, 2);
+                            }
                         }
                     }
                 }
@@ -1673,7 +1853,7 @@ public final class TeyvatWorldGenManager {
                 data.recordNamedStructure("thunderhelm_lawachurl", pos);
                 return true;
             }
-            case "anemo_shrine", "santuario_anemo", "shrine_anemo" -> {
+            case "anemo_shrine", "anemo_shrine_of_depths", "anemo_shrine_of_depths_final", "santuario_anemo", "shrine_anemo" -> {
                 buildSolidFoundation(level, pos, 7);
                 boolean ok = TeyvatStructureManager.placeNbtStructure(level, pos, "anemo_shrine_of_depths_final", -6, 0, -6);
                 if (ok) {
@@ -1685,7 +1865,7 @@ public final class TeyvatWorldGenManager {
                     return true;
                 }
             }
-            case "geo_shrine", "santuario_geo", "shrine_geo" -> {
+            case "geo_shrine", "geo_shrine_of_depths", "geo_shrine_of_depths_final", "santuario_geo", "shrine_geo" -> {
                 buildSolidFoundation(level, pos, 7);
                 boolean ok = TeyvatStructureManager.placeNbtStructure(level, pos, "geo_shrine_of_depths_final", -6, 0, -6);
                 if (ok) {
@@ -1697,7 +1877,7 @@ public final class TeyvatWorldGenManager {
                     return true;
                 }
             }
-            case "electro_shrine", "santuario_electro", "shrine_electro" -> {
+            case "electro_shrine", "electro_shrine_of_depths", "electro_shrine_of_depths_final", "santuario_electro", "shrine_electro" -> {
                 buildSolidFoundation(level, pos, 7);
                 boolean ok = TeyvatStructureManager.placeNbtStructure(level, pos, "electro_shrine_of_depths_final", -6, 0, -6);
                 if (ok) {
@@ -1709,7 +1889,7 @@ public final class TeyvatWorldGenManager {
                     return true;
                 }
             }
-            case "dendro_shrine", "santuario_dendro", "shrine_dendro", "shrine", "santuario" -> {
+            case "dendro_shrine", "dendro_shrine_of_depths", "dendro_shrine_of_depths_final", "santuario_dendro", "shrine_dendro", "shrine", "santuario" -> {
                 buildSolidFoundation(level, pos, 7);
                 boolean ok = TeyvatStructureManager.placeNbtStructure(level, pos, "dendro_shrine_of_depths_final", -6, 0, -6);
                 if (ok) {
@@ -1741,15 +1921,12 @@ public final class TeyvatWorldGenManager {
             }
             case "fix_arenas", "clean_arenas", "fix_structures", "clean" -> {
                 int totalPurged = 0;
-                // 1. Limpiar la arena actual donde se encuentra el jugador
                 totalPurged += TeyvatStructureManager.clearArenaCylinder(level, pos, 22, 35);
 
-                // 2. Limpiar todas las arenas de jefes registradas en Teyvat
                 for (BlockPos arenaPos : data.bossArenas) {
                     totalPurged += TeyvatStructureManager.clearArenaCylinder(level, arenaPos, 20, 35);
                 }
 
-                // 3. Limpiar también Windrise si existe
                 BlockPos windrisePos = data.namedStructures.getOrDefault("windrise", new BlockPos(90, 68, -140));
                 totalPurged += TeyvatStructureManager.purgeParasiteTreesInsideWindrise(level, windrisePos);
 
@@ -1863,6 +2040,13 @@ public final class TeyvatWorldGenManager {
                 data.recordNamedStructure("monument", pos);
                 return true;
             }
+            case "casino", "gran_casino", "casino_teyvat" -> {
+                TeyvatCasinoBuilder.buildCasino(level, pos);
+                data.regionalStructures.add(pos);
+                data.recordNamedStructure("casino", pos);
+                data.recordNamedStructure("gran_casino", pos);
+                return true;
+            }
             case "abyss", "spiral_abyss", "musk_reef", "espiral_abismo", "arrecife_musk" -> {
                 TeyvatAbyssPortalBuilder.generateMuskReefIsland(level, pos, Direction.SOUTH, TeyvatWorldManager.isAbyssActive());
                 data.regionalStructures.add(pos);
@@ -1879,5 +2063,10 @@ public final class TeyvatWorldGenManager {
             }
         }
         return false;
+    }
+
+    public static void clearCache() {
+        EVALUATED_TEYVAT_CHUNKS.clear();
+        STATUE_HEAL_COOLDOWNS.clear();
     }
 }

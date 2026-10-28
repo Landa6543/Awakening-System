@@ -14,51 +14,51 @@ public final class ConstellationAscension {
     private static final Random RNG = new Random();
 
     private static final List<String> STRENGTH_TITLES = List.of(
-            "Soberano de la Espada Primordial",
-            "Destructor de Montañas y Cielos",
-            "Señor de la Furia de Hierro",
-            "Titán del Juicio de Sangre",
-            "Monarca del Puño Inquebrantable"
+            "Sovereign of the Primordial Sword",
+            "Destroyer of Mountains and Skies",
+            "Lord of Iron Fury",
+            "Titan of Blood Judgment",
+            "Monarch of the Unbreakable Fist"
     );
 
     private static final List<String> AGILITY_TITLES = List.of(
-            "Sombra del Viento Silencioso",
-            "Cazador de la Luna Plateada",
-            "Danza de la Tormenta Espectral",
-            "Fantasma del Abismo Rápido",
-            "Relámpago de la Noche Estrellada"
+            "Shadow of the Silent Wind",
+            "Hunter of the Silver Moon",
+            "Dance of the Spectral Storm",
+            "Ghost of the Swift Abyss",
+            "Lightning of the Starry Night"
     );
 
     private static final List<String> VITALITY_TITLES = List.of(
-            "Guardián de la Vida Eterna",
-            "Bastión de la Fortaleza Imperecedera",
-            "Corazón del Fénix Inmortal",
-            "Señor de las Cien Heridas",
-            "Escudo del Ocaso Sin Fin"
+            "Guardian of Eternal Life",
+            "Bastion of Imperishable Fortitude",
+            "Heart of the Immortal Phoenix",
+            "Lord of the Hundred Wounds",
+            "Shield of Endless Twilight"
     );
 
     private static final List<String> INTELLIGENCE_TITLES = List.of(
-            "Arquitecto del Conocimiento Arcano",
-            "Señor de la Biblioteca Infinita",
-            "Gobernante del Destino Cósmico",
-            "Tejedor del Caos Estelar",
-            "Maestro de los Secretos del Vacío"
+            "Architect of Arcane Knowledge",
+            "Master of the Infinite Library",
+            "Ruler of Cosmic Destiny",
+            "Weaver of Stellar Chaos",
+            "Master of Void Secrets"
     );
 
     private static final List<String> WILLPOWER_TITLES = List.of(
-            "Monarca de la Voluntad Inquebrantable",
-            "Ermitaño del Vórtice del Alma",
-            "Juez del Vacío Sombrío",
-            "Soberano del Trance Carmesí",
-            "Espíritu que Desafía al Destino"
+            "Monarch of Unyielding Will",
+            "Hermit of the Soul Vortex",
+            "Judge of the Somber Void",
+            "Sovereign of the Crimson Trance",
+            "Spirit That Defies Fate"
     );
 
     private static final List<String> PERCEPTION_TITLES = List.of(
-            "Ojo del Destino Olvidado",
-            "Observador de la Realidad Distante",
-            "Oráculo del Ocaso Silencioso",
-            "Vigía de las Estrellas Lejanas",
-            "Aquel que Ve a Través del Velo"
+            "Eye of Forgotten Destiny",
+            "Watcher of Distant Reality",
+            "Oracle of Silent Twilight",
+            "Sentinel of Distant Stars",
+            "He Who Sees Through the Veil"
     );
 
     private ConstellationAscension() {}
@@ -95,14 +95,13 @@ public final class ConstellationAscension {
         data.setIsConstellation(true);
         data.setConstellationModifier(modifier);
 
-        // Anuncio ceremonial del Transmisor Estelar en el chat de todo el servidor
         if (player.getServer() != null) {
             String pName = player.getScoreboardName();
             for (ServerPlayer p : player.getServer().getPlayerList().getPlayers()) {
                 p.playNotifySound(SoundEvents.UI_TOAST_CHALLENGE_COMPLETE, SoundSource.MASTER, 1.0F, 1.0F);
 
-                // Notificación emergente holográfica del Sistema en pantalla
-                String displayMod = getTranslatedTitleComponent(modifier).getString();
+                String titleKey = getTitleTranslationKey(modifier);
+                String displayMod = (titleKey != null) ? titleKey : modifier;
                 if (p.getUUID().equals(player.getUUID())) {
                     AwakeningSystemMod.notify(p,
                             "awakening_system.notification.constellation.ascension_self_title",
@@ -117,7 +116,6 @@ public final class ConstellationAscension {
             }
         }
 
-        // Efectos visuales de ascensión
         if (player.level() instanceof ServerLevel sl) {
             sl.sendParticles(ParticleTypes.END_ROD, player.getX(), player.getY() + 1.0D, player.getZ(), 80, 1.2D, 1.5D, 1.2D, 0.15D);
             sl.sendParticles(ParticleTypes.SOUL, player.getX(), player.getY() + 1.0D, player.getZ(), 50, 1.0D, 1.0D, 1.0D, 0.08D);
@@ -128,12 +126,42 @@ public final class ConstellationAscension {
         return true;
     }
 
+    public static boolean isEligibleForAscension(SystemData data) {
+        if (data == null || data.isConstellation()) return false;
+        // 1. Requisito de Nivel: Al menos Nivel 50
+        if (data.level() < 50) return false;
+        // 2. Requisito de Fábulas: Al menos 8 fábulas desbloqueadas
+        if (data.unlockedFables().size() < 8) return false;
+        // 3. Requisito de Peso Narrativo: Al menos 400 puntos de peso
+        if (data.fableWeight() < 400) return false;
+
+        // 4. Pirámide Narrativa Canónica del Star Stream:
+        // - Al menos 1 Fábula MÍTICA o RELATO GIGANTE
+        // - Al menos 2 Fábulas LEGENDARIAS o SEMIMÍTICAS
+        // - Al menos 3 Fábulas HISTÓRICAS
+        int mythOrGiant = 0;
+        int legendaryOrSemi = 0;
+        int historical = 0;
+
+        for (String fId : data.unlockedFables()) {
+            var f = com.soybe.awakeningsystem.fable.FableDefinitions.get(fId);
+            if (f == null) continue;
+            switch (f.grade()) {
+                case GIANT_STORY, MYTH -> mythOrGiant++;
+                case LEGENDARY, SEMI_MYTH -> legendaryOrSemi++;
+                case HISTORICAL -> historical++;
+            }
+        }
+
+        return mythOrGiant >= 1 && legendaryOrSemi >= 2 && historical >= 3;
+    }
+
     public static void checkMonarchBossDefeat(ServerPlayer player, int bossVariant) {
         SystemData data = SystemEvents.data(player);
         if (data == null || data.isConstellation()) return;
 
-        String bossName = (bossVariant == 1) ? "Ashborn, Monarca de las Sombras" : "Antares, Monarca de la Destrucción";
-        triggerAscension(player, "Victoria Épica sobre " + bossName, null);
+        SystemEvents.grantFable(player, "first_monarch_defeat");
+        checkFableAscension(player);
     }
 
     public static void checkRedGateClear(ServerPlayer player, String rank) {
@@ -142,76 +170,86 @@ public final class ConstellationAscension {
 
         int tier = DungeonManager.getRankTier(rank);
         if (tier >= 7) {
-            triggerAscension(player, "Superación de Gate Rojo de Calamidad Rango " + rank, null);
+            SystemEvents.grantFable(player, "dungeon_red_gate_conqueror");
+            if (tier >= 10) {
+                SystemEvents.grantFable(player, "gate_breaker_s_rank");
+            }
+            checkFableAscension(player);
         }
     }
 
     public static void checkLevelMilestone(ServerPlayer player, int level) {
         SystemData data = SystemEvents.data(player);
-        if (data == null || data.isConstellation()) return;
-
-        // Requisito canónico de ORV: El nivel ordinario por sí solo no otorga estatus de Constelación.
-        // La ascensión a Constelación requiere acumulación de Fábulas míticas (checkFableAscension)
-        // o derrotar Monarcas supremos (checkMonarchBossDefeat) o Gates Calamitosos (checkRedGateClear).
+        if (data == null) return;
+        if (level >= 100) {
+            SystemEvents.grantFable(player, "first_level_100");
+        }
+        if (level >= 200) {
+            SystemEvents.grantFable(player, "level_200_demigod");
+        }
+        checkFableAscension(player);
     }
 
     public static void checkFableAscension(ServerPlayer player) {
         SystemData data = SystemEvents.data(player);
         if (data == null || data.isConstellation()) return;
 
-        // Requisito de ORV: al menos 5 fábulas y un peso de fábulas de 150+
-        if (data.unlockedFables().size() >= 5 && data.fableWeight() >= 150) {
-            triggerAscension(player, "Acumulación Trascendente de Fábulas (" + data.fableWeight() + " Peso Estelar)", null);
+        if (isEligibleForAscension(data)) {
+            triggerAscension(player, "awakening_system.ascension.reason.fable_accumulation@@@" + data.fableWeight(), null);
         }
     }
 
-    public static Component getTranslatedTitleComponent(String modifier) {
+    public static String getTitleTranslationKey(String modifier) {
         if (modifier == null || modifier.isEmpty()) {
-            return Component.translatable("awakening_system.constellation.default_modifier");
+            return "awakening_system.constellation.default_modifier";
         }
-        String key = switch (modifier.trim()) {
-            case "Soberano de la Espada Primordial" -> "awakening_system.constellation.title.sovereign_primordial_sword";
-            case "Destructor de Montañas y Cielos" -> "awakening_system.constellation.title.destroyer_mountains_skies";
-            case "Señor de la Furia de Hierro" -> "awakening_system.constellation.title.lord_iron_fury";
-            case "Titán del Juicio de Sangre" -> "awakening_system.constellation.title.titan_blood_judgment";
-            case "Monarca del Puño Inquebrantable" -> "awakening_system.constellation.title.monarch_unbreakable_fist";
+        return switch (modifier.trim()) {
+            case "Sovereign of the Primordial Sword" -> "awakening_system.constellation.title.sovereign_primordial_sword";
+            case "Destroyer of Mountains and Skies" -> "awakening_system.constellation.title.destroyer_mountains_skies";
+            case "Lord of Iron Fury" -> "awakening_system.constellation.title.lord_iron_fury";
+            case "Titan of Blood Judgment" -> "awakening_system.constellation.title.titan_blood_judgment";
+            case "Monarch of the Unbreakable Fist" -> "awakening_system.constellation.title.monarch_unbreakable_fist";
 
-            case "Sombra del Viento Silencioso" -> "awakening_system.constellation.title.shadow_silent_wind";
-            case "Cazador de la Luna Plateada" -> "awakening_system.constellation.title.hunter_silver_moon";
-            case "Danza de la Tormenta Espectral" -> "awakening_system.constellation.title.dance_spectral_storm";
-            case "Fantasma del Abismo Rápido" -> "awakening_system.constellation.title.ghost_swift_abyss";
-            case "Relámpago de la Noche Estrellada" -> "awakening_system.constellation.title.lightning_starry_night";
+            case "Shadow of the Silent Wind" -> "awakening_system.constellation.title.shadow_silent_wind";
+            case "Hunter of the Silver Moon" -> "awakening_system.constellation.title.hunter_silver_moon";
+            case "Dance of the Spectral Storm" -> "awakening_system.constellation.title.dance_spectral_storm";
+            case "Ghost of the Swift Abyss" -> "awakening_system.constellation.title.ghost_swift_abyss";
+            case "Lightning of the Starry Night" -> "awakening_system.constellation.title.lightning_starry_night";
 
-            case "Guardián de la Vida Eterna" -> "awakening_system.constellation.title.guardian_eternal_life";
-            case "Bastión de la Fortaleza Imperecedera" -> "awakening_system.constellation.title.bastion_imperishable_fortitude";
-            case "Corazón del Fénix Inmortal" -> "awakening_system.constellation.title.heart_immortal_phoenix";
-            case "Señor de las Cien Heridas" -> "awakening_system.constellation.title.lord_hundred_wounds";
-            case "Escudo del Ocaso Sin Fin" -> "awakening_system.constellation.title.shield_endless_twilight";
+            case "Guardian of Eternal Life" -> "awakening_system.constellation.title.guardian_eternal_life";
+            case "Bastion of Imperishable Fortitude" -> "awakening_system.constellation.title.bastion_imperishable_fortitude";
+            case "Heart of the Immortal Phoenix" -> "awakening_system.constellation.title.heart_immortal_phoenix";
+            case "Lord of the Hundred Wounds" -> "awakening_system.constellation.title.lord_hundred_wounds";
+            case "Shield of Endless Twilight" -> "awakening_system.constellation.title.shield_endless_twilight";
 
-            case "Arquitecto del Conocimiento Arcano" -> "awakening_system.constellation.title.architect_arcane_knowledge";
-            case "Señor de la Biblioteca Infinita" -> "awakening_system.constellation.title.master_infinite_library";
-            case "Gobernante del Destino Cósmico" -> "awakening_system.constellation.title.ruler_cosmic_destiny";
-            case "Tejedor del Caos Estelar" -> "awakening_system.constellation.title.weaver_stellar_chaos";
-            case "Maestro de los Secretos del Vacío" -> "awakening_system.constellation.title.master_void_secrets";
+            case "Architect of Arcane Knowledge" -> "awakening_system.constellation.title.architect_arcane_knowledge";
+            case "Master of the Infinite Library" -> "awakening_system.constellation.title.master_infinite_library";
+            case "Ruler of Cosmic Destiny" -> "awakening_system.constellation.title.ruler_cosmic_destiny";
+            case "Weaver of Stellar Chaos" -> "awakening_system.constellation.title.weaver_stellar_chaos";
+            case "Master of Void Secrets" -> "awakening_system.constellation.title.master_void_secrets";
 
-            case "Monarca de la Voluntad Inquebrantable" -> "awakening_system.constellation.title.monarch_unyielding_will";
-            case "Ermitaño del Vórtice del Alma" -> "awakening_system.constellation.title.hermit_soul_vortex";
-            case "Juez del Vacío Sombrío" -> "awakening_system.constellation.title.judge_somber_void";
-            case "Soberano del Trance Carmesí" -> "awakening_system.constellation.title.sovereign_crimson_trance";
-            case "Espíritu que Desafía al Destino" -> "awakening_system.constellation.title.spirit_defies_fate";
+            case "Monarch of Unyielding Will" -> "awakening_system.constellation.title.monarch_unyielding_will";
+            case "Hermit of the Soul Vortex" -> "awakening_system.constellation.title.hermit_soul_vortex";
+            case "Judge of the Somber Void" -> "awakening_system.constellation.title.judge_somber_void";
+            case "Sovereign of the Crimson Trance" -> "awakening_system.constellation.title.sovereign_crimson_trance";
+            case "Spirit That Defies Fate" -> "awakening_system.constellation.title.spirit_defies_fate";
 
-            case "Ojo del Destino Olvidado" -> "awakening_system.constellation.title.eye_forgotten_destiny";
-            case "Observador de la Realidad Distante" -> "awakening_system.constellation.title.watcher_distant_reality";
-            case "Oráculo del Ocaso Silencioso" -> "awakening_system.constellation.title.oracle_silent_twilight";
-            case "Vigía de las Estrellas Lejanas" -> "awakening_system.constellation.title.sentinel_distant_stars";
-            case "Aquel que Ve a Través del Velo" -> "awakening_system.constellation.title.he_who_sees_veil";
+            case "Eye of Forgotten Destiny" -> "awakening_system.constellation.title.eye_forgotten_destiny";
+            case "Watcher of Distant Reality" -> "awakening_system.constellation.title.watcher_distant_reality";
+            case "Oracle of Silent Twilight" -> "awakening_system.constellation.title.oracle_silent_twilight";
+            case "Sentinel of Distant Stars" -> "awakening_system.constellation.title.sentinel_distant_stars";
+            case "He Who Sees Through the Veil" -> "awakening_system.constellation.title.he_who_sees_veil";
 
-            case "Constelación Despertada" -> "awakening_system.constellation.default_modifier";
+            case "Awakened Constellation" -> "awakening_system.constellation.default_modifier";
             default -> null;
         };
+    }
+
+    public static Component getTranslatedTitleComponent(String modifier) {
+        String key = getTitleTranslationKey(modifier);
         if (key != null) {
             return Component.translatable(key);
         }
-        return Component.literal(modifier);
+        return (modifier != null && !modifier.isEmpty()) ? Component.literal(modifier) : Component.translatable("awakening_system.constellation.default_modifier");
     }
 }

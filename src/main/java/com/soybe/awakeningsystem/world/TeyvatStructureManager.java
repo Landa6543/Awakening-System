@@ -32,48 +32,57 @@ import java.util.Optional;
 public final class TeyvatStructureManager {
     private TeyvatStructureManager() {}
 
+    private static final java.util.Map<String, StructureTemplate> TEMPLATE_CACHE = new java.util.concurrent.ConcurrentHashMap<>();
     private static volatile boolean spawnTreeGenerated = false;
+
+    public static void clearCache() {
+        TEMPLATE_CACHE.clear();
+    }
 
     /**
      * Carga y coloca una estructura NBT en las coordenadas dadas con el desfase especificado.
      */
     public static boolean placeNbtStructure(ServerLevelAccessor level, BlockPos center, String name, int offsetX, int offsetY, int offsetZ) {
         try {
-            ResourceLocation id = ResourceLocation.fromNamespaceAndPath(AwakeningSystemMod.MOD_ID, name);
             ServerLevel serverLevel = level.getLevel();
-            StructureTemplateManager stm = serverLevel.getStructureManager();
-            Optional<StructureTemplate> opt = stm.get(id);
+            StructureTemplate template = TEMPLATE_CACHE.get(name);
 
-            StructureTemplate template = null;
-            if (opt.isPresent()) {
-                template = opt.get();
-            } else {
-                // Intentar leer desde el classpath
-                String[] paths = {
-                        "/data/awakening_system/structure/" + name + ".nbt",
-                        "/data/awakening_system/structures/" + name + ".nbt"
-                };
-                for (String p : paths) {
-                    try (InputStream in = TeyvatStructureManager.class.getResourceAsStream(p)) {
-                        if (in != null) {
-                            CompoundTag tag = NbtIo.readCompressed(in, NbtAccounter.unlimitedHeap());
-                            template = new StructureTemplate();
-                            template.load(serverLevel.holderLookup(Registries.BLOCK), tag);
-                            break;
+            if (template == null) {
+                ResourceLocation id = ResourceLocation.fromNamespaceAndPath(AwakeningSystemMod.MOD_ID, name);
+                StructureTemplateManager stm = serverLevel.getStructureManager();
+                Optional<StructureTemplate> opt = stm.get(id);
+
+                if (opt.isPresent()) {
+                    template = opt.get();
+                } else {
+                    String[] paths = {
+                            "/data/awakening_system/structure/" + name + ".nbt",
+                            "/data/awakening_system/structures/" + name + ".nbt"
+                    };
+                    for (String p : paths) {
+                        try (InputStream in = TeyvatStructureManager.class.getResourceAsStream(p)) {
+                            if (in != null) {
+                                CompoundTag tag = NbtIo.readCompressed(in, NbtAccounter.unlimitedHeap());
+                                remapOldBlockNamespaces(tag);
+                                template = new StructureTemplate();
+                                template.load(serverLevel.holderLookup(Registries.BLOCK), tag);
+                                break;
+                            }
+                        } catch (Exception e) {
+                            AwakeningSystemMod.LOGGER.debug("Could not read template {} from {}: {}", name, p, e.getMessage());
                         }
-                    } catch (Exception ignored) {}
+                    }
+                }
+                if (template != null) {
+                    TEMPLATE_CACHE.put(name, template);
                 }
             }
 
             if (template != null) {
                 BlockPos origin = center.offset(offsetX, offsetY, offsetZ);
 
-                // Limpiar previamente vegetación en la zona de la estructura
-                net.minecraft.core.Vec3i templateSize = template.getSize();
                 if (name.contains("hypos") || name.contains("bunker") || name.contains("regisvine") || name.contains("arena")) {
-                    clearArenaCylinder(level, center, 20, 35);
-                } else {
-                    clearAllVegetationInArea(level, origin, templateSize);
+                    clearArenaCylinder(level, center, 12, 14);
                 }
 
                 StructurePlaceSettings settings = new StructurePlaceSettings()
@@ -84,33 +93,63 @@ public final class TeyvatStructureManager {
 
                 template.placeInWorld(level, origin, origin, settings, level.getRandom(), 2);
 
-                // Limpieza y adaptación de barreras invisibles o spawners accidentales
-                net.minecraft.core.Vec3i size = template.getSize();
-                for (int dx = 0; dx < size.getX(); dx++) {
-                    for (int dy = 0; dy < size.getY(); dy++) {
-                        for (int dz = 0; dz < size.getZ(); dz++) {
-                            BlockPos check = origin.offset(dx, dy, dz);
-                            BlockState st = level.getBlockState(check);
-                            if (name.contains("shrine_of_depths")) {
+                if (name.contains("shrine_of_depths")) {
+                    net.minecraft.core.Vec3i size = template.getSize();
+                    for (int dx = 0; dx < size.getX(); dx++) {
+                        for (int dy = 0; dy < size.getY(); dy++) {
+                            for (int dz = 0; dz < size.getZ(); dz++) {
+                                BlockPos check = origin.offset(dx, dy, dz);
+                                BlockState st = level.getBlockState(check);
                                 if (st.is(Blocks.BARRIER)) {
                                     level.setBlock(check, com.soybe.awakeningsystem.block.SystemBlocks.ELEMENTAL_BARRIER.get().defaultBlockState(), 2);
                                 }
-                                if (st.is(Blocks.CHEST) || st.is(Blocks.TRAPPED_CHEST)) {
-                                    level.setBlock(check, Blocks.AIR.defaultBlockState(), 2);
+                                if (st.is(Blocks.CHEST) || st.is(Blocks.TRAPPED_CHEST) || st.is(com.soybe.awakeningsystem.block.SystemBlocks.LOCKED_TREASURE_CHEST.get())) {
+                                    level.setBlock(check, com.soybe.awakeningsystem.block.SystemBlocks.LOCKED_TREASURE_CHEST.get().defaultBlockState().setValue(com.soybe.awakeningsystem.block.LockedTreasureChestBlock.LOCKED, true), 3);
+                                    TeyvatWorldGenManager.populateShrineChestLoot(level, check, level.getRandom());
                                 }
-                            } else {
-                                if (st.is(Blocks.BARRIER) || st.is(com.soybe.awakeningsystem.block.SystemBlocks.ELEMENTAL_BARRIER.get())) {
-                                    level.setBlock(check, Blocks.AIR.defaultBlockState(), 2);
-                                }
-                            }
-                            if ((name.contains("shrine") || name.contains("bank") || name.contains("santuario") || name.contains("temple")) && st.is(Blocks.SPAWNER)) {
-                                level.setBlock(check, Blocks.AIR.defaultBlockState(), 2);
                             }
                         }
                     }
                 }
+                                if (name.equalsIgnoreCase("temple")) {
+                    net.minecraft.core.Vec3i size = template.getSize();
+                    BlockPos thronePos = origin.offset(size.getX() / 2, 2, size.getZ() - 25);
+                    if (serverLevel.getEntitiesOfClass(com.soybe.awakeningsystem.entity.StatueOfGodEntity.class, new net.minecraft.world.phys.AABB(thronePos).inflate(30.0D)).isEmpty()) {
+                        com.soybe.awakeningsystem.entity.StatueOfGodEntity statue = com.soybe.awakeningsystem.entity.ModEntities.STATUE_OF_GOD.get().create(serverLevel);
+                        if (statue != null) {
+                            statue.moveTo(thronePos.getX() + 0.5D, thronePos.getY(), thronePos.getZ() + 0.5D, 180.0F, 0.0F);
+                            statue.setYRot(180.0F);
+                            statue.setPersistenceRequired();
+                            serverLevel.addFreshEntity(statue);
+                        }
+                    }
+                } else if (name.equalsIgnoreCase("igris_boss_room")) {
+                    net.minecraft.core.Vec3i size = template.getSize();
+                    BlockPos bossPos = origin.offset(size.getX() / 2, 2, size.getZ() / 2);
+                    if (serverLevel.getEntitiesOfClass(com.soybe.awakeningsystem.entity.IgrisBossEntity.class, new net.minecraft.world.phys.AABB(bossPos).inflate(25.0D)).isEmpty()) {
+                        com.soybe.awakeningsystem.entity.IgrisBossEntity igris = com.soybe.awakeningsystem.entity.ModEntities.IGRIS_BOSS.get().create(serverLevel);
+                        if (igris != null) {
+                            igris.moveTo(bossPos.getX() + 0.5D, bossPos.getY(), bossPos.getZ() + 0.5D, 180.0F, 0.0F);
+                            igris.setPersistenceRequired();
+                            serverLevel.addFreshEntity(igris);
+                        }
+                    }
+                } else if (name.contains("dungeon_ant") && (name.contains("crystals") || name.endsWith("3"))) {
+                    net.minecraft.core.Vec3i size = template.getSize();
+                    BlockPos bossPos = origin.offset(size.getX() / 2, 2, size.getZ() / 2);
+                    if (serverLevel.getEntitiesOfClass(com.soybe.awakeningsystem.entity.BeruBossEntity.class, new net.minecraft.world.phys.AABB(bossPos).inflate(20.0D)).isEmpty()) {
+                        com.soybe.awakeningsystem.entity.BeruBossEntity beru = com.soybe.awakeningsystem.entity.ModEntities.BERU_BOSS.get().create(serverLevel);
+                        if (beru != null) {
+                            beru.moveTo(bossPos.getX() + 0.5D, bossPos.getY(), bossPos.getZ() + 0.5D, 0.0F, 0.0F);
+                            beru.setPersistenceRequired();
+                            serverLevel.addFreshEntity(beru);
+                        }
+                    }
+                }
 
-                AwakeningSystemMod.LOGGER.info("Estructura NBT '{}' colocada exitosamente en {}", name, origin);
+                if (serverLevel.getServer() != null) {
+                    SeriesStructureWorldGen.SeriesStructureData.get(serverLevel.getServer()).recordStructure(name, center, serverLevel.dimension());
+                }
                 return true;
             } else {
                 AwakeningSystemMod.LOGGER.error("No se pudo cargar la estructura NBT '{}'", name);
@@ -133,7 +172,6 @@ public final class TeyvatStructureManager {
             treePos = new BlockPos(90, surfaceY, -140);
         }
 
-        // Cargar chunks circundantes (-5 a +5)
         int centerChunkX = treePos.getX() >> 4;
         int centerChunkZ = treePos.getZ() >> 4;
         for (int dx = -5; dx <= 5; dx++) {
@@ -142,7 +180,6 @@ public final class TeyvatStructureManager {
             }
         }
 
-        // Verificar si ya está colocado
         BlockPos checkPos = treePos.above(10);
         if (level.getBlockState(checkPos).is(Blocks.OAK_LOG) || level.getBlockState(checkPos).is(Blocks.DARK_OAK_LOG) || level.getBlockState(checkPos).is(Blocks.OAK_WOOD)) {
             spawnTreeGenerated = true;
@@ -150,14 +187,12 @@ public final class TeyvatStructureManager {
             return;
         }
 
-        // Soporte adaptativo natural únicamente bajo el tronco central del árbol (radio 14)
         int radius = 14;
         for (int dx = -radius; dx <= radius; dx++) {
             for (int dz = -radius; dz <= radius; dz++) {
                 int distSq = dx * dx + dz * dz;
                 if (distSq <= radius * radius) {
                     BlockPos p = treePos.offset(dx, -1, dz);
-                    // Rellenar únicamente hacia abajo hasta tocar terreno sólido si hay huecos
                     for (int dy = 0; dy <= 24; dy++) {
                         BlockPos down = p.below(dy);
                         BlockState s = level.getBlockState(down);
@@ -170,7 +205,6 @@ public final class TeyvatStructureManager {
             }
         }
 
-        // Dimensiones del árbol gigante: 143x136x138 -> offset (-71, -2, -69)
         boolean success = placeNbtStructure(level, treePos, "windrise_giant_tree", -71, -2, -69);
         if (success) {
             spawnTreeGenerated = true;
@@ -178,10 +212,8 @@ public final class TeyvatStructureManager {
             SeriesStructureWorldGen.SeriesStructureData data = SeriesStructureWorldGen.SeriesStructureData.get(level.getServer());
             data.recordStructure("teyvat_windrise_tree", treePos);
 
-            // Estatua de los Siete al pie del Roble Sagrado
             TeyvatWorldGenManager.generateStatueOfTheSeven(level, treePos.offset(0, 0, 16));
 
-            // Spawns en el árbol sagrado de Windrise
             SeriesStructureBuilder.spawnNpcIfAbsent(level, treePos.offset(0, 1, 6), ModEntities.SERIES_NPC.get(), NpcProfile.GANYU);
             SeriesStructureBuilder.spawnNpcIfAbsent(level, treePos.offset(4, 1, 4), ModEntities.SERIES_NPC.get(), NpcProfile.MARCH_7TH);
         }
@@ -221,14 +253,15 @@ public final class TeyvatStructureManager {
      * eliminando cualquier árbol, tronco, hoja, farol, cadena o vegetación previa.
      */
     public static int clearArenaCylinder(LevelAccessor level, BlockPos center, int radius, int heightUp) {
+        int r = Math.min(radius, 12);
+        int h = Math.min(heightUp, 14);
         int cleared = 0;
         BlockPos.MutableBlockPos mpos = new BlockPos.MutableBlockPos();
-        int rSq = (radius + 2) * (radius + 2);
-        for (int dx = -radius - 2; dx <= radius + 2; dx++) {
-            for (int dz = -radius - 2; dz <= radius + 2; dz++) {
+        int rSq = (r + 1) * (r + 1);
+        for (int dx = -r - 1; dx <= r + 1; dx++) {
+            for (int dz = -r - 1; dz <= r + 1; dz++) {
                 if (dx * dx + dz * dz <= rSq) {
-                    // Limpiar desde 2 bloques debajo del suelo hasta heightUp
-                    for (int dy = -2; dy <= heightUp; dy++) {
+                    for (int dy = -1; dy <= h; dy++) {
                         mpos.set(center.getX() + dx, center.getY() + dy, center.getZ() + dz);
                         BlockState state = level.getBlockState(mpos);
                         if (isVegetationOrTreeBlock(state)) {
@@ -238,9 +271,6 @@ public final class TeyvatStructureManager {
                     }
                 }
             }
-        }
-        if (cleared > 0) {
-            AwakeningSystemMod.LOGGER.info("Arena vegetation clear: {} bloques eliminados en {}", cleared, center);
         }
         return cleared;
     }
@@ -310,25 +340,20 @@ public final class TeyvatStructureManager {
 
                     boolean isParasite = false;
 
-                    // 1. Abedul (Birch) - Nunca forma parte del Roble Sagrado
                     if (st.is(Blocks.BIRCH_LOG) || st.is(Blocks.BIRCH_WOOD) || st.is(Blocks.BIRCH_LEAVES)
                             || st.is(Blocks.STRIPPED_BIRCH_LOG) || st.is(Blocks.STRIPPED_BIRCH_WOOD)) {
                         isParasite = true;
                     }
-                    // 2. Cuihua / Modded custom trees
                     else if (st.is(SystemBlocks.CUIHUA_LOG.get()) || st.is(SystemBlocks.CUIHUA_LEAVES.get())
                             || st.is(SystemBlocks.CUIHUA_SAPLING.get())) {
                         isParasite = true;
                     }
-                    // 3. Tronco Vanilla Oak Log (El árbol NBT usa EXCLUSIVAMENTE oak_wood con corteza en los 6 lados)
                     else if (st.is(Blocks.OAK_LOG)) {
                         isParasite = true;
                     }
-                    // 4. Hojas generadas naturalmente sin persistencia (las del NBT tienen persistent=true)
                     else if (st.getBlock() instanceof LeavesBlock && st.hasProperty(LeavesBlock.PERSISTENT) && !st.getValue(LeavesBlock.PERSISTENT)) {
                         isParasite = true;
                     }
-                    // 5. Retoños parásitos en las ramas o suelo interior
                     else if (st.is(BlockTags.SAPLINGS)) {
                         isParasite = true;
                     }
@@ -345,5 +370,31 @@ public final class TeyvatStructureManager {
             AwakeningSystemMod.LOGGER.info("Windrise parasite purge: {} bloques parásitos eliminados con éxito en {}", purged, treePos);
         }
         return purged;
+    }
+
+    private static void remapOldBlockNamespaces(CompoundTag tag) {
+        if (tag.contains("palette", 9)) {
+            net.minecraft.nbt.ListTag palette = tag.getList("palette", 10);
+            for (int i = 0; i < palette.size(); i++) {
+                CompoundTag state = palette.getCompound(i);
+                String bName = state.getString("Name");
+                if ("solo_leveling:magic_crystal".equals(bName)) {
+                    state.putString("Name", "awakening_system:mana_crystal_cluster_c");
+                }
+            }
+        }
+        if (tag.contains("palettes", 9)) {
+            net.minecraft.nbt.ListTag palettes = tag.getList("palettes", 9);
+            for (int i = 0; i < palettes.size(); i++) {
+                net.minecraft.nbt.ListTag pal = palettes.getList(i);
+                for (int j = 0; j < pal.size(); j++) {
+                    CompoundTag state = pal.getCompound(j);
+                    String bName = state.getString("Name");
+                    if ("solo_leveling:magic_crystal".equals(bName)) {
+                        state.putString("Name", "awakening_system:mana_crystal_cluster_c");
+                    }
+                }
+            }
+        }
     }
 }

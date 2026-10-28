@@ -3,12 +3,12 @@
   "temperature": 0.4,
   "downfall": 0.4,
   "effects": {
-    "sky_color": 3874413,
-    "fog_color": 6961331,
+    "sky_color": 4270426,
+    "fog_color": 2956110,
     "water_color": 6966419,
     "water_fog_color": 6966419,
-    "grass_color": 3711064,
-    "foliage_color": 10309341,
+    "grass_color": 2067056,
+    "foliage_color": 3334340,
     "ambient_sound": "minecraft:ambient.underwater.loop",
     "mood_sound": {
       "sound": "minecraft:ambient.cave",
@@ -20,42 +20,54 @@
       "options": {
         "type": "minecraft:warped_spore"
       },
-      "probability": 0.015
+      "probability": 0.02
     }
   },
   "spawners": {
     "monster": [
       {
-        "type": "awakening_system:isekai_slime",
-        "weight": 70,
+        "type": "awakening_system:goblin_warrior",
+        "weight": 40,
         "minCount": 2,
-        "maxCount": 4
+        "maxCount": 3
+      },
+      {
+        "type": "awakening_system:shadow_direwolf",
+        "weight": 30,
+        "minCount": 1,
+        "maxCount": 2
+      },
+      {
+        "type": "awakening_system:screaming_mandrake",
+        "weight": 25,
+        "minCount": 1,
+        "maxCount": 2
+      },
+      {
+        "type": "awakening_system:jiangshi",
+        "weight": 20,
+        "minCount": 1,
+        "maxCount": 2
       }
     ],
     "creature": [
       {
-        "type": "awakening_system:astral_dragon",
-        "weight": 22,
+        "type": "awakening_system:spirit_fox",
+        "weight": 15,
+        "minCount": 1,
+        "maxCount": 3
+      },
+      {
+        "type": "awakening_system:mana_pixie",
+        "weight": 12,
         "minCount": 1,
         "maxCount": 2
       },
       {
         "type": "minecraft:allay",
-        "weight": 14,
-        "minCount": 2,
-        "maxCount": 4
-      },
-      {
-        "type": "minecraft:frog",
         "weight": 8,
-        "minCount": 2,
-        "maxCount": 4
-      },
-      {
-        "type": "minecraft:rabbit",
-        "weight": 6,
-        "minCount": 2,
-        "maxCount": 3
+        "minCount": 1,
+        "maxCount": 2
       }
     ]
   },
@@ -73,11 +85,11 @@
     [],
     [
       "minecraft:flower_flower_forest",
-      "minecraft:patch_grass_taiga",
       "minecraft:lush_caves_vegetation",
+      "minecraft:patch_grass_taiga",
       "minecraft:spore_blossom",
-      "awakening_system:mystic_crystal_tree",
-      "minecraft:patch_berry_bush"
+      "minecraft:patch_berry_bush",
+      "awakening_system:mystic_crystal_tree"
     ],
     []
   ]

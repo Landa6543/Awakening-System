@@ -23,7 +23,6 @@ public class WildfireRenderer extends MobRenderer<WildfireEntity, WildfireModel>
 
     @Override
     protected int getBlockLightLevel(WildfireEntity entity, BlockPos pos) {
-        // Brillo ardiente constante (como Blaze)
         return 15;
     }
 

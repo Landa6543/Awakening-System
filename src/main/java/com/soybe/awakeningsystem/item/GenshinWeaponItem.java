@@ -38,42 +38,35 @@ import net.minecraft.world.item.component.CustomData;
 public class GenshinWeaponItem extends SwordItem implements AwakeningWeaponItem {
 
     public enum WeaponType {
-        // --- ARMAS DE ASTA (POLEARMS) ---
-        ENGULFING_LIGHTNING("engulfing_lightning", "Luz del Segador", 5, 13, -2.4F, "Naginata sagrada de la Arconte Electro"),
-        PRIMORDIAL_JADE_WINGED_SPEAR("primordial_jade_winged_spear", "Halcón de Jade", 5, 14, -2.5F, "Lanza de jade forjada para el Conquistador de Demonios"),
-        CRIMSON_MOONS_SEMBLANCE("crimson_moons_semblance", "Semblanza de la Luna Carmesí", 5, 15, -2.8F, "Guadaña carmesí de la Sota de los Fatui"),
-        VORTEX_VANQUISHER("vortex_vanquisher", "Rompe Rocas", 5, 14, -2.6F, "Lanza mítica capaz de hender las montañas de Liyue"),
-        THE_CATCH("the_catch", "La Captura", 4, 10, -2.4F, "Tridente de pesca legendario con una tremenda carga energética"),
-        BLACK_TASSEL("black_tassel", "Borla Negra", 3, 8, -2.5F, "Lanza de cazador tradicional con punta reforzada y letal contra slimes"),
+        ENGULFING_LIGHTNING("engulfing_lightning", "Engulfing Lightning", 5, 13, -2.4F, "Sacred naginata of the Electro Archon"),
+        PRIMORDIAL_JADE_WINGED_SPEAR("primordial_jade_winged_spear", "Primordial Jade Winged-Spear", 5, 14, -2.5F, "A jade polearm forged for the Conqueror of Demons"),
+        CRIMSON_MOONS_SEMBLANCE("crimson_moons_semblance", "Crimson Moon's Semblance", 5, 15, -2.8F, "Crimson scythe of the Knave of the Fatui Harbingers"),
+        VORTEX_VANQUISHER("vortex_vanquisher", "Vortex Vanquisher", 5, 14, -2.6F, "A mythical polearm capable of cleaving the mountains of Liyue"),
+        THE_CATCH("the_catch", "\"The Catch\"", 4, 10, -2.4F, "A legendary fishing trident imbued with tremendous energetic charge"),
+        BLACK_TASSEL("black_tassel", "Black Tassel", 3, 8, -2.5F, "A traditional hunter's spear with a reinforced tip lethal against slimes"),
 
-        // --- MANDOBLES (CLAYMORES) ---
-        WOLFS_GRAVESTONE("wolfs_gravestone", "Lápida del Lobo", 5, 16, -3.0F, "Mandoble de acero puro templado con el alma del Rey del Viento"),
-        REDHORN_STONETHRESHER("redhorn_stonethresher", "Espadón Cornirrojo", 5, 15, -3.0F, "Espadón de cuerno dorado del líder supremo de la Banda de Arataki"),
-        VERDICT("verdict", "Sentencia", 5, 16, -3.1F, "Hacha ceremonial dorada de la Presidenta de Spina di Rosula"),
+        WOLFS_GRAVESTONE("wolfs_gravestone", "Wolf's Gravestone", 5, 16, -3.0F, "A pure steel greatsword tempered with the soul of the King of the Wind"),
+        REDHORN_STONETHRESHER("redhorn_stonethresher", "Redhorn Stonethresher", 5, 15, -3.0F, "A golden-horned greatsword wielded by the supreme leader of the Arataki Gang"),
+        VERDICT("verdict", "Verdict", 5, 16, -3.1F, "Golden ceremonial axe of the President of Spina di Rosula"),
 
-        // --- ESPADAS LIGERAS (SWORDS) ---
-        SKYWARD_BLADE("skyward_blade", "Hoja Afilada Celestial", 5, 13, -2.2F, "Espada que simboliza el honor del Caballero de Favonius y la bendición del Dragón del Viento"),
-        MISTSPLITTER_REFORGED("mistsplitter_reforged", "Reflejo de las Tinieblas", 5, 13, -2.2F, "Espada que brilla con la luz de una noche sin nubes"),
-        PRIMORDIAL_JADE_CUTTER("primordial_jade_cutter", "Cortador de Jade Primordial", 5, 12, -2.2F, "Hoja tallada meticulosamente a partir de jade puro"),
-        FREEDOM_SWORN("freedom_sworn", "Juramento por la Libertad", 5, 12, -2.2F, "Espada tan recta como el juramento de libertad del Viento"),
-        KEY_OF_KHAJ_NISUT("key_of_khaj_nisut", "Llave de la Coronación", 5, 12, -2.3F, "Espada ceremonial de los sacerdotes del desierto de Sumeru"),
-        ABSOLUTION("absolution", "Expiación", 5, 13, -2.2F, "Florete supremo imbuido con el juicio del Pacto del Fin"),
-        THE_FLUTE("the_flute", "La Espada de la Flauta", 4, 10, -2.4F, "Espada ligera con orificios armónicos que emite melodías al ser blandida"),
-        THE_BLACK_SWORD("the_black_sword", "La Espada Negra", 4, 11, -2.3F, "Espada ensangrentada que anhela el caos del combate y regenera al portador"),
-        FLEUVE_CENDRE_FERRYMAN("fleuve_cendre_ferryman", "Vado del Río Ceniciento", 4, 9, -2.3F, "Herramienta de hierro de los fontaneros clandestinos"),
+        SKYWARD_BLADE("skyward_blade", "Skyward Blade", 5, 13, -2.2F, "A sword symbolizing the honor of the Knights of Favonius and the blessing of the Dragon of the Wind"),
+        MISTSPLITTER_REFORGED("mistsplitter_reforged", "Mistsplitter Reforged", 5, 13, -2.2F, "A sword that blazes with the light of a cloudless night"),
+        PRIMORDIAL_JADE_CUTTER("primordial_jade_cutter", "Primordial Jade Cutter", 5, 12, -2.2F, "A ceremonial blade meticulously carved from pure jade"),
+        FREEDOM_SWORN("freedom_sworn", "Freedom-Sworn", 5, 12, -2.2F, "A straight sword echoing the Wind's everlasting oath of freedom"),
+        KEY_OF_KHAJ_NISUT("key_of_khaj_nisut", "Key of Khaj-Nisut", 5, 12, -2.3F, "A ceremonial sword once wielded by the desert priests of Sumeru"),
+        ABSOLUTION("absolution", "Absolution", 5, 13, -2.2F, "A supreme rapier imbued with the judgment of the Covenant of the End"),
+        THE_FLUTE("the_flute", "The Flute", 4, 10, -2.4F, "A lightweight sword with harmonic holes that sings melodies as it swings"),
+        THE_BLACK_SWORD("the_black_sword", "The Black Sword", 4, 11, -2.3F, "A bloodstained sword yearning for slaughter that heals its wielder"),
+        FLEUVE_CENDRE_FERRYMAN("fleuve_cendre_ferryman", "Fleuve Cendre Ferryman", 4, 9, -2.3F, "A handy iron pipe tool of clandestine pipefitters"),
 
-        // --- HONKAI: STAR RAIL ---
-        HERTA_HAMMER("herta_hammer", "Martillo de Herta", 5, 15, -3.0F, "Martillo colosal de la Miembro #83 de la Sociedad de Genios. ¡Kuru Kuru!"),
+        HERTA_HAMMER("herta_hammer", "Herta's Hammer", 5, 15, -3.0F, "Colossal hammer of Genius Society Member #83. Kuru Kuru!"),
 
-        // --- ZENLESS ZONE ZERO ---
-        QINGMING_SWORD("qingming_sword", "Espada Qingming", 5, 14, -2.4F, "Espada de alta frecuencia con filo de éter animado de Nueva Eridu"),
-        TAILLESS("tailless", "Espada Sin Cola (Tailless)", 5, 15, -2.8F, "Mandoble cibernético pesado utilizado por agentes de élite"),
-        SHUNGUANG_SWORD("shunguang_sword", "Espada Shunguang", 5, 13, -2.2F, "Katana electrificada con filo relampagueante de reacción rápida"),
-        SHIYUAN_SWORD("shiyuan_sword", "Espada Shiyuan", 4, 10, -2.3F, "Espada equilibrada de combate de los inspectores de la Comisión"),
+        QINGMING_SWORD("qingming_sword", "Qingming Sword", 5, 14, -2.4F, "High-frequency ether-blade forged in New Eridu"),
+        TAILLESS("tailless", "Tailless Claymore", 5, 15, -2.8F, "Heavy cybernetic greatsword deployed by elite special agents"),
+        SHUNGUANG_SWORD("shunguang_sword", "Shunguang Sword", 5, 13, -2.2F, "Electrified katana with lightning-fast reactive cutting edge"),
+        SHIYUAN_SWORD("shiyuan_sword", "Shiyuan Sword", 4, 10, -2.3F, "Balanced combat sword issued to Commission inspectors"),
 
-        // --- HONKAI IMPACT 3RD ---
-        DOMAIN_OF_SANCTION("domain_of_sanction", "Dominio de la Sanción", 5, 14, -2.2F, "Katana sagrada forjada con la autoridad y la furia del trueno divino");
-
+        DOMAIN_OF_SANCTION("domain_of_sanction", "Domain of Sanction", 5, 14, -2.2F, "Sacred katana forged with the authority and fury of divine thunder");
 
         public final String id;
         public final String displayName;
@@ -130,13 +123,12 @@ public class GenshinWeaponItem extends SwordItem implements AwakeningWeaponItem 
             return InteractionResultHolder.fail(stack);
         }
         if (!level.isClientSide() && player instanceof ServerPlayer sp) {
-            // 1. Refinamiento de arma con copia duplicada en mano secundaria y Mora
             if (sp.isShiftKeyDown()) {
                 ItemStack offHand = sp.getOffhandItem();
                 if (offHand.getItem() instanceof GenshinWeaponItem other && other.getWeaponType() == this.weaponType) {
                     int currentRank = getRefinement(stack);
                     if (currentRank >= 5) {
-                        sp.displayClientMessage(Component.literal("§e✦ ¡Esta arma ya ha alcanzado el Rango Máximo de Refinamiento (R5)!"), true);
+                        sp.displayClientMessage(Component.translatable("item.awakening_system.genshin_weapon.max_refinement"), true);
                         return InteractionResultHolder.fail(stack);
                     }
                     int costMora = (weaponType.stars == 5 ? 30000 : 15000) * currentRank;
@@ -153,10 +145,10 @@ public class GenshinWeaponItem extends SwordItem implements AwakeningWeaponItem 
                         sl.playSound(null, sp.getX(), sp.getY(), sp.getZ(), SoundEvents.ANVIL_USE, SoundSource.PLAYERS, 1.2F, 1.1F);
                         AwakeningSystemMod.sync(sp);
 
-                        sp.displayClientMessage(Component.literal("§6§l✦ ¡REFINAMIENTO EXITOSO! §f" + weaponType.displayName + " §eha alcanzado el Rango §6R" + nextRank + " §f(-" + String.format("%,d", costMora) + " Mora)."), false);
+                        sp.displayClientMessage(Component.translatable("item.awakening_system.genshin_weapon.refinement_success", Component.translatable(stack.getDescriptionId()), nextRank, String.format(java.util.Locale.US, "%,d", costMora)), false);
                         return InteractionResultHolder.consume(stack);
                     } else {
-                        sp.displayClientMessage(Component.literal("§cSaldo insuficiente de Mora. Necesitas §6" + String.format("%,d", costMora) + " Mora §cpara refinar a R" + (currentRank + 1) + "."), true);
+                        sp.displayClientMessage(Component.translatable("item.awakening_system.genshin_weapon.insufficient_mora", String.format(java.util.Locale.US, "%,d", costMora), (currentRank + 1)), true);
                         return InteractionResultHolder.consume(stack);
                     }
                 }
@@ -168,11 +160,10 @@ public class GenshinWeaponItem extends SwordItem implements AwakeningWeaponItem 
 
             if (gameTime < cdUntil) {
                 long sec = (cdUntil - gameTime) / 20;
-                sp.displayClientMessage(Component.literal("§c§l✦ " + weaponType.displayName + " en enfriamiento: §f" + sec + "s"), true);
+                sp.displayClientMessage(Component.translatable("item.awakening_system.genshin_weapon.cooldown", Component.translatable(stack.getDescriptionId()), sec), true);
                 return InteractionResultHolder.fail(stack);
             }
 
-            // Ejecutar habilidad activa según el arma
             executeActiveSkill(sp, (ServerLevel) level, gameTime, cdKey);
             return InteractionResultHolder.consume(stack);
         }
@@ -192,13 +183,11 @@ public class GenshinWeaponItem extends SwordItem implements AwakeningWeaponItem 
 
         switch (weaponType) {
             case ENGULFING_LIGHTNING -> {
-                // Musou Isshin (16s CD)
                 sp.getPersistentData().putLong(cdKey, gameTime + 320L);
                 sp.addEffect(new MobEffectInstance(MobEffects.DAMAGE_BOOST, 200, 1, false, true, true));
                 sp.addEffect(new MobEffectInstance(MobEffects.MOVEMENT_SPEED, 200, 1, false, true, true));
                 sp.addEffect(new MobEffectInstance(MobEffects.DAMAGE_RESISTANCE, 200, 1, false, true, true));
 
-                // Rayos celestiales a enemigos cercanos
                 AABB area = sp.getBoundingBox().inflate(10.0D);
                 List<LivingEntity> enemies = sl.getEntitiesOfClass(LivingEntity.class, area, e -> e != sp && e.isAlive() && !e.isAlliedTo(sp));
                 for (LivingEntity enemy : enemies) {
@@ -206,11 +195,10 @@ public class GenshinWeaponItem extends SwordItem implements AwakeningWeaponItem 
                     sl.sendParticles(ParticleTypes.ELECTRIC_SPARK, enemy.getX(), enemy.getY() + 1.0D, enemy.getZ(), 20, 0.4D, 0.6D, 0.4D, 0.1D);
                 }
                 sl.playSound(null, sp.getX(), sp.getY(), sp.getZ(), SoundEvents.LIGHTNING_BOLT_THUNDER, SoundSource.PLAYERS, 1.2F, 1.4F);
-                sp.displayClientMessage(Component.literal("§d§l✦ [LUZ DEL SEGADOR] §e¡SUEÑO ETERNO DE MUSOU ISSHIN ACTIVADO!"), true);
+                sp.displayClientMessage(Component.translatable("item.awakening_system.engulfing_lightning.active_msg"), true);
             }
 
             case PRIMORDIAL_JADE_WINGED_SPEAR -> {
-                // Salto y Azote de Todo Mal (12s CD)
                 sp.getPersistentData().putLong(cdKey, gameTime + 240L);
                 if (sp.onGround()) {
                     sp.setDeltaMovement(sp.getDeltaMovement().x, 1.35D, sp.getDeltaMovement().z);
@@ -223,11 +211,10 @@ public class GenshinWeaponItem extends SwordItem implements AwakeningWeaponItem 
 
                 sl.sendParticles(ParticleTypes.HAPPY_VILLAGER, sp.getX(), sp.getY(), sp.getZ(), 30, 0.8D, 0.5D, 0.8D, 0.1D);
                 sl.playSound(null, sp.getX(), sp.getY(), sp.getZ(), SoundEvents.WIND_CHARGE_BURST.value(), SoundSource.PLAYERS, 1.4F, 1.1F);
-                sp.displayClientMessage(Component.literal("§a§l✦ [HALCÓN DE JADE] §f¡RUINA DE TODO MAL DESATADA!"), true);
+                sp.displayClientMessage(Component.translatable("item.awakening_system.primordial_jade_winged_spear.active_msg"), true);
             }
 
             case CRIMSON_MOONS_SEMBLANCE -> {
-                // Banquete de la Luna Roja (14s CD)
                 sp.getPersistentData().putLong(cdKey, gameTime + 280L);
                 AABB area = sp.getBoundingBox().inflate(6.0D);
                 List<LivingEntity> enemies = sl.getEntitiesOfClass(LivingEntity.class, area, e -> e != sp && e.isAlive() && !e.isAlliedTo(sp));
@@ -241,11 +228,10 @@ public class GenshinWeaponItem extends SwordItem implements AwakeningWeaponItem 
                 sp.heal(Math.min(totalHeal, 14.0F));
                 sl.playSound(null, sp.getX(), sp.getY(), sp.getZ(), SoundEvents.PLAYER_ATTACK_SWEEP, SoundSource.PLAYERS, 1.6F, 0.7F);
                 sl.playSound(null, sp.getX(), sp.getY(), sp.getZ(), SoundEvents.WITHER_SHOOT, SoundSource.PLAYERS, 0.9F, 1.5F);
-                sp.displayClientMessage(Component.literal("§4§l✦ [SEMBLANZA DE LA LUNA CARMESÍ] §c¡CORTE DEL PACTO CARMESÍ!"), true);
+                sp.displayClientMessage(Component.translatable("item.awakening_system.crimson_moons_semblance.active_msg"), true);
             }
 
             case VORTEX_VANQUISHER -> {
-                // Pilar de Geo y Petrificación (14s CD)
                 sp.getPersistentData().putLong(cdKey, gameTime + 280L);
                 sp.addEffect(new MobEffectInstance(MobEffects.ABSORPTION, 400, 2, false, true, true));
                 sp.addEffect(new MobEffectInstance(MobEffects.DAMAGE_RESISTANCE, 240, 1, false, true, true));
@@ -259,17 +245,15 @@ public class GenshinWeaponItem extends SwordItem implements AwakeningWeaponItem 
                     sl.sendParticles(ParticleTypes.CRIT, enemy.getX(), enemy.getY() + 0.5D, enemy.getZ(), 20, 0.4D, 0.4D, 0.4D, 0.1D);
                 }
                 sl.playSound(null, sp.getX(), sp.getY(), sp.getZ(), SoundEvents.ANVIL_LAND, SoundSource.PLAYERS, 1.0F, 0.8F);
-                sp.displayClientMessage(Component.literal("§6§l✦ [ROMPE ROCAS] §e¡ORDEN CELESTIAL Y DOMINIO TELÚRICO!"), true);
+                sp.displayClientMessage(Component.translatable("item.awakening_system.vortex_vanquisher.active_msg"), true);
             }
 
             case WOLFS_GRAVESTONE -> {
-                // Rugido del Lobo del Norte (16s CD)
                 sp.getPersistentData().putLong(cdKey, gameTime + 320L);
                 sp.addEffect(new MobEffectInstance(MobEffects.DAMAGE_BOOST, 240, 2, false, true, true));
                 sp.addEffect(new MobEffectInstance(MobEffects.DAMAGE_RESISTANCE, 200, 1, false, true, true));
                 sp.addEffect(new MobEffectInstance(MobEffects.ABSORPTION, 300, 1, false, true, true));
 
-                // Buff a aliados en 12 bloques
                 AABB area = sp.getBoundingBox().inflate(12.0D);
                 List<Player> allies = sl.getEntitiesOfClass(Player.class, area, p -> p.isAlive());
                 for (Player ally : allies) {
@@ -277,11 +261,10 @@ public class GenshinWeaponItem extends SwordItem implements AwakeningWeaponItem 
                 }
                 sl.sendParticles(ParticleTypes.SOUL_FIRE_FLAME, sp.getX(), sp.getY() + 1.0D, sp.getZ(), 40, 0.6D, 0.8D, 0.6D, 0.08D);
                 sl.playSound(null, sp.getX(), sp.getY(), sp.getZ(), SoundEvents.WOLF_HOWL, SoundSource.PLAYERS, 1.6F, 0.8F);
-                sp.displayClientMessage(Component.literal("§c§l✦ [LÁPIDA DEL LOBO] §f¡AULLIDO DEL REY LOBO! (+40% ATQ ALIADOS)"), true);
+                sp.displayClientMessage(Component.translatable("item.awakening_system.wolfs_gravestone.active_msg"), true);
             }
 
             case REDHORN_STONETHRESHER -> {
-                // Furia del Gran Oni (14s CD)
                 sp.getPersistentData().putLong(cdKey, gameTime + 280L);
                 sp.addEffect(new MobEffectInstance(MobEffects.DAMAGE_BOOST, 200, 2, false, true, true));
                 sp.addEffect(new MobEffectInstance(MobEffects.DAMAGE_RESISTANCE, 200, 2, false, true, true));
@@ -289,11 +272,10 @@ public class GenshinWeaponItem extends SwordItem implements AwakeningWeaponItem 
 
                 sl.sendParticles(ParticleTypes.LAVA, sp.getX(), sp.getY() + 1.0D, sp.getZ(), 25, 0.5D, 0.5D, 0.5D, 0.05D);
                 sl.playSound(null, sp.getX(), sp.getY(), sp.getZ(), SoundEvents.IRON_GOLEM_ATTACK, SoundSource.PLAYERS, 1.4F, 0.9F);
-                sp.displayClientMessage(Component.literal("§6§l✦ [ESPADÓN CORNIRROJO] §e¡FURIA DEL REY ONI DORADO ACTIVADA!"), true);
+                sp.displayClientMessage(Component.translatable("item.awakening_system.redhorn_stonethresher.active_msg"), true);
             }
 
             case VERDICT -> {
-                // Salva Ceremonial de Spina di Rosula (12s CD)
                 sp.getPersistentData().putLong(cdKey, gameTime + 240L);
                 Vec3 look = sp.getLookAngle();
                 AABB area = sp.getBoundingBox().expandTowards(look.scale(8.0D)).inflate(2.0D);
@@ -304,11 +286,10 @@ public class GenshinWeaponItem extends SwordItem implements AwakeningWeaponItem 
                     sl.sendParticles(ParticleTypes.EXPLOSION, enemy.getX(), enemy.getY() + 1.0D, enemy.getZ(), 2, 0.2D, 0.2D, 0.2D, 0.05D);
                 }
                 sl.playSound(null, sp.getX(), sp.getY(), sp.getZ(), SoundEvents.GENERIC_EXPLODE.value(), SoundSource.PLAYERS, 1.2F, 1.2F);
-                sp.displayClientMessage(Component.literal("§e§l✦ [SENTENCIA] §6¡DISPARO DE CAÑÓN CEREMONIAL EJECUTADO!"), true);
+                sp.displayClientMessage(Component.translatable("item.awakening_system.verdict.active_msg"), true);
             }
 
             case MISTSPLITTER_REFORGED -> {
-                // Corte de Niebla Trascendente (10s CD)
                 sp.getPersistentData().putLong(cdKey, gameTime + 200L);
                 sp.addEffect(new MobEffectInstance(MobEffects.DAMAGE_BOOST, 160, 1, false, true, true));
                 sp.addEffect(new MobEffectInstance(MobEffects.MOVEMENT_SPEED, 160, 2, false, true, true));
@@ -326,11 +307,10 @@ public class GenshinWeaponItem extends SwordItem implements AwakeningWeaponItem 
                     enemy.setTicksFrozen(140);
                 }
                 sl.playSound(null, sp.getX(), sp.getY(), sp.getZ(), SoundEvents.PLAYER_ATTACK_SWEEP, SoundSource.PLAYERS, 1.5F, 1.6F);
-                sp.displayClientMessage(Component.literal("§9§l✦ [REFLEJO DE LAS TINIEBLAS] §b¡CORTE DE NIEBLA TRASCENDENTE!"), true);
+                sp.displayClientMessage(Component.translatable("item.awakening_system.mistsplitter_reforged.active_msg"), true);
             }
 
             case PRIMORDIAL_JADE_CUTTER -> {
-                // Danza Esmeralda de Purificación (12s CD)
                 sp.getPersistentData().putLong(cdKey, gameTime + 240L);
                 sp.removeAllEffects();
                 sp.heal(sp.getMaxHealth() * 0.35F);
@@ -339,16 +319,14 @@ public class GenshinWeaponItem extends SwordItem implements AwakeningWeaponItem 
 
                 sl.sendParticles(ParticleTypes.HAPPY_VILLAGER, sp.getX(), sp.getY() + 1.0D, sp.getZ(), 35, 0.6D, 0.8D, 0.6D, 0.05D);
                 sl.playSound(null, sp.getX(), sp.getY(), sp.getZ(), SoundEvents.AMETHYST_BLOCK_CHIME, SoundSource.PLAYERS, 1.6F, 1.2F);
-                sp.displayClientMessage(Component.literal("§a§l✦ [CORTADOR DE JADE PRIMORDIAL] §f¡PURIFICACIÓN ESMERALDA COMPLETA!"), true);
+                sp.displayClientMessage(Component.translatable("item.awakening_system.primordial_jade_cutter.active_msg"), true);
             }
 
             case FREEDOM_SWORN -> {
-                // Tempestad Céfira (12s CD)
                 sp.getPersistentData().putLong(cdKey, gameTime + 240L);
                 sp.addEffect(new MobEffectInstance(MobEffects.MOVEMENT_SPEED, 240, 2, false, true, true));
                 sp.addEffect(new MobEffectInstance(MobEffects.JUMP, 240, 1, false, true, true));
 
-                // Atraer enemigos con un vórtice
                 AABB area = sp.getBoundingBox().inflate(8.0D);
                 List<LivingEntity> enemies = sl.getEntitiesOfClass(LivingEntity.class, area, e -> e != sp && e.isAlive() && !e.isAlliedTo(sp));
                 for (LivingEntity enemy : enemies) {
@@ -359,11 +337,10 @@ public class GenshinWeaponItem extends SwordItem implements AwakeningWeaponItem 
                     sl.sendParticles(ParticleTypes.POOF, enemy.getX(), enemy.getY() + 0.5D, enemy.getZ(), 10, 0.3D, 0.3D, 0.3D, 0.05D);
                 }
                 sl.playSound(null, sp.getX(), sp.getY(), sp.getZ(), SoundEvents.WIND_CHARGE_BURST.value(), SoundSource.PLAYERS, 1.4F, 1.4F);
-                sp.displayClientMessage(Component.literal("§b§l✦ [JURAMENTO POR LA LIBERTAD] §f¡VÓRTICE CÉFIRO DE LA REBELIÓN!"), true);
+                sp.displayClientMessage(Component.translatable("item.awakening_system.freedom_sworn.active_msg"), true);
             }
 
             case KEY_OF_KHAJ_NISUT -> {
-                // Danza de la Inundación Sagrada (15s CD)
                 sp.getPersistentData().putLong(cdKey, gameTime + 300L);
                 sp.addEffect(new MobEffectInstance(MobEffects.REGENERATION, 180, 2, false, true, true));
                 sp.addEffect(new MobEffectInstance(MobEffects.ABSORPTION, 300, 1, false, true, true));
@@ -371,11 +348,10 @@ public class GenshinWeaponItem extends SwordItem implements AwakeningWeaponItem 
                 sl.sendParticles(ParticleTypes.SPLASH, sp.getX(), sp.getY() + 0.5D, sp.getZ(), 50, 0.8D, 0.8D, 0.8D, 0.1D);
                 sl.sendParticles(ParticleTypes.DRIPPING_WATER, sp.getX(), sp.getY() + 1.2D, sp.getZ(), 20, 0.4D, 0.4D, 0.4D, 0.05D);
                 sl.playSound(null, sp.getX(), sp.getY(), sp.getZ(), SoundEvents.PLAYER_SPLASH, SoundSource.PLAYERS, 1.4F, 1.0F);
-                sp.displayClientMessage(Component.literal("§3§l✦ [LLAVE DE LA CORONACIÓN] §b¡AGUAS CURATIVAS DEL OASIS DESATADAS!"), true);
+                sp.displayClientMessage(Component.translatable("item.awakening_system.key_of_khaj_nisut.active_msg"), true);
             }
 
             case ABSOLUTION -> {
-                // Caza de las Sombras / Paso Perforante (8s CD)
                 sp.getPersistentData().putLong(cdKey, gameTime + 160L);
                 Vec3 look = sp.getLookAngle();
                 sp.setDeltaMovement(look.scale(1.8D).add(0, 0.2D, 0));
@@ -388,35 +364,32 @@ public class GenshinWeaponItem extends SwordItem implements AwakeningWeaponItem 
                     sl.sendParticles(ParticleTypes.ELECTRIC_SPARK, enemy.getX(), enemy.getY() + 1.0D, enemy.getZ(), 15, 0.3D, 0.5D, 0.3D, 0.05D);
                 }
                 sl.playSound(null, sp.getX(), sp.getY(), sp.getZ(), SoundEvents.PLAYER_ATTACK_SWEEP, SoundSource.PLAYERS, 1.6F, 1.8F);
-                sp.displayClientMessage(Component.literal("§d§l✦ [EXPIACIÓN] §f¡ESTOCADA FULGURANTE DE LOS DUELISTAS!"), true);
+                sp.displayClientMessage(Component.translatable("item.awakening_system.absolution.active_msg"), true);
             }
 
             case THE_CATCH -> {
-                // Carga del Pescador (10s CD)
                 sp.getPersistentData().putLong(cdKey, gameTime + 200L);
                 SystemData data = SystemEvents.data(sp);
                 data.restoreEnergy(35);
                 sp.addEffect(new MobEffectInstance(MobEffects.DAMAGE_BOOST, 140, 1, false, true, true));
                 sl.sendParticles(ParticleTypes.CRIT, sp.getX(), sp.getY() + 1.0D, sp.getZ(), 20, 0.4D, 0.6D, 0.4D, 0.1D);
                 sl.playSound(null, sp.getX(), sp.getY(), sp.getZ(), SoundEvents.PLAYER_ATTACK_CRIT, SoundSource.PLAYERS, 1.2F, 1.2F);
-                sp.displayClientMessage(Component.literal("§b§l✦ [LA CAPTURA] §f¡ENERGÍA ELEMENTAL RECARGADA (+35 MANÁ)!"), true);
+                sp.displayClientMessage(Component.translatable("item.awakening_system.the_catch.active_msg"), true);
                 AwakeningSystemMod.sync(sp);
             }
 
             case FLEUVE_CENDRE_FERRYMAN -> {
-                // Presión de Tubería Cenicienta (8s CD)
                 sp.getPersistentData().putLong(cdKey, gameTime + 160L);
                 SystemData data = SystemEvents.data(sp);
                 data.restoreEnergy(25);
                 sp.addEffect(new MobEffectInstance(MobEffects.DIG_SPEED, 140, 1, false, true, true));
                 sp.addEffect(new MobEffectInstance(MobEffects.MOVEMENT_SPEED, 140, 0, false, true, true));
                 sl.playSound(null, sp.getX(), sp.getY(), sp.getZ(), SoundEvents.LAVA_EXTINGUISH, SoundSource.PLAYERS, 1.0F, 1.5F);
-                sp.displayClientMessage(Component.literal("§7§l✦ [VADO DEL RÍO CENICIENTO] §f¡REGENERACIÓN Y VELOCIDAD CLANDESTINA!"), true);
+                sp.displayClientMessage(Component.translatable("item.awakening_system.fleuve_cendre_ferryman.active_msg"), true);
                 AwakeningSystemMod.sync(sp);
             }
 
             case SKYWARD_BLADE -> {
-                // Poder Perforacielos (12s CD)
                 sp.getPersistentData().putLong(cdKey, gameTime + 240L);
                 sp.addEffect(new MobEffectInstance(MobEffects.MOVEMENT_SPEED, 240, 1, false, true, true));
                 sp.addEffect(new MobEffectInstance(MobEffects.DIG_SPEED, 240, 1, false, true, true));
@@ -431,11 +404,10 @@ public class GenshinWeaponItem extends SwordItem implements AwakeningWeaponItem 
                 }
                 sl.playSound(null, sp.getX(), sp.getY(), sp.getZ(), SoundEvents.PLAYER_ATTACK_SWEEP, SoundSource.PLAYERS, 1.5F, 1.5F);
                 sl.playSound(null, sp.getX(), sp.getY(), sp.getZ(), SoundEvents.WIND_CHARGE_BURST.value(), SoundSource.PLAYERS, 1.2F, 1.2F);
-                sp.displayClientMessage(Component.literal("§b§l✦ [HOJA AFILADA CELESTIAL] §f¡PODER PERFORACIELOS DESATADO!"), true);
+                sp.displayClientMessage(Component.translatable("item.awakening_system.skyward_blade.active_msg"), true);
             }
 
             case THE_FLUTE -> {
-                // Obertura Melódica (10s CD)
                 sp.getPersistentData().putLong(cdKey, gameTime + 200L);
                 sp.addEffect(new MobEffectInstance(MobEffects.REGENERATION, 120, 0, false, true, true));
 
@@ -450,22 +422,20 @@ public class GenshinWeaponItem extends SwordItem implements AwakeningWeaponItem 
                 }
                 sl.playSound(null, sp.getX(), sp.getY(), sp.getZ(), SoundEvents.NOTE_BLOCK_CHIME.value(), SoundSource.PLAYERS, 1.6F, 1.4F);
                 sl.playSound(null, sp.getX(), sp.getY(), sp.getZ(), SoundEvents.NOTE_BLOCK_FLUTE.value(), SoundSource.PLAYERS, 1.6F, 1.2F);
-                sp.displayClientMessage(Component.literal("§e§l✦ [LA ESPADA DE LA FLAUTA] §6¡OBERTURA MELÓDICA RESONANTE!"), true);
+                sp.displayClientMessage(Component.translatable("item.awakening_system.the_flute.active_msg"), true);
             }
 
             case THE_BLACK_SWORD -> {
-                // Sed de Batalla (12s CD)
                 sp.getPersistentData().putLong(cdKey, gameTime + 240L);
                 sp.addEffect(new MobEffectInstance(MobEffects.DAMAGE_BOOST, 160, 1, false, true, true));
                 sp.addEffect(new MobEffectInstance(MobEffects.MOVEMENT_SPEED, 160, 1, false, true, true));
 
                 sl.sendParticles(ParticleTypes.CRIMSON_SPORE, sp.getX(), sp.getY() + 1.0D, sp.getZ(), 30, 0.5D, 0.6D, 0.5D, 0.05D);
                 sl.playSound(null, sp.getX(), sp.getY(), sp.getZ(), SoundEvents.WITHER_HURT, SoundSource.PLAYERS, 0.8F, 1.6F);
-                sp.displayClientMessage(Component.literal("§4§l✦ [LA ESPADA NEGRA] §c¡SED DE SANGRE Y COMBATE DESPERTADA!"), true);
+                sp.displayClientMessage(Component.translatable("item.awakening_system.the_black_sword.active_msg"), true);
             }
 
             case BLACK_TASSEL -> {
-                // Estocada Cazadora (8s CD)
                 sp.getPersistentData().putLong(cdKey, gameTime + 160L);
                 Vec3 look = sp.getLookAngle();
                 sp.setDeltaMovement(look.scale(1.3D).add(0, 0.1D, 0));
@@ -479,11 +449,10 @@ public class GenshinWeaponItem extends SwordItem implements AwakeningWeaponItem 
                     sl.sendParticles(ParticleTypes.CRIT, enemy.getX(), enemy.getY() + 0.8D, enemy.getZ(), 10, 0.2D, 0.3D, 0.2D, 0.05D);
                 }
                 sl.playSound(null, sp.getX(), sp.getY(), sp.getZ(), SoundEvents.PLAYER_ATTACK_CRIT, SoundSource.PLAYERS, 1.3F, 1.2F);
-                sp.displayClientMessage(Component.literal("§7§l✦ [BORLA NEGRA] §f¡ESTOCADA CAZADORA DE ALIMAÑAS!"), true);
+                sp.displayClientMessage(Component.translatable("item.awakening_system.black_tassel.active_msg"), true);
             }
 
             case HERTA_HAMMER -> {
-                // Kuru Kuru! ~ Kururin (12s CD)
                 sp.getPersistentData().putLong(cdKey, gameTime + 240L);
                 sp.addEffect(new MobEffectInstance(MobEffects.DAMAGE_BOOST, 160, 2, false, true, true));
                 sp.addEffect(new MobEffectInstance(MobEffects.MOVEMENT_SPEED, 160, 1, false, true, true));
@@ -498,18 +467,16 @@ public class GenshinWeaponItem extends SwordItem implements AwakeningWeaponItem 
                     enemy.hurtMarked = true;
                     sl.sendParticles(ParticleTypes.SNOWFLAKE, enemy.getX(), enemy.getY() + 1.0D, enemy.getZ(), 20, 0.4D, 0.6D, 0.4D, 0.1D);
                 }
-                // ¡El sonidito icónico de Herta (Kuru Kuru~ o Kururin~)!
                 net.minecraft.sounds.SoundEvent kuruSound = sp.getRandom().nextBoolean()
                         ? com.soybe.awakeningsystem.ModSounds.HERTA_KURU.get()
                         : com.soybe.awakeningsystem.ModSounds.HERTA_KURURIN.get();
                 sp.connection.send(new ClientboundStopSoundPacket(null, SoundSource.VOICE));
                 sl.playSound(null, sp.getX(), sp.getY(), sp.getZ(), kuruSound, SoundSource.VOICE, 2.0F, 1.0F);
                 sl.playSound(null, sp.getX(), sp.getY(), sp.getZ(), com.soybe.awakeningsystem.ModSounds.HERTA_SWING.get(), SoundSource.PLAYERS, 1.5F, 1.0F);
-                sp.displayClientMessage(Component.literal("§d§l✦ [MARTILLO DE HERTA] §b¡KURU KURU! ~ ¡KURURIN! (Torbellino Gélido)"), true);
+                sp.displayClientMessage(Component.translatable("item.awakening_system.herta_hammer.active_msg"), true);
             }
 
             case QINGMING_SWORD -> {
-                // Floración de Escarcha de Éter (10s CD)
                 sp.getPersistentData().putLong(cdKey, gameTime + 200L);
                 Vec3 look = sp.getLookAngle();
                 sp.setDeltaMovement(look.scale(1.6D).add(0, 0.15D, 0));
@@ -524,11 +491,10 @@ public class GenshinWeaponItem extends SwordItem implements AwakeningWeaponItem 
                     sl.sendParticles(ParticleTypes.SOUL_FIRE_FLAME, enemy.getX(), enemy.getY() + 0.8D, enemy.getZ(), 10, 0.2D, 0.3D, 0.2D, 0.05D);
                 }
                 sl.playSound(null, sp.getX(), sp.getY(), sp.getZ(), SoundEvents.PLAYER_ATTACK_SWEEP, SoundSource.PLAYERS, 1.5F, 1.6F);
-                sp.displayClientMessage(Component.literal("§b§l✦ [ESPADA QINGMING] §3¡FLORACIÓN DE ÉTER Y ESCARCHA DESATADA!"), true);
+                sp.displayClientMessage(Component.translatable("item.awakening_system.qingming_sword.active_msg"), true);
             }
 
             case TAILLESS -> {
-                // Impacto de Demolición Cibernética (12s CD)
                 sp.getPersistentData().putLong(cdKey, gameTime + 240L);
                 sp.addEffect(new MobEffectInstance(MobEffects.DAMAGE_RESISTANCE, 200, 2, false, true, true));
 
@@ -540,11 +506,10 @@ public class GenshinWeaponItem extends SwordItem implements AwakeningWeaponItem 
                     sl.sendParticles(ParticleTypes.EXPLOSION, enemy.getX(), enemy.getY() + 0.5D, enemy.getZ(), 1, 0, 0, 0, 0);
                 }
                 sl.playSound(null, sp.getX(), sp.getY(), sp.getZ(), SoundEvents.ANVIL_LAND, SoundSource.PLAYERS, 1.4F, 0.6F);
-                sp.displayClientMessage(Component.literal("§6§l✦ [TAILLESS] §c¡RUPTURA DE ANOMALÍA CIBERNÉTICA EJECUTADA!"), true);
+                sp.displayClientMessage(Component.translatable("item.awakening_system.tailless.active_msg"), true);
             }
 
             case SHUNGUANG_SWORD -> {
-                // Destello Relámpago Fugaz (8s CD)
                 sp.getPersistentData().putLong(cdKey, gameTime + 160L);
                 Vec3 look = sp.getLookAngle();
                 Vec3 targetPos = sp.position().add(look.scale(7.0D));
@@ -558,11 +523,10 @@ public class GenshinWeaponItem extends SwordItem implements AwakeningWeaponItem 
                     sl.sendParticles(ParticleTypes.ELECTRIC_SPARK, enemy.getX(), enemy.getY() + 1.0D, enemy.getZ(), 20, 0.4D, 0.5D, 0.4D, 0.1D);
                 }
                 sl.playSound(null, sp.getX(), sp.getY(), sp.getZ(), SoundEvents.LIGHTNING_BOLT_THUNDER, SoundSource.PLAYERS, 1.2F, 1.8F);
-                sp.displayClientMessage(Component.literal("§e§l✦ [ESPADA SHUNGUANG] §f¡DESTELLO RELÁMPAGO FUGAZ!"), true);
+                sp.displayClientMessage(Component.translatable("item.awakening_system.shunguang_sword.active_msg"), true);
             }
 
             case SHIYUAN_SWORD -> {
-                // Pulso del Origen (10s CD)
                 sp.getPersistentData().putLong(cdKey, gameTime + 200L);
                 SystemData data = SystemEvents.data(sp);
                 data.restoreEnergy(30);
@@ -571,12 +535,11 @@ public class GenshinWeaponItem extends SwordItem implements AwakeningWeaponItem 
 
                 sl.sendParticles(ParticleTypes.ENCHANTED_HIT, sp.getX(), sp.getY() + 1.0D, sp.getZ(), 25, 0.5D, 0.5D, 0.5D, 0.05D);
                 sl.playSound(null, sp.getX(), sp.getY(), sp.getZ(), SoundEvents.BEACON_ACTIVATE, SoundSource.PLAYERS, 1.0F, 1.5F);
-                sp.displayClientMessage(Component.literal("§a§l✦ [ESPADA SHIYUAN] §f¡PULSO DEL ORIGEN ACTIVADO (+30 MANÁ)!"), true);
+                sp.displayClientMessage(Component.translatable("item.awakening_system.shiyuan_sword.active_msg"), true);
                 AwakeningSystemMod.sync(sp);
             }
 
             case DOMAIN_OF_SANCTION -> {
-                // Dominio de la Sanción: Juicio de la Herrscher del Trueno (12s CD)
                 sp.getPersistentData().putLong(cdKey, gameTime + 240L);
                 sp.addEffect(new MobEffectInstance(MobEffects.DAMAGE_BOOST, 200, 1, false, true, true));
                 sp.addEffect(new MobEffectInstance(MobEffects.MOVEMENT_SPEED, 200, 1, false, true, true));
@@ -594,18 +557,16 @@ public class GenshinWeaponItem extends SwordItem implements AwakeningWeaponItem 
                 sl.playSound(null, sp.getX(), sp.getY(), sp.getZ(), com.soybe.awakeningsystem.ModSounds.DOMAIN_OF_SANCTION_SLASH.get(), SoundSource.PLAYERS, 2.0F, 1.0F);
                 sp.playNotifySound(com.soybe.awakeningsystem.ModSounds.DOMAIN_OF_SANCTION_SLASH.get(), SoundSource.PLAYERS, 2.0F, 1.0F);
                 sl.playSound(null, sp.getX(), sp.getY(), sp.getZ(), SoundEvents.LIGHTNING_BOLT_THUNDER, SoundSource.PLAYERS, 1.2F, 1.4F);
-                sp.displayClientMessage(Component.literal("§d§l✦ [DOMINIO DE LA SANCIÓN] §e¡JUICIO DE LA HERRSCHER DEL TRUENO!"), true);
+                sp.displayClientMessage(Component.translatable("item.awakening_system.domain_of_sanction.active_msg"), true);
             }
         }
     }
-
 
     @Override
     public boolean hurtEnemy(ItemStack stack, LivingEntity target, LivingEntity attacker) {
         if (attacker instanceof Player player && player.level() instanceof ServerLevel sl) {
             switch (weaponType) {
                 case ENGULFING_LIGHTNING -> {
-                    // Electro shock y maná
                     target.hurt(attacker.damageSources().magic(), 4.0F);
                     sl.sendParticles(ParticleTypes.ELECTRIC_SPARK, target.getX(), target.getY() + 1.0D, target.getZ(), 8, 0.2D, 0.3D, 0.2D, 0.05D);
                     if (player instanceof ServerPlayer sp) {
@@ -613,16 +574,13 @@ public class GenshinWeaponItem extends SwordItem implements AwakeningWeaponItem 
                     }
                 }
                 case PRIMORDIAL_JADE_WINGED_SPEAR -> {
-                    // Cuchillas de viento jade
                     sl.sendParticles(ParticleTypes.HAPPY_VILLAGER, target.getX(), target.getY() + 1.0D, target.getZ(), 6, 0.2D, 0.3D, 0.2D, 0.02D);
                 }
                 case CRIMSON_MOONS_SEMBLANCE -> {
-                    // Sangrado carmesí y robo de vida
                     player.heal(1.5F);
                     sl.sendParticles(ParticleTypes.CRIMSON_SPORE, target.getX(), target.getY() + 0.8D, target.getZ(), 10, 0.3D, 0.4D, 0.3D, 0.05D);
                 }
                 case WOLFS_GRAVESTONE -> {
-                    // Rematar si objetivo < 30% HP
                     if (target.getHealth() <= target.getMaxHealth() * 0.30F) {
                         target.hurt(attacker.damageSources().playerAttack(player), 12.0F);
                         player.addEffect(new MobEffectInstance(MobEffects.DAMAGE_BOOST, 160, 1, false, true, true));
@@ -630,14 +588,12 @@ public class GenshinWeaponItem extends SwordItem implements AwakeningWeaponItem 
                     }
                 }
                 case REDHORN_STONETHRESHER -> {
-                    // Escalar con armadura del jugador
                     int armor = player.getArmorValue();
                     float extraDmg = Math.min(18.0F, armor * 0.45F);
                     target.hurt(attacker.damageSources().playerAttack(player), extraDmg);
                     sl.sendParticles(ParticleTypes.CRIT, target.getX(), target.getY() + 1.0D, target.getZ(), 8, 0.2D, 0.3D, 0.2D, 0.05D);
                 }
                 case VERDICT -> {
-                    // Metralla cada 3 golpes
                     long count = player.getPersistentData().getLong("verdict_hits") + 1;
                     player.getPersistentData().putLong("verdict_hits", count);
                     if (count % 3 == 0) {
@@ -646,21 +602,17 @@ public class GenshinWeaponItem extends SwordItem implements AwakeningWeaponItem 
                     }
                 }
                 case MISTSPLITTER_REFORGED -> {
-                    // Hielo y relámpago
                     target.setTicksFrozen(60);
                     sl.sendParticles(ParticleTypes.SNOWFLAKE, target.getX(), target.getY() + 1.0D, target.getZ(), 8, 0.2D, 0.3D, 0.2D, 0.02D);
                 }
                 case PRIMORDIAL_JADE_CUTTER -> {
-                    // Daño extra basado en vida máxima
                     float bonus = player.getMaxHealth() * 0.08F;
                     target.hurt(attacker.damageSources().playerAttack(player), bonus);
                 }
                 case FREEDOM_SWORN -> {
-                    // Ráfaga céfira
                     sl.sendParticles(ParticleTypes.POOF, target.getX(), target.getY() + 0.5D, target.getZ(), 6, 0.2D, 0.2D, 0.2D, 0.02D);
                 }
                 case SKYWARD_BLADE -> {
-                    // Cuchilla de viento adicional
                     target.hurt(attacker.damageSources().magic(), 4.0F);
                     sl.sendParticles(ParticleTypes.SWEEP_ATTACK, target.getX(), target.getY() + 1.0D, target.getZ(), 2, 0.2D, 0.2D, 0.2D, 0.02D);
                     sl.sendParticles(ParticleTypes.CLOUD, target.getX(), target.getY() + 0.5D, target.getZ(), 4, 0.2D, 0.2D, 0.2D, 0.02D);
@@ -680,7 +632,6 @@ public class GenshinWeaponItem extends SwordItem implements AwakeningWeaponItem 
                     }
                 }
                 case THE_BLACK_SWORD -> {
-                    // Robo de vida
                     player.heal(1.5F);
                     sl.sendParticles(ParticleTypes.CRIMSON_SPORE, target.getX(), target.getY() + 0.8D, target.getZ(), 8, 0.2D, 0.3D, 0.2D, 0.05D);
                     if (target.getHealth() <= target.getMaxHealth() * 0.4F) {
@@ -737,7 +688,6 @@ public class GenshinWeaponItem extends SwordItem implements AwakeningWeaponItem 
     public void inventoryTick(ItemStack stack, Level level, Entity entity, int slot, boolean selected) {
         super.inventoryTick(stack, level, entity, slot, selected);
         if (selected && entity instanceof LivingEntity living && weaponType == WeaponType.PRIMORDIAL_JADE_CUTTER) {
-            // Bono de +20 Vida Máxima (10 corazones) mientras se empuña
             var maxHpAttr = living.getAttribute(Attributes.MAX_HEALTH);
             if (maxHpAttr != null && !maxHpAttr.hasModifier(JADE_CUTTER_HP_MOD)) {
                 maxHpAttr.addTransientModifier(new AttributeModifier(JADE_CUTTER_HP_MOD, 20.0D, AttributeModifier.Operation.ADD_VALUE));
@@ -750,7 +700,6 @@ public class GenshinWeaponItem extends SwordItem implements AwakeningWeaponItem 
         }
 
         if (selected && entity instanceof LivingEntity living && weaponType == WeaponType.BLACK_TASSEL) {
-            // Bono de +4 Vida Máxima (2 corazones) mientras se empuña
             var maxHpAttr = living.getAttribute(Attributes.MAX_HEALTH);
             if (maxHpAttr != null && !maxHpAttr.hasModifier(BLACK_TASSEL_HP_MOD)) {
                 maxHpAttr.addTransientModifier(new AttributeModifier(BLACK_TASSEL_HP_MOD, 4.0D, AttributeModifier.Operation.ADD_VALUE));
@@ -765,152 +714,38 @@ public class GenshinWeaponItem extends SwordItem implements AwakeningWeaponItem 
 
     @Override
     public void appendHoverText(ItemStack stack, TooltipContext context, List<Component> tooltip, TooltipFlag flag) {
-        String starStr = switch (weaponType.stars) {
-            case 5 -> "⭐⭐⭐⭐⭐ [Arma Legendaria 5★]";
-            case 4 -> "⭐⭐⭐⭐ [Arma Épica 4★]";
-            default -> "⭐⭐⭐ [Arma de Aventurero 3★]";
+        String starKey = switch (weaponType.stars) {
+            case 5 -> "item.awakening_system.genshin_weapon.star5";
+            case 4 -> "item.awakening_system.genshin_weapon.star4";
+            default -> "item.awakening_system.genshin_weapon.star3";
         };
-        tooltip.add(Component.literal("§6" + starStr).withStyle(weaponType.stars == 5 ? ChatFormatting.GOLD : ChatFormatting.LIGHT_PURPLE));
+        tooltip.add(Component.literal("§6").append(Component.translatable(starKey)).withStyle(weaponType.stars == 5 ? ChatFormatting.GOLD : ChatFormatting.LIGHT_PURPLE));
         int rank = getRefinement(stack);
-        tooltip.add(Component.literal("§e✦ Rango de Refinamiento: §6R" + rank + "§8/R5"));
+        tooltip.add(Component.translatable("item.awakening_system.genshin_weapon.refine_rank", rank));
         if (rank < 5) {
             long cost = (weaponType.stars >= 5 ? 30000L : 15000L) * rank;
-            tooltip.add(Component.literal("  §8▸ Shift + Clic Der con duplicado en mano secundaria: §6" + String.format("%,d", cost) + " Mora §8(R" + (rank + 1) + ")"));
+            tooltip.add(Component.translatable("item.awakening_system.genshin_weapon.refine_hint", String.format("%,d", cost), rank + 1));
         } else {
-            tooltip.add(Component.literal("  §a✔ Rango Máximo de Refinamiento Alcanzado (R5)"));
+            tooltip.add(Component.translatable("item.awakening_system.genshin_weapon.refine_max"));
         }
-        tooltip.add(Component.literal("§7" + weaponType.lore).withStyle(ChatFormatting.GRAY));
+        tooltip.add(Component.translatableWithFallback("item.awakening_system.genshin_weapon." + weaponType.id + ".lore", "§7" + weaponType.lore).withStyle(ChatFormatting.GRAY));
 
-        // Descripción de habilidad
-        switch (weaponType) {
-            case ENGULFING_LIGHTNING -> {
-                tooltip.add(Component.literal("§d▸ Habilidad Activa: Sueño de Musou Isshin (Clic Derecho / ~)").withStyle(ChatFormatting.LIGHT_PURPLE));
-                tooltip.add(Component.literal("  §7Descarga rayos sobre enemigos en 10 bloques y otorga Fuerza, Resistencia y Velocidad.").withStyle(ChatFormatting.DARK_GRAY));
-                tooltip.add(Component.literal("§e▸ Pasiva: Eternidad Inquebrantable").withStyle(ChatFormatting.YELLOW));
-                tooltip.add(Component.literal("  §7Ataques electrocutan e infunden +5 Maná por golpe.").withStyle(ChatFormatting.DARK_GRAY));
-            }
-            case PRIMORDIAL_JADE_WINGED_SPEAR -> {
-                tooltip.add(Component.literal("§a▸ Habilidad Activa: Azote de Todo Mal (Clic Derecho / ~)").withStyle(ChatFormatting.GREEN));
-                tooltip.add(Component.literal("  §7Propulsa al jugador a los cielos para ejecutar un devastador ataque en picada.").withStyle(ChatFormatting.DARK_GRAY));
-                tooltip.add(Component.literal("§2▸ Pasiva: Justicia de Jade").withStyle(ChatFormatting.DARK_GREEN));
-                tooltip.add(Component.literal("  §7Aumenta el daño de ataque con cada impacto certero consecutivo.").withStyle(ChatFormatting.DARK_GRAY));
-            }
-            case CRIMSON_MOONS_SEMBLANCE -> {
-                tooltip.add(Component.literal("§4▸ Habilidad Activa: Banquete de la Luna Roja (Clic Derecho / ~)").withStyle(ChatFormatting.DARK_RED));
-                tooltip.add(Component.literal("  §7Barre un corte de guadaña en 360°, descompone enemigos y drena su salud.").withStyle(ChatFormatting.DARK_GRAY));
-                tooltip.add(Component.literal("§c▸ Pasiva: Pacto Militar Carmesí").withStyle(ChatFormatting.RED));
-                tooltip.add(Component.literal("  §7Restaura salud al jugador en cada corte de guadaña.").withStyle(ChatFormatting.DARK_GRAY));
-            }
-            case VORTEX_VANQUISHER -> {
-                tooltip.add(Component.literal("§6▸ Habilidad Activa: Dominio Telúrico (Clic Derecho / ~)").withStyle(ChatFormatting.GOLD));
-                tooltip.add(Component.literal("  §7Petrifica e inmoviliza a enemigos cercanos y otorga Escudos de Absorción III.").withStyle(ChatFormatting.DARK_GRAY));
-                tooltip.add(Component.literal("§e▸ Pasiva: Pilar Inconmovible").withStyle(ChatFormatting.YELLOW));
-                tooltip.add(Component.literal("  §7Otorga resistencia continua mientras luchas.").withStyle(ChatFormatting.DARK_GRAY));
-            }
-            case WOLFS_GRAVESTONE -> {
-                tooltip.add(Component.literal("§c▸ Habilidad Activa: Aullido del Rey Lobo (Clic Derecho / ~)").withStyle(ChatFormatting.RED));
-                tooltip.add(Component.literal("  §7Desata el aullido ancestral: otorga +40% de Daño de Ataque a ti y a tus aliados.").withStyle(ChatFormatting.DARK_GRAY));
-                tooltip.add(Component.literal("§6▸ Pasiva: Cazador Implacable").withStyle(ChatFormatting.GOLD));
-                tooltip.add(Component.literal("  §7Ataques a enemigos con menos del 30% HP infligen daño mortal ejecutante.").withStyle(ChatFormatting.DARK_GRAY));
-            }
-            case REDHORN_STONETHRESHER -> {
-                tooltip.add(Component.literal("§e▸ Habilidad Activa: Furia del Rey Oni Dorado (Clic Derecho / ~)").withStyle(ChatFormatting.YELLOW));
-                tooltip.add(Component.literal("  §7Activa Fuerza III y Resistencia III con impactos de terremoto.").withStyle(ChatFormatting.DARK_GRAY));
-                tooltip.add(Component.literal("§6▸ Pasiva: Gokadaijin del Rey Oni").withStyle(ChatFormatting.GOLD));
-                tooltip.add(Component.literal("  §7El daño de ataque escala con los puntos totales de armadura del portador.").withStyle(ChatFormatting.DARK_GRAY));
-            }
-            case VERDICT -> {
-                tooltip.add(Component.literal("§e▸ Habilidad Activa: Salva Ceremonial (Clic Derecho / ~)").withStyle(ChatFormatting.YELLOW));
-                tooltip.add(Component.literal("  §7Dispara una salva frontal de cañón que arrasa enemigos en línea recta.").withStyle(ChatFormatting.DARK_GRAY));
-                tooltip.add(Component.literal("§6▸ Pasiva: Metralla Solar").withStyle(ChatFormatting.GOLD));
-                tooltip.add(Component.literal("  §7Cada 3er golpe produce una explosión de metralla cristalina.").withStyle(ChatFormatting.DARK_GRAY));
-            }
-            case SKYWARD_BLADE -> {
-                tooltip.add(Component.literal("§b▸ Habilidad Activa: Poder Perforacielos (Clic Derecho / ~)").withStyle(ChatFormatting.AQUA));
-                tooltip.add(Component.literal("  §7Desata la velocidad de los vientos de Dvalin: Fuerza II, Velocidad II y Prisa II.").withStyle(ChatFormatting.DARK_GRAY));
-                tooltip.add(Component.literal("§3▸ Pasiva: Colmillo Celestial").withStyle(ChatFormatting.DARK_AQUA));
-                tooltip.add(Component.literal("  §7Genera cuchillas de viento cortantes con cada golpe básico.").withStyle(ChatFormatting.DARK_GRAY));
-            }
-            case MISTSPLITTER_REFORGED -> {
-                tooltip.add(Component.literal("§9▸ Habilidad Activa: Corte de Niebla Trascendente (Clic Derecho / ~)").withStyle(ChatFormatting.BLUE));
-                tooltip.add(Component.literal("  §7Lanza un filo cortante de escarcha y niebla que congela a los enemigos.").withStyle(ChatFormatting.DARK_GRAY));
-                tooltip.add(Component.literal("§b▸ Pasiva: Emblema Cortanebulosas").withStyle(ChatFormatting.AQUA));
-                tooltip.add(Component.literal("  §7Aumenta la velocidad y congela instantáneamente al impactar.").withStyle(ChatFormatting.DARK_GRAY));
-            }
-            case PRIMORDIAL_JADE_CUTTER -> {
-                tooltip.add(Component.literal("§a▸ Habilidad Activa: Purificación Esmeralda (Clic Derecho / ~)").withStyle(ChatFormatting.GREEN));
-                tooltip.add(Component.literal("  §7Disipa todas las desventajas y restaura un 35% de la Salud Máxima.").withStyle(ChatFormatting.DARK_GRAY));
-                tooltip.add(Component.literal("§2▸ Pasiva: Pureza de Jade").withStyle(ChatFormatting.DARK_GREEN));
-                tooltip.add(Component.literal("  §7Otorga +10 Corazones Adicionales (+20 HP) mientras la empuñas.").withStyle(ChatFormatting.DARK_GRAY));
-            }
-            case FREEDOM_SWORN -> {
-                tooltip.add(Component.literal("§b▸ Habilidad Activa: Vórtice Céfiro de la Rebelión (Clic Derecho / ~)").withStyle(ChatFormatting.AQUA));
-                tooltip.add(Component.literal("  §7Crea un vórtice de viento que arrastra y eleva a los enemigos circundantes.").withStyle(ChatFormatting.DARK_GRAY));
-                tooltip.add(Component.literal("§3▸ Pasiva: Concierto Revolucionario").withStyle(ChatFormatting.DARK_AQUA));
-                tooltip.add(Component.literal("  §7Otorga velocidad de movimiento y salto mejorado.").withStyle(ChatFormatting.DARK_GRAY));
-            }
-            case KEY_OF_KHAJ_NISUT -> {
-                tooltip.add(Component.literal("§3▸ Habilidad Activa: Danza de la Inundación Sagrada (Clic Derecho / ~)").withStyle(ChatFormatting.DARK_AQUA));
-                tooltip.add(Component.literal("  §7Despliega aguas sagradas que regeneran salud continua y otorgan absorción.").withStyle(ChatFormatting.DARK_GRAY));
-            }
-            case ABSOLUTION -> {
-                tooltip.add(Component.literal("§d▸ Habilidad Activa: Estocada Fulgurante (Clic Derecho / ~)").withStyle(ChatFormatting.LIGHT_PURPLE));
-                tooltip.add(Component.literal("  §7Embiste a gran velocidad atravesando enemigos con un ataque perforante eléctrico.").withStyle(ChatFormatting.DARK_GRAY));
-            }
-            case THE_FLUTE -> {
-                tooltip.add(Component.literal("§e▸ Habilidad Activa: Obertura Melódica (Clic Derecho / ~)").withStyle(ChatFormatting.YELLOW));
-                tooltip.add(Component.literal("  §7Emite un acorde resonante que repele a los enemigos y otorga Regeneración.").withStyle(ChatFormatting.DARK_GRAY));
-                tooltip.add(Component.literal("§6▸ Pasiva: Acorde Armónico").withStyle(ChatFormatting.GOLD));
-                tooltip.add(Component.literal("  §7Acumula notas armónicas al atacar; cada 5 golpes detona una onda musical de daño.").withStyle(ChatFormatting.DARK_GRAY));
-            }
-            case THE_BLACK_SWORD -> {
-                tooltip.add(Component.literal("§4▸ Habilidad Activa: Sed de Sangre (Clic Derecho / ~)").withStyle(ChatFormatting.DARK_RED));
-                tooltip.add(Component.literal("  §7Entra en un frenesí voraz otorgando Fuerza II y Velocidad I.").withStyle(ChatFormatting.DARK_GRAY));
-                tooltip.add(Component.literal("§c▸ Pasiva: Justicia Sombría").withStyle(ChatFormatting.RED));
-                tooltip.add(Component.literal("  §7Restaura salud al asestar impactos certeros a los oponentes.").withStyle(ChatFormatting.DARK_GRAY));
-            }
-            case THE_CATCH -> {
-                tooltip.add(Component.literal("§b▸ Habilidad Activa: Carga del Pescador (Clic Derecho / ~)").withStyle(ChatFormatting.AQUA));
-                tooltip.add(Component.literal("  §7Recarga 35 puntos de maná/energía al instante y aumenta el poder crítico.").withStyle(ChatFormatting.DARK_GRAY));
-            }
-            case BLACK_TASSEL -> {
-                tooltip.add(Component.literal("§7▸ Habilidad Activa: Estocada Cazadora (Clic Derecho / ~)").withStyle(ChatFormatting.GRAY));
-                tooltip.add(Component.literal("  §7Carga frontal perforante letal contra monstruos amorfos.").withStyle(ChatFormatting.DARK_GRAY));
-                tooltip.add(Component.literal("§f▸ Pasiva: Perdición del Slime").withStyle(ChatFormatting.WHITE));
-                tooltip.add(Component.literal("  §7Inflige daño masivo demoledor a Slimes y Magma Cubes, y otorga +2 Corazones.").withStyle(ChatFormatting.DARK_GRAY));
-            }
-            case FLEUVE_CENDRE_FERRYMAN -> {
-                tooltip.add(Component.literal("§7▸ Habilidad Activa: Presión Clandestina (Clic Derecho / ~)").withStyle(ChatFormatting.GRAY));
-                tooltip.add(Component.literal("  §7Recupera maná y acelera la velocidad de minado y ataque.").withStyle(ChatFormatting.DARK_GRAY));
-            }
-            case HERTA_HAMMER -> {
-                tooltip.add(Component.literal("§d▸ Habilidad Activa: ¡Kuru Kuru! ~ Kururin (Clic Derecho / ~)").withStyle(ChatFormatting.LIGHT_PURPLE));
-                tooltip.add(Component.literal("  §7Gira en un torbellino helado de 360° repeliendo y congelando enemigos.").withStyle(ChatFormatting.DARK_GRAY));
-                tooltip.add(Component.literal("§b▸ Pasiva: Golpe Adicional de la Genio").withStyle(ChatFormatting.AQUA));
-                tooltip.add(Component.literal("  §7Impactar a enemigos con menos del 50% HP detona un ataque adicional de escarcha.").withStyle(ChatFormatting.DARK_GRAY));
-            }
-            case QINGMING_SWORD -> {
-                tooltip.add(Component.literal("§b▸ Habilidad Activa: Floración de Escarcha de Éter (Clic Derecho / ~)").withStyle(ChatFormatting.AQUA));
-                tooltip.add(Component.literal("  §7Embiste en línea recta detonando escarcha y explosión de éter.").withStyle(ChatFormatting.DARK_GRAY));
-            }
-            case TAILLESS -> {
-                tooltip.add(Component.literal("§6▸ Habilidad Activa: Ruptura de Anomalía (Clic Derecho / ~)").withStyle(ChatFormatting.GOLD));
-                tooltip.add(Component.literal("  §7Golpe sísmico descendente que fractura la armadura del enemigo.").withStyle(ChatFormatting.DARK_GRAY));
-            }
-            case SHUNGUANG_SWORD -> {
-                tooltip.add(Component.literal("§e▸ Habilidad Activa: Destello Relámpago Fugaz (Clic Derecho / ~)").withStyle(ChatFormatting.YELLOW));
-                tooltip.add(Component.literal("  §7Teletransporte instantáneo perforando enemigos con descarga eléctrica.").withStyle(ChatFormatting.DARK_GRAY));
-            }
-            case SHIYUAN_SWORD -> {
-                tooltip.add(Component.literal("§a▸ Habilidad Activa: Pulso del Origen (Clic Derecho / ~)").withStyle(ChatFormatting.GREEN));
-                tooltip.add(Component.literal("  §7Otorga escudos de absorción y restaura +30 Maná.").withStyle(ChatFormatting.DARK_GRAY));
-            }
-            case DOMAIN_OF_SANCTION -> {
-                tooltip.add(Component.literal("§d▸ Habilidad Activa: Juicio de la Herrscher (Clic Derecho / ~)").withStyle(ChatFormatting.LIGHT_PURPLE));
-                tooltip.add(Component.literal("  §7Desata una tormenta de rayos que paraliza enemigos con 20 de daño y otorga Fuerza y Velocidad.").withStyle(ChatFormatting.DARK_GRAY));
-                tooltip.add(Component.literal("§e▸ Pasiva: Furia Eléctrica").withStyle(ChatFormatting.YELLOW));
-                tooltip.add(Component.literal("  §735% de probabilidad de electrocutar enemigos al impactar con rayos.").withStyle(ChatFormatting.DARK_GRAY));
-            }
+        tooltip.add(Component.translatable("item.awakening_system.genshin_weapon." + weaponType.id + ".active.title"));
+        tooltip.add(Component.translatable("item.awakening_system.genshin_weapon." + weaponType.id + ".active.desc"));
+
+        if (hasPassive(weaponType)) {
+            tooltip.add(Component.translatable("item.awakening_system.genshin_weapon." + weaponType.id + ".passive.title"));
+            tooltip.add(Component.translatable("item.awakening_system.genshin_weapon." + weaponType.id + ".passive.desc"));
         }
+    }
+
+    private boolean hasPassive(WeaponType type) {
+        return switch (type) {
+            case ENGULFING_LIGHTNING, PRIMORDIAL_JADE_WINGED_SPEAR, CRIMSON_MOONS_SEMBLANCE,
+                 VORTEX_VANQUISHER, WOLFS_GRAVESTONE, REDHORN_STONETHRESHER, VERDICT,
+                 SKYWARD_BLADE, MISTSPLITTER_REFORGED, PRIMORDIAL_JADE_CUTTER, FREEDOM_SWORN,
+                 THE_FLUTE, THE_BLACK_SWORD, BLACK_TASSEL, HERTA_HAMMER, DOMAIN_OF_SANCTION -> true;
+            default -> false;
+        };
     }
 }

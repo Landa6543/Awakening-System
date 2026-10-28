@@ -1,6 +1,7 @@
 package com.soybe.awakeningsystem;
 
 import com.mojang.brigadier.CommandDispatcher;
+import com.mojang.brigadier.arguments.BoolArgumentType;
 import com.mojang.brigadier.arguments.IntegerArgumentType;
 import com.mojang.brigadier.arguments.StringArgumentType;
 import net.minecraft.ChatFormatting;
@@ -26,27 +27,82 @@ import net.neoforged.neoforge.network.PacketDistributor;
 public final class SystemCommands {
     private SystemCommands() {}
 
+    public static boolean hasAdminOrCreatorPermission(CommandSourceStack source) {
+        if (source == null) return false;
+        if (source.hasPermission(2)) return true;
+        return source.getEntity() instanceof ServerPlayer player && TitleDefinitions.isCreator(player);
+    }
+
     public static void register(net.neoforged.neoforge.event.RegisterCommandsEvent event) {
         CommandDispatcher<CommandSourceStack> dispatcher = event.getDispatcher();
 
-        // Registrar comandos de Gremio / Clan
         com.soybe.awakeningsystem.guild.GuildCommands.register(dispatcher);
 
-        // 1. Comando principal /system
+        dispatcher.register(Commands.literal("creator")
+                .executes(context -> claimCreatorTitle(context.getSource())));
+        dispatcher.register(Commands.literal("nanda")
+                .executes(context -> claimNandaTitle(context.getSource())));
+        dispatcher.register(Commands.literal("misticpotato")
+                .executes(context -> claimMisticPotatoTitle(context.getSource())));
+        dispatcher.register(Commands.literal("potato")
+                .executes(context -> claimMisticPotatoTitle(context.getSource())));
+        dispatcher.register(Commands.literal("schvis")
+                .executes(context -> claimSchvisTitle(context.getSource())));
+        dispatcher.register(Commands.literal("tomcraft")
+                .executes(context -> claimTomcraftTitle(context.getSource())));
+        dispatcher.register(Commands.literal("pokemon")
+                .executes(context -> claimTomcraftTitle(context.getSource())));
+
         var systemBuilder = Commands.literal("system")
-                .requires(source -> source.hasPermission(2))
+                .requires(source -> hasAdminOrCreatorPermission(source))
                 .executes(context -> show(context.getSource()))
+                .then(Commands.literal("creator").executes(context -> claimCreatorTitle(context.getSource())))
+                .then(Commands.literal("nanda").executes(context -> claimNandaTitle(context.getSource())))
+                .then(Commands.literal("misticpotato").executes(context -> claimMisticPotatoTitle(context.getSource())))
+                .then(Commands.literal("potato").executes(context -> claimMisticPotatoTitle(context.getSource())))
+                .then(Commands.literal("schvis").executes(context -> claimSchvisTitle(context.getSource())))
+                .then(Commands.literal("tomcraft").executes(context -> claimTomcraftTitle(context.getSource())))
                 .then(Commands.literal("stats").executes(context -> show(context.getSource())))
                 .then(Commands.literal("give_all").executes(context -> giveAll(context.getSource())))
                 .then(Commands.literal("unlock_all").executes(context -> giveAll(context.getSource())))
                 .then(Commands.literal("max").executes(context -> giveAll(context.getSource())))
                 .then(Commands.literal("tower")
                         .executes(context -> enterTower(context.getSource()))
+                        .then(Commands.literal("spawn")
+                                .executes(context -> spawnTowerStructure(context.getSource())))
+                        .then(Commands.literal("structure")
+                                .executes(context -> spawnTowerStructure(context.getSource())))
+                        .then(Commands.literal("export")
+                                .executes(context -> exportTowerCommand(context.getSource(), 0))
+                                .then(Commands.argument("radius", IntegerArgumentType.integer(10, 100))
+                                        .executes(context -> exportTowerCommand(context.getSource(), IntegerArgumentType.getInteger(context, "radius")))))
+                        .then(Commands.literal("reset")
+                                .executes(context -> resetTowerCommand(context.getSource())))
+                        .then(Commands.literal("reset_boss")
+                                .executes(context -> resetFloor10BossCommand(context.getSource())))
+                        .then(Commands.literal("respawn_boss")
+                                .executes(context -> resetFloor10BossCommand(context.getSource())))
                         .then(Commands.literal("floor")
                                 .then(Commands.argument("floorNum", IntegerArgumentType.integer(1, 100))
                                         .executes(context -> warpTowerFloor(context.getSource(), IntegerArgumentType.getInteger(context, "floorNum"))))))
+                .then(Commands.literal("spawn_tower")
+                        .executes(context -> spawnTowerStructure(context.getSource())))
                 .then(Commands.literal("ranker_tower")
                         .executes(context -> enterTower(context.getSource()))
+                        .then(Commands.literal("spawn")
+                                .executes(context -> spawnTowerStructure(context.getSource())))
+                        .then(Commands.literal("structure")
+                                .executes(context -> spawnTowerStructure(context.getSource())))
+                        .then(Commands.literal("export")
+                                .executes(context -> exportTowerCommand(context.getSource(), 0))
+                                .then(Commands.argument("radius", IntegerArgumentType.integer(10, 100))
+                                        .executes(context -> exportTowerCommand(context.getSource(), IntegerArgumentType.getInteger(context, "radius")))))
+                        .then(Commands.literal("reset")
+                                .executes(context -> resetTowerCommand(context.getSource())))
+                        .then(Commands.literal("reset_boss")
+                                .executes(context -> resetFloor10BossCommand(context.getSource())))
+                        .then(Commands.literal("respawn_boss")
+                                .executes(context -> resetFloor10BossCommand(context.getSource())))
                         .then(Commands.literal("floor")
                                 .then(Commands.argument("floorNum", IntegerArgumentType.integer(1, 100))
                                         .executes(context -> warpTowerFloor(context.getSource(), IntegerArgumentType.getInteger(context, "floorNum"))))))
@@ -54,6 +110,13 @@ public final class SystemCommands {
                 .then(Commands.literal("meditate").executes(context -> cultivate(context.getSource())))
                 .then(Commands.literal("isekai").executes(context -> warpIsekai(context.getSource())))
                 .then(Commands.literal("murim").executes(context -> warpMurim(context.getSource())))
+                .then(Commands.literal("abyss")
+                        .executes(context -> warpAbyss(context.getSource()))
+                        .then(Commands.literal("cave").executes(context -> warpAbyssCave(context.getSource())))
+                        .then(Commands.literal("cueva").executes(context -> warpAbyssCave(context.getSource())))
+                        .then(Commands.literal("spiral").executes(context -> warpAbyss(context.getSource()))))
+                .then(Commands.literal("cueva_abisal").executes(context -> warpAbyssCave(context.getSource())))
+                .then(Commands.literal("abyss_cave").executes(context -> warpAbyssCave(context.getSource())))
                 .then(Commands.literal("teyvat")
                         .executes(context -> warpTeyvat(context.getSource()))
                         .then(Commands.literal("golden_house").executes(context -> warpTeyvatCapital(context.getSource(), "golden_house")))
@@ -75,6 +138,24 @@ public final class SystemCommands {
                         .then(Commands.literal("inazuma").executes(context -> warpTeyvatCapital(context.getSource(), "inazuma")))
                         .then(Commands.literal("sumeru").executes(context -> warpTeyvatCapital(context.getSource(), "sumeru")))
                         .then(Commands.literal("fontaine").executes(context -> warpTeyvatCapital(context.getSource(), "fontaine")))
+                        .then(Commands.literal("racetrack")
+                                .executes(context -> warpRacetrackCommand(context.getSource()))
+                                .then(Commands.literal("tp").executes(context -> warpRacetrackCommand(context.getSource())))
+                                .then(Commands.literal("upgrade").executes(context -> upgradeRacetrackMaterialsCommand(context.getSource())))
+                                .then(Commands.literal("update_materials").executes(context -> upgradeRacetrackMaterialsCommand(context.getSource())))
+                                .then(Commands.literal("rebuild").executes(context -> rebuildRacetrackCommand(context.getSource())))
+                                .then(Commands.literal("start").executes(context -> startRacetrackCommand(context.getSource())))
+                                .then(Commands.literal("export").executes(context -> exportRacetrackCommand(context.getSource(), 0))
+                                        .then(Commands.argument("radius", IntegerArgumentType.integer(10, 300)).executes(context -> exportRacetrackCommand(context.getSource(), IntegerArgumentType.getInteger(context, "radius"))))))
+                        .then(Commands.literal("hipodromo")
+                                .executes(context -> warpRacetrackCommand(context.getSource()))
+                                .then(Commands.literal("tp").executes(context -> warpRacetrackCommand(context.getSource())))
+                                .then(Commands.literal("upgrade").executes(context -> upgradeRacetrackMaterialsCommand(context.getSource())))
+                                .then(Commands.literal("update_materials").executes(context -> upgradeRacetrackMaterialsCommand(context.getSource())))
+                                .then(Commands.literal("rebuild").executes(context -> rebuildRacetrackCommand(context.getSource())))
+                                .then(Commands.literal("start").executes(context -> startRacetrackCommand(context.getSource())))
+                                .then(Commands.literal("export").executes(context -> exportRacetrackCommand(context.getSource(), 0))
+                                        .then(Commands.argument("radius", IntegerArgumentType.integer(10, 300)).executes(context -> exportRacetrackCommand(context.getSource(), IntegerArgumentType.getInteger(context, "radius"))))))
                         .then(Commands.literal("locate")
                                 .executes(context -> locateTeyvatStructureCommand(context.getSource(), null))
                                 .then(Commands.argument("structure", StringArgumentType.greedyString())
@@ -100,6 +181,20 @@ public final class SystemCommands {
                                         .executes(context -> buildAbyssPortalCommand(context.getSource(), StringArgumentType.getString(context, "mode")))))
                         .then(Commands.argument("destination", StringArgumentType.word())
                                 .executes(context -> warpTeyvatCapital(context.getSource(), StringArgumentType.getString(context, "destination")))))
+                .then(Commands.literal("racetrack")
+                        .executes(context -> warpRacetrackCommand(context.getSource()))
+                        .then(Commands.literal("tp").executes(context -> warpRacetrackCommand(context.getSource())))
+                        .then(Commands.literal("rebuild").executes(context -> rebuildRacetrackCommand(context.getSource())))
+                        .then(Commands.literal("start").executes(context -> startRacetrackCommand(context.getSource())))
+                        .then(Commands.literal("export").executes(context -> exportRacetrackCommand(context.getSource(), 0))
+                                .then(Commands.argument("radius", IntegerArgumentType.integer(10, 300)).executes(context -> exportRacetrackCommand(context.getSource(), IntegerArgumentType.getInteger(context, "radius"))))))
+                .then(Commands.literal("hipodromo")
+                        .executes(context -> warpRacetrackCommand(context.getSource()))
+                        .then(Commands.literal("tp").executes(context -> warpRacetrackCommand(context.getSource())))
+                        .then(Commands.literal("rebuild").executes(context -> rebuildRacetrackCommand(context.getSource())))
+                        .then(Commands.literal("start").executes(context -> startRacetrackCommand(context.getSource())))
+                        .then(Commands.literal("export").executes(context -> exportRacetrackCommand(context.getSource(), 0))
+                                .then(Commands.argument("radius", IntegerArgumentType.integer(10, 300)).executes(context -> exportRacetrackCommand(context.getSource(), IntegerArgumentType.getInteger(context, "radius"))))))
                 .then(Commands.literal("gacha").executes(context -> openGachaCommand(context.getSource())))
                 .then(Commands.literal("wish").executes(context -> openGachaCommand(context.getSource())))
                 .then(Commands.literal("welkin")
@@ -122,6 +217,8 @@ public final class SystemCommands {
                         .then(Commands.literal("entrar").executes(context -> enterSubspaceCommand(context.getSource())))
                         .then(Commands.literal("exit").executes(context -> exitSubspaceCommand(context.getSource())))
                         .then(Commands.literal("salir").executes(context -> exitSubspaceCommand(context.getSource())))
+                        .then(Commands.literal("sync").executes(context -> syncSubspaceCommand(context.getSource())))
+                        .then(Commands.literal("sincronizar").executes(context -> syncSubspaceCommand(context.getSource())))
                         .then(Commands.literal("upgrade").executes(context -> upgradeSubspaceCommand(context.getSource())))
                         .then(Commands.literal("mejorar").executes(context -> upgradeSubspaceCommand(context.getSource()))))
                 .then(Commands.literal("subspace")
@@ -130,6 +227,8 @@ public final class SystemCommands {
                         .then(Commands.literal("entrar").executes(context -> enterSubspaceCommand(context.getSource())))
                         .then(Commands.literal("exit").executes(context -> exitSubspaceCommand(context.getSource())))
                         .then(Commands.literal("salir").executes(context -> exitSubspaceCommand(context.getSource())))
+                        .then(Commands.literal("sync").executes(context -> syncSubspaceCommand(context.getSource())))
+                        .then(Commands.literal("sincronizar").executes(context -> syncSubspaceCommand(context.getSource())))
                         .then(Commands.literal("upgrade").executes(context -> upgradeSubspaceCommand(context.getSource())))
                         .then(Commands.literal("mejorar").executes(context -> upgradeSubspaceCommand(context.getSource()))))
                 .then(Commands.literal("version")
@@ -205,7 +304,7 @@ public final class SystemCommands {
                         .then(Commands.argument("count", IntegerArgumentType.integer(0, 100))
                                 .executes(context -> setCombo(context.getSource(), IntegerArgumentType.getInteger(context, "count")))))
                 .then(Commands.literal("level")
-                        .then(Commands.argument("amount", IntegerArgumentType.integer(1, 500))
+                        .then(Commands.argument("amount", IntegerArgumentType.integer(1, 2000))
                                 .executes(context -> setLevel(context.getSource(), IntegerArgumentType.getInteger(context, "amount")))))
                 .then(Commands.literal("sponsor")
                         .then(Commands.argument("constellation", StringArgumentType.word())
@@ -276,7 +375,19 @@ public final class SystemCommands {
                 .then(Commands.literal("bestiary").executes(context -> openBestiary(context.getSource())))
                 .then(Commands.literal("bestiario").executes(context -> openBestiary(context.getSource())))
                 .then(Commands.literal("structure")
+                        .then(Commands.literal("tp")
+                                .then(Commands.argument("name", StringArgumentType.word())
+                                        .suggests((ctx, builder) -> net.minecraft.commands.SharedSuggestionProvider.suggest(ALL_STRUCTURE_NAMES, builder))
+                                        .executes(context -> tpStructureCommand(context.getSource(), StringArgumentType.getString(context, "name")))))
+                        .then(Commands.literal("locate")
+                                .executes(context -> locateStructureCommand(context.getSource(), null))
+                                .then(Commands.argument("type", StringArgumentType.word())
+                                        .suggests((ctx, builder) -> net.minecraft.commands.SharedSuggestionProvider.suggest(ALL_STRUCTURE_NAMES, builder))
+                                        .executes(context -> locateStructureCommand(context.getSource(), StringArgumentType.getString(context, "type")))))
+                        .then(Commands.literal("list")
+                                .executes(context -> listStructuresCommand(context.getSource())))
                         .then(Commands.argument("name", StringArgumentType.word())
+                                .suggests((ctx, builder) -> net.minecraft.commands.SharedSuggestionProvider.suggest(ALL_STRUCTURE_NAMES, builder))
                                 .executes(context -> spawnStructureCommand(context.getSource(), StringArgumentType.getString(context, "name")))))
                 .then(Commands.literal("npc")
                         .then(Commands.argument("character", StringArgumentType.word())
@@ -293,13 +404,35 @@ public final class SystemCommands {
                         .then(Commands.literal("entrar").executes(context -> enterPagodaTrial(context.getSource())))
                         .then(Commands.literal("exit").executes(context -> exitPagodaTrial(context.getSource())))
                         .then(Commands.literal("salir").executes(context -> exitPagodaTrial(context.getSource())))
+                        .then(Commands.literal("arena")
+                                .requires(source -> hasAdminOrCreatorPermission(source))
+                                .executes(context -> spawnPagodaArenaCommand(context.getSource(), 1))
+                                .then(Commands.argument("stage", IntegerArgumentType.integer(1, 9))
+                                        .executes(context -> spawnPagodaArenaCommand(context.getSource(), IntegerArgumentType.getInteger(context, "stage")))))
                         .then(Commands.literal("warp")
                                 .then(Commands.argument("stage", IntegerArgumentType.integer(1, 9))
-                                        .executes(context -> warpPagodaStage(context.getSource(), IntegerArgumentType.getInteger(context, "stage"))))));
+                                        .executes(context -> warpPagodaStage(context.getSource(), IntegerArgumentType.getInteger(context, "stage"))))))
+                .then(Commands.literal("casino")
+                        .executes(context -> warpCasinoCommand(context.getSource()))
+                        .then(Commands.literal("tp").executes(context -> warpCasinoCommand(context.getSource())))
+                        .then(Commands.literal("claim_jackpot").executes(context -> claimJackpotCommand(context.getSource())))
+                        .then(Commands.literal("jackpot").executes(context -> claimJackpotCommand(context.getSource())))
+                        .then(Commands.literal("build").requires(s -> hasAdminOrCreatorPermission(s)).executes(context -> rebuildCasinoCommand(context.getSource())))
+                        .then(Commands.literal("rebuild").requires(s -> hasAdminOrCreatorPermission(s)).executes(context -> rebuildCasinoCommand(context.getSource()))))
+                .then(Commands.literal("announcement")
+                        .executes(context -> testAnnouncementCommand(context.getSource(), "mythic"))
+                        .then(Commands.literal("test").executes(context -> testAnnouncementCommand(context.getSource(), "mythic")))
+                        .then(Commands.literal("mythic").executes(context -> testAnnouncementCommand(context.getSource(), "mythic")))
+                        .then(Commands.literal("gold").executes(context -> testAnnouncementCommand(context.getSource(), "gold")))
+                        .then(Commands.literal("doncella").executes(context -> testAnnouncementCommand(context.getSource(), "doncella")))
+                        .then(Commands.argument("title", StringArgumentType.string())
+                                .then(Commands.argument("message", StringArgumentType.greedyString())
+                                        .executes(context -> customAnnouncementCommand(context.getSource(),
+                                                StringArgumentType.getString(context, "title"),
+                                                StringArgumentType.getString(context, "message"))))));
 
         dispatcher.register(systemBuilder);
 
-        // Atajo directo /sombras y /shadows para gestión del ejército del Monarca
         var shadowsBuilder = Commands.literal("sombras")
                 .executes(context -> showShadowStatus(context.getSource()))
                 .then(Commands.literal("guardar").executes(context -> storeShadowsCommand(context.getSource())))
@@ -311,117 +444,187 @@ public final class SystemCommands {
         dispatcher.register(Commands.literal("shadows")
                 .redirect(dispatcher.getRoot().getChild("sombras")));
 
-        // Atajo directo /subespacio y /subspace para acceso al inventario dimensional
         dispatcher.register(Commands.literal("subespacio")
-                .executes(context -> openSubspaceCommand(context.getSource())));
+                .executes(context -> openSubspaceCommand(context.getSource()))
+                .then(Commands.literal("enter").executes(context -> enterSubspaceCommand(context.getSource())))
+                .then(Commands.literal("entrar").executes(context -> enterSubspaceCommand(context.getSource())))
+                .then(Commands.literal("exit").executes(context -> exitSubspaceCommand(context.getSource())))
+                .then(Commands.literal("salir").executes(context -> exitSubspaceCommand(context.getSource())))
+                .then(Commands.literal("sync").executes(context -> syncSubspaceCommand(context.getSource())))
+                .then(Commands.literal("sincronizar").executes(context -> syncSubspaceCommand(context.getSource())))
+                .then(Commands.literal("upgrade").executes(context -> upgradeSubspaceCommand(context.getSource())))
+                .then(Commands.literal("mejorar").executes(context -> upgradeSubspaceCommand(context.getSource())))
+                .then(Commands.literal("update_structure")
+                        .executes(context -> requestUpdateSubspaceStructureCommand(context.getSource()))
+                        .then(Commands.literal("confirm").executes(context -> confirmUpdateSubspaceStructureCommand(context.getSource()))))
+                .then(Commands.literal("actualizar_estructura")
+                        .executes(context -> requestUpdateSubspaceStructureCommand(context.getSource()))
+                        .then(Commands.literal("confirmar").executes(context -> confirmUpdateSubspaceStructureCommand(context.getSource())))));
         dispatcher.register(Commands.literal("subspace")
                 .redirect(dispatcher.getRoot().getChild("subespacio")));
 
-        // Atajo directo /structure <name|locate|list>
         dispatcher.register(Commands.literal("structure")
-                .requires(source -> source.hasPermission(2))
+                .requires(source -> hasAdminOrCreatorPermission(source))
+                .then(Commands.literal("tp")
+                        .then(Commands.argument("name", StringArgumentType.word())
+                                .suggests((ctx, builder) -> net.minecraft.commands.SharedSuggestionProvider.suggest(ALL_STRUCTURE_NAMES, builder))
+                                .executes(context -> tpStructureCommand(context.getSource(), StringArgumentType.getString(context, "name")))))
                 .then(Commands.literal("locate")
                         .executes(context -> locateStructureCommand(context.getSource(), null))
                         .then(Commands.argument("type", StringArgumentType.word())
+                                .suggests((ctx, builder) -> net.minecraft.commands.SharedSuggestionProvider.suggest(ALL_STRUCTURE_NAMES, builder))
                                 .executes(context -> locateStructureCommand(context.getSource(), StringArgumentType.getString(context, "type")))))
                 .then(Commands.literal("list")
                         .executes(context -> listStructuresCommand(context.getSource())))
                 .then(Commands.argument("name", StringArgumentType.word())
+                        .suggests((ctx, builder) -> net.minecraft.commands.SharedSuggestionProvider.suggest(ALL_STRUCTURE_NAMES, builder))
                         .executes(context -> spawnStructureCommand(context.getSource(), StringArgumentType.getString(context, "name")))));
 
-        // Atajo directo /npc <character>
-                // Atajo directo /dokkaebi <spawn|quest|dismiss>
         dispatcher.register(Commands.literal("dokkaebi")
                 .executes(context -> showDokkaebiQuestCommand(context.getSource()))
                 .then(Commands.literal("spawn")
-                        .requires(source -> source.hasPermission(2))
+                        .requires(source -> hasAdminOrCreatorPermission(source))
                         .executes(context -> spawnDokkaebiCommand(context.getSource())))
                 .then(Commands.literal("quest")
                         .executes(context -> showDokkaebiQuestCommand(context.getSource())))
                 .then(Commands.literal("scenario")
-                        .requires(source -> source.hasPermission(2))
-                        .executes(context -> triggerDokkaebiScenarioCommand(context.getSource())))
+                        .requires(source -> hasAdminOrCreatorPermission(source))
+                        .executes(context -> triggerDokkaebiScenarioCommand(context.getSource(), 0))
+                        .then(Commands.argument("target", com.mojang.brigadier.arguments.IntegerArgumentType.integer(1, 100))
+                                .executes(context -> triggerDokkaebiScenarioCommand(context.getSource(), com.mojang.brigadier.arguments.IntegerArgumentType.getInteger(context, "target")))))
                 .then(Commands.literal("dismiss")
                         .executes(context -> dismissDokkaebiCommand(context.getSource()))));
 
         dispatcher.register(Commands.literal("boss")
-                .requires(source -> source.hasPermission(2))
+                .requires(source -> hasAdminOrCreatorPermission(source))
                 .then(Commands.argument("type", StringArgumentType.word())
                         .executes(context -> spawnBossCommand(context.getSource(), StringArgumentType.getString(context, "type")))));
 
         dispatcher.register(Commands.literal("abyss")
                 .executes(context -> warpAbyss(context.getSource()))
+                .then(Commands.literal("cave").executes(context -> warpAbyssCave(context.getSource())))
+                .then(Commands.literal("cueva").executes(context -> warpAbyssCave(context.getSource())))
+                .then(Commands.literal("spiral").executes(context -> warpAbyss(context.getSource())))
                 .then(Commands.literal("menu").executes(context -> openAbyssMenu(context.getSource())))
                 .then(Commands.literal("gui").executes(context -> openAbyssMenu(context.getSource())))
                 .then(Commands.literal("open").executes(context -> openAbyssMenu(context.getSource())))
-                .then(Commands.literal("active").requires(s -> s.hasPermission(2)).executes(context -> setAbyssStateCommand(context.getSource(), true)))
-                .then(Commands.literal("unlock").requires(s -> s.hasPermission(2)).executes(context -> setAbyssStateCommand(context.getSource(), true)))
-                .then(Commands.literal("locked").requires(s -> s.hasPermission(2)).executes(context -> setAbyssStateCommand(context.getSource(), false)))
-                .then(Commands.literal("lock").requires(s -> s.hasPermission(2)).executes(context -> setAbyssStateCommand(context.getSource(), false)))
-                .then(Commands.literal("rebuild").requires(s -> s.hasPermission(2)).executes(context -> rebuildAbyssCommand(context.getSource()))));
+                .then(Commands.literal("advance").executes(context -> advanceAbyssFloor(context.getSource())))
+                .then(Commands.literal("next").executes(context -> advanceAbyssFloor(context.getSource())))
+                .then(Commands.literal("leave").executes(context -> leaveAbyssCommand(context.getSource())))
+                .then(Commands.literal("exit").executes(context -> leaveAbyssCommand(context.getSource())))
+                .then(Commands.literal("salir").executes(context -> leaveAbyssCommand(context.getSource())))
+                .then(Commands.literal("active").requires(s -> hasAdminOrCreatorPermission(s)).executes(context -> setAbyssStateCommand(context.getSource(), true)))
+                .then(Commands.literal("unlock").requires(s -> hasAdminOrCreatorPermission(s)).executes(context -> setAbyssStateCommand(context.getSource(), true)))
+                .then(Commands.literal("locked").requires(s -> hasAdminOrCreatorPermission(s)).executes(context -> setAbyssStateCommand(context.getSource(), false)))
+                .then(Commands.literal("lock").requires(s -> hasAdminOrCreatorPermission(s)).executes(context -> setAbyssStateCommand(context.getSource(), false)))
+                .then(Commands.literal("rebuild").requires(s -> hasAdminOrCreatorPermission(s)).executes(context -> rebuildAbyssCommand(context.getSource()))));
 
         dispatcher.register(Commands.literal("npc")
-                .requires(source -> source.hasPermission(2))
+                .requires(source -> hasAdminOrCreatorPermission(source))
                 .then(Commands.argument("character", StringArgumentType.word())
                         .executes(context -> spawnNpcCommand(context.getSource(), StringArgumentType.getString(context, "character")))));
 
-        // Comando /escape accesible para TODOS los jugadores sin permisos OP
         dispatcher.register(Commands.literal("escape")
                 .executes(context -> escapeCommand(context.getSource())));
 
-        // Comando /dungeon con subcomando /dungeon exit y /dungeon escape para todos los jugadores
         dispatcher.register(Commands.literal("dungeon")
                 .then(Commands.literal("exit").executes(context -> escapeCommand(context.getSource())))
                 .then(Commands.literal("escape").executes(context -> escapeCommand(context.getSource())))
                 .then(Commands.literal("salir").executes(context -> escapeCommand(context.getSource())))
+                .then(Commands.literal("claim").executes(context -> claimDungeonReward(context.getSource())))
+                .then(Commands.literal("asegurar").executes(context -> claimDungeonReward(context.getSource())))
+                .then(Commands.literal("gamble").executes(context -> gambleDungeonReward(context.getSource())))
+                .then(Commands.literal("apostar").executes(context -> gambleDungeonReward(context.getSource())))
                 .then(Commands.literal("start")
-                        .requires(source -> source.hasPermission(2))
+                        .requires(source -> hasAdminOrCreatorPermission(source))
                         .executes(context -> triggerDungeon(context.getSource(), "D", "crypt"))
                         .then(Commands.argument("rankOrTheme", StringArgumentType.word())
                                 .executes(context -> triggerDungeon(context.getSource(), StringArgumentType.getString(context, "rankOrTheme"), null))
                                 .then(Commands.argument("theme", StringArgumentType.word())
                                         .executes(context -> triggerDungeon(context.getSource(), StringArgumentType.getString(context, "rankOrTheme"), StringArgumentType.getString(context, "theme"))))))
                 .then(Commands.argument("rankOrTheme", StringArgumentType.word())
-                        .requires(source -> source.hasPermission(2))
+                        .requires(source -> hasAdminOrCreatorPermission(source))
                         .executes(context -> triggerDungeon(context.getSource(), StringArgumentType.getString(context, "rankOrTheme"), null))
                         .then(Commands.argument("theme", StringArgumentType.word())
-                                .executes(context -> triggerDungeon(context.getSource(), StringArgumentType.getString(context, "rankOrTheme"), StringArgumentType.getString(context, "theme"))))));
+                                .executes(context -> triggerDungeon(context.getSource(), StringArgumentType.getString(context, "rankOrTheme"), StringArgumentType.getString(context, "theme")))))
+                .then(Commands.literal("test_gate")
+                        .requires(source -> hasAdminOrCreatorPermission(source))
+                        .executes(context -> {
+                            ServerPlayer p = context.getSource().getPlayerOrException();
+                            BlockPos target = p.blockPosition().relative(p.getDirection(), 5);
+                            DungeonManager.buildDungeonGateRuins(p.serverLevel(), target);
+                            context.getSource().sendSuccess(() -> Component.literal("§5✦ Dungeon Gate Ruins NBT structure placed at §e" + target.toShortString() + "§5!"), true);
+                            return 1;
+                        }))
+                .then(Commands.literal("ruins")
+                        .requires(source -> hasAdminOrCreatorPermission(source))
+                        .executes(context -> {
+                            ServerPlayer p = context.getSource().getPlayerOrException();
+                            BlockPos target = p.blockPosition().relative(p.getDirection(), 5);
+                            DungeonManager.buildDungeonGateRuins(p.serverLevel(), target);
+                            context.getSource().sendSuccess(() -> Component.literal("§5✦ Dungeon Gate Ruins NBT structure placed at §e" + target.toShortString() + "§5!"), true);
+                            return 1;
+                        }))
+                .then(Commands.literal("rift")
+                        .requires(source -> hasAdminOrCreatorPermission(source))
+                        .then(Commands.argument("rank", StringArgumentType.word())
+                                .executes(context -> {
+                                    ServerPlayer p = context.getSource().getPlayerOrException();
+                                    DungeonManager.spawnRiftNear(p, StringArgumentType.getString(context, "rank"), "crypt", false);
+                                    return 1;
+                                })
+                                .then(Commands.argument("theme", StringArgumentType.word())
+                                        .executes(context -> {
+                                            ServerPlayer p = context.getSource().getPlayerOrException();
+                                            DungeonManager.spawnRiftNear(p, StringArgumentType.getString(context, "rank"), StringArgumentType.getString(context, "theme"), false);
+                                            return 1;
+                                        })
+                                        .then(Commands.argument("permanent", BoolArgumentType.bool())
+                                                .executes(context -> {
+                                                    ServerPlayer p = context.getSource().getPlayerOrException();
+                                                    DungeonManager.spawnRiftNear(p, StringArgumentType.getString(context, "rank"), StringArgumentType.getString(context, "theme"), BoolArgumentType.getBool(context, "permanent"));
+                                                    return 1;
+                                                }))))));
 
-        // Comando /tower exit para todos los jugadores
         dispatcher.register(Commands.literal("tower")
                 .then(Commands.literal("exit").executes(context -> escapeCommand(context.getSource())))
                 .then(Commands.literal("escape").executes(context -> escapeCommand(context.getSource())))
                 .then(Commands.literal("salir").executes(context -> escapeCommand(context.getSource())))
                 .then(Commands.literal("enter")
-                        .requires(source -> source.hasPermission(2))
-                        .executes(context -> enterTower(context.getSource()))));
+                        .requires(source -> hasAdminOrCreatorPermission(source))
+                        .executes(context -> enterTower(context.getSource())))
+                .then(Commands.literal("floor")
+                        .requires(source -> hasAdminOrCreatorPermission(source))
+                        .then(Commands.argument("floor", com.mojang.brigadier.arguments.IntegerArgumentType.integer(1, 100))
+                                .executes(context -> warpTowerFloor(context.getSource(), com.mojang.brigadier.arguments.IntegerArgumentType.getInteger(context, "floor"))))));
 
-        // Alias en español /sistema que redirige a /system
         dispatcher.register(Commands.literal("sistema")
                 .redirect(dispatcher.getRoot().getChild("system")));
 
-        // Atajo directo /murim
         dispatcher.register(Commands.literal("murim")
-                .requires(source -> source.hasPermission(2))
+                .requires(source -> hasAdminOrCreatorPermission(source))
                 .executes(context -> warpMurim(context.getSource())));
 
-        // Atajo directo /pagoda
         dispatcher.register(Commands.literal("pagoda")
                 .then(Commands.literal("exit").executes(context -> escapeCommand(context.getSource())))
                 .then(Commands.literal("salir").executes(context -> escapeCommand(context.getSource())))
                 .then(Commands.literal("escape").executes(context -> escapeCommand(context.getSource())))
                 .then(Commands.literal("enter")
-                        .requires(source -> source.hasPermission(2))
+                        .requires(source -> hasAdminOrCreatorPermission(source))
                         .executes(context -> enterPagodaTrial(context.getSource())))
                 .then(Commands.literal("entrar")
-                        .requires(source -> source.hasPermission(2))
+                        .requires(source -> hasAdminOrCreatorPermission(source))
                         .executes(context -> enterPagodaTrial(context.getSource())))
                 .then(Commands.literal("warp")
-                        .requires(source -> source.hasPermission(2))
+                        .requires(source -> hasAdminOrCreatorPermission(source))
                         .then(Commands.argument("stage", IntegerArgumentType.integer(1, 9))
-                                .executes(context -> warpPagodaStage(context.getSource(), IntegerArgumentType.getInteger(context, "stage"))))));
+                                .executes(context -> warpPagodaStage(context.getSource(), IntegerArgumentType.getInteger(context, "stage")))))
+                .then(Commands.literal("arena")
+                        .requires(source -> hasAdminOrCreatorPermission(source))
+                        .executes(context -> spawnPagodaArenaCommand(context.getSource(), 1))
+                        .then(Commands.argument("stage", IntegerArgumentType.integer(1, 9))
+                                .executes(context -> spawnPagodaArenaCommand(context.getSource(), IntegerArgumentType.getInteger(context, "stage"))))));
 
-        // Atajo directo para que las Constelaciones puedan renombrarse o regresar de proyección astral
         dispatcher.register(Commands.literal("constelacion")
                 .then(Commands.literal("nombre")
                         .then(Commands.argument("modifier", StringArgumentType.greedyString())
@@ -429,7 +632,12 @@ public final class SystemCommands {
                 .then(Commands.literal("regresar")
                         .executes(context -> returnFromAstral(context.getSource()))));
 
-        // Atajo directo /guide para todos los jugadores
+        dispatcher.register(Commands.literal("abyss_cave")
+                .executes(context -> warpAbyssCave(context.getSource())));
+
+        dispatcher.register(Commands.literal("cueva_abisal")
+                .executes(context -> warpAbyssCave(context.getSource())));
+
         dispatcher.register(Commands.literal("guide")
                 .executes(context -> openGuide(context.getSource())));
         dispatcher.register(Commands.literal("bestiary")
@@ -437,17 +645,30 @@ public final class SystemCommands {
         dispatcher.register(Commands.literal("bestiario")
                 .executes(context -> openBestiary(context.getSource())));
 
-        // Atajo directo /gacha, /wish, /deseos para todos los jugadores
         dispatcher.register(Commands.literal("gacha")
                 .executes(context -> openGachaCommand(context.getSource())));
         dispatcher.register(Commands.literal("wish")
                 .executes(context -> openGachaCommand(context.getSource())));
-        dispatcher.register(Commands.literal("deseos")
+        dispatcher.register(Commands.literal("wishes")
                 .executes(context -> openGachaCommand(context.getSource())));
 
-        // Atajo directo /teyvat [mondstadt | liyue | inazuma | sumeru | fontaine | spawn | abyss | rebuild]
+        dispatcher.register(Commands.literal("banner")
+                .requires(source -> hasAdminOrCreatorPermission(source))
+                .then(Commands.literal("reset").executes(context -> resetBannerCommand(context.getSource())))
+                .then(Commands.literal("set_phase")
+                        .then(Commands.argument("phase", com.mojang.brigadier.arguments.IntegerArgumentType.integer(1, 34))
+                                .executes(context -> setBannerPhaseCommand(context.getSource(), com.mojang.brigadier.arguments.IntegerArgumentType.getInteger(context, "phase"))))));
+
+        dispatcher.register(Commands.literal("awakening")
+                .requires(source -> hasAdminOrCreatorPermission(source))
+                .then(Commands.literal("banner")
+                        .then(Commands.literal("reset").executes(context -> resetBannerCommand(context.getSource())))
+                        .then(Commands.literal("set_phase")
+                                .then(Commands.argument("phase", com.mojang.brigadier.arguments.IntegerArgumentType.integer(1, 34))
+                                        .executes(context -> setBannerPhaseCommand(context.getSource(), com.mojang.brigadier.arguments.IntegerArgumentType.getInteger(context, "phase")))))));
+
         dispatcher.register(Commands.literal("teyvat")
-                .requires(source -> source.hasPermission(2))
+                .requires(source -> hasAdminOrCreatorPermission(source))
                 .executes(context -> warpTeyvat(context.getSource()))
                 .then(Commands.literal("warp").executes(context -> warpTeyvat(context.getSource())))
                 .then(Commands.literal("golden_house").executes(context -> warpTeyvatCapital(context.getSource(), "golden_house")))
@@ -469,6 +690,8 @@ public final class SystemCommands {
                 .then(Commands.literal("inazuma").executes(context -> warpTeyvatCapital(context.getSource(), "inazuma")))
                 .then(Commands.literal("sumeru").executes(context -> warpTeyvatCapital(context.getSource(), "sumeru")))
                 .then(Commands.literal("fontaine").executes(context -> warpTeyvatCapital(context.getSource(), "fontaine")))
+                .then(Commands.literal("casino").executes(context -> warpCasinoCommand(context.getSource())))
+                .then(Commands.literal("gran_casino").executes(context -> warpCasinoCommand(context.getSource())))
                 .then(Commands.literal("spawn").executes(context -> warpTeyvat(context.getSource())))
                 .then(Commands.literal("locate")
                         .executes(context -> locateTeyvatStructureCommand(context.getSource(), null))
@@ -492,9 +715,8 @@ public final class SystemCommands {
                 .then(Commands.argument("destination", StringArgumentType.word())
                         .executes(context -> warpTeyvatCapital(context.getSource(), StringArgumentType.getString(context, "destination")))));
 
-        // Atajo directo /tp_teyvat [destination]
         dispatcher.register(Commands.literal("tp_teyvat")
-                .requires(source -> source.hasPermission(2))
+                .requires(source -> hasAdminOrCreatorPermission(source))
                 .executes(context -> warpTeyvat(context.getSource()))
                 .then(Commands.literal("golden_house").executes(context -> warpTeyvatCapital(context.getSource(), "golden_house")))
                 .then(Commands.literal("childe").executes(context -> warpTeyvatCapital(context.getSource(), "golden_house")))
@@ -509,39 +731,43 @@ public final class SystemCommands {
                 .then(Commands.literal("inazuma").executes(context -> warpTeyvatCapital(context.getSource(), "inazuma")))
                 .then(Commands.literal("sumeru").executes(context -> warpTeyvatCapital(context.getSource(), "sumeru")))
                 .then(Commands.literal("fontaine").executes(context -> warpTeyvatCapital(context.getSource(), "fontaine")))
-                .then(Commands.literal("spawn").executes(context -> warpTeyvat(context.getSource())))
-                .then(Commands.literal("abyss").executes(context -> warpAbyss(context.getSource())))
+                .then(Commands.literal("casino").executes(context -> warpCasinoCommand(context.getSource())))
+                .then(Commands.literal("abyss")
+                        .executes(context -> warpAbyss(context.getSource()))
+                        .then(Commands.literal("cave").executes(context -> warpAbyssCave(context.getSource())))
+                        .then(Commands.literal("cueva").executes(context -> warpAbyssCave(context.getSource())))
+                        .then(Commands.literal("spiral").executes(context -> warpAbyss(context.getSource()))))
+                .then(Commands.literal("cueva_abisal").executes(context -> warpAbyssCave(context.getSource())))
+                .then(Commands.literal("abyss_cave").executes(context -> warpAbyssCave(context.getSource())))
+                .then(Commands.literal("racetrack").executes(context -> warpRacetrackCommand(context.getSource())))
+                .then(Commands.literal("hipodromo").executes(context -> warpRacetrackCommand(context.getSource())))
                 .then(Commands.argument("capital", StringArgumentType.word())
                         .executes(context -> warpTeyvatCapital(context.getSource(), StringArgumentType.getString(context, "capital")))));
 
-        // Atajo directo /resetprogress para reiniciar progreso personal o de terceros
         dispatcher.register(Commands.literal("resetprogress")
                 .executes(context -> {
                     if (context.getSource().getEntity() instanceof ServerPlayer sp) {
                         return resetPlayer(context.getSource(), sp);
                     } else {
-                        context.getSource().sendFailure(Component.literal("Especifica un jugador: /resetprogress <jugador>"));
+                        context.getSource().sendFailure(Component.literal("Specify a player: /resetprogress <player>"));
                         return 0;
                     }
                 })
                 .then(Commands.argument("target", EntityArgument.player())
-                        .requires(source -> source.hasPermission(2))
+                        .requires(source -> hasAdminOrCreatorPermission(source))
                         .executes(context -> resetPlayer(context.getSource(), EntityArgument.getPlayer(context, "target")))));
 
-        // Atajo directo /trance
         dispatcher.register(Commands.literal("trance")
-                .requires(source -> source.hasPermission(2))
+                .requires(source -> hasAdminOrCreatorPermission(source))
                 .executes(context -> triggerTrance(context.getSource())));
 
-        // Atajo directo /cultivate y /meditate
         dispatcher.register(Commands.literal("cultivate")
                 .executes(context -> cultivate(context.getSource())));
         dispatcher.register(Commands.literal("meditate")
                 .executes(context -> cultivate(context.getSource())));
 
-        // Atajo directo /worldtree y /arboldelmundo
         dispatcher.register(Commands.literal("worldtree")
-                .requires(source -> source.hasPermission(2))
+                .requires(source -> hasAdminOrCreatorPermission(source))
                 .executes(context -> warpWorldTree(context.getSource(), null))
                 .then(Commands.literal("procedural")
                         .executes(context -> warpWorldTree(context.getSource(), "procedural")))
@@ -551,7 +777,7 @@ public final class SystemCommands {
                         .executes(context -> warpWorldTree(context.getSource(), "rebuild"))));
 
         dispatcher.register(Commands.literal("arboldelmundo")
-                .requires(source -> source.hasPermission(2))
+                .requires(source -> hasAdminOrCreatorPermission(source))
                 .executes(context -> warpWorldTree(context.getSource(), null))
                 .then(Commands.literal("procedural")
                         .executes(context -> warpWorldTree(context.getSource(), "procedural")))
@@ -560,9 +786,8 @@ public final class SystemCommands {
                 .then(Commands.literal("rebuild")
                         .executes(context -> warpWorldTree(context.getSource(), "rebuild"))));
 
-        // 2. Comandos directos de conveniencia /coins y /givecoins
         dispatcher.register(Commands.literal("coins")
-                .requires(source -> source.hasPermission(2))
+                .requires(source -> hasAdminOrCreatorPermission(source))
                 .executes(context -> showCoins(context.getSource()))
                 .then(Commands.argument("amount", IntegerArgumentType.integer())
                         .executes(context -> giveCoins(context.getSource(),
@@ -573,7 +798,7 @@ public final class SystemCommands {
                                         EntityArgument.getPlayer(context, "target"))))));
 
         dispatcher.register(Commands.literal("givecoins")
-                .requires(source -> source.hasPermission(2))
+                .requires(source -> hasAdminOrCreatorPermission(source))
                 .executes(context -> showCoins(context.getSource()))
                 .then(Commands.argument("amount", IntegerArgumentType.integer())
                         .executes(context -> giveCoins(context.getSource(),
@@ -582,29 +807,207 @@ public final class SystemCommands {
                                 .executes(context -> giveCoins(context.getSource(),
                                         IntegerArgumentType.getInteger(context, "amount"),
                                         EntityArgument.getPlayer(context, "target"))))));
+
+        dispatcher.register(Commands.literal("carats")
+                .executes(context -> showCarats(context.getSource()))
+                .then(Commands.argument("amount", IntegerArgumentType.integer())
+                        .requires(source -> hasAdminOrCreatorPermission(source))
+                        .executes(context -> giveCarats(context.getSource(),
+                                IntegerArgumentType.getInteger(context, "amount"), null))
+                        .then(Commands.argument("target", EntityArgument.player())
+                                .executes(context -> giveCarats(context.getSource(),
+                                        IntegerArgumentType.getInteger(context, "amount"),
+                                        EntityArgument.getPlayer(context, "target"))))));
+
+        dispatcher.register(Commands.literal("givecarats")
+                .requires(source -> hasAdminOrCreatorPermission(source))
+                .executes(context -> showCarats(context.getSource()))
+                .then(Commands.argument("amount", IntegerArgumentType.integer())
+                        .executes(context -> giveCarats(context.getSource(),
+                                IntegerArgumentType.getInteger(context, "amount"), null))
+                        .then(Commands.argument("target", EntityArgument.player())
+                                .executes(context -> giveCarats(context.getSource(),
+                                        IntegerArgumentType.getInteger(context, "amount"),
+                                        EntityArgument.getPlayer(context, "target"))))));
+
+        dispatcher.register(Commands.literal("umahub")
+                .executes(context -> {
+                    if (context.getSource().getEntity() instanceof ServerPlayer player) {
+                        com.soybe.awakeningsystem.block.CustomRacetrackBlock.openHub(player, null);
+                        return 1;
+                    }
+                    return 0;
+                }));
+
+        dispatcher.register(Commands.literal("racetrack")
+                .executes(context -> warpRacetrackCommand(context.getSource()))
+                .then(Commands.literal("tp").executes(context -> warpRacetrackCommand(context.getSource())))
+                .then(Commands.literal("upgrade").executes(context -> upgradeRacetrackMaterialsCommand(context.getSource())))
+                .then(Commands.literal("update_materials").executes(context -> upgradeRacetrackMaterialsCommand(context.getSource())))
+                .then(Commands.literal("rebuild").executes(context -> rebuildRacetrackCommand(context.getSource())))
+                .then(Commands.literal("start").executes(context -> startRacetrackCommand(context.getSource())))
+                .then(Commands.literal("export_circuit").executes(context -> exportCircuitJsonCommand(context.getSource())))
+                .then(Commands.literal("reload_circuit").executes(context -> reloadCircuitJsonCommand(context.getSource(), "custom_racetrack.json"))
+                        .then(Commands.argument("file", StringArgumentType.string()).executes(context -> reloadCircuitJsonCommand(context.getSource(), StringArgumentType.getString(context, "file")))))
+                .then(Commands.literal("export").executes(context -> exportRacetrackCommand(context.getSource(), 0))
+                        .then(Commands.argument("radius", IntegerArgumentType.integer(10, 300)).executes(context -> exportRacetrackCommand(context.getSource(), IntegerArgumentType.getInteger(context, "radius"))))));
+
+        dispatcher.register(Commands.literal("hipodromo")
+                .executes(context -> warpRacetrackCommand(context.getSource()))
+                .then(Commands.literal("tp").executes(context -> warpRacetrackCommand(context.getSource())))
+                .then(Commands.literal("upgrade").executes(context -> upgradeRacetrackMaterialsCommand(context.getSource())))
+                .then(Commands.literal("update_materials").executes(context -> upgradeRacetrackMaterialsCommand(context.getSource())))
+                .then(Commands.literal("rebuild").executes(context -> rebuildRacetrackCommand(context.getSource())))
+                .then(Commands.literal("start").executes(context -> startRacetrackCommand(context.getSource())))
+                .then(Commands.literal("export_circuit").executes(context -> exportCircuitJsonCommand(context.getSource())))
+                .then(Commands.literal("reload_circuit").executes(context -> reloadCircuitJsonCommand(context.getSource(), "custom_racetrack.json"))
+                        .then(Commands.argument("file", StringArgumentType.string()).executes(context -> reloadCircuitJsonCommand(context.getSource(), StringArgumentType.getString(context, "file")))))
+                .then(Commands.literal("export").executes(context -> exportRacetrackCommand(context.getSource(), 0))
+                        .then(Commands.argument("radius", IntegerArgumentType.integer(10, 300)).executes(context -> exportRacetrackCommand(context.getSource(), IntegerArgumentType.getInteger(context, "radius"))))));
+
+        dispatcher.register(Commands.literal("uma")
+                .then(Commands.literal("track")
+                        .then(Commands.literal("upgrade").executes(context -> upgradeRacetrackMaterialsCommand(context.getSource())))
+                        .then(Commands.literal("update_materials").executes(context -> upgradeRacetrackMaterialsCommand(context.getSource())))
+                        .then(Commands.literal("export").executes(context -> exportRacetrackCommand(context.getSource(), 0))
+                                .then(Commands.argument("radius", IntegerArgumentType.integer(10, 300)).executes(context -> exportRacetrackCommand(context.getSource(), IntegerArgumentType.getInteger(context, "radius")))))
+                        .then(Commands.literal("rebuild").executes(context -> rebuildRacetrackCommand(context.getSource())))
+                        .then(Commands.literal("tp").executes(context -> warpRacetrackCommand(context.getSource()))))
+                .then(Commands.literal("start").executes(context -> startRacetrackCommand(context.getSource())))
+                .then(Commands.literal("hub").executes(context -> {
+                    if (context.getSource().getEntity() instanceof ServerPlayer player) {
+                        com.soybe.awakeningsystem.block.CustomRacetrackBlock.openHub(player, null);
+                        return 1;
+                    }
+                    return 0;
+                })));
+
+        dispatcher.register(Commands.literal("casino")
+                .executes(context -> warpCasinoCommand(context.getSource()))
+                .then(Commands.literal("tp").executes(context -> warpCasinoCommand(context.getSource())))
+                .then(Commands.literal("claim_jackpot").executes(context -> claimJackpotCommand(context.getSource())))
+                .then(Commands.literal("jackpot").executes(context -> claimJackpotCommand(context.getSource())))
+                .then(Commands.literal("build").requires(s -> hasAdminOrCreatorPermission(s)).executes(context -> rebuildCasinoCommand(context.getSource())))
+                .then(Commands.literal("rebuild").requires(s -> hasAdminOrCreatorPermission(s)).executes(context -> rebuildCasinoCommand(context.getSource())))
+                .then(Commands.literal("clear_furniture").requires(s -> hasAdminOrCreatorPermission(s))
+                        .executes(context -> clearCasinoFurnitureCommand(context.getSource(), 40))
+                        .then(Commands.argument("radius", IntegerArgumentType.integer(5, 100))
+                                .executes(context -> clearCasinoFurnitureCommand(context.getSource(), IntegerArgumentType.getInteger(context, "radius")))))
+                .then(Commands.literal("export").requires(s -> hasAdminOrCreatorPermission(s))
+                        .executes(context -> exportCasinoFurnitureCommand(context.getSource(), "casino_custom.json", 40))
+                        .then(Commands.argument("name", StringArgumentType.string())
+                                .executes(context -> exportCasinoFurnitureCommand(context.getSource(), StringArgumentType.getString(context, "name"), 40))
+                                .then(Commands.argument("radius", IntegerArgumentType.integer(5, 100))
+                                        .executes(context -> exportCasinoFurnitureCommand(context.getSource(), StringArgumentType.getString(context, "name"), IntegerArgumentType.getInteger(context, "radius"))))))
+                .then(Commands.literal("import").requires(s -> hasAdminOrCreatorPermission(s))
+                        .executes(context -> importCasinoFurnitureCommand(context.getSource(), "casino_custom.json"))
+                        .then(Commands.argument("name", StringArgumentType.string())
+                                .executes(context -> importCasinoFurnitureCommand(context.getSource(), StringArgumentType.getString(context, "name")))))
+                .then(Commands.literal("populate").requires(s -> hasAdminOrCreatorPermission(s))
+                        .executes(context -> populateCasinoFurnitureCommand(context.getSource()))));
+
+        dispatcher.register(Commands.literal("announcement")
+                .requires(s -> hasAdminOrCreatorPermission(s))
+                .executes(context -> testAnnouncementCommand(context.getSource(), "mythic"))
+                .then(Commands.literal("test").executes(context -> testAnnouncementCommand(context.getSource(), "mythic")))
+                .then(Commands.literal("mythic").executes(context -> testAnnouncementCommand(context.getSource(), "mythic")))
+                .then(Commands.literal("gold").executes(context -> testAnnouncementCommand(context.getSource(), "gold")))
+                .then(Commands.literal("doncella").executes(context -> testAnnouncementCommand(context.getSource(), "doncella")))
+                .then(Commands.argument("title", StringArgumentType.string())
+                        .then(Commands.argument("message", StringArgumentType.greedyString())
+                                .executes(context -> customAnnouncementCommand(context.getSource(),
+                                        StringArgumentType.getString(context, "title"),
+                                        StringArgumentType.getString(context, "message"))))));
+
+        dispatcher.register(Commands.literal("black_market")
+                .executes(context -> warpBlackMarketCommand(context.getSource()))
+                .then(Commands.literal("tp").executes(context -> warpBlackMarketCommand(context.getSource())))
+                .then(Commands.literal("surface").executes(context -> warpBlackMarketSurfaceCommand(context.getSource())))
+                .then(Commands.literal("superficie").executes(context -> warpBlackMarketSurfaceCommand(context.getSource())))
+                .then(Commands.literal("locate").executes(context -> locateBlackMarketCommand(context.getSource())))
+                .then(Commands.literal("build").requires(s -> hasAdminOrCreatorPermission(s)).executes(context -> buildBlackMarketCommand(context.getSource())))
+                .then(Commands.literal("open").executes(context -> openBlackMarketCommand(context.getSource())))
+                .then(Commands.literal("export").requires(s -> hasAdminOrCreatorPermission(s))
+                        .executes(context -> exportBlackMarketCommand(context.getSource(), "default", 16))
+                        .then(Commands.argument("nombre", StringArgumentType.word())
+                                .executes(context -> exportBlackMarketCommand(context.getSource(), StringArgumentType.getString(context, "nombre"), 16))
+                                .then(Commands.argument("radio", IntegerArgumentType.integer(5, 64))
+                                        .executes(context -> exportBlackMarketCommand(context.getSource(), StringArgumentType.getString(context, "nombre"), IntegerArgumentType.getInteger(context, "radio"))))))
+                .then(Commands.literal("import").requires(s -> hasAdminOrCreatorPermission(s))
+                        .executes(context -> importBlackMarketCommand(context.getSource(), "default"))
+                        .then(Commands.argument("nombre", StringArgumentType.word())
+                                .executes(context -> importBlackMarketCommand(context.getSource(), StringArgumentType.getString(context, "nombre"))))));
+
+        dispatcher.register(Commands.literal("mercado_negro")
+                .executes(context -> warpBlackMarketCommand(context.getSource()))
+                .then(Commands.literal("tp").executes(context -> warpBlackMarketCommand(context.getSource())))
+                .then(Commands.literal("surface").executes(context -> warpBlackMarketSurfaceCommand(context.getSource())))
+                .then(Commands.literal("superficie").executes(context -> warpBlackMarketSurfaceCommand(context.getSource())))
+                .then(Commands.literal("locate").executes(context -> locateBlackMarketCommand(context.getSource())))
+                .then(Commands.literal("build").requires(s -> hasAdminOrCreatorPermission(s)).executes(context -> buildBlackMarketCommand(context.getSource())))
+                .then(Commands.literal("open").executes(context -> openBlackMarketCommand(context.getSource())))
+                .then(Commands.literal("export").requires(s -> hasAdminOrCreatorPermission(s))
+                        .executes(context -> exportBlackMarketCommand(context.getSource(), "default", 16))
+                        .then(Commands.argument("nombre", StringArgumentType.word())
+                                .executes(context -> exportBlackMarketCommand(context.getSource(), StringArgumentType.getString(context, "nombre"), 16))
+                                .then(Commands.argument("radio", IntegerArgumentType.integer(5, 64))
+                                        .executes(context -> exportBlackMarketCommand(context.getSource(), StringArgumentType.getString(context, "nombre"), IntegerArgumentType.getInteger(context, "radio"))))))
+                .then(Commands.literal("import").requires(s -> hasAdminOrCreatorPermission(s))
+                        .executes(context -> importBlackMarketCommand(context.getSource(), "default"))
+                        .then(Commands.argument("nombre", StringArgumentType.word())
+                                .executes(context -> importBlackMarketCommand(context.getSource(), StringArgumentType.getString(context, "nombre"))))));
+
+        dispatcher.register(Commands.literal("black_market_surface")
+                .executes(context -> warpBlackMarketSurfaceCommand(context.getSource())));
+
+        dispatcher.register(Commands.literal("mercado_negro_superficie")
+                .executes(context -> warpBlackMarketSurfaceCommand(context.getSource())));
+    }
+
+    private static int resetBannerCommand(CommandSourceStack source) {
+        net.minecraft.server.MinecraftServer server = source.getServer();
+        long now = server.overworld().getDayTime();
+        DimensionGenSavedData data = DimensionGenSavedData.get(server);
+        data.setBannerEpochStartTick(now);
+        PromotionalBanner.setBannerEpochTick(now);
+        PromotionalBanner.BannerPhase phase1 = PromotionalBanner.getActivePhase(now, 0);
+        source.sendSuccess(() -> Component.literal("§6§l✦ [BANNERS RESET] §fThe promotional banner cycle has begun from §ePhase 1: " + phase1.bannerTitle() + " (" + phase1.franchise().displayName() + ") §fwith §a14 days remaining §f(336,000 ticks)."), true);
+        return 1;
+    }
+
+    private static int setBannerPhaseCommand(CommandSourceStack source, int phase) {
+        net.minecraft.server.MinecraftServer server = source.getServer();
+        long now = server.overworld().getDayTime();
+        long targetEpoch = now - (long) (phase - 1) * PromotionalBanner.BANNER_CYCLE_TICKS;
+        DimensionGenSavedData data = DimensionGenSavedData.get(server);
+        data.setBannerEpochStartTick(targetEpoch);
+        PromotionalBanner.setBannerEpochTick(targetEpoch);
+        PromotionalBanner.BannerPhase activeP = PromotionalBanner.getActivePhase(now, 0);
+        source.sendSuccess(() -> Component.literal("§6§l✦ [PHASE CHANGED] §fSet to §ePhase " + phase + ": " + activeP.bannerTitle() + " (" + activeP.franchise().displayName() + ") §fwith §a14 days remaining§f."), true);
+        return 1;
     }
 
     private static int show(CommandSourceStack source) {
         if (!(source.getEntity() instanceof ServerPlayer player)) {
-            source.sendFailure(Component.literal("Este comando debe ser ejecutado por un jugador."));
+            source.sendFailure(Component.literal("This command must be executed by a player."));
             return 0;
         }
         SystemData data = SystemEvents.data(player);
-        source.sendSuccess(() -> Component.literal("§b========== SISTEMA ==========\n" +
-                "§fNivel: §e" + data.level() + " §7| §fEXP: §b" + data.experience() + "/" + data.nextLevelExperience() + "\n" +
-                "§6Monedas: §e" + data.coins() + " §8| §ePuntos: §a" + data.attributePoints() + "\n" +
-                "§c⚔ FUE §f" + data.strength() + "  §a❤ VIT §f" + data.vitality() + "  §b⚡ AGI §f" + data.agility() + "\n" +
-                "§d👁 PER §f" + data.perception() + "  §9🧠 INT §f" + data.intelligence() + "  §5🛡 VOL §f" + data.willpower()), false);
+        source.sendSuccess(() -> Component.literal("§b========== SYSTEM ==========\n" +
+                "§fLevel: §e" + data.level() + " §7| §fEXP: §b" + data.experience() + "/" + data.nextLevelExperience() + "\n" +
+                "§6Coins: §e" + data.coins() + " §8| §ePoints: §a" + data.attributePoints() + "\n" +
+                "§c⚔ STR §f" + data.strength() + "  §a❤ VIT §f" + data.vitality() + "  §b⚡ AGI §f" + data.agility() + "\n" +
+                "§d👁 PER §f" + data.perception() + "  §9🧠 INT §f" + data.intelligence() + "  §5🛡 WIL §f" + data.willpower()), false);
         return 1;
     }
 
     private static int showCoins(CommandSourceStack source) {
         if (!(source.getEntity() instanceof ServerPlayer player)) {
-            source.sendFailure(Component.literal("Uso: /coins <cantidad> <jugador>"));
+            source.sendFailure(Component.literal("Usage: /coins <amount> <player>"));
             return 0;
         }
         SystemData data = SystemEvents.data(player);
-        source.sendSuccess(() -> Component.literal("§6§l[SISTEMA]§r Saldo actual: §e" + data.coins() + " §fmonedas del Despertar. (Usa: §e/coins <cantidad>§f)"), false);
+        source.sendSuccess(() -> Component.literal("§6§l[SYSTEM]§r Current balance: §e" + data.coins() + " §fAwakening coins. (Use: §e/coins <amount>§f)"), false);
         return 1;
     }
 
@@ -614,7 +1017,7 @@ public final class SystemCommands {
             player = sp;
         }
         if (player == null) {
-            source.sendFailure(Component.literal("Debes especificar un jugador objetivo."));
+            source.sendFailure(Component.literal("You must specify a target player."));
             return 0;
         }
         SystemData data = SystemEvents.data(player);
@@ -624,14 +1027,42 @@ public final class SystemCommands {
         AwakeningSystemMod.notify(player, "awakening_system.notification.shop.coin_title",
                 "awakening_system.notification.shop.coin_message", 0xFFFFD866, amount);
         final ServerPlayer finalPlayer = player;
-        source.sendSuccess(() -> Component.literal("§6§l[SISTEMA]§r Se han añadido §e" + amount + " §fmonedas a §b"
-                + finalPlayer.getGameProfile().getName() + "§f. Total: §e" + data.coins() + " §fmonedas."), true);
+        source.sendSuccess(() -> Component.literal("§6§l[SYSTEM]§r Added §e" + amount + " §fcoins to §b"
+                + finalPlayer.getGameProfile().getName() + "§f. Total: §e" + data.coins() + " §fcoins."), true);
+        return 1;
+    }
+
+    private static int showCarats(CommandSourceStack source) {
+        if (!(source.getEntity() instanceof ServerPlayer player)) {
+            source.sendFailure(Component.literal("Usage: /carats <amount> [player]"));
+            return 0;
+        }
+        SystemData data = SystemEvents.data(player);
+        source.sendSuccess(() -> Component.literal("§6🥕 [TRACEN] §fCurrent Carats balance: §e" + data.getCarats() + " 🥕§f."), false);
+        return 1;
+    }
+
+    private static int giveCarats(CommandSourceStack source, int amount, ServerPlayer target) {
+        ServerPlayer player = target;
+        if (player == null && source.getEntity() instanceof ServerPlayer sp) {
+            player = sp;
+        }
+        if (player == null) {
+            source.sendFailure(Component.literal("You must specify a target player."));
+            return 0;
+        }
+        SystemData data = SystemEvents.data(player);
+        data.addCarats(amount);
+        AwakeningSystemMod.sync(player);
+        final ServerPlayer finalPlayer = player;
+        source.sendSuccess(() -> Component.literal("§6🥕 [TRACEN] §fGranted §e" + amount + " Carats 🥕 §fto §e"
+                + finalPlayer.getGameProfile().getName() + "§f. Total: §e" + data.getCarats() + " 🥕§f."), true);
         return 1;
     }
 
     private static int giveAll(CommandSourceStack source) {
         if (!(source.getEntity() instanceof ServerPlayer player)) {
-            source.sendFailure(Component.literal("Este comando debe ser ejecutado por un jugador."));
+            source.sendFailure(Component.literal("This command must be executed by a player."));
             return 0;
         }
         SystemEvents.grantAll(player);
@@ -642,7 +1073,7 @@ public final class SystemCommands {
             player.getInventory().add(new ItemStack(keyItem, 16));
         }
         AwakeningSystemMod.sync(player);
-        source.sendSuccess(() -> Component.literal("§a§l[SISTEMA]§r ¡Desbloqueo total completado! Nivel 490, 47 habilidades desbloqueadas a Nivel VI (activas, pasivas y manhwas), títulos míticos, afinidades al máximo, 16 llaves de mazmorra y 1.000.000 de monedas."), true);
+        source.sendSuccess(() -> Component.literal("§a§l[SYSTEM]§r Full unlock complete! Level " + data.level() + ", " + data.skills().size() + " skills unlocked at Level VI (active, passive, and manhwas), mythic titles, max affinities, 16 dungeon keys, and 1,000,000 coins."), true);
         return 1;
     }
 
@@ -654,32 +1085,32 @@ public final class SystemCommands {
         AwakeningSystemMod.sync(target);
 
         target.displayClientMessage(Component.translatable("awakening_system.command.reset_success"), true);
-        source.sendSuccess(() -> Component.literal("§a§l[SISTEMA]§r Se ha restablecido todo el progreso de §e" + target.getGameProfile().getName() + "§r."), true);
+        source.sendSuccess(() -> Component.literal("§a§l[SYSTEM]§r All progress has been reset for §e" + target.getGameProfile().getName() + "§r."), true);
         return 1;
     }
 
     private static int addAttribute(CommandSourceStack source, String name) {
         if (!(source.getEntity() instanceof ServerPlayer player)) {
-            source.sendFailure(Component.literal("Este comando debe ser ejecutado por un jugador."));
+            source.sendFailure(Component.literal("This command must be executed by a player."));
             return 0;
         }
         if (!SystemEvents.spendAttribute(player, name)) {
-            source.sendFailure(Component.literal("Atributo invalido o no tienes puntos disponibles."));
+            source.sendFailure(Component.literal("Invalid attribute or no points available."));
             return 0;
         }
-        source.sendSuccess(() -> Component.literal("Atributo mejorado: " + name), false);
+        source.sendSuccess(() -> Component.literal("Attribute upgraded: " + name), false);
         return 1;
     }
 
     private static int inspect(CommandSourceStack source, ServerPlayer target) {
         SystemData data = SystemEvents.data(target);
-        source.sendSuccess(() -> Component.literal("=== INSPECCIÓN: " + target.getGameProfile().getName() + " ===").withStyle(ChatFormatting.GOLD), false);
-        source.sendSuccess(() -> Component.literal("Nivel: " + data.level() + " | Prestigio: " + data.prestigeLevel() + " | Monedas: " + data.coins()).withStyle(ChatFormatting.AQUA), false);
-        source.sendSuccess(() -> Component.literal("FUE " + data.strength() + "  VIT " + data.vitality() + "  AGI " + data.agility()
-                + "  PER " + data.perception() + "  INT " + data.intelligence() + "  VOL " + data.willpower()).withStyle(ChatFormatting.WHITE), false);
-        source.sendSuccess(() -> Component.literal("Mobs derrotados: " + data.creaturesDefeated() + " | Jefes: " + data.bossKills()
-                + " | Misiones completadas: " + data.missionsCompleted()).withStyle(ChatFormatting.GREEN), false);
-        source.sendSuccess(() -> Component.literal("Habilidades (" + data.skills().size() + "): " + data.skills().keySet()).withStyle(ChatFormatting.LIGHT_PURPLE), false);
+        source.sendSuccess(() -> Component.literal("=== INSPECT: " + target.getGameProfile().getName() + " ===").withStyle(ChatFormatting.GOLD), false);
+        source.sendSuccess(() -> Component.literal("Level: " + data.level() + " | Prestige: " + data.prestigeLevel() + " | Coins: " + data.coins()).withStyle(ChatFormatting.AQUA), false);
+        source.sendSuccess(() -> Component.literal("STR " + data.strength() + "  VIT " + data.vitality() + "  AGI " + data.agility()
+                + "  PER " + data.perception() + "  INT " + data.intelligence() + "  WIL " + data.willpower()).withStyle(ChatFormatting.WHITE), false);
+        source.sendSuccess(() -> Component.literal("Defeated Mobs: " + data.creaturesDefeated() + " | Bosses: " + data.bossKills()
+                + " | Completed Quests: " + data.missionsCompleted()).withStyle(ChatFormatting.GREEN), false);
+        source.sendSuccess(() -> Component.literal("Skills (" + data.skills().size() + "): " + data.skills().keySet()).withStyle(ChatFormatting.LIGHT_PURPLE), false);
         return 1;
     }
 
@@ -693,14 +1124,14 @@ public final class SystemCommands {
             return pCmp != 0 ? pCmp : Integer.compare(db.level(), da.level());
         });
 
-        source.sendSuccess(() -> Component.literal("=== CLASIFICACION DEL SISTEMA ===").withStyle(ChatFormatting.GOLD), false);
+        source.sendSuccess(() -> Component.literal("=== SYSTEM LEADERBOARD ===").withStyle(ChatFormatting.GOLD), false);
         int rank = 1;
         for (ServerPlayer player : players) {
             if (rank > 5) break;
             SystemData d = SystemEvents.data(player);
             final int pos = rank;
             source.sendSuccess(() -> Component.literal("#" + pos + " " + player.getGameProfile().getName()
-                    + " | Nvl: " + d.level() + " | Prestigio: " + d.prestigeLevel()
+                    + " | Lvl: " + d.level() + " | Prestige: " + d.prestigeLevel()
                     + " | Mobs: " + d.creaturesDefeated()).withStyle(pos == 1 ? ChatFormatting.YELLOW : ChatFormatting.AQUA), false);
             rank++;
         }
@@ -715,7 +1146,7 @@ public final class SystemCommands {
                 "awakening_system.notification.trance.message", 0xFFFF5555);
         player.playNotifySound(net.minecraft.sounds.SoundEvents.ENDER_DRAGON_GROWL, net.minecraft.sounds.SoundSource.PLAYERS, 0.7F, 1.8F);
         AwakeningSystemMod.sync(player);
-        source.sendSuccess(() -> Component.literal("§c§l[MODO TRANCE]§r Activado por 10 segundos. (Daño +3.0 y ataques de barrido activados).").withStyle(ChatFormatting.RED), false);
+        source.sendSuccess(() -> Component.literal("§c§l[TRANCE MODE]§r Activated for 10 seconds. (+3.0 Damage and sweeping edge attacks enabled).").withStyle(ChatFormatting.RED), false);
         return 1;
     }
 
@@ -724,7 +1155,7 @@ public final class SystemCommands {
         SystemData data = SystemEvents.data(player);
         data.setComboCount(count);
         AwakeningSystemMod.sync(player);
-        source.sendSuccess(() -> Component.literal("§e§l[COMBO]§r Contador fijado en: §f" + count), false);
+        source.sendSuccess(() -> Component.literal("§e§l[COMBO]§r Counter set to: §f" + count), false);
         return 1;
     }
 
@@ -734,17 +1165,17 @@ public final class SystemCommands {
         data.setLevel(level);
         SystemAttributeEffects.apply(player);
         AwakeningSystemMod.sync(player);
-        source.sendSuccess(() -> Component.literal("§a§l[NIVEL]§r Nivel establecido en: §e" + level + "§a. Puntos de atributo calculados."), false);
+        source.sendSuccess(() -> Component.literal("§a§l[LEVEL]§r Level set to: §e" + level + "§a. Attribute points calculated."), false);
         return 1;
     }
 
     private static int setSponsor(CommandSourceStack source, String constellationId) {
         if (!(source.getEntity() instanceof ServerPlayer player)) return 0;
         if (!SystemEvents.selectConstellation(player, constellationId)) {
-            source.sendFailure(Component.literal("ID de constelación inválida o nivel menor a 25. Constelaciones disponibles: abyssal_black_dragon, demon_like_judge_of_fire, secretive_plotter, prisoner_of_the_golden_headband, master_of_the_underworld"));
+            source.sendFailure(Component.literal("Invalid constellation ID or level below 25. Available constellations: abyssal_black_dragon, demon_like_judge_of_fire, secretive_plotter, prisoner_of_the_golden_headband, master_of_the_underworld"));
             return 0;
         }
-        source.sendSuccess(() -> Component.literal("§d§l[CONSTELACIÓN]§r Patrocinador asignado: " + constellationId), false);
+        source.sendSuccess(() -> Component.literal("§d§l[CONSTELLATION]§r Sponsor assigned: " + constellationId), false);
         return 1;
     }
 
@@ -759,7 +1190,7 @@ public final class SystemCommands {
         };
         data.setScenarioDirect(scenarioId, target);
         AwakeningSystemMod.sync(player);
-        source.sendSuccess(() -> Component.literal("§b§l[ESCENARIO]§r Escenario activo establecido en: " + scenarioId + " (Objetivo: " + target + ")"), false);
+        source.sendSuccess(() -> Component.literal("§b§l[SCENARIO]§r Active scenario set to: " + scenarioId + " (Target: " + target + ")"), false);
         return 1;
     }
 
@@ -769,7 +1200,7 @@ public final class SystemCommands {
         data.completeScenarioDirect();
         SystemEvents.announceScenarioComplete(player, data);
         AwakeningSystemMod.sync(player);
-        source.sendSuccess(() -> Component.literal("§6§l[ESCENARIO]§r ¡Escenario completado! Abre el menú (Misiones) para pulsar [★ RECLAMAR]."), false);
+        source.sendSuccess(() -> Component.literal("§6§l[SCENARIO]§r Scenario completed! Open the menu (Quests) to click [★ CLAIM]."), false);
         return 1;
     }
 
@@ -783,7 +1214,7 @@ public final class SystemCommands {
                 "awakening_system.notification.skill_assimilated.message", 0xFFBB7DFF,
                 def != null ? def.nameKey() : skillId);
         AwakeningSystemMod.sync(player);
-        source.sendSuccess(() -> Component.literal("§b§l[HABILIDAD]§r Habilidad aprendida: " + (def != null ? def.nameKey() : skillId)), false);
+        source.sendSuccess(() -> Component.literal("§b§l[SKILL]§r Skill learned: " + (def != null ? def.nameKey() : skillId)), false);
         return 1;
     }
 
@@ -815,7 +1246,7 @@ public final class SystemCommands {
         final String finalRank = rank;
         final String finalTheme = theme;
         final boolean finalRed = isRed;
-        source.sendSuccess(() -> Component.literal("§c§l[CALABOZO]§r Entrando a calabozo de rango §e" + finalRank + " §7(Tema: §b" + finalTheme + (finalRed ? " §4[RED GATE]" : "") + "§7)"), false);
+        source.sendSuccess(() -> Component.translatable("awakening_system.command.dungeon.entering", finalRank, finalTheme, finalRed ? Component.translatable("awakening_system.command.dungeon.red_tag").getString() : ""), false);
         return 1;
     }
 
@@ -830,30 +1261,30 @@ public final class SystemCommands {
         AwakeningSystemMod.notify(player, "awakening_system.notification.awakening_complete.title",
                 "awakening_system.notification.awakening_complete.message", 0xFFFFD866);
         AwakeningSystemMod.sync(player);
-        source.sendSuccess(() -> Component.literal("§6§l[DESPERTAR]§r ¡Misión del Despertar del Sistema completada!"), false);
+        source.sendSuccess(() -> Component.literal("§6§l[AWAKENING]§r System Awakening Quest completed!"), false);
         return 1;
     }
 
     private static int openSponsorSelection(CommandSourceStack source) {
         if (!(source.getEntity() instanceof ServerPlayer player)) return 0;
         net.neoforged.neoforge.network.PacketDistributor.sendToPlayer(player, new OpenSponsorScreenPayload(false));
-        source.sendSuccess(() -> Component.literal("§6§l[PATROCINIO]§r Abriendo pantalla de selección de Constelación."), false);
+        source.sendSuccess(() -> Component.literal("§6§l[SPONSORSHIP]§r Opening Constellation selection screen."), false);
         return 1;
     }
 
     private static int listUniqueRanks(CommandSourceStack source) {
         var server = source.getServer();
         UniqueRankManager mgr = UniqueRankManager.get(server);
-        source.sendSuccess(() -> Component.literal("§6=== TÍTULOS DE RANGO ÚNICO (1 POR SERVIDOR) ==="), false);
+        source.sendSuccess(() -> Component.translatable("awakening_system.command.unique.titles_header"), false);
         for (String tId : UniqueRankManager.UNIQUE_TITLES) {
             String holder = mgr.getTitleHolderName(tId);
-            String status = holder != null ? "§c[OCUPADO: " + holder + "]" : "§a[DISPONIBLE]";
+            String status = holder != null ? "§c[CLAIMED: " + holder + "]" : "§a[AVAILABLE]";
             source.sendSuccess(() -> Component.literal("§e• " + tId + " §7-> " + status), false);
         }
-        source.sendSuccess(() -> Component.literal("§d=== HABILIDADES DE RANGO ÚNICO (1 POR SERVIDOR) ==="), false);
+        source.sendSuccess(() -> Component.translatable("awakening_system.command.unique.skills_header"), false);
         for (String sId : UniqueRankManager.UNIQUE_SKILLS) {
             String holder = mgr.getSkillHolderName(sId);
-            String status = holder != null ? "§c[OCUPADO: " + holder + "]" : "§a[DISPONIBLE]";
+            String status = holder != null ? "§c[CLAIMED: " + holder + "]" : "§a[AVAILABLE]";
             source.sendSuccess(() -> Component.literal("§b• " + sId + " §7-> " + status), false);
         }
         return 1;
@@ -869,11 +1300,11 @@ public final class SystemCommands {
                 data.equipTitle(id);
                 SystemAttributeEffects.apply(player);
                 AwakeningSystemMod.sync(player);
-                source.sendSuccess(() -> Component.literal("§6§l[RANGO ÚNICO]§r ¡Has reclamado con éxito el título único: §e" + id), false);
+                source.sendSuccess(() -> Component.translatable("awakening_system.command.unique.title_claimed", id), false);
                 return 1;
             } else {
                 String holder = mgr.getTitleHolderName(id);
-                source.sendFailure(Component.literal("§cEl título único '" + id + "' ya pertenece al cazador: " + (holder != null ? holder : "Desconocido")));
+                source.sendFailure(Component.translatable("awakening_system.command.unique.title_held", id, (holder != null ? holder : "Unknown")));
                 return 0;
             }
         } else if (UniqueRankManager.isUniqueSkill(id)) {
@@ -882,15 +1313,15 @@ public final class SystemCommands {
                 data.skills().put(id, 6);
                 data.setEquippedSkill(id);
                 AwakeningSystemMod.sync(player);
-                source.sendSuccess(() -> Component.literal("§b§l[RANGO ÚNICO]§r ¡Has reclamado con éxito la habilidad única: §e" + id), false);
+                source.sendSuccess(() -> Component.translatable("awakening_system.command.unique.skill_claimed", id), false);
                 return 1;
             } else {
                 String holder = mgr.getSkillHolderName(id);
-                source.sendFailure(Component.literal("§cLa habilidad única '" + id + "' ya pertenece al cazador: " + (holder != null ? holder : "Desconocido")));
+                source.sendFailure(Component.translatable("awakening_system.command.unique.skill_held", id, (holder != null ? holder : "Unknown")));
                 return 0;
             }
         } else {
-            source.sendFailure(Component.literal("§c'" + id + "' no es un título ni una habilidad de Rango Único válida."));
+            source.sendFailure(Component.translatable("awakening_system.command.unique.invalid", id));
             return 0;
         }
     }
@@ -898,7 +1329,7 @@ public final class SystemCommands {
     private static int openGuide(CommandSourceStack source) {
         if (source.getEntity() instanceof ServerPlayer player) {
             PacketDistributor.sendToPlayer(player, new OpenGuidebookPayload());
-            source.sendSuccess(() -> Component.literal("§aAbriendo la Guía del Cazador..."), false);
+            source.sendSuccess(() -> Component.translatable("awakening_system.command.guide.opening"), false);
             return 1;
         }
         return 0;
@@ -907,7 +1338,7 @@ public final class SystemCommands {
     private static int openBestiary(CommandSourceStack source) {
         if (source.getEntity() instanceof ServerPlayer player) {
             PacketDistributor.sendToPlayer(player, new OpenBestiaryPayload());
-            source.sendSuccess(() -> Component.literal("§aAbriendo el Bestiario de Cazadores..."), false);
+            source.sendSuccess(() -> Component.translatable("awakening_system.command.bestiary.opening"), false);
             return 1;
         }
         return 0;
@@ -919,13 +1350,13 @@ public final class SystemCommands {
             player = sp;
         }
         if (player == null) {
-            source.sendFailure(Component.literal("Especifica un jugador objetivo: /system constelacion ascender <jugador> [nombre]"));
+            source.sendFailure(Component.literal("Specify a target player: /system constellation ascend <player> [name]"));
             return 0;
         }
         final ServerPlayer finalP = player;
-        ConstellationAscension.triggerAscension(finalP, "Comando Administrativo del Sistema",
+        ConstellationAscension.triggerAscension(finalP, "System Administrative Command",
                 (customModifier == null || customModifier.isBlank()) ? null : customModifier.trim());
-        source.sendSuccess(() -> Component.literal("§d§l[STAR STREAM]§r El jugador §e" + finalP.getGameProfile().getName() + " §dha ascendido a Constelación."), true);
+        source.sendSuccess(() -> Component.literal("§d§l[STAR STREAM]§r Player §e" + finalP.getGameProfile().getName() + " §dhas ascended to Constellation."), true);
         return 1;
     }
 
@@ -935,7 +1366,7 @@ public final class SystemCommands {
             player = sp;
         }
         if (player == null) {
-            source.sendFailure(Component.literal("Especifica un jugador objetivo: /system constelacion degradar <jugador>"));
+            source.sendFailure(Component.literal("Specify a target player: /system constellation demote <player>"));
             return 0;
         }
         final ServerPlayer finalP = player;
@@ -943,35 +1374,35 @@ public final class SystemCommands {
         data.setIsConstellation(false);
         data.setConstellationModifier("");
         AwakeningSystemMod.sync(finalP);
-        source.sendSuccess(() -> Component.literal("§c§l[STAR STREAM]§r El estatus de Constelación de §e" + finalP.getGameProfile().getName() + " §cha sido revocado."), true);
+        source.sendSuccess(() -> Component.literal("§c§l[STAR STREAM]§r Constellation status of §e" + finalP.getGameProfile().getName() + " §chas been revoked."), true);
         finalP.displayClientMessage(Component.translatable("awakening_system.command.constellation_reverted"), true);
         return 1;
     }
 
     private static int renameConstellation(CommandSourceStack source, String modifier) {
         if (!(source.getEntity() instanceof ServerPlayer player)) {
-            source.sendFailure(Component.literal("Este comando debe ser ejecutado por un jugador."));
+            source.sendFailure(Component.literal("This command must be executed by a player."));
             return 0;
         }
         SystemData data = SystemEvents.data(player);
         if (!data.isConstellation()) {
-            source.sendFailure(Component.literal("§cNo eres una Constelación. Debes ascender primero mediante eventos míticos o hazañas trascendentes."));
+            source.sendFailure(Component.literal("§cYou are not a Constellation. You must ascend first through mythical events or transcendent feats."));
             return 0;
         }
         String clean = modifier.trim().replace("[", "").replace("]", "");
         data.setConstellationModifier(clean);
         AwakeningSystemMod.sync(player);
-        source.sendSuccess(() -> Component.literal("§d§l[STAR STREAM]§r Tu Nombre Propio como Constelación ha sido actualizado a: §e[" + clean + "§e]"), false);
+        source.sendSuccess(() -> Component.literal("§d§l[STAR STREAM]§r Your True Name as a Constellation has been updated to: §e[" + clean + "§e]"), false);
         return 1;
     }
 
     private static int returnFromAstral(CommandSourceStack source) {
         if (!(source.getEntity() instanceof ServerPlayer player)) {
-            source.sendFailure(Component.literal("Este comando debe ser ejecutado por un jugador."));
+            source.sendFailure(Component.literal("This command must be executed by a player."));
             return 0;
         }
         if (!ConstellationChannelHandler.isAstralWatching(player.getUUID())) {
-            source.sendFailure(Component.literal("§cNo te encuentras en proyección astral."));
+            source.sendFailure(Component.literal("§cYou are not in astral projection."));
             return 0;
         }
         ConstellationChannelHandler.returnFromAstral(player);
@@ -980,48 +1411,47 @@ public final class SystemCommands {
 
     private static int spawnStructureCommand(CommandSourceStack source, String name) {
         if (!(source.getLevel() instanceof ServerLevel level)) {
-            source.sendFailure(Component.literal("§cComando solo disponible en el servidor."));
+            source.sendFailure(Component.literal("§cCommand only available on the server."));
             return 0;
         }
         BlockPos pos = BlockPos.containing(source.getPosition());
         if ("abyss".equalsIgnoreCase(name) || "abyss_portal".equalsIgnoreCase(name) || "spiral_abyss".equalsIgnoreCase(name) || "teyvat_portal".equalsIgnoreCase(name)) {
             Direction dir = (source.getEntity() instanceof ServerPlayer sp) ? sp.getDirection() : Direction.SOUTH;
             com.soybe.awakeningsystem.world.TeyvatAbyssPortalBuilder.generateMuskReefIsland(level, pos, dir, com.soybe.awakeningsystem.TeyvatWorldManager.isAbyssActive());
-            source.sendSuccess(() -> Component.literal("§b§l✦ [TEYVAT] §aArrecife de Musk e Isla de la Espiral del Abismo generados en " + pos.toShortString()), true);
+            source.sendSuccess(() -> Component.literal("§b§l✦ [TEYVAT] §aMusk Reef and Spiral Abyss Island generated at " + pos.toShortString()), true);
             return 1;
         }
         boolean ok = com.soybe.awakeningsystem.world.SeriesStructureWorldGen.generateStructure(level, pos, name);
         if (ok) {
             com.soybe.awakeningsystem.world.SeriesStructureWorldGen.checkAndEnsureNpcsPresent(level.getServer());
-            source.sendSuccess(() -> Component.literal("§a§l[SISTEMA]§r Estructura temática '§e" + name + "§r' generada en " + pos.toShortString()), true);
+            source.sendSuccess(() -> Component.literal("§a§l[SYSTEM]§r Themed structure '§e" + name + "§r' generated at " + pos.toShortString()), true);
             return 1;
         }
 
-        // Probar si es una estructura o arena de jefe de Teyvat (Genshin Impact)
         boolean teyvatOk = com.soybe.awakeningsystem.world.TeyvatWorldGenManager.spawnTeyvatStructure(level, pos, name);
         if (teyvatOk) {
-            source.sendSuccess(() -> Component.literal("§b§l✦ [TEYVAT] §aEstructura de Teyvat '§e" + name + "§a' generada exitosamente en " + pos.toShortString()), true);
+            source.sendSuccess(() -> Component.literal("§b§l✦ [TEYVAT] §aTeyvat structure '§e" + name + "§a' successfully generated at " + pos.toShortString()), true);
             return 1;
         }
 
-        source.sendFailure(Component.literal("§cTipo de estructura desconocido. Opciones:\n" +
-                "§7Teyvat: §bgolden_house (Childe), tenshukaku (Raiden), wolflord (Acechador), azhdaha, anemo_hypostasis, electro_hypostasis, geo_hypostasis, cryo_hypostasis, pyro_hypostasis, hydro_hypostasis, cryo_regisvine, anemo_shrine, geo_shrine, electro_shrine, dendro_shrine, statue, waypoint, camp, windrise, jade_chamber, beidou_ship, primal_temple, chasm_mine, karst, updraft, abyss.\n" +
+        source.sendFailure(Component.literal("§cUnknown structure type. Options:\n" +
+                "§7Teyvat: §bgolden_house (Childe), tenshukaku (Raiden), wolflord (Wolflord), azhdaha, anemo_hypostasis, electro_hypostasis, geo_hypostasis, cryo_hypostasis, pyro_hypostasis, hydro_hypostasis, cryo_regisvine, anemo_shrine, geo_shrine, electro_shrine, dendro_shrine, statue, waypoint, camp, windrise, jade_chamber, beidou_ship, primal_temple, chasm_mine, karst, updraft, abyss.\n" +
                 "§7Manhwa: §eabyss, solo_leveling, orv, estate, nano, tbate, ranker, mount_hua, valter, tower_of_god, ascension, etc."));
         return 0;
     }
 
     private static int spawnTeyvatStructureCommand(CommandSourceStack source, String name) {
         if (!(source.getLevel() instanceof ServerLevel level)) {
-            source.sendFailure(Component.literal("§cComando solo disponible en el servidor."));
+            source.sendFailure(Component.literal("§cCommand only available on the server."));
             return 0;
         }
         BlockPos pos = BlockPos.containing(source.getPosition());
         boolean ok = com.soybe.awakeningsystem.world.TeyvatWorldGenManager.spawnTeyvatStructure(level, pos, name);
         if (ok) {
-            source.sendSuccess(() -> Component.literal("§b§l✦ [TEYVAT] §aEstructura '§e" + name + "§a' generada exitosamente en " + pos.toShortString()), true);
+            source.sendSuccess(() -> Component.literal("§b§l✦ [TEYVAT] §aStructure '§e" + name + "§a' successfully generated at " + pos.toShortString()), true);
             return 1;
         } else {
-            source.sendFailure(Component.literal("§cEstructura de Teyvat no reconocida. Opciones: golden_house (Childe), tenshukaku (Raiden Shogun), wolflord (Rey Acechador), azhdaha, anemo_hypostasis, electro_hypostasis, geo_hypostasis, cryo_hypostasis, pyro_hypostasis, hydro_hypostasis, cryo_regisvine, anemo_shrine, geo_shrine, electro_shrine, dendro_shrine, statue, waypoint, camp, windrise, fix_windrise, fix_arenas, clean_arenas, jade_chamber, beidou_ship, primal_temple, chasm_mine, karst, updraft, abyss."));
+            source.sendFailure(Component.literal("§cUnrecognized Teyvat structure. Options: golden_house (Childe), tenshukaku (Raiden Shogun), wolflord (Wolflord), azhdaha, anemo_hypostasis, electro_hypostasis, geo_hypostasis, cryo_hypostasis, pyro_hypostasis, hydro_hypostasis, cryo_regisvine, anemo_shrine, geo_shrine, electro_shrine, dendro_shrine, statue, waypoint, camp, windrise, fix_windrise, fix_arenas, clean_arenas, jade_chamber, beidou_ship, primal_temple, chasm_mine, karst, updraft, abyss."));
             return 0;
         }
     }
@@ -1029,36 +1459,38 @@ public final class SystemCommands {
     record TeyvatLocateTarget(String id, String displayName, BlockPos canonicalPos, String cmd) {}
 
     private static final java.util.List<TeyvatLocateTarget> TEYVAT_CANONICAL_TARGETS = java.util.List.of(
-            new TeyvatLocateTarget("golden_house", "La Casa Dorada (Jefe Tartaglia / Childe)", TeyvatWorldManager.GOLDEN_HOUSE_POS.offset(0, 7, 4), "golden_house"),
-            new TeyvatLocateTarget("tenshukaku", "Palacio Tenshukaku (Jefe Raiden Shogun)", TeyvatWorldManager.TENSHUKAKU_POS, "tenshukaku"),
-            new TeyvatLocateTarget("wolflord", "Dominio del Rey Acechador Dorado (Enkanomiya)", TeyvatWorldManager.WOLFLORD_POS, "wolflord"),
-            new TeyvatLocateTarget("azhdaha", "Dominio Subterráneo del Dragón Azhdaha", TeyvatWorldManager.AZHDAHA_POS, "azhdaha"),
-            new TeyvatLocateTarget("windrise", "Gran Roble Sagrado de Windrise", TeyvatWorldManager.WINDRISE_POS, "windrise"),
-            new TeyvatLocateTarget("jade_chamber", "Cámara de Jade Flotante", TeyvatWorldManager.JADE_CHAMBER_POS, "jade_chamber"),
-            new TeyvatLocateTarget("dawn_winery", "Viñedo del Amanecer (Dawn Winery)", TeyvatWorldManager.WINERY_POS, "dawn_winery"),
-            new TeyvatLocateTarget("beidou_ship", "El Alcor (Navío de Beidou)", TeyvatWorldManager.ALCOR_POS, "alcor"),
-            new TeyvatLocateTarget("anemo_hypostasis", "Arena Hipóstasis Anemo (Beth)", TeyvatWorldManager.ANEMO_HYPOSTASIS_POS, "anemo_hypostasis"),
-            new TeyvatLocateTarget("electro_hypostasis", "Arena Hipóstasis Electro (Aleph)", TeyvatWorldManager.ELECTRO_HYPOSTASIS_POS, "electro_hypostasis"),
-            new TeyvatLocateTarget("geo_hypostasis", "Arena Hipóstasis Geo (Gimel)", TeyvatWorldManager.GEO_HYPOSTASIS_POS, "geo_hypostasis"),
-            new TeyvatLocateTarget("cryo_hypostasis", "Arena Hipóstasis Cryo (Daleth)", TeyvatWorldManager.CRYO_HYPOSTASIS_POS, "cryo_hypostasis"),
-            new TeyvatLocateTarget("pyro_hypostasis", "Arena Hipóstasis Pyro (Ayin)", TeyvatWorldManager.PYRO_HYPOSTASIS_POS, "pyro_hypostasis"),
-            new TeyvatLocateTarget("hydro_hypostasis", "Arena Hipóstasis Hydro (He)", TeyvatWorldManager.HYDRO_HYPOSTASIS_POS, "hydro_hypostasis"),
-            new TeyvatLocateTarget("cryo_regisvine", "Arena de Regisvid Cryo", TeyvatWorldManager.CRYO_REGISVINE_POS, "cryo_regisvine"),
-            new TeyvatLocateTarget("abyss", "Espiral del Abismo (Musk Reef)", TeyvatWorldManager.MUSK_REEF_ISLAND_POS, "abyss"),
-            new TeyvatLocateTarget("mondstadt", "Mondstadt (Ciudadela Favonius)", com.soybe.awakeningsystem.world.TeyvatRegionalBuilder.MONDSTADT_POS, "mondstadt"),
-            new TeyvatLocateTarget("sumeru", "Sumeru (La Gran Academiya)", com.soybe.awakeningsystem.world.TeyvatRegionalBuilder.SUMERU_POS, "sumeru"),
+            new TeyvatLocateTarget("golden_house", "The Golden House (Tartaglia / Childe Boss)", TeyvatWorldManager.GOLDEN_HOUSE_POS.offset(0, 7, 4), "golden_house"),
+            new TeyvatLocateTarget("tenshukaku", "Tenshukaku Palace (Raiden Shogun Boss)", TeyvatWorldManager.TENSHUKAKU_POS, "tenshukaku"),
+            new TeyvatLocateTarget("wolflord", "Golden Wolflord Domain (Enkanomiya)", TeyvatWorldManager.WOLFLORD_POS, "wolflord"),
+            new TeyvatLocateTarget("azhdaha", "Azhdaha's Underground Domain", TeyvatWorldManager.AZHDAHA_POS, "azhdaha"),
+            new TeyvatLocateTarget("windrise", "Great Sacred Oak of Windrise", TeyvatWorldManager.WINDRISE_POS, "windrise"),
+            new TeyvatLocateTarget("jade_chamber", "Floating Jade Chamber", TeyvatWorldManager.JADE_CHAMBER_POS, "jade_chamber"),
+            new TeyvatLocateTarget("dawn_winery", "Dawn Winery", TeyvatWorldManager.WINERY_POS, "dawn_winery"),
+            new TeyvatLocateTarget("beidou_ship", "The Alcor (Beidou's Crux Flagship)", TeyvatWorldManager.ALCOR_POS, "alcor"),
+            new TeyvatLocateTarget("anemo_hypostasis", "Anemo Hypostasis Arena (Beth)", TeyvatWorldManager.ANEMO_HYPOSTASIS_POS, "anemo_hypostasis"),
+            new TeyvatLocateTarget("electro_hypostasis", "Electro Hypostasis Arena (Aleph)", TeyvatWorldManager.ELECTRO_HYPOSTASIS_POS, "electro_hypostasis"),
+            new TeyvatLocateTarget("geo_hypostasis", "Geo Hypostasis Arena (Gimel)", TeyvatWorldManager.GEO_HYPOSTASIS_POS, "geo_hypostasis"),
+            new TeyvatLocateTarget("cryo_hypostasis", "Cryo Hypostasis Arena (Daleth)", TeyvatWorldManager.CRYO_HYPOSTASIS_POS, "cryo_hypostasis"),
+            new TeyvatLocateTarget("pyro_hypostasis", "Pyro Hypostasis Arena (Ayin)", TeyvatWorldManager.PYRO_HYPOSTASIS_POS, "pyro_hypostasis"),
+            new TeyvatLocateTarget("hydro_hypostasis", "Hydro Hypostasis Arena (He)", TeyvatWorldManager.HYDRO_HYPOSTASIS_POS, "hydro_hypostasis"),
+            new TeyvatLocateTarget("cryo_regisvine", "Cryo Regisvine Arena", TeyvatWorldManager.CRYO_REGISVINE_POS, "cryo_regisvine"),
+            new TeyvatLocateTarget("abyss", "Spiral Abyss (Musk Reef)", TeyvatWorldManager.MUSK_REEF_ISLAND_POS, "abyss"),
+            new TeyvatLocateTarget("mondstadt", "Mondstadt (Favonius Citadel)", com.soybe.awakeningsystem.world.TeyvatRegionalBuilder.MONDSTADT_POS, "mondstadt"),
+            new TeyvatLocateTarget("liyue", "Liyue (Yujing Terrace)", com.soybe.awakeningsystem.world.TeyvatRegionalBuilder.LIYUE_POS, "liyue"),
+            new TeyvatLocateTarget("inazuma", "Inazuma (Tenshukaku)", com.soybe.awakeningsystem.world.TeyvatRegionalBuilder.INAZUMA_POS, "inazuma"),
+            new TeyvatLocateTarget("sumeru", "Sumeru (The Great Academiya)", com.soybe.awakeningsystem.world.TeyvatRegionalBuilder.SUMERU_POS, "sumeru"),
             new TeyvatLocateTarget("fontaine", "Fontaine (Palais Mermonia)", com.soybe.awakeningsystem.world.TeyvatRegionalBuilder.FONTAINE_POS, "fontaine")
     );
 
     private static int locateTeyvatStructureCommand(CommandSourceStack source, String filter) {
         if (!(source.getLevel() instanceof ServerLevel level)) {
-            source.sendFailure(Component.literal("§cComando solo disponible en el servidor."));
+            source.sendFailure(Component.literal("§cCommand only available on the server."));
             return 0;
         }
         MinecraftServer server = level.getServer();
         ServerLevel teyvat = server.getLevel(TeyvatWorldManager.TEYVAT_WORLD);
         if (teyvat == null) {
-            source.sendFailure(Component.literal("§cLa dimensión de Teyvat no está cargada. Viaja primero con /teyvat."));
+            source.sendFailure(Component.literal("§cTeyvat dimension is not loaded. Travel first using /teyvat."));
             return 0;
         }
 
@@ -1066,7 +1498,6 @@ public final class SystemCommands {
         String q = (filter == null) ? "" : filter.toLowerCase(java.util.Locale.ROOT).trim();
         var tData = com.soybe.awakeningsystem.world.TeyvatWorldGenManager.TeyvatFeaturesData.get(server);
 
-        // 1. Coincidencia con estructuras canónicas (Jefes, Palacios, Hipóstasis, etc.)
         TeyvatLocateTarget matchedTarget = null;
         if (!q.isEmpty()) {
             for (var target : TEYVAT_CANONICAL_TARGETS) {
@@ -1079,7 +1510,6 @@ public final class SystemCommands {
                     matchedTarget = target;
                     break;
                 }
-                // Alias comunes
                 if ((q.contains("childe") || q.contains("tartaglia") || q.contains("golden_house") || q.contains("dorada")) && target.id().equals("golden_house")) {
                     matchedTarget = target; break;
                 }
@@ -1138,7 +1568,7 @@ public final class SystemCommands {
             BlockPos targetPos = alreadyBuilt ? actualPos : finalTarget.canonicalPos();
             int dist = (int) Math.sqrt(targetPos.distSqr(origin));
 
-            var warpBtn = Component.literal(" §e§l[VIAJAR Y ENTRAR]")
+            var warpBtn = Component.literal(" §e§l[TRAVEL & ENTER]")
                     .withStyle(style -> style
                             .withColor(ChatFormatting.GOLD)
                             .withBold(true)
@@ -1147,23 +1577,22 @@ public final class SystemCommands {
                                     "/teyvat " + finalTarget.cmd()))
                             .withHoverEvent(new net.minecraft.network.chat.HoverEvent(
                                     net.minecraft.network.chat.HoverEvent.Action.SHOW_TEXT,
-                                    Component.literal("§aClic para " + (alreadyBuilt ? "viajar" : "construir e ingresar") + " a " + finalTarget.displayName()))));
+                                    Component.literal("§aClick to " + (alreadyBuilt ? "travel" : "build and enter") + " " + finalTarget.displayName()))));
 
-            var msg = Component.literal("§b§l✦ [TEYVAT] §aEstructura: §e" + finalTarget.displayName() +
-                    "\n§7Coordenadas: §b[" + targetPos.getX() + ", " + targetPos.getY() + ", " + targetPos.getZ() + "] §8(" + dist + "m) " +
-                    (alreadyBuilt ? "§2✔ [Construida]" : "§6★ [Sede Canónica]") + " ")
+            var msg = Component.literal("§b§l✦ [TEYVAT] §aStructure: §e" + finalTarget.displayName() +
+                    "\n§7Coordinates: §b[" + targetPos.getX() + ", " + targetPos.getY() + ", " + targetPos.getZ() + "] §8(" + dist + "m) " +
+                    (alreadyBuilt ? "§2✔ [Built]" : "§6★ [Canonical Site]") + " ")
                     .append(warpBtn);
 
             source.sendSuccess(() -> msg, false);
             return 1;
         }
 
-        // 2. Si busca por estructuras secundarias o genéricas registradas en namedStructures
         for (var entry : tData.namedStructures.entrySet()) {
             if (!q.isEmpty() && entry.getKey().contains(q)) {
                 BlockPos p = entry.getValue();
                 int dist = (int) Math.sqrt(p.distSqr(origin));
-                var tpBtn = Component.literal(" §e§l[TELETRANSPORTAR]")
+                var tpBtn = Component.literal(" §e§l[TELEPORT]")
                         .withStyle(style -> style
                                 .withColor(ChatFormatting.YELLOW)
                                 .withBold(true)
@@ -1172,34 +1601,33 @@ public final class SystemCommands {
                                         "/tp @s " + p.getX() + " " + (p.getY() + 1) + " " + p.getZ()))
                                 .withHoverEvent(new net.minecraft.network.chat.HoverEvent(
                                         net.minecraft.network.chat.HoverEvent.Action.SHOW_TEXT,
-                                        Component.literal("§aClic para teletransportarte"))));
-                var msg = Component.literal("§b§l✦ [TEYVAT] §aEstructura registrada: §e" + entry.getKey() + " §7en §b[" + p.getX() + ", " + p.getY() + ", " + p.getZ() + "] §8(" + dist + "m)").append(tpBtn);
+                                        Component.literal("§aClick to teleport"))));
+                var msg = Component.literal("§b§l✦ [TEYVAT] §aRegistered structure: §e" + entry.getKey() + " §7at §b[" + p.getX() + ", " + p.getY() + ", " + p.getZ() + "] §8(" + dist + "m)").append(tpBtn);
                 source.sendSuccess(() -> msg, false);
                 return 1;
             }
         }
 
-        // 3. Características de exploración (Santuarios, Estatuas, Waypoints, Campamentos)
         java.util.List<BlockPos> featureList = null;
         String featureLabel = null;
         if (q.contains("shrine") || q.contains("santuario")) {
             featureList = tData.shrinesOfDepths;
-            featureLabel = "Santuario de las Profundidades";
+            featureLabel = "Shrine of Depths";
         } else if (q.contains("statue") || q.contains("estatua")) {
             featureList = tData.statues;
-            featureLabel = "Estatua de los Siete";
+            featureLabel = "Statue of the Seven";
         } else if (q.contains("waypoint") || q.contains("tp") || q.contains("teleport")) {
             featureList = tData.waypoints;
             featureLabel = "Teleport Waypoint";
         } else if (q.contains("camp") || q.contains("hilichurl") || q.contains("campamento")) {
             featureList = tData.camps;
-            featureLabel = "Campamento Hilichurl";
+            featureLabel = "Hilichurl Camp";
         }
 
         if (featureList != null) {
             final String finalFeatureLabel = featureLabel;
             if (featureList.isEmpty()) {
-                source.sendSuccess(() -> Component.literal("§e§l[TEYVAT]§r Aún no se han descubierto " + finalFeatureLabel + "s en el mapa. Explora nuevas regiones a más de 300 bloques."), false);
+                source.sendSuccess(() -> Component.literal("§e§l[TEYVAT]§r No " + finalFeatureLabel + "s have been discovered on the map yet. Explore new regions beyond 300 blocks."), false);
                 return 1;
             }
             BlockPos nearest = null;
@@ -1213,7 +1641,7 @@ public final class SystemCommands {
             }
             final BlockPos fp = nearest;
             int dist = (int) Math.sqrt(bestD);
-            var tpBtn = Component.literal(" §e§l[TELETRANSPORTAR]")
+            var tpBtn = Component.literal(" §e§l[TELEPORT]")
                     .withStyle(style -> style
                             .withColor(ChatFormatting.YELLOW)
                             .withBold(true)
@@ -1222,64 +1650,59 @@ public final class SystemCommands {
                                     "/tp @s " + fp.getX() + " " + (fp.getY() + 1) + " " + fp.getZ()))
                             .withHoverEvent(new net.minecraft.network.chat.HoverEvent(
                                     net.minecraft.network.chat.HoverEvent.Action.SHOW_TEXT,
-                                    Component.literal("§aClic para teletransportarte al " + finalFeatureLabel))));
-            source.sendSuccess(() -> Component.literal("§b§l✦ [TEYVAT] §a" + finalFeatureLabel + " más cercano en §b[" + fp.getX() + ", " + fp.getY() + ", " + fp.getZ() + "] §8(" + dist + "m)").append(tpBtn), false);
+                                    Component.literal("§aClick to teleport to " + finalFeatureLabel))));
+            source.sendSuccess(() -> Component.literal("§b§l✦ [TEYVAT] §aNearest " + finalFeatureLabel + " at §b[" + fp.getX() + ", " + fp.getY() + ", " + fp.getZ() + "] §8(" + dist + "m)").append(tpBtn), false);
             return 1;
         }
 
-        // 4. Si no se encontró, mostrar catálogo de acceso rápido
-        source.sendSuccess(() -> Component.literal("§e§l[TEYVAT]§r No se encontró ninguna estructura con el término '§c" + q + "§r'."), false);
-        source.sendSuccess(() -> Component.literal("§7Usa §b/teyvat list§7 para ver el catálogo interactivo o viaja directo a los jefes:"), false);
+        source.sendSuccess(() -> Component.literal("§e§l[TEYVAT]§r No structure found matching term '§c" + q + "§r'."), false);
+        source.sendSuccess(() -> Component.literal("§7Use §b/teyvat list§7 to view the interactive catalog or travel directly to bosses:"), false);
         source.sendSuccess(() -> Component.literal("  §6✦ [Tartaglia / Childe] §7-> §e/teyvat golden_house"), false);
         source.sendSuccess(() -> Component.literal("  §d✦ [Raiden Shogun]      §7-> §e/teyvat tenshukaku"), false);
-        source.sendSuccess(() -> Component.literal("  §6✦ [Rey Acechador]      §7-> §e/teyvat wolflord"), false);
-        source.sendSuccess(() -> Component.literal("  §e✦ [Dragón Azhdaha]     §7-> §e/teyvat azhdaha"), false);
+        source.sendSuccess(() -> Component.literal("  §6✦ [Golden Wolflord]    §7-> §e/teyvat wolflord"), false);
+        source.sendSuccess(() -> Component.literal("  §e✦ [Azhdaha Dragon]     §7-> §e/teyvat azhdaha"), false);
         return 1;
     }
 
     private static int listTeyvatStructuresCommand(CommandSourceStack source) {
         if (!(source.getLevel() instanceof ServerLevel level)) {
-            source.sendFailure(Component.literal("§cComando solo disponible en el servidor."));
+            source.sendFailure(Component.literal("§cCommand only available on the server."));
             return 0;
         }
         MinecraftServer server = level.getServer();
         var tData = com.soybe.awakeningsystem.world.TeyvatWorldGenManager.TeyvatFeaturesData.get(server);
         BlockPos origin = BlockPos.containing(source.getPosition());
 
-        source.sendSuccess(() -> Component.literal("§b§l================ CATÁLOGO DE ESTRUCTURAS DE TEYVAT ================"), false);
+        source.sendSuccess(() -> Component.literal("§b§l================ TEYVAT STRUCTURE CATALOG ================"), false);
 
-        // 1. Jefes Semanales y Grandes Palacios
-        source.sendSuccess(() -> Component.literal("§6§l👑 JEFES SEMANALES Y PALACIOS AUTÉNTICOS:"), false);
-        sendLocateEntry(source, origin, "🏰 La Casa Dorada (Jefe Tartaglia / Childe)", "golden_house", TeyvatWorldManager.GOLDEN_HOUSE_POS.offset(0, 7, 4), tData);
-        sendLocateEntry(source, origin, "⚡ Palacio Tenshukaku (Jefe Raiden Shogun)", "tenshukaku", TeyvatWorldManager.TENSHUKAKU_POS, tData);
-        sendLocateEntry(source, origin, "🐺 Isla Enkanomiya (Rey Acechador Dorado)", "wolflord", TeyvatWorldManager.WOLFLORD_POS, tData);
-        sendLocateEntry(source, origin, "🐉 Dominio Subterráneo del Dragón Azhdaha", "azhdaha", TeyvatWorldManager.AZHDAHA_POS, tData);
+        source.sendSuccess(() -> Component.literal("§6§l👑 WEEKLY BOSSES AND AUTHENTIC PALACES:"), false);
+        sendLocateEntry(source, origin, "🏰 The Golden House (Tartaglia / Childe Boss)", "golden_house", TeyvatWorldManager.GOLDEN_HOUSE_POS.offset(0, 7, 4), tData);
+        sendLocateEntry(source, origin, "⚡ Tenshukaku Palace (Raiden Shogun Boss)", "tenshukaku", TeyvatWorldManager.TENSHUKAKU_POS, tData);
+        sendLocateEntry(source, origin, "🐺 Enkanomiya Island (Golden Wolflord)", "wolflord", TeyvatWorldManager.WOLFLORD_POS, tData);
+        sendLocateEntry(source, origin, "🐉 Azhdaha's Underground Domain", "azhdaha", TeyvatWorldManager.AZHDAHA_POS, tData);
 
-        // 2. Hipóstasis Elementales
-        source.sendSuccess(() -> Component.literal("§b§l💎 HIPÓSTASIS ELEMENTALES Y REGISVID:"), false);
-        sendLocateEntry(source, origin, "🍃 Hipóstasis Anemo (Beth)", "anemo_hypostasis", TeyvatWorldManager.ANEMO_HYPOSTASIS_POS, tData);
-        sendLocateEntry(source, origin, "⚡ Hipóstasis Electro (Aleph)", "electro_hypostasis", TeyvatWorldManager.ELECTRO_HYPOSTASIS_POS, tData);
-        sendLocateEntry(source, origin, "🔶 Hipóstasis Geo (Gimel)", "geo_hypostasis", TeyvatWorldManager.GEO_HYPOSTASIS_POS, tData);
-        sendLocateEntry(source, origin, "❄ Hipóstasis Cryo (Daleth)", "cryo_hypostasis", TeyvatWorldManager.CRYO_HYPOSTASIS_POS, tData);
-        sendLocateEntry(source, origin, "🔥 Hipóstasis Pyro (Ayin)", "pyro_hypostasis", TeyvatWorldManager.PYRO_HYPOSTASIS_POS, tData);
-        sendLocateEntry(source, origin, "💧 Hipóstasis Hydro (He)", "hydro_hypostasis", TeyvatWorldManager.HYDRO_HYPOSTASIS_POS, tData);
-        sendLocateEntry(source, origin, "❄ Regisvid Cryo", "cryo_regisvine", TeyvatWorldManager.CRYO_REGISVINE_POS, tData);
+        source.sendSuccess(() -> Component.literal("§b§l💎 ELEMENTAL HYPOSTASES AND REGISVINE:"), false);
+        sendLocateEntry(source, origin, "🍃 Anemo Hypostasis (Beth)", "anemo_hypostasis", TeyvatWorldManager.ANEMO_HYPOSTASIS_POS, tData);
+        sendLocateEntry(source, origin, "⚡ Electro Hypostasis (Aleph)", "electro_hypostasis", TeyvatWorldManager.ELECTRO_HYPOSTASIS_POS, tData);
+        sendLocateEntry(source, origin, "🔶 Geo Hypostasis (Gimel)", "geo_hypostasis", TeyvatWorldManager.GEO_HYPOSTASIS_POS, tData);
+        sendLocateEntry(source, origin, "❄ Cryo Hypostasis (Daleth)", "cryo_hypostasis", TeyvatWorldManager.CRYO_HYPOSTASIS_POS, tData);
+        sendLocateEntry(source, origin, "🔥 Pyro Hypostasis (Ayin)", "pyro_hypostasis", TeyvatWorldManager.PYRO_HYPOSTASIS_POS, tData);
+        sendLocateEntry(source, origin, "💧 Hydro Hypostasis (He)", "hydro_hypostasis", TeyvatWorldManager.HYDRO_HYPOSTASIS_POS, tData);
+        sendLocateEntry(source, origin, "❄ Cryo Regisvine", "cryo_regisvine", TeyvatWorldManager.CRYO_REGISVINE_POS, tData);
 
-        // 3. Lugares Emblemáticos
-        source.sendSuccess(() -> Component.literal("§a§l🌳 MONUMENTOS Y SEDES DE NACIONES:"), false);
-        sendLocateEntry(source, origin, "🌳 Gran Roble Sagrado de Windrise", "windrise", TeyvatWorldManager.WINDRISE_POS, tData);
-        sendLocateEntry(source, origin, "🏯 Cámara de Jade Flotante", "jade_chamber", TeyvatWorldManager.JADE_CHAMBER_POS, tData);
-        sendLocateEntry(source, origin, "🍷 Viñedo del Amanecer (Dawn Winery)", "dawn_winery", TeyvatWorldManager.WINERY_POS, tData);
-        sendLocateEntry(source, origin, "⛵ El Alcor (Navío de Beidou)", "alcor", TeyvatWorldManager.ALCOR_POS, tData);
-        sendLocateEntry(source, origin, "🌀 Espiral del Abismo (Musk Reef)", "abyss", TeyvatWorldManager.MUSK_REEF_ISLAND_POS, tData);
+        source.sendSuccess(() -> Component.literal("§a§l🌳 MONUMENTS AND NATION SEATS:"), false);
+        sendLocateEntry(source, origin, "🌳 Great Sacred Oak of Windrise", "windrise", TeyvatWorldManager.WINDRISE_POS, tData);
+        sendLocateEntry(source, origin, "🏯 Floating Jade Chamber", "jade_chamber", TeyvatWorldManager.JADE_CHAMBER_POS, tData);
+        sendLocateEntry(source, origin, "🍷 Dawn Winery", "dawn_winery", TeyvatWorldManager.WINERY_POS, tData);
+        sendLocateEntry(source, origin, "⛵ The Alcor (Beidou's Flagship)", "alcor", TeyvatWorldManager.ALCOR_POS, tData);
+        sendLocateEntry(source, origin, "🌀 Spiral Abyss (Musk Reef)", "abyss", TeyvatWorldManager.MUSK_REEF_ISLAND_POS, tData);
 
-        // 4. Conteo de exploración
-        source.sendSuccess(() -> Component.literal("§e§l⛩ EXPLORACIÓN Y RECURSOS:"), false);
-        source.sendSuccess(() -> Component.literal("  §fSantuarios de las Profundidades: §e" + tData.shrinesOfDepths.size() +
-                " §7| §fEstatuas de los Siete: §e" + tData.statues.size() +
+        source.sendSuccess(() -> Component.literal("§e§l⛩ EXPLORATION AND RESOURCES:"), false);
+        source.sendSuccess(() -> Component.literal("  §fShrines of Depths: §e" + tData.shrinesOfDepths.size() +
+                " §7| §fStatues of the Seven: §e" + tData.statues.size() +
                 " §7| §fWaypoints: §e" + tData.waypoints.size() +
-                " §7| §fCampamentos: §e" + tData.camps.size()), false);
-        source.sendSuccess(() -> Component.literal("§7Usa §b/teyvat <nombre>§7 para viajar directamente a cualquier estructura o jefe."), false);
+                " §7| §fCamps: §e" + tData.camps.size()), false);
+        source.sendSuccess(() -> Component.literal("§7Use §b/teyvat <name>§7 to travel directly to any structure or boss."), false);
         source.sendSuccess(() -> Component.literal("§b§l=================================================================="), false);
         return 1;
     }
@@ -1290,7 +1713,7 @@ public final class SystemCommands {
         BlockPos p = built ? actual : canonicalPos;
         int dist = (int) Math.sqrt(p.distSqr(origin));
 
-        var btn = Component.literal(built ? " §e§l[VIAJAR]" : " §6§l[ENTRAR/GENERAR]")
+        var btn = Component.literal(built ? " §e§l[TRAVEL]" : " §6§l[ENTER/GENERATE]")
                 .withStyle(style -> style
                         .withColor(built ? ChatFormatting.YELLOW : ChatFormatting.GOLD)
                         .withBold(true)
@@ -1299,14 +1722,14 @@ public final class SystemCommands {
                                 "/teyvat " + cmdKey))
                         .withHoverEvent(new net.minecraft.network.chat.HoverEvent(
                                 net.minecraft.network.chat.HoverEvent.Action.SHOW_TEXT,
-                                Component.literal("§aClic para viajar a " + displayName + (built ? "" : " (Se materializará al instante)")))));
+                                Component.literal("§aClick to travel to " + displayName + (built ? "" : " (Will materialize instantly)")))));
 
         source.sendSuccess(() -> Component.literal("  §f" + displayName + " §7en §b[" + p.getX() + ", " + p.getY() + ", " + p.getZ() + "] §8(" + dist + "m) " + (built ? "§2✔" : "§7○")).append(btn), false);
     }
 
     private static int buildAbyssPortalCommand(CommandSourceStack source, String modeArg) {
         if (!(source.getLevel() instanceof ServerLevel level)) {
-            source.sendFailure(Component.literal("§cComando solo disponible en el servidor."));
+            source.sendFailure(Component.literal("§cCommand only available on the server."));
             return 0;
         }
         BlockPos pos = BlockPos.containing(source.getPosition());
@@ -1314,7 +1737,7 @@ public final class SystemCommands {
 
         if ("island".equalsIgnoreCase(modeArg)) {
             com.soybe.awakeningsystem.world.TeyvatAbyssPortalBuilder.generateMuskReefIsland(level, pos, dir, com.soybe.awakeningsystem.TeyvatWorldManager.isAbyssActive());
-            source.sendSuccess(() -> Component.literal("§b§l✦ [TEYVAT] §aIsla del Arrecife de Musk y Espiral del Abismo generadas en " + pos.toShortString()), true);
+            source.sendSuccess(() -> Component.literal("§b§l✦ [TEYVAT] §aMusk Reef Island and Spiral Abyss generated at " + pos.toShortString()), true);
             return 1;
         }
 
@@ -1331,7 +1754,7 @@ public final class SystemCommands {
                 : com.soybe.awakeningsystem.world.TeyvatAbyssPortalBuilder.CenterMode.AIR);
 
         com.soybe.awakeningsystem.world.TeyvatAbyssPortalBuilder.build(level, pos, dir, buildMode, centerMode, active);
-        source.sendSuccess(() -> Component.literal("§b§l✦ [TEYVAT] §aMonumento de la Espiral del Abismo (13x13) construido con éxito en " + pos.toShortString() + " [" + (active ? "§bACTIVO§a" : "§cBLOQUEADO§a") + "]"), true);
+        source.sendSuccess(() -> Component.literal("§b§l✦ [TEYVAT] §aSpiral Abyss Monument (13x13) successfully built at " + pos.toShortString() + " [" + (active ? "§bACTIVE§a" : "§cLOCKED§a") + "]"), true);
         return 1;
     }
 
@@ -1341,24 +1764,52 @@ public final class SystemCommands {
             com.soybe.awakeningsystem.abyss.SpiralAbyssManager.openAbyssScreen(player);
             return 1;
         }
-        source.sendFailure(Component.literal("Solo los jugadores pueden teletransportarse a la Espiral del Abismo."));
+        source.sendFailure(Component.literal("Only players can teleport to the Spiral Abyss."));
         return 0;
+    }
+
+    private static int warpAbyssCave(CommandSourceStack source) {
+        if (!(source.getEntity() instanceof ServerPlayer player)) {
+            source.sendFailure(Component.literal("Only players can teleport to the abyssal cave."));
+            return 0;
+        }
+        source.sendSuccess(() -> Component.literal("§d✦ Teleporting to the Overworld Great Abyssal Cavern..."), false);
+        com.soybe.awakeningsystem.world.AbyssalCaveBuilder.teleportToAbyssalCave(player);
+        return 1;
     }
 
     private static int openAbyssMenu(CommandSourceStack source) {
         if (source.getEntity() instanceof ServerPlayer player) {
-            com.soybe.awakeningsystem.abyss.SpiralAbyssManager.openAbyssScreen(player);
-            source.sendSuccess(() -> Component.literal("§b✦ [Espiral del Abismo] Abriendo interfaz..."), false);
+            com.soybe.awakeningsystem.abyss.SpiralAbyssManager.openAbyssMenuFromCommand(player);
+            source.sendSuccess(() -> Component.literal("§b✦ [Spiral Abyss] Opening interface..."), false);
             return 1;
         }
-        source.sendFailure(Component.literal("Solo los jugadores pueden abrir la interfaz de la Espiral del Abismo."));
+        source.sendFailure(Component.literal("Only players can open the Spiral Abyss interface."));
+        return 0;
+    }
+
+    private static int advanceAbyssFloor(CommandSourceStack source) {
+        if (source.getEntity() instanceof ServerPlayer player) {
+            com.soybe.awakeningsystem.abyss.SpiralAbyssManager.handleAdvanceOrNextFloor(player);
+            return 1;
+        }
+        source.sendFailure(Component.literal("Only players can advance in the Spiral Abyss."));
+        return 0;
+    }
+
+    private static int leaveAbyssCommand(CommandSourceStack source) {
+        if (source.getEntity() instanceof ServerPlayer player) {
+            com.soybe.awakeningsystem.abyss.SpiralAbyssManager.handleLeaveAbyss(player);
+            return 1;
+        }
+        source.sendFailure(Component.literal("Only players can leave the Spiral Abyss."));
         return 0;
     }
 
     private static int setAbyssStateCommand(CommandSourceStack source, boolean active) {
         var server = source.getServer();
         com.soybe.awakeningsystem.TeyvatWorldManager.setAbyssActive(server, active);
-        source.sendSuccess(() -> Component.literal("§b§l✦ [ESPIRAL DEL ABISMO] §aEstado actualizado a: " + (active ? "§bACTIVO (Vórtice Cósmico ABIERTO)" : "§cBLOQUEADO (Portal SELLADO)")), true);
+        source.sendSuccess(() -> Component.literal("§b§l✦ [SPIRAL ABYSS] §aStatus updated to: " + (active ? "§bACTIVE (Cosmic Vortex OPEN)" : "§cLOCKED (Portal SEALED)")), true);
         return 1;
     }
 
@@ -1372,28 +1823,168 @@ public final class SystemCommands {
         ServerLevel teyvat = server.getLevel(com.soybe.awakeningsystem.TeyvatWorldManager.TEYVAT_WORLD);
         if (teyvat != null) {
             com.soybe.awakeningsystem.TeyvatWorldManager.forceRebuildStructures(teyvat);
-            source.sendSuccess(() -> Component.literal("§b§l✦ [ESPIRAL DEL ABISMO] §aIsla del Arrecife de Musk y portal reconstruidos con éxito."), true);
+            source.sendSuccess(() -> Component.literal("§b§l✦ [SPIRAL ABYSS] §aMusk Reef Island and portal successfully rebuilt."), true);
             return 1;
         }
-        source.sendFailure(Component.literal("§cLa dimensión de Teyvat no está cargada."));
+        source.sendFailure(Component.literal("§cTeyvat dimension is not loaded."));
+        return 0;
+    }
+
+    public static final java.util.List<String> ALL_STRUCTURE_NAMES = java.util.List.of(
+            "solo_leveling", "jinwoo", "hunter_office",
+            "orv", "dokja", "subway", "orv_subway_carriage",
+            "estate", "lloyd", "frontera_estate",
+            "nano", "demon_pagoda",
+            "tbate", "arthur", "aether_sanctuary",
+            "ranker", "ranker_tower",
+            "mount_hua", "chung_myung", "mount_hua_pavilion",
+            "valter", "valter_camp",
+            "tower_of_god", "shinsoo_shrine",
+            "adventurers_guild",
+            "black_market_den",
+            "nine_tribulations_pagoda", "pagoda_arena", "pagoda_arena_stage_1",
+            "yggdrasil_root_labyrinth",
+            "ancestral_immortal_grotto",
+            "elemental_floating_castles",
+            "hunter_expedition_camp",
+            "ruined_stargazer_outpost",
+            "ancient_lore_stele",
+            "ancient_alchemy_pavilion",
+            "taoist_bamboo_shrine",
+            "blood_sect_fortress",
+            "spirit_valley",
+            "dragon_sanctuary",
+            "roulette_pavilion",
+            "goddess_shrine",
+            "ascension_pavilion",
+            "anemo_shrine", "anemo_shrine_of_depths_final",
+            "geo_shrine", "geo_shrine_of_depths_final",
+            "electro_shrine", "electro_shrine_of_depths_final",
+            "dendro_shrine", "dendro_shrine_of_depths_final",
+            "plains_shrine", "desert_shrine", "mountain_shrine",
+            "mora_temple", "interastral_bank", "hilichurl_camp",
+            "chasm_mine", "overworld_miniboss_arena",
+            "dawn_winery", "jade_chamber", "windrise_giant_tree",
+            "beidou_ship", "grand_casino", "racetrack", "golden_house", "tenshukaku",
+            "witch_island", "teyvat_treehouses"
+    );
+
+    private static int tpStructureCommand(CommandSourceStack source, String name) {
+        if (!(source.getEntity() instanceof ServerPlayer player)) {
+            source.sendFailure(Component.literal("§cOnly players can teleport."));
+            return 0;
+        }
+        ServerLevel level = player.serverLevel();
+        var server = source.getServer();
+        String target = name.toLowerCase(java.util.Locale.ROOT).trim();
+        String canonical = com.soybe.awakeningsystem.world.SeriesStructureWorldGen.canonicalizeStructureName(target);
+        net.minecraft.resources.ResourceKey<Level> targetDim = com.soybe.awakeningsystem.world.SeriesStructureWorldGen.getTargetDimensionForStructure(canonical);
+        ServerLevel resolvedTargetLevel = server.getLevel(targetDim);
+        final ServerLevel targetLevel = (resolvedTargetLevel != null) ? resolvedTargetLevel : level;
+
+        java.util.Map<String, BlockPos> all = new java.util.LinkedHashMap<>();
+        var seriesData = com.soybe.awakeningsystem.world.SeriesStructureWorldGen.SeriesStructureData.get(server);
+        if (seriesData != null) all.putAll(seriesData.getAll());
+        var teyvatData = com.soybe.awakeningsystem.world.TeyvatWorldGenManager.TeyvatFeaturesData.get(server);
+        if (teyvatData != null && teyvatData.namedStructures != null) all.putAll(teyvatData.namedStructures);
+
+        BlockPos origin = player.blockPosition();
+        BlockPos bestDest = null;
+        String bestKey = null;
+        double bestDistSq = Double.MAX_VALUE;
+
+        for (java.util.Map.Entry<String, BlockPos> e : all.entrySet()) {
+            if (com.soybe.awakeningsystem.world.SeriesStructureWorldGen.matchesCanonical(e.getKey(), canonical)) {
+                // Ensure the existing structure was recorded in the matching dimension
+                net.minecraft.resources.ResourceKey<Level> entryDim = com.soybe.awakeningsystem.world.SeriesStructureWorldGen.getDimensionOfKey(e.getKey(), canonical);
+                if (!entryDim.equals(targetDim)) {
+                    continue; // Skip structures recorded in the wrong dimension (e.g. legacy Overworld murim)
+                }
+
+                // Check for damaged/corrupted placements (e.g. monoliths into water or steep dropoffs)
+                if (targetDim.equals(Level.OVERWORLD) && !canonical.equals("orv") && !canonical.equals("black_market_den")) {
+                    int checkY = com.soybe.awakeningsystem.world.SeriesStructureWorldGen.findSolidSurfaceGround(targetLevel, e.getValue().getX(), e.getValue().getZ());
+                    if (checkY < 50 || Math.abs(checkY - e.getValue().getY()) > 4) {
+                        continue; // Corrupted terrain or placed in water; regenerate a pristine site instead
+                    }
+                }
+
+                double dist = e.getValue().distSqr(origin);
+                if (dist < bestDistSq) {
+                    bestDistSq = dist;
+                    bestDest = e.getValue();
+                    bestKey = e.getKey();
+                }
+            }
+        }
+
+        if (bestDest != null) {
+            BlockPos landing = com.soybe.awakeningsystem.world.SeriesStructureWorldGen.getSafeLandingPosition(targetLevel, bestDest, canonical);
+            if (player.serverLevel() != targetLevel) {
+                player.teleportTo(targetLevel, landing.getX() + 0.5D, landing.getY(), landing.getZ() + 0.5D, player.getYRot(), player.getXRot());
+            } else {
+                player.teleportTo(landing.getX() + 0.5D, landing.getY(), landing.getZ() + 0.5D);
+            }
+            final String k = bestKey;
+            final int distBlocks = (int) Math.sqrt(bestDistSq);
+            source.sendSuccess(() -> Component.literal("§a§l[SYSTEM]§r Teleported to existing structure: §e" + k + " §7at §b[" + landing.getX() + ", " + landing.getY() + ", " + landing.getZ() + "] §8(" + targetLevel.dimension().location().getPath() + ", " + distBlocks + "m)"), true);
+            return 1;
+        }
+
+        // Si no existía todavía, localizar su ubicación natural en la semilla del mundo y generarla allí de forma orgánica
+        var naturalResult = com.soybe.awakeningsystem.world.SeriesStructureWorldGen.findOrCreateNaturalStructure(level, player, target);
+        if (naturalResult != null) {
+            ServerLevel resultLevel = naturalResult.level();
+            BlockPos landing = naturalResult.landingPos();
+            if (player.serverLevel() != resultLevel) {
+                player.teleportTo(resultLevel, landing.getX() + 0.5D, landing.getY(), landing.getZ() + 0.5D, player.getYRot(), player.getXRot());
+            } else {
+                player.teleportTo(landing.getX() + 0.5D, landing.getY(), landing.getZ() + 0.5D);
+            }
+            source.sendSuccess(() -> Component.literal("§a§l[SYSTEM]§r Teleported to natural site of '§e" + naturalResult.canonicalName() + "§r' at §b[" + landing.getX() + ", " + landing.getY() + ", " + landing.getZ() + "] §7(Dimension: §b" + resultLevel.dimension().location().getPath() + "§7, Biome: §d" + naturalResult.biomeName() + "§7)"), true);
+            return 1;
+        }
+
+        source.sendFailure(Component.literal("§cUnknown structure type: '§e" + name + "§c'.\n§7Use §b/structure list§7 to view registered structures."));
         return 0;
     }
 
     private static int locateStructureCommand(CommandSourceStack source, String filterType) {
         if (!(source.getLevel() instanceof ServerLevel level)) {
-            source.sendFailure(Component.literal("§cComando solo disponible en el servidor."));
+            source.sendFailure(Component.literal("§cCommand only available on the server."));
             return 0;
         }
+        var server = level.getServer();
+        var seriesData = com.soybe.awakeningsystem.world.SeriesStructureWorldGen.SeriesStructureData.get(server);
+
         BlockPos origin = BlockPos.containing(source.getPosition());
-        var data = com.soybe.awakeningsystem.world.SeriesStructureWorldGen.SeriesStructureData.get(level.getServer());
-        java.util.Map<String, BlockPos> all = data.getAll();
+        java.util.Map<String, BlockPos> all = new java.util.LinkedHashMap<>();
+        if (seriesData != null) all.putAll(seriesData.getAll());
+        var teyvatData = com.soybe.awakeningsystem.world.TeyvatWorldGenManager.TeyvatFeaturesData.get(server);
+        if (teyvatData != null && teyvatData.namedStructures != null) all.putAll(teyvatData.namedStructures);
+
+        String canonicalFilter = filterType != null && !filterType.isEmpty()
+                ? com.soybe.awakeningsystem.world.SeriesStructureWorldGen.canonicalizeStructureName(filterType)
+                : null;
+
+        net.minecraft.resources.ResourceKey<Level> targetDim = (canonicalFilter != null)
+                ? com.soybe.awakeningsystem.world.SeriesStructureWorldGen.getTargetDimensionForStructure(canonicalFilter)
+                : level.dimension();
+        ServerLevel resolvedLocateTargetLevel = server.getLevel(targetDim);
+        final ServerLevel targetLevel = (resolvedLocateTargetLevel != null) ? resolvedLocateTargetLevel : level;
 
         java.util.Map.Entry<String, BlockPos> nearest = null;
         double bestDistSq = Double.MAX_VALUE;
 
         for (java.util.Map.Entry<String, BlockPos> entry : all.entrySet()) {
-            if (filterType != null && !filterType.isEmpty() && !entry.getKey().toLowerCase(java.util.Locale.ROOT).contains(filterType.toLowerCase(java.util.Locale.ROOT))) {
-                continue;
+            if (canonicalFilter != null) {
+                if (!com.soybe.awakeningsystem.world.SeriesStructureWorldGen.matchesCanonical(entry.getKey(), canonicalFilter)) {
+                    continue;
+                }
+                net.minecraft.resources.ResourceKey<Level> entryDim = com.soybe.awakeningsystem.world.SeriesStructureWorldGen.getDimensionOfKey(entry.getKey(), canonicalFilter);
+                if (!entryDim.equals(targetDim)) {
+                    continue;
+                }
             }
             double dist = entry.getValue().distSqr(origin);
             if (dist < bestDistSq) {
@@ -1404,75 +1995,74 @@ public final class SystemCommands {
 
         if (nearest != null) {
             final var found = nearest;
-            final BlockPos p = found.getValue();
+            final BlockPos basePos = found.getValue();
+            final String cName = canonicalFilter != null ? canonicalFilter : found.getKey();
+            final BlockPos p = com.soybe.awakeningsystem.world.SeriesStructureWorldGen.getSafeLandingPosition(targetLevel, basePos, cName);
             final int distBlocks = (int) Math.sqrt(bestDistSq);
-            source.sendSuccess(() -> Component.literal("§a§l[SISTEMA]§r Estructura descubierta '§e" + found.getKey() + "§r' en: §b[" + p.getX() + ", " + p.getY() + ", " + p.getZ() + "] §7(" + distBlocks + " bloques de distancia)"), false);
+            net.minecraft.network.chat.Component coords = Component.literal("§b[" + p.getX() + ", " + p.getY() + ", " + p.getZ() + "]")
+                .withStyle(style -> style
+                    .withClickEvent(new net.minecraft.network.chat.ClickEvent(net.minecraft.network.chat.ClickEvent.Action.RUN_COMMAND, "/structure tp " + (canonicalFilter != null ? canonicalFilter : found.getKey())))
+                    .withHoverEvent(new net.minecraft.network.chat.HoverEvent(net.minecraft.network.chat.HoverEvent.Action.SHOW_TEXT, Component.literal("§aClick to teleport here"))));
+            net.minecraft.network.chat.Component msg = Component.literal("§a§l[SYSTEM]§r Existing structure '§e" + found.getKey() + "§r' in (" + targetLevel.dimension().location().getPath() + "): ").append(coords).append(Component.literal(" §7(" + distBlocks + " blocks away)"));
+            source.sendSuccess(() -> msg, false);
             return 1;
         }
 
-        // Si aún no se ha generado en el mundo, predecir la zona natural más cercana de la cuadrícula
-        int originChunkX = origin.getX() >> 4;
-        int originChunkZ = origin.getZ() >> 4;
-        int pRegionX = Math.floorDiv(originChunkX, 32);
-        int pRegionZ = Math.floorDiv(originChunkZ, 32);
-
-        BlockPos bestCand = null;
-        double bestCandDistSq = Double.MAX_VALUE;
-
-        for (int rx = pRegionX - 2; rx <= pRegionX + 2; rx++) {
-            for (int rz = pRegionZ - 2; rz <= pRegionZ + 2; rz++) {
-                long seed = ((long) rx * 341873128712L + (long) rz * 132897987541L) ^ level.getSeed();
-                java.util.Random rand = new java.util.Random(seed);
-                int targetChunkX = rx * 32 + rand.nextInt(24) + 4;
-                int targetChunkZ = rz * 32 + rand.nextInt(24) + 4;
-                int bx = targetChunkX * 16 + 8;
-                int bz = targetChunkZ * 16 + 8;
-                int by = level.getHeight(net.minecraft.world.level.levelgen.Heightmap.Types.WORLD_SURFACE, bx, bz);
-                BlockPos cand = new BlockPos(bx, by, bz);
-                double d = cand.distSqr(origin);
-                if (d < bestCandDistSq) {
-                    bestCandDistSq = d;
-                    bestCand = cand;
-                }
+        if (source.getEntity() instanceof ServerPlayer sp && canonicalFilter != null) {
+            var nat = com.soybe.awakeningsystem.world.SeriesStructureWorldGen.findOrCreateNaturalStructure(level, sp, canonicalFilter);
+            if (nat != null) {
+                BlockPos p = nat.landingPos();
+                int distBlocks = (int) Math.sqrt(p.distSqr(origin));
+                net.minecraft.network.chat.Component coords = Component.literal("§b[" + p.getX() + ", " + p.getY() + ", " + p.getZ() + "]")
+                    .withStyle(style -> style
+                        .withClickEvent(new net.minecraft.network.chat.ClickEvent(net.minecraft.network.chat.ClickEvent.Action.RUN_COMMAND, "/structure tp " + nat.canonicalName()))
+                        .withHoverEvent(new net.minecraft.network.chat.HoverEvent(net.minecraft.network.chat.HoverEvent.Action.SHOW_TEXT, Component.literal("§aClick to teleport here"))));
+                net.minecraft.network.chat.Component msg = Component.literal("§6§l[SYSTEM]§r Natural structure '§e" + nat.canonicalName() + "§r' discovered in (" + nat.level().dimension().location().getPath() + "): ").append(coords).append(Component.literal(" §7(Biome: §d" + nat.biomeName() + "§7, " + distBlocks + "m away)"));
+                source.sendSuccess(() -> msg, false);
+                return 1;
             }
         }
 
-        if (bestCand != null) {
-            final BlockPos candidate = bestCand;
-            int dist = (int) Math.sqrt(bestCandDistSq);
-            source.sendSuccess(() -> Component.literal("§6§l[SISTEMA]§r Próxima zona de generación natural predicha: §b[" + candidate.getX() + ", " + candidate.getY() + ", " + candidate.getZ() + "] §7(" + dist + " bloques). Explora esa zona para que emerja."), false);
-            return 1;
-        }
-
-        source.sendFailure(Component.literal("§cNo se encontraron coordenadas en el rango actual."));
+        source.sendFailure(Component.literal("§cNo coordinates found within current range."));
         return 0;
     }
 
     private static int listStructuresCommand(CommandSourceStack source) {
         if (!(source.getLevel() instanceof ServerLevel level)) {
-            source.sendFailure(Component.literal("§cComando solo disponible en el servidor."));
+            source.sendFailure(Component.literal("§cCommand only available on the server."));
             return 0;
         }
-        var data = com.soybe.awakeningsystem.world.SeriesStructureWorldGen.SeriesStructureData.get(level.getServer());
-        java.util.Map<String, BlockPos> all = data.getAll();
+        var server = level.getServer();
+        var seriesData = com.soybe.awakeningsystem.world.SeriesStructureWorldGen.SeriesStructureData.get(server);
+
+        java.util.Map<String, BlockPos> all = new java.util.LinkedHashMap<>();
+        if (seriesData != null) all.putAll(seriesData.getAll());
+        var teyvatData = com.soybe.awakeningsystem.world.TeyvatWorldGenManager.TeyvatFeaturesData.get(server);
+        if (teyvatData != null && teyvatData.namedStructures != null) all.putAll(teyvatData.namedStructures);
+
         if (all.isEmpty()) {
-            source.sendSuccess(() -> Component.literal("§e§l[SISTEMA]§r Aún no se han generado estructuras en este mundo. Explora nuevas regiones o usa §b/structure <nombre>§r."), false);
+            source.sendSuccess(() -> Component.literal("§e§l[SYSTEM]§r No structures have generated in this world yet. Explore new regions or use §b/structure tp <name>§r."), false);
             return 1;
         }
 
-        source.sendSuccess(() -> Component.literal("§6§l=== ESTRUCTURAS DE SERIES GENERADAS (" + all.size() + ") ==="), false);
+        source.sendSuccess(() -> Component.literal("§6§l=== REGISTERED STRUCTURES (" + all.size() + ") ==="), false);
         BlockPos origin = BlockPos.containing(source.getPosition());
         for (java.util.Map.Entry<String, BlockPos> entry : all.entrySet()) {
             BlockPos p = entry.getValue();
             int dist = (int) Math.sqrt(p.distSqr(origin));
-            source.sendSuccess(() -> Component.literal("§e✦ " + entry.getKey() + " §7en §b[" + p.getX() + ", " + p.getY() + ", " + p.getZ() + "] §8(" + dist + "m)"), false);
+            net.minecraft.network.chat.Component coords = Component.literal("§b[" + p.getX() + ", " + p.getY() + ", " + p.getZ() + "]")
+                .withStyle(style -> style
+                    .withClickEvent(new net.minecraft.network.chat.ClickEvent(net.minecraft.network.chat.ClickEvent.Action.RUN_COMMAND, "/structure tp " + entry.getKey()))
+                    .withHoverEvent(new net.minecraft.network.chat.HoverEvent(net.minecraft.network.chat.HoverEvent.Action.SHOW_TEXT, Component.literal("§aClick to teleport here"))));
+            net.minecraft.network.chat.Component line = Component.literal("§e✦ " + entry.getKey() + " §7en ").append(coords).append(Component.literal(" §8(" + dist + "m)"));
+            source.sendSuccess(() -> line, false);
         }
         return 1;
     }
 
     private static int spawnNpcCommand(CommandSourceStack source, String character) {
         if (!(source.getLevel() instanceof ServerLevel level)) {
-            source.sendFailure(Component.literal("§cComando solo disponible en el servidor."));
+            source.sendFailure(Component.literal("§cCommand only available on the server."));
             return 0;
         }
         BlockPos pos = BlockPos.containing(source.getPosition());
@@ -1483,41 +2073,41 @@ public final class SystemCommands {
         npc.moveTo(pos.getX() + 0.5D, pos.getY(), pos.getZ() + 0.5D, 0.0F, 0.0F);
         npc.setHomePos(pos);
         level.addFreshEntity(npc);
-        source.sendSuccess(() -> Component.literal("§a§l[SISTEMA]§r NPC " + profile.titleColor() + profile.displayName() + "§r invocado con éxito."), true);
+        source.sendSuccess(() -> Component.literal("§a§l[SYSTEM]§r NPC " + profile.titleColor() + profile.displayName() + "§r successfully summoned."), true);
         return 1;
     }
 
     private static int storeShadowsCommand(CommandSourceStack source) {
         if (!(source.getEntity() instanceof ServerPlayer player)) {
-            source.sendFailure(Component.literal("Este comando debe ser ejecutado por un jugador."));
+            source.sendFailure(Component.literal("This command must be executed by a player."));
             return 0;
         }
         int count = SystemEvents.storePlayerShadows(player);
         if (count > 0) {
-            source.sendSuccess(() -> Component.literal("§8[§9Ejército de Sombras§8] §aSe han guardado §f" + count + " §asoldado(s) en tu dominio."), false);
+            source.sendSuccess(() -> Component.literal("§8[§9Shadow Army§8] §aSaved §f" + count + " §asoldier(s) to your domain."), false);
         } else {
-            source.sendFailure(Component.literal("§cNo tienes soldados de sombra cercanos en el campo para guardar."));
+            source.sendFailure(Component.literal("§cYou have no shadow soldiers nearby in the field to store."));
         }
         return count;
     }
 
     private static int deployShadowsCommand(CommandSourceStack source) {
         if (!(source.getEntity() instanceof ServerPlayer player)) {
-            source.sendFailure(Component.literal("Este comando debe ser ejecutado por un jugador."));
+            source.sendFailure(Component.literal("This command must be executed by a player."));
             return 0;
         }
         int deployed = SystemEvents.deployPlayerShadows(player, 4);
         if (deployed > 0) {
-            source.sendSuccess(() -> Component.literal("§8[§9Ejército de Sombras§8] §bHas desplegado §f" + deployed + " §bsoldado(s) al combate."), false);
+            source.sendSuccess(() -> Component.literal("§8[§9Shadow Army§8] §bDeployed §f" + deployed + " §bsoldier(s) to battle."), false);
         } else {
-            source.sendFailure(Component.literal("§cNo tienes soldados de sombra en la reserva de tu dominio."));
+            source.sendFailure(Component.literal("§cYou have no shadow soldiers in your domain reserve."));
         }
         return deployed;
     }
 
     private static int showShadowStatus(CommandSourceStack source) {
         if (!(source.getEntity() instanceof ServerPlayer player)) {
-            source.sendFailure(Component.literal("Este comando debe ser ejecutado por un jugador."));
+            source.sendFailure(Component.literal("This command must be executed by a player."));
             return 0;
         }
         SystemData data = SystemEvents.data(player);
@@ -1530,52 +2120,52 @@ public final class SystemCommands {
         int stored = data.storedShadowCount();
         int energy = data.energy();
         final long finalActive = activeCount;
-        source.sendSuccess(() -> Component.literal("§8================ §9§lDOMINIO DE SOMBRAS §8================"), false);
-        source.sendSuccess(() -> Component.literal("§7Soldados activos en campo: §b" + finalActive), false);
-        source.sendSuccess(() -> Component.literal("§7Soldados resguardados en dominio: §a" + stored), false);
-        source.sendSuccess(() -> Component.literal("§7Maná actual para regeneración: §d" + energy + " / 100 §f(Costo regen: 1 maná/s, revivir: 15 maná)"), false);
-        source.sendSuccess(() -> Component.literal("§7Controles rápidos: §e[V] §7para Extraer/Sacar, §e[Shift + V] §7para Guardar en dominio."), false);
+        source.sendSuccess(() -> Component.literal("§8================ §9§lSHADOW DOMAIN §8================"), false);
+        source.sendSuccess(() -> Component.literal("§7Active soldiers in field: §b" + finalActive), false);
+        source.sendSuccess(() -> Component.literal("§7Stored soldiers in domain: §a" + stored), false);
+        source.sendSuccess(() -> Component.literal("§7Current mana for regeneration: §d" + energy + " / 100 §f(Regen cost: 1 mana/s, revive: 15 mana)"), false);
+        source.sendSuccess(() -> Component.literal("§7Quick controls: §e[V] §7to Extract/Deploy, §e[Shift + V] §7to Store in domain."), false);
         source.sendSuccess(() -> Component.literal("§8======================================================="), false);
         return 1;
     }
 
     private static int dismissShadowsCommand(CommandSourceStack source) {
         if (!(source.getEntity() instanceof ServerPlayer player)) {
-            source.sendFailure(Component.literal("Este comando debe ser ejecutado por un jugador."));
+            source.sendFailure(Component.literal("This command must be executed by a player."));
             return 0;
         }
         SystemEvents.dismissAllShadows(player);
-        source.sendSuccess(() -> Component.literal("§8[§9Ejército de Sombras§8] §eTodas tus sombras activas han sido disipadas."), false);
+        source.sendSuccess(() -> Component.literal("§8[§9Shadow Army§8] §eAll your active shadows have been dismissed."), false);
         return 1;
     }
 
     private static int spawnDokkaebiCommand(CommandSourceStack source) {
         if (!(source.getEntity() instanceof ServerPlayer player)) {
-            source.sendFailure(Component.literal("Este comando solo puede ser ejecutado por un jugador."));
+            source.sendFailure(Component.literal("This command can only be executed by a player."));
             return 0;
         }
         SystemEvents.spawnDokkaebiNearPlayer(player);
-        source.sendSuccess(() -> Component.literal("§e§l[Star Stream]§r Dokkaebi invocado con éxito junto a ti."), false);
+        source.sendSuccess(() -> Component.literal("§e§l[Star Stream]§r Dokkaebi successfully summoned beside you."), false);
         return 1;
     }
 
     private static int showDokkaebiQuestCommand(CommandSourceStack source) {
         if (!(source.getEntity() instanceof ServerPlayer player)) {
-            source.sendFailure(Component.literal("Este comando solo puede ser ejecutado por un jugador."));
+            source.sendFailure(Component.literal("This command can only be executed by a player."));
             return 0;
         }
         ServerLevel level = player.serverLevel();
         net.minecraft.world.phys.AABB nearby = player.getBoundingBox().inflate(32.0D);
         java.util.List<com.soybe.awakeningsystem.entity.DokkaebiEntity> dokkaebis = level.getEntitiesOfClass(com.soybe.awakeningsystem.entity.DokkaebiEntity.class, nearby);
         if (dokkaebis.isEmpty()) {
-            source.sendFailure(Component.literal("§cNo hay ningún Dokkaebi cerca transmitiendo. Espera a que aparezca o usa /dokkaebi spawn."));
+            source.sendFailure(Component.literal("§cThere is no Dokkaebi broadcasting nearby. Wait for one to appear or use /dokkaebi spawn."));
             return 0;
         }
         var dokkaebi = dokkaebis.get(0);
         if (!dokkaebi.isQuestActive()) {
-            source.sendSuccess(() -> Component.literal("§e§l[Star Stream]§r El Dokkaebi aún no te ha asignado ningún Sub-Escenario. Hazle clic derecho para recibir uno."), false);
+            source.sendSuccess(() -> Component.literal("§e§l[Star Stream]§r The Dokkaebi has not assigned you a Sub-Scenario yet. Right-click it to receive one."), false);
         } else {
-            String title = (dokkaebi.getQuestTitle() != null && !dokkaebi.getQuestTitle().isEmpty()) ? dokkaebi.getQuestTitle() : "Sub-Escenario";
+            String title = (dokkaebi.getQuestTitle() != null && !dokkaebi.getQuestTitle().isEmpty()) ? dokkaebi.getQuestTitle() : "Sub-Scenario";
             String desc = (dokkaebi.getQuestDesc() != null) ? dokkaebi.getQuestDesc() : "";
             source.sendSuccess(() -> Component.literal("§8[§eStar Stream§8] §fSub-Escenario: §b" + title + " §7(" + dokkaebi.getQuestProgress() + "/" + dokkaebi.getQuestTarget() + ") §e- " + desc), false);
         }
@@ -1584,41 +2174,42 @@ public final class SystemCommands {
 
     private static int dismissDokkaebiCommand(CommandSourceStack source) {
         if (!(source.getEntity() instanceof ServerPlayer player)) {
-            source.sendFailure(Component.literal("Este comando solo puede ser ejecutado por un jugador."));
+            source.sendFailure(Component.literal("This command can only be executed by a player."));
             return 0;
         }
         ServerLevel level = player.serverLevel();
         net.minecraft.world.phys.AABB nearby = player.getBoundingBox().inflate(32.0D);
         java.util.List<com.soybe.awakeningsystem.entity.DokkaebiEntity> dokkaebis = level.getEntitiesOfClass(com.soybe.awakeningsystem.entity.DokkaebiEntity.class, nearby);
         if (dokkaebis.isEmpty()) {
-            source.sendFailure(Component.literal("§cNo hay ningún Dokkaebi cercano para despedir."));
+            source.sendFailure(Component.literal("§cThere is no Dokkaebi nearby to dismiss."));
             return 0;
         }
         for (var d : dokkaebis) {
             d.dismissWithParticles();
         }
-        source.sendSuccess(() -> Component.literal("§e§l[Star Stream]§r El Dokkaebi ha cerrado la transmisión."), false);
+        source.sendSuccess(() -> Component.literal("§e§l[Star Stream]§r The Dokkaebi has closed the broadcast."), false);
         return 1;
     }
 
-    private static int triggerDokkaebiScenarioCommand(CommandSourceStack source) {
-        if (!(source.getEntity() instanceof ServerPlayer player)) {
-            source.sendFailure(Component.literal("Este comando solo puede ser ejecutado por un jugador."));
+    private static int triggerDokkaebiScenarioCommand(CommandSourceStack source, int forcedTarget) {
+        var server = source.getServer();
+        if (server == null) {
+            source.sendFailure(Component.literal("Server is not available."));
             return 0;
         }
-        SystemData data = SystemEvents.data(player);
-        int target = 10;
-        data.startDokkaebiScenario("Supervivencia y Cacería de Emergencia", 3600, target);
-        AwakeningSystemMod.notify(player, "awakening_system.notification.dokkaebi_scenario_start.title", "awakening_system.notification.dokkaebi_scenario_start.desc", 0xFFFF4444, target);
-        player.level().playSound(null, player.getX(), player.getY(), player.getZ(), net.minecraft.sounds.SoundEvents.BELL_BLOCK, net.minecraft.sounds.SoundSource.PLAYERS, 1.5F, 0.8F);
-        AwakeningSystemMod.sync(player);
-        source.sendSuccess(() -> Component.literal("§e§l[Star Stream]§r Escenario Forzado del Dokkaebi iniciado con éxito."), false);
-        return 1;
+        boolean started = SystemEvents.triggerServerDokkaebiEvent(server, forcedTarget);
+        if (started) {
+            source.sendSuccess(() -> Component.literal("§e§l[Star Stream]§r Server-wide Dokkaebi scenario successfully initiated for all active players."), true);
+            return 1;
+        } else {
+            source.sendFailure(Component.literal("§cCould not start scenario: no eligible players found."));
+            return 0;
+        }
     }
 
     private static int spawnBossCommand(CommandSourceStack source, String type) {
         if (!(source.getEntity() instanceof ServerPlayer player)) {
-            source.sendFailure(Component.literal("Este comando solo puede ser ejecutado por un jugador."));
+            source.sendFailure(Component.literal("This command can only be executed by a player."));
             return 0;
         }
         ServerLevel level = player.serverLevel();
@@ -1627,7 +2218,7 @@ public final class SystemCommands {
             if (igris != null) {
                 igris.moveTo(player.getX() + 2.0, player.getY(), player.getZ() + 2.0, player.getYRot(), 0.0F);
                 level.addFreshEntity(igris);
-                source.sendSuccess(() -> Component.literal("§c§l[Jefe Invocado]§r ¡Igris, Comandante Carmesí ha aparecido!"), true);
+                source.sendSuccess(() -> Component.literal("§c§l[Boss Spawned]§r Igris, the Bloodred Commander has appeared!"), true);
                 return 1;
             }
         } else if ("baran".equalsIgnoreCase(type)) {
@@ -1635,7 +2226,7 @@ public final class SystemCommands {
             if (baran != null) {
                 baran.moveTo(player.getX() + 2.0, player.getY(), player.getZ() + 2.0, player.getYRot(), 0.0F);
                 level.addFreshEntity(baran);
-                source.sendSuccess(() -> Component.literal("§b§l[Jefe Invocado]§r ¡Baran, Monarca de las Llamas Blancas ha aparecido!"), true);
+                source.sendSuccess(() -> Component.literal("§b§l[Boss Spawned]§r Baran, Monarch of White Flames has appeared!"), true);
                 return 1;
             }
         } else if ("patriarch".equalsIgnoreCase(type) || "patriarca".equalsIgnoreCase(type) || "blood_patriarch".equalsIgnoreCase(type)) {
@@ -1643,7 +2234,7 @@ public final class SystemCommands {
             if (patriarch != null) {
                 patriarch.moveTo(player.getX() + 2.0, player.getY(), player.getZ() + 2.0, player.getYRot(), 0.0F);
                 level.addFreshEntity(patriarch);
-                source.sendSuccess(() -> Component.literal("§4§l[Jefe Invocado]§r ¡Gran Patriarca de la Secta de Sangre ha aparecido!"), true);
+                source.sendSuccess(() -> Component.literal("§4§l[Boss Spawned]§r Great Patriarch of the Blood Sect has appeared!"), true);
                 return 1;
             }
         } else if ("treant".equalsIgnoreCase(type) || "yggdrasil_treant".equalsIgnoreCase(type)) {
@@ -1651,7 +2242,7 @@ public final class SystemCommands {
             if (treant != null) {
                 treant.moveTo(player.getX() + 2.0, player.getY(), player.getZ() + 2.0, player.getYRot(), 0.0F);
                 level.addFreshEntity(treant);
-                source.sendSuccess(() -> Component.literal("§2§l[Jefe Invocado]§r ¡Treant Ancestral de Yggdrasil ha aparecido!"), true);
+                source.sendSuccess(() -> Component.literal("§2§l[Boss Spawned]§r Ancestral Treant of Yggdrasil has appeared!"), true);
                 return 1;
             }
         } else if ("childe".equalsIgnoreCase(type) || "tartaglia".equalsIgnoreCase(type) || "nobile".equalsIgnoreCase(type)) {
@@ -1659,7 +2250,7 @@ public final class SystemCommands {
             if (childe != null) {
                 childe.moveTo(player.getX() + 2.0, player.getY(), player.getZ() + 2.0, player.getYRot(), 0.0F);
                 level.addFreshEntity(childe);
-                source.sendSuccess(() -> Component.literal("§b§l[Jefe Invocado]§r ¡Nobile / Tartaglia (Childe), Undécimo Heraldo de Fatui ha aparecido!"), true);
+                source.sendSuccess(() -> Component.literal("§b§l[Boss Spawned]§r Tartaglia (Childe), 11th of the Fatui Harbingers has appeared!"), true);
                 return 1;
             }
         } else if ("raiden".equalsIgnoreCase(type) || "shogun".equalsIgnoreCase(type) || "baal".equalsIgnoreCase(type)) {
@@ -1667,7 +2258,7 @@ public final class SystemCommands {
             if (raiden != null) {
                 raiden.moveTo(player.getX() + 2.0, player.getY(), player.getZ() + 2.0, player.getYRot(), 0.0F);
                 level.addFreshEntity(raiden);
-                source.sendSuccess(() -> Component.literal("§d§l[Jefe Invocado]§r ¡Shogun Raiden / Baal, Diosa de la Eternidad ha aparecido!"), true);
+                source.sendSuccess(() -> Component.literal("§d§l[Boss Spawned]§r Raiden Shogun / Baal, God of Eternity has appeared!"), true);
                 return 1;
             }
         } else if ("wolflord".equalsIgnoreCase(type) || "rey_acechador".equalsIgnoreCase(type) || "golden_wolflord".equalsIgnoreCase(type)) {
@@ -1675,7 +2266,7 @@ public final class SystemCommands {
             if (wolflord != null) {
                 wolflord.moveTo(player.getX() + 2.0, player.getY() + 4.0, player.getZ() + 2.0, player.getYRot(), 0.0F);
                 level.addFreshEntity(wolflord);
-                source.sendSuccess(() -> Component.literal("§6§l[Jefe Invocado]§r ¡Rey Acechador Dorado, Soberano del Can Menor de la Grieta ha aparecido!"), true);
+                source.sendSuccess(() -> Component.literal("§6§l[Boss Spawned]§r Golden Wolflord, Monarch of the Rift Hound Pack has appeared!"), true);
                 return 1;
             }
         } else if ("azhdaha".equalsIgnoreCase(type)) {
@@ -1683,7 +2274,7 @@ public final class SystemCommands {
             if (azhdaha != null) {
                 azhdaha.moveTo(player.getX() + 2.0, player.getY(), player.getZ() + 2.0, player.getYRot(), 0.0F);
                 level.addFreshEntity(azhdaha);
-                source.sendSuccess(() -> Component.literal("§6§l[Jefe Invocado]§r ¡Azhdaha, Rey Dragón Primigenio Sellado ha aparecido!"), true);
+                source.sendSuccess(() -> Component.literal("§6§l[Boss Spawned]§r Azhdaha, Sealed Primeval Dragon King has appeared!"), true);
                 return 1;
             }
         } else if ("anemo_hypostasis".equalsIgnoreCase(type) || "anemo_cube".equalsIgnoreCase(type)) {
@@ -1691,7 +2282,7 @@ public final class SystemCommands {
             if (h != null) {
                 h.moveTo(player.getX() + 2.0, player.getY() + 2.0, player.getZ() + 2.0, player.getYRot(), 0.0F);
                 level.addFreshEntity(h);
-                source.sendSuccess(() -> Component.literal("§a§l[Jefe Invocado]§r ¡Hipóstasis Anemo (Beth) ha aparecido!"), true);
+                source.sendSuccess(() -> Component.literal("§a§l[Boss Spawned]§r Anemo Hypostasis (Beth) has appeared!"), true);
                 return 1;
             }
         } else if ("electro_hypostasis".equalsIgnoreCase(type) || "electro_cube".equalsIgnoreCase(type)) {
@@ -1699,7 +2290,7 @@ public final class SystemCommands {
             if (h != null) {
                 h.moveTo(player.getX() + 2.0, player.getY() + 2.0, player.getZ() + 2.0, player.getYRot(), 0.0F);
                 level.addFreshEntity(h);
-                source.sendSuccess(() -> Component.literal("§d§l[Jefe Invocado]§r ¡Hipóstasis Electro (Aleph) ha aparecido!"), true);
+                source.sendSuccess(() -> Component.literal("§d§l[Boss Spawned]§r Electro Hypostasis (Aleph) has appeared!"), true);
                 return 1;
             }
         } else if ("geo_hypostasis".equalsIgnoreCase(type) || "geo_cube".equalsIgnoreCase(type)) {
@@ -1707,7 +2298,7 @@ public final class SystemCommands {
             if (h != null) {
                 h.moveTo(player.getX() + 2.0, player.getY() + 2.0, player.getZ() + 2.0, player.getYRot(), 0.0F);
                 level.addFreshEntity(h);
-                source.sendSuccess(() -> Component.literal("§e§l[Jefe Invocado]§r ¡Hipóstasis Geo (Gimel) ha aparecido!"), true);
+                source.sendSuccess(() -> Component.literal("§e§l[Boss Spawned]§r Geo Hypostasis (Gimel) has appeared!"), true);
                 return 1;
             }
         } else if ("cryo_hypostasis".equalsIgnoreCase(type) || "cryo_cube".equalsIgnoreCase(type)) {
@@ -1715,7 +2306,7 @@ public final class SystemCommands {
             if (h != null) {
                 h.moveTo(player.getX() + 2.0, player.getY() + 2.0, player.getZ() + 2.0, player.getYRot(), 0.0F);
                 level.addFreshEntity(h);
-                source.sendSuccess(() -> Component.literal("§b§l[Jefe Invocado]§r ¡Hipóstasis Cryo (Daleth) ha aparecido!"), true);
+                source.sendSuccess(() -> Component.literal("§b§l[Boss Spawned]§r Cryo Hypostasis (Daleth) has appeared!"), true);
                 return 1;
             }
         } else if ("pyro_hypostasis".equalsIgnoreCase(type) || "pyro_cube".equalsIgnoreCase(type)) {
@@ -1723,7 +2314,7 @@ public final class SystemCommands {
             if (h != null) {
                 h.moveTo(player.getX() + 2.0, player.getY() + 2.0, player.getZ() + 2.0, player.getYRot(), 0.0F);
                 level.addFreshEntity(h);
-                source.sendSuccess(() -> Component.literal("§c§l[Jefe Invocado]§r ¡Hipóstasis Pyro (Ayin) ha aparecido!"), true);
+                source.sendSuccess(() -> Component.literal("§c§l[Boss Spawned]§r Pyro Hypostasis (Ayin) has appeared!"), true);
                 return 1;
             }
         } else if ("hydro_hypostasis".equalsIgnoreCase(type) || "hydro_cube".equalsIgnoreCase(type)) {
@@ -1731,7 +2322,7 @@ public final class SystemCommands {
             if (h != null) {
                 h.moveTo(player.getX() + 2.0, player.getY() + 2.0, player.getZ() + 2.0, player.getYRot(), 0.0F);
                 level.addFreshEntity(h);
-                source.sendSuccess(() -> Component.literal("§9§l[Jefe Invocado]§r ¡Hipóstasis Hydro (He) ha aparecido!"), true);
+                source.sendSuccess(() -> Component.literal("§9§l[Boss Spawned]§r Hydro Hypostasis (He) has appeared!"), true);
                 return 1;
             }
         } else if ("cryo_regisvine".equalsIgnoreCase(type) || "regisvine".equalsIgnoreCase(type)) {
@@ -1739,11 +2330,37 @@ public final class SystemCommands {
             if (r != null) {
                 r.moveTo(player.getX() + 2.0, player.getY(), player.getZ() + 2.0, player.getYRot(), 0.0F);
                 level.addFreshEntity(r);
-                source.sendSuccess(() -> Component.literal("§b§l[Jefe Invocado]§r ¡Regisvid Criogénica ha aparecido!"), true);
+                source.sendSuccess(() -> Component.literal("§b§l[Boss Spawned]§r Cryo Regisvine has appeared!"), true);
+                return 1;
+            }
+        } else if ("sculk".equalsIgnoreCase(type) || "warden".equalsIgnoreCase(type) || "colossus".equalsIgnoreCase(type) || "coloso".equalsIgnoreCase(type) || "sculk_warden".equalsIgnoreCase(type)) {
+            var wardenBoss = com.soybe.awakeningsystem.entity.ModEntities.COLOSSAL_SCULK_WARDEN.get().create(level);
+            if (wardenBoss != null) {
+                wardenBoss.moveTo(player.getX() + 3.0, player.getY(), player.getZ() + 3.0, player.getYRot(), 0.0F);
+                level.addFreshEntity(wardenBoss);
+                source.sendSuccess(() -> Component.literal("§3§l[Boss Spawned]§r ¡El Titán Colosal de Sculk ha despertado!"), true);
+                return 1;
+            }
+        } else if ("sculk_golem".equalsIgnoreCase(type) || "golem".equalsIgnoreCase(type)) {
+            var golem = com.soybe.awakeningsystem.entity.ModEntities.SCULK_GOLEM.get().create(level);
+            if (golem != null) {
+                golem.moveTo(player.getX() + 2.0, player.getY(), player.getZ() + 2.0, player.getYRot(), 0.0F);
+                golem.setStatue(false);
+                level.addFreshEntity(golem);
+                source.sendSuccess(() -> Component.literal("§3§l[Mob Spawned]§r Golem de Sculk invocado."), true);
+                return 1;
+            }
+        } else if ("sculk_statue".equalsIgnoreCase(type) || "statue".equalsIgnoreCase(type)) {
+            var golem = com.soybe.awakeningsystem.entity.ModEntities.SCULK_GOLEM.get().create(level);
+            if (golem != null) {
+                golem.moveTo(player.getX() + 2.0, player.getY(), player.getZ() + 2.0, player.getYRot(), 0.0F);
+                golem.setStatue(true);
+                level.addFreshEntity(golem);
+                source.sendSuccess(() -> Component.literal("§7§l[Mob Spawned]§r Estatua durmiente de Golem de Sculk invocada."), true);
                 return 1;
             }
         } else {
-            source.sendFailure(Component.literal("§cJefe desconocido. Usa: /boss <igris | baran | patriarch | treant | childe | raiden | wolflord | azhdaha | anemo_hypostasis | electro_hypostasis | geo_hypostasis | cryo_hypostasis | pyro_hypostasis | hydro_hypostasis | cryo_regisvine>"));
+            source.sendFailure(Component.literal("§cJefe desconocido. Usa: /boss <warden | colossus | sculk_golem | igris | baran | patriarch | treant | childe | raiden | wolflord | azhdaha | anemo_hypostasis | electro_hypostasis | geo_hypostasis | cryo_hypostasis | pyro_hypostasis | hydro_hypostasis | cryo_regisvine>"));
             return 0;
         }
         return 0;
@@ -1754,17 +2371,85 @@ public final class SystemCommands {
             TowerManager.enterTower(player);
             return 1;
         }
-        source.sendFailure(Component.literal("Solo los jugadores pueden ingresar a la Torre."));
+        source.sendFailure(Component.literal("Only players can enter the Tower."));
         return 0;
     }
 
     private static int warpTowerFloor(CommandSourceStack source, int floorNum) {
         if (source.getEntity() instanceof ServerPlayer player) {
-            TowerManager.warpFloor(player, floorNum);
+            if (player.level().dimension().equals(TowerManager.RANKER_TOWER)) {
+                TowerManager.warpFloor(player, floorNum);
+            } else {
+                com.soybe.awakeningsystem.tower.GreatTowerWorldManager.enterFloor(player, floorNum);
+            }
             return 1;
         }
-        source.sendFailure(Component.literal("Solo los jugadores pueden cambiar de piso en la Torre."));
+        source.sendFailure(Component.literal("Only players can change floors in the Tower."));
         return 0;
+    }
+
+    private static int spawnTowerStructure(CommandSourceStack source) {
+        if (source.getEntity() instanceof ServerPlayer player) {
+            ServerLevel level = player.serverLevel();
+            BlockPos pos = player.blockPosition();
+            com.soybe.awakeningsystem.world.TowerStructureGenerator.generate(level, pos);
+            source.sendSuccess(() -> Component.literal("§a[Sistema] ¡Fachada y estructura monumental de la Torre generadas con éxito en X=" + pos.getX() + ", Z=" + pos.getZ() + "!"), true);
+            player.playNotifySound(SoundEvents.END_PORTAL_SPAWN, SoundSource.PLAYERS, 1.2F, 0.8F);
+            return 1;
+        }
+        source.sendFailure(Component.literal("Only players can spawn the tower structure."));
+        return 0;
+    }
+
+    private static int exportTowerCommand(CommandSourceStack source, int customRadius) {
+        if (source.getEntity() instanceof ServerPlayer player) {
+            ServerLevel level = player.serverLevel();
+            BlockPos pos = player.blockPosition();
+            int count = com.soybe.awakeningsystem.world.TowerStructureGenerator.exportTower(level, pos, customRadius);
+            if (count > 0) {
+                source.sendSuccess(() -> Component.literal("§a[Sistema] ¡Torre exportada exitosamente! §e(" + count + " bloques guardados en config/awakening_system/custom_tower/tower_exterior.json)"), true);
+                player.playNotifySound(SoundEvents.PLAYER_LEVELUP, SoundSource.PLAYERS, 1.0F, 1.2F);
+                return 1;
+            } else {
+                source.sendFailure(Component.literal("§cError al exportar la torre. Revisa los logs."));
+                return 0;
+            }
+        }
+        source.sendFailure(Component.literal("Only players can export the tower."));
+        return 0;
+    }
+
+    private static int resetTowerCommand(CommandSourceStack source) {
+        java.nio.file.Path p = com.soybe.awakeningsystem.world.TowerStructureGenerator.getExportFilePath();
+        try {
+            if (java.nio.file.Files.deleteIfExists(p)) {
+                source.sendSuccess(() -> Component.literal("§a[Sistema] Archivo custom eliminado. Ahora la torre se generará con el diseño procedural por defecto."), true);
+                return 1;
+            } else {
+                source.sendSuccess(() -> Component.literal("§e[Sistema] No había ningún archivo custom activo. Ya se usa el diseño procedural por defecto."), false);
+                return 1;
+            }
+        } catch (Exception e) {
+            source.sendFailure(Component.literal("§cError al eliminar archivo custom: " + e.getMessage()));
+            return 0;
+        }
+    }
+
+    private static int resetFloor10BossCommand(CommandSourceStack source) {
+        MinecraftServer server = source.getServer();
+        DimensionGenSavedData.get(server).setTowerFloor10BossDefeated(false);
+        ServerLevel floor10 = server.getLevel(com.soybe.awakeningsystem.tower.GreatTowerWorldManager.TOWER_FLOOR_10);
+        if (floor10 != null) {
+            var existing = floor10.getEntities(com.soybe.awakeningsystem.entity.ModEntities.COLOSSAL_SCULK_WARDEN.get(), net.minecraft.world.entity.LivingEntity::isAlive);
+            for (var b : existing) {
+                b.discard();
+            }
+            com.soybe.awakeningsystem.tower.GreatTowerWorldManager.ensureFloor10Boss(floor10);
+            source.sendSuccess(() -> Component.literal("§a[Sistema] §fEl Titán Colosal de Sculk ha sido reaparecido en la arena del Piso 10."), true);
+        } else {
+            source.sendSuccess(() -> Component.literal("§e[Sistema] §fEl estado del Titán Colosal ha sido reiniciado a no derrotado."), true);
+        }
+        return 1;
     }
 
     private static int cultivate(CommandSourceStack source) {
@@ -1772,7 +2457,7 @@ public final class SystemCommands {
             SystemEvents.handleCultivationAction(player, "toggle_meditation", 0);
             return 1;
         }
-        source.sendFailure(Component.literal("Solo los jugadores pueden cultivar Qi."));
+        source.sendFailure(Component.literal("Only players can cultivate Qi."));
         return 0;
     }
 
@@ -1782,7 +2467,7 @@ public final class SystemCommands {
             source.sendSuccess(() -> Component.translatable("awakening_system.command.isekai_teleport"), true);
             return 1;
         }
-        source.sendFailure(Component.literal("Solo los jugadores pueden viajar al mundo Isekai."));
+        source.sendFailure(Component.literal("Only players can travel to the Isekai world."));
         return 0;
     }
 
@@ -1791,22 +2476,22 @@ public final class SystemCommands {
             SystemData data = SystemEvents.data(player);
             if (data.isSystem40Updating()) {
                 TeyvatWorldManager.completeSystem40Update(player, data);
-                source.sendSuccess(() -> Component.literal("§a✔ Actualización a Sistema 4.0 completada instantáneamente sin esperas."), true);
+                source.sendSuccess(() -> Component.literal("§a✔ System 4.0 update completed instantly without waiting."), true);
                 return 1;
             } else if (data.isSystem30Updating()) {
                 MurimWorldManager.completeSystem30Update(player, data);
-                source.sendSuccess(() -> Component.literal("§a✔ Actualización a Sistema 3.0 completada instantáneamente sin esperas."), true);
+                source.sendSuccess(() -> Component.literal("§a✔ System 3.0 update completed instantly without waiting."), true);
                 return 1;
             } else if (data.isSystemUpdating()) {
                 IsekaiWorldManager.completeSystemUpdate(player, data);
                 source.sendSuccess(() -> Component.translatable("awakening_system.command.complete_update_success"), true);
                 return 1;
             } else {
-                source.sendFailure(Component.literal("§cNo hay ninguna actualización en curso. Puedes forzar la versión con: /system version <1|2|3|4>"));
+                source.sendFailure(Component.literal("§cThere is no update in progress. You can force the version with: /system version <1|2|3|4>"));
                 return 0;
             }
         }
-        source.sendFailure(Component.literal("Solo los jugadores pueden completar la actualización del Sistema."));
+        source.sendFailure(Component.literal("Only players can complete the System update."));
         return 0;
     }
 
@@ -1829,6 +2514,24 @@ public final class SystemCommands {
             return 1;
         }
         source.sendFailure(Component.translatable("awakening_system.command.only_players"));
+        return 0;
+    }
+
+    private static int requestUpdateSubspaceStructureCommand(CommandSourceStack source) {
+        if (source.getEntity() instanceof ServerPlayer player) {
+            com.soybe.awakeningsystem.subspace.SubspaceManager.requestUpdateStructure(player);
+            return 1;
+        }
+        source.sendFailure(Component.literal("Only players can update subspace structure."));
+        return 0;
+    }
+
+    private static int confirmUpdateSubspaceStructureCommand(CommandSourceStack source) {
+        if (source.getEntity() instanceof ServerPlayer player) {
+            com.soybe.awakeningsystem.subspace.SubspaceManager.regenerateSubspaceStructure(player);
+            return 1;
+        }
+        source.sendFailure(Component.literal("Only players can update subspace structure."));
         return 0;
     }
 
@@ -1859,7 +2562,7 @@ public final class SystemCommands {
             data.setSystem40Updated(false);
             data.setTeyvatUnlocked(false);
             AwakeningSystemMod.sync(player);
-            source.sendSuccess(() -> Component.literal("§e[SISTEMA] §aVersión cambiada instantáneamente a: §b§lSistema 1.0 (Awakening Base)"), true);
+            source.sendSuccess(() -> Component.literal("§e[SYSTEM] §aVersion switched instantly to: §b§lSystem 1.0 (Awakening Base)"), true);
             return 1;
         } else if (v.equals("2") || v.equals("2.0") || v.equals("isekai") || v.equals("v2")) {
             data.setSystemUpdated(true);
@@ -1869,7 +2572,7 @@ public final class SystemCommands {
             data.setSystem40Updated(false);
             data.setTeyvatUnlocked(false);
             AwakeningSystemMod.sync(player);
-            source.sendSuccess(() -> Component.literal("§e[SISTEMA] §aVersión cambiada instantáneamente a: §d§lSistema 2.0 (Isekai & Constelaciones)"), true);
+            source.sendSuccess(() -> Component.literal("§e[SYSTEM] §aVersion switched instantly to: §d§lSystem 2.0 (Isekai & Constellations)"), true);
             return 1;
         } else if (v.equals("3") || v.equals("3.0") || v.equals("murim") || v.equals("v3")) {
             data.setSystemUpdated(true);
@@ -1879,7 +2582,7 @@ public final class SystemCommands {
             data.setSystem40Updated(false);
             data.setTeyvatUnlocked(false);
             AwakeningSystemMod.sync(player);
-            source.sendSuccess(() -> Component.literal("§e[SISTEMA] §aVersión cambiada instantáneamente a: §a§lSistema 3.0 (Murim & Cultivo Xianxia)"), true);
+            source.sendSuccess(() -> Component.literal("§e[SYSTEM] §aVersion switched instantly to: §a§lSystem 3.0 (Murim & Xianxia Cultivation)"), true);
             return 1;
         } else if (v.equals("4") || v.equals("4.0") || v.equals("teyvat") || v.equals("v4")) {
             data.setSystemUpdated(true);
@@ -1889,10 +2592,10 @@ public final class SystemCommands {
             data.setSystem40Updated(true);
             data.setTeyvatUnlocked(true);
             AwakeningSystemMod.sync(player);
-            source.sendSuccess(() -> Component.literal("§e[SISTEMA] §aVersión cambiada instantáneamente a: §6§lSistema 4.0 (Teyvat & Impacto Celestial)"), true);
+            source.sendSuccess(() -> Component.literal("§e[SYSTEM] §aVersion switched instantly to: §6§lSystem 4.0 (Teyvat & Celestial Impact)"), true);
             return 1;
         } else {
-            source.sendFailure(Component.literal("§cVersión no válida. Usa: /system version <1 | 2 | 3 | 4>"));
+            source.sendFailure(Component.literal("§cInvalid version. Use: /system version <1 | 2 | 3 | 4>"));
             return 0;
         }
     }
@@ -1923,7 +2626,6 @@ public final class SystemCommands {
                 IsekaiWorldManager.ensureWorldTreeDirect(isekaiLevel, false);
             }
 
-            // Si estaba en la Torre, remover sesión de torre limpiamente
             int targetY = YggdrasilTreeGenerator.BASE_Y + 1;
             if (TowerManager.isInTower(player.getUUID())) {
                 TowerManager.exitTowerToDimension(player, isekaiLevel, new net.minecraft.core.BlockPos(0, targetY, 26));
@@ -1937,7 +2639,7 @@ public final class SystemCommands {
             source.sendSuccess(() -> Component.translatable("awakening_system.command.worldtree_teleport"), true);
             return 1;
         }
-        source.sendFailure(Component.literal("Solo los jugadores pueden viajar al Árbol del Mundo."));
+        source.sendFailure(Component.literal("Only players can travel to the World Tree."));
         return 0;
     }
 
@@ -1947,29 +2649,31 @@ public final class SystemCommands {
             source.sendSuccess(() -> Component.translatable("awakening_system.command.murim_teleport"), true);
             return 1;
         }
-        source.sendFailure(Component.literal("Solo los jugadores pueden ascender al Reino Murim."));
+        source.sendFailure(Component.literal("Only players can ascend to the Murim Realm."));
         return 0;
     }
 
     private static int warpTeyvat(CommandSourceStack source) {
         if (source.getEntity() instanceof ServerPlayer player) {
             TeyvatWorldManager.teleportToTeyvat(player);
-            source.sendSuccess(() -> Component.literal("§b[Teyvat] Viajando a la Plaza Ceremonial de Teyvat..."), true);
+            source.sendSuccess(() -> Component.literal("§b[Teyvat] Traveling to Teyvat Ceremonial Plaza..."), true);
             return 1;
         }
-        source.sendFailure(Component.literal("Solo los jugadores pueden viajar a Teyvat."));
+        source.sendFailure(Component.literal("Only players can travel to Teyvat."));
         return 0;
     }
 
     private static int warpTeyvatCapital(CommandSourceStack source, String capital) {
         if (!(source.getEntity() instanceof ServerPlayer player)) {
-            source.sendFailure(Component.literal("Solo los jugadores pueden viajar por Teyvat."));
+            source.sendFailure(Component.literal("Only players can travel around Teyvat."));
             return 0;
         }
         String clean = capital.toLowerCase(java.util.Locale.ROOT).trim();
         switch (clean) {
-            case "golden_house", "childe", "tartaglia", "casa_dorada", "liyue", "yujing", "contratos" -> TeyvatWorldManager.teleportToGoldenHouse(player);
-            case "tenshukaku", "raiden", "shogun", "baal", "inazuma", "eternidad", "electric_castle", "electriccastle" -> TeyvatWorldManager.teleportToTenshukaku(player);
+            case "golden_house", "childe", "tartaglia", "casa_dorada" -> TeyvatWorldManager.teleportToGoldenHouse(player);
+            case "liyue", "yujing", "contratos" -> TeyvatWorldManager.teleportToLiyue(player);
+            case "tenshukaku", "raiden", "shogun", "baal", "electric_castle", "electriccastle" -> TeyvatWorldManager.teleportToTenshukaku(player);
+            case "inazuma", "eternidad" -> TeyvatWorldManager.teleportToInazuma(player);
             case "wolflord", "acechador", "enkanomiya", "rey_acechador", "golden_wolflord" -> TeyvatWorldManager.teleportToWolflord(player);
             case "azhdaha", "dragon", "dominio_azhdaha" -> TeyvatWorldManager.teleportToAzhdaha(player);
             case "windrise", "roble", "arbol_sagrado", "windrise_giant_tree" -> TeyvatWorldManager.teleportToWindrise(player);
@@ -1993,41 +2697,292 @@ public final class SystemCommands {
                 TeyvatWorldManager.teleportToAbyss(player);
                 com.soybe.awakeningsystem.abyss.SpiralAbyssManager.openAbyssScreen(player);
             }
+            case "racetrack", "hipodromo", "uma", "carreras" -> {
+                return warpRacetrackCommand(source);
+            }
+            case "casino", "gran_casino", "apuestas" -> {
+                return warpCasinoCommand(source);
+            }
             default -> {
-                source.sendFailure(Component.literal("§cDestino no reconocido. Opciones disponibles:\n" +
-                        "§6Jefes Semanales: §e/teyvat golden_house §7(Childe), §e/teyvat tenshukaku §7(Raiden), §e/teyvat wolflord §7(Rey Acechador), §e/teyvat azhdaha\n" +
-                        "§bHipóstasis: §e/teyvat anemo_hypostasis§7, §eelectro_hypostasis§7, §egeo_hypostasis§7, §ecryo_hypostasis§7, §epyro_hypostasis§7, §ehydro_hypostasis§7, §ecryo_regisvine\n" +
-                        "§aLugares y Monumentos: §e/teyvat windrise§7, §ejade_chamber§7, §edawn_winery§7, §ealcor§7, §eabyss§7, §emondstadt§7, §esumeru§7, §efontaine"));
+                source.sendFailure(Component.literal("§cUnrecognized destination. Available options:\n" +
+                        "§6Weekly Bosses: §e/teyvat golden_house §7(Childe), §e/teyvat tenshukaku §7(Raiden), §e/teyvat wolflord §7(Wolflord), §e/teyvat azhdaha\n" +
+                        "§bHypostases: §e/teyvat anemo_hypostasis§7, §eelectro_hypostasis§7, §egeo_hypostasis§7, §ecryo_hypostasis§7, §epyro_hypostasis§7, §ehydro_hypostasis§7, §ecryo_regisvine\n" +
+                        "§aLandmarks & Monuments: §e/teyvat windrise§7, §ejade_chamber§7, §edawn_winery§7, §ealcor§7, §eabyss§7, §emondstadt§7, §esumeru§7, §efontaine\n" +
+                        "§6Grand Casino of Teyvat: §e/teyvat casino §7(or /casino / /system casino build)\n" +
+                        "§dUma Racetrack: §e/teyvat racetrack §7(or /system racetrack rebuild / start)"));
                 return 0;
             }
         }
         return 1;
     }
 
-    private static int rebuildCapitalsCommand(CommandSourceStack source) {
+    private static int warpCasinoCommand(CommandSourceStack source) {
+        if (!(source.getEntity() instanceof ServerPlayer player)) {
+            source.sendFailure(Component.literal("Only players can travel to the Grand Casino of Teyvat."));
+            return 0;
+        }
         var server = source.getServer();
         ServerLevel teyvat = server.getLevel(TeyvatWorldManager.TEYVAT_WORLD);
-        if (teyvat != null) {
-            TeyvatWorldManager.forceRebuildStructures(teyvat);
-            source.sendSuccess(() -> Component.literal("§b§l✦ [TEYVAT] §aEstructuras procedurales eliminadas y terreno restaurado a su estado natural."), true);
+        if (teyvat == null) {
+            source.sendFailure(Component.literal("§cTeyvat dimension is not loaded."));
+            return 0;
+        }
+        com.soybe.awakeningsystem.world.TeyvatCasinoBuilder.buildCasinoIfAbsent(teyvat);
+        TeyvatWorldManager.teleportToCasino(player);
+        source.sendSuccess(() -> Component.literal("§6✦ [Grand Casino of Teyvat] §aYou have teleported to the Grand Royal Casino esplanade of Teyvat!"), true);
+        return 1;
+    }
+
+    private static int rebuildCasinoCommand(CommandSourceStack source) {
+        var server = source.getServer();
+        ServerLevel teyvat = server.getLevel(TeyvatWorldManager.TEYVAT_WORLD);
+        if (teyvat == null) {
+            source.sendFailure(Component.literal("§cTeyvat dimension is not loaded."));
+            return 0;
+        }
+        com.soybe.awakeningsystem.world.TeyvatCasinoBuilder.forceRebuild(teyvat);
+        source.sendSuccess(() -> Component.literal("§6✦ [Grand Casino of Teyvat] §aMonte Carlo Casino monumental structure successfully rebuilt!"), true);
+        return 1;
+    }
+
+    private static int clearCasinoFurnitureCommand(CommandSourceStack source, int radius) {
+        ServerLevel level = source.getLevel();
+        BlockPos origin = (source.getEntity() instanceof ServerPlayer sp) ? sp.blockPosition() : com.soybe.awakeningsystem.world.TeyvatCasinoBuilder.getOrFindCasinoPos(level);
+        int cleared = com.soybe.awakeningsystem.casino.CasinoJsonHelper.clearFurniture(level, origin, radius);
+        source.sendSuccess(() -> Component.literal("§6✦ [Casino] §aCleared §e" + cleared + " §afurniture in a radius of §e" + radius + " §ablocks around (" + origin.getX() + ", " + origin.getY() + ", " + origin.getZ() + "). Ready to arrange as you wish!"), true);
+        return cleared;
+    }
+
+    private static int exportCasinoFurnitureCommand(CommandSourceStack source, String layoutName, int radius) {
+        ServerLevel level = source.getLevel();
+        BlockPos origin = (source.getEntity() instanceof ServerPlayer sp) ? sp.blockPosition() : com.soybe.awakeningsystem.world.TeyvatCasinoBuilder.getOrFindCasinoPos(level);
+        java.io.File file = com.soybe.awakeningsystem.casino.CasinoJsonHelper.exportFurniture(level, origin, radius, layoutName);
+        if (file != null) {
+            source.sendSuccess(() -> Component.literal("§a✅ Casino furniture successfully exported to: §econfig/awakening_system/custom_casino/" + file.getName() + "§a!"), true);
+            return 1;
+        } else {
+            source.sendFailure(Component.literal("§cError exporting casino configuration file."));
+            return 0;
+        }
+    }
+
+    private static int importCasinoFurnitureCommand(CommandSourceStack source, String layoutName) {
+        ServerLevel level = source.getLevel();
+        BlockPos origin = (source.getEntity() instanceof ServerPlayer sp) ? sp.blockPosition() : com.soybe.awakeningsystem.world.TeyvatCasinoBuilder.getOrFindCasinoPos(level);
+        int placed = com.soybe.awakeningsystem.casino.CasinoJsonHelper.importFurniture(level, origin, layoutName);
+        if (placed >= 0) {
+            source.sendSuccess(() -> Component.literal("§a✅ Layout §e" + layoutName + " §asuccessfully loaded! Placed §e" + placed + " §afurniture and machines."), true);
+            return placed;
+        } else {
+            source.sendFailure(Component.literal("§cFile not found: §e" + layoutName + "§c in config/awakening_system/custom_casino/"));
+            return 0;
+        }
+    }
+
+    private static int populateCasinoFurnitureCommand(CommandSourceStack source) {
+        ServerLevel level = source.getLevel();
+        BlockPos origin = (source.getEntity() instanceof ServerPlayer sp) ? sp.blockPosition() : com.soybe.awakeningsystem.world.TeyvatCasinoBuilder.getOrFindCasinoPos(level);
+        com.soybe.awakeningsystem.world.TeyvatCasinoBuilder.populateDefaultFurniture(level, origin);
+        source.sendSuccess(() -> Component.literal("§6✦ [Casino] §aOfficial regulation furniture (Slots, Blackjack 2x2, Roulette 2x3, Pool 3x4, Chairs, and Trophies) successfully deployed!"), true);
+        return 1;
+    }
+
+    private static int claimJackpotCommand(CommandSourceStack source) {
+        if (!(source.getEntity() instanceof ServerPlayer player)) {
+            source.sendFailure(Component.literal("Only players can claim the Casino Jackpot."));
+            return 0;
+        }
+
+        SystemData data = SystemEvents.data(player);
+        data.addMora(50_000_000);
+        data.addCoins(1600);
+        data.addCasinoWinnings(50_000_000L);
+
+        giveOrDrop(player, new ItemStack(SystemItems.CASINO_CHIP_PLATINUM.get(), 10));
+        giveOrDrop(player, new ItemStack(SystemItems.INTERTWINED_FATE.get(), 10));
+        giveOrDrop(player, new ItemStack(SystemItems.CREATOR_CLAYMORE.get(), 1));
+        giveOrDrop(player, new ItemStack(SystemItems.END_VOID_KEY.get(), 1));
+
+        ItemStack trophy = com.soybe.awakeningsystem.item.CasinoTrophyItem.createTrophy(
+                3, player.getName().getString(), "Grand Casino 777 Jackpot"
+        );
+        giveOrDrop(player, trophy);
+
+        AwakeningSystemMod.sync(player);
+
+        ServerLevel level = player.serverLevel();
+        level.playSound(null, player.blockPosition(), ModSounds.CASINO_JACKPOT.get(), SoundSource.PLAYERS, 1.5F, 1.0F);
+        level.sendParticles(ParticleTypes.FIREWORK, player.getX(), player.getY() + 1.8D, player.getZ(), 80, 0.6D, 0.8D, 0.6D, 0.12D);
+        level.sendParticles(ParticleTypes.TOTEM_OF_UNDYING, player.getX(), player.getY() + 1.2D, player.getZ(), 70, 0.4D, 0.4D, 0.4D, 0.2D);
+
+        source.getServer().getPlayerList().broadcastSystemMessage(
+                Component.literal("§6§l✦ CASINO MEGA JACKPOT! §ePlayer §f" + player.getName().getString() +
+                        " §ehas claimed their legitimate prize for §6TRIPLE 777 §ewith Platinum Chip: §6+50,000,000 Mora, 10 Platinum Chips, 1,600 Primogems, and Legendary Trophy!"), false);
+
+        player.sendSystemMessage(Component.literal("§a§l✔ [Awakening Casino] §eYou have successfully claimed all complete rewards from the Grand Platinum 777 Jackpot!"));
+        return 1;
+    }
+
+    private static void giveOrDrop(ServerPlayer player, ItemStack stack) {
+        if (!player.getInventory().add(stack)) {
+            player.drop(stack, false);
+        }
+    }
+
+    private static int warpRacetrackCommand(CommandSourceStack source) {
+        if (!(source.getEntity() instanceof ServerPlayer player)) {
+            source.sendFailure(Component.literal("Only players can travel to the Teyvat Racetrack."));
+            return 0;
+        }
+        var server = source.getServer();
+        ServerLevel teyvat = server.getLevel(TeyvatWorldManager.TEYVAT_WORLD);
+        if (teyvat == null) {
+            source.sendFailure(Component.literal("§cTeyvat dimension is not loaded."));
+            return 0;
+        }
+        com.soybe.awakeningsystem.world.TeyvatRacetrackBuilder.buildRacetrackIfAbsent(teyvat);
+        var manager = com.soybe.awakeningsystem.uma.TeyvatRacetrackManager.get(teyvat);
+        if (manager != null) {
+            manager.pruneDuplicateRunners();
+        }
+        player.teleportTo(teyvat, 122.5, 68.0, 224.5, 180.0F, 0.0F);
+        source.sendSuccess(() -> Component.literal("§6🏇 [Teyvat Racetrack] §aYou have teleported to the Official Tracen Betting Pavilion!"), true);
+        return 1;
+    }
+
+    private static int upgradeRacetrackMaterialsCommand(CommandSourceStack source) {
+        var server = source.getServer();
+        ServerLevel teyvat = server.getLevel(TeyvatWorldManager.TEYVAT_WORLD);
+        if (teyvat == null) {
+            source.sendFailure(Component.literal("§cTeyvat dimension is not loaded."));
+            return 0;
+        }
+        BlockPos center = com.soybe.awakeningsystem.uma.TeyvatRacetrackManager.TRACK_CENTER;
+        if (source.getEntity() instanceof ServerPlayer player) {
+            if (player.level().dimension().equals(TeyvatWorldManager.TEYVAT_WORLD)) {
+                center = player.blockPosition();
+            }
+        }
+        int[] results = com.soybe.awakeningsystem.world.TeyvatRacetrackBuilder.upgradeRacetrackBlocks(teyvat, center);
+        source.sendSuccess(() -> Component.literal(String.format("§6🏇 [Teyvat Racetrack] §aMaterials successfully upgraded! §e%d §astone fences replaced with §fWhite Paddock Fences §aand §e%d §adirt/mud blocks replaced with §2Racetrack Turf§a.", results[0], results[1])), true);
+        return 1;
+    }
+
+    private static int rebuildRacetrackCommand(CommandSourceStack source) {
+        var server = source.getServer();
+        ServerLevel teyvat = server.getLevel(TeyvatWorldManager.TEYVAT_WORLD);
+        if (teyvat == null) {
+            source.sendFailure(Component.literal("§cTeyvat dimension is not loaded."));
+            return 0;
+        }
+        com.soybe.awakeningsystem.world.TeyvatRacetrackBuilder.forceRebuild(teyvat);
+        var manager = com.soybe.awakeningsystem.uma.TeyvatRacetrackManager.get(teyvat);
+        if (manager != null) {
+            manager.setupNewRace();
+        }
+        source.sendSuccess(() -> Component.literal("§6🏇 [Teyvat Racetrack] §aTrack completely rebuilt without gaps, tree clearing done, and starting gates ready!"), true);
+        return 1;
+    }
+
+    private static int startRacetrackCommand(CommandSourceStack source) {
+        var server = source.getServer();
+        ServerLevel teyvat = server.getLevel(TeyvatWorldManager.TEYVAT_WORLD);
+        if (teyvat == null) {
+            source.sendFailure(Component.literal("§cTeyvat dimension is not loaded."));
+            return 0;
+        }
+        var manager = com.soybe.awakeningsystem.uma.TeyvatRacetrackManager.get(teyvat);
+        if (manager != null) {
+            manager.startRaceNow();
+            source.sendSuccess(() -> Component.literal("§6🏇 [Teyvat Racetrack] §eRace countdown forcefully started!"), true);
             return 1;
         }
-        source.sendFailure(Component.literal("§cLa dimensión de Teyvat no está cargada."));
+        source.sendFailure(Component.literal("§cCould not access the racetrack manager."));
         return 0;
     }
 
+    private static int exportRacetrackCommand(CommandSourceStack source, int customRadius) {
+        ServerLevel level = source.getLevel();
+        BlockPos center = com.soybe.awakeningsystem.uma.TeyvatRacetrackManager.TRACK_CENTER;
+        if (source.getEntity() instanceof ServerPlayer player) {
+            if (!level.dimension().equals(TeyvatWorldManager.TEYVAT_WORLD)) {
+                center = player.blockPosition();
+            }
+        }
+
+        int rx = customRadius > 0 ? customRadius : 95;
+        int rz = customRadius > 0 ? customRadius : 50;
+        int minY = 65;
+        int maxY = 82;
+
+        com.google.gson.JsonObject root = new com.google.gson.JsonObject();
+        root.addProperty("version", 1);
+        root.addProperty("centerX", center.getX());
+        root.addProperty("centerY", center.getY());
+        root.addProperty("centerZ", center.getZ());
+        root.addProperty("radiusX", rx);
+        root.addProperty("radiusZ", rz);
+
+        com.google.gson.JsonArray blockList = new com.google.gson.JsonArray();
+        int count = 0;
+
+        for (int x = center.getX() - rx; x <= center.getX() + rx; x++) {
+            for (int z = center.getZ() - rz; z <= center.getZ() + rz; z++) {
+                for (int y = minY; y <= maxY; y++) {
+                    BlockPos pos = new BlockPos(x, y, z);
+                    net.minecraft.world.level.block.state.BlockState state = level.getBlockState(pos);
+                    if (!state.isAir()) {
+                        com.google.gson.JsonObject bObj = new com.google.gson.JsonObject();
+                        bObj.addProperty("x", x - center.getX());
+                        bObj.addProperty("y", y - center.getY());
+                        bObj.addProperty("z", z - center.getZ());
+                        bObj.addProperty("block", BuiltInRegistries.BLOCK.getKey(state.getBlock()).toString());
+                        blockList.add(bObj);
+                        count++;
+                    }
+                }
+            }
+        }
+
+        root.addProperty("blockCount", count);
+        root.add("blocks", blockList);
+
+        java.nio.file.Path exportPath = com.soybe.awakeningsystem.world.TeyvatRacetrackBuilder.getExportFilePath();
+        try {
+            if (exportPath.getParent() != null) {
+                java.nio.file.Files.createDirectories(exportPath.getParent());
+            }
+            try (java.io.Writer writer = java.nio.file.Files.newBufferedWriter(exportPath)) {
+                new com.google.gson.GsonBuilder().setPrettyPrinting().create().toJson(root, writer);
+            }
+            final int finalCount = count;
+            source.sendSuccess(() -> Component.literal("§a✅ Track successfully exported! Scanned §e" + finalCount +
+                    " blocks §ain: §b" + exportPath.getFileName() +
+                    "§a. Mod generator and wizard can now read your changes directly."), true);
+            return 1;
+        } catch (Exception e) {
+            source.sendFailure(Component.literal("§cError saving exported file: " + e.getMessage()));
+            return 0;
+        }
+    }
+
+    private static int rebuildCapitalsCommand(CommandSourceStack source) {
+        source.sendSuccess(() -> Component.literal("§e[TEYVAT] Artificial capital structures have been permanently removed and disabled. The world generates its natural terrain cleanly."), false);
+        return 1;
+    }
+
     private static int syncTeyvatMapCommand(CommandSourceStack source) {
-        source.sendSuccess(() -> Component.literal("§e[Teyvat] La inyección de regiones externas está desactivada. La dimensión genera su terreno natural de forma limpia."), false);
+        source.sendSuccess(() -> Component.literal("§e[Teyvat] External region injection is disabled. The dimension generates its natural terrain cleanly."), false);
         return 1;
     }
 
     private static int openGachaCommand(CommandSourceStack source) {
         if (source.getEntity() instanceof ServerPlayer player) {
             GachaManager.openGachaScreen(player);
-            source.sendSuccess(() -> Component.literal("§6[Gacha] Abriendo interfaz del Sistema de Deseos de Teyvat..."), false);
+            source.sendSuccess(() -> Component.literal("§6[Gacha] Opening Teyvat Wish System interface..."), false);
             return 1;
         }
-        source.sendFailure(Component.literal("Solo los jugadores pueden abrir el Sistema de Deseos."));
+        source.sendFailure(Component.literal("Only players can open the Wish System."));
         return 0;
     }
 
@@ -2048,7 +3003,7 @@ public final class SystemCommands {
             PagodaTrialManager.enterTrial(player);
             return 1;
         }
-        source.sendFailure(Component.literal("Solo los jugadores pueden entrar a la Pagoda de las Nueve Tribulaciones."));
+        source.sendFailure(Component.literal("Only players can enter the Nine Tribulations Pagoda."));
         return 0;
     }
 
@@ -2057,8 +3012,20 @@ public final class SystemCommands {
             PagodaTrialManager.warpStage(player, stage);
             return 1;
         }
-        source.sendFailure(Component.literal("Solo los jugadores pueden cambiar de etapa en la Pagoda."));
+        source.sendFailure(Component.literal("Only players can change stages in the Pagoda."));
         return 0;
+    }
+
+    private static int spawnPagodaArenaCommand(CommandSourceStack source, int stage) {
+        if (!(source.getEntity() instanceof ServerPlayer player)) {
+            source.sendFailure(Component.literal("Only players can spawn the pagoda arena."));
+            return 0;
+        }
+        ServerLevel level = player.serverLevel();
+        BlockPos origin = player.blockPosition();
+        PagodaTrialManager.generateArenaInWorld(level, origin, stage, true);
+        source.sendSuccess(() -> Component.literal("§6§l[PAGODA] §aArena del Piso " + stage + " generada en §e" + origin.toShortString() + "§a!\n§eSe coloco un §bBloque de Estructuras §epreconfigurado frente a la puerta para guardar como §bawakening_system:pagoda_arena_stage_" + stage + "§e (o §bawakening_system:pagoda_arena§e)."), true);
+        return 1;
     }
 
     private static int exitPagodaTrial(CommandSourceStack source) {
@@ -2066,7 +3033,7 @@ public final class SystemCommands {
             PagodaTrialManager.exitTrial(player.getServer(), player.getUUID());
             return 1;
         }
-        source.sendFailure(Component.literal("Solo los jugadores pueden salir de la Pagoda."));
+        source.sendFailure(Component.literal("Only players can exit the Pagoda."));
         return 0;
     }
 
@@ -2074,18 +3041,18 @@ public final class SystemCommands {
         if (!(source.getEntity() instanceof ServerPlayer player)) return 0;
         SystemData data = SystemEvents.data(player);
         source.sendSuccess(() -> Component.literal("§6========================================"), false);
-        source.sendSuccess(() -> Component.literal("§e✦ CRÓNICAS DEL STAR STREAM §8| §f" + player.getName().getString()), false);
-        source.sendSuccess(() -> Component.literal("§7Fábulas Desbloqueadas: §e" + data.unlockedFables().size() + "/18"), false);
-        source.sendSuccess(() -> Component.literal("§7Peso Narrativo Total: §b" + data.fableWeight() + " pts"), false);
-        source.sendSuccess(() -> Component.literal("§7Apto para Constelación: " + (data.isConstellation() ? "§e[Ya Ascendido]" : (data.unlockedFables().size() >= 5 && data.fableWeight() >= 150 ? "§a✔ [APTO]" : "§c✖ [Faltan requisitos: 5 fábulas y 150 peso]"))), false);
+        source.sendSuccess(() -> Component.literal("§e✦ STAR STREAM CHRONICLES §8| §f" + player.getName().getString()), false);
+        source.sendSuccess(() -> Component.literal("§7Unlocked Fables: §e" + data.unlockedFables().size() + "/61"), false);
+        source.sendSuccess(() -> Component.literal("§7Total Narrative Weight: §b" + data.fableWeight() + " pts"), false);
+        source.sendSuccess(() -> Component.literal("§7Eligible for Constellation: " + (data.isConstellation() ? "§e[Already Ascended]" : (ConstellationAscension.isEligibleForAscension(data) ? "§a✔ [ELIGIBLE]" : "§c✖ [Missing requirements: Lv 50+, 8+ fables, 400+ weight, 1 Mythic/Giant, 2 Legendary/Semi, 3 Historical]"))), false);
         source.sendSuccess(() -> Component.literal("§8----------------------------------------"), false);
         for (String fid : data.unlockedFables()) {
             var f = com.soybe.awakeningsystem.fable.FableDefinitions.get(fid);
             if (f != null) {
-                source.sendSuccess(() -> Component.literal(" §e" + f.icon() + " " + f.grade().colorCode() + "[" + f.title() + "] §8(+§b" + f.weight() + " pts§8)" + (f.isWorldFirst() ? " §6[★ PRIMACÍA]" : "")), false);
+                source.sendSuccess(() -> Component.literal(" §e" + f.icon() + " " + f.grade().colorCode() + "[" + f.title() + "] §8(+§b" + f.weight() + " pts§8)" + (f.isWorldFirst() ? " §6[★ WORLD FIRST]" : "")), false);
             }
         }
-        source.sendSuccess(() -> Component.literal("§7Abre el menú del Sistema (§eH§7) y haz clic en §6[FÁBULAS]§7 para la interfaz completa."), false);
+        source.sendSuccess(() -> Component.literal("§7Open System menu (§eH§7) and click on §6[FABLES]§7 for the full interface."), false);
         source.sendSuccess(() -> Component.literal("§6========================================"), false);
         return 1;
     }
@@ -2094,11 +3061,11 @@ public final class SystemCommands {
         if (!(source.getEntity() instanceof ServerPlayer player)) return 0;
         var fable = com.soybe.awakeningsystem.fable.FableDefinitions.get(fableId);
         if (fable == null) {
-            source.sendFailure(Component.literal("§cFábula no encontrada: " + fableId));
+            source.sendFailure(Component.literal("§cFable not found: " + fableId));
             return 0;
         }
         SystemEvents.grantFable(player, fableId);
-        source.sendSuccess(() -> Component.literal("§aFábula concedida: " + fable.title()), false);
+        source.sendSuccess(() -> Component.literal("§aFable granted: " + fable.title()), false);
         return 1;
     }
 
@@ -2107,7 +3074,43 @@ public final class SystemCommands {
             com.soybe.awakeningsystem.subspace.SubspaceManager.openSubspace(player);
             return 1;
         }
-        source.sendFailure(Component.literal("Solo los jugadores pueden abrir el subespacio dimensional."));
+        source.sendFailure(Component.literal("Only players can open the dimensional subspace."));
+        return 0;
+    }
+
+    private static int syncSubspaceCommand(CommandSourceStack source) {
+        if (source.getEntity() instanceof ServerPlayer player) {
+            ServerLevel level = com.soybe.awakeningsystem.subspace.SubspaceManager.getSubspaceLevel(player.getServer());
+            if (level != null) {
+                com.soybe.awakeningsystem.subspace.SubspaceManager.syncWorldToSubspace(level, player);
+                SystemData d = SystemEvents.data(player);
+                player.sendSystemMessage(Component.translatable("awakening_system.subspace.updated", d.subspaceChestCount(), d.subspaceUnlockedSlots()));
+                return 1;
+            }
+        }
+        source.sendFailure(Component.literal("Only players can synchronize the subspace."));
+        return 0;
+    }
+
+    private static int claimDungeonReward(CommandSourceStack source) {
+        if (source.getEntity() instanceof ServerPlayer player) {
+            if (DungeonManager.claimDungeonRewardSafe(player)) {
+                return 1;
+            } else {
+                player.sendSystemMessage(Component.translatable("awakening_system.dungeon.claim_no_pending"));
+            }
+        }
+        return 0;
+    }
+
+    private static int gambleDungeonReward(CommandSourceStack source) {
+        if (source.getEntity() instanceof ServerPlayer player) {
+            if (DungeonManager.gambleDungeonReward(player)) {
+                return 1;
+            } else {
+                player.sendSystemMessage(Component.translatable("awakening_system.dungeon.gamble_no_pending"));
+            }
+        }
         return 0;
     }
 
@@ -2149,11 +3152,22 @@ public final class SystemCommands {
 
         if (dim.equals(com.soybe.awakeningsystem.subspace.SubspaceManager.SUBSPACE_REALM)) {
             com.soybe.awakeningsystem.subspace.SubspaceManager.exitSubspace(player);
-            source.sendSuccess(() -> Component.literal("§a✔ Regresaste exitosamente de tu Subespacio Dimensional.").withStyle(ChatFormatting.GREEN), false);
+            source.sendSuccess(() -> Component.translatable("awakening_system.subspace.escape_success").withStyle(ChatFormatting.GREEN), false);
             return 1;
         }
 
-        // Si está en el vacío fuera del mundo o atascado en otra dimensión de prueba
+        if (dim.equals(com.soybe.awakeningsystem.abyss.SpiralAbyssManager.SPIRAL_ABYSS_DIMENSION)) {
+            com.soybe.awakeningsystem.abyss.SpiralAbyssManager.handleLeaveAbyss(player);
+            source.sendSuccess(() -> Component.translatable("awakening_system.abyss.escape_success").withStyle(ChatFormatting.GREEN), false);
+            return 1;
+        }
+
+        if (com.soybe.awakeningsystem.tower.GreatTowerWorldManager.isGreatTowerDimension(player.level())) {
+            com.soybe.awakeningsystem.tower.GreatTowerWorldManager.exitTower(player);
+            source.sendSuccess(() -> Component.translatable("awakening_system.tower.escape_success").withStyle(ChatFormatting.GREEN), false);
+            return 1;
+        }
+
         if (player.getY() < -50.0 || player.getY() > 320.0) {
             DungeonManager.rescueStrandedPlayer(player);
             source.sendSuccess(() -> Component.translatable("awakening_system.dungeon.escape_success").withStyle(ChatFormatting.GREEN), false);
@@ -2190,9 +3204,9 @@ public final class SystemCommands {
         data.setWelkinEnhanced(newState);
         if (newState) {
             data.setWelkinQuestStep(4);
-            source.sendSuccess(() -> Component.literal("§d✦ Bendición de Columbina (Mejorada +50%) activada exitosamente para " + player.getName().getString() + "."), true);
+            source.sendSuccess(() -> Component.literal("§d✦ Columbina's Blessing (Enhanced +50%) successfully activated for " + player.getName().getString() + "."), true);
         } else {
-            source.sendSuccess(() -> Component.literal("§7✦ Bendición Lunar restablecida a estándar (90 protos/día)."), true);
+            source.sendSuccess(() -> Component.literal("§7✦ Welkin Moon Blessing restored to standard (90 primos/day)."), true);
         }
         AwakeningSystemMod.sync(player);
         return 1;
@@ -2209,7 +3223,7 @@ public final class SystemCommands {
         ServerPlayer player = source.getPlayer();
         if (player == null) return 0;
         GachaManager.completeColumbinaAscension(player);
-        source.sendSuccess(() -> Component.literal("§d✦ Misión de Ascensión de Columbina completada."), true);
+        source.sendSuccess(() -> Component.literal("§d✦ Columbina Ascension Quest completed."), true);
         return 1;
     }
 
@@ -2221,7 +3235,7 @@ public final class SystemCommands {
         data.setWelkinQuestStep(0);
         data.setWelkinQuestProgress(0);
         AwakeningSystemMod.sync(player);
-        source.sendSuccess(() -> Component.literal("§e✦ Progreso de Misión de Columbina reiniciado a 0."), true);
+        source.sendSuccess(() -> Component.literal("§e✦ Columbina Quest progress reset to 0."), true);
         return 1;
     }
 
@@ -2231,7 +3245,7 @@ public final class SystemCommands {
         SystemData data = SystemEvents.data(player);
         data.addWelkinDays(days);
         AwakeningSystemMod.sync(player);
-        source.sendSuccess(() -> Component.literal("§a✦ Se añadieron " + days + " días de Bendición Lunar. Días totales: " + data.welkinDays()), true);
+        source.sendSuccess(() -> Component.literal("§a✦ Added " + days + " days of Welkin Moon Blessing. Total days: " + data.welkinDays()), true);
         return 1;
     }
 
@@ -2242,7 +3256,419 @@ public final class SystemCommands {
         net.minecraft.core.BlockPos center = player.blockPosition().below();
         TrilunarSanctuaryManager.buildSanctuary(level, center);
         player.teleportTo(center.getX() + 0.5D, center.getY() + 2.0D, center.getZ() + 0.5D);
-        source.sendSuccess(() -> Component.literal("§d✦ Santuario de las Tres Diosas de la Luna (Aria, Sonnet, Canon) manifestado con éxito."), true);
+        source.sendSuccess(() -> Component.literal("§d✦ Sanctuary of the Three Moon Goddesses (Aria, Sonnet, Canon) successfully manifested."), true);
         return 1;
+    }
+
+    private static int exportCircuitJsonCommand(CommandSourceStack source) {
+        if (!(source.getEntity() instanceof ServerPlayer player)) {
+            source.sendFailure(Component.literal("§cCommand only available for players."));
+            return 0;
+        }
+        BlockPos playerPos = player.blockPosition();
+        com.soybe.awakeningsystem.block.entity.CustomRacetrackBlockEntity targetBe = null;
+        for (BlockPos p : BlockPos.betweenClosed(playerPos.offset(-32, -12, -32), playerPos.offset(32, 12, 32))) {
+            if (player.level().getBlockEntity(p) instanceof com.soybe.awakeningsystem.block.entity.CustomRacetrackBlockEntity be) {
+                targetBe = be;
+                break;
+            }
+        }
+        if (targetBe != null) {
+            java.io.File file = com.soybe.awakeningsystem.uma.RacetrackJsonHelper.exportTrack(targetBe, (ServerLevel) player.level());
+            if (file != null) {
+                source.sendSuccess(() -> Component.literal("§a💾 Track successfully exported to JSON!: §econfig/awakening_system/custom_racetracks/" + file.getName()), true);
+                return 1;
+            }
+        }
+        source.sendFailure(Component.literal("§cNo Custom Racetrack Core found within 32 blocks radius."));
+        return 0;
+    }
+
+    private static int reloadCircuitJsonCommand(CommandSourceStack source, String fileName) {
+        if (!(source.getEntity() instanceof ServerPlayer player)) {
+            source.sendFailure(Component.literal("§cCommand only available for players."));
+            return 0;
+        }
+        BlockPos playerPos = player.blockPosition();
+        com.soybe.awakeningsystem.block.entity.CustomRacetrackBlockEntity targetBe = null;
+        for (BlockPos p : BlockPos.betweenClosed(playerPos.offset(-32, -12, -32), playerPos.offset(32, 12, 32))) {
+            if (player.level().getBlockEntity(p) instanceof com.soybe.awakeningsystem.block.entity.CustomRacetrackBlockEntity be) {
+                targetBe = be;
+                break;
+            }
+        }
+        if (targetBe != null) {
+            boolean ok = com.soybe.awakeningsystem.uma.RacetrackJsonHelper.importTrack(targetBe, fileName);
+            if (ok) {
+                final int wpCount = targetBe.getWaypoints().size();
+                source.sendSuccess(() -> Component.literal("§a✔ Track successfully reloaded from §e" + fileName + " §a(" + wpCount + " waypoints)."), true);
+                return 1;
+            } else {
+                source.sendFailure(Component.literal("§cCould not load file §e" + fileName + "§c in config/awakening_system/custom_racetracks/"));
+                return 0;
+            }
+        }
+        source.sendFailure(Component.literal("§cNo Custom Racetrack Core found within 32 blocks radius."));
+        return 0;
+    }
+
+    private static int testAnnouncementCommand(CommandSourceStack source, String type) {
+        String playerName = source.getEntity() != null ? source.getEntity().getName().getString() : "Commander";
+        String title;
+        String message;
+        int color;
+        if ("doncella".equalsIgnoreCase(type)) {
+            title = "✦ AWAKENED RELIC 5★ (0.02%)! ✦";
+            message = playerName + " obtained: §dThe Immortal Maiden";
+            color = 0xFFFF55FF;
+        } else if ("gold".equalsIgnoreCase(type)) {
+            title = "✦ 5★ CHARACTER OBTAINED! ✦";
+            message = playerName + " obtained: §eRaiden Shogun";
+            color = 0xFFFFCC00;
+        } else {
+            title = "✦ SUPREME MYTHIC FIND (0.008%)! ✦";
+            message = playerName + " obtained: §cCreator's Claymore";
+            color = 0xFFFFD700;
+        }
+
+        PacketDistributor.sendToAllPlayers(new com.soybe.awakeningsystem.network.SystemAnnouncementPayload(title, message, color));
+        source.sendSuccess(() -> Component.literal("§6✦ [Global Announcement] §aTest announcement sent to all players: §f" + title), true);
+        return 1;
+    }
+
+    private static int customAnnouncementCommand(CommandSourceStack source, String title, String message) {
+        PacketDistributor.sendToAllPlayers(new com.soybe.awakeningsystem.network.SystemAnnouncementPayload(title, message, 0xFFFFD700));
+        source.sendSuccess(() -> Component.literal("§6✦ [Global Announcement] §aCustom announcement triggered: §f" + title + " §7- " + message), true);
+        return 1;
+    }
+
+    private static int openBlackMarketCommand(CommandSourceStack source) {
+        if (source.getEntity() instanceof ServerPlayer player) {
+            com.soybe.awakeningsystem.blackmarket.BlackMarketServerHandler.openMarket(player);
+            return 1;
+        }
+        source.sendFailure(Component.literal("Only players can open the Black Market interface."));
+        return 0;
+    }
+
+    private static int locateBlackMarketCommand(CommandSourceStack source) {
+        if (!(source.getEntity() instanceof ServerPlayer player)) {
+            source.sendFailure(Component.literal("Only players can search for the Black Market."));
+            return 0;
+        }
+        var data = com.soybe.awakeningsystem.world.SeriesStructureWorldGen.SeriesStructureData.get(source.getServer());
+        BlockPos playerPos = player.blockPosition();
+        BlockPos closest = null;
+        double closestDistSq = Double.MAX_VALUE;
+
+        for (var entry : data.getAll().entrySet()) {
+            if (entry.getKey().startsWith("black_market_den")) {
+                double dSq = entry.getValue().distSqr(playerPos);
+                if (dSq < closestDistSq) {
+                    closestDistSq = dSq;
+                    closest = entry.getValue();
+                }
+            }
+        }
+
+        if (closest != null) {
+            int dist = (int) Math.sqrt(closestDistSq);
+            final BlockPos foundPos = closest;
+            source.sendSuccess(() -> Component.literal("§5☠ [Black Market] §aNearest underground den at: §eX=" + foundPos.getX() + ", Y=" + foundPos.getY() + ", Z=" + foundPos.getZ() + " §7(Distance: §d" + dist + " blocks§7). Use §d/black_market tp §7to teleport!"), false);
+            return 1;
+        } else {
+            source.sendSuccess(() -> Component.literal("§5☠ [Black Market] §eNo den has been registered in this world yet. Generates in the underground Overworld (Y=10 to 20) beneath forests, swamps, or jungles, or run §d/black_market tp §eto locate or spawn one immediately."), false);
+            return 0;
+        }
+    }
+
+    private static int warpBlackMarketCommand(CommandSourceStack source) {
+        if (!(source.getEntity() instanceof ServerPlayer player)) {
+            source.sendFailure(Component.literal("Only players can travel to the Black Market."));
+            return 0;
+        }
+        var server = source.getServer();
+        ServerLevel overworld = server.overworld();
+        var data = com.soybe.awakeningsystem.world.SeriesStructureWorldGen.SeriesStructureData.get(server);
+        BlockPos playerPos = player.blockPosition();
+
+        BlockPos closest = null;
+        double closestDistSq = Double.MAX_VALUE;
+        for (var entry : data.getAll().entrySet()) {
+            if (entry.getKey().startsWith("black_market_den")) {
+                double dSq = entry.getValue().distSqr(playerPos);
+                if (dSq < closestDistSq) {
+                    closestDistSq = dSq;
+                    closest = entry.getValue();
+                }
+            }
+        }
+
+        BlockPos denPos;
+        if (closest != null) {
+            denPos = closest;
+        } else {
+            int targetY = Math.min(20, Math.max(10, playerPos.getY() - 35));
+            denPos = new BlockPos(playerPos.getX(), targetY, playerPos.getZ());
+            com.soybe.awakeningsystem.world.SeriesStructureBuilder.buildBlackMarketDen(overworld, denPos);
+            data.recordStructure("black_market_den", denPos);
+        }
+
+        BlockPos targetPos = denPos.offset(0, 1, 0);
+        player.teleportTo(overworld, targetPos.getX() + 0.5D, targetPos.getY(), targetPos.getZ() + 0.5D, 0.0F, 0.0F);
+        player.playNotifySound(SoundEvents.ENDERMAN_TELEPORT, SoundSource.PLAYERS, 1.0F, 0.8F);
+        source.sendSuccess(() -> Component.literal("§5☠ [Black Market] §aYou have descended to the clandestine den of Valerius the Silent at (" + denPos.getX() + ", " + denPos.getY() + ", " + denPos.getZ() + ")!"), true);
+        return 1;
+    }
+
+    private static int warpBlackMarketSurfaceCommand(CommandSourceStack source) {
+        if (!(source.getEntity() instanceof ServerPlayer player)) {
+            source.sendFailure(Component.literal("Only players can travel to the Black Market surface hatch."));
+            return 0;
+        }
+        var server = source.getServer();
+        ServerLevel overworld = server.overworld();
+        var data = com.soybe.awakeningsystem.world.SeriesStructureWorldGen.SeriesStructureData.get(server);
+        BlockPos playerPos = player.blockPosition();
+
+        BlockPos closestHatch = null;
+        double closestHatchDistSq = Double.MAX_VALUE;
+        for (var entry : data.getAll().entrySet()) {
+            if (entry.getKey().startsWith("black_market_surface_hatch")) {
+                double dSq = entry.getValue().distSqr(playerPos);
+                if (dSq < closestHatchDistSq) {
+                    closestHatchDistSq = dSq;
+                    closestHatch = entry.getValue();
+                }
+            }
+        }
+
+        if (closestHatch == null) {
+            BlockPos closestDen = null;
+            double closestDenDistSq = Double.MAX_VALUE;
+            for (var entry : data.getAll().entrySet()) {
+                if (entry.getKey().startsWith("black_market_den")) {
+                    double dSq = entry.getValue().distSqr(playerPos);
+                    if (dSq < closestDenDistSq) {
+                        closestDenDistSq = dSq;
+                        closestDen = entry.getValue();
+                    }
+                }
+            }
+
+            if (closestDen == null) {
+                int targetY = Math.min(20, Math.max(10, playerPos.getY() - 35));
+                closestDen = new BlockPos(playerPos.getX(), targetY, playerPos.getZ());
+                com.soybe.awakeningsystem.world.SeriesStructureBuilder.buildBlackMarketDen(overworld, closestDen);
+                data.recordStructure("black_market_den", closestDen);
+            } else {
+                com.soybe.awakeningsystem.world.SeriesStructureBuilder.buildBlackMarketSurfaceHut(overworld, closestDen.getX(), closestDen.getY(), closestDen.getZ());
+            }
+
+            for (var entry : data.getAll().entrySet()) {
+                if (entry.getKey().startsWith("black_market_surface_hatch")) {
+                    double dSq = entry.getValue().distSqr(playerPos);
+                    if (dSq < closestHatchDistSq) {
+                        closestHatchDistSq = dSq;
+                        closestHatch = entry.getValue();
+                    }
+                }
+            }
+            if (closestHatch == null) {
+                int sY = overworld.getHeight(net.minecraft.world.level.levelgen.Heightmap.Types.WORLD_SURFACE, closestDen.getX(), closestDen.getZ() - 12);
+                if (sY < 62) sY = 64;
+                closestHatch = new BlockPos(closestDen.getX(), sY, closestDen.getZ() - 12);
+            }
+        }
+
+        BlockPos targetPos = closestHatch.offset(0, 1, 0);
+        player.teleportTo(overworld, targetPos.getX() + 0.5D, targetPos.getY(), targetPos.getZ() + 0.5D, 0.0F, 0.0F);
+        player.playNotifySound(SoundEvents.ENDERMAN_TELEPORT, SoundSource.PLAYERS, 1.0F, 0.8F);
+        final BlockPos fHatch = closestHatch;
+        source.sendSuccess(() -> Component.literal("§5☠ [Black Market] §aYou have been transported to the ground-level surface hatch at (" + fHatch.getX() + ", " + fHatch.getY() + ", " + fHatch.getZ() + ")! Open the trapdoor on the ground to descend into the shaft."), true);
+        return 1;
+    }
+
+    private static int buildBlackMarketCommand(CommandSourceStack source) {
+        if (!(source.getEntity() instanceof ServerPlayer player)) {
+            source.sendFailure(Component.literal("Only players can construct a Black Market den."));
+            return 0;
+        }
+        ServerLevel level = player.serverLevel();
+        BlockPos denPos = player.blockPosition().below();
+        com.soybe.awakeningsystem.world.SeriesStructureBuilder.buildBlackMarketDen(level, denPos);
+        var data = com.soybe.awakeningsystem.world.SeriesStructureWorldGen.SeriesStructureData.get(source.getServer());
+        data.recordStructure("black_market_den", denPos);
+
+        source.sendSuccess(() -> Component.literal("§5☠ [Black Market] §aClandestine den built at §e(" + denPos.getX() + ", " + denPos.getY() + ", " + denPos.getZ() + ") §awith Valerius the Silent ready to trade!"), true);
+        return 1;
+    }
+
+    private static int exportBlackMarketCommand(CommandSourceStack source, String name, int radius) {
+        if (!(source.getEntity() instanceof ServerPlayer player)) {
+            source.sendFailure(Component.literal("Only players can export the structure."));
+            return 0;
+        }
+        ServerLevel level = player.serverLevel();
+        BlockPos origin = player.blockPosition();
+        java.io.File file = com.soybe.awakeningsystem.world.BlackMarketJsonHelper.exportStructure(level, origin, radius, name);
+        if (file != null) {
+            long size = file.length();
+            source.sendSuccess(() -> Component.literal("§5☠ [Black Market] §aStructure exported successfully! Saved to: §econfig/awakening_system/custom_black_market/" + file.getName() + " §7(" + size + " bytes)"), true);
+            return 1;
+        } else {
+            source.sendFailure(Component.literal("§cError exporting the Black Market structure."));
+            return 0;
+        }
+    }
+
+    private static int importBlackMarketCommand(CommandSourceStack source, String name) {
+        if (!(source.getEntity() instanceof ServerPlayer player)) {
+            source.sendFailure(Component.literal("Only players can import the structure."));
+            return 0;
+        }
+        ServerLevel level = player.serverLevel();
+        BlockPos origin = player.blockPosition();
+        int placed = com.soybe.awakeningsystem.world.BlackMarketJsonHelper.importStructure(level, origin, name);
+        if (placed >= 0) {
+            source.sendSuccess(() -> Component.literal("§5☠ [Black Market] §aStructure §e" + name + " §aloaded successfully! Placed §e" + placed + " §ablocks."), true);
+            return 1;
+        } else {
+            source.sendFailure(Component.literal("§cFile not found: §e" + name + "§c in config/awakening_system/custom_black_market/"));
+            return 0;
+        }
+    }
+
+    private static int claimCreatorTitle(CommandSourceStack source) {
+        if (source.getEntity() instanceof ServerPlayer player) {
+            if (!TitleDefinitions.isCreator(player)) {
+                player.sendSystemMessage(Component.translatable("awakening_system.creator.only_creator").withStyle(ChatFormatting.RED));
+                return 0;
+            }
+            SystemData data = SystemEvents.data(player);
+            data.setCreator(true);
+            data.equipTitle("creator");
+            AwakeningSystemMod.sync(player);
+            AwakeningSystemMod.syncPlayerBadge(player);
+
+            player.connection.send(new net.minecraft.network.protocol.game.ClientboundSetTitleTextPacket(
+                    Component.translatable("awakening_system.creator.title_screen")
+            ));
+            player.connection.send(new net.minecraft.network.protocol.game.ClientboundSetSubtitleTextPacket(
+                    Component.translatable("awakening_system.creator.subtitle_screen")
+            ));
+            player.playNotifySound(SoundEvents.UI_TOAST_CHALLENGE_COMPLETE, SoundSource.PLAYERS, 1.0F, 1.0F);
+
+            player.sendSystemMessage(Component.literal("§6=================================================="));
+            player.sendSystemMessage(Component.translatable("awakening_system.creator.privileges_activated"));
+            player.sendSystemMessage(Component.literal("§fUsuario: §e" + player.getGameProfile().getName() + " §7(UUID: " + player.getUUID() + ")"));
+            player.sendSystemMessage(Component.translatable("awakening_system.creator.equipped"));
+            player.sendSystemMessage(Component.literal("§6=================================================="));
+            return 1;
+        }
+        return 0;
+    }
+
+    private static int claimNandaTitle(CommandSourceStack source) {
+        if (source.getEntity() instanceof ServerPlayer player) {
+            if (!TitleDefinitions.isNanda(player)) {
+                player.sendSystemMessage(Component.translatable("awakening_system.nanda.only_nanda").withStyle(ChatFormatting.RED));
+                return 0;
+            }
+            SystemData data = SystemEvents.data(player);
+            data.setNanda(true);
+            data.equipTitle("michi_lover");
+            AwakeningSystemMod.sync(player);
+            AwakeningSystemMod.syncPlayerBadge(player);
+
+            player.connection.send(new net.minecraft.network.protocol.game.ClientboundSetTitleTextPacket(
+                    Component.translatable("awakening_system.nanda.title_screen")
+            ));
+            player.connection.send(new net.minecraft.network.protocol.game.ClientboundSetSubtitleTextPacket(
+                    Component.translatable("awakening_system.nanda.subtitle_screen")
+            ));
+            player.playNotifySound(SoundEvents.UI_TOAST_CHALLENGE_COMPLETE, SoundSource.PLAYERS, 1.2F, 1.2F);
+            player.playNotifySound(SoundEvents.CAT_PURREOW, SoundSource.PLAYERS, 1.0F, 1.0F);
+            return 1;
+        }
+        return 0;
+    }
+
+    private static int claimMisticPotatoTitle(CommandSourceStack source) {
+        if (source.getEntity() instanceof ServerPlayer player) {
+            if (!TitleDefinitions.isMisticPotato(player)) {
+                player.sendSystemMessage(Component.translatable("awakening_system.potato.only_potato").withStyle(ChatFormatting.RED));
+                return 0;
+            }
+            SystemData data = SystemEvents.data(player);
+            data.setMisticPotato(true);
+            data.equipTitle("caffeine_addict");
+            AwakeningSystemMod.sync(player);
+            AwakeningSystemMod.syncPlayerBadge(player);
+
+            player.connection.send(new net.minecraft.network.protocol.game.ClientboundSetTitlesAnimationPacket(10, 80, 20));
+            player.connection.send(new net.minecraft.network.protocol.game.ClientboundSetTitleTextPacket(
+                    Component.translatable("awakening_system.potato.title_screen")
+            ));
+            player.connection.send(new net.minecraft.network.protocol.game.ClientboundSetSubtitleTextPacket(
+                    Component.translatable("awakening_system.potato.subtitle_screen")
+            ));
+            player.playNotifySound(SoundEvents.UI_TOAST_CHALLENGE_COMPLETE, SoundSource.PLAYERS, 1.2F, 1.2F);
+            player.playNotifySound(SoundEvents.GENERIC_DRINK, SoundSource.PLAYERS, 1.0F, 1.0F);
+            return 1;
+        }
+        return 0;
+    }
+
+    private static int claimSchvisTitle(CommandSourceStack source) {
+        if (source.getEntity() instanceof ServerPlayer player) {
+            if (!TitleDefinitions.isSchvis(player)) {
+                player.sendSystemMessage(Component.translatable("awakening_system.schvis.only_schvis").withStyle(ChatFormatting.RED));
+                return 0;
+            }
+            SystemData data = SystemEvents.data(player);
+            data.setSchvis(true);
+            data.equipTitle("futanari_hentai_master");
+            AwakeningSystemMod.sync(player);
+            AwakeningSystemMod.syncPlayerBadge(player);
+
+            player.connection.send(new net.minecraft.network.protocol.game.ClientboundSetTitlesAnimationPacket(10, 80, 20));
+            player.connection.send(new net.minecraft.network.protocol.game.ClientboundSetTitleTextPacket(
+                    Component.translatable("awakening_system.schvis.title_screen")
+            ));
+            player.connection.send(new net.minecraft.network.protocol.game.ClientboundSetSubtitleTextPacket(
+                    Component.translatable("awakening_system.schvis.subtitle_screen")
+            ));
+            player.playNotifySound(SoundEvents.UI_TOAST_CHALLENGE_COMPLETE, SoundSource.PLAYERS, 1.2F, 1.2F);
+            player.playNotifySound(SoundEvents.PLAYER_LEVELUP, SoundSource.PLAYERS, 1.0F, 1.3F);
+            return 1;
+        }
+        return 0;
+    }
+
+    private static int claimTomcraftTitle(CommandSourceStack source) {
+        if (source.getEntity() instanceof ServerPlayer player) {
+            if (!TitleDefinitions.isTomcraft(player) && !TitleDefinitions.isCreator(player)) {
+                player.sendSystemMessage(Component.translatable("awakening_system.pokemon.only_tomcraft").withStyle(ChatFormatting.RED));
+                return 0;
+            }
+            SystemData data = SystemEvents.data(player);
+            data.setTomcraft(true);
+            data.equipTitle("pokemon_master");
+            AwakeningSystemMod.sync(player);
+            AwakeningSystemMod.syncPlayerBadge(player);
+
+            player.connection.send(new net.minecraft.network.protocol.game.ClientboundSetTitlesAnimationPacket(10, 80, 20));
+            player.connection.send(new net.minecraft.network.protocol.game.ClientboundSetTitleTextPacket(
+                    Component.translatable("awakening_system.pokemon.title_screen")
+            ));
+            player.connection.send(new net.minecraft.network.protocol.game.ClientboundSetSubtitleTextPacket(
+                    Component.translatable("awakening_system.pokemon.subtitle_screen")
+            ));
+            player.playNotifySound(SoundEvents.UI_TOAST_CHALLENGE_COMPLETE, SoundSource.PLAYERS, 1.2F, 1.2F);
+            player.playNotifySound(SoundEvents.LIGHTNING_BOLT_THUNDER, SoundSource.PLAYERS, 0.45F, 1.8F);
+            return 1;
+        }
+        return 0;
     }
 }

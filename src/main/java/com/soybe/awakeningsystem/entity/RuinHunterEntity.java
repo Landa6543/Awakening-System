@@ -151,7 +151,6 @@ public class RuinHunterEntity extends Monster {
     @Override
     public void travel(Vec3 travelVector) {
         if (this.isStunned()) {
-            // Caída pesada por gravedad al suelo cuando está desactivado
             this.setDeltaMovement(this.getDeltaMovement().x * 0.75D, -0.45D, this.getDeltaMovement().z * 0.75D);
             this.move(MoverType.SELF, this.getDeltaMovement());
             return;
@@ -173,14 +172,12 @@ public class RuinHunterEntity extends Monster {
 
     @Override
     protected void checkFallDamage(double y, boolean onGround, BlockState state, BlockPos pos) {
-        // Los autómatas de levitación nunca sufren daño por caída
     }
 
     @Override
     public void aiStep() {
         super.aiStep();
 
-        // Partículas en cliente para los propulsores arcanos
         if (this.level().isClientSide && !this.isStunned()) {
             double px = this.getX();
             double py = this.getY() + 0.6D;
@@ -192,7 +189,6 @@ public class RuinHunterEntity extends Monster {
                 this.level().addParticle(ParticleTypes.SMALL_FLAME, px + (this.random.nextDouble() - 0.5D) * 0.6D, py, pz + (this.random.nextDouble() - 0.5D) * 0.6D, 0.0D, -0.08D, 0.0D);
             }
             if (this.isBombarding()) {
-                // Destello dorado de artillería en el ojo frontal
                 this.level().addParticle(ParticleTypes.FLAME, px, py + 1.6D, pz, 0.0D, 0.02D, 0.0D);
             }
         }
@@ -202,7 +198,6 @@ public class RuinHunterEntity extends Monster {
     protected void customServerAiStep() {
         super.customServerAiStep();
 
-        // 1. Manejo del estado ATURDIDO
         if (this.isStunned()) {
             this.stunTimer--;
             this.getNavigation().stop();
@@ -215,23 +210,19 @@ public class RuinHunterEntity extends Monster {
                 if (this.level() instanceof ServerLevel sl) {
                     sl.sendParticles(ParticleTypes.EXPLOSION, this.getX(), this.getY() + 1.2D, this.getZ(), 4, 0.4D, 0.4D, 0.4D, 0.05D);
                 }
-                // Impulso vertical para volver a elevarse
                 this.setDeltaMovement(0.0D, 0.65D, 0.0D);
             }
             return;
         }
 
-        // 2. Control de altitud adaptativa
         int surfaceY = this.level().getHeight(Heightmap.Types.MOTION_BLOCKING, this.getBlockX(), this.getBlockZ());
         LivingEntity target = this.getTarget();
 
         double desiredHeight;
         if (this.isBombarding()) {
-            // En modo bombardeo asciende a 7.5 bloques sobre el suelo o 6 bloques sobre el jugador
             double baseTarget = target != null ? target.getY() + 6.0D : surfaceY + 7.5D;
             desiredHeight = Math.max(surfaceY + 6.5D, baseTarget);
         } else {
-            // Flotación normal a 2.0 bloques sobre el suelo
             desiredHeight = surfaceY + 2.0D;
         }
 
@@ -242,7 +233,6 @@ public class RuinHunterEntity extends Monster {
             this.setDeltaMovement(this.getDeltaMovement().add(0.0D, -0.05D, 0.0D));
         }
 
-        // Reducir tiempos de enfriamiento de habilidades
         if (this.spinCooldown > 0) this.spinCooldown--;
         if (this.bombardCooldown > 0) this.bombardCooldown--;
         if (this.dashCooldown > 0) this.dashCooldown--;
@@ -251,13 +241,10 @@ public class RuinHunterEntity extends Monster {
     @Override
     public boolean hurt(DamageSource source, float amount) {
         if (source.getDirectEntity() instanceof Projectile projectile) {
-            // === MECÁNICA CLAVE DE PUNTO DÉBIL ===
-            // En Genshin Impact: Mientras está en el aire en Modo Bombardeo, impactar su ojo frontal
-            // sobrecarga su núcleo y lo precipita desplomado al suelo durante 7 segundos.
             if (this.isBombarding()) {
                 this.setBombarding(false);
                 this.setStunned(true);
-                this.stunTimer = 140; // 7 segundos de aturdimiento total
+                this.stunTimer = 140;
 
                 this.level().playSound(null, this.getX(), this.getY(), this.getZ(),
                         SoundEvents.ANVIL_LAND, SoundSource.HOSTILE, 2.0F, 0.85F);
@@ -270,14 +257,13 @@ public class RuinHunterEntity extends Monster {
                 }
 
                 if (source.getEntity() instanceof Player player) {
-                    player.displayClientMessage(Component.literal("§c§l✦ ¡NÚCLEO OCULAR SOBRECARGADO! §eEl Cazador de las Ruinas ha sido derribado y desactivado."), true);
+                    player.displayClientMessage(Component.translatable("boss.awakening_system.ruin_hunter.weakpoint"), true);
                 }
                 return super.hurt(source, amount * 2.8F);
             }
         }
 
         if (this.isStunned()) {
-            // Recibe daño aumentado mientras está indefenso en el suelo
             return super.hurt(source, amount * 1.5F);
         }
 
@@ -298,7 +284,6 @@ public class RuinHunterEntity extends Monster {
     protected void dropCustomDeathLoot(ServerLevel level, DamageSource damageSource, boolean recentlyHit) {
         super.dropCustomDeathLoot(level, damageSource, recentlyHit);
 
-        // Drops de materiales de Khaenri'ah con física e interactividad nativa de Minecraft
         if (SystemItems.CHAOS_DEVICE.isBound()) {
             this.spawnAtLocation(new ItemStack(SystemItems.CHAOS_DEVICE.get(), 3 + this.random.nextInt(4)));
         }
@@ -321,7 +306,6 @@ public class RuinHunterEntity extends Monster {
                     2, 0.2D, 0.2D, 0.2D, 0.0D);
 
             boolean isTeyvat = sl.dimension().equals(com.soybe.awakeningsystem.TeyvatWorldManager.TEYVAT_WORLD);
-            // Recompensa a los jugadores cercanos
             for (Player p : sl.getPlayers(pl -> pl.distanceToSqr(this) < 1200.0D)) {
                 if (p instanceof ServerPlayer sp) {
                     var data = SystemEvents.data(sp);
@@ -331,7 +315,7 @@ public class RuinHunterEntity extends Monster {
                         data.addMora(moraGain);
                         data.addPrimogems(primoGain);
                         AwakeningSystemMod.sync(sp);
-                        sp.displayClientMessage(Component.literal("§6§l✦ ¡CAZADOR DE LAS RUINAS DESTRUIDO! §e+" + moraGain + " Mora, §b+" + primoGain + " Protogemas§e."), false);
+                        sp.displayClientMessage(Component.translatable("boss.awakening_system.ruin_hunter.defeated", moraGain, primoGain), false);
                     } else {
                         if (SystemItems.AWAKENING_COIN.isBound()) {
                             sp.addItem(new ItemStack(SystemItems.AWAKENING_COIN.get(), 6));
@@ -342,7 +326,6 @@ public class RuinHunterEntity extends Monster {
         }
     }
 
-    // === IA 1: MODO BOMBARDEO AÉREO (ARTILLERY MODE) ===
     static class RuinHunterBombardGoal extends Goal {
         private final RuinHunterEntity hunter;
         private int bombardTicks = 0;
@@ -358,9 +341,7 @@ public class RuinHunterEntity extends Monster {
             if (target == null || !target.isAlive() || this.hunter.isStunned() || this.hunter.isSpinning() || this.hunter.isDashing()) {
                 return false;
             }
-            // Condición A: El jugador se eleva (usando corrientes de viento o vuelo)
             boolean targetElevated = target.getY() > this.hunter.getY() + 1.8D;
-            // Condición B: Cooldown listo y distancia media/larga
             boolean longRangeTrigger = this.hunter.bombardCooldown <= 0 && this.hunter.distanceToSqr(target) > 64.0D;
 
             return targetElevated || longRangeTrigger;
@@ -369,7 +350,7 @@ public class RuinHunterEntity extends Monster {
         @Override
         public void start() {
             this.hunter.setBombarding(true);
-            this.bombardTicks = 120; // 6 segundos de bombardeo
+            this.bombardTicks = 120;
             this.hunter.bombardCooldown = 300;
             this.hunter.level().playSound(null, this.hunter.getX(), this.hunter.getY(), this.hunter.getZ(),
                     SoundEvents.FIREWORK_ROCKET_LAUNCH, SoundSource.HOSTILE, 2.0F, 0.5F);
@@ -383,7 +364,6 @@ public class RuinHunterEntity extends Monster {
             }
             this.bombardTicks--;
 
-            // Cada 22 ticks dispara una salva de misiles teledirigidos
             if (this.bombardTicks % 22 == 0 && target != null && !this.hunter.level().isClientSide) {
                 for (int i = 0; i < 4; i++) {
                     RuinMissileEntity missile = new RuinMissileEntity(this.hunter.level(), this.hunter, target);
@@ -408,14 +388,12 @@ public class RuinHunterEntity extends Monster {
             this.hunter.setBombarding(false);
             LivingEntity target = this.hunter.getTarget();
             if (target != null && !this.hunter.isStunned()) {
-                // Al descender hace una embestida en picada hacia la víctima
                 Vec3 diveDir = target.position().subtract(this.hunter.position()).normalize().scale(0.9D);
                 this.hunter.setDeltaMovement(diveDir.x, -0.4D, diveDir.z);
             }
         }
     }
 
-    // === IA 2: EMBESTIDA CORTANTE CON CUCHILLAS (DASH SLICE) ===
     static class RuinHunterDashGoal extends Goal {
         private final RuinHunterEntity hunter;
         private int dashTicks = 0;
@@ -450,13 +428,12 @@ public class RuinHunterEntity extends Monster {
                 Vec3 dir = target.getEyePosition().subtract(this.hunter.position()).normalize().scale(0.85D);
                 this.hunter.setDeltaMovement(dir.x, dir.y * 0.5D, dir.z);
 
-                // Si impacta con el objetivo durante la embestida
                 if (this.hunter.distanceToSqr(target) < 9.0D) {
                     target.hurt(this.hunter.damageSources().mobAttack(this.hunter), 16.0F);
                     target.setDeltaMovement(dir.x * 1.2D, 0.45D, dir.z * 1.2D);
                     this.hunter.level().playSound(null, this.hunter.getX(), this.hunter.getY(), this.hunter.getZ(),
                             SoundEvents.IRON_GOLEM_ATTACK, SoundSource.HOSTILE, 1.5F, 0.9F);
-                    this.dashTicks = 0; // Terminar embestida tras conectar
+                    this.dashTicks = 0;
                 }
             }
             this.dashTicks--;
@@ -473,7 +450,6 @@ public class RuinHunterEntity extends Monster {
         }
     }
 
-    // === IA 3: TORBELLINO GIRATORIO DE CUCHILLAS (WHIRLWIND BLADES) ===
     static class RuinHunterSpinGoal extends Goal {
         private final RuinHunterEntity hunter;
         private int spinTicks = 0;
@@ -494,7 +470,7 @@ public class RuinHunterEntity extends Monster {
         @Override
         public void start() {
             this.hunter.setSpinning(true);
-            this.spinTicks = 60; // 3 segundos de giro
+            this.spinTicks = 60;
             this.hunter.spinCooldown = 220;
             this.hunter.level().playSound(null, this.hunter.getX(), this.hunter.getY(), this.hunter.getZ(),
                     SoundEvents.PLAYER_ATTACK_SWEEP, SoundSource.HOSTILE, 2.0F, 0.5F);
@@ -510,7 +486,6 @@ public class RuinHunterEntity extends Monster {
             }
             this.spinTicks--;
 
-            // Daño radial cada 8 ticks a enemigos en radio de 3.0 bloques
             if (this.spinTicks % 8 == 0 && this.hunter.level() instanceof ServerLevel sl) {
                 sl.playSound(null, this.hunter.getX(), this.hunter.getY(), this.hunter.getZ(),
                         SoundEvents.PLAYER_ATTACK_SWEEP, SoundSource.HOSTILE, 1.5F, 1.1F);
@@ -536,7 +511,6 @@ public class RuinHunterEntity extends Monster {
         }
     }
 
-    // === IA 4: PERSECUCIÓN Y ATAQUE CUERPO A CUERPO POR DEFECTO ===
     static class RuinHunterHoverAttackGoal extends Goal {
         private final RuinHunterEntity hunter;
 
@@ -560,12 +534,10 @@ public class RuinHunterEntity extends Monster {
             this.hunter.getLookControl().setLookAt(target, 30.0F, 30.0F);
             double distSq = this.hunter.distanceToSqr(target);
 
-            // Acercarse flotando al objetivo
             if (distSq > 9.0D) {
                 Vec3 dir = target.getEyePosition().subtract(this.hunter.position()).normalize().scale(0.32D);
                 this.hunter.setDeltaMovement(dir.x, dir.y * 0.4D, dir.z);
             } else {
-                // Golpe con cuchilla básica
                 if (this.hunter.attackAnim == 0) {
                     this.hunter.doHurtTarget(target);
                     this.hunter.level().playSound(null, this.hunter.getX(), this.hunter.getY(), this.hunter.getZ(),

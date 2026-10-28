@@ -18,6 +18,10 @@ public final class SystemAttributeEffects {
         int strPoints = Math.max(0, data.strength() - SystemData.ATTR_BASE);
         apply(player, Attributes.ATTACK_DAMAGE, "strength", strPoints * 0.5D);
         apply(player, Attributes.ATTACK_SPEED, "agility", diminishing(data.agility(), SystemData.ATTR_BASE, 0.015D));
+        double agiSpeedBonus = data.agilitySpeedEnabled()
+                ? Math.min(0.022D, Math.max(0, data.agility() - SystemData.ATTR_BASE) * 0.00025D)
+                : 0.0D;
+        apply(player, Attributes.MOVEMENT_SPEED, "agility_move_speed", agiSpeedBonus);
         apply(player, Attributes.LUCK, "perception", diminishing(data.perception(), SystemData.ATTR_BASE, 0.1D));
         apply(player, Attributes.ATTACK_SPEED, "intelligence", diminishing(data.intelligence(), SystemData.ATTR_BASE, 0.02D));
         apply(player, Attributes.KNOCKBACK_RESISTANCE, "willpower", diminishing(data.willpower(), SystemData.ATTR_BASE, 0.02D));
@@ -29,7 +33,6 @@ public final class SystemAttributeEffects {
             apply(player, Attributes.ARMOR, "skill_blue_dragon_armor", 0.0D);
         }
 
-        // Hunter Class Awakening Modifiers
         String hClass = data.hunterClass();
         apply(player, Attributes.ATTACK_SPEED, "hunter_sword_saint_spd", "sword_saint".equals(hClass) ? 0.35D : ("demonic_cultivator".equals(hClass) ? 0.15D : ("void_assassin".equals(hClass) ? 0.25D : ("lightning_emperor".equals(hClass) ? 0.20D : ("blood_emperor".equals(hClass) ? 0.10D : 0.0D)))));
         apply(player, Attributes.MAX_HEALTH, "hunter_colossal_hp", "colossal_berserker".equals(hClass) ? 16.0D : ("dragon_monarch".equals(hClass) ? 10.0D : ("spiritual_healer".equals(hClass) ? 6.0D : 0.0D)));
@@ -40,10 +43,8 @@ public final class SystemAttributeEffects {
         apply(player, Attributes.ARMOR_TOUGHNESS, "hunter_dragon_toughness", "dragon_monarch".equals(hClass) ? 2.0D : 0.0D);
         apply(player, Attributes.LUCK, "hunter_archmage_luck", "grand_archmage".equals(hClass) ? 1.0D : 0.0D);
 
-        // Cross-Mod Magic Compatibility (Iron's Spells 'n Spellbooks & Ars Nouveau)
         com.soybe.awakeningsystem.compat.MagicModCompatHandler.applyMagicAttributes(player, data);
 
-        // Class Skill Tree Attribute Node Modifiers
         double treeAtk = ClassSkillTree.getTotalAttributeBonus(data, ClassSkillTree.StatType.ATTACK_DAMAGE);
         apply(player, Attributes.ATTACK_DAMAGE, "tree_bonus_atk", treeAtk);
 
@@ -62,6 +63,34 @@ public final class SystemAttributeEffects {
         double treeKb = ClassSkillTree.getTotalAttributeBonus(data, ClassSkillTree.StatType.KNOCKBACK_RESISTANCE);
         apply(player, Attributes.KNOCKBACK_RESISTANCE, "tree_bonus_kb", treeKb);
 
+        boolean hasGoldShoe = false;
+        boolean hasSilverShoe = false;
+        if (SystemItems.GOLD_HORSESHOE != null && SystemItems.GOLD_HORSESHOE.isBound()) {
+            if (player.getItemBySlot(net.minecraft.world.entity.EquipmentSlot.FEET).is(SystemItems.GOLD_HORSESHOE.value())) {
+                hasGoldShoe = true;
+            } else {
+                for (net.minecraft.world.item.ItemStack invStack : player.getInventory().items) {
+                    if (invStack.is(SystemItems.GOLD_HORSESHOE.value())) {
+                        hasGoldShoe = true;
+                        break;
+                    }
+                }
+            }
+        }
+        if (!hasGoldShoe && SystemItems.SILVER_HORSESHOE != null && SystemItems.SILVER_HORSESHOE.isBound()) {
+            if (player.getItemBySlot(net.minecraft.world.entity.EquipmentSlot.FEET).is(SystemItems.SILVER_HORSESHOE.value())) {
+                hasSilverShoe = true;
+            } else {
+                for (net.minecraft.world.item.ItemStack invStack : player.getInventory().items) {
+                    if (invStack.is(SystemItems.SILVER_HORSESHOE.value())) {
+                        hasSilverShoe = true;
+                        break;
+                    }
+                }
+            }
+        }
+        double shoeSpeedBonus = hasGoldShoe ? 0.025D : (hasSilverShoe ? 0.015D : 0.0D);
+        apply(player, Attributes.MOVEMENT_SPEED, "uma_horseshoe_speed", shoeSpeedBonus);
 
         String classId = data.classId();
         clearClassModifiers(player);
@@ -144,6 +173,49 @@ public final class SystemAttributeEffects {
                 apply(player, Attributes.MAX_HEALTH, "title_unique_dragon_health", 16.0D);
                 apply(player, Attributes.KNOCKBACK_RESISTANCE, "title_unique_dragon_kb", 0.35D);
             }
+            case "creator" -> {
+                apply(player, Attributes.MAX_HEALTH, "title_creator_health", 20.0D);
+                apply(player, Attributes.ATTACK_DAMAGE, "title_creator_damage", 6.0D);
+                apply(player, Attributes.ARMOR, "title_creator_armor", 10.0D);
+                apply(player, Attributes.LUCK, "title_creator_luck", 5.0D);
+            }
+            case "michi_lover" -> {
+                apply(player, Attributes.MAX_HEALTH, "title_nanda_health", 20.0D);
+                apply(player, Attributes.ATTACK_DAMAGE, "title_nanda_damage", 8.0D);
+                apply(player, Attributes.ARMOR, "title_nanda_armor", 6.0D);
+                apply(player, Attributes.MOVEMENT_SPEED, "title_nanda_speed", 0.04D);
+                apply(player, Attributes.LUCK, "title_nanda_luck", 6.0D);
+            }
+            case "caffeine_addict" -> {
+                apply(player, Attributes.ATTACK_SPEED, "title_caffeine_atk_speed", 1.25D);
+                apply(player, Attributes.MOVEMENT_SPEED, "title_caffeine_speed", 0.04D);
+                apply(player, Attributes.MAX_HEALTH, "title_caffeine_health", 16.0D);
+                apply(player, Attributes.ATTACK_DAMAGE, "title_caffeine_damage", 7.0D);
+                apply(player, Attributes.LUCK, "title_caffeine_luck", 5.0D);
+            }
+            case "futanari_hentai_master" -> {
+                apply(player, Attributes.MAX_HEALTH, "title_schvis_health", 20.0D);
+                apply(player, Attributes.ATTACK_DAMAGE, "title_schvis_damage", 4.0D);
+                apply(player, Attributes.ARMOR, "title_schvis_armor", 8.0D);
+                apply(player, Attributes.MOVEMENT_SPEED, "title_schvis_speed", 0.035D);
+                apply(player, Attributes.KNOCKBACK_RESISTANCE, "title_schvis_kb", 0.25D);
+                apply(player, Attributes.LUCK, "title_schvis_luck", 7.0D);
+                apply(player, Attributes.SCALE, "title_schvis_scale", 0.1D);
+            }
+            case "pokemon_master" -> {
+                apply(player, Attributes.MAX_HEALTH, "title_pokemon_health", 18.0D);
+                apply(player, Attributes.ATTACK_DAMAGE, "title_pokemon_damage", 6.0D);
+                apply(player, Attributes.ARMOR, "title_pokemon_armor", 6.0D);
+                apply(player, Attributes.MOVEMENT_SPEED, "title_pokemon_speed", 0.035D);
+                apply(player, Attributes.ATTACK_SPEED, "title_pokemon_atk_speed", 0.25D);
+                apply(player, Attributes.LUCK, "title_pokemon_luck", 7.0D);
+            }
+            case "mod_conqueror" -> {
+                apply(player, Attributes.MAX_HEALTH, "title_conqueror_health", 16.0D);
+                apply(player, Attributes.ATTACK_DAMAGE, "title_conqueror_damage", 8.0D);
+                apply(player, Attributes.ARMOR, "title_conqueror_armor", 8.0D);
+                apply(player, Attributes.LUCK, "title_conqueror_luck", 3.0D);
+            }
             case "ranker_of_the_tower" -> {
                 apply(player, Attributes.ATTACK_DAMAGE, "title_ranker_damage", 6.0D);
                 apply(player, Attributes.MAX_HEALTH, "title_ranker_health", 14.0D);
@@ -171,7 +243,6 @@ public final class SystemAttributeEffects {
             }
         }
 
-        // Estigma de Constelación Patrocinadora (ORV)
         String sponsor = data.sponsorConstellation();
         clearConstellationModifiers(player);
         switch (sponsor) {
@@ -307,12 +378,12 @@ public final class SystemAttributeEffects {
     }
 
     private static void clearTitleModifiers(ServerPlayer player) {
-        String[] ids = {"rank_damage", "rank_health", "stone_breaker_speed", "stone_breaker_luck", "deep_delver_health", "ironforged_resistance", "diamond_blessed_luck", "nether_walker_speed", "ender_walker_health", "dragon_slayer_damage", "village_hero_luck", "sea_explorer_health", "master_fisher_luck", "beast_hunter_damage", "raid_breaker_resistance", "ancient_hunter_damage", "warden_survivor_health", "librarian_attack_speed", "master_builder_health", "netherite_damage", "netherite_resistance", "ex_damage", "ex_health", "rank_s_damage", "rank_ss_damage", "rank_ss_health", "rank_sss_damage", "rank_sss_health", "rank_ex_plus_damage", "rank_ex_plus_health", "rank_transcendent_damage", "rank_transcendent_health", "rank_transcendent_speed", "rank_singularity_damage", "rank_singularity_health", "rank_singularity_luck", "ranker_damage", "ranker_health", "ranker_speed", "ranker_kb", "awakened_health", "evolved_damage", "evolved_speed", "awakening_health", "generic_luck", "generic_health"};
+        String[] ids = {"rank_damage", "rank_health", "nanda_health", "nanda_damage", "nanda_armor", "nanda_speed", "nanda_luck", "caffeine_atk_speed", "caffeine_speed", "caffeine_health", "caffeine_damage", "caffeine_luck", "schvis_health", "schvis_damage", "schvis_armor", "schvis_speed", "schvis_kb", "schvis_luck", "schvis_scale", "creator_health", "creator_damage", "creator_armor", "creator_luck", "conqueror_health", "conqueror_damage", "conqueror_armor", "conqueror_luck", "stone_breaker_speed", "stone_breaker_luck", "deep_delver_health", "ironforged_resistance", "diamond_blessed_luck", "nether_walker_speed", "ender_walker_health", "dragon_slayer_damage", "village_hero_luck", "sea_explorer_health", "master_fisher_luck", "beast_hunter_damage", "raid_breaker_resistance", "ancient_hunter_damage", "warden_survivor_health", "librarian_attack_speed", "master_builder_health", "netherite_damage", "netherite_resistance", "ex_damage", "ex_health", "rank_s_damage", "rank_ss_damage", "rank_ss_health", "rank_sss_damage", "rank_sss_health", "rank_ex_plus_damage", "rank_ex_plus_health", "rank_transcendent_damage", "rank_transcendent_health", "rank_transcendent_speed", "rank_singularity_damage", "rank_singularity_health", "rank_singularity_luck", "ranker_damage", "ranker_health", "ranker_speed", "ranker_kb", "awakened_health", "evolved_damage", "evolved_speed", "awakening_health", "generic_luck", "generic_health"};
         for (String id : ids) clearModifier(player, "title_" + id);
     }
 
     private static void clearModifier(ServerPlayer player, String id) {
-        for (Holder<Attribute> attribute : new Holder[]{Attributes.ATTACK_DAMAGE, Attributes.MAX_HEALTH, Attributes.MOVEMENT_SPEED, Attributes.LUCK, Attributes.ATTACK_SPEED, Attributes.KNOCKBACK_RESISTANCE}) {
+        for (Holder<Attribute> attribute : new Holder[]{Attributes.ATTACK_DAMAGE, Attributes.MAX_HEALTH, Attributes.MOVEMENT_SPEED, Attributes.LUCK, Attributes.ATTACK_SPEED, Attributes.KNOCKBACK_RESISTANCE, Attributes.ARMOR, Attributes.SCALE}) {
             AttributeInstance instance = player.getAttribute(attribute);
             if (instance != null) instance.removeModifier(ResourceLocation.fromNamespaceAndPath(AwakeningSystemMod.MOD_ID, id));
         }
@@ -327,7 +398,6 @@ public final class SystemAttributeEffects {
         apply(player, Attributes.ATTACK_SPEED, "class_sage_attack_speed", 0.0D);
         apply(player, Attributes.MAX_HEALTH, "class_wanderer_health", 0.0D);
     }
-
 
     private static double diminishing(int value, int baseline, double perPoint) {
         int points = value - baseline;

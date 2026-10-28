@@ -28,7 +28,6 @@ public class AstralDragonRenderer extends MobRenderer<AstralDragonEntity, Astral
 
     @Override
     protected void scale(AstralDragonEntity entity, PoseStack poseStack, float partialTickTime) {
-        // Escala armoniosa para dragón bebé compañero (se ajusta al hitbox de 0.65x0.6)
         poseStack.scale(0.75F, 0.75F, 0.75F);
     }
 }

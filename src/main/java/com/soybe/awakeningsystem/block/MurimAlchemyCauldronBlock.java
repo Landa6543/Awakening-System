@@ -85,7 +85,6 @@ public class MurimAlchemyCauldronBlock extends Block {
         boolean hasHeat = state.getValue(LIT) || isHeatSource(level, pos);
         ServerLevel sl = (ServerLevel) level;
 
-        // 1. Receta rápida en mano: Ginseng Salvaje + (Mandrágora -> Píldora de Médula / Jade -> Píldora de Alma)
         if (hasHeat && heldStack.is(SystemItems.WILD_GINSENG.get())) {
             int mandrakeSlot = findItemSlot(player, SystemItems.MANDRAKE_ROOT.get());
             if (mandrakeSlot >= 0) {
@@ -108,7 +107,6 @@ public class MurimAlchemyCauldronBlock extends Block {
             return ItemInteractionResult.FAIL;
         }
 
-        // 2. Receta rápida en mano: Loto de Nieve + (Ginseng Milenario -> Dragón Naciente / Jade -> Escudo de Tribulación)
         if (hasHeat && heldStack.is(SystemItems.SNOW_LOTUS.get())) {
             int ginsengSlot = findItemSlot(player, SystemItems.THOUSAND_YEAR_GINSENG.get());
             if (ginsengSlot >= 0) {
@@ -131,7 +129,6 @@ public class MurimAlchemyCauldronBlock extends Block {
             return ItemInteractionResult.FAIL;
         }
 
-        // 3. Receta rápida en mano: Ginseng Milenario + Jade Espiritual -> Píldora de Ruptura de Reino
         if (hasHeat && heldStack.is(SystemItems.THOUSAND_YEAR_GINSENG.get())) {
             int jadeSlot = findItemSlot(player, SystemItems.SPIRIT_JADE.get());
             if (jadeSlot < 0) jadeSlot = findItemSlot(player, SystemItems.SPIRIT_JADE_SHARD.get());
@@ -147,7 +144,6 @@ public class MurimAlchemyCauldronBlock extends Block {
             }
         }
 
-        // 4. Receta rápida en mano: Raíz de Mandrágora + Lingote de Adamantita -> Elixir de la Tortuga Negra
         if (hasHeat && heldStack.is(SystemItems.MANDRAKE_ROOT.get())) {
             int adamSlot = findItemSlot(player, SystemItems.ADAMANTITE_INGOT.get());
             if (adamSlot >= 0) {
@@ -162,7 +158,6 @@ public class MurimAlchemyCauldronBlock extends Block {
             }
         }
 
-        // 5. Receta rápida en mano: Jade Espiritual (o Fragmento) + Ingrediente correspondiente
         if (hasHeat && (heldStack.is(SystemItems.SPIRIT_JADE.get()) || heldStack.is(SystemItems.SPIRIT_JADE_SHARD.get()))) {
             int ginsengSlot = findItemSlot(player, SystemItems.THOUSAND_YEAR_GINSENG.get());
             if (ginsengSlot >= 0) {
@@ -190,7 +185,6 @@ public class MurimAlchemyCauldronBlock extends Block {
             }
         }
 
-        // Abrir la interfaz gráfica estética de Alquimia de Murim
         if (player instanceof net.minecraft.server.level.ServerPlayer sp) {
             net.neoforged.neoforge.network.PacketDistributor.sendToPlayer(sp, new com.soybe.awakeningsystem.OpenMurimAlchemyPayload(pos, hasHeat));
             sp.playNotifySound(SoundEvents.BOOK_PAGE_TURN, SoundSource.BLOCKS, 1.0F, 1.0F);
@@ -216,7 +210,7 @@ public class MurimAlchemyCauldronBlock extends Block {
         }
 
         switch (payload.recipeIndex()) {
-            case 0 -> { // Ginseng Salvaje + Mandrágora
+            case 0 -> {
                 int s1 = findItemSlot(player, SystemItems.WILD_GINSENG.get());
                 int s2 = findItemSlot(player, SystemItems.MANDRAKE_ROOT.get());
                 if (s1 >= 0 && s2 >= 0) {
@@ -229,7 +223,7 @@ public class MurimAlchemyCauldronBlock extends Block {
                     player.displayClientMessage(Component.translatable("awakening_system.cauldron.missing_ingredients_1"), true);
                 }
             }
-            case 1 -> { // Loto de Nieve + Ginseng Milenario
+            case 1 -> {
                 int s1 = findItemSlot(player, SystemItems.SNOW_LOTUS.get());
                 int s2 = findItemSlot(player, SystemItems.THOUSAND_YEAR_GINSENG.get());
                 if (s1 >= 0 && s2 >= 0) {
@@ -242,7 +236,7 @@ public class MurimAlchemyCauldronBlock extends Block {
                     player.displayClientMessage(Component.translatable("awakening_system.cauldron.missing_ingredients_2"), true);
                 }
             }
-            case 2 -> { // Ginseng Milenario + Jade Espiritual
+            case 2 -> {
                 int s1 = findItemSlot(player, SystemItems.THOUSAND_YEAR_GINSENG.get());
                 int s2 = findItemSlot(player, SystemItems.SPIRIT_JADE.get());
                 if (s2 < 0) s2 = findItemSlot(player, SystemItems.SPIRIT_JADE_SHARD.get());
@@ -256,7 +250,7 @@ public class MurimAlchemyCauldronBlock extends Block {
                     player.displayClientMessage(Component.translatable("awakening_system.cauldron.missing_ingredients_3"), true);
                 }
             }
-            case 3 -> { // Mandrágora + Lingote de Adamantita
+            case 3 -> {
                 int s1 = findItemSlot(player, SystemItems.MANDRAKE_ROOT.get());
                 int s2 = findItemSlot(player, SystemItems.ADAMANTITE_INGOT.get());
                 if (s1 >= 0 && s2 >= 0) {
@@ -269,7 +263,7 @@ public class MurimAlchemyCauldronBlock extends Block {
                     player.displayClientMessage(Component.translatable("awakening_system.cauldron.missing_ingredients_4"), true);
                 }
             }
-            case 4 -> { // Loto de Nieve + Jade Espiritual -> Píldora del Escudo de Tribulación
+            case 4 -> {
                 int s1 = findItemSlot(player, SystemItems.SNOW_LOTUS.get());
                 int s2 = findItemSlot(player, SystemItems.SPIRIT_JADE.get());
                 if (s2 < 0) s2 = findItemSlot(player, SystemItems.SPIRIT_JADE_SHARD.get());
@@ -283,7 +277,7 @@ public class MurimAlchemyCauldronBlock extends Block {
                     player.displayClientMessage(Component.translatable("awakening_system.cauldron.missing_ingredients_5"), true);
                 }
             }
-            case 5 -> { // Ginseng Salvaje + Jade Espiritual -> Píldora de Transformación del Alma
+            case 5 -> {
                 int s1 = findItemSlot(player, SystemItems.WILD_GINSENG.get());
                 int s2 = findItemSlot(player, SystemItems.SPIRIT_JADE.get());
                 if (s2 < 0) s2 = findItemSlot(player, SystemItems.SPIRIT_JADE_SHARD.get());

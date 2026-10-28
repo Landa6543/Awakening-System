@@ -1,0 +1,13 @@
+{
+  "type": "minecraft:crafting_shapeless",
+  "category": "misc",
+  "ingredients": [
+    {
+      "item": "awakening_system:soul_alloy_block"
+    }
+  ],
+  "result": {
+    "count": 9,
+    "id": "awakening_system:soul_alloy_ingot"
+  }
+}

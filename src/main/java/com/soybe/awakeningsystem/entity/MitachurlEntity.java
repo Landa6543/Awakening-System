@@ -39,8 +39,8 @@ import java.util.List;
 public class MitachurlEntity extends Monster {
 
     public enum MitachurlType {
-        BLAZING_AXE(0, "blazing_axe", "§4§lMitachurl con Gran Hacha Ardiente"),
-        SHIELDWALL(1, "shieldwall", "§6§lMitachurl con Escudo Colosal");
+        BLAZING_AXE(0, "blazing_axe", "§4§lBlazing Axe Mitachurl"),
+        SHIELDWALL(1, "shieldwall", "§6§lWooden Shieldwall Mitachurl");
 
         private final int id;
         private final String name;
@@ -128,7 +128,6 @@ public class MitachurlEntity extends Monster {
 
     @Override
     public boolean hurt(DamageSource source, float amount) {
-        // Variante Escudo Colosal: bloquea el 85% de impactos frontales
         if (getMitachurlType() == MitachurlType.SHIELDWALL && !source.is(net.minecraft.tags.DamageTypeTags.BYPASSES_SHIELD)) {
             Entity attacker = source.getEntity();
             if (attacker != null) {
@@ -162,7 +161,6 @@ public class MitachurlEntity extends Monster {
         if (target != null && target.isAlive() && !this.level().isClientSide) {
             double distSqr = this.distanceToSqr(target);
 
-            // Ataque especial cada ~5-7 segundos
             if (this.specialAttackCooldown <= 0) {
                 if (getMitachurlType() == MitachurlType.BLAZING_AXE && distSqr < 25.0D) {
                     performAxeGroundSlam(target);
@@ -171,13 +169,11 @@ public class MitachurlEntity extends Monster {
                 }
             }
 
-            // Lógica de embestida con escudo activa
             if (this.chargeTicks > 0) {
                 this.chargeTicks--;
                 Vec3 forward = Vec3.directionFromRotation(0, this.getYRot()).scale(0.55D);
                 this.setDeltaMovement(forward.x, this.getDeltaMovement().y, forward.z);
 
-                // Colisión con el objetivo o entidades cercanas
                 AABB box = this.getBoundingBox().inflate(0.5D);
                 List<LivingEntity> hit = this.level().getEntitiesOfClass(LivingEntity.class, box, e -> e != this);
                 for (LivingEntity e : hit) {
@@ -200,7 +196,6 @@ public class MitachurlEntity extends Monster {
         this.setDeltaMovement(this.getDeltaMovement().add(0, 0.45D, 0));
         this.playSound(ModSounds.MITACHURL_AXE_SLAM.get(), 1.2F, 1.0F);
 
-        // Al tocar tierra genera onda de choque ígnea
         if (this.level() instanceof ServerLevel sl) {
             sl.sendParticles(ParticleTypes.EXPLOSION, target.getX(), target.getY() + 0.5D, target.getZ(), 2, 0.5D, 0.5D, 0.5D, 0.0D);
             sl.sendParticles(ParticleTypes.FLAME, target.getX(), target.getY() + 0.2D, target.getZ(), 40, 1.5D, 0.2D, 1.5D, 0.1D);
@@ -211,7 +206,7 @@ public class MitachurlEntity extends Monster {
 
     private void startShieldCharge(LivingEntity target) {
         this.specialAttackCooldown = 140;
-        this.chargeTicks = 30; // 1.5s de carga
+        this.chargeTicks = 30;
         setCharging(true);
         this.lookAt(target, 30.0F, 30.0F);
         this.playSound(ModSounds.MITACHURL_SHIELD_CHARGE.get(), 1.2F, 1.0F);

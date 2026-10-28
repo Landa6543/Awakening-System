@@ -28,7 +28,6 @@ public class CustomTierFurnaceScreen extends AbstractContainerScreen<CustomTierF
         int relY = mouseY - this.topPos;
         FurnaceTier tier = this.menu.getTier();
 
-        // Tooltip en el boton de alternancia de vista de mejoras (161, 4 a 172, 15)
         if (relX >= 161 && relX <= 172 && relY >= 4 && relY <= 15) {
             java.util.List<Component> tooltip = new java.util.ArrayList<>();
             if (this.menu.isAugmentGuiOpen()) {
@@ -43,7 +42,6 @@ public class CustomTierFurnaceScreen extends AbstractContainerScreen<CustomTierF
         }
 
         if (!this.menu.isAugmentGuiOpen()) {
-            // Tooltip enriquecido en la flecha de progreso (79, 34 a 103, 50)
             if (relX >= 79 && relX <= 103 && relY >= 34 && relY <= 50) {
                 java.util.List<Component> tooltip = new java.util.ArrayList<>();
                 int augType = this.menu.getAugmentType();
@@ -66,7 +64,6 @@ public class CustomTierFurnaceScreen extends AbstractContainerScreen<CustomTierF
                 g.renderComponentTooltip(this.font, tooltip, mouseX, mouseY);
             }
         } else {
-            // Tooltips fantasma en las ranuras de mejoras si están vacías
             if (relX >= 26 && relX <= 42 && relY >= 35 && relY <= 51 && !this.menu.getSlot(CustomTierFurnaceMenu.AUGMENT_RED_SLOT).hasItem()) {
                 java.util.List<Component> tooltip = new java.util.ArrayList<>();
                 tooltip.add(Component.translatable("awakening_system.furnace.slot_mode_title"));
@@ -92,29 +89,28 @@ public class CustomTierFurnaceScreen extends AbstractContainerScreen<CustomTierF
         FurnaceTier tier = this.menu.getTier();
 
         if (this.menu.isAugmentGuiOpen()) {
-            // 1. Titulo de Mejoras conciso y perfectamente ajustado sin solapamiento con el boton en x=161
             String tierLabel = switch (tier) {
                 case ABYSSAL -> "Abisal";
+                case SOUL_ALLOY -> "Almas";
+                case ASTRALITE -> "Astralita";
                 case MITHRIL -> "Mithril";
                 case ADAMANTITE -> "Adamantita";
                 case SPIRIT_JADE -> "Jade";
                 case ASTRAL -> "Astral";
+                case CELESTIAL -> "Celestial";
+                case PRIMORDIAL -> "Primordial";
             };
             g.drawString(this.font, Component.literal("Mejoras: " + tierLabel), 8, 6, 0x404040, false);
 
-            // 2. Encabezados de categorias sobre las ranuras
             g.drawCenteredString(this.font, "§cModo", 35, 23, 0x802020);
             g.drawCenteredString(this.font, "§aVelocidad", 89, 23, 0x206020);
             g.drawCenteredString(this.font, "§bUtilidad", 143, 23, 0x105070);
 
-            // 3. Etiqueta del inventario
             g.drawString(this.font, this.playerInventoryTitle, 8, this.imageHeight - 93, 0x404040, false);
         } else {
-            // 1. Titulo del Horno en color oscuro legible (0x404040)
             String titleStr = this.title.getString();
             g.drawString(this.font, Component.literal(titleStr), 8, 6, 0x404040, false);
 
-            // 2. Indicador de modo / velocidad (sin invadir el boton en x=161)
             int titleW = this.font.width(titleStr);
             int augType = this.menu.getAugmentType();
             String modeTag = switch (augType) {
@@ -132,7 +128,6 @@ public class CustomTierFurnaceScreen extends AbstractContainerScreen<CustomTierF
                 g.drawString(this.font, Component.literal(modeTag), 8 + titleW + 6, 6, tagColor, false);
             }
 
-            // 3. Etiqueta del inventario del jugador
             g.drawString(this.font, this.playerInventoryTitle, 8, this.imageHeight - 93, 0x404040, false);
         }
     }
@@ -143,24 +138,19 @@ public class CustomTierFurnaceScreen extends AbstractContainerScreen<CustomTierF
         int y = this.topPos;
 
         if (this.menu.isAugmentGuiOpen()) {
-            // Fondo de la pantalla de Mejoras
             g.blit(TEXTURE_AUGMENT, x, y, 0, 0, this.imageWidth, this.imageHeight);
         } else {
-            // Fondo estandar de horno
             g.blit(TEXTURE_FURNACE, x, y, 0, 0, this.imageWidth, this.imageHeight);
 
-            // Fuego animado cuando esta encendido
             if (this.menu.isLit()) {
                 int litProgress = this.menu.getLitProgress();
                 g.blit(TEXTURE_FURNACE, x + 56, y + 36 + 12 - litProgress, 176, 12 - litProgress, 14, litProgress + 1);
             }
 
-            // Flecha de progreso de fundicion
             int burnProgress = this.menu.getBurnProgress();
             g.blit(TEXTURE_FURNACE, x + 79, y + 34, 176, 14, burnProgress + 1, 16);
         }
 
-        // Resaltado al pasar el raton sobre el boton de mejoras (161, 4)
         int relX = mouseX - this.leftPos;
         int relY = mouseY - this.topPos;
         if (relX >= 161 && relX <= 172 && relY >= 4 && relY <= 15) {
@@ -173,7 +163,6 @@ public class CustomTierFurnaceScreen extends AbstractContainerScreen<CustomTierF
         int relX = (int) mouseX - this.leftPos;
         int relY = (int) mouseY - this.topPos;
 
-        // Clic en el boton de alternancia de mejoras (161, 4 a 172, 15)
         if (button == 0 && relX >= 161 && relX <= 172 && relY >= 4 && relY <= 15) {
             if (this.minecraft != null && this.minecraft.gameMode != null) {
                 this.minecraft.getSoundManager().play(SimpleSoundInstance.forUI(SoundEvents.UI_BUTTON_CLICK, 1.0F));

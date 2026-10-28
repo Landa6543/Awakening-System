@@ -1,6 +1,12 @@
 {
-  "replace": false,
-  "values": [
-    "awakening_system:transcendent_thorn"
-  ]
+    "replace":  false,
+    "values":  [
+                   "awakening_system:staff_of_homa",
+                   "awakening_system:engulfing_lightning",
+                   "awakening_system:primordial_jade_winged_spear",
+                   "awakening_system:vortex_vanquisher",
+                   "awakening_system:the_catch",
+                   "awakening_system:black_tassel",
+                   "awakening_system:astral_guandao"
+               ]
 }

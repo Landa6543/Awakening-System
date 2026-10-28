@@ -32,10 +32,8 @@ public class AbyssMageShieldedModel<T extends AbstractAbyssMageEntity> extends A
         MeshDefinition mesh = new MeshDefinition();
         PartDefinition root = mesh.getRoot();
 
-        // Partes corporales base idénticas (mapeadas en la mitad superior 0..64)
         addBodyParts(root);
 
-        // Barrera elemental (shield) mapeada en la mitad inferior (UV 71..94 en altura 128)
         root.addOrReplaceChild("shield", CubeListBuilder.create()
                 .texOffs(18, 73).addBox(11.0F, -40.0F, -8.0F, 2.0F, 40.0F, 2.0F, new CubeDeformation(0.0F))
                 .texOffs(8, 71).addBox(-13.0F, -40.0F, -8.0F, 2.0F, 40.0F, 2.0F, new CubeDeformation(0.0F))
@@ -67,7 +65,6 @@ public class AbyssMageShieldedModel<T extends AbstractAbyssMageEntity> extends A
                           float ageInTicks, float netHeadYaw, float headPitch) {
         super.setupAnim(entity, limbSwing, limbSwingAmount, ageInTicks, netHeadYaw, headPitch);
         if (this.shield != null) {
-            // Rotación mística lenta de la barrera elemental
             this.shield.yRot = ageInTicks * 0.02F;
         }
     }

@@ -13,6 +13,7 @@ import net.minecraft.client.renderer.RenderType;
 import net.minecraft.client.renderer.texture.OverlayTexture;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.util.Mth;
+import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.phys.Vec3;
@@ -41,8 +42,6 @@ public final class VolumetricAuraRenderer {
     private VolumetricAuraRenderer() {}
 
     public static void renderAuras(RenderLevelStageEvent event) {
-        if (event.getStage() != RenderLevelStageEvent.Stage.AFTER_TRANSLUCENT_BLOCKS) return;
-
         Minecraft mc = Minecraft.getInstance();
         if (mc.level == null || mc.player == null) return;
 
@@ -55,8 +54,13 @@ public final class VolumetricAuraRenderer {
         for (Player player : mc.level.players()) {
             if (!player.isAlive()) continue;
 
-            // En primera persona deshabilitamos el aura sobre uno mismo para no tapar la vista
-            if (player == mc.player && mc.options.getCameraType().isFirstPerson()) {
+            boolean isMeditating = player.getVehicle() instanceof MeditationSeatEntity
+                    || (player.getVehicle() != null && player.getVehicle().getType() == com.soybe.awakeningsystem.entity.ModEntities.MEDITATION_SEAT.get())
+                    || player.getPersistentData().getBoolean("is_cultivating_qi")
+                    || player.getPersistentData().getInt("murim_meditation_ticks") > 0;
+
+            boolean isFirstPersonSelf = (player == mc.player && mc.options.getCameraType().isFirstPerson());
+            if (isFirstPersonSelf && !isMeditating) {
                 continue;
             }
 
@@ -65,16 +69,14 @@ public final class VolumetricAuraRenderer {
             double dz = Mth.lerp(partialTick, player.zo, player.getZ()) - camPos.z;
 
             double distSq = dx * dx + dy * dy + dz * dz;
-            if (distSq > 64.0D * 64.0D) continue; // Descarte de distancia (64 bloques)
-
-            boolean isMeditating = player.getVehicle() instanceof MeditationSeatEntity
-                    || player.getPersistentData().getBoolean("is_cultivating_qi");
+            if (distSq > 64.0D * 64.0D) continue;
 
             if (isMeditating) {
-                if (player.getVehicle() instanceof MeditationSeatEntity seat) {
-                    dx = Mth.lerp(partialTick, seat.xo, seat.getX()) - camPos.x;
-                    dy = Mth.lerp(partialTick, seat.yo, seat.getY()) - camPos.y;
-                    dz = Mth.lerp(partialTick, seat.zo, seat.getZ()) - camPos.z;
+                if (player.getVehicle() != null) {
+                    Entity veh = player.getVehicle();
+                    dx = Mth.lerp(partialTick, veh.xo, veh.getX()) - camPos.x;
+                    dy = Mth.lerp(partialTick, veh.yo, veh.getY()) - camPos.y;
+                    dz = Mth.lerp(partialTick, veh.zo, veh.getZ()) - camPos.z;
                 } else {
                     dy = Math.floor(player.getY()) - camPos.y;
                 }
@@ -92,20 +94,19 @@ public final class VolumetricAuraRenderer {
             boolean inCombatTrance = player.getPersistentData().getLong("system_trance_until") > mc.level.getGameTime();
             boolean inSkillBurst = player.getPersistentData().getLong("active_skill_aura_until") > mc.level.getGameTime();
 
-            // Determinar estilo de aura corporal predominante
             if (isMeditating) {
-                // 1. AURA DE CULTIVO KI (Manto espiritual completo en cúpula que envuelve al meditador de pies a cabeza)
-                renderKiCultivationAura(poseStack, bufferSource, dx, dy, dz, time);
+                if (isFirstPersonSelf) {
+                    renderKiCultivationGroundOnly(poseStack, bufferSource, dx, dy, dz, time);
+                } else {
+                    renderKiCultivationAura(poseStack, bufferSource, dx, dy, dz, time);
+                }
             } else if (hasDoncella) {
-                // 2. AURA DE LA DONCELLA (Manto celestial de Rosas / Luna Carmesí al portar la espada mítica)
                 ItemStack dStack = (mainStack.getItem() instanceof LaDoncellaSwordItem) ? mainStack : offStack;
                 boolean transformed = LaDoncellaSwordItem.isTransformed(dStack);
                 renderDoncellaAura(poseStack, bufferSource, dx, dy, dz, time, transformed, inCombatTrance || inSkillBurst);
             } else if (hasCreatorSword) {
-                // 3. AURA CELESTIAL DEL CREADOR (Permanente al empuñar el mandoble mítico, intensificada en combate)
                 renderCreatorDivineAura(poseStack, bufferSource, dx, dy, dz, time, inCombatTrance || inSkillBurst);
             } else if (inCombatTrance || inSkillBurst) {
-                // 4. AURA DE HABILIDAD DESPIERTA / TRANCE (Manto etéreo azul ceñido al cuerpo durante habilidades activas)
                 renderAwakenedSkillAura(poseStack, bufferSource, dx, dy, dz, time);
             }
         }
@@ -122,23 +123,27 @@ public final class VolumetricAuraRenderer {
 
         VertexConsumer kiBuffer = bufferSource.getBuffer(RenderType.entityTranslucent(TEX_AURA_KI));
 
-        // 1. Llamas interiores que atraviesan el núcleo del cuerpo desde el suelo hasta la cabeza
         renderInteriorCoreFlames(poseStack, kiBuffer, 1.15F, 1.65F, time * 0.05F, 245, 252, 255, 130);
 
-        // 2. Manto espiritual íntimo en cúpula (Blanco perlado)
         renderBodyAuraShroud(poseStack, kiBuffer, 0.95F, 1.70F, time * 0.04F, 0.03F,
                 240, 248, 255, 140, true, true);
 
-        // 3. Manto exterior ondulante de condensación de Qi (Celeste translúcido)
         poseStack.pushPose();
         poseStack.mulPose(Axis.YP.rotationDegrees(-time * 1.2F));
         renderBodyAuraShroud(poseStack, kiBuffer, 1.15F, 1.80F, -time * 0.05F, 0.04F,
                 160, 230, 255, 90, true, true);
         poseStack.popPose();
 
-        // 4. Círculo Mágico de Cultivo Murim en el suelo (elevado de forma segura para eliminar z-fighting y parpadeos)
         renderCultivationMurimCircle(poseStack, bufferSource, time);
 
+        poseStack.popPose();
+    }
+
+    private static void renderKiCultivationGroundOnly(PoseStack poseStack, net.minecraft.client.renderer.MultiBufferSource bufferSource,
+                                                double x, double y, double z, float time) {
+        poseStack.pushPose();
+        poseStack.translate(x, y, z);
+        renderCultivationMurimCircle(poseStack, bufferSource, time);
         poseStack.popPose();
     }
 
@@ -151,17 +156,13 @@ public final class VolumetricAuraRenderer {
         VertexConsumer murimBuffer = bufferSource.getBuffer(RenderType.entityTranslucent(com.soybe.awakeningsystem.AwakeningSystemClient.MAGIC_CIRCLE_MURIM));
 
         float outerRadius = 1.95F + 0.05F * (float) Math.sin(time * 0.08F);
-        // Elevación segura a 0.065 bloques sobre el suelo para evitar coplanaridad con bloques de césped
         float y = 0.065F;
 
-        // Sello exterior giratorio (Verde espiritual esmeralda / turquesa celestial)
         poseStack.pushPose();
         poseStack.mulPose(Axis.YP.rotationDegrees(time * 0.9F));
         renderGroundDiscDirect(poseStack, murimBuffer, outerRadius, y, 90, 245, 175, 210);
         poseStack.popPose();
 
-        // Sello interior concéntrico contra-rotante (Blanco perlado / celeste)
-        // Separación vertical de +0.02 bloques para evitar interferencia entre ambos sellos en rotación
         poseStack.pushPose();
         poseStack.mulPose(Axis.YP.rotationDegrees(-time * 2.2F));
         float innerRadius = outerRadius * 0.65F;
@@ -174,7 +175,6 @@ public final class VolumetricAuraRenderer {
     private static void renderGroundDiscDirect(PoseStack poseStack, VertexConsumer builder, float radius, float y, int r, int g, int b, int a) {
         Matrix4f matrix = poseStack.last().pose();
 
-        // Cara superior visible hacia arriba
         builder.addVertex(matrix, -radius, y, -radius).setColor(r, g, b, a).setUv(0.0F, 0.0F)
                 .setOverlay(OverlayTexture.NO_OVERLAY).setLight(LightTexture.FULL_BRIGHT).setNormal(0, 1, 0);
         builder.addVertex(matrix, radius, y, -radius).setColor(r, g, b, a).setUv(1.0F, 0.0F)
@@ -184,7 +184,6 @@ public final class VolumetricAuraRenderer {
         builder.addVertex(matrix, -radius, y, radius).setColor(r, g, b, a).setUv(0.0F, 1.0F)
                 .setOverlay(OverlayTexture.NO_OVERLAY).setLight(LightTexture.FULL_BRIGHT).setNormal(0, 1, 0);
 
-        // Cara inferior visible si la cámara se encuentra bajo el suelo
         float yDown = y - 0.002F;
         builder.addVertex(matrix, -radius, yDown, radius).setColor(r, g, b, a).setUv(0.0F, 1.0F)
                 .setOverlay(OverlayTexture.NO_OVERLAY).setLight(LightTexture.FULL_BRIGHT).setNormal(0, -1, 0);
@@ -207,19 +206,15 @@ public final class VolumetricAuraRenderer {
 
         VertexConsumer flameBuffer = bufferSource.getBuffer(RenderType.entityTranslucent(TEX_AURA_FLAME));
 
-        // 1. Llamas interiores cruzadas que suben por el torso y cabeza
         renderInteriorCoreFlames(poseStack, flameBuffer, 0.85F, 2.10F, time * 0.12F, 110, 205, 255, 135);
 
-        // 2. Manto espiritual ceñido en cúpula (Azul cian)
         renderBodyAuraShroud(poseStack, flameBuffer, 0.58F, 2.15F, time * 0.10F, 0.07F,
                 100, 190, 255, 140, false, false);
 
-        // 3. Capa exterior de vapor arcano
         poseStack.mulPose(Axis.YP.rotationDegrees(time * 1.6F));
         renderBodyAuraShroud(poseStack, flameBuffer, 0.74F, 2.30F, -time * 0.12F, 0.09F,
                 60, 140, 255, 90, false, false);
 
-        // 4. Anillo de impacto en la base
         renderGroundDisc(poseStack, bufferSource.getBuffer(RenderType.entityTranslucent(TEX_AURA_RING)),
                 1.15F + 0.05F * (float) Math.sin(time * 0.18F), 100, 200, 255, 120);
 
@@ -241,20 +236,16 @@ public final class VolumetricAuraRenderer {
         int shroudAlpha = intensified ? 165 : 125;
         int outerAlpha = intensified ? 110 : 80;
 
-        // 1. Llamas cósmicas interiores que cruzan el cuerpo del portador
         renderInteriorCoreFlames(poseStack, flameBuffer, 0.90F, 2.20F, time * (intensified ? 0.16F : 0.10F),
                 185, 100, 255, coreAlpha);
 
-        // 2. Manto espiritual cósmico en cúpula (Amatista primordial)
         renderBodyAuraShroud(poseStack, flameBuffer, 0.60F, 2.22F, time * 0.09F, 0.08F,
                 170, 80, 240, shroudAlpha, false, false);
 
-        // 3. Capa externa estelar lila
         poseStack.mulPose(Axis.YP.rotationDegrees(-time * 1.5F));
         renderBodyAuraShroud(poseStack, flameBuffer, 0.78F, 2.38F, -time * 0.11F, 0.10F,
                 230, 180, 255, outerAlpha, false, false);
 
-        // 4. Relámpagos arcanos violetas suaves
         if (intensified || Math.sin(time * 0.25F) > 0.2D) {
             VertexConsumer lightningBuf = bufferSource.getBuffer(RenderType.entityTranslucent(TEX_AURA_LIGHTNING));
             poseStack.pushPose();
@@ -264,7 +255,6 @@ public final class VolumetricAuraRenderer {
             poseStack.popPose();
         }
 
-        // 5. Disco cósmico en el suelo
         renderGroundDisc(poseStack, bufferSource.getBuffer(RenderType.entityTranslucent(TEX_AURA_RING)),
                 1.20F + 0.06F * (float) Math.sin(time * 0.15F), 210, 130, 255, intensified ? 145 : 110);
 
@@ -293,14 +283,12 @@ public final class VolumetricAuraRenderer {
         int rRing, gRing, bRing;
 
         if (transformed) {
-            // Luna Carmesí / Trono de Ceniza (Carmesí rubí vibrante y pétalos de sangre eterna)
             rCore = 255; gCore = 35; bCore = 60;
             rMid = 210; gMid = 20; bMid = 50;
             rOut = 255; gOut = 95; bOut = 130;
             rLit = 255; gLit = 65; bLit = 95;
             rRing = 255; gRing = 30; bRing = 60;
         } else {
-            // Jardines del Silencio / Doncella Pura (Rosa plateado etéreo y flor eterna)
             rCore = 255; gCore = 175; bCore = 215;
             rMid = 235; gMid = 130; bMid = 180;
             rOut = 255; gOut = 215; bOut = 240;
@@ -308,20 +296,16 @@ public final class VolumetricAuraRenderer {
             rRing = 255; gRing = 145; bRing = 195;
         }
 
-        // 1. Llamas interiores que cruzan el cuerpo del portador
         renderInteriorCoreFlames(poseStack, flameBuffer, 0.90F, 2.20F, time * (intensified ? 0.16F : 0.10F),
                 rCore, gCore, bCore, coreAlpha);
 
-        // 2. Manto espiritual ceñido en cúpula
         renderBodyAuraShroud(poseStack, flameBuffer, 0.60F, 2.22F, time * 0.09F, 0.08F,
                 rMid, gMid, bMid, shroudAlpha, false, false);
 
-        // 3. Capa externa ondulante
         poseStack.mulPose(Axis.YP.rotationDegrees(-time * 1.5F));
         renderBodyAuraShroud(poseStack, flameBuffer, 0.78F, 2.38F, -time * 0.11F, 0.10F,
                 rOut, gOut, bOut, outerAlpha, false, false);
 
-        // 4. Relámpagos arcanos de pétalos/energía
         if (intensified || Math.sin(time * 0.25F) > 0.15D) {
             VertexConsumer lightningBuf = bufferSource.getBuffer(RenderType.entityTranslucent(TEX_AURA_LIGHTNING));
             poseStack.pushPose();
@@ -331,7 +315,6 @@ public final class VolumetricAuraRenderer {
             poseStack.popPose();
         }
 
-        // 5. Disco de pétalos/energía en el suelo
         renderGroundDisc(poseStack, bufferSource.getBuffer(RenderType.entityTranslucent(TEX_AURA_RING)),
                 1.22F + 0.06F * (float) Math.sin(time * 0.15F), rRing, gRing, bRing, intensified ? 150 : 115);
 
@@ -353,7 +336,6 @@ public final class VolumetricAuraRenderer {
             poseStack.mulPose(Axis.YP.rotationDegrees(p * 60.0F));
             Matrix4f m = poseStack.last().pose();
 
-            // Cara frontal y trasera del plano de llama cruzada
             addVertex(builder, m, -halfW, 0.0F, 0.0F, 0.0F, 1.0F + vOffset, r, g, b, 0);
             addVertex(builder, m, halfW, 0.0F, 0.0F, 1.0F, 1.0F + vOffset, r, g, b, 0);
             addVertex(builder, m, halfW, height, 0.0F, 1.0F, 0.0F + vOffset, r, g, b, a);
@@ -379,16 +361,13 @@ public final class VolumetricAuraRenderer {
         Matrix4f matrix = poseStack.last().pose();
         float angleStep = (float) (2.0 * Math.PI / SEGMENTS);
 
-        // Definición de las 5 alturas y radios del manto corporal
         float[] ringY;
         float[] ringR;
 
         if (sitting) {
-            // Perfil ceñido al cuerpo sentado en posición de loto (cubre piernas cruzadas y cierra sobre cabeza)
             ringY = new float[] { 0.00F, height * 0.25F, height * 0.55F, height * 0.82F, height * 1.05F };
             ringR = new float[] { baseRadius * 1.15F, baseRadius * 1.25F, baseRadius * 0.95F, baseRadius * 0.60F, 0.03F };
         } else {
-            // Perfil ceñido al cuerpo erguido (pies, torso, hombros y cúpula cerrada sobre la coronilla)
             ringY = new float[] { -0.05F, height * 0.35F, height * 0.70F, height * 0.90F, height * 1.08F };
             ringR = new float[] { baseRadius * 0.90F, baseRadius * 1.05F, baseRadius * 1.00F, baseRadius * 0.62F, 0.03F };
         }
@@ -404,7 +383,6 @@ public final class VolumetricAuraRenderer {
             float vBot = 1.0F - (float) t / tiers + vOffset;
             float vTop = 1.0F - (float) (t + 1) / tiers + vOffset;
 
-            // Opacidad gradual: suave en los pies, plena en el cuerpo, suavemente difusa en la corona
             int aBot = (t == 0) ? (int)(a * 0.3F) : a;
             int aTop = (t == tiers - 1) ? (int)(a * 0.65F) : a;
 
@@ -433,7 +411,6 @@ public final class VolumetricAuraRenderer {
                 float u0 = (float) i / SEGMENTS;
                 float u1 = (float) (i + 1) / SEGMENTS;
 
-                // Doble cara para que el manto sea visible tanto desde el exterior como desde el interior
                 addVertex(builder, matrix, x0_bot, yBot, z0_bot, u0, vBot, r, g, b, aBot);
                 addVertex(builder, matrix, x1_bot, yBot, z1_bot, u1, vBot, r, g, b, aBot);
                 addVertex(builder, matrix, x1_top, yTop, z1_top, u1, vTop, r, g, b, aTop);

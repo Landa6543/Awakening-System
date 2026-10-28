@@ -88,26 +88,21 @@ public class WildfireModel extends HierarchicalModel<WildfireEntity> {
     public void setupAnim(WildfireEntity entity, float limbSwing, float limbSwingAmount, float ageInTicks, float netHeadYaw, float headPitch) {
         this.root().getAllParts().forEach(ModelPart::resetPose);
 
-        // Mirada de la cabeza
         this.head.yRot = netHeadYaw * ((float) Math.PI / 180F);
         this.head.xRot = headPitch * ((float) Math.PI / 180F);
 
-        // Flotación sutil
         float hover = Mth.sin(ageInTicks * 0.12F) * 2.5F;
         this.body.y = 24.0F + hover;
         this.shields.y = 24.0F + hover;
 
-        // Rotación continua de los escudos flotantes
         this.shields.yRot = ageInTicks * 0.065F;
 
-        // Visibilidad según la cantidad de escudos intactos
         int activeShields = entity.getActiveShields();
         this.frontShield.visible = activeShields >= 1;
         this.rightShield.visible = activeShields >= 2;
         this.backShield.visible = activeShields >= 3;
         this.leftShield.visible = activeShields >= 4;
 
-        // Si está ejecutando la onda de choque, los escudos se expanden hacia afuera
         if (entity.isPerformingShockwave()) {
             float progress = entity.getShockwaveProgress();
             float expansion = Mth.sin(progress * (float) Math.PI) * 4.0F;

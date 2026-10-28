@@ -1,0 +1,17 @@
+{
+  "type": "minecraft:crafting_shaped",
+  "category": "misc",
+  "pattern": [
+    "#",
+    "#"
+  ],
+  "key": {
+    "#": {
+      "item": "minecraft:netherite_ingot"
+    }
+  },
+  "result": {
+    "count": 4,
+    "id": "awakening_system:netherite_stick"
+  }
+}

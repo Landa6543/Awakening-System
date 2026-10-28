@@ -34,63 +34,76 @@ public class TeyvatRegionalStructureFeature extends Feature<NoneFeatureConfigura
         BlockState below = level.getBlockState(origin.below());
         if (!below.isSolid() || below.liquid() || below.is(BlockTags.LEAVES)) return false;
 
-        // No generar pegado al spawn ni a las capitales
-        if (Math.abs(origin.getX()) < 160 && Math.abs(origin.getZ()) < 160) return false;
-        if (Math.abs(origin.getX() - TeyvatRegionalBuilder.MONDSTADT_POS.getX()) < 180 && Math.abs(origin.getZ() - TeyvatRegionalBuilder.MONDSTADT_POS.getZ()) < 180) return false;
-        if (Math.abs(origin.getX() - TeyvatRegionalBuilder.LIYUE_POS.getX()) < 180 && Math.abs(origin.getZ() - TeyvatRegionalBuilder.LIYUE_POS.getZ()) < 180) return false;
+        if (!TeyvatWorldGenManager.isAreaClearOfBossesAndStructures(level, origin, 220.0D)) {
+            return false;
+        }
+
+        try {
+            if (level.getLevel().getServer() != null) {
+                var data = TeyvatWorldGenManager.TeyvatFeaturesData.get(level.getLevel().getServer());
+                if (!TeyvatWorldGenManager.isFarFromList2D(origin, data.regionalStructures, 350.0D)) {
+                    return false;
+                }
+            }
+        } catch (Exception ignored) {}
 
         String biomeName = level.getBiome(origin).unwrapKey().map(k -> k.location().getPath()).orElse("");
 
         int roll = rand.nextInt(100);
 
-        // 1. Palacios y Mazmorras Legendarias (Tenshukaku, Baal Realm, Golden House, Azhdaha, Primal Temple, Wolflord, Tumor Tree, Floating Island - 500-650m mín)
         if (roll < 20) {
             boolean dungeonPlaced = TeyvatWorldGenManager.generateLegendaryDungeon(level, origin, biomeName, rand);
             if (dungeonPlaced) return true;
         }
 
-        // 2. Arenas de Hipóstasis Elementales y Cuevas de Regisvines (420m mín)
         if (roll < 45) {
             boolean arenaPlaced = TeyvatWorldGenManager.generateHypostasisArena(level, origin, biomeName, rand);
             if (arenaPlaced) return true;
         }
 
-        // 3. 7 Puzzles de Monumentos Elementales Interactivos
-        if (roll < 70) {
+        if (roll < 75) {
             boolean puzzlePlaced = TeyvatWorldGenManager.generateElementalMonumentPuzzle(level, origin, biomeName, rand);
             if (puzzlePlaced) return true;
         }
 
-        // 4. Estructuras arquitectónicas regionales de cada nación
-        if (biomeName.contains("narukami") || biomeName.contains("watatsumi") || biomeName.contains("yashiori")) {
-            TeyvatRegionalBuilder.buildNarukamiGrandShrine(level.getLevel(), origin);
-            return true;
-        } else if (biomeName.contains("desert")) {
-            TeyvatRegionalBuilder.buildDesertPyramidAltar(level.getLevel(), origin);
-            return true;
-        } else if (biomeName.contains("dragonspine")) {
-            TeyvatRegionalBuilder.buildDragonspineFrostAltar(level.getLevel(), origin);
-            return true;
-        } else if (biomeName.contains("dharma")) {
-            TeyvatRegionalBuilder.buildAranaraTreehouse(level.getLevel(), origin);
-            return true;
-        } else if (biomeName.contains("fontaine")) {
-            TeyvatRegionalBuilder.buildFontaineGazebo(level.getLevel(), origin);
-            return true;
-        } else if (biomeName.contains("karst") || biomeName.contains("mountain")) {
+        if (biomeName.contains("karst") || biomeName.contains("mountain")) {
             TeyvatWorldGenManager.generateJueyunKarstPillars(level, origin, rand);
+            recordRegionalStructure(level, origin);
             return true;
-        } else if (biomeName.contains("windrise") || biomeName.contains("plains") || biomeName.contains("marsh")) {
+        }
+
+        if (biomeName.contains("windrise") || biomeName.contains("plains") || biomeName.contains("marsh")) {
             if (TeyvatWorldGenManager.isAreaFlat(level, origin, 7, 2)) {
-                TeyvatWorldGenManager.buildSolidFoundation(level, origin, 8);
+                TeyvatWorldGenManager.buildSolidFoundation(level, origin, 6);
                 boolean placed = TeyvatStructureManager.placeNbtStructure(level, origin, "teyvat_plains_shrine", -6, 0, -6);
                 if (placed) {
                     TeyvatWorldGenManager.spawnTeyvatMonster(level, origin.offset(0, 2, 7), rand.nextBoolean() ? ModEntities.RUIN_HUNTER.get() : ModEntities.RUIN_GUARD.get());
+                    recordRegionalStructure(level, origin);
+                    return true;
+                }
+            }
+        } else if (biomeName.contains("desert")) {
+            if (TeyvatWorldGenManager.isAreaFlat(level, origin, 7, 2)) {
+                TeyvatWorldGenManager.buildSolidFoundation(level, origin, 6);
+                boolean placed = TeyvatStructureManager.placeNbtStructure(level, origin, "teyvat_desert_shrine", -6, 0, -6);
+                if (placed) {
+                    TeyvatWorldGenManager.spawnTeyvatMonster(level, origin.offset(0, 2, 7), rand.nextBoolean() ? ModEntities.RUIN_HUNTER.get() : ModEntities.RUIN_GUARD.get());
+                    recordRegionalStructure(level, origin);
                     return true;
                 }
             }
         }
 
         return false;
+    }
+
+    private void recordRegionalStructure(WorldGenLevel level, BlockPos pos) {
+        try {
+            if (level.getLevel().getServer() != null) {
+                var data = TeyvatWorldGenManager.TeyvatFeaturesData.get(level.getLevel().getServer());
+                data.regionalStructures.add(pos);
+                data.setDirty();
+            }
+        } catch (Exception ignored) {}
     }
 }

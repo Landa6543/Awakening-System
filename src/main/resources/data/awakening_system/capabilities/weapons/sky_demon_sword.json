@@ -1,3 +1,4 @@
 {
-  "weapon_type": "epicfight:sword"
+  "type": "epicfight:tachi",
+  "weapon_type": "epicfight:tachi"
 }

@@ -48,7 +48,7 @@ public class RuinDrakeEntity extends Monster {
     public RuinDrakeEntity(EntityType<? extends Monster> entityType, Level level) {
         super(entityType, level);
         this.moveControl = new FlyingMoveControl(this, 10, true);
-        this.setCustomName(Component.literal("§6§lDragón de las Ruinas: Vigía Celeste"));
+        this.setCustomName(Component.translatable("boss.awakening_system.ruin_drake.name"));
         this.setCustomNameVisible(true);
         this.setNoGravity(true);
         this.xpReward = 320;
@@ -111,7 +111,6 @@ public class RuinDrakeEntity extends Monster {
 
         sl.playSound(null, this.blockPosition(), SoundEvents.DISPENSER_LAUNCH, SoundSource.HOSTILE, 2.0F, 0.8F);
 
-        // Disparo de 4 misiles mecánicos en abanico
         Vec3 dir = target.position().subtract(this.position()).normalize();
         for (int i = 0; i < 4; i++) {
             double ox = (this.random.nextDouble() - 0.5D) * 1.5D;

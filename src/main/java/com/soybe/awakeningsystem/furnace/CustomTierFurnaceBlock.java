@@ -80,11 +80,9 @@ public class CustomTierFurnaceBlock extends BaseEntityBlock {
     protected ItemInteractionResult useItemOn(ItemStack stack, BlockState state, Level level, BlockPos pos,
                                               Player player, InteractionHand hand, BlockHitResult hitResult) {
         if (stack.getItem() instanceof FurnaceUpgradeItem) {
-            // Permitir que el ítem de mejora de tier procese la interacción en useOn
             return ItemInteractionResult.PASS_TO_DEFAULT_BLOCK_INTERACTION;
         }
 
-        // Detectar mejoras de Alto Horno y Ahumador (de Iron Furnaces o Awakening System)
         ResourceLocation itemKey = BuiltInRegistries.ITEM.getKey(stack.getItem());
         String path = itemKey.getPath();
         boolean isBlasting = path.equals("augment_blasting") || path.endsWith("_blasting");
@@ -96,13 +94,11 @@ public class CustomTierFurnaceBlock extends BaseEntityBlock {
             }
             BlockEntity be = level.getBlockEntity(pos);
             if (be instanceof CustomTierFurnaceBlockEntity furnaceBE) {
-                // Si ya había una mejora previa instalada, expulsarla al suelo
                 if (!furnaceBE.getInstalledAugment().isEmpty()) {
                     ItemStack previous = furnaceBE.removeInstalledAugment();
                     Containers.dropItemStack(level, pos.getX(), pos.getY() + 1.0D, pos.getZ(), previous);
                 }
 
-                // Instalar nueva mejora
                 furnaceBE.setInstalledAugment(stack.copyWithCount(1));
                 if (!player.isCreative()) {
                     stack.shrink(1);
@@ -119,7 +115,6 @@ public class CustomTierFurnaceBlock extends BaseEntityBlock {
             }
         }
 
-        // Si el jugador está agachado con la mano vacía, desinstalar la mejora
         if (stack.isEmpty() && player.isCrouching()) {
             BlockEntity be = level.getBlockEntity(pos);
             if (be instanceof CustomTierFurnaceBlockEntity furnaceBE && !furnaceBE.getInstalledAugment().isEmpty()) {
@@ -203,10 +198,14 @@ public class CustomTierFurnaceBlock extends BaseEntityBlock {
     private BlockEntityType<CustomTierFurnaceBlockEntity> getExpectedBlockEntityType() {
         return (BlockEntityType<CustomTierFurnaceBlockEntity>) (BlockEntityType<?>) switch (this.tier) {
             case ABYSSAL -> ModBlockEntities.ABYSSAL_FURNACE.get();
+            case SOUL_ALLOY -> ModBlockEntities.SOUL_ALLOY_FURNACE.get();
+            case ASTRALITE -> ModBlockEntities.ASTRALITE_FURNACE.get();
             case MITHRIL -> ModBlockEntities.MITHRIL_FURNACE.get();
             case ADAMANTITE -> ModBlockEntities.ADAMANTITE_FURNACE.get();
             case SPIRIT_JADE -> ModBlockEntities.SPIRIT_JADE_FURNACE.get();
             case ASTRAL -> ModBlockEntities.ASTRAL_FURNACE.get();
+            case CELESTIAL -> ModBlockEntities.CELESTIAL_FURNACE.get();
+            case PRIMORDIAL -> ModBlockEntities.PRIMORDIAL_FURNACE.get();
         };
     }
 
@@ -222,17 +221,17 @@ public class CustomTierFurnaceBlock extends BaseEntityBlock {
 
         int type = state.getValue(TYPE);
 
-        if (type == 1) { // Ahumador
+        if (type == 1) {
             if (random.nextDouble() < 0.1D) {
                 level.playLocalSound(x, y, z, SoundEvents.SMOKER_SMOKE, SoundSource.BLOCKS, 1.0F, 1.0F, false);
             }
             level.addParticle(ParticleTypes.CAMPFIRE_COSY_SMOKE, x, y + 1.1D, z, 0.0D, 0.07D, 0.0D);
             level.addParticle(ParticleTypes.SMOKE, x, y + 1.1D, z, 0.0D, 0.03D, 0.0D);
-        } else if (type == 2) { // Alto Horno
+        } else if (type == 2) {
             if (random.nextDouble() < 0.1D) {
                 level.playLocalSound(x, y, z, SoundEvents.BLASTFURNACE_FIRE_CRACKLE, SoundSource.BLOCKS, 1.0F, 1.0F, false);
             }
-        } else { // Estándar
+        } else {
             if (random.nextDouble() < 0.1D) {
                 level.playLocalSound(x, y, z, SoundEvents.FURNACE_FIRE_CRACKLE, SoundSource.BLOCKS, 1.0F, 1.0F, false);
             }
@@ -251,8 +250,15 @@ public class CustomTierFurnaceBlock extends BaseEntityBlock {
             level.addParticle(ParticleTypes.LAVA, x + dx, y + dy + 0.2D, z + dz, 0.0D, 0.0D, 0.0D);
         }
 
-        // Partículas temáticas según el tier
         switch (this.tier) {
+            case SOUL_ALLOY -> {
+                level.addParticle(ParticleTypes.SOUL_FIRE_FLAME, x + dx, y + dy + 0.2D, z + dz, 0.0D, 0.01D, 0.0D);
+                level.addParticle(ParticleTypes.SCULK_SOUL, x + dx, y + dy + 0.1D, z + dz, 0.0D, 0.02D, 0.0D);
+            }
+            case ASTRALITE -> {
+                level.addParticle(ParticleTypes.END_ROD, x + dx, y + dy + 0.2D, z + dz, 0.0D, 0.02D, 0.0D);
+                level.addParticle(ParticleTypes.PORTAL, x + dx, y + dy + 0.2D, z + dz, 0.0D, 0.0D, 0.0D);
+            }
             case MITHRIL -> level.addParticle(ParticleTypes.SOUL_FIRE_FLAME, x + dx, y + dy + 0.2D, z + dz, 0.0D, 0.0D, 0.0D);
             case ADAMANTITE -> level.addParticle(ParticleTypes.FLAME, x + dx, y + dy + 0.2D, z + dz, 0.0D, 0.0D, 0.0D);
             case SPIRIT_JADE -> {
@@ -261,6 +267,14 @@ public class CustomTierFurnaceBlock extends BaseEntityBlock {
             }
             case ASTRAL -> {
                 level.addParticle(ParticleTypes.END_ROD, x + dx, y + dy + 0.2D, z + dz, 0.0D, 0.02D, 0.0D);
+                level.addParticle(ParticleTypes.WITCH, x + dx, y + dy + 0.2D, z + dz, 0.0D, 0.01D, 0.0D);
+            }
+            case CELESTIAL -> {
+                level.addParticle(ParticleTypes.END_ROD, x + dx, y + dy + 0.2D, z + dz, 0.0D, 0.03D, 0.0D);
+                level.addParticle(ParticleTypes.SOUL_FIRE_FLAME, x + dx, y + dy + 0.2D, z + dz, 0.0D, 0.02D, 0.0D);
+            }
+            case PRIMORDIAL -> {
+                level.addParticle(ParticleTypes.DRAGON_BREATH, x + dx, y + dy + 0.2D, z + dz, 0.0D, 0.02D, 0.0D);
                 level.addParticle(ParticleTypes.WITCH, x + dx, y + dy + 0.2D, z + dz, 0.0D, 0.01D, 0.0D);
             }
         }

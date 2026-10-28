@@ -1,0 +1,27 @@
+{
+  "type": "minecraft:crafting_shaped",
+  "category": "building",
+  "pattern": [
+    " P ",
+    "GTG",
+    " S "
+  ],
+  "key": {
+    "P": {
+      "item": "minecraft:paper"
+    },
+    "G": {
+      "item": "minecraft:glowstone_dust"
+    },
+    "T": {
+      "item": "minecraft:torch"
+    },
+    "S": {
+      "item": "minecraft:stick"
+    }
+  },
+  "result": {
+    "count": 1,
+    "id": "awakening_system:liuli_pavilion_sandbearer_floor_lamp"
+  }
+}

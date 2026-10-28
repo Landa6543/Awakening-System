@@ -48,8 +48,8 @@ public class CelestialPineNutItem extends Item {
                 AwakeningSystemMod.sync(player);
             }
 
-            player.addEffect(new MobEffectInstance(MobEffects.DAMAGE_RESISTANCE, 300, 1, false, true)); // Resistencia II
-            player.addEffect(new MobEffectInstance(MobEffects.ABSORPTION, 400, 0, false, true)); // Absorción I
+            player.addEffect(new MobEffectInstance(MobEffects.DAMAGE_RESISTANCE, 300, 1, false, true));
+            player.addEffect(new MobEffectInstance(MobEffects.ABSORPTION, 400, 0, false, true));
 
             if (level instanceof ServerLevel sl) {
                 sl.sendParticles(ParticleTypes.ENCHANTED_HIT, player.getX(), player.getY() + 1.0D, player.getZ(), 30, 0.5D, 0.6D, 0.5D, 0.1D);
@@ -57,18 +57,18 @@ public class CelestialPineNutItem extends Item {
             }
 
             player.playNotifySound(SoundEvents.SHIELD_BLOCK, SoundSource.PLAYERS, 0.9F, 1.2F);
-            player.displayClientMessage(Component.literal("§2§l🌲 [PIÑÓN DEL DAO] §fLa esencia pétrea del pino milenario fortalece tu físico (+45 Qi)."), true);
+            player.displayClientMessage(Component.translatableWithFallback("item.awakening_system.celestial_pine_nut.msg", "§2§l🌲 [DAO PINE NUT] §fThe stone essence of the thousand-year pine strengthens your physique (+45 Qi)."), true);
         }
         return result;
     }
 
     @Override
     public void appendHoverText(ItemStack stack, TooltipContext context, List<Component> tooltip, TooltipFlag flag) {
-        tooltip.add(Component.literal("§2§lPiñón Celestial del Dao Ancestral").withStyle(ChatFormatting.DARK_GREEN));
-        tooltip.add(Component.literal("§7Semilla concentrada caída de las copas de los Pinos Colosales de Murim."));
-        tooltip.add(Component.literal(""));
-        tooltip.add(Component.literal("§e▪ Al Consumir:"));
-        tooltip.add(Component.literal("  §b▪ +45 Qi de Cultivo y +50 EXP"));
-        tooltip.add(Component.literal("  §6▪ Resistencia II (15s) y Coraza de Absorción I (20s)"));
+        tooltip.add(Component.translatable("item.awakening_system.celestial_pine_nut.title").withStyle(ChatFormatting.DARK_GREEN));
+        tooltip.add(Component.translatable("item.awakening_system.celestial_pine_nut.desc"));
+        tooltip.add(Component.empty());
+        tooltip.add(Component.translatable("item.awakening_system.celestial_pine_nut.on_consume"));
+        tooltip.add(Component.translatable("item.awakening_system.celestial_pine_nut.effect1"));
+        tooltip.add(Component.translatable("item.awakening_system.celestial_pine_nut.effect2"));
     }
 }

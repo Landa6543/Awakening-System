@@ -1,0 +1,12 @@
+{
+    "cookingtime":  200,
+    "experience":  1,
+    "ingredient":  {
+                       "item":  "awakening_system:abyssal_stone_diamond_ore"
+                   },
+    "type":  "minecraft:smelting",
+    "category":  "misc",
+    "result":  {
+                   "id":  "minecraft:diamond"
+               }
+}

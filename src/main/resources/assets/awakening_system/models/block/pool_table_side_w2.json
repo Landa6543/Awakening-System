@@ -1,0 +1,51 @@
+{
+    "credit": "Awakening System - Pool Multiblock Side W2",
+    "textures": {
+        "wood": "awakening_system:block/casino_table_wood",
+        "felt": "awakening_system:block/casino_table_felt_pool",
+        "brass": "awakening_system:block/casino_table_brass",
+        "particle": "awakening_system:block/casino_table_felt_pool"
+    },
+    "elements": [
+        {
+            "name": "base",
+            "from": [0, 11, 0],
+            "to": [16, 13.5, 16],
+            "faces": {
+                "west": { "texture": "#wood" },
+                "down": { "texture": "#wood" }
+            }
+        },
+        {
+            "name": "pocket_w",
+            "from": [0, 13.5, 0],
+            "to": [2.5, 15.5, 2],
+            "faces": {
+                "up": { "texture": "#brass" },
+                "down": { "texture": "#brass" },
+                "west": { "texture": "#brass" },
+                "south": { "texture": "#brass" },
+                "east": { "texture": "#brass" }
+            }
+        },
+        {
+            "name": "rim_w",
+            "from": [0, 13.5, 2],
+            "to": [2.5, 15.5, 16],
+            "faces": {
+                "west": { "texture": "#wood" },
+                "up": { "texture": "#wood" },
+                "east": { "texture": "#felt" },
+                "down": { "texture": "#wood" }
+            }
+        },
+        {
+            "name": "felt",
+            "from": [2.5, 13.8, 0],
+            "to": [16, 14.0, 16],
+            "faces": {
+                "up": { "uv": [0, 4, 5.33, 8], "texture": "#felt" }
+            }
+        }
+    ]
+}

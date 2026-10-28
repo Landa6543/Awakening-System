@@ -64,16 +64,8 @@ public class SuperGiantWorldTreeFeature extends Feature<NoneFeatureConfiguration
         BlockPos origin = context.origin();
         RandomSource rand = context.random();
 
-        // 0. EXCLUSIÓN DE TEYVAT: Los árboles canónicos de Teyvat se generan proceduralmente
         if (level.getLevel().dimension().location().getPath().contains("teyvat")) {
             return false;
-        }
-
-        if (level.getLevel().getServer() != null) {
-            var sData = com.soybe.awakeningsystem.world.SeriesStructureWorldGen.SeriesStructureData.get(level.getLevel().getServer());
-            if (sData.hasStructureNearby(origin, 50.0D)) {
-                return false;
-            }
         }
 
         BlockPos ground = origin.below();
@@ -82,10 +74,9 @@ public class SuperGiantWorldTreeFeature extends Feature<NoneFeatureConfiguration
             return false;
         }
 
-        int height = 36 + rand.nextInt(15); // 36 a 51 bloques
+        int height = 36 + rand.nextInt(15);
         BlockState logY = SystemBlocks.MANA_WOOD_LOG.get().defaultBlockState().setValue(RotatedPillarBlock.AXIS, Direction.Axis.Y);
 
-        // 1. Base colosal 3x3 de tronco
         for (int dx = 0; dx <= 2; dx++) {
             for (int dz = 0; dz <= 2; dz++) {
                 for (int y = -3; y <= height; y++) {
@@ -94,7 +85,6 @@ public class SuperGiantWorldTreeFeature extends Feature<NoneFeatureConfiguration
             }
         }
 
-        // Raíces contrafuerte gigantescas que se extienden hasta 5 bloques en cruz
         for (Direction d : Direction.Plane.HORIZONTAL) {
             for (int dist = 2; dist <= 5; dist++) {
                 BlockPos rPos = origin.offset(1, 0, 1).relative(d, dist);
@@ -104,7 +94,6 @@ public class SuperGiantWorldTreeFeature extends Feature<NoneFeatureConfiguration
             }
         }
 
-        // 2. Grandes brazos/ramas ramificadas en todas las direcciones cardinales e intercardinales
         for (Direction d : Direction.Plane.HORIZONTAL) {
             int branchLen = 6 + rand.nextInt(4);
             int branchStart = height - 8 - rand.nextInt(6);
@@ -116,7 +105,6 @@ public class SuperGiantWorldTreeFeature extends Feature<NoneFeatureConfiguration
                 setLog(level, bPos, logAxis);
                 setLog(level, bPos.below(), logAxis);
 
-                // Nube de follaje en las puntas
                 if (step >= branchLen - 2) {
                     int r = 3 + rand.nextInt(2);
                     for (int dx = -r; dx <= r; dx++) {
@@ -131,7 +119,6 @@ public class SuperGiantWorldTreeFeature extends Feature<NoneFeatureConfiguration
                 }
             }
 
-            // Farol de alma suspendido de la gran rama
             if (rand.nextFloat() < 0.85F) {
                 BlockPos underB = bPos.below(2);
                 if (level.isEmptyBlock(underB)) {
@@ -140,7 +127,6 @@ public class SuperGiantWorldTreeFeature extends Feature<NoneFeatureConfiguration
             }
         }
 
-        // 3. Dosel gigante superior (bóveda mística)
         BlockPos apex = origin.offset(1, height, 1);
         int crownRadius = 8 + rand.nextInt(3);
         for (int dx = -crownRadius; dx <= crownRadius; dx++) {

@@ -1,0 +1,19 @@
+{
+  "variants": {
+    "facing=north": {
+      "model": "awakening_system:block/custom_racetrack_core"
+    },
+    "facing=east": {
+      "model": "awakening_system:block/custom_racetrack_core",
+      "y": 90
+    },
+    "facing=south": {
+      "model": "awakening_system:block/custom_racetrack_core",
+      "y": 180
+    },
+    "facing=west": {
+      "model": "awakening_system:block/custom_racetrack_core",
+      "y": 270
+    }
+  }
+}

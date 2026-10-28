@@ -38,7 +38,7 @@ public class AnemoHypostasisBossEntity extends HypostasisBaseBossEntity {
 
     @Override
     protected Component getBossTitle() {
-        return Component.literal("§b✦ Beth — Hipóstasis Anemo ✦");
+        return Component.translatable("boss.awakening_system.hypostasis.anemo");
     }
 
     @Override
@@ -53,7 +53,7 @@ public class AnemoHypostasisBossEntity extends HypostasisBaseBossEntity {
 
     @Override
     public int getElementalColorHex() {
-        return 0x00FFCC; // Cyan / Turquesa Anemo
+        return 0x00FFCC;
     }
 
     @Override
@@ -62,12 +62,10 @@ public class AnemoHypostasisBossEntity extends HypostasisBaseBossEntity {
 
         switch (attack) {
             case CLAP -> {
-                // Clap ocurre en el 60% del progreso con ráfaga nítida de viento y onda de choque
                 if (progress >= 0.58F && progress <= 0.65F) {
                     sl.playSound(null, this.getX(), this.getY(), this.getZ(), SoundEvents.WIND_CHARGE_BURST.value(), SoundSource.HOSTILE, 1.8F, 1.2F);
                     sl.playSound(null, this.getX(), this.getY(), this.getZ(), SoundEvents.PLAYER_ATTACK_SWEEP, SoundSource.HOSTILE, 1.5F, 0.9F);
 
-                    // Onda de choque frontal de viento
                     Vec3 strikePos = this.position().add(toTarget.scale(2.5D));
                     sl.sendParticles(ParticleTypes.EXPLOSION, strikePos.x, strikePos.y, strikePos.z, 2, 0, 0, 0, 0);
                     sl.sendParticles(ParticleTypes.SWEEP_ATTACK, strikePos.x, strikePos.y, strikePos.z, 5, 0.5D, 0.5D, 0.5D, 0.05D);
@@ -89,14 +87,12 @@ public class AnemoHypostasisBossEntity extends HypostasisBaseBossEntity {
                     sl.playSound(null, this.getX(), this.getY(), this.getZ(), SoundEvents.BREEZE_SHOOT, SoundSource.HOSTILE, 1.5F, 1.2F);
                 }
 
-                // Dispara proyectiles en ráfagas (cada 15% de progreso)
                 int step = (int) (progress * 10);
                 if (progress > 0.25F && progress < 0.85F && (step % 2 == 0)) {
                     sl.playSound(null, this.getX(), this.getY(), this.getZ(), SoundEvents.SNOWBALL_THROW, SoundSource.HOSTILE, 0.6F, 1.6F);
                     Vec3 shotPos = this.position().add(0, 1.0D, 0);
                     sl.sendParticles(ParticleTypes.CLOUD, shotPos.x, shotPos.y, shotPos.z, 10, 0.2D, 0.2D, 0.2D, 0.05D);
 
-                    // Impacto guiado sobre el área del jugador
                     Vec3 targetArea = target.position().add((rng.nextDouble() - 0.5D) * 2.0D, 0, (rng.nextDouble() - 0.5D) * 2.0D);
                     sl.sendParticles(ParticleTypes.CLOUD, targetArea.x, targetArea.y + 0.5D, targetArea.z, 8, 0.3D, 0.3D, 0.3D, 0.05D);
                     sl.sendParticles(ParticleTypes.SWEEP_ATTACK, targetArea.x, targetArea.y + 0.5D, targetArea.z, 1, 0, 0, 0, 0);
@@ -108,7 +104,6 @@ public class AnemoHypostasisBossEntity extends HypostasisBaseBossEntity {
                 }
             }
             case SPECIAL_ACTION -> {
-                // Invocación de 3 Tornados de Vórtice
                 if (progress >= 0.38F && progress <= 0.44F) {
                     sl.playSound(null, this.getX(), this.getY(), this.getZ(), SoundEvents.WIND_CHARGE_BURST.value(), SoundSource.HOSTILE, 1.8F, 0.85F);
 
@@ -131,18 +126,15 @@ public class AnemoHypostasisBossEntity extends HypostasisBaseBossEntity {
                 }
             }
             case BURST_ULTIMATE -> {
-                // Alas de Mariposa Anemo: Succión por vacío y Estallido final
                 if (progress >= 0.05F && progress <= 0.12F) {
                     sl.playSound(null, this.getX(), this.getY(), this.getZ(), SoundEvents.BREEZE_INHALE, SoundSource.HOSTILE, 1.6F, 0.9F);
                 }
 
                 if (progress < 0.75F) {
-                    // Atracción por vacío hacia el núcleo
                     Vec3 pull = this.position().subtract(target.position()).normalize().scale(0.12D);
                     target.setDeltaMovement(target.getDeltaMovement().add(pull));
                     sl.sendParticles(ParticleTypes.PORTAL, this.getX(), this.getY() + 1.0D, this.getZ(), 8, 1.5D, 1.5D, 1.5D, -0.2D);
                 } else if (progress >= 0.75F && progress <= 0.82F) {
-                    // ¡Estallido y aleteo de mariposa auténtico y nítido!
                     sl.playSound(null, this.getX(), this.getY(), this.getZ(), SoundEvents.WARDEN_SONIC_BOOM, SoundSource.HOSTILE, 1.2F, 1.4F);
                     sl.playSound(null, this.getX(), this.getY(), this.getZ(), SoundEvents.WIND_CHARGE_BURST.value(), SoundSource.HOSTILE, 1.8F, 1.0F);
 
@@ -178,7 +170,7 @@ public class AnemoHypostasisBossEntity extends HypostasisBaseBossEntity {
         }
 
         for (ServerPlayer player : sl.getPlayers(p -> p.distanceToSqr(this) < 1600.0D)) {
-            player.displayClientMessage(Component.literal("§b§l✦ [BETH EN CRISIS] §f¡Recoge o destruye las §b3 Esferas de Viento §fantes de que regenere su núcleo!"), true);
+            player.displayClientMessage(Component.translatable("boss.awakening_system.anemo_hypostasis.crisis"), true);
         }
     }
 
@@ -208,17 +200,16 @@ public class AnemoHypostasisBossEntity extends HypostasisBaseBossEntity {
                     data.addMora(60000);
                     data.addPrimogems(30);
                     com.soybe.awakeningsystem.AwakeningSystemMod.sync(sp);
-                    sp.displayClientMessage(Component.literal("§b§l✦ ¡HIPÓSTASIS ANEMO DERROTADO! §eHas ganado §6+60,000 Mora §ey §b+30 Protogemas§e."), false);
+                    sp.displayClientMessage(Component.translatable("boss.awakening_system.anemo_hypostasis.defeated_teyvat"), false);
                 } else {
                     if (SystemItems.AWAKENING_COIN.isBound()) {
                         sp.addItem(new ItemStack(SystemItems.AWAKENING_COIN.get(), 24));
                     }
-                    sp.displayClientMessage(Component.literal("§b§l✦ ¡HIPÓSTASIS ANEMO DERROTADO! §6+24 Monedas de Despertar§e."), false);
+                    sp.displayClientMessage(Component.translatable("boss.awakening_system.anemo_hypostasis.defeated_vanilla"), false);
                 }
             }
         }
 
-        // Drops físicos: Cristales de Turquesa Vayuda, Destinos y Artefactos
         if (isTeyvat && SystemItems.PRIMOGEM.isBound()) {
             sl.addFreshEntity(new ItemEntity(sl, this.getX(), this.getY(), this.getZ(), new ItemStack(SystemItems.PRIMOGEM.get(), 25)));
         }

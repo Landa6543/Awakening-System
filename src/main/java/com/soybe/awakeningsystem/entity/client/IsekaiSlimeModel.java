@@ -46,35 +46,29 @@ public class IsekaiSlimeModel extends HierarchicalModel<IsekaiSlimeEntity> {
         MeshDefinition mesh = new MeshDefinition();
         PartDefinition root = mesh.getRoot();
 
-        // Contenedor del cuerpo en la base (Y = 24 es el nivel del suelo)
         PartDefinition body = root.addOrReplaceChild("body", CubeListBuilder.create(),
                 PartPose.offset(0.0F, 24.0F, 0.0F));
 
-        // 1. Base aplanada y redondeada (UV 0, 0)
         body.addOrReplaceChild("base", CubeListBuilder.create()
                 .texOffs(0, 0)
                 .addBox(-5.0F, -2.0F, -5.0F, 10.0F, 2.0F, 10.0F, new CubeDeformation(0.0F)),
                 PartPose.ZERO);
 
-        // 2. Vientre esférico y rechoncho central (UV 0, 12)
         body.addOrReplaceChild("belly", CubeListBuilder.create()
                 .texOffs(0, 12)
                 .addBox(-6.0F, -7.0F, -6.0F, 12.0F, 5.0F, 12.0F, new CubeDeformation(0.0F)),
                 PartPose.ZERO);
 
-        // 3. Cúpula superior ahusada hacia adentro (UV 0, 29)
         body.addOrReplaceChild("dome", CubeListBuilder.create()
                 .texOffs(0, 29)
                 .addBox(-4.5F, -10.0F, -4.5F, 9.0F, 3.0F, 9.0F, new CubeDeformation(0.0F)),
                 PartPose.ZERO);
 
-        // 4. Corona cónica previa a la punta (UV 0, 41)
         body.addOrReplaceChild("crown", CubeListBuilder.create()
                 .texOffs(0, 41)
                 .addBox(-3.0F, -12.0F, -3.0F, 6.0F, 2.0F, 6.0F, new CubeDeformation(0.0F)),
                 PartPose.ZERO);
 
-        // 5. Punta de gota elástica curvada hacia atrás (UV 24, 41)
         PartDefinition tipPart = body.addOrReplaceChild("tip", CubeListBuilder.create()
                 .texOffs(24, 41)
                 .addBox(-1.5F, -2.0F, -1.5F, 3.0F, 2.0F, 3.0F, new CubeDeformation(0.0F))
@@ -82,7 +76,6 @@ public class IsekaiSlimeModel extends HierarchicalModel<IsekaiSlimeEntity> {
                 .addBox(-1.0F, -3.5F, 0.2F, 2.0F, 2.0F, 2.0F, new CubeDeformation(0.0F)),
                 PartPose.offset(0.0F, -12.0F, 0.0F));
 
-        // 6. Ojos anime brillantes con relieve frontal
         body.addOrReplaceChild("right_eye", CubeListBuilder.create()
                 .texOffs(48, 0)
                 .addBox(-1.0F, -1.5F, -0.5F, 2.0F, 3.0F, 1.0F, new CubeDeformation(0.0F)),
@@ -93,7 +86,6 @@ public class IsekaiSlimeModel extends HierarchicalModel<IsekaiSlimeEntity> {
                 .addBox(-1.0F, -1.5F, -0.5F, 2.0F, 3.0F, 1.0F, new CubeDeformation(0.0F)),
                 PartPose.offset(2.5F, -5.0F, -6.0F));
 
-        // 7. Boca adorable
         body.addOrReplaceChild("mouth", CubeListBuilder.create()
                 .texOffs(48, 5)
                 .addBox(-0.5F, -0.5F, -0.2F, 1.0F, 1.0F, 1.0F, new CubeDeformation(0.0F)),
@@ -112,55 +104,43 @@ public class IsekaiSlimeModel extends HierarchicalModel<IsekaiSlimeEntity> {
                           float ageInTicks, float netHeadYaw, float headPitch) {
         this.root().getAllParts().forEach(ModelPart::resetPose);
 
-        // Interpolación fluida de la deformación elástica entre ticks
         float partialTick = ageInTicks - (float) entity.tickCount;
         float squishFactor = Mth.lerp(partialTick, entity.prevSquish, entity.squish);
 
-        // Respiración suave y pulsante cuando está quieto
         float breathe = 0.0F;
         if (Math.abs(squishFactor) < 0.25F) {
             breathe = Mth.sin(ageInTicks * 0.12F) * 0.035F;
         }
 
-        // La base siempre se asienta sobre el nivel del suelo (Y = 24)
         this.body.y = 24.0F;
 
         if (squishFactor < 0.0F) {
-            // =========================================================================
-            // IMPACTO CONTRA EL SUELO (SQUASH): Se aplasta intensamente desde arriba hacia abajo
-            // =========================================================================
-            float s = -squishFactor; // Factor positivo de aplastamiento (0.0 a 1.3)
+            float s = -squishFactor;
 
-            // Deformación del cuerpo: se aplana verticalmente y se expande horizontalmente
             this.body.yScale = Math.max(0.32F, 1.0F - s * 0.42F) + breathe;
             this.body.xScale = 1.0F + s * 0.38F - breathe * 0.5F;
             this.body.zScale = 1.0F + s * 0.38F - breathe * 0.5F;
 
-            // La punta se hunde profundamente en la corona y se achata
             this.tip.y = -12.0F + s * 5.2F;
             this.tip.yScale = Math.max(0.20F, 1.0F - s * 0.55F);
             this.tip.xScale = 1.0F + s * 0.35F;
             this.tip.zScale = 1.0F + s * 0.35F;
 
-            // La corona se comprime hacia la cúpula
             this.crown.y = s * 3.6F;
             this.crown.yScale = Math.max(0.30F, 1.0F - s * 0.45F);
             this.crown.xScale = 1.0F + s * 0.28F;
             this.crown.zScale = 1.0F + s * 0.28F;
 
-            // La cúpula se hunde en el vientre
             this.dome.y = s * 2.2F;
             this.dome.yScale = Math.max(0.40F, 1.0F - s * 0.38F);
             this.dome.xScale = 1.0F + s * 0.22F;
             this.dome.zScale = 1.0F + s * 0.22F;
 
-            // El vientre se expande ampliamente como una masa gelatinosa elástica
             this.belly.y = s * 0.9F;
             this.belly.yScale = Math.max(0.48F, 1.0F - s * 0.32F);
             this.belly.xScale = 1.0F + s * 0.32F;
             this.belly.zScale = 1.0F + s * 0.32F;
 
-            // El rostro (ojos y boca) acompaña la compresión facial con ojos achatados tiernos
             this.rightEye.y = -5.0F + s * 1.8F;
             this.leftEye.y = -5.0F + s * 1.8F;
             this.mouth.y = -3.2F + s * 1.3F;
@@ -170,24 +150,18 @@ public class IsekaiSlimeModel extends HierarchicalModel<IsekaiSlimeEntity> {
             this.leftEye.xScale = 1.0F + s * 0.25F;
 
         } else {
-            // =========================================================================
-            // SALTO Y VUELO EN EL AIRE (STRETCH): Estiramiento vertical aerodinámico
-            // =========================================================================
-            float t = squishFactor; // Factor positivo de estiramiento (0.0 a 1.0)
+            float t = squishFactor;
 
-            // El cuerpo se estira esbelto hacia arriba y reduce su ancho (conservación de volumen)
             this.body.yScale = 1.0F + t * 0.52F + breathe;
             this.body.xScale = Math.max(0.60F, 1.0F - t * 0.28F) - breathe * 0.5F;
             this.body.zScale = Math.max(0.60F, 1.0F - t * 0.28F) - breathe * 0.5F;
 
-            // La punta de gota se alarga hacia arriba y se inclina hacia atrás por resistencia al aire
             this.tip.y = -12.0F - t * 3.2F;
             this.tip.yScale = 1.0F + t * 0.35F;
             this.tip.xScale = Math.max(0.65F, 1.0F - t * 0.22F);
             this.tip.zScale = Math.max(0.65F, 1.0F - t * 0.22F);
             this.tip.xRot = (headPitch * ((float) Math.PI / 180.0F) * 0.3F) - (limbSwingAmount * 0.25F) - t * 0.38F;
 
-            // Las secciones superiores se elevan escalonadas
             this.crown.y = -t * 1.8F;
             this.dome.y = -t * 0.9F;
 
@@ -195,11 +169,9 @@ public class IsekaiSlimeModel extends HierarchicalModel<IsekaiSlimeEntity> {
             this.leftEye.y = -5.0F - t * 0.6F;
         }
 
-        // Bamboleo elástico continuo de la punta de la gota
         float tipWobble = Mth.sin(ageInTicks * 0.18F + limbSwing * 0.8F) * 0.16F;
         this.tip.zRot += tipWobble;
 
-        // Giro de ojos hacia la dirección de visión
         float eyeLook = netHeadYaw * ((float) Math.PI / 180.0F) * 0.2F;
         this.rightEye.yRot = eyeLook;
         this.leftEye.yRot = eyeLook;

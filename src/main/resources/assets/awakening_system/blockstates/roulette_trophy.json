@@ -1,0 +1,28 @@
+{
+  "variants": {
+    "facing=north,trophy_type=1": { "model": "awakening_system:block/casino_trophy_roulette", "y": 0 },
+    "facing=south,trophy_type=1": { "model": "awakening_system:block/casino_trophy_roulette", "y": 180 },
+    "facing=west,trophy_type=1":  { "model": "awakening_system:block/casino_trophy_roulette", "y": 270 },
+    "facing=east,trophy_type=1":  { "model": "awakening_system:block/casino_trophy_roulette", "y": 90 },
+
+    "facing=north,trophy_type=2": { "model": "awakening_system:block/casino_trophy_roulette", "y": 0 },
+    "facing=south,trophy_type=2": { "model": "awakening_system:block/casino_trophy_roulette", "y": 180 },
+    "facing=west,trophy_type=2":  { "model": "awakening_system:block/casino_trophy_roulette", "y": 270 },
+    "facing=east,trophy_type=2":  { "model": "awakening_system:block/casino_trophy_roulette", "y": 90 },
+
+    "facing=north,trophy_type=3": { "model": "awakening_system:block/casino_trophy_roulette", "y": 0 },
+    "facing=south,trophy_type=3": { "model": "awakening_system:block/casino_trophy_roulette", "y": 180 },
+    "facing=west,trophy_type=3":  { "model": "awakening_system:block/casino_trophy_roulette", "y": 270 },
+    "facing=east,trophy_type=3":  { "model": "awakening_system:block/casino_trophy_roulette", "y": 90 },
+
+    "facing=north,trophy_type=4": { "model": "awakening_system:block/casino_trophy_roulette", "y": 0 },
+    "facing=south,trophy_type=4": { "model": "awakening_system:block/casino_trophy_roulette", "y": 180 },
+    "facing=west,trophy_type=4":  { "model": "awakening_system:block/casino_trophy_roulette", "y": 270 },
+    "facing=east,trophy_type=4":  { "model": "awakening_system:block/casino_trophy_roulette", "y": 90 },
+
+    "facing=north,trophy_type=5": { "model": "awakening_system:block/casino_trophy_roulette", "y": 0 },
+    "facing=south,trophy_type=5": { "model": "awakening_system:block/casino_trophy_roulette", "y": 180 },
+    "facing=west,trophy_type=5":  { "model": "awakening_system:block/casino_trophy_roulette", "y": 270 },
+    "facing=east,trophy_type=5":  { "model": "awakening_system:block/casino_trophy_roulette", "y": 90 }
+  }
+}

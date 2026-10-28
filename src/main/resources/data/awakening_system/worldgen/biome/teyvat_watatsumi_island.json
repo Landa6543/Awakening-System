@@ -37,13 +37,16 @@
         "maxCount": 1
       }
     ],
-    "creature": [
+    "creature": [],
+    "underground_water_creature": [
       {
         "type": "minecraft:glow_squid",
         "weight": 8,
         "minCount": 2,
         "maxCount": 4
-      },
+      }
+    ],
+    "water_ambient": [
       {
         "type": "minecraft:tropical_fish",
         "weight": 10,
@@ -61,9 +64,9 @@
     [],
     [
       "awakening_system:teyvat_hilichurl_camp",
+      "awakening_system:teyvat_regional_structure",
       "awakening_system:teyvat_shrine_of_depths",
-      "awakening_system:teyvat_teleport_waypoint",
-      "awakening_system:teyvat_regional_structure"
+      "awakening_system:teyvat_teleport_waypoint"
     ],
     [],
     [
@@ -73,12 +76,12 @@
     [],
     [],
     [
-      "awakening_system:teyvat_cuihua_tree",
       "minecraft:seagrass_simple",
       "awakening_system:teyvat_aralia_tree",
+      "awakening_system:teyvat_cuihua_tree",
+      "awakening_system:teyvat_maple_tree",
       "awakening_system:teyvat_otogi_tree",
-      "awakening_system:teyvat_yumemiru_tree",
-      "awakening_system:teyvat_maple_tree"
+      "awakening_system:teyvat_yumemiru_tree"
     ],
     []
   ]

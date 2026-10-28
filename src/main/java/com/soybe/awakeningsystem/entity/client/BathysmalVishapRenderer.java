@@ -8,16 +8,16 @@ import net.minecraft.client.renderer.entity.EntityRendererProvider;
 import net.minecraft.client.renderer.entity.MobRenderer;
 import net.minecraft.resources.ResourceLocation;
 
-public class BathysmalVishapRenderer extends MobRenderer<BathysmalVishapEntity, GeovishapModel<BathysmalVishapEntity>> {
+public class BathysmalVishapRenderer extends MobRenderer<BathysmalVishapEntity, BathysmalVishapModel<BathysmalVishapEntity>> {
 
     public static final ModelLayerLocation LAYER_LOCATION =
             new ModelLayerLocation(ResourceLocation.fromNamespaceAndPath(AwakeningSystemMod.MOD_ID, "bathysmal_vishap"), "main");
 
     private static final ResourceLocation TEXTURE =
-            ResourceLocation.fromNamespaceAndPath(AwakeningSystemMod.MOD_ID, "textures/entity/primordial_bathysmal_vishap.png");
+            ResourceLocation.fromNamespaceAndPath(AwakeningSystemMod.MOD_ID, "textures/entity/bathysmal_vishap.png");
 
     public BathysmalVishapRenderer(EntityRendererProvider.Context context) {
-        super(context, new GeovishapModel<>(context.bakeLayer(LAYER_LOCATION)), 1.3F);
+        super(context, new BathysmalVishapModel<>(context.bakeLayer(LAYER_LOCATION)), 1.3F);
     }
 
     @Override

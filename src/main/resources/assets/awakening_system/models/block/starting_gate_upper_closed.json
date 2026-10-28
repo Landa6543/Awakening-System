@@ -1,0 +1,121 @@
+{
+  "parent": "minecraft:block/block",
+  "textures": {
+    "particle": "awakening_system:block/starting_gate_frame",
+    "iron": "awakening_system:block/starting_gate_frame",
+    "turf": "awakening_system:block/starting_gate_pad",
+    "door": "awakening_system:block/starting_gate_door",
+    "gold": "awakening_system:block/starting_gate_gold",
+    "display": "awakening_system:block/starting_gate_display"
+  },
+  "elements": [
+    {
+      "name": "left_column",
+      "from": [0, 0, 0],
+      "to": [2.5, 24, 16],
+      "faces": {
+        "north": { "texture": "#iron" },
+        "south": { "texture": "#iron" },
+        "west":  { "texture": "#iron", "cullface": "west" },
+        "east":  { "texture": "#turf" }
+      }
+    },
+    {
+      "name": "right_column",
+      "from": [13.5, 0, 0],
+      "to": [16, 24, 16],
+      "faces": {
+        "north": { "texture": "#iron" },
+        "south": { "texture": "#iron" },
+        "west":  { "texture": "#turf" },
+        "east":  { "texture": "#iron", "cullface": "east" }
+      }
+    },
+    {
+      "name": "left_upper_hinge",
+      "from": [1.8, 3.5, 0.5],
+      "to": [2.8, 5.5, 1.8],
+      "faces": {
+        "north": { "texture": "#gold" },
+        "south": { "texture": "#gold" },
+        "east":  { "texture": "#gold" },
+        "up":    { "texture": "#gold" },
+        "down":  { "texture": "#gold" }
+      }
+    },
+    {
+      "name": "right_upper_hinge",
+      "from": [13.2, 3.5, 0.5],
+      "to": [14.2, 5.5, 1.8],
+      "faces": {
+        "north": { "texture": "#gold" },
+        "south": { "texture": "#gold" },
+        "west":  { "texture": "#gold" },
+        "up":    { "texture": "#gold" },
+        "down":  { "texture": "#gold" }
+      }
+    },
+    {
+      "name": "overhead_arch",
+      "from": [0, 22, 0],
+      "to": [16, 26, 16],
+      "faces": {
+        "up":    { "texture": "#turf" },
+        "down":  { "texture": "#iron" },
+        "north": { "texture": "#iron" },
+        "south": { "texture": "#iron" },
+        "west":  { "texture": "#iron", "cullface": "west" },
+        "east":  { "texture": "#iron", "cullface": "east" }
+      }
+    },
+    {
+      "name": "canopy_roof",
+      "from": [0, 26, 0],
+      "to": [16, 28, 16],
+      "faces": {
+        "up":    { "texture": "#turf" },
+        "north": { "texture": "#turf" },
+        "south": { "texture": "#turf" },
+        "west":  { "texture": "#turf", "cullface": "west" },
+        "east":  { "texture": "#turf", "cullface": "east" }
+      }
+    },
+    {
+      "name": "stall_number_box",
+      "from": [3.5, 22.2, -0.2],
+      "to": [12.5, 27.8, 1.8],
+      "faces": {
+        "up":    { "texture": "#gold" },
+        "down":  { "texture": "#gold" },
+        "north": { "texture": "#display" },
+        "south": { "texture": "#display" },
+        "west":  { "texture": "#gold" },
+        "east":  { "texture": "#gold" }
+      }
+    },
+    {
+      "name": "left_upper_door_closed",
+      "from": [2.6, 0, 1],
+      "to": [7.95, 16, 2.5],
+      "faces": {
+        "up":    { "texture": "#gold" },
+        "north": { "texture": "#door" },
+        "south": { "texture": "#door" },
+        "west":  { "texture": "#gold" },
+        "east":  { "texture": "#gold" }
+      }
+    },
+    {
+      "name": "right_upper_door_closed",
+      "from": [8.05, 0, 1],
+      "to": [13.4, 16, 2.5],
+      "faces": {
+        "up":    { "texture": "#gold" },
+        "north": { "texture": "#door" },
+        "south": { "texture": "#door" },
+        "west":  { "texture": "#gold" },
+        "east":  { "texture": "#gold" }
+      }
+    }
+  ]
+}

@@ -48,9 +48,9 @@
     [],
     [
       "awakening_system:teyvat_hilichurl_camp",
+      "awakening_system:teyvat_regional_structure",
       "awakening_system:teyvat_shrine_of_depths",
-      "awakening_system:teyvat_teleport_waypoint",
-      "awakening_system:teyvat_regional_structure"
+      "awakening_system:teyvat_teleport_waypoint"
     ],
     [],
     [
@@ -60,11 +60,11 @@
     [],
     [],
     [
-      "awakening_system:teyvat_cuihua_tree",
       "awakening_system:teyvat_aralia_tree",
+      "awakening_system:teyvat_cuihua_tree",
+      "awakening_system:teyvat_maple_tree",
       "awakening_system:teyvat_otogi_tree",
-      "awakening_system:teyvat_yumemiru_tree",
-      "awakening_system:teyvat_maple_tree"
+      "awakening_system:teyvat_yumemiru_tree"
     ],
     []
   ]

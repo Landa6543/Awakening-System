@@ -1,31 +1,24 @@
 package com.soybe.awakeningsystem.entity.client;
 
 import com.mojang.blaze3d.vertex.PoseStack;
-import com.soybe.awakeningsystem.AwakeningSystemMod;
 import com.soybe.awakeningsystem.entity.IgrisBossEntity;
-import net.minecraft.client.model.PlayerModel;
-import net.minecraft.client.model.geom.ModelLayers;
 import net.minecraft.client.renderer.entity.EntityRendererProvider;
-import net.minecraft.client.renderer.entity.HumanoidMobRenderer;
-import net.minecraft.client.renderer.entity.layers.ItemInHandLayer;
-import net.minecraft.resources.ResourceLocation;
+import software.bernie.geckolib.cache.object.BakedGeoModel;
+import software.bernie.geckolib.renderer.GeoEntityRenderer;
 
-public class IgrisBossRenderer extends HumanoidMobRenderer<IgrisBossEntity, PlayerModel<IgrisBossEntity>> {
-    private static final ResourceLocation IGRIS_TEXTURE =
-            ResourceLocation.fromNamespaceAndPath(AwakeningSystemMod.MOD_ID, "textures/entity/igris.png");
+/**
+ * Renderer GeckoLib 3D para el Comandante Carmesí Igris.
+ */
+public class IgrisBossRenderer extends GeoEntityRenderer<IgrisBossEntity> {
 
     public IgrisBossRenderer(EntityRendererProvider.Context context) {
-        super(context, new PlayerModel<>(context.bakeLayer(ModelLayers.PLAYER), false), 0.7F);
-        this.addLayer(new ItemInHandLayer<>(this, context.getItemInHandRenderer()));
+        super(context, new IgrisBossGeoModel());
+        this.shadowRadius = 0.65F;
     }
 
     @Override
-    protected void scale(IgrisBossEntity entity, PoseStack poseStack, float partialTickTime) {
-        poseStack.scale(1.2F, 1.2F, 1.2F);
-    }
-
-    @Override
-    public ResourceLocation getTextureLocation(IgrisBossEntity entity) {
-        return IGRIS_TEXTURE;
+    public void scaleModelForRender(float widthScale, float heightScale, PoseStack poseStack, IgrisBossEntity animatable, BakedGeoModel model, boolean isReRender, float partialTick, int packedLight, int packedOverlay) {
+        float scale = 1.25F;
+        super.scaleModelForRender(widthScale * scale, heightScale * scale, poseStack, animatable, model, isReRender, partialTick, packedLight, packedOverlay);
     }
 }

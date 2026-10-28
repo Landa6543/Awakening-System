@@ -1,8 +1,13 @@
 {
-  "replace": false,
-  "values": [
-    "awakening_system:asrahan_holy_sword",
-    "awakening_system:black_dragon_scythe",
-    "awakening_system:gigantic_greatsword"
-  ]
+    "replace":  false,
+    "values":  [
+                   "awakening_system:gigantic_greatsword",
+                   "awakening_system:creator_claymore",
+                   "awakening_system:wolfs_gravestone",
+                   "awakening_system:redhorn_stonethresher",
+                   "awakening_system:domain_of_sanction",
+                   "awakening_system:black_dragon_scythe",
+                   "awakening_system:dread_scythe",
+                   "awakening_system:crimson_moons_semblance"
+               ]
 }

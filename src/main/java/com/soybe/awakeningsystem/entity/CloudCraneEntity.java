@@ -108,7 +108,6 @@ public class CloudCraneEntity extends TamableAnimal implements PlayerRideableJum
     public InteractionResult mobInteract(Player player, InteractionHand hand) {
         ItemStack itemstack = player.getItemInHand(hand);
 
-        // 1. Si NO está domesticada
         if (!this.isTame()) {
             if (this.isFood(itemstack)) {
                 this.usePlayerItem(player, hand, itemstack);
@@ -118,10 +117,10 @@ public class CloudCraneEntity extends TamableAnimal implements PlayerRideableJum
                         this.navigation.stop();
                         this.setTarget(null);
                         this.setOrderedToSit(true);
-                        this.level().broadcastEntityEvent(this, (byte) 7); // Corazones
+                        this.level().broadcastEntityEvent(this, (byte) 7);
                         this.playSound(SoundEvents.CHICKEN_EGG, 1.0F, 1.2F);
                     } else {
-                        this.level().broadcastEntityEvent(this, (byte) 6); // Humo
+                        this.level().broadcastEntityEvent(this, (byte) 6);
                     }
                 }
                 return InteractionResult.sidedSuccess(this.level().isClientSide);
@@ -129,9 +128,7 @@ public class CloudCraneEntity extends TamableAnimal implements PlayerRideableJum
             return super.mobInteract(player, hand);
         }
 
-        // 2. Si YA está domesticada y pertenece al jugador
         if (this.isOwnedBy(player)) {
-            // Curar con alimento
             if (this.isFood(itemstack) && this.getHealth() < this.getMaxHealth()) {
                 this.usePlayerItem(player, hand, itemstack);
                 this.heal(6.0F);
@@ -141,7 +138,6 @@ public class CloudCraneEntity extends TamableAnimal implements PlayerRideableJum
                 return InteractionResult.sidedSuccess(this.level().isClientSide);
             }
 
-            // Shift + Clic derecho: Acostarse / Levantarse (postura de nido de ave)
             if (player.isShiftKeyDown()) {
                 boolean wantsToLieDown = !this.isOrderedToSit();
                 this.setOrderedToSit(wantsToLieDown);
@@ -152,7 +148,6 @@ public class CloudCraneEntity extends TamableAnimal implements PlayerRideableJum
                 return InteractionResult.SUCCESS;
             }
 
-            // Montar para volar
             if (!this.isInSittingPose() && !this.isVehicle()) {
                 this.doPlayerRide(player);
                 return InteractionResult.SUCCESS;
@@ -179,7 +174,6 @@ public class CloudCraneEntity extends TamableAnimal implements PlayerRideableJum
 
     @Override
     protected Vec3 getPassengerAttachmentPoint(Entity entity, EntityDimensions dimensions, float scale) {
-        // Colocar al jinete exactamente en el lomo (sin flotar) y centrado al 100% (x = 0.0)
         double yOff = this.isInSittingPose() ? 0.18D : 0.52D;
         return new Vec3(0.0D, yOff * (double) scale, -0.10D * (double) scale);
     }
@@ -188,7 +182,6 @@ public class CloudCraneEntity extends TamableAnimal implements PlayerRideableJum
     protected void positionRider(Entity passenger, Entity.MoveFunction moveFunction) {
         if (this.hasPassenger(passenger)) {
             double yOff = this.isInSittingPose() ? 0.18D : 0.52D;
-            // x = 0.0D garantiza alineación simétrica perfecta en 1ra y 3ra persona
             Vec3 localOffset = new Vec3(0.0D, yOff, -0.10D);
             Vec3 worldOffset = localOffset.yRot(-this.getYRot() * ((float) Math.PI / 180.0F));
             moveFunction.accept(passenger, this.getX() + worldOffset.x, this.getY() + worldOffset.y, this.getZ() + worldOffset.z);
@@ -209,7 +202,6 @@ public class CloudCraneEntity extends TamableAnimal implements PlayerRideableJum
     public void travel(Vec3 travelVector) {
         if (this.isAlive()) {
             if (this.isVehicle() && this.isCraneFlying()) {
-                // Vuelo 3D directo sin gravedad terrestre en conflicto
                 this.move(MoverType.SELF, this.getDeltaMovement());
                 return;
             }
@@ -221,18 +213,15 @@ public class CloudCraneEntity extends TamableAnimal implements PlayerRideableJum
     protected void tickRidden(Player player, Vec3 travelVector) {
         super.tickRidden(player, travelVector);
 
-        // 1. Sincronización instantánea de rotación con la mirada del jugador (cero desfase visual)
         this.setRot(player.getYRot(), player.getXRot());
         this.yRotO = this.yBodyRot = this.yHeadRot = this.getYRot();
         this.yBodyRotO = this.yHeadRotO = this.yBodyRot;
 
         boolean onGround = this.onGround();
-        // Consumir el salto del jugador en este tick e INMEDIATAMENTE ponerlo a 0 para que no se quede subiendo infinito
         boolean jumpTriggered = this.playerJumpPendingScale > 0.05F;
         this.playerJumpPendingScale = 0.0F;
 
         if (jumpTriggered) {
-            // Despegue desde tierra o aleteo ascendente
             Vec3 cur = this.getDeltaMovement();
             this.setDeltaMovement(cur.x, 0.52D, cur.z);
             this.setCraneFlying(true);
@@ -251,10 +240,6 @@ public class CloudCraneEntity extends TamableAnimal implements PlayerRideableJum
             double vz = cur.z;
 
             if (forward > 0.0F) {
-                // VUELO DIRECCIONAL 3D REAL SEGÚN EL CURSOR:
-                // - Mirar arriba -> sube en la dirección del cursor
-                // - Mirar abajo -> desciende / pica hacia el suelo
-                // - Mirar al horizonte -> vuela nivelado
                 vx = look.x * speed;
                 vy = look.y * speed;
                 vz = look.z * speed;
@@ -265,23 +250,19 @@ public class CloudCraneEntity extends TamableAnimal implements PlayerRideableJum
                     vz += -side.z;
                 }
             } else if (forward < 0.0F) {
-                // Retroceso lento en el aire
                 vx = -look.x * speed * 0.25D;
                 vz = -look.z * speed * 0.25D;
                 vy = -0.15D;
             } else {
-                // Sin presionar W: planeo aerodinámico natural
                 vx = cur.x * 0.88D;
                 vz = cur.z * 0.88D;
-                // Si mira abajo aunque no presione W, también desciende hacia donde apunta
                 if (look.y < -0.10D) {
                     vy = look.y * 0.38D;
                 } else {
-                    vy = -0.14D; // Caída suave de planeo hacia la tierra para aterrizar
+                    vy = -0.14D;
                 }
             }
 
-            // Si toca tierra mientras descendía: aterriza y pasa a caminata
             if (onGround && vy <= 0.0D && !jumpTriggered) {
                 this.setCraneFlying(false);
                 vy = 0.0D;
@@ -291,7 +272,6 @@ public class CloudCraneEntity extends TamableAnimal implements PlayerRideableJum
             player.fallDistance = 0.0F;
             this.fallDistance = 0.0F;
         } else {
-            // En tierra caminando normalmente
             this.setCraneFlying(false);
         }
     }
@@ -305,12 +285,10 @@ public class CloudCraneEntity extends TamableAnimal implements PlayerRideableJum
     public void aiStep() {
         super.aiStep();
 
-        // Si está en tierra, apagar estado de vuelo
         if (this.onGround() && this.isCraneFlying()) {
             this.setCraneFlying(false);
         }
 
-        // Si está en el aire salvaje (sin jinete)
         boolean inAir = !this.onGround() && !this.isInSittingPose();
         if (inAir) {
             this.inAirTicks++;
@@ -324,7 +302,6 @@ public class CloudCraneEntity extends TamableAnimal implements PlayerRideableJum
             }
         }
 
-        // Planeo suave para aves salvajes sin jinete
         if (!this.onGround() && !this.isInSittingPose() && !this.isVehicle()) {
             Vec3 vel = this.getDeltaMovement();
             if (vel.y < 0.0D) {
@@ -333,7 +310,6 @@ public class CloudCraneEntity extends TamableAnimal implements PlayerRideableJum
             this.fallDistance = 0.0F;
         }
 
-        // Estela mística de nubes en vuelo
         if (this.level().isClientSide && this.isCraneFlying()) {
             if (this.random.nextInt(3) == 0) {
                 double ox = (this.random.nextDouble() - 0.5D) * 1.6D;

@@ -9,6 +9,7 @@ import net.minecraft.core.particles.ParticleTypes;
 import net.minecraft.network.chat.Component;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.server.level.ServerPlayer;
+import net.minecraft.sounds.SoundEvents;
 import net.minecraft.sounds.SoundSource;
 import net.minecraft.world.InteractionHand;
 import net.minecraft.world.InteractionResultHolder;
@@ -24,10 +25,45 @@ import java.util.List;
 import java.util.Random;
 
 public class GachaCapsuleItem extends Item {
+    public enum CapsuleRarity {
+        BLUE(3, Rarity.RARE, "§9✦✦✦ Gacha Capsule (3★)"),
+        PURPLE(4, Rarity.EPIC, "§d✦✦✦✦ Epic Gacha Capsule (4★)"),
+        GOLD(5, Rarity.EPIC, "§6✦✦✦✦✦ Legendary Gacha Capsule (5★)");
+
+        private final int stars;
+        private final Rarity rarity;
+        private final String displayName;
+
+        CapsuleRarity(int stars, Rarity rarity, String displayName) {
+            this.stars = stars;
+            this.rarity = rarity;
+            this.displayName = displayName;
+        }
+
+        public int getStars() { return stars; }
+        public Rarity getRarity() { return rarity; }
+        public String getDisplayName() { return displayName; }
+    }
+
     private static final Random RNG = new Random();
+    private final CapsuleRarity capsuleRarity;
 
     public GachaCapsuleItem(Properties properties) {
-        super(properties.rarity(Rarity.RARE).stacksTo(16));
+        this(properties, CapsuleRarity.BLUE);
+    }
+
+    public GachaCapsuleItem(Properties properties, CapsuleRarity capsuleRarity) {
+        super(properties.rarity(capsuleRarity.getRarity()).stacksTo(16));
+        this.capsuleRarity = capsuleRarity;
+    }
+
+    public CapsuleRarity getCapsuleRarity() {
+        return capsuleRarity;
+    }
+
+    @Override
+    public boolean isFoil(ItemStack stack) {
+        return capsuleRarity == CapsuleRarity.GOLD || super.isFoil(stack);
     }
 
     @Override
@@ -35,148 +71,309 @@ public class GachaCapsuleItem extends Item {
         ItemStack held = player.getItemInHand(hand);
 
         if (!level.isClientSide() && player instanceof ServerPlayer sp) {
-            held.shrink(1);
             ServerLevel sl = (ServerLevel) level;
             SystemData data = SystemEvents.data(sp);
 
-            // Sonido de apertura
             level.playSound(null, sp.getX(), sp.getY(), sp.getZ(),
-                    net.minecraft.sounds.SoundEvents.AMETHYST_BLOCK_CHIME, SoundSource.PLAYERS, 1.0F, 1.3F);
+                    SoundEvents.BUNDLE_DROP_CONTENTS, SoundSource.PLAYERS, 1.2F, 1.1F);
             level.playSound(null, sp.getX(), sp.getY(), sp.getZ(),
-                    ModSounds.GACHA_OPEN_PRIZE.get(), SoundSource.PLAYERS, 1.0F, 1.0F);
+                    SoundEvents.AMETHYST_BLOCK_CHIME, SoundSource.PLAYERS, 1.0F, 1.3F);
 
-            // Partículas mágicas iniciales
             sl.sendParticles(ParticleTypes.END_ROD, sp.getX(), sp.getY() + 1.0D, sp.getZ(), 25, 0.4D, 0.5D, 0.4D, 0.08D);
 
-            // === 0. JACKPOT DEL CREADOR (0.008%) ===
-            if (RNG.nextDouble() < 0.00008D) {
-                ItemStack creatorSword = new ItemStack(SystemItems.CREATOR_CLAYMORE.get());
-                giveOrDrop(sp, creatorSword);
-                level.playSound(null, sp.getX(), sp.getY(), sp.getZ(),
-                        net.minecraft.sounds.SoundEvents.UI_TOAST_CHALLENGE_COMPLETE, SoundSource.PLAYERS, 1.5F, 1.0F);
-                level.playSound(null, sp.getX(), sp.getY(), sp.getZ(),
-                        net.minecraft.sounds.SoundEvents.END_PORTAL_SPAWN, SoundSource.PLAYERS, 1.2F, 1.5F);
-                level.playSound(null, sp.getX(), sp.getY(), sp.getZ(),
-                        net.minecraft.sounds.SoundEvents.TOTEM_USE, SoundSource.PLAYERS, 1.0F, 1.2F);
-                sl.sendParticles(ParticleTypes.END_ROD, sp.getX(), sp.getY() + 1.5D, sp.getZ(), 150, 1.2D, 1.2D, 1.2D, 0.25D);
-                sl.sendParticles(ParticleTypes.TOTEM_OF_UNDYING, sp.getX(), sp.getY() + 1.2D, sp.getZ(), 100, 0.8D, 0.8D, 0.8D, 0.2D);
-                sl.sendParticles(ParticleTypes.FIREWORK, sp.getX(), sp.getY() + 1.0D, sp.getZ(), 80, 1.0D, 1.0D, 1.0D, 0.1D);
+            ItemStack rewardStack = rollReward(sp, data, level, sl);
 
-                Component creatorAnnounce = Component.literal("§6§l✦✦✦✦✦✦✦ ¡¡¡CÁPSULA DEL CREADOR (0.008%)!!! §e" + sp.getName().getString() +
-                        " §fha desbloqueado la reliquia suprema: §6" + creatorSword.getHoverName().getString() + "§6§l! ✦✦✦✦✦✦✦");
-                for (ServerPlayer online : sp.server.getPlayerList().getPlayers()) {
-                    online.displayClientMessage(creatorAnnounce, false);
-                }
-                return InteractionResultHolder.consume(held);
+            boolean isCreative = sp.getAbilities().instabuild;
+            boolean isSingle = (held.getCount() == 1);
+
+            if (!isCreative) {
+                held.shrink(1);
             }
 
-            // === 0.1 PREMIO DE LA DONCELLA (0.020% / ~1 en 5000 cápsulas) ===
-            if (RNG.nextDouble() < 0.00020D) {
-                ItemStack doncellaSword = new ItemStack(SystemItems.LA_DONCELLA.get());
-                giveOrDrop(sp, doncellaSword);
-                level.playSound(null, sp.getX(), sp.getY(), sp.getZ(),
-                        net.minecraft.sounds.SoundEvents.UI_TOAST_CHALLENGE_COMPLETE, SoundSource.PLAYERS, 1.2F, 1.2F);
-                sl.sendParticles(ParticleTypes.CRIMSON_SPORE, sp.getX(), sp.getY() + 1.5D, sp.getZ(), 80, 0.8D, 0.8D, 0.8D, 0.2D);
-                sl.sendParticles(ParticleTypes.CHERRY_LEAVES, sp.getX(), sp.getY() + 1.0D, sp.getZ(), 50, 0.8D, 0.8D, 0.8D, 0.1D);
-
-                Component doncellaAnnounce = Component.literal("§d§l✦✦✦✦✦ ¡CÁPSULA MÍSTICA (0.020%)! §e" + sp.getName().getString() +
-                        " §fha obtenido: §d" + doncellaSword.getHoverName().getString() + "§d§l! ✦✦✦✦✦");
-                for (ServerPlayer online : sp.server.getPlayerList().getPlayers()) {
-                    online.displayClientMessage(doncellaAnnounce, false);
-                }
-                return InteractionResultHolder.consume(held);
-            }
-
-            int roll = RNG.nextInt(100);
-
-            if (roll >= 90) {
-                // === 5★ LEGENDARIO (10%) ===
-                level.playSound(null, sp.getX(), sp.getY(), sp.getZ(),
-                        ModSounds.GACHA_LEGENDARY_PRIZE.get(), SoundSource.PLAYERS, 1.2F, 1.0F);
-                sl.sendParticles(ParticleTypes.TOTEM_OF_UNDYING, sp.getX(), sp.getY() + 1.2D, sp.getZ(), 50, 0.6D, 0.6D, 0.6D, 0.2D);
-                sl.sendParticles(ParticleTypes.FIREWORK, sp.getX(), sp.getY() + 1.5D, sp.getZ(), 30, 0.5D, 0.5D, 0.5D, 0.1D);
-
-                int subRoll = RNG.nextInt(3);
-                if (subRoll == 0) {
-                    ItemStack lightCone = new ItemStack(SystemItems.LIGHT_CONE_MILKY_WAY.get());
-                    giveOrDrop(sp, lightCone);
-                    sp.sendSystemMessage(Component.literal("§6§l¡✦✦✦✦✦ JACKPOT LEGENDARIO! §e¡Has obtenido el §dCono de Luz 3D: Noche en la Vía Láctea§e!"), false);
-                } else if (subRoll == 1) {
-                    ItemStack fate = new ItemStack(SystemItems.INTERTWINED_FATE.get());
-                    giveOrDrop(sp, fate);
-                    sp.sendSystemMessage(Component.literal("§6§l¡✦✦✦✦✦ RECOMPENSA DORADA! §e¡Has obtenido §d1x Destino Entrelazado§e!"), false);
+            if (isSingle && !isCreative) {
+                if (!rewardStack.isEmpty()) {
+                    if (hand == InteractionHand.MAIN_HAND) {
+                        sp.getInventory().setItem(sp.getInventory().selected, rewardStack.copy());
+                    } else {
+                        sp.getInventory().offhand.set(0, rewardStack.copy());
+                    }
+                    sp.inventoryMenu.broadcastChanges();
+                    sp.containerMenu.broadcastChanges();
+                    return InteractionResultHolder.sidedSuccess(rewardStack, level.isClientSide());
                 } else {
-                    int jackpotMora = 100000;
-                    data.addMora(jackpotMora);
-                    com.soybe.awakeningsystem.AwakeningSystemMod.sync(sp);
-                    sp.sendSystemMessage(Component.literal("§6§l¡✦✦✦✦✦ BOLSA DEL DRAGÓN! §e¡Has ganado §6+100,000 Mora§e directa a tu monedero!"), false);
-                }
-            } else if (roll >= 65) {
-                // === 4★ RARO (25%) ===
-                level.playSound(null, sp.getX(), sp.getY(), sp.getZ(),
-                        ModSounds.GACHA_RARE_PRIZE.get(), SoundSource.PLAYERS, 1.0F, 1.0F);
-                sl.sendParticles(ParticleTypes.WITCH, sp.getX(), sp.getY() + 1.0D, sp.getZ(), 30, 0.5D, 0.5D, 0.5D, 0.1D);
-
-                int subRoll = RNG.nextInt(3);
-                if (subRoll == 0) {
-                    ItemStack starglitter = new ItemStack(SystemItems.MASTERLESS_STARGLITTER.get(), 4);
-                    giveOrDrop(sp, starglitter);
-                    sp.sendSystemMessage(Component.literal("§d§l¡✦✦✦✦ PREMIO RARO! §fHas obtenido §d4x Brillo Estelar§f."), false);
-                } else if (subRoll == 1) {
-                    ItemStack pills = new ItemStack(SystemItems.RISING_DRAGON_PILL.get(), 2);
-                    giveOrDrop(sp, pills);
-                    sp.sendSystemMessage(Component.literal("§d§l¡✦✦✦✦ PREMIO RARO! §fHas obtenido §b2x Píldora del Dragón Naciente§f."), false);
-                } else {
-                    int moraWon = 25000;
-                    data.addMora(moraWon);
-                    com.soybe.awakeningsystem.AwakeningSystemMod.sync(sp);
-                    sp.sendSystemMessage(Component.literal("§d§l¡✦✦✦✦ PREMIO RARO! §fHas obtenido §6+25,000 Mora§f."), false);
+                    sp.inventoryMenu.broadcastChanges();
+                    sp.containerMenu.broadcastChanges();
+                    return InteractionResultHolder.sidedSuccess(held, level.isClientSide());
                 }
             } else {
-                // === 3★ COMÚN (65%) ===
-                level.playSound(null, sp.getX(), sp.getY(), sp.getZ(),
-                        ModSounds.GACHA_COMMON_PRIZE.get(), SoundSource.PLAYERS, 0.9F, 1.0F);
-
-                int subRoll = RNG.nextInt(3);
-                if (subRoll == 0) {
-                    ItemStack exp = new ItemStack(SystemItems.HEROS_WIT.get(), 3);
-                    giveOrDrop(sp, exp);
-                    sp.sendSystemMessage(Component.literal("§b✦✦✦ Recompensa: §fHas obtenido §93x Ingenio del Héroe§f."), false);
-                } else if (subRoll == 1) {
-                    ItemStack stardust = new ItemStack(SystemItems.MASTERLESS_STARDUST.get(), 15);
-                    giveOrDrop(sp, stardust);
-                    sp.sendSystemMessage(Component.literal("§b✦✦✦ Recompensa: §fHas obtenido §b15x Polvo Estelar§f."), false);
-                } else {
-                    int moraWon = 7500;
-                    data.addMora(moraWon);
-                    com.soybe.awakeningsystem.AwakeningSystemMod.sync(sp);
-                    sp.sendSystemMessage(Component.literal("§b✦✦✦ Recompensa: §fHas obtenido §6+7,500 Mora§f."), false);
+                if (!rewardStack.isEmpty()) {
+                    deliverRewardExcludingHand(sp, hand, rewardStack);
                 }
+                sp.inventoryMenu.broadcastChanges();
+                sp.containerMenu.broadcastChanges();
+                return InteractionResultHolder.sidedSuccess(held, level.isClientSide());
             }
-
-            return InteractionResultHolder.consume(held);
         }
 
         return InteractionResultHolder.sidedSuccess(held, level.isClientSide());
     }
 
-    private static void giveOrDrop(ServerPlayer player, ItemStack stack) {
-        if (stack == null || stack.isEmpty()) return;
+    private ItemStack rollReward(ServerPlayer sp, SystemData data, Level level, ServerLevel sl) {
+        double creatorChance = capsuleRarity == CapsuleRarity.GOLD ? 0.0008D :
+                              (capsuleRarity == CapsuleRarity.PURPLE ? 0.0002D : 0.00008D);
+        double doncellaChance = capsuleRarity == CapsuleRarity.GOLD ? 0.0020D :
+                               (capsuleRarity == CapsuleRarity.PURPLE ? 0.0005D : 0.00020D);
+
+        if (RNG.nextDouble() < creatorChance) {
+            ItemStack creatorSword = new ItemStack(SystemItems.CREATOR_CLAYMORE.get());
+            level.playSound(null, sp.getX(), sp.getY(), sp.getZ(),
+                    SoundEvents.UI_TOAST_CHALLENGE_COMPLETE, SoundSource.PLAYERS, 1.5F, 1.0F);
+            level.playSound(null, sp.getX(), sp.getY(), sp.getZ(),
+                    SoundEvents.END_PORTAL_SPAWN, SoundSource.PLAYERS, 1.2F, 1.5F);
+            level.playSound(null, sp.getX(), sp.getY(), sp.getZ(),
+                    SoundEvents.TOTEM_USE, SoundSource.PLAYERS, 1.0F, 1.2F);
+            sl.sendParticles(ParticleTypes.END_ROD, sp.getX(), sp.getY() + 1.5D, sp.getZ(), 150, 1.2D, 1.2D, 1.2D, 0.25D);
+            sl.sendParticles(ParticleTypes.TOTEM_OF_UNDYING, sp.getX(), sp.getY() + 1.2D, sp.getZ(), 100, 0.8D, 0.8D, 0.8D, 0.2D);
+            sl.sendParticles(ParticleTypes.FIREWORK, sp.getX(), sp.getY() + 1.0D, sp.getZ(), 80, 1.0D, 1.0D, 1.0D, 0.1D);
+
+            Component creatorAnnounce = Component.translatable("item.awakening_system.gacha_capsule.creator_announce", sp.getName(), creatorSword.getHoverName());
+            for (ServerPlayer online : sp.server.getPlayerList().getPlayers()) {
+                online.displayClientMessage(creatorAnnounce, false);
+            }
+            return creatorSword;
+        }
+
+        if (RNG.nextDouble() < doncellaChance) {
+            ItemStack doncellaSword = new ItemStack(SystemItems.LA_DONCELLA.get());
+            level.playSound(null, sp.getX(), sp.getY(), sp.getZ(),
+                    SoundEvents.UI_TOAST_CHALLENGE_COMPLETE, SoundSource.PLAYERS, 1.2F, 1.2F);
+            sl.sendParticles(ParticleTypes.CRIMSON_SPORE, sp.getX(), sp.getY() + 1.5D, sp.getZ(), 80, 0.8D, 0.8D, 0.8D, 0.2D);
+            sl.sendParticles(ParticleTypes.CHERRY_LEAVES, sp.getX(), sp.getY() + 1.0D, sp.getZ(), 50, 0.8D, 0.8D, 0.8D, 0.1D);
+
+            Component doncellaAnnounce = Component.translatable("item.awakening_system.gacha_capsule.doncella_announce", sp.getName(), doncellaSword.getHoverName());
+            for (ServerPlayer online : sp.server.getPlayerList().getPlayers()) {
+                online.displayClientMessage(doncellaAnnounce, false);
+            }
+            return doncellaSword;
+        }
+
+        int tier;
+        if (capsuleRarity == CapsuleRarity.GOLD) {
+            tier = 5;
+        } else if (capsuleRarity == CapsuleRarity.PURPLE) {
+            tier = RNG.nextInt(100) < 25 ? 5 : 4;
+        } else {
+            int roll = RNG.nextInt(100);
+            if (roll < 10) {
+                tier = 5;
+            } else if (roll < 40) {
+                tier = 4;
+            } else {
+                tier = 3;
+            }
+        }
+
+        if (tier == 5) {
+            return giveTier5Reward(sp, data, level, sl);
+        } else if (tier == 4) {
+            return giveTier4Reward(sp, data, level, sl);
+        } else {
+            return giveTier3Reward(sp, data, level, sl);
+        }
+    }
+
+    private ItemStack giveTier5Reward(ServerPlayer sp, SystemData data, Level level, ServerLevel sl) {
+        level.playSound(null, sp.getX(), sp.getY(), sp.getZ(),
+                SoundEvents.UI_TOAST_CHALLENGE_COMPLETE, SoundSource.PLAYERS, 1.2F, 1.0F);
+        level.playSound(null, sp.getX(), sp.getY(), sp.getZ(),
+                SoundEvents.AMETHYST_BLOCK_RESONATE, SoundSource.PLAYERS, 1.4F, 1.2F);
+        level.playSound(null, sp.getX(), sp.getY(), sp.getZ(),
+                SoundEvents.PLAYER_LEVELUP, SoundSource.PLAYERS, 1.0F, 1.2F);
+        sl.sendParticles(ParticleTypes.TOTEM_OF_UNDYING, sp.getX(), sp.getY() + 1.2D, sp.getZ(), 80, 0.8D, 0.8D, 0.8D, 0.25D);
+        sl.sendParticles(ParticleTypes.FIREWORK, sp.getX(), sp.getY() + 1.5D, sp.getZ(), 50, 0.6D, 0.6D, 0.6D, 0.15D);
+        sl.sendParticles(ParticleTypes.END_ROD, sp.getX(), sp.getY() + 1.0D, sp.getZ(), 40, 0.5D, 0.5D, 0.5D, 0.1D);
+
+        int subRoll = RNG.nextInt(7);
+        if (subRoll == 0) {
+            ItemStack lightCone = new ItemStack(SystemItems.LIGHT_CONE_MILKY_WAY.get());
+            sp.sendSystemMessage(Component.translatable("item.awakening_system.gacha_capsule.tier5_light_cone", lightCone.getHoverName()), false);
+            return lightCone;
+        } else if (subRoll == 1) {
+            ItemStack lightCone = new ItemStack(SystemItems.LIGHT_CONE_PASSING_SHORE.get());
+            sp.sendSystemMessage(Component.translatable("item.awakening_system.gacha_capsule.tier5_light_cone", lightCone.getHoverName()), false);
+            return lightCone;
+        } else if (subRoll == 2) {
+            ItemStack lightCone = new ItemStack(SystemItems.LIGHT_CONE_PATIENCE.get());
+            sp.sendSystemMessage(Component.translatable("item.awakening_system.gacha_capsule.tier5_light_cone", lightCone.getHoverName()), false);
+            return lightCone;
+        } else if (subRoll == 3) {
+            ItemStack lightCone = new ItemStack(SystemItems.LIGHT_CONE_DREAMS_REST.get());
+            sp.sendSystemMessage(Component.translatable("item.awakening_system.gacha_capsule.tier5_light_cone", lightCone.getHoverName()), false);
+            return lightCone;
+        } else if (subRoll == 4) {
+            ItemStack lightCone = new ItemStack(SystemItems.LIGHT_CONE_BEFORE_DAWN.get());
+            sp.sendSystemMessage(Component.translatable("item.awakening_system.gacha_capsule.tier5_light_cone", lightCone.getHoverName()), false);
+            return lightCone;
+        } else if (subRoll == 5) {
+            ItemStack fate = new ItemStack(SystemItems.INTERTWINED_FATE.get());
+            sp.sendSystemMessage(Component.translatable("item.awakening_system.gacha_capsule.tier5_fate"), false);
+            return fate;
+        } else {
+            int jackpotMora = 100000;
+            data.addMora(jackpotMora);
+            com.soybe.awakeningsystem.AwakeningSystemMod.sync(sp);
+            sp.sendSystemMessage(Component.translatable("item.awakening_system.gacha_capsule.tier5_mora"), false);
+            return ItemStack.EMPTY;
+        }
+    }
+
+    private ItemStack giveTier4Reward(ServerPlayer sp, SystemData data, Level level, ServerLevel sl) {
+        level.playSound(null, sp.getX(), sp.getY(), sp.getZ(),
+                SoundEvents.AMETHYST_BLOCK_RESONATE, SoundSource.PLAYERS, 1.2F, 1.5F);
+        level.playSound(null, sp.getX(), sp.getY(), sp.getZ(),
+                SoundEvents.EXPERIENCE_ORB_PICKUP, SoundSource.PLAYERS, 1.0F, 0.85F);
+        sl.sendParticles(ParticleTypes.WITCH, sp.getX(), sp.getY() + 1.0D, sp.getZ(), 45, 0.6D, 0.6D, 0.6D, 0.1D);
+        sl.sendParticles(ParticleTypes.PORTAL, sp.getX(), sp.getY() + 1.2D, sp.getZ(), 30, 0.5D, 0.5D, 0.5D, 0.15D);
+
+        int subRoll = RNG.nextInt(6);
+        if (subRoll == 0) {
+            Item[] runes = new Item[]{
+                    SystemItems.RUNE_STONE_RULERS_AUTHORITY.get(),
+                    SystemItems.RUNE_STONE_DRAGON_EYES.get(),
+                    SystemItems.RUNE_STONE_BLOODTHIRST.get(),
+                    SystemItems.RUNE_STONE_SHADOW_STEP.get(),
+                    SystemItems.RUNE_STONE_FOURTH_WALL.get(),
+                    SystemItems.RUNE_STONE_IRON_BODY.get()
+            };
+            ItemStack runeStack = new ItemStack(runes[RNG.nextInt(runes.length)]);
+            sp.sendSystemMessage(Component.translatable("item.awakening_system.gacha_capsule.tier4_reward", runeStack.getHoverName()), false);
+            return runeStack;
+        } else if (subRoll == 1) {
+            ItemStack starglitter = new ItemStack(SystemItems.MASTERLESS_STARGLITTER.get(), 4);
+            sp.sendSystemMessage(Component.translatable("item.awakening_system.gacha_capsule.tier4_starglitter"), false);
+            return starglitter;
+        } else if (subRoll == 2) {
+            ItemStack pills = new ItemStack(SystemItems.RISING_DRAGON_PILL.get(), 2);
+            sp.sendSystemMessage(Component.translatable("item.awakening_system.gacha_capsule.tier4_pills"), false);
+            return pills;
+        } else if (subRoll == 3) {
+            ItemStack sigils = new ItemStack(SystemItems.GUARDIANS_SIGIL.get(), 2);
+            sp.sendSystemMessage(Component.translatable("item.awakening_system.gacha_capsule.tier4_sigils"), false);
+            return sigils;
+        } else {
+            int moraWon = 25000;
+            data.addMora(moraWon);
+            com.soybe.awakeningsystem.AwakeningSystemMod.sync(sp);
+            sp.sendSystemMessage(Component.translatable("item.awakening_system.gacha_capsule.tier4_mora"), false);
+            return ItemStack.EMPTY;
+        }
+    }
+
+    private ItemStack giveTier3Reward(ServerPlayer sp, SystemData data, Level level, ServerLevel sl) {
+        level.playSound(null, sp.getX(), sp.getY(), sp.getZ(),
+                SoundEvents.AMETHYST_BLOCK_CHIME, SoundSource.PLAYERS, 1.0F, 1.4F);
+        level.playSound(null, sp.getX(), sp.getY(), sp.getZ(),
+                SoundEvents.ITEM_PICKUP, SoundSource.PLAYERS, 1.0F, 1.0F);
+        sl.sendParticles(ParticleTypes.ENCHANTED_HIT, sp.getX(), sp.getY() + 1.0D, sp.getZ(), 30, 0.4D, 0.4D, 0.4D, 0.1D);
+
+        int subRoll = RNG.nextInt(4);
+        if (subRoll == 0) {
+            ItemStack exp = new ItemStack(SystemItems.HEROS_WIT.get(), 3);
+            sp.sendSystemMessage(Component.translatable("item.awakening_system.gacha_capsule.tier3_exp"), false);
+            return exp;
+        } else if (subRoll == 1) {
+            ItemStack stardust = new ItemStack(SystemItems.MASTERLESS_STARDUST.get(), 15);
+            sp.sendSystemMessage(Component.translatable("item.awakening_system.gacha_capsule.tier3_stardust"), false);
+            return stardust;
+        } else if (subRoll == 2) {
+            Item[] sigilPool = new Item[]{
+                    SystemItems.ANEMO_SIGIL.get(),
+                    SystemItems.GEO_SIGIL.get(),
+                    SystemItems.ELECTRO_SIGIL.get(),
+                    SystemItems.DENDRO_SIGIL.get()
+            };
+            ItemStack sigil = new ItemStack(sigilPool[RNG.nextInt(sigilPool.length)], 3);
+            sp.sendSystemMessage(Component.translatable("item.awakening_system.gacha_capsule.tier3_sigil", sigil.getHoverName()), false);
+            return sigil;
+        } else {
+            int moraWon = 7500;
+            data.addMora(moraWon);
+            com.soybe.awakeningsystem.AwakeningSystemMod.sync(sp);
+            sp.sendSystemMessage(Component.translatable("item.awakening_system.gacha_capsule.tier3_mora"), false);
+            return ItemStack.EMPTY;
+        }
+    }
+
+    private static void deliverRewardExcludingHand(ServerPlayer player, InteractionHand hand, ItemStack rewardStack) {
+        if (rewardStack == null || rewardStack.isEmpty()) return;
+
         SystemData data = SystemEvents.data(player);
-        boolean[] sentToSubspace = new boolean[]{false};
-        int[] counter = new int[]{0};
-        com.soybe.awakeningsystem.GachaManager.deliverGachaReward(player, data, stack, sentToSubspace, counter);
-        if (sentToSubspace[0]) {
-            player.sendSystemMessage(Component.literal("§6✦ [SISTEMA] §e¡Tu inventario estaba lleno! §fEl premio (" + stack.getHoverName().getString() + ") se guardó en tu §eSubespacio del Sistema§f."));
-            player.playNotifySound(net.minecraft.sounds.SoundEvents.CHEST_OPEN, SoundSource.PLAYERS, 0.8f, 1.2f);
-            com.soybe.awakeningsystem.AwakeningSystemMod.sync(player);
+        int excludedSlot = (hand == InteractionHand.MAIN_HAND) ? player.getInventory().selected : -1;
+        ItemStack remaining = rewardStack.copy();
+
+        if (remaining.isStackable()) {
+            for (int i = 0; i < player.getInventory().items.size(); i++) {
+                if (i == excludedSlot) continue;
+                ItemStack slotStack = player.getInventory().items.get(i);
+                if (!slotStack.isEmpty() && ItemStack.isSameItemSameComponents(slotStack, remaining)) {
+                    int space = slotStack.getMaxStackSize() - slotStack.getCount();
+                    if (space > 0) {
+                        int toMove = Math.min(space, remaining.getCount());
+                        slotStack.grow(toMove);
+                        remaining.shrink(toMove);
+                        if (remaining.isEmpty()) {
+                            player.inventoryMenu.broadcastChanges();
+                            return;
+                        }
+                    }
+                }
+            }
+        }
+
+        int targetSlot = -1;
+        for (int i = 0; i < player.getInventory().items.size(); i++) {
+            if (i == excludedSlot) continue;
+            if (player.getInventory().items.get(i).isEmpty()) {
+                targetSlot = i;
+                break;
+            }
+        }
+
+        if (targetSlot >= 0) {
+            player.getInventory().items.set(targetSlot, remaining.copy());
+            remaining.setCount(0);
+            player.inventoryMenu.broadcastChanges();
+            return;
+        }
+
+        ItemStack leftover = data.addToSubspace(remaining);
+        player.sendSystemMessage(Component.literal("§6✦ [SYSTEM] §eYour inventory was full! §fReward (" + rewardStack.getHoverName().getString() + ") was stored in your §eSystem Subspace§f."));
+        player.playNotifySound(SoundEvents.CHEST_OPEN, SoundSource.PLAYERS, 0.8f, 1.2f);
+        com.soybe.awakeningsystem.AwakeningSystemMod.sync(player);
+
+        if (!leftover.isEmpty()) {
+            player.drop(leftover, false);
         }
     }
 
     @Override
     public void appendHoverText(ItemStack stack, TooltipContext context, List<Component> tooltip, TooltipFlag tooltipFlag) {
-        tooltip.add(Component.literal("§7Cápsula mágica sellada obtenida del Gachapon de Teyvat.").withStyle(ChatFormatting.GRAY));
-        tooltip.add(Component.literal("§eHaz clic derecho §7para abrir y revelar su tesoro.").withStyle(ChatFormatting.YELLOW));
-        tooltip.add(Component.literal("§6✦ Posibles Premios: §fMandoble del Creador, La Doncella, Conos de Luz 3D, Destinos, Mora.").withStyle(ChatFormatting.GOLD));
+        if (capsuleRarity == CapsuleRarity.GOLD) {
+            tooltip.add(Component.translatable("item.awakening_system.gacha_capsule.rarity_gold").withStyle(ChatFormatting.GOLD));
+            tooltip.add(Component.translatable("item.awakening_system.gacha_capsule.desc_gold").withStyle(ChatFormatting.GRAY));
+            tooltip.add(Component.translatable("item.awakening_system.gacha_capsule.guarantee_gold").withStyle(ChatFormatting.YELLOW));
+            tooltip.add(Component.translatable("item.awakening_system.gacha_capsule.prizes_gold").withStyle(ChatFormatting.GOLD));
+        } else if (capsuleRarity == CapsuleRarity.PURPLE) {
+            tooltip.add(Component.translatable("item.awakening_system.gacha_capsule.rarity_purple").withStyle(ChatFormatting.LIGHT_PURPLE));
+            tooltip.add(Component.translatable("item.awakening_system.gacha_capsule.desc_purple").withStyle(ChatFormatting.GRAY));
+            tooltip.add(Component.translatable("item.awakening_system.gacha_capsule.rewards_purple").withStyle(ChatFormatting.LIGHT_PURPLE));
+            tooltip.add(Component.translatable("item.awakening_system.gacha_capsule.prizes_purple").withStyle(ChatFormatting.DARK_PURPLE));
+        } else {
+            tooltip.add(Component.translatable("item.awakening_system.gacha_capsule.rarity_blue").withStyle(ChatFormatting.BLUE));
+            tooltip.add(Component.translatable("item.awakening_system.gacha_capsule.desc_blue").withStyle(ChatFormatting.GRAY));
+            tooltip.add(Component.translatable("item.awakening_system.gacha_capsule.rewards_blue").withStyle(ChatFormatting.AQUA));
+            tooltip.add(Component.translatable("item.awakening_system.gacha_capsule.prizes_blue").withStyle(ChatFormatting.GRAY));
+        }
+        tooltip.add(Component.translatable("item.awakening_system.gacha_capsule.open").withStyle(ChatFormatting.YELLOW));
     }
 }

@@ -30,13 +30,16 @@
         "maxCount": 3
       }
     ],
-    "creature": [
+    "creature": [],
+    "underground_water_creature": [
       {
         "type": "minecraft:glow_squid",
         "weight": 20,
         "minCount": 2,
         "maxCount": 4
-      },
+      }
+    ],
+    "ambient": [
       {
         "type": "minecraft:bat",
         "weight": 15,

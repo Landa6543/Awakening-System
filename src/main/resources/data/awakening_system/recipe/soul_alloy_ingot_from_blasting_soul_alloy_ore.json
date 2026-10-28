@@ -1,0 +1,12 @@
+{
+  "type": "minecraft:blasting",
+  "category": "misc",
+  "cookingtime": 100,
+  "experience": 2.5,
+  "ingredient": {
+    "item": "awakening_system:soul_alloy_ore"
+  },
+  "result": {
+    "id": "awakening_system:soul_alloy_ingot"
+  }
+}

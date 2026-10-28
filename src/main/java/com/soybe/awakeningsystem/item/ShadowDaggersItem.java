@@ -45,11 +45,11 @@ public class ShadowDaggersItem extends SwordItem implements AwakeningWeaponItem 
             long cdUntil = sp.getPersistentData().getLong("shadow_daggers_cd");
             if (gameTime < cdUntil) {
                 long sec = (cdUntil - gameTime) / 20;
-                sp.displayClientMessage(Component.literal("§c⏳ Dagas de Sangre y Sombras en recarga (" + sec + "s)..."), true);
+                sp.displayClientMessage(Component.translatable("item.awakening_system.shadow_daggers.cooldown", sec), true);
                 return InteractionResultHolder.fail(stack);
             }
 
-            sp.getPersistentData().putLong("shadow_daggers_cd", gameTime + 240L); // 12s cooldown
+            sp.getPersistentData().putLong("shadow_daggers_cd", gameTime + 240L);
             sp.getCooldowns().addCooldown(this, 240);
 
             if (level instanceof ServerLevel sl) {
@@ -73,12 +73,10 @@ public class ShadowDaggersItem extends SwordItem implements AwakeningWeaponItem 
                 }
 
                 if (target != null) {
-                    // --- PASO DE SOMBRAS: APARICIÓN TRAS EL OBJETIVO ---
                     sl.sendParticles(ParticleTypes.SQUID_INK, sp.getX(), sp.getY() + 0.8D, sp.getZ(), 35, 0.4D, 0.6D, 0.4D, 0.05D);
                     sl.sendParticles(ParticleTypes.PORTAL, sp.getX(), sp.getY() + 0.8D, sp.getZ(), 20, 0.3D, 0.5D, 0.3D, 0.1D);
                     sl.playSound(null, sp.getX(), sp.getY(), sp.getZ(), SoundEvents.ENDERMAN_TELEPORT, SoundSource.PLAYERS, 1.0F, 1.2F);
 
-                    // Posición detrás del enemigo (1.5 bloques a su espalda)
                     Vec3 targetLook = target.getLookAngle().normalize();
                     double destX = target.getX() - targetLook.x * 1.5D;
                     double destZ = target.getZ() - targetLook.z * 1.5D;
@@ -86,20 +84,17 @@ public class ShadowDaggersItem extends SwordItem implements AwakeningWeaponItem 
 
                     sp.teleportTo(sl, destX, destY, destZ, target.getYRot(), target.getXRot());
 
-                    // Estallido de sombra al reaparecer
                     sl.sendParticles(ParticleTypes.SQUID_INK, destX, destY + 0.8D, destZ, 45, 0.5D, 0.6D, 0.5D, 0.05D);
                     sl.playSound(null, destX, destY, destZ, SoundEvents.PLAYER_ATTACK_CRIT, SoundSource.PLAYERS, 1.6F, 1.4F);
                     sl.playSound(null, destX, destY, destZ, SoundEvents.WARDEN_SONIC_BOOM, SoundSource.PLAYERS, 0.65F, 1.8F);
 
                     com.soybe.awakeningsystem.CameraShakePayload.sendToNearby(sl, destX, destY, destZ, 28.0D, 0.70F, 10);
 
-                    // Puñalada por la espalda y Cruz de Sombras
                     float backstabDmg = (float) (28.0D * WeaponLevelManager.getDamageMultiplier(stack));
                     if (target.getHealth() < target.getMaxHealth() * 0.5F) {
-                        backstabDmg += 14.0F; // Golpe de ejecución letal
+                        backstabDmg += 14.0F;
                     }
 
-                    // Tajo Cruzado 'X' de Vacío a la Espalda
                     SlashWaveEntity crossSlice = new SlashWaveEntity(sl, sp, SlashWaveEntity.TYPE_DARK_VOID, backstabDmg, 3.2F, 3.2F, 0.0F, 16, 4);
                     crossSlice.setCross(true);
                     crossSlice.setDeltaMovement(targetLook.scale(1.8D));
@@ -115,9 +110,8 @@ public class ShadowDaggersItem extends SwordItem implements AwakeningWeaponItem 
                     WeaponLevelManager.addExp(stack, 35, sp);
 
                     String targetName = target.getCustomName() != null ? target.getCustomName().getString() : target.getType().getDescription().getString();
-                    sp.displayClientMessage(Component.literal("§8§l✦ [DEGÜELLO DE SOMBRAS] §5¡Degüello en Cruz ejecutado tras §f" + targetName + " §5(§c" + (int)backstabDmg + " daño§5)!"), true);
+                    sp.displayClientMessage(Component.translatable("item.awakening_system.shadow_daggers.backstab", targetName, (int)backstabDmg), true);
                 } else {
-                    // --- PARPADEO SOMBRÍO (SHADOW DASH) SI NO HAY OBJETIVO ---
                     Vec3 dashDest = eyePos.add(lookVec.scale(8.0D));
                     BlockPos targetPos = BlockPos.containing(dashDest);
                     if (level.getBlockState(targetPos).isAir() || level.getBlockState(targetPos).canBeReplaced()) {
@@ -127,7 +121,6 @@ public class ShadowDaggersItem extends SwordItem implements AwakeningWeaponItem 
                         sp.hurtMarked = true;
                     }
 
-                    // Disparar onda cortante de sombra frontal en el parpadeo
                     SlashWaveEntity dashWave = new SlashWaveEntity(sl, sp, SlashWaveEntity.TYPE_DARK_VOID, 20.0F, 3.4F, 1.2F, 0.0F, 22, 6);
                     dashWave.setDeltaMovement(lookVec.scale(2.2D));
                     sl.addFreshEntity(dashWave);
@@ -135,7 +128,7 @@ public class ShadowDaggersItem extends SwordItem implements AwakeningWeaponItem 
                     com.soybe.awakeningsystem.CameraShakePayload.sendToNearby(sl, sp.getX(), sp.getY(), sp.getZ(), 20.0D, 0.4F, 6);
                     sl.playSound(null, sp.getX(), sp.getY(), sp.getZ(), SoundEvents.ENDERMAN_TELEPORT, SoundSource.PLAYERS, 1.0F, 1.2F);
                     sp.addEffect(new MobEffectInstance(MobEffects.MOVEMENT_SPEED, 60, 2, false, true));
-                    sp.displayClientMessage(Component.literal("§8§l✦ [PASO DE SOMBRAS] §7¡Parpadeo sombrío ejecutado con cuchilla de vacío!"), true);
+                    sp.displayClientMessage(Component.translatable("item.awakening_system.shadow_daggers.shadow_step"), true);
                 }
             }
             return InteractionResultHolder.sidedSuccess(stack, level.isClientSide());
@@ -153,7 +146,6 @@ public class ShadowDaggersItem extends SwordItem implements AwakeningWeaponItem 
             target.addEffect(new MobEffectInstance(MobEffects.WITHER, 60, 1));
             target.addEffect(new MobEffectInstance(MobEffects.BLINDNESS, 40, 0));
 
-            // Backstab / execute bonus
             if (target.getHealth() < target.getMaxHealth() * 0.5F && attacker instanceof Player p) {
                 target.hurt(target.damageSources().playerAttack(p), 8.0F);
                 sl.playSound(null, target.getX(), target.getY(), target.getZ(), SoundEvents.PLAYER_ATTACK_CRIT, SoundSource.PLAYERS, 1.3F, 1.6F);

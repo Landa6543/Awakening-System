@@ -6,6 +6,7 @@ import com.soybe.awakeningsystem.SystemEvents;
 import com.soybe.awakeningsystem.SystemItems;
 import com.soybe.awakeningsystem.OpenGuildReceptionPayload;
 import com.soybe.awakeningsystem.GuildReceptionActionPayload;
+import net.minecraft.ChatFormatting;
 import net.minecraft.core.particles.ParticleTypes;
 import net.minecraft.world.effect.MobEffectInstance;
 import net.minecraft.world.effect.MobEffects;
@@ -13,10 +14,12 @@ import net.minecraft.world.item.ItemStack;
 import net.minecraft.core.BlockPos;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.network.chat.Component;
+import net.minecraft.network.chat.MutableComponent;
 import net.minecraft.network.protocol.game.ClientboundStopSoundPacket;
 import net.minecraft.network.syncher.EntityDataAccessor;
 import net.minecraft.network.syncher.EntityDataSerializers;
 import net.minecraft.network.syncher.SynchedEntityData;
+import net.minecraft.server.level.ServerLevel;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.sounds.SoundEvents;
 import net.minecraft.sounds.SoundSource;
@@ -69,11 +72,15 @@ public class SeriesNpcEntity extends PathfinderMob {
             @Override
             public boolean canUse() {
                 if (SeriesNpcEntity.this.getNpcProfile() == NpcProfile.ELENA_RECEPTIONIST) return false;
+                if (SeriesNpcEntity.this.getNpcProfile() == NpcProfile.BLACK_MARKET_DEALER) return false;
+                if (SeriesNpcEntity.this.getNpcProfile() == NpcProfile.CASINO_RECEPTIONIST) return false;
                 return super.canUse();
             }
             @Override
             public boolean canContinueToUse() {
                 if (SeriesNpcEntity.this.getNpcProfile() == NpcProfile.ELENA_RECEPTIONIST) return false;
+                if (SeriesNpcEntity.this.getNpcProfile() == NpcProfile.BLACK_MARKET_DEALER) return false;
+                if (SeriesNpcEntity.this.getNpcProfile() == NpcProfile.CASINO_RECEPTIONIST) return false;
                 return super.canContinueToUse();
             }
         });
@@ -106,7 +113,29 @@ public class SeriesNpcEntity extends PathfinderMob {
 
     public void updateCustomName() {
         NpcProfile p = getNpcProfile();
-        this.setCustomName(Component.literal(p.titleColor() + p.displayName() + " §7[").append(Component.translatable("awakening_system.npc." + p.id() + ".title")).append(Component.literal("]")));
+        ChatFormatting color = ChatFormatting.WHITE;
+        String tc = p.titleColor();
+        if (tc != null && tc.length() >= 2 && tc.charAt(0) == '§') {
+            ChatFormatting found = ChatFormatting.getByCode(tc.charAt(1));
+            if (found != null && found.isColor()) {
+                color = found;
+            }
+        }
+        boolean bold = tc != null && tc.contains("§l");
+
+        MutableComponent nameComp = Component.translatable("entity.awakening_system." + p.id())
+                .withStyle(color);
+        if (bold) {
+            nameComp.withStyle(ChatFormatting.BOLD);
+        }
+
+        MutableComponent titleComp = Component.translatable("awakening_system.npc." + p.id() + ".title")
+                .withStyle(ChatFormatting.GRAY);
+
+        this.setCustomName(nameComp
+                .append(Component.literal(" [").withStyle(ChatFormatting.GRAY))
+                .append(titleComp)
+                .append(Component.literal("]").withStyle(ChatFormatting.GRAY)));
         this.setCustomNameVisible(true);
     }
 
@@ -156,7 +185,6 @@ public class SeriesNpcEntity extends PathfinderMob {
             NpcProfile profile = getNpcProfile();
             String quote = profile.getRandomDialogue();
 
-            // Mensaje en pantalla estilo Sistema
             int diagIdx = (int) (Math.random() * 4);
             AwakeningSystemMod.notify(serverPlayer,
                     "awakening_system.npc." + profile.id() + ".dialogue_title",
@@ -164,9 +192,8 @@ public class SeriesNpcEntity extends PathfinderMob {
                     0xFFFFD700);
 
             serverPlayer.connection.send(new ClientboundStopSoundPacket(null, SoundSource.VOICE));
-            serverPlayer.playNotifySound(com.soybe.awakeningsystem.ModSounds.NPC_INTERACT.get(), SoundSource.VOICE, 1.0F, 1.0F);
+            serverPlayer.playNotifySound(profile.getVoiceSound(), SoundSource.VOICE, 1.2F, 1.0F);
 
-            // Gestión de Rango y Pantalla Interactiva de Elena (Recepcionista del Gremio)
             if (profile == NpcProfile.ELENA_RECEPTIONIST) {
                 CompoundTag pTag = serverPlayer.getPersistentData();
                 int completed = pTag.getInt("bounties_total_completed");
@@ -190,7 +217,52 @@ public class SeriesNpcEntity extends PathfinderMob {
                 return InteractionResult.SUCCESS;
             }
 
-            // Sistema de Bendición / Buff Diario
+            if (profile == NpcProfile.BLACK_MARKET_DEALER) {
+                com.soybe.awakeningsystem.blackmarket.BlackMarketServerHandler.openMarket(serverPlayer);
+                return InteractionResult.SUCCESS;
+            }
+
+            if (profile == NpcProfile.CASINO_RECEPTIONIST) {
+                com.soybe.awakeningsystem.SystemData data = SystemEvents.data(serverPlayer);
+                boolean isVip = data.isCasinoVip();
+                var passItem = SystemItems.CASINO_VIP_PASS.get();
+                boolean hasPass = serverPlayer.getInventory().contains(new ItemStack(passItem));
+
+                if (isVip) {
+                    if (!hasPass) {
+                        ItemStack pass = new ItemStack(passItem);
+                        com.soybe.awakeningsystem.item.CasinoVipPassItem.bindToPlayer(pass, serverPlayer);
+                        serverPlayer.getInventory().add(pass);
+                        serverPlayer.displayClientMessage(Component.translatable("awakening_system.npc.valerie.welcome_card"), false);
+                        serverPlayer.playNotifySound(SoundEvents.PLAYER_LEVELUP, SoundSource.PLAYERS, 1.0F, 1.2F);
+                    } else {
+                        serverPlayer.displayClientMessage(Component.translatable("awakening_system.npc.valerie.active"), false);
+                        serverPlayer.playNotifySound(SoundEvents.EXPERIENCE_ORB_PICKUP, SoundSource.PLAYERS, 1.0F, 1.0F);
+                    }
+                } else {
+                    final int VIP_PRICE_MORA = 50000;
+                    if (data.mora() >= VIP_PRICE_MORA) {
+                        data.spendMora(VIP_PRICE_MORA);
+                        data.setCasinoVipUntilTick(-1L);
+                        AwakeningSystemMod.sync(serverPlayer);
+                        if (!hasPass) {
+                            ItemStack pass = new ItemStack(passItem);
+                            com.soybe.awakeningsystem.item.CasinoVipPassItem.bindToPlayer(pass, serverPlayer);
+                            serverPlayer.getInventory().add(pass);
+                        }
+                        serverPlayer.playNotifySound(SoundEvents.UI_TOAST_CHALLENGE_COMPLETE, SoundSource.PLAYERS, 1.0F, 1.0F);
+                        if (serverPlayer.level() instanceof ServerLevel sl) {
+                            sl.sendParticles(ParticleTypes.TOTEM_OF_UNDYING, serverPlayer.getX(), serverPlayer.getY() + 1.2D, serverPlayer.getZ(), 45, 0.5D, 0.8D, 0.5D, 0.15D);
+                        }
+                        serverPlayer.displayClientMessage(Component.translatable("awakening_system.npc.valerie.purchased"), false);
+                    } else {
+                        serverPlayer.playNotifySound(SoundEvents.VILLAGER_NO, SoundSource.NEUTRAL, 1.0F, 1.0F);
+                        serverPlayer.displayClientMessage(Component.translatable("awakening_system.npc.valerie.need_mora", data.mora()), false);
+                    }
+                }
+                return InteractionResult.SUCCESS;
+            }
+
             long currentDay = serverPlayer.level().getDayTime() / 24000L;
             String tagKey = "blessing_day_" + profile.id();
             long lastBlessingDay = serverPlayer.getPersistentData().getLong(tagKey);
@@ -213,7 +285,6 @@ public class SeriesNpcEntity extends PathfinderMob {
 
     @Override
     public boolean hurt(DamageSource source, float amount) {
-        // Los NPCs protagonistas son legendarios e inmortales frente a monstruos, fuego, asfixia y caídas
         if (source.getEntity() instanceof Player player) {
             return player.isCreative() && super.hurt(source, amount);
         }
@@ -222,13 +293,16 @@ public class SeriesNpcEntity extends PathfinderMob {
 
     @Override
     public boolean isPushable() {
-        return getNpcProfile() != NpcProfile.ELENA_RECEPTIONIST && super.isPushable();
+        return getNpcProfile() != NpcProfile.ELENA_RECEPTIONIST
+                && getNpcProfile() != NpcProfile.BLACK_MARKET_DEALER
+                && getNpcProfile() != NpcProfile.CASINO_RECEPTIONIST
+                && super.isPushable();
     }
 
     @Override
     public void tick() {
         super.tick();
-        if (!this.level().isClientSide && getNpcProfile() == NpcProfile.ELENA_RECEPTIONIST && this.homePos != null) {
+        if (!this.level().isClientSide && (getNpcProfile() == NpcProfile.ELENA_RECEPTIONIST || getNpcProfile() == NpcProfile.BLACK_MARKET_DEALER || getNpcProfile() == NpcProfile.CASINO_RECEPTIONIST) && this.homePos != null) {
             double targetX = this.homePos.getX() + 0.5D;
             double targetY = this.homePos.getY();
             double targetZ = this.homePos.getZ() + 0.5D;
@@ -262,7 +336,6 @@ public class SeriesNpcEntity extends PathfinderMob {
         String nextRank = GuildRankManager.getNextRankName(completed);
 
         if (payload.actionId() == 1) {
-            // ASCENSO DE RANGO
             if (!currentRank.equals(lastPromoted)) {
                 pTag.putString("last_promoted_guild_rank", currentRank);
                 pTag.putString("guild_rank", currentRank);
@@ -297,7 +370,6 @@ public class SeriesNpcEntity extends PathfinderMob {
                         ));
             }
         } else if (payload.actionId() == 2) {
-            // BENDICIÓN DE ELENA
             long lastBlessingTime = pTag.getLong("elena_last_blessing_time");
             long currentTime = player.level().getGameTime();
             if (currentTime - lastBlessingTime >= 24000L || lastBlessingTime == 0) {

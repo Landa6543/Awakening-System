@@ -20,11 +20,11 @@ public class OmnisciencePouchItem extends Item {
 
     @Override
     public void appendHoverText(ItemStack stack, TooltipContext context, List<Component> tooltip, TooltipFlag flag) {
-        tooltip.add(Component.literal("§5§l['Curio' Bolsa Omnisciente]").withStyle(ChatFormatting.LIGHT_PURPLE));
-        tooltip.add(Component.literal("§7Un mítico talismán proveniente de las profundidades del Universo Simulado."));
-        tooltip.add(Component.literal("§e✦ Fortuna Astral:"));
-        tooltip.add(Component.literal("§7  Al romper Vasijas de Teyvat o abrir Cofres del Tesoro,"));
-        tooltip.add(Component.literal("§a  duplica automáticamente todas las recompensas y materiales obtenidos."));
+        tooltip.add(Component.translatable("item.awakening_system.omniscience_pouch.title").withStyle(ChatFormatting.LIGHT_PURPLE));
+        tooltip.add(Component.translatable("item.awakening_system.omniscience_pouch.desc"));
+        tooltip.add(Component.translatable("item.awakening_system.omniscience_pouch.header"));
+        tooltip.add(Component.translatable("item.awakening_system.omniscience_pouch.desc1"));
+        tooltip.add(Component.translatable("item.awakening_system.omniscience_pouch.desc2"));
         super.appendHoverText(stack, context, tooltip, flag);
     }
 }

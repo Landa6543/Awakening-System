@@ -133,7 +133,6 @@ public class SubwayPassengerSeatBlock extends HorizontalDirectionalBlock {
     @Override
     protected InteractionResult useWithoutItem(BlockState state, Level level, BlockPos pos, Player player, BlockHitResult hitResult) {
         if (!level.isClientSide()) {
-            // Shift + Clic derecho: rotar manualmente orientación del asiento
             if (player.isShiftKeyDown()) {
                 Direction newFacing = state.getValue(FACING).getClockWise();
                 BlockState newState = updateSeatShape(level, pos, newFacing);
@@ -142,7 +141,6 @@ public class SubwayPassengerSeatBlock extends HorizontalDirectionalBlock {
                 return InteractionResult.CONSUME;
             }
 
-            // Comprobar si ya hay alguien sentado en este asiento
             AABB checkArea = new AABB(pos).inflate(0.2D);
             List<com.soybe.awakeningsystem.entity.TavernSeatEntity> seats = level.getEntitiesOfClass(com.soybe.awakeningsystem.entity.TavernSeatEntity.class, checkArea);
             if (!seats.isEmpty()) {
@@ -150,12 +148,11 @@ public class SubwayPassengerSeatBlock extends HorizontalDirectionalBlock {
                 if (existing.hasPassenger(player)) {
                     return InteractionResult.PASS;
                 } else if (!existing.getPassengers().isEmpty()) {
-                    player.displayClientMessage(Component.literal("§c[Metro] Este asiento ya está ocupado."), true);
+                    player.displayClientMessage(Component.translatable("block.awakening_system.subway_seat.occupied"), true);
                     return InteractionResult.CONSUME;
                 }
             }
 
-            // Invocar asiento de pasajero normal (sin meditación ni cultivo de Qi)
             com.soybe.awakeningsystem.entity.TavernSeatEntity seat = ModEntities.TAVERN_SEAT.get().create(level);
             if (seat != null) {
                 Direction facing = state.getValue(FACING);
@@ -168,7 +165,7 @@ public class SubwayPassengerSeatBlock extends HorizontalDirectionalBlock {
                 player.yRotO = facing.toYRot();
                 player.xRotO = 0.0F;
                 level.playSound(null, pos, SoundEvents.WOOL_PLACE, SoundSource.BLOCKS, 0.8F, 1.1F);
-                player.displayClientMessage(Component.literal("§b[Metro de Seúl] §7Te has acomodado en el asiento del vagón."), true);
+                player.displayClientMessage(Component.translatable("block.awakening_system.subway_seat.seated"), true);
             }
         }
         return InteractionResult.sidedSuccess(level.isClientSide());

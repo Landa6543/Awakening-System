@@ -27,14 +27,14 @@ public class AwakeningCoinItem extends Item {
     public InteractionResultHolder<ItemStack> use(Level level, Player player, InteractionHand hand) {
         ItemStack stack = player.getItemInHand(hand);
 
-        // Shift + Clic Derecho: Depositar en la cuenta del Banco del Sistema
         if (player.isShiftKeyDown()) {
             if (!level.isClientSide() && player instanceof ServerPlayer sp) {
                 int count = stack.getCount();
                 stack.shrink(count);
 
+                int coinsAwarded = count * 2;
                 SystemData data = SystemEvents.data(sp);
-                data.addCoins(count);
+                data.addCoins(coinsAwarded);
                 AwakeningSystemMod.sync(sp);
 
                 level.playSound(null, player.getX(), player.getY(), player.getZ(),
@@ -42,20 +42,18 @@ public class AwakeningCoinItem extends Item {
                 level.playSound(null, player.getX(), player.getY(), player.getZ(),
                         SoundEvents.EXPERIENCE_ORB_PICKUP, SoundSource.PLAYERS, 0.6F, 1.3F);
 
-                sp.displayClientMessage(Component.translatable("awakening_system.bank.coins_deposited", count, data.coins()), true);
+                sp.displayClientMessage(Component.translatable("awakening_system.bank.coins_deposited", coinsAwarded, data.coins()), true);
                 return InteractionResultHolder.sidedSuccess(stack, false);
             }
             return InteractionResultHolder.sidedSuccess(stack, level.isClientSide());
         }
 
-        // Clic Derecho Normal: Lanzamiento Físico de la Ficha
         boolean lookingUp = player.getXRot() < -45.0F;
         if (!level.isClientSide() && player instanceof ServerPlayer sp) {
             com.soybe.awakeningsystem.entity.AwakeningCoinEntity coin =
                     new com.soybe.awakeningsystem.entity.AwakeningCoinEntity(level, sp, lookingUp);
 
             if (lookingUp) {
-                // Tiro vertical parabólico para Cara o Cruz
                 coin.shootFromRotation(sp, -88.0F, sp.getYRot(), 0.0F, 0.75F, 0.0F);
                 level.playSound(null, sp.getX(), sp.getY(), sp.getZ(),
                         SoundEvents.NOTE_BLOCK_CHIME.value(), SoundSource.PLAYERS, 1.0F, 2.0F);
@@ -63,7 +61,6 @@ public class AwakeningCoinItem extends Item {
                         SoundEvents.EXPERIENCE_ORB_PICKUP, SoundSource.PLAYERS, 0.7F, 1.8F);
                 sp.displayClientMessage(Component.translatable("awakening_system.item.coin.flip"), true);
             } else {
-                // Lanzamiento frontal cinético con rebote
                 coin.shootFromRotation(sp, sp.getXRot(), sp.getYRot(), 0.0F, 1.4F, 1.0F);
                 level.playSound(null, sp.getX(), sp.getY(), sp.getZ(),
                         SoundEvents.SNOWBALL_THROW, SoundSource.PLAYERS, 0.9F, 1.4F);

@@ -71,7 +71,6 @@ public class AwakeningCoinEntity extends ThrowableItemProjectile {
         super.tick();
         lifeTicks++;
 
-        // Partículas de estela giratoria dorada mientras vuela
         if (level().isClientSide) {
             Vec3 motion = getDeltaMovement();
             level().addParticle(ParticleTypes.ELECTRIC_SPARK,
@@ -84,7 +83,6 @@ public class AwakeningCoinEntity extends ThrowableItemProjectile {
             }
         }
 
-        // Lógica de Cara o Cruz al caer o alcanzar el ápice en el aire
         if (!level().isClientSide && isCoinFlip()) {
             if (lifeTicks >= 22 || (lifeTicks > 10 && getDeltaMovement().y <= 0 && getOwner() != null && distanceToSqr(getOwner()) < 6.0)) {
                 resolveCoinFlip();
@@ -107,7 +105,6 @@ public class AwakeningCoinEntity extends ThrowableItemProjectile {
 
         boolean heads = random.nextBoolean();
         if (heads) {
-            // Cara: Suerte del Sistema (Sol Dorado)
             player.addEffect(new MobEffectInstance(MobEffects.LUCK, 600, 1, false, false, true));
             player.addEffect(new MobEffectInstance(MobEffects.MOVEMENT_SPEED, 300, 1, false, false, true));
             player.displayClientMessage(Component.translatable("awakening_system.coin_entity.heads"), true);
@@ -116,7 +113,6 @@ public class AwakeningCoinEntity extends ThrowableItemProjectile {
                 sl.sendParticles(ParticleTypes.TOTEM_OF_UNDYING, player.getX(), player.getY() + 1.0, player.getZ(), 30, 0.5, 0.5, 0.5, 0.1);
             }
         } else {
-            // Cruz: Escudo del Sistema (Luna Sombría)
             player.addEffect(new MobEffectInstance(MobEffects.ABSORPTION, 600, 1, false, false, true));
             player.addEffect(new MobEffectInstance(MobEffects.DAMAGE_RESISTANCE, 300, 0, false, false, true));
             player.displayClientMessage(Component.translatable("awakening_system.coin_entity.tails"), true);
@@ -144,7 +140,6 @@ public class AwakeningCoinEntity extends ThrowableItemProjectile {
             }
 
             if (!target.isAlive()) {
-                // Drop de moneda extra por impacto crítico
                 ItemEntity bonus = new ItemEntity(level(), target.getX(), target.getY() + 0.5, target.getZ(),
                         new ItemStack(SystemItems.AWAKENING_COIN.get(), 1 + random.nextInt(2)));
                 level().addFreshEntity(bonus);
@@ -158,7 +153,6 @@ public class AwakeningCoinEntity extends ThrowableItemProjectile {
         super.onHitBlock(result);
         if (level().isClientSide) return;
 
-        // Si impacta contra un Altar de Ruleta en la mazmorra
         if (level().getBlockState(result.getBlockPos()).is(Blocks.RESPAWN_ANCHOR)) {
             level().playSound(null, result.getBlockPos(), SoundEvents.RESPAWN_ANCHOR_SET_SPAWN, SoundSource.BLOCKS, 1.2F, 1.5F);
             if (level() instanceof ServerLevel sl) {
@@ -171,7 +165,6 @@ public class AwakeningCoinEntity extends ThrowableItemProjectile {
             return;
         }
 
-        // Física de rebote de la ficha contra el suelo o muros
         bounces++;
         level().playSound(null, getX(), getY(), getZ(), SoundEvents.AMETHYST_BLOCK_HIT, SoundSource.BLOCKS, 0.9F, 1.8F + random.nextFloat() * 0.4F);
         level().playSound(null, getX(), getY(), getZ(), SoundEvents.CHAIN_STEP, SoundSource.BLOCKS, 0.8F, 1.6F);
@@ -186,7 +179,6 @@ public class AwakeningCoinEntity extends ThrowableItemProjectile {
             return;
         }
 
-        // Invertir velocidad según la cara golpeada con disipación de energía cinética
         Vec3 delta = getDeltaMovement();
         Direction.Axis axis = result.getDirection().getAxis();
         double factor = 0.55;

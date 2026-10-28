@@ -77,14 +77,12 @@ public class ShrineOfDepthsBlock extends Block {
             boolean hasKeyInHand = (!mainHand.isEmpty() && mainHand.is(requiredKey)) || (!offHand.isEmpty() && offHand.is(requiredKey));
 
             if (hasKeyInHand) {
-                // Consumir 1 llave
                 if (!mainHand.isEmpty() && mainHand.is(requiredKey)) {
                     mainHand.shrink(1);
                 } else {
                     offHand.shrink(1);
                 }
 
-                // Efectos visuales elementales apoteósicos
                 double cx = pos.getX() + 0.5D;
                 double cy = pos.getY() + 1.2D;
                 double cz = pos.getZ() + 0.5D;
@@ -111,7 +109,6 @@ public class ShrineOfDepthsBlock extends Block {
                 sl.playSound(null, pos, SoundEvents.UI_TOAST_CHALLENGE_COMPLETE, SoundSource.BLOCKS, 1.2F, 1.0F);
                 sl.playSound(null, pos, SoundEvents.BEACON_ACTIVATE, SoundSource.BLOCKS, 1.4F, 1.2F);
 
-                // Entregar recompensas canónicas de Santuario de las Profundidades
                 giveItem(sp, new ItemStack(SystemItems.PRIMOGEM.get(), 40));
                 giveItem(sp, new ItemStack(SystemItems.INTERTWINED_FATE.get(), 1));
                 giveItem(sp, new ItemStack(SystemItems.MYSTIC_ENHANCEMENT_ORE.get(), 5));
@@ -123,14 +120,13 @@ public class ShrineOfDepthsBlock extends Block {
                     AwakeningSystemMod.sync(sp);
                 }
 
-                sp.sendSystemMessage(Component.literal("§6§l✦ ¡SELLO DEL SANTUARIO DE LAS PROFUNDIDADES ROTO! ✦"));
-                sp.sendSystemMessage(Component.literal(element.colorCode + "Has liberado el poder de " + element.name + " y obtenido §b40 Protogemas§f, §d1 Destino Entrelazado§f, §65000 Mora/Monedas§f y §a5x Mineral Místico§f."));
+                sp.sendSystemMessage(Component.translatable("block.awakening_system.shrine_of_depths.seal_broken"));
+                sp.sendSystemMessage(Component.translatable("block.awakening_system.shrine_of_depths.reward", element.colorCode + element.name));
                 return ItemInteractionResult.SUCCESS;
             } else {
-                // No tiene la llave
                 sl.playSound(null, pos, SoundEvents.SHIELD_BLOCK, SoundSource.BLOCKS, 1.0F, 0.8F);
-                sp.sendSystemMessage(Component.literal("§c[Sello Arcano] El santuario elemental está protegido por un sello inquebrantable."));
-                sp.sendSystemMessage(Component.literal("§7Requiere sostener una §e" + requiredKey.getDescription().getString() + " §7para abrirse."));
+                sp.sendSystemMessage(Component.translatable("block.awakening_system.shrine_of_depths.locked"));
+                sp.sendSystemMessage(Component.translatable("block.awakening_system.shrine_of_depths.key_required", requiredKey.getDescription()));
                 return ItemInteractionResult.FAIL;
             }
         }

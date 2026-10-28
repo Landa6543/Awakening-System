@@ -133,7 +133,6 @@ public class StonehideLawachurlEntity extends Monster {
                 }
             }
 
-            // El escudo absorbe el 60% del daño
             return super.hurt(source, amount * 0.40F);
         }
 
@@ -154,7 +153,6 @@ public class StonehideLawachurlEntity extends Monster {
     protected void dropCustomDeathLoot(ServerLevel level, DamageSource damageSource, boolean recentlyHit) {
         super.dropCustomDeathLoot(level, damageSource, recentlyHit);
 
-        // Drops de cuernos y materiales de Lawachurl con física nativa
         if (SystemItems.HEAVY_HORN.isBound()) {
             this.spawnAtLocation(new ItemStack(SystemItems.HEAVY_HORN.get(), 2 + this.random.nextInt(3)));
         }
@@ -183,7 +181,7 @@ public class StonehideLawachurlEntity extends Monster {
                         data.addMora(moraGain);
                         data.addPrimogems(primoGain);
                         com.soybe.awakeningsystem.AwakeningSystemMod.sync(sp);
-                        sp.displayClientMessage(Component.literal("§6§l✦ ¡STONEHIDE LAWACHURL DERROTADO! §e+" + moraGain + " Mora, §b+" + primoGain + " Protogemas§e."), false);
+                        sp.displayClientMessage(Component.translatable("boss.awakening_system.stonehide_lawachurl.defeated", moraGain, primoGain), false);
                     } else {
                         if (SystemItems.AWAKENING_COIN.isBound()) {
                             sp.addItem(new ItemStack(SystemItems.AWAKENING_COIN.get(), 6));
@@ -194,7 +192,6 @@ public class StonehideLawachurlEntity extends Monster {
         }
     }
 
-    // === IA: IMPACTO SÍSMICO Y SALTO EN PICADO ===
     static class LawachurlSlamGoal extends Goal {
         private final StonehideLawachurlEntity lawachurl;
         private int leapTicks = 0;
@@ -233,7 +230,6 @@ public class StonehideLawachurlEntity extends Monster {
         public void tick() {
             this.leapTicks--;
 
-            // Al tocar el suelo tras haber estado en el aire
             if (this.leapTicks < 30 && this.lawachurl.onGround() && !this.lawachurl.level().isClientSide) {
                 ServerLevel sl = (ServerLevel) this.lawachurl.level();
                 sl.playSound(null, this.lawachurl.getX(), this.lawachurl.getY(), this.lawachurl.getZ(),

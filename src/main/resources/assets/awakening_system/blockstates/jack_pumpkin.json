@@ -1,0 +1,19 @@
+{
+  "variants": {
+    "facing=north": {
+      "model": "awakening_system:block/jack_pumpkin"
+    },
+    "facing=east": {
+      "model": "awakening_system:block/jack_pumpkin",
+      "y": 90
+    },
+    "facing=south": {
+      "model": "awakening_system:block/jack_pumpkin",
+      "y": 180
+    },
+    "facing=west": {
+      "model": "awakening_system:block/jack_pumpkin",
+      "y": 270
+    }
+  }
+}

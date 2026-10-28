@@ -1,0 +1,68 @@
+{
+  "credit": "Awakening System - Casino Wall Display Stand",
+  "textures": {
+    "wood": "awakening_system:block/casino_table_wood",
+    "felt": "awakening_system:block/casino_cashier_felt",
+    "particle": "awakening_system:block/casino_table_wood"
+  },
+  "elements": [
+    {
+      "name": "backplate",
+      "from": [2, 2, 15],
+      "to": [14, 9, 16],
+      "faces": {
+        "north": { "texture": "#wood", "uv": [2, 7, 14, 14] },
+        "east":  { "texture": "#wood", "uv": [15, 7, 16, 14] },
+        "south": { "texture": "#wood", "uv": [2, 7, 14, 14] },
+        "west":  { "texture": "#wood", "uv": [0, 7, 1, 14] },
+        "up":    { "texture": "#wood", "uv": [2, 15, 14, 16] },
+        "down":  { "texture": "#wood", "uv": [2, 15, 14, 16] }
+      }
+    },
+    {
+      "name": "shelf_board",
+      "from": [2, 6, 6],
+      "to": [14, 7.5, 15],
+      "faces": {
+        "north": { "texture": "#wood", "uv": [2, 6, 14, 7.5] },
+        "east":  { "texture": "#wood", "uv": [6, 6, 15, 7.5] },
+        "west":  { "texture": "#wood", "uv": [6, 6, 15, 7.5] },
+        "up":    { "texture": "#wood", "uv": [2, 6, 14, 15] },
+        "down":  { "texture": "#wood", "uv": [2, 6, 14, 15] }
+      }
+    },
+    {
+      "name": "felt_cushion",
+      "from": [3, 7.5, 7],
+      "to": [13, 8.0, 14],
+      "faces": {
+        "north": { "texture": "#felt", "uv": [3, 7, 13, 7.5] },
+        "east":  { "texture": "#felt", "uv": [7, 7, 14, 7.5] },
+        "west":  { "texture": "#felt", "uv": [7, 7, 14, 7.5] },
+        "up":    { "texture": "#felt", "uv": [3, 7, 13, 14] }
+      }
+    },
+    {
+      "name": "bracket_left",
+      "from": [3.5, 3, 9],
+      "to": [5.5, 6, 15],
+      "faces": {
+        "north": { "texture": "#wood", "uv": [3, 3, 5, 6] },
+        "east":  { "texture": "#wood", "uv": [9, 3, 15, 6] },
+        "west":  { "texture": "#wood", "uv": [9, 3, 15, 6] },
+        "down":  { "texture": "#wood", "uv": [3, 9, 5, 15] }
+      }
+    },
+    {
+      "name": "bracket_right",
+      "from": [10.5, 3, 9],
+      "to": [12.5, 6, 15],
+      "faces": {
+        "north": { "texture": "#wood", "uv": [10, 3, 12, 6] },
+        "east":  { "texture": "#wood", "uv": [9, 3, 15, 6] },
+        "west":  { "texture": "#wood", "uv": [9, 3, 15, 6] },
+        "down":  { "texture": "#wood", "uv": [10, 9, 12, 15] }
+      }
+    }
+  ]
+}

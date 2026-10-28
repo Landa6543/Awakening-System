@@ -1,0 +1,204 @@
+{
+  "credit": "Made with Blockbench for Awakening System",
+  "texture_size": [
+    16,
+    16
+  ],
+  "textures": {
+    "0": "awakening_system:item/ignited_soul_alloy_ingot",
+    "particle": "awakening_system:item/ignited_soul_alloy_ingot"
+  },
+  "elements": [
+    {
+      "name": "cube",
+      "from": [
+        6.5,
+        7,
+        4
+      ],
+      "to": [
+        9.5,
+        9,
+        12
+      ],
+      "faces": {
+        "north": {
+          "uv": [
+            7.5198,
+            12.2057,
+            9.5285,
+            15.2328
+          ],
+          "texture": "#0"
+        },
+        "east": {
+          "uv": [
+            7.4873,
+            2.0906,
+            14.1043,
+            4.8846
+          ],
+          "texture": "#0"
+        },
+        "south": {
+          "uv": [
+            7.4935,
+            8.8734,
+            9.5352,
+            11.8293
+          ],
+          "texture": "#0"
+        },
+        "west": {
+          "uv": [
+            7.6718,
+            5.6804,
+            14.089,
+            8.5331
+          ],
+          "texture": "#0"
+        },
+        "up": {
+          "uv": [
+            4.3885,
+            1.9789,
+            6.9398,
+            13.3234
+          ],
+          "texture": "#0"
+        },
+        "down": {
+          "uv": [
+            1.3223,
+            1.9534,
+            3.7912,
+            13.2117
+          ],
+          "texture": "#0",
+          "rotation": 180
+        }
+      }
+    }
+  ],
+  "display": {
+    "thirdperson_righthand": {
+      "rotation": [
+        75,
+        45,
+        0
+      ],
+      "translation": [
+        0,
+        2.5,
+        0
+      ],
+      "scale": [
+        0.7,
+        0.7,
+        0.7
+      ]
+    },
+    "thirdperson_lefthand": {
+      "rotation": [
+        75,
+        45,
+        0
+      ],
+      "translation": [
+        0,
+        2.5,
+        0
+      ],
+      "scale": [
+        0.7,
+        0.7,
+        0.7
+      ]
+    },
+    "firstperson_righthand": {
+      "rotation": [
+        0,
+        45,
+        0
+      ],
+      "translation": [
+        0,
+        1.5,
+        0
+      ],
+      "scale": [
+        0.7,
+        0.7,
+        0.7
+      ]
+    },
+    "firstperson_lefthand": {
+      "rotation": [
+        0,
+        45,
+        0
+      ],
+      "translation": [
+        0,
+        1.5,
+        0
+      ],
+      "scale": [
+        0.7,
+        0.7,
+        0.7
+      ]
+    },
+    "ground": {
+      "rotation": [
+        0,
+        0,
+        0
+      ],
+      "translation": [
+        0,
+        3,
+        0
+      ],
+      "scale": [
+        0.65,
+        0.65,
+        0.65
+      ]
+    },
+    "gui": {
+      "rotation": [
+        30,
+        225,
+        0
+      ],
+      "translation": [
+        0,
+        0,
+        0
+      ],
+      "scale": [
+        1.45,
+        1.45,
+        1.45
+      ]
+    },
+    "fixed": {
+      "rotation": [
+        0,
+        90,
+        0
+      ],
+      "translation": [
+        0,
+        0,
+        0
+      ],
+      "scale": [
+        0.65,
+        0.65,
+        0.65
+      ]
+    }
+  }
+}

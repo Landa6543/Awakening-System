@@ -28,14 +28,12 @@ public class HypostasisModel<T extends HypostasisBaseBossEntity> extends EntityM
         MeshDefinition mesh = new MeshDefinition();
         PartDefinition root = mesh.getRoot();
 
-        // Núcleo central octaédrico (16x16x16 mapeado canónicamente a texOffs(0, 0))
         root.addOrReplaceChild("core",
                 CubeListBuilder.create()
                         .texOffs(0, 0)
                         .addBox(-8.0F, -8.0F, -8.0F, 16.0F, 16.0F, 16.0F),
                 PartPose.offset(0.0F, 0.0F, 0.0F));
 
-        // 8 Cubos protectores con circuitos elementales (10x10x10 mapeado canónicamente a texOffs(88, 108))
         for (int i = 0; i < 8; i++) {
             root.addOrReplaceChild("cube" + i,
                     CubeListBuilder.create()
@@ -56,14 +54,12 @@ public class HypostasisModel<T extends HypostasisBaseBossEntity> extends EntityM
 
         float bob = Mth.sin(time * 0.05F) * 1.5F;
 
-        // Escala normalizada de los 8 cubos exteriores (1.35x para porte imponente de jefe)
         for (int i = 0; i < 8; i++) {
             this.cubes[i].xScale = 1.35F;
             this.cubes[i].yScale = 1.35F;
             this.cubes[i].zScale = 1.35F;
         }
 
-        // 1. Núcleo central: Diamante elemental flotante y radiante
         if (state == HypostasisBaseBossEntity.STATE_VULNERABLE) {
             this.core.setPos(0.0F, 10.0F + Mth.sin(time * 0.15F) * 0.6F, 0.0F);
             float pulse = 0.75F * (1.0F + Mth.sin(time * 0.3F) * 0.12F);
@@ -78,15 +74,12 @@ public class HypostasisModel<T extends HypostasisBaseBossEntity> extends EntityM
             this.core.zScale = pulse;
         }
 
-        // Rotación continua del diamante central en sus ejes
         this.core.xRot = 0.7854F + Mth.sin(time * 0.05F) * 0.1F;
         this.core.zRot = 0.7854F + Mth.cos(time * 0.05F) * 0.1F;
         this.core.yRot = time * 0.06F;
 
-        // 2. Animación de los 8 cubos de caparazón
         switch (state) {
             case HypostasisBaseBossEntity.STATE_PROTECTED -> {
-                // Matriz flotante separada canónica de Genshin: los cubos orbitan con espacio visible hacia el núcleo
                 float shellYaw = time * 0.02F;
                 float shellPitch = Mth.sin(time * 0.03F) * 0.05F;
                 float shellRoll = Mth.cos(time * 0.03F) * 0.05F;
@@ -116,7 +109,6 @@ public class HypostasisModel<T extends HypostasisBaseBossEntity> extends EntityM
                 animateAttackFormation(entity, attack, progress, time, bob);
             }
             case HypostasisBaseBossEntity.STATE_VULNERABLE -> {
-                // Cubos derribados en el suelo, dispersos y desconectados
                 float groundY = 16.0F;
                 float scatterR = 22.0F;
                 for (int i = 0; i < 8; i++) {
@@ -128,7 +120,6 @@ public class HypostasisModel<T extends HypostasisBaseBossEntity> extends EntityM
                 }
             }
             case HypostasisBaseBossEntity.STATE_REVIVAL -> {
-                // Escudo protector de resurrección
                 float shieldRot = time * 0.02F;
                 float shieldDist = 9.5F;
                 for (int i = 0; i < 8; i++) {
@@ -157,7 +148,6 @@ public class HypostasisModel<T extends HypostasisBaseBossEntity> extends EntityM
     private void animateAttackFormation(T entity, HypostasisAttackType attack, float progress, float time, float bob) {
         switch (attack) {
             case CLAP -> {
-                // Palmada gigante: 4 cubos en pared izquierda (-X) y 4 cubos en pared derecha (+X)
                 float pullBack = (progress < 0.4F) ? (progress / 0.4F) : 1.0F;
                 float slam = (progress >= 0.4F && progress <= 0.65F) ? ((progress - 0.4F) / 0.25F) : 0.0F;
                 float recover = (progress > 0.65F) ? ((progress - 0.65F) / 0.35F) : 0.0F;
@@ -166,7 +156,7 @@ public class HypostasisModel<T extends HypostasisBaseBossEntity> extends EntityM
                 if (progress < 0.4F) {
                     currentDist = 6.4F + pullBack * 18.0F;
                 } else if (progress <= 0.65F) {
-                    currentDist = 24.4F - slam * 23.4F; // ¡impacto contundente a 1.0F!
+                    currentDist = 24.4F - slam * 23.4F;
                 } else {
                     currentDist = 1.0F + recover * 5.4F;
                 }
@@ -183,7 +173,6 @@ public class HypostasisModel<T extends HypostasisBaseBossEntity> extends EntityM
                 }
             }
             case MISSILES -> {
-                // Halo orbital vertical en el plano XY apuntando hacia el objetivo
                 float ringRadius = 16.0F;
                 float ringRot = time * 0.05F;
                 for (int i = 0; i < 8; i++) {
@@ -193,7 +182,7 @@ public class HypostasisModel<T extends HypostasisBaseBossEntity> extends EntityM
                     float rz = -6.0F;
 
                     if ((int) (time * 0.35F) % 8 == i) {
-                        rz -= 3.5F; // retroceso dinámico al disparar
+                        rz -= 3.5F;
                     }
 
                     this.cubes[i].setPos(rx, ry, rz);
@@ -205,7 +194,6 @@ public class HypostasisModel<T extends HypostasisBaseBossEntity> extends EntityM
             case SPECIAL_ACTION -> {
                 boolean isAnemo = entity instanceof com.soybe.awakeningsystem.entity.hypostasis.AnemoHypostasisBossEntity;
                 if (isAnemo) {
-                    // Aleteo de Mariposa Elemental (Beth)
                     float flap = Mth.sin(time * 0.28F) * 0.65F;
                     for (int i = 0; i < 8; i++) {
                         boolean isLeft = (i < 4);
@@ -221,7 +209,6 @@ public class HypostasisModel<T extends HypostasisBaseBossEntity> extends EntityM
                         this.cubes[i].zRot = side * flap;
                     }
                 } else {
-                    // Taladro Perforador Eléctrico (Aleph)
                     float drillSpin = time * 0.45F;
                     for (int i = 0; i < 8; i++) {
                         float zOffset = (i - 3.5F) * 3.5F + 6.0F;
@@ -236,7 +223,6 @@ public class HypostasisModel<T extends HypostasisBaseBossEntity> extends EntityM
                 }
             }
             case BURST_ULTIMATE -> {
-                // Láseres Giratorios (Aleph) o Pulso de Vórtice (Beth): Anillo en el suelo
                 float laserRingRot = time * 0.035F;
                 float ringR = 22.0F;
                 for (int i = 0; i < 8; i++) {

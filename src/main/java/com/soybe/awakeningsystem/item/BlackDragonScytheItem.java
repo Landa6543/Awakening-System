@@ -49,7 +49,7 @@ public class BlackDragonScytheItem extends SwordItem implements AwakeningWeaponI
                 return InteractionResultHolder.fail(stack);
             }
 
-            sp.getPersistentData().putLong("black_dragon_cd", gameTime + 300L); // 15s cooldown
+            sp.getPersistentData().putLong("black_dragon_cd", gameTime + 300L);
             sp.getCooldowns().addCooldown(this, 300);
 
             if (sp.onGround()) {
@@ -62,7 +62,6 @@ public class BlackDragonScytheItem extends SwordItem implements AwakeningWeaponI
             if (level instanceof ServerLevel sl) {
                 Vec3 look = sp.getLookAngle();
 
-                // 1. Sello arcano del Dragón Negro en el suelo
                 net.neoforged.neoforge.network.PacketDistributor.sendToPlayersNear(
                         sl, null, sp.getX(), sp.getY(), sp.getZ(), 64.0D,
                         new com.soybe.awakeningsystem.SpawnMagicCirclePayload(
@@ -80,7 +79,6 @@ public class BlackDragonScytheItem extends SwordItem implements AwakeningWeaponI
 
                 float dmg = (float) (32.0D * WeaponLevelManager.getDamageMultiplier(stack));
 
-                // 2. Tajo Creciente de la Guadaña del Dragón Negro (SlashWaveEntity de Fuego de Dragón)
                 SlashWaveEntity scytheWave = new SlashWaveEntity(sl, sp, SlashWaveEntity.TYPE_DARK_VOID, dmg, 5.2F, 2.0F, -25.0F, 26, 12);
                 scytheWave.setDeltaMovement(look.scale(2.2D));
                 sl.addFreshEntity(scytheWave);
@@ -90,7 +88,7 @@ public class BlackDragonScytheItem extends SwordItem implements AwakeningWeaponI
 
             sp.addEffect(new MobEffectInstance(MobEffects.FIRE_RESISTANCE, 200, 0, false, true));
             sp.addEffect(new MobEffectInstance(MobEffects.DAMAGE_RESISTANCE, 160, 1, false, true));
-            sp.displayClientMessage(Component.literal("§5§l✦ [COSECHA DEL DRAGÓN NEGRO] §4¡Tajo devastador de guadaña y fuego de dragón desatado!"), true);
+            sp.displayClientMessage(Component.translatable("item.awakening_system.black_dragon_scythe.unleashed"), true);
             return InteractionResultHolder.sidedSuccess(stack, false);
         }
 
@@ -117,7 +115,7 @@ public class BlackDragonScytheItem extends SwordItem implements AwakeningWeaponI
             target.igniteForSeconds(5);
             target.addEffect(new MobEffectInstance(MobEffects.WITHER, 80, 1));
         }
-        attacker.heal(2.0F); // Draconic vitality leech
+        attacker.heal(2.0F);
         return super.hurtEnemy(stack, target, attacker);
     }
 

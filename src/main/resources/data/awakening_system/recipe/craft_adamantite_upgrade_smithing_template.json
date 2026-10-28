@@ -1,0 +1,18 @@
+{
+  "type": "minecraft:crafting_shaped",
+  "category": "misc",
+  "pattern": [
+    "#I#",
+    "#C#",
+    "###"
+  ],
+  "key": {
+    "#": { "item": "minecraft:diamond" },
+    "I": { "item": "awakening_system:adamantite_ingot" },
+    "C": { "item": "minecraft:magma_block" }
+  },
+  "result": {
+    "count": 1,
+    "id": "awakening_system:adamantite_upgrade_smithing_template"
+  }
+}

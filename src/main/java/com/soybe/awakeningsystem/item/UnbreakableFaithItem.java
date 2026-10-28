@@ -48,11 +48,11 @@ public class UnbreakableFaithItem extends SwordItem implements AwakeningWeaponIt
             long cdUntil = sp.getPersistentData().getLong("unbreakable_faith_cd");
             if (gameTime < cdUntil) {
                 long sec = (cdUntil - gameTime) / 20;
-                sp.displayClientMessage(Component.literal("§c⏳ Fe Inquebrantable en recarga (" + sec + "s)..."), true);
+                sp.displayClientMessage(Component.translatable("item.awakening_system.unbreakable_faith.cooldown", sec), true);
                 return InteractionResultHolder.fail(stack);
             }
 
-            sp.getPersistentData().putLong("unbreakable_faith_cd", gameTime + 260L); // 13s cooldown
+            sp.getPersistentData().putLong("unbreakable_faith_cd", gameTime + 260L);
             sp.getCooldowns().addCooldown(this, 260);
 
             Vec3 look = sp.getLookAngle();
@@ -60,7 +60,6 @@ public class UnbreakableFaithItem extends SwordItem implements AwakeningWeaponIt
             sp.hurtMarked = true;
 
             if (level instanceof ServerLevel sl) {
-                // 1. Sello Divino del Cuarto Muro (Blanco Radiante / Cian Celestial)
                 PacketDistributor.sendToPlayersNear(
                         sl, null, sp.getX(), sp.getY(), sp.getZ(), 64.0D,
                         new SpawnMagicCirclePayload(
@@ -77,7 +76,6 @@ public class UnbreakableFaithItem extends SwordItem implements AwakeningWeaponIt
 
                 CameraShakePayload.sendToNearby(sl, sp.getX(), sp.getY(), sp.getZ(), 28.0D, 0.55F, 8);
 
-                // 2. Onda Sagrada Cortante de la Fe
                 float dmg = (float) (22.0D * WeaponLevelManager.getDamageMultiplier(stack));
                 SlashWaveEntity holyWave = new SlashWaveEntity(sl, sp, SlashWaveEntity.TYPE_SOLAR_LIGHT, dmg, 4.0F, 1.4F, 0.0F, 24, 8);
                 holyWave.setDeltaMovement(look.scale(2.1D));
@@ -94,7 +92,6 @@ public class UnbreakableFaithItem extends SwordItem implements AwakeningWeaponIt
                 WeaponLevelManager.addExp(stack, 30, sp);
             }
 
-            // Fourth Wall Barrier: massive resistance for 3s
             sp.addEffect(new MobEffectInstance(MobEffects.DAMAGE_RESISTANCE, 60, 3, false, true));
             sp.addEffect(new MobEffectInstance(MobEffects.MOVEMENT_SPEED, 100, 1, false, true));
             return InteractionResultHolder.sidedSuccess(stack, false);

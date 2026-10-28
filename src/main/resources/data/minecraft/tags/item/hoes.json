@@ -1,0 +1,14 @@
+{
+    "replace":  false,
+    "values":  [
+                   "awakening_system:abyssal_hoe",
+                   "awakening_system:adamantite_hoe",
+                   "awakening_system:astral_hoe",
+                   "awakening_system:celestial_hoe",
+                   "awakening_system:mithril_hoe",
+                   "awakening_system:primordial_hoe",
+                   "awakening_system:spirit_jade_hoe",
+                   "awakening_system:soul_alloy_hoe",
+                   "awakening_system:astralite_hoe"
+               ]
+}

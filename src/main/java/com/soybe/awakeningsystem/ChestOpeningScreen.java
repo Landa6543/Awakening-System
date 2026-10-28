@@ -79,13 +79,9 @@ public final class ChestOpeningScreen extends Screen {
             return;
         } else {
             pool = new Item[]{
-                    // Malos / Basura cómica
                     Items.STICK, Items.POISONOUS_POTATO, Items.STRING, Items.COBWEB, Items.DIRT, Items.ROTTEN_FLESH, Items.WOODEN_HOE, Items.BONE,
-                    // Regulares / Útiles
                     Items.IRON_INGOT, Items.COAL, Items.GOLD_INGOT, Items.COOKED_BEEF, Items.ARROW, Items.SHIELD, Items.GOLDEN_APPLE,
-                    // Buenos / Raros
                     Items.DIAMOND, Items.ENDER_PEARL, Items.NETHERITE_SCRAP, Items.EXPERIENCE_BOTTLE, Items.DIAMOND_BLOCK,
-                    // Jackpot / Míticos
                     Items.NETHERITE_INGOT, Items.TOTEM_OF_UNDYING, Items.ENCHANTED_GOLDEN_APPLE, Items.HEAVY_CORE, Items.MACE
             };
         }
@@ -110,10 +106,13 @@ public final class ChestOpeningScreen extends Screen {
         this.rewardStacks.clear();
         for (int i = 0; i < payload.itemIds().size(); i++) {
             String itemId = payload.itemIds().get(i);
-            int count = payload.itemCounts().get(i);
+            int count = payload.itemCounts().size() > i ? Math.max(1, payload.itemCounts().get(i)) : 1;
             ResourceLocation rl = ResourceLocation.parse(itemId);
             if (BuiltInRegistries.ITEM.containsKey(rl)) {
-                rewardStacks.add(new ItemStack(BuiltInRegistries.ITEM.get(rl), count));
+                ItemStack stack = new ItemStack(BuiltInRegistries.ITEM.get(rl), count);
+                if (!stack.isEmpty()) {
+                    rewardStacks.add(stack);
+                }
             }
         }
 
@@ -159,7 +158,6 @@ public final class ChestOpeningScreen extends Screen {
                 int sectorIndex = (int) (spinAngle / 45.0F);
                 if (sectorIndex != lastClickCard) {
                     lastClickCard = sectorIndex;
-                    // Sonido adictivo de trinquete de ruleta de casino mecánica: clic seco + campana metálica de ranura
                     float clickPitch = 1.5F + (progress * 0.5F);
                     float bellPitch = 1.2F + ((sectorIndex % 8) * 0.1F);
                     player.playSound(SoundEvents.UI_BUTTON_CLICK.value(), 0.8F, clickPitch);
@@ -167,7 +165,6 @@ public final class ChestOpeningScreen extends Screen {
                     player.playSound(SoundEvents.NOTE_BLOCK_CHIME.value(), 0.35F, 1.4F + (progress * 0.4F));
                 }
             } else {
-                // Sonido de bóveda vibrando y sellos crujiendo
                 if (ticks % 8 == 0) {
                     player.playSound(SoundEvents.AMETHYST_BLOCK_CHIME, 0.6F, 0.8F + (ticks / 46.0F) * 0.6F);
                 }
@@ -177,7 +174,6 @@ public final class ChestOpeningScreen extends Screen {
             }
         }
 
-        // Lluvia de campanas de casino y monedas mientras se revela el premio
         if (isRoulette && opened && ticks > 56 && ticks <= 70 && ticks % 2 == 0) {
             int step = (ticks - 56) / 2;
             float bellPitch = Math.min(2.0F, 1.2F + (step * 0.12F));
@@ -188,14 +184,12 @@ public final class ChestOpeningScreen extends Screen {
             player.playSound(SoundEvents.CHAIN_STEP, 0.5F, 1.6F);
         }
 
-        // Detención y revelación de la ruleta en tick 56 (o 46 para cajas comunes)
         int targetOpenTick = isRoulette ? 56 : 46;
         if (ticks == targetOpenTick && !opened) {
             opened = true;
             flashAlpha = 0.85F;
 
             if (isRoulette) {
-                // JACKPOT DE CASINO: Clic de cerrojo + acorde de campanas + fanfarria de victoria + fuegos
                 player.playSound(SoundEvents.UI_BUTTON_CLICK.value(), 1.0F, 2.0F);
                 player.playSound(SoundEvents.NOTE_BLOCK_BELL.value(), 0.85F, 2.0F);
                 player.playSound(SoundEvents.NOTE_BLOCK_CHIME.value(), 0.65F, 2.0F);
@@ -224,7 +218,6 @@ public final class ChestOpeningScreen extends Screen {
 
     @Override
     public void render(GuiGraphics g, int mouseX, int mouseY, float partialTick) {
-        // Fondo cinemático con degradado oscuro del Sistema
         g.fill(0, 0, width, height, 0xF008121D);
 
         int cx = width / 2;
@@ -232,13 +225,12 @@ public final class ChestOpeningScreen extends Screen {
         float animTime = ticks + partialTick;
 
         int rarityColor = switch (tier) {
-            case 4 -> 0xFFFFAA00; // Legendario Oro
-            case 3 -> 0xFFD055FF; // Épico Púrpura
-            case 2 -> 0xFF55AAFF; // Raro Azul
-            default -> "lucky_box".equals(boxId) ? 0xFFFFD866 : 0xFFE0E0E0; // Común
+            case 4 -> 0xFFFFAA00;
+            case 3 -> 0xFFD055FF;
+            case 2 -> 0xFF55AAFF;
+            default -> "lucky_box".equals(boxId) ? 0xFFFFD866 : 0xFFE0E0E0;
         };
 
-        // Rayos de aura cósmica
         renderAuraRays(g, cx, opened ? cy - 35 : cy - 10, animTime, rarityColor);
 
         boolean isRoulette = "system_roulette".equals(boxId);
@@ -246,7 +238,6 @@ public final class ChestOpeningScreen extends Screen {
         boolean sys20 = sData != null && (sData.systemUpdated() || sData.isSystemUpdating());
 
         if (isRoulette) {
-            // === RULETA CIRCULAR DEL SISTEMA ===
             Component mainTitle = Component.translatable(opened ? "awakening_system.chest.roulette.awarded" : "awakening_system.chest.roulette.title").withStyle(ChatFormatting.BOLD);
             g.drawCenteredString(font, mainTitle, cx, cy - 106, 0xFFFFD866);
 
@@ -261,10 +252,8 @@ public final class ChestOpeningScreen extends Screen {
                 Component calib = Component.translatable("awakening_system.chest.roulette.calibrating");
                 g.drawCenteredString(font, calib, cx, cy + 50, sys20 ? 0x90FFD700 : 0x9070E8FF);
             } else {
-                // Rueda detenida en posición ganadora exacta (animTime = 56.0F)
                 renderRouletteReel(g, cx, cy - 14, 56.0F, rarityColor, true);
 
-                // Texto del premio obtenido
                 String prizeName = !rewardStacks.isEmpty() ? rewardStacks.get(0).getHoverName().getString() : (!rewardSummary.isEmpty() ? rewardSummary : Component.translatable("awakening_system.chest.default_prize").getString());
                 Component prizeComp = Component.translatable("awakening_system.chest.prize_banner", prizeName);
                 g.drawCenteredString(font, prizeComp, cx, cy + 48, 0xFFFFD700);
@@ -274,7 +263,6 @@ public final class ChestOpeningScreen extends Screen {
                     g.drawCenteredString(font, coinComp, cx, cy + 60, 0xFFFFD866);
                 }
 
-                // Botón Continuar
                 int btnW = 140;
                 int btnH = 22;
                 int btnX = cx - btnW / 2;
@@ -287,7 +275,6 @@ public final class ChestOpeningScreen extends Screen {
             }
         } else {
             if (!opened) {
-                // === FASE DE BÓVEDA DIMENSIONAL VIBRANDO ===
                 Component mainTitle = Component.translatable("awakening_system.chest.vault.unsealing").withStyle(ChatFormatting.BOLD);
                 g.drawCenteredString(font, mainTitle, cx, cy - 86, rarityColor);
 
@@ -303,17 +290,14 @@ public final class ChestOpeningScreen extends Screen {
                 float pulse = (float) ((Math.sin(animTime * 0.6F) + 1.0F) * 0.5F);
                 g.drawCenteredString(font, calib, cx, cy + 48, ((int)(160 + pulse * 95) << 24) | (rarityColor & 0xFFFFFF));
             } else {
-                // === FASE DE PREMIO REVELADO ===
                 Component title = Component.translatable("awakening_system.chest.vault.opened").withStyle(ChatFormatting.BOLD);
                 g.drawCenteredString(font, title, cx, cy - 90, 0xFFFFD866);
 
                 Component chestTitle = Component.translatable(nameKey).withStyle(ChatFormatting.BOLD);
                 g.drawCenteredString(font, chestTitle, cx, cy - 76, rarityColor);
 
-                // Tarjetas con los premios obtenidos
                 renderRewards(g, cx, cy, mouseX, mouseY);
 
-                // Botón de continuar
                 int btnW = 140;
                 int btnH = 22;
                 int btnX = cx - btnW / 2;
@@ -326,7 +310,6 @@ public final class ChestOpeningScreen extends Screen {
             }
         }
 
-        // Destello de apertura (Flash blanco)
         if (flashAlpha > 0.0F) {
             int a = (int) (flashAlpha * 255);
             g.fill(0, 0, width, height, (a << 24) | 0xFFFFFF);
@@ -345,30 +328,23 @@ public final class ChestOpeningScreen extends Screen {
         int vx = cx - vw / 2 + jx;
         int vy = cy - vh / 2 + jy;
 
-        // Pilar de luz cósmica vertical
         g.fill(cx - 24, cy - 80, cx + 24, cy + 30, (0x35 << 24) | (rarityColor & 0xFFFFFF));
         g.fill(cx - 10, cy - 90, cx + 10, cy + 30, (0x60 << 24) | 0xFFFFFF);
 
-        // Cuerpo de la Bóveda Metálica
         g.fill(vx - 2, vy - 2, vx + vw + 2, vy + vh + 2, 0xFF08121D);
         g.fill(vx, vy, vx + vw, vy + vh, 0xFF142433);
 
-        // Molduras y esquinas doradas / arcanas
         g.fill(vx, vy, vx + vw, vy + 4, rarityColor);
         g.fill(vx, vy + vh - 4, vx + vw, vy + vh, rarityColor);
         g.fill(vx, vy, vx + 4, vy + vh, rarityColor);
         g.fill(vx + vw - 4, vy, vx + vw, vy + vh, rarityColor);
 
-        // Tapa superior de la bóveda
         g.fill(vx + 4, vy + 18, vx + vw - 4, vy + 21, 0xFF08121D);
         g.fill(vx + 4, vy + 20, vx + vw - 4, vy + 22, rarityColor);
 
-        // Cadenas arcanas cruzadas (antes de abrirse)
         if (!isOpened) {
-            // Cadena diagonal 1
             g.fill(vx + 6, vy + 6, vx + 16, vy + 12, 0xFF4A5568);
             g.fill(vx + vw - 16, vy + vh - 12, vx + vw - 6, vy + vh - 6, 0xFF4A5568);
-            // Sello rúnico central de la bóveda
             int sealSize = 18;
             int sx = cx - sealSize / 2 + jx;
             int sy = cy - sealSize / 2 + jy + 4;
@@ -376,7 +352,6 @@ public final class ChestOpeningScreen extends Screen {
             g.fill(sx + 2, sy + 2, sx + sealSize - 2, sy + sealSize - 2, 0xFF102536);
             g.drawCenteredString(font, "❖", cx + jx, sy + 4, rarityColor);
 
-            // Grietas luminosas por sobrecarga
             if (animTime > 18) {
                 g.fill(vx + 14, vy + 26, vx + 28, vy + 28, 0xFFFFFFFF);
                 g.fill(vx + vw - 28, vy + 26, vx + vw - 14, vy + 28, 0xFFFFFFFF);
@@ -386,7 +361,6 @@ public final class ChestOpeningScreen extends Screen {
                 g.fill(vx + vw - 22, vy + 10, vx + vw - 20, vy + 38, (0xC0 << 24) | (rarityColor & 0xFFFFFF));
             }
         } else {
-            // Bóveda abierta emanando luz cósmica
             g.fill(vx + 8, vy + 8, vx + vw - 8, vy + 22, (0xAA << 24) | (rarityColor & 0xFFFFFF));
         }
     }
@@ -394,20 +368,18 @@ public final class ChestOpeningScreen extends Screen {
     private void renderRouletteReel(GuiGraphics g, int cx, int cy, float animTime, int rarityColor, boolean isStopped) {
         float progress = Math.min(1.0F, animTime / 56.0F);
         float ease = 1.0F - (float) Math.pow(1.0F - progress, 3.2);
-        float totalRotations = 5.0F * 360.0F; // 5 giros completos
+        float totalRotations = 5.0F * 360.0F;
         float spinAngle = (1.0F - ease) * totalRotations;
 
         int outerRadius = 56;
         int slotRadius = 40;
         int coreRadius = 14;
 
-        // 1. Disco base circular oscuro de alta tecnología
         for (int dy = -outerRadius; dy <= outerRadius; dy++) {
             int dx = (int) Math.sqrt(outerRadius * outerRadius - dy * dy);
             g.fill(cx - dx, cy + dy, cx + dx, cy + dy + 1, 0xEE081420);
         }
 
-        // 2. Anillo perimetral luminoso y marcas angulares de calibración
         int numTicks = 32;
         for (int i = 0; i < numTicks; i++) {
             double angleRad = Math.toRadians(i * (360.0 / numTicks) + spinAngle);
@@ -418,7 +390,6 @@ public final class ChestOpeningScreen extends Screen {
             g.fill(tx - (major ? 1 : 0), ty - (major ? 1 : 0), tx + (major ? 2 : 1), ty + (major ? 2 : 1), tickColor);
         }
 
-        // 3. Radios divisorios de los 8 sectores
         for (int k = 0; k < 8; k++) {
             double spokeRad = Math.toRadians(-90.0 + spinAngle + k * 45.0 + 22.5);
             double cosA = Math.cos(spokeRad);
@@ -430,7 +401,6 @@ public final class ChestOpeningScreen extends Screen {
             }
         }
 
-        // 4. Renderizado de los 8 pods con sus ítems (Slot 0 es el ganador que frenará exactamente arriba)
         for (int i = 0; i < 8; i++) {
             double slotAngleRad = Math.toRadians(-90.0 + spinAngle + i * 45.0);
             float px = (float) (cx + Math.cos(slotAngleRad) * slotRadius);
@@ -440,7 +410,6 @@ public final class ChestOpeningScreen extends Screen {
             int boxX = (int) px - 10;
             int boxY = (int) py - 10;
 
-            // Marco del pod del ítem
             int borderColor = isWinner ? (isStopped || progress >= 0.95F ? 0xFFFFD700 : 0xFFE5C158) : 0xFF1E526B;
             int bgColor = isWinner ? (isStopped ? 0xDD42360E : 0x9942360E) : 0x880C1D2D;
 
@@ -451,7 +420,6 @@ public final class ChestOpeningScreen extends Screen {
             g.fill(boxX + 19, boxY, boxX + 20, boxY + 20, borderColor);
 
             if (isWinner && (isStopped || progress >= 0.9F)) {
-                // Resplandor áurico dorado en el ítem premiado
                 g.fill(boxX - 1, boxY - 1, boxX + 21, boxY, 0xAAFFD700);
                 g.fill(boxX - 1, boxY + 20, boxX + 21, boxY + 21, 0xAAFFD700);
             }
@@ -468,7 +436,6 @@ public final class ChestOpeningScreen extends Screen {
             }
         }
 
-        // 5. Núcleo central holográfico (System Core)
         for (int dy = -coreRadius; dy <= coreRadius; dy++) {
             int dx = (int) Math.sqrt(coreRadius * coreRadius - dy * dy);
             g.fill(cx - dx, cy + dy, cx + dx, cy + dy + 1, 0xFF0D1D2C);
@@ -483,7 +450,6 @@ public final class ChestOpeningScreen extends Screen {
         int emblemColor = ((int) (180 + pulse * 75) << 24) | 0xFFD866;
         g.drawCenteredString(font, "✦", cx, cy - 4, emblemColor);
 
-        // 6. Aguja indicadora fija superior en las 12 en punto (▼)
         int pointerY = cy - outerRadius - 4;
         g.fill(cx - 8, pointerY - 4, cx + 8, pointerY, 0xFF142B3C);
         g.fill(cx - 7, pointerY - 3, cx + 7, pointerY - 1, 0xFFFFD866);
@@ -524,8 +490,8 @@ public final class ChestOpeningScreen extends Screen {
         int cardIndex = 0;
         ItemStack hoveredStack = null;
 
-        // Mostrar ítems obtenidos
         for (ItemStack stack : rewardStacks) {
+            if (stack == null || stack.isEmpty()) continue;
             int x = startX + cardIndex * (cardW + gap);
             int y = startY;
             boolean hovered = mouseX >= x && mouseX < x + cardW && mouseY >= y && mouseY < y + cardH;
@@ -547,7 +513,6 @@ public final class ChestOpeningScreen extends Screen {
             cardIndex++;
         }
 
-        // Mostrar tarjeta de monedas
         if (coinsWon > 0) {
             int x = startX + cardIndex * (cardW + gap);
             int y = startY;

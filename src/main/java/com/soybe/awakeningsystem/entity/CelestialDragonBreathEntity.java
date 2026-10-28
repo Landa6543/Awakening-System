@@ -57,7 +57,6 @@ public class CelestialDragonBreathEntity extends Projectile {
         this.setPos(this.getX() + movement.x, this.getY() + movement.y, this.getZ() + movement.z);
 
         if (this.level().isClientSide) {
-            // Estela visual mística de plasma celestial
             this.level().addParticle(ParticleTypes.TOTEM_OF_UNDYING, this.getX(), this.getY(), this.getZ(),
                     (this.random.nextDouble() - 0.5) * 0.2, (this.random.nextDouble() - 0.5) * 0.2, (this.random.nextDouble() - 0.5) * 0.2);
             this.level().addParticle(ParticleTypes.ELECTRIC_SPARK, this.getX(), this.getY(), this.getZ(),

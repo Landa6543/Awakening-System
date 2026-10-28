@@ -67,20 +67,20 @@
     [],
     [
       "awakening_system:teyvat_hilichurl_camp",
+      "awakening_system:teyvat_regional_structure",
       "awakening_system:teyvat_shrine_of_depths",
       "awakening_system:teyvat_statue_of_the_seven",
-      "awakening_system:teyvat_teleport_waypoint",
-      "awakening_system:teyvat_regional_structure"
+      "awakening_system:teyvat_teleport_waypoint"
     ],
     [],
     [],
     [],
     [],
     [
-      "awakening_system:teyvat_cuihua_tree",
       "minecraft:flower_meadow",
       "minecraft:patch_sugar_cane",
-      "minecraft:patch_pumpkin"
+      "minecraft:patch_pumpkin",
+      "awakening_system:teyvat_cuihua_tree"
     ],
     []
   ]

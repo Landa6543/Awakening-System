@@ -12,7 +12,6 @@ public class ModMobEffects {
     public static final DeferredRegister<MobEffect> MOB_EFFECTS =
             DeferredRegister.create(BuiltInRegistries.MOB_EFFECT, AwakeningSystemMod.MOD_ID);
 
-    // Resonancias Elementales de Teyvat (Buffs)
     public static final DeferredHolder<MobEffect, MobEffect> PYRO_FERVOR = MOB_EFFECTS.register("pyro_fervor",
             () -> new TeyvatElementalEffect(MobEffectCategory.BENEFICIAL, 0xFF3D00));
     public static final DeferredHolder<MobEffect, MobEffect> HYDRO_SOOTHING = MOB_EFFECTS.register("hydro_soothing",
@@ -28,7 +27,6 @@ public class ModMobEffects {
     public static final DeferredHolder<MobEffect, MobEffect> DENDRO_VITALITY = MOB_EFFECTS.register("dendro_vitality",
             () -> new TeyvatElementalEffect(MobEffectCategory.BENEFICIAL, 0x76FF03));
 
-    // Estados Negativos y Ambientales de Teyvat
     public static final DeferredHolder<MobEffect, MobEffect> SHEER_COLD = MOB_EFFECTS.register("sheer_cold",
             () -> new PeriodicHarmfulEffect(MobEffectCategory.HARMFUL, 0x00E5FF, 40, 2.0F));
     public static final DeferredHolder<MobEffect, MobEffect> CORROSION = MOB_EFFECTS.register("corrosion",
@@ -39,6 +37,8 @@ public class ModMobEffects {
             () -> new PeriodicHarmfulEffect(MobEffectCategory.HARMFUL, 0x7C4DFF, 35, 1.5F));
     public static final DeferredHolder<MobEffect, MobEffect> WET = MOB_EFFECTS.register("wet",
             () -> new TeyvatElementalEffect(MobEffectCategory.NEUTRAL, 0x2979FF));
+    public static final DeferredHolder<MobEffect, MobEffect> MANA_SATURATION = MOB_EFFECTS.register("mana_saturation",
+            () -> new ManaSaturationEffect(MobEffectCategory.HARMFUL, 0x00D4FF));
 
     public static class TeyvatElementalEffect extends MobEffect {
         public TeyvatElementalEffect(MobEffectCategory category, int color) {

@@ -73,13 +73,11 @@ public class BeastmanWarriorEntity extends Monster {
             if (target != null && target.isAlive()) {
                 double distSq = this.distanceToSqr(target);
 
-                // Rugido Bestial de Guerra
                 if (roarCooldown <= 0 && distSq < 225.0D) {
                     performWarRoar();
                     roarCooldown = 220;
                 }
 
-                // Salto demoledor a media distancia (entre 5 y 14 bloques)
                 if (leapCooldown <= 0 && distSq >= 25.0D && distSq <= 196.0D && this.onGround()) {
                     Vec3 dir = target.position().subtract(this.position()).normalize();
                     this.setDeltaMovement(dir.x * 1.2D, 0.45D, dir.z * 1.2D);

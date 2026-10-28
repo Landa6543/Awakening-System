@@ -92,7 +92,6 @@ public class FishingTrapBlock extends BaseEntityBlock {
     @Override
     public void appendHoverText(ItemStack stack, Item.TooltipContext context, List<Component> tooltipComponents, TooltipFlag tooltipFlag) {
         super.appendHoverText(stack, context, tooltipComponents, tooltipFlag);
-        tooltipComponents.add(Component.literal("§7Sólo funciona bajo agua. Usa cebos"));
-        tooltipComponents.add(Component.literal("§8(Only works underwater. Use baits)"));
+        tooltipComponents.add(Component.translatable("block.awakening_system.fishing_trap.desc"));
     }
 }

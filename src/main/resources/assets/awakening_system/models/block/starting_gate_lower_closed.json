@@ -1,0 +1,146 @@
+{
+  "parent": "minecraft:block/block",
+  "textures": {
+    "particle": "awakening_system:block/starting_gate_frame",
+    "iron": "awakening_system:block/starting_gate_frame",
+    "turf": "awakening_system:block/starting_gate_pad",
+    "door": "awakening_system:block/starting_gate_door",
+    "gold": "awakening_system:block/starting_gate_gold",
+    "display": "awakening_system:block/starting_gate_display"
+  },
+  "elements": [
+    {
+      "name": "left_base",
+      "from": [0, 0, 0],
+      "to": [2.5, 2, 16],
+      "faces": {
+        "down":  { "texture": "#iron", "cullface": "down" },
+        "up":    { "texture": "#iron" },
+        "north": { "texture": "#iron" },
+        "south": { "texture": "#iron" },
+        "west":  { "texture": "#iron", "cullface": "west" },
+        "east":  { "texture": "#iron" }
+      }
+    },
+    {
+      "name": "right_base",
+      "from": [13.5, 0, 0],
+      "to": [16, 2, 16],
+      "faces": {
+        "down":  { "texture": "#iron", "cullface": "down" },
+        "up":    { "texture": "#iron" },
+        "north": { "texture": "#iron" },
+        "south": { "texture": "#iron" },
+        "west":  { "texture": "#iron" },
+        "east":  { "texture": "#iron", "cullface": "east" }
+      }
+    },
+    {
+      "name": "left_pillar",
+      "from": [0, 2, 0],
+      "to": [2.5, 16, 16],
+      "faces": {
+        "north": { "texture": "#iron" },
+        "south": { "texture": "#iron" },
+        "west":  { "texture": "#iron", "cullface": "west" },
+        "east":  { "texture": "#turf" }
+      }
+    },
+    {
+      "name": "right_pillar",
+      "from": [13.5, 2, 0],
+      "to": [16, 16, 16],
+      "faces": {
+        "north": { "texture": "#iron" },
+        "south": { "texture": "#iron" },
+        "west":  { "texture": "#turf" },
+        "east":  { "texture": "#iron", "cullface": "east" }
+      }
+    },
+    {
+      "name": "left_hinge_lower",
+      "from": [1.8, 3.5, 0.5],
+      "to": [2.8, 5.5, 1.8],
+      "faces": {
+        "north": { "texture": "#gold" },
+        "south": { "texture": "#gold" },
+        "east":  { "texture": "#gold" },
+        "up":    { "texture": "#gold" },
+        "down":  { "texture": "#gold" }
+      }
+    },
+    {
+      "name": "left_hinge_upper",
+      "from": [1.8, 12.5, 0.5],
+      "to": [2.8, 14.5, 1.8],
+      "faces": {
+        "north": { "texture": "#gold" },
+        "south": { "texture": "#gold" },
+        "east":  { "texture": "#gold" },
+        "up":    { "texture": "#gold" },
+        "down":  { "texture": "#gold" }
+      }
+    },
+    {
+      "name": "right_hinge_lower",
+      "from": [13.2, 3.5, 0.5],
+      "to": [14.2, 5.5, 1.8],
+      "faces": {
+        "north": { "texture": "#gold" },
+        "south": { "texture": "#gold" },
+        "west":  { "texture": "#gold" },
+        "up":    { "texture": "#gold" },
+        "down":  { "texture": "#gold" }
+      }
+    },
+    {
+      "name": "right_hinge_upper",
+      "from": [13.2, 12.5, 0.5],
+      "to": [14.2, 14.5, 1.8],
+      "faces": {
+        "north": { "texture": "#gold" },
+        "south": { "texture": "#gold" },
+        "west":  { "texture": "#gold" },
+        "up":    { "texture": "#gold" },
+        "down":  { "texture": "#gold" }
+      }
+    },
+    {
+      "name": "left_door_closed",
+      "from": [2.6, 2, 1],
+      "to": [7.95, 16, 2.5],
+      "faces": {
+        "down":  { "texture": "#gold" },
+        "north": { "texture": "#door" },
+        "south": { "texture": "#door" },
+        "west":  { "texture": "#gold" },
+        "east":  { "texture": "#gold" }
+      }
+    },
+    {
+      "name": "right_door_closed",
+      "from": [8.05, 2, 1],
+      "to": [13.4, 16, 2.5],
+      "faces": {
+        "down":  { "texture": "#gold" },
+        "north": { "texture": "#door" },
+        "south": { "texture": "#door" },
+        "west":  { "texture": "#gold" },
+        "east":  { "texture": "#gold" }
+      }
+    },
+    {
+      "name": "door_lock",
+      "from": [7, 7, 0.5],
+      "to": [9, 11, 3],
+      "faces": {
+        "up":    { "texture": "#gold" },
+        "down":  { "texture": "#gold" },
+        "north": { "texture": "#gold" },
+        "south": { "texture": "#gold" },
+        "west":  { "texture": "#gold" },
+        "east":  { "texture": "#gold" }
+      }
+    }
+  ]
+}

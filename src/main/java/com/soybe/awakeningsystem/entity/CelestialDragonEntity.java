@@ -70,7 +70,6 @@ public class CelestialDragonEntity extends TamableAnimal implements FlyingAnimal
     private int roarAnimationTicks = 0;
     private int thunderCooldown = 200;
 
-    // Buffer cinemático de estela de 32 vértebras (~50 bloques colosales de longitud)
     public static final int SEGMENT_COUNT = 32;
     public final float[] segmentYaw = new float[SEGMENT_COUNT];
     public final float[] segmentYawO = new float[SEGMENT_COUNT];
@@ -78,14 +77,12 @@ public class CelestialDragonEntity extends TamableAnimal implements FlyingAnimal
     public final float[] segmentPitchO = new float[SEGMENT_COUNT];
     private boolean segmentsInitialized = false;
 
-    // 16 Partes de Hitbox distribuidas a lo largo del cuerpo del dragón montable
     public final DragonBodyPart[] subParts;
     public static final int[] PART_SEGMENT_INDICES = new int[] {
         1, 3, 5, 7, 9, 11, 13, 15, 17, 19, 21, 23, 25, 27, 29, 31
     };
     public final Vec3[] segmentPositions = new Vec3[SEGMENT_COUNT];
 
-    // Entradas de vuelo recibidas por red desde el cliente
     private boolean clientSpaceHeld = false;
     private boolean clientShiftHeld = false;
     private boolean clientSprintHeld = false;
@@ -97,12 +94,12 @@ public class CelestialDragonEntity extends TamableAnimal implements FlyingAnimal
     }
 
     public float getSegmentYaw(int index, float partialTick) {
-        if (index < 0 || index >= SEGMENT_COUNT) return this.getYRot();
+        if (!this.segmentsInitialized || index < 0 || index >= SEGMENT_COUNT) return this.getYRot();
         return Mth.rotLerp(partialTick, this.segmentYawO[index], this.segmentYaw[index]);
     }
 
     public float getSegmentPitch(int index, float partialTick) {
-        if (index < 0 || index >= SEGMENT_COUNT) return this.getXRot();
+        if (!this.segmentsInitialized || index < 0 || index >= SEGMENT_COUNT) return this.getXRot();
         return Mth.lerp(partialTick, this.segmentPitchO[index], this.segmentPitch[index]);
     }
 
@@ -218,14 +215,12 @@ public class CelestialDragonEntity extends TamableAnimal implements FlyingAnimal
                 return !CelestialDragonEntity.this.isVehicle() && !CelestialDragonEntity.this.isOrderedToSit() && super.canUse();
             }
         });
-        // Solo dragones salvajes vuelan aleatoriamente; domesticados permanecen majestuosos en su posición
         this.goalSelector.addGoal(5, new WaterAvoidingRandomFlyingGoal(this, 0.85D) {
             @Override
             public boolean canUse() {
                 return !CelestialDragonEntity.this.isTame() && !CelestialDragonEntity.this.isVehicle() && super.canUse();
             }
         });
-        // Evitar que la cabeza dé tirones erráticos intentando mirar al jugador al estar montado o domesticado
         this.goalSelector.addGoal(6, new LookAtPlayerGoal(this, Player.class, 16.0F) {
             @Override
             public boolean canUse() {
@@ -264,7 +259,6 @@ public class CelestialDragonEntity extends TamableAnimal implements FlyingAnimal
         }
         this.fallDistance = 0.0F;
 
-        // 1. Inicialización y actualización de la cinemática de estela de 32 vértebras (modo autónomo)
         if (!this.segmentsInitialized) {
             for (int i = 0; i < SEGMENT_COUNT; i++) {
                 this.segmentYaw[i] = this.segmentYawO[i] = this.getYRot();
@@ -279,7 +273,6 @@ public class CelestialDragonEntity extends TamableAnimal implements FlyingAnimal
             this.segmentYaw[0] = this.getYRot();
             this.segmentPitch[0] = this.getXRot();
 
-            // Cada vértebra sigue progresivamente a la anterior para curvar el cuerpo entero en arcos y círculos
             float followSpeed = 0.22F;
             for (int i = 1; i < SEGMENT_COUNT; i++) {
                 this.segmentYawO[i] = this.segmentYaw[i];
@@ -303,7 +296,6 @@ public class CelestialDragonEntity extends TamableAnimal implements FlyingAnimal
         if (!this.level().isClientSide) {
             this.bossEvent.setProgress(this.getHealth() / this.getMaxHealth());
 
-            // Ataque ocasional de Tormenta de Truenos en combate
             if (this.getTarget() != null && this.getTarget().isAlive()) {
                 this.thunderCooldown--;
                 if (this.thunderCooldown <= 0) {
@@ -312,7 +304,6 @@ public class CelestialDragonEntity extends TamableAnimal implements FlyingAnimal
                 }
             }
         } else {
-            // Estela visual mística de escamas celestiales
             if (this.random.nextFloat() < 0.35F) {
                 double px = this.getX() + (this.random.nextDouble() - 0.5) * 2.5;
                 double py = this.getY() + this.random.nextDouble() * 2.0;
@@ -333,11 +324,15 @@ public class CelestialDragonEntity extends TamableAnimal implements FlyingAnimal
         }
 
         this.yRotO = this.getYRot();
-        this.yBodyRotO = this.yBodyRot;
+        this.yBodyRotO = this.getYRot();
+        this.yBodyRot = this.getYRot();
+        this.yHeadRotO = this.getYRot();
+        this.yHeadRot = this.getYRot();
         this.xRotO = this.getXRot();
 
         super.tick();
 
+        this.yBodyRot = this.getYRot();
         this.updateSubPartPositions();
     }
 
@@ -410,7 +405,6 @@ public class CelestialDragonEntity extends TamableAnimal implements FlyingAnimal
     public InteractionResult mobInteract(Player player, InteractionHand hand) {
         ItemStack itemstack = player.getItemInHand(hand);
 
-        // Domesticación con la Perla del Dragón Celestial
         if (itemstack.is(SystemItems.CELESTIAL_DRAGON_PEARL.get()) && !this.isTame()) {
             if (!this.level().isClientSide) {
                 if (!player.getAbilities().instabuild) {
@@ -420,7 +414,7 @@ public class CelestialDragonEntity extends TamableAnimal implements FlyingAnimal
                 this.triggerRoar();
                 this.navigation.stop();
                 this.setTarget(null);
-                this.level().broadcastEntityEvent(this, (byte) 7); // Corazones
+                this.level().broadcastEntityEvent(this, (byte) 7);
                 if (this.level() instanceof ServerLevel sl) {
                     sl.sendParticles(ParticleTypes.TOTEM_OF_UNDYING, this.getX(), this.getY() + 2.0D, this.getZ(), 80, 2.0D, 2.0D, 2.0D, 0.4D);
                     sl.sendParticles(ParticleTypes.DRAGON_BREATH, this.getX(), this.getY() + 2.0D, this.getZ(), 60, 2.0D, 1.5D, 2.0D, 0.1D);
@@ -436,7 +430,6 @@ public class CelestialDragonEntity extends TamableAnimal implements FlyingAnimal
             return InteractionResult.sidedSuccess(this.level().isClientSide);
         }
 
-        // Sanación y restauración vital del dragón domado con la Perla
         if (this.isTame() && this.isOwnedBy(player) && itemstack.is(SystemItems.CELESTIAL_DRAGON_PEARL.get())) {
             if (this.getHealth() < this.getMaxHealth()) {
                 if (!this.level().isClientSide) {
@@ -455,7 +448,6 @@ public class CelestialDragonEntity extends TamableAnimal implements FlyingAnimal
             }
         }
 
-        // Montura y reposo en meditación cuando está domesticado
         if (this.isTame() && this.isOwnedBy(player)) {
             if (!this.level().isClientSide) {
                 if (player.isSecondaryUseActive()) {
@@ -478,7 +470,6 @@ public class CelestialDragonEntity extends TamableAnimal implements FlyingAnimal
             return InteractionResult.sidedSuccess(this.level().isClientSide);
         }
 
-        // Domesticación rápida en modo creativo para pruebas
         if (!this.isTame() && player.getAbilities().instabuild && itemstack.isEmpty()) {
             if (!this.level().isClientSide) {
                 this.tame(player);
@@ -492,27 +483,20 @@ public class CelestialDragonEntity extends TamableAnimal implements FlyingAnimal
         return super.mobInteract(player, hand);
     }
 
-    // Control de vuelo estilo Dragon Mounts con cabeceo dinámico (Ascenso vertical hacia el cielo y picada hacia la tierra)
     @Override
     public void travel(Vec3 travelVector) {
         if (this.isAlive()) {
             Entity firstPassenger = this.getFirstPassenger();
             if (this.isVehicle() && firstPassenger instanceof Player player) {
-                // Solo la instancia que controla la montura ejecuta las físicas locales de vuelo;
-                // previene tirones por doble simulación concurrente entre cliente y servidor.
                 if (!this.isControlledByLocalInstance()) {
                     return;
                 }
 
-                // 1. Cabeceo dinámico cinematográfico:
-                // Espacio presionado: Cabeza empinada hacia el cielo (-65°) para ascender en línea recta
-                // Shift presionado: Cabeza en picada directa hacia la tierra (+65°) con la cola arriba
-                // Neutral: Suave seguimiento de la mirada del jinete
                 float targetPitch;
                 if (this.clientSpaceHeld) {
-                    targetPitch = -65.0F; // Cabeza hacia el cielo
+                    targetPitch = -65.0F;
                 } else if (this.clientShiftHeld) {
-                    targetPitch = 65.0F;  // Cabeza en picada hacia la tierra
+                    targetPitch = 65.0F;
                 } else {
                     targetPitch = player.getXRot() * 0.45F;
                 }
@@ -524,12 +508,9 @@ public class CelestialDragonEntity extends TamableAnimal implements FlyingAnimal
                 this.setYRot(player.getYRot());
                 this.yBodyRot = this.getYRot();
                 this.yHeadRot = this.getYRot();
-                // Preservar yRotO, yBodyRotO y xRotO con los valores del inicio del tick
-                // para permitir que rotLerp interpole con suavidad total a 144+ FPS sin tirones a 20 Hz
 
                 this.updateSegmentsRidden();
 
-                // 2. Navegación horizontal
                 float forward = player.zza;
                 float strafe = player.xxa;
 
@@ -556,10 +537,6 @@ public class CelestialDragonEntity extends TamableAnimal implements FlyingAnimal
                     if (Math.abs(vz) < 0.005D) vz = 0.0D;
                 }
 
-                // 3. Control de altitud Dragon Mounts:
-                // Espacio presionado: Ascenso vertical sostenido (+0.65D)
-                // Shift presionado: Descenso activo en picada (-0.65D)
-                // Soltar ambas teclas: Altitud bloqueada sin deriva (¡CERO vuelo infinito!)
                 double vy = 0.0D;
                 if (this.clientSpaceHeld) {
                     vy = 0.65D;
@@ -568,14 +545,14 @@ public class CelestialDragonEntity extends TamableAnimal implements FlyingAnimal
                         this.playSound(ModSounds.CELESTIAL_DRAGON_ROAR.get(), 1.5F, 1.2F);
                     }
                 } else if (this.clientShiftHeld) {
-                    vy = -0.65D; // Descenso aerodinámico en picada
+                    vy = -0.65D;
                 } else if (this.onGround()) {
                     vy = 0.0D;
                 } else {
                     if (forward != 0.0F || strafe != 0.0F) {
-                        vy = -0.015D; // Suave sustentación natural de planeo
+                        vy = -0.015D;
                     } else {
-                        vy = 0.0D; // Suspensión estable de Qi
+                        vy = 0.0D;
                     }
                 }
 
@@ -590,23 +567,17 @@ public class CelestialDragonEntity extends TamableAnimal implements FlyingAnimal
     @Override
     protected void positionRider(Entity passenger, Entity.MoveFunction moveFunction) {
         if (this.hasPassenger(passenger)) {
-            // Anclaje cinemático exacto a la primera vértebra del lomo (neck1)
-            // Escala colosal 3.6x:
-            // Pivote de neck1 en el modelo: (0, 8.0/16.0, -14.0/16.0)
-            // Posición de la montura sobre las escamas superiores de neck1: (0, -5.0/16.0, 2.0/16.0)
             float pitchRad = this.getXRot() * ((float) Math.PI / 180.0F);
             float yawRad = this.getYRot() * ((float) Math.PI / 180.0F);
 
             double yl = -5.0D / 16.0D;
             double zl = 2.0D / 16.0D;
 
-            // Rotación por cabeceo (pitch) en el pivote del cuello
             double cosP = Math.cos(pitchRad);
             double sinP = Math.sin(pitchRad);
             double yNeck = (8.0D / 16.0D) + (yl * cosP - zl * sinP);
             double zNeck = (-14.0D / 16.0D) + (yl * sinP + zl * cosP);
 
-            // Proyección a espacio de mundo (MobRenderer aplica escala 3.6x y traslación -1.501)
             double dy = -3.6D * (yNeck - 1.501D);
             double forwardDist = -3.6D * zNeck;
 
@@ -656,7 +627,6 @@ public class CelestialDragonEntity extends TamableAnimal implements FlyingAnimal
 
     @Override
     protected void checkFallDamage(double y, boolean onGround, net.minecraft.world.level.block.state.BlockState state, BlockPos pos) {
-        // Inmune al daño de caída al descender y aterrizar
     }
 
     @Override
@@ -669,12 +639,11 @@ public class CelestialDragonEntity extends TamableAnimal implements FlyingAnimal
 
     @Override
     public boolean shouldRiderFaceForward(Player player) {
-        return false; // Permite giro de cámara suave e independiente con el ratón sin micro-tirones
+        return false;
     }
 
     @Override
     public void onPassengerTurned(Entity entityToUpdate) {
-        // Sin tirones por rotación forzada de pasajero
     }
 
     @Override
@@ -729,7 +698,6 @@ public class CelestialDragonEntity extends TamableAnimal implements FlyingAnimal
     @Override
     protected void dropCustomDeathLoot(ServerLevel level, DamageSource damageSource, boolean recentlyHit) {
         super.dropCustomDeathLoot(level, damageSource, recentlyHit);
-        // Drops legendarios
         this.spawnAtLocation(new ItemStack(SystemItems.CELESTIAL_DRAGON_PEARL.get(), 1 + this.random.nextInt(2)));
         this.spawnAtLocation(new ItemStack(SystemItems.IMMORTAL_DRAGON_SCALE.get(), 4 + this.random.nextInt(5)));
     }
@@ -803,7 +771,6 @@ public class CelestialDragonEntity extends TamableAnimal implements FlyingAnimal
         return null;
     }
 
-    // Goal especializado de aliento celestial en ráfaga
     static class CelestialDragonBreathGoal extends Goal {
         private final CelestialDragonEntity dragon;
         private int attackTime;

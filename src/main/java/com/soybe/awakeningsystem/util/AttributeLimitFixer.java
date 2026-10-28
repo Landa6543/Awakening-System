@@ -48,7 +48,6 @@ public final class AttributeLimitFixer {
 
         boolean modified = false;
 
-        // 1. Intentar mediante Unsafe
         if (unsafe != null) {
             Class<?> c = rangedAttr.getClass();
             while (c != null && c != Object.class) {
@@ -62,14 +61,15 @@ public final class AttributeLimitFixer {
                                 unsafe.putDouble(rangedAttr, offset, newMax);
                                 modified = true;
                             }
-                        } catch (Throwable ignored) {}
+                        } catch (Throwable t) {
+                            AwakeningSystemMod.LOGGER.debug("AttributeLimitFixer unsafe patch failed for field {}: {}", field.getName(), t.getMessage());
+                        }
                     }
                 }
                 c = c.getSuperclass();
             }
         }
 
-        // 2. Fallback a reflexión directa si Unsafe no estuviera disponible
         if (!modified || rangedAttr.getMaxValue() < newMax) {
             Class<?> c = rangedAttr.getClass();
             while (c != null && c != Object.class) {
@@ -83,7 +83,9 @@ public final class AttributeLimitFixer {
                                 field.setDouble(rangedAttr, newMax);
                                 modified = true;
                             }
-                        } catch (Throwable ignored) {}
+                        } catch (Throwable t) {
+                            AwakeningSystemMod.LOGGER.debug("AttributeLimitFixer reflection patch failed for field {}: {}", field.getName(), t.getMessage());
+                        }
                     }
                 }
                 c = c.getSuperclass();

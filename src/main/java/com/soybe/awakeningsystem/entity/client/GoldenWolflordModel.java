@@ -238,7 +238,6 @@ public class GoldenWolflordModel extends EntityModel<GoldenWolflordBossEntity> {
         this.head.yRot = netHeadYaw * ((float)Math.PI / 180F);
         this.head.xRot = headPitch * ((float)Math.PI / 180F);
 
-        // Ondulación serpentina elegante de leviatán flotante
         float wave = Mth.sin(ageInTicks * 0.12F);
         float waveCos = Mth.cos(ageInTicks * 0.12F);
         this.body.yRot = wave * 0.15F;

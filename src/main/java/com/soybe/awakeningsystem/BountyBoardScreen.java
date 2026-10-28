@@ -119,23 +119,19 @@ public final class BountyBoardScreen extends Screen {
         int left = (this.width - boardW) / 2;
         int top = (this.height - boardH) / 2;
 
-        // 1. Marco exterior de madera oscura rústica
         g.fill(left - 6, top - 6, left + boardW + 6, top + boardH + 6, 0xFF1C1107);
         g.fill(left - 4, top - 4, left + boardW + 4, top + boardH + 4, 0xFF35200D);
         g.fill(left, top, left + boardW, top + boardH, 0xFF28180A);
 
-        // Tablas de madera del fondo (imitando tablón de anuncios de corcho/madera)
         for (int y = top + 4; y < top + boardH - 4; y += 18) {
             g.fill(left + 4, y, left + boardW - 4, y + 16, 0xFF3D2510);
             g.fill(left + 4, y + 16, left + boardW - 4, y + 18, 0xFF221408);
         }
 
-        // 2. Cartel tallado superior: "NOTICE BOARD"
         g.fill(left + 12, top + 6, left + boardW - 12, top + 26, 0xFF523315);
         g.fill(left + 14, top + 8, left + boardW - 14, top + 24, 0xFF65401C);
         g.drawCenteredString(this.font, Component.translatable("awakening_system.bounty_board.title"), left + boardW / 2, top + 12, 0xFFFFD700);
 
-        // Botón de rotar tablón en la cabecera superior derecha
         int refX = left + boardW - 88;
         int refY = top + 27;
         int refW = 76;
@@ -145,14 +141,12 @@ public final class BountyBoardScreen extends Screen {
         g.fill(refX + 1, refY + 1, refX + refW - 1, refY + refH - 1, refHov ? 0xFFA05518 : 0xFF5A300E);
         g.drawCenteredString(this.font, Component.translatable("awakening_system.bounty_board.btn_refresh"), refX + refW / 2, refY + 3, refHov ? 0xFFFFFFFF : 0xFFFFD700);
 
-        // Barra de estado del rango de gremio
         int needed = payload.nextRankNeeded();
         int completed = payload.completedBounties();
         int remain = Math.max(0, needed - completed);
         Component rankStr = Component.translatable("awakening_system.bounty_board.rank_status", payload.guildRank(), completed, remain);
         g.drawString(this.font, rankStr, left + 14, top + 30, 0xFFE0E0E0, false);
 
-        // 3. Panel Izquierdo: Lista de Pergaminos de Cacería (Selección Aleatoria)
         int listX = left + 10;
         int listY = top + 44;
         int listW = 156;
@@ -164,7 +158,6 @@ public final class BountyBoardScreen extends Screen {
         int totalOffers = (offers != null) ? offers.length : 0;
         int maxScroll = Math.max(0, totalOffers - 6);
 
-        // Botones de scroll arriba / abajo si hay más contratos
         if (listScroll > 0) {
             g.fill(listX + listW - 16, listY + 2, listX + listW - 2, listY + 12, 0xFF553311);
             g.drawCenteredString(this.font, "▲", listX + listW - 9, listY + 3, 0xFFFFD700);
@@ -189,7 +182,6 @@ public final class BountyBoardScreen extends Screen {
             int bgCol = isSelected ? 0xFFEEDBB7 : (isHovered ? 0xFF5D3D1E : 0xFF3D2510);
             g.fill(listX + 2, itemY, listX + listW - 2, itemY + 27, bgCol);
 
-            // Borde lateral del rango
             int rankColor = switch (item.rank) {
                 case "F" -> 0xFF888888;
                 case "E" -> 0xFF55AA55;
@@ -201,11 +193,9 @@ public final class BountyBoardScreen extends Screen {
             };
             g.fill(listX + 2, itemY, listX + 6, itemY + 27, rankColor);
 
-            // Sello miniatura
             g.fill(listX + 8, itemY + 5, listX + 22, itemY + 22, rankColor);
             g.drawCenteredString(this.font, item.rank, listX + 15, itemY + 9, 0xFFFFFFFF);
 
-            // Nombre recortado
             String title = Component.translatable(item.nameKey).getString();
             int maxTitleW = listW - 32;
             if (this.font.width(title) > maxTitleW) {
@@ -224,13 +214,11 @@ public final class BountyBoardScreen extends Screen {
             }
         }
 
-        // 4. Panel Derecho: Expediente / Pergamino Grande Detallado
         int detX = left + 174;
         int detY = top + 44;
         int detW = 196;
         int detH = 180;
 
-        // Pergamino de fondo
         g.fill(detX - 2, detY - 2, detX + detW + 2, detY + detH + 2, 0xFF1E1308);
         g.fill(detX, detY, detX + detW, detY + detH, 0xFFF7ECDA);
         g.fill(detX + 4, detY + 4, detX + detW - 4, detY + detH - 4, 0xFFFAF3E6);
@@ -240,11 +228,9 @@ public final class BountyBoardScreen extends Screen {
             if (selGlobalIdx >= 0 && selGlobalIdx < BountyBoardBlock.ALL_BOUNTIES.size()) {
                 BountyBoardBlock.BountyTemplate sel = BountyBoardBlock.ALL_BOUNTIES.get(selGlobalIdx);
 
-                // Cabecera del contrato
                 g.fill(detX + 6, detY + 6, detX + detW - 6, detY + 22, 0xFF8B2500);
                 g.drawCenteredString(this.font, Component.translatable("awakening_system.bounty_board.contract_rank", sel.rank), detX + detW / 2, detY + 10, 0xFFFFFFFF);
 
-                // Título completo con ajuste de líneas
                 String fullTitle = Component.translatable(sel.nameKey).getString();
                 List<FormattedCharSequence> titleLines = this.font.split(Component.literal("§4§l" + fullTitle), detW - 16);
                 int ty = detY + 25;
@@ -254,7 +240,6 @@ public final class BountyBoardScreen extends Screen {
                     ty += 10;
                 }
 
-                // Objetivo de la misión
                 int objY = Math.max(ty + 3, detY + 46);
                 g.drawString(this.font, Component.translatable("awakening_system.bounty_board.objective_header"), detX + 10, objY, 0xFF444444, false);
 
@@ -334,7 +319,6 @@ public final class BountyBoardScreen extends Screen {
                     toY += 10;
                 }
 
-                // Caja de Recompensas compacta (evita solapamiento)
                 int rewY = toY + 3;
                 int rewH = 32;
                 g.fill(detX + 8, rewY, detX + detW - 8, rewY + rewH, 0xFFEEDBB7);
@@ -342,7 +326,6 @@ public final class BountyBoardScreen extends Screen {
                 g.drawString(this.font, Component.translatable("awakening_system.bounty_board.rewards_header"), detX + 14, rewY + 4, 0xFF8B5A00, false);
                 g.drawString(this.font, Component.literal("§0• §6+" + sel.coins + " M   §2+" + sel.exp + " EXP   §5+" + sel.medals + " 🏅"), detX + 14, rewY + 16, 0xFF000000, false);
 
-                // Estado de progreso
                 boolean isActiveContract = (payload.hasActiveBounty() && payload.activeIndex() == selGlobalIdx);
                 int progY = rewY + rewH + 4;
                 if (isActiveContract) {
@@ -352,13 +335,11 @@ public final class BountyBoardScreen extends Screen {
                             ? Component.translatable("awakening_system.bounty_board.delivered", k, n)
                             : Component.translatable("awakening_system.bounty_board.progress", k, n);
                     g.drawString(this.font, Component.literal("§8").append(progText), detX + 12, progY, 0xFF000000, false);
-                    // Barra de progreso
                     g.fill(detX + 12, progY + 9, detX + detW - 12, progY + 14, 0xFFCCCCCC);
                     int fillW = n > 0 ? Math.min(detW - 24, (detW - 24) * k / n) : 0;
                     g.fill(detX + 12, progY + 9, detX + 12 + fillW, progY + 14, k >= n ? 0xFF44AA44 : 0xFFE5A823);
                 }
 
-                // Indicación explicativa para misiones de recolección
                 if (sel.targetType.startsWith("collect_")) {
                     int hintY = isActiveContract ? progY + 17 : progY + 2;
                     if (hintY + 8 < detY + detH - 22) {
@@ -366,7 +347,6 @@ public final class BountyBoardScreen extends Screen {
                     }
                 }
 
-                // Botón de acción (Reclamar / Aceptar / Ocupado)
                 int btnX = detX + 10;
                 int btnY = detY + detH - 22;
                 int btnW = detW - 20;
@@ -407,7 +387,6 @@ public final class BountyBoardScreen extends Screen {
         int left = (this.width - boardW) / 2;
         int top = (this.height - boardH) / 2;
 
-        // Click en Botón de rotar tablón
         int refX = left + boardW - 88;
         int refY = top + 27;
         int refW = 76;
@@ -429,7 +408,6 @@ public final class BountyBoardScreen extends Screen {
         int totalOffers = (offers != null) ? offers.length : 0;
         int maxScroll = Math.max(0, totalOffers - 6);
 
-        // Click en flecha arriba
         if (listScroll > 0 && mouseX >= listX + listW - 16 && mouseX <= listX + listW - 2 && mouseY >= listY + 2 && mouseY <= listY + 12) {
             listScroll = Math.max(0, listScroll - 1);
             if (minecraft != null && minecraft.player != null) {
@@ -438,7 +416,6 @@ public final class BountyBoardScreen extends Screen {
             return true;
         }
 
-        // Click en flecha abajo
         if (listScroll < maxScroll && mouseX >= listX + listW - 16 && mouseX <= listX + listW - 2 && mouseY >= listY + listH - 12 && mouseY <= listY + listH - 2) {
             listScroll = Math.min(maxScroll, listScroll + 1);
             if (minecraft != null && minecraft.player != null) {
@@ -461,7 +438,6 @@ public final class BountyBoardScreen extends Screen {
             }
         }
 
-        // Botón de acción
         int detX = left + 174;
         int detY = top + 44;
         int detW = 196;

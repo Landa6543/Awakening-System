@@ -57,19 +57,19 @@ public class SpiritPlumFruitItem extends Item {
             }
 
             player.playNotifySound(SoundEvents.AMETHYST_BLOCK_CHIME, SoundSource.PLAYERS, 1.0F, 1.4F);
-            player.displayClientMessage(Component.literal("§d§l🌸 [CIRUELA ESPIRITUAL] §fEl néctar de Monte Hua purifica tus meridianos (+30 Qi)."), true);
+            player.displayClientMessage(Component.translatableWithFallback("item.awakening_system.spirit_plum_fruit.msg", "§d§l🌸 [SPIRIT PLUM] §fThe nectar of Mount Hua purifies your meridians (+30 Qi)."), true);
         }
         return result;
     }
 
     @Override
     public void appendHoverText(ItemStack stack, TooltipContext context, List<Component> tooltip, TooltipFlag flag) {
-        tooltip.add(Component.literal("§d§lFruto Espiritual de Monte Hua").withStyle(ChatFormatting.LIGHT_PURPLE));
-        tooltip.add(Component.literal("§7Cosechado de los sagrados ciruelos en flor de la cumbre del viento."));
-        tooltip.add(Component.literal(""));
-        tooltip.add(Component.literal("§e▪ Al Consumir:"));
-        tooltip.add(Component.literal("  §b▪ +30 Qi de Cultivo y +40 EXP"));
-        tooltip.add(Component.literal("  §a▪ Regeneración II (10s) y Ligereza I (10s)"));
-        tooltip.add(Component.literal("§8▪ Se puede cosechar directamente haciendo clic derecho en las hojas."));
+        tooltip.add(Component.translatable("item.awakening_system.spirit_plum_fruit.title").withStyle(ChatFormatting.LIGHT_PURPLE));
+        tooltip.add(Component.translatable("item.awakening_system.spirit_plum_fruit.desc"));
+        tooltip.add(Component.empty());
+        tooltip.add(Component.translatable("item.awakening_system.spirit_plum_fruit.on_consume"));
+        tooltip.add(Component.translatable("item.awakening_system.spirit_plum_fruit.effect1"));
+        tooltip.add(Component.translatable("item.awakening_system.spirit_plum_fruit.effect2"));
+        tooltip.add(Component.translatable("item.awakening_system.spirit_plum_fruit.harvest_hint"));
     }
 }

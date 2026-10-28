@@ -176,7 +176,6 @@ public class WhopperflowerEntity extends Monster {
             Vec3 dir = target.getEyePosition().subtract(this.getEyePosition()).normalize();
             Type t = getFlowerType();
 
-            // Disparo triple en abanico
             for (int i = -1; i <= 1; i++) {
                 Vec3 spreadDir = dir.add((this.random.nextDouble() - 0.5D) * 0.15D, (this.random.nextDouble() - 0.5D) * 0.1D, (this.random.nextDouble() - 0.5D) * 0.15D).normalize();
                 SmallFireball ball = new SmallFireball(sLevel, this, spreadDir.scale(0.75D));
@@ -212,7 +211,9 @@ public class WhopperflowerEntity extends Monster {
             if (nearestPlayer instanceof ServerPlayer sp) {
                 SystemEvents.data(sp).restoreMana(25);
             }
-            this.spawnAtLocation(new ItemStack(SystemItems.CRYSTAL_CORE.get(), 1));
+            if (sLevel.dimension().equals(com.soybe.awakeningsystem.TeyvatWorldManager.TEYVAT_WORLD)) {
+                this.spawnAtLocation(new ItemStack(SystemItems.CRYSTAL_CORE.get(), 1));
+            }
         }
     }
 

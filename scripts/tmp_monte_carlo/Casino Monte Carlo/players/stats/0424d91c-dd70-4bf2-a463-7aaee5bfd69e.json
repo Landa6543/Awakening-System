@@ -1,0 +1,37 @@
+{
+  "stats": {
+    "minecraft:used": {
+      "minecraft:grass_block": 6,
+      "minecraft:netherite_sword": 20
+    },
+    "minecraft:picked_up": {
+      "minecraft:brown_wool": 1,
+      "minecraft:chicken": 4,
+      "minecraft:mutton": 1,
+      "minecraft:leather": 11,
+      "minecraft:beef": 4
+    },
+    "minecraft:custom": {
+      "minecraft:time_since_rest": 8818,
+      "minecraft:walk_one_cm": 6872,
+      "minecraft:leave_game": 1,
+      "minecraft:mob_kills": 12,
+      "minecraft:play_time": 8818,
+      "minecraft:damage_dealt": 1280,
+      "minecraft:jump": 57,
+      "minecraft:time_since_death": 8818,
+      "minecraft:sprint_one_cm": 15037,
+      "minecraft:total_world_time": 9104,
+      "minecraft:fly_one_cm": 145019,
+      "minecraft:crouch_one_cm": 11,
+      "minecraft:sneak_time": 238
+    },
+    "minecraft:killed": {
+      "minecraft:donkey": 3,
+      "minecraft:chicken": 5,
+      "minecraft:sheep": 1,
+      "minecraft:cow": 3
+    }
+  },
+  "DataVersion": 4790
+}

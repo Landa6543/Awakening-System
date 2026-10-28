@@ -58,7 +58,6 @@ public class CelestialDragonAltarBlock extends Block {
 
             ServerLevel serverLevel = (ServerLevel) level;
 
-            // Verificar si el dragón jefe ya existe en el área (radio 350 bloques)
             AABB searchBox = new AABB(pos).inflate(350.0D);
             List<AncientCelestialDragonBossEntity> existingDragons = serverLevel.getEntitiesOfClass(
                     AncientCelestialDragonBossEntity.class, searchBox, AncientCelestialDragonBossEntity::isAlive);
@@ -69,15 +68,12 @@ public class CelestialDragonAltarBlock extends Block {
                 return ItemInteractionResult.FAIL;
             }
 
-            // Consumir el ítem de tributo
             if (!player.getAbilities().instabuild) {
                 stack.shrink(1);
             }
 
-            // 1. Desatar tormenta cósmica de Qi
             serverLevel.setWeatherParameters(0, 12000, true, true);
 
-            // 2. Rayos ceremoniales en los 4 puntos cardinales del santuario
             int[][] offsets = {{-7, -7}, {7, -7}, {-7, 7}, {7, 7}};
             for (int[] off : offsets) {
                 BlockPos strikePos = pos.offset(off[0], 0, off[1]);
@@ -89,23 +85,20 @@ public class CelestialDragonAltarBlock extends Block {
                 }
             }
 
-            // 3. Sonidos climáticos retumbantes
             serverLevel.playSound(null, pos, SoundEvents.END_PORTAL_SPAWN, SoundSource.AMBIENT, 3.0F, 0.8F);
             serverLevel.playSound(null, pos, ModSounds.CELESTIAL_DRAGON_ROAR.get(), SoundSource.HOSTILE, 4.0F, 0.7F);
 
-            // 4. Invocar al Titán: Dragón Celestial Ancestral en picada vertical desde el cielo (cabeza abajo)
             double spawnX = pos.getX() + 0.5D;
             double spawnY = Math.min(serverLevel.getMaxBuildHeight() - 10, Math.max(pos.getY() + 90, 225));
             double spawnZ = pos.getZ() + 0.5D;
 
             AncientCelestialDragonBossEntity boss = ModEntities.ANCIENT_CELESTIAL_DRAGON.get().create(serverLevel);
             if (boss != null) {
-                boss.moveTo(spawnX, spawnY, spawnZ, player.getYRot(), 85.0F); // Pitch 85 = cabeza apuntando hacia abajo en picada
+                boss.moveTo(spawnX, spawnY, spawnZ, player.getYRot(), 85.0F);
                 boss.setHomeSanctuaryPos(pos);
                 boss.triggerDescentRoar();
                 serverLevel.addFreshEntity(boss);
 
-                // Enviar cinemática de cámara con vista al cielo y temblor de pantalla a jugadores cercanos
                 com.soybe.awakeningsystem.BossCinematicPayload cinematicPayload =
                         new com.soybe.awakeningsystem.BossCinematicPayload(pos, 160, boss.getId());
                 for (ServerPlayer sp : serverLevel.players()) {
@@ -115,7 +108,6 @@ public class CelestialDragonAltarBlock extends Block {
                 }
             }
 
-            // 5. Anuncio en toda la dimensión
             Component announcement = Component.literal("§8§m━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n")
                     .append(Component.translatable("awakening_system.altar.celestial_dragon_descended_title").withStyle(ChatFormatting.BOLD, ChatFormatting.GOLD))
                     .append(Component.translatable("awakening_system.altar.celestial_dragon_descended_desc"))
@@ -138,7 +130,6 @@ public class CelestialDragonAltarBlock extends Block {
         double py = pos.getY() + 1.0D;
         double pz = pos.getZ() + 0.5D;
 
-        // Estela mística de Qi ascendente
         if (random.nextFloat() < 0.45F) {
             double rx = px + (random.nextDouble() - 0.5D) * 0.8D;
             double rz = pz + (random.nextDouble() - 0.5D) * 0.8D;

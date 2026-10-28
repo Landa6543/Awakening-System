@@ -13,12 +13,12 @@ public class RuinHunterModel extends EntityModel<RuinHunterEntity> {
 
     private final ModelPart root;
     private final ModelPart body;
-    private final ModelPart leftWing;   // bone3 (propulsor izquierdo)
-    private final ModelPart rightWing;  // bone2 (propulsor derecho)
-    private final ModelPart facePlate;  // bone (ojo y coraza frontal)
+    private final ModelPart leftWing;
+    private final ModelPart rightWing;
+    private final ModelPart facePlate;
     private final ModelPart leftArm;
     private final ModelPart rightArm;
-    private final ModelPart ringBase;   // bb_main (anillo inferior)
+    private final ModelPart ringBase;
 
     public RuinHunterModel(ModelPart root) {
         this.root = root;
@@ -35,7 +35,6 @@ public class RuinHunterModel extends EntityModel<RuinHunterEntity> {
         MeshDefinition mesh = new MeshDefinition();
         PartDefinition root = mesh.getRoot();
 
-        // 1. Cuerpo Principal (Y=24.0F)
         PartDefinition body = root.addOrReplaceChild("body",
                 CubeListBuilder.create()
                         .texOffs(70, 0).mirror(false).addBox(-7.0F, -21.0F, -2.0F, 14.0F, 15.0F, 15.0F)
@@ -43,7 +42,6 @@ public class RuinHunterModel extends EntityModel<RuinHunterEntity> {
                         .texOffs(13, 81).mirror(false).addBox(-4.0F, -49.0F, -5.0F, 9.0F, 2.0F, 21.0F),
                 PartPose.offset(0.0F, 24.0F, 0.0F));
 
-        // 2. Propulsor / Ala Trasera Izquierda (bone3)
         PartDefinition bone3 = body.addOrReplaceChild("bone3",
                 CubeListBuilder.create()
                         .texOffs(130, 0).mirror(true).addBox(-2.9333F, -4.6786F, 0.1348F, 6.0F, 6.0F, 9.0F),
@@ -59,7 +57,6 @@ public class RuinHunterModel extends EntityModel<RuinHunterEntity> {
                         .texOffs(98, 50).mirror(true).addBox(-3.1F, -3.0F, -0.5F, 6.0F, 6.0F, 25.0F),
                 PartPose.offsetAndRotation(0.0667F, -1.6786F, 8.6348F, 0.5236F, 0.0F, 0.0F));
 
-        // 3. Propulsor / Ala Trasera Derecha (bone2)
         PartDefinition bone2 = body.addOrReplaceChild("bone2",
                 CubeListBuilder.create()
                         .texOffs(130, 0).mirror(false).addBox(-3.0F, -4.6786F, -0.8652F, 6.0F, 6.0F, 9.0F),
@@ -75,12 +72,11 @@ public class RuinHunterModel extends EntityModel<RuinHunterEntity> {
                         .texOffs(98, 50).mirror(false).addBox(-2.9F, -3.0F, -0.5F, 6.0F, 6.0F, 25.0F),
                 PartPose.offsetAndRotation(0.0F, -1.6786F, 7.6348F, 0.5236F, 0.0F, 0.0F));
 
-        // 4. Placa Facial y Núcleo Ocular (bone)
         body.addOrReplaceChild("bone",
                 CubeListBuilder.create()
                         .texOffs(112, 34).mirror(false).addBox(-9.92F, -32.52F, -6.16F, 2.0F, 2.0F, 2.0F)
                         .texOffs(112, 34).mirror(false).addBox(-7.28F, -29.88F, -6.16F, 2.0F, 2.0F, 2.0F)
-                        .texOffs(29, 54).mirror(false).addBox(-8.08F, -43.64F, -6.16F, 16.0F, 14.0F, 2.0F) // Ojo y visor
+                        .texOffs(29, 54).mirror(false).addBox(-8.08F, -43.64F, -6.16F, 16.0F, 14.0F, 2.0F)
                         .texOffs(112, 34).mirror(false).addBox(-2.36F, -29.88F, -6.16F, 5.0F, 2.0F, 2.0F)
                         .texOffs(112, 34).mirror(false).addBox(-9.92F, -43.08F, -6.16F, 2.0F, 2.0F, 2.0F)
                         .texOffs(112, 34).mirror(false).addBox(-7.28F, -45.72F, -6.16F, 2.0F, 2.0F, 2.0F)
@@ -93,7 +89,6 @@ public class RuinHunterModel extends EntityModel<RuinHunterEntity> {
                         .texOffs(112, 34).mirror(false).addBox(5.04F, -29.88F, -6.16F, 2.0F, 2.0F, 2.0F),
                 PartPose.offset(0.0F, 0.0F, 0.0F));
 
-        // 5. Brazo y Cuchilla Izquierda (left_arm)
         PartDefinition left_arm = body.addOrReplaceChild("left_arm",
                 CubeListBuilder.create()
                         .texOffs(0, 26).mirror(true).addBox(-5.25F, -0.5F, -6.5F, 10.0F, 8.0F, 13.0F),
@@ -110,7 +105,6 @@ public class RuinHunterModel extends EntityModel<RuinHunterEntity> {
                         .texOffs(66, 31).mirror(true).addBox(-2.5F, 0.0F, -2.5F, 5.0F, 16.0F, 5.0F),
                 PartPose.offsetAndRotation(0.25F, 6.5F, 0.0F, -0.2559F, 0.056F, 0.211F));
 
-        // 6. Brazo y Cuchilla Derecha (right_arm)
         PartDefinition right_arm = body.addOrReplaceChild("right_arm",
                 CubeListBuilder.create()
                         .texOffs(0, 26).mirror(false).addBox(-4.75F, -0.5F, -6.5F, 10.0F, 8.0F, 13.0F),
@@ -127,7 +121,6 @@ public class RuinHunterModel extends EntityModel<RuinHunterEntity> {
                         .texOffs(66, 31).mirror(true).addBox(-2.5F, 0.0F, -2.5F, 5.0F, 16.0F, 5.0F),
                 PartPose.offsetAndRotation(-0.25F, 6.5F, 0.0F, -0.2559F, -0.056F, -0.211F));
 
-        // 7. Base de Levitación y Anillo Inferior (bb_main)
         PartDefinition bb_main = body.addOrReplaceChild("bb_main",
                 CubeListBuilder.create()
                         .texOffs(44, 0).mirror(false).addBox(-2.0F, -1.0F, -8.0F, 4.0F, 1.0F, 6.0F)
@@ -151,7 +144,6 @@ public class RuinHunterModel extends EntityModel<RuinHunterEntity> {
 
     @Override
     public void setupAnim(RuinHunterEntity entity, float limbSwing, float limbSwingAmount, float ageInTicks, float netHeadYaw, float headPitch) {
-        // Reset base positions and rotations
         this.body.xRot = 0.0F;
         this.body.yRot = netHeadYaw * ((float) Math.PI / 180F) * 0.4F;
         this.body.zRot = 0.0F;
@@ -172,10 +164,9 @@ public class RuinHunterModel extends EntityModel<RuinHunterEntity> {
         this.rightArm.yRot = 0.0F;
         this.rightArm.zRot = 0.0F;
 
-        // 1. Estado ATURDIDO (Disparo crítico en el ojo): Desplomado e inerte
         if (entity.isStunned()) {
-            this.body.y = 24.0F; // Tocado en el suelo
-            this.body.xRot = 0.55F; // Inclinado hacia abajo
+            this.body.y = 24.0F;
+            this.body.xRot = 0.55F;
             this.leftArm.xRot = 0.4F;
             this.leftArm.zRot = 0.25F;
             this.rightArm.xRot = 0.4F;
@@ -185,16 +176,13 @@ public class RuinHunterModel extends EntityModel<RuinHunterEntity> {
             return;
         }
 
-        // 2. Levitación dinámica (Bobbing sinusoidal continuo)
         float hoverBob = Mth.sin(ageInTicks * 0.12F) * 2.0F;
         this.body.y = 22.0F + hoverBob;
 
-        // Pulsación sutil de los propulsores traseros
         float wingPulse = Mth.sin(ageInTicks * 0.15F) * 0.06F;
         this.leftWing.zRot = -0.7606F + wingPulse;
         this.rightWing.zRot = 0.6996F - wingPulse;
 
-        // 3. Estado de TORBELLINO DE CUCHILLAS (360° continuo a alta velocidad)
         if (entity.isSpinning()) {
             float spinAngle = ageInTicks * 1.4F;
             this.leftArm.yRot = spinAngle;
@@ -204,24 +192,19 @@ public class RuinHunterModel extends EntityModel<RuinHunterEntity> {
             return;
         }
 
-        // 4. Estado MODO BOMBARDEO AÉREO (Artillery Mode en gran altura)
         if (entity.isBombarding()) {
             this.body.xRot = 0.25F + headPitch * ((float) Math.PI / 180F) * 0.3F;
-            // Brazos alzados y replegados hacia los lados para despejar el campo de fuego
             this.leftArm.xRot = -1.3F;
             this.leftArm.zRot = 0.4F;
             this.rightArm.xRot = -1.3F;
             this.rightArm.zRot = -0.4F;
-            // Propulsores abiertos al máximo para sostener el vuelo
             this.leftWing.xRot = 1.35F;
             this.rightWing.xRot = 1.05F;
             return;
         }
 
-        // 5. Estado EMBESTIDA / DASH CORTANTE
         if (entity.isDashing()) {
-            this.body.xRot = 0.45F; // Inclinación agresiva hacia adelante
-            // Tijera de cuchillas frontales
+            this.body.xRot = 0.45F;
             this.leftArm.xRot = -1.0F;
             this.leftArm.yRot = 0.35F;
             this.rightArm.xRot = -1.0F;
@@ -229,7 +212,6 @@ public class RuinHunterModel extends EntityModel<RuinHunterEntity> {
             return;
         }
 
-        // 6. Postura por defecto (Patrulla / Flotación)
         float bladeSway = Mth.cos(ageInTicks * 0.08F) * 0.12F;
         this.leftArm.xRot = bladeSway;
         this.rightArm.xRot = -bladeSway;

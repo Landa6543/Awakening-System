@@ -121,7 +121,6 @@ public class AncientDragonModel extends HierarchicalModel<AncientDragonEntity> {
         MeshDefinition mesh = new MeshDefinition();
         PartDefinition root = mesh.getRoot();
 
-        // 1. Torso y Placas Ventrales
         PartDefinition body = root.addOrReplaceChild("body", CubeListBuilder.create()
                 .texOffs(0, 0).addBox(-10.0F, -9.0F, -18.0F, 20.0F, 18.0F, 36.0F, new CubeDeformation(0.0F))
                 .texOffs(112, 0).addBox(-8.5F, 6.2F, -16.0F, 17.0F, 4.0F, 32.0F, new CubeDeformation(0.0F))
@@ -133,7 +132,6 @@ public class AncientDragonModel extends HierarchicalModel<AncientDragonEntity> {
                 .texOffs(204, 104).addBox(-1.5F, -13.0F, -8.0F, 3.0F, 4.0F, 14.0F, new CubeDeformation(0.0F)),
                 PartPose.offset(0.0F, 0.0F, 0.0F));
 
-        // Montura y Alforjas
         body.addOrReplaceChild("saddle", CubeListBuilder.create()
                 .texOffs(168, 122).addBox(-7.5F, -10.5F, -7.0F, 15.0F, 2.0F, 12.0F, new CubeDeformation(0.0F))
                 .texOffs(82, 54).addBox(-5.5F, -12.5F, -7.0F, 11.0F, 2.0F, 3.0F, new CubeDeformation(0.0F))
@@ -144,7 +142,6 @@ public class AncientDragonModel extends HierarchicalModel<AncientDragonEntity> {
                 .texOffs(232, 122).addBox(10.0F, -7.0F, -4.0F, 3.0F, 8.0F, 8.0F, new CubeDeformation(0.0F)),
                 PartPose.offset(0.0F, 0.0F, 0.0F));
 
-        // Cuello
         PartDefinition neck1 = body.addOrReplaceChild("neck1", CubeListBuilder.create()
                 .texOffs(112, 36).addBox(-6.0F, -6.0F, -12.0F, 12.0F, 12.0F, 12.0F, new CubeDeformation(0.0F))
                 .texOffs(170, 187).addBox(-1.0F, -9.0F, -10.0F, 2.0F, 3.0F, 9.0F, new CubeDeformation(0.0F))
@@ -163,7 +160,6 @@ public class AncientDragonModel extends HierarchicalModel<AncientDragonEntity> {
                 .texOffs(150, 78).addBox(-3.5F, 3.0F, -8.0F, 7.0F, 2.5F, 7.0F, new CubeDeformation(0.0F)),
                 PartPose.offsetAndRotation(0.0F, -1.5F, -9.0F, 0.20F, 0.0F, 0.0F));
 
-        // Cabeza y Fauces (SIN DIENTES)
         PartDefinition head = neck3.addOrReplaceChild("head", CubeListBuilder.create()
                 .texOffs(160, 59).addBox(-5.5F, -5.0F, -10.0F, 11.0F, 9.0F, 10.0F, new CubeDeformation(0.0F))
                 .texOffs(112, 144).addBox(-4.0F, -2.0F, -20.0F, 8.0F, 6.0F, 10.0F, new CubeDeformation(0.0F))
@@ -176,7 +172,6 @@ public class AncientDragonModel extends HierarchicalModel<AncientDragonEntity> {
                 .texOffs(110, 79).addBox(-2.0F, -0.8F, -7.0F, 4.0F, 1.5F, 7.0F, new CubeDeformation(0.0F)),
                 PartPose.offsetAndRotation(0.0F, 2.0F, -10.0F, 0.15F, 0.0F, 0.0F));
 
-        // Cuernos
         PartDefinition leftHorn = head.addOrReplaceChild("left_horn", CubeListBuilder.create()
                 .texOffs(170, 144).addBox(-1.5F, -2.0F, 0.0F, 3.0F, 4.0F, 11.0F, new CubeDeformation(0.0F)),
                 PartPose.offsetAndRotation(-4.0F, -4.0F, -1.5F, 0.30F, -0.25F, -0.20F));
@@ -199,26 +194,21 @@ public class AncientDragonModel extends HierarchicalModel<AncientDragonEntity> {
                 .texOffs(112, 199).addBox(0.0F, -2.0F, -2.0F, 5.0F, 4.0F, 4.0F, new CubeDeformation(0.0F)),
                 PartPose.offsetAndRotation(5.0F, 1.0F, -3.0F, 0.0F, 0.35F, 0.20F));
 
-        // 8. ALAS ARTICULADAS EN 3 PARTES (Brazo, Antebrazo y Punta de Mano con Proporciones Naturales)
-        // Brazo (dx=24, dz=30) - Posicionado en los hombros junto a la base del cuello
         PartDefinition leftWing = body.addOrReplaceChild("left_wing", CubeListBuilder.create().mirror()
                 .texOffs(112, 88).addBox("bone", 0.0F, -2.5F, -2.5F, 24.0F, 5.0F, 5.0F, new CubeDeformation(0.0F))
                 .texOffs(-30, 88).addBox("skin", 0.0F, 0.0F, 1.0F, 24.0F, 0.0F, 30.0F, new CubeDeformation(0.0F)),
                 PartPose.offset(10.0F, -5.0F, -14.0F));
 
-        // Antebrazo (dx=22, dz=24 - Profundidad claramente menor que el brazo: 24 < 30)
         PartDefinition leftWingMid = leftWing.addOrReplaceChild("left_wing_mid", CubeListBuilder.create().mirror()
                 .texOffs(176, 88).addBox("bone", 0.0F, -2.0F, -2.0F, 22.0F, 4.0F, 4.0F, new CubeDeformation(0.0F))
                 .texOffs(-24, 122).addBox("skin", 0.0F, 0.0F, 1.0F, 22.0F, 0.0F, 24.0F, new CubeDeformation(0.0F)),
                 PartPose.offset(24.0F, 0.0F, 0.0F));
 
-        // Punta de Mano (dx=20, dz=16 - Tapering suave hacia la punta: 16 < 24 < 30)
         leftWingMid.addOrReplaceChild("left_wing_tip", CubeListBuilder.create().mirror()
                 .texOffs(112, 136).addBox("bone", 0.0F, -1.5F, -1.5F, 20.0F, 3.0F, 3.0F, new CubeDeformation(0.0F))
                 .texOffs(-16, 150).addBox("skin", 0.0F, 0.0F, 1.0F, 20.0F, 0.0F, 16.0F, new CubeDeformation(0.0F)),
                 PartPose.offset(22.0F, 0.0F, 0.0F));
 
-        // Ala Derecha Simétrica
         PartDefinition rightWing = body.addOrReplaceChild("right_wing", CubeListBuilder.create()
                 .texOffs(112, 88).addBox("bone", -24.0F, -2.5F, -2.5F, 24.0F, 5.0F, 5.0F, new CubeDeformation(0.0F))
                 .texOffs(-30, 88).addBox("skin", -24.0F, 0.0F, 1.0F, 24.0F, 0.0F, 30.0F, new CubeDeformation(0.0F)),
@@ -234,7 +224,6 @@ public class AncientDragonModel extends HierarchicalModel<AncientDragonEntity> {
                 .texOffs(-16, 150).addBox("skin", -20.0F, 0.0F, 1.0F, 20.0F, 0.0F, 16.0F, new CubeDeformation(0.0F)),
                 PartPose.offset(-22.0F, 0.0F, 0.0F));
 
-        // 9. Patas Delanteras
         PartDefinition frontLeftLeg = body.addOrReplaceChild("front_left_leg", CubeListBuilder.create()
                 .texOffs(120, 60).addBox(-3.5F, 0.0F, -4.0F, 7.0F, 11.0F, 8.0F, new CubeDeformation(0.0F)),
                 PartPose.offset(-8.0F, 5.0F, -10.0F));
@@ -255,7 +244,6 @@ public class AncientDragonModel extends HierarchicalModel<AncientDragonEntity> {
                 .texOffs(192, 198).addBox(-3.5F, 0.0F, -6.0F, 7.0F, 3.0F, 8.0F, new CubeDeformation(0.0F)),
                 PartPose.offset(0.0F, 10.0F, 0.0F));
 
-        // 10. Patas Traseras (Misma altura total que las delanteras para pisada equilibrada)
         PartDefinition backLeftLeg = body.addOrReplaceChild("back_left_leg", CubeListBuilder.create()
                 .texOffs(210, 0).addBox(-4.5F, 0.0F, -5.5F, 9.0F, 13.0F, 11.0F, new CubeDeformation(0.0F)),
                 PartPose.offset(-8.5F, 4.0F, 10.0F));
@@ -276,7 +264,6 @@ public class AncientDragonModel extends HierarchicalModel<AncientDragonEntity> {
                 .texOffs(206, 159).addBox(-4.0F, 0.0F, -7.5F, 8.0F, 3.5F, 10.0F, new CubeDeformation(0.0F)),
                 PartPose.offset(0.0F, 11.0F, 0.0F));
 
-        // 11. Cola Segmentada Robusta
         PartDefinition tail1 = body.addOrReplaceChild("tail1", CubeListBuilder.create()
                 .texOffs(160, 36).addBox(-5.0F, -5.0F, 0.0F, 10.0F, 10.0F, 13.0F, new CubeDeformation(0.0F))
                 .texOffs(138, 160).addBox(-1.0F, -8.0F, 1.0F, 2.0F, 3.0F, 11.0F, new CubeDeformation(0.0F)),
@@ -297,7 +284,6 @@ public class AncientDragonModel extends HierarchicalModel<AncientDragonEntity> {
                 .texOffs(216, 173).addBox(-1.0F, -5.0F, 1.0F, 2.0F, 3.0F, 11.0F, new CubeDeformation(0.0F)),
                 PartPose.offset(0.0F, 0.0F, 12.5F));
 
-        // PALA APICAL 3D MACIZA (Cubo central + diamante con grosor 3 + aleta dorsal)
         tail4.addOrReplaceChild("spade", CubeListBuilder.create()
                 .texOffs(132, 174).addBox(-2.0F, -2.0F, 0.0F, 4.0F, 4.0F, 8.0F, new CubeDeformation(0.0F))
                 .texOffs(0, 75).addBox(-4.0F, -1.5F, 2.0F, 8.0F, 3.0F, 10.0F, new CubeDeformation(0.0F))
@@ -321,7 +307,6 @@ public class AncientDragonModel extends HierarchicalModel<AncientDragonEntity> {
         this.saddle.visible = saddled;
         this.spinesMiddle.visible = !saddled;
 
-        // flyProgress interpolado suavemente por entidad individual (0.0F en tierra, 1.0F en pleno vuelo)
         float partialTick = ageInTicks - (float) entity.tickCount;
         if (partialTick < 0.0F) partialTick += 1.0F;
         float flyProgress = entity.getFlyProgress(partialTick);
@@ -331,7 +316,6 @@ public class AncientDragonModel extends HierarchicalModel<AncientDragonEntity> {
         float groundProgress = Math.max(0.0F, 1.0F - flyProgress * 1.6F);
         float walkAmt = (flyProgress > 0.15F) ? 0.0F : (Math.min(1.0F, limbSwingAmount * 1.4F) * groundProgress);
 
-        // 1. Mirada y articulación orgánica de cabeza y cuello
         float headYawClamped = Mth.clamp(netHeadYaw, -35.0F, 35.0F) * ((float) Math.PI / 180.0F);
         float headPitchClamped = Mth.clamp(headPitch, -25.0F, 25.0F) * ((float) Math.PI / 180.0F);
 
@@ -345,28 +329,23 @@ public class AncientDragonModel extends HierarchicalModel<AncientDragonEntity> {
         this.neck3.xRot += headPitchClamped * 0.25F;
         this.head.xRot += headPitchClamped * 0.20F;
 
-        // 2. Respiración continua orgánica multinivel
         float breathCycle = ageInTicks * 0.065F;
         float breathSine = Mth.sin(breathCycle);
         float breathCosine = Mth.cos(breathCycle);
 
-        // Pecho se infla y desinfla con la respiración
         this.body.y += breathSine * 0.35F * groundProgress;
         this.body.xRot += breathSine * 0.025F;
 
-        // Ondulación orgánica del cuello compensatoria
         this.neck1.xRot -= breathSine * 0.030F;
         this.neck2.xRot += breathCosine * 0.025F;
         this.neck3.xRot -= breathSine * 0.020F;
 
-        // Micromovimientos vivos en cabeza, cuernos y volantes
         this.head.zRot += breathCosine * 0.015F;
         this.leftCheekFrill.yRot += breathSine * 0.05F;
         this.rightCheekFrill.yRot -= breathSine * 0.05F;
         this.leftHorn.xRot += breathSine * 0.02F;
         this.rightHorn.xRot += breathSine * 0.02F;
 
-        // 3. Fauces al rugir / exhalar aliento
         if (entity.isRoaring()) {
             this.jaw.xRot = 0.55F + Mth.sin(ageInTicks * 0.45F) * 0.12F;
             this.head.xRot -= 0.15F;
@@ -375,22 +354,17 @@ public class AncientDragonModel extends HierarchicalModel<AncientDragonEntity> {
             this.jaw.xRot = 0.05F;
         }
 
-        // 4. ANIMACIÓN ORGÁNICA DE COLA (FLUIDA, SIN VIBRACIONES NI TIRONES)
-        // A. Frecuencias constantes basadas en el tiempo del mundo (cero saltos de fase / cero tiritera)
         float flightTailTime = ageInTicks * 0.065F;
         float idleTailTime = ageInTicks * 0.038F;
 
-        // B. Curvatura de inercia al girar en el aire (la cola sigue con elegancia la trayectoria de la curva)
         float turnTrail = -headYawClamped * 0.25F;
 
-        // C. Ondulación en Vuelo: suave onda senoidal viajera a lo largo de la columna vertebral
         float airY1 = Mth.sin(flightTailTime) * 0.045F + turnTrail * 0.30F;
         float airY2 = Mth.sin(flightTailTime - 0.45F) * 0.060F + turnTrail * 0.50F;
         float airY3 = Mth.sin(flightTailTime - 0.90F) * 0.075F + turnTrail * 0.70F;
         float airY4 = Mth.sin(flightTailTime - 1.35F) * 0.085F + turnTrail * 0.90F;
         float airYSpade = Mth.sin(flightTailTime - 1.80F) * 0.095F + turnTrail * 0.40F;
 
-        // Ondulación vertical en Vuelo: sustentación y aleteo armónico a medio tiempo
         float vertWave = Mth.cos(flightTailTime * 0.5F);
         float airX1 = -0.02F + vertWave * 0.018F;
         float airX2 = 0.01F + Mth.cos(flightTailTime * 0.5F - 0.35F) * 0.022F;
@@ -398,15 +372,12 @@ public class AncientDragonModel extends HierarchicalModel<AncientDragonEntity> {
         float airX4 = 0.03F + Mth.cos(flightTailTime * 0.5F - 1.05F) * 0.028F;
         float airXSpade = 0.01F + Mth.cos(flightTailTime * 0.5F - 1.40F) * 0.030F;
 
-        // D. En Tierra (Reposo y Caminata Cuadrúpeda)
-        // En reposo: suave vaivén respiratorio perezoso
         float idleY1 = Mth.sin(idleTailTime) * 0.030F;
         float idleY2 = Mth.sin(idleTailTime - 0.40F) * 0.040F;
         float idleY3 = Mth.sin(idleTailTime - 0.80F) * 0.050F;
         float idleY4 = Mth.sin(idleTailTime - 1.20F) * 0.060F;
         float idleYSpade = Mth.sin(idleTailTime - 1.60F) * 0.070F;
 
-        // Al caminar: contrapeso rítmico coordinado con las zancadas traseras
         float walkTailPhase = limbSwing * 0.55F;
         float walkSway1 = -Mth.sin(walkTailPhase) * 0.07F * walkAmt;
         float walkSway2 = -Mth.sin(walkTailPhase - 0.40F) * 0.09F * walkAmt;
@@ -420,14 +391,12 @@ public class AncientDragonModel extends HierarchicalModel<AncientDragonEntity> {
         float groundY4 = idleY4 + walkSway4;
         float groundYSpade = idleYSpade + walkSwaySpade;
 
-        // Inclinación vertical en tierra: desciende suavemente desde la grupa y la punta se alza sobre el pasto
         float groundX1 = 0.06F;
         float groundX2 = 0.05F;
         float groundX3 = -0.02F;
         float groundX4 = -0.04F;
         float groundXSpade = 0.02F;
 
-        // E. Interpolación fluida entre Tierra y Vuelo (Mth.lerp con flyProgress)
         this.tail1.yRot = Mth.lerp(flyProgress, groundY1, airY1);
         this.tail1.xRot = Mth.lerp(flyProgress, groundX1, airX1);
 
@@ -444,14 +413,11 @@ public class AncientDragonModel extends HierarchicalModel<AncientDragonEntity> {
         this.tailSpade.xRot = Mth.lerp(flyProgress, groundXSpade, airXSpade);
         this.tailSpade.zRot = 0.0F;
 
-        // 5. ANIMACIÓN DE ALAS (PLIEGUE EN TIERRA vs ALETEO Y PLANEO EN VUELO)
-        // Aleteo lento, majestuoso y poderoso proporcional al tamaño colosal (0.085F)
         float flapSpeed = 0.085F;
         float flapRad = ageInTicks * flapSpeed;
         float wingStroke = Mth.sin(flapRad);
         float wingSweep = Mth.cos(flapRad);
 
-        // Vuelo dinámico: si está descendiendo o volando a velocidad estable, transición a planeo majestuoso
         Vec3 vel = entity.getDeltaMovement();
         boolean isGliding = Math.abs(vel.y) < 0.08D && vel.horizontalDistanceSqr() > 0.04D;
         float glideFactor = isGliding ? 0.35F : 1.0F;
@@ -462,17 +428,15 @@ public class AncientDragonModel extends HierarchicalModel<AncientDragonEntity> {
         float airMidZ = (-Mth.sin(flapRad - 0.35F) * 0.35F) * glideFactor + (1.0F - glideFactor) * -0.05F;
         float airTipZ = (-Mth.sin(flapRad - 0.70F) * 0.40F) * glideFactor + (1.0F - glideFactor) * -0.05F;
 
-        // Plegado suave y natural en tierra a lo largo del torso
         float groundX = 0.15F;
-        float groundY = -0.65F; // Hacia atrás a lo largo de los flancos
-        float groundZ = 0.45F;  // Pegado al cuerpo
+        float groundY = -0.65F;
+        float groundZ = 0.45F;
         float groundMidY = -0.15F;
         float groundMidZ = -0.25F;
         float groundTipX = 0.0F;
         float groundTipY = -0.10F;
         float groundTipZ = 0.15F;
 
-        // Plegado con suspensión suave al respirar o caminar
         float groundWingBounce = breathSine * 0.02F;
         this.leftWing.xRot = Mth.lerp(flyProgress, groundX + groundWingBounce, airX);
         this.leftWing.yRot = Mth.lerp(flyProgress, groundY, airY);
@@ -486,7 +450,6 @@ public class AncientDragonModel extends HierarchicalModel<AncientDragonEntity> {
         this.leftWingTip.yRot = Mth.lerp(flyProgress, groundTipY, 0.0F);
         this.leftWingTip.zRot = Mth.lerp(flyProgress, groundTipZ, airTipZ);
 
-        // Espejado simétrico del ala derecha
         this.rightWing.xRot = this.leftWing.xRot;
         this.rightWing.yRot = -this.leftWing.yRot;
         this.rightWing.zRot = -this.leftWing.zRot;
@@ -499,18 +462,14 @@ public class AncientDragonModel extends HierarchicalModel<AncientDragonEntity> {
         this.rightWingTip.yRot = -this.leftWingTip.yRot;
         this.rightWingTip.zRot = -this.leftWingTip.zRot;
 
-        // 6. Cabeceo del torso y Alabeo (Banking) en vuelo
         if (flyProgress > 0.05F) {
             float bodyPitch = Mth.clamp(entity.getXRot(), -30.0F, 30.0F) * ((float) Math.PI / 180.0F);
             this.body.xRot += bodyPitch * flyProgress;
 
-            // Alabeo en giros aéreos (Roll / Bank en el eje Z)
             float turnRoll = Mth.clamp(headYawClamped * 0.6F, -0.35F, 0.35F);
             this.body.zRot += turnRoll * flyProgress;
         }
 
-        // 7. ANIMACIÓN DE PATAS (POSTURA DE REPOSO VIVA + CAMINATA CUADRÚPEDA vs VUELO RECOGIDO)
-        // En Vuelo (patas replegadas aerodinámicamente hacia atrás contra el vientre)
         float airFL_Leg = 0.80F;
         float airFL_Shin = -0.45F;
         float airFL_Foot = 0.25F;
@@ -519,8 +478,6 @@ public class AncientDragonModel extends HierarchicalModel<AncientDragonEntity> {
         float airBL_Shin = 0.40F;
         float airBL_Foot = -0.35F;
 
-        // En Tierra:
-        // A. Postura base de reposo con flexión biomecánica (rodillas levemente flexionadas, no tiesas como palos)
         float idleFL_Leg = 0.08F;
         float idleFL_Shin = -0.12F;
         float idleFL_Foot = 0.04F;
@@ -529,36 +486,29 @@ public class AncientDragonModel extends HierarchicalModel<AncientDragonEntity> {
         float idleBL_Shin = 0.14F;
         float idleBL_Foot = -0.08F;
 
-        // B. Caminata cuadrúpeda dinámica (si se está desplazando en tierra)
         float walkSpeed = 0.55F;
         float walkSwing = Mth.sin(limbSwing * walkSpeed);
         float walkCos = Mth.cos(limbSwing * walkSpeed);
 
-        // Balanceo del cuerpo al caminar
         this.body.zRot += walkCos * 0.04F * walkAmt;
         this.body.y += Math.abs(walkSwing) * 0.6F * walkAmt;
 
-        // Pata Delantera Izquierda (en fase con Trasera Derecha)
         float walkFL_Leg = idleFL_Leg + walkSwing * 0.65F * walkAmt;
         float walkFL_Shin = idleFL_Shin + Math.max(0.0F, -walkSwing * 0.55F) * walkAmt;
         float walkFL_Foot = idleFL_Foot - Math.max(0.0F, -walkSwing * 0.35F) * walkAmt;
 
-        // Pata Delantera Derecha (contrafase)
         float walkFR_Leg = idleFL_Leg - walkSwing * 0.65F * walkAmt;
         float walkFR_Shin = idleFL_Shin + Math.max(0.0F, walkSwing * 0.55F) * walkAmt;
         float walkFR_Foot = idleFL_Foot - Math.max(0.0F, walkSwing * 0.35F) * walkAmt;
 
-        // Pata Trasera Izquierda (en fase con Delantera Derecha)
         float walkBL_Leg = idleBL_Leg - walkSwing * 0.55F * walkAmt;
         float walkBL_Shin = idleBL_Shin + Math.max(0.0F, walkSwing * 0.45F) * walkAmt;
         float walkBL_Foot = idleBL_Foot - Math.max(0.0F, walkSwing * 0.30F) * walkAmt;
 
-        // Pata Trasera Derecha (en fase con Delantera Izquierda)
         float walkBR_Leg = idleBL_Leg + walkSwing * 0.55F * walkAmt;
         float walkBR_Shin = idleBL_Shin + Math.max(0.0F, -walkSwing * 0.45F) * walkAmt;
         float walkBR_Foot = idleBL_Foot - Math.max(0.0F, -walkSwing * 0.30F) * walkAmt;
 
-        // Interpolación fluida entre pose de tierra y pose de vuelo
         this.frontLeftLeg.xRot = Mth.lerp(flyProgress, walkFL_Leg, airFL_Leg);
         this.frontLeftShin.xRot = Mth.lerp(flyProgress, walkFL_Shin, airFL_Shin);
         this.frontLeftFoot.xRot = Mth.lerp(flyProgress, walkFL_Foot, airFL_Foot);

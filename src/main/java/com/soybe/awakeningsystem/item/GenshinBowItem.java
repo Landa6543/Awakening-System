@@ -22,19 +22,20 @@ import net.minecraft.world.item.TooltipFlag;
 import net.minecraft.world.level.Level;
 
 import java.util.List;
+import java.util.function.Predicate;
 
 public class GenshinBowItem extends BowItem implements AwakeningWeaponItem {
 
     public enum BowType {
-        AMOS_BOW("amos_bow", "Arco de Amos", 5, "Genshin Impact", 14.0F, "Flecha Fuerte: El daño del proyectil aumenta hasta un +50% según la distancia recorrida en el aire."),
-        AQUA_SIMULACRA("aqua_simulacra", "Aqua Simulacra", 5, "Genshin Impact", 15.0F, "Forma Limpia: Disparos imbuidos en Hydro que aumentan el daño y otorgan velocidad."),
-        THUNDERING_PULSE("thundering_pulse", "Agitador del Relámpago", 5, "Genshin Impact", 16.0F, "Carga del Rayo: Los disparos cargados emiten chispas Electro con daño expansivo."),
-        ASTRAL_ARCHERS_BOW("astral_archers_bow", "Arco de la Cazadora Astral", 4, "Honkai: Star Rail", 11.0F, "Poder de la Preservación: Flechas de cristal que ralentizan y congelan a los enemigos."),
-        SKYWARD_HARP("skyward_harp", "Alas de la Bóveda Celeste", 5, "Genshin Impact", 15.0F, "Balada Resonante: Disparos imbuidos en Anemo con ráfagas celestiales de viento cortante."),
-        POLAR_STAR("polar_star", "Estrella Polar", 5, "Genshin Impact", 16.0F, "Luz del Invierno Polar: Flechas glaciares de Fatui con mayor probabilidad de golpe crítico."),
-        HUNTER_PATH("hunter_path", "Senda de la Cazadora", 5, "Genshin Impact", 15.0F, "Fin del Crepúsculo Silvano: Disparos imbuidos en Dendro con daño elemental aumentado."),
-        HAMAYUMI("hamayumi", "Masacrademonios", 4, "Genshin Impact", 12.0F, "Tiro Demoniaco: Disparos de fuego exorcista con mayor poder según la energía disponible."),
-        END_OF_THE_LINE("end_of_the_line", "Fin de las Aguas", 4, "Genshin Impact", 11.0F, "Surcador del Océano: Flechas de agua que empujan a los objetivos con corrientes marinas.");
+        AMOS_BOW("amos_bow", "Amos' Bow", 5, "Genshin Impact", 14.0F, "Strong-Willed: Projectile damage increases by up to +50% based on flight distance."),
+        AQUA_SIMULACRA("aqua_simulacra", "Aqua Simulacra", 5, "Genshin Impact", 15.0F, "The Cleansing Form: Hydro-infused shots deal increased damage and boost movement speed."),
+        THUNDERING_PULSE("thundering_pulse", "Thundering Pulse", 5, "Genshin Impact", 16.0F, "Rule by Thunder: Charged shots emit Electro sparks dealing area-of-effect damage."),
+        ASTRAL_ARCHERS_BOW("astral_archers_bow", "Astral Archer's Bow", 4, "Honkai: Star Rail", 11.0F, "Power of Preservation: Crystal arrows slow and freeze enemies upon impact."),
+        SKYWARD_HARP("skyward_harp", "Skyward Harp", 5, "Genshin Impact", 15.0F, "Echoing Ballad: Anemo-infused shots summon celestial gusts of cutting wind."),
+        POLAR_STAR("polar_star", "Polar Star", 5, "Genshin Impact", 16.0F, "Daylight's Augury: Fatui glacial arrows grant increased critical hit chance."),
+        HUNTER_PATH("hunter_path", "Hunter's Path", 5, "Genshin Impact", 15.0F, "At the End of the Beast-Paths: Dendro-infused shots deal increased elemental damage."),
+        HAMAYUMI("hamayumi", "Hamayumi", 4, "Genshin Impact", 12.0F, "Full Draw: Exorcism fire arrows scale in damage based on current energy."),
+        END_OF_THE_LINE("end_of_the_line", "End of the Line", 4, "Genshin Impact", 11.0F, "Net Snapper: Water arrows push targets with rapid oceanic currents.");
 
         public final String id;
         public final String displayName;
@@ -65,19 +66,33 @@ public class GenshinBowItem extends BowItem implements AwakeningWeaponItem {
     }
 
     @Override
+    public InteractionResultHolder<ItemStack> use(Level level, Player player, InteractionHand hand) {
+        ItemStack itemstack = player.getItemInHand(hand);
+        player.startUsingItem(hand);
+        return InteractionResultHolder.consume(itemstack);
+    }
+
+    @Override
+    public Predicate<ItemStack> getAllSupportedProjectiles() {
+        return stack -> true;
+    }
+
+    @Override
     public void releaseUsing(ItemStack stack, Level level, LivingEntity livingEntity, int timeLeft) {
         if (!(livingEntity instanceof Player player)) return;
 
         ItemStack ammo = player.getProjectile(stack);
         boolean creative = player.getAbilities().instabuild;
-        boolean hasAmmo = !ammo.isEmpty() || creative;
 
         int duration = this.getUseDuration(stack, livingEntity) - timeLeft;
         float power = getPowerForTime(duration);
 
-        if ((double) power >= 0.1D && hasAmmo) {
+        if ((double) power >= 0.1D) {
+            boolean hasRealAmmo = !ammo.isEmpty();
+            boolean generatedAmmo = false;
             if (ammo.isEmpty()) {
                 ammo = new ItemStack(Items.ARROW);
+                generatedAmmo = true;
             }
 
             if (!level.isClientSide()) {
@@ -85,7 +100,12 @@ public class GenshinBowItem extends BowItem implements AwakeningWeaponItem {
                 AbstractArrow arrow = arrowItem.createArrow(level, ammo, player, stack);
                 arrow.shootFromRotation(player, player.getXRot(), player.getYRot(), 0.0F, power * 3.2F, 0.5F);
 
-                // Bono de daño elemental según el arco
+                if (generatedAmmo || creative) {
+                    arrow.pickup = AbstractArrow.Pickup.CREATIVE_ONLY;
+                } else {
+                    arrow.pickup = AbstractArrow.Pickup.ALLOWED;
+                }
+
                 double baseDmg = arrow.getBaseDamage() + (this.bowType.bonusDamage / 2.0D);
                 if (power >= 1.0F) {
                     arrow.setCritArrow(true);
@@ -93,7 +113,6 @@ public class GenshinBowItem extends BowItem implements AwakeningWeaponItem {
                 }
                 arrow.setBaseDamage(baseDmg);
 
-                // Efectos elementales especiales
                 if (this.bowType == BowType.THUNDERING_PULSE) {
                     if (level instanceof ServerLevel sl) {
                         sl.sendParticles(ParticleTypes.ELECTRIC_SPARK, arrow.getX(), arrow.getY(), arrow.getZ(), 10, 0.2, 0.2, 0.2, 0.05);
@@ -141,11 +160,8 @@ public class GenshinBowItem extends BowItem implements AwakeningWeaponItem {
                     SoundEvents.ARROW_SHOOT, SoundSource.PLAYERS,
                     1.0F, 1.0F / (level.getRandom().nextFloat() * 0.4F + 1.2F) + power * 0.5F);
 
-            if (!creative && !ammo.isEmpty()) {
+            if (!creative && hasRealAmmo) {
                 ammo.shrink(1);
-                if (ammo.isEmpty()) {
-                    player.getInventory().removeItem(ammo);
-                }
             }
         }
     }
@@ -158,9 +174,9 @@ public class GenshinBowItem extends BowItem implements AwakeningWeaponItem {
             default -> "§b★★★";
         };
         tooltip.add(Component.literal(starString + " §e[" + bowType.series + "]"));
-        tooltip.add(Component.literal("§7Daño Base de Disparo: §a+" + String.format("%.1f", bowType.bonusDamage)));
+        tooltip.add(Component.translatable("item.awakening_system.genshin_bow.base_dmg", String.format("%.1f", bowType.bonusDamage)));
         tooltip.add(Component.empty());
-        tooltip.add(Component.literal("§e✦ Pasiva Legendaria:"));
-        tooltip.add(Component.literal("§7" + bowType.passiveDesc));
+        tooltip.add(Component.translatable("item.awakening_system.genshin_bow.passive_header"));
+        tooltip.add(Component.translatableWithFallback("item.awakening_system.genshin_bow." + bowType.id + ".passive", "§7" + bowType.passiveDesc));
     }
 }

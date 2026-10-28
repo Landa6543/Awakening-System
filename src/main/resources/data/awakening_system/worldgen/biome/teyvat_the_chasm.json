@@ -37,7 +37,8 @@
         "maxCount": 1
       }
     ],
-    "creature": [
+    "creature": [],
+    "ambient": [
       {
         "type": "minecraft:bat",
         "weight": 10,
@@ -55,24 +56,22 @@
     [],
     [
       "awakening_system:teyvat_hilichurl_camp",
+      "awakening_system:teyvat_regional_structure",
       "awakening_system:teyvat_shrine_of_depths",
-      "awakening_system:teyvat_teleport_waypoint",
-      "awakening_system:teyvat_regional_structure"
+      "awakening_system:teyvat_teleport_waypoint"
     ],
     [],
     [
-      "awakening_system:ore_adamantite",
       "awakening_system:ore_prithiva_topaz",
       "awakening_system:ore_white_iron"
     ],
     [],
     [],
     [
-      "awakening_system:teyvat_sandbearer_tree",
       "minecraft:patch_dead_bush",
-      "minecraft:forest_rock"
+      "minecraft:forest_rock",
+      "awakening_system:teyvat_sandbearer_tree"
     ],
-    [],
     []
   ]
 }

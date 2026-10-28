@@ -53,7 +53,7 @@ public class CryoRegisvineEntity extends Monster {
             SynchedEntityData.defineId(CryoRegisvineEntity.class, EntityDataSerializers.INT);
 
     private final ServerBossEvent bossEvent = (ServerBossEvent) new ServerBossEvent(
-            Component.literal("§b§lRegisvid Criogénica §7- §3Flor Criopurpúrea Titánica"),
+            Component.translatable("boss.awakening_system.cryo_regisvine.boss_bar"),
             BossEvent.BossBarColor.BLUE,
             BossEvent.BossBarOverlay.NOTCHED_10
     ).setDarkenScreen(false);
@@ -123,30 +123,25 @@ public class CryoRegisvineEntity extends Monster {
     public void tick() {
         super.tick();
 
-        // Anclado al terreno (no se desplaza por empujes)
         Vec3 curMotion = this.getDeltaMovement();
         this.setDeltaMovement(0.0D, curMotion.y < 0 ? curMotion.y : 0.0D, 0.0D);
 
         if (!this.level().isClientSide) {
-            // Actualización de la barra de jefe
             this.bossEvent.setProgress(this.getHealth() / this.getMaxHealth());
             this.bossEvent.setVisible(true);
 
-            // Reducir cooldowns
             if (this.slamCooldown > 0) this.slamCooldown--;
             if (this.spinCooldown > 0) this.spinCooldown--;
             if (this.barrageCooldown > 0) this.barrageCooldown--;
 
-            // Manejo de estado aturdido
             if (isStunned()) {
                 this.stunTimer--;
                 if (this.stunTimer <= 0) {
                     recoverFromStun();
                 }
-                return; // Si está aturdida, no realiza ataques
+                return;
             }
 
-            // Manejo de animación de cabezazo sísmico
             int slamTicks = this.entityData.get(DATA_SLAM_TICKS);
             if (slamTicks > 0) {
                 this.entityData.set(DATA_SLAM_TICKS, slamTicks - 1);
@@ -155,7 +150,6 @@ public class CryoRegisvineEntity extends Monster {
                 }
             }
 
-            // Manejo de animación de giro en 360 grados
             int spinTicks = this.entityData.get(DATA_SPIN_TICKS);
             if (spinTicks > 0) {
                 this.entityData.set(DATA_SPIN_TICKS, spinTicks - 1);
@@ -164,19 +158,15 @@ public class CryoRegisvineEntity extends Monster {
                 }
             }
 
-            // IA de combate y selección de ataques
             LivingEntity target = this.getTarget();
             if (target != null && target.isAlive() && !isSlamming() && !isSpinning()) {
                 double distSqr = this.distanceToSqr(target);
 
                 if (distSqr <= 36.0D && this.spinCooldown <= 0) {
-                    // Objetivo a corta distancia: Látigo giratorio 360 grados
                     startSpinAttack();
                 } else if (distSqr <= 100.0D && this.slamCooldown <= 0) {
-                    // Distancia media: Cabezazo masivo al suelo
                     startSlamAttack();
                 } else if (distSqr >= 36.0D && distSqr <= 1024.0D && this.barrageCooldown <= 0) {
-                    // Distancia larga: Ráfaga de proyectiles de escarcha teledirigidos
                     launchHoarfrostBarrage(target);
                 }
             }
@@ -279,7 +269,6 @@ public class CryoRegisvineEntity extends Monster {
             sl.playSound(null, this.getX(), this.getY(), this.getZ(),
                     SoundEvents.GLASS_PLACE, SoundSource.HOSTILE, 2.0F, 0.7F);
 
-            // Onda de choque Cryo expansiva al reincorporarse
             sl.sendParticles(ParticleTypes.EXPLOSION, this.getX(), this.getY() + 1.0D, this.getZ(), 2, 0, 0, 0, 0);
             sl.sendParticles(ParticleTypes.SNOWFLAKE, this.getX(), this.getY() + 1.0D, this.getZ(), 80, 4.0, 1.0, 4.0, 0.2);
 
@@ -308,11 +297,10 @@ public class CryoRegisvineEntity extends Monster {
             }
 
             if (this.corollaShield <= 0.0F) {
-                // ¡Corola destruida! Entra en estado noqueado
                 setStunned(true);
                 this.entityData.set(DATA_SLAM_TICKS, 0);
                 this.entityData.set(DATA_SPIN_TICKS, 0);
-                this.stunTimer = 160; // 8 segundos de vulnerabilidad extrema
+                this.stunTimer = 160;
 
                 if (this.level() instanceof ServerLevel sl) {
                     sl.playSound(null, this.getX(), this.getY(), this.getZ(),
@@ -323,13 +311,12 @@ public class CryoRegisvineEntity extends Monster {
                             50, 1.5, 1.5, 1.5, 0.2);
 
                     for (Player p : sl.getPlayers(pl -> pl.distanceToSqr(this) < 900.0D)) {
-                        p.displayClientMessage(Component.literal("§b§l✦ ¡COROLA CRYO DESTRUIDA! §fLa Regisvid Criogénica yace desplomada."), true);
+                        p.displayClientMessage(Component.translatable("boss.awakening_system.cryo_regisvine.corolla_broken"), true);
                     }
                 }
             }
         }
 
-        // Si está aturdida recibe daño crítico incrementado (1.8x)
         if (isStunned()) {
             return super.hurt(source, amount * 1.8F);
         }
@@ -363,7 +350,6 @@ public class CryoRegisvineEntity extends Monster {
     protected void dropCustomDeathLoot(ServerLevel level, DamageSource damageSource, boolean recentlyHit) {
         super.dropCustomDeathLoot(level, damageSource, recentlyHit);
 
-        // Drops de Núcleo de Escarcha y Jade Shivada con física nativa
         if (SystemItems.HOARFROST_CORE.isBound()) {
             this.spawnAtLocation(new ItemStack(SystemItems.HOARFROST_CORE.get(), 1 + this.random.nextInt(3)));
         }
@@ -389,7 +375,6 @@ public class CryoRegisvineEntity extends Monster {
             sl.sendParticles(ParticleTypes.SNOWFLAKE, this.getX(), this.getY() + 2.0D, this.getZ(), 100, 3.0, 1.5, 3.0, 0.25);
 
             boolean isTeyvat = sl.dimension().equals(com.soybe.awakeningsystem.TeyvatWorldManager.TEYVAT_WORLD);
-            // Recompensas a los jugadores cercanos
             for (Player p : sl.getPlayers(pl -> pl.distanceToSqr(this) < 1200.0D)) {
                 if (p instanceof ServerPlayer sp) {
                     var data = SystemEvents.data(sp);
@@ -399,13 +384,13 @@ public class CryoRegisvineEntity extends Monster {
                         data.addMora(moraGain);
                         data.addPrimogems(primoGain);
                         com.soybe.awakeningsystem.AwakeningSystemMod.sync(sp);
-                        sp.displayClientMessage(Component.literal("§b§l✦ ¡REGISVID CRIOGÉNICA PURGADA! §e+" + moraGain + " Mora, §b+" + primoGain + " Protogemas§e."), false);
+                        sp.displayClientMessage(Component.translatable("boss.awakening_system.cryo_regisvine.defeated_teyvat", moraGain, primoGain), false);
                     } else {
                         int coinGain = 20 + sl.random.nextInt(15);
                         if (SystemItems.AWAKENING_COIN.isBound()) {
                             sp.addItem(new ItemStack(SystemItems.AWAKENING_COIN.get(), coinGain));
                         }
-                        sp.displayClientMessage(Component.literal("§b§l✦ ¡REGISVID CRIOGÉNICA PURGADA! §6+" + coinGain + " Monedas de Despertar§e."), false);
+                        sp.displayClientMessage(Component.translatable("boss.awakening_system.cryo_regisvine.defeated_vanilla", coinGain), false);
                     }
                 }
             }

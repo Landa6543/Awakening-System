@@ -56,7 +56,7 @@ public class RaidenBossEntity extends Monster {
             SynchedEntityData.defineId(RaidenBossEntity.class, EntityDataSerializers.BOOLEAN);
 
     private final ServerBossEvent bossEvent = (ServerBossEvent) new ServerBossEvent(
-            Component.literal("§d§lRaiden Shogun §7- §5Plano de la Eutimia"),
+            Component.translatable("boss.awakening_system.raiden.boss_bar"),
             BossEvent.BossBarColor.PURPLE,
             BossEvent.BossBarOverlay.NOTCHED_10
     ).setDarkenScreen(false);
@@ -70,9 +70,9 @@ public class RaidenBossEntity extends Monster {
     public RaidenBossEntity(EntityType<? extends Monster> entityType, Level level) {
         super(entityType, level);
         this.xpReward = 450;
-        this.setCustomName(Component.literal("§d§lShogun Raiden"));
+        this.setCustomName(Component.translatable("boss.awakening_system.raiden.name"));
         this.setCustomNameVisible(true);
-        this.setItemSlot(EquipmentSlot.MAINHAND, new ItemStack(SystemItems.SKYWARD_BLADE.get()));
+        this.setItemSlot(EquipmentSlot.MAINHAND, new ItemStack(SystemItems.ENGULFING_LIGHTNING.get()));
     }
 
     public static AttributeSupplier.Builder createAttributes() {
@@ -100,15 +100,15 @@ public class RaidenBossEntity extends Monster {
     public void setPhase(int phase) {
         this.entityData.set(DATA_PHASE, phase);
         if (phase == 2) {
-            bossEvent.setName(Component.literal("§5§lMagatsu Mitake Narukami no Mikoto §7- §dMarioneta del Juicio"));
+            bossEvent.setName(Component.translatable("boss.awakening_system.raiden.phase2"));
             this.getAttribute(Attributes.MOVEMENT_SPEED).setBaseValue(0.42D);
             this.getAttribute(Attributes.ATTACK_DAMAGE).setBaseValue(24.0D);
             this.getAttribute(Attributes.KNOCKBACK_RESISTANCE).setBaseValue(1.0D);
             this.setItemSlot(EquipmentSlot.MAINHAND, ItemStack.EMPTY);
             this.setNoGravity(true);
         } else {
-            bossEvent.setName(Component.literal("§d§lRaiden Shogun §7- §5Plano de la Eutimia"));
-            this.setItemSlot(EquipmentSlot.MAINHAND, new ItemStack(SystemItems.SKYWARD_BLADE.get()));
+            bossEvent.setName(Component.translatable("boss.awakening_system.raiden.boss_bar"));
+            this.setItemSlot(EquipmentSlot.MAINHAND, new ItemStack(SystemItems.ENGULFING_LIGHTNING.get()));
             this.setNoGravity(false);
         }
     }
@@ -161,7 +161,6 @@ public class RaidenBossEntity extends Monster {
 
         if (this.level().isClientSide) {
             if (getPhase() == 2) {
-                // Partículas divinas de levitación y electro bajo el mecha flotante
                 if (this.random.nextInt(2) == 0) {
                     this.level().addParticle(ParticleTypes.ELECTRIC_SPARK,
                             this.getRandomX(1.4D), this.getY() - 0.2D + this.random.nextDouble() * 0.4D, this.getRandomZ(1.4D),
@@ -178,7 +177,6 @@ public class RaidenBossEntity extends Monster {
 
         this.bossEvent.setProgress(this.getHealth() / this.getMaxHealth());
 
-        // Música de combate instrumental de fondo (BGM Shogun Raiden)
         long now = this.level().getGameTime();
         if (now - lastBgmStartTick > 1800L && this.level() instanceof ServerLevel sl) {
             lastBgmStartTick = now;
@@ -189,20 +187,16 @@ public class RaidenBossEntity extends Monster {
             }
         }
 
-        // Mecánica de levitación / vuelo divino en Fase 2 (Marioneta del Juicio)
         if (getPhase() == 2) {
             this.setNoGravity(true);
             this.fallDistance = 0.0F;
 
-            // Asegurar que no tenga ítems de mano residuales en Fase 2
             if (!this.getMainHandItem().isEmpty()) {
                 this.setItemSlot(EquipmentSlot.MAINHAND, ItemStack.EMPTY);
             }
 
-            // Desactivar navegación terrestre para que no intente correr en el suelo
             this.getNavigation().stop();
 
-            // Encontrar altura de la superficie debajo
             BlockPos currentPos = this.blockPosition();
             int floorY = currentPos.getY();
             for (int dy = 0; dy <= 12; dy++) {
@@ -213,14 +207,12 @@ public class RaidenBossEntity extends Monster {
                 }
             }
 
-            // Altura de levitación deseada: al menos 2.2 bloques sobre el suelo o jugador
             double desiredHoverY = floorY + 2.2D;
             LivingEntity target = this.getTarget();
             if (target != null && target.isAlive()) {
                 desiredHoverY = Math.max(desiredHoverY, target.getY() + 2.0D);
             }
 
-            // Impulso vertical suave para mantenerse flotando en el aire
             double diffY = desiredHoverY - this.getY();
             double vy = Mth.clamp(diffY * 0.18D, -0.32D, 0.32D);
 
@@ -235,7 +227,6 @@ public class RaidenBossEntity extends Monster {
                 }
                 this.lookAt(net.minecraft.commands.arguments.EntityAnchorArgument.Anchor.EYES, target.getEyePosition());
 
-                // Ataque cuerpo a cuerpo aéreo si el jugador está muy cerca
                 if (dist2D <= 3.2D && this.tickCount % 20 == 0) {
                     this.doHurtTarget(target);
                     target.hurt(this.damageSources().mobAttack(this), 24.0F);
@@ -248,7 +239,6 @@ public class RaidenBossEntity extends Monster {
             this.setNoGravity(false);
         }
 
-        // Efectos de transición a Fase 2
         if (isTransitioning) {
             this.setDeltaMovement(0, 0.05D, 0);
             this.transitionTicks--;
@@ -276,7 +266,6 @@ public class RaidenBossEntity extends Monster {
             return;
         }
 
-        // Habilidades de combate activas
         LivingEntity target = this.getTarget();
         if (target != null && target.isAlive()) {
             if (attackCooldown > 0) {
@@ -301,7 +290,6 @@ public class RaidenBossEntity extends Monster {
         setAttacking(true);
 
         if (getPhase() == 1) {
-            // Fase 1: Teletransporte relámpago detrás del jugador y rayo
             Vec3 targetLook = target.getLookAngle();
             Vec3 behindPos = target.position().subtract(targetLook.scale(2.0D));
 
@@ -309,7 +297,6 @@ public class RaidenBossEntity extends Monster {
             this.teleportTo(behindPos.x, target.getY(), behindPos.z);
             sl.playSound(null, this.blockPosition(), SoundEvents.ENDERMAN_TELEPORT, SoundSource.HOSTILE, 1.5F, 1.2F);
 
-            // Invocar rayo vertical
             LightningBolt bolt = EntityType.LIGHTNING_BOLT.create(sl);
             if (bolt != null) {
                 bolt.moveTo(target.position());
@@ -317,7 +304,6 @@ public class RaidenBossEntity extends Monster {
                 sl.addFreshEntity(bolt);
             }
         } else {
-            // Fase 2: Ojos del Juicio - Teletransporte aéreo divino y triplete de rayos
             Vec3 targetPos = target.position();
             Vec3 aerialPos = targetPos.add((this.random.nextDouble() - 0.5D) * 4.0D, 2.5D, (this.random.nextDouble() - 0.5D) * 4.0D);
             this.teleportTo(aerialPos.x, aerialPos.y, aerialPos.z);
@@ -341,7 +327,6 @@ public class RaidenBossEntity extends Monster {
             sl.playSound(null, this.blockPosition(), SoundEvents.LIGHTNING_BOLT_THUNDER, SoundSource.HOSTILE, 1.8F, 1.0F);
         }
 
-        // Restablecer postura de ataque después de 15 ticks
         this.level().getServer().tell(new net.minecraft.server.TickTask(
                 this.level().getServer().getTickCount() + 15,
                 () -> setAttacking(false)
@@ -354,7 +339,6 @@ public class RaidenBossEntity extends Monster {
         sl.playSound(null, this.blockPosition(), SoundEvents.TRIDENT_THUNDER.value(), SoundSource.HOSTILE, 2.0F, 0.8F);
         sl.playSound(null, this.blockPosition(), SoundEvents.WARDEN_SONIC_BOOM, SoundSource.HOSTILE, 1.5F, 1.4F);
 
-        // Onda expansiva de corte de trueno dimensional (Musou no Hitotachi)
         AABB area = this.getBoundingBox().inflate(10.0D);
         for (LivingEntity e : sl.getEntitiesOfClass(LivingEntity.class, area)) {
             if (e != this && !(e instanceof RaidenBossEntity)) {
@@ -365,7 +349,6 @@ public class RaidenBossEntity extends Monster {
             }
         }
 
-        // Partículas en abanico
         for (int i = 0; i < 360; i += 15) {
             double rad = Math.toRadians(i);
             double px = this.getX() + Math.cos(rad) * 6.0D;
@@ -379,7 +362,6 @@ public class RaidenBossEntity extends Monster {
     public void die(DamageSource source) {
         super.die(source);
         if (!this.level().isClientSide) {
-            // Drops legendarios de Shogun Raiden
             if (SystemItems.MUDRA_OF_THE_MALEFIC_GENERAL.isBound()) {
                 dropItem(new ItemStack(SystemItems.MUDRA_OF_THE_MALEFIC_GENERAL.get(), 2 + this.random.nextInt(2)));
             }
@@ -396,7 +378,6 @@ public class RaidenBossEntity extends Monster {
                 dropItem(new ItemStack(SystemItems.AWAKENING_COIN.get(), 30));
             }
 
-            // Artefacto legendario 5 estrellas
             try {
                 var items = net.minecraft.core.registries.BuiltInRegistries.ITEM;
                 java.util.List<GenshinArtifactItem> arts = new java.util.ArrayList<>();
@@ -408,13 +389,14 @@ public class RaidenBossEntity extends Monster {
                 if (!arts.isEmpty()) {
                     dropItem(new ItemStack(arts.get(this.random.nextInt(arts.size()))));
                 }
-            } catch (Exception ignored) {}
+            } catch (Exception e) {
+                AwakeningSystemMod.LOGGER.debug("Error dropping artifact for Raiden Boss: {}", e.getMessage(), e);
+            }
 
             if (SystemItems.TEYVAT_SHRINE_KEY.isBound()) {
                 dropItem(new ItemStack(SystemItems.TEYVAT_SHRINE_KEY.get(), 1));
             }
 
-            // Detener BGM de combate
             if (this.level() instanceof ServerLevel sl) {
                 for (ServerPlayer sp : sl.players()) {
                     if (sp.distanceToSqr(this) < 64.0D * 64.0D) {

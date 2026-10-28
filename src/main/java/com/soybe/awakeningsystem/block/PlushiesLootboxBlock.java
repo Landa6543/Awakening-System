@@ -33,7 +33,7 @@ public class PlushiesLootboxBlock extends Block {
             sl.playSound(null, pos, SoundEvents.UI_TOAST_CHALLENGE_COMPLETE, SoundSource.BLOCKS, 1.0F, 1.2F);
             sl.playSound(null, pos, SoundEvents.SLIME_SQUISH, SoundSource.BLOCKS, 1.2F, 1.8F);
 
-            player.displayClientMessage(net.minecraft.network.chat.Component.literal("§6🎁 ¡Has abierto una Caja de Peluches de Genshin y obtenido: §e" + randomPlushie.getHoverName().getString() + "§6!"), true);
+            player.displayClientMessage(net.minecraft.network.chat.Component.translatable("block.awakening_system.plushie_lootbox.opened", randomPlushie.getHoverName()), true);
             return InteractionResult.SUCCESS;
         }
         return InteractionResult.sidedSuccess(level.isClientSide());

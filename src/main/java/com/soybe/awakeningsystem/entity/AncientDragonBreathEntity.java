@@ -162,7 +162,6 @@ public class AncientDragonBreathEntity extends Projectile {
 
         switch (getElementType()) {
             case AncientDragonEntity.VARIANT_FIRE -> {
-                // EXPLOSIÓN ÍGNEA DESTRUCTORA
                 this.playSound(SoundEvents.GENERIC_EXPLODE.value(), 2.0F, 0.85F);
                 this.playSound(SoundEvents.BLAZE_SHOOT, 1.5F, 0.7F);
                 if (this.level() instanceof net.minecraft.server.level.ServerLevel sl) {
@@ -179,7 +178,6 @@ public class AncientDragonBreathEntity extends Projectile {
                 }
             }
             case AncientDragonEntity.VARIANT_ICE -> {
-                // NOVA GLACIAL CONGELANTE
                 this.playSound(SoundEvents.GLASS_BREAK, 2.0F, 0.75F);
                 this.playSound(SoundEvents.PLAYER_HURT_FREEZE, 2.0F, 0.65F);
                 if (this.level() instanceof net.minecraft.server.level.ServerLevel sl) {
@@ -196,7 +194,6 @@ public class AncientDragonBreathEntity extends Projectile {
                 }
             }
             case AncientDragonEntity.VARIANT_FOREST -> {
-                // NUBE DE ESPORAS TÓXICAS Y ENREDADERAS
                 this.playSound(SoundEvents.MUD_BREAK, 2.0F, 0.8F);
                 this.playSound(SoundEvents.THORNS_HIT, 1.8F, 0.9F);
                 if (this.level() instanceof net.minecraft.server.level.ServerLevel sl) {
@@ -213,7 +210,6 @@ public class AncientDragonBreathEntity extends Projectile {
                 }
             }
             case AncientDragonEntity.VARIANT_SHADOW -> {
-                // SINGULARIDAD DEL VACÍO / VÓRTICE GRAVITACIONAL
                 this.playSound(SoundEvents.WITHER_SHOOT, 2.0F, 0.65F);
                 this.playSound(SoundEvents.WARDEN_SONIC_BOOM, 1.5F, 1.2F);
                 if (this.level() instanceof net.minecraft.server.level.ServerLevel sl) {
@@ -228,14 +224,12 @@ public class AncientDragonBreathEntity extends Projectile {
                     e.addEffect(new MobEffectInstance(MobEffects.DARKNESS, 120, 0));
                     e.addEffect(new MobEffectInstance(MobEffects.BLINDNESS, 100, 0));
 
-                    // Tirón gravitacional hacia el vórtice
                     Vec3 pull = this.position().subtract(e.position()).normalize().scale(0.75D);
                     e.setDeltaMovement(pull.x, 0.25D, pull.z);
                     e.hurtMarked = true;
                 }
             }
             case AncientDragonEntity.VARIANT_LIGHTNING -> {
-                // IMPACTO DE RAYO CELESTIAL Y CHOQUE PARALIZANTE
                 this.playSound(SoundEvents.LIGHTNING_BOLT_THUNDER, 2.5F, 0.9F);
                 this.playSound(SoundEvents.LIGHTNING_BOLT_IMPACT, 2.0F, 1.1F);
                 if (this.level() instanceof net.minecraft.server.level.ServerLevel sl) {
@@ -257,7 +251,6 @@ public class AncientDragonBreathEntity extends Projectile {
                 }
             }
             case AncientDragonEntity.VARIANT_CELESTIAL -> {
-                // DESTELLO SOLAR RADIANTE Y PURIFICACIÓN
                 this.playSound(SoundEvents.TOTEM_USE, 2.0F, 1.1F);
                 this.playSound(SoundEvents.BEACON_ACTIVATE, 2.0F, 1.2F);
                 if (this.level() instanceof net.minecraft.server.level.ServerLevel sl) {
@@ -268,7 +261,6 @@ public class AncientDragonBreathEntity extends Projectile {
                 for (LivingEntity e : nearby) {
                     float dist = (float) e.distanceTo(this);
                     float baseDmg = Math.max(12.0F, 30.0F - dist * 3.0F);
-                    // Daño sagrado purificador amplificado contra no-muertos
                     if (e.isInvertedHealAndHarm()) {
                         baseDmg += 16.0F;
                     }

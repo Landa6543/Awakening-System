@@ -23,7 +23,7 @@ import net.minecraft.world.level.block.state.BlockState;
 import java.util.UUID;
 
 public class AncientDragonEggBlockEntity extends BlockEntity {
-    public static final int MAX_INCUBATION_TICKS = 1200; // ~60 segundos con temperatura adecuada
+    public static final int MAX_INCUBATION_TICKS = 1200;
 
     private int variant = 0;
     private int incubationTicks = 0;
@@ -92,7 +92,6 @@ public class AncientDragonEggBlockEntity extends BlockEntity {
             return;
         }
 
-        // 1. Verificación de condiciones de confort elemental estilo ARK
         boolean wasComfortable = egg.comfortable;
         egg.comfortable = checkComfort(level, pos, egg.variant);
         if (wasComfortable != egg.comfortable) {
@@ -100,19 +99,16 @@ public class AncientDragonEggBlockEntity extends BlockEntity {
             level.sendBlockUpdated(pos, state, state, 3);
         }
 
-        // 2. Progreso de incubación
         if (egg.comfortable) {
             egg.incubationTicks++;
             if (egg.incubationTicks % 100 == 0) {
                 egg.setChanged();
             }
 
-            // Sonido de crujido y movimiento conforme se acerca a eclosionar
             if (egg.incubationTicks > (MAX_INCUBATION_TICKS * 0.75) && level.random.nextInt(60) == 0) {
                 level.playSound(null, pos, SoundEvents.TURTLE_EGG_CRACK, SoundSource.BLOCKS, 0.8F, 1.2F);
             }
 
-            // 3. Eclosión del Dragón
             if (egg.incubationTicks >= MAX_INCUBATION_TICKS) {
                 hatchDragon(level, pos, egg);
             }
@@ -122,7 +118,6 @@ public class AncientDragonEggBlockEntity extends BlockEntity {
     private static boolean checkComfort(Level level, BlockPos pos, int variant) {
         switch (variant) {
             case AncientDragonEntity.VARIANT_FIRE -> {
-                // Calor: Fuego, fogata, lava o magma cerca en un radio de 3 bloques
                 for (BlockPos check : BlockPos.betweenClosed(pos.offset(-3, -1, -3), pos.offset(3, 2, 3))) {
                     BlockState bs = level.getBlockState(check);
                     if (bs.is(Blocks.FIRE) || bs.is(Blocks.CAMPFIRE) || bs.is(Blocks.LAVA) || bs.is(Blocks.MAGMA_BLOCK)) {
@@ -132,7 +127,6 @@ public class AncientDragonEggBlockEntity extends BlockEntity {
                 return level.dimension() == Level.NETHER;
             }
             case AncientDragonEntity.VARIANT_ICE -> {
-                // Frío: Hielo, hielo compacto, nieve, bioma frío
                 for (BlockPos check : BlockPos.betweenClosed(pos.offset(-3, -1, -3), pos.offset(3, 2, 3))) {
                     BlockState bs = level.getBlockState(check);
                     if (bs.is(Blocks.ICE) || bs.is(Blocks.PACKED_ICE) || bs.is(Blocks.BLUE_ICE) || bs.is(Blocks.POWDER_SNOW)) {
@@ -142,7 +136,6 @@ public class AncientDragonEggBlockEntity extends BlockEntity {
                 return level.getBiome(pos).value().coldEnoughToSnow(pos);
             }
             case AncientDragonEntity.VARIANT_FOREST -> {
-                // Naturaleza: Hojas, flores, césped o musgo en un radio de 3 bloques
                 int floraCount = 0;
                 for (BlockPos check : BlockPos.betweenClosed(pos.offset(-2, -1, -2), pos.offset(2, 2, 2))) {
                     BlockState bs = level.getBlockState(check);
@@ -153,7 +146,6 @@ public class AncientDragonEggBlockEntity extends BlockEntity {
                 return floraCount >= 2;
             }
             case AncientDragonEntity.VARIANT_SHADOW -> {
-                // Oscuridad y energía del vacío: Luz de bloque baja (< 4) o cerca de obsidiana / fuego de almas
                 if (level.getRawBrightness(pos, 0) <= 4) return true;
                 for (BlockPos check : BlockPos.betweenClosed(pos.offset(-2, -1, -2), pos.offset(2, 2, 2))) {
                     BlockState bs = level.getBlockState(check);
@@ -164,7 +156,6 @@ public class AncientDragonEggBlockEntity extends BlockEntity {
                 return false;
             }
             case AncientDragonEntity.VARIANT_LIGHTNING -> {
-                // Electricidad y Tormenta: Pararrayos, bloques de cobre o tormenta eléctrica activa
                 if (level.isThundering()) return true;
                 for (BlockPos check : BlockPos.betweenClosed(pos.offset(-3, -1, -3), pos.offset(3, 2, 3))) {
                     BlockState bs = level.getBlockState(check);
@@ -175,7 +166,6 @@ public class AncientDragonEggBlockEntity extends BlockEntity {
                 return false;
             }
             case AncientDragonEntity.VARIANT_CELESTIAL -> {
-                // Luz Divina: Cielo despejado de día o bloques de oro / linternas de mar / faro
                 if (level.canSeeSky(pos.above()) && level.isDay()) return true;
                 for (BlockPos check : BlockPos.betweenClosed(pos.offset(-3, -1, -3), pos.offset(3, 2, 3))) {
                     BlockState bs = level.getBlockState(check);
@@ -194,19 +184,16 @@ public class AncientDragonEggBlockEntity extends BlockEntity {
     private static void hatchDragon(Level level, BlockPos pos, AncientDragonEggBlockEntity egg) {
         if (!(level instanceof ServerLevel sl)) return;
 
-        // Efectos de eclosión
         sl.playSound(null, pos, SoundEvents.TURTLE_EGG_HATCH, SoundSource.BLOCKS, 1.5F, 0.9F);
-        sl.playSound(null, pos, ModSounds.ANCIENT_DRAGON_ROAR.get(), SoundSource.NEUTRAL, 1.6F, 1.65F); // Chillido tierno de bebé
+        sl.playSound(null, pos, ModSounds.ANCIENT_DRAGON_ROAR.get(), SoundSource.NEUTRAL, 1.6F, 1.65F);
         sl.sendParticles(ParticleTypes.EXPLOSION, pos.getX() + 0.5D, pos.getY() + 0.6D, pos.getZ() + 0.5D, 1, 0, 0, 0, 0);
 
-        // Generar cría de dragón (Escala 0.8x, Edad 0)
         AncientDragonEntity baby = ModEntities.ANCIENT_DRAGON.get().create(level);
         if (baby != null) {
             baby.moveTo(pos.getX() + 0.5D, pos.getY(), pos.getZ() + 0.5D, level.random.nextFloat() * 360.0F, 0.0F);
             baby.setVariant(egg.variant);
-            baby.setDragonAge(0); // Día 0: Cría / Bebé
+            baby.setDragonAge(0);
 
-            // Impronta y domesticación automática con el jugador que lo incubó
             if (egg.placerUUID != null) {
                 Player owner = level.getPlayerByUUID(egg.placerUUID);
                 if (owner != null) {
@@ -219,7 +206,6 @@ public class AncientDragonEggBlockEntity extends BlockEntity {
             level.addFreshEntity(baby);
         }
 
-        // Retirar el bloque del cascarón eclosionado
         level.removeBlock(pos, false);
     }
 

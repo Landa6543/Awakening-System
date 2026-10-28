@@ -31,62 +31,20 @@ public class LightConePatienceIsAllYouNeedItem extends Item {
     @Override
     public InteractionResultHolder<ItemStack> use(Level level, Player player, InteractionHand hand) {
         ItemStack stack = player.getItemInHand(hand);
-        if (!level.isClientSide() && player instanceof ServerPlayer sp) {
-            long gameTime = level.getGameTime();
-            long cdUntil = sp.getPersistentData().getLong("patience_skill_cd");
-            if (gameTime < cdUntil) {
-                long sec = Math.max(1, (cdUntil - gameTime + 19) / 20);
-                sp.displayClientMessage(Component.literal("§d§l✦ Cono de Luz en recarga: §f" + sec + "s"), true);
-                return InteractionResultHolder.fail(stack);
-            }
-
-            sp.getPersistentData().putLong("patience_skill_cd", gameTime + 320L); // 16s cooldown
-
-            AABB area = sp.getBoundingBox().inflate(14.0D, 6.0D, 14.0D);
-            List<LivingEntity> targets = level.getEntitiesOfClass(LivingEntity.class, area,
-                    e -> e != sp && e.isAlive() && !e.getType().getCategory().isFriendly() && !e.getTags().contains("shadow_soldier"));
-
-            float baseDamage = 42.0F;
-            Vec3 center = sp.position();
-
-            for (LivingEntity enemy : targets) {
-                enemy.hurt(sp.damageSources().playerAttack(sp), baseDamage);
-                enemy.addEffect(new MobEffectInstance(MobEffects.MOVEMENT_SLOWDOWN, 100, 2));
-                enemy.addEffect(new MobEffectInstance(MobEffects.GLOWING, 140, 0));
-
-                // Atracción electromagnética sutil por los hilos del destino
-                Vec3 pull = center.subtract(enemy.position()).normalize().scale(0.8D);
-                enemy.setDeltaMovement(pull.x, 0.3D, pull.z);
-
-                if (level instanceof ServerLevel sl) {
-                    sl.sendParticles(ParticleTypes.ELECTRIC_SPARK, enemy.getX(), enemy.getY() + 1.0D, enemy.getZ(), 25, 0.4D, 0.6D, 0.4D, 0.15D);
-                    sl.sendParticles(ParticleTypes.WITCH, enemy.getX(), enemy.getY() + 1.2D, enemy.getZ(), 15, 0.4D, 0.4D, 0.4D, 0.05D);
-                }
-            }
-
-            if (level instanceof ServerLevel sl) {
-                sl.sendParticles(ParticleTypes.FLASH, sp.getX(), sp.getY() + 1.2D, sp.getZ(), 3, 0, 0, 0, 0);
-                sl.sendParticles(ParticleTypes.REVERSE_PORTAL, sp.getX(), sp.getY() + 1.0D, sp.getZ(), 45, 1.2D, 0.8D, 1.2D, 0.1D);
-                sl.playSound(null, sp.getX(), sp.getY(), sp.getZ(), SoundEvents.LIGHTNING_BOLT_IMPACT, SoundSource.PLAYERS, 1.2F, 1.6F);
-                sl.playSound(null, sp.getX(), sp.getY(), sp.getZ(), SoundEvents.BEACON_POWER_SELECT, SoundSource.PLAYERS, 1.5F, 1.8F);
-                sl.playSound(null, sp.getX(), sp.getY(), sp.getZ(), SoundEvents.LEASH_KNOT_BREAK, SoundSource.PLAYERS, 1.4F, 0.7F);
-            }
-
-            sp.addEffect(new MobEffectInstance(MobEffects.MOVEMENT_SPEED, 200, 2)); // Speed III
-            sp.addEffect(new MobEffectInstance(MobEffects.DIG_SPEED, 200, 1)); // Haste II
-            sp.displayClientMessage(Component.literal("§d§l✦ [SOLO HAY QUE ESPERAR] §f¡Hilos del Estelaron y Electrocución desatados! (Boom)"), true);
-            return InteractionResultHolder.sidedSuccess(stack, level.isClientSide());
+        if (!level.isClientSide()) {
+            player.displayClientMessage(Component.translatable("item.awakening_system.light_cone.use_msg"), true);
         }
-        return InteractionResultHolder.sidedSuccess(stack, level.isClientSide());
+        return InteractionResultHolder.pass(stack);
     }
 
     @Override
     public void appendHoverText(ItemStack stack, TooltipContext context, List<Component> tooltip, TooltipFlag flag) {
-        tooltip.add(Component.literal("§6⭐⭐⭐⭐⭐ [Cono de Luz Legendario 5★ - Nihilidad]").withStyle(ChatFormatting.GOLD));
-        tooltip.add(Component.literal("§7El cono de luz exclusivo de Kafka (Honkai: Star Rail).").withStyle(ChatFormatting.GRAY));
-        tooltip.add(Component.literal("§7Bajo una lluvia tranquila, escucha el latir de tu corazón... Boom.").withStyle(ChatFormatting.DARK_GRAY));
-        tooltip.add(Component.literal("§d▸ Habilidad Activa (Clic derecho): Telaraña del Destino").withStyle(ChatFormatting.LIGHT_PURPLE));
-        tooltip.add(Component.literal("  §7Atrae a los enemigos en 14 bloques, infligiendo 42 de daño de rayo.").withStyle(ChatFormatting.DARK_GRAY));
-        tooltip.add(Component.literal("  §7Otorga al usuario Velocidad III y Prisa minera II por 10 segundos.").withStyle(ChatFormatting.DARK_GRAY));
+        tooltip.add(Component.translatable("item.awakening_system.light_cone.passing_shore.badge").withStyle(ChatFormatting.GOLD));
+        tooltip.add(Component.translatable("item.awakening_system.light_cone.patience.path").withStyle(ChatFormatting.LIGHT_PURPLE));
+        tooltip.add(Component.translatable("item.awakening_system.light_cone.patience.lore").withStyle(ChatFormatting.GRAY));
+        tooltip.add(Component.translatable("item.awakening_system.light_cone.patience.stats_title").withStyle(ChatFormatting.LIGHT_PURPLE));
+        tooltip.add(Component.translatable("item.awakening_system.light_cone.patience.stat1").withStyle(ChatFormatting.GRAY));
+        tooltip.add(Component.translatable("item.awakening_system.light_cone.patience.stat2").withStyle(ChatFormatting.GRAY));
+        tooltip.add(Component.translatable("item.awakening_system.light_cone.equip_hint").withStyle(ChatFormatting.DARK_GRAY));
     }
 }

@@ -1,0 +1,10 @@
+{
+  "type": "neoforge:add_features",
+  "biomes": "#minecraft:is_overworld",
+  "features": [
+    "awakening_system:ore_abyssal",
+    "awakening_system:ore_abyssal_resonant_crystal",
+    "awakening_system:blob_abyssal_stone_overworld"
+  ],
+  "step": "underground_ores"
+}

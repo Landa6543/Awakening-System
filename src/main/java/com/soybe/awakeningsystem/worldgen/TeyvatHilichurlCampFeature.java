@@ -52,19 +52,25 @@ public class TeyvatHilichurlCampFeature extends Feature<NoneFeatureConfiguration
         BlockPos origin = context.origin();
         RandomSource rand = context.random();
 
-        // 1. Evitar generar sobre agua, vacío o fuera de rango de superficie
         if (origin.getY() < 60 || origin.getY() > 185) return false;
         BlockState below = level.getBlockState(origin.below());
         if (!below.isSolid() || below.liquid() || below.is(BlockTags.LEAVES)) return false;
 
-        // 2. No generar pegado al spawn (0,0) ni a las capitales de Teyvat
-        if (Math.abs(origin.getX()) < 160 && Math.abs(origin.getZ()) < 160) return false;
-        if (Math.abs(origin.getX() - TeyvatRegionalBuilder.MONDSTADT_POS.getX()) < 180 && Math.abs(origin.getZ() - TeyvatRegionalBuilder.MONDSTADT_POS.getZ()) < 180) return false;
-        if (Math.abs(origin.getX() - TeyvatRegionalBuilder.LIYUE_POS.getX()) < 180 && Math.abs(origin.getZ() - TeyvatRegionalBuilder.LIYUE_POS.getZ()) < 180) return false;
+        if (!TeyvatWorldGenManager.isAreaClearOfBossesAndStructures(level, origin, 220.0D)) {
+            return false;
+        }
+
+        try {
+            if (level.getLevel().getServer() != null) {
+                var data = TeyvatWorldGenManager.TeyvatFeaturesData.get(level.getLevel().getServer());
+                if (!TeyvatWorldGenManager.isFarFromList2D(origin, data.camps, 180.0D)) {
+                    return false;
+                }
+            }
+        } catch (Exception ignored) {}
 
         String biomeName = level.getBiome(origin).unwrapKey().map(k -> k.location().getPath()).orElse("");
 
-        // 3. Selección y colocación de Aldeas Hilichurl NBT canónicas
         boolean villagePlaced = false;
         if (TeyvatWorldGenManager.isAreaFlat(level, origin, 8, 3)) {
             String selectedNbt;
@@ -76,24 +82,19 @@ public class TeyvatHilichurlCampFeature extends Feature<NoneFeatureConfiguration
                 selectedNbt = PLAINS_VILLAGES[rand.nextInt(PLAINS_VILLAGES.length)];
             }
 
-            TeyvatWorldGenManager.buildSolidFoundation(level, origin, 10);
+            TeyvatWorldGenManager.buildSolidFoundation(level, origin, 8);
             villagePlaced = TeyvatStructureManager.placeNbtStructure(level, origin, selectedNbt, -8, 0, -8);
             if (villagePlaced) {
-                AwakeningSystemMod.LOGGER.info("Aldea Hilichurl canónica '{}' generada nativamente en {}", selectedNbt, origin);
-
-                // Spawneo de patrulla de la tribu Hilichurl
-                int hiliCount = 3 + rand.nextInt(3);
+                int hiliCount = 2 + rand.nextInt(3);
                 for (int i = 0; i < hiliCount; i++) {
-                    int ox = (rand.nextInt(9) - 4);
-                    int oz = (rand.nextInt(9) - 4);
+                    int ox = (rand.nextInt(7) - 3);
+                    int oz = (rand.nextInt(7) - 3);
                     TeyvatWorldGenManager.spawnTeyvatMonster(level, origin.offset(ox, 1, oz), ModEntities.HILICHURL.get());
                 }
-                // Líder Mitachurl
                 TeyvatWorldGenManager.spawnTeyvatMonster(level, origin.offset(0, 1, 2), ModEntities.MITACHURL.get());
             }
         }
 
-        // 4. Si el terreno era demasiado accidentado para una aldea grande completa, fallback al campamento procedural adaptativo
         if (!villagePlaced) {
             if (!TeyvatWorldGenManager.isAreaFlat(level, origin, 5, 2)) {
                 return false;

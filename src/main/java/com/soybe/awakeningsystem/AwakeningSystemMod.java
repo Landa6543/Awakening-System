@@ -15,6 +15,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.function.Supplier;
 import com.soybe.awakeningsystem.entity.SeriesNpcEntity;
+import com.soybe.awakeningsystem.block.SystemBlocks;
 
 @Mod(AwakeningSystemMod.MOD_ID)
 public final class AwakeningSystemMod {
@@ -89,7 +90,18 @@ public final class AwakeningSystemMod {
         net.neoforged.fml.ModContainer modContainer = net.neoforged.fml.ModList.get().getModContainerById(MOD_ID).orElse(null);
         if (modContainer != null) {
             modContainer.registerConfig(net.neoforged.fml.config.ModConfig.Type.SERVER, SystemConfig.SPEC);
+            modContainer.registerConfig(net.neoforged.fml.config.ModConfig.Type.CLIENT, SystemClientConfig.SPEC);
         }
+        modBus.addListener((net.neoforged.fml.event.config.ModConfigEvent.Loading e) -> {
+            if (e.getConfig().getSpec() == SystemClientConfig.SPEC) {
+                SystemClientConfig.syncToGuiConfig();
+            }
+        });
+        modBus.addListener((net.neoforged.fml.event.config.ModConfigEvent.Reloading e) -> {
+            if (e.getConfig().getSpec() == SystemClientConfig.SPEC) {
+                SystemClientConfig.syncToGuiConfig();
+            }
+        });
         modBus.addListener(AwakeningSystemMod::registerPayloads);
         if (net.neoforged.fml.loading.FMLEnvironment.dist.isClient()) {
             modBus.addListener(AwakeningSystemClient::onClientSetup);
@@ -97,6 +109,7 @@ public final class AwakeningSystemMod {
             modBus.addListener(AwakeningSystemClient::registerKeyMappings);
             modBus.addListener(AwakeningSystemClient::registerEntityRenderers);
             modBus.addListener(AwakeningSystemClient::registerLayerDefinitions);
+            modBus.addListener(AwakeningSystemClient::registerLayers);
             modBus.addListener(AwakeningSystemClient::registerParticleProviders);
             modBus.addListener(AwakeningSystemClient::registerClientExtensions);
             modBus.addListener(AwakeningSystemClient::registerDimensionSpecialEffects);
@@ -105,11 +118,16 @@ public final class AwakeningSystemMod {
             NeoForge.EVENT_BUS.addListener(AwakeningSystemClient::onRenderLivingPre);
             NeoForge.EVENT_BUS.addListener(AwakeningSystemClient::onRenderPlayerPre);
             NeoForge.EVENT_BUS.addListener(AwakeningSystemClient::onMovementInputUpdate);
+            NeoForge.EVENT_BUS.addListener(AwakeningSystemClient::onComputeFovModifier);
             NeoForge.EVENT_BUS.addListener(AwakeningSystemClient::onComputeCameraAngles);
             NeoForge.EVENT_BUS.addListener(AwakeningSystemClient::onRenderNameTag);
             NeoForge.EVENT_BUS.addListener(AwakeningSystemClient::registerClientCommands);
             NeoForge.EVENT_BUS.addListener(AwakeningSystemClient::onMouseButtonPre);
             NeoForge.EVENT_BUS.addListener(AwakeningSystemClient::onItemTooltip);
+            NeoForge.EVENT_BUS.addListener(AwakeningSystemClient::onClientEntityJoinLevel);
+            NeoForge.EVENT_BUS.addListener(AwakeningSystemClient::onScreenOpening);
+            NeoForge.EVENT_BUS.addListener(AwakeningSystemClient::onLivingDeath);
+            NeoForge.EVENT_BUS.addListener(AwakeningSystemClient::onClientLoggingOut);
         }
         NeoForge.EVENT_BUS.register(SystemEvents.class);
         NeoForge.EVENT_BUS.addListener(SystemCommands::register);
@@ -119,10 +137,93 @@ public final class AwakeningSystemMod {
         event.enqueueWork(() -> {
             if (net.neoforged.fml.ModList.get().isLoaded("terrablender")) {
                 com.soybe.awakeningsystem.worldgen.TerraBlenderCompat.registerRegions();
+                com.soybe.awakeningsystem.worldgen.TerraBlenderCompat.registerSurfaceRules();
             }
             com.soybe.awakeningsystem.config.CustomLootConfigManager.init();
             com.soybe.awakeningsystem.config.BossCompatibilityManager.init();
+            registerFlammableBlocks();
         });
+    }
+
+    private void registerFlammableBlocks() {
+        if (net.minecraft.world.level.block.Blocks.FIRE instanceof net.minecraft.world.level.block.FireBlock fireBlock) {
+            // Troncos y Maderas (5, 5)
+            fireBlock.setFlammable(SystemBlocks.CUIHUA_LOG.get(), 5, 5);
+            fireBlock.setFlammable(SystemBlocks.ADHIGAMA_LOG.get(), 5, 5);
+            fireBlock.setFlammable(SystemBlocks.SANDBEARER_LOG.get(), 5, 5);
+            fireBlock.setFlammable(SystemBlocks.MANA_WOOD_LOG.get(), 5, 5);
+            fireBlock.setFlammable(SystemBlocks.ELDORIA_LOG.get(), 5, 5);
+            fireBlock.setFlammable(SystemBlocks.SPIRIT_PLUM_LOG.get(), 5, 5);
+            fireBlock.setFlammable(SystemBlocks.CELESTIAL_PINE_LOG.get(), 5, 5);
+            fireBlock.setFlammable(SystemBlocks.ARALIA_WOOD.get(), 5, 5);
+            fireBlock.setFlammable(SystemBlocks.YUMEMIRU_WOOD.get(), 5, 5);
+            fireBlock.setFlammable(SystemBlocks.OTOGI_WOOD.get(), 5, 5);
+            fireBlock.setFlammable(SystemBlocks.BAMBOO_SEGMENT.get(), 5, 5);
+            fireBlock.setFlammable(SystemBlocks.MAPLE_WOOD.get(), 5, 5);
+
+            // Hojas (30, 60)
+            fireBlock.setFlammable(SystemBlocks.CUIHUA_LEAVES.get(), 30, 60);
+            fireBlock.setFlammable(SystemBlocks.ADHIGAMA_LEAVES.get(), 30, 60);
+            fireBlock.setFlammable(SystemBlocks.SANDBEARER_LEAVES.get(), 30, 60);
+            fireBlock.setFlammable(SystemBlocks.MANA_WOOD_LEAVES.get(), 30, 60);
+            fireBlock.setFlammable(SystemBlocks.ELDORIA_LEAVES.get(), 30, 60);
+            fireBlock.setFlammable(SystemBlocks.SPIRIT_PLUM_LEAVES.get(), 30, 60);
+            fireBlock.setFlammable(SystemBlocks.CELESTIAL_PINE_LEAVES.get(), 30, 60);
+            fireBlock.setFlammable(SystemBlocks.IMMORTALITY_PEACH_LEAVES.get(), 30, 60);
+            fireBlock.setFlammable(SystemBlocks.ARALIA_LEAVES.get(), 30, 60);
+            fireBlock.setFlammable(SystemBlocks.YUMEMIRU_LEAVES.get(), 30, 60);
+            fireBlock.setFlammable(SystemBlocks.OTOGI_LEAVES.get(), 30, 60);
+            fireBlock.setFlammable(SystemBlocks.MAPLE_LEAVES.get(), 30, 60);
+
+            // Tablones, Escaleras, Losas, Vallas y Puertas de Valla (5, 20)
+            fireBlock.setFlammable(SystemBlocks.CUIHUA_PLANKS.get(), 5, 20);
+            fireBlock.setFlammable(SystemBlocks.ADHIGAMA_PLANKS.get(), 5, 20);
+            fireBlock.setFlammable(SystemBlocks.ADHIGAMA_FENCE.get(), 5, 20);
+            fireBlock.setFlammable(SystemBlocks.ADHIGAMA_FENCE_GATE.get(), 5, 20);
+            fireBlock.setFlammable(SystemBlocks.SANDBEARER_PLANKS.get(), 5, 20);
+            fireBlock.setFlammable(SystemBlocks.MANA_WOOD_PLANKS.get(), 5, 20);
+            fireBlock.setFlammable(SystemBlocks.ELDORIA_PLANKS.get(), 5, 20);
+
+            fireBlock.setFlammable(SystemBlocks.SPIRIT_PLUM_PLANKS.get(), 5, 20);
+            fireBlock.setFlammable(SystemBlocks.SPIRIT_PLUM_STAIRS.get(), 5, 20);
+            fireBlock.setFlammable(SystemBlocks.SPIRIT_PLUM_SLAB.get(), 5, 20);
+            fireBlock.setFlammable(SystemBlocks.SPIRIT_PLUM_FENCE.get(), 5, 20);
+            fireBlock.setFlammable(SystemBlocks.SPIRIT_PLUM_FENCE_GATE.get(), 5, 20);
+
+            fireBlock.setFlammable(SystemBlocks.CELESTIAL_PINE_PLANKS.get(), 5, 20);
+            fireBlock.setFlammable(SystemBlocks.CELESTIAL_PINE_STAIRS.get(), 5, 20);
+            fireBlock.setFlammable(SystemBlocks.CELESTIAL_PINE_SLAB.get(), 5, 20);
+            fireBlock.setFlammable(SystemBlocks.CELESTIAL_PINE_FENCE.get(), 5, 20);
+            fireBlock.setFlammable(SystemBlocks.CELESTIAL_PINE_FENCE_GATE.get(), 5, 20);
+
+            fireBlock.setFlammable(SystemBlocks.ARALIA_PLANKS.get(), 5, 20);
+            fireBlock.setFlammable(SystemBlocks.ARALIA_STAIRS.get(), 5, 20);
+            fireBlock.setFlammable(SystemBlocks.ARALIA_SLAB.get(), 5, 20);
+            fireBlock.setFlammable(SystemBlocks.ARALIA_FENCE.get(), 5, 20);
+            fireBlock.setFlammable(SystemBlocks.ARALIA_FENCE_GATE.get(), 5, 20);
+
+            fireBlock.setFlammable(SystemBlocks.YUMEMIRU_PLANKS.get(), 5, 20);
+            fireBlock.setFlammable(SystemBlocks.YUMEMIRU_STAIRS.get(), 5, 20);
+            fireBlock.setFlammable(SystemBlocks.YUMEMIRU_SLAB.get(), 5, 20);
+            fireBlock.setFlammable(SystemBlocks.YUMEMIRU_FENCE.get(), 5, 20);
+            fireBlock.setFlammable(SystemBlocks.YUMEMIRU_FENCE_GATE.get(), 5, 20);
+
+            fireBlock.setFlammable(SystemBlocks.OTOGI_PLANKS.get(), 5, 20);
+            fireBlock.setFlammable(SystemBlocks.OTOGI_STAIRS.get(), 5, 20);
+            fireBlock.setFlammable(SystemBlocks.OTOGI_SLAB.get(), 5, 20);
+
+            fireBlock.setFlammable(SystemBlocks.BAMBOO_PLANKS.get(), 5, 20);
+            fireBlock.setFlammable(SystemBlocks.BAMBOO_STAIRS.get(), 5, 20);
+            fireBlock.setFlammable(SystemBlocks.BAMBOO_SLAB.get(), 5, 20);
+            fireBlock.setFlammable(SystemBlocks.BAMBOO_FENCE.get(), 5, 20);
+            fireBlock.setFlammable(SystemBlocks.BAMBOO_FENCE_GATE.get(), 5, 20);
+
+            fireBlock.setFlammable(SystemBlocks.MAPLE_PLANKS.get(), 5, 20);
+            fireBlock.setFlammable(SystemBlocks.MAPLE_STAIRS.get(), 5, 20);
+            fireBlock.setFlammable(SystemBlocks.MAPLE_SLAB.get(), 5, 20);
+            fireBlock.setFlammable(SystemBlocks.MAPLE_FENCE.get(), 5, 20);
+            fireBlock.setFlammable(SystemBlocks.MAPLE_FENCE_GATE.get(), 5, 20);
+        }
     }
 
     private static void registerPayloads(net.neoforged.neoforge.network.event.RegisterPayloadHandlersEvent event) {
@@ -131,6 +232,15 @@ public final class AwakeningSystemMod {
                 (payload, context) -> context.enqueueWork(() -> {
                     if (context.player() instanceof net.minecraft.server.level.ServerPlayer player) {
                         SystemEvents.spendAttribute(player, payload.attribute());
+                    }
+                }));
+        registrar.playToServer(ToggleAgilitySpeedPayload.TYPE, ToggleAgilitySpeedPayload.STREAM_CODEC,
+                (payload, context) -> context.enqueueWork(() -> {
+                    if (context.player() instanceof net.minecraft.server.level.ServerPlayer player) {
+                        SystemData data = SystemEvents.data(player);
+                        data.setAgilitySpeedEnabled(!data.agilitySpeedEnabled());
+                        SystemAttributeEffects.apply(player);
+                        AwakeningSystemMod.sync(player);
                     }
                 }));
         registrar.playToServer(ActivateSkillPayload.TYPE, ActivateSkillPayload.STREAM_CODEC,
@@ -183,6 +293,18 @@ public final class AwakeningSystemMod {
                         SystemEvents.prestigePlayer(player);
                     }
                 }));
+        registrar.playToServer(com.soybe.awakeningsystem.combat.AceToggleModePayload.TYPE, com.soybe.awakeningsystem.combat.AceToggleModePayload.STREAM_CODEC,
+                (payload, context) -> context.enqueueWork(() -> {
+                    if (context.player() instanceof net.minecraft.server.level.ServerPlayer player) {
+                        com.soybe.awakeningsystem.combat.AceCombatState.setServerPlayerMode(player, payload.getMode());
+                    }
+                }));
+        registrar.playToServer(com.soybe.awakeningsystem.combat.AceAttackPacket.TYPE, com.soybe.awakeningsystem.combat.AceAttackPacket.STREAM_CODEC,
+                (payload, context) -> context.enqueueWork(() -> {
+                    if (context.player() instanceof net.minecraft.server.level.ServerPlayer player) {
+                        com.soybe.awakeningsystem.combat.AceServerCombatHandler.handleAttackPacket(player, payload);
+                    }
+                }));
         registrar.playToServer(EvolveSkillPayload.TYPE, EvolveSkillPayload.STREAM_CODEC,
                 (payload, context) -> context.enqueueWork(() -> {
                     if (context.player() instanceof net.minecraft.server.level.ServerPlayer player) {
@@ -209,6 +331,21 @@ public final class AwakeningSystemMod {
                         SystemEvents.handleBankTransaction(player, payload.action(), payload.amount());
                     }
                 }));
+        registrar.playToServer(com.soybe.awakeningsystem.p2p.network.P2PShopActionPayload.TYPE, com.soybe.awakeningsystem.p2p.network.P2PShopActionPayload.STREAM_CODEC,
+                (payload, context) -> context.enqueueWork(() -> {
+                    if (context.player() instanceof net.minecraft.server.level.ServerPlayer player) {
+                        com.soybe.awakeningsystem.p2p.P2PShopSavedData data = com.soybe.awakeningsystem.p2p.P2PShopSavedData.get(player.server);
+                        switch (payload.action()) {
+                            case com.soybe.awakeningsystem.p2p.network.P2PShopActionPayload.ACTION_BUY -> data.buyListing(player, payload.listingId());
+                            case com.soybe.awakeningsystem.p2p.network.P2PShopActionPayload.ACTION_CANCEL -> data.cancelListing(player, payload.listingId());
+                            case com.soybe.awakeningsystem.p2p.network.P2PShopActionPayload.ACTION_CREATE -> data.createListing(player, payload.slotIndex(), payload.count(), payload.price());
+                            case com.soybe.awakeningsystem.p2p.network.P2PShopActionPayload.ACTION_CLAIM_EARNINGS -> data.claimEarnings(player);
+                            case com.soybe.awakeningsystem.p2p.network.P2PShopActionPayload.ACTION_REQUEST_SYNC -> data.syncToPlayer(player);
+                        }
+                    }
+                }));
+        registrar.playToClient(com.soybe.awakeningsystem.p2p.network.SyncP2PShopPayload.TYPE, com.soybe.awakeningsystem.p2p.network.SyncP2PShopPayload.STREAM_CODEC,
+                (payload, context) -> context.enqueueWork(() -> AwakeningSystemClient.handleSyncP2PShop(payload)));
         registrar.playToServer(EquipTitlePayload.TYPE, EquipTitlePayload.STREAM_CODEC,
                 (payload, context) -> context.enqueueWork(() -> {
                     if (context.player() instanceof net.minecraft.server.level.ServerPlayer player
@@ -300,6 +437,30 @@ public final class AwakeningSystemMod {
                         SystemEvents.activateArmorSkill(player);
                     }
                 }));
+        registrar.playToServer(com.soybe.awakeningsystem.network.EquipLightConePayload.TYPE, com.soybe.awakeningsystem.network.EquipLightConePayload.STREAM_CODEC,
+                (payload, context) -> context.enqueueWork(() -> {
+                    if (context.player() instanceof net.minecraft.server.level.ServerPlayer player) {
+                        com.soybe.awakeningsystem.item.EquipmentSystemManager.handleEquipLightCone(player, payload);
+                    }
+                }));
+        registrar.playToServer(com.soybe.awakeningsystem.network.EquipRunePayload.TYPE, com.soybe.awakeningsystem.network.EquipRunePayload.STREAM_CODEC,
+                (payload, context) -> context.enqueueWork(() -> {
+                    if (context.player() instanceof net.minecraft.server.level.ServerPlayer player) {
+                        com.soybe.awakeningsystem.item.EquipmentSystemManager.handleEquipRune(player, payload);
+                    }
+                }));
+        registrar.playToServer(com.soybe.awakeningsystem.network.ActivateRunePayload.TYPE, com.soybe.awakeningsystem.network.ActivateRunePayload.STREAM_CODEC,
+                (payload, context) -> context.enqueueWork(() -> {
+                    if (context.player() instanceof net.minecraft.server.level.ServerPlayer player) {
+                        com.soybe.awakeningsystem.item.EquipmentSystemManager.handleActivateRune(player, payload);
+                    }
+                }));
+        registrar.playToServer(com.soybe.awakeningsystem.network.RequestSyncPayload.TYPE, com.soybe.awakeningsystem.network.RequestSyncPayload.STREAM_CODEC,
+                (payload, context) -> context.enqueueWork(() -> {
+                    if (context.player() instanceof net.minecraft.server.level.ServerPlayer player) {
+                        SystemEvents.handleRequestSync(player);
+                    }
+                }));
         registrar.playToClient(SystemSyncPayload.TYPE, SystemSyncPayload.STREAM_CODEC,
                 (payload, context) -> context.enqueueWork(() -> context.player()
                         .getData(PLAYER_SYSTEM)
@@ -323,6 +484,16 @@ public final class AwakeningSystemMod {
                 (payload, context) -> context.enqueueWork(() -> AwakeningSystemClient.openGuidebookScreen()));
         registrar.playToClient(OpenBestiaryPayload.TYPE, OpenBestiaryPayload.STREAM_CODEC,
                 (payload, context) -> context.enqueueWork(() -> AwakeningSystemClient.openBestiaryScreen()));
+        registrar.playToClient(OpenVisionSelectionPayload.TYPE, OpenVisionSelectionPayload.STREAM_CODEC,
+                (payload, context) -> context.enqueueWork(() -> com.soybe.awakeningsystem.client.gui.VisionSelectionScreen.open()));
+        registrar.playToClient(OpenStatueScreenPayload.TYPE, OpenStatueScreenPayload.STREAM_CODEC,
+                (payload, context) -> context.enqueueWork(() -> AwakeningSystemClient.openStatueScreen(payload)));
+        registrar.playToServer(StatueActionC2SPayload.TYPE, StatueActionC2SPayload.STREAM_CODEC,
+                (payload, context) -> context.enqueueWork(() -> {
+                    if (context.player() instanceof net.minecraft.server.level.ServerPlayer player) {
+                        com.soybe.awakeningsystem.block.StatueOfTheSevenBlock.handleStatueAction(player, payload);
+                    }
+                }));
         registrar.playToClient(SpawnMagicCirclePayload.TYPE, SpawnMagicCirclePayload.STREAM_CODEC,
                 (payload, context) -> context.enqueueWork(() -> AwakeningSystemClient.spawnMagicCircle(payload)));
         registrar.playToClient(CancelMagicCirclePayload.TYPE, CancelMagicCirclePayload.STREAM_CODEC,
@@ -381,6 +552,20 @@ public final class AwakeningSystemMod {
                         com.soybe.awakeningsystem.block.BountyBoardBlock.handleSelectBounty(player, payload);
                     }
                 }));
+        registrar.playToClient(OpenTowerMissionBoardPayload.TYPE, OpenTowerMissionBoardPayload.STREAM_CODEC,
+                (payload, context) -> context.enqueueWork(() -> AwakeningSystemClient.openTowerMissionBoardScreen(payload)));
+        registrar.playToServer(TowerMissionActionPayload.TYPE, TowerMissionActionPayload.STREAM_CODEC,
+                (payload, context) -> context.enqueueWork(() -> {
+                    if (context.player() instanceof net.minecraft.server.level.ServerPlayer player) {
+                        if (payload.action() == TowerMissionActionPayload.ACTION_ACCEPT) {
+                            com.soybe.awakeningsystem.tower.TowerDailyMissionManager.acceptMission(player, payload.missionIndex());
+                        } else if (payload.action() == TowerMissionActionPayload.ACTION_CLAIM) {
+                            com.soybe.awakeningsystem.tower.TowerDailyMissionManager.claimMission(player);
+                        } else if (payload.action() == TowerMissionActionPayload.ACTION_ABANDON) {
+                            com.soybe.awakeningsystem.tower.TowerDailyMissionManager.abandonMission(player);
+                        }
+                    }
+                }));
         registrar.playToClient(OpenFishingStationPayload.TYPE, OpenFishingStationPayload.STREAM_CODEC,
                 (payload, context) -> context.enqueueWork(() -> AwakeningSystemClient.openFishingStationScreen(payload)));
         registrar.playToServer(FishingStationActionPayload.TYPE, FishingStationActionPayload.STREAM_CODEC,
@@ -399,6 +584,8 @@ public final class AwakeningSystemMod {
                 }));
         registrar.playToClient(com.soybe.awakeningsystem.guild.OpenGuildScreenPayload.TYPE, com.soybe.awakeningsystem.guild.OpenGuildScreenPayload.STREAM_CODEC,
                 (payload, context) -> context.enqueueWork(() -> AwakeningSystemClient.openGuildScreen(payload.data())));
+        registrar.playToClient(com.soybe.awakeningsystem.guild.SyncGuildClaimsPayload.TYPE, com.soybe.awakeningsystem.guild.SyncGuildClaimsPayload.STREAM_CODEC,
+                (payload, context) -> context.enqueueWork(() -> AwakeningSystemClient.handleSyncGuildClaims(payload)));
         registrar.playToServer(com.soybe.awakeningsystem.guild.GuildActionPayload.TYPE, com.soybe.awakeningsystem.guild.GuildActionPayload.STREAM_CODEC,
                 (payload, context) -> context.enqueueWork(() -> {
                     if (context.player() instanceof net.minecraft.server.level.ServerPlayer player) {
@@ -504,6 +691,94 @@ public final class AwakeningSystemMod {
                         com.soybe.awakeningsystem.casino.SlotMachineServerHandler.handleClose(player, payload);
                     }
                 }));
+        registrar.playToClient(com.soybe.awakeningsystem.casino.network.OpenClandestineOwnerPayload.TYPE, com.soybe.awakeningsystem.casino.network.OpenClandestineOwnerPayload.STREAM_CODEC,
+                (payload, context) -> context.enqueueWork(() -> AwakeningSystemClient.openClandestineOwnerScreen(payload)));
+        registrar.playToServer(com.soybe.awakeningsystem.casino.network.ClandestineOwnerActionC2SPayload.TYPE, com.soybe.awakeningsystem.casino.network.ClandestineOwnerActionC2SPayload.STREAM_CODEC,
+                (payload, context) -> context.enqueueWork(() -> {
+                    if (context.player() instanceof net.minecraft.server.level.ServerPlayer player) {
+                        com.soybe.awakeningsystem.casino.SlotMachineServerHandler.handleOwnerAction(player, payload);
+                    }
+                }));
+        registrar.playToClient(com.soybe.awakeningsystem.casino.network.OpenCasinoCashierPayload.TYPE, com.soybe.awakeningsystem.casino.network.OpenCasinoCashierPayload.STREAM_CODEC,
+                (payload, context) -> context.enqueueWork(() -> AwakeningSystemClient.openCasinoCashierScreen(payload)));
+        registrar.playToServer(com.soybe.awakeningsystem.casino.network.CasinoExchangeC2SPayload.TYPE, com.soybe.awakeningsystem.casino.network.CasinoExchangeC2SPayload.STREAM_CODEC,
+                (payload, context) -> context.enqueueWork(() -> {
+                    if (context.player() instanceof net.minecraft.server.level.ServerPlayer player) {
+                        com.soybe.awakeningsystem.casino.CasinoCashierServerHandler.handleExchange(player, payload);
+                    }
+                }));
+        registrar.playToClient(com.soybe.awakeningsystem.casino.network.OpenClandestineCashierPayload.TYPE, com.soybe.awakeningsystem.casino.network.OpenClandestineCashierPayload.STREAM_CODEC,
+                (payload, context) -> context.enqueueWork(() -> AwakeningSystemClient.openClandestineCashierScreen(payload)));
+        registrar.playToClient(com.soybe.awakeningsystem.casino.network.OpenClandestineCashierOwnerPayload.TYPE, com.soybe.awakeningsystem.casino.network.OpenClandestineCashierOwnerPayload.STREAM_CODEC,
+                (payload, context) -> context.enqueueWork(() -> AwakeningSystemClient.openClandestineCashierOwnerScreen(payload)));
+        registrar.playToServer(com.soybe.awakeningsystem.casino.network.ClandestineExchangeC2SPayload.TYPE, com.soybe.awakeningsystem.casino.network.ClandestineExchangeC2SPayload.STREAM_CODEC,
+                (payload, context) -> context.enqueueWork(() -> {
+                    if (context.player() instanceof net.minecraft.server.level.ServerPlayer player) {
+                        com.soybe.awakeningsystem.casino.CasinoCashierServerHandler.handleClandestineExchange(player, payload);
+                    }
+                }));
+        registrar.playToServer(com.soybe.awakeningsystem.casino.network.ClandestineCashierOwnerActionC2SPayload.TYPE, com.soybe.awakeningsystem.casino.network.ClandestineCashierOwnerActionC2SPayload.STREAM_CODEC,
+                (payload, context) -> context.enqueueWork(() -> {
+                    if (context.player() instanceof net.minecraft.server.level.ServerPlayer player) {
+                        com.soybe.awakeningsystem.casino.CasinoCashierServerHandler.handleClandestineCashierOwnerAction(player, payload);
+                    }
+                }));
+        registrar.playToClient(com.soybe.awakeningsystem.casino.network.OpenBlackjackPayload.TYPE, com.soybe.awakeningsystem.casino.network.OpenBlackjackPayload.STREAM_CODEC,
+                (payload, context) -> context.enqueueWork(() -> AwakeningSystemClient.openBlackjackScreen(payload)));
+        registrar.playToServer(com.soybe.awakeningsystem.casino.network.BlackjackActionC2SPayload.TYPE, com.soybe.awakeningsystem.casino.network.BlackjackActionC2SPayload.STREAM_CODEC,
+                (payload, context) -> context.enqueueWork(() -> {
+                    if (context.player() instanceof net.minecraft.server.level.ServerPlayer player) {
+                        com.soybe.awakeningsystem.casino.BlackjackServerHandler.handleAction(player, payload);
+                    }
+                }));
+        registrar.playToClient(com.soybe.awakeningsystem.casino.network.BlackjackStateS2CPayload.TYPE, com.soybe.awakeningsystem.casino.network.BlackjackStateS2CPayload.STREAM_CODEC,
+                (payload, context) -> context.enqueueWork(() -> AwakeningSystemClient.handleBlackjackState(payload)));
+        registrar.playToServer(com.soybe.awakeningsystem.casino.network.BlackjackPvPActionC2SPayload.TYPE, com.soybe.awakeningsystem.casino.network.BlackjackPvPActionC2SPayload.STREAM_CODEC,
+                (payload, context) -> context.enqueueWork(() -> {
+                    if (context.player() instanceof net.minecraft.server.level.ServerPlayer player) {
+                        com.soybe.awakeningsystem.casino.BlackjackServerHandler.handlePvPAction(player, payload);
+                    }
+                }));
+        registrar.playToClient(com.soybe.awakeningsystem.casino.network.BlackjackPvPStateS2CPayload.TYPE, com.soybe.awakeningsystem.casino.network.BlackjackPvPStateS2CPayload.STREAM_CODEC,
+                (payload, context) -> context.enqueueWork(() -> AwakeningSystemClient.handleBlackjackPvPState(payload)));
+        registrar.playToClient(com.soybe.awakeningsystem.casino.network.OpenRoulettePayload.TYPE, com.soybe.awakeningsystem.casino.network.OpenRoulettePayload.STREAM_CODEC,
+                (payload, context) -> context.enqueueWork(() -> AwakeningSystemClient.openRouletteScreen(payload)));
+        registrar.playToServer(com.soybe.awakeningsystem.casino.network.RouletteSpinC2SPayload.TYPE, com.soybe.awakeningsystem.casino.network.RouletteSpinC2SPayload.STREAM_CODEC,
+                (payload, context) -> context.enqueueWork(() -> {
+                    if (context.player() instanceof net.minecraft.server.level.ServerPlayer player) {
+                        com.soybe.awakeningsystem.casino.RouletteServerHandler.handleSpin(player, payload);
+                    }
+                }));
+        registrar.playToClient(com.soybe.awakeningsystem.casino.network.RouletteResultS2CPayload.TYPE, com.soybe.awakeningsystem.casino.network.RouletteResultS2CPayload.STREAM_CODEC,
+                (payload, context) -> context.enqueueWork(() -> AwakeningSystemClient.handleRouletteResult(payload)));
+        registrar.playToClient(com.soybe.awakeningsystem.casino.pool.network.OpenPoolTablePayload.TYPE, com.soybe.awakeningsystem.casino.pool.network.OpenPoolTablePayload.STREAM_CODEC,
+                (payload, context) -> context.enqueueWork(() -> AwakeningSystemClient.openPoolTableScreen(payload)));
+        registrar.playToServer(com.soybe.awakeningsystem.casino.pool.network.PoolTableActionC2SPayload.TYPE, com.soybe.awakeningsystem.casino.pool.network.PoolTableActionC2SPayload.STREAM_CODEC,
+                (payload, context) -> context.enqueueWork(() -> {
+                    if (context.player() instanceof net.minecraft.server.level.ServerPlayer player) {
+                        com.soybe.awakeningsystem.casino.pool.PoolTableServerHandler.handleAction(player, payload);
+                    }
+                }));
+        registrar.playToClient(com.soybe.awakeningsystem.casino.pool.network.PoolTableStateS2CPayload.TYPE, com.soybe.awakeningsystem.casino.pool.network.PoolTableStateS2CPayload.STREAM_CODEC,
+                (payload, context) -> context.enqueueWork(() -> AwakeningSystemClient.handlePoolTableState(payload)));
+        registrar.playToClient(com.soybe.awakeningsystem.casino.darts.network.OpenDartboardPayload.TYPE, com.soybe.awakeningsystem.casino.darts.network.OpenDartboardPayload.STREAM_CODEC,
+                (payload, context) -> context.enqueueWork(() -> AwakeningSystemClient.openDartboardScreen(payload)));
+        registrar.playToServer(com.soybe.awakeningsystem.casino.darts.network.DartboardActionC2SPayload.TYPE, com.soybe.awakeningsystem.casino.darts.network.DartboardActionC2SPayload.STREAM_CODEC,
+                (payload, context) -> context.enqueueWork(() -> {
+                    if (context.player() instanceof net.minecraft.server.level.ServerPlayer player) {
+                        com.soybe.awakeningsystem.casino.darts.DartboardServerHandler.handleAction(player, payload);
+                    }
+                }));
+        registrar.playToClient(com.soybe.awakeningsystem.blackmarket.network.OpenBlackMarketPayload.TYPE, com.soybe.awakeningsystem.blackmarket.network.OpenBlackMarketPayload.STREAM_CODEC,
+                (payload, context) -> context.enqueueWork(() -> AwakeningSystemClient.openBlackMarketScreen(payload)));
+        registrar.playToClient(com.soybe.awakeningsystem.network.SystemAnnouncementPayload.TYPE, com.soybe.awakeningsystem.network.SystemAnnouncementPayload.STREAM_CODEC,
+                (payload, context) -> context.enqueueWork(() -> AwakeningSystemClient.showAnnouncement(payload)));
+        registrar.playToServer(com.soybe.awakeningsystem.blackmarket.network.BlackMarketActionC2SPayload.TYPE, com.soybe.awakeningsystem.blackmarket.network.BlackMarketActionC2SPayload.STREAM_CODEC,
+                (payload, context) -> context.enqueueWork(() -> {
+                    if (context.player() instanceof net.minecraft.server.level.ServerPlayer player) {
+                        com.soybe.awakeningsystem.blackmarket.BlackMarketServerHandler.handleAction(player, payload);
+                    }
+                }));
         registrar.playToServer(OpenSubspaceC2SPayload.TYPE, OpenSubspaceC2SPayload.STREAM_CODEC,
                 (payload, context) -> context.enqueueWork(() -> {
                     if (context.player() instanceof net.minecraft.server.level.ServerPlayer player) {
@@ -519,6 +794,10 @@ public final class AwakeningSystemMod {
                             com.soybe.awakeningsystem.subspace.SubspaceManager.upgradeSubspace(player);
                         } else if ("exit".equalsIgnoreCase(payload.action())) {
                             com.soybe.awakeningsystem.subspace.SubspaceManager.exitSubspace(player);
+                        } else if ("update_structure".equalsIgnoreCase(payload.action())) {
+                            com.soybe.awakeningsystem.subspace.SubspaceManager.requestUpdateStructure(player);
+                        } else if ("update_structure_confirm".equalsIgnoreCase(payload.action())) {
+                            com.soybe.awakeningsystem.subspace.SubspaceManager.regenerateSubspaceStructure(player);
                         } else if (payload.action().startsWith("page:")) {
                             try {
                                 int page = Integer.parseInt(payload.action().substring(5));
@@ -550,6 +829,303 @@ public final class AwakeningSystemMod {
                         com.soybe.awakeningsystem.util.TrackPlacementHelper.executeTrackPlacement(player, payload.startPos(), payload.endPos(), payload.isWideTrack());
                     }
                 }));
+        registrar.playToClient(com.soybe.awakeningsystem.uma.network.OpenUmaRacePayload.TYPE, com.soybe.awakeningsystem.uma.network.OpenUmaRacePayload.STREAM_CODEC,
+                (payload, context) -> context.enqueueWork(() -> AwakeningSystemClient.openUmaRaceScreen(payload)));
+        registrar.playToServer(com.soybe.awakeningsystem.uma.network.UmaRaceActionC2SPayload.TYPE, com.soybe.awakeningsystem.uma.network.UmaRaceActionC2SPayload.STREAM_CODEC,
+                (payload, context) -> context.enqueueWork(() -> {
+                    if (context.player() instanceof net.minecraft.server.level.ServerPlayer player) {
+                        handleUmaRaceAction(player, payload);
+                    }
+                }));
+        registrar.playToClient(com.soybe.awakeningsystem.uma.network.OpenUmaHubPayload.TYPE, com.soybe.awakeningsystem.uma.network.OpenUmaHubPayload.STREAM_CODEC,
+                (payload, context) -> context.enqueueWork(() -> AwakeningSystemClient.openUmaHubScreen(payload)));
+        registrar.playToServer(com.soybe.awakeningsystem.uma.network.UmaHubActionPayload.TYPE, com.soybe.awakeningsystem.uma.network.UmaHubActionPayload.STREAM_CODEC,
+                (payload, context) -> context.enqueueWork(() -> {
+                    if (context.player() instanceof net.minecraft.server.level.ServerPlayer player) {
+                        handleUmaHubAction(player, payload);
+                    }
+                }));
+        registrar.playToClient(com.soybe.awakeningsystem.uma.network.UmaGachaResultPayload.TYPE, com.soybe.awakeningsystem.uma.network.UmaGachaResultPayload.STREAM_CODEC,
+                (payload, context) -> context.enqueueWork(() -> AwakeningSystemClient.handleUmaGachaResult(payload)));
+    }
+
+    public static void handleUmaRaceAction(net.minecraft.server.level.ServerPlayer player, com.soybe.awakeningsystem.uma.network.UmaRaceActionC2SPayload payload) {
+        if (player == null) return;
+        com.soybe.awakeningsystem.uma.TeyvatRacetrackManager manager = com.soybe.awakeningsystem.uma.TeyvatRacetrackManager.get(player.level());
+        if (manager == null && player.getServer() != null) {
+            net.minecraft.server.level.ServerLevel teyvat = player.getServer().getLevel(TeyvatWorldManager.TEYVAT_WORLD);
+            if (teyvat != null) {
+                manager = com.soybe.awakeningsystem.uma.TeyvatRacetrackManager.get(teyvat);
+            }
+        }
+        if (manager == null) return;
+
+        if ("BET".equalsIgnoreCase(payload.action())) {
+            if (manager.getState() != com.soybe.awakeningsystem.uma.TeyvatRacetrackManager.RaceState.BETTING_OPEN) {
+                player.displayClientMessage(net.minecraft.network.chat.Component.translatable("awakening_system.uma.betting_closed"), true);
+                player.playNotifySound(net.minecraft.sounds.SoundEvents.VILLAGER_NO, net.minecraft.sounds.SoundSource.PLAYERS, 1.0F, 1.0F);
+                return;
+            }
+            if (manager.hasActiveBet(player.getUUID())) {
+                player.displayClientMessage(net.minecraft.network.chat.Component.translatable("awakening_system.uma.bet_already_placed"), true);
+                player.playNotifySound(net.minecraft.sounds.SoundEvents.VILLAGER_NO, net.minecraft.sounds.SoundSource.PLAYERS, 1.0F, 1.0F);
+                return;
+            }
+
+            com.soybe.awakeningsystem.uma.UmaProfile chosen = com.soybe.awakeningsystem.uma.UmaProfile.byId(payload.chosenUmaId());
+            if (chosen == null) return;
+
+            int slot = payload.inventorySlotIndex();
+            net.minecraft.world.item.ItemStack stack = net.minecraft.world.item.ItemStack.EMPTY;
+            if (slot >= 0 && slot < player.getInventory().getContainerSize()) {
+                stack = player.getInventory().getItem(slot);
+            }
+            if (stack.isEmpty()) {
+                stack = player.getMainHandItem();
+            }
+            if (!stack.isEmpty()) {
+                manager.placeBet(player, chosen, stack);
+            } else {
+                player.displayClientMessage(net.minecraft.network.chat.Component.translatable("awakening_system.uma.invalid_bet_item"), true);
+            }
+        } else if ("START".equalsIgnoreCase(payload.action())) {
+            if (manager.getState() != com.soybe.awakeningsystem.uma.TeyvatRacetrackManager.RaceState.BETTING_OPEN) {
+                player.displayClientMessage(net.minecraft.network.chat.Component.translatable("awakening_system.uma.race_already_started"), true);
+                return;
+            }
+            manager.startRaceNow();
+            player.displayClientMessage(net.minecraft.network.chat.Component.translatable("awakening_system.uma.start_signal_sent"), true);
+        }
+    }
+
+    private static net.minecraft.core.BlockPos resolveTrackPos(net.minecraft.server.level.ServerPlayer player, net.minecraft.core.BlockPos trackPos) {
+        if (trackPos != null && !trackPos.equals(net.minecraft.core.BlockPos.ZERO) && player.level().getBlockEntity(trackPos) instanceof com.soybe.awakeningsystem.block.entity.CustomRacetrackBlockEntity) {
+            return trackPos;
+        }
+        net.minecraft.core.BlockPos pPos = player.blockPosition();
+        for (net.minecraft.core.BlockPos check : net.minecraft.core.BlockPos.betweenClosed(pPos.offset(-24, -8, -24), pPos.offset(24, 8, 24))) {
+            if (player.level().getBlockEntity(check) instanceof com.soybe.awakeningsystem.block.entity.CustomRacetrackBlockEntity) {
+                return check.immutable();
+            }
+        }
+        return null;
+    }
+
+    public static void handleUmaHubAction(net.minecraft.server.level.ServerPlayer player, com.soybe.awakeningsystem.uma.network.UmaHubActionPayload payload) {
+        if (player == null) return;
+        SystemData data = SystemEvents.data(player);
+        String action = payload.action();
+
+        switch (action) {
+            case "PULL_SINGLE" -> {
+                List<com.soybe.awakeningsystem.uma.gacha.UmaGachaManager.PullResult> results =
+                        com.soybe.awakeningsystem.uma.gacha.UmaGachaManager.performSinglePull(player, data);
+                if (results.isEmpty()) {
+                    player.displayClientMessage(net.minecraft.network.chat.Component.translatable("awakening_system.uma.insufficient_carats_single"), true);
+                    player.playNotifySound(net.minecraft.sounds.SoundEvents.VILLAGER_NO, net.minecraft.sounds.SoundSource.PLAYERS, 1.0F, 1.0F);
+                    return;
+                }
+                AwakeningSystemMod.sync(player);
+                List<com.soybe.awakeningsystem.uma.network.UmaGachaResultPayload.GachaCardEntry> entries = new ArrayList<>();
+                for (var r : results) {
+                    entries.add(new com.soybe.awakeningsystem.uma.network.UmaGachaResultPayload.GachaCardEntry(r.umaId(), r.rarity(), r.isNew(), r.shardsGained()));
+                }
+                net.neoforged.neoforge.network.PacketDistributor.sendToPlayer(player,
+                        new com.soybe.awakeningsystem.uma.network.UmaGachaResultPayload(data.getCarats(), entries));
+                player.playNotifySound(net.minecraft.sounds.SoundEvents.PLAYER_LEVELUP, net.minecraft.sounds.SoundSource.PLAYERS, 1.0F, 1.3F);
+            }
+            case "PULL_MULTI" -> {
+                List<com.soybe.awakeningsystem.uma.gacha.UmaGachaManager.PullResult> results =
+                        com.soybe.awakeningsystem.uma.gacha.UmaGachaManager.performMultiPull(player, data);
+                if (results.isEmpty()) {
+                    player.displayClientMessage(net.minecraft.network.chat.Component.translatable("awakening_system.uma.insufficient_carats_multi"), true);
+                    player.playNotifySound(net.minecraft.sounds.SoundEvents.VILLAGER_NO, net.minecraft.sounds.SoundSource.PLAYERS, 1.0F, 1.0F);
+                    return;
+                }
+                AwakeningSystemMod.sync(player);
+                List<com.soybe.awakeningsystem.uma.network.UmaGachaResultPayload.GachaCardEntry> entries = new ArrayList<>();
+                for (var r : results) {
+                    entries.add(new com.soybe.awakeningsystem.uma.network.UmaGachaResultPayload.GachaCardEntry(r.umaId(), r.rarity(), r.isNew(), r.shardsGained()));
+                }
+                net.neoforged.neoforge.network.PacketDistributor.sendToPlayer(player,
+                        new com.soybe.awakeningsystem.uma.network.UmaGachaResultPayload(data.getCarats(), entries));
+                player.playNotifySound(net.minecraft.sounds.SoundEvents.UI_TOAST_CHALLENGE_COMPLETE, net.minecraft.sounds.SoundSource.PLAYERS, 1.0F, 1.0F);
+            }
+            case "REFRESH" -> {
+                net.neoforged.neoforge.network.PacketDistributor.sendToPlayer(player,
+                        com.soybe.awakeningsystem.uma.network.OpenUmaHubPayload.createForPlayer(player, payload.trackPos()));
+            }
+            case "TRAIN" -> {
+                String fullParam = payload.paramString();
+                String targetUma = data.getActiveUmaId();
+                String stat = fullParam;
+                if (fullParam.contains(":")) {
+                    String[] parts = fullParam.split(":", 2);
+                    targetUma = parts[0];
+                    stat = parts[1];
+                }
+                com.soybe.awakeningsystem.uma.model.OwnedUma uma = data.getOwnedUma(targetUma);
+                if (uma != null && uma.isStatMaxed(stat)) {
+                    player.displayClientMessage(net.minecraft.network.chat.Component.translatable("awakening_system.uma.stat_maxed"), true);
+                    player.playNotifySound(net.minecraft.sounds.SoundEvents.UI_TOAST_CHALLENGE_COMPLETE, net.minecraft.sounds.SoundSource.PLAYERS, 1.0F, 1.5F);
+                    return;
+                }
+                if (data.trainUmaStat(targetUma, stat, 50, 200)) {
+                    AwakeningSystemMod.sync(player);
+                    net.neoforged.neoforge.network.PacketDistributor.sendToPlayer(player,
+                            com.soybe.awakeningsystem.uma.network.OpenUmaHubPayload.createForPlayer(player, payload.trackPos()));
+                    player.playNotifySound(net.minecraft.sounds.SoundEvents.PLAYER_LEVELUP, net.minecraft.sounds.SoundSource.PLAYERS, 1.0F, 1.25F);
+                    player.playNotifySound(net.minecraft.sounds.SoundEvents.EXPERIENCE_ORB_PICKUP, net.minecraft.sounds.SoundSource.PLAYERS, 0.8F, 1.4F);
+                    player.displayClientMessage(net.minecraft.network.chat.Component.translatable("awakening_system.uma.train_success", stat.toUpperCase()), true);
+                } else {
+                    player.displayClientMessage(net.minecraft.network.chat.Component.translatable("awakening_system.uma.insufficient_resources"), true);
+                    player.playNotifySound(net.minecraft.sounds.SoundEvents.VILLAGER_NO, net.minecraft.sounds.SoundSource.PLAYERS, 1.0F, 1.0F);
+                }
+            }
+            case "BLOOM" -> {
+                String umaId = payload.paramString();
+                if (data.bloomUma(umaId)) {
+                    AwakeningSystemMod.sync(player);
+                    net.neoforged.neoforge.network.PacketDistributor.sendToPlayer(player,
+                            com.soybe.awakeningsystem.uma.network.OpenUmaHubPayload.createForPlayer(player, payload.trackPos()));
+                    player.playNotifySound(net.minecraft.sounds.SoundEvents.UI_TOAST_CHALLENGE_COMPLETE, net.minecraft.sounds.SoundSource.PLAYERS, 1.0F, 1.2F);
+                    player.displayClientMessage(net.minecraft.network.chat.Component.translatable("awakening_system.uma.talent_bloom"), true);
+                } else {
+                    player.displayClientMessage(net.minecraft.network.chat.Component.translatable("awakening_system.uma.insufficient_shards"), true);
+                    player.playNotifySound(net.minecraft.sounds.SoundEvents.VILLAGER_NO, net.minecraft.sounds.SoundSource.PLAYERS, 1.0F, 1.0F);
+                }
+            }
+            case "EXCHANGE_STATUES" -> {
+                String umaId = payload.paramString();
+                com.soybe.awakeningsystem.uma.model.OwnedUma uma = data.getOwnedUma(umaId);
+                if (uma == null) return;
+
+                int statuesNeeded = 5;
+                int found = 0;
+                for (int i = 0; i < player.getInventory().getContainerSize(); i++) {
+                    net.minecraft.world.item.ItemStack st = player.getInventory().getItem(i);
+                    if (!st.isEmpty() && st.is(SystemItems.CLOVER_SPARK.get())) {
+                        found += st.getCount();
+                    }
+                }
+                if (found >= statuesNeeded) {
+                    int toConsume = statuesNeeded;
+                    for (int i = 0; i < player.getInventory().getContainerSize() && toConsume > 0; i++) {
+                        net.minecraft.world.item.ItemStack st = player.getInventory().getItem(i);
+                        if (!st.isEmpty() && st.is(SystemItems.CLOVER_SPARK.get())) {
+                            int take = Math.min(toConsume, st.getCount());
+                            st.shrink(take);
+                            toConsume -= take;
+                        }
+                    }
+                    uma.addShards(5);
+                    AwakeningSystemMod.sync(player);
+                    net.neoforged.neoforge.network.PacketDistributor.sendToPlayer(player,
+                            com.soybe.awakeningsystem.uma.network.OpenUmaHubPayload.createForPlayer(player, payload.trackPos()));
+                    player.playNotifySound(net.minecraft.sounds.SoundEvents.PLAYER_LEVELUP, net.minecraft.sounds.SoundSource.PLAYERS, 1.0F, 1.4F);
+                    player.displayClientMessage(net.minecraft.network.chat.Component.translatable("awakening_system.uma.exchange_statues_success", uma.getProfile().getDisplayName()), true);
+                } else {
+                    player.displayClientMessage(net.minecraft.network.chat.Component.translatable("awakening_system.uma.requires_goddess_statues"), true);
+                    player.playNotifySound(net.minecraft.sounds.SoundEvents.VILLAGER_NO, net.minecraft.sounds.SoundSource.PLAYERS, 1.0F, 1.0F);
+                }
+            }
+            case "SELECT_ACE" -> {
+                String umaId = payload.paramString();
+                data.setActiveUmaId(umaId);
+                AwakeningSystemMod.sync(player);
+                net.neoforged.neoforge.network.PacketDistributor.sendToPlayer(player,
+                        com.soybe.awakeningsystem.uma.network.OpenUmaHubPayload.createForPlayer(player, payload.trackPos()));
+                player.playNotifySound(net.minecraft.sounds.SoundEvents.NOTE_BLOCK_CHIME.value(), net.minecraft.sounds.SoundSource.PLAYERS, 1.0F, 1.2F);
+                player.displayClientMessage(net.minecraft.network.chat.Component.translatable("awakening_system.uma.ace_selected"), true);
+            }
+            case "JOIN_CUSTOM_RACE" -> {
+                net.minecraft.core.BlockPos tPos = resolveTrackPos(player, payload.trackPos());
+                if (tPos != null && player.level().getBlockEntity(tPos) instanceof com.soybe.awakeningsystem.block.entity.CustomRacetrackBlockEntity be) {
+                    if (be.joinRace(player)) {
+                        net.neoforged.neoforge.network.PacketDistributor.sendToPlayer(player,
+                                com.soybe.awakeningsystem.uma.network.OpenUmaHubPayload.createForPlayer(player, tPos));
+                        player.playNotifySound(net.minecraft.sounds.SoundEvents.NOTE_BLOCK_CHIME.value(), net.minecraft.sounds.SoundSource.PLAYERS, 1.0F, 1.2F);
+                        player.displayClientMessage(net.minecraft.network.chat.Component.translatable("awakening_system.uma.race_joined"), true);
+                    } else {
+                        player.displayClientMessage(net.minecraft.network.chat.Component.translatable("awakening_system.uma.race_join_failed"), true);
+                    }
+                } else {
+                    player.displayClientMessage(net.minecraft.network.chat.Component.translatable("awakening_system.uma.no_track_nearby"), true);
+                }
+            }
+            case "FILL_NPCS" -> {
+                net.minecraft.core.BlockPos tPos = resolveTrackPos(player, payload.trackPos());
+                if (tPos != null && player.level().getBlockEntity(tPos) instanceof com.soybe.awakeningsystem.block.entity.CustomRacetrackBlockEntity be) {
+                    be.fillWithNpcs();
+                    net.neoforged.neoforge.network.PacketDistributor.sendToPlayer(player,
+                            com.soybe.awakeningsystem.uma.network.OpenUmaHubPayload.createForPlayer(player, tPos));
+                    player.playNotifySound(net.minecraft.sounds.SoundEvents.NOTE_BLOCK_BELL.value(), net.minecraft.sounds.SoundSource.PLAYERS, 1.0F, 1.0F);
+                } else {
+                    player.displayClientMessage(net.minecraft.network.chat.Component.translatable("awakening_system.uma.no_track_nearby"), true);
+                }
+            }
+            case "CLEAR_LOBBY", "CLEAR_PARTICIPANTS" -> {
+                net.minecraft.core.BlockPos tPos = resolveTrackPos(player, payload.trackPos());
+                if (tPos != null && player.level().getBlockEntity(tPos) instanceof com.soybe.awakeningsystem.block.entity.CustomRacetrackBlockEntity be) {
+                    be.clearParticipants();
+                    net.neoforged.neoforge.network.PacketDistributor.sendToPlayer(player,
+                            com.soybe.awakeningsystem.uma.network.OpenUmaHubPayload.createForPlayer(player, tPos));
+                } else {
+                    player.displayClientMessage(net.minecraft.network.chat.Component.translatable("awakening_system.uma.no_track_nearby"), true);
+                }
+            }
+            case "START_CUSTOM_RACE" -> {
+                net.minecraft.core.BlockPos tPos = resolveTrackPos(player, payload.trackPos());
+                if (tPos != null && player.level().getBlockEntity(tPos) instanceof com.soybe.awakeningsystem.block.entity.CustomRacetrackBlockEntity be) {
+                    if (be.startRace()) {
+                        player.displayClientMessage(net.minecraft.network.chat.Component.translatable("awakening_system.uma.countdown_started"), true);
+                    } else {
+                        player.displayClientMessage(net.minecraft.network.chat.Component.translatable("awakening_system.uma.cannot_start_requirements"), true);
+                    }
+                } else {
+                    player.displayClientMessage(net.minecraft.network.chat.Component.translatable("awakening_system.uma.no_track_nearby"), true);
+                }
+            }
+            case "EXPORT_TRACK_JSON" -> {
+                net.minecraft.core.BlockPos tPos = resolveTrackPos(player, payload.trackPos());
+                if (tPos != null && player.level().getBlockEntity(tPos) instanceof com.soybe.awakeningsystem.block.entity.CustomRacetrackBlockEntity be) {
+                    java.io.File file = com.soybe.awakeningsystem.uma.RacetrackJsonHelper.exportTrack(be, (net.minecraft.server.level.ServerLevel) player.level());
+                    if (file != null) {
+                        player.displayClientMessage(net.minecraft.network.chat.Component.translatable("awakening_system.uma.track_exported", file.getName()), false);
+                    }
+                }
+            }
+            case "RELOAD_TRACK_JSON" -> {
+                net.minecraft.core.BlockPos tPos = resolveTrackPos(player, payload.trackPos());
+                if (tPos != null && player.level().getBlockEntity(tPos) instanceof com.soybe.awakeningsystem.block.entity.CustomRacetrackBlockEntity be) {
+                    String fname = payload.paramString().isBlank() ? "custom_racetrack.json" : payload.paramString();
+                    boolean ok = com.soybe.awakeningsystem.uma.RacetrackJsonHelper.importTrack(be, fname);
+                    if (ok) {
+                        player.displayClientMessage(net.minecraft.network.chat.Component.translatable("awakening_system.uma.track_reloaded", fname, be.getWaypoints().size()), false);
+                        net.neoforged.neoforge.network.PacketDistributor.sendToPlayer(player,
+                                com.soybe.awakeningsystem.uma.network.OpenUmaHubPayload.createForPlayer(player, tPos));
+                    } else {
+                        player.displayClientMessage(net.minecraft.network.chat.Component.translatable("awakening_system.uma.track_reload_failed", fname), false);
+                    }
+                }
+            }
+            case "EXCHANGE_COINS" -> {
+                int coins = payload.paramInt();
+                if (coins >= 10 && data.coins() >= coins) {
+                    int caratsGain = coins / 10;
+                    data.spendCoins(caratsGain * 10);
+                    data.addCarats(caratsGain);
+                    AwakeningSystemMod.sync(player);
+                    net.neoforged.neoforge.network.PacketDistributor.sendToPlayer(player,
+                            com.soybe.awakeningsystem.uma.network.OpenUmaHubPayload.createForPlayer(player, payload.trackPos()));
+                    player.playNotifySound(net.minecraft.sounds.SoundEvents.PLAYER_LEVELUP, net.minecraft.sounds.SoundSource.PLAYERS, 1.0F, 1.4F);
+                    player.displayClientMessage(net.minecraft.network.chat.Component.translatable("awakening_system.uma.exchange_coins_success", caratsGain), true);
+                } else {
+                    player.displayClientMessage(net.minecraft.network.chat.Component.translatable("awakening_system.uma.exchange_coins_insufficient"), true);
+                    player.playNotifySound(net.minecraft.sounds.SoundEvents.VILLAGER_NO, net.minecraft.sounds.SoundSource.PLAYERS, 1.0F, 1.0F);
+                }
+            }
+        }
     }
 
     public static void syncPlayerBadge(net.minecraft.server.level.ServerPlayer player) {
@@ -565,9 +1141,30 @@ public final class AwakeningSystemMod {
                 hunterRank,
                 guildRank,
                 data.constellationModifier(),
-                data.isConstellation()
+                data.isConstellation(),
+                data.equippedTitle()
         );
         PacketDistributor.sendToAllPlayers(payload);
+    }
+
+    public static void syncAllBadgesToPlayer(net.minecraft.server.level.ServerPlayer receiver) {
+        if (receiver == null || receiver.getServer() == null) return;
+        for (net.minecraft.server.level.ServerPlayer other : receiver.getServer().getPlayerList().getPlayers()) {
+            SystemData data = other.getData(PLAYER_SYSTEM);
+            int completedBounties = other.getPersistentData().getInt("bounties_total_completed");
+            String guildRank = GuildRankManager.getGuildRank(completedBounties);
+            SyncPlayerBadgePayload payload = new SyncPlayerBadgePayload(
+                    other.getUUID(),
+                    data.hunterClass(),
+                    data.level(),
+                    data.rank(),
+                    guildRank,
+                    data.constellationModifier(),
+                    data.isConstellation(),
+                    data.equippedTitle()
+            );
+            PacketDistributor.sendToPlayer(receiver, payload);
+        }
     }
 
     public static void sync(net.minecraft.server.level.ServerPlayer player) {
@@ -594,7 +1191,6 @@ public final class AwakeningSystemMod {
             ));
         }
 
-        // Benchmark Hunter rankings: recalculate every day as if hunters are actively clearing dungeons
         long inGameDay = Math.max(0, player.serverLevel().getDayTime() / 24000L);
         long realDay = java.time.LocalDate.now().toEpochDay() % 365;
         long day = inGameDay + realDay;
@@ -602,7 +1198,6 @@ public final class AwakeningSystemMod {
         record HunterProfile(String name, int baseLvl, int basePres, int baseKills, int baseCoins, int killsPerDay, int coinsPerDay, int daysPerLvl) {}
 
         HunterProfile[] benchmarks = new HunterProfile[]{
-                // Solo Leveling
                 new HunterProfile("Sung Jin-Woo", 120, 5, 12500, 65000, 150, 800, 2),
                 new HunterProfile("Thomas Andre", 105, 4, 8900, 32000, 110, 550, 3),
                 new HunterProfile("Liu Zhigang", 102, 4, 8400, 28000, 100, 500, 3),
@@ -615,7 +1210,6 @@ public final class AwakeningSystemMod {
                 new HunterProfile("Min Byung-Gyu", 74, 1, 1900, 9500, 25, 260, 8),
                 new HunterProfile("Woo Jin-Chul", 72, 1, 2400, 7200, 42, 210, 8),
 
-                // Omniscient Reader's Viewpoint (ORV)
                 new HunterProfile("Yoo Joonghyuk", 118, 5, 11900, 60000, 145, 770, 2),
                 new HunterProfile("Kim Dokja", 110, 4, 9500, 99999, 120, 999, 3),
                 new HunterProfile("Han Sooyoung", 96, 3, 6500, 24000, 85, 400, 4),
@@ -625,31 +1219,23 @@ public final class AwakeningSystemMod {
                 new HunterProfile("Shin Yoosung", 75, 1, 3100, 8800, 52, 230, 7),
                 new HunterProfile("Lee Gilyoung", 73, 1, 2800, 7900, 48, 220, 7),
 
-                // The Greatest Estate Developer
                 new HunterProfile("Javier Asrahan", 108, 4, 9800, 35000, 130, 600, 3),
                 new HunterProfile("Lloyd Frontera", 88, 3, 3200, 88888, 35, 950, 5),
 
-                // The Beginning After The End (TBATE)
                 new HunterProfile("Arthur Leywin", 115, 5, 11200, 54000, 135, 700, 2),
 
-                // Second Life Ranker
                 new HunterProfile("Cha Yeon-woo", 112, 4, 10400, 48000, 125, 660, 3),
 
-                // Solo Max-Level Newbie
                 new HunterProfile("Kang Jinhyuk", 106, 4, 9200, 42000, 115, 580, 3),
 
-                // The S-Classes That I Raised
                 new HunterProfile("Han Yoohyun", 94, 3, 6200, 18000, 82, 370, 4),
                 new HunterProfile("Bak Yerim", 86, 2, 4600, 13500, 70, 330, 5),
                 new HunterProfile("Han Yoojin", 68, 1, 1200, 15000, 20, 350, 9),
 
-                // Doom Breaker
                 new HunterProfile("Zephyr", 104, 4, 8700, 38000, 112, 540, 3),
 
-                // Nano Machine
                 new HunterProfile("Cheon Yeo-woon", 109, 4, 9900, 45000, 128, 640, 3),
 
-                // Solo Leveling Ragnarok & Additional Hunters
                 new HunterProfile("Sung Suho", 116, 5, 11400, 58000, 140, 750, 2),
                 new HunterProfile("Siddharth Bachchan", 104, 4, 8600, 31000, 105, 520, 3),
                 new HunterProfile("Goto Ryuji", 99, 3, 7500, 23000, 92, 460, 4),
@@ -660,7 +1246,6 @@ public final class AwakeningSystemMod {
                 new HunterProfile("Lee Joohee", 65, 1, 1500, 6200, 22, 210, 9),
                 new HunterProfile("Song Chi-Yul", 62, 1, 1400, 5900, 25, 180, 9),
 
-                // Omniscient Reader Constellations & Mythological
                 new HunterProfile("Sun Wukong", 138, 7, 18500, 88000, 180, 1200, 1),
                 new HunterProfile("Secretive Plotter", 140, 7, 19200, 95000, 190, 1300, 1),
                 new HunterProfile("Uriel", 135, 6, 17000, 82000, 175, 1100, 2),
@@ -669,19 +1254,16 @@ public final class AwakeningSystemMod {
                 new HunterProfile("Persephone", 136, 6, 17500, 84000, 172, 1120, 2),
                 new HunterProfile("Dionysus", 130, 6, 16000, 76000, 165, 1020, 2),
 
-                // Return of the Mount Hua Sect
                 new HunterProfile("Chung Myung", 125, 6, 13200, 72000, 155, 820, 2),
                 new HunterProfile("Baek Cheon", 95, 3, 6100, 17500, 84, 380, 4),
                 new HunterProfile("Yu Yiseol", 93, 3, 5900, 16800, 81, 370, 4),
                 new HunterProfile("Jo Gul", 87, 2, 4800, 13200, 72, 320, 5),
                 new HunterProfile("Yoon Jong", 85, 2, 4500, 12800, 68, 310, 5),
 
-                // Survival Story of a Sword King
                 new HunterProfile("Ryu Hanbin", 122, 5, 12800, 68000, 150, 790, 2),
                 new HunterProfile("Kivier", 114, 4, 9600, 41000, 120, 620, 3),
                 new HunterProfile("Atisse", 92, 3, 5600, 17000, 78, 360, 4),
 
-                // Tower of God
                 new HunterProfile("Twenty-Fifth Baam", 128, 6, 14500, 85000, 160, 900, 2),
                 new HunterProfile("Urek Mazino", 142, 8, 21000, 110000, 200, 1400, 1),
                 new HunterProfile("Zahard", 145, 8, 22500, 120000, 210, 1500, 1),
@@ -690,24 +1272,19 @@ public final class AwakeningSystemMod {
                 new HunterProfile("Ha Jinsung", 118, 5, 11500, 56000, 138, 710, 2),
                 new HunterProfile("Yuri Zahard", 107, 4, 9100, 34000, 114, 560, 3),
 
-                // Solo Leveling Monarchs & Shadow Army
                 new HunterProfile("Ashborn", 146, 8, 23000, 125000, 220, 1600, 1),
                 new HunterProfile("Antares", 144, 8, 22000, 118000, 215, 1550, 1),
                 new HunterProfile("Bellion", 119, 5, 12100, 62000, 142, 760, 2),
                 new HunterProfile("Beru", 112, 4, 10800, 49000, 130, 670, 3),
                 new HunterProfile("Igris", 110, 4, 10200, 46000, 126, 650, 3),
 
-                // Reaper of the Drifting Moon
                 new HunterProfile("Pyo Wol", 115, 5, 11800, 52000, 135, 690, 2),
 
-                // SSS-Class Suicide Hunter
                 new HunterProfile("Kim Gong-ja", 117, 5, 11900, 63000, 140, 740, 2),
                 new HunterProfile("Raviel Iv-Consience", 105, 4, 8800, 33000, 112, 530, 3),
 
-                // Pick Me Up, Infinite Gacha
                 new HunterProfile("Han Yslat", 91, 3, 5700, 21000, 76, 390, 5),
 
-                // Genshin Impact (Arcontes y Leyendas de Teyvat)
                 new HunterProfile("Raiden Shogun", 136, 6, 17200, 85000, 170, 1100, 2),
                 new HunterProfile("Zhongli", 138, 7, 18400, 92000, 178, 1180, 1),
                 new HunterProfile("Neuvillette", 134, 6, 16800, 81000, 165, 1050, 2),
@@ -719,7 +1296,6 @@ public final class AwakeningSystemMod {
                 new HunterProfile("Furina", 92, 3, 5800, 22000, 75, 420, 4),
                 new HunterProfile("Diluc", 102, 4, 8800, 34000, 110, 530, 3),
 
-                // Honkai: Star Rail (Emanadores y Cazadores Estelares)
                 new HunterProfile("Acheron", 137, 6, 17900, 89000, 175, 1150, 2),
                 new HunterProfile("Feixiao", 130, 6, 15900, 78000, 160, 980, 2),
                 new HunterProfile("Dan Heng • IL", 125, 5, 14000, 69000, 150, 830, 2),
@@ -728,7 +1304,6 @@ public final class AwakeningSystemMod {
                 new HunterProfile("Aventurine", 105, 4, 8900, 48000, 110, 640, 3),
                 new HunterProfile("March 7th", 88, 2, 5100, 18000, 74, 340, 5),
 
-                // Zenless Zone Zero (Agentes de Élite de Nueva Eridu)
                 new HunterProfile("Hoshimi Miyabi", 120, 5, 12600, 62000, 144, 760, 2),
                 new HunterProfile("Ellen Joe", 107, 4, 9500, 38000, 116, 580, 3),
                 new HunterProfile("Zhu Yuan", 101, 4, 8600, 32000, 108, 510, 3),
@@ -811,7 +1386,7 @@ public final class AwakeningSystemMod {
                 if (target != null) {
                     data.invitePlayer(player, target);
                 } else {
-                    player.sendSystemMessage(net.minecraft.network.chat.Component.literal("§cEl jugador no está en línea."));
+                    player.sendSystemMessage(net.minecraft.network.chat.Component.translatable("gui.awakening_system.guild.player_offline"));
                 }
             }
             case "ACCEPT" -> data.acceptInvite(player);
@@ -838,6 +1413,8 @@ public final class AwakeningSystemMod {
             case "DEPOSIT_COINS" -> data.depositCoins(player, payload.amount());
             case "WITHDRAW_MORA" -> data.withdrawMora(player, payload.amount());
             case "WITHDRAW_COINS" -> data.withdrawCoins(player, payload.amount());
+            case "WITHDRAW_ALL_MORA" -> data.withdrawAllMora(player);
+            case "WITHDRAW_ALL_COINS" -> data.withdrawAllCoins(player);
             case "REQUEST_WITHDRAW" -> data.requestWithdrawal(player, payload.target(), payload.amount());
             case "BUY_HUNTING_BOARD" -> data.buyHuntingBoard(player);
             case "CLAIM_CHUNK" -> {
@@ -871,7 +1448,25 @@ public final class AwakeningSystemMod {
             case "PERK" -> data.unlockPerk(player, payload.target());
             case "SET_HOME" -> data.setGuildHq(player);
             case "HOME" -> data.teleportToHq(player);
-            case "OPEN", "SYNC" -> data.syncToPlayer(player);
+            case "ALLY" -> data.toggleAlliance(player, payload.target());
+            case "CLAIM_PORTAL" -> {
+                data.claimPortalAt(player, payload.target());
+                data.syncToPlayerWithTab(player, 4);
+            }
+            case "UNCLAIM_PORTAL" -> {
+                data.unclaimPortalAt(player, payload.target());
+                data.syncToPlayerWithTab(player, 4);
+            }
+            case "SET_PORTAL_FEE" -> {
+                data.setPortalRentalFeeAt(player, payload.target(), (int) payload.amount());
+                data.syncToPlayerWithTab(player, 4);
+            }
+            case "TOGGLE_PORTAL_CURRENCY" -> {
+                data.togglePortalCurrencyAt(player, payload.target());
+                data.syncToPlayerWithTab(player, 4);
+            }
+            case "OPEN" -> data.openGuildScreenForPlayer(player);
+            case "SYNC" -> data.syncToPlayer(player);
         }
     }
 }

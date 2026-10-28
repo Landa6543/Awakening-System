@@ -21,6 +21,9 @@ import net.minecraft.nbt.CompoundTag;
 import net.minecraft.nbt.ListTag;
 import net.minecraft.nbt.Tag;
 import net.minecraft.network.chat.Component;
+import net.minecraft.network.chat.ClickEvent;
+import net.minecraft.network.chat.HoverEvent;
+import net.minecraft.network.chat.MutableComponent;
 import net.minecraft.resources.ResourceKey;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.server.MinecraftServer;
@@ -83,7 +86,6 @@ public final class SpiralAbyssManager {
             ResourceLocation.fromNamespaceAndPath(AwakeningSystemMod.MOD_ID, "spiral_abyss")
     );
 
-    // --- DATOS PERSISTENTES POR JUGADOR ---
     public static class PlayerAbyssData {
         public int unlockedFloor = 1;
         public final int[] starsPerFloor = new int[TOTAL_FLOORS];
@@ -155,11 +157,10 @@ public final class SpiralAbyssManager {
         }
     }
 
-    // --- SESIONES DE COMBATE EN LA ARENA ---
     public enum SessionState {
-        WAITING_FOR_TRIGGER, // Esperando que el jugador active la Espada/Llave del Dominio
-        COMBAT,               // Oleada activa combatiendo contrarreloj
-        CHAMBER_CLEARED       // Sala superada
+        WAITING_FOR_TRIGGER,
+        COMBAT,
+        CHAMBER_CLEARED
     }
 
     public static class PendingAbyssSpawn {
@@ -197,21 +198,17 @@ public final class SpiralAbyssManager {
         public ServerBossEvent bossEvent;
         public int ticksInChamber = 0;
 
-        // Monolito de las Líneas Ley (Defensa en Sala 1)
         public boolean isMonolithChamber = false;
         public UUID monolithEntityId = null;
         public float monolithMaxHp = 3000.0F;
         public boolean monolithSpawned = false;
 
-        // Sistema de 2 Etapas / Mitades (Pisos 5+)
-        public int currentHalf = 1; // 1 = Primera Mitad, 2 = Segunda Mitad
+        public int currentHalf = 1;
 
-        // Cofre del Dominio de Recompensa
         public BlockPos rewardChestPos = null;
         public UUID rewardChestMarkerId = null;
         public boolean rewardChestClaimed = false;
 
-        // Portal de Descenso Astral
         public BlockPos descentPortalPos = null;
         public UUID descentPortalMarkerId = null;
         public final Set<BlockPos> descentPortalBlocks = new HashSet<>();
@@ -232,6 +229,7 @@ public final class SpiralAbyssManager {
     }
 
     private static final Map<UUID, AbyssSession> ACTIVE_SESSIONS = new ConcurrentHashMap<>();
+    private static final Map<UUID, Integer> PENDING_MENU_OPENS = new ConcurrentHashMap<>();
     private static final AtomicInteger ARENA_COUNTER = new AtomicInteger(1);
 
     public static boolean isInAbyss(UUID playerId) {
@@ -252,7 +250,6 @@ public final class SpiralAbyssManager {
         return server.overworld();
     }
 
-    // --- APERTURA DE INTERFAZ CANÓNICA ---
     public static void openAbyssScreen(ServerPlayer player) {
         MinecraftServer server = player.getServer();
         if (server == null) return;
@@ -273,7 +270,6 @@ public final class SpiralAbyssManager {
         ));
     }
 
-    // --- RECLAMO DE RECOMPENSAS ---
     public static void handleClaimReward(ServerPlayer player, int floorNumber) {
         if (floorNumber < 1 || floorNumber > TOTAL_FLOORS) return;
         MinecraftServer server = player.getServer();
@@ -285,14 +281,14 @@ public final class SpiralAbyssManager {
 
         int floorIdx = floorNumber - 1;
         if (pData.claimedRewards[floorIdx]) {
-            player.displayClientMessage(Component.literal("§c✦ Ya has reclamado las recompensas del Piso " + floorNumber + "."), true);
+            player.displayClientMessage(Component.translatable("abyss.awakening_system.floor_already_claimed", floorNumber), true);
             player.playNotifySound(SoundEvents.VILLAGER_NO, SoundSource.PLAYERS, 0.8F, 1.0F);
             return;
         }
 
         int stars = pData.starsPerFloor[floorIdx];
         if (stars < 3) {
-            player.displayClientMessage(Component.literal("§c✦ Necesitas al menos 3 estrellas en el Piso " + floorNumber + " para reclamar recompensas."), true);
+            player.displayClientMessage(Component.translatable("abyss.awakening_system.floor_stars_needed", floorNumber), true);
             player.playNotifySound(SoundEvents.VILLAGER_NO, SoundSource.PLAYERS, 0.8F, 1.0F);
             return;
         }
@@ -324,13 +320,12 @@ public final class SpiralAbyssManager {
 
         player.playNotifySound(SoundEvents.UI_TOAST_CHALLENGE_COMPLETE, SoundSource.PLAYERS, 1.0F, 1.2F);
         player.playNotifySound(SoundEvents.PLAYER_LEVELUP, SoundSource.PLAYERS, 0.8F, 1.4F);
-        player.displayClientMessage(Component.literal("§6§l✦ [ESPIRAL DEL ABISMO] §a¡Recompensas reclamadas del Piso " + floorNumber + "!\n" +
-                "§d+" + rewardedPrimos + " Protogemas  §6+" + rewardedCoins + " Monedas  §b+" + rewardedFates + " Destinos Entrelazados"), false);
+        player.displayClientMessage(Component.translatable("abyss.awakening_system.floor_reward_claimed",
+                floorNumber, rewardedPrimos, rewardedCoins, rewardedFates), false);
 
         openAbyssScreen(player);
     }
 
-    // --- INICIO DE EXPEDICIÓN EN UN PISO ---
     public static void handleStartFloor(ServerPlayer player, int floorNumber) {
         if (floorNumber < 1 || floorNumber > TOTAL_FLOORS) return;
         MinecraftServer server = player.getServer();
@@ -340,21 +335,18 @@ public final class SpiralAbyssManager {
         PlayerAbyssData pData = savedData.getOrCreate(player.getUUID());
 
         if (floorNumber > pData.unlockedFloor) {
-            player.displayClientMessage(Component.literal("§c✦ El Piso " + floorNumber + " está bloqueado. Completa el piso anterior con al menos 6 estrellas."), true);
+            player.displayClientMessage(Component.translatable("abyss.awakening_system.floor_locked", floorNumber), true);
             player.playNotifySound(SoundEvents.CHEST_LOCKED, SoundSource.BLOCKS, 1.0F, 0.8F);
             return;
         }
 
         ServerLevel abyssLevel = getAbyssLevel(server);
 
-        // Posición de la arena aislada en la dimensión del abismo
         int arenaIdx = ARENA_COUNTER.getAndIncrement();
         BlockPos arenaCenter = new BlockPos(10000 + (arenaIdx % 40) * 180, 80, 10000 + (arenaIdx / 40) * 180);
 
-        // Construir el auténtico Santuario del Dominio de Genshin Impact
         buildAbyssArena(abyssLevel, arenaCenter);
 
-        // Crear la sesión
         AbyssSession session = new AbyssSession(
                 player.getUUID(),
                 floorNumber,
@@ -367,30 +359,25 @@ public final class SpiralAbyssManager {
 
         ACTIVE_SESSIONS.put(player.getUUID(), session);
 
-        // Generar la espada/llave flotante del desafío en el centro
         spawnChallengeSword(abyssLevel, session);
 
-        // Teletransportar al jugador al borde norte de la plataforma circular mirando al centro (Yaw 0: hacia el Sur)
         BlockPos spawnPos = arenaCenter.offset(0, 1, -14);
         player.teleportTo(abyssLevel, spawnPos.getX() + 0.5, spawnPos.getY(), spawnPos.getZ() + 0.5, 0.0F, 0.0F);
 
-        // Efectos místicos
         player.playNotifySound(SoundEvents.END_PORTAL_SPAWN, SoundSource.PLAYERS, 0.9F, 1.0F);
         player.playNotifySound(SoundEvents.BEACON_ACTIVATE, SoundSource.PLAYERS, 1.0F, 0.8F);
 
         abyssLevel.sendParticles(ParticleTypes.PORTAL, spawnPos.getX() + 0.5, spawnPos.getY() + 1.0, spawnPos.getZ() + 0.5, 50, 1.0, 1.5, 1.0, 0.1);
 
-        player.displayClientMessage(Component.literal("§5§l✦ [ESPIRAL DEL ABISMO: PISO " + floorNumber + "] §fHas descendido a la Cámara Abisal."), false);
-        player.displayClientMessage(Component.literal("§e✦ Acércate al centro e interactúa con la §c§lLlave del Desafío§e para comenzar el combate."), false);
+        player.displayClientMessage(Component.translatable("abyss.awakening_system.descended_chamber", floorNumber), false);
+        player.displayClientMessage(Component.translatable("abyss.awakening_system.interact_key_prompt"), false);
     }
 
-    // --- CONSTRUCCIÓN DE LA ARENA CANÓNICA DE GENSHIN IMPACT ---
     private static void buildAbyssArena(ServerLevel level, BlockPos center) {
         int r = 18;
-        int centerY = center.getY(); // Y = 80
-        int chasmY = centerY - 38;  // Y = 42
+        int centerY = center.getY();
+        int chasmY = centerY - 38;
 
-        // 1. Despejar un amplio volumen en el vacío cósmico (X/Z +/-55, Y de 35 a 130)
         for (int dx = -55; dx <= 55; dx++) {
             for (int dz = -55; dz <= 55; dz++) {
                 int wx = center.getX() + dx;
@@ -404,8 +391,6 @@ public final class SpiralAbyssManager {
             }
         }
 
-        // 2. SUELO DEL ABISMO PROFUNDO (Y = 42)
-        // Paisaje subterráneo oscuro y aterrador con rifts de obsidiana llorosa, linternas de mar y fuego azul
         for (int dx = -52; dx <= 52; dx++) {
             for (int dz = -52; dz <= 52; dz++) {
                 double dist = Math.sqrt(dx * dx + dz * dz);
@@ -431,14 +416,12 @@ public final class SpiralAbyssManager {
             }
         }
 
-        // 3. OCHO COLUMNAS COLOSALES DE KHAENRI'AH (4x4, de Y=42 a Y=122) CON ARBOTANTES SUPERIORES
         int pillarRadius = 36;
         for (int pIdx = 0; pIdx < 8; pIdx++) {
             double angle = (2.0 * Math.PI / 8.0) * pIdx;
             int px = center.getX() + (int) Math.round(Math.cos(angle) * pillarRadius);
             int pz = center.getZ() + (int) Math.round(Math.sin(angle) * pillarRadius);
 
-            // Pilar 4x4
             for (int colY = chasmY; colY <= centerY + 42; colY++) {
                 for (int ox = -1; ox <= 2; ox++) {
                     for (int oz = -1; oz <= 2; oz++) {
@@ -457,7 +440,6 @@ public final class SpiralAbyssManager {
                 }
             }
 
-            // Capitel ensanchado en la cima
             for (int ox = -2; ox <= 3; ox++) {
                 for (int oz = -2; oz <= 3; oz++) {
                     BlockPos capPos = new BlockPos(px + ox, centerY + 42, pz + oz);
@@ -466,7 +448,6 @@ public final class SpiralAbyssManager {
             }
             level.setBlock(new BlockPos(px, centerY + 43, pz), Blocks.SOUL_CAMPFIRE.defaultBlockState(), 2);
 
-            // Arbotantes / arcos abovedados superiores hacia el centro
             for (int step = 1; step <= 14; step++) {
                 double archFraction = (double) step / 14.0;
                 int ax = px + (int) Math.round((center.getX() - px) * archFraction * 0.42);
@@ -482,17 +463,15 @@ public final class SpiralAbyssManager {
             }
         }
 
-        // 4. ESCALERA EN ESPIRAL HELICOIDAL MONUMENTAL EN EL VACÍO CIRCUNDANTE
         int stairRadius = 28;
         int totalSteps = 160;
         for (int step = 0; step < totalSteps; step++) {
-            double angle = (4.0 * Math.PI / totalSteps) * step; // 2 giros completos de 360 grados
-            int sy = centerY + 30 - (int) (step * 0.42); // Desciende desde Y=110 hasta Y=43
+            double angle = (4.0 * Math.PI / totalSteps) * step;
+            int sy = centerY + 30 - (int) (step * 0.42);
 
             int sx = center.getX() + (int) Math.round(Math.cos(angle) * stairRadius);
             int sz = center.getZ() + (int) Math.round(Math.sin(angle) * stairRadius);
 
-            // Ancho del peldaño de 4 bloques en dirección radial
             for (int w = -1; w <= 2; w++) {
                 int wx = center.getX() + (int) Math.round(Math.cos(angle) * (stairRadius + w));
                 int wz = center.getZ() + (int) Math.round(Math.sin(angle) * (stairRadius + w));
@@ -512,7 +491,6 @@ public final class SpiralAbyssManager {
             }
         }
 
-        // 5. ANILLO CELESTIAL / HALO DE LAS LÍNEAS LEY (Estructura Astral Cósmica)
         int ringZ = center.getZ() + 35;
         int ringCenterY = centerY + 18;
         for (int rx = -16; rx <= 16; rx++) {
@@ -531,7 +509,6 @@ public final class SpiralAbyssManager {
             }
         }
 
-        // 6. Base Esculpida Cónica Invertida Flotante debajo de la Arena (Y = 66 a 79)
         for (int dx = -r; dx <= r; dx++) {
             for (int dz = -r; dz <= r; dz++) {
                 double dist = Math.sqrt(dx * dx + dz * dz);
@@ -569,7 +546,6 @@ public final class SpiralAbyssManager {
             }
         }
 
-        // 7. Suelo de la Arena de Combate (Y = 80) - TOTALMENTE A RAS, NUNCA BLOQUES ELEVADOS
         for (int dx = -r; dx <= r; dx++) {
             for (int dz = -r; dz <= r; dz++) {
                 double dist = Math.sqrt(dx * dx + dz * dz);
@@ -579,14 +555,12 @@ public final class SpiralAbyssManager {
                 int wz = center.getZ() + dz;
                 BlockPos floorPos = new BlockPos(wx, centerY, wz);
 
-                // Garantizar que todo el espacio sobre la arena (Y=81 a 86) sea 100% AIRE libre de obstrucciones
                 if (dist < r - 0.5) {
                     for (int ay = 1; ay <= 6; ay++) {
                         level.setBlock(floorPos.above(ay), Blocks.AIR.defaultBlockState(), 2);
                     }
                 }
 
-                // Bordillo perimetral bajo de piedra labrada y barreras invisibles infranqueables
                 if (dist >= r - 0.8) {
                     level.setBlock(floorPos, Blocks.POLISHED_DEEPSLATE.defaultBlockState(), 2);
                     level.setBlock(floorPos.above(1), Blocks.POLISHED_DEEPSLATE_WALL.defaultBlockState(), 2);
@@ -594,24 +568,20 @@ public final class SpiralAbyssManager {
                         level.setBlock(floorPos.above(by), Blocks.BARRIER.defaultBlockState(), 2);
                     }
                 }
-                // Núcleo Central: Sello Solar de la Llave
                 else if (dist <= 1.8) {
                     level.setBlock(floorPos, Blocks.GILDED_BLACKSTONE.defaultBlockState(), 2);
                 }
-                // Anillo Interior de Conducción Rúnica (Líneas Ley)
                 else if (dist <= 4.2) {
                     boolean isRay = (dx == 0 || dz == 0 || Math.abs(dx) == Math.abs(dz));
                     if (isRay) {
                         level.setBlock(floorPos, Blocks.GILDED_BLACKSTONE.defaultBlockState(), 2);
                     } else if (dist <= 3.2) {
-                        // Conducción empotrada: Linterna de mar debajo en Y=79, vidrio cian a ras en Y=80
                         level.setBlock(floorPos.below(1), Blocks.SEA_LANTERN.defaultBlockState(), 2);
                         level.setBlock(floorPos, Blocks.CYAN_STAINED_GLASS.defaultBlockState(), 2);
                     } else {
                         level.setBlock(floorPos, Blocks.CHISELED_POLISHED_BLACKSTONE.defaultBlockState(), 2);
                     }
                 }
-                // Anillo de Obsidiana Llorosa Intermedio
                 else if (dist <= 7.5) {
                     if (dist >= 6.8) {
                         level.setBlock(floorPos, Blocks.CRYING_OBSIDIAN.defaultBlockState(), 2);
@@ -619,7 +589,6 @@ public final class SpiralAbyssManager {
                         level.setBlock(floorPos, Blocks.DEEPSLATE_BRICKS.defaultBlockState(), 2);
                     }
                 }
-                // Anillo Medio con Nodos de Oro
                 else if (dist <= 12.0) {
                     boolean isNode = (dx == 0 && Math.abs(dz) == 9) || (dz == 0 && Math.abs(dx) == 9) || (Math.abs(dx) == 6 && Math.abs(dz) == 6);
                     if (isNode) {
@@ -630,12 +599,10 @@ public final class SpiralAbyssManager {
                         level.setBlock(floorPos, Blocks.POLISHED_DEEPSLATE.defaultBlockState(), 2);
                     }
                 }
-                // Anillo Exterior Iluminado de Líneas Ley Cian
                 else {
                     boolean isOuterRing = (dist >= 14.8 && dist <= 16.2);
                     boolean isConduitRay = (dx == 0 || dz == 0 || Math.abs(dx) == Math.abs(dz));
                     if (isOuterRing || isConduitRay) {
-                        // Linterna empotrada debajo (Y=79), vidrio cian a ras en Y=80
                         level.setBlock(floorPos.below(1), Blocks.SEA_LANTERN.defaultBlockState(), 2);
                         level.setBlock(floorPos, Blocks.CYAN_STAINED_GLASS.defaultBlockState(), 2);
                     } else {
@@ -645,7 +612,6 @@ public final class SpiralAbyssManager {
             }
         }
 
-        // 8. Braseros perimetrales con Fuego de Almas azul místico (8 alrededor del borde)
         for (int i = 0; i < 8; i++) {
             double angle = (2.0 * Math.PI / 8.0) * i;
             int bx = center.getX() + (int) Math.round(Math.cos(angle) * 17.5);
@@ -655,8 +621,6 @@ public final class SpiralAbyssManager {
             level.setBlock(bp.above(1), Blocks.SOUL_CAMPFIRE.defaultBlockState(), 2);
         }
 
-        // 9. ALTAR CENTRAL Y PEDESTAL RÚNICO KHAENRI'AH DE LA LLAVE
-        // Espacio completamente despejado en el centro para las entidades 3D (Llave Roja y Monolito)
         for (int sx = -2; sx <= 2; sx++) {
             for (int sz = -2; sz <= 2; sz++) {
                 BlockPos ap = center.offset(sx, 0, sz);
@@ -664,14 +628,12 @@ public final class SpiralAbyssManager {
                 if (d <= 1.5) {
                     level.setBlock(ap, Blocks.CHISELED_POLISHED_BLACKSTONE.defaultBlockState(), 2);
                 }
-                // Limpiar todo el espacio vertical superior (Y = centerY + 1 a 6) para que nada obstruya la Llave/Monolito
                 for (int sy = 1; sy <= 6; sy++) {
                     level.setBlock(center.offset(sx, sy, sz), Blocks.AIR.defaultBlockState(), 2);
                 }
             }
         }
 
-        // 10. Muro perimetral continuo infranqueable de barreras invisibles (Blocks.BARRIER) de 16 bloques de altura
         for (int dx = -r - 1; dx <= r + 1; dx++) {
             for (int dz = -r - 1; dz <= r + 1; dz++) {
                 double dist = Math.sqrt(dx * dx + dz * dz);
@@ -686,9 +648,6 @@ public final class SpiralAbyssManager {
             }
         }
 
-        // 11. CÚPULA CÓSMICA LEJANA DEL ABISMO (ABYSSAL_VOID_STONE)
-        // Ubicada en la lejanía detrás de los 8 pilares colosales (r=36) y la escalera helicoidal (r=28).
-        // El perímetro de la arena de combate (r=19 a 44) queda 100% abierto hacia el abismo.
         int domeR = 47;
         for (int dx = -domeR - 1; dx <= domeR + 1; dx++) {
             for (int dz = -domeR - 1; dz <= domeR + 1; dz++) {
@@ -698,16 +657,13 @@ public final class SpiralAbyssManager {
                 int wx = center.getX() + dx;
                 int wz = center.getZ() + dz;
 
-                // Suelo cósmico inferior en el fondo del vacío (debajo del chasm, Y = chasmY - 2 y chasmY - 1)
                 if (dist >= 32.0 && dist <= domeR + 0.5) {
                     level.setBlock(new BlockPos(wx, chasmY - 2, wz), SystemBlocks.ABYSSAL_VOID_STONE.get().defaultBlockState(), 2);
                     level.setBlock(new BlockPos(wx, chasmY - 1, wz), SystemBlocks.ABYSSAL_VOID_STONE.get().defaultBlockState(), 2);
                 }
 
-                // Cilindro vertical exterior lejano detrás de los pilares (de Y = chasmY a Y = centerY + 22)
                 if (dist >= domeR - 1.8 && dist <= domeR + 0.5) {
                     for (int wy = chasmY; wy <= centerY + 22; wy++) {
-                        // Constelaciones y nebulosas estelares lejanas incrustadas ocasionalmente
                         if ((wx * 11 + wz * 17 + wy * 13) % 43 == 0) {
                             level.setBlock(new BlockPos(wx, wy, wz), Blocks.CRYING_OBSIDIAN.defaultBlockState(), 2);
                         } else if ((wx * 7 + wz * 19 + wy * 23) % 59 == 0) {
@@ -718,9 +674,8 @@ public final class SpiralAbyssManager {
                     }
                 }
 
-                // Cúpula abovedada superior que se curva hacia el cenit (de Y = centerY + 23 a centerY + 46)
                 for (int wy = centerY + 23; wy <= centerY + 46; wy++) {
-                    double hFrac = (double) (wy - (centerY + 22)) / 25.0; // 0.04 a 0.96
+                    double hFrac = (double) (wy - (centerY + 22)) / 25.0;
                     double targetR = domeR * Math.sqrt(Math.max(0.0, 1.0 - hFrac * hFrac));
                     if (dist >= targetR - 1.6 && dist <= targetR + 0.6) {
                         if ((wx * 13 + wz * 7 + wy * 19) % 37 == 0) {
@@ -745,17 +700,15 @@ public final class SpiralAbyssManager {
         }
         BlockPos center = session.arenaCenter;
 
-        // Limpiar el espacio central sobre el suelo
         level.setBlock(center.above(1), Blocks.AIR.defaultBlockState(), 2);
         level.setBlock(center.above(2), Blocks.AIR.defaultBlockState(), 2);
         level.setBlock(center.above(3), Blocks.AIR.defaultBlockState(), 2);
         level.setBlock(center.above(4), Blocks.AIR.defaultBlockState(), 2);
 
-        // Invocar la Llave de Desafío Roja 3D de Genshin Impact
         AbyssChallengeKeyEntity keyEntity = ModEntities.ABYSS_CHALLENGE_KEY.get().create(level);
         if (keyEntity != null) {
             keyEntity.moveTo(center.getX() + 0.5, center.getY() + 1.0, center.getZ() + 0.5, 0.0F, 0.0F);
-            keyEntity.setCustomName(Component.literal("§c§l✦ INICIAR DESAFÍO (SALA " + session.currentChamber + ") ✦"));
+            keyEntity.setCustomName(Component.literal("§c§l✦ START CHALLENGE (CHAMBER " + session.currentChamber + ") ✦"));
             keyEntity.setCustomNameVisible(true);
             level.addFreshEntity(keyEntity);
             session.challengeKeyEntityId = keyEntity.getUUID();
@@ -823,18 +776,15 @@ public final class SpiralAbyssManager {
         session.isMonolithChamber = false;
     }
 
-    // --- ACTIVACIÓN DEL COMBATE EN LA SALA ACTUAL ---
     private static void startChamberCombat(ServerPlayer player, AbyssSession session, ServerLevel level) {
         session.state = SessionState.COMBAT;
-        session.chamberSecondsRemaining = 300; // 5 minutos
+        session.chamberSecondsRemaining = 300;
         session.ticksInChamber = 0;
         session.activeEnemies.clear();
         session.pendingSpawns.clear();
 
-        // Limpiar elementos de la sala anterior (cofre y portal si quedaron)
         cleanUpChamberDecorations(level, session);
 
-        // Retirar la Llave central y el marcador
         if (session.challengeKeyEntityId != null) {
             var keyEnt = level.getEntity(session.challengeKeyEntityId);
             if (keyEnt != null) keyEnt.discard();
@@ -846,13 +796,11 @@ public final class SpiralAbyssManager {
         level.setBlock(center.above(3), Blocks.AIR.defaultBlockState(), 2);
         level.setBlock(center.above(4), Blocks.AIR.defaultBlockState(), 2);
 
-        // Determinar si es sala de Defensa del Monolito (Sala 1 de cada piso en Pisos 1-4, y Sala 1 Primera Mitad en Pisos 5+)
         session.currentHalf = 1;
         boolean twoHalves = isTwoHalvesFloor(session.floorNumber);
         session.isMonolithChamber = (session.currentChamber == 1);
         session.monolithSpawned = false;
         if (session.isMonolithChamber) {
-            // Invocar el auténtico Monolito de las Líneas Ley 3D de Genshin Impact
             LeyLineMonolithEntity monolith = ModEntities.LEY_LINE_MONOLITH.get().create(level);
             if (monolith != null) {
                 monolith.moveTo(center.getX() + 0.5, center.getY() + 1.0, center.getZ() + 0.5, 0.0F, 0.0F);
@@ -866,17 +814,15 @@ public final class SpiralAbyssManager {
             }
         }
 
-        // Aplicar la Anomalía de las Líneas Ley al jugador
         applyLeyLineDisorder(player, session.floorNumber);
 
-        // Crear BossBar canónica de la cámara
         if (session.bossEvent != null) {
             session.bossEvent.removeAllPlayers();
         }
-        String halfTag = twoHalves ? " §d[1ª Mitad]" : "";
+        String halfTag = twoHalves ? " §d[1st Half]" : "";
         String initialBarText = session.isMonolithChamber
-                ? "§b✦ ESPIRAL DEL ABISMO §7| §aMonolito: 100%" + halfTag + " §7(05:00)"
-                : "§b✦ ESPIRAL DEL ABISMO §7| §ePiso " + session.floorNumber + " - Sala " + session.currentChamber + halfTag + " §7(05:00)";
+                ? "§b✦ SPIRAL ABYSS §7| §aMonolith: 100%" + halfTag + " §7(05:00)"
+                : "§b✦ SPIRAL ABYSS §7| §eFloor " + session.floorNumber + " - Chamber " + session.currentChamber + halfTag + " §7(05:00)";
         session.bossEvent = new ServerBossEvent(
                 Component.literal(initialBarText),
                 session.isMonolithChamber ? BossEvent.BossBarColor.GREEN : BossEvent.BossBarColor.BLUE,
@@ -884,7 +830,6 @@ public final class SpiralAbyssManager {
         );
         session.bossEvent.addPlayer(player);
 
-        // Sonido y onda expansiva carmesí
         player.playNotifySound(SoundEvents.BEACON_POWER_SELECT, SoundSource.PLAYERS, 1.0F, 1.2F);
         player.playNotifySound(SoundEvents.TOTEM_USE, SoundSource.PLAYERS, 0.8F, 1.4F);
 
@@ -892,16 +837,15 @@ public final class SpiralAbyssManager {
         level.sendParticles(ParticleTypes.SOUL_FIRE_FLAME, center.getX() + 0.5, center.getY() + 1.8, center.getZ() + 0.5, 50, 1.5, 1.0, 1.5, 0.1);
         level.sendParticles(ParticleTypes.REVERSE_PORTAL, center.getX() + 0.5, center.getY() + 1.8, center.getZ() + 0.5, 40, 1.5, 1.0, 1.5, 0.1);
 
-        // Generar oleada táctica de enemigos con Spawners Rúnicos
         spawnChamberWave(level, session);
 
-        String challengeMsg = session.isMonolithChamber
-                ? "§c§l⚔ ¡DESAFÍO INICIADO! §eDefiende el §b§lMonolito de las Líneas Ley§e" + (twoHalves ? " §d[1ª Mitad]" : "") + ".\n§fEvita que los monstruos destruyan el monolito central."
-                : "§c§l⚔ ¡DESAFÍO INICIADO! §ePiso " + session.floorNumber + " - Sala " + session.currentChamber + (twoHalves ? " §d[1ª Mitad]" : "") + "\n§fDerrota a todos los monstruos antes de que se agote el tiempo.";
-        player.displayClientMessage(Component.literal(challengeMsg), false);
+        Component halfComp = twoHalves ? Component.translatable("abyss.awakening_system.first_half_tag") : Component.empty();
+        Component challengeMsg = session.isMonolithChamber
+                ? Component.translatable("abyss.awakening_system.challenge_monolith_started", halfComp)
+                : Component.translatable("abyss.awakening_system.challenge_floor_started", session.floorNumber, session.currentChamber, halfComp);
+        player.displayClientMessage(challengeMsg, false);
     }
 
-    // --- SPAWN DE MONSTRUOS POR PISO Y SALA CON SPAWNERS RÚNICOS ---
     private static void spawnChamberWave(ServerLevel level, AbyssSession session) {
         int floor = session.floorNumber;
         int chamber = session.currentChamber;
@@ -915,8 +859,6 @@ public final class SpiralAbyssManager {
         Random rnd = new Random();
         for (int i = 0; i < mobCount; i++) {
             double angle = (2.0 * Math.PI / mobCount) * i + (rnd.nextDouble() - 0.5) * 0.3;
-            // En salas de defensa del monolito, spawnear a los monstruos en el perímetro de la arena (14-16.5 bloques)
-            // para dar tiempo al jugador a interceptarlos antes de que lleguen al centro
             double radius = session.isMonolithChamber ? (14.0 + rnd.nextDouble() * 2.5) : (10.0 + rnd.nextDouble() * 4.0);
             int mx = center.getX() + (int) (Math.cos(angle) * radius);
             int mz = center.getZ() + (int) (Math.sin(angle) * radius);
@@ -938,7 +880,6 @@ public final class SpiralAbyssManager {
                     mob.getAttribute(Attributes.ATTACK_DAMAGE).setBaseValue(newDmg);
                 }
 
-                // Generar Círculo Rúnico de Invocación con canalización escalonada
                 int delayTicks = 20 + (i / 2) * 15;
                 session.pendingSpawns.add(new PendingAbyssSpawn(spawnPos, mob, delayTicks));
             }
@@ -1011,14 +952,14 @@ public final class SpiralAbyssManager {
         if ("pyro".equalsIgnoreCase(element)) {
             Blaze b = EntityType.BLAZE.create(level);
             if (b != null) {
-                b.setCustomName(Component.literal("§c§lMago del Abismo Pyro"));
+                b.setCustomName(Component.translatable("abyss.awakening_system.mob.pyro_abyss_mage"));
                 b.setCustomNameVisible(true);
             }
             return b;
         } else if ("cryo".equalsIgnoreCase(element)) {
             Stray s = EntityType.STRAY.create(level);
             if (s != null) {
-                s.setCustomName(Component.literal("§b§lMago del Abismo Cryo"));
+                s.setCustomName(Component.translatable("abyss.awakening_system.mob.cryo_abyss_mage"));
                 s.setCustomNameVisible(true);
                 ItemStack helm = new ItemStack(Items.LEATHER_HELMET);
                 helm.set(DataComponents.DYED_COLOR, new DyedItemColor(0x81D4FA, false));
@@ -1032,7 +973,7 @@ public final class SpiralAbyssManager {
         } else {
             Witch w = EntityType.WITCH.create(level);
             if (w != null) {
-                w.setCustomName(Component.literal("§5§lMago del Abismo Electro"));
+                w.setCustomName(Component.translatable("abyss.awakening_system.mob.electro_abyss_mage"));
                 w.setCustomNameVisible(true);
             }
             return w;
@@ -1041,12 +982,10 @@ public final class SpiralAbyssManager {
 
     private static Mob createAbyssMob(ServerLevel level, int floor, int chamber, int half, int index) {
         if (floor <= 2) {
-            // Pisos 1 y 2: Slimes Elementales de Genshin Impact e Hilichurls
             if (index == 0 && chamber == 3 && floor == 2) {
                 return createMitachurl(level, false);
             }
             if (index % 2 == 0) {
-                // Slimes de Genshin Impact usando GenshinSlimeEntity canónico
                 GenshinSlimeEntity.Element[] elements = {
                         GenshinSlimeEntity.Element.PYRO,
                         GenshinSlimeEntity.Element.HYDRO,
@@ -1060,7 +999,6 @@ public final class SpiralAbyssManager {
                 boolean isBig = (index == 0 || chamber == 3);
                 return createGenshinSlime(level, elem, isBig);
             } else {
-                // Hilichurls (Berserker, Escudo, Tirador)
                 if (index % 4 == 1) {
                     return createHilichurl(level, HilichurlEntity.HilichurlRole.BERSERKER);
                 } else if (index % 4 == 3) {
@@ -1070,7 +1008,6 @@ public final class SpiralAbyssManager {
                 }
             }
         } else if (floor <= 4) {
-            // Pisos 3 y 4: Hilichurls de élite, Mitachurls y Slimes Gigantes
             if (index == 0) {
                 return createMitachurl(level, (chamber % 2 == 1));
             } else if (index % 3 == 0) {
@@ -1082,9 +1019,7 @@ public final class SpiralAbyssManager {
                 return createGenshinSlime(level, elem, true);
             }
         } else if (floor <= 6) {
-            // Pisos 5 y 6: Sistema canónico de 2 Etapas (Primera y Segunda Mitad)
             if (half == 1) {
-                // 1ª Mitad: Enjambre elemental y patrulla Hilichurl
                 if (index % 3 == 0) {
                     GenshinSlimeEntity.Element elem = (chamber == 1) ? GenshinSlimeEntity.Element.PYRO : (chamber == 2 ? GenshinSlimeEntity.Element.ELECTRO : GenshinSlimeEntity.Element.ANEMO);
                     return createGenshinSlime(level, elem, true);
@@ -1094,11 +1029,10 @@ public final class SpiralAbyssManager {
                     return createHilichurl(level, HilichurlEntity.HilichurlRole.GUARD);
                 }
             } else {
-                // 2ª Mitad: Refuerzos de élite, Mitachurls y Magos del Abismo
                 if (index == 0 && chamber == 3) {
                     IronGolem golem = EntityType.IRON_GOLEM.create(level);
                     if (golem != null) {
-                        golem.setCustomName(Component.literal("§c§lGuardián de las Ruinas Ancestral"));
+                        golem.setCustomName(Component.translatable("abyss.awakening_system.mob.ancient_ruin_guard"));
                         golem.setCustomNameVisible(true);
                     }
                     return golem;
@@ -1112,7 +1046,6 @@ public final class SpiralAbyssManager {
                 }
             }
         } else {
-            // Pisos 7 a 12: Heraldos del Abismo, Magos del Abismo Élite y Mitachurls
             if (half == 1) {
                 if (index % 3 == 0) {
                     return createMitachurl(level, true);
@@ -1125,7 +1058,7 @@ public final class SpiralAbyssManager {
                 if (index == 0) {
                     WitherSkeleton ws = EntityType.WITHER_SKELETON.create(level);
                     if (ws != null) {
-                        ws.setCustomName(Component.literal("§1§lHeraldo del Abismo: Torrente"));
+                        ws.setCustomName(Component.translatable("abyss.awakening_system.mob.abyss_herald_torrent"));
                         ws.setCustomNameVisible(true);
                         ws.setItemSlot(EquipmentSlot.MAINHAND, new ItemStack(Items.DIAMOND_SWORD));
                         ws.addEffect(new MobEffectInstance(MobEffects.MOVEMENT_SPEED, 99999, 1, false, false));
@@ -1140,7 +1073,6 @@ public final class SpiralAbyssManager {
         }
     }
 
-    // --- APLICACIÓN DE LA ANOMALÍA DE LAS LÍNEAS LEY ---
     private static void applyLeyLineDisorder(ServerPlayer player, int floor) {
         switch (floor) {
             case 1 -> {
@@ -1176,8 +1108,22 @@ public final class SpiralAbyssManager {
         }
     }
 
-    // --- ACTUALIZACIÓN TICK DEL SERVIDOR ---
     public static void tick(MinecraftServer server) {
+        if (!PENDING_MENU_OPENS.isEmpty()) {
+            PENDING_MENU_OPENS.entrySet().removeIf(entry -> {
+                int rem = entry.getValue() - 1;
+                if (rem <= 0) {
+                    ServerPlayer p = server.getPlayerList().getPlayer(entry.getKey());
+                    if (p != null) {
+                        openAbyssScreen(p);
+                    }
+                    return true;
+                }
+                entry.setValue(rem);
+                return false;
+            });
+        }
+
         if (ACTIVE_SESSIONS.isEmpty()) return;
 
         ServerLevel abyssLevel = getAbyssLevel(server);
@@ -1192,7 +1138,6 @@ public final class SpiralAbyssManager {
                 continue;
             }
 
-            // Failsafe de seguridad y contención: Evitar que el jugador caiga al vacío abisal o sea expulsado del perímetro
             double pDistToCenter = Math.sqrt(
                     Math.pow(player.getX() - (session.arenaCenter.getX() + 0.5), 2) +
                     Math.pow(player.getZ() - (session.arenaCenter.getZ() + 0.5), 2)
@@ -1202,10 +1147,9 @@ public final class SpiralAbyssManager {
                 player.setDeltaMovement(0, 0, 0);
                 player.fallDistance = 0.0F;
                 player.playNotifySound(SoundEvents.CHORUS_FRUIT_TELEPORT, SoundSource.PLAYERS, 0.8F, 1.2F);
-                player.displayClientMessage(Component.literal("§5§l✦ [BARRERA DEL ABISMO] §fHas sido contenido dentro de la plataforma del desafío."), true);
+                player.displayClientMessage(Component.translatable("abyss.awakening_system.barrier_contained"), true);
             }
 
-            // Partículas de atmósfera mística abisal (niebla cósmica y esporas flotantes sin shaders)
             if (server.getTickCount() % 4 == 0) {
                 Vec3 pPos = player.position();
                 RandomSource rnd = player.getRandom();
@@ -1220,7 +1164,6 @@ public final class SpiralAbyssManager {
                 }
             }
 
-            // 1. Estado: Esperando activación en la Llave del Altar
             if (session.state == SessionState.WAITING_FOR_TRIGGER) {
                 BlockPos keyPos = session.arenaCenter.above(2);
                 abyssLevel.sendParticles(ParticleTypes.SOUL_FIRE_FLAME, keyPos.getX() + 0.5, keyPos.getY() + 0.8, keyPos.getZ() + 0.5, 4, 0.2, 0.3, 0.2, 0.02);
@@ -1233,18 +1176,15 @@ public final class SpiralAbyssManager {
                 continue;
             }
 
-            // 2. Estado: Combate en curso
             if (session.state == SessionState.COMBAT) {
                 session.ticksInChamber++;
 
-                // A) Procesar Spawners Rúnicos de Invocación
                 if (!session.pendingSpawns.isEmpty()) {
                     List<PendingAbyssSpawn> toRemove = new ArrayList<>();
                     for (PendingAbyssSpawn spawn : session.pendingSpawns) {
                         spawn.ticksRemaining--;
 
                         BlockPos p = spawn.pos;
-                        // Efectos visuales de círculo rúnico rotatorio en el suelo
                         if (session.ticksInChamber % 2 == 0) {
                             double rot = (server.getTickCount() * 0.15D);
                             for (int a = 0; a < 6; a++) {
@@ -1256,12 +1196,10 @@ public final class SpiralAbyssManager {
                             abyssLevel.sendParticles(ParticleTypes.REVERSE_PORTAL, p.getX() + 0.5D, p.getY() + 0.3D, p.getZ() + 0.5D, 2, 0.2, 0.2, 0.2, 0.01);
                         }
 
-                        // Sonido pre-spawn de invocación
                         if (spawn.ticksRemaining == 10) {
                             player.playNotifySound(SoundEvents.EVOKER_PREPARE_SUMMON, SoundSource.HOSTILE, 0.7F, 1.2F);
                         }
 
-                        // Momento de materialización del monstruo
                         if (spawn.ticksRemaining <= 0) {
                             toRemove.add(spawn);
                             Mob mob = spawn.mob;
@@ -1269,7 +1207,6 @@ public final class SpiralAbyssManager {
                                 abyssLevel.addFreshEntity(mob);
                                 session.activeEnemies.add(mob.getUUID());
 
-                                // Si es sala de monolito, orientar el aggro hacia el monolito
                                 if (session.isMonolithChamber && session.monolithEntityId != null) {
                                     var monoEnt = abyssLevel.getEntity(session.monolithEntityId);
                                     if (monoEnt instanceof LivingEntity livingMono && livingMono.isAlive()) {
@@ -1287,7 +1224,6 @@ public final class SpiralAbyssManager {
                     session.pendingSpawns.removeAll(toRemove);
                 }
 
-                // B) Monolito de las Líneas Ley (Sala 1)
                 float monolithHpPct = 1.0F;
                 if (session.isMonolithChamber) {
                     LeyLineMonolithEntity monolith = null;
@@ -1295,9 +1231,8 @@ public final class SpiralAbyssManager {
                         var ent = abyssLevel.getEntity(session.monolithEntityId);
                         if (ent instanceof LeyLineMonolithEntity llm) {
                             if (llm.isDeadOrDying() || llm.getHealth() <= 0.0F) {
-                                // Monolito destruido -> derrota inmediata
                                 player.playNotifySound(SoundEvents.WITHER_DEATH, SoundSource.PLAYERS, 0.8F, 0.8F);
-                                player.displayClientMessage(Component.literal("§c§l✦ [DEFENSA FALLIDA] §7El Monolito de las Líneas Ley ha sido destruido."), false);
+                                player.displayClientMessage(Component.translatable("abyss.awakening_system.monolith_destroyed"), false);
                                 handleChamberDefeat(player, session, server);
                                 ACTIVE_SESSIONS.remove(entry.getKey());
                                 continue;
@@ -1313,13 +1248,12 @@ public final class SpiralAbyssManager {
                         String col = monolithHpPct >= 0.6F ? "§a" : (monolithHpPct >= 0.3F ? "§e" : "§c");
                         monolith.setCustomName(Component.literal("§b§l✦ Monolito: " + col + (int)(monolithHpPct * 100) + "% §b✦"));
 
-                        // Re-enfocar hacia el monolito ÚNICAMENTE a los monstruos que NO tengan objetivo
                         if (session.ticksInChamber % 20 == 0) {
                             for (UUID mobId : session.activeEnemies) {
                                 var enemyEnt = abyssLevel.getEntity(mobId);
                                 if (enemyEnt instanceof Mob enemyMob) {
                                     if (enemyMob.getTarget() instanceof Player) {
-                                        continue; // Conservar el aggro sobre el jugador que los interceptó
+                                        continue;
                                     }
                                     if (enemyMob.getTarget() == null) {
                                         enemyMob.setTarget(monolith);
@@ -1330,7 +1264,6 @@ public final class SpiralAbyssManager {
                     }
                 }
 
-                // C) Chequeo periódico cada segundo (20 ticks)
                 if (session.ticksInChamber % 20 == 0) {
                     session.chamberSecondsRemaining--;
 
@@ -1345,7 +1278,7 @@ public final class SpiralAbyssManager {
                     String timeStr = String.format("%02d:%02d", mins, secs);
 
                     boolean twoHalves = isTwoHalvesFloor(session.floorNumber);
-                    String halfTag = twoHalves ? (session.currentHalf == 1 ? " §d[1ª Mitad]" : " §b[2ª Mitad]") : "";
+                    String halfTag = twoHalves ? (session.currentHalf == 1 ? " §d[1st Half]" : " §b[2nd Half]") : "";
 
                     if (session.bossEvent != null) {
                         if (session.isMonolithChamber) {
@@ -1354,14 +1287,14 @@ public final class SpiralAbyssManager {
                             session.bossEvent.setColor(barCol);
                             String pctCol = monolithHpPct >= 0.6F ? "§a" : (monolithHpPct >= 0.3F ? "§e" : "§c");
                             session.bossEvent.setName(Component.literal(
-                                    "§b✦ ESPIRAL DEL ABISMO §7| §6Monolito: " + pctCol + (int)(monolithHpPct * 100) + "%" + halfTag + " §7(" + timeStr + ") §8| §cMonstruos: " + remaining + "/" + session.totalEnemiesInWave
+                                    "§b✦ SPIRAL ABYSS §7| §6Monolith: " + pctCol + (int)(monolithHpPct * 100) + "%" + halfTag + " §7(" + timeStr + ") §8| §cMonsters: " + remaining + "/" + session.totalEnemiesInWave
                             ));
                         } else {
                             float progress = Math.max(0.0F, (float) session.chamberSecondsRemaining / 300.0F);
                             session.bossEvent.setProgress(progress);
                             session.bossEvent.setName(Component.literal(
-                                    "§b✦ ESPIRAL DEL ABISMO §7| §ePiso " + session.floorNumber + " - Sala " + session.currentChamber + halfTag +
-                                            " §7(" + timeStr + ") §8| §cMonstruos: " + remaining + "/" + session.totalEnemiesInWave
+                                    "§b✦ SPIRAL ABYSS §7| §eFloor " + session.floorNumber + " - Chamber " + session.currentChamber + halfTag +
+                                            " §7(" + timeStr + ") §8| §cMonsters: " + remaining + "/" + session.totalEnemiesInWave
                             ));
                         }
                     }
@@ -1382,16 +1315,13 @@ public final class SpiralAbyssManager {
                 }
             }
 
-            // 3. Estado: Sala Superada (Cofre y Portal activos)
             if (session.state == SessionState.CHAMBER_CLEARED) {
-                // Brillo áureo del Cofre del Dominio si aún no se ha reclamado
                 if (session.rewardChestPos != null && !session.rewardChestClaimed && server.getTickCount() % 5 == 0) {
                     BlockPos cp = session.rewardChestPos;
                     abyssLevel.sendParticles(ParticleTypes.WAX_OFF, cp.getX() + 0.5, cp.getY() + 0.7, cp.getZ() + 0.5, 3, 0.25, 0.25, 0.25, 0.02);
                     abyssLevel.sendParticles(ParticleTypes.SOUL_FIRE_FLAME, cp.getX() + 0.5, cp.getY() + 0.9, cp.getZ() + 0.5, 1, 0.1, 0.1, 0.1, 0.01);
                 }
 
-                // Partículas del Portal de Descenso Astral y Detección de Entrada
                 if (session.descentPortalPos != null) {
                     BlockPos pp = session.descentPortalPos;
                     if (server.getTickCount() % 3 == 0) {
@@ -1417,7 +1347,6 @@ public final class SpiralAbyssManager {
     private static void advanceToSecondHalf(ServerPlayer player, AbyssSession session, ServerLevel level) {
         session.currentHalf = 2;
 
-        // Si la primera mitad era monolito, celebrarlo y retirarlo pacíficamente
         if (session.isMonolithChamber && session.monolithEntityId != null) {
             var mEnt = level.getEntity(session.monolithEntityId);
             if (mEnt != null) {
@@ -1428,7 +1357,6 @@ public final class SpiralAbyssManager {
             session.isMonolithChamber = false;
         }
 
-        // Efectos de transición a la Segunda Mitad
         player.playNotifySound(SoundEvents.UI_TOAST_CHALLENGE_COMPLETE, SoundSource.PLAYERS, 1.0F, 1.2F);
         player.playNotifySound(SoundEvents.BEACON_ACTIVATE, SoundSource.PLAYERS, 0.9F, 1.3F);
 
@@ -1436,16 +1364,14 @@ public final class SpiralAbyssManager {
         level.sendParticles(ParticleTypes.FLASH, center.getX() + 0.5, center.getY() + 2.0, center.getZ() + 0.5, 2, 0.2, 0.2, 0.2, 0.0);
         level.sendParticles(ParticleTypes.SOUL_FIRE_FLAME, center.getX() + 0.5, center.getY() + 1.5, center.getZ() + 0.5, 60, 2.0, 1.0, 2.0, 0.1);
 
-        player.displayClientMessage(Component.literal("§6§l✦ [¡PRIMERA MITAD COMPLETADA!] §aObjetivo cumplido.\n§b§l⚔ INICIANDO SEGUNDA MITAD (2ª ETAPA) ⚔ §e¡Derrota a los refuerzos de élite!"), false);
+        player.displayClientMessage(Component.translatable("abyss.awakening_system.first_half_complete"), false);
 
-        // Generar oleada táctica de la Segunda Mitad
         spawnChamberWave(level, session);
     }
 
     private static void handleChamberVictory(ServerPlayer player, AbyssSession session, ServerLevel level, MinecraftServer server) {
         session.state = SessionState.CHAMBER_CLEARED;
 
-        // Cálculo canónico de estrellas: Monolito HP% en Sala 1, Tiempo restante en Salas 2 y 3
         int stars;
         if (session.isMonolithChamber && session.monolithEntityId != null) {
             var mEnt = level.getEntity(session.monolithEntityId);
@@ -1456,7 +1382,6 @@ public final class SpiralAbyssManager {
         }
         session.chamberStarsEarned[session.currentChamber - 1] = stars;
 
-        // Limpiar el Monolito si estaba presente
         if (session.monolithEntityId != null) {
             var mEnt = level.getEntity(session.monolithEntityId);
             if (mEnt != null) mEnt.discard();
@@ -1470,14 +1395,37 @@ public final class SpiralAbyssManager {
 
         String starIcons = "⭐".repeat(stars);
         player.playNotifySound(SoundEvents.UI_TOAST_CHALLENGE_COMPLETE, SoundSource.PLAYERS, 1.0F, 1.2F);
-        player.displayClientMessage(Component.literal("§6§l✦ [SALA " + session.currentChamber + " SUPERADA] §fEstrellas ganadas: §e" + starIcons + " §8(Tiempo: " + session.chamberSecondsRemaining + "s)"), false);
+        player.displayClientMessage(Component.translatable("abyss.awakening_system.chamber_cleared", session.currentChamber, starIcons, session.chamberSecondsRemaining), false);
 
         if (session.bossEvent != null) {
             session.bossEvent.removeAllPlayers();
             session.bossEvent = null;
         }
 
-        // 1. Spawnear Cofre del Dominio de Recompensa
+        boolean isFloorFinished = (session.currentChamber == 3);
+        int totalStarsInFloor = 0;
+        boolean canAdvance = false;
+        int nextFloor = session.floorNumber + 1;
+
+        if (isFloorFinished) {
+            SpiralAbyssSavedData savedData = SpiralAbyssSavedData.get(server);
+            PlayerAbyssData pData = savedData.getOrCreate(player.getUUID());
+            totalStarsInFloor = session.chamberStarsEarned[0] + session.chamberStarsEarned[1] + session.chamberStarsEarned[2];
+            int floorIdx = session.floorNumber - 1;
+
+            if (totalStarsInFloor > pData.starsPerFloor[floorIdx]) {
+                pData.starsPerFloor[floorIdx] = totalStarsInFloor;
+            }
+
+            if (totalStarsInFloor >= 6 && session.floorNumber < TOTAL_FLOORS) {
+                if (pData.unlockedFloor <= session.floorNumber) {
+                    pData.unlockedFloor = nextFloor;
+                }
+                canAdvance = true;
+            }
+            savedData.setDirty();
+        }
+
         BlockPos chestPos = center.offset(0, 1, 2);
         session.rewardChestPos = chestPos;
         session.rewardChestClaimed = false;
@@ -1493,20 +1441,19 @@ public final class SpiralAbyssManager {
         chestMarker.setInvisible(true);
         chestMarker.setNoGravity(true);
         chestMarker.setInvulnerable(true);
-        chestMarker.setCustomName(Component.literal("§6§l✦ COFRE DEL DOMINIO ✦ §e[Clic Derecho]"));
+        chestMarker.setCustomName(Component.translatable("abyss.awakening_system.chest_marker"));
         chestMarker.setCustomNameVisible(true);
         level.addFreshEntity(chestMarker);
         session.rewardChestMarkerId = chestMarker.getUUID();
         level.sendParticles(ParticleTypes.TOTEM_OF_UNDYING, chestPos.getX() + 0.5, chestPos.getY() + 1.2, chestPos.getZ() + 0.5, 30, 0.5, 0.5, 0.5, 0.15);
 
-        // 2. Abrir Portal de Descenso Astral hacia la siguiente sala (o Salida si es sala 3)
         BlockPos portalPos = center.offset(0, 1, 13);
         session.descentPortalPos = portalPos;
         buildDescentPortalArch(level, session, portalPos);
 
-        String portalTitle = (session.currentChamber < 3)
-                ? "§b§l✦ PORTAL DE DESCENSO (SALA " + (session.currentChamber + 1) + ") ✦ §e[Cruza para avanzar]"
-                : "§d§l✦ SALIDA ASTRAL DEL DOMINIO ✦ §e[Cruza para reclamar victoria]";
+        Component portalTitle = (!isFloorFinished)
+                ? Component.translatable("abyss.awakening_system.portal_descent_marker", session.currentChamber + 1)
+                : Component.translatable("abyss.awakening_system.portal_astral_exit_marker");
 
         ArmorStand portalMarker = new ArmorStand(level, portalPos.getX() + 0.5, portalPos.getY() + 2.0, portalPos.getZ() + 0.5);
         CompoundTag portalTag = new CompoundTag();
@@ -1518,12 +1465,49 @@ public final class SpiralAbyssManager {
         portalMarker.setInvisible(true);
         portalMarker.setNoGravity(true);
         portalMarker.setInvulnerable(true);
-        portalMarker.setCustomName(Component.literal(portalTitle));
+        portalMarker.setCustomName(portalTitle);
         portalMarker.setCustomNameVisible(true);
         level.addFreshEntity(portalMarker);
         session.descentPortalMarkerId = portalMarker.getUUID();
 
-        player.displayClientMessage(Component.literal("§e✦ ¡Cofre del Dominio disponible! §fReclámalo con clic derecho y luego atraviesa el §b§lPortal de Descenso§f."), false);
+        if (isFloorFinished) {
+            player.playNotifySound(SoundEvents.PLAYER_LEVELUP, SoundSource.PLAYERS, 1.0F, 1.0F);
+            player.displayClientMessage(Component.translatable("abyss.awakening_system.divider"), false);
+            player.displayClientMessage(Component.translatable("abyss.awakening_system.floor_cleared_stars", session.floorNumber, totalStarsInFloor), false);
+            if (canAdvance) {
+                player.displayClientMessage(Component.translatable("abyss.awakening_system.advance_or_menu_prompt", nextFloor), false);
+
+                MutableComponent advanceBtn = Component.translatable("abyss.awakening_system.btn_advance_floor", nextFloor)
+                        .withStyle(style -> style
+                                .withClickEvent(new ClickEvent(ClickEvent.Action.RUN_COMMAND, "/abyss advance"))
+                                .withHoverEvent(new HoverEvent(HoverEvent.Action.SHOW_TEXT, Component.translatable("abyss.awakening_system.hover_advance_floor", nextFloor))));
+
+                MutableComponent menuBtn = Component.translatable("abyss.awakening_system.btn_choose_level_menu")
+                        .withStyle(style -> style
+                                .withClickEvent(new ClickEvent(ClickEvent.Action.RUN_COMMAND, "/abyss menu"))
+                                .withHoverEvent(new HoverEvent(HoverEvent.Action.SHOW_TEXT, Component.translatable("abyss.awakening_system.hover_choose_level_menu"))));
+
+                player.displayClientMessage(advanceBtn.append(menuBtn), false);
+            } else if (session.floorNumber == TOTAL_FLOORS) {
+                player.displayClientMessage(Component.translatable("abyss.awakening_system.fully_conquered"), false);
+                MutableComponent menuBtn = Component.translatable("abyss.awakening_system.btn_open_abyss_menu")
+                        .withStyle(style -> style
+                                .withClickEvent(new ClickEvent(ClickEvent.Action.RUN_COMMAND, "/abyss menu"))
+                                .withHoverEvent(new HoverEvent(HoverEvent.Action.SHOW_TEXT, Component.translatable("abyss.awakening_system.hover_open_abyss_menu"))));
+                player.displayClientMessage(menuBtn, false);
+            } else {
+                player.displayClientMessage(Component.translatable("abyss.awakening_system.floor_stars_unlock_needed", totalStarsInFloor, nextFloor), false);
+                MutableComponent menuBtn = Component.translatable("abyss.awakening_system.btn_retry_level_menu")
+                        .withStyle(style -> style
+                                .withClickEvent(new ClickEvent(ClickEvent.Action.RUN_COMMAND, "/abyss menu"))
+                                .withHoverEvent(new HoverEvent(HoverEvent.Action.SHOW_TEXT, Component.translatable("abyss.awakening_system.hover_retry_level_menu"))));
+                player.displayClientMessage(menuBtn, false);
+            }
+            player.displayClientMessage(Component.translatable("abyss.awakening_system.divider"), false);
+            player.displayClientMessage(Component.translatable("abyss.awakening_system.claim_chest_astral_exit"), false);
+        } else {
+            player.displayClientMessage(Component.translatable("abyss.awakening_system.claim_chest_descent_portal"), false);
+        }
     }
 
     private static void buildDescentPortalArch(ServerLevel level, AbyssSession session, BlockPos base) {
@@ -1556,16 +1540,14 @@ public final class SpiralAbyssManager {
         session.chamberSecondsRemaining = 300;
         session.state = SessionState.WAITING_FOR_TRIGGER;
 
-        // Spawnear de nuevo la Llave del desafío para la siguiente sala
         spawnChallengeSword(level, session);
 
-        // Teletransportar al balcón norte para contemplar la siguiente sala
         BlockPos spawnPos = session.arenaCenter.offset(0, 1, -14);
         player.teleportTo(level, spawnPos.getX() + 0.5, spawnPos.getY(), spawnPos.getZ() + 0.5, 0.0F, 0.0F);
         player.playNotifySound(SoundEvents.PLAYER_TELEPORT, SoundSource.PLAYERS, 1.0F, 1.0F);
         level.sendParticles(ParticleTypes.PORTAL, spawnPos.getX() + 0.5, spawnPos.getY() + 1.0, spawnPos.getZ() + 0.5, 30, 0.5, 0.5, 0.5, 0.1);
 
-        player.displayClientMessage(Component.literal("§b✦ Has descendido a la §eSala " + session.currentChamber + "§b. Acércate al centro e interactúa con la §c§lLlave del Desafío§b para comenzar."), false);
+        player.displayClientMessage(Component.translatable("abyss.awakening_system.descended_next_chamber", session.currentChamber), false);
     }
 
     public static boolean handleChestInteraction(ServerPlayer player, BlockPos clickedPos) {
@@ -1609,8 +1591,8 @@ public final class SpiralAbyssManager {
             player.playNotifySound(SoundEvents.PLAYER_LEVELUP, SoundSource.PLAYERS, 1.0F, 1.3F);
             level.sendParticles(ParticleTypes.TOTEM_OF_UNDYING, clickedPos.getX() + 0.5, clickedPos.getY() + 1.2, clickedPos.getZ() + 0.5, 45, 0.4, 0.5, 0.4, 0.2);
 
-            player.displayClientMessage(Component.literal("§6§l✦ [COFRE DEL DOMINIO RECLAMADO] §fHas obtenido:"), false);
-            player.displayClientMessage(Component.literal("§6  +" + moraReward + " Mora §7| §d+" + primoReward + " Protogemas §7| §b+" + witCount + " Ingenio del Héroe"), false);
+            player.displayClientMessage(Component.translatable("abyss.awakening_system.domain_chest_claimed"), false);
+            player.displayClientMessage(Component.translatable("abyss.awakening_system.domain_chest_rewards", moraReward, primoReward, witCount), false);
 
             if (session.rewardChestMarkerId != null) {
                 var m = level.getEntity(session.rewardChestMarkerId);
@@ -1625,7 +1607,7 @@ public final class SpiralAbyssManager {
         return false;
     }
 
-    private static void handleFloorCompletion(ServerPlayer player, AbyssSession session, MinecraftServer server) {
+    public static void handleFloorCompletion(ServerPlayer player, AbyssSession session, MinecraftServer server) {
         SpiralAbyssSavedData savedData = SpiralAbyssSavedData.get(server);
         PlayerAbyssData pData = savedData.getOrCreate(player.getUUID());
 
@@ -1644,10 +1626,10 @@ public final class SpiralAbyssManager {
         savedData.setDirty();
 
         player.playNotifySound(SoundEvents.PLAYER_LEVELUP, SoundSource.PLAYERS, 1.0F, 1.0F);
-        player.displayClientMessage(Component.literal("§6§l✦ [¡PISO " + session.floorNumber + " COMPLETADO!] §aTotal estrellas obtenidas: §e" + totalStarsInFloor + "/9 ⭐"), false);
-        player.displayClientMessage(Component.literal("§fAbre la interfaz de la Espiral del Abismo en el Arrecife de Musk para reclamar tus §dProtogemas§f."), false);
+        player.displayClientMessage(Component.translatable("abyss.awakening_system.floor_completed_stars", session.floorNumber, totalStarsInFloor), false);
+        player.displayClientMessage(Component.translatable("abyss.awakening_system.redirecting_to_menu"), false);
 
-        player.getPersistentData().putLong("abyss_last_open_ms", System.currentTimeMillis() + 5000);
+        player.getPersistentData().remove("abyss_last_open_ms");
 
         ServerLevel retLevel = server.getLevel(session.returnDimension);
         if (retLevel != null) {
@@ -1659,15 +1641,17 @@ public final class SpiralAbyssManager {
         } else {
             TeyvatWorldManager.teleportToAbyss(player);
         }
+
+        PENDING_MENU_OPENS.put(player.getUUID(), 4);
     }
 
     private static void handleChamberDefeat(ServerPlayer player, AbyssSession session, MinecraftServer server) {
         player.playNotifySound(SoundEvents.WITHER_DEATH, SoundSource.PLAYERS, 0.6F, 0.8F);
-        player.displayClientMessage(Component.literal("§c§l✦ [DESAFÍO FALLIDO] §7No se ha podido completar el objetivo de la cámara."), false);
+        player.displayClientMessage(Component.translatable("abyss.awakening_system.chamber_challenge_failed"), false);
 
         cleanUpSession(server, session);
 
-        player.getPersistentData().putLong("abyss_last_open_ms", System.currentTimeMillis() + 5000);
+        player.getPersistentData().remove("abyss_last_open_ms");
 
         ServerLevel retLevel = server.getLevel(session.returnDimension);
         if (retLevel != null) {
@@ -1679,6 +1663,97 @@ public final class SpiralAbyssManager {
         } else {
             TeyvatWorldManager.teleportToAbyss(player);
         }
+
+        PENDING_MENU_OPENS.put(player.getUUID(), 4);
+    }
+
+    public static void handleAdvanceOrNextFloor(ServerPlayer player) {
+        MinecraftServer server = player.getServer();
+        if (server == null) return;
+
+        AbyssSession session = ACTIVE_SESSIONS.get(player.getUUID());
+        SpiralAbyssSavedData savedData = SpiralAbyssSavedData.get(server);
+        PlayerAbyssData pData = savedData.getOrCreate(player.getUUID());
+
+        if (session != null) {
+            if (session.currentChamber == 3 && session.state == SessionState.CHAMBER_CLEARED) {
+                int totalStars = session.chamberStarsEarned[0] + session.chamberStarsEarned[1] + session.chamberStarsEarned[2];
+                if (totalStars >= 6 && session.floorNumber < TOTAL_FLOORS) {
+                    int nextFloor = session.floorNumber + 1;
+                    cleanUpSession(server, session);
+                    ACTIVE_SESSIONS.remove(player.getUUID());
+
+                    player.displayClientMessage(Component.translatable("abyss.awakening_system.advancing_next_floor", nextFloor), false);
+                    handleStartFloor(player, nextFloor);
+                    return;
+                } else if (session.floorNumber >= TOTAL_FLOORS) {
+                    player.displayClientMessage(Component.translatable("abyss.awakening_system.last_floor_conquered"), false);
+                    handleFloorCompletion(player, session, server);
+                    cleanUpSession(server, session);
+                    ACTIVE_SESSIONS.remove(player.getUUID());
+                    return;
+                } else {
+                    player.displayClientMessage(Component.translatable("abyss.awakening_system.need_6_stars_advance"), false);
+                    handleFloorCompletion(player, session, server);
+                    cleanUpSession(server, session);
+                    ACTIVE_SESSIONS.remove(player.getUUID());
+                    return;
+                }
+            } else {
+                player.displayClientMessage(Component.translatable("abyss.awakening_system.must_complete_all_chambers"), true);
+                return;
+            }
+        }
+
+        int targetFloor = Math.min(TOTAL_FLOORS, pData.unlockedFloor);
+        handleStartFloor(player, targetFloor);
+    }
+
+    public static void openAbyssMenuFromCommand(ServerPlayer player) {
+        MinecraftServer server = player.getServer();
+        if (server == null) return;
+
+        AbyssSession session = ACTIVE_SESSIONS.get(player.getUUID());
+        if (session != null) {
+            if (session.currentChamber == 3 && session.state == SessionState.CHAMBER_CLEARED) {
+                handleFloorCompletion(player, session, server);
+                cleanUpSession(server, session);
+                ACTIVE_SESSIONS.remove(player.getUUID());
+                return;
+            } else {
+                cleanUpSession(server, session);
+                ACTIVE_SESSIONS.remove(player.getUUID());
+                ServerLevel retLevel = server.getLevel(session.returnDimension);
+                if (retLevel != null) {
+                    player.teleportTo(retLevel, session.returnPos.x, session.returnPos.y, session.returnPos.z, session.returnYaw, session.returnPitch);
+                } else {
+                    TeyvatWorldManager.teleportToAbyss(player);
+                }
+                PENDING_MENU_OPENS.put(player.getUUID(), 4);
+                return;
+            }
+        }
+
+        openAbyssScreen(player);
+    }
+
+    public static void handleLeaveAbyss(ServerPlayer player) {
+        MinecraftServer server = player.getServer();
+        if (server == null) return;
+
+        AbyssSession session = ACTIVE_SESSIONS.remove(player.getUUID());
+        if (session != null) {
+            cleanUpSession(server, session);
+            ServerLevel retLevel = server.getLevel(session.returnDimension);
+            if (retLevel != null) {
+                player.teleportTo(retLevel, session.returnPos.x, session.returnPos.y, session.returnPos.z, session.returnYaw, session.returnPitch);
+            } else {
+                TeyvatWorldManager.teleportToAbyss(player);
+            }
+        } else {
+            TeyvatWorldManager.teleportToAbyss(player);
+        }
+        player.displayClientMessage(Component.translatable("abyss.awakening_system.left_spiral_abyss"), true);
     }
 
     private static void cleanUpSession(MinecraftServer server, AbyssSession session) {
@@ -1706,5 +1781,10 @@ public final class SpiralAbyssManager {
         }
         session.activeEnemies.clear();
         session.pendingSpawns.clear();
+    }
+
+    public static void clearAll() {
+        ACTIVE_SESSIONS.clear();
+        PENDING_MENU_OPENS.clear();
     }
 }

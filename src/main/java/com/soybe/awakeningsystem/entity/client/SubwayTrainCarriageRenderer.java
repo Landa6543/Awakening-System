@@ -46,19 +46,16 @@ public class SubwayTrainCarriageRenderer extends EntityRenderer<SubwayTrainCarri
                        PoseStack poseStack, MultiBufferSource bufferSource, int packedLight) {
         poseStack.pushPose();
 
-        // Rotación orientada hacia el vector de avance (Faros y cabina al frente)
         poseStack.mulPose(Axis.YP.rotationDegrees(-entity.getYRot()));
 
         Matrix4f m = poseStack.last().pose();
 
-        // Proporciones del vagón (3 bloques de ancho total, 9 bloques de largo)
         float halfW = 1.46F;
         float halfL = 4.40F;
         float floorY = 0.45F;
         float roofY = 2.80F;
         float[] bogieZ = new float[] { -2.80F, 2.80F };
 
-        // 1. Chasis, Bogies y Techo interior (Negro pulido)
         VertexConsumer darkBuf = bufferSource.getBuffer(RenderType.entitySolid(TEX_DARK));
         renderBox(m, darkBuf, -halfW, 0.18F, -halfL, halfW, floorY, halfL, packedLight);
         renderBox(m, darkBuf, -halfW * 0.75F, roofY, -halfL * 0.90F, halfW * 0.75F, roofY + 0.18F, halfL * 0.90F, packedLight);
@@ -66,51 +63,38 @@ public class SubwayTrainCarriageRenderer extends EntityRenderer<SubwayTrainCarri
             renderBox(m, darkBuf, -halfW * 0.85F, 0.10F, bz - 0.20F, halfW * 0.85F, 0.26F, bz + 0.20F, packedLight);
         }
 
-        // 2. Ruedas de metro sobre rieles anchos (X = -1.0 y X = +1.0)
         VertexConsumer wheelBuf = bufferSource.getBuffer(RenderType.entitySolid(TEX_WHEEL));
         for (float bz : bogieZ) {
             renderBox(m, wheelBuf, -1.15F, 0.00F, bz - 0.40F, -0.85F, 0.50F, bz + 0.40F, packedLight);
             renderBox(m, wheelBuf, 0.85F, 0.00F, bz - 0.40F, 1.15F, 0.50F, bz + 0.40F, packedLight);
         }
 
-        // 3. Carrocería de Acero Inoxidable Cepillado (Subway Stainless Steel)
         VertexConsumer metalBuf = bufferSource.getBuffer(RenderType.entitySolid(TEX_METAL));
-        // Laterales inferiores
         renderBox(m, metalBuf, -halfW, floorY, -halfL, -halfW + 0.10F, floorY + 0.75F, halfL, packedLight);
         renderBox(m, metalBuf, halfW - 0.10F, floorY, -halfL, halfW, floorY + 0.75F, halfL, packedLight);
-        // Pared trasera
         renderBox(m, metalBuf, -halfW, floorY, -halfL, halfW, roofY, -halfL + 0.15F, packedLight);
-        // Pared frontal (Cabina)
         renderBox(m, metalBuf, -halfW, floorY, halfL - 0.30F, halfW, floorY + 0.95F, halfL, packedLight);
-        // Marco de techo
         renderBox(m, metalBuf, -halfW, roofY - 0.18F, -halfL, halfW, roofY, halfL, packedLight);
 
-        // 4. Franja Naranja Línea 3 de Seúl
         VertexConsumer orangeBuf = bufferSource.getBuffer(RenderType.entitySolid(TEX_ORANGE));
         renderBox(m, orangeBuf, -halfW - 0.01F, floorY + 0.75F, -halfL, -halfW + 0.11F, floorY + 1.00F, halfL, packedLight);
         renderBox(m, orangeBuf, halfW - 0.11F, floorY + 0.75F, -halfL, halfW + 0.01F, floorY + 1.00F, halfL, packedLight);
         renderBox(m, orangeBuf, -halfW, floorY + 0.95F, halfL - 0.30F, halfW, floorY + 1.20F, halfL, packedLight);
 
-        // 5. Asientos interiores del vagón (Cojines azules ergonómicos)
         VertexConsumer seatBuf = bufferSource.getBuffer(RenderType.entitySolid(TEX_SEAT_BLUE));
         renderBox(m, seatBuf, -halfW + 0.12F, floorY + 0.10F, -2.5F, -halfW + 0.65F, floorY + 0.40F, 1.5F, packedLight);
         renderBox(m, seatBuf, halfW - 0.65F, floorY + 0.10F, -2.5F, halfW - 0.12F, floorY + 0.40F, 1.5F, packedLight);
 
-        // 6. Consola de Conducción en la Cabina Frontal
         VertexConsumer ctrlBuf = bufferSource.getBuffer(RenderType.entitySolid(TEX_CONTROLLER));
         renderBox(m, ctrlBuf, -0.40F, floorY + 0.10F, halfL - 1.10F, 0.40F, floorY + 0.85F, halfL - 0.40F, packedLight);
 
-        // 7. Faros Delanteros Iluminados (FULL_BRIGHT)
         VertexConsumer lightBuf = bufferSource.getBuffer(RenderType.entityTranslucent(TEX_HEADLIGHT));
         renderBox(m, lightBuf, -halfW + 0.25F, floorY + 0.50F, halfL - 0.02F, -halfW + 0.60F, floorY + 0.80F, halfL + 0.02F, LightTexture.FULL_BRIGHT);
         renderBox(m, lightBuf, halfW - 0.60F, floorY + 0.50F, halfL - 0.02F, halfW - 0.25F, floorY + 0.80F, halfL + 0.02F, LightTexture.FULL_BRIGHT);
 
-        // 8. Ventanales Panorámicos de Cristal Tintado
         VertexConsumer glassBuf = bufferSource.getBuffer(RenderType.entityTranslucent(TEX_GLASS));
-        // Ventanales laterales
         renderBox(m, glassBuf, -halfW + 0.02F, floorY + 1.00F, -halfL + 0.4F, -halfW + 0.08F, roofY - 0.20F, halfL - 0.4F, packedLight);
         renderBox(m, glassBuf, halfW - 0.08F, floorY + 1.00F, -halfL + 0.4F, halfW - 0.02F, roofY - 0.20F, halfL - 0.4F, packedLight);
-        // Parabrisas de la cabina del conductor
         renderBox(m, glassBuf, -halfW + 0.20F, floorY + 1.20F, halfL - 0.28F, halfW - 0.20F, roofY - 0.20F, halfL - 0.22F, packedLight);
 
         poseStack.popPose();

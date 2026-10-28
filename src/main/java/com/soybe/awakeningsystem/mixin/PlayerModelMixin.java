@@ -22,7 +22,6 @@ public abstract class PlayerModelMixin<T extends LivingEntity> extends HumanoidM
     private void awakening_system$setupCustomPoses(T entity, float limbSwing, float limbSwingAmount, float ageInTicks, float netHeadYaw, float headPitch, CallbackInfo ci) {
         if (entity.getVehicle() instanceof FlyingSwordEntity) {
             this.riding = false;
-            // Postura erguida de cultivador inmortal sobre la espada voladora
             this.leftLeg.xRot = 0.0F;
             this.leftLeg.yRot = 0.0F;
             this.leftLeg.zRot = -0.05F;
@@ -30,7 +29,6 @@ public abstract class PlayerModelMixin<T extends LivingEntity> extends HumanoidM
             this.rightLeg.yRot = 0.0F;
             this.rightLeg.zRot = 0.05F;
 
-            // Brazos rectos a los lados
             this.leftArm.xRot = 0.0F;
             this.leftArm.yRot = 0.0F;
             this.leftArm.zRot = -0.08F;
@@ -39,14 +37,12 @@ public abstract class PlayerModelMixin<T extends LivingEntity> extends HumanoidM
             this.rightArm.zRot = 0.08F;
         } else if (entity.getVehicle() instanceof MeditationSeatEntity) {
             this.riding = true;
-            // Padmasana: postura de piernas cruzadas en loto
             this.leftLeg.xRot = -1.45F;
             this.leftLeg.yRot = 0.52F;
             this.leftLeg.zRot = 0.35F;
             this.rightLeg.xRot = -1.45F;
             this.rightLeg.yRot = -0.52F;
             this.rightLeg.zRot = -0.35F;
-            // Dhyana Mudra: postura de meditación con palmas sobre las rodillas
             this.leftArm.xRot = -0.70F;
             this.leftArm.yRot = 0.35F;
             this.leftArm.zRot = -0.25F;
@@ -55,7 +51,6 @@ public abstract class PlayerModelMixin<T extends LivingEntity> extends HumanoidM
             this.rightArm.zRot = 0.25F;
         } else if (entity.getVehicle() instanceof com.soybe.awakeningsystem.entity.CelestialDragonEntity || entity.getVehicle() instanceof com.soybe.awakeningsystem.entity.AncientDragonEntity) {
             this.riding = true;
-            // Postura de Jinete de Dragón: brazos adelantados sosteniendo riendas/crin dracónica si no empuña armas
             if (entity.getMainHandItem().isEmpty() && entity.getOffhandItem().isEmpty()) {
                 this.leftArm.xRot = -0.62F;
                 this.leftArm.yRot = 0.18F;

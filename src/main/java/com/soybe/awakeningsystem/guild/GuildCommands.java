@@ -167,7 +167,7 @@ public final class GuildCommands {
                             ServerPlayer player = ctx.getSource().getPlayerOrException();
                             Guild g = GuildSavedData.get(player.server).getGuildByPlayer(player.getUUID());
                             if (g == null) {
-                                player.sendSystemMessage(Component.literal("§cNo perteneces a ningún gremio."));
+                                player.sendSystemMessage(Component.translatable("guild.msg.not_in_guild"));
                                 return 0;
                             }
                             printGuildInfo(player, g);
@@ -179,7 +179,7 @@ public final class GuildCommands {
                                     String gName = StringArgumentType.getString(ctx, "guildName");
                                     Guild g = GuildSavedData.get(player.server).getGuildByName(gName);
                                     if (g == null) {
-                                        player.sendSystemMessage(Component.literal("§cNo se encontró ningún gremio con ese nombre."));
+                                        player.sendSystemMessage(Component.translatable("guild.msg.guild_not_found"));
                                         return 0;
                                     }
                                     printGuildInfo(player, g);
@@ -190,31 +190,116 @@ public final class GuildCommands {
                             ServerPlayer player = ctx.getSource().getPlayerOrException();
                             Collection<Guild> guilds = GuildSavedData.get(player.server).getAllGuilds();
                             if (guilds.isEmpty()) {
-                                player.sendSystemMessage(Component.literal("§7No hay gremios fundados en este mundo aún. ¡Usa §e/guild create §7para fundar uno!"));
+                                player.sendSystemMessage(Component.translatable("guild.msg.no_guilds_founded"));
                                 return 1;
                             }
-                            player.sendSystemMessage(Component.literal("§6═══════ §f[LISTA DE GREMIOS DE CAZADORES] §6═══════"));
+                            player.sendSystemMessage(Component.translatable("guild.msg.guild_list_header"));
                             for (Guild g : guilds) {
                                 player.sendSystemMessage(Component.literal("§e✦ [" + g.getTag() + "] §b" + g.getName() + " §7- Nv. §a" + g.getLevel() + " §7(Miembros: §f" + g.getMembers().size() + "§7)"));
                             }
                             return 1;
-                        }));
+                        }))
+                .then(Commands.literal("portal")
+                        .then(Commands.literal("claim")
+                                .executes(ctx -> {
+                                    ServerPlayer player = ctx.getSource().getPlayerOrException();
+                                    GuildSavedData.get(player.server).claimNearbyPortal(player);
+                                    return 1;
+                                }))
+                        .then(Commands.literal("unclaim")
+                                .executes(ctx -> {
+                                    ServerPlayer player = ctx.getSource().getPlayerOrException();
+                                    GuildSavedData.get(player.server).unclaimNearbyPortal(player);
+                                    return 1;
+                                }))
+                        .then(Commands.literal("list")
+                                .executes(ctx -> {
+                                    ServerPlayer player = ctx.getSource().getPlayerOrException();
+                                    GuildSavedData.get(player.server).listGuildPortals(player);
+                                    return 1;
+                                }))
+                        .then(Commands.literal("setfee")
+                                .then(Commands.argument("mora", IntegerArgumentType.integer(0, 100000000))
+                                        .executes(ctx -> {
+                                            ServerPlayer player = ctx.getSource().getPlayerOrException();
+                                            int mora = IntegerArgumentType.getInteger(ctx, "mora");
+                                            GuildSavedData.get(player.server).setPortalRentalFee(player, mora);
+                                            player.sendSystemMessage(Component.translatable("guild.msg.portal_rental_fee_updated", String.format("%,d", mora)));
+                                            return 1;
+                                        })))
+                        .then(Commands.literal("fee")
+                                .then(Commands.argument("mora", IntegerArgumentType.integer(0, 100000000))
+                                        .executes(ctx -> {
+                                            ServerPlayer player = ctx.getSource().getPlayerOrException();
+                                            int mora = IntegerArgumentType.getInteger(ctx, "mora");
+                                            GuildSavedData.get(player.server).setPortalRentalFee(player, mora);
+                                            player.sendSystemMessage(Component.translatable("guild.msg.portal_rental_fee_updated", String.format("%,d", mora)));
+                                            return 1;
+                                        })))
+                        .then(Commands.literal("rent")
+                                .then(Commands.literal("request")
+                                        .then(Commands.argument("x", IntegerArgumentType.integer())
+                                                .then(Commands.argument("y", IntegerArgumentType.integer())
+                                                        .then(Commands.argument("z", IntegerArgumentType.integer())
+                                                                .executes(ctx -> {
+                                                                    ServerPlayer player = ctx.getSource().getPlayerOrException();
+                                                                    int x = IntegerArgumentType.getInteger(ctx, "x");
+                                                                    int y = IntegerArgumentType.getInteger(ctx, "y");
+                                                                    int z = IntegerArgumentType.getInteger(ctx, "z");
+                                                                    GuildSavedData.get(player.server).requestPortalRent(player, x, y, z);
+                                                                    return 1;
+                                                                })))))
+                                .then(Commands.literal("accept")
+                                        .then(Commands.argument("target", StringArgumentType.word())
+                                                .then(Commands.argument("x", IntegerArgumentType.integer())
+                                                        .then(Commands.argument("y", IntegerArgumentType.integer())
+                                                                .then(Commands.argument("z", IntegerArgumentType.integer())
+                                                                        .executes(ctx -> {
+                                                                            ServerPlayer officer = ctx.getSource().getPlayerOrException();
+                                                                            String targetStr = StringArgumentType.getString(ctx, "target");
+                                                                            int x = IntegerArgumentType.getInteger(ctx, "x");
+                                                                            int y = IntegerArgumentType.getInteger(ctx, "y");
+                                                                            int z = IntegerArgumentType.getInteger(ctx, "z");
+                                                                            try {
+                                                                                UUID targetUuid = UUID.fromString(targetStr);
+                                                                                GuildSavedData.get(officer.server).acceptPortalRent(officer, targetUuid, x, y, z);
+                                                                            } catch (IllegalArgumentException e) {
+                                                                                officer.sendSystemMessage(Component.translatable("guild.msg.invalid_uuid"));
+                                                                            }
+                                                                            return 1;
+                                                                        }))))))
+                                .then(Commands.literal("deny")
+                                        .then(Commands.argument("target", StringArgumentType.word())
+                                                .then(Commands.argument("x", IntegerArgumentType.integer())
+                                                        .then(Commands.argument("y", IntegerArgumentType.integer())
+                                                                .then(Commands.argument("z", IntegerArgumentType.integer())
+                                                                        .executes(ctx -> {
+                                                                            ServerPlayer officer = ctx.getSource().getPlayerOrException();
+                                                                            String targetStr = StringArgumentType.getString(ctx, "target");
+                                                                            int x = IntegerArgumentType.getInteger(ctx, "x");
+                                                                            int y = IntegerArgumentType.getInteger(ctx, "y");
+                                                                            int z = IntegerArgumentType.getInteger(ctx, "z");
+                                                                            try {
+                                                                                UUID targetUuid = UUID.fromString(targetStr);
+                                                                                GuildSavedData.get(officer.server).denyPortalRent(officer, targetUuid, x, y, z);
+                                                                            } catch (IllegalArgumentException e) {
+                                                                                officer.sendSystemMessage(Component.translatable("guild.msg.invalid_uuid"));
+                                                                            }
+                                                                            return 1;
+                                                                        }))))))));
 
-        // Registrar /guild
         dispatcher.register(root);
 
-        // Registrar alias /clan
         var clanRoot = Commands.literal("clan")
                 .redirect(dispatcher.getRoot().getChild("guild"));
         dispatcher.register(clanRoot);
 
-        // Comandos de Chat de Gremio: /gc, /g, /clanchat (soporta mensaje directo o alternar modo)
         var gcCmd = Commands.literal("gc")
                 .executes(ctx -> {
                     ServerPlayer player = ctx.getSource().getPlayerOrException();
                     Guild g = GuildSavedData.get(player.server).getGuildByPlayer(player.getUUID());
                     if (g == null) {
-                        player.sendSystemMessage(Component.literal("§cNo perteneces a ningún gremio."));
+                        player.sendSystemMessage(Component.translatable("guild.msg.not_in_guild"));
                         return 0;
                     }
                     boolean active = GuildEventHandler.toggleGuildChat(player);
@@ -239,7 +324,7 @@ public final class GuildCommands {
                     ServerPlayer player = ctx.getSource().getPlayerOrException();
                     Guild g = GuildSavedData.get(player.server).getGuildByPlayer(player.getUUID());
                     if (g == null) {
-                        player.sendSystemMessage(Component.literal("§cNo perteneces a ningún gremio."));
+                        player.sendSystemMessage(Component.translatable("guild.msg.not_in_guild"));
                         return 0;
                     }
                     boolean active = GuildEventHandler.toggleGuildChat(player);
@@ -264,7 +349,7 @@ public final class GuildCommands {
                     ServerPlayer player = ctx.getSource().getPlayerOrException();
                     Guild g = GuildSavedData.get(player.server).getGuildByPlayer(player.getUUID());
                     if (g == null) {
-                        player.sendSystemMessage(Component.literal("§cNo perteneces a ningún gremio."));
+                        player.sendSystemMessage(Component.translatable("guild.msg.not_in_guild"));
                         return 0;
                     }
                     boolean active = GuildEventHandler.toggleGuildChat(player);
@@ -287,19 +372,19 @@ public final class GuildCommands {
 
     private static void printGuildInfo(ServerPlayer player, Guild g) {
         player.sendSystemMessage(Component.literal("§6═══════ §f[" + g.getTag() + "] §e" + g.getName() + " §6═══════"));
-        player.sendSystemMessage(Component.literal("§7Nivel: §a" + g.getLevel() + " §7| EXP: §b" + g.getExp() + " / " + g.getExpForNextLevel()));
-        player.sendSystemMessage(Component.literal("§7Fondo de Moras: §e" + g.getMoraVault() + " Moras"));
-        player.sendSystemMessage(Component.literal("§7Miembros (§f" + g.getMembers().size() + "§7):"));
+        player.sendSystemMessage(Component.translatable("awakening_system.guild.info_level", g.getLevel(), g.getExp(), g.getExpForNextLevel()));
+        player.sendSystemMessage(Component.translatable("awakening_system.guild.info_vault", g.getMoraVault()));
+        player.sendSystemMessage(Component.translatable("awakening_system.guild.info_members", g.getMembers().size()));
         for (GuildMember m : g.getMembers().values()) {
             boolean isOnline = player.server.getPlayerList().getPlayer(m.getUuid()) != null;
             String status = isOnline ? "§a●" : "§7○";
-            player.sendSystemMessage(Component.literal("  " + status + " " + m.getRole().getLabel() + " §f" + m.getName() + " §7(Donado: §e" + m.getContributedMora() + "§7)"));
+            player.sendSystemMessage(Component.translatable("awakening_system.guild.info_member_entry", status, m.getRole().getLabel(), m.getName(), m.getContributedMora()));
         }
-        player.sendSystemMessage(Component.literal("§7Bendiciones Activas: §d" + g.getUnlockedPerks().size()));
+        player.sendSystemMessage(Component.translatable("awakening_system.guild.info_active_perks", g.getUnlockedPerks().size()));
         for (String pId : g.getUnlockedPerks()) {
             GuildPerk p = GuildPerk.fromId(pId);
             if (p != null) {
-                player.sendSystemMessage(Component.literal("  §b✔ " + p.getTitle() + " §8- " + p.getDescription()));
+                player.sendSystemMessage(Component.literal("  §b✔ ").append(p.getTitleComponent()).append(Component.literal(" §8- ")).append(p.getDescriptionComponent()));
             }
         }
         player.sendSystemMessage(Component.literal("§6══════════════════════════════════"));

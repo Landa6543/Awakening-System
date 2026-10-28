@@ -57,11 +57,9 @@ public class CelestialDragonModel<T extends CelestialDragonEntity> extends Entit
         ModelPart current = this.neck1;
         this.chainJoints = new ModelPart[31];
 
-        // 1. neck2
         current = current.getChild("neck2");
         this.chainJoints[0] = current;
 
-        // 2..23: body1 a body22 (colosal ~50 bloques de longitud)
         ModelPart bFront = null;
         ModelPart bBack = null;
         for (int b = 1; b <= 22; b++) {
@@ -71,13 +69,11 @@ public class CelestialDragonModel<T extends CelestialDragonEntity> extends Entit
             if (b == 16) bBack = current;
         }
 
-        // 24..30: tail1 a tail7
         for (int t = 1; t <= 7; t++) {
             current = current.getChild("tail" + t);
             this.chainJoints[22 + t] = current;
         }
 
-        // 31: tailTuft
         this.tailTuft = current.getChild("tail_tuft");
         this.chainJoints[30] = this.tailTuft;
 
@@ -91,24 +87,20 @@ public class CelestialDragonModel<T extends CelestialDragonEntity> extends Entit
         MeshDefinition mesh = new MeshDefinition();
         PartDefinition root = mesh.getRoot();
 
-        // 1. neck1 (profundidad 10 calibrada exactamente a la textura: z = -4 a +6)
         PartDefinition neck1 = root.addOrReplaceChild("neck1", CubeListBuilder.create()
                 .texOffs(0, 25).addBox(-4.0F, -4.0F, -4.0F, 8.0F, 8.0F, 10.0F, new CubeDeformation(0.0F))
                 .texOffs(38, 25).addBox(-1.0F, -8.0F, -4.0F, 2.0F, 4.0F, 10.0F, new CubeDeformation(0.0F))
                 .texOffs(64, 25).addBox(-3.0F, 3.8F, -4.0F, 6.0F, 1.0F, 10.0F, new CubeDeformation(0.0F)),
                 PartPose.offset(0.0F, 8.0F, -14.0F));
 
-        // Head con cejas 3D prominentes
         PartDefinition head = neck1.addOrReplaceChild("head", CubeListBuilder.create()
                 .texOffs(0, 0).addBox(-4.0F, -4.0F, -8.0F, 8.0F, 7.0F, 9.0F, new CubeDeformation(0.0F))
                 .texOffs(35, 0).addBox(-3.0F, -1.0F, -16.0F, 6.0F, 4.0F, 8.0F, new CubeDeformation(0.0F))
                 .texOffs(64, 0).addBox(-2.5F, -2.5F, -15.0F, 5.0F, 2.0F, 7.0F, new CubeDeformation(0.0F))
-                // Cejas 3D arqueadas sobre los ojos ancestrales
                 .texOffs(64, 0).addBox(-4.2F, -2.8F, -8.0F, 0.4F, 1.0F, 4.5F, new CubeDeformation(0.0F))
                 .texOffs(64, 0).addBox(3.8F, -2.8F, -8.0F, 0.4F, 1.0F, 4.5F, new CubeDeformation(0.0F)),
                 PartPose.offset(0.0F, 0.0F, -3.0F));
 
-        // Cuernos ramificados de ciervo imperial en café noble (Stag Antlers hacia atrás y arriba)
         head.addOrReplaceChild("horn_left", CubeListBuilder.create()
                 .texOffs(64, 10).addBox(-1.0F, -10.0F, -1.0F, 2.0F, 10.0F, 2.0F, new CubeDeformation(0.0F))
                 .texOffs(73, 10).addBox(-0.5F, -15.0F, -0.5F, 1.0F, 5.0F, 1.0F, new CubeDeformation(0.0F))
@@ -141,14 +133,12 @@ public class CelestialDragonModel<T extends CelestialDragonEntity> extends Entit
                 .texOffs(90, 5).addBox(-0.5F, -0.5F, 0.0F, 1.0F, 1.0F, 14.0F, new CubeDeformation(0.0F)),
                 PartPose.offset(1.5F, 0.0F, 1.0F));
 
-        // 2. neck2 (offset 5.0F, caja z = -2 a +8 -> solapamiento permanente de 3 unidades con neck1)
         PartDefinition neck2 = neck1.addOrReplaceChild("neck2", CubeListBuilder.create()
                 .texOffs(0, 25).addBox(-4.0F, -4.0F, -2.0F, 8.0F, 8.0F, 10.0F, new CubeDeformation(0.0F))
                 .texOffs(38, 25).addBox(-1.0F, -8.0F, -2.0F, 2.0F, 4.0F, 10.0F, new CubeDeformation(0.0F))
                 .texOffs(64, 25).addBox(-3.0F, 3.8F, -2.0F, 6.0F, 1.0F, 10.0F, new CubeDeformation(0.0F)),
                 PartPose.offset(0.0F, 0.0F, 5.0F));
 
-        // 22 Segmentos de cuerpo (~50 bloques colosales)
         PartDefinition prev = neck2;
         for (int b = 1; b <= 22; b++) {
             PartDefinition body = prev.addOrReplaceChild("body" + b, CubeListBuilder.create()
@@ -163,7 +153,6 @@ public class CelestialDragonModel<T extends CelestialDragonEntity> extends Entit
             prev = body;
         }
 
-        // 7 Segmentos de Cola cónica
         PartDefinition tail1 = prev.addOrReplaceChild("tail1", CubeListBuilder.create()
                 .texOffs(0, 58).addBox(-3.5F, -3.5F, -2.0F, 7.0F, 7.0F, 9.0F, new CubeDeformation(0.0F))
                 .texOffs(34, 58).addBox(-1.0F, -6.0F, -2.0F, 2.0F, 3.0F, 9.0F, new CubeDeformation(0.0F))
@@ -237,101 +226,87 @@ public class CelestialDragonModel<T extends CelestialDragonEntity> extends Entit
         float partialTick = ageInTicks - (float) entity.tickCount;
         if (partialTick < 0.0F) partialTick += 1.0F;
 
-        // Si el dragón está en tierra, quieto y sin jinete (NUNCA en vuelo ni cuando está montado)
-        boolean isIdleResting = !entity.isVehicle() && entity.onGround() && (entity.isOrderedToSit() || entity.isInSittingPose() || entity.getDeltaMovement().horizontalDistanceSqr() < 0.01D);
-        float slowBreathing = Mth.sin(ageInTicks * 0.05F) * 0.02F;
-
-        // 1. Orientación de la Cabeza y Cuello Raíz (neck1)
-        if (isIdleResting) {
-            this.neck1.xRot = slowBreathing * 0.4F;
-            this.neck1.yRot = 0.0F;
-            this.head.xRot = slowBreathing * 0.4F;
-            this.head.yRot = 0.0F;
-        } else {
-            // Rotación del cabeceo cinemático en neck1:
-            // Al presionar Espacio (subida) -> neck1 se inclina vertical hacia arriba (-65°)
-            // Al presionar Shift (picada) -> neck1 se inclina hacia abajo (+65°)
-            float basePitch = entity.getSegmentPitch(0, partialTick) * ((float) Math.PI / 180.0F);
-            this.neck1.xRot = basePitch;
-            this.neck1.yRot = 0.0F;
-
-            if (entity.isVehicle()) {
-                float cleanHeadYaw = Mth.wrapDegrees(netHeadYaw);
-                this.head.xRot = Mth.clamp((headPitch * ((float)Math.PI / 180F) - basePitch) * 0.20F, -0.35F, 0.35F);
-                this.head.yRot = cleanHeadYaw * ((float)Math.PI / 180F) * 0.15F;
-            } else {
-                this.head.xRot = 0.0F;
-                this.head.yRot = netHeadYaw * ((float)Math.PI / 180F) * 0.35F;
-            }
+        boolean isSitting = entity.isOrderedToSit() || entity.isInSittingPose();
+        double horizSpeedSq = entity.getDeltaMovement().horizontalDistanceSqr();
+        float speed = (float) Math.sqrt(horizSpeedSq);
+        float speedNorm = Mth.clamp(speed * 2.5F, 0.0F, 1.0F);
+        if (entity.isVehicle()) {
+            speedNorm = Math.max(speedNorm, 0.45F);
         }
+
+        // Constant angular frequency avoids phase-shearing jitter completely (baseTime is strictly monotonic)
+        float baseTime = ageInTicks * 0.085F;
+        float waveK = 0.35F; // Spatial wavelength: ~18 vertebrae per cycle
+
+        // Amplitude scales smoothly with speed; dampened when sitting
+        float yawAmp = 0.040F + speedNorm * 0.022F;
+        float pitchAmp = 0.015F + speedNorm * 0.010F;
+        if (isSitting) {
+            yawAmp *= 0.35F;
+            pitchAmp *= 0.35F;
+        }
+
+        // Neck1 is root; keep yRot strictly 0 so downstream joints do not swing the entire world pose
+        float basePitch = entity.getSegmentPitch(0, partialTick) * ((float) Math.PI / 180.0F);
+        this.neck1.xRot = Mth.clamp(basePitch, -0.65F, 0.65F);
+        this.neck1.yRot = 0.0F;
+        this.neck1.zRot = 0.0F;
+
+        // Head aims naturally without jerking
+        float cleanHeadYaw = Mth.clamp(Mth.wrapDegrees(netHeadYaw), -50.0F, 50.0F) * ((float) Math.PI / 180.0F);
+        float cleanHeadPitch = Mth.clamp(headPitch, -35.0F, 35.0F) * ((float) Math.PI / 180.0F);
+        this.head.yRot = cleanHeadYaw * 0.40F;
+        this.head.xRot = cleanHeadPitch * 0.30F;
 
         if (entity.isRoaring() || entity.isBreathing()) {
             this.jaw.xRot = 0.65F;
         } else {
-            this.jaw.xRot = 0.04F + Mth.sin(ageInTicks * 0.1F) * 0.03F;
+            this.jaw.xRot = 0.04F + Mth.sin(ageInTicks * 0.10F) * 0.03F;
         }
 
-        // Bigotes
-        float wFlutter = Mth.sin(ageInTicks * 0.22F) * 0.14F;
+        // Smooth flowing whiskers
+        float wFlutter = Mth.sin(ageInTicks * 0.12F) * (0.08F + speedNorm * 0.08F);
         this.whiskerLeft.yRot = -0.32F + wFlutter;
-        this.whiskerLeftTip.yRot = 0.18F + Mth.sin(ageInTicks * 0.22F - 0.6F) * 0.20F;
-        this.whiskerLeftTip.zRot = 0.12F + Mth.cos(ageInTicks * 0.18F - 0.6F) * 0.14F;
+        this.whiskerLeftTip.yRot = 0.18F + Mth.sin(ageInTicks * 0.15F - 0.6F) * 0.14F;
+        this.whiskerLeftTip.zRot = 0.12F + Mth.cos(ageInTicks * 0.12F - 0.6F) * 0.10F;
 
         this.whiskerRight.yRot = 0.32F - wFlutter;
-        this.whiskerRightTip.yRot = -0.18F - Mth.sin(ageInTicks * 0.22F - 0.6F) * 0.20F;
-        this.whiskerRightTip.zRot = -0.12F - Mth.cos(ageInTicks * 0.18F - 0.6F) * 0.14F;
+        this.whiskerRightTip.yRot = -0.18F - Mth.sin(ageInTicks * 0.15F - 0.6F) * 0.10F;
+        this.whiskerRightTip.zRot = -0.12F - Mth.cos(ageInTicks * 0.12F - 0.6F) * 0.10F;
 
-        // 2. CINEMÁTICA SERPENTINA DE ESTELA Y REPOSO EN TIERRA
+        // 31-joint kinematic chain: local bend + traveling continuous wave
         for (int i = 0; i < this.chainJoints.length; i++) {
             ModelPart joint = this.chainJoints[i];
             int segIndex = i + 1;
 
-            if (isIdleResting) {
-                // Reposo noble ancestral en tierra: cuerpo sereno sobre el suelo con respiración sutil de Qi
-                float breathVertical = Mth.sin(ageInTicks * 0.05F - (float) i * 0.08F) * 0.012F;
-                float groundSettle = (i > 15) ? 0.015F : 0.0F;
-                float lazyTail = (i >= 25) ? Mth.sin(ageInTicks * 0.03F + (float) (i - 25) * 0.20F) * 0.03F : 0.0F;
+            float curYaw = entity.getSegmentYaw(segIndex, partialTick);
+            float prevYaw = entity.getSegmentYaw(segIndex - 1, partialTick);
+            float rawDiffYaw = Mth.wrapDegrees(curYaw - prevYaw);
+            float bendYaw = Mth.clamp(rawDiffYaw, -14.0F, 14.0F) * ((float) Math.PI / 180.0F);
 
-                joint.yRot = lazyTail;
-                joint.xRot = breathVertical + groundSettle;
-                joint.zRot = 0.0F;
-            } else {
-                float curYaw = entity.getSegmentYaw(segIndex, partialTick);
-                float prevYaw = entity.getSegmentYaw(segIndex - 1, partialTick);
-                float bendYaw = Mth.wrapDegrees(curYaw - prevYaw) * ((float) Math.PI / 180.0F);
+            float curPitch = entity.getSegmentPitch(segIndex, partialTick);
+            float prevPitch = entity.getSegmentPitch(segIndex - 1, partialTick);
+            float rawDiffPitch = curPitch - prevPitch;
+            float bendPitch = Mth.clamp(rawDiffPitch, -10.0F, 10.0F) * ((float) Math.PI / 180.0F);
 
-                float curPitch = entity.getSegmentPitch(segIndex, partialTick);
-                float prevPitch = entity.getSegmentPitch(segIndex - 1, partialTick);
-                float bendPitch = (curPitch - prevPitch) * ((float) Math.PI / 180.0F);
+            float segOffset = (float) i * waveK;
+            float easeIn = Math.min(1.0F, (i + 1) * 0.14F);
+            float waveYaw = Mth.sin(baseTime - segOffset) * (yawAmp * easeIn);
+            float wavePitch = Mth.cos(baseTime - segOffset) * (pitchAmp * easeIn);
 
-                // Cinemática pura sin restricciones artificiales para permitir enroscar el dragón libremente
-                joint.yRot = bendYaw;
-                joint.xRot = bendPitch;
-                joint.zRot = -bendYaw * 0.06F;
-            }
+            joint.yRot = bendYaw + waveYaw;
+            joint.xRot = bendPitch + wavePitch;
+            joint.zRot = -bendYaw * 0.08F + waveYaw * 0.06F;
         }
 
-        if (isIdleResting) {
-            this.tailTuft.yRot = Mth.sin(ageInTicks * 0.03F) * 0.05F;
-            this.tailTuft.zRot = 0.0F;
-        } else {
-            this.tailTuft.yRot = 0.0F;
-            this.tailTuft.zRot = 0.0F;
-        }
-
-        // 3. Patas
-        if (isIdleResting) {
-            this.legFrontLeft.xRot = 0.25F;
-            this.legFrontRight.xRot = 0.25F;
-            this.legBackLeft.xRot = 0.35F;
-            this.legBackRight.xRot = 0.35F;
-        } else {
-            float legCycle = ageInTicks * 0.14F;
-            this.legFrontLeft.xRot = 0.35F + Mth.cos(legCycle) * 0.18F;
-            this.legFrontRight.xRot = 0.35F - Mth.cos(legCycle) * 0.18F;
-            this.legBackLeft.xRot = 0.45F - Mth.cos(legCycle) * 0.18F;
-            this.legBackRight.xRot = 0.45F + Mth.cos(legCycle) * 0.18F;
-        }
+        // Paws: smooth paddling/undulation
+        float legCycle = ageInTicks * 0.085F;
+        float legSwing = Mth.cos(legCycle) * 0.12F * (0.35F + speedNorm * 0.65F);
+        float legBasePitch = isSitting ? 0.25F : 0.38F;
+        this.legFrontLeft.xRot = legBasePitch + legSwing;
+        this.legFrontRight.xRot = legBasePitch - legSwing;
+        this.legBackLeft.xRot = (legBasePitch + 0.10F) - legSwing;
+        this.legBackRight.xRot = (legBasePitch + 0.10F) + legSwing;
     }
 
     @Override

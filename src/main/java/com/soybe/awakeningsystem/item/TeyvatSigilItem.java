@@ -26,12 +26,15 @@ import java.util.List;
 public class TeyvatSigilItem extends Item {
 
     public enum SigilType {
-        ANEMO("anemo", "Insignia Anemo", "Mondstadt", 1600, ChatFormatting.GREEN),
-        GEO("geo", "Insignia Geo", "Liyue", 1600, ChatFormatting.GOLD),
-        ELECTRO("electro", "Insignia Electro", "Inazuma", 1600, ChatFormatting.LIGHT_PURPLE),
-        DENDRO("dendro", "Insignia Dendro", "Sumeru", 1600, ChatFormatting.DARK_GREEN),
-        GUARDIAN("guardians", "Insignia del Guardián", "Ruinas de Teyvat", 3200, ChatFormatting.AQUA),
-        LIGHT_REALM("light_realm", "Insignia del Reino de la Luz", "Enkanomiya", 4500, ChatFormatting.YELLOW);
+        ANEMO("anemo", "Anemo Sigil", "Mondstadt", 1600, ChatFormatting.GREEN),
+        GEO("geo", "Geo Sigil", "Liyue", 1600, ChatFormatting.GOLD),
+        ELECTRO("electro", "Electro Sigil", "Inazuma", 1600, ChatFormatting.LIGHT_PURPLE),
+        DENDRO("dendro", "Dendro Sigil", "Sumeru", 1600, ChatFormatting.DARK_GREEN),
+        HYDRO("hydro", "Hydro Sigil", "Fontaine", 1600, ChatFormatting.BLUE),
+        PYRO("pyro", "Pyro Sigil", "Natlan", 1600, ChatFormatting.RED),
+        CRYO("cryo", "Cryo Sigil", "Snezhnaya", 1600, ChatFormatting.AQUA),
+        GUARDIAN("guardians", "Guardian Sigil", "Teyvat Ruins", 3200, ChatFormatting.AQUA),
+        LIGHT_REALM("light_realm", "Light Realm Sigil", "Enkanomiya", 4500, ChatFormatting.YELLOW);
 
         public final String id;
         public final String title;
@@ -72,7 +75,7 @@ public class TeyvatSigilItem extends Item {
             sl.sendParticles(ParticleTypes.HAPPY_VILLAGER, sp.getX(), sp.getY() + 1.0, sp.getZ(), 15, 0.5, 0.5, 0.5, 0.1);
             sl.playSound(null, sp.getX(), sp.getY(), sp.getZ(), SoundEvents.EXPERIENCE_ORB_PICKUP, SoundSource.PLAYERS, 1.0F, 1.3F);
 
-            sp.displayClientMessage(Component.literal("§6+" + type.moraValue + " Mora §7(Canje de " + type.format + type.title + "§7)"), true);
+            sp.displayClientMessage(Component.translatable("item.awakening_system.teyvat_sigil.redeem_msg", type.moraValue, type.format + type.title), true);
         }
 
         return InteractionResultHolder.sidedSuccess(stack, level.isClientSide());
@@ -80,8 +83,8 @@ public class TeyvatSigilItem extends Item {
 
     @Override
     public void appendHoverText(ItemStack stack, TooltipContext context, List<Component> tooltip, TooltipFlag flag) {
-        tooltip.add(Component.literal("§7Región: " + type.format + type.region));
-        tooltip.add(Component.literal("§e[Click Derecho] §7Canjear por §6" + type.moraValue + " Mora§7."));
-        tooltip.add(Component.literal("§8Moneda de intercambio ceremonial venerada por las gentes de Teyvat."));
+        tooltip.add(Component.translatable("item.awakening_system.teyvat_sigil.region", type.format + type.region));
+        tooltip.add(Component.translatable("item.awakening_system.teyvat_sigil.use", String.valueOf(type.moraValue)));
+        tooltip.add(Component.translatable("item.awakening_system.teyvat_sigil.lore"));
     }
 }

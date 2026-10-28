@@ -32,7 +32,7 @@ public class CryoHypostasisBossEntity extends HypostasisBaseBossEntity {
 
     @Override
     protected Component getBossTitle() {
-        return Component.literal("§b✦ Daleth — Hipóstasis Cryo ✦");
+        return Component.translatable("boss.awakening_system.hypostasis.cryo");
     }
 
     @Override
@@ -47,7 +47,7 @@ public class CryoHypostasisBossEntity extends HypostasisBaseBossEntity {
 
     @Override
     public int getElementalColorHex() {
-        return 0x88EEFF; // Azul Glacial / Hielo Cryo
+        return 0x88EEFF;
     }
 
     @Override
@@ -121,7 +121,7 @@ public class CryoHypostasisBossEntity extends HypostasisBaseBossEntity {
     protected void spawnRevivalObjects(ServerLevel sl) {
         sl.playSound(null, this.getX(), this.getY(), this.getZ(), SoundEvents.GLASS_BREAK, SoundSource.HOSTILE, 2.0F, 0.5F);
         for (ServerPlayer player : sl.getPlayers(p -> p.distanceToSqr(this) < 1600.0D)) {
-            player.displayClientMessage(Component.literal("§b§l✦ [DALETH EN CRISIS] §f¡Aplica ataques de Pyro para derretir la coraza helada antes de que restaure su vitalidad!"), true);
+            player.displayClientMessage(Component.translatable("boss.awakening_system.cryo_hypostasis.crisis"), true);
         }
     }
 
@@ -143,12 +143,12 @@ public class CryoHypostasisBossEntity extends HypostasisBaseBossEntity {
                     data.addMora(60000);
                     data.addPrimogems(30);
                     com.soybe.awakeningsystem.AwakeningSystemMod.sync(sp);
-                    sp.displayClientMessage(Component.literal("§b§l✦ ¡HIPÓSTASIS CRYO DERROTADO! §eHas ganado §6+60,000 Mora §ey §b+30 Protogemas§e."), false);
+                    sp.displayClientMessage(Component.translatable("boss.awakening_system.cryo_hypostasis.defeated_teyvat"), false);
                 } else {
                     if (SystemItems.AWAKENING_COIN.isBound()) {
                         sp.addItem(new ItemStack(SystemItems.AWAKENING_COIN.get(), 24));
                     }
-                    sp.displayClientMessage(Component.literal("§b§l✦ ¡HIPÓSTASIS CRYO DERROTADO! §6+24 Monedas de Despertar§e."), false);
+                    sp.displayClientMessage(Component.translatable("boss.awakening_system.cryo_hypostasis.defeated_vanilla"), false);
                 }
             }
         }

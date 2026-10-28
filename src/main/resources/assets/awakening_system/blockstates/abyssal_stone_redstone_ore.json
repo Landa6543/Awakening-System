@@ -1,0 +1,10 @@
+{
+    "variants":  {
+                     "lit=true":  {
+                                      "model":  "awakening_system:block/abyssal_stone_redstone_ore"
+                                  },
+                     "lit=false":  {
+                                       "model":  "awakening_system:block/abyssal_stone_redstone_ore"
+                                   }
+                 }
+}

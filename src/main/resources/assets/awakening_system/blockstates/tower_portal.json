@@ -1,9 +1,21 @@
 {
   "variants": {
-    "axis=x": {
+    "axis=x,portal_type=base": {
       "model": "awakening_system:block/tower_portal_ns"
     },
-    "axis=z": {
+    "axis=x,portal_type=return": {
+      "model": "awakening_system:block/tower_portal_ns"
+    },
+    "axis=x,portal_type=ascend": {
+      "model": "awakening_system:block/tower_portal_ns"
+    },
+    "axis=z,portal_type=base": {
+      "model": "awakening_system:block/tower_portal_ew"
+    },
+    "axis=z,portal_type=return": {
+      "model": "awakening_system:block/tower_portal_ew"
+    },
+    "axis=z,portal_type=ascend": {
       "model": "awakening_system:block/tower_portal_ew"
     }
   }

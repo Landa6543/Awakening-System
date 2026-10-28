@@ -3,7 +3,11 @@ package com.soybe.awakeningsystem.entity;
 import com.soybe.awakeningsystem.AwakeningSystemMod;
 import com.soybe.awakeningsystem.SystemItems;
 import net.minecraft.core.particles.ParticleTypes;
+import net.minecraft.nbt.CompoundTag;
 import net.minecraft.network.chat.Component;
+import net.minecraft.network.syncher.EntityDataAccessor;
+import net.minecraft.network.syncher.EntityDataSerializers;
+import net.minecraft.network.syncher.SynchedEntityData;
 import net.minecraft.server.level.ServerBossEvent;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.server.level.ServerPlayer;
@@ -35,11 +39,27 @@ import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.level.ServerLevelAccessor;
 import net.minecraft.world.phys.Vec3;
+import software.bernie.geckolib.animatable.GeoEntity;
+import software.bernie.geckolib.animatable.instance.AnimatableInstanceCache;
+import software.bernie.geckolib.animation.AnimatableManager;
+import software.bernie.geckolib.animation.AnimationController;
+import software.bernie.geckolib.animation.PlayState;
+import software.bernie.geckolib.animation.RawAnimation;
+import software.bernie.geckolib.util.GeckoLibUtil;
 
 import javax.annotation.Nullable;
 import java.util.List;
 
-public class IgrisBossEntity extends Monster {
+public class IgrisBossEntity extends Monster implements GeoEntity {
+    private static final EntityDataAccessor<Boolean> DATA_IS_SHADOW =
+            SynchedEntityData.defineId(IgrisBossEntity.class, EntityDataSerializers.BOOLEAN);
+
+    private final AnimatableInstanceCache geoCache = GeckoLibUtil.createInstanceCache(this);
+    private static final RawAnimation IDLE_ANIM = RawAnimation.begin().thenLoop("idle");
+    private static final RawAnimation WALK_ANIM = RawAnimation.begin().thenLoop("walk");
+    private static final RawAnimation ATTACK_ANIM = RawAnimation.begin().thenPlay("attack1");
+    private static final RawAnimation SPIN_ANIM = RawAnimation.begin().thenPlay("spin");
+
     private final ServerBossEvent bossEvent = (ServerBossEvent) new ServerBossEvent(
             Component.translatable("awakening_system.boss.igris.name"),
             BossEvent.BossBarColor.RED,
@@ -95,8 +115,40 @@ public class IgrisBossEntity extends Monster {
                 target -> this.isShadowSoldier() && target != null && !target.getTags().contains("shadow_soldier")));
     }
 
+    @Override
+    protected void defineSynchedData(SynchedEntityData.Builder builder) {
+        super.defineSynchedData(builder);
+        builder.define(DATA_IS_SHADOW, false);
+    }
+
     public boolean isShadowSoldier() {
-        return this.getTags().contains("shadow_soldier");
+        if (this.level().isClientSide()) {
+            return this.entityData.get(DATA_IS_SHADOW);
+        }
+        return this.entityData.get(DATA_IS_SHADOW) || this.getTags().contains("shadow_soldier");
+    }
+
+    public void setShadowSoldier(boolean shadow) {
+        this.entityData.set(DATA_IS_SHADOW, shadow);
+        if (shadow) {
+            this.addTag("shadow_soldier");
+        } else {
+            this.removeTag("shadow_soldier");
+        }
+    }
+
+    @Override
+    public void addAdditionalSaveData(CompoundTag compound) {
+        super.addAdditionalSaveData(compound);
+        compound.putBoolean("IsShadowSoldier", this.isShadowSoldier());
+    }
+
+    @Override
+    public void readAdditionalSaveData(CompoundTag compound) {
+        super.readAdditionalSaveData(compound);
+        if (compound.contains("IsShadowSoldier")) {
+            setShadowSoldier(compound.getBoolean("IsShadowSoldier"));
+        }
     }
 
     @Override
@@ -116,6 +168,10 @@ public class IgrisBossEntity extends Monster {
     @Override
     public void customServerAiStep() {
         super.customServerAiStep();
+        boolean hasTag = this.getTags().contains("shadow_soldier");
+        if (hasTag != this.entityData.get(DATA_IS_SHADOW)) {
+            this.entityData.set(DATA_IS_SHADOW, hasTag);
+        }
         if (!isShadowSoldier()) {
             this.bossEvent.setProgress(this.getHealth() / this.getMaxHealth());
         }
@@ -126,7 +182,6 @@ public class IgrisBossEntity extends Monster {
         super.aiStep();
 
         if (this.isShadowSoldier()) {
-            // Visual particles for Shadow Commander
             if (this.level().isClientSide) {
                 double px = this.getX() + (this.random.nextDouble() - 0.5D) * 0.8D;
                 double py = this.getY() + this.random.nextDouble() * 1.8D;
@@ -138,8 +193,6 @@ public class IgrisBossEntity extends Monster {
 
         if (this.level() instanceof ServerLevel sl) {
             LivingEntity target = this.getTarget();
-
-            // Guard stance counter
             if (guardTicks > 0) {
                 guardTicks--;
                 if (guardTicks == 0) isGuarding = false;
@@ -150,7 +203,6 @@ public class IgrisBossEntity extends Monster {
                 double distSq = this.distanceToSqr(target);
                 boolean enraged = this.getHealth() < this.getMaxHealth() * 0.5F;
 
-                // 1. Supersonic Thrust (Dash attack)
                 if (thrustCooldown > 0) thrustCooldown--;
                 if (thrustCooldown <= 0 && distSq >= 16.0D && distSq <= 144.0D) {
                     thrustCooldown = enraged ? 50 : 80;
@@ -166,7 +218,6 @@ public class IgrisBossEntity extends Monster {
                     target.addEffect(new MobEffectInstance(MobEffects.MOVEMENT_SLOWDOWN, 40, 1));
                 }
 
-                // 2. Whirlwind 360° Slash
                 if (whirlwindCooldown > 0) whirlwindCooldown--;
                 if (whirlwindCooldown <= 0 && distSq <= 25.0D) {
                     whirlwindCooldown = enraged ? 80 : 120;
@@ -183,11 +234,10 @@ public class IgrisBossEntity extends Monster {
                     sl.sendParticles(ParticleTypes.CRIT, this.getX(), this.getY() + 1.0D, this.getZ(), 30, 1.2D, 0.5D, 1.2D, 0.1D);
                 }
 
-                // 3. Defensive Guard
                 if (guardCooldown > 0) guardCooldown--;
                 if (guardCooldown <= 0 && this.getHealth() < this.getMaxHealth() * 0.7F && this.random.nextFloat() < 0.3F) {
                     guardCooldown = 200;
-                    guardTicks = 60; // 3 seconds
+                    guardTicks = 60;
                     isGuarding = true;
                     this.addEffect(new MobEffectInstance(MobEffects.DAMAGE_RESISTANCE, 60, 2));
                     sl.playSound(null, this.getX(), this.getY(), this.getZ(), SoundEvents.SHIELD_BLOCK, SoundSource.HOSTILE, 1.5F, 0.8F);
@@ -213,7 +263,6 @@ public class IgrisBossEntity extends Monster {
         super.die(damageSource);
 
         if (this.level() instanceof ServerLevel sl && !isShadowSoldier()) {
-            // Drops
             if (SystemItems.RUNE_STONE_RULERS_AUTHORITY != null && SystemItems.RUNE_STONE_RULERS_AUTHORITY.isBound()) {
                 sl.addFreshEntity(new ItemEntity(sl, this.getX(), this.getY() + 0.5D, this.getZ(),
                         new ItemStack(SystemItems.RUNE_STONE_RULERS_AUTHORITY.get())));
@@ -223,13 +272,12 @@ public class IgrisBossEntity extends Monster {
                         SystemItems.coin(45)));
             }
 
-            // Spawn Shadow Extraction Soul (Exclusivo para Monarca de las Sombras)
             Player killer = (damageSource.getEntity() instanceof Player p) ? p : null;
             if (killer != null) {
                 com.soybe.awakeningsystem.SystemData kData = killer.getData(AwakeningSystemMod.PLAYER_SYSTEM);
                 if (kData != null && ((kData.hasHunterClass() && "shadow_monarch".equals(kData.hunterClass())) || kData.skills().containsKey("unique_absolute_extraction"))) {
                     ShadowSoulEntity soul = new ShadowSoulEntity(sl, this.getX(), this.getY(), this.getZ(), this, killer.getUUID());
-                    soul.setMobName(Component.translatable("awakening_system.mob.igris_crimson_knight").getString());
+                    soul.setMobNameComponent(Component.translatable("awakening_system.mob.igris_crimson_knight"));
                     sl.addFreshEntity(soul);
                 }
             }
@@ -238,5 +286,28 @@ public class IgrisBossEntity extends Monster {
                 AwakeningSystemMod.notify(sp, "awakening_system.notification.igris_defeated.title", "awakening_system.notification.igris_defeated.desc", 0xFFFF5555);
             }
         }
+    }
+
+    @Override
+    public void registerControllers(AnimatableManager.ControllerRegistrar controllers) {
+        controllers.add(new AnimationController<>(this, "movement", 5, state -> {
+            if (state.isMoving()) {
+                return state.setAndContinue(WALK_ANIM);
+            }
+            return state.setAndContinue(IDLE_ANIM);
+        }));
+        controllers.add(new AnimationController<>(this, "attack", 5, state -> {
+            if (this.whirlwindCooldown > 100) {
+                return state.setAndContinue(SPIN_ANIM);
+            } else if (this.thrustCooldown > 45) {
+                return state.setAndContinue(ATTACK_ANIM);
+            }
+            return PlayState.STOP;
+        }));
+    }
+
+    @Override
+    public AnimatableInstanceCache getAnimatableInstanceCache() {
+        return this.geoCache;
     }
 }

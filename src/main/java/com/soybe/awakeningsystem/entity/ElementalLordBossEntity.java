@@ -44,7 +44,7 @@ public class ElementalLordBossEntity extends Monster {
             SynchedEntityData.defineId(ElementalLordBossEntity.class, EntityDataSerializers.INT);
 
     private final ServerBossEvent bossBar = new ServerBossEvent(
-            Component.literal("§6§lSeñor Elemental"),
+            Component.translatable("boss.awakening_system.elemental_lord.name"),
             BossEvent.BossBarColor.WHITE,
             BossEvent.BossBarOverlay.NOTCHED_6
     );
@@ -71,7 +71,7 @@ public class ElementalLordBossEntity extends Monster {
     @Override
     protected void defineSynchedData(SynchedEntityData.Builder builder) {
         super.defineSynchedData(builder);
-        builder.define(ELEMENT_TYPE, 0); // 0: WIND, 1: FROST, 2: FIRE, 3: STORM
+        builder.define(ELEMENT_TYPE, 0);
     }
 
     public ElementalType getElementalType() {
@@ -150,7 +150,6 @@ public class ElementalLordBossEntity extends Monster {
             return;
         }
 
-        // Ataques especiales temáticos del mini-jefe
         if (this.attackCooldown > 0) {
             this.attackCooldown--;
         } else if (this.getTarget() != null && this.getTarget().isAlive()) {
@@ -164,7 +163,6 @@ public class ElementalLordBossEntity extends Monster {
 
         switch (type) {
             case WIND -> {
-                // Ráfaga cortante y levitación
                 sl.playSound(null, this.blockPosition(), SoundEvents.PHANTOM_BITE, SoundSource.HOSTILE, 1.5F, 0.8F);
                 sl.sendParticles(ParticleTypes.SWEEP_ATTACK, this.getX(), this.getY() + 1.2D, this.getZ(), 25, 2.0D, 0.5D, 2.0D, 0.1D);
                 AABB box = this.getBoundingBox().inflate(10.0D, 3.0D, 10.0D);
@@ -177,7 +175,6 @@ public class ElementalLordBossEntity extends Monster {
                 }
             }
             case FROST -> {
-                // Congelación glacial y lentitud
                 sl.playSound(null, this.blockPosition(), SoundEvents.AMETHYST_BLOCK_RESONATE, SoundSource.HOSTILE, 1.8F, 0.7F);
                 sl.sendParticles(ParticleTypes.SNOWFLAKE, this.getX(), this.getY() + 1.2D, this.getZ(), 50, 3.0D, 1.0D, 3.0D, 0.1D);
                 AABB box = this.getBoundingBox().inflate(8.0D, 3.0D, 8.0D);
@@ -188,7 +185,6 @@ public class ElementalLordBossEntity extends Monster {
                 }
             }
             case FIRE -> {
-                // Explosión volcánica y quemadura
                 sl.playSound(null, this.blockPosition(), SoundEvents.GENERIC_EXPLODE.value(), SoundSource.HOSTILE, 1.4F, 1.3F);
                 sl.sendParticles(ParticleTypes.FLAME, this.getX(), this.getY() + 0.8D, this.getZ(), 60, 3.0D, 1.0D, 3.0D, 0.15D);
                 sl.sendParticles(ParticleTypes.LAVA, this.getX(), this.getY() + 1.0D, this.getZ(), 20, 1.5D, 0.5D, 1.5D, 0.1D);
@@ -199,7 +195,6 @@ public class ElementalLordBossEntity extends Monster {
                 }
             }
             case STORM -> {
-                // Saeta de relámpago
                 sl.playSound(null, this.getTarget().blockPosition(), SoundEvents.LIGHTNING_BOLT_THUNDER, SoundSource.HOSTILE, 2.0F, 1.1F);
                 sl.sendParticles(ParticleTypes.ELECTRIC_SPARK, this.getTarget().getX(), this.getTarget().getY() + 1.0D, this.getTarget().getZ(), 40, 1.0D, 1.5D, 1.0D, 0.2D);
                 this.getTarget().hurt(this.damageSources().magic(), 15.0F);
@@ -216,7 +211,6 @@ public class ElementalLordBossEntity extends Monster {
             sl.sendParticles(ParticleTypes.TOTEM_OF_UNDYING, this.getX(), this.getY() + 1.2D, this.getZ(), 80, 1.0D, 1.0D, 1.0D, 0.2D);
             sl.sendParticles(type.getParticle(), this.getX(), this.getY() + 1.2D, this.getZ(), 60, 1.5D, 1.0D, 1.5D, 0.1D);
 
-            // Intentar activar automáticamente el altar en su torre cercana
             for (int dx = -25; dx <= 25; dx++) {
                 for (int dz = -25; dz <= 25; dz++) {
                     for (int dy = -6; dy <= 6; dy++) {
@@ -226,7 +220,6 @@ public class ElementalLordBossEntity extends Monster {
                             sl.setBlock(ap, st.setValue(ElementalAltarBlock.ACTIVE, true), 3);
                             sl.playSound(null, ap, SoundEvents.BEACON_ACTIVATE, SoundSource.BLOCKS, 1.2F, 1.2F);
 
-                            // Comprobar si los 4 sellos se han desactivado en el complejo
                             List<BlockPos> altars = ElementalAltarBlock.findAltarsInComplex(sl, ap);
                             int activeCount = 0;
                             for (BlockPos p : altars) {
@@ -250,7 +243,6 @@ public class ElementalLordBossEntity extends Monster {
             }
         }
 
-        // Recompensas
         this.spawnAtLocation(new ItemStack(Items.DIAMOND, 4));
         this.spawnAtLocation(new ItemStack(Items.EMERALD, 16));
         if (SystemItems.AWAKENING_COIN.isBound()) {

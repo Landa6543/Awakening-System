@@ -3,9 +3,11 @@ package com.soybe.awakeningsystem.item;
 import com.soybe.awakeningsystem.AwakeningSystemMod;
 import com.soybe.awakeningsystem.SystemData;
 import com.soybe.awakeningsystem.SystemEvents;
+import com.soybe.awakeningsystem.effect.ModMobEffects;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.world.InteractionHand;
 import net.minecraft.world.InteractionResultHolder;
+import net.minecraft.world.effect.MobEffectInstance;
 import net.minecraft.world.entity.LivingEntity;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.item.Item;
@@ -24,7 +26,13 @@ public class ManaMilkBucketItem extends Item {
     @Override
     public ItemStack finishUsingItem(ItemStack stack, Level level, LivingEntity entity) {
         if (!level.isClientSide) {
+            MobEffectInstance sat = entity.getEffect(ModMobEffects.MANA_SATURATION);
+            MobEffectInstance satCopy = sat != null ? new MobEffectInstance(sat) : null;
             entity.removeAllEffects();
+            if (satCopy != null) {
+                satCopy.getCures().clear();
+                entity.addEffect(satCopy);
+            }
             if (entity instanceof ServerPlayer player) {
                 SystemData data = SystemEvents.data(player);
                 data.restoreEnergy(35);

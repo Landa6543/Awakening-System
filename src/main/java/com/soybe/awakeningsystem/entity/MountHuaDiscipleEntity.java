@@ -68,10 +68,8 @@ public class MountHuaDiscipleEntity extends PathfinderMob {
         this.goalSelector.addGoal(6, new LookAtPlayerGoal(this, Player.class, 8.0F));
         this.goalSelector.addGoal(7, new RandomLookAroundGoal(this));
 
-        // Defenderse si es atacado por cualquier entidad
         this.targetSelector.addGoal(1, new HurtByTargetGoal(this));
 
-        // Hostilidad automatica ante cultistas demoniacos, zombis saltadores (Jiangshi) y sectarios de sangre
         this.targetSelector.addGoal(2, new NearestAttackableTargetGoal<>(this, DemonicCultivatorEntity.class, true));
         this.targetSelector.addGoal(3, new NearestAttackableTargetGoal<>(this, JiangshiEntity.class, true));
         this.targetSelector.addGoal(4, new NearestAttackableTargetGoal<>(this, BloodSectDiscipleEntity.class, true));
@@ -92,7 +90,6 @@ public class MountHuaDiscipleEntity extends PathfinderMob {
             if (target != null && target.isAlive()) {
                 double distSq = this.distanceToSqr(target);
 
-                // Paso de Qinggong del Monte Hua (Abalanzarse con rafaga de petalos de ciruelo)
                 if (dashCooldown <= 0 && distSq >= 16.0D && distSq <= 144.0D && this.hasLineOfSight(target)) {
                     Vec3 diff = target.position().subtract(this.position()).normalize();
                     this.setDeltaMovement(diff.x * 1.15D, 0.36D, diff.z * 1.15D);
@@ -105,7 +102,6 @@ public class MountHuaDiscipleEntity extends PathfinderMob {
                     dashCooldown = 80 + this.random.nextInt(30);
                 }
 
-                // Tecnica de los 24 Movimientos de la Espada de Ciruelo en cuerpo a cuerpo
                 if (blossomSlashCooldown <= 0 && distSq <= 12.0D) {
                     this.swing(InteractionHand.MAIN_HAND);
                     this.playSound(SoundEvents.PLAYER_ATTACK_SWEEP, 1.2F, 1.15F);
@@ -128,7 +124,6 @@ public class MountHuaDiscipleEntity extends PathfinderMob {
     public InteractionResult mobInteract(Player player, InteractionHand hand) {
         ItemStack held = player.getItemInHand(hand);
 
-        // Intercambio amistoso: 4 Esmeraldas por 1 Talisman Taoista de Sellado
         if (held.is(Items.EMERALD) && held.getCount() >= 4) {
             if (!player.getAbilities().instabuild) {
                 held.shrink(4);
@@ -148,7 +143,6 @@ public class MountHuaDiscipleEntity extends PathfinderMob {
             return InteractionResult.sidedSuccess(this.level().isClientSide);
         }
 
-        // Saludo taoista ortodoxo de cortesia
         if (hand == InteractionHand.MAIN_HAND && !this.level().isClientSide) {
             this.playSound(SoundEvents.VILLAGER_YES, 0.9F, 1.1F);
             player.displayClientMessage(Component.translatable("awakening_system.npc.mount_hua.greeting"), true);

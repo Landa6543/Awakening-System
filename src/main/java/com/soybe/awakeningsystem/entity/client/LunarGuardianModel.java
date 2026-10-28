@@ -40,19 +40,16 @@ public class LunarGuardianModel extends HierarchicalModel<LunarGuardianEntity> {
         MeshDefinition mesh = new MeshDefinition();
         PartDefinition root = mesh.getRoot();
 
-        // Cabeza con yelmo de obsidiana y corona dorada lunar
         root.addOrReplaceChild("head", CubeListBuilder.create()
                 .texOffs(0, 0).addBox(-4.0F, -8.0F, -4.0F, 8.0F, 8.0F, 8.0F, new CubeDeformation(0.0F))
                 .texOffs(36, 0).addBox(-4.5F, -8.5F, -4.5F, 9.0F, 9.0F, 9.0F, new CubeDeformation(0.4F)),
                 PartPose.offset(0.0F, -2.0F, 0.0F));
 
-        // Torso masivo de obsidiana astral con peto de luna creciente
         root.addOrReplaceChild("body", CubeListBuilder.create()
                 .texOffs(0, 20).addBox(-5.0F, 0.0F, -3.0F, 10.0F, 14.0F, 6.0F, new CubeDeformation(0.0F))
                 .texOffs(36, 20).addBox(-5.5F, 0.0F, -3.5F, 11.0F, 14.0F, 7.0F, new CubeDeformation(0.3F)),
                 PartPose.offset(0.0F, -2.0F, 0.0F));
 
-        // Brazos acorazados con hombreras colosales independientes
         root.addOrReplaceChild("right_arm", CubeListBuilder.create()
                 .texOffs(76, 0).addBox(-4.0F, -2.0F, -2.5F, 5.0F, 14.0F, 5.0F, new CubeDeformation(0.0F))
                 .texOffs(98, 0).addBox(-5.0F, -3.5F, -3.0F, 6.0F, 6.0F, 6.0F, new CubeDeformation(0.4F)),
@@ -63,7 +60,6 @@ public class LunarGuardianModel extends HierarchicalModel<LunarGuardianEntity> {
                 .texOffs(98, 14).addBox(-1.0F, -3.5F, -3.0F, 6.0F, 6.0F, 6.0F, new CubeDeformation(0.4F)),
                 PartPose.offset(6.0F, 0.0F, 0.0F));
 
-        // Piernas de coloso pesado con grebas y rodilleras doradas
         root.addOrReplaceChild("right_leg", CubeListBuilder.create()
                 .texOffs(0, 44).addBox(-2.5F, 0.0F, -2.5F, 5.0F, 14.0F, 5.0F, new CubeDeformation(0.0F)),
                 PartPose.offset(-2.5F, 12.0F, 0.0F));
@@ -92,7 +88,6 @@ public class LunarGuardianModel extends HierarchicalModel<LunarGuardianEntity> {
         this.rightArm.xRot = Mth.cos(limbSwing * 0.5F + (float) Math.PI) * 1.0F * limbSwingAmount;
         this.leftArm.xRot = Mth.cos(limbSwing * 0.5F) * 1.0F * limbSwingAmount;
 
-        // Postura dominante de combate
         this.rightArm.zRot = 0.15F;
         this.leftArm.zRot = -0.15F;
     }

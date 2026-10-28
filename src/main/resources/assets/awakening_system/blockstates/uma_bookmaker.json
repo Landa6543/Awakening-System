@@ -1,0 +1,19 @@
+{
+  "variants": {
+    "facing=north": {
+      "model": "awakening_system:block/uma_bookmaker"
+    },
+    "facing=east": {
+      "model": "awakening_system:block/uma_bookmaker",
+      "y": 90
+    },
+    "facing=south": {
+      "model": "awakening_system:block/uma_bookmaker",
+      "y": 180
+    },
+    "facing=west": {
+      "model": "awakening_system:block/uma_bookmaker",
+      "y": 270
+    }
+  }
+}

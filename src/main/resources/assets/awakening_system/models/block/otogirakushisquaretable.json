@@ -1,5 +1,5 @@
 {
-  "parent": "awakening_system:block/custom/otogi_rakushi_square_table",
+  "parent": "awakening_system:custom/otogi_rakushi_square_table",
   "textures": {
     "all": "awakening_system:block/otogi_rakushi_square_table",
     "particle": "awakening_system:block/otogi_rakushi_square_table",

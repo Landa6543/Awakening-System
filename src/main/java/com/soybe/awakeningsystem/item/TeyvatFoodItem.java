@@ -18,33 +18,33 @@ import java.util.List;
 public class TeyvatFoodItem extends Item {
     public enum FoodType {
         ADEPTUS_TEMPTATION(
-                "Tentación de Adeptus",
-                "§6★★★★★ [Plato Legendario de Liyue]",
-                "Exquisito manjar cocinado a fuego lento que deleita incluso a los dioses.",
+                "Adeptus' Temptation",
+                "§6★★★★★ [Legendary Dish of Liyue]",
+                "An exquisite simmered delicacy that delights even gods.",
                 10,
                 1.2F,
                 Rarity.EPIC
         ),
         SWEET_MADAME(
-                "Pollo Dulce",
-                "§a★★ [Especialidad de Mondstadt]",
-                "Pollo asado dorado con flores dulces. Reconforta el cuerpo al instante.",
+                "Sweet Madame",
+                "§a★★ [Mondstadt Specialty]",
+                "Golden roasted fowl seasoned with sweet flowers. Instantly comforts the body.",
                 8,
                 0.8F,
                 Rarity.UNCOMMON
         ),
         ALMOND_TOFU(
-                "Tofu de Almendras",
-                "§b★★★ [Especialidad de la Posada Wangshu]",
-                "Postre dulce favorito del Cazador de Demonios Xiao. Aclara los pensamientos.",
+                "Almond Tofu",
+                "§b★★★ [Wangshu Inn Specialty]",
+                "Sweet dessert favored by the Conqueror of Demons, Xiao. Clears the mind.",
                 6,
                 0.6F,
                 Rarity.RARE
         ),
         SUNSETTIA(
-                "Fruta del Ocaso",
-                "§e★ [Fruta Silvestre de Teyvat]",
-                "Fruta rolliza y dulce que crece en los árboles de Cuihua. Reconforta el cuerpo.",
+                "Sunsettia",
+                "§e★ [Wild Fruit of Teyvat]",
+                "A plump and sweet fruit growing on Cuihua trees. Revitalizes the body.",
                 4,
                 0.5F,
                 Rarity.COMMON
@@ -64,6 +64,14 @@ public class TeyvatFoodItem extends Item {
             this.nutrition = nutrition;
             this.saturation = saturation;
             this.rarity = rarity;
+        }
+        public String getId() {
+            return switch (this) {
+                case ADEPTUS_TEMPTATION -> "adeptus_temptation";
+                case SWEET_MADAME -> "sweet_madame";
+                case ALMOND_TOFU -> "almond_tofu";
+                case SUNSETTIA -> "sunsettia";
+            };
         }
     }
 
@@ -89,23 +97,23 @@ public class TeyvatFoodItem extends Item {
                     player.addEffect(new MobEffectInstance(MobEffects.DAMAGE_BOOST, 6000, 1, false, false));
                     player.addEffect(new MobEffectInstance(MobEffects.ABSORPTION, 6000, 1, false, false));
                     player.addEffect(new MobEffectInstance(MobEffects.REGENERATION, 600, 1, false, false));
-                    player.displayClientMessage(Component.literal("§6§l✦ [TENTACIÓN DE ADEPTUS] §f¡Poder celestial imbuido! (+30% Daño de Ataque, Absorción y Regeneración durante 5 min)."), false);
+                    player.displayClientMessage(Component.translatable("awakening_system.food.adeptus_temptation.msg"), false);
                 }
                 case SWEET_MADAME -> {
                     player.heal(16.0F);
                     player.removeEffect(MobEffects.POISON);
                     player.removeEffect(MobEffects.WITHER);
-                    player.displayClientMessage(Component.literal("§a§l✦ [POLLO DULCE] §f¡Salud restaurada (+16 HP) y efectos negativos purificados!"), true);
+                    player.displayClientMessage(Component.translatable("awakening_system.food.sweet_madame.msg"), true);
                 }
                 case ALMOND_TOFU -> {
                     player.addEffect(new MobEffectInstance(MobEffects.MOVEMENT_SPEED, 6000, 1, false, false));
                     player.addEffect(new MobEffectInstance(MobEffects.DIG_SPEED, 6000, 1, false, false));
                     player.addEffect(new MobEffectInstance(MobEffects.LUCK, 6000, 1, false, false));
-                    player.displayClientMessage(Component.literal("§b§l✦ [TOFU DE ALMENDRAS] §f¡La agilidad de Xiao fluye en ti! (+Velocidad y Suerte aumentadas durante 5 min)."), true);
+                    player.displayClientMessage(Component.translatable("awakening_system.food.almond_tofu.msg"), true);
                 }
                 case SUNSETTIA -> {
                     player.heal(4.0F);
-                    player.displayClientMessage(Component.literal("§e§l✦ [FRUTA DEL OCASO] §f¡Dulce y jugosa! (+4 HP restaurados)."), true);
+                    player.displayClientMessage(Component.translatable("awakening_system.food.sunsettia.msg"), true);
                 }
             }
         }
@@ -114,14 +122,10 @@ public class TeyvatFoodItem extends Item {
 
     @Override
     public void appendHoverText(ItemStack stack, TooltipContext context, List<Component> tooltip, TooltipFlag flag) {
-        tooltip.add(Component.literal(foodType.starsBadge).withStyle(ChatFormatting.BOLD));
-        tooltip.add(Component.literal("§7" + foodType.description).withStyle(ChatFormatting.GRAY));
+        String id = foodType.getId();
+        tooltip.add(Component.translatableWithFallback("awakening_system.food." + id + ".badge", foodType.starsBadge).withStyle(ChatFormatting.BOLD));
+        tooltip.add(Component.literal("§7").append(Component.translatableWithFallback("awakening_system.food." + id + ".desc", foodType.description)).withStyle(ChatFormatting.GRAY));
         tooltip.add(Component.empty());
-        switch (foodType) {
-            case ADEPTUS_TEMPTATION -> tooltip.add(Component.literal("§6▸ Efecto: §fFuerza II, Absorción II y Regeneración por 5 min.").withStyle(ChatFormatting.YELLOW));
-            case SWEET_MADAME -> tooltip.add(Component.literal("§a▸ Efecto: §fCura +16 HP al instante y purga veneno/descomposición.").withStyle(ChatFormatting.GREEN));
-            case ALMOND_TOFU -> tooltip.add(Component.literal("§b▸ Efecto: §fVelocidad II, Prisa II y Suerte II por 5 min.").withStyle(ChatFormatting.AQUA));
-            case SUNSETTIA -> tooltip.add(Component.literal("§e▸ Efecto: §fRestaura 4 HP al instante.").withStyle(ChatFormatting.YELLOW));
-        }
+        tooltip.add(Component.translatable("awakening_system.food." + id + ".effect"));
     }
 }

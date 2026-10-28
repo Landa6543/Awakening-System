@@ -50,7 +50,7 @@ public class ElectroRegisvineEntity extends Monster {
             SynchedEntityData.defineId(ElectroRegisvineEntity.class, EntityDataSerializers.INT);
 
     private final ServerBossEvent bossEvent = (ServerBossEvent) new ServerBossEvent(
-            Component.literal("§d§lRegisvid Electro §7- §5Flor del Trueno Titánica"),
+            Component.translatable("boss.awakening_system.electro_regisvine.boss_bar"),
             BossEvent.BossBarColor.PURPLE,
             BossEvent.BossBarOverlay.NOTCHED_10
     ).setDarkenScreen(false);
@@ -61,7 +61,7 @@ public class ElectroRegisvineEntity extends Monster {
 
     public ElectroRegisvineEntity(EntityType<? extends Monster> entityType, Level level) {
         super(entityType, level);
-        this.setCustomName(Component.literal("§d§lRegisvid Electro"));
+        this.setCustomName(Component.translatable("boss.awakening_system.electro_regisvine.name"));
         this.setCustomNameVisible(true);
         this.setPersistenceRequired();
         this.xpReward = 800;
@@ -160,7 +160,6 @@ public class ElectroRegisvineEntity extends Monster {
                 }
             }
         } else {
-            // Partículas de chispas eléctricas y aura de tormenta
             if (this.random.nextFloat() < 0.35F) {
                 this.level().addParticle(ParticleTypes.ELECTRIC_SPARK,
                         this.getX() + (this.random.nextDouble() - 0.5D) * 3.0D,
@@ -196,7 +195,6 @@ public class ElectroRegisvineEntity extends Monster {
             target.hurt(this.damageSources().mobAttack(this), 28.0F);
             target.addEffect(new MobEffectInstance(MobEffects.MOVEMENT_SLOWDOWN, 60, 2));
 
-            // Daño en área alrededor del impacto
             List<LivingEntity> nearby = sl.getEntitiesOfClass(LivingEntity.class, target.getBoundingBox().inflate(3.5D),
                     e -> e != this && e != target && e.isAlive());
             for (LivingEntity e : nearby) {
@@ -268,7 +266,7 @@ public class ElectroRegisvineEntity extends Monster {
             if (this.corollaShield <= 0.0F) {
                 this.corollaShield = 0.0F;
                 this.entityData.set(DATA_STUNNED, true);
-                this.stunTimer = 160; // 8 segundos de aturdimiento en el suelo
+                this.stunTimer = 160;
 
                 if (this.level() instanceof ServerLevel sl) {
                     sl.playSound(null, this.blockPosition(), SoundEvents.SHIELD_BREAK, SoundSource.HOSTILE, 2.5F, 0.8F);
@@ -276,7 +274,7 @@ public class ElectroRegisvineEntity extends Monster {
                     sl.sendParticles(ParticleTypes.FLASH, this.getX(), this.getY() + 2.5D, this.getZ(), 2, 0.5D, 0.5D, 0.5D, 0.0D);
 
                     for (ServerPlayer sp : sl.getPlayers(p -> p.distanceToSqr(this) < 1600.0D)) {
-                        sp.displayClientMessage(Component.literal("§d§l✦ [¡COROLA ELECTRO DESTRUIDA!] §f¡La Regisvid está aturdida y vulnerable a ataques críticos!"), true);
+                        sp.displayClientMessage(Component.translatable("boss.awakening_system.electro_regisvine.corolla_broken"), true);
                     }
                 }
             }
@@ -303,12 +301,12 @@ public class ElectroRegisvineEntity extends Monster {
                     data.addMora(60000);
                     data.addPrimogems(35);
                     com.soybe.awakeningsystem.AwakeningSystemMod.sync(sp);
-                    sp.displayClientMessage(Component.literal("§d§l✦ ¡REGISVID ELECTRO DERROTADA! §eHas ganado §6+60,000 Mora §ey §b+35 Protogemas§e."), false);
+                    sp.displayClientMessage(Component.translatable("boss.awakening_system.electro_regisvine.defeated_teyvat"), false);
                 } else {
                     if (SystemItems.AWAKENING_COIN.isBound()) {
                         sp.addItem(new ItemStack(SystemItems.AWAKENING_COIN.get(), 24));
                     }
-                    sp.displayClientMessage(Component.literal("§d§l✦ ¡REGISVID ELECTRO DERROTADA! §6+24 Monedas de Despertar§e."), false);
+                    sp.displayClientMessage(Component.translatable("boss.awakening_system.electro_regisvine.defeated_vanilla"), false);
                 }
             }
 

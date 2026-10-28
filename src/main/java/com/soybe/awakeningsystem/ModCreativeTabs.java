@@ -13,20 +13,15 @@ public final class ModCreativeTabs {
     public static final DeferredRegister<CreativeModeTab> CREATIVE_MODE_TABS =
             DeferredRegister.create(Registries.CREATIVE_MODE_TAB, AwakeningSystemMod.MOD_ID);
 
-    // ==========================================
-    // 1. PESTAÑA: ARSENAL, COMBATE Y ARMADURAS
-    // ==========================================
     public static final DeferredHolder<CreativeModeTab, CreativeModeTab> COMBAT_TAB = CREATIVE_MODE_TABS.register("awakening_combat", () ->
             CreativeModeTab.builder()
                     .title(Component.translatable("itemGroup.awakening_system.combat"))
                     .icon(() -> SystemItems.STAFF_OF_HOMA.isBound() ? new ItemStack(SystemItems.STAFF_OF_HOMA.get()) : new ItemStack(Items.NETHERITE_SWORD))
                     .displayItems((parameters, output) -> {
-                        // --- NOVEDADES DESTACADAS Y ARMAS PRINCIPALES ---
                         accept(output, SystemItems.SOUL_SOLID);
                         accept(output, SystemItems.LA_DONCELLA);
                         accept(output, SystemItems.WILDFIRE_CROWN);
 
-                        // --- LANZAS Y ARMAS DE ASTA (POLEARMS) ---
                         accept(output, SystemItems.STAFF_OF_HOMA);
                         accept(output, SystemItems.ENGULFING_LIGHTNING);
                         accept(output, SystemItems.PRIMORDIAL_JADE_WINGED_SPEAR);
@@ -36,7 +31,6 @@ public final class ModCreativeTabs {
                         accept(output, SystemItems.BLACK_TASSEL);
                         accept(output, SystemItems.ASTRAL_GUANDAO);
 
-                        // --- ARCOS Y ARMAS A DISTANCIA (BOWS) ---
                         accept(output, SystemItems.AMOS_BOW);
                         accept(output, SystemItems.ASTRAL_ARCHERS_BOW);
                         accept(output, SystemItems.THUNDERING_PULSE);
@@ -46,8 +40,8 @@ public final class ModCreativeTabs {
                         accept(output, SystemItems.HUNTER_PATH);
                         accept(output, SystemItems.HAMAYUMI);
                         accept(output, SystemItems.END_OF_THE_LINE);
+                        accept(output, SystemItems.DART);
 
-                        // --- MANDOBLES Y ARMAS PESADAS ---
                         accept(output, SystemItems.WOLFS_GRAVESTONE);
                         accept(output, SystemItems.REDHORN_STONETHRESHER);
                         accept(output, SystemItems.VERDICT);
@@ -56,7 +50,6 @@ public final class ModCreativeTabs {
                         accept(output, SystemItems.HERTA_HAMMER);
                         accept(output, SystemItems.ADAMANTITE_WAR_HAMMER);
 
-                        // --- ESPADAS LIGERAS, KATANAS Y DAGAS ---
                         accept(output, SystemItems.SKYWARD_BLADE);
                         accept(output, SystemItems.MISTSPLITTER_REFORGED);
                         accept(output, SystemItems.PRIMORDIAL_JADE_CUTTER);
@@ -72,13 +65,13 @@ public final class ModCreativeTabs {
                         accept(output, SystemItems.DOMAIN_OF_SANCTION);
                         accept(output, SystemItems.PRIMOGEM_SWORD);
 
-                        // --- ARMAS SHONEN, MANHWA Y MÍSTICAS ---
                         accept(output, SystemItems.LA_DONCELLA);
                         accept(output, SystemItems.SOUL_SOLID);
                         accept(output, SystemItems.PLUM_BLOSSOM_SWORD);
                         accept(output, SystemItems.ASRAHAN_HOLY_SWORD);
                         accept(output, SystemItems.DAWNS_BALLAD);
                         accept(output, SystemItems.CREATOR_CLAYMORE);
+                        accept(output, SystemItems.VOID_CLAYMORE);
                         accept(output, SystemItems.ELUCIDATOR);
                         accept(output, SystemItems.DARK_REPULSER);
                         accept(output, SystemItems.LAMBENT_LIGHT);
@@ -88,16 +81,18 @@ public final class ModCreativeTabs {
                         accept(output, SystemItems.RADIANT_LIGHT_SWORD);
                         accept(output, SystemItems.SKY_DEMON_SWORD);
                         accept(output, SystemItems.HEAVEN_SHAKING_SWORD);
-                        accept(output, SystemItems.UNBREAKABLE_FAITH);
                         accept(output, SystemItems.TRANSCENDENT_THORN);
                         accept(output, SystemItems.FLYING_SWORD);
                         accept(output, SystemItems.JADE_FEIJIAN);
                         accept(output, SystemItems.DEATH_KING_CLOCK);
                         accept(output, SystemItems.WILDFIRE_CROWN);
 
-                        // --- ESPADAS Y HACHAS POST-NETHERITE ---
                         accept(output, SystemItems.ABYSSAL_SWORD);
                         accept(output, SystemItems.ABYSSAL_AXE);
+                        accept(output, SystemItems.SOUL_ALLOY_SWORD);
+                        accept(output, SystemItems.SOUL_ALLOY_AXE);
+                        accept(output, SystemItems.ASTRALITE_SWORD);
+                        accept(output, SystemItems.ASTRALITE_AXE);
                         accept(output, SystemItems.MITHRIL_SWORD);
                         accept(output, SystemItems.MITHRIL_AXE);
                         accept(output, SystemItems.ADAMANTITE_SWORD);
@@ -106,12 +101,26 @@ public final class ModCreativeTabs {
                         accept(output, SystemItems.SPIRIT_JADE_AXE);
                         accept(output, SystemItems.ASTRAL_SWORD);
                         accept(output, SystemItems.ASTRAL_AXE);
+                        accept(output, SystemItems.ASTRAL_GUANDAO);
 
-                        // --- ARMADURAS POST-NETHERITE ---
+                        accept(output, SystemItems.CELESTIAL_SWORD);
+                        accept(output, SystemItems.CELESTIAL_AXE);
+
+                        accept(output, SystemItems.PRIMORDIAL_SWORD);
+                        accept(output, SystemItems.PRIMORDIAL_AXE);
+
                         accept(output, SystemItems.ABYSSAL_HELMET);
                         accept(output, SystemItems.ABYSSAL_CHESTPLATE);
                         accept(output, SystemItems.ABYSSAL_LEGGINGS);
                         accept(output, SystemItems.ABYSSAL_BOOTS);
+                        accept(output, SystemItems.SOUL_ALLOY_HELMET);
+                        accept(output, SystemItems.SOUL_ALLOY_CHESTPLATE);
+                        accept(output, SystemItems.SOUL_ALLOY_LEGGINGS);
+                                                accept(output, SystemItems.SOUL_ALLOY_BOOTS);
+                        accept(output, SystemItems.ASTRALITE_HELMET);
+                        accept(output, SystemItems.ASTRALITE_CHESTPLATE);
+                        accept(output, SystemItems.ASTRALITE_LEGGINGS);
+                        accept(output, SystemItems.ASTRALITE_BOOTS);
 
                         accept(output, SystemItems.MITHRIL_HELMET);
                         accept(output, SystemItems.MITHRIL_CHESTPLATE);
@@ -133,70 +142,69 @@ public final class ModCreativeTabs {
                         accept(output, SystemItems.ASTRAL_LEGGINGS);
                         accept(output, SystemItems.ASTRAL_BOOTS);
                         
-                        // --- ARMADURA ÁUREA DE MORA (GENSHIN IMPACT / PRIMOGEMCRAFT) ---
+                        accept(output, SystemItems.CELESTIAL_HELMET);
+                        accept(output, SystemItems.CELESTIAL_CHESTPLATE);
+                        accept(output, SystemItems.CELESTIAL_LEGGINGS);
+                        accept(output, SystemItems.CELESTIAL_BOOTS);
+
+                        accept(output, SystemItems.PRIMORDIAL_HELMET);
+                        accept(output, SystemItems.PRIMORDIAL_CHESTPLATE);
+                        accept(output, SystemItems.PRIMORDIAL_LEGGINGS);
+                        accept(output, SystemItems.PRIMORDIAL_BOOTS);
+
                         accept(output, SystemItems.MORA_HELMET);
                         accept(output, SystemItems.MORA_CHESTPLATE);
                         accept(output, SystemItems.MORA_LEGGINGS);
                         accept(output, SystemItems.MORA_BOOTS);
 
-                        // --- ARTEFACTOS DE TEYVAT (GENSHIN IMPACT) ---
-                        // Bruja Carmesí en Llamas (Crimson Witch of Flames)
                         accept(output, SystemItems.ARTIFACT_CRIMSON_WITCH_FLOWER);
                         accept(output, SystemItems.ARTIFACT_CRIMSON_WITCH_PLUME);
                         accept(output, SystemItems.ARTIFACT_CRIMSON_WITCH_SANDS);
                         accept(output, SystemItems.ARTIFACT_CRIMSON_WITCH_GOBLET);
                         accept(output, SystemItems.ARTIFACT_CRIMSON_WITCH_CIRCLET);
 
-                        // Final del Gladiador (Gladiator's Finale)
                         accept(output, SystemItems.ARTIFACT_GLADIATORS_FINALE_FLOWER);
                         accept(output, SystemItems.ARTIFACT_GLADIATORS_FINALE_PLUME);
                         accept(output, SystemItems.ARTIFACT_GLADIATORS_FINALE_SANDS);
                         accept(output, SystemItems.ARTIFACT_GLADIATORS_FINALE_GOBLET);
                         accept(output, SystemItems.ARTIFACT_GLADIATORS_FINALE_CIRCLET);
 
-                        // Sombra Verde Esmeralda (Viridescent Venerer)
                         accept(output, SystemItems.ARTIFACT_VIRIDESCENT_VENERER_FLOWER);
                         accept(output, SystemItems.ARTIFACT_VIRIDESCENT_VENERER_PLUME);
                         accept(output, SystemItems.ARTIFACT_VIRIDESCENT_VENERER_SANDS);
                         accept(output, SystemItems.ARTIFACT_VIRIDESCENT_VENERER_GOBLET);
                         accept(output, SystemItems.ARTIFACT_VIRIDESCENT_VENERER_CIRCLET);
 
-                        // Doncella Amada (Maiden Beloved)
                         accept(output, SystemItems.ARTIFACT_MAIDEN_BELOVED_FLOWER);
                         accept(output, SystemItems.ARTIFACT_MAIDEN_BELOVED_PLUME);
                         accept(output, SystemItems.ARTIFACT_MAIDEN_BELOVED_SANDS);
                         accept(output, SystemItems.ARTIFACT_MAIDEN_BELOVED_GOBLET);
                         accept(output, SystemItems.ARTIFACT_MAIDEN_BELOVED_CIRCLET);
 
-                        // Caballería Sanguinaria (Bloodstained Chivalry)
                         accept(output, SystemItems.ARTIFACT_BLOODSTAINED_CHIVALRY_FLOWER);
                         accept(output, SystemItems.ARTIFACT_BLOODSTAINED_CHIVALRY_PLUME);
                         accept(output, SystemItems.ARTIFACT_BLOODSTAINED_CHIVALRY_SANDS);
                         accept(output, SystemItems.ARTIFACT_BLOODSTAINED_CHIVALRY_GOBLET);
                         accept(output, SystemItems.ARTIFACT_BLOODSTAINED_CHIVALRY_CIRCLET);
 
-                        // Berserker
                         accept(output, SystemItems.ARTIFACT_BERSERKER_FLOWER);
                         accept(output, SystemItems.ARTIFACT_BERSERKER_PLUME);
                         accept(output, SystemItems.ARTIFACT_BERSERKER_SANDS);
                         accept(output, SystemItems.ARTIFACT_BERSERKER_GOBLET);
                         accept(output, SystemItems.ARTIFACT_BERSERKER_CIRCLET);
 
-                        // El Exiliado (The Exile)
                         accept(output, SystemItems.ARTIFACT_THE_EXILE_FLOWER);
                         accept(output, SystemItems.ARTIFACT_THE_EXILE_PLUME);
                         accept(output, SystemItems.ARTIFACT_THE_EXILE_SANDS);
                         accept(output, SystemItems.ARTIFACT_THE_EXILE_GOBLET);
                         accept(output, SystemItems.ARTIFACT_THE_EXILE_CIRCLET);
 
-                        // Corazón del Guerrero (Brave Heart)
                         accept(output, SystemItems.ARTIFACT_BRAVE_HEART_FLOWER);
                         accept(output, SystemItems.ARTIFACT_BRAVE_HEART_PLUME);
                         accept(output, SystemItems.ARTIFACT_BRAVE_HEART_SANDS);
                         accept(output, SystemItems.ARTIFACT_BRAVE_HEART_GOBLET);
                         accept(output, SystemItems.ARTIFACT_BRAVE_HEART_CIRCLET);
 
-                        // --- 60 NUEVOS ARTEFACTOS CANÓNICOS (EXPANDIDOS) ---
                         for (var artHolder : SystemItems.EXPANDED_ARTIFACTS) {
                             accept(output, artHolder);
                         }
@@ -204,15 +212,11 @@ public final class ModCreativeTabs {
                     .build()
     );
 
-    // ==========================================
-    // 2. PESTAÑA: SISTEMA, GACHA Y RELIQUIAS
-    // ==========================================
     public static final DeferredHolder<CreativeModeTab, CreativeModeTab> SYSTEM_TAB = CREATIVE_MODE_TABS.register("awakening_system", () ->
             CreativeModeTab.builder()
                     .title(Component.translatable("itemGroup.awakening_system.system"))
                     .icon(() -> SystemItems.INTERTWINED_FATE.isBound() ? new ItemStack(SystemItems.INTERTWINED_FATE.get()) : new ItemStack(Items.NETHER_STAR))
                     .displayItems((parameters, output) -> {
-                        // --- MONEDAS Y DESEOS GACHA ---
                         accept(output, SystemItems.PRIMOGEM);
                         accept(output, SystemItems.GENESIS_CRYSTAL);
                         accept(output, SystemItems.STELLAR_JADE);
@@ -223,6 +227,11 @@ public final class ModCreativeTabs {
                         accept(output, SystemItems.MASTERLESS_STARGLITTER);
                         accept(output, SystemItems.AWAKENING_COIN);
                         accept(output, SystemItems.ROULETTE_TOKEN);
+                        accept(output, SystemItems.CASINO_CHIP_BRONZE);
+                        accept(output, SystemItems.CASINO_CHIP_SILVER);
+                        accept(output, SystemItems.CASINO_CHIP_GOLD);
+                        accept(output, SystemItems.CASINO_CHIP_PLATINUM);
+                        accept(output, SystemItems.CASINO_CHIP_BLACK);
                         accept(output, SystemItems.MORA);
                         accept(output, SystemItems.MORA_POUCH);
                         accept(output, SystemItems.MORA_BUNDLE);
@@ -232,7 +241,6 @@ public final class ModCreativeTabs {
                         accept(output, SystemItems.GIFT_CARD_50);
                         accept(output, SystemItems.GIFT_CARD_100);
 
-                        // --- CURIOSIDADES Y CONSUMIBLES HOYOVERSE ---
                         accept(output, SystemItems.COSMIC_FRAGMENT);
                         accept(output, SystemItems.ADVENTURERS_EXPERIENCE);
                         accept(output, SystemItems.HEROS_WIT);
@@ -248,6 +256,11 @@ public final class ModCreativeTabs {
                         accept(output, SystemItems.CONDENSED_RESIN);
                         accept(output, SystemItems.TRANSIENT_RESIN);
                         accept(output, SystemItems.VISIONS_MENU);
+                        accept(output, SystemItems.OLIVE_ELIXIR);
+                        accept(output, SystemItems.VIGOR_POTION);
+                        accept(output, SystemItems.FABLE_SCROLL);
+                        accept(output, SystemItems.CONSTELLATION_NECTAR);
+                        accept(output, SystemItems.FABLE_STAR_FRAGMENT);
                         accept(output, SystemItems.SLIME_CONDENSATE);
                         accept(output, SystemItems.SLIME_SECRETIONS);
                         accept(output, SystemItems.SLIME_CONCENTRATE);
@@ -263,20 +276,82 @@ public final class ModCreativeTabs {
                         accept(output, SystemItems.OMNISCIENCE_POUCH);
                         accept(output, SystemItems.DOCTORS_ROBE);
                         accept(output, SystemItems.GACHA_CAPSULE);
+                        accept(output, SystemItems.GACHA_CAPSULE_PURPLE);
+                        accept(output, SystemItems.GACHA_CAPSULE_GOLD);
                         accept(output, SystemItems.SLOT_MACHINE);
+                        accept(output, SystemItems.ILLEGAL_SLOT_MACHINE);
+                        accept(output, SystemItems.CASINO_CASHIER);
+                        accept(output, SystemItems.CLANDESTINE_CASHIER);
+                        accept(output, SystemItems.BLACKJACK_TABLE);
+                        accept(output, SystemItems.ILLEGAL_BLACKJACK_TABLE);
+                        accept(output, SystemItems.VIP_BLACKJACK_TABLE);
+                        accept(output, SystemItems.ROULETTE_TABLE);
+                        accept(output, SystemItems.ILLEGAL_ROULETTE_TABLE);
+                        accept(output, SystemItems.VIP_ROULETTE_TABLE);
+                        accept(output, SystemItems.POOL_TABLE);
+                        accept(output, SystemItems.ILLEGAL_POOL_TABLE);
+                        accept(output, SystemItems.DARTBOARD);
+                        accept(output, SystemItems.CASINO_CHAIR);
+                        accept(output, SystemItems.CLANDESTINE_CHAIR);
+                        accept(output, SystemItems.CASINO_BAR_STOOL);
+                        accept(output, SystemItems.CASINO_VIP_BARRIER);
+                        accept(output, SystemItems.CASINO_VIP_GATE);
+                        accept(output, SystemItems.CASINO_RECEPTION_GATE);
+                        accept(output, SystemItems.CASINO_WALL_DISPLAY_STAND);
+                        accept(output, SystemItems.CASINO_VIP_PASS);
+                        accept(output, SystemItems.CLANDESTINE_VAULT_KEY);
+                        accept(output, SystemItems.CASINO_TROPHY);
+                        accept(output, SystemItems.DARTS_TROPHY);
+                        accept(output, SystemItems.BLACKJACK_TROPHY);
+                        accept(output, SystemItems.POOL_TROPHY);
+                        accept(output, SystemItems.ROULETTE_TROPHY);
+                        accept(output, SystemItems.DART);
+                        accept(output, SystemItems.DARK_STAMINA_ELIXIR);
+                        accept(output, SystemItems.DUNGEON_CORE);
                         accept(output, SystemItems.GACHA_MACHINE);
+                        accept(output, SystemItems.UMA_BOOKMAKER);
+                        accept(output, SystemItems.CUSTOM_RACETRACK_CORE);
+                        accept(output, SystemItems.RACETRACK_BLEACHERS);
+                        accept(output, SystemItems.STARTING_GATE);
+                        accept(output, SystemItems.RACETRACK_TURF);
+                        accept(output, SystemItems.RACETRACK_PADDOCK_FENCE);
+                        accept(output, SystemItems.STARTING_GATE_TRUSS);
+                        accept(output, SystemItems.CARAT);
+                        accept(output, SystemItems.ELITE_CARAT);
+                        accept(output, SystemItems.PLEASING_PARFAIT);
+                        accept(output, SystemItems.BITTER_JUICE);
+                        accept(output, SystemItems.ALARM_CLOCK);
+                        accept(output, SystemItems.TRAINING_WHISTLE);
+                        accept(output, SystemItems.ANKLE_WEIGHTS);
+                        accept(output, SystemItems.SILVER_HORSESHOE);
+                        accept(output, SystemItems.GOLD_HORSESHOE);
+                        accept(output, SystemItems.GACHA_TICKET);
+                        accept(output, SystemItems.GOLDEN_GACHA_TICKET);
+                        accept(output, SystemItems.CLOVER_SPARK);
+                        accept(output, SystemItems.TRACK_MARKER_WAND);
 
-
-                        // --- RELIQUIAS SHONEN Y VISIONES ---
                         accept(output, SystemItems.LIGHT_CONE_MILKY_WAY);
                         accept(output, SystemItems.LIGHT_CONE_PASSING_SHORE);
                         accept(output, SystemItems.LIGHT_CONE_PATIENCE);
                         accept(output, SystemItems.LIGHT_CONE_DREAMS_REST);
                         accept(output, SystemItems.LIGHT_CONE_BEFORE_DAWN);
+                        accept(output, SystemItems.LIGHT_CONE_DANCE_DANCE_DANCE);
+                        accept(output, SystemItems.LIGHT_CONE_GOOD_NIGHT_SLEEP_WELL);
+                        accept(output, SystemItems.LIGHT_CONE_THE_DAY_COSMOS_FELL);
+                        accept(output, SystemItems.LIGHT_CONE_EYES_OF_THE_PREY);
+                        accept(output, SystemItems.LIGHT_CONE_POST_OP_CONVERSATION);
+                        accept(output, SystemItems.LIGHT_CONE_BIRTH_OF_THE_SELF);
+                        accept(output, SystemItems.LIGHT_CONE_ARROWS);
+                        accept(output, SystemItems.LIGHT_CONE_MULTIPLICATION);
+                        accept(output, SystemItems.LIGHT_CONE_DEFENSE);
+                        accept(output, SystemItems.LIGHT_CONE_PASSKEY);
+                        accept(output, SystemItems.LIGHT_CONE_CHORUS);
+                        accept(output, SystemItems.LIGHT_CONE_LOOP);
+                        accept(output, SystemItems.LIGHT_CONE_COLLAPSING_SKY);
+                        accept(output, SystemItems.LIGHT_CONE_CORNUCOPIA);
+                        accept(output, SystemItems.LIGHT_CONE_VOID);
+                        accept(output, SystemItems.LIGHT_CONE_AMBER);
                         accept(output, SystemItems.COMMAND_SPELL);
-                        accept(output, SystemItems.ELUCIDATOR);
-                        accept(output, SystemItems.DARK_REPULSER);
-                        accept(output, SystemItems.LAMBENT_LIGHT);
                         accept(output, SystemItems.VISION_PYRO);
                         accept(output, SystemItems.VISION_ELECTRO);
                         accept(output, SystemItems.VISION_CRYO);
@@ -285,7 +360,6 @@ public final class ModCreativeTabs {
                         accept(output, SystemItems.VISION_GEO);
                         accept(output, SystemItems.VISION_DENDRO);
 
-                        // --- ENGAÑOS DE LOS FATUI (DELUSIONS) ---
                         accept(output, SystemItems.PYRO_DELUSION);
                         accept(output, SystemItems.HYDRO_DELUSION);
                         accept(output, SystemItems.CRYO_DELUSION);
@@ -296,7 +370,6 @@ public final class ModCreativeTabs {
                         accept(output, SystemItems.BLANK_DELUSION);
                         accept(output, SystemItems.DELUSION_FRAGMENT);
 
-                        // --- SIGILOS ELEMENTALES DE TEYVAT ---
                         accept(output, SystemItems.ANEMO_SIGIL);
                         accept(output, SystemItems.GEO_SIGIL);
                         accept(output, SystemItems.ELECTRO_SIGIL);
@@ -304,13 +377,13 @@ public final class ModCreativeTabs {
                         accept(output, SystemItems.GUARDIANS_SIGIL);
                         accept(output, SystemItems.LIGHT_REALM_SIGIL);
 
-                        // --- LLAVES DE SANTUARIOS REGIONALES ---
                         accept(output, SystemItems.ANEMO_SHRINE_KEY);
                         accept(output, SystemItems.GEO_SHRINE_KEY);
                         accept(output, SystemItems.ELECTRO_SHRINE_KEY);
                         accept(output, SystemItems.DENDRO_SHRINE_KEY);
 
-                        // --- ÓCULOS Y PIEDRAS DE RESONANCIA ---
+                        accept(output, SystemItems.STATUE_OF_THE_SEVEN);
+
                         accept(output, SystemItems.ANEMOCULUS);
                         accept(output, SystemItems.GEOCULUS);
                         accept(output, SystemItems.ELECTROCULUS);
@@ -320,7 +393,6 @@ public final class ModCreativeTabs {
                         accept(output, SystemItems.ELECTROCULUS_RESONANCE_STONE);
                         accept(output, SystemItems.DENDROCULUS_RESONANCE_STONE);
 
-                        // --- PROTOTIPOS DE FORJA (BILLETS) ---
                         accept(output, SystemItems.NORTHLANDER_SWORD_BILLET);
                         accept(output, SystemItems.NORTHLANDER_BOW_BILLET);
                         accept(output, SystemItems.NORTHLANDER_CLAYMORE_BILLET);
@@ -332,7 +404,6 @@ public final class ModCreativeTabs {
                         accept(output, SystemItems.MIDLANDER_CATALYST_BILLET);
                         accept(output, SystemItems.MIDLANDER_POLEARM_BILLET);
 
-                        // --- PIEDRAS DE RUNA ---
                         accept(output, SystemItems.RUNE_STONE_RULERS_AUTHORITY);
                         accept(output, SystemItems.RUNE_STONE_DRAGON_EYES);
                         accept(output, SystemItems.RUNE_STONE_BLOODTHIRST);
@@ -340,22 +411,21 @@ public final class ModCreativeTabs {
                         accept(output, SystemItems.RUNE_STONE_FOURTH_WALL);
                         accept(output, SystemItems.RUNE_STONE_IRON_BODY);
 
-                        // --- RELIQUIAS Y JOYAS SUPREMAS ---
                         accept(output, SystemItems.DEMON_MONARCH_RING);
                         accept(output, SystemItems.ASRAHAN_MANA_CHALICE);
                         accept(output, SystemItems.KING_SLAYER_NECKLACE);
                         accept(output, SystemItems.PHOENIX_FEATHER);
                         accept(output, SystemItems.ELEMENTAL_DEMON_CROWN);
 
-                        // --- LIBROS, TICKETS Y PERGAMINOS ---
                         accept(output, SystemItems.HUNTER_GUIDE);
                         accept(output, SystemItems.HUNTER_BESTIARY);
-                        accept(output, SystemItems.WORN_LORE_BOOK);
+                        output.accept(com.soybe.awakeningsystem.item.WornLoreBookItem.createVolume(1));
+                        output.accept(com.soybe.awakeningsystem.item.WornLoreBookItem.createVolume(2));
+                        output.accept(com.soybe.awakeningsystem.item.WornLoreBookItem.createVolume(3));
                         accept(output, SystemItems.RANKER_TOWER_TICKET);
                         accept(output, SystemItems.RANKER_RETURN_SCROLL);
                         accept(output, SystemItems.ADVENTURER_MEDAL);
 
-                        // --- DISCOS DE MÚSICA OFICIALES HOYOVERSE ---
                         accept(output, SystemItems.MUSIC_DISC_TAKE_THE_JOURNEY);
                         accept(output, SystemItems.MUSIC_DISC_SPACE_WALK);
                         accept(output, SystemItems.MUSIC_DISC_QINGCE_NIGHT);
@@ -369,40 +439,30 @@ public final class ModCreativeTabs {
                     .build()
     );
 
-    // ==========================================
-    // 3. PESTAÑA: MINERALES, BLOQUES Y FORJA
-    // ==========================================
     public static final DeferredHolder<CreativeModeTab, CreativeModeTab> MATERIALS_TAB = CREATIVE_MODE_TABS.register("awakening_materials", () ->
             CreativeModeTab.builder()
                     .title(Component.translatable("itemGroup.awakening_system.materials"))
-                    .icon(() -> SystemItems.ASTRAL_INGOT.isBound() ? new ItemStack(SystemItems.ASTRAL_INGOT.get()) : new ItemStack(Items.NETHERITE_INGOT))
+                    .icon(() -> SystemItems.ABYSSAL_BLOCK.isBound() ? new ItemStack(SystemItems.ABYSSAL_BLOCK.get()) : new ItemStack(Items.NETHERITE_BLOCK))
                     .displayItems((parameters, output) -> {
-                        // --- FAMILIA ABISAL ---
                         accept(output, SystemItems.RAW_ABYSSAL_ORE);
                         accept(output, SystemItems.ABYSSAL_INGOT);
                         accept(output, SystemItems.ABYSSAL_NUGGET);
                         accept(output, SystemItems.ABYSSAL_STONE);
+                        accept(output, SystemItems.ABYSSAL_GROWTH);
+                        accept(output, SystemItems.ABYSSAL_TENDRILS);
                         accept(output, SystemItems.ABYSSAL_RESONANT_CRYSTAL);
                         accept(output, SystemItems.ABYSSAL_ORE);
                         accept(output, SystemItems.DEEPSLATE_ABYSSAL_ORE);
+                        accept(output, SystemItems.ABYSSAL_STONE_ABYSSAL_ORE);
+                        accept(output, SystemItems.ABYSSAL_STONE_DIAMOND_ORE);
+                        accept(output, SystemItems.ABYSSAL_STONE_IRON_ORE);
+                        accept(output, SystemItems.ABYSSAL_STONE_GOLD_ORE);
+                        accept(output, SystemItems.ABYSSAL_STONE_REDSTONE_ORE);
+                        accept(output, SystemItems.ABYSSAL_STONE_LAPIS_ORE);
+                        accept(output, SystemItems.ABYSSAL_STONE_COPPER_ORE);
+                        accept(output, SystemItems.ABYSSAL_STONE_COAL_ORE);
                         accept(output, SystemItems.ABYSSAL_BLOCK);
 
-                        // --- PLANTILLAS DE MEJORA DE HERRERÍA ---
-                        accept(output, SystemItems.ABYSSAL_UPGRADE_SMITHING_TEMPLATE);
-                        accept(output, SystemItems.MITHRIL_UPGRADE_SMITHING_TEMPLATE);
-                        accept(output, SystemItems.ADAMANTITE_UPGRADE_SMITHING_TEMPLATE);
-                        accept(output, SystemItems.SPIRIT_JADE_UPGRADE_SMITHING_TEMPLATE);
-                        accept(output, SystemItems.ASTRAL_UPGRADE_SMITHING_TEMPLATE);
-
-                        // --- LLAVES DIMENSIONALES ---
-                        accept(output, SystemItems.OVERWORLD_DUNGEON_KEY);
-                        accept(output, SystemItems.NETHER_FLAME_KEY);
-                        accept(output, SystemItems.END_VOID_KEY);
-                        accept(output, SystemItems.TEYVAT_SHRINE_KEY);
-                        accept(output, SystemItems.ISEKAI_MANA_KEY);
-                        accept(output, SystemItems.MURIM_DAO_KEY);
-
-                        // --- FAMILIA MITHRIL ---
                         accept(output, SystemItems.RAW_MITHRIL);
                         accept(output, SystemItems.MITHRIL_INGOT);
                         accept(output, SystemItems.MITHRIL_NUGGET);
@@ -410,86 +470,98 @@ public final class ModCreativeTabs {
                         accept(output, SystemItems.DEEPSLATE_MITHRIL_ORE);
                         accept(output, SystemItems.MITHRIL_BLOCK);
 
-                        // --- FAMILIA ADAMANTITE ---
                         accept(output, SystemItems.RAW_ADAMANTITE);
                         accept(output, SystemItems.ADAMANTITE_INGOT);
                         accept(output, SystemItems.ADAMANTITE_NUGGET);
                         accept(output, SystemItems.ADAMANTITE_ORE);
+                        accept(output, SystemItems.DEEPSLATE_ADAMANTITE_ORE);
                         accept(output, SystemItems.ADAMANTITE_BLOCK);
 
-                        // --- FAMILIA JADE ESPIRITUAL ---
                         accept(output, SystemItems.RAW_SPIRIT_JADE);
                         accept(output, SystemItems.SPIRIT_JADE);
                         accept(output, SystemItems.SPIRIT_JADE_SHARD);
                         accept(output, SystemItems.SPIRIT_JADE_ORE);
                         accept(output, SystemItems.SPIRIT_JADE_BLOCK);
 
-                        // --- FAMILIA ASTRAL Y BLOQUES SUPREMOS ---
                         accept(output, SystemItems.RAW_ASTRAL);
                         accept(output, SystemItems.ASTRAL_INGOT);
                         accept(output, SystemItems.ASTRAL_NUGGET);
                         accept(output, SystemItems.ASTRAL_ORE);
                         accept(output, SystemItems.ASTRAL_BLOCK);
+
+                        accept(output, SystemItems.RAW_CELESTIAL);
+                        accept(output, SystemItems.CELESTIAL_INGOT);
+                        accept(output, SystemItems.CELESTIAL_NUGGET);
+                        accept(output, SystemItems.CELESTIAL_ORE);
+                        accept(output, SystemItems.CELESTIAL_BLOCK);
+
+                        accept(output, SystemItems.RAW_PRIMORDIAL);
+                        accept(output, SystemItems.PRIMORDIAL_INGOT);
+                        accept(output, SystemItems.PRIMORDIAL_NUGGET);
+                        accept(output, SystemItems.PRIMORDIAL_ORE);
+                        accept(output, SystemItems.PRIMORDIAL_BLOCK);
+
+                        accept(output, SystemItems.NETHERITE_STICK);
+                        accept(output, SystemItems.SOUL_ALLOY_INGOT);
+                        accept(output, SystemItems.IGNITED_SOUL_ALLOY_INGOT);
+                        accept(output, SystemItems.SOUL_ALLOY_ORE);
+                                                accept(output, SystemItems.SOUL_ALLOY_BLOCK);
+                        accept(output, SystemItems.ASTRALITE_INGOT);
+                        accept(output, SystemItems.ASTRALITE_ORE);
+                        accept(output, SystemItems.ASTRALITE_BLOCK);
+
                         accept(output, SystemItems.ABYSSAL_VOID_STONE);
                         accept(output, SystemItems.CELESTIAL_WAYPOINT);
+                        accept(output, SystemItems.STATUE_OF_THE_SEVEN);
 
-                        // --- MINERALES Y GEMAS ELEMENTALES DE TEYVAT ---
                         accept(output, SystemItems.PRIMOGEM_ORE);
                         accept(output, SystemItems.DEEPSLATE_PRIMOGEM_ORE);
                         accept(output, SystemItems.WHITE_IRON_ORE);
                         accept(output, SystemItems.WHITE_IRON_CHUNK);
                         accept(output, SystemItems.MORA_BLOCK);
 
-                        // Pyro (Agnidus Agate)
                         accept(output, SystemItems.AGNIDUS_AGATE_ORE);
                         accept(output, SystemItems.AGNIDUS_AGATE_SLIVER);
                         accept(output, SystemItems.AGNIDUS_AGATE_FRAGMENT);
                         accept(output, SystemItems.AGNIDUS_AGATE_CHUNK);
                         accept(output, SystemItems.AGNIDUS_AGATE_GEMSTONE);
 
-                        // Cryo (Shivada Jade)
                         accept(output, SystemItems.SHIVADA_JADE_ORE);
                         accept(output, SystemItems.SHIVADA_JADE_SLIVER);
                         accept(output, SystemItems.SHIVADA_JADE_FRAGMENT);
                         accept(output, SystemItems.SHIVADA_JADE_CHUNK);
                         accept(output, SystemItems.SHIVADA_JADE_GEMSTONE);
 
-                        // Hydro (Varunada Lazurite)
                         accept(output, SystemItems.VARUNADA_LAZURITE_ORE);
                         accept(output, SystemItems.VARUNADA_LAZURITE_SLIVER);
                         accept(output, SystemItems.VARUNADA_LAZURITE_FRAGMENT);
                         accept(output, SystemItems.VARUNADA_LAZURITE_CHUNK);
                         accept(output, SystemItems.VARUNADA_LAZURITE_GEMSTONE);
 
-                        // Electro (Vajrada Amethyst)
                         accept(output, SystemItems.VAJRADA_AMETHYST_ORE);
                         accept(output, SystemItems.VAJRADA_AMETHYST_SLIVER);
                         accept(output, SystemItems.VAJRADA_AMETHYST_FRAGMENT);
                         accept(output, SystemItems.VAJRADA_AMETHYST_CHUNK);
                         accept(output, SystemItems.VAJRADA_AMETHYST_GEMSTONE);
 
-                        // Anemo (Vayuda Turquoise)
                         accept(output, SystemItems.VAYUDA_TURQUOISE_ORE);
                         accept(output, SystemItems.VAYUDA_TURQUOISE_SLIVER);
                         accept(output, SystemItems.VAYUDA_TURQUOISE_FRAGMENT);
                         accept(output, SystemItems.VAYUDA_TURQUOISE_CHUNK);
                         accept(output, SystemItems.VAYUDA_TURQUOISE_GEMSTONE);
 
-                        // Geo (Prithiva Topaz)
                         accept(output, SystemItems.PRITHIVA_TOPAZ_ORE);
                         accept(output, SystemItems.PRITHIVA_TOPAZ_SLIVER);
                         accept(output, SystemItems.PRITHIVA_TOPAZ_FRAGMENT);
                         accept(output, SystemItems.PRITHIVA_TOPAZ_CHUNK);
                         accept(output, SystemItems.PRITHIVA_TOPAZ_GEMSTONE);
 
-                        // Dendro (Nagadus Emerald)
                         accept(output, SystemItems.NAGADUS_EMERALD_ORE);
                         accept(output, SystemItems.NAGADUS_EMERALD_SLIVER);
                         accept(output, SystemItems.NAGADUS_EMERALD_FRAGMENT);
                         accept(output, SystemItems.NAGADUS_EMERALD_CHUNK);
                         accept(output, SystemItems.NAGADUS_EMERALD_GEMSTONE);
 
-                        // Materiales de Mejora y Núcleos
                         accept(output, SystemItems.CRYSTAL_CORE);
                         accept(output, SystemItems.ENHANCEMENT_ORE);
                         accept(output, SystemItems.FINE_ENHANCEMENT_ORE);
@@ -497,7 +569,6 @@ public final class ModCreativeTabs {
                         accept(output, SystemItems.MASTERLESS_STARDUST);
                         accept(output, SystemItems.MASTERLESS_STARGLITTER);
 
-                        // --- MATERIALES DE ASCENSIÓN DE HIPÓSTASIS (GENSHIN IMPACT) ---
                         accept(output, SystemItems.HURRICANE_SEED);
                         accept(output, SystemItems.LIGHTNING_PRISM);
                         accept(output, SystemItems.BASALT_PILLAR);
@@ -505,26 +576,19 @@ public final class ModCreativeTabs {
                         accept(output, SystemItems.SMOLDERING_PEARL);
                         accept(output, SystemItems.DEW_OF_REPUDIATION);
 
-                        // --- MATERIALES DE AUTÓMATAS DE RUINAS (KHAENRI'AH) ---
                         accept(output, SystemItems.CHAOS_DEVICE);
                         accept(output, SystemItems.CHAOS_CIRCUIT);
                         accept(output, SystemItems.CHAOS_CORE);
 
-                        // --- MATERIALES DE REGISVID (GENSHIN IMPACT) ---
                         accept(output, SystemItems.HOARFROST_CORE);
                         accept(output, SystemItems.EVERFLAME_SEED);
 
-                        // --- MATERIALES DE JEFES SEMANALES Y MUNDIALES (GENSHIN IMPACT) ---
                         accept(output, SystemItems.MUDRA_OF_THE_MALEFIC_GENERAL);
-                        // accept(output, SystemItems.RIFTBORN_REGALIA);
-                        // accept(output, SystemItems.GOLDEN_WOLFLORD_CORE);
 
-                        // --- MATERIALES DE MITACHURL Y LAWACHURL ---
                         accept(output, SystemItems.HEAVY_HORN);
                         accept(output, SystemItems.BLACK_BRONZE_HORN);
                         accept(output, SystemItems.BLACK_CRYSTAL_HORN);
 
-                        // --- BLOQUES DE PODER ELEMENTAL DE HIPÓSTASIS ---
                         accept(output, SystemItems.ANEMO_HYPOSTASIS_BLOCK);
                         accept(output, SystemItems.ELECTRO_HYPOSTASIS_BLOCK);
                         accept(output, SystemItems.GEO_HYPOSTASIS_BLOCK);
@@ -532,7 +596,6 @@ public final class ModCreativeTabs {
                         accept(output, SystemItems.PYRO_HYPOSTASIS_BLOCK);
                         accept(output, SystemItems.HYDRO_HYPOSTASIS_BLOCK);
 
-                        // --- MONUMENTOS ELEMENTALES DE TEYVAT ---
                         accept(output, SystemItems.ANEMO_MONUMENT);
                         accept(output, SystemItems.GEO_MONUMENT);
                         accept(output, SystemItems.ELECTRO_MONUMENT);
@@ -542,24 +605,43 @@ public final class ModCreativeTabs {
                         accept(output, SystemItems.CRYO_MONUMENT);
                         accept(output, SystemItems.BLANK_MONUMENT);
 
-                        // --- HORNOS MÁGICOS ---
+                        accept(output, SystemItems.MITHRIL_UPGRADE_SMITHING_TEMPLATE);
+                        accept(output, SystemItems.ADAMANTITE_UPGRADE_SMITHING_TEMPLATE);
+                        accept(output, SystemItems.SPIRIT_JADE_UPGRADE_SMITHING_TEMPLATE);
+                        accept(output, SystemItems.ASTRAL_UPGRADE_SMITHING_TEMPLATE);
+                        accept(output, SystemItems.CELESTIAL_UPGRADE_SMITHING_TEMPLATE);
+                        accept(output, SystemItems.PRIMORDIAL_UPGRADE_SMITHING_TEMPLATE);
+
+                        accept(output, SystemItems.UPGRADE_ABYSSAL_TO_SOUL_ALLOY);
+                        accept(output, SystemItems.UPGRADE_SOUL_ALLOY_TO_ASTRALITE);
+                        accept(output, SystemItems.UPGRADE_ASTRALITE_TO_MITHRIL);
+                        accept(output, SystemItems.UPGRADE_MITHRIL_TO_ADAMANTITE);
+                        accept(output, SystemItems.UPGRADE_ADAMANTITE_TO_SPIRIT_JADE);
+                        accept(output, SystemItems.UPGRADE_SPIRIT_JADE_TO_ASTRAL);
+                        accept(output, SystemItems.UPGRADE_ASTRAL_TO_CELESTIAL);
+                        accept(output, SystemItems.UPGRADE_CELESTIAL_TO_PRIMORDIAL);
+
                         accept(output, SystemItems.ABYSSAL_FURNACE);
+                        accept(output, SystemItems.SOUL_ALLOY_FURNACE);
+                        accept(output, SystemItems.ASTRALITE_FURNACE);
                         accept(output, SystemItems.MITHRIL_FURNACE);
                         accept(output, SystemItems.ADAMANTITE_FURNACE);
                         accept(output, SystemItems.SPIRIT_JADE_FURNACE);
                         accept(output, SystemItems.ASTRAL_FURNACE);
+                        accept(output, SystemItems.CELESTIAL_FURNACE);
+                        accept(output, SystemItems.PRIMORDIAL_FURNACE);
 
-                        // --- PLANTILLAS DE HERRERÍA (SMITHING TEMPLATES) ---
-                        accept(output, SystemItems.UPGRADE_NETHERITE_TO_ABYSSAL);
-                        accept(output, SystemItems.UPGRADE_NETHERITE_TO_MITHRIL);
-                        accept(output, SystemItems.UPGRADE_MITHRIL_TO_ADAMANTITE);
-                        accept(output, SystemItems.UPGRADE_ADAMANTITE_TO_SPIRIT_JADE);
-                        accept(output, SystemItems.UPGRADE_SPIRIT_JADE_TO_ASTRAL);
-
-                        // --- HERRAMIENTAS DE MINERÍA Y UTILIDAD ---
                         accept(output, SystemItems.ABYSSAL_PICKAXE);
                         accept(output, SystemItems.ABYSSAL_SHOVEL);
                         accept(output, SystemItems.ABYSSAL_HOE);
+
+                        accept(output, SystemItems.SOUL_ALLOY_PICKAXE);
+                        accept(output, SystemItems.SOUL_ALLOY_SHOVEL);
+                        accept(output, SystemItems.SOUL_ALLOY_HOE);
+
+                        accept(output, SystemItems.ASTRALITE_PICKAXE);
+                        accept(output, SystemItems.ASTRALITE_SHOVEL);
+                        accept(output, SystemItems.ASTRALITE_HOE);
 
                         accept(output, SystemItems.MITHRIL_PICKAXE);
                         accept(output, SystemItems.MITHRIL_SHOVEL);
@@ -577,10 +659,40 @@ public final class ModCreativeTabs {
                         accept(output, SystemItems.ASTRAL_SHOVEL);
                         accept(output, SystemItems.ASTRAL_HOE);
 
-                        // --- HERRAMIENTAS PRIMORDIALES DE TEYVAT ---
+                        accept(output, SystemItems.CELESTIAL_PICKAXE);
+                        accept(output, SystemItems.CELESTIAL_SHOVEL);
+                        accept(output, SystemItems.CELESTIAL_HOE);
+
+                        accept(output, SystemItems.PRIMORDIAL_PICKAXE);
+                        accept(output, SystemItems.PRIMORDIAL_SHOVEL);
+                        accept(output, SystemItems.PRIMORDIAL_HOE);
+
                         accept(output, SystemItems.PRIMOGEM_PICKAXE);
 
-                        // --- MADERAS Y ÁRBOLES CANÓNICOS DE TEYVAT ---
+                        accept(output, SystemItems.LOCKED_TREASURE_CHEST);
+                        accept(output, SystemItems.LOCKED_CHEST_OVERWORLD);
+                        accept(output, SystemItems.LOCKED_CHEST_NETHER);
+                        accept(output, SystemItems.LOCKED_CHEST_END);
+                        accept(output, SystemItems.LOCKED_CHEST_TEYVAT);
+                        accept(output, SystemItems.LOCKED_CHEST_ISEKAI);
+                        accept(output, SystemItems.LOCKED_CHEST_MURIM);
+
+                        accept(output, SystemItems.DUNGEON_KEY);
+                        accept(output, SystemItems.OVERWORLD_DUNGEON_KEY);
+                        accept(output, SystemItems.NETHER_FLAME_KEY);
+                        accept(output, SystemItems.END_VOID_KEY);
+                        accept(output, SystemItems.TEYVAT_SHRINE_KEY);
+                        accept(output, SystemItems.ANEMO_SHRINE_KEY);
+                        accept(output, SystemItems.GEO_SHRINE_KEY);
+                        accept(output, SystemItems.ELECTRO_SHRINE_KEY);
+                        accept(output, SystemItems.DENDRO_SHRINE_KEY);
+                        accept(output, SystemItems.ISEKAI_MANA_KEY);
+                        accept(output, SystemItems.MURIM_DAO_KEY);
+                        accept(output, SystemItems.JADE_ANCESTRAL_KEY);
+                        accept(output, SystemItems.YGGDRASIL_TREANT_KEY);
+                        accept(output, SystemItems.ELEMENTAL_CASTLE_KEY);
+                        accept(output, SystemItems.CLANDESTINE_VAULT_KEY);
+
                         accept(output, SystemItems.CUIHUA_LOG);
                         accept(output, SystemItems.CUIHUA_LEAVES);
                         accept(output, SystemItems.CUIHUA_SAPLING);
@@ -616,7 +728,6 @@ public final class ModCreativeTabs {
                         accept(output, SystemItems.MAPLE_SAPLING_ITEM);
                         accept(output, SystemItems.MAPLE_PLANKS_ITEM);
 
-                        // --- MADERAS Y ÁRBOLES CANÓNICOS DE ISEKAI ---
                         accept(output, SystemItems.MANA_WOOD_LOG);
                         accept(output, SystemItems.MANA_WOOD_LEAVES);
                         accept(output, SystemItems.MANA_WOOD_SAPLING);
@@ -627,7 +738,6 @@ public final class ModCreativeTabs {
                         accept(output, SystemItems.ELDORIA_SAPLING);
                         accept(output, SystemItems.ELDORIA_PLANKS);
 
-                        // --- MADERAS Y ÁRBOLES CANÓNICOS DE MURIM (CULTIVO) ---
                         accept(output, SystemItems.SPIRIT_PLUM_LOG);
                         accept(output, SystemItems.SPIRIT_PLUM_LEAVES);
                         accept(output, SystemItems.SPIRIT_PLUM_SAPLING);
@@ -638,6 +748,8 @@ public final class ModCreativeTabs {
                         accept(output, SystemItems.SPIRIT_PLUM_FENCE_GATE);
                         accept(output, SystemItems.SPIRIT_PLUM_DOOR);
                         accept(output, SystemItems.SPIRIT_PLUM_TRAPDOOR);
+                        accept(output, SystemItems.SPIRIT_PLUM_BUTTON);
+                        accept(output, SystemItems.SPIRIT_PLUM_PRESSURE_PLATE);
 
                         accept(output, SystemItems.CELESTIAL_PINE_LOG);
                         accept(output, SystemItems.CELESTIAL_PINE_LEAVES);
@@ -652,7 +764,6 @@ public final class ModCreativeTabs {
 
                         accept(output, SystemItems.IMMORTALITY_PEACH_LEAVES);
 
-                        // --- MINERALES Y GEMAS ADICIONALES DE TEYVAT ---
                         accept(output, SystemItems.COR_LAPIS_BLOCK_ITEM);
                         accept(output, SystemItems.COR_LAPIS_ITEM);
                         accept(output, SystemItems.NOCTILUCOUS_JADE_BLOCK_ITEM);
@@ -665,14 +776,27 @@ public final class ModCreativeTabs {
                         accept(output, SystemItems.MAGICAL_CRYSTAL_CHUNK);
                         accept(output, SystemItems.ELECTRO_CRYSTAL_BLOCK_ITEM);
                         accept(output, SystemItems.ELECTRO_CRYSTAL);
+                        accept(output, SystemItems.MANA_CRYSTAL_CLUSTER_E_ITEM);
+                        accept(output, SystemItems.MANA_CRYSTAL_SHARD_E);
+                        accept(output, SystemItems.MANA_CRYSTAL_CLUSTER_D_ITEM);
+                        accept(output, SystemItems.MANA_CRYSTAL_SHARD_D);
+                        accept(output, SystemItems.MANA_CRYSTAL_CLUSTER_C_ITEM);
+                        accept(output, SystemItems.MANA_CRYSTAL_SHARD_C);
+                        accept(output, SystemItems.MANA_CRYSTAL_CLUSTER_B_ITEM);
+                        accept(output, SystemItems.MANA_CRYSTAL_SHARD_B);
+                        accept(output, SystemItems.MANA_CRYSTAL_CLUSTER_A_ITEM);
+                        accept(output, SystemItems.MANA_CRYSTAL_SHARD_A);
+                        accept(output, SystemItems.MANA_CRYSTAL_CLUSTER_S_ITEM);
+                        accept(output, SystemItems.MANA_CRYSTAL_SHARD_S);
+                        accept(output, SystemItems.JACK_PUMPKIN);
+                        accept(output, SystemItems.LIMBO_VICTORIAN_LAMPPOST);
+                        accept(output, SystemItems.VOID_BLACK_PATH);
 
-                        // --- SANTUARIOS DE LAS PROFUNDIDADES ---
                         accept(output, SystemItems.ANEMO_SHRINE_BLOCK_ITEM);
                         accept(output, SystemItems.GEO_SHRINE_BLOCK_ITEM);
                         accept(output, SystemItems.ELECTRO_SHRINE_BLOCK_ITEM);
                         accept(output, SystemItems.DENDRO_SHRINE_BLOCK_ITEM);
 
-                        // --- BLOQUES DE ÓCULOS Y UTILIDAD ---
                         accept(output, SystemItems.ANEMOCULUS_BLOCK_ITEM);
                         accept(output, SystemItems.GEOCULUS_BLOCK_ITEM);
                         accept(output, SystemItems.ELECTROCULUS_BLOCK_ITEM);
@@ -681,14 +805,12 @@ public final class ModCreativeTabs {
                         accept(output, SystemItems.FISHING_GUILD_STATION_ITEM);
                         accept(output, SystemItems.GUILD_HUNTING_BOARD_ITEM);
 
-                        // --- MOBILIARIO Y AMBIENTACIÓN DE TEYVAT ---
                         accept(output, SystemItems.BAMBOO_TEA_TABLE_ITEM);
                         accept(output, SystemItems.OTOGI_TABLE_ITEM);
                         accept(output, SystemItems.OTOGI_STOOL_ITEM);
                         accept(output, SystemItems.YUMEMIRU_STOOL_ITEM);
                         accept(output, SystemItems.SANDBEARER_FLOOR_LAMP_ITEM);
 
-                        // --- SETS COMPLETOS DE MADERAS DE TEYVAT ---
                         accept(output, SystemItems.CUIHUA_STAIRS_ITEM);
                         accept(output, SystemItems.CUIHUA_SLAB_ITEM);
                         accept(output, SystemItems.CUIHUA_FENCE_ITEM);
@@ -762,18 +884,13 @@ public final class ModCreativeTabs {
                     .build()
     );
 
-    // ==========================================
-    // 4. PESTAÑA: ALQUIMIA, MAZMORRAS Y CRIATURAS
-    // ==========================================
     public static final DeferredHolder<CreativeModeTab, CreativeModeTab> MAGIC_ENTITIES_TAB = CREATIVE_MODE_TABS.register("awakening_magic_entities", () ->
             CreativeModeTab.builder()
                     .title(Component.translatable("itemGroup.awakening_system.magic_entities"))
                     .icon(() -> SystemItems.RISING_DRAGON_PILL.isBound() ? new ItemStack(SystemItems.RISING_DRAGON_PILL.get()) : new ItemStack(Items.GOLDEN_APPLE))
                     .displayItems((parameters, output) -> {
-                        // --- ESTACIONES CELESTIALES Y NOVEDADES ---
                         accept(output, SystemItems.COMPANION_ASCENSION_TABLE);
 
-                        // --- ALQUIMIA Y PÍLDORAS MURIM ---
                         accept(output, SystemItems.MURIM_ALCHEMY_CAULDRON);
                         accept(output, SystemItems.RISING_DRAGON_PILL);
                         accept(output, SystemItems.MARROW_CLEANSING_PILL);
@@ -787,25 +904,23 @@ public final class ModCreativeTabs {
                         accept(output, SystemItems.HEAVENLY_ENLIGHTENMENT_PILL);
                         accept(output, SystemItems.FOUNDATION_BUILDING_PILL);
                         accept(output, SystemItems.PRIMORDIAL_REBIRTH_PILL);
+                        accept(output, SystemItems.NINE_TRIBULATIONS_SCROLL);
                         accept(output, SystemItems.WU_XING_MANUAL);
                         accept(output, SystemItems.MURIM_ASCENSION_TALISMAN);
                         accept(output, SystemItems.TAOIST_TALISMAN);
 
-                        // --- BOLSAS DE ALMACENAMIENTO GIGANTE (RELIQUIAS DE VIAJE) ---
                         accept(output, SystemItems.WANDERER_POUCH);
                         accept(output, SystemItems.ADVENTURER_POUCH);
                         accept(output, SystemItems.OUTLANDER_POUCH);
                         accept(output, SystemItems.EMERGENCY_POUCH);
                         accept(output, SystemItems.OMNISCIENCE_POUCH);
 
-                        // --- HIERBAS Y PLANTAS MEDICINALES SAGRADAS ---
                         accept(output, SystemItems.THOUSAND_YEAR_GINSENG);
                         accept(output, SystemItems.WILD_GINSENG);
                         accept(output, SystemItems.SNOW_LOTUS);
                         accept(output, SystemItems.MANDRAKE_ROOT);
                         accept(output, SystemItems.YGGDRASIL_HEART_SEED);
 
-                        // --- ALIMENTOS Y CARNES DE MANÁ ---
                         accept(output, SystemItems.MANA_BEEF);
                         accept(output, SystemItems.COOKED_MANA_BEEF);
                         accept(output, SystemItems.MANA_PORKCHOP);
@@ -815,8 +930,8 @@ public final class ModCreativeTabs {
                         accept(output, SystemItems.MANA_CHICKEN_MEAT);
                         accept(output, SystemItems.COOKED_MANA_CHICKEN_MEAT);
                         accept(output, SystemItems.MANA_MILK_BUCKET);
+                        accept(output, SystemItems.MANA_POTION);
 
-                        // --- PLATOS Y ALIMENTOS DE TEYVAT ---
                         accept(output, SystemItems.ADEPTUS_TEMPTATION);
                         accept(output, SystemItems.SWEET_MADAME);
                         accept(output, SystemItems.ALMOND_TOFU);
@@ -827,7 +942,6 @@ public final class ModCreativeTabs {
                         accept(output, SystemItems.OMINOUS_DISH);
                         accept(output, SystemItems.RADISH);
 
-                        // --- PECES Y PESCA DE TEYVAT ---
                         accept(output, SystemItems.MEDAKA);
                         accept(output, SystemItems.AIZEN_MEDAKA);
                         accept(output, SystemItems.SWEET_FLOWER_MEDAKA);
@@ -844,14 +958,12 @@ public final class ModCreativeTabs {
                         accept(output, SystemItems.GLOWGRASS_BAIT);
                         accept(output, SystemItems.SUGARDEW_BAIT);
 
-                        // --- FRUTAS ESPIRITUALES, ASTRALES Y DE CULTIVO ---
                         accept(output, SystemItems.SPIRIT_PLUM_FRUIT);
                         accept(output, SystemItems.CELESTIAL_PINE_NUT);
                         accept(output, SystemItems.IMMORTALITY_PEACH);
                         accept(output, SystemItems.ELDORIA_FRUIT);
                         accept(output, SystemItems.MANA_FRUIT);
 
-                        // --- DROPS DE MONSTRUOS Y MATERIALES ---
                         accept(output, SystemItems.GOBLIN_EAR);
                         accept(output, SystemItems.BEASTMAN_FUR);
                         accept(output, SystemItems.BEASTMAN_FANG);
@@ -861,12 +973,8 @@ public final class ModCreativeTabs {
                         accept(output, SystemItems.CELESTIAL_DRAGON_PEARL);
                         accept(output, SystemItems.BOTTLED_MANA_PIXIE);
                         accept(output, SystemItems.CHAOS_MANA_CORE);
-                        accept(output, SystemItems.WYVERN_SCALE);
-                        accept(output, SystemItems.WYVERN_FANG);
-                        accept(output, SystemItems.WYVERN_SADDLE);
                         accept(output, SystemItems.WILDFIRE_CROWN_FRAGMENT);
 
-                        // --- MAZMORRAS, ALTARES Y MOBILIARIO ---
                         accept(output, SystemItems.ROULETTE_ALTAR);
                         accept(output, SystemItems.CELESTIAL_DRAGON_TRIBUTE);
                         accept(output, SystemItems.CELESTIAL_DRAGON_ALTAR);
@@ -881,7 +989,16 @@ public final class ModCreativeTabs {
                         accept(output, SystemItems.ELEMENTAL_BARRIER);
                         accept(output, SystemItems.FIVE_ELEMENTS_PEDESTAL);
                         accept(output, SystemItems.BOUNTY_BOARD);
+                        accept(output, SystemItems.TOWER_MISSION_BOARD);
+                        accept(output, SystemItems.ANCIENT_BROWN_ROCK);
                         accept(output, SystemItems.TAVERN_CHAIR);
+                        accept(output, SystemItems.CASINO_CHAIR);
+                        accept(output, SystemItems.CLANDESTINE_CHAIR);
+                        accept(output, SystemItems.CASINO_BAR_STOOL);
+                        accept(output, SystemItems.CASINO_VIP_BARRIER);
+                        accept(output, SystemItems.CASINO_VIP_GATE);
+                        accept(output, SystemItems.CASINO_RECEPTION_GATE);
+                        accept(output, SystemItems.CASINO_WALL_DISPLAY_STAND);
                         accept(output, SystemItems.CAMPFIRE_LOG_SEAT);
                         accept(output, SystemItems.TAVERN_TABLE);
                         accept(output, SystemItems.SUBWAY_RAIL_TRACK);
@@ -890,27 +1007,10 @@ public final class ModCreativeTabs {
                         accept(output, SystemItems.SUBWAY_GRAB_HANDLE);
                         accept(output, SystemItems.SUBWAY_TRAIN_WHEEL);
                         accept(output, SystemItems.SUBWAY_PASSENGER_SEAT);
-                        accept(output, SystemItems.SUBWAY_TRAIN_CONTROLLER);
                         accept(output, SystemItems.SUBWAY_STAINLESS_STEEL);
                         accept(output, SystemItems.SUBWAY_DOOR);
                         accept(output, SystemItems.ARCHITECT_DRAFTING_TABLE);
-                        accept(output, SystemItems.DIMENSIONAL_RIFT_STAND);
-                        accept(output, SystemItems.LOCKED_TREASURE_CHEST);
-                        accept(output, SystemItems.LOCKED_CHEST_OVERWORLD);
-                        accept(output, SystemItems.LOCKED_CHEST_NETHER);
-                        accept(output, SystemItems.LOCKED_CHEST_END);
-                        accept(output, SystemItems.LOCKED_CHEST_TEYVAT);
-                        accept(output, SystemItems.LOCKED_CHEST_ISEKAI);
-                        accept(output, SystemItems.LOCKED_CHEST_MURIM);
 
-                        // --- LLAVES DE MAZMORRA ---
-                        accept(output, SystemItems.DUNGEON_KEY);
-                        accept(output, SystemItems.YGGDRASIL_TREANT_KEY);
-                        accept(output, SystemItems.JADE_ANCESTRAL_KEY);
-                        accept(output, SystemItems.ELEMENTAL_CASTLE_KEY);
-                        accept(output, SystemItems.TEYVAT_SHRINE_KEY);
-
-                        // --- NIDOS Y HUEVOS DE DRAGÓN Y WYVERN ---
                         accept(output, SystemItems.DRAGON_NEST);
                         accept(output, SystemItems.ANCIENT_DRAGON_EGG_FIRE);
                         accept(output, SystemItems.ANCIENT_DRAGON_EGG_ICE);
@@ -920,7 +1020,6 @@ public final class ModCreativeTabs {
                         accept(output, SystemItems.ANCIENT_DRAGON_EGG_CELESTIAL);
                         accept(output, SystemItems.WYVERN_EGG);
 
-                        // --- HUEVOS DE GENERACIÓN (SPAWN EGGS) ---
                         accept(output, SystemItems.PAIMON_SPAWN_EGG);
                         accept(output, SystemItems.ANT_SOLDIER_SPAWN_EGG);
                         accept(output, SystemItems.ABYSSAL_BEHOLDER_SPAWN_EGG);
@@ -987,9 +1086,19 @@ public final class ModCreativeTabs {
                         accept(output, SystemItems.CHILDE_BOSS_SPAWN_EGG);
                         accept(output, SystemItems.AZHDAHA_BOSS_SPAWN_EGG);
                         accept(output, SystemItems.RAIDEN_SHOGUN_BOSS_SPAWN_EGG);
-                        // accept(output, SystemItems.GOLDEN_WOLFLORD_BOSS_SPAWN_EGG);
+                        accept(output, SystemItems.MOTHER_SPIDER_SPAWN_EGG);
+                        accept(output, SystemItems.MOTHER_SPIDER_BOSS_SPAWN_EGG);
+                        accept(output, SystemItems.BERU_BOSS_SPAWN_EGG);
+                        accept(output, SystemItems.STATUE_OF_GOD_SPAWN_EGG);
+                        accept(output, SystemItems.LIMBO_OPHANIM_SPAWN_EGG);
+                        accept(output, SystemItems.STILT_WALKER_SPAWN_EGG);
+                        accept(output, SystemItems.SPIDER_HEAD_SPAWN_EGG);
+                        accept(output, SystemItems.TALL_STALKER_SPAWN_EGG);
+                        accept(output, SystemItems.LIMBO_ENTITY_SPAWN_EGG);
+                        accept(output, SystemItems.LIMBO_DOOR_ITEM);
+                        accept(output, SystemItems.TOWER_PORTAL);
+                        accept(output, SystemItems.VOID_BLACK_PATH);
 
-                        // --- COMPAÑEROS INVOCABLES (PACTOS DE INVOCACIÓN) ---
                         accept(output, SystemItems.COMPANION_CONTRACT);
                         for (com.soybe.awakeningsystem.entity.CompanionProfile profile : com.soybe.awakeningsystem.entity.CompanionProfile.values()) {
                             output.accept(com.soybe.awakeningsystem.item.CompanionContractItem.createContract(profile));
@@ -998,9 +1107,6 @@ public final class ModCreativeTabs {
                     .build()
     );
 
-    // ==========================================
-    // 5. PESTAÑA: PELUCHES Y COLECCIONABLES DE TEYVAT
-    // ==========================================
     public static final DeferredHolder<CreativeModeTab, CreativeModeTab> PLUSHIES_TAB = CREATIVE_MODE_TABS.register("awakening_plushies", () ->
             CreativeModeTab.builder()
                     .title(Component.translatable("itemGroup.awakening_system.plushies"))
@@ -1009,6 +1115,7 @@ public final class ModCreativeTabs {
                         return (paimon != null && paimon.isBound()) ? new ItemStack(paimon.get()) : new ItemStack(Items.EMERALD);
                     })
                     .displayItems((parameters, output) -> {
+                        accept(output, SystemItems.CUSTOM_PLAYER_PLUSHIE);
                         accept(output, SystemItems.PLUSHIES_LOOTBOX);
                         for (var itemHolder : SystemItems.PLUSHIE_ITEMS.values()) {
                             accept(output, itemHolder);
@@ -1017,7 +1124,7 @@ public final class ModCreativeTabs {
                     .build()
     );
 
-    private static void accept(CreativeModeTab.Output output, DeferredHolder<net.minecraft.world.item.Item, net.minecraft.world.item.Item> holder) {
+    private static void accept(CreativeModeTab.Output output, DeferredHolder<net.minecraft.world.item.Item, ? extends net.minecraft.world.item.Item> holder) {
         if (holder != null && holder.isBound()) {
             output.accept(holder.get());
         }

@@ -35,7 +35,7 @@ public class LambentLightItem extends SwordItem implements AwakeningWeaponItem {
                 .rarity(Rarity.EPIC)
                 .fireResistant()
                 .durability(12000)
-                .attributes(SwordItem.createAttributes(Tiers.NETHERITE, 13, -1.8F))); // 17 Daño, 2.2 Velocidad de ataque
+                .attributes(SwordItem.createAttributes(Tiers.NETHERITE, 13, -1.8F)));
     }
 
     @Override
@@ -50,13 +50,12 @@ public class LambentLightItem extends SwordItem implements AwakeningWeaponItem {
             ServerLevel sl = (ServerLevel) level;
 
             int lvl = WeaponLevelManager.getLevel(stack);
-            int baseCd = (lvl >= 50) ? 240 : 360; // 12s o 18s
+            int baseCd = (lvl >= 50) ? 240 : 360;
             sp.getCooldowns().addCooldown(this, baseCd);
 
             Vec3 look = sp.getLookAngle();
             Vec3 start = sp.position();
 
-            // 1. Sello vertical de estocada estelar en frente del estoque
             net.neoforged.neoforge.network.PacketDistributor.sendToPlayersNear(
                     sl, null, sp.getX(), sp.getY(), sp.getZ(), 64.0D,
                     new com.soybe.awakeningsystem.SpawnMagicCirclePayload(
@@ -66,7 +65,6 @@ public class LambentLightItem extends SwordItem implements AwakeningWeaponItem {
                     )
             );
 
-            // 2. Propulsión física ultrarrápida del usuario
             Vec3 dashVec = new Vec3(look.x * 2.2D, 0.22D, look.z * 2.2D);
             sp.setDeltaMovement(dashVec);
             sp.hurtMarked = true;
@@ -79,15 +77,14 @@ public class LambentLightItem extends SwordItem implements AwakeningWeaponItem {
 
             float dmg = (float) (28.0D * WeaponLevelManager.getDamageMultiplier(stack));
 
-            // 3. Proyectil Físico de Haz Perforante (Flashing Penetrator / Linear V2)
             SlashWaveEntity thrustBeam = new SlashWaveEntity(sl, sp, SlashWaveEntity.TYPE_SOLAR_LIGHT, dmg, 1.4F, 3.6F, 0.0F, 20, 10);
             thrustBeam.setDeltaMovement(look.scale(2.8D));
-            thrustBeam.setArmorPenetration(0.50F); // Perfora 50% armadura
+            thrustBeam.setArmorPenetration(0.50F);
             sl.addFreshEntity(thrustBeam);
 
             WeaponLevelManager.addExp(stack, 35, sp);
 
-            sp.displayClientMessage(Component.literal("§e§l✦ [LINEAR / FLASHING PENETRATOR] §f¡Haz de estocada a la velocidad de la luz disparado!"), true);
+            sp.displayClientMessage(Component.translatable("item.awakening_system.lambent_light.unleashed"), true);
             return InteractionResultHolder.consume(stack);
         }
 

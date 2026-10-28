@@ -49,7 +49,7 @@ public class CommandSpellItem extends Item {
         if (!level.isClientSide() && player instanceof ServerPlayer sp) {
             int currentSeals = getSeals(stack);
             if (currentSeals <= 0) {
-                sp.displayClientMessage(Component.literal("§c§l✦ Sellos de Comando agotados. (Se recargan automáticamente al iniciar un nuevo día)"), true);
+                sp.displayClientMessage(Component.translatable("item.awakening_system.command_spell.depleted"), true);
                 sp.playNotifySound(SoundEvents.CHAIN_FALL, SoundSource.PLAYERS, 0.8F, 1.2F);
                 return InteractionResultHolder.fail(stack);
             }
@@ -61,16 +61,14 @@ public class CommandSpellItem extends Item {
             boolean isLowHealth = sp.getHealth() < sp.getMaxHealth() * 0.5F;
 
             if (isLowHealth) {
-                // Sello de Restauración Vital y Purificación
                 sp.setHealth(sp.getMaxHealth());
                 sp.removeAllEffects();
                 sp.addEffect(new MobEffectInstance(MobEffects.ABSORPTION, 600, 4));
                 sp.addEffect(new MobEffectInstance(MobEffects.DAMAGE_RESISTANCE, 200, 2));
                 sp.addEffect(new MobEffectInstance(MobEffects.REGENERATION, 200, 2));
                 data.restoreEnergy(data.maxEnergy());
-                sp.displayClientMessage(Component.literal("§c§l✦ [SELLO DE COMANDO] §f¡RESTAURACIÓN ABSOLUTA ACTIVADA! (Quedan: §c" + remaining + "/3§f)"), true);
+                sp.displayClientMessage(Component.translatable("item.awakening_system.command_spell.absolute_restoration", remaining), true);
             } else {
-                // Sello de Resonancia Mágica: 100% maná y reinicio de enfriamientos
                 data.restoreEnergy(data.maxEnergy());
                 sp.getPersistentData().remove("asrahan_holy_cd");
                 sp.getPersistentData().remove("homa_skill_cd");
@@ -81,7 +79,7 @@ public class CommandSpellItem extends Item {
                 sp.getPersistentData().remove("before_dawn_skill_cd");
                 sp.addEffect(new MobEffectInstance(MobEffects.DAMAGE_BOOST, 300, 2));
                 sp.addEffect(new MobEffectInstance(MobEffects.MOVEMENT_SPEED, 300, 2));
-                sp.displayClientMessage(Component.literal("§c§l✦ [SELLO DE COMANDO] §f¡REINICIO TOTAL DE ENFRIAMIENTOS Y MANÁ AL 100%! (Quedan: §c" + remaining + "/3§f)"), true);
+                sp.displayClientMessage(Component.translatable("item.awakening_system.command_spell.cooldown_reset", remaining), true);
             }
 
             if (level instanceof ServerLevel sl) {
@@ -99,12 +97,12 @@ public class CommandSpellItem extends Item {
     @Override
     public void appendHoverText(ItemStack stack, TooltipContext context, List<Component> tooltip, TooltipFlag flag) {
         int seals = getSeals(stack);
-        tooltip.add(Component.literal("§6⭐⭐⭐⭐⭐ [Artefacto Místico 5★ - Fate/Grand Order]").withStyle(ChatFormatting.GOLD));
-        tooltip.add(Component.literal("§7El blasón sagrado del Master que impone la voluntad absoluta.").withStyle(ChatFormatting.GRAY));
-        tooltip.add(Component.literal("§c▸ Sellos Restantes: §f" + seals + "/3").withStyle(ChatFormatting.RED));
-        tooltip.add(Component.literal("§e▸ Clic derecho a baja salud (<50% HP):").withStyle(ChatFormatting.GOLD));
-        tooltip.add(Component.literal("  §7Restaura 100% HP, Maná y otorga Absorción V con purificación.").withStyle(ChatFormatting.DARK_GRAY));
-        tooltip.add(Component.literal("§b▸ Clic derecho con salud alta (≥50% HP):").withStyle(ChatFormatting.AQUA));
-        tooltip.add(Component.literal("  §7Restaura 100% Maná y reinicia al instante todos los enfriamientos de armas.").withStyle(ChatFormatting.DARK_GRAY));
+        tooltip.add(Component.translatable("item.awakening_system.command_spell.badge").withStyle(ChatFormatting.GOLD));
+        tooltip.add(Component.translatable("item.awakening_system.command_spell.desc").withStyle(ChatFormatting.GRAY));
+        tooltip.add(Component.translatable("item.awakening_system.command_spell.seals", seals).withStyle(ChatFormatting.RED));
+        tooltip.add(Component.translatable("item.awakening_system.command_spell.low_hp_title").withStyle(ChatFormatting.GOLD));
+        tooltip.add(Component.translatable("item.awakening_system.command_spell.low_hp_desc").withStyle(ChatFormatting.DARK_GRAY));
+        tooltip.add(Component.translatable("item.awakening_system.command_spell.high_hp_title").withStyle(ChatFormatting.AQUA));
+        tooltip.add(Component.translatable("item.awakening_system.command_spell.high_hp_desc").withStyle(ChatFormatting.DARK_GRAY));
     }
 }

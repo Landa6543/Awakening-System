@@ -53,7 +53,6 @@ public class FishingStationBlock extends HorizontalDirectionalBlock {
     public static final MapCodec<FishingStationBlock> CODEC = simpleCodec(FishingStationBlock::new);
     public static final DirectionProperty FACING = HorizontalDirectionalBlock.FACING;
 
-    // Voxel shape: mesa de artesano robusta de 16x16x16
     private static final VoxelShape TABLE_TOP = Block.box(0.0D, 12.0D, 0.0D, 16.0D, 16.0D, 16.0D);
     private static final VoxelShape TABLE_LEGS = Shapes.or(
             Block.box(1.0D, 0.0D, 1.0D, 4.0D, 12.0D, 4.0D),
@@ -168,14 +167,12 @@ public class FishingStationBlock extends HorizontalDirectionalBlock {
             case 3 -> handleCookFish(sp, itemId, data);
         }
 
-        // Reabrir / sincronizar la interfaz
         openStationFor(sp);
     }
 
     private static void handleTradeWeapon(ServerPlayer sp, int weaponId, SystemData data) {
         switch (weaponId) {
-            case 0 -> { // La Captura (The Catch)
-                // Coste: 6 Raimei + 20 Crystalfish + 20 Venomspine
+            case 0 -> {
                 if (countItem(sp, SystemItems.RAIMEI_ANGELFISH.get()) >= 6
                         && countItem(sp, SystemItems.CRYSTALFISH.get()) >= 20
                         && countItem(sp, SystemItems.VENOMSPINE_FISH.get()) >= 20) {
@@ -186,14 +183,13 @@ public class FishingStationBlock extends HorizontalDirectionalBlock {
                     ItemStack stack = new ItemStack(SystemItems.THE_CATCH.get());
                     giveItem(sp, stack);
                     sp.playNotifySound(SoundEvents.UI_TOAST_CHALLENGE_COMPLETE, SoundSource.PLAYERS, 1.2F, 1.0F);
-                    sp.sendSystemMessage(Component.literal("§6§l[GREMIO DE PESCADORES] §f¡Has obtenido el arma legendaria §b✦ La Captura ✦§f!"));
+                    sp.sendSystemMessage(Component.translatable("fishing_station.msg.get_the_catch"));
                 } else {
-                    sp.sendSystemMessage(Component.literal("§c[Gremio de Pescadores] No tienes suficientes peces para forjar La Captura. (Requiere 6 Pez Raimei, 20 Cristalino, 20 Espina Venenosa)."));
+                    sp.sendSystemMessage(Component.translatable("fishing_station.msg.lack_the_catch"));
                     sp.playNotifySound(SoundEvents.VILLAGER_NO, SoundSource.PLAYERS, 1.0F, 1.0F);
                 }
             }
-            case 1 -> { // Vado del Río Ceniciento (Fleuve Cendre Ferryman)
-                // Coste: 4 Raimei + 12 Crystalfish + 12 Aizen
+            case 1 -> {
                 if (countItem(sp, SystemItems.RAIMEI_ANGELFISH.get()) >= 4
                         && countItem(sp, SystemItems.CRYSTALFISH.get()) >= 12
                         && countItem(sp, SystemItems.AIZEN_MEDAKA.get()) >= 12) {
@@ -204,14 +200,13 @@ public class FishingStationBlock extends HorizontalDirectionalBlock {
                     ItemStack stack = new ItemStack(SystemItems.FLEUVE_CENDRE_FERRYMAN.get());
                     giveItem(sp, stack);
                     sp.playNotifySound(SoundEvents.PLAYER_LEVELUP, SoundSource.PLAYERS, 1.2F, 1.2F);
-                    sp.sendSystemMessage(Component.literal("§6§l[GREMIO DE PESCADORES] §f¡Has obtenido la espada legendaria §b✦ Vado del Río Ceniciento ✦§f!"));
+                    sp.sendSystemMessage(Component.translatable("fishing_station.msg.get_fleuve"));
                 } else {
-                    sp.sendSystemMessage(Component.literal("§c[Gremio de Pescadores] No tienes suficientes peces para el Vado del Río Ceniciento. (Requiere 4 Pez Raimei, 12 Cristalino, 12 Medaka Aizen)."));
+                    sp.sendSystemMessage(Component.translatable("fishing_station.msg.lack_fleuve"));
                     sp.playNotifySound(SoundEvents.VILLAGER_NO, SoundSource.PLAYERS, 1.0F, 1.0F);
                 }
             }
-            case 2 -> { // Estabilizador de Sedal
-                // Coste: 3 Medaka + 3 Sweet Flower
+            case 2 -> {
                 if (countItem(sp, SystemItems.MEDAKA.get()) >= 3
                         && countItem(sp, SystemItems.SWEET_FLOWER_MEDAKA.get()) >= 3) {
                     removeItem(sp, SystemItems.MEDAKA.get(), 3);
@@ -220,14 +215,13 @@ public class FishingStationBlock extends HorizontalDirectionalBlock {
                     ItemStack stack = new ItemStack(SystemItems.FISHING_LINE_STABILIZER.get());
                     giveItem(sp, stack);
                     sp.playNotifySound(SoundEvents.ENCHANTMENT_TABLE_USE, SoundSource.PLAYERS, 1.2F, 1.4F);
-                    sp.sendSystemMessage(Component.literal("§6§l[GREMIO DE PESCADORES] §f¡Has recibido el accesorio §a✦ Estabilizador de Pesca ✦§f!"));
+                    sp.sendSystemMessage(Component.translatable("fishing_station.msg.get_stabilizer"));
                 } else {
-                    sp.sendSystemMessage(Component.literal("§c[Gremio de Pescadores] Faltan peces para el Estabilizador. (Requiere 3 Medaka y 3 Medaka Flor Dulce)."));
+                    sp.sendSystemMessage(Component.translatable("fishing_station.msg.lack_stabilizer"));
                     sp.playNotifySound(SoundEvents.VILLAGER_NO, SoundSource.PLAYERS, 1.0F, 1.0F);
                 }
             }
-            case 3 -> { // Caña del Maestro Pescador (Caña encantada)
-                // Coste: 5 Medaka + 5 Aizen + 5 Glaze
+            case 3 -> {
                 if (countItem(sp, SystemItems.MEDAKA.get()) >= 5
                         && countItem(sp, SystemItems.AIZEN_MEDAKA.get()) >= 5
                         && countItem(sp, SystemItems.GLAZE_MEDAKA.get()) >= 5) {
@@ -236,7 +230,7 @@ public class FishingStationBlock extends HorizontalDirectionalBlock {
                     removeItem(sp, SystemItems.GLAZE_MEDAKA.get(), 5);
 
                     ItemStack rod = new ItemStack(Items.FISHING_ROD);
-                    rod.set(DataComponents.CUSTOM_NAME, Component.literal("§b§lCaña del Maestro Pescador"));
+                    rod.set(DataComponents.CUSTOM_NAME, Component.translatable("fishing_station.offer.rod.name"));
                     var enchantLookup = sp.level().registryAccess().lookupOrThrow(Registries.ENCHANTMENT);
                     rod.enchant(enchantLookup.getOrThrow(Enchantments.LUCK_OF_THE_SEA), 3);
                     rod.enchant(enchantLookup.getOrThrow(Enchantments.LURE), 3);
@@ -244,9 +238,9 @@ public class FishingStationBlock extends HorizontalDirectionalBlock {
 
                     giveItem(sp, rod);
                     sp.playNotifySound(SoundEvents.PLAYER_LEVELUP, SoundSource.PLAYERS, 1.1F, 1.5F);
-                    sp.sendSystemMessage(Component.literal("§6§l[GREMIO DE PESCADORES] §f¡Has obtenido la §bCaña del Maestro Pescador§f con Suerte y Señuelo III!"));
+                    sp.sendSystemMessage(Component.translatable("fishing_station.msg.get_rod"));
                 } else {
-                    sp.sendSystemMessage(Component.literal("§c[Gremio de Pescadores] Faltan peces para la Caña del Maestro. (Requiere 5 Medaka, 5 Aizen, 5 Esmaltado)."));
+                    sp.sendSystemMessage(Component.translatable("fishing_station.msg.lack_rod"));
                     sp.playNotifySound(SoundEvents.VILLAGER_NO, SoundSource.PLAYERS, 1.0F, 1.0F);
                 }
             }
@@ -254,8 +248,6 @@ public class FishingStationBlock extends HorizontalDirectionalBlock {
     }
 
     private static void handleTradeBillet(ServerPlayer sp, int billetId, SystemData data) {
-        // Billets del Norte (0..4) y Centrales (5..9)
-        // Coste estándar: 10 Medaka + 5 de pez correspondiente
         Item billetItem = switch (billetId) {
             case 0 -> SystemItems.NORTHLANDER_SWORD_BILLET.get();
             case 1 -> SystemItems.NORTHLANDER_CLAYMORE_BILLET.get();
@@ -278,9 +270,9 @@ public class FishingStationBlock extends HorizontalDirectionalBlock {
             removeItem(sp, secondaryFish, 5);
             giveItem(sp, new ItemStack(billetItem));
             sp.playNotifySound(SoundEvents.ANVIL_USE, SoundSource.PLAYERS, 1.0F, 1.2F);
-            sp.sendSystemMessage(Component.literal("§6§l[GREMIO DE PESCADORES] §f¡Canjeado con éxito: §e" + billetItem.getDescription().getString() + "§f!"));
+            sp.sendSystemMessage(Component.translatable("fishing_station.msg.billet_success", billetItem.getDescription()));
         } else {
-            sp.sendSystemMessage(Component.literal("§c[Gremio de Pescadores] Faltan materiales. Se requieren 10 Medaka y 5 " + secondaryFish.getDescription().getString() + "."));
+            sp.sendSystemMessage(Component.translatable("fishing_station.msg.billet_lack", secondaryFish.getDescription()));
             sp.playNotifySound(SoundEvents.VILLAGER_NO, SoundSource.PLAYERS, 1.0F, 1.0F);
         }
     }
@@ -292,7 +284,7 @@ public class FishingStationBlock extends HorizontalDirectionalBlock {
 
         int available = countItem(sp, fishItem);
         if (available <= 0) {
-            sp.sendSystemMessage(Component.literal("§c[Pescadería] No tienes ese tipo de pez en el inventario."));
+            sp.sendSystemMessage(Component.translatable("fishing_station.msg.sell_no_fish"));
             return;
         }
 
@@ -302,11 +294,10 @@ public class FishingStationBlock extends HorizontalDirectionalBlock {
         data.addCoins(earnedCoins);
         AwakeningSystemMod.sync(sp);
         sp.playNotifySound(SoundEvents.EXPERIENCE_ORB_PICKUP, SoundSource.PLAYERS, 1.2F, 1.3F);
-        sp.sendSystemMessage(Component.literal("§a§l[PESCADERÍA] §fHas vendido §e" + toSell + "x " + fishItem.getDescription().getString() + " §fpor §6+" + earnedCoins + " Monedas del Sistema§f."));
+        sp.sendSystemMessage(Component.translatable("fishing_station.msg.sell_success", toSell, fishItem.getDescription(), earnedCoins));
     }
 
     private static void handleCookFish(ServerPlayer sp, int recipeId, SystemData data) {
-        // Preparar Pescado Asado de Tigre
         if (countItem(sp, SystemItems.MEDAKA.get()) >= 1 || countItem(sp, Items.COD) >= 1 || countItem(sp, Items.SALMON) >= 1) {
             if (countItem(sp, SystemItems.MEDAKA.get()) >= 1) {
                 removeItem(sp, SystemItems.MEDAKA.get(), 1);
@@ -317,9 +308,9 @@ public class FishingStationBlock extends HorizontalDirectionalBlock {
             }
             giveItem(sp, new ItemStack(SystemItems.GRILLED_TIGER_FISH.get()));
             sp.playNotifySound(SoundEvents.CAMPFIRE_CRACKLE, SoundSource.PLAYERS, 1.2F, 1.1F);
-            sp.sendSystemMessage(Component.literal("§a§l[GREMIO DE PESCADORES] §f¡Has cocinado un delicioso §6Pescado Asado de Tigre§f!"));
+            sp.sendSystemMessage(Component.translatable("fishing_station.msg.cook_success"));
         } else {
-            sp.sendSystemMessage(Component.literal("§c[Gremio de Pescadores] Necesitas al menos 1 pez (Medaka, Bacalao o Salmón) para cocinar."));
+            sp.sendSystemMessage(Component.translatable("fishing_station.msg.cook_lack"));
         }
     }
 
@@ -343,18 +334,18 @@ public class FishingStationBlock extends HorizontalDirectionalBlock {
 
     public static int getFishPriceByIndex(int idx) {
         return switch (idx) {
-            case 0 -> 5;   // Medaka
-            case 1 -> 8;   // Aizen
-            case 2 -> 8;   // Sweet flower
-            case 3 -> 10;  // Glaze
-            case 4 -> 18;  // Crystalfish
-            case 5 -> 20;  // Venomspine
-            case 6 -> 45;  // Abiding angelfish
-            case 7 -> 60;  // Raimei angelfish
-            case 8 -> 6;   // Cod
-            case 9 -> 8;   // Salmon
-            case 10 -> 10; // Tropical fish
-            case 11 -> 15; // Pufferfish
+            case 0 -> 5;
+            case 1 -> 8;
+            case 2 -> 8;
+            case 3 -> 10;
+            case 4 -> 18;
+            case 5 -> 20;
+            case 6 -> 45;
+            case 7 -> 60;
+            case 8 -> 6;
+            case 9 -> 8;
+            case 10 -> 10;
+            case 11 -> 15;
             default -> 0;
         };
     }

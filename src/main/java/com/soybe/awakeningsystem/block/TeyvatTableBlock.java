@@ -36,7 +36,7 @@ public class TeyvatTableBlock extends Block {
     private static final VoxelShape SHAPE = Shapes.or(TOP, LEG);
 
     public TeyvatTableBlock(BlockBehaviour.Properties properties) {
-        super(properties);
+        super(properties.noOcclusion());
     }
 
     @Override
@@ -59,8 +59,8 @@ public class TeyvatTableBlock extends Block {
         if (player instanceof ServerPlayer sp && level instanceof ServerLevel sl) {
             long now = level.getGameTime();
             long lastDrink = sp.getPersistentData().getLong("last_tea_sip_time");
-            if (now - lastDrink < 200L) { // 10s cooldown
-                sp.displayClientMessage(Component.literal("§7Ya has disfrutado de una taza de té recientemente."), true);
+            if (now - lastDrink < 200L) {
+                sp.displayClientMessage(Component.translatable("block.awakening_system.teyvat_table.cooldown"), true);
                 return ItemInteractionResult.SUCCESS;
             }
             sp.getPersistentData().putLong("last_tea_sip_time", now);
@@ -73,7 +73,7 @@ public class TeyvatTableBlock extends Block {
             sl.sendParticles(ParticleTypes.HAPPY_VILLAGER, pos.getX() + 0.5D, pos.getY() + 1.1D, pos.getZ() + 0.5D, 8, 0.3D, 0.2D, 0.3D, 0.05D);
             sl.sendParticles(ParticleTypes.POOF, pos.getX() + 0.5D, pos.getY() + 1.0D, pos.getZ() + 0.5D, 5, 0.2D, 0.1D, 0.2D, 0.02D);
 
-            sp.displayClientMessage(Component.literal("§a§l✦ [MESA DE TEYVAT] §fHas degustado una reconfortante taza de té aromático."), true);
+            sp.displayClientMessage(Component.translatable("block.awakening_system.teyvat_table.tea_enjoyed"), true);
             return ItemInteractionResult.SUCCESS;
         }
         return ItemInteractionResult.SUCCESS;

@@ -73,11 +73,10 @@ public class AbyssalOrcEntity extends Monster {
     public boolean doHurtTarget(Entity target) {
         boolean hurt = super.doHurtTarget(target);
         if (hurt) {
-            this.level().broadcastEntityEvent(this, (byte) 5); // Smash animation (Ground Slam)
+            this.level().broadcastEntityEvent(this, (byte) 5);
             this.level().playSound(null, target.getX(), target.getY(), target.getZ(),
                     SoundEvents.RAVAGER_ATTACK, SoundSource.HOSTILE, 1.3F, 0.75F);
 
-            // Robo de vida durante Frenesí de Sangre
             if (bloodFrenzyTicks > 0) {
                 this.heal(8.0F);
                 if (this.level() instanceof net.minecraft.server.level.ServerLevel sl) {
@@ -86,7 +85,6 @@ public class AbyssalOrcEntity extends Monster {
                 }
             }
 
-            // Habilidad Mágica 1: Fisura Sísmica en Línea Recta (Abyssal Ground Fissure)
             if (this.level() instanceof net.minecraft.server.level.ServerLevel sl) {
                 Vec3 dir = target.position().subtract(this.position()).normalize();
                 for (double step = 1.5D; step <= 9.0D; step += 1.5D) {
@@ -114,7 +112,6 @@ public class AbyssalOrcEntity extends Monster {
     @Override
     public boolean hurt(DamageSource source, float amount) {
         boolean hurt = super.hurt(source, amount);
-        // Daño de espinas por reflejo de sangre durante el Frenesí
         if (hurt && bloodFrenzyTicks > 0 && source.getEntity() instanceof LivingEntity attacker && attacker != this) {
             attacker.hurt(this.damageSources().thorns(this), 5.0F);
             this.playSound(SoundEvents.THORNS_HIT, 1.0F, 1.0F);
@@ -145,8 +142,8 @@ public class AbyssalOrcEntity extends Monster {
             LivingEntity target = this.getTarget();
             if (target != null && roarCooldown <= 0 && this.distanceToSqr(target) < 144.0D) {
                 this.roarCooldown = 260;
-                this.bloodFrenzyTicks = 180; // 9 segundos de Frenesí de Sangre
-                this.level().broadcastEntityEvent(this, (byte) 6); // Roar
+                this.bloodFrenzyTicks = 180;
+                this.level().broadcastEntityEvent(this, (byte) 6);
                 this.addEffect(new MobEffectInstance(MobEffects.DAMAGE_BOOST, 180, 1));
                 this.addEffect(new MobEffectInstance(MobEffects.MOVEMENT_SPEED, 180, 1));
                 this.addEffect(new MobEffectInstance(MobEffects.DAMAGE_RESISTANCE, 180, 0));

@@ -39,7 +39,6 @@ public class AbyssMageCryoEntity extends AbstractAbyssMageEntity {
         if (this.level().isClientSide) return;
 
         if (this.random.nextFloat() < 0.60F) {
-            // Disparo de carámbano afilado
             Snowball snowball = new Snowball(this.level(), this);
             snowball.setPos(this.getX(), this.getY() + 1.2D, this.getZ());
             Vec3 dir = target.getEyePosition().subtract(this.getEyePosition());
@@ -53,7 +52,6 @@ public class AbyssMageCryoEntity extends AbstractAbyssMageEntity {
             this.level().playSound(null, this.getX(), this.getY(), this.getZ(),
                     SoundEvents.SNOW_GOLEM_SHOOT, SoundSource.HOSTILE, 1.6F, 0.7F);
         } else {
-            // Tormenta de estalactitas Cryo sobre el jugador
             if (this.level() instanceof ServerLevel sl) {
                 sl.playSound(null, target.getX(), target.getY(), target.getZ(),
                         SoundEvents.GLASS_BREAK, SoundSource.HOSTILE, 1.8F, 1.5F);

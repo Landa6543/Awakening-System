@@ -36,7 +36,6 @@ public class ManaChickenEntity extends Chicken {
         ItemEntity entity = new ItemEntity(level, this.getX(), this.getY() + 0.5D, this.getZ(), drop);
         level.addFreshEntity(entity);
 
-        // Plumas
         int feathers = 1 + this.random.nextInt(2);
         level.addFreshEntity(new ItemEntity(level, this.getX(), this.getY() + 0.5D, this.getZ(),
                 new ItemStack(Items.FEATHER, feathers)));

@@ -21,9 +21,19 @@ import net.minecraft.world.entity.ai.goal.target.NearestAttackableTargetGoal;
 import net.minecraft.world.entity.monster.Monster;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.level.Level;
+import net.minecraft.nbt.CompoundTag;
+import net.minecraft.network.syncher.EntityDataAccessor;
+import net.minecraft.network.syncher.EntityDataSerializers;
+import net.minecraft.network.syncher.SynchedEntityData;
 import net.minecraft.world.phys.Vec3;
 
 public class ShadowInfantryEntity extends Monster {
+    private static final EntityDataAccessor<Integer> VARIANT =
+            SynchedEntityData.defineId(ShadowInfantryEntity.class, EntityDataSerializers.INT);
+
+    public static final int VARIANT_CYAN = 0; // Sombra invocada aliada del jugador (Celeste)
+    public static final int VARIANT_RED = 1;  // Caballero hostil / minion de mazmorra (Rojo)
+
     public final AnimationState attackAnimationState = new AnimationState();
     public final AnimationState castAnimationState = new AnimationState();
     public int attackAnimationTimeout = 0;
@@ -37,6 +47,45 @@ public class ShadowInfantryEntity extends Monster {
     public ShadowInfantryEntity(EntityType<? extends Monster> entityType, Level level) {
         super(entityType, level);
         this.xpReward = 25;
+    }
+
+    @Override
+    protected void defineSynchedData(SynchedEntityData.Builder builder) {
+        super.defineSynchedData(builder);
+        builder.define(VARIANT, VARIANT_RED);
+    }
+
+    public int getVariant() {
+        if (this.getTags().contains("shadow_soldier")) {
+            return VARIANT_CYAN;
+        }
+        return this.entityData.get(VARIANT);
+    }
+
+    public void setVariant(int variant) {
+        this.entityData.set(VARIANT, variant);
+    }
+
+    public boolean isFriendlyShadow() {
+        return this.getTags().contains("shadow_soldier") || this.getVariant() == VARIANT_CYAN;
+    }
+
+    public boolean isRedVariant() {
+        return !isFriendlyShadow() && this.getVariant() == VARIANT_RED;
+    }
+
+    @Override
+    public void addAdditionalSaveData(CompoundTag compound) {
+        super.addAdditionalSaveData(compound);
+        compound.putInt("Variant", this.getVariant());
+    }
+
+    @Override
+    public void readAdditionalSaveData(CompoundTag compound) {
+        super.readAdditionalSaveData(compound);
+        if (compound.contains("Variant")) {
+            this.setVariant(compound.getInt("Variant"));
+        }
     }
 
     public static AttributeSupplier.Builder createAttributes() {
@@ -66,17 +115,51 @@ public class ShadowInfantryEntity extends Monster {
         this.goalSelector.addGoal(6, new LookAtPlayerGoal(this, Player.class, 8.0F));
         this.goalSelector.addGoal(7, new RandomLookAroundGoal(this));
 
-        this.targetSelector.addGoal(1, new HurtByTargetGoal(this));
-        this.targetSelector.addGoal(2, new NearestAttackableTargetGoal<>(this, Player.class, true));
+        this.targetSelector.addGoal(1, new HurtByTargetGoal(this) {
+            @Override
+            public boolean canUse() {
+                if (mob.getLastHurtByMob() instanceof Player p && (mob.getTags().contains("shadow_soldier") || mob.getTags().contains("shadow_master_" + p.getUUID()))) {
+                    return false;
+                }
+                return super.canUse();
+            }
+        });
+        this.targetSelector.addGoal(2, new NearestAttackableTargetGoal<>(this, Player.class, 10, true, false, (target) -> {
+            if (this.getTags().contains("shadow_soldier")) {
+                return false;
+            }
+            return target instanceof Player;
+        }));
+    }
+
+    @Override
+    public boolean canAttack(LivingEntity target) {
+        if (target instanceof Player p) {
+            if (this.getTags().contains("shadow_soldier") || this.getTags().contains("shadow_master_" + p.getUUID())) {
+                return false;
+            }
+        }
+        return super.canAttack(target);
+    }
+
+    @Override
+    public void setTarget(LivingEntity target) {
+        if (target instanceof Player p) {
+            if (this.getTags().contains("shadow_soldier") || this.getTags().contains("shadow_master_" + p.getUUID())) {
+                return;
+            }
+        }
+        super.setTarget(target);
     }
 
     @Override
     public boolean doHurtTarget(Entity target) {
         boolean hurt = super.doHurtTarget(target);
         if (hurt) {
-            this.level().broadcastEntityEvent(this, (byte) 4); // Trigger attack anim (3-phase combo)
+            this.level().broadcastEntityEvent(this, (byte) 4);
             if (this.level() instanceof net.minecraft.server.level.ServerLevel sl) {
-                sl.sendParticles(ParticleTypes.SOUL_FIRE_FLAME, target.getX(), target.getY() + 1.0D, target.getZ(),
+                var flameParticle = this.isRedVariant() ? ParticleTypes.FLAME : ParticleTypes.SOUL_FIRE_FLAME;
+                sl.sendParticles(flameParticle, target.getX(), target.getY() + 1.0D, target.getZ(),
                         16, 0.25D, 0.35D, 0.25D, 0.05D);
                 sl.sendParticles(ParticleTypes.SWEEP_ATTACK, target.getX(), target.getY() + 0.8D, target.getZ(),
                         2, 0.2D, 0.2D, 0.2D, 0.0D);
@@ -93,9 +176,8 @@ public class ShadowInfantryEntity extends Monster {
             decoyCooldown = 220;
             LivingEntity attacker = source.getEntity() instanceof LivingEntity le ? le : this.getTarget();
             if (attacker != null) {
-                // Paso Sombrío con Señuelo Explosivo
                 pendingDecoyPos = this.position();
-                pendingDecoyTimer = 20; // Detona en 1 segundo
+                pendingDecoyTimer = 20;
 
                 Vec3 look = attacker.getLookAngle();
                 double bx = attacker.getX() - look.x * 2.5D;
@@ -106,7 +188,8 @@ public class ShadowInfantryEntity extends Monster {
                 this.level().playSound(null, safePos.x, safePos.y, safePos.z, SoundEvents.ENDERMAN_TELEPORT, SoundSource.HOSTILE, 1.0F, 1.3F);
 
                 if (this.level() instanceof net.minecraft.server.level.ServerLevel sl) {
-                    sl.sendParticles(ParticleTypes.SOUL_FIRE_FLAME, pendingDecoyPos.x, pendingDecoyPos.y + 0.8D, pendingDecoyPos.z,
+                    var flameParticle = this.isRedVariant() ? ParticleTypes.FLAME : ParticleTypes.SOUL_FIRE_FLAME;
+                    sl.sendParticles(flameParticle, pendingDecoyPos.x, pendingDecoyPos.y + 0.8D, pendingDecoyPos.z,
                             25, 0.3D, 0.5D, 0.3D, 0.08D);
                     sl.sendParticles(ParticleTypes.SMOKE, pendingDecoyPos.x, pendingDecoyPos.y + 0.5D, pendingDecoyPos.z,
                             20, 0.3D, 0.4D, 0.3D, 0.02D);
@@ -123,7 +206,8 @@ public class ShadowInfantryEntity extends Monster {
         if (this.level().isClientSide) {
             setupAnimationStates();
             if (this.random.nextInt(3) == 0) {
-                this.level().addParticle(ParticleTypes.SOUL_FIRE_FLAME,
+                var flameParticle = this.isRedVariant() ? ParticleTypes.FLAME : ParticleTypes.SOUL_FIRE_FLAME;
+                this.level().addParticle(flameParticle,
                         this.getRandomX(0.5D), this.getRandomY(), this.getRandomZ(0.5D),
                         0, 0.02D, 0);
             }
@@ -131,12 +215,12 @@ public class ShadowInfantryEntity extends Monster {
             if (this.getTags().contains("shadow_soldier") && !this.hasEffect(net.minecraft.world.effect.MobEffects.GLOWING)) {
                 this.addEffect(new net.minecraft.world.effect.MobEffectInstance(net.minecraft.world.effect.MobEffects.GLOWING, 72000, 0, false, false, false));
             }
-            // Detonación del Señuelo Sombrío
             if (pendingDecoyTimer > 0) {
                 pendingDecoyTimer--;
                 if (pendingDecoyTimer == 0 && pendingDecoyPos != null && this.level() instanceof net.minecraft.server.level.ServerLevel sl) {
+                    var flameParticle = this.isRedVariant() ? ParticleTypes.FLAME : ParticleTypes.SOUL_FIRE_FLAME;
                     sl.sendParticles(ParticleTypes.EXPLOSION, pendingDecoyPos.x, pendingDecoyPos.y + 0.5D, pendingDecoyPos.z, 3, 0.4D, 0.4D, 0.4D, 0.05D);
-                    sl.sendParticles(ParticleTypes.SOUL_FIRE_FLAME, pendingDecoyPos.x, pendingDecoyPos.y + 0.8D, pendingDecoyPos.z, 35, 0.6D, 0.6D, 0.6D, 0.12D);
+                    sl.sendParticles(flameParticle, pendingDecoyPos.x, pendingDecoyPos.y + 0.8D, pendingDecoyPos.z, 35, 0.6D, 0.6D, 0.6D, 0.12D);
                     this.level().playSound(null, pendingDecoyPos.x, pendingDecoyPos.y, pendingDecoyPos.z, SoundEvents.GENERIC_EXPLODE.value(), SoundSource.HOSTILE, 1.0F, 1.2F);
 
                     var aabb = new net.minecraft.world.phys.AABB(pendingDecoyPos.x - 3.0D, pendingDecoyPos.y - 1.0D, pendingDecoyPos.z - 3.0D,
@@ -161,23 +245,24 @@ public class ShadowInfantryEntity extends Monster {
             if (target != null) {
                 double distSq = this.distanceToSqr(target);
 
-                // Habilidad Mágica 1: Hojas del Vacío (Dark Blade Waves a distancia)
                 if (rangedCooldown <= 0 && distSq >= 25.0D && distSq <= 324.0D) {
                     rangedCooldown = 100;
-                    this.level().broadcastEntityEvent(this, (byte) 9); // Cast animation
+                    this.level().broadcastEntityEvent(this, (byte) 9);
                     this.level().playSound(null, this.getX(), this.getY(), this.getZ(),
                             SoundEvents.PLAYER_ATTACK_SWEEP, SoundSource.HOSTILE, 1.2F, 0.6F);
                     this.level().playSound(null, this.getX(), this.getY(), this.getZ(),
                             SoundEvents.SOUL_ESCAPE.value(), SoundSource.HOSTILE, 1.2F, 1.2F);
 
                     if (this.level() instanceof net.minecraft.server.level.ServerLevel sl) {
+                        var flameParticle = this.isRedVariant() ? ParticleTypes.FLAME : ParticleTypes.SOUL_FIRE_FLAME;
+                        var trailParticle = this.isRedVariant() ? ParticleTypes.SMOKE : ParticleTypes.SCULK_SOUL;
                         Vec3 dir = target.position().subtract(this.position()).normalize();
                         for (double s = 1.0D; s <= Math.sqrt(distSq); s += 1.2D) {
                             double px = this.getX() + dir.x * s;
                             double py = this.getY() + 1.0D + dir.y * s;
                             double pz = this.getZ() + dir.z * s;
-                            sl.sendParticles(ParticleTypes.SOUL_FIRE_FLAME, px, py, pz, 4, 0.15D, 0.15D, 0.15D, 0.02D);
-                            sl.sendParticles(ParticleTypes.SCULK_SOUL, px, py, pz, 1, 0.1D, 0.1D, 0.1D, 0.01D);
+                            sl.sendParticles(flameParticle, px, py, pz, 4, 0.15D, 0.15D, 0.15D, 0.02D);
+                            sl.sendParticles(trailParticle, px, py, pz, 1, 0.1D, 0.1D, 0.1D, 0.01D);
                         }
                         double rangedAtk = this.getAttributeValue(Attributes.ATTACK_DAMAGE);
                         float waveDmg = (float) Math.max(2.0D, rangedAtk * 0.8D);
@@ -187,7 +272,6 @@ public class ShadowInfantryEntity extends Monster {
                     }
                 }
 
-                // Shadow Dash cuerpo a cuerpo
                 if (dashCooldown <= 0 && distSq > 9.0D && distSq < 64.0D) {
                     Vec3 dir = target.position().subtract(this.position()).normalize();
                     this.setDeltaMovement(dir.x * 1.4D, 0.28D, dir.z * 1.4D);
@@ -196,7 +280,8 @@ public class ShadowInfantryEntity extends Monster {
                     this.level().playSound(null, this.getX(), this.getY(), this.getZ(),
                             SoundEvents.PLAYER_ATTACK_SWEEP, SoundSource.HOSTILE, 1.0F, 1.4F);
                     if (this.level() instanceof net.minecraft.server.level.ServerLevel sl) {
-                        sl.sendParticles(ParticleTypes.SOUL_FIRE_FLAME, this.getX(), this.getY() + 0.8D, this.getZ(),
+                        var flameParticle = this.isRedVariant() ? ParticleTypes.FLAME : ParticleTypes.SOUL_FIRE_FLAME;
+                        sl.sendParticles(flameParticle, this.getX(), this.getY() + 0.8D, this.getZ(),
                                 20, 0.3D, 0.5D, 0.3D, 0.1D);
                     }
                 }

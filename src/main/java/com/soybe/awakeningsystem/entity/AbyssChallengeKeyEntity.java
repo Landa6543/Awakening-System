@@ -32,7 +32,7 @@ public class AbyssChallengeKeyEntity extends LivingEntity {
 
     public AbyssChallengeKeyEntity(EntityType<? extends LivingEntity> entityType, Level level) {
         super(entityType, level);
-        this.setCustomName(Component.literal("§c§l✦ INICIAR DESAFÍO ✦"));
+        this.setCustomName(Component.translatable("entity.awakening_system.abyss_key.start_challenge"));
         this.setCustomNameVisible(true);
         this.addTag("abyss_challenge_key");
         this.addTag("no_shadow_extraction");
@@ -88,7 +88,6 @@ public class AbyssChallengeKeyEntity extends LivingEntity {
         boolean triggered = SpiralAbyssManager.triggerChallengeKey(player, this);
         if (triggered) {
             if (this.level() instanceof ServerLevel sl) {
-                // Onda expansiva de partículas carmesí y sonido épico
                 sl.sendParticles(ParticleTypes.EXPLOSION, this.getX(), this.getY() + 1.2, this.getZ(), 2, 0.4, 0.4, 0.4, 0.0);
                 sl.sendParticles(ParticleTypes.FLAME, this.getX(), this.getY() + 1.2, this.getZ(), 50, 0.8, 0.8, 0.8, 0.1);
                 sl.sendParticles(ParticleTypes.SOUL_FIRE_FLAME, this.getX(), this.getY() + 1.2, this.getZ(), 30, 0.6, 0.6, 0.6, 0.08);
@@ -109,7 +108,6 @@ public class AbyssChallengeKeyEntity extends LivingEntity {
         this.setDeltaMovement(Vec3.ZERO);
 
         if (this.level().isClientSide) {
-            // Partículas carmesí de prueba ascendentes
             double angle = (this.tickCount * 0.08D);
             double r = 0.9D;
             double px = this.getX() + Math.cos(angle) * r;

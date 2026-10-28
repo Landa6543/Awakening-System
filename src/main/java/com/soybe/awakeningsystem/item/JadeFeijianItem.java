@@ -36,7 +36,7 @@ public class JadeFeijianItem extends SwordItem implements AwakeningWeaponItem {
             sl.sendParticles(ParticleTypes.ENCHANT, target.getX(), target.getY() + 1.0D, target.getZ(), 12, 0.3D, 0.3D, 0.3D, 0.1D);
             sl.playSound(null, target.getX(), target.getY(), target.getZ(), SoundEvents.AMETHYST_BLOCK_CHIME, SoundSource.PLAYERS, 1.2F, 1.7F);
             if (attacker instanceof Player p) {
-                target.hurt(target.damageSources().magic(), 4.0F); // Daño espiritual de Qi de Jade
+                target.hurt(target.damageSources().magic(), 4.0F);
             }
         }
         attacker.addEffect(new MobEffectInstance(MobEffects.MOVEMENT_SPEED, 50, 0, false, false));

@@ -43,13 +43,12 @@ public class CrimsonPhoenixPillItem extends Item {
                 sp.playNotifySound(SoundEvents.PLAYER_LEVELUP, SoundSource.PLAYERS, 1.0F, 1.4F);
                 sp.displayClientMessage(Component.translatable("awakening_system.cultivation.sublevel_success", data.cultivationSubLevel(), SystemEvents.getDantianRealmComponent(realm)), true);
             } else {
-                sp.displayClientMessage(Component.literal("§c✦ Has refinado la §6Píldora del Fénix Carmesí §c(+6,000 Qi)."), true);
+                sp.displayClientMessage(Component.translatable("item.awakening_system.crimson_phoenix_pill.refined"), true);
             }
 
-            // Renacimiento del Fénix: Curación total e inmunidad ígnea
             sp.setHealth(sp.getMaxHealth());
             sp.removeAllEffects();
-            sp.addEffect(new MobEffectInstance(MobEffects.FIRE_RESISTANCE, 12000, 0)); // 10 min
+            sp.addEffect(new MobEffectInstance(MobEffects.FIRE_RESISTANCE, 12000, 0));
             sp.addEffect(new MobEffectInstance(MobEffects.REGENERATION, 1200, 2));
 
             ServerLevel sl = sp.serverLevel();
@@ -72,13 +71,13 @@ public class CrimsonPhoenixPillItem extends Item {
 
     @Override
     public void appendHoverText(ItemStack stack, TooltipContext context, List<Component> tooltipComponents, TooltipFlag tooltipFlag) {
-        tooltipComponents.add(Component.literal("§c✦ Píldora del Nirvana del Fénix Carmesí").withStyle(ChatFormatting.RED, ChatFormatting.BOLD));
-        tooltipComponents.add(Component.literal("§7\"Destilada con plumas y sangre ardiente del fénix ancestral inmortal.\""));
-        tooltipComponents.add(Component.literal(""));
-        tooltipComponents.add(Component.literal("§e✦ Efectos de Refinamiento:").withStyle(ChatFormatting.YELLOW));
-        tooltipComponents.add(Component.literal("  §a✔ +6,000 Puntos de Qi de Cultivo Inmediato"));
-        tooltipComponents.add(Component.literal("  §c✔ Renacimiento: Restaura el 100% de Vida y limpia efectos negativos"));
-        tooltipComponents.add(Component.literal("  §6✔ Inmunidad al fuego por 10 minutos"));
+        tooltipComponents.add(Component.translatable("item.awakening_system.crimson_phoenix_pill.title").withStyle(ChatFormatting.RED, ChatFormatting.BOLD));
+        tooltipComponents.add(Component.translatable("item.awakening_system.crimson_phoenix_pill.quote"));
+        tooltipComponents.add(Component.empty());
+        tooltipComponents.add(Component.translatable("item.awakening_system.crimson_phoenix_pill.effects_header").withStyle(ChatFormatting.YELLOW));
+        tooltipComponents.add(Component.translatable("item.awakening_system.crimson_phoenix_pill.effect1"));
+        tooltipComponents.add(Component.translatable("item.awakening_system.crimson_phoenix_pill.effect2"));
+        tooltipComponents.add(Component.translatable("item.awakening_system.crimson_phoenix_pill.effect3"));
         super.appendHoverText(stack, context, tooltipComponents, tooltipFlag);
     }
 }

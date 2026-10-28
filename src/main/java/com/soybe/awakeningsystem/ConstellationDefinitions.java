@@ -21,7 +21,6 @@ public final class ConstellationDefinitions {
     }
 
     private static final List<Constellation> CONSTELLATIONS = List.of(
-            // --- Omniscient Reader's Viewpoint (ORV) ---
             new Constellation(
                     "demon_like_judge_of_fire",
                     "awakening_system.constellation.demon_like_judge_of_fire.name",
@@ -86,7 +85,6 @@ public final class ConstellationDefinitions {
                     75
             ),
 
-            // --- Solo Leveling ---
             new Constellation(
                     "architect_of_the_system",
                     "awakening_system.constellation.architect_of_the_system.name",
@@ -97,7 +95,6 @@ public final class ConstellationDefinitions {
                     70
             ),
 
-            // --- The Greatest Estate Developer ---
             new Constellation(
                     "iron_blooded_sword_saint",
                     "awakening_system.constellation.iron_blooded_sword_saint.name",
@@ -117,7 +114,6 @@ public final class ConstellationDefinitions {
                     50
             ),
 
-            // --- Second Life Ranker ---
             new Constellation(
                     "martial_king_nayuta",
                     "awakening_system.constellation.martial_king_nayuta.name",
@@ -128,7 +124,6 @@ public final class ConstellationDefinitions {
                     65
             ),
 
-            // --- The S-Classes That I Raised ---
             new Constellation(
                     "caregiver_of_the_abyss",
                     "awakening_system.constellation.caregiver_of_the_abyss.name",
@@ -139,7 +134,6 @@ public final class ConstellationDefinitions {
                     45
             ),
 
-            // --- Nano Machine ---
             new Constellation(
                     "murim_heavenly_demon",
                     "awakening_system.constellation.murim_heavenly_demon.name",
@@ -150,7 +144,6 @@ public final class ConstellationDefinitions {
                     60
             ),
 
-            // --- Pick Me Up, Infinite Gacha ---
             new Constellation(
                     "master_of_mobius_gacha",
                     "awakening_system.constellation.master_of_mobius_gacha.name",
@@ -161,7 +154,6 @@ public final class ConstellationDefinitions {
                     50
             ),
 
-            // --- Doom Breaker (Suicidal Battle God) ---
             new Constellation(
                     "blue_dragon_of_retribution",
                     "awakening_system.constellation.blue_dragon_of_retribution.name",
@@ -172,7 +164,6 @@ public final class ConstellationDefinitions {
                     65
             ),
 
-            // --- Nuevas Constelaciones del Transmisor Estelar (Manhwas y Mitos) ---
             new Constellation(
                     "master_of_steel",
                     "awakening_system.constellation.master_of_steel.name",

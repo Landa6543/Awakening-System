@@ -1,0 +1,15 @@
+{
+  "replace": false,
+  "values": [
+    "awakening_system:abyssal_helmet",
+    "awakening_system:adamantite_helmet",
+    "awakening_system:astral_helmet",
+    "awakening_system:celestial_helmet",
+    "awakening_system:elemental_demon_crown",
+    "awakening_system:mithril_helmet",
+    "awakening_system:mora_helmet",
+    "awakening_system:primordial_helmet",
+    "awakening_system:spirit_jade_helmet",
+    "awakening_system:wildfire_crown"
+  ]
+}

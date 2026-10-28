@@ -1,0 +1,21 @@
+{
+  "type": "minecraft:crafting_shaped",
+  "category": "misc",
+  "pattern": [
+    "###",
+    "#F#",
+    "###"
+  ],
+  "key": {
+    "#": {
+      "item": "awakening_system:primordial_ingot"
+    },
+    "F": {
+      "item": "awakening_system:celestial_furnace"
+    }
+  },
+  "result": {
+    "count": 1,
+    "id": "awakening_system:primordial_furnace"
+  }
+}

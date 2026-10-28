@@ -2,6 +2,8 @@ package com.soybe.awakeningsystem.casino.screen;
 
 import com.soybe.awakeningsystem.AwakeningSystemMod;
 import com.soybe.awakeningsystem.ModSounds;
+import com.soybe.awakeningsystem.SystemData;
+import com.soybe.awakeningsystem.SystemEvents;
 import com.soybe.awakeningsystem.casino.network.CloseSlotMachineC2SPayload;
 import com.soybe.awakeningsystem.casino.network.SlotSpinC2SPayload;
 import com.soybe.awakeningsystem.casino.slot.SlotLineResult;
@@ -41,24 +43,27 @@ public class SlotMachineScreen extends Screen {
     private final BlockPos machinePos;
     private long balance;
     private long pendingBalance = -1L;
-    private int betBase = 1000;
+    private int betBase = 1;
     private int linesMode = 1;
 
-    private static final int[] BET_PRESETS = { 100, 500, 1000, 2500, 5000, 10000, 25000, 50000 };
-    private int betPresetIndex = 2;
+    private boolean isIllegal = false;
+    private int chipsAvailable = 0;
+    private int reserveChips = 0;
+    private boolean isOwner = false;
+
+    private static final int[] CHIP_BET_PRESETS = { 1, 2, 3, 5, 10, 20 };
+    private int betPresetIndex = 0;
 
     private List<SlotLineResult> lastWins = List.of();
     private long lastWinAmount = 0;
     private long pendingWinAmount = -1;
     private boolean lastSpinHadWin = false;
 
-    // --- BOTONES ---
     private SlotButton spinButton;
     private SlotButton betButton;
     private SlotButton linesButton;
     private SlotButton closeButton;
 
-    // --- LÍNEAS DE PAGO ---
     private SlotLineSprite lineOneSprite;
     private SlotLineSprite lineTwoSprite;
     private SlotLineSprite lineThreeTopSprite;
@@ -75,7 +80,6 @@ public class SlotMachineScreen extends Screen {
     private int flashTicksRemaining = 0;
     private int flashTickCounter = 0;
 
-    // --- LAYOUT ---
     private final int backgroundWidth = 220;
     private final int backgroundHeight = 205;
     private static final int SYMBOL_SIZE = 32;
@@ -83,36 +87,45 @@ public class SlotMachineScreen extends Screen {
     private static final int ROW_Y = 53;
     private static final int VIRTUAL_ROWS = 5;
 
-    // --- ANIMACIÓN ---
     private boolean isSpinning = false;
     private boolean isWaitingForServer = false;
     private SimpleSoundInstance spinSoundInstance = null;
     private final int[] reelIndex = new int[3];
     private final int[] targetTopIndex = new int[3];
     private final float[] reelOffset = new float[3];
+    private final float[] reelBounce = new float[3];
     private final int[] reelTimer = new int[3];
     private final boolean[] reelSpinning = new boolean[3];
     private static final float REEL_VELOCITY = 16.0f;
     private static final int[] REEL_TICKS = { 32, 46, 60 };
-    private static final int[] REEL_STEPS = { 16, 23, 30 }; // REEL_TICKS / 2
+    private static final int[] REEL_STEPS = { 16, 23, 30 };
 
-    // --- PAIMON ---
     private final DancingPaimon paimonLeft = new DancingPaimon();
     private final DancingPaimon paimonRight = new DancingPaimon();
 
     public SlotMachineScreen(BlockPos machinePos, long initialBalance, int betBase, int linesMode) {
-        super(Component.literal("Tragamonedas Celestial"));
+        this(machinePos, initialBalance, betBase, linesMode, false, (int) initialBalance, 0, false);
+    }
+
+    public SlotMachineScreen(BlockPos machinePos, long initialBalance, int betBase, int linesMode, boolean isIllegal, int chipsAvailable, int reserveChips, boolean isOwner) {
+        super(isIllegal ? Component.translatable("awakening_system.screen.slot_machine.title_clandestine") : Component.translatable("awakening_system.screen.slot_machine.title_celestial"));
         this.machinePos = machinePos;
         this.balance = initialBalance;
-        this.betBase = betBase;
-        this.linesMode = linesMode;
+        this.isIllegal = isIllegal;
+        this.chipsAvailable = chipsAvailable;
+        this.reserveChips = reserveChips;
+        this.isOwner = isOwner;
+        this.linesMode = Math.max(1, Math.min(3, linesMode));
 
-        for (int i = 0; i < BET_PRESETS.length; i++) {
-            if (BET_PRESETS[i] == betBase) {
-                this.betPresetIndex = i;
+        int matchedIdx = 0;
+        for (int i = 0; i < CHIP_BET_PRESETS.length; i++) {
+            if (CHIP_BET_PRESETS[i] == betBase) {
+                matchedIdx = i;
                 break;
             }
         }
+        this.betPresetIndex = matchedIdx;
+        this.betBase = CHIP_BET_PRESETS[matchedIdx];
     }
 
     @Override
@@ -121,26 +134,21 @@ public class SlotMachineScreen extends Screen {
         int originX = (this.width - this.backgroundWidth) / 2;
         int originY = (this.height - this.backgroundHeight) / 2;
 
-        // Cargar sprites de líneas con sus dimensiones exactas de textura (14px para horizontales, 112px para diagonales)
         this.lineOneSprite = new SlotLineSprite(ResourceLocation.fromNamespaceAndPath(AwakeningSystemMod.MOD_ID, "textures/gui/casino/lines/line_one.png"), 160, 14);
         this.lineTwoSprite = new SlotLineSprite(ResourceLocation.fromNamespaceAndPath(AwakeningSystemMod.MOD_ID, "textures/gui/casino/lines/line_two.png"), 160, 14);
         this.lineThreeTopSprite = new SlotLineSprite(ResourceLocation.fromNamespaceAndPath(AwakeningSystemMod.MOD_ID, "textures/gui/casino/lines/line_three_top.png"), 160, 112);
         this.lineThreeBottomSprite = new SlotLineSprite(ResourceLocation.fromNamespaceAndPath(AwakeningSystemMod.MOD_ID, "textures/gui/casino/lines/line_three_bottom.png"), 160, 112);
 
-        // Botón APUESTA (Ajustar valor base de Mora)
-        this.betButton = new SlotButton(originX + 8, originY + 168, 50, 26, BTN_BET, btn -> cycleBet(), Component.literal("Apuesta"));
+        this.betButton = new SlotButton(originX + 8, originY + 168, 50, 26, BTN_BET, btn -> cycleBet(), Component.translatable("awakening_system.screen.slot_machine.btn_bet"));
         this.addRenderableWidget(this.betButton);
 
-        // Botón LÍNEAS (Modo 1, 2 o 3)
-        this.linesButton = new SlotButton(originX + 63, originY + 168, 44, 26, BTN_MENU, btn -> cycleLines(), Component.literal("Líneas"));
+        this.linesButton = new SlotButton(originX + 63, originY + 168, 44, 26, BTN_MENU, btn -> cycleLines(), Component.translatable("awakening_system.screen.slot_machine.btn_lines"));
         this.addRenderableWidget(this.linesButton);
 
-        // Botón SALIR
-        this.closeButton = new SlotButton(originX + 112, originY + 168, 44, 26, BTN_MENU, btn -> onClose(), Component.literal("Salir"));
+        this.closeButton = new SlotButton(originX + 112, originY + 168, 44, 26, BTN_MENU, btn -> onClose(), Component.translatable("awakening_system.screen.slot_machine.btn_exit"));
         this.addRenderableWidget(this.closeButton);
 
-        // Botón GIRAR (Arcade Spin Button)
-        this.spinButton = new SlotButton(originX + 161, originY + 168, 54, 26, BTN_SPIN, btn -> doSpin(), Component.literal("GIRAR"));
+        this.spinButton = new SlotButton(originX + 161, originY + 168, 54, 26, BTN_SPIN, btn -> doSpin(), Component.translatable("awakening_system.screen.slot_machine.btn_spin"));
         this.addRenderableWidget(this.spinButton);
 
         updateButtonsState();
@@ -148,8 +156,8 @@ public class SlotMachineScreen extends Screen {
 
     private void cycleBet() {
         if (isSpinning || isWaitingForServer) return;
-        betPresetIndex = (betPresetIndex + 1) % BET_PRESETS.length;
-        this.betBase = BET_PRESETS[betPresetIndex];
+        betPresetIndex = (betPresetIndex + 1) % CHIP_BET_PRESETS.length;
+        this.betBase = CHIP_BET_PRESETS[betPresetIndex];
         updateButtonsState();
     }
 
@@ -161,12 +169,11 @@ public class SlotMachineScreen extends Screen {
 
     private void doSpin() {
         long totalBet = (long) betBase * SlotLines.getLineCount(linesMode);
-        if (isSpinning || isWaitingForServer || balance < totalBet) return;
+        if (isSpinning || isWaitingForServer || chipsAvailable < totalBet) return;
 
-        // Enviar solicitud de giro al servidor
         PacketDistributor.sendToServer(new SlotSpinC2SPayload(machinePos, betBase, linesMode));
         this.isWaitingForServer = true;
-        this.balance -= totalBet;
+        this.chipsAvailable -= (int) totalBet;
         updateButtonsState();
     }
 
@@ -176,6 +183,7 @@ public class SlotMachineScreen extends Screen {
         this.linesMode = mode;
         this.pendingWinAmount = totalWin;
         this.pendingBalance = newBalance;
+        this.chipsAvailable = (int) newBalance;
         this.lastSpinHadWin = totalWin > 0;
 
         pendingFlashingLines.clear();
@@ -259,7 +267,6 @@ public class SlotMachineScreen extends Screen {
     public void tick() {
         super.tick();
 
-        // Parpadeo de líneas ganadoras
         if (flashTicksRemaining > 0) {
             flashTicksRemaining--;
             flashTickCounter++;
@@ -271,7 +278,6 @@ public class SlotMachineScreen extends Screen {
             flashingLines.clear();
         }
 
-        // Animación sincronizada y determinista de rodillos
         if (isSpinning) {
             boolean anySpinning = false;
             int len = SlotReels.REEL_SIZE;
@@ -279,7 +285,11 @@ public class SlotMachineScreen extends Screen {
             for (int col = 0; col < 3; col++) {
                 if (reelSpinning[col]) {
                     reelTimer[col]--;
-                    reelOffset[col] += REEL_VELOCITY;
+                    float vel = REEL_VELOCITY;
+                    if (reelTimer[col] <= 8) {
+                        vel = Math.max(3.0F, REEL_VELOCITY * (reelTimer[col] / 8.0F));
+                    }
+                    reelOffset[col] += vel;
 
                     if (reelOffset[col] >= SYMBOL_SIZE) {
                         reelOffset[col] -= SYMBOL_SIZE;
@@ -290,12 +300,17 @@ public class SlotMachineScreen extends Screen {
                         reelOffset[col] = 0.0F;
                         reelSpinning[col] = false;
                         reelIndex[col] = targetTopIndex[col];
+                        reelBounce[col] = 5.0F; // Rebote mecánico elástico al frenar
                         Minecraft.getInstance().getSoundManager().play(
                                 SimpleSoundInstance.forUI(net.minecraft.sounds.SoundEvents.UI_BUTTON_CLICK, 1.2F + col * 0.25F)
                         );
                     } else {
                         anySpinning = true;
                     }
+                } else if (Math.abs(reelBounce[col]) > 0.3F) {
+                    reelBounce[col] *= -0.45F;
+                } else {
+                    reelBounce[col] = 0.0F;
                 }
             }
 
@@ -304,7 +319,6 @@ public class SlotMachineScreen extends Screen {
             }
         }
 
-        // Animación de Paimon
         DancingPaimon.Phase phase;
         if (isSpinning) {
             phase = DancingPaimon.Phase.NEUTRAL;
@@ -323,20 +337,20 @@ public class SlotMachineScreen extends Screen {
     private void updateButtonsState() {
         boolean busy = isSpinning || isWaitingForServer;
         long totalBet = (long) betBase * SlotLines.getLineCount(linesMode);
-        boolean canAfford = balance >= totalBet;
+        boolean canAfford = chipsAvailable >= totalBet;
 
         if (spinButton != null) {
             spinButton.active = !busy && canAfford;
             spinButton.setForcedPressed(busy);
-            spinButton.setMessage(Component.literal(busy ? "..." : "GIRAR"));
+            spinButton.setMessage(busy ? Component.literal("...") : (canAfford ? Component.translatable("awakening_system.screen.slot_machine.btn_spin") : Component.translatable("awakening_system.screen.slot_machine.btn_no_chips")));
         }
         if (betButton != null) {
             betButton.active = !busy;
-            betButton.setSubtitle(Component.literal(String.format(Locale.US, "%,d", betBase)));
+            betButton.setSubtitle(Component.literal(betBase + (isIllegal ? " 🟣" : " 🟡")));
         }
         if (linesButton != null) {
             linesButton.active = !busy;
-            linesButton.setSubtitle(Component.literal(SlotLines.getLineCount(linesMode) + " / 3"));
+            linesButton.setSubtitle(Component.literal(SlotLines.getLineCount(linesMode) + " / " + (linesMode == 3 ? "5" : "3")));
         }
         if (closeButton != null) {
             closeButton.active = !busy;
@@ -364,46 +378,119 @@ public class SlotMachineScreen extends Screen {
         };
     }
 
+    public float getGuiScale() {
+        float scaleX = (float) this.width / (backgroundWidth + 30.0F);
+        float scaleY = (float) this.height / (backgroundHeight + 35.0F);
+        float scale = Math.min(scaleX, scaleY);
+        return Math.min(1.0F, Math.max(0.35F, scale));
+    }
+
+    public double transformMouseX(double mouseX) {
+        float scale = getGuiScale();
+        if (scale >= 1.0F) return mouseX;
+        double cx = this.width / 2.0;
+        return (mouseX - cx) / scale + cx;
+    }
+
+    public double transformMouseY(double mouseY) {
+        float scale = getGuiScale();
+        if (scale >= 1.0F) return mouseY;
+        double cy = this.height / 2.0;
+        return (mouseY - cy) / scale + cy;
+    }
+
+    @Override
+    public boolean mouseClicked(double mouseX, double mouseY, int button) {
+        return super.mouseClicked(transformMouseX(mouseX), transformMouseY(mouseY), button);
+    }
+
+    @Override
+    public boolean mouseReleased(double mouseX, double mouseY, int button) {
+        return super.mouseReleased(transformMouseX(mouseX), transformMouseY(mouseY), button);
+    }
+
+    @Override
+    public boolean mouseDragged(double mouseX, double mouseY, int button, double dragX, double dragY) {
+        return super.mouseDragged(transformMouseX(mouseX), transformMouseY(mouseY), button, dragX, dragY);
+    }
+
     @Override
     public void renderBackground(GuiGraphics graphics, int mouseX, int mouseY, float partialTick) {
-        // Vacío intencionalmente para evitar shaders de blur vanilla de Minecraft
+    }
+
+    @Override
+    public void renderTransparentBackground(GuiGraphics guiGraphics) {
     }
 
     @Override
     public void render(GuiGraphics graphics, int mouseX, int mouseY, float partialTick) {
+        graphics.fillGradient(0, 0, this.width, this.height, 0x88000000, 0xA0000000);
+
+        float scale = getGuiScale();
+        int mX = (int) Math.round(transformMouseX(mouseX));
+        int mY = (int) Math.round(transformMouseY(mouseY));
+
+        graphics.pose().pushPose();
+        if (scale < 1.0F) {
+            float cxF = this.width / 2.0F;
+            float cyF = this.height / 2.0F;
+            graphics.pose().translate(cxF, cyF, 0.0F);
+            graphics.pose().scale(scale, scale, 1.0F);
+            graphics.pose().translate(-cxF, -cyF, 0.0F);
+        }
+
         int originX = (this.width - this.backgroundWidth) / 2;
         int originY = (this.height - this.backgroundHeight) / 2;
 
-        // Fondo oscuro semitransparente limpio sin shader de blur
-        graphics.fillGradient(0, 0, this.width, this.height, 0x88000000, 0xA0000000);
-
-        // Fondo de rodillos
         graphics.blit(REELS_TEXTURE, originX + 50, originY + 47, 0, 0, 120, 112, 120, 112);
 
-        // Dibujar símbolos que ruedan
         drawSymbols(graphics, originX, originY);
 
-        // Gabinete de la tragamonedas (marco superior que oculta los rodillos fuera del área)
         graphics.blit(GUI_TEXTURE, originX, originY, 0, 0, backgroundWidth, backgroundHeight, 256, 256);
 
-        // Dibujar líneas de pago
         drawLines(graphics, originX, originY);
 
-        // Dibujar Paimons animadas en los laterales
         paimonLeft.render(graphics, originX + 7, originY + 131);
         paimonRight.render(graphics, originX + 191, originY + 131);
 
-        // Renderizar widgets/botones
-        super.render(graphics, mouseX, mouseY, partialTick);
+        super.render(graphics, mX, mY, partialTick);
 
-        // Textos de saldo, apuesta y ganancias
         drawTexts(graphics, originX, originY);
+
+        renderPersonalRecordPill(graphics, originX, originY);
+
+        graphics.pose().popPose();
+    }
+
+    private void renderPersonalRecordPill(GuiGraphics g, int originX, int originY) {
+        if (this.minecraft == null || this.minecraft.player == null) return;
+        if (isIllegal) {
+            Component status = isOwner ? Component.translatable("awakening_system.screen.slot_machine.status_clandestine_owner") : Component.translatable("awakening_system.screen.slot_machine.status_clandestine_underworld");
+            int textW = this.font.width(status);
+            int pillX = originX + (backgroundWidth - textW - 12) / 2;
+            int pillY = originY - 16;
+            g.fill(pillX, pillY, pillX + textW + 12, pillY + 13, 0xEE1E0B36);
+            g.renderOutline(pillX, pillY, textW + 12, 13, 0x88A855F7);
+            g.drawString(this.font, status, pillX + 6, pillY + 3, 0xFFFFFF);
+            return;
+        }
+        com.soybe.awakeningsystem.SystemData sData = com.soybe.awakeningsystem.SystemEvents.data(this.minecraft.player);
+        long totalWon = sData.getCasinoTotalWon();
+        int maxPay = sData.getCasinoMaxPayout();
+        Component recordComp = Component.translatable("awakening_system.screen.slot_machine.record_pill",
+                String.format(Locale.US, "%,d", totalWon), (isIllegal ? "🟣" : "🟡"),
+                String.format(Locale.US, "%,d", (long) maxPay), (isIllegal ? "🟣" : "🟡"));
+        int textW = this.font.width(recordComp);
+        int pillX = originX + (backgroundWidth - textW - 12) / 2;
+        int pillY = originY - 16;
+        g.fill(pillX, pillY, pillX + textW + 12, pillY + 13, 0xEE121820);
+        g.renderOutline(pillX, pillY, textW + 12, 13, 0x88D4AF37);
+        g.drawString(this.font, recordComp, pillX + 6, pillY + 3, 0xFFFFFF);
     }
 
     private void drawSymbols(GuiGraphics graphics, int originX, int originY) {
         int len = SlotReels.REEL_SIZE;
 
-        // Limitar el renderizado de símbolos estrictamente a la ventana visible de los rodillos
         graphics.enableScissor(originX + 54, originY + 51, originX + 166, originY + 155);
 
         for (int col = 0; col < 3; col++) {
@@ -418,7 +505,7 @@ public class SlotMachineScreen extends Screen {
                 if (tex == null) continue;
 
                 int drawX = originX + COLUMN_X[col];
-                int drawY = originY + ROW_Y + ((row - 1) * SYMBOL_SIZE) + (int) reelOffset[col];
+                int drawY = originY + ROW_Y + ((row - 1) * SYMBOL_SIZE) + (int) (reelOffset[col] + reelBounce[col]);
 
                 graphics.blit(tex, drawX, drawY, 0, 0, SYMBOL_SIZE, SYMBOL_SIZE, SYMBOL_SIZE, SYMBOL_SIZE);
             }
@@ -462,30 +549,26 @@ public class SlotMachineScreen extends Screen {
     private void drawTexts(GuiGraphics graphics, int originX, int originY) {
         long totalBet = (long) betBase * SlotLines.getLineCount(linesMode);
 
-        // Título celestial en la marquesina superior
-        graphics.drawCenteredString(this.font, "✦ TRAGAMONEDAS CELESTIAL ✦", originX + backgroundWidth / 2, originY + 9, 0xFFDF73);
+        Component title = isIllegal ? Component.translatable("awakening_system.screen.slot_machine.header_clandestine") : Component.translatable("awakening_system.screen.slot_machine.header_royal");
+        graphics.drawCenteredString(this.font, title, originX + backgroundWidth / 2, originY + 9, isIllegal ? 0xD8B4FE : 0xFFDF73);
 
-        // Apuesta en la pantalla superior (y=32)
-        String betStr = String.format(Locale.US, "%,d", totalBet);
-        graphics.drawString(this.font, "Apuesta:", originX + 58, originY + 32, 0xFFE080, true);
-        int betColor = balance >= totalBet ? 0x55FF55 : 0xFF5555;
+        String chipIcon = isIllegal ? "🟣" : "🟡";
+        String betStr = totalBet + " " + chipIcon;
+        graphics.drawString(this.font, Component.translatable("awakening_system.screen.slot_machine.label_bet"), originX + 58, originY + 32, 0xFFE080, true);
+        int betColor = chipsAvailable >= totalBet ? 0x55FF55 : 0xFF5555;
         graphics.drawString(this.font, betStr, originX + 115, originY + 32, betColor, true);
 
-        // Saldo de Mora (inferior izquierda)
-        graphics.blit(MORA_ICON, originX + 14, originY + 145, 0, 0, 10, 10, 10, 10);
-        String balStr = String.format(Locale.US, "%,d", balance);
-        graphics.drawString(this.font, balStr, originX + 27, originY + 146, 0xFFE080, true);
+        String balStr = chipsAvailable + " " + chipIcon;
+        graphics.drawString(this.font, balStr, originX + 14, originY + 146, 0xFFE080, true);
 
-        // Ganancias de la tirada (inferior derecha)
-        graphics.drawString(this.font, "Premio:", originX + 120, originY + 146, 0xAAAAAA, true);
-        String winStr = String.format(Locale.US, "%,d", lastWinAmount);
+        graphics.drawString(this.font, Component.translatable("awakening_system.screen.slot_machine.label_prize"), originX + 120, originY + 146, 0xAAAAAA, true);
+        String winStr = lastWinAmount + " " + chipIcon;
         int winColor = lastWinAmount > 0 ? 0x55FF55 : 0x888888;
         graphics.drawString(this.font, winStr, originX + 160, originY + 146, winColor, true);
     }
 
     @Override
     public void onClose() {
-        if (isSpinning) return;
         if (spinSoundInstance != null) {
             Minecraft.getInstance().getSoundManager().stop(spinSoundInstance);
             spinSoundInstance = null;

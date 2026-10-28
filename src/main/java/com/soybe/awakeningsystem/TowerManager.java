@@ -29,6 +29,8 @@ import net.minecraft.world.entity.monster.ElderGuardian;
 import net.minecraft.world.entity.monster.Ravager;
 import net.minecraft.world.entity.monster.WitherSkeleton;
 import net.minecraft.world.entity.player.Player;
+import com.soybe.awakeningsystem.entity.ModEntities;
+import com.soybe.awakeningsystem.entity.SculkGolemEntity;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.Items;
 import net.minecraft.world.level.Level;
@@ -141,6 +143,7 @@ public final class TowerManager {
     }
 
     public static void enterTowerAtFloor(ServerPlayer player, int startFloor) {
+        player.getPersistentData().putBoolean("tower_has_entered", true);
         if (isInTower(player.getUUID())) {
             warpFloor(player, startFloor);
             return;
@@ -261,32 +264,27 @@ public final class TowerManager {
         int height = CHAMBER_HEIGHT;
         int tier = Math.min(10, (floor - 1) / 10 + 1);
 
-        // 1. Generación de Cámara Cerrada (Suelo, Muros Sólidos, Techo y Vaciado de Aire)
         for (int dx = -radius; dx <= radius; dx++) {
             for (int dz = -radius; dz <= radius; dz++) {
                 double dist = Math.sqrt(dx * dx + dz * dz);
                 if (dist <= radius) {
                     BlockPos p = origin.offset(dx, 0, dz);
 
-                    // Suelo y base de bedrock
                     var floorBlock = getFloorBlockForTier(tier, dist, radius, floor);
                     level.setBlockAndUpdate(p, floorBlock.defaultBlockState());
                     level.setBlockAndUpdate(p.below(), Blocks.BEDROCK.defaultBlockState());
 
-                    // Muros sólidos del recinto
                     if (dist >= radius - 1 && dist <= radius) {
                         var wallBlock = getWallBlockForTier(tier, dx, dz, floor);
                         for (int h = 1; h <= height; h++) {
                             level.setBlockAndUpdate(p.above(h), wallBlock.defaultBlockState());
                         }
                     } else {
-                        // Interior vacío y seguro
                         for (int h = 1; h <= height; h++) {
                             level.setBlockAndUpdate(p.above(h), Blocks.AIR.defaultBlockState());
                         }
                     }
 
-                    // Techo sólido estructural
                     var ceilingBlock = getCeilingBlockForTier(tier, dist, floor);
                     level.setBlockAndUpdate(p.above(height + 1), ceilingBlock.defaultBlockState());
                     level.setBlockAndUpdate(p.above(height + 2), Blocks.BEDROCK.defaultBlockState());
@@ -294,7 +292,6 @@ public final class TowerManager {
             }
         }
 
-        // 2. Cuatro Pilares Arquitectónicos
         int[][] pillarOffsets = {{-9, -9}, {9, -9}, {-9, 9}, {9, 9}};
         for (int[] offset : pillarOffsets) {
             int px = offset[0];
@@ -303,16 +300,13 @@ public final class TowerManager {
             for (int h = 1; h <= height; h++) {
                 level.setBlockAndUpdate(origin.offset(px, h, pz), pillarBlock.defaultBlockState());
             }
-            // Lámparas adosadas a los pilares
             level.setBlockAndUpdate(origin.offset(px, 3, pz + (pz > 0 ? -1 : 1)), getTierLantern(tier).defaultBlockState());
         }
 
-        // 3. Candelabro Central y Lámparas de Techo
         level.setBlockAndUpdate(origin.offset(0, height, 0), getCeilingLightForTier(tier).defaultBlockState());
         level.setBlockAndUpdate(origin.offset(0, height - 1, 0), Blocks.CHAIN.defaultBlockState());
         level.setBlockAndUpdate(origin.offset(0, height - 2, 0), getCeilingLightForTier(tier).defaultBlockState());
 
-        // Iluminación montada en los muros perimetrales (sin faroles en el suelo)
         for (int i = 0; i < 360; i += 45) {
             double rad = Math.toRadians(i);
             int lx = (int) (Math.cos(rad) * (radius - 1));
@@ -320,30 +314,24 @@ public final class TowerManager {
             level.setBlockAndUpdate(origin.offset(lx, 3, lz), getTierLantern(tier).defaultBlockState());
         }
 
-        // 4. Portal de Retorno al Overworld (Al sur del recinto, enmarcado con arco ceremonial)
         BlockPos returnPos = origin.offset(0, 1, -13);
         session.returnPortalPos = returnPos;
         buildPortalFrame(level, returnPos, Blocks.CRYING_OBSIDIAN, Blocks.OBSIDIAN);
 
-        // 5. Ubicación del Portal de Ascensión (Al norte del recinto)
         session.elevatorPos = origin.offset(0, 1, 13);
 
-        // 6. Spawn de Enemigos con Escalado Estrictamente Monótono
         spawnFloorEnemies(level, session, floor, origin, tier);
     }
 
     private static void buildPortalFrame(ServerLevel level, BlockPos center, net.minecraft.world.level.block.Block pillarMat, net.minecraft.world.level.block.Block lintelMat) {
-        // Base
         for (int dx = -1; dx <= 1; dx++) {
             level.setBlockAndUpdate(center.offset(dx, -1, 0), lintelMat.defaultBlockState());
         }
-        // Columnas
         for (int h = 0; h <= 2; h++) {
             level.setBlockAndUpdate(center.offset(-1, h, 0), pillarMat.defaultBlockState());
             level.setBlockAndUpdate(center.offset(1, h, 0), pillarMat.defaultBlockState());
             level.setBlockAndUpdate(center.offset(0, h, 0), Blocks.AIR.defaultBlockState());
         }
-        // Dintel superior
         for (int dx = -1; dx <= 1; dx++) {
             level.setBlockAndUpdate(center.offset(dx, 3, 0), lintelMat.defaultBlockState());
         }
@@ -443,28 +431,26 @@ public final class TowerManager {
     public static void configureTowerMobAI(Mob mob, TowerSession session, ServerPlayer player) {
         if (mob == null) return;
 
-        // 1. Limpiar todos los objetivos de ataque vanilla (defensa de aldea, agresión a monstruos/golems, represalias mutuas)
         mob.targetSelector.getAvailableGoals().removeIf(wrappedGoal ->
                 wrappedGoal.getGoal() instanceof TargetGoal
         );
 
-        // 2. Añadir meta prioritaria hacia el jugador escalador de la torre
         mob.targetSelector.addGoal(1, new NearestAttackableTargetGoal<>(
                 mob, Player.class, 10, true, false,
                 target -> target != null && target.getUUID().equals(session.playerId)
         ));
 
-        // 3. Meta de respaldo para cualquier jugador
         mob.targetSelector.addGoal(2, new NearestAttackableTargetGoal<>(
                 mob, Player.class, true
         ));
 
-        // 4. Si el mob es un IronGolem, agregar MeleeAttackGoal agresivo hacia jugadores
         if (mob instanceof IronGolem golem) {
             golem.goalSelector.addGoal(2, new MeleeAttackGoal(golem, 1.25D, true));
         }
+        if (mob instanceof SculkGolemEntity sculkGolem) {
+            sculkGolem.setStatue(false);
+        }
 
-        // 5. Enfocar inmediatamente al jugador desafiante si está presente
         if (player != null && player.isAlive()) {
             mob.setTarget(player);
         }
@@ -477,20 +463,19 @@ public final class TowerManager {
 
         ServerPlayer player = level.getServer().getPlayerList().getPlayer(session.playerId);
 
-        // Fórmulas de escalado monótono garantizado (Pisos 1 al 100)
         double championHp;
         if (floor <= 10) {
-            championHp = 80.0D + (floor * 15.0D); // 95 -> 230 HP
+            championHp = 80.0D + (floor * 15.0D);
         } else if (floor <= 20) {
-            championHp = 230.0D + ((floor - 10) * 25.0D); // 255 -> 480 HP
+            championHp = 230.0D + ((floor - 10) * 25.0D);
         } else if (floor <= 50) {
-            championHp = 480.0D + ((floor - 20) * 35.0D); // 515 -> 1530 HP
+            championHp = 480.0D + ((floor - 20) * 35.0D);
         } else if (floor <= 80) {
-            championHp = 1530.0D + ((floor - 50) * 45.0D); // 1575 -> 2880 HP
+            championHp = 1530.0D + ((floor - 50) * 45.0D);
         } else if (floor < 100) {
-            championHp = 2880.0D + ((floor - 80) * 60.0D); // 2940 -> 4020 HP
+            championHp = 2880.0D + ((floor - 80) * 60.0D);
         } else {
-            championHp = 6500.0D; // Gran Administrador Piso 100
+            championHp = 6500.0D;
         }
 
         double championDmg = 5.0D + (floor * 0.35D);
@@ -498,11 +483,11 @@ public final class TowerManager {
 
         double minionHp;
         if (floor <= 10) {
-            minionHp = 20.0D + (floor * 5.0D); // 25 -> 70 HP
+            minionHp = 20.0D + (floor * 5.0D);
         } else if (floor <= 50) {
-            minionHp = 70.0D + ((floor - 10) * 10.0D); // 80 -> 470 HP
+            minionHp = 70.0D + ((floor - 10) * 10.0D);
         } else {
-            minionHp = 470.0D + ((floor - 50) * 15.0D); // 485 -> 1205 HP
+            minionHp = 470.0D + ((floor - 50) * 15.0D);
         }
         double minionDmg = 3.0D + (floor * 0.20D);
         double minionArmor = Math.min(24.0D, 1.0D + (floor * 0.22D));
@@ -522,6 +507,11 @@ public final class TowerManager {
                 applyAttributes(boss, championHp, championDmg, championArmor);
                 boss.addEffect(new MobEffectInstance(MobEffects.MOVEMENT_SPEED, 72000, 1, false, false));
                 boss.addEffect(new MobEffectInstance(MobEffects.GLOWING, 72000, 0, false, false));
+                boss.getPersistentData().putBoolean("TowerFinalBoss", true);
+                boss.getPersistentData().putBoolean("TowerChampion", true);
+                boss.getPersistentData().putBoolean("TowerMob", true);
+                boss.getPersistentData().putInt("TowerFloor", 100);
+                boss.getPersistentData().putInt("rpg_mob_level", 150);
                 configureTowerMobAI(boss, session, player);
                 level.addFreshEntity(boss);
                 session.enemyUUIDs.add(boss.getUUID());
@@ -536,6 +526,10 @@ public final class TowerManager {
                     guard.setItemSlot(EquipmentSlot.MAINHAND, new ItemStack(Items.NETHERITE_SWORD));
                     guard.setItemSlot(EquipmentSlot.CHEST, new ItemStack(Items.NETHERITE_CHESTPLATE));
                     applyAttributes(guard, 1200.0D, 24.0D, 20.0D);
+                    guard.getPersistentData().putBoolean("TowerMinion", true);
+                    guard.getPersistentData().putBoolean("TowerMob", true);
+                    guard.getPersistentData().putInt("TowerFloor", 100);
+                    guard.getPersistentData().putInt("rpg_mob_level", 130);
                     configureTowerMobAI(guard, session, player);
                     level.addFreshEntity(guard);
                     session.enemyUUIDs.add(guard.getUUID());
@@ -595,8 +589,9 @@ public final class TowerManager {
     private static void spawnFloorChampion(ServerLevel level, TowerSession session, BlockPos origin, int tier, int floor, double hp, double dmg, double armor) {
         Mob champion = switch (tier) {
             case 1 -> {
-                IronGolem g = EntityType.IRON_GOLEM.create(level);
-                if (g != null) g.setCustomName(Component.translatable("awakening_system.tower.mob.headon_beast"));
+                SculkGolemEntity g = new SculkGolemEntity(ModEntities.SCULK_GOLEM.get(), level);
+                g.setStatue(false);
+                g.setCustomName(Component.translatable("awakening_system.tower.mob.headon_beast"));
                 yield g;
             }
             case 2 -> {
@@ -610,8 +605,9 @@ public final class TowerManager {
                 yield eg;
             }
             case 4 -> {
-                IronGolem g = EntityType.IRON_GOLEM.create(level);
-                if (g != null) g.setCustomName(Component.translatable("awakening_system.tower.mob.crown_champion"));
+                SculkGolemEntity g = new SculkGolemEntity(ModEntities.SCULK_GOLEM.get(), level);
+                g.setStatue(false);
+                g.setCustomName(Component.translatable("awakening_system.tower.mob.crown_champion"));
                 yield g;
             }
             case 5 -> {
@@ -620,7 +616,7 @@ public final class TowerManager {
                 if (maulerType != null) {
                     var m = maulerType.create(level);
                     if (m instanceof Mob mob) {
-                        mob.setCustomName(Component.literal("§c§l✦ MAULER ALFA - DEPREDADOR DE LA TORRE ✦"));
+                        mob.setCustomName(Component.translatable("awakening_system.tower.mob.alpha_mauler"));
                         yield mob;
                     }
                 }
@@ -637,7 +633,7 @@ public final class TowerManager {
                 if (iceologerType != null) {
                     var ice = iceologerType.create(level);
                     if (ice instanceof Mob mob) {
-                        mob.setCustomName(Component.literal("§b§l✦ ICEOLOGER ARCHIMAGO - SEÑOR DE LA ESCARCHA ✦"));
+                        mob.setCustomName(Component.translatable("awakening_system.tower.mob.archmage_iceologer"));
                         yield mob;
                     }
                 }
@@ -651,7 +647,7 @@ public final class TowerManager {
                 if (illusionerType != null) {
                     var ill = illusionerType.create(level);
                     if (ill instanceof Mob mob) {
-                        mob.setCustomName(Component.literal("§d§l✦ ILLUSIONER SOMBRÍO - MAESTRO DEL ESPEJISMO ✦"));
+                        mob.setCustomName(Component.translatable("awakening_system.tower.mob.shadow_illusioner"));
                         yield mob;
                     }
                 }
@@ -663,20 +659,18 @@ public final class TowerManager {
                 yield ws;
             }
             case 8 -> {
-                // JEFE DE PISO 80: Wildfire (Hovering Inferno con escudos)
                 var wildfireType = net.minecraft.core.registries.BuiltInRegistries.ENTITY_TYPE.getOptional(
                         net.minecraft.resources.ResourceLocation.fromNamespaceAndPath("friendsandfoes", "wildfire")).orElse(null);
                 if (wildfireType != null) {
                     var wf = wildfireType.create(level);
                     if (wf instanceof Mob mob) {
-                        mob.setCustomName(Component.literal("§6§l✦ WILDFIRE - MONARCA DE LAS LLAMAS ✦"));
+                        mob.setCustomName(Component.translatable("awakening_system.tower.mob.wildfire_monarch"));
                         yield mob;
                     }
                 }
-                // Blaze Titánico equivalente con escudos protectores
                 Blaze b = EntityType.BLAZE.create(level);
                 if (b != null) {
-                    b.setCustomName(Component.literal("§6§l✦ WILDFIRE - MONARCA DE LAS LLAMAS ✦"));
+                    b.setCustomName(Component.translatable("awakening_system.tower.mob.wildfire_monarch"));
                     b.addEffect(new MobEffectInstance(MobEffects.FIRE_RESISTANCE, 72000, 0, false, false));
                     b.addEffect(new MobEffectInstance(MobEffects.DAMAGE_RESISTANCE, 72000, 1, false, false));
                 }
@@ -690,6 +684,11 @@ public final class TowerManager {
         };
 
         if (champion != null) {
+            champion.getPersistentData().putBoolean("TowerChampion", true);
+            champion.getPersistentData().putBoolean("TowerMob", true);
+            champion.getPersistentData().putInt("TowerFloor", floor);
+            int internalLevel = Math.min(150, Math.max(15, 15 + (int) Math.round(floor * 1.35D)));
+            champion.getPersistentData().putInt("rpg_mob_level", internalLevel);
             champion.setPos(origin.getX() + 0.5D, origin.getY() + 1.0D, origin.getZ() + 0.5D);
             champion.setCustomNameVisible(true);
             applyAttributes(champion, hp, dmg, armor);
@@ -712,8 +711,9 @@ public final class TowerManager {
                 yield ws;
             }
             case 3 -> {
-                IronGolem g = EntityType.IRON_GOLEM.create(level);
-                if (g != null) g.setCustomName(Component.translatable("awakening_system.tower.mob.shinsoo_construct"));
+                SculkGolemEntity g = new SculkGolemEntity(ModEntities.SCULK_GOLEM.get(), level);
+                g.setStatue(false);
+                g.setCustomName(Component.translatable("awakening_system.tower.mob.shinsoo_construct"));
                 yield g;
             }
             case 4, 5 -> {
@@ -722,7 +722,7 @@ public final class TowerManager {
                 if (maulerType != null && tier == 4) {
                     var m = maulerType.create(level);
                     if (m instanceof Mob mob) {
-                        mob.setCustomName(Component.literal("§cEsbirro Mauler de la Torre"));
+                        mob.setCustomName(Component.translatable("awakening_system.tower.mob.minion_mauler"));
                         yield mob;
                     }
                 }
@@ -740,7 +740,7 @@ public final class TowerManager {
                 if (iceologerType != null && tier == 6) {
                     var ice = iceologerType.create(level);
                     if (ice instanceof Mob mob) {
-                        mob.setCustomName(Component.literal("§bEsbirro Iceologer de la Torre"));
+                        mob.setCustomName(Component.translatable("awakening_system.tower.mob.minion_iceologer"));
                         yield mob;
                     }
                 }
@@ -754,7 +754,7 @@ public final class TowerManager {
                 if (illusionerType != null && tier == 8) {
                     var ill = illusionerType.create(level);
                     if (ill instanceof Mob mob) {
-                        mob.setCustomName(Component.literal("§dEsbirro Illusioner de la Torre"));
+                        mob.setCustomName(Component.translatable("awakening_system.tower.mob.minion_illusioner"));
                         yield mob;
                     }
                 }
@@ -769,6 +769,11 @@ public final class TowerManager {
         };
 
         if (minion != null) {
+            minion.getPersistentData().putBoolean("TowerMinion", true);
+            minion.getPersistentData().putBoolean("TowerMob", true);
+            minion.getPersistentData().putInt("TowerFloor", floor);
+            int internalLevel = Math.min(140, Math.max(10, 10 + (int) Math.round(floor * 1.25D)));
+            minion.getPersistentData().putInt("rpg_mob_level", internalLevel);
             minion.setPos(x, y, z);
             applyAttributes(minion, hp, dmg, armor);
             ServerPlayer player = level.getServer().getPlayerList().getPlayer(session.playerId);
@@ -781,7 +786,6 @@ public final class TowerManager {
     private static void buildElevator(ServerLevel level, TowerSession session) {
         BlockPos pos = session.elevatorPos;
 
-        // Construir arco ceremonial de ascensión con energía de Shinsoo
         int tier = Math.min(10, (session.floor - 1) / 10 + 1);
         var frameBlock = tier >= 8 ? Blocks.GILDED_BLACKSTONE : Blocks.CRYING_OBSIDIAN;
         var topBlock = tier >= 8 ? Blocks.GOLD_BLOCK : Blocks.SEA_LANTERN;
@@ -799,7 +803,6 @@ public final class TowerManager {
         BlockPos center = session.floorOrigin.offset(0, 1, 0);
         session.isekaiPortalPos = center;
 
-        // Despejar el área alrededor del Gran Portal Isekai para que flote limpiamente
         for (int dx = -3; dx <= 3; dx++) {
             for (int dz = -3; dz <= 3; dz++) {
                 for (int dy = 0; dy <= 6; dy++) {
@@ -807,7 +810,6 @@ public final class TowerManager {
                 }
             }
         }
-        // Base rúnica sutil en el suelo
         level.setBlockAndUpdate(center.below(), Blocks.CHISELED_QUARTZ_BLOCK.defaultBlockState());
         level.setBlockAndUpdate(center.below().north(), Blocks.GILDED_BLACKSTONE.defaultBlockState());
         level.setBlockAndUpdate(center.below().south(), Blocks.GILDED_BLACKSTONE.defaultBlockState());
@@ -841,15 +843,33 @@ public final class TowerManager {
     }
 
     public static void onEntityKilled(UUID entityId) {
+        onEntityKilled(entityId, "", "");
+    }
+
+    public static void onEntityKilled(net.minecraft.world.entity.LivingEntity entity) {
+        if (entity == null) return;
+        String customName = entity.hasCustomName() && entity.getCustomName() != null ? entity.getCustomName().getString() : "";
+        String typeKey = net.minecraft.core.registries.BuiltInRegistries.ENTITY_TYPE.getKey(entity.getType()).toString();
+        onEntityKilled(entity.getUUID(), customName, typeKey);
+    }
+
+    public static void onEntityKilled(UUID entityId, String customName, String typeKey) {
         for (TowerSession session : SESSIONS.values()) {
             if (session.enemyUUIDs.remove(entityId)) {
+                var server = net.neoforged.neoforge.server.ServerLifecycleHooks.getCurrentServer();
+                if (server != null) {
+                    ServerPlayer player = server.getPlayerList().getPlayer(session.playerId);
+                    if (player != null) {
+                        com.soybe.awakeningsystem.tower.TowerDailyMissionManager.onTowerKill(player, session.floor, customName, typeKey);
+                    }
+                }
+
                 if (session.bossEvent != null && session.totalEnemies > 0) {
                     float prog = (float) session.enemyUUIDs.size() / (float) session.totalEnemies;
                     session.bossEvent.setProgress(Math.max(0.0F, Math.min(1.0F, prog)));
                 }
 
                 if (session.enemyUUIDs.isEmpty()) {
-                    var server = net.neoforged.neoforge.server.ServerLifecycleHooks.getCurrentServer();
                     if (server != null) {
                         ServerPlayer player = server.getPlayerList().getPlayer(session.playerId);
                         if (player != null) {
@@ -858,7 +878,6 @@ public final class TowerManager {
                                 session.elevatorSpawned = true;
                                 buildElevator(level, session);
 
-                                // Guardar progreso de piso en SystemData
                                 SystemData data = SystemEvents.data(player);
                                 data.setSavedTowerFloor(session.floor + 1);
                                 AwakeningSystemMod.sync(player);
@@ -904,7 +923,6 @@ public final class TowerManager {
 
         ServerPlayer player = server.getPlayerList().getPlayer(playerId);
         if (player != null) {
-            // Guardar checkpoint actual sin degradar progreso
             SystemData data = SystemEvents.data(player);
             int floorToSave = session.elevatorSpawned ? Math.min(MAX_FLOORS, session.floor + 1) : session.floor;
             data.setSavedTowerFloor(Math.max(data.savedTowerFloor(), floorToSave));
@@ -992,7 +1010,6 @@ public final class TowerManager {
     public static void tick(MinecraftServer server) {
         if (server == null) return;
 
-        // Failsafe Watchdog: Rescatar periódicamente a jugadores varados en RANKER_TOWER sin sesión
         if (server.getTickCount() % 20 == 0) {
             ServerLevel towerLevel = server.getLevel(RANKER_TOWER);
             if (towerLevel != null) {
@@ -1026,13 +1043,11 @@ public final class TowerManager {
 
             session.floorTicks++;
 
-            // Failsafe Watchdog: Reubicar al jugador si terminó fuera de los límites o en el vacío/bloques
             if (isPlayerOutOfBounds(session, player)) {
                 rescuePlayerToBounds(session, player);
             }
 
             if (gameTime % 20 == 0) {
-                // Reafirmar objetivo hacia el jugador en todos los enemigos vivos de la torre
                 if (!session.enemyUUIDs.isEmpty()) {
                     for (UUID enemyId : session.enemyUUIDs) {
                         var entity = level.getEntity(enemyId);
@@ -1129,5 +1144,9 @@ public final class TowerManager {
                 }
             }
         }
+    }
+
+    public static void clearAll() {
+        SESSIONS.clear();
     }
 }

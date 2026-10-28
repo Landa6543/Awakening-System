@@ -41,7 +41,6 @@ public class PrimogemPickaxeItem extends PickaxeItem {
 
             if (isOre) {
                 double roll = level.getRandom().nextDouble();
-                // 25% prob: 1-3 Fragmentos Cósmicos
                 if (roll < 0.25) {
                     int count = 1 + level.getRandom().nextInt(3);
                     ItemStack frags = new ItemStack(SystemItems.COSMIC_FRAGMENT.get(), count);
@@ -51,7 +50,6 @@ public class PrimogemPickaxeItem extends PickaxeItem {
                     level.playSound(null, pos, SoundEvents.AMETHYST_BLOCK_CHIME, SoundSource.PLAYERS, 1.0F, 1.4F);
                 }
 
-                // 6% prob: 1 Protogema directa
                 if (roll < 0.06) {
                     ItemStack primo = new ItemStack(SystemItems.PRIMOGEM.get(), 1);
                     ItemEntity entity = new ItemEntity(level, pos.getX() + 0.5, pos.getY() + 0.5, pos.getZ() + 0.5, primo);
@@ -66,10 +64,10 @@ public class PrimogemPickaxeItem extends PickaxeItem {
 
     @Override
     public void appendHoverText(ItemStack stack, TooltipContext context, List<Component> tooltip, TooltipFlag flag) {
-        tooltip.add(Component.literal("§b§l[RESONANCIA ASTRAL]").withStyle(ChatFormatting.BOLD));
-        tooltip.add(Component.literal("§7Canaliza la fuerza cósmica de las estrellas para excavar tesoros:"));
-        tooltip.add(Component.literal("§e✦ 25% de prob. de desenterrar Fragmentos Cósmicos al picar minerales."));
-        tooltip.add(Component.literal("§d✦ 6% de prob. de hallar Protogemas puras directas."));
+        tooltip.add(Component.translatable("item.awakening_system.primogem_pickaxe.title").withStyle(ChatFormatting.BOLD));
+        tooltip.add(Component.translatable("item.awakening_system.primogem_pickaxe.desc"));
+        tooltip.add(Component.translatable("item.awakening_system.primogem_pickaxe.eff1"));
+        tooltip.add(Component.translatable("item.awakening_system.primogem_pickaxe.eff2"));
         super.appendHoverText(stack, context, tooltip, flag);
     }
 }

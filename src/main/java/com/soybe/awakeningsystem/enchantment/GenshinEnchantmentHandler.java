@@ -52,7 +52,6 @@ public final class GenshinEnchantmentHandler {
         ServerLevel sl = (ServerLevel) target.level();
         String targetName = target.getType().toString().toLowerCase();
 
-        // 1. Electric Absorb (Absorción Eléctrica)
         int lvlElectric = getEnchantmentLevel(weapon, "electric_absorb");
         if (lvlElectric > 0) {
             if (targetName.contains("electro") || target.isInWaterOrRain()) {
@@ -61,7 +60,6 @@ public final class GenshinEnchantmentHandler {
             }
         }
 
-        // 2. Icebreaker (Rompehielos)
         int lvlIce = getEnchantmentLevel(weapon, "icebreaker");
         if (lvlIce > 0) {
             if (targetName.contains("cryo") || target.getTicksFrozen() > 0 || targetName.contains("ice")) {
@@ -71,7 +69,6 @@ public final class GenshinEnchantmentHandler {
             }
         }
 
-        // 3. Rock Smasher (Destructor de Rocas)
         int lvlRock = getEnchantmentLevel(weapon, "rock_smasher");
         if (lvlRock > 0) {
             if (targetName.contains("geo") || targetName.contains("stone") || targetName.contains("golem") || targetName.contains("vishap") || targetName.contains("lawachurl")) {
@@ -80,7 +77,6 @@ public final class GenshinEnchantmentHandler {
             }
         }
 
-        // 4. Soft Amber (Ámbar Suave)
         int lvlAmber = getEnchantmentLevel(weapon, "soft_amber");
         if (lvlAmber > 0) {
             if (sl.random.nextFloat() < 0.35F) {
@@ -89,7 +85,6 @@ public final class GenshinEnchantmentHandler {
             }
         }
 
-        // 5. Windblower (Ráfaga de Viento)
         int lvlWind = getEnchantmentLevel(weapon, "windblower");
         if (lvlWind > 0) {
             if (targetName.contains("anemo") || !target.onGround()) {
@@ -99,7 +94,6 @@ public final class GenshinEnchantmentHandler {
             }
         }
 
-        // 6. Fire Extinguisher (Extintor de Fuego)
         int lvlFire = getEnchantmentLevel(weapon, "fire_extinguisher");
         if (lvlFire > 0) {
             if (targetName.contains("pyro") || target.isOnFire() || targetName.contains("blaze") || targetName.contains("magma")) {
@@ -112,7 +106,6 @@ public final class GenshinEnchantmentHandler {
             }
         }
 
-        // 7. Hydrophobia (Hidrofobia)
         int lvlHydro = getEnchantmentLevel(weapon, "hydrophobia");
         if (lvlHydro > 0) {
             if (targetName.contains("hydro") || targetName.contains("water") || targetName.contains("mimic") || targetName.contains("guardian")) {
@@ -121,7 +114,6 @@ public final class GenshinEnchantmentHandler {
             }
         }
 
-        // 8. Magic Destroyer (Destructor Arcano)
         int lvlMagic = getEnchantmentLevel(weapon, "magic_destroyer");
         if (lvlMagic > 0) {
             if (targetName.contains("abyss") || targetName.contains("ruin") || targetName.contains("husk") || targetName.contains("rifthound")) {
@@ -130,7 +122,6 @@ public final class GenshinEnchantmentHandler {
             }
         }
 
-        // 9. Enemy of Nature (Enemigo de la Naturaleza)
         int lvlNature = getEnchantmentLevel(weapon, "enemy_of_nature");
         if (lvlNature > 0) {
             if (targetName.contains("dendro") || targetName.contains("fungus") || targetName.contains("shroom") || targetName.contains("whopperflower")) {
@@ -170,7 +161,6 @@ public final class GenshinEnchantmentHandler {
         if (event.getEntity().level().isClientSide()) return;
         if (!(event.getEntity() instanceof ServerPlayer sp)) return;
 
-        // Registrar contador total de pesca
         int currentTotal = sp.getPersistentData().getInt("total_fish_caught");
         sp.getPersistentData().putInt("total_fish_caught", currentTotal + 1);
 
@@ -180,7 +170,6 @@ public final class GenshinEnchantmentHandler {
             lvlFish = getEnchantmentLevel(sp.getOffhandItem(), "fishing_stabilizing");
         }
 
-        // Comprobar si tiene el Estabilizador de Pesca en el inventario
         boolean hasStabilizer = false;
         for (int i = 0; i < sp.getInventory().getContainerSize(); i++) {
             ItemStack stack = sp.getInventory().getItem(i);
@@ -204,7 +193,6 @@ public final class GenshinEnchantmentHandler {
             float rarityRoll = sl.random.nextFloat();
             ItemStack extraFish;
 
-            // Inazuma o tormenta: Pez Ángel Raimei
             if ((biomePath.contains("narukami") || biomePath.contains("yashiori") || sl.isThundering()) && rarityRoll < 0.12F) {
                 extraFish = new ItemStack(SystemItems.RAIMEI_ANGELFISH.get());
             } else if ((biomePath.contains("jueyun") || biomePath.contains("karst") || biomePath.contains("chenyu")) && rarityRoll < 0.15F) {
@@ -230,7 +218,7 @@ public final class GenshinEnchantmentHandler {
             event.getDrops().add(extraFish);
             sl.sendParticles(ParticleTypes.HAPPY_VILLAGER, sp.getX(), sp.getY() + 1.0D, sp.getZ(), 8, 0.4D, 0.4D, 0.4D, 0.1D);
             sl.playSound(null, sp.blockPosition(), SoundEvents.FISHING_BOBBER_SPLASH, SoundSource.PLAYERS, 1.0F, 1.4F);
-            sp.displayClientMessage(Component.literal("§b✦ ¡Has pescado un §e" + extraFish.getHoverName().getString() + "§b de Teyvat!"), true);
+            sp.displayClientMessage(Component.translatable("enchantment.awakening_system.fish_caught", extraFish.getHoverName()), true);
         }
     }
 }

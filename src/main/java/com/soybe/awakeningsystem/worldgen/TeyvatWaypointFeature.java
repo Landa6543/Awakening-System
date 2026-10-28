@@ -30,9 +30,18 @@ public class TeyvatWaypointFeature extends Feature<NoneFeatureConfiguration> {
         BlockState below = level.getBlockState(origin.below());
         if (!below.isSolid() || below.liquid() || below.is(BlockTags.LEAVES)) return false;
 
-        if (Math.abs(origin.getX()) < 160 && Math.abs(origin.getZ()) < 160) return false;
-        if (Math.abs(origin.getX() - TeyvatRegionalBuilder.MONDSTADT_POS.getX()) < 180 && Math.abs(origin.getZ() - TeyvatRegionalBuilder.MONDSTADT_POS.getZ()) < 180) return false;
-        if (Math.abs(origin.getX() - TeyvatRegionalBuilder.LIYUE_POS.getX()) < 180 && Math.abs(origin.getZ() - TeyvatRegionalBuilder.LIYUE_POS.getZ()) < 180) return false;
+        if (!TeyvatWorldGenManager.isAreaClearOfBossesAndStructures(level, origin, 120.0D)) {
+            return false;
+        }
+
+        try {
+            if (level.getLevel().getServer() != null) {
+                var data = TeyvatWorldGenManager.TeyvatFeaturesData.get(level.getLevel().getServer());
+                if (!TeyvatWorldGenManager.isFarFromList2D(origin, data.waypoints, 240.0D)) {
+                    return false;
+                }
+            }
+        } catch (Exception ignored) {}
 
         TeyvatWorldGenManager.generateTeleportWaypoint(level, origin);
 

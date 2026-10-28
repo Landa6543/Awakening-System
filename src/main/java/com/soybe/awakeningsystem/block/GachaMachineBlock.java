@@ -11,6 +11,7 @@ import net.minecraft.core.particles.ParticleTypes;
 import net.minecraft.network.chat.Component;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.server.level.ServerPlayer;
+import net.minecraft.sounds.SoundEvents;
 import net.minecraft.sounds.SoundSource;
 import net.minecraft.util.RandomSource;
 import net.minecraft.world.InteractionHand;
@@ -103,13 +104,9 @@ public class GachaMachineBlock extends Block {
         }
 
         if (player instanceof ServerPlayer sp) {
-            SystemData data = SystemEvents.data(sp);
+            boolean paid = consumeGachaPayment(sp);
 
-            if (data.mora() >= SPIN_COST_MORA) {
-                data.spendMora(SPIN_COST_MORA);
-                com.soybe.awakeningsystem.AwakeningSystemMod.sync(sp);
-
-                // Sonido de inserción de moneda
+            if (paid) {
                 level.playSound(null, pos, ModSounds.CASINO_INSERT_COIN.get(), SoundSource.BLOCKS, 1.0F, 1.0F);
 
                 if (level instanceof ServerLevel sl) {
@@ -117,18 +114,46 @@ public class GachaMachineBlock extends Block {
                     sl.sendParticles(ParticleTypes.END_ROD, pos.getX() + 0.5D, pos.getY() + 0.8D, pos.getZ() + 0.5D, 10, 0.2D, 0.2D, 0.2D, 0.05D);
                 }
 
-                sp.sendSystemMessage(Component.literal("§e🪙 ¡5,000 Mora insertadas! Girando el mecanismo del Gachapon..."), true);
-
-                // Programar dispensación en 20 ticks (1 segundo)
                 level.scheduleTick(pos, this, 20);
                 return ItemInteractionResult.SUCCESS;
             } else {
-                sp.sendSystemMessage(Component.literal("§cSaldo insuficiente. Necesitas §65,000 Mora §cpara girar el Gachapon de Teyvat."), true);
+                sp.sendSystemMessage(Component.translatable("block.awakening_system.gacha_machine.requires_payment"), true);
                 return ItemInteractionResult.CONSUME;
             }
         }
 
         return ItemInteractionResult.SUCCESS;
+    }
+
+    private static boolean consumeGachaPayment(ServerPlayer sp) {
+        if (sp.isCreative()) {
+            sp.sendSystemMessage(Component.translatable("block.awakening_system.gacha_machine.creative_spin"), true);
+            return true;
+        }
+
+        for (ItemStack stack : sp.getInventory().items) {
+            if (!stack.isEmpty() && stack.is(SystemItems.GOLDEN_GACHA_TICKET.get())) {
+                stack.shrink(1);
+                sp.sendSystemMessage(Component.translatable("block.awakening_system.gacha_machine.golden_ticket"), true);
+                return true;
+            }
+        }
+
+        for (ItemStack stack : sp.getInventory().items) {
+            if (!stack.isEmpty()) {
+                if (stack.is(SystemItems.CASINO_CHIP_GOLD.get()) || stack.is(SystemItems.CASINO_CHIP_SILVER.get()) || stack.is(SystemItems.CASINO_CHIP_BLACK.get())) {
+                    stack.shrink(1);
+                    sp.sendSystemMessage(Component.translatable("block.awakening_system.gacha_machine.chip_inserted"), true);
+                    return true;
+                } else if (stack.is(SystemItems.CASINO_CHIP_BRONZE.get()) && stack.getCount() >= 5) {
+                    stack.shrink(5);
+                    sp.sendSystemMessage(Component.translatable("block.awakening_system.gacha_machine.bronze_chips_inserted"), true);
+                    return true;
+                }
+            }
+        }
+
+        return false;
     }
 
     @Override
@@ -140,15 +165,34 @@ public class GachaMachineBlock extends Block {
         double spawnY = pos.getY() + 0.3D;
         double spawnZ = pos.getZ() + 0.5D + (facing.getStepZ() * 0.65D);
 
-        ItemStack capsuleStack = new ItemStack(SystemItems.GACHA_CAPSULE.get());
+        int roll = random.nextInt(100);
+        ItemStack capsuleStack;
+
+        if (roll < 10) {
+            capsuleStack = new ItemStack(SystemItems.GACHA_CAPSULE_GOLD.get());
+            level.playSound(null, pos, SoundEvents.UI_TOAST_CHALLENGE_COMPLETE, SoundSource.BLOCKS, 1.2F, 1.2F);
+            level.playSound(null, pos, SoundEvents.AMETHYST_BLOCK_RESONATE, SoundSource.BLOCKS, 1.2F, 1.4F);
+            level.sendParticles(ParticleTypes.TOTEM_OF_UNDYING, spawnX, spawnY + 0.2D, spawnZ, 35, 0.3D, 0.3D, 0.3D, 0.15D);
+            level.sendParticles(ParticleTypes.FIREWORK, spawnX, spawnY + 0.3D, spawnZ, 25, 0.3D, 0.3D, 0.3D, 0.1D);
+        } else if (roll < 40) {
+            capsuleStack = new ItemStack(SystemItems.GACHA_CAPSULE_PURPLE.get());
+            level.playSound(null, pos, SoundEvents.AMETHYST_BLOCK_RESONATE, SoundSource.BLOCKS, 1.1F, 1.3F);
+            level.playSound(null, pos, SoundEvents.DISPENSER_LAUNCH, SoundSource.BLOCKS, 1.0F, 1.2F);
+            level.sendParticles(ParticleTypes.WITCH, spawnX, spawnY + 0.2D, spawnZ, 25, 0.25D, 0.25D, 0.25D, 0.08D);
+            level.sendParticles(ParticleTypes.PORTAL, spawnX, spawnY + 0.2D, spawnZ, 15, 0.2D, 0.2D, 0.2D, 0.1D);
+        } else {
+            capsuleStack = new ItemStack(SystemItems.GACHA_CAPSULE.get());
+            level.playSound(null, pos, SoundEvents.DISPENSER_LAUNCH, SoundSource.BLOCKS, 1.0F, 1.2F);
+            level.playSound(null, pos, SoundEvents.AMETHYST_BLOCK_CHIME, SoundSource.BLOCKS, 1.0F, 1.1F);
+            level.sendParticles(ParticleTypes.FIREWORK, spawnX, spawnY + 0.2D, spawnZ, 15, 0.2D, 0.2D, 0.2D, 0.05D);
+            level.sendParticles(ParticleTypes.ENCHANTED_HIT, spawnX, spawnY + 0.2D, spawnZ, 15, 0.2D, 0.2D, 0.2D, 0.08D);
+        }
+
         ItemEntity capsuleEntity = new ItemEntity(level, spawnX, spawnY, spawnZ, capsuleStack);
         capsuleEntity.setDeltaMovement(new Vec3(facing.getStepX() * 0.15D, 0.1D, facing.getStepZ() * 0.15D));
         level.addFreshEntity(capsuleEntity);
 
-        // Sonido de premio y partículas
-        level.playSound(null, pos, ModSounds.GACHA_UNCOMMON_PRIZE.get(), SoundSource.BLOCKS, 1.0F, 1.0F);
-        level.sendParticles(ParticleTypes.FIREWORK, spawnX, spawnY + 0.2D, spawnZ, 15, 0.2D, 0.2D, 0.2D, 0.05D);
-        level.sendParticles(ParticleTypes.TOTEM_OF_UNDYING, spawnX, spawnY + 0.2D, spawnZ, 10, 0.2D, 0.2D, 0.2D, 0.05D);
+        level.playSound(null, pos, SoundEvents.VAULT_ACTIVATE, SoundSource.BLOCKS, 0.8F, 1.4F);
     }
 
     @Nullable

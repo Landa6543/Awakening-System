@@ -37,9 +37,9 @@ public class HilichurlEntity extends Monster implements RangedAttackMob {
 
     public enum HilichurlRole {
         BERSERKER(0, "berserker", "§6Hilichurl Berserker"),
-        GUARD(1, "guard", "§eHilichurl con Escudo"),
-        SHOOTER(2, "shooter", "§bHilichurl Tirador"),
-        FIGHTER(3, "fighter", "§eHilichurl Luchador");
+        GUARD(1, "guard", "§eWooden Shield Hilichurl"),
+        SHOOTER(2, "shooter", "§bHilichurl Shooter"),
+        FIGHTER(3, "fighter", "§eHilichurl Fighter");
 
         private final int id;
         private final String name;
@@ -132,7 +132,6 @@ public class HilichurlEntity extends Monster implements RangedAttackMob {
     protected void registerGoals() {
         this.goalSelector.addGoal(1, new FloatGoal(this));
 
-        // Ranged attack goal para Shooter
         this.goalSelector.addGoal(2, new RangedAttackGoal(this, 1.0D, 30, 15.0F) {
             @Override
             public boolean canUse() {
@@ -140,7 +139,6 @@ public class HilichurlEntity extends Monster implements RangedAttackMob {
             }
         });
 
-        // Melee attack goal para Berserker y Guard
         this.goalSelector.addGoal(3, new MeleeAttackGoal(this, 1.15D, false) {
             @Override
             public boolean canUse() {
@@ -160,11 +158,9 @@ public class HilichurlEntity extends Monster implements RangedAttackMob {
 
     @Override
     public boolean hurt(DamageSource source, float amount) {
-        // Bloqueo con Escudo de madera tribal
         if (getRole() == HilichurlRole.GUARD && !source.is(net.minecraft.tags.DamageTypeTags.BYPASSES_SHIELD)) {
             Entity attacker = source.getEntity();
             if (attacker != null) {
-                // Verificar si el atacante está al frente (ángulo frontal)
                 double dx = attacker.getX() - this.getX();
                 double dz = attacker.getZ() - this.getZ();
                 float angle = (float) (Mth.atan2(dz, dx) * (180F / (float) Math.PI)) - 90F;
@@ -181,7 +177,7 @@ public class HilichurlEntity extends Monster implements RangedAttackMob {
                     if (attacker instanceof LivingEntity living) {
                         living.knockback(0.4D, -Math.sin(Math.toRadians(this.getYRot())), Math.cos(Math.toRadians(this.getYRot())));
                     }
-                    return super.hurt(source, amount * 0.2F); // Mitiga el 80% del daño
+                    return super.hurt(source, amount * 0.2F);
                 }
             }
         }

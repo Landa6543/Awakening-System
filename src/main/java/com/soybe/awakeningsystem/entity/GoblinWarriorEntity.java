@@ -57,14 +57,13 @@ public class GoblinWarriorEntity extends Monster {
 
     @Override
     public boolean hurt(DamageSource source, float amount) {
-        // Probabilidad de bloquear con escudo de madera
         if (!source.is(net.minecraft.tags.DamageTypeTags.BYPASSES_SHIELD) && this.random.nextFloat() < 0.30F) {
             this.playSound(SoundEvents.SHIELD_BLOCK, 1.0F, 1.2F);
             if (this.level() instanceof net.minecraft.server.level.ServerLevel sl) {
                 sl.sendParticles(ParticleTypes.CRIT, this.getX(), this.getY() + 1.0D, this.getZ(),
                         10, 0.3D, 0.3D, 0.3D, 0.05D);
             }
-            amount *= 0.3F; // Mitiga el 70% del daño
+            amount *= 0.3F;
         }
         return super.hurt(source, amount);
     }

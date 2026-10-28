@@ -1,0 +1,27 @@
+{
+    "credit": "Awakening System - Pool Multiblock Center 2",
+    "textures": {
+        "wood": "awakening_system:block/casino_table_wood_illegal",
+        "felt": "awakening_system:block/casino_table_felt_illegal_pool",
+        "brass": "awakening_system:block/casino_table_brass_illegal",
+        "particle": "awakening_system:block/casino_table_felt_illegal_pool"
+    },
+    "elements": [
+        {
+            "name": "base",
+            "from": [0, 11, 0],
+            "to": [16, 13.5, 16],
+            "faces": {
+                "down": { "texture": "#wood" }
+            }
+        },
+        {
+            "name": "felt",
+            "from": [0, 13.8, 0],
+            "to": [16, 14.0, 16],
+            "faces": {
+                "up": { "uv": [5.33, 4, 10.67, 8], "texture": "#felt" }
+            }
+        }
+    ]
+}

@@ -28,6 +28,7 @@ public record OpenGachaScreenPayload(
         int stellarJade,
         int welkinDays,
         int totalWishes,
+        long bannerEpochTick,
         List<String> wishHistory
 ) implements CustomPacketPayload {
     public static final Type<OpenGachaScreenPayload> TYPE = new Type<>(ResourceLocation.fromNamespaceAndPath(AwakeningSystemMod.MOD_ID, "open_gacha_screen"));
@@ -53,6 +54,7 @@ public record OpenGachaScreenPayload(
                 buf.writeVarInt(p.stellarJade);
                 buf.writeVarInt(p.welkinDays);
                 buf.writeVarInt(p.totalWishes);
+                buf.writeLong(p.bannerEpochTick);
                 buf.writeVarInt(p.wishHistory.size());
                 for (String entry : p.wishHistory) {
                     buf.writeUtf(entry);
@@ -78,12 +80,13 @@ public record OpenGachaScreenPayload(
                 int stellarJade = buf.readVarInt();
                 int welkinDays = buf.readVarInt();
                 int totalWishes = buf.readVarInt();
+                long epochTick = buf.readLong();
                 int histSize = buf.readVarInt();
                 List<String> history = new ArrayList<>(histSize);
                 for (int i = 0; i < histSize; i++) {
                     history.add(buf.readUtf());
                 }
-                return new OpenGachaScreenPayload(primos, intertwined, acquaint, stardust, starglitter, pity5, pity4, guaranteed, beginner, mora, weaponTarget, weaponFatePts, charTarget, coins, usdBalance, genesisCrystals, stellarJade, welkinDays, totalWishes, history);
+                return new OpenGachaScreenPayload(primos, intertwined, acquaint, stardust, starglitter, pity5, pity4, guaranteed, beginner, mora, weaponTarget, weaponFatePts, charTarget, coins, usdBalance, genesisCrystals, stellarJade, welkinDays, totalWishes, epochTick, history);
             }
     );
 

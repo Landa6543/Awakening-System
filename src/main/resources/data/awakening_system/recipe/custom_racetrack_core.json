@@ -1,0 +1,27 @@
+{
+  "type": "minecraft:crafting_shaped",
+  "category": "misc",
+  "pattern": [
+    "GGG",
+    "EQE",
+    "CCC"
+  ],
+  "key": {
+    "G": {
+      "item": "minecraft:gold_ingot"
+    },
+    "E": {
+      "item": "minecraft:emerald"
+    },
+    "Q": {
+      "item": "minecraft:quartz_block"
+    },
+    "C": {
+      "item": "minecraft:green_concrete"
+    }
+  },
+  "result": {
+    "count": 1,
+    "id": "awakening_system:custom_racetrack_core"
+  }
+}

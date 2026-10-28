@@ -83,7 +83,6 @@ public class ElementalDemonKingBossEntity extends Monster {
         this.bossBar.setProgress(this.getHealth() / this.getMaxHealth());
 
         if (this.level().isClientSide()) {
-            // Efectos de partículas elementales constantes alrededor del Rey Demonio
             double px = this.getX() + (this.random.nextDouble() - 0.5D) * 1.5D;
             double py = this.getY() + this.random.nextDouble() * 2.8D;
             double pz = this.getZ() + (this.random.nextDouble() - 0.5D) * 1.5D;
@@ -102,12 +101,10 @@ public class ElementalDemonKingBossEntity extends Monster {
             return;
         }
 
-        // Ataques mágicos especiales del jefe
         if (this.getTarget() != null && this.getTarget().isAlive()) {
             double distSq = this.distanceToSqr(this.getTarget());
             float hpPct = this.getHealth() / this.getMaxHealth();
 
-            // 1. Ráfaga de Vendaval (Viento): Empuja a todos los jugadores cercanos
             if (this.windGaleCooldown > 0) {
                 this.windGaleCooldown--;
             } else if (distSq <= 200.0D) {
@@ -126,7 +123,6 @@ public class ElementalDemonKingBossEntity extends Monster {
                 }
             }
 
-            // 2. Rayo de Tormenta Primordial (Rayo)
             if (this.stormLightningCooldown > 0) {
                 this.stormLightningCooldown--;
             } else if (distSq <= 250.0D) {
@@ -138,7 +134,6 @@ public class ElementalDemonKingBossEntity extends Monster {
                 this.getTarget().hurt(this.damageSources().magic(), 18.0F);
             }
 
-            // 3. Erupción de Geiseres de Magma (Fase 2 y 3)
             if (hpPct <= 0.55F) {
                 if (this.magmaGeyserCooldown > 0) {
                     this.magmaGeyserCooldown--;
@@ -157,7 +152,6 @@ public class ElementalDemonKingBossEntity extends Monster {
                 }
             }
 
-            // 4. Muro de Hielo Glacial (Fase 2 y 3)
             if (hpPct <= 0.55F) {
                 if (this.frostShieldCooldown > 0) {
                     this.frostShieldCooldown--;
@@ -181,12 +175,11 @@ public class ElementalDemonKingBossEntity extends Monster {
         if (source.is(DamageTypeTags.IS_FIRE)) {
             return false;
         }
-        // En fase 2 y 3 tiene reducción pasiva de daño por escudo de los elementos
         float hpPct = this.getHealth() / this.getMaxHealth();
         if (hpPct <= 0.5F && hpPct > 0.2F) {
-            amount *= 0.8F; // 20% resistencia
+            amount *= 0.8F;
         } else if (hpPct <= 0.2F) {
-            amount *= 0.65F; // 35% resistencia en fase furia
+            amount *= 0.65F;
         }
         return super.hurt(source, amount);
     }
@@ -200,7 +193,6 @@ public class ElementalDemonKingBossEntity extends Monster {
             sl.sendParticles(ParticleTypes.EXPLOSION_EMITTER, this.getX(), this.getY() + 1.5D, this.getZ(), 3, 0.5D, 0.5D, 0.5D, 0.0D);
         }
 
-        // Drops supremos de Endgame
         if (SystemItems.ELEMENTAL_DEMON_CROWN.isBound()) {
             this.spawnAtLocation(new ItemStack(SystemItems.ELEMENTAL_DEMON_CROWN.get()));
         }

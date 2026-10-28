@@ -23,7 +23,6 @@ public final class TrilunarSanctuaryManager {
         int radius = 8;
         int baseY = center.getY();
 
-        // 1. Limpieza de aire sobre el santuario
         for (int x = -radius - 1; x <= radius + 1; x++) {
             for (int z = -radius - 1; z <= radius + 1; z++) {
                 for (int y = 1; y <= 6; y++) {
@@ -32,13 +31,11 @@ public final class TrilunarSanctuaryManager {
             }
         }
 
-        // 2. Plataforma circular sagrada
         for (int x = -radius; x <= radius; x++) {
             for (int z = -radius; z <= radius; z++) {
                 double dist = Math.sqrt(x * x + z * z);
                 if (dist <= radius) {
                     BlockPos p = center.offset(x, 0, z);
-                    // Borde o centro
                     if (dist > radius - 1.2) {
                         level.setBlock(p, Blocks.CHISELED_QUARTZ_BLOCK.defaultBlockState(), 3);
                     } else if (dist <= 2.2) {
@@ -48,26 +45,19 @@ public final class TrilunarSanctuaryManager {
                     } else {
                         level.setBlock(p, Blocks.SMOOTH_QUARTZ.defaultBlockState(), 3);
                     }
-                    // Base sólida inferior
                     level.setBlock(p.below(), Blocks.DEEPSLATE_BRICKS.defaultBlockState(), 3);
                 }
             }
         }
 
-        // 3. Tres Pilares Celestiales a 120 grados
-        // Pilar 1: Aria (Norte: Z = -5)
         buildPillar(level, center.offset(0, 0, -5), Blocks.SMOOTH_QUARTZ, Blocks.SEA_LANTERN, "Aria");
-        // Pilar 2: Sonnet (Sureste: X = 4, Z = 3)
         buildPillar(level, center.offset(4, 0, 3), Blocks.CALCITE, Blocks.GLOWSTONE, "Sonnet");
-        // Pilar 3: Canon (Suroeste: X = -4, Z = 3)
         buildPillar(level, center.offset(-4, 0, 3), Blocks.DARK_PRISMARINE, Blocks.AMETHYST_BLOCK, "Canon");
 
-        // 4. Pedestal y Altar Central Trilunar
         BlockPos altarPos = center.above();
         level.setBlock(center, Blocks.CHISELED_QUARTZ_BLOCK.defaultBlockState(), 3);
         level.setBlock(altarPos, SystemBlocks.TRILUNAR_ALTAR.get().defaultBlockState(), 3);
 
-        // 5. Partículas y sonido de consagración
         level.sendParticles(ParticleTypes.END_ROD, center.getX() + 0.5D, center.getY() + 2.0D, center.getZ() + 0.5D, 60, 2.0D, 1.0D, 2.0D, 0.08D);
         level.playSound(null, center, SoundEvents.BEACON_ACTIVATE, SoundSource.BLOCKS, 1.5F, 1.2F);
     }

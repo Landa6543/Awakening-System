@@ -30,7 +30,7 @@ public class PyroHypostasisBossEntity extends HypostasisBaseBossEntity {
 
     @Override
     protected Component getBossTitle() {
-        return Component.literal("§c✦ Ayin — Hipóstasis Pyro ✦");
+        return Component.translatable("boss.awakening_system.hypostasis.pyro");
     }
 
     @Override
@@ -45,7 +45,7 @@ public class PyroHypostasisBossEntity extends HypostasisBaseBossEntity {
 
     @Override
     public int getElementalColorHex() {
-        return 0xFF4400; // Carmesí Ígneo Pyro
+        return 0xFF4400;
     }
 
     @Override
@@ -121,7 +121,7 @@ public class PyroHypostasisBossEntity extends HypostasisBaseBossEntity {
     protected void spawnRevivalObjects(ServerLevel sl) {
         sl.playSound(null, this.getX(), this.getY(), this.getZ(), SoundEvents.BLAZE_DEATH, SoundSource.HOSTILE, 2.0F, 0.8F);
         for (ServerPlayer player : sl.getPlayers(p -> p.distanceToSqr(this) < 1600.0D)) {
-            player.displayClientMessage(Component.literal("§c§l✦ [AYIN EN CRISIS] §f¡Aplica ataques de Hydro para extinguir las ascuas ígneas antes de que se reavive!"), true);
+            player.displayClientMessage(Component.translatable("boss.awakening_system.pyro_hypostasis.crisis"), true);
         }
     }
 
@@ -143,12 +143,12 @@ public class PyroHypostasisBossEntity extends HypostasisBaseBossEntity {
                     data.addMora(60000);
                     data.addPrimogems(30);
                     com.soybe.awakeningsystem.AwakeningSystemMod.sync(sp);
-                    sp.displayClientMessage(Component.literal("§c§l✦ ¡HIPÓSTASIS PYRO DERROTADO! §eHas ganado §6+60,000 Mora §ey §b+30 Protogemas§e."), false);
+                    sp.displayClientMessage(Component.translatable("boss.awakening_system.pyro_hypostasis.defeated_teyvat"), false);
                 } else {
                     if (SystemItems.AWAKENING_COIN.isBound()) {
                         sp.addItem(new ItemStack(SystemItems.AWAKENING_COIN.get(), 24));
                     }
-                    sp.displayClientMessage(Component.literal("§c§l✦ ¡HIPÓSTASIS PYRO DERROTADO! §6+24 Monedas de Despertar§e."), false);
+                    sp.displayClientMessage(Component.translatable("boss.awakening_system.pyro_hypostasis.defeated_vanilla"), false);
                 }
             }
         }

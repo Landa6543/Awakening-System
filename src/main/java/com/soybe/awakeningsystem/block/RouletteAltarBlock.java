@@ -130,7 +130,6 @@ public class RouletteAltarBlock extends BaseEntityBlock {
             return ItemInteractionResult.sidedSuccess(level.isClientSide());
         }
 
-        // Si el jugador hace clic con cualquier otro ítem que no sea la Tirada de Ruleta del Sistema
         if (!level.isClientSide() && player instanceof ServerPlayer sp) {
             level.playSound(null, pos, SoundEvents.SHIELD_BLOCK, SoundSource.BLOCKS, 0.9F, 1.2F);
             level.playSound(null, pos, SoundEvents.AMETHYST_BLOCK_HIT, SoundSource.BLOCKS, 1.0F, 0.65F);
@@ -153,7 +152,6 @@ public class RouletteAltarBlock extends BaseEntityBlock {
             return InteractionResult.sidedSuccess(level.isClientSide());
         }
 
-        // Clic derecho con mano vacía rechazado
         if (!level.isClientSide() && player instanceof ServerPlayer sp) {
             level.playSound(null, pos, SoundEvents.SHIELD_BLOCK, SoundSource.BLOCKS, 0.9F, 1.2F);
             level.playSound(null, pos, SoundEvents.AMETHYST_BLOCK_HIT, SoundSource.BLOCKS, 1.0F, 0.65F);

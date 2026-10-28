@@ -99,7 +99,6 @@ public class DragonNestBlock extends BaseEntityBlock {
                     level.setBlock(pos, state.setValue(EGGS, be.getEggCount()), 3);
                     level.playSound(null, pos, SoundEvents.ITEM_PICKUP, SoundSource.PLAYERS, 1.0F, 0.9F);
 
-                    // ACTIVACIÓN DE LA FURIA DRACÓNICA ESTILO ARK
                     triggerDragonEggTheftAlert(level, pos, player);
                 }
             }
@@ -131,7 +130,6 @@ public class DragonNestBlock extends BaseEntityBlock {
     public static void triggerDragonEggTheftAlert(Level level, BlockPos pos, @Nullable Player thief) {
         if (!(level instanceof ServerLevel sl)) return;
 
-        // Radio de furia dracónica: 96 bloques
         double range = 96.0D;
         AABB searchBox = new AABB(pos).inflate(range, 48.0D, range);
         List<AncientDragonEntity> dragons = level.getEntitiesOfClass(AncientDragonEntity.class, searchBox,

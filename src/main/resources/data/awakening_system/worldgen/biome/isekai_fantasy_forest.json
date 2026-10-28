@@ -100,8 +100,8 @@
       "minecraft:patch_grass_forest",
       "minecraft:flower_cherry",
       "minecraft:trees_cherry",
-      "awakening_system:giant_fantasy_tree",
-      "minecraft:patch_berry_bush"
+      "minecraft:patch_berry_bush",
+      "awakening_system:giant_fantasy_tree"
     ],
     []
   ]

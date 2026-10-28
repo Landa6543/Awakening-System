@@ -53,13 +53,58 @@ public class WornLoreBookItem extends Item {
         return stack;
     }
 
+    public static int getVolume(ItemStack stack) {
+        CustomData cd = stack.get(DataComponents.CUSTOM_DATA);
+        if (cd != null && cd.contains("Volume")) {
+            return cd.copyTag().getInt("Volume");
+        }
+        return 1;
+    }
+
+    @Override
+    public Component getName(ItemStack stack) {
+        if (!stack.has(DataComponents.CUSTOM_NAME)) {
+            int vol = getVolume(stack);
+            return switch (vol) {
+                case 2 -> Component.translatable("item.awakening_system.worn_lore_book.vol2.name");
+                case 3 -> Component.translatable("item.awakening_system.worn_lore_book.vol3.name");
+                default -> Component.translatable("item.awakening_system.worn_lore_book.vol1.name");
+            };
+        }
+        return super.getName(stack);
+    }
+
+    @Override
+    public void appendHoverText(ItemStack stack, TooltipContext context, List<Component> tooltipComponents, net.minecraft.world.item.TooltipFlag tooltipFlag) {
+        if (!stack.has(DataComponents.LORE)) {
+            int vol = getVolume(stack);
+            switch (vol) {
+                case 2 -> {
+                    tooltipComponents.add(Component.translatable("item.awakening_system.worn_lore_book.vol2.lore1"));
+                    tooltipComponents.add(Component.translatable("item.awakening_system.worn_lore_book.vol2.lore2"));
+                }
+                case 3 -> {
+                    tooltipComponents.add(Component.translatable("item.awakening_system.worn_lore_book.vol3.lore1"));
+                    tooltipComponents.add(Component.translatable("item.awakening_system.worn_lore_book.vol3.lore2"));
+                }
+                default -> {
+                    tooltipComponents.add(Component.translatable("item.awakening_system.worn_lore_book.vol1.lore1"));
+                    tooltipComponents.add(Component.translatable("item.awakening_system.worn_lore_book.vol1.lore2"));
+                }
+            }
+        }
+        super.appendHoverText(stack, context, tooltipComponents, tooltipFlag);
+    }
+
     @Override
     public InteractionResultHolder<ItemStack> use(Level level, Player player, InteractionHand hand) {
         ItemStack stack = player.getItemInHand(hand);
-        int vol = 1;
-        CustomData cd = stack.get(DataComponents.CUSTOM_DATA);
-        if (cd != null && cd.contains("Volume")) {
-            vol = cd.copyTag().getInt("Volume");
+        int vol = getVolume(stack);
+
+        if (!stack.has(DataComponents.CUSTOM_DATA)) {
+            net.minecraft.nbt.CompoundTag tag = new net.minecraft.nbt.CompoundTag();
+            tag.putInt("Volume", 1);
+            stack.set(DataComponents.CUSTOM_DATA, CustomData.of(tag));
         }
 
         if (level.isClientSide()) {

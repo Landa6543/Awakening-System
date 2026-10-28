@@ -2,7 +2,6 @@ package com.soybe.awakeningsystem.entity;
 
 import com.soybe.awakeningsystem.block.SubwayDoorBlock;
 import com.soybe.awakeningsystem.block.SubwayRailTrackBlock;
-import com.soybe.awakeningsystem.block.SubwayTrainControllerBlock;
 import com.soybe.awakeningsystem.block.SubwayTrainWheelBlock;
 import com.soybe.awakeningsystem.block.SubwayWideRailTrackBlock;
 import com.soybe.awakeningsystem.block.SystemBlocks;
@@ -45,7 +44,7 @@ public class SubwayTrainCarriageEntity extends Entity {
     private static final EntityDataAccessor<Float> SPEED = SynchedEntityData.defineId(SubwayTrainCarriageEntity.class, EntityDataSerializers.FLOAT);
     private static final EntityDataAccessor<Direction> TRACK_DIR = SynchedEntityData.defineId(SubwayTrainCarriageEntity.class, EntityDataSerializers.DIRECTION);
 
-    private static final float MAX_SPEED = 0.70F; // ~14 m/s (50 km/h)
+    private static final float MAX_SPEED = 0.70F;
     private static final float ACCELERATION = 0.025F;
     private static final float BRAKE_DECEL = 0.055F;
     private static final float FRICTION = 0.012F;
@@ -91,11 +90,9 @@ public class SubwayTrainCarriageEntity extends Entity {
         float currentSpeed = this.entityData.get(SPEED);
         Direction trackFacing = this.entityData.get(TRACK_DIR);
 
-        // Actualizar orientación visual acorde a la vía
         this.setYRot(trackFacing.toYRot());
         this.yRotO = this.getYRot();
 
-        // 1. Detección estricta de vía férrea inferior
         BlockPos currentPos = this.blockPosition();
         BlockPos belowPos = currentPos.below();
         BlockState trackState = level.getBlockState(belowPos);
@@ -108,26 +105,22 @@ public class SubwayTrainCarriageEntity extends Entity {
         LivingEntity driver = this.getControllingPassenger();
 
         if (!onTrack) {
-            // Fuera de vías: frenado inmediato y bloqueo de tracción
             currentSpeed = 0.0F;
             if (driver instanceof Player player && this.tickCount % 40 == 0) {
-                player.displayClientMessage(Component.literal("§c⚠ [FIN DE VÍA / TIERRA] El tren solo puede circular sobre rieles."), true);
+                player.displayClientMessage(Component.translatable("entity.awakening_system.subway.track_end"), true);
             }
         } else if (driver instanceof Player player) {
             float forwardInput = player.zza;
 
             if (forwardInput > 0.0F) {
-                // Acelerar hacia adelante en dirección de la cabina
                 currentSpeed = Math.min(MAX_SPEED, currentSpeed + ACCELERATION);
             } else if (forwardInput < 0.0F) {
-                // Frenar o marcha atrás
                 if (currentSpeed > 0.0F) {
                     currentSpeed = Math.max(0.0F, currentSpeed - BRAKE_DECEL);
                 } else {
                     currentSpeed = Math.max(-MAX_SPEED * 0.4F, currentSpeed - ACCELERATION * 0.5F);
                 }
             } else {
-                // Fricción pasiva de rodadura
                 if (currentSpeed > 0.0F) {
                     currentSpeed = Math.max(0.0F, currentSpeed - FRICTION);
                 } else if (currentSpeed < 0.0F) {
@@ -135,14 +128,12 @@ public class SubwayTrainCarriageEntity extends Entity {
                 }
             }
 
-            // Tocar bocina/campana del metro con clic
             if (player.swinging && this.tickCount % 20 == 0) {
                 level.playSound(null, this.getX(), this.getY(), this.getZ(),
                         SoundEvents.BELL_BLOCK, SoundSource.NEUTRAL, 1.2F, 1.3F);
-                player.displayClientMessage(Component.literal("§6§l✦ [Bocina del Metro de Seúl] ✦"), true);
+                player.displayClientMessage(Component.translatable("entity.awakening_system.subway.horn"), true);
             }
         } else {
-            // Sin conductor: desaceleración gradual
             if (Math.abs(currentSpeed) > 0.01F) {
                 currentSpeed *= 0.90F;
             } else {
@@ -150,7 +141,6 @@ public class SubwayTrainCarriageEntity extends Entity {
             }
         }
 
-        // 2. Comprobar curvas de vía ancha
         if (trackState.getBlock() instanceof SubwayWideRailTrackBlock) {
             SubwayWideRailTrackBlock.WideTrackShape shape = trackState.getValue(SubwayWideRailTrackBlock.SHAPE);
             Direction actualFacing = trackFacing;
@@ -183,12 +173,10 @@ public class SubwayTrainCarriageEntity extends Entity {
             this.entityData.set(SPEED, currentSpeed);
         }
 
-        // 3. Vector de velocidad hacia adelante (stepX, stepZ)
         Vec3 stepVec = new Vec3(trackFacing.getStepX(), 0.0D, trackFacing.getStepZ()).scale(currentSpeed);
         this.setDeltaMovement(stepVec.x, this.onGround() ? 0.0D : -0.08D, stepVec.z);
         this.move(MoverType.SELF, this.getDeltaMovement());
 
-        // Sonido de rodadura por rieles
         if (Math.abs(currentSpeed) > 0.08F && this.tickCount % 12 == 0) {
             level.playSound(null, this.getX(), this.getY(), this.getZ(),
                     SoundEvents.MINECART_RIDING, SoundSource.NEUTRAL, 0.45F, 0.85F + Math.abs(currentSpeed) * 0.4F);
@@ -203,13 +191,13 @@ public class SubwayTrainCarriageEntity extends Entity {
         Vec3 right = new Vec3(dir.getClockWise().getStepX(), 0, dir.getClockWise().getStepZ());
 
         return switch (index) {
-            case 0 -> forward.scale(3.5D).add(0.0D, 0.65D, 0.0D); // Asiento de Cabina del Conductor
-            case 1 -> forward.scale(1.2D).add(right.scale(1.0D)).add(0.0D, 0.50D, 0.0D); // Pasajero lateral der 1
-            case 2 -> forward.scale(1.2D).add(right.scale(-1.0D)).add(0.0D, 0.50D, 0.0D); // Pasajero lateral izq 1
-            case 3 -> forward.scale(-0.8D).add(right.scale(1.0D)).add(0.0D, 0.50D, 0.0D); // Pasajero lateral der 2
-            case 4 -> forward.scale(-0.8D).add(right.scale(-1.0D)).add(0.0D, 0.50D, 0.0D); // Pasajero lateral izq 2
-            case 5 -> forward.scale(-2.8D).add(right.scale(1.0D)).add(0.0D, 0.50D, 0.0D); // Pasajero lateral der 3
-            case 6 -> forward.scale(-2.8D).add(right.scale(-1.0D)).add(0.0D, 0.50D, 0.0D); // Pasajero lateral izq 3
+            case 0 -> forward.scale(3.5D).add(0.0D, 0.65D, 0.0D);
+            case 1 -> forward.scale(1.2D).add(right.scale(1.0D)).add(0.0D, 0.50D, 0.0D);
+            case 2 -> forward.scale(1.2D).add(right.scale(-1.0D)).add(0.0D, 0.50D, 0.0D);
+            case 3 -> forward.scale(-0.8D).add(right.scale(1.0D)).add(0.0D, 0.50D, 0.0D);
+            case 4 -> forward.scale(-0.8D).add(right.scale(-1.0D)).add(0.0D, 0.50D, 0.0D);
+            case 5 -> forward.scale(-2.8D).add(right.scale(1.0D)).add(0.0D, 0.50D, 0.0D);
+            case 6 -> forward.scale(-2.8D).add(right.scale(-1.0D)).add(0.0D, 0.50D, 0.0D);
             default -> new Vec3(0.0D, 0.50D, 0.0D);
         };
     }
@@ -230,13 +218,6 @@ public class SubwayTrainCarriageEntity extends Entity {
 
         this.ejectPassengers();
 
-        // 1. Desplegar la consola de control en la cabina del tren
-        BlockPos cabPos = pos.relative(dir, 3);
-        if (level.getBlockState(cabPos).canBeReplaced()) {
-            level.setBlock(cabPos, SystemBlocks.SUBWAY_TRAIN_CONTROLLER.get().defaultBlockState().setValue(SubwayTrainControllerBlock.FACING, dir), 3);
-        }
-
-        // 2. Desplegar ruedas sobre las vías
         BlockPos frontWheel = pos.relative(dir, 2);
         BlockPos backWheel = pos.relative(dir.getOpposite(), 2);
         if (level.getBlockState(frontWheel).canBeReplaced()) {
@@ -246,7 +227,6 @@ public class SubwayTrainCarriageEntity extends Entity {
             level.setBlock(backWheel, SystemBlocks.SUBWAY_TRAIN_WHEEL.get().defaultBlockState().setValue(SubwayTrainWheelBlock.FACING, dir), 3);
         }
 
-        // 3. Desplegar puertas dobles hacia el andén
         BlockPos doorPos = pos.relative(cross, 1);
         if (level.getBlockState(doorPos).canBeReplaced() && level.getBlockState(doorPos.above()).canBeReplaced()) {
             level.setBlock(doorPos, SystemBlocks.SUBWAY_DOOR.get().defaultBlockState().setValue(SubwayDoorBlock.FACING, cross).setValue(SubwayDoorBlock.HALF, DoubleBlockHalf.LOWER), 3);
@@ -254,7 +234,7 @@ public class SubwayTrainCarriageEntity extends Entity {
         }
 
         level.playSound(null, this.getX(), this.getY(), this.getZ(), SoundEvents.PISTON_CONTRACT, SoundSource.BLOCKS, 1.0F, 0.9F);
-        player.displayClientMessage(Component.literal("§6§l✦ [TREN ESTACIONADO EN EL ANDÉN] ✦\n§aLa estructura se ha fijado como bloques sólidos en la estación."), false);
+        player.displayClientMessage(Component.translatable("entity.awakening_system.subway.parked"), false);
 
         this.discard();
     }
@@ -264,7 +244,6 @@ public class SubwayTrainCarriageEntity extends Entity {
         Level level = this.level();
         float currentSpeed = this.entityData.get(SPEED);
 
-        // Estacionar en el andén con Shift + Clic cuando el tren está detenido
         if (player.isShiftKeyDown() && Math.abs(currentSpeed) < 0.05F) {
             if (!level.isClientSide()) {
                 parkAndDeployToWorld(player);
@@ -276,9 +255,9 @@ public class SubwayTrainCarriageEntity extends Entity {
             if (this.canAddPassenger(player)) {
                 player.startRiding(this);
                 if (this.getPassengers().indexOf(player) == 0) {
-                    player.displayClientMessage(Component.literal("§6§l[CABINA DE CONDUCCIÓN - LÍNEA 3] §a¡Al mando! Usa §fW §apara acelerar y §fS §apara frenar.\n§7Shift + Clic cuando estés detenido para estacionar en el andén."), false);
+                    player.displayClientMessage(Component.translatable("entity.awakening_system.subway.cabin_instructions"), false);
                 } else {
-                    player.displayClientMessage(Component.literal("§b[METRO DE SEÚL - COCHE 3707] §7Has subido como pasajero al vagón."), true);
+                    player.displayClientMessage(Component.translatable("entity.awakening_system.subway.passenger_boarded"), true);
                 }
             }
         }
@@ -291,7 +270,6 @@ public class SubwayTrainCarriageEntity extends Entity {
         if (!this.level().isClientSide() && source.getEntity() instanceof Player player) {
             if (player.isCreative() || player.isShiftKeyDown()) {
                 this.ejectPassengers();
-                this.spawnAtLocation(new ItemStack(SystemBlocks.SUBWAY_TRAIN_CONTROLLER.get()));
                 this.spawnAtLocation(new ItemStack(SystemBlocks.SUBWAY_TRAIN_WHEEL.get(), 2));
                 this.spawnAtLocation(new ItemStack(SystemBlocks.SUBWAY_DOOR.get()));
                 this.spawnAtLocation(new ItemStack(SystemBlocks.SUBWAY_STAINLESS_STEEL.get(), 4));

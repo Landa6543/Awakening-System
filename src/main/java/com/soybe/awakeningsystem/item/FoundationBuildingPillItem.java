@@ -43,7 +43,7 @@ public class FoundationBuildingPillItem extends Item {
                 sp.playNotifySound(SoundEvents.PLAYER_LEVELUP, SoundSource.PLAYERS, 1.0F, 1.4F);
                 sp.displayClientMessage(Component.translatable("awakening_system.cultivation.sublevel_success", data.cultivationSubLevel(), SystemEvents.getDantianRealmComponent(realm)), true);
             } else {
-                sp.displayClientMessage(Component.literal("§a✦ Has refinado la §2Píldora de Construcción de Cimientos §a(+2,500 Qi)."), true);
+                sp.displayClientMessage(Component.translatable("item.awakening_system.foundation_building_pill.refined"), true);
             }
 
             sp.addEffect(new MobEffectInstance(MobEffects.DAMAGE_RESISTANCE, 3600, 0));
@@ -68,12 +68,12 @@ public class FoundationBuildingPillItem extends Item {
 
     @Override
     public void appendHoverText(ItemStack stack, TooltipContext context, List<Component> tooltipComponents, TooltipFlag tooltipFlag) {
-        tooltipComponents.add(Component.literal("§a✦ Píldora de Construcción de Cimientos (Zhuji Dan)").withStyle(ChatFormatting.GREEN, ChatFormatting.BOLD));
-        tooltipComponents.add(Component.literal("§7\"La píldora fundamental indispensable para consolidar el Dantian y los meridianos.\""));
-        tooltipComponents.add(Component.literal(""));
-        tooltipComponents.add(Component.literal("§e✦ Efectos de Refinamiento:").withStyle(ChatFormatting.YELLOW));
-        tooltipComponents.add(Component.literal("  §a✔ +2,500 Puntos de Qi de Cultivo Inmediato"));
-        tooltipComponents.add(Component.literal("  §e✔ Cimientos Sólidos: Absorción y Resistencia por 3 minutos"));
+        tooltipComponents.add(Component.translatable("item.awakening_system.foundation_building_pill.title").withStyle(ChatFormatting.GREEN, ChatFormatting.BOLD));
+        tooltipComponents.add(Component.translatable("item.awakening_system.foundation_building_pill.quote"));
+        tooltipComponents.add(Component.empty());
+        tooltipComponents.add(Component.translatable("item.awakening_system.foundation_building_pill.effects_header").withStyle(ChatFormatting.YELLOW));
+        tooltipComponents.add(Component.translatable("item.awakening_system.foundation_building_pill.effect1"));
+        tooltipComponents.add(Component.translatable("item.awakening_system.foundation_building_pill.effect2"));
         super.appendHoverText(stack, context, tooltipComponents, tooltipFlag);
     }
 }

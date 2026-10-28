@@ -114,7 +114,6 @@ public class GeovishapEntity extends Monster {
                 if (rollCooldown > 0) {
                     rollCooldown--;
                 } else if (this.distanceToSqr(target) > 16.0D && this.distanceToSqr(target) < 256.0D) {
-                    // Carga en bola rodante
                     this.entityData.set(DATA_ROLLING, true);
                     this.rollTicks = 30;
                     this.rollDirection = target.position().subtract(this.position()).normalize().scale(0.85D);

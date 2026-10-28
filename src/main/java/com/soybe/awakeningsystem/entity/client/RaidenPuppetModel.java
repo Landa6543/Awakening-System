@@ -858,11 +858,9 @@ public class RaidenPuppetModel extends EntityModel<RaidenBossEntity> implements 
         this.head.yRot = netHeadYaw * ((float)Math.PI / 180F);
         this.head.xRot = headPitch * ((float)Math.PI / 180F);
 
-        // Elevación y flotación suave del mecha completo (deidad flotante)
         float hoverBob = Mth.sin(ageInTicks * 0.08F) * 2.0F;
         this.bone60.y = 12.0F + hoverBob;
 
-        // Postura aérea ceremonial de las piernas (sin trote terrestre de zombi)
         this.legRight.xRot = 0.25F + Mth.sin(ageInTicks * 0.06F) * 0.04F;
         this.legRight.yRot = -0.05F;
         this.legRight.zRot = 0.08F;
@@ -871,7 +869,6 @@ public class RaidenPuppetModel extends EntityModel<RaidenBossEntity> implements 
         this.legLeft.yRot = 0.05F;
         this.legLeft.zRot = -0.08F;
 
-        // Manos mecánicas gigantes flotando y rotando alrededor del mecha
         if (this.puppetStuff != null) {
             float floatWave = Mth.sin(ageInTicks * 0.1F);
             this.puppetStuff.y = floatWave * 4.0F;
@@ -896,7 +893,6 @@ public class RaidenPuppetModel extends EntityModel<RaidenBossEntity> implements 
 
     @Override
     public void translateToHand(HumanoidArm arm, PoseStack poseStack) {
-        // En Fase 2 (Marioneta del Juicio), no se renderizan ítems de mano para evitar espadas flotantes
         poseStack.scale(0.0F, 0.0F, 0.0F);
     }
 }

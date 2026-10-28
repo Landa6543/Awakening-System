@@ -26,6 +26,8 @@ import net.minecraft.world.level.block.FenceBlock;
 import net.minecraft.world.level.block.FenceGateBlock;
 import net.minecraft.world.level.block.DoorBlock;
 import net.minecraft.world.level.block.TrapDoorBlock;
+import net.minecraft.world.level.block.ButtonBlock;
+import net.minecraft.world.level.block.PressurePlateBlock;
 import net.minecraft.world.level.block.state.properties.WoodType;
 import net.minecraft.world.level.block.state.properties.BlockSetType;
 import net.neoforged.neoforge.registries.DeferredHolder;
@@ -91,6 +93,16 @@ public final class SystemBlocks {
             )
     );
 
+    public static final DeferredHolder<Block, TowerMissionBoardBlock> TOWER_MISSION_BOARD = BLOCKS.register(
+            "tower_mission_board", () -> new TowerMissionBoardBlock(
+                    BlockBehaviour.Properties.of()
+                            .mapColor(MapColor.WOOD)
+                            .strength(2.5F, 4.0F)
+                            .sound(SoundType.WOOD)
+                            .noOcclusion()
+            )
+    );
+
     public static final DeferredHolder<Block, TavernChairBlock> TAVERN_CHAIR = BLOCKS.register(
             "tavern_chair", () -> new TavernChairBlock(
                     BlockBehaviour.Properties.of()
@@ -110,7 +122,6 @@ public final class SystemBlocks {
                             .noOcclusion()
             )
     );
-
 
     public static final DeferredHolder<Block, MurimAlchemyCauldronBlock> MURIM_ALCHEMY_CAULDRON = BLOCKS.register(
             "murim_alchemy_cauldron", () -> new MurimAlchemyCauldronBlock(
@@ -195,16 +206,6 @@ public final class SystemBlocks {
             )
     );
 
-    public static final DeferredHolder<Block, SubwayTrainControllerBlock> SUBWAY_TRAIN_CONTROLLER = BLOCKS.register(
-            "subway_train_controller", () -> new SubwayTrainControllerBlock(
-                    BlockBehaviour.Properties.of()
-                            .mapColor(MapColor.COLOR_BLACK)
-                            .strength(4.0F, 8.0F)
-                            .sound(SoundType.NETHERITE_BLOCK)
-                            .noOcclusion()
-            )
-    );
-
     public static final DeferredHolder<Block, Block> SUBWAY_STAINLESS_STEEL = BLOCKS.register(
             "subway_stainless_steel", () -> new Block(
                     BlockBehaviour.Properties.of()
@@ -251,17 +252,6 @@ public final class SystemBlocks {
                             .mapColor(MapColor.WOOD)
                             .strength(2.5F, 3.0F)
                             .sound(SoundType.WOOD)
-                            .noOcclusion()
-            )
-    );
-
-    public static final DeferredHolder<Block, DimensionalRiftStandBlock> DIMENSIONAL_RIFT_STAND = BLOCKS.register(
-            "dimensional_rift_stand", () -> new DimensionalRiftStandBlock(
-                    BlockBehaviour.Properties.of()
-                            .mapColor(MapColor.COLOR_PURPLE)
-                            .strength(2.0F, 3.0F)
-                            .sound(SoundType.AMETHYST)
-                            .lightLevel(state -> 10)
                             .noOcclusion()
             )
     );
@@ -328,6 +318,27 @@ public final class SystemBlocks {
                             .sound(SoundType.GLASS)
                             .lightLevel(state -> 15)
                             .noOcclusion()
+                            .pushReaction(net.minecraft.world.level.material.PushReaction.BLOCK)
+            )
+    );
+
+    public static final DeferredHolder<Block, Block> ANCIENT_BROWN_ROCK = BLOCKS.register(
+            "ancient_brown_rock", () -> new Block(
+                    BlockBehaviour.Properties.of()
+                            .mapColor(MapColor.COLOR_BROWN)
+                            .strength(3.0F, 6.0F)
+                            .sound(SoundType.STONE)
+                            .requiresCorrectToolForDrops()
+            )
+    );
+
+    public static final DeferredHolder<Block, LimboVictorianLamppostBlock> LIMBO_VICTORIAN_LAMPPOST = BLOCKS.register(
+            "limbo_victorian_lamppost", () -> new LimboVictorianLamppostBlock(
+                    BlockBehaviour.Properties.of()
+                            .mapColor(MapColor.COLOR_BLACK)
+                            .strength(3.5F, 6.0F)
+                            .sound(SoundType.LANTERN)
+                            .noOcclusion()
             )
     );
 
@@ -364,12 +375,11 @@ public final class SystemBlocks {
             )
     );
 
-    // --- MINERALES Y BLOQUES METÁLICOS POST-NETHERITE ---
     public static final DeferredHolder<Block, Block> ABYSSAL_STONE = BLOCKS.register(
             "abyssal_stone", () -> new Block(
                     BlockBehaviour.Properties.of()
                             .mapColor(MapColor.COLOR_BLACK)
-                            .strength(4.5F, 10.0F)
+                            .strength(4.0F, 8.0F)
                             .sound(SoundType.DEEPSLATE)
                             .requiresCorrectToolForDrops()
             )
@@ -390,8 +400,8 @@ public final class SystemBlocks {
             "abyssal_ore", () -> new Block(
                     BlockBehaviour.Properties.of()
                             .mapColor(MapColor.COLOR_BLACK)
-                            .strength(30.0F, 1200.0F)
-                            .sound(SoundType.ANCIENT_DEBRIS)
+                            .strength(4.5F, 9.0F)
+                            .sound(SoundType.DEEPSLATE)
                             .requiresCorrectToolForDrops()
             )
     );
@@ -400,9 +410,117 @@ public final class SystemBlocks {
             "deepslate_abyssal_ore", () -> new Block(
                     BlockBehaviour.Properties.of()
                             .mapColor(MapColor.DEEPSLATE)
-                            .strength(32.0F, 1200.0F)
+                            .strength(6.0F, 12.0F)
                             .sound(SoundType.DEEPSLATE)
                             .requiresCorrectToolForDrops()
+            )
+    );
+
+    public static final DeferredHolder<Block, Block> ABYSSAL_STONE_ABYSSAL_ORE = BLOCKS.register(
+            "abyssal_stone_abyssal_ore", () -> new Block(
+                    BlockBehaviour.Properties.of()
+                            .mapColor(MapColor.COLOR_BLACK)
+                            .strength(5.0F, 10.0F)
+                            .sound(SoundType.DEEPSLATE)
+                            .requiresCorrectToolForDrops()
+            )
+    );
+
+    public static final DeferredHolder<Block, DropExperienceBlock> ABYSSAL_STONE_DIAMOND_ORE = BLOCKS.register(
+            "abyssal_stone_diamond_ore", () -> new DropExperienceBlock(
+                    UniformInt.of(3, 7),
+                    BlockBehaviour.Properties.of()
+                            .mapColor(MapColor.COLOR_BLACK)
+                            .strength(4.5F, 3.0F)
+                            .sound(SoundType.DEEPSLATE)
+                            .requiresCorrectToolForDrops()
+            )
+    );
+
+    public static final DeferredHolder<Block, Block> ABYSSAL_STONE_IRON_ORE = BLOCKS.register(
+            "abyssal_stone_iron_ore", () -> new Block(
+                    BlockBehaviour.Properties.of()
+                            .mapColor(MapColor.COLOR_BLACK)
+                            .strength(4.5F, 3.0F)
+                            .sound(SoundType.DEEPSLATE)
+                            .requiresCorrectToolForDrops()
+            )
+    );
+
+    public static final DeferredHolder<Block, Block> ABYSSAL_STONE_GOLD_ORE = BLOCKS.register(
+            "abyssal_stone_gold_ore", () -> new Block(
+                    BlockBehaviour.Properties.of()
+                            .mapColor(MapColor.COLOR_BLACK)
+                            .strength(4.5F, 3.0F)
+                            .sound(SoundType.DEEPSLATE)
+                            .requiresCorrectToolForDrops()
+            )
+    );
+
+    public static final DeferredHolder<Block, net.minecraft.world.level.block.RedStoneOreBlock> ABYSSAL_STONE_REDSTONE_ORE = BLOCKS.register(
+            "abyssal_stone_redstone_ore", () -> new net.minecraft.world.level.block.RedStoneOreBlock(
+                    BlockBehaviour.Properties.of()
+                            .mapColor(MapColor.COLOR_BLACK)
+                            .requiresCorrectToolForDrops()
+                            .randomTicks()
+                            .lightLevel(state -> state.getValue(net.minecraft.world.level.block.RedStoneOreBlock.LIT) ? 9 : 0)
+                            .strength(4.5F, 3.0F)
+                            .sound(SoundType.DEEPSLATE)
+            )
+    );
+
+    public static final DeferredHolder<Block, DropExperienceBlock> ABYSSAL_STONE_LAPIS_ORE = BLOCKS.register(
+            "abyssal_stone_lapis_ore", () -> new DropExperienceBlock(
+                    UniformInt.of(2, 5),
+                    BlockBehaviour.Properties.of()
+                            .mapColor(MapColor.COLOR_BLACK)
+                            .strength(4.5F, 3.0F)
+                            .sound(SoundType.DEEPSLATE)
+                            .requiresCorrectToolForDrops()
+            )
+    );
+
+    public static final DeferredHolder<Block, Block> ABYSSAL_STONE_COPPER_ORE = BLOCKS.register(
+            "abyssal_stone_copper_ore", () -> new Block(
+                    BlockBehaviour.Properties.of()
+                            .mapColor(MapColor.COLOR_BLACK)
+                            .strength(4.5F, 3.0F)
+                            .sound(SoundType.DEEPSLATE)
+                            .requiresCorrectToolForDrops()
+            )
+    );
+
+    public static final DeferredHolder<Block, DropExperienceBlock> ABYSSAL_STONE_COAL_ORE = BLOCKS.register(
+            "abyssal_stone_coal_ore", () -> new DropExperienceBlock(
+                    UniformInt.of(0, 2),
+                    BlockBehaviour.Properties.of()
+                            .mapColor(MapColor.COLOR_BLACK)
+                            .strength(4.5F, 3.0F)
+                            .sound(SoundType.DEEPSLATE)
+                            .requiresCorrectToolForDrops()
+            )
+    );
+
+    public static final DeferredHolder<Block, AbyssalGrowthBlock> ABYSSAL_GROWTH = BLOCKS.register(
+            "abyssal_growth", () -> new AbyssalGrowthBlock(
+                    BlockBehaviour.Properties.of()
+                            .mapColor(MapColor.COLOR_PURPLE)
+                            .strength(1.5F, 3.0F)
+                            .sound(SoundType.SOUL_SOIL)
+                            .lightLevel(s -> 4)
+                            .requiresCorrectToolForDrops()
+            )
+    );
+
+    public static final DeferredHolder<Block, AbyssalTendrilsBlock> ABYSSAL_TENDRILS = BLOCKS.register(
+            "abyssal_tendrils", () -> new AbyssalTendrilsBlock(
+                    BlockBehaviour.Properties.of()
+                            .mapColor(MapColor.COLOR_PURPLE)
+                            .noCollission()
+                            .strength(0.3F)
+                            .sound(SoundType.GLOW_LICHEN)
+                            .lightLevel(s -> 3)
+                            .noOcclusion()
             )
     );
 
@@ -410,7 +528,7 @@ public final class SystemBlocks {
             "abyssal_block", () -> new Block(
                     BlockBehaviour.Properties.of()
                             .mapColor(MapColor.COLOR_BLACK)
-                            .strength(50.0F, 1200.0F)
+                            .strength(10.0F, 20.0F)
                             .sound(SoundType.NETHERITE_BLOCK)
                             .requiresCorrectToolForDrops()
             )
@@ -449,9 +567,19 @@ public final class SystemBlocks {
     public static final DeferredHolder<Block, Block> ADAMANTITE_ORE = BLOCKS.register(
             "adamantite_ore", () -> new Block(
                     BlockBehaviour.Properties.of()
-                            .mapColor(MapColor.NETHER)
-                            .strength(7.5F, 16.0F)
-                            .sound(SoundType.NETHER_ORE)
+                            .mapColor(MapColor.STONE)
+                            .strength(4.5F, 9.0F)
+                            .sound(SoundType.STONE)
+                            .requiresCorrectToolForDrops()
+            )
+    );
+
+    public static final DeferredHolder<Block, Block> DEEPSLATE_ADAMANTITE_ORE = BLOCKS.register(
+            "deepslate_adamantite_ore", () -> new Block(
+                    BlockBehaviour.Properties.of()
+                            .mapColor(MapColor.DEEPSLATE)
+                            .strength(6.0F, 12.0F)
+                            .sound(SoundType.DEEPSLATE)
                             .requiresCorrectToolForDrops()
             )
     );
@@ -510,9 +638,107 @@ public final class SystemBlocks {
             )
     );
 
-    // ==========================================
-    // === MINERALES DE TEYVAT (PRIMOGEM & ARCHON ORES) ===
-    // ==========================================
+    public static final DeferredHolder<Block, Block> CELESTIAL_ORE = BLOCKS.register(
+            "celestial_ore", () -> new Block(
+                    BlockBehaviour.Properties.of()
+                            .mapColor(MapColor.COLOR_LIGHT_BLUE)
+                            .strength(12.0F, 35.0F)
+                            .sound(SoundType.AMETHYST)
+                            .lightLevel(s -> 8)
+                            .requiresCorrectToolForDrops()
+            )
+    );
+
+    public static final DeferredHolder<Block, Block> CELESTIAL_BLOCK = BLOCKS.register(
+            "celestial_block", () -> new Block(
+                    BlockBehaviour.Properties.of()
+                            .mapColor(MapColor.COLOR_CYAN)
+                            .strength(14.0F, 45.0F)
+                            .sound(SoundType.NETHERITE_BLOCK)
+                            .lightLevel(s -> 11)
+                            .requiresCorrectToolForDrops()
+            )
+    );
+
+    public static final DeferredHolder<Block, Block> SOUL_ALLOY_ORE = BLOCKS.register(
+            "soul_alloy_ore", () -> new SoulAlloyOreBlock(
+                    UniformInt.of(5, 12),
+                    BlockBehaviour.Properties.of()
+                            .mapColor(MapColor.COLOR_BLACK)
+                            .requiresCorrectToolForDrops()
+                            .strength(10.0F, 1200.0F)
+                            .sound(SoundType.NETHERITE_BLOCK)
+                            .lightLevel(s -> 9)
+            )
+    );
+
+    public static final DeferredHolder<Block, Block> SOUL_ALLOY_BLOCK = BLOCKS.register(
+            "soul_alloy_block", () -> new SoulAlloyBlock(
+                    BlockBehaviour.Properties.of()
+                            .mapColor(MapColor.COLOR_BLACK)
+                            .requiresCorrectToolForDrops()
+                            .strength(12.0F, 1200.0F)
+                            .sound(SoundType.NETHERITE_BLOCK)
+                            .lightLevel(s -> 6)
+            )
+    );
+
+    public static final DeferredHolder<Block, Block> ASTRALITE_ORE = BLOCKS.register(
+            "astralite_ore", () -> new Block(
+                    BlockBehaviour.Properties.of()
+                            .mapColor(MapColor.COLOR_LIGHT_GRAY)
+                            .strength(11.0F, 35.0F)
+                            .sound(SoundType.AMETHYST)
+                            .lightLevel(s -> 10)
+                            .requiresCorrectToolForDrops()
+            )
+    );
+
+    public static final DeferredHolder<Block, Block> ASTRALITE_BLOCK = BLOCKS.register(
+            "astralite_block", () -> new Block(
+                    BlockBehaviour.Properties.of()
+                            .mapColor(MapColor.COLOR_PURPLE)
+                            .strength(14.0F, 50.0F)
+                            .sound(SoundType.NETHERITE_BLOCK)
+                            .lightLevel(s -> 8)
+                            .requiresCorrectToolForDrops()
+            )
+    );
+
+    public static final DeferredHolder<Block, JackPumpkinBlock> JACK_PUMPKIN = BLOCKS.register(
+            "jack_pumpkin", () -> new JackPumpkinBlock(
+                    BlockBehaviour.Properties.of()
+                            .mapColor(MapColor.COLOR_ORANGE)
+                            .strength(1.0F)
+                            .sound(SoundType.WOOD)
+                            .lightLevel(state -> 15)
+                            .noOcclusion()
+            )
+    );
+
+
+    public static final DeferredHolder<Block, Block> PRIMORDIAL_ORE = BLOCKS.register(
+            "primordial_ore", () -> new Block(
+                    BlockBehaviour.Properties.of()
+                            .mapColor(MapColor.COLOR_MAGENTA)
+                            .strength(16.0F, 50.0F)
+                            .sound(SoundType.ANCIENT_DEBRIS)
+                            .lightLevel(s -> 10)
+                            .requiresCorrectToolForDrops()
+            )
+    );
+
+    public static final DeferredHolder<Block, Block> PRIMORDIAL_BLOCK = BLOCKS.register(
+            "primordial_block", () -> new Block(
+                    BlockBehaviour.Properties.of()
+                            .mapColor(MapColor.COLOR_PURPLE)
+                            .strength(20.0F, 60.0F)
+                            .sound(SoundType.NETHERITE_BLOCK)
+                            .lightLevel(s -> 14)
+                            .requiresCorrectToolForDrops()
+            )
+    );
+
     public static final DeferredHolder<Block, Block> PRIMOGEM_ORE = BLOCKS.register(
             "primogem_ore", () -> new DropExperienceBlock(
                     UniformInt.of(3, 7),
@@ -631,7 +857,6 @@ public final class SystemBlocks {
             )
     );
 
-    // --- HORNOS AVANZADOS (ADDON IRON FURNACES / STANDALONE) ---
     public static final DeferredHolder<Block, com.soybe.awakeningsystem.furnace.CustomTierFurnaceBlock> ABYSSAL_FURNACE = BLOCKS.register(
             "abyssal_furnace", () -> new com.soybe.awakeningsystem.furnace.CustomTierFurnaceBlock(
                     BlockBehaviour.Properties.of()
@@ -641,6 +866,30 @@ public final class SystemBlocks {
                             .lightLevel(state -> state.getValue(com.soybe.awakeningsystem.furnace.CustomTierFurnaceBlock.LIT) ? 13 : 0)
                             .requiresCorrectToolForDrops(),
                     com.soybe.awakeningsystem.furnace.FurnaceTier.ABYSSAL
+            )
+    );
+
+    public static final DeferredHolder<Block, com.soybe.awakeningsystem.furnace.CustomTierFurnaceBlock> SOUL_ALLOY_FURNACE = BLOCKS.register(
+            "soul_alloy_furnace", () -> new com.soybe.awakeningsystem.furnace.CustomTierFurnaceBlock(
+                    BlockBehaviour.Properties.of()
+                            .mapColor(MapColor.COLOR_CYAN)
+                            .strength(5.8F, 11.0F)
+                            .sound(SoundType.NETHERITE_BLOCK)
+                            .lightLevel(state -> state.getValue(com.soybe.awakeningsystem.furnace.CustomTierFurnaceBlock.LIT) ? 14 : 0)
+                            .requiresCorrectToolForDrops(),
+                    com.soybe.awakeningsystem.furnace.FurnaceTier.SOUL_ALLOY
+            )
+    );
+
+    public static final DeferredHolder<Block, com.soybe.awakeningsystem.furnace.CustomTierFurnaceBlock> ASTRALITE_FURNACE = BLOCKS.register(
+            "astralite_furnace", () -> new com.soybe.awakeningsystem.furnace.CustomTierFurnaceBlock(
+                    BlockBehaviour.Properties.of()
+                            .mapColor(MapColor.COLOR_MAGENTA)
+                            .strength(6.0F, 12.0F)
+                            .sound(SoundType.NETHERITE_BLOCK)
+                            .lightLevel(state -> state.getValue(com.soybe.awakeningsystem.furnace.CustomTierFurnaceBlock.LIT) ? 14 : 0)
+                            .requiresCorrectToolForDrops(),
+                    com.soybe.awakeningsystem.furnace.FurnaceTier.ASTRALITE
             )
     );
 
@@ -689,6 +938,30 @@ public final class SystemBlocks {
                             .lightLevel(state -> state.getValue(com.soybe.awakeningsystem.furnace.CustomTierFurnaceBlock.LIT) ? 15 : 0)
                             .requiresCorrectToolForDrops(),
                     com.soybe.awakeningsystem.furnace.FurnaceTier.ASTRAL
+            )
+    );
+
+    public static final DeferredHolder<Block, com.soybe.awakeningsystem.furnace.CustomTierFurnaceBlock> CELESTIAL_FURNACE = BLOCKS.register(
+            "celestial_furnace", () -> new com.soybe.awakeningsystem.furnace.CustomTierFurnaceBlock(
+                    BlockBehaviour.Properties.of()
+                            .mapColor(MapColor.DIAMOND)
+                            .strength(15.0F, 45.0F)
+                            .sound(SoundType.AMETHYST)
+                            .lightLevel(state -> state.getValue(com.soybe.awakeningsystem.furnace.CustomTierFurnaceBlock.LIT) ? 15 : 0)
+                            .requiresCorrectToolForDrops(),
+                    com.soybe.awakeningsystem.furnace.FurnaceTier.CELESTIAL
+            )
+    );
+
+    public static final DeferredHolder<Block, com.soybe.awakeningsystem.furnace.CustomTierFurnaceBlock> PRIMORDIAL_FURNACE = BLOCKS.register(
+            "primordial_furnace", () -> new com.soybe.awakeningsystem.furnace.CustomTierFurnaceBlock(
+                    BlockBehaviour.Properties.of()
+                            .mapColor(MapColor.COLOR_PURPLE)
+                            .strength(20.0F, 60.0F)
+                            .sound(SoundType.NETHERITE_BLOCK)
+                            .lightLevel(state -> state.getValue(com.soybe.awakeningsystem.furnace.CustomTierFurnaceBlock.LIT) ? 15 : 0)
+                            .requiresCorrectToolForDrops(),
+                    com.soybe.awakeningsystem.furnace.FurnaceTier.PRIMORDIAL
             )
     );
 
@@ -788,11 +1061,339 @@ public final class SystemBlocks {
 
     public static final DeferredHolder<Block, SlotMachineBlock> SLOT_MACHINE = BLOCKS.register(
             "slot_machine", () -> new SlotMachineBlock(
+                    false,
                     BlockBehaviour.Properties.of()
                             .mapColor(MapColor.GOLD)
-                            .strength(3.0F, 1200.0F)
+                            .strength(50.0F, 3600000.0F)
                             .sound(SoundType.METAL)
                             .lightLevel(state -> 14)
+                            .noOcclusion()
+            )
+    );
+
+    public static final DeferredHolder<Block, SlotMachineBlock> ILLEGAL_SLOT_MACHINE = BLOCKS.register(
+            "illegal_slot_machine", () -> new SlotMachineBlock(
+                    true,
+                    BlockBehaviour.Properties.of()
+                            .mapColor(MapColor.COLOR_BLACK)
+                            .strength(-1.0F, 3600000.0F)
+                            .sound(SoundType.NETHERITE_BLOCK)
+                            .lightLevel(state -> 14)
+                            .noOcclusion()
+            )
+    );
+
+    public static final DeferredHolder<Block, CasinoCashierBlock> CASINO_CASHIER = BLOCKS.register(
+            "casino_cashier", () -> new CasinoCashierBlock(
+                    BlockBehaviour.Properties.of()
+                            .mapColor(MapColor.COLOR_RED)
+                            .strength(-1.0F, 3600000.0F)
+                            .sound(SoundType.WOOD)
+                            .noOcclusion()
+            )
+    );
+
+    public static final DeferredHolder<Block, CasinoChairBlock> CASINO_CHAIR = BLOCKS.register(
+            "casino_chair", () -> new CasinoChairBlock(
+                    BlockBehaviour.Properties.of()
+                            .mapColor(MapColor.COLOR_RED)
+                            .strength(-1.0F, 3600000.0F)
+                            .sound(SoundType.WOOL)
+                            .noOcclusion()
+            )
+    );
+
+    public static final DeferredHolder<Block, CasinoChairBlock> CLANDESTINE_CHAIR = BLOCKS.register(
+            "clandestine_chair", () -> new CasinoChairBlock(
+                    BlockBehaviour.Properties.of()
+                            .mapColor(MapColor.COLOR_BLACK)
+                            .strength(-1.0F, 3600000.0F)
+                            .sound(SoundType.NETHERITE_BLOCK)
+                            .noOcclusion()
+            )
+    );
+
+    public static final DeferredHolder<Block, CasinoBarStoolBlock> CASINO_BAR_STOOL = BLOCKS.register(
+            "casino_bar_stool", () -> new CasinoBarStoolBlock(
+                    BlockBehaviour.Properties.of()
+                            .mapColor(MapColor.COLOR_RED)
+                            .strength(-1.0F, 3600000.0F)
+                            .sound(SoundType.NETHER_WOOD)
+                            .noOcclusion()
+            )
+    );
+
+    public static final DeferredHolder<Block, CasinoVipBarrierBlock> CASINO_VIP_BARRIER = BLOCKS.register(
+            "casino_vip_barrier", () -> new CasinoVipBarrierBlock(
+                    BlockBehaviour.Properties.of()
+                            .mapColor(MapColor.GOLD)
+                            .strength(50.0F, 3600000.0F)
+                            .sound(SoundType.NETHER_WOOD)
+                            .noOcclusion()
+            )
+    );
+
+    public static final DeferredHolder<Block, CasinoVipGateBlock> CASINO_VIP_GATE = BLOCKS.register(
+            "casino_vip_gate", () -> new CasinoVipGateBlock(
+                    BlockBehaviour.Properties.of()
+                            .mapColor(MapColor.GOLD)
+                            .strength(50.0F, 3600000.0F)
+                            .sound(SoundType.NETHER_WOOD)
+                            .noOcclusion()
+            )
+    );
+
+    public static final DeferredHolder<Block, CasinoReceptionGateBlock> CASINO_RECEPTION_GATE = BLOCKS.register(
+            "casino_reception_gate", () -> new CasinoReceptionGateBlock(
+                    BlockBehaviour.Properties.of()
+                            .mapColor(MapColor.COLOR_BROWN)
+                            .strength(-1.0F, 3600000.0F)
+                            .sound(SoundType.WOOD)
+                            .noOcclusion()
+            )
+    );
+
+    public static final DeferredHolder<Block, CasinoWallDisplayStandBlock> CASINO_WALL_DISPLAY_STAND = BLOCKS.register(
+            "casino_wall_display_stand", () -> new CasinoWallDisplayStandBlock(
+                    BlockBehaviour.Properties.of()
+                            .mapColor(MapColor.GOLD)
+                            .strength(50.0F, 3600000.0F)
+                            .sound(SoundType.WOOD)
+                            .noOcclusion()
+            )
+    );
+
+    public static final DeferredHolder<Block, ClandestineCashierBlock> CLANDESTINE_CASHIER = BLOCKS.register(
+            "clandestine_cashier", () -> new ClandestineCashierBlock(
+                    BlockBehaviour.Properties.of()
+                            .mapColor(MapColor.COLOR_PURPLE)
+                            .strength(-1.0F, 3600000.0F)
+                            .sound(SoundType.NETHER_WOOD)
+                            .noOcclusion()
+            )
+    );
+
+    public static final DeferredHolder<Block, BlackjackTableBlock> BLACKJACK_TABLE = BLOCKS.register(
+            "blackjack_table", () -> new BlackjackTableBlock(
+                    BlockBehaviour.Properties.of()
+                            .mapColor(MapColor.COLOR_GREEN)
+                            .strength(-1.0F, 3600000.0F)
+                            .sound(SoundType.WOOD)
+                            .noOcclusion()
+            )
+    );
+
+    public static final DeferredHolder<Block, IllegalBlackjackTableBlock> ILLEGAL_BLACKJACK_TABLE = BLOCKS.register(
+            "illegal_blackjack_table", () -> new IllegalBlackjackTableBlock(
+                    BlockBehaviour.Properties.of()
+                            .mapColor(MapColor.COLOR_PURPLE)
+                            .strength(-1.0F, 3600000.0F)
+                            .sound(SoundType.WOOD)
+                            .noOcclusion()
+            )
+    );
+
+    public static final DeferredHolder<Block, RouletteTableBlock> ROULETTE_TABLE = BLOCKS.register(
+            "roulette_table", () -> new RouletteTableBlock(
+                    BlockBehaviour.Properties.of()
+                            .mapColor(MapColor.COLOR_GREEN)
+                            .strength(-1.0F, 3600000.0F)
+                            .sound(SoundType.WOOD)
+                            .noOcclusion()
+            )
+    );
+
+    public static final DeferredHolder<Block, IllegalRouletteTableBlock> ILLEGAL_ROULETTE_TABLE = BLOCKS.register(
+            "illegal_roulette_table", () -> new IllegalRouletteTableBlock(
+                    BlockBehaviour.Properties.of()
+                            .mapColor(MapColor.COLOR_PURPLE)
+                            .strength(-1.0F, 3600000.0F)
+                            .sound(SoundType.WOOD)
+                            .noOcclusion()
+            )
+    );
+
+    public static final DeferredHolder<Block, VipBlackjackTableBlock> VIP_BLACKJACK_TABLE = BLOCKS.register(
+            "vip_blackjack_table", () -> new VipBlackjackTableBlock(
+                    BlockBehaviour.Properties.of()
+                            .mapColor(MapColor.GOLD)
+                            .strength(50.0F, 3600000.0F)
+                            .sound(SoundType.WOOD)
+                            .noOcclusion()
+            )
+    );
+
+    public static final DeferredHolder<Block, VipRouletteTableBlock> VIP_ROULETTE_TABLE = BLOCKS.register(
+            "vip_roulette_table", () -> new VipRouletteTableBlock(
+                    BlockBehaviour.Properties.of()
+                            .mapColor(MapColor.GOLD)
+                            .strength(50.0F, 3600000.0F)
+                            .sound(SoundType.WOOD)
+                            .noOcclusion()
+            )
+    );
+
+    public static final DeferredHolder<Block, UmaBookmakerBlock> UMA_BOOKMAKER = BLOCKS.register(
+            "uma_bookmaker", () -> new UmaBookmakerBlock(
+                    BlockBehaviour.Properties.of()
+                            .mapColor(MapColor.WOOD)
+                            .strength(-1.0F, 3600000.0F)
+                            .sound(SoundType.WOOD)
+                            .noOcclusion()
+            )
+    );
+
+    public static final DeferredHolder<Block, com.soybe.awakeningsystem.casino.pool.PoolTableBlock> POOL_TABLE = BLOCKS.register(
+            "pool_table", () -> new com.soybe.awakeningsystem.casino.pool.PoolTableBlock(
+                    BlockBehaviour.Properties.of()
+                            .mapColor(MapColor.COLOR_GREEN)
+                            .strength(-1.0F, 3600000.0F)
+                            .sound(SoundType.WOOD)
+                            .noOcclusion()
+            )
+    );
+
+    public static final DeferredHolder<Block, com.soybe.awakeningsystem.casino.pool.IllegalPoolTableBlock> ILLEGAL_POOL_TABLE = BLOCKS.register(
+            "illegal_pool_table", () -> new com.soybe.awakeningsystem.casino.pool.IllegalPoolTableBlock(
+                    BlockBehaviour.Properties.of()
+                            .mapColor(MapColor.COLOR_RED)
+                            .strength(-1.0F, 3600000.0F)
+                            .sound(SoundType.WOOD)
+                            .noOcclusion()
+            )
+    );
+
+    public static final DeferredHolder<Block, com.soybe.awakeningsystem.casino.darts.DartboardBlock> DARTBOARD = BLOCKS.register(
+            "dartboard", () -> new com.soybe.awakeningsystem.casino.darts.DartboardBlock(
+                    BlockBehaviour.Properties.of()
+                            .mapColor(MapColor.WOOD)
+                            .strength(-1.0F, 3600000.0F)
+                            .sound(SoundType.WOOD)
+                            .noOcclusion()
+            )
+    );
+
+    public static final DeferredHolder<Block, CasinoTrophyBlock> CASINO_TROPHY = BLOCKS.register(
+            "casino_trophy", () -> new CasinoTrophyBlock(
+                    BlockBehaviour.Properties.of()
+                            .mapColor(MapColor.GOLD)
+                            .strength(50.0F, 3600000.0F)
+                            .sound(SoundType.METAL)
+                            .lightLevel(state -> 6)
+                            .noOcclusion(), 1
+            )
+    );
+
+    public static final DeferredHolder<Block, CasinoTrophyBlock> BLACKJACK_TROPHY = BLOCKS.register(
+            "blackjack_trophy", () -> new CasinoTrophyBlock(
+                    BlockBehaviour.Properties.of()
+                            .mapColor(MapColor.GOLD)
+                            .strength(50.0F, 3600000.0F)
+                            .sound(SoundType.METAL)
+                            .lightLevel(state -> 6)
+                            .noOcclusion(), 2
+            )
+    );
+
+    public static final DeferredHolder<Block, CasinoTrophyBlock> ROULETTE_TROPHY = BLOCKS.register(
+            "roulette_trophy", () -> new CasinoTrophyBlock(
+                    BlockBehaviour.Properties.of()
+                            .mapColor(MapColor.GOLD)
+                            .strength(50.0F, 3600000.0F)
+                            .sound(SoundType.METAL)
+                            .lightLevel(state -> 6)
+                            .noOcclusion(), 3
+            )
+    );
+
+    public static final DeferredHolder<Block, CasinoTrophyBlock> POOL_TROPHY = BLOCKS.register(
+            "pool_trophy", () -> new CasinoTrophyBlock(
+                    BlockBehaviour.Properties.of()
+                            .mapColor(MapColor.GOLD)
+                            .strength(50.0F, 3600000.0F)
+                            .sound(SoundType.METAL)
+                            .lightLevel(state -> 6)
+                            .noOcclusion(), 4
+            )
+    );
+
+    public static final DeferredHolder<Block, CasinoTrophyBlock> DARTS_TROPHY = BLOCKS.register(
+            "darts_trophy", () -> new CasinoTrophyBlock(
+                    BlockBehaviour.Properties.of()
+                            .mapColor(MapColor.GOLD)
+                            .strength(50.0F, 3600000.0F)
+                            .sound(SoundType.METAL)
+                            .lightLevel(state -> 6)
+                            .noOcclusion(), 5
+            )
+    );
+
+    public static final DeferredHolder<Block, CustomRacetrackBlock> CUSTOM_RACETRACK_CORE = BLOCKS.register(
+            "custom_racetrack_core", () -> new CustomRacetrackBlock(
+                    BlockBehaviour.Properties.of()
+                            .mapColor(MapColor.COLOR_RED)
+                            .strength(3.0F, 600.0F)
+                            .sound(SoundType.STONE)
+                            .lightLevel(state -> 10)
+                            .noOcclusion()
+            )
+    );
+
+    public static final DeferredHolder<Block, RacetrackBleachersBlock> RACETRACK_BLEACHERS = BLOCKS.register(
+            "racetrack_bleachers", () -> new RacetrackBleachersBlock(
+                    BlockBehaviour.Properties.of()
+                            .mapColor(MapColor.COLOR_LIGHT_GRAY)
+                            .strength(2.0F, 300.0F)
+                            .sound(SoundType.WOOD)
+                            .noOcclusion()
+            )
+    );
+
+    public static final DeferredHolder<Block, StartingGateBlock> STARTING_GATE = BLOCKS.register(
+            "starting_gate", () -> new StartingGateBlock(
+                    BlockBehaviour.Properties.of()
+                            .mapColor(MapColor.METAL)
+                            .strength(3.5F, 600.0F)
+                            .sound(SoundType.METAL)
+                            .noOcclusion()
+            )
+    );
+
+    public static final DeferredHolder<Block, Block> RACETRACK_TURF = BLOCKS.register(
+            "racetrack_turf", () -> new Block(
+                    BlockBehaviour.Properties.of()
+                            .mapColor(MapColor.COLOR_GREEN)
+                            .strength(0.8F, 2.5F)
+                            .sound(SoundType.GRASS)
+            )
+    );
+
+    public static final DeferredHolder<Block, net.minecraft.world.level.block.FenceBlock> RACETRACK_PADDOCK_FENCE = BLOCKS.register(
+            "racetrack_paddock_fence", () -> new net.minecraft.world.level.block.FenceBlock(
+                    BlockBehaviour.Properties.of()
+                            .mapColor(MapColor.SNOW)
+                            .strength(2.0F, 5.0F)
+                            .sound(SoundType.NETHER_WOOD)
+            )
+    );
+
+    public static final DeferredHolder<Block, Block> STARTING_GATE_TRUSS = BLOCKS.register(
+            "starting_gate_truss", () -> new Block(
+                    BlockBehaviour.Properties.of()
+                            .mapColor(MapColor.COLOR_GREEN)
+                            .strength(3.0F, 10.0F)
+                            .sound(SoundType.LANTERN)
+                            .noOcclusion()
+            )
+    );
+
+    public static final DeferredHolder<Block, DungeonCoreBlock> DUNGEON_CORE = BLOCKS.register(
+            "dungeon_core", () -> new DungeonCoreBlock(
+                    BlockBehaviour.Properties.of()
+                            .mapColor(MapColor.COLOR_PURPLE)
+                            .strength(5.0F, 1200.0F)
+                            .sound(SoundType.AMETHYST)
+                            .lightLevel(state -> state.getValue(DungeonCoreBlock.CLAIMED) ? 6 : (state.getValue(DungeonCoreBlock.ACTIVATED) ? 15 : 12))
                             .noOcclusion()
             )
     );
@@ -808,7 +1409,6 @@ public final class SystemBlocks {
             )
     );
 
-    // Bloque Cósmico de las Profundidades del Abismo (Genshin Spiral Abyss)
     public static final DeferredHolder<Block, Block> ABYSSAL_VOID_STONE = BLOCKS.register(
             "abyssal_void_stone", () -> new Block(
                     BlockBehaviour.Properties.of()
@@ -819,7 +1419,6 @@ public final class SystemBlocks {
             )
     );
 
-    // Punto de Teletransporte Celestial a Teyvat (Genshin Waypoint)
     public static final DeferredHolder<Block, CelestialWaypointBlock> CELESTIAL_WAYPOINT = BLOCKS.register(
             "celestial_waypoint", () -> new CelestialWaypointBlock(
                     BlockBehaviour.Properties.of()
@@ -832,7 +1431,18 @@ public final class SystemBlocks {
             )
     );
 
-    // Altar Sagrado de la Diosa Trilunar (Columbina y las Tres Diosas de la Luna)
+    public static final DeferredHolder<Block, StatueOfTheSevenBlock> STATUE_OF_THE_SEVEN = BLOCKS.register(
+            "statue_of_the_seven", () -> new StatueOfTheSevenBlock(
+                    BlockBehaviour.Properties.of()
+                            .mapColor(MapColor.QUARTZ)
+                            .strength(5.0F, 1200.0F)
+                            .sound(SoundType.STONE)
+                            .lightLevel(state -> 13)
+                            .noOcclusion()
+                            .requiresCorrectToolForDrops()
+            )
+    );
+
     public static final DeferredHolder<Block, TrilunarAltarBlock> TRILUNAR_ALTAR = BLOCKS.register(
             "trilunar_altar", () -> new TrilunarAltarBlock(
                     BlockBehaviour.Properties.of()
@@ -845,7 +1455,6 @@ public final class SystemBlocks {
             )
     );
 
-    // Bloque de Mora maciza de PrimogemCraft
     public static final DeferredHolder<Block, MoraBlock> MORA_BLOCK = BLOCKS.register(
             "mora_block", () -> new MoraBlock(
                     BlockBehaviour.Properties.of()
@@ -856,7 +1465,6 @@ public final class SystemBlocks {
             )
     );
 
-    // Vasija de Tesoro de Teyvat de PrimogemCraft
     public static final DeferredHolder<Block, TeyvatJarBlock> TEYVAT_JAR = BLOCKS.register(
             "teyvat_jar", () -> new TeyvatJarBlock(
                     BlockBehaviour.Properties.of()
@@ -867,11 +1475,6 @@ public final class SystemBlocks {
             )
     );
 
-    // ========================================================
-    // MADERAS Y ÁRBOLES CANÓNICOS DE TEYVAT (GENSHIN IMPACT)
-    // ========================================================
-
-    // 1. Árbol de Cuihua (Mondstadt & Bishui Plains)
     public static class TeyvatSaplingBlock extends BushBlock implements BonemealableBlock {
         public static final com.mojang.serialization.MapCodec<TeyvatSaplingBlock> CODEC = simpleCodec(TeyvatSaplingBlock::new);
 
@@ -1005,12 +1608,11 @@ public final class SystemBlocks {
             "cuihua_planks", () -> new Block(BlockBehaviour.Properties.ofFullCopy(Blocks.OAK_PLANKS))
     );
 
-    // 2. Árbol de Adhigama (Selva Tropical de Sumeru / Dharma Forest)
     public static final DeferredHolder<Block, RotatedPillarBlock> ADHIGAMA_LOG = BLOCKS.register(
             "adhigama_log", () -> new RotatedPillarBlock(BlockBehaviour.Properties.ofFullCopy(Blocks.JUNGLE_LOG))
     );
     public static final DeferredHolder<Block, LeavesBlock> ADHIGAMA_LEAVES = BLOCKS.register(
-            "adhigama_leaves", () -> new LeavesBlock(BlockBehaviour.Properties.ofFullCopy(Blocks.JUNGLE_LEAVES).noOcclusion())
+            "adhigama_leaves", () -> new LeavesBlock(BlockBehaviour.Properties.ofFullCopy(Blocks.JUNGLE_LEAVES).randomTicks().noOcclusion())
     );
     public static final DeferredHolder<Block, TeyvatSaplingBlock> ADHIGAMA_SAPLING = BLOCKS.register(
             "adhigama_sapling", () -> new TeyvatSaplingBlock(BlockBehaviour.Properties.ofFullCopy(Blocks.JUNGLE_SAPLING).randomTicks().noOcclusion())
@@ -1019,12 +1621,11 @@ public final class SystemBlocks {
             "adhigama_planks", () -> new Block(BlockBehaviour.Properties.ofFullCopy(Blocks.JUNGLE_PLANKS))
     );
 
-    // 3. Árbol de Sandbearer / Madera Arenosa (Picos Kársticos de Liyue)
     public static final DeferredHolder<Block, RotatedPillarBlock> SANDBEARER_LOG = BLOCKS.register(
             "sandbearer_log", () -> new RotatedPillarBlock(BlockBehaviour.Properties.ofFullCopy(Blocks.ACACIA_LOG))
     );
     public static final DeferredHolder<Block, LeavesBlock> SANDBEARER_LEAVES = BLOCKS.register(
-            "sandbearer_leaves", () -> new LeavesBlock(BlockBehaviour.Properties.ofFullCopy(Blocks.ACACIA_LEAVES).noOcclusion())
+            "sandbearer_leaves", () -> new LeavesBlock(BlockBehaviour.Properties.ofFullCopy(Blocks.ACACIA_LEAVES).randomTicks().noOcclusion())
     );
     public static final DeferredHolder<Block, TeyvatSaplingBlock> SANDBEARER_SAPLING = BLOCKS.register(
             "sandbearer_sapling", () -> new TeyvatSaplingBlock(BlockBehaviour.Properties.ofFullCopy(Blocks.ACACIA_SAPLING).randomTicks().noOcclusion())
@@ -1033,11 +1634,6 @@ public final class SystemBlocks {
             "sandbearer_planks", () -> new Block(BlockBehaviour.Properties.ofFullCopy(Blocks.ACACIA_PLANKS))
     );
 
-    // ========================================================
-    // MADERAS Y ÁRBOLES CANÓNICOS DEL MUNDO ISEKAI
-    // ========================================================
-
-    // 4. Árbol de Madera de Maná (Bosque Místico de Isekai)
     public static final DeferredHolder<Block, RotatedPillarBlock> MANA_WOOD_LOG = BLOCKS.register(
             "mana_wood_log", () -> new RotatedPillarBlock(BlockBehaviour.Properties.ofFullCopy(Blocks.WARPED_STEM).sound(SoundType.WOOD))
     );
@@ -1052,12 +1648,11 @@ public final class SystemBlocks {
             "mana_wood_planks", () -> new Block(BlockBehaviour.Properties.ofFullCopy(Blocks.OAK_PLANKS).sound(SoundType.WOOD))
     );
 
-    // 5. Árbol Sagrado de Eldoria (Llanuras Doradas / Arboleda Sagrada de Isekai)
     public static final DeferredHolder<Block, RotatedPillarBlock> ELDORIA_LOG = BLOCKS.register(
             "eldoria_log", () -> new RotatedPillarBlock(BlockBehaviour.Properties.ofFullCopy(Blocks.BIRCH_LOG).sound(SoundType.WOOD))
     );
     public static final DeferredHolder<Block, LeavesBlock> ELDORIA_LEAVES = BLOCKS.register(
-            "eldoria_leaves", () -> new LeavesBlock(BlockBehaviour.Properties.ofFullCopy(Blocks.BIRCH_LEAVES).lightLevel(s -> 4).noOcclusion())
+            "eldoria_leaves", () -> new LeavesBlock(BlockBehaviour.Properties.ofFullCopy(Blocks.BIRCH_LEAVES).lightLevel(s -> 4).randomTicks().noOcclusion())
     );
     public static final DeferredHolder<Block, TeyvatSaplingBlock> ELDORIA_SAPLING = BLOCKS.register(
             "eldoria_sapling", () -> new TeyvatSaplingBlock(BlockBehaviour.Properties.ofFullCopy(Blocks.BIRCH_SAPLING).lightLevel(s -> 2).randomTicks().noOcclusion())
@@ -1066,11 +1661,6 @@ public final class SystemBlocks {
             "eldoria_planks", () -> new Block(BlockBehaviour.Properties.ofFullCopy(Blocks.BIRCH_PLANKS).sound(SoundType.WOOD))
     );
 
-    // ========================================================
-    // MADERAS Y ÁRBOLES CANÓNICOS DEL MUNDO MURIM (CULTIVO)
-    // ========================================================
-
-    // 6. Árbol de Ciruelo Espiritual del Monte Hua (Murim)
     public static final DeferredHolder<Block, RotatedPillarBlock> SPIRIT_PLUM_LOG = BLOCKS.register(
             "spirit_plum_log", () -> new RotatedPillarBlock(BlockBehaviour.Properties.ofFullCopy(Blocks.CHERRY_LOG).sound(SoundType.WOOD))
     );
@@ -1102,13 +1692,18 @@ public final class SystemBlocks {
     public static final DeferredHolder<Block, TrapDoorBlock> SPIRIT_PLUM_TRAPDOOR = BLOCKS.register(
             "spirit_plum_trapdoor", () -> new TrapDoorBlock(BlockSetType.CHERRY, BlockBehaviour.Properties.ofFullCopy(Blocks.CHERRY_TRAPDOOR))
     );
+    public static final DeferredHolder<Block, ButtonBlock> SPIRIT_PLUM_BUTTON = BLOCKS.register(
+            "spirit_plum_button", () -> new ButtonBlock(BlockSetType.CHERRY, 30, BlockBehaviour.Properties.ofFullCopy(Blocks.CHERRY_BUTTON))
+    );
+    public static final DeferredHolder<Block, PressurePlateBlock> SPIRIT_PLUM_PRESSURE_PLATE = BLOCKS.register(
+            "spirit_plum_pressure_plate", () -> new PressurePlateBlock(BlockSetType.CHERRY, BlockBehaviour.Properties.ofFullCopy(Blocks.CHERRY_PRESSURE_PLATE))
+    );
 
-    // 7. Árbol de Pino Celestial Milenario (Murim)
     public static final DeferredHolder<Block, RotatedPillarBlock> CELESTIAL_PINE_LOG = BLOCKS.register(
             "celestial_pine_log", () -> new RotatedPillarBlock(BlockBehaviour.Properties.ofFullCopy(Blocks.SPRUCE_LOG).sound(SoundType.WOOD))
     );
     public static final DeferredHolder<Block, LeavesBlock> CELESTIAL_PINE_LEAVES = BLOCKS.register(
-            "celestial_pine_leaves", () -> new LeavesBlock(BlockBehaviour.Properties.ofFullCopy(Blocks.SPRUCE_LEAVES).lightLevel(s -> 3).noOcclusion())
+            "celestial_pine_leaves", () -> new LeavesBlock(BlockBehaviour.Properties.ofFullCopy(Blocks.SPRUCE_LEAVES).lightLevel(s -> 3).randomTicks().noOcclusion())
     );
     public static final DeferredHolder<Block, TeyvatSaplingBlock> CELESTIAL_PINE_SAPLING = BLOCKS.register(
             "celestial_pine_sapling", () -> new TeyvatSaplingBlock(BlockBehaviour.Properties.ofFullCopy(Blocks.SPRUCE_SAPLING).randomTicks().noOcclusion())
@@ -1135,15 +1730,11 @@ public final class SystemBlocks {
             "celestial_pine_trapdoor", () -> new TrapDoorBlock(BlockSetType.SPRUCE, BlockBehaviour.Properties.ofFullCopy(Blocks.SPRUCE_TRAPDOOR))
     );
 
-    // 8. Melocotonero Celestial de la Inmortalidad (Murim)
     public static final DeferredHolder<Block, FruitLeavesBlock> IMMORTALITY_PEACH_LEAVES = BLOCKS.register(
             "immortality_peach_leaves", () -> new FruitLeavesBlock(BlockBehaviour.Properties.ofFullCopy(Blocks.OAK_LEAVES).lightLevel(s -> 6).randomTicks().noOcclusion(),
                     () -> SystemItems.IMMORTALITY_PEACH.get())
     );
 
-    // ========================================================
-    // MESA DE ASCENSIÓN CELESTIAL DE COMPAÑEROS
-    // ========================================================
     public static final DeferredHolder<Block, CompanionAscensionTableBlock> COMPANION_ASCENSION_TABLE = BLOCKS.register(
             "companion_ascension_table", () -> new CompanionAscensionTableBlock(
                     BlockBehaviour.Properties.of()
@@ -1154,9 +1745,6 @@ public final class SystemBlocks {
                             .noOcclusion()
             )
     );
-    // ========================================================
-    // BLOQUES DE HIPÓSTASIS ELEMENTAL (TROFEOS Y PODER ARCANO)
-    // ========================================================
     public static final DeferredHolder<Block, Block> ANEMO_HYPOSTASIS_BLOCK = BLOCKS.register(
             "anemo_hypostasis_block", () -> new Block(
                     BlockBehaviour.Properties.of()
@@ -1218,9 +1806,6 @@ public final class SystemBlocks {
             )
     );
 
-    // ========================================================
-    // PELUCHES (PLUSHIES) DE GENSHIN IMPACT CON ANIMACIÓN BOUNCE
-    // ========================================================
     public static final String[] PLUSHIE_IDS = {
             "aetherplushie", "albedoplushie", "aloyplushie", "amberplushie", "ayakaplushie", "ayatoplushie",
             "barbaraplushie", "beidouplushie", "bennettplushie", "candaceplushie", "chongyunplushie", "colleiplushie",
@@ -1232,8 +1817,20 @@ public final class SystemBlocks {
             "paimonplushie", "qiqiplushie", "raidenplushie", "razorplushie", "rosariaplushie", "saraplushie",
             "sayuplushie", "shenheplushie", "sucroseplushie", "tartagliaplushie", "thomaplushie", "tighnariplushie",
             "ventiplushie", "xianglingplushie", "xiaoplushie", "xingqiuplushie", "xinyanplushie", "yaemikoplushie",
-            "yanfeiplushie", "yelanplushie", "yoimiyaplushie", "yunjinplushie", "zhongliplushie"
+            "yanfeiplushie", "yelanplushie", "yoimiyaplushie", "yunjinplushie", "zhongliplushie",
+            "amiyaplushie", "kaltsitplushie", "chenplushie", "shirokoplushie", "arisplushie", "hinaplushie",
+            "landeraloplushie", "schvisplushie", "techidnaplushie", "tomcraftplushie", "nandachanplushie", "misticpotatoplushie"
     };
+
+    public static final DeferredHolder<Block, CustomPlayerPlushieBlock> CUSTOM_PLAYER_PLUSHIE = BLOCKS.register(
+            "custom_player_plushie", () -> new CustomPlayerPlushieBlock(
+                    BlockBehaviour.Properties.of()
+                            .mapColor(MapColor.WOOL)
+                            .strength(0.5F, 1.0F)
+                            .sound(SoundType.WOOL)
+                            .noOcclusion()
+            )
+    );
 
     public static final DeferredHolder<Block, PlushiesLootboxBlock> PLUSHIES_LOOTBOX = BLOCKS.register(
             "plushieslootbox", () -> new PlushiesLootboxBlock(
@@ -1244,9 +1841,6 @@ public final class SystemBlocks {
             )
     );
 
-    // ==========================================
-    // ✦ MONUMENTOS ELEMENTALES DE TEYVAT ✦
-    // ==========================================
     public static final DeferredHolder<Block, ElementalMonumentBlock> ANEMO_MONUMENT = BLOCKS.register(
             "anemo_monument", () -> new ElementalMonumentBlock(
                     ElementalMonumentBlock.MonumentElement.ANEMO,
@@ -1335,10 +1929,6 @@ public final class SystemBlocks {
             )
     );
 
-    // ==========================================
-    // ✦ BLOQUES DE CONSTRUCCIÓN DE TEYVAT ✦
-    // ==========================================
-    // Cuihua derivados
     public static final DeferredHolder<Block, StairBlock> CUIHUA_STAIRS = BLOCKS.register("cuihua_stairs",
             () -> new StairBlock(CUIHUA_PLANKS.get().defaultBlockState(), BlockBehaviour.Properties.ofFullCopy(CUIHUA_PLANKS.get())));
     public static final DeferredHolder<Block, SlabBlock> CUIHUA_SLAB = BLOCKS.register("cuihua_slab",
@@ -1352,7 +1942,6 @@ public final class SystemBlocks {
     public static final DeferredHolder<Block, TrapDoorBlock> CUIHUA_TRAPDOOR = BLOCKS.register("cuihua_trapdoor",
             () -> new TrapDoorBlock(BlockSetType.OAK, BlockBehaviour.Properties.ofFullCopy(Blocks.OAK_TRAPDOOR)));
 
-    // Sandbearer derivados
     public static final DeferredHolder<Block, StairBlock> SANDBEARER_STAIRS = BLOCKS.register("sandbearer_stairs",
             () -> new StairBlock(SANDBEARER_PLANKS.get().defaultBlockState(), BlockBehaviour.Properties.ofFullCopy(SANDBEARER_PLANKS.get())));
     public static final DeferredHolder<Block, SlabBlock> SANDBEARER_SLAB = BLOCKS.register("sandbearer_slab",
@@ -1366,7 +1955,6 @@ public final class SystemBlocks {
     public static final DeferredHolder<Block, TrapDoorBlock> SANDBEARER_TRAPDOOR = BLOCKS.register("sandbearer_trapdoor",
             () -> new TrapDoorBlock(BlockSetType.OAK, BlockBehaviour.Properties.ofFullCopy(Blocks.OAK_TRAPDOOR)));
 
-    // Adhigama derivados
     public static final DeferredHolder<Block, StairBlock> ADHIGAMA_STAIRS = BLOCKS.register("adhigama_stairs",
             () -> new StairBlock(ADHIGAMA_PLANKS.get().defaultBlockState(), BlockBehaviour.Properties.ofFullCopy(ADHIGAMA_PLANKS.get())));
     public static final DeferredHolder<Block, SlabBlock> ADHIGAMA_SLAB = BLOCKS.register("adhigama_slab",
@@ -1380,11 +1968,10 @@ public final class SystemBlocks {
     public static final DeferredHolder<Block, TrapDoorBlock> ADHIGAMA_TRAPDOOR = BLOCKS.register("adhigama_trapdoor",
             () -> new TrapDoorBlock(BlockSetType.OAK, BlockBehaviour.Properties.ofFullCopy(Blocks.OAK_TRAPDOOR)));
 
-    // Aralia (Inazuma)
     public static final DeferredHolder<Block, RotatedPillarBlock> ARALIA_WOOD = BLOCKS.register("aralia_wood",
             () -> new RotatedPillarBlock(BlockBehaviour.Properties.ofFullCopy(Blocks.DARK_OAK_LOG)));
     public static final DeferredHolder<Block, LeavesBlock> ARALIA_LEAVES = BLOCKS.register("aralia_leaves",
-            () -> new LeavesBlock(BlockBehaviour.Properties.ofFullCopy(Blocks.DARK_OAK_LEAVES).noOcclusion()));
+            () -> new LeavesBlock(BlockBehaviour.Properties.ofFullCopy(Blocks.DARK_OAK_LEAVES).randomTicks().noOcclusion()));
     public static final DeferredHolder<Block, Block> ARALIA_PLANKS = BLOCKS.register("aralia_planks",
             () -> new Block(BlockBehaviour.Properties.ofFullCopy(Blocks.DARK_OAK_PLANKS)));
     public static final DeferredHolder<Block, StairBlock> ARALIA_STAIRS = BLOCKS.register("aralia_stairs",
@@ -1402,11 +1989,10 @@ public final class SystemBlocks {
     public static final DeferredHolder<Block, TrapDoorBlock> ARALIA_TRAPDOOR = BLOCKS.register("aralia_trapdoor",
             () -> new TrapDoorBlock(BlockSetType.OAK, BlockBehaviour.Properties.ofFullCopy(Blocks.DARK_OAK_TRAPDOOR)));
 
-    // Yumemiru (Sakura Inazuma)
     public static final DeferredHolder<Block, RotatedPillarBlock> YUMEMIRU_WOOD = BLOCKS.register("yumemiru_wood",
             () -> new RotatedPillarBlock(BlockBehaviour.Properties.ofFullCopy(Blocks.CHERRY_LOG)));
     public static final DeferredHolder<Block, LeavesBlock> YUMEMIRU_LEAVES = BLOCKS.register("yumemiru_leaves",
-            () -> new LeavesBlock(BlockBehaviour.Properties.ofFullCopy(Blocks.CHERRY_LEAVES).noOcclusion()));
+            () -> new LeavesBlock(BlockBehaviour.Properties.ofFullCopy(Blocks.CHERRY_LEAVES).randomTicks().noOcclusion()));
     public static final DeferredHolder<Block, Block> YUMEMIRU_PLANKS = BLOCKS.register("yumemiru_planks",
             () -> new Block(BlockBehaviour.Properties.ofFullCopy(Blocks.CHERRY_PLANKS)));
     public static final DeferredHolder<Block, StairBlock> YUMEMIRU_STAIRS = BLOCKS.register("yumemiru_stairs",
@@ -1424,11 +2010,10 @@ public final class SystemBlocks {
     public static final DeferredHolder<Block, TrapDoorBlock> YUMEMIRU_TRAPDOOR = BLOCKS.register("yumemiru_trapdoor",
             () -> new TrapDoorBlock(BlockSetType.OAK, BlockBehaviour.Properties.ofFullCopy(Blocks.CHERRY_TRAPDOOR)));
 
-    // Otogi (Inazuma)
     public static final DeferredHolder<Block, RotatedPillarBlock> OTOGI_WOOD = BLOCKS.register("otogi_wood",
             () -> new RotatedPillarBlock(BlockBehaviour.Properties.ofFullCopy(Blocks.OAK_LOG)));
     public static final DeferredHolder<Block, LeavesBlock> OTOGI_LEAVES = BLOCKS.register("otogi_leaves",
-            () -> new LeavesBlock(BlockBehaviour.Properties.ofFullCopy(Blocks.OAK_LEAVES).noOcclusion()));
+            () -> new LeavesBlock(BlockBehaviour.Properties.ofFullCopy(Blocks.OAK_LEAVES).randomTicks().noOcclusion()));
     public static final DeferredHolder<Block, Block> OTOGI_PLANKS = BLOCKS.register("otogi_planks",
             () -> new Block(BlockBehaviour.Properties.ofFullCopy(Blocks.OAK_PLANKS)));
     public static final DeferredHolder<Block, StairBlock> OTOGI_STAIRS = BLOCKS.register("otogi_stairs",
@@ -1446,7 +2031,6 @@ public final class SystemBlocks {
     public static final DeferredHolder<Block, TrapDoorBlock> OTOGI_TRAPDOOR = BLOCKS.register("otogi_trapdoor",
             () -> new TrapDoorBlock(BlockSetType.OAK, BlockBehaviour.Properties.ofFullCopy(Blocks.OAK_TRAPDOOR)));
 
-    // Bamboo (Bambú de Liyue)
     public static final DeferredHolder<Block, RotatedPillarBlock> BAMBOO_SEGMENT = BLOCKS.register("bamboo_segment",
             () -> new RotatedPillarBlock(BlockBehaviour.Properties.ofFullCopy(Blocks.BAMBOO_BLOCK)));
     public static final DeferredHolder<Block, Block> BAMBOO_PLANKS = BLOCKS.register("bamboo_planks",
@@ -1464,11 +2048,10 @@ public final class SystemBlocks {
     public static final DeferredHolder<Block, TrapDoorBlock> BAMBOO_TRAPDOOR = BLOCKS.register("bamboo_trapdoor",
             () -> new TrapDoorBlock(BlockSetType.BAMBOO, BlockBehaviour.Properties.ofFullCopy(Blocks.BAMBOO_TRAPDOOR)));
 
-    // Maple (Arce Rojo / Momiji)
     public static final DeferredHolder<Block, RotatedPillarBlock> MAPLE_WOOD = BLOCKS.register("maple_wood",
             () -> new RotatedPillarBlock(BlockBehaviour.Properties.ofFullCopy(Blocks.MANGROVE_LOG)));
     public static final DeferredHolder<Block, LeavesBlock> MAPLE_LEAVES = BLOCKS.register("maple_leaves",
-            () -> new LeavesBlock(BlockBehaviour.Properties.ofFullCopy(Blocks.MANGROVE_LEAVES).noOcclusion()));
+            () -> new LeavesBlock(BlockBehaviour.Properties.ofFullCopy(Blocks.MANGROVE_LEAVES).randomTicks().noOcclusion()));
     public static final DeferredHolder<Block, Block> MAPLE_PLANKS = BLOCKS.register("maple_planks",
             () -> new Block(BlockBehaviour.Properties.ofFullCopy(Blocks.MANGROVE_PLANKS)));
     public static final DeferredHolder<Block, StairBlock> MAPLE_STAIRS = BLOCKS.register("maple_stairs",
@@ -1486,59 +2069,120 @@ public final class SystemBlocks {
     public static final DeferredHolder<Block, TrapDoorBlock> MAPLE_TRAPDOOR = BLOCKS.register("maple_trapdoor",
             () -> new TrapDoorBlock(BlockSetType.OAK, BlockBehaviour.Properties.ofFullCopy(Blocks.MANGROVE_TRAPDOOR)));
 
-    // ==========================================
-    // ✦ MINERALES Y ROCAS DE TEYVAT ✦
-    // ==========================================
-    public static final DeferredHolder<Block, Block> COR_LAPIS = BLOCKS.register("corlapis",
-            () -> new Block(BlockBehaviour.Properties.of()
+    public static final DeferredHolder<Block, TeyvatCrystalBlock> COR_LAPIS = BLOCKS.register("corlapis",
+            () -> new TeyvatCrystalBlock(BlockBehaviour.Properties.of()
                     .mapColor(MapColor.COLOR_ORANGE)
                     .strength(3.0F, 6.0F)
                     .sound(SoundType.AMETHYST)
                     .lightLevel(s -> 4)
+                    .noOcclusion()
                     .requiresCorrectToolForDrops()));
 
-    public static final DeferredHolder<Block, Block> NOCTILUCOUS_JADE = BLOCKS.register("noctilucousjade",
-            () -> new Block(BlockBehaviour.Properties.of()
+    public static final DeferredHolder<Block, TeyvatCrystalBlock> NOCTILUCOUS_JADE = BLOCKS.register("noctilucousjade",
+            () -> new TeyvatCrystalBlock(BlockBehaviour.Properties.of()
                     .mapColor(MapColor.COLOR_BLUE)
                     .strength(3.0F, 6.0F)
                     .sound(SoundType.AMETHYST)
                     .lightLevel(s -> 7)
+                    .noOcclusion()
                     .requiresCorrectToolForDrops()));
 
-    public static final DeferredHolder<Block, Block> STARSILVER = BLOCKS.register("starsilver",
-            () -> new Block(BlockBehaviour.Properties.of()
+    public static final DeferredHolder<Block, TeyvatCrystalBlock> STARSILVER = BLOCKS.register("starsilver",
+            () -> new TeyvatCrystalBlock(BlockBehaviour.Properties.of()
                     .mapColor(MapColor.COLOR_LIGHT_BLUE)
                     .strength(3.5F, 8.0F)
                     .sound(SoundType.STONE)
+                    .noOcclusion()
                     .requiresCorrectToolForDrops()));
 
-    public static final DeferredHolder<Block, Block> CRYSTAL_CHUNK_BLOCK = BLOCKS.register("crystal_chunk_block",
-            () -> new Block(BlockBehaviour.Properties.of()
+    public static final DeferredHolder<Block, TeyvatCrystalBlock> CRYSTAL_CHUNK_BLOCK = BLOCKS.register("crystal_chunk_block",
+            () -> new TeyvatCrystalBlock(BlockBehaviour.Properties.of()
                     .mapColor(MapColor.COLOR_CYAN)
                     .strength(3.0F, 6.0F)
                     .sound(SoundType.GLASS)
                     .lightLevel(s -> 5)
+                    .noOcclusion()
                     .requiresCorrectToolForDrops()));
 
-    public static final DeferredHolder<Block, Block> MAGICAL_CRYSTAL_BLOCK = BLOCKS.register("magical_crystal_chunk_block",
-            () -> new Block(BlockBehaviour.Properties.of()
+    public static final DeferredHolder<Block, TeyvatCrystalBlock> MAGICAL_CRYSTAL_BLOCK = BLOCKS.register("magical_crystal_chunk_block",
+            () -> new TeyvatCrystalBlock(BlockBehaviour.Properties.of()
                     .mapColor(MapColor.COLOR_BLUE)
                     .strength(4.0F, 10.0F)
                     .sound(SoundType.AMETHYST)
                     .lightLevel(s -> 8)
+                    .noOcclusion()
                     .requiresCorrectToolForDrops()));
 
-    public static final DeferredHolder<Block, Block> ELECTRO_CRYSTAL_BLOCK = BLOCKS.register("electrocrystal",
-            () -> new Block(BlockBehaviour.Properties.of()
+    public static final DeferredHolder<Block, TeyvatCrystalBlock> ELECTRO_CRYSTAL_BLOCK = BLOCKS.register("electrocrystal",
+            () -> new TeyvatCrystalBlock(BlockBehaviour.Properties.of()
                     .mapColor(MapColor.COLOR_PURPLE)
                     .strength(2.5F, 5.0F)
                     .sound(SoundType.GLASS)
                     .lightLevel(s -> 9)
+                    .noOcclusion()
                     .requiresCorrectToolForDrops()));
 
-    // ==========================================
-    // ✦ SANTUARIOS DE LAS PROFUNDIDADES & ÓCULOS ✦
-    // ==========================================
+    public static final DeferredHolder<Block, TeyvatCrystalBlock> MANA_CRYSTAL_CLUSTER_E = BLOCKS.register("mana_crystal_cluster_e",
+            () -> new TeyvatCrystalBlock(BlockBehaviour.Properties.of()
+                    .mapColor(MapColor.COLOR_LIGHT_BLUE)
+                    .strength(2.0F, 5.0F)
+                    .sound(SoundType.AMETHYST_CLUSTER)
+                    .lightLevel(s -> 7)
+                    .noOcclusion()
+                    .requiresCorrectToolForDrops()));
+
+    public static final DeferredHolder<Block, TeyvatCrystalBlock> MANA_CRYSTAL_CLUSTER_D = BLOCKS.register("mana_crystal_cluster_d",
+            () -> new TeyvatCrystalBlock(BlockBehaviour.Properties.of()
+                    .mapColor(MapColor.COLOR_GREEN)
+                    .strength(2.8F, 6.5F)
+                    .sound(SoundType.AMETHYST_CLUSTER)
+                    .lightLevel(s -> 9)
+                    .noOcclusion()
+                    .requiresCorrectToolForDrops()));
+
+    public static final DeferredHolder<Block, TeyvatCrystalBlock> MANA_CRYSTAL_CLUSTER_C = BLOCKS.register("mana_crystal_cluster_c",
+            () -> new TeyvatCrystalBlock(BlockBehaviour.Properties.of()
+                    .mapColor(MapColor.COLOR_LIGHT_BLUE)
+                    .strength(3.5F, 8.0F)
+                    .sound(SoundType.AMETHYST_CLUSTER)
+                    .lightLevel(s -> 11)
+                    .noOcclusion()
+                    .requiresCorrectToolForDrops()));
+
+    public static final DeferredHolder<Block, TeyvatCrystalBlock> MANA_CRYSTAL_CLUSTER_B = BLOCKS.register("mana_crystal_cluster_b",
+            () -> new TeyvatCrystalBlock(BlockBehaviour.Properties.of()
+                    .mapColor(MapColor.COLOR_PURPLE)
+                    .strength(4.5F, 10.0F)
+                    .sound(SoundType.AMETHYST_CLUSTER)
+                    .lightLevel(s -> 13)
+                    .noOcclusion()
+                    .requiresCorrectToolForDrops()));
+
+    public static final DeferredHolder<Block, TeyvatCrystalBlock> MANA_CRYSTAL_CLUSTER_A = BLOCKS.register("mana_crystal_cluster_a",
+            () -> new TeyvatCrystalBlock(BlockBehaviour.Properties.of()
+                    .mapColor(MapColor.COLOR_RED)
+                    .strength(6.0F, 14.0F)
+                    .sound(SoundType.AMETHYST_CLUSTER)
+                    .lightLevel(s -> 14)
+                    .noOcclusion()
+                    .requiresCorrectToolForDrops()));
+
+    public static final DeferredHolder<Block, TeyvatCrystalBlock> MANA_CRYSTAL_CLUSTER_S = BLOCKS.register("mana_crystal_cluster_s",
+            () -> new TeyvatCrystalBlock(BlockBehaviour.Properties.of()
+                    .mapColor(MapColor.COLOR_YELLOW)
+                    .strength(8.0F, 20.0F)
+                    .sound(SoundType.AMETHYST_CLUSTER)
+                    .lightLevel(s -> 15)
+                    .noOcclusion()
+                    .requiresCorrectToolForDrops()));
+
+    public static final DeferredHolder<Block, Block> VOID_BLACK_PATH = BLOCKS.register("void_black_path",
+            () -> new Block(BlockBehaviour.Properties.of()
+                    .mapColor(MapColor.COLOR_BLACK)
+                    .strength(3.0F, 1200.0F)
+                    .sound(SoundType.NETHERITE_BLOCK)
+                    .requiresCorrectToolForDrops()));
+
     public static final DeferredHolder<Block, ShrineOfDepthsBlock> ANEMO_SHRINE_BLOCK = BLOCKS.register("anemo_shrine_block",
             () -> new ShrineOfDepthsBlock(ShrineOfDepthsBlock.ShrineElement.ANEMO, BlockBehaviour.Properties.of()
                     .mapColor(MapColor.COLOR_LIGHT_GREEN)
@@ -1613,9 +2257,6 @@ public final class SystemBlocks {
                     .sound(SoundType.WOOD)
                     .noOcclusion()));
 
-    // ==========================================
-    // ✦ MUEBLES Y DECORACIÓN DE TEYVAT ✦
-    // ==========================================
     public static final DeferredHolder<Block, TeyvatTableBlock> BAMBOO_TEA_TABLE = BLOCKS.register("bamboo_outdoor_tea_table",
             () -> new TeyvatTableBlock(BlockBehaviour.Properties.of()
                     .mapColor(MapColor.WOOD)
@@ -1657,6 +2298,28 @@ public final class SystemBlocks {
                     .strength(2.0F, 3.0F)
                     .sound(SoundType.WOOD)
                     .noOcclusion()));
+
+    public static final DeferredHolder<Block, BlackMarketHatchBlock> BLACK_MARKET_HATCH = BLOCKS.register("black_market_hatch",
+            () -> new BlackMarketHatchBlock(BlockBehaviour.Properties.of()
+                    .mapColor(MapColor.METAL)
+                    .strength(5.0F, 8.0F)
+                    .sound(SoundType.NETHERITE_BLOCK)
+                    .noOcclusion()));
+
+    public static final DeferredHolder<Block, MountainStoneRubbleBlock> MOUNTAIN_STONE_RUBBLE = BLOCKS.register("mountain_stone_rubble",
+            () -> new MountainStoneRubbleBlock(BlockBehaviour.Properties.of()
+                    .mapColor(MapColor.STONE)
+                    .strength(1.2F, 4.0F)
+                    .sound(SoundType.STONE)
+                    .noOcclusion()));
+
+    public static final DeferredHolder<Block, ForestWildShrubBlock> FOREST_WILD_SHRUB = BLOCKS.register("forest_wild_shrub",
+            () -> new ForestWildShrubBlock(BlockBehaviour.Properties.of()
+                    .mapColor(MapColor.PLANT)
+                    .strength(0.2F)
+                    .sound(SoundType.GRASS)
+                    .noOcclusion()
+                    .noCollission()));
 
     public static final java.util.Map<String, DeferredHolder<Block, PlushieBlock>> PLUSHIE_BLOCKS = registerAllPlushieBlocks();
 

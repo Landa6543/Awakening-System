@@ -32,7 +32,7 @@ public class GiganticGreatswordItem extends SwordItem implements AwakeningWeapon
     public GiganticGreatswordItem(Properties properties) {
         super(Tiers.NETHERITE, properties
                 .rarity(Rarity.EPIC)
-                .attributes(SwordItem.createAttributes(Tiers.NETHERITE, 14, -3.15F))); // 18 Damage, 0.85 Attack Speed
+                .attributes(SwordItem.createAttributes(Tiers.NETHERITE, 14, -3.15F)));
     }
 
     @Override
@@ -52,10 +52,9 @@ public class GiganticGreatswordItem extends SwordItem implements AwakeningWeapon
                 return InteractionResultHolder.fail(stack);
             }
 
-            sp.getPersistentData().putLong("greatsword_cross_impact_cd", gameTime + 280L); // 14s cooldown
+            sp.getPersistentData().putLong("greatsword_cross_impact_cd", gameTime + 280L);
             sp.getCooldowns().addCooldown(this, 280);
 
-            // Seismic leap & slam: si está en el suelo, salta hacia adelante/arriba; si está en el aire, picado hacia el suelo
             if (sp.onGround()) {
                 sp.setDeltaMovement(sp.getLookAngle().x * 0.8D, 0.65D, sp.getLookAngle().z * 0.8D);
             } else {
@@ -65,7 +64,6 @@ public class GiganticGreatswordItem extends SwordItem implements AwakeningWeapon
 
             if (level instanceof ServerLevel sl) {
                 Vec3 look = sp.getLookAngle();
-                // 1. Sello Arcano Tectónico en el punto de impacto
                 PacketDistributor.sendToPlayersNear(
                         sl, null, sp.getX(), sp.getY(), sp.getZ(), 64.0D,
                         new SpawnMagicCirclePayload(
@@ -80,10 +78,8 @@ public class GiganticGreatswordItem extends SwordItem implements AwakeningWeapon
                 sl.playSound(null, sp.getX(), sp.getY(), sp.getZ(), SoundEvents.GENERIC_EXPLODE.value(), SoundSource.PLAYERS, 1.6F, 0.7F);
                 sl.playSound(null, sp.getX(), sp.getY(), sp.getZ(), SoundEvents.ANVIL_LAND, SoundSource.PLAYERS, 1.5F, 0.5F);
 
-                // Sacudida sísmica pesada
                 CameraShakePayload.sendToNearby(sl, sp.getX(), sp.getY(), sp.getZ(), 36.0D, 0.85F, 14);
 
-                // 2. Onda Sísmica Titánica de Choque Terrestre
                 float dmg = (float) (28.0D * WeaponLevelManager.getDamageMultiplier(stack));
                 SlashWaveEntity seismicWave = new SlashWaveEntity(sl, sp, SlashWaveEntity.TYPE_PYRO_FLAME, dmg, 5.2F, 1.6F, 0.0F, 24, 10);
                 seismicWave.setDeltaMovement(look.scale(2.0D));
@@ -93,7 +89,7 @@ public class GiganticGreatswordItem extends SwordItem implements AwakeningWeapon
                 for (LivingEntity nearby : level.getEntitiesOfClass(LivingEntity.class, box)) {
                     if (nearby != sp && (nearby instanceof Enemy || nearby != player)) {
                         nearby.hurt(nearby.damageSources().playerAttack(sp), dmg * 0.8F);
-                        nearby.setDeltaMovement(0.0D, 0.85D, 0.0D); // Launch into air
+                        nearby.setDeltaMovement(0.0D, 0.85D, 0.0D);
                         nearby.addEffect(new MobEffectInstance(MobEffects.MOVEMENT_SLOWDOWN, 100, 2));
                     }
                 }
@@ -128,7 +124,6 @@ public class GiganticGreatswordItem extends SwordItem implements AwakeningWeapon
             sl.sendParticles(ParticleTypes.CRIT, target.getX(), target.getY() + 1.0D, target.getZ(), 25, 0.6D, 0.6D, 0.6D, 0.2D);
             sl.playSound(null, target.getX(), target.getY(), target.getZ(), SoundEvents.MACE_SMASH_GROUND, SoundSource.PLAYERS, 1.2F, 0.7F);
 
-            // Broad cleave shockwave
             AABB cleave = target.getBoundingBox().inflate(3.5D, 1.5D, 3.5D);
             for (LivingEntity nearby : sl.getEntitiesOfClass(LivingEntity.class, cleave)) {
                 if (nearby != attacker && nearby != target && (nearby instanceof Enemy)) {

@@ -116,7 +116,6 @@ public abstract class HypostasisBaseBossEntity extends Monster {
     public void tick() {
         super.tick();
 
-        // Increment continuous visual animation tick
         float anim = this.entityData.get(DATA_ANIM_TICK) + 1.0F;
         this.entityData.set(DATA_ANIM_TICK, anim);
 
@@ -132,7 +131,6 @@ public abstract class HypostasisBaseBossEntity extends Monster {
         ServerLevel sl = (ServerLevel) this.level();
         Player target = sl.getNearestPlayer(this, 40.0D);
 
-        // Chequeo de Fase de Renacimiento (Last Stand al 6% de HP o menos)
         if (!revivalAttempted && this.getHealth() <= this.getMaxHealth() * 0.06F && getBossState() != STATE_REVIVAL && getBossState() != STATE_DEFEATED) {
             triggerRevivalPhase(sl);
             return;
@@ -141,12 +139,10 @@ public abstract class HypostasisBaseBossEntity extends Monster {
         int state = getBossState();
         switch (state) {
             case STATE_PROTECTED -> {
-                // Flotar suavemente hacia el jugador a 2.5 bloques del suelo
                 hoverTowards(target, 2.5D, 0.06D);
 
                 stateTimer--;
                 if (stateTimer <= 0) {
-                    // Seleccionar un nuevo ataque
                     selectAndStartAttack(target);
                 }
             }
@@ -156,39 +152,32 @@ public abstract class HypostasisBaseBossEntity extends Monster {
                 float progress = attackDuration > 0 ? (float) attackElapsed / (float) attackDuration : 1.0F;
                 setAttackProgress(Math.min(progress, 1.0F));
 
-                // Ejecutar ataque específico elemental
                 if (target != null) {
                     executeAttackStep(sl, target, currentAttack, progress);
                 }
 
                 if (attackElapsed >= attackDuration) {
-                    // Fin del ataque -> entrar en Estado Vulnerable (Downtime para el jugador)
                     startVulnerableState();
                 }
             }
             case STATE_VULNERABLE -> {
-                // Descender hacia el suelo para exponer el núcleo
                 descendToGround();
 
                 stateTimer--;
                 if (stateTimer <= 0) {
-                    // Reensamblar y volver al estado protegido
                     endVulnerableState(sl);
                 }
             }
             case STATE_REVIVAL -> {
-                // Flotar a altura sagrada
                 hoverAtHeight(3.5D);
 
                 stateTimer--;
                 boolean cleared = checkRevivalObjectsCleared(sl);
                 if (cleared) {
-                    // Todos los prismas/orbes destruidos -> Muerte definitiva
                     sl.playSound(null, this.getX(), this.getY(), this.getZ(), SoundEvents.WITHER_DEATH, SoundSource.HOSTILE, 1.8F, 1.0F);
                     setBossState(STATE_DEFEATED);
                     this.hurt(this.damageSources().genericKill(), 9999.0F);
                 } else if (stateTimer <= 0) {
-                    // Tiempo agotado sin destruir prismas -> Se recupera 30% de HP
                     cleanupRevivalObjects(sl);
                     this.heal(this.getMaxHealth() * 0.30F);
                     sl.playSound(null, this.getX(), this.getY(), this.getZ(), SoundEvents.BEACON_ACTIVATE, SoundSource.HOSTILE, 1.5F, 1.2F);
@@ -223,7 +212,7 @@ public abstract class HypostasisBaseBossEntity extends Monster {
         setBossState(STATE_VULNERABLE);
         setAttackType(HypostasisAttackType.NONE);
         setAttackProgress(0.0F);
-        this.stateTimer = 130; // ~6.5 segundos de núcleo expuesto
+        this.stateTimer = 130;
 
         if (this.level() instanceof ServerLevel sl) {
             sl.playSound(null, this.getX(), this.getY(), this.getZ(), SoundEvents.AMETHYST_CLUSTER_BREAK, SoundSource.HOSTILE, 1.8F, 0.9F);
@@ -233,7 +222,7 @@ public abstract class HypostasisBaseBossEntity extends Monster {
 
     protected void endVulnerableState(ServerLevel sl) {
         setBossState(STATE_PROTECTED);
-        this.stateTimer = 70; // 3.5s antes del próximo ataque
+        this.stateTimer = 70;
 
         sl.playSound(null, this.getX(), this.getY(), this.getZ(), SoundEvents.AMETHYST_BLOCK_RESONATE, SoundSource.HOSTILE, 1.8F, 1.2F);
         sl.playSound(null, this.getX(), this.getY(), this.getZ(), SoundEvents.BEACON_ACTIVATE, SoundSource.HOSTILE, 1.4F, 1.4F);
@@ -243,7 +232,7 @@ public abstract class HypostasisBaseBossEntity extends Monster {
         this.revivalAttempted = true;
         setBossState(STATE_REVIVAL);
         setAttackType(HypostasisAttackType.NONE);
-        this.stateTimer = 340; // 17 segundos para romper los prismas
+        this.stateTimer = 340;
 
         sl.playSound(null, this.getX(), this.getY(), this.getZ(), getRevivalSound(), SoundSource.HOSTILE, 1.8F, 1.0F);
 
@@ -298,7 +287,6 @@ public abstract class HypostasisBaseBossEntity extends Monster {
     public boolean hurt(DamageSource source, float amount) {
         int state = getBossState();
 
-        // Si está en fase de renacimiento o ya derrotado, es completamente inmune
         if (state == STATE_REVIVAL || state == STATE_DEFEATED) {
             if (this.level() instanceof ServerLevel sl) {
                 sl.playSound(null, this.getX(), this.getY(), this.getZ(), SoundEvents.SHIELD_BLOCK, SoundSource.HOSTILE, 1.0F, 1.5F);
@@ -306,7 +294,6 @@ public abstract class HypostasisBaseBossEntity extends Monster {
             return false;
         }
 
-        // Si está protegido, absorbe el 90% del daño y genera efecto de desvío
         if (state == STATE_PROTECTED || state == STATE_ATTACKING) {
             float reduced = amount * 0.10F;
             if (this.level() instanceof ServerLevel sl) {
@@ -316,7 +303,6 @@ public abstract class HypostasisBaseBossEntity extends Monster {
             return super.hurt(source, reduced);
         }
 
-        // Si está VULNERABLE, recibe el 100% del daño + golpe crítico garantizado (+25% extra)
         if (state == STATE_VULNERABLE) {
             if (this.level() instanceof ServerLevel sl) {
                 sl.playSound(null, this.getX(), this.getY(), this.getZ(), SoundEvents.PLAYER_ATTACK_CRIT, SoundSource.HOSTILE, 1.4F, 1.1F);
@@ -367,7 +353,6 @@ public abstract class HypostasisBaseBossEntity extends Monster {
         this.revivalAttempted = compound.getBoolean("RevivalAttempted");
     }
 
-    // Métodos abstractos a implementar por cada Hipóstasis elemental
     protected abstract Component getBossTitle();
     protected abstract BossEvent.BossBarColor getBossBarColor();
     public abstract ParticleOptions getElementalParticle();

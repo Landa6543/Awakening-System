@@ -22,9 +22,9 @@ import net.minecraft.world.phys.Vec3;
 public class YggdrasilTreeGenerator {
 
     public static final int BASE_Y = 88;
-    public static final int TRUNK_HEIGHT = 145; // Alcanza Y = 233
-    public static final BlockPos APEX_SUMMIT_POS = new BlockPos(0, 245, 0); // Cima absoluta sobre todas las hojas
-    public static final BlockPos ASCENSION_GATE_POS = new BlockPos(0, 231, 6); // Portal dimensional oculto entre las ramas maestras
+    public static final int TRUNK_HEIGHT = 145;
+    public static final BlockPos APEX_SUMMIT_POS = new BlockPos(0, 245, 0);
+    public static final BlockPos ASCENSION_GATE_POS = new BlockPos(0, 231, 6);
     public static final BlockPos GROUND_ASCENSION_GATE_POS = new BlockPos(0, BASE_Y, 20);
     public static final BlockPos OVERWORLD_RETURN_GATE_POS = new BlockPos(0, BASE_Y, 20);
 
@@ -32,19 +32,14 @@ public class YggdrasilTreeGenerator {
         AwakeningSystemMod.LOGGER.info("Iniciando generación limpia y majestuosa de Yggdrasil en {}", basePos);
         RandomSource random = RandomSource.create(level.getSeed() ^ 0x5947474452415349L);
 
-        // 1. Zócalo continental y despeje total del espacio aéreo (elimina montañas encima y árboles flotantes)
         clearAirAndBuildMountainBase(level, basePos);
 
-        // 2. 8 Raíces contrafuerte monumentales
         generateButtressRoots(level, basePos, random);
 
-        // 3. Tronco colosal orgánico con 6 nervaduras
         generateTrunk(level, basePos, random);
 
-        // 4. Ramas mayores tridimensionales y cúpulas de follaje de cerezo
         generateBoughsAndCanopies(level, basePos, random);
 
-        // 5. Portal Secreto a Murim oculto orgánicamente entre las ramas del dosel (sin estructuras artificiales)
         generateHiddenMurimPortal(level, basePos, random);
 
         AwakeningSystemMod.LOGGER.info("¡Yggdrasil procedural generado exitosamente sin obstrucciones!");
@@ -66,7 +61,6 @@ public class YggdrasilTreeGenerator {
         int cy = ASCENSION_GATE_POS.getY();
         int cz = ASCENSION_GATE_POS.getZ();
 
-        // 1. Terraza semicircular del Mirador Celestial (y = cy - 1)
         for (int dx = -5; dx <= 5; dx++) {
             for (int dz = -4; dz <= 6; dz++) {
                 double dist = Math.sqrt(dx * dx + (dz - 1) * (dz - 1));
@@ -74,7 +68,6 @@ public class YggdrasilTreeGenerator {
 
                 BlockPos p = new BlockPos(cx + dx, cy - 1, cz + dz);
                 if (dist > 4.6D) {
-                    // Borde de shroomlight y madera pulida
                     level.setBlock(p, (dx % 2 == 0) ? Blocks.SHROOMLIGHT.defaultBlockState() : Blocks.POLISHED_DEEPSLATE.defaultBlockState(), 2);
                 } else {
                     level.setBlock(p, ((dx + dz) % 2 == 0) ? Blocks.CHERRY_PLANKS.defaultBlockState() : Blocks.CHISELED_DEEPSLATE.defaultBlockState(), 2);
@@ -82,7 +75,6 @@ public class YggdrasilTreeGenerator {
             }
         }
 
-        // 2. Despeje de aire de la terraza y mirador (dy de 0 a 6)
         for (int dx = -5; dx <= 5; dx++) {
             for (int dz = -4; dz <= 6; dz++) {
                 double dist = Math.sqrt(dx * dx + (dz - 1) * (dz - 1));
@@ -95,7 +87,6 @@ public class YggdrasilTreeGenerator {
             }
         }
 
-        // 3. Arco Ceremonial Monumental de los Nueve Cielos (en cz)
         for (int dx = -3; dx <= 3; dx++) {
             for (int dy = 0; dy <= 5; dy++) {
                 boolean isBorder = (Math.abs(dx) == 2 || Math.abs(dx) == 3 || dy == 0 || dy == 4 || dy == 5);
@@ -115,24 +106,21 @@ public class YggdrasilTreeGenerator {
                     }
                     level.setBlock(p, mat, 2);
                 } else {
-                    // Vano interior con el bloque de portal dimensional
                     level.setBlock(p, com.soybe.awakeningsystem.block.SystemBlocks.ASCENSION_PORTAL.get().defaultBlockState(), 2);
                 }
             }
         }
 
-        // 4. Faroles de Fuego del Alma en las columnas maestras
         level.setBlock(new BlockPos(cx - 3, cy + 6, cz), Blocks.SOUL_LANTERN.defaultBlockState(), 2);
         level.setBlock(new BlockPos(cx + 3, cy + 6, cz), Blocks.SOUL_LANTERN.defaultBlockState(), 2);
 
-        // 5. Pilares guías de acceso al portal (a cz + 3)
         level.setBlock(new BlockPos(cx - 2, cy, cz + 3), Blocks.POLISHED_DEEPSLATE_WALL.defaultBlockState(), 2);
         level.setBlock(new BlockPos(cx - 2, cy + 1, cz + 3), Blocks.SOUL_LANTERN.defaultBlockState(), 2);
         level.setBlock(new BlockPos(cx + 2, cy, cz + 3), Blocks.POLISHED_DEEPSLATE_WALL.defaultBlockState(), 2);
         level.setBlock(new BlockPos(cx + 2, cy + 1, cz + 3), Blocks.SOUL_LANTERN.defaultBlockState(), 2);
     }
 
-    private static final int FAST_FLAG = 18; // UPDATE_CLIENTS | UPDATE_KNOWN_SHAPE (evita recálculos de forma redundantes)
+    private static final int FAST_FLAG = 18;
 
     /**
      * Modela la Gran Montaña Sagrada de Yggdrasil alrededor del tronco, raíces monumentales y santuario:
@@ -158,14 +146,13 @@ public class YggdrasilTreeGenerator {
 
                 int targetY;
                 if (dist <= plateauRadius) {
-                    targetY = BASE_Y; // 88: Meseta ceremonial amplia
+                    targetY = BASE_Y;
                 } else {
                     double t = (dist - plateauRadius) / (double) (blendRadius - plateauRadius);
                     double s = 0.5D * (1.0D - Math.cos(Math.PI * t));
                     targetY = BASE_Y + (int) Math.round(s * (hNat - BASE_Y));
                 }
 
-                // 1. Limpieza de aire en la meseta para despejar árboles vanilla que atraviesen las raíces
                 if (dist <= plateauRadius) {
                     int topClear = Math.max(hNat + 1, BASE_Y + 14);
                     for (int y = targetY + 1; y <= topClear; y++) {
@@ -176,12 +163,10 @@ public class YggdrasilTreeGenerator {
                     }
                 }
 
-                // 2. Colocar superficie de la montaña sagrada (césped verde natural y musgo)
                 BlockPos surf = new BlockPos(worldX, targetY, worldZ);
                 boolean isMoss = (dist <= 30.0D && (dx + dz) % 5 == 0);
                 level.setBlock(surf, isMoss ? Blocks.MOSS_BLOCK.defaultBlockState() : Blocks.GRASS_BLOCK.defaultBlockState(), FAST_FLAG);
 
-                // 3. Cimientos sólidos debajo del césped
                 int minDepth = Math.max(targetY - 4, hNat - 2);
                 for (int y = targetY - 1; y >= minDepth; y--) {
                     BlockPos bp = new BlockPos(worldX, y, worldZ);
@@ -195,7 +180,6 @@ public class YggdrasilTreeGenerator {
             }
         }
 
-        // 4. Sendero ceremonial que une el portal en las raíces (Z=20) con la plaza de llegada (Z=26)
         for (int z = 18; z <= 28; z++) {
             for (int x = -2; x <= 2; x++) {
                 BlockPos p = new BlockPos(centerX + x, BASE_Y, centerZ + z);
@@ -216,8 +200,6 @@ public class YggdrasilTreeGenerator {
         }
     }
 
-
-
     /**
      * Genera 8 raíces monumentales semienterradas con arcos que sobresalen orgánicamente del terreno.
      * Las raíces nacen del tronco, penetran en la tierra y emergen en arcos transitables cubiertos de musgo y azaleas.
@@ -226,7 +208,6 @@ public class YggdrasilTreeGenerator {
         for (int i = 0; i < 8; i++) {
             double baseAngle = i * (Math.PI / 4.0) + 0.12;
             generateSingleWindingRoot(level, basePos, baseAngle, random, false);
-            // Bifurcación secundaria que se ramifica orgánicamente
             if (i % 2 == 0) {
                 generateSingleWindingRoot(level, basePos, baseAngle + 0.28, random, true);
             }
@@ -246,33 +227,26 @@ public class YggdrasilTreeGenerator {
             int rx = basePos.getX() + (int) Math.round(Math.cos(angle) * dist);
             int rz = basePos.getZ() + (int) Math.round(Math.sin(angle) * dist);
 
-            // Perfil de elevación: Entierro y Arcos que sobresalen
             int rootY;
             boolean isArch = false;
             if (dist <= 13.0) {
-                // Nacimiento en la base del tronco, descendiendo hacia el suelo
                 double f = (13.0 - dist) / 5.0;
                 rootY = BASE_Y + (int) Math.round(f * f * 6.0) - 1;
             } else if (dist <= 22.0) {
-                // Segmento 1: Enterrado bajo tierra
                 rootY = BASE_Y - 3;
             } else if (dist <= 36.0) {
-                // Segmento 2: ARCO MONUMENTAL QUE SOBRESALE DE LA TIERRA
                 double archT = (dist - 22.0) / 14.0;
                 double archH = Math.sin(archT * Math.PI) * 4.5;
                 rootY = BASE_Y + (int) Math.round(archH);
                 if (rootY > BASE_Y) isArch = true;
             } else if (dist <= 45.0) {
-                // Segmento 3: Se vuelve a sumergir bajo tierra
                 rootY = BASE_Y - 3;
             } else if (dist <= 54.0) {
-                // Segmento 4: Segundo montículo que asoma sobre la hierba
                 double archT2 = (dist - 45.0) / 9.0;
                 double archH2 = Math.sin(archT2 * Math.PI) * 2.2;
                 rootY = BASE_Y + (int) Math.round(archH2);
                 if (rootY > BASE_Y) isArch = true;
             } else {
-                // Anclaje final en roca profunda
                 rootY = BASE_Y - 4;
             }
 
@@ -287,17 +261,14 @@ public class YggdrasilTreeGenerator {
 
                             BlockState mat;
                             if (rp.getY() < BASE_Y && !isArch) {
-                                // Parte subterránea: alternar madera profunda y tierra enraizada
                                 mat = (surface && random.nextInt(3) == 0) ? Blocks.ROOTED_DIRT.defaultBlockState() : Blocks.DARK_OAK_LOG.defaultBlockState();
                             } else {
-                                // Parte expuesta / arco
                                 mat = surface ?
                                         (random.nextInt(3) == 0 ? Blocks.STRIPPED_DARK_OAK_WOOD.defaultBlockState() : Blocks.DARK_OAK_WOOD.defaultBlockState()) :
                                         Blocks.DARK_OAK_LOG.defaultBlockState();
                             }
                             level.setBlock(rp, mat, 2);
 
-                            // Decoración superficial cuando sobresale de la tierra
                             if (oy == thickness && rootY + oy >= BASE_Y) {
                                 if (random.nextInt(4) == 0) {
                                     level.setBlock(rp.above(), Blocks.MOSS_CARPET.defaultBlockState(), 2);
@@ -310,7 +281,6 @@ public class YggdrasilTreeGenerator {
                 }
             }
 
-            // Si está bajo tierra, garantizar que la superficie a BASE_Y sea tierra enraizada con musgo
             if (rootY < BASE_Y) {
                 BlockPos surfPos = new BlockPos(rx, BASE_Y, rz);
                 if (level.getBlockState(surfPos).is(Blocks.GRASS_BLOCK) || level.getBlockState(surfPos).is(Blocks.DIRT)) {
@@ -318,7 +288,6 @@ public class YggdrasilTreeGenerator {
                 }
             }
 
-            // Si es un arco que sobresale del suelo, vaciar túnel transitable debajo y colgar raíces
             if (isArch && rootY - thickness > BASE_Y) {
                 for (int ox = -1; ox <= 1; ox++) {
                     for (int oz = -1; oz <= 1; oz++) {
@@ -326,7 +295,6 @@ public class YggdrasilTreeGenerator {
                             BlockPos tun = new BlockPos(rx + ox, ty, rz + oz);
                             level.setBlock(tun, Blocks.AIR.defaultBlockState(), 2);
                         }
-                        // Raíces colgantes bajo el arco
                         BlockPos underRoot = new BlockPos(rx + ox, rootY - thickness, rz + oz);
                         if (random.nextInt(3) == 0 && level.getBlockState(underRoot.below()).isAir()) {
                             level.setBlock(underRoot.below(), Blocks.HANGING_ROOTS.defaultBlockState(), 2);
@@ -350,13 +318,13 @@ public class YggdrasilTreeGenerator {
 
             double r;
             if (y < 35) {
-                r = 18.0 - (y / 35.0) * 5.2; // 18.0 -> 12.8
+                r = 18.0 - (y / 35.0) * 5.2;
             } else if (y < 85) {
-                r = 12.8 - ((y - 35) / 50.0) * 3.6; // 12.8 -> 9.2
+                r = 12.8 - ((y - 35) / 50.0) * 3.6;
             } else if (y < 135) {
-                r = 9.2 - ((y - 85) / 50.0) * 2.2; // 9.2 -> 7.0
+                r = 9.2 - ((y - 85) / 50.0) * 2.2;
             } else {
-                r = 7.0 - ((y - 135) / 40.0) * 1.8; // 7.0 -> 5.2
+                r = 7.0 - ((y - 135) / 40.0) * 1.8;
             }
 
             int cx = centerX + (int) Math.round(4.2 * Math.sin(y * 0.028));
@@ -399,9 +367,9 @@ public class YggdrasilTreeGenerator {
         int centerZ = basePos.getZ();
 
         BoughTier[] tiers = new BoughTier[] {
-                new BoughTier(60, 4, 36.0, 0.0, 14.0),           // Nivel 1 (Y ~ 170)
-                new BoughTier(100, 4, 38.0, Math.PI / 4.0, 16.0), // Nivel 2 (Y ~ 210)
-                new BoughTier(138, 4, 28.0, 0.2, 14.0)           // Nivel 3 (Y ~ 250)
+                new BoughTier(60, 4, 36.0, 0.0, 14.0),
+                new BoughTier(100, 4, 38.0, Math.PI / 4.0, 16.0),
+                new BoughTier(138, 4, 28.0, 0.2, 14.0)
         };
 
         for (BoughTier tier : tiers) {
@@ -425,21 +393,17 @@ public class YggdrasilTreeGenerator {
                         cz + Math.sin(angle) * reach
                 );
 
-                // Dibujar rama principal con curva Bézier cuadrática sólida
                 drawBezierBranch(level, p0, p1, p2, 3.2, 1.4, random);
 
-                // Sub-ramificación secundaria
                 double subAngle1 = angle + 0.35;
                 Vec3 subEnd1 = p2.add(Math.cos(subAngle1) * 10.0, 3.0, Math.sin(subAngle1) * 10.0);
                 drawBezierBranch(level, p2, p2.add(0, 1, 0), subEnd1, 1.4, 0.9, random);
 
-                // Nubes de follaje de cerezo esponjosas en los extremos
                 generateCanopyCloud(level, BlockPos.containing(p2), 11, 5, 11, random);
                 generateCanopyCloud(level, BlockPos.containing(subEnd1), 8, 4, 8, random);
             }
         }
 
-        // Gran Corona Cúpula Celestial en el ápice de Yggdrasil (Y ~ 290)
         BlockPos apexPos = new BlockPos(centerX, BASE_Y + TRUNK_HEIGHT, centerZ);
         generateCanopyCloud(level, apexPos, 18, 7, 18, random);
         generateCanopyCloud(level, apexPos.above(4), 13, 5, 13, random);
@@ -489,13 +453,11 @@ public class YggdrasilTreeGenerator {
                     double normZ = (double) dz / rz;
                     double distSq = normX * normX + normY * normY + normZ * normZ;
 
-                    // Capa envolvente de follaje (hollow shell) para reducir bloques en un 80% con idéntico aspecto
                     if (distSq <= 1.0 && (distSq >= 0.45 || distSq < 0.12 || random.nextFloat() > 0.4f)) {
                         BlockPos pos = center.offset(dx, dy, dz);
                         BlockState existing = level.getBlockState(pos);
 
                         if (existing.isAir() || existing.getBlock() instanceof LeavesBlock) {
-                            // Núcleo bioluminiscente de Shroomlight en el interior
                             if (distSq < 0.10 && random.nextInt(3) == 0) {
                                 level.setBlock(pos, Blocks.SHROOMLIGHT.defaultBlockState(), FAST_FLAG);
                             } else {

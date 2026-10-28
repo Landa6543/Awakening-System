@@ -1,0 +1,12 @@
+{
+  "variants": {
+    "facing=north,waterlogged=false": { "model": "awakening_system:block/statue_of_the_seven" },
+    "facing=east,waterlogged=false":  { "model": "awakening_system:block/statue_of_the_seven", "y": 90 },
+    "facing=south,waterlogged=false": { "model": "awakening_system:block/statue_of_the_seven", "y": 180 },
+    "facing=west,waterlogged=false":  { "model": "awakening_system:block/statue_of_the_seven", "y": 270 },
+    "facing=north,waterlogged=true":  { "model": "awakening_system:block/statue_of_the_seven" },
+    "facing=east,waterlogged=true":   { "model": "awakening_system:block/statue_of_the_seven", "y": 90 },
+    "facing=south,waterlogged=true":  { "model": "awakening_system:block/statue_of_the_seven", "y": 180 },
+    "facing=west,waterlogged=true":   { "model": "awakening_system:block/statue_of_the_seven", "y": 270 }
+  }
+}

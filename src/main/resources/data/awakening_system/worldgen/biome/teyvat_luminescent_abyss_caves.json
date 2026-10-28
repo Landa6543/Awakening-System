@@ -7,7 +7,6 @@
     "fog_color": 2631720,
     "water_color": 3426420,
     "water_fog_color": 3426420,
-    "ambient_sound": "minecraft:ambient.cave",
     "particle": {
       "options": {
         "type": "minecraft:glow"
@@ -30,7 +29,8 @@
         "maxCount": 2
       }
     ],
-    "creature": [
+    "creature": [],
+    "underground_water_creature": [
       {
         "type": "minecraft:glow_squid",
         "weight": 25,
@@ -40,7 +40,13 @@
     ]
   },
   "spawn_costs": {},
-  "carvers": {},
+  "carvers": {
+    "air": [
+      "minecraft:cave",
+      "minecraft:cave_extra_underground",
+      "minecraft:canyon"
+    ]
+  },
   "features": [
     [],
     [],

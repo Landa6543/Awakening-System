@@ -1,36 +1,5 @@
 {
   "type": "neoforge:add_spawns",
   "biomes": "#minecraft:is_overworld",
-  "spawners": [
-    {
-      "type": "awakening_system:goblin_scout",
-      "weight": 15,
-      "minCount": 1,
-      "maxCount": 3
-    },
-    {
-      "type": "awakening_system:goblin_warrior",
-      "weight": 10,
-      "minCount": 1,
-      "maxCount": 2
-    },
-    {
-      "type": "awakening_system:goblin_shaman",
-      "weight": 6,
-      "minCount": 1,
-      "maxCount": 1
-    },
-    {
-      "type": "awakening_system:isekai_slime",
-      "weight": 15,
-      "minCount": 1,
-      "maxCount": 3
-    },
-    {
-      "type": "awakening_system:spirit_fox",
-      "weight": 8,
-      "minCount": 1,
-      "maxCount": 2
-    }
-  ]
+  "spawners": []
 }

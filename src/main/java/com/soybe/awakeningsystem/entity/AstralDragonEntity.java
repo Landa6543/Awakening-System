@@ -43,7 +43,7 @@ import org.jetbrains.annotations.Nullable;
  */
 public class AstralDragonEntity extends TamableAnimal implements FlyingAnimal, RangedAttackMob {
 
-    private int scaleDropTimer = 12000 + this.random.nextInt(6000); // 10-15 min
+    private int scaleDropTimer = 12000 + this.random.nextInt(6000);
 
     public AstralDragonEntity(EntityType<? extends AstralDragonEntity> type, Level level) {
         super(type, level);
@@ -103,7 +103,6 @@ public class AstralDragonEntity extends TamableAnimal implements FlyingAnimal, R
 
         ItemStack itemstack = player.getItemInHand(hand);
 
-        // 1. Proceso de Domesticación (con alimento místico, en creativo o con mano vacía)
         if (!this.isTame()) {
             if (isFood(itemstack)) {
                 if (!player.getAbilities().instabuild) {
@@ -114,12 +113,11 @@ public class AstralDragonEntity extends TamableAnimal implements FlyingAnimal, R
                 this.setInSittingPose(true);
                 this.navigation.stop();
                 this.setTarget(null);
-                this.level().broadcastEntityEvent(this, (byte) 7); // Corazones
+                this.level().broadcastEntityEvent(this, (byte) 7);
                 this.playSound(SoundEvents.AMETHYST_BLOCK_CHIME, 1.2F, 1.6F);
                 this.playSound(SoundEvents.STRIDER_HAPPY, 1.0F, 1.6F);
                 return InteractionResult.sidedSuccess(this.level().isClientSide);
             } else if (itemstack.isEmpty() || player.getAbilities().instabuild) {
-                // Domesticación directa con mano vacía
                 this.tame(player);
                 this.setOrderedToSit(true);
                 this.setInSittingPose(true);
@@ -133,9 +131,7 @@ public class AstralDragonEntity extends TamableAnimal implements FlyingAnimal, R
             return InteractionResult.PASS;
         }
 
-        // 2. Interacción cuando ya está domesticado
         if (this.isTame() && this.isOwnedBy(player)) {
-            // Curar si está herido y se le ofrece comida
             if (isFood(itemstack) && this.getHealth() < this.getMaxHealth()) {
                 if (!player.getAbilities().instabuild) {
                     itemstack.shrink(1);
@@ -147,7 +143,6 @@ public class AstralDragonEntity extends TamableAnimal implements FlyingAnimal, R
                 return InteractionResult.sidedSuccess(this.level().isClientSide);
             }
 
-            // Alternar estado de Sentado / Levantarse
             boolean willSit = !this.isOrderedToSit();
             this.setOrderedToSit(willSit);
             this.setInSittingPose(willSit);
@@ -157,7 +152,7 @@ public class AstralDragonEntity extends TamableAnimal implements FlyingAnimal, R
 
             if (willSit) {
                 if (!this.onGround()) {
-                    this.setDeltaMovement(this.getDeltaMovement().x * 0.5D, -0.4D, this.getDeltaMovement().z * 0.5D); // Desciende suavemente
+                    this.setDeltaMovement(this.getDeltaMovement().x * 0.5D, -0.4D, this.getDeltaMovement().z * 0.5D);
                 }
                 this.playSound(SoundEvents.STRIDER_AMBIENT, 0.9F, 1.6F);
                 this.playSound(SoundEvents.AMETHYST_BLOCK_CHIME, 0.9F, 1.8F);
@@ -174,7 +169,6 @@ public class AstralDragonEntity extends TamableAnimal implements FlyingAnimal, R
     public void aiStep() {
         super.aiStep();
 
-        // Control de gravedad: si está sentado desciende y se sienta en tierra, si no, vuela suavemente
         if (this.isOrderedToSit() || this.isInSittingPose()) {
             this.setNoGravity(false);
             if (!this.onGround()) {
@@ -184,11 +178,9 @@ public class AstralDragonEntity extends TamableAnimal implements FlyingAnimal, R
             this.setNoGravity(!this.onGround());
         }
 
-        // 1. Efectos del servidor (Resonancia Astral con su maestro)
         if (!this.level().isClientSide) {
             if (this.isTame() && this.getOwner() instanceof Player owner) {
-                if (this.distanceToSqr(owner) < 144.0D) { // Radio de 12 bloques
-                    // Resonancia de Maná: Regeneración pasiva continua
+                if (this.distanceToSqr(owner) < 144.0D) {
                     if (this.tickCount % 40 == 0) {
                         SystemData data = SystemEvents.data(owner);
                         if (data != null && data.energy() < data.maxEnergy()) {
@@ -202,7 +194,6 @@ public class AstralDragonEntity extends TamableAnimal implements FlyingAnimal, R
                 }
             }
 
-            // Mudanza periódica de escamas astrales
             if (--this.scaleDropTimer <= 0) {
                 this.scaleDropTimer = 12000 + this.random.nextInt(6000);
                 this.playSound(SoundEvents.AMETHYST_BLOCK_RESONATE, 1.0F, 1.8F);
@@ -214,7 +205,6 @@ public class AstralDragonEntity extends TamableAnimal implements FlyingAnimal, R
             }
         }
 
-        // 2. Destellos astrales clientes (Sutiles partículas de polvo estelar y reposo)
         if (this.level().isClientSide) {
             if (this.isOrderedToSit()) {
                 if (this.random.nextInt(16) == 0) {
@@ -256,27 +246,27 @@ public class AstralDragonEntity extends TamableAnimal implements FlyingAnimal, R
 
     @Override
     public float getVoicePitch() {
-        return (this.random.nextFloat() - this.random.nextFloat()) * 0.1F + 1.55F; // Tono dulce y agudo de dragón cría
+        return (this.random.nextFloat() - this.random.nextFloat()) * 0.1F + 1.55F;
     }
 
     @Override
     protected float getSoundVolume() {
-        return 0.55F; // Volumen moderado de mascota
+        return 0.55F;
     }
 
     @Override
     protected SoundEvent getAmbientSound() {
-        return SoundEvents.STRIDER_AMBIENT; // Ronroneo / gorjeo suave de reptil místico
+        return SoundEvents.STRIDER_AMBIENT;
     }
 
     @Override
     protected SoundEvent getHurtSound(DamageSource damageSource) {
-        return SoundEvents.FOX_HURT; // Chillido agudo de cachorro / cría
+        return SoundEvents.FOX_HURT;
     }
 
     @Override
     protected SoundEvent getDeathSound() {
-        return SoundEvents.STRIDER_DEATH; // Suspiro triste suave
+        return SoundEvents.STRIDER_DEATH;
     }
 
     @Override
@@ -286,13 +276,11 @@ public class AstralDragonEntity extends TamableAnimal implements FlyingAnimal, R
 
     @Override
     public boolean causeFallDamage(float fallDistance, float multiplier, DamageSource source) {
-        // Los dragones astrales planean con sus alas y son totalmente inmunes a daño por caída
         return false;
     }
 
     @Override
     protected void checkFallDamage(double y, boolean onGround, BlockState state, BlockPos pos) {
-        // Sin acumulación de daño de caída al descender
     }
 
     @Override

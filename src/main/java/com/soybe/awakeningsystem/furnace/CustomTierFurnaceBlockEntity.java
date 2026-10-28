@@ -140,10 +140,14 @@ public class CustomTierFurnaceBlockEntity extends BaseContainerBlockEntity imple
     public CustomTierFurnaceBlockEntity(BlockPos pos, BlockState state, FurnaceTier tier) {
         super(switch (tier) {
             case ABYSSAL -> ModBlockEntities.ABYSSAL_FURNACE.get();
+            case SOUL_ALLOY -> ModBlockEntities.SOUL_ALLOY_FURNACE.get();
+            case ASTRALITE -> ModBlockEntities.ASTRALITE_FURNACE.get();
             case MITHRIL -> ModBlockEntities.MITHRIL_FURNACE.get();
             case ADAMANTITE -> ModBlockEntities.ADAMANTITE_FURNACE.get();
             case SPIRIT_JADE -> ModBlockEntities.SPIRIT_JADE_FURNACE.get();
             case ASTRAL -> ModBlockEntities.ASTRAL_FURNACE.get();
+            case CELESTIAL -> ModBlockEntities.CELESTIAL_FURNACE.get();
+            case PRIMORDIAL -> ModBlockEntities.PRIMORDIAL_FURNACE.get();
         }, pos, state);
         this.tier = tier;
         this.cookingTotalTime = tier.getCookTime();
@@ -198,7 +202,6 @@ public class CustomTierFurnaceBlockEntity extends BaseContainerBlockEntity imple
         boolean wasLit = be.isLit();
         boolean stateChanged = false;
 
-        // Sincronizar propiedad TYPE del bloque con la mejora instalada
         int targetType = be.getAugmentType();
         if (state.hasProperty(CustomTierFurnaceBlock.TYPE) && state.getValue(CustomTierFurnaceBlock.TYPE) != targetType) {
             state = state.setValue(CustomTierFurnaceBlock.TYPE, targetType);
@@ -215,7 +218,6 @@ public class CustomTierFurnaceBlockEntity extends BaseContainerBlockEntity imple
         boolean hasInput = !inputStack.isEmpty();
         boolean hasFuel = !fuelStack.isEmpty();
 
-        // Tiempo total de cocción: normal según el tier, o 2x velocidad si tiene mejora de Alto Horno o Ahumador
         int baseCookTime = be.tier.getCookTime();
         int effectiveCookTime = (targetType != 0) ? Math.max(1, baseCookTime / 2) : baseCookTime;
         be.cookingTotalTime = effectiveCookTime;
@@ -281,15 +283,12 @@ public class CustomTierFurnaceBlockEntity extends BaseContainerBlockEntity imple
         int augType = getAugmentType();
 
         if (augType == 2) {
-            // Alto Horno (Blasting): Solo recetas de alto horno (minerales, metales, equipamiento)
             Optional<RecipeHolder<BlastingRecipe>> blasting = rm.getRecipeFor(RecipeType.BLASTING, recipeInput, serverLevel);
             return blasting.orElse(null);
         } else if (augType == 1) {
-            // Ahumador (Smoking): Solo recetas de ahumador (alimentos, carne, pescado, papas)
             Optional<RecipeHolder<SmokingRecipe>> smoking = rm.getRecipeFor(RecipeType.SMOKING, recipeInput, serverLevel);
             return smoking.orElse(null);
         } else {
-            // Horno Estándar: Smelting -> Blasting -> Smoking
             Optional<RecipeHolder<SmeltingRecipe>> smelting = rm.getRecipeFor(RecipeType.SMELTING, recipeInput, serverLevel);
             if (smelting.isPresent()) return smelting.get();
 
@@ -330,7 +329,6 @@ public class CustomTierFurnaceBlockEntity extends BaseContainerBlockEntity imple
         ItemStack recipeResult = recipeHolder.value().getResultItem(serverLevel.registryAccess()).copy();
         ItemStack currentResult = inventory.get(SLOT_RESULT);
 
-        // Bonificación de duplicación de mineral/producto según el tier
         int countToProduce = recipeResult.getCount();
         if (this.tier.getDoubleOutputChance() > 0.0F && serverLevel.getRandom().nextFloat() < this.tier.getDoubleOutputChance()) {
             countToProduce *= 2;
@@ -355,11 +353,10 @@ public class CustomTierFurnaceBlockEntity extends BaseContainerBlockEntity imple
             return 0;
         }
 
-        // Combustible especial cósmico para el Horno Astral
-        if (this.tier == FurnaceTier.ASTRAL) {
+        if (this.tier == FurnaceTier.ASTRAL || this.tier == FurnaceTier.CELESTIAL || this.tier == FurnaceTier.PRIMORDIAL) {
             String path = net.minecraft.core.registries.BuiltInRegistries.ITEM.getKey(fuel.getItem()).getPath();
-            if (path.contains("coin") || path.contains("star") || path.contains("soul")) {
-                return 4000; // Gran quema mística de 4000 ticks (800 ítems)
+            if (path.contains("coin") || path.contains("star") || path.contains("soul") || path.contains("celestial") || path.contains("primordial")) {
+                return this.tier == FurnaceTier.PRIMORDIAL ? 12000 : (this.tier == FurnaceTier.CELESTIAL ? 8000 : 4000);
             }
         }
 

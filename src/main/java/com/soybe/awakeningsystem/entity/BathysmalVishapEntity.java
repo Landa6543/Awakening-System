@@ -39,7 +39,7 @@ public class BathysmalVishapEntity extends Monster {
 
     public BathysmalVishapEntity(EntityType<? extends Monster> entityType, Level level) {
         super(entityType, level);
-        this.setCustomName(Component.literal("§9§lDragarto de las Profundidades"));
+        this.setCustomName(Component.translatable("entity.awakening_system.bathysmal_vishap.name"));
         this.setCustomNameVisible(true);
         this.xpReward = 240;
     }

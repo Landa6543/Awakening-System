@@ -78,7 +78,6 @@ public class BountyBoardBlock extends HorizontalDirectionalBlock {
     }
 
     public static final List<BountyTemplate> ALL_BOUNTIES = List.of(
-            // --- RANGO F (Novato / Recolección) ---
             new BountyTemplate("awakening_system.bounty.flower_gathering", "F", "collect_flower", 10, 450, 500, 1),
             new BountyTemplate("awakening_system.bounty.slime_hunt", "F", "isekai_slime", 6, 500, 600, 1),
             new BountyTemplate("awakening_system.bounty.goblin_scout_hunt", "F", "goblin_scout", 6, 600, 750, 1),
@@ -90,7 +89,6 @@ public class BountyBoardBlock extends HorizontalDirectionalBlock {
             new BountyTemplate("awakening_system.bounty.skeleton_bone_salvage", "F", "collect_bone", 8, 620, 750, 1),
             new BountyTemplate("awakening_system.bounty.forest_berry_harvest", "F", "collect_berries", 16, 480, 580, 1),
 
-            // --- RANGO E (Aprendiz) ---
             new BountyTemplate("awakening_system.bounty.giant_slime_cull", "E", "giant_slime", 3, 800, 1000, 2),
             new BountyTemplate("awakening_system.bounty.goblin_patrol", "E", "goblin_scout", 10, 950, 1200, 2),
             new BountyTemplate("awakening_system.bounty.wolf_threat", "E", "isekai_wolf", 8, 850, 1100, 2),
@@ -102,7 +100,6 @@ public class BountyBoardBlock extends HorizontalDirectionalBlock {
             new BountyTemplate("awakening_system.bounty.hilichurl_patrol", "E", "hilichurl_hunt", 6, 1000, 1300, 2),
             new BountyTemplate("awakening_system.bounty.forest_spider_clearing", "E", "isekai_spider", 8, 880, 1150, 2),
 
-            // --- RANGO D (Aventurero) ---
             new BountyTemplate("awakening_system.bounty.goblin_warrior_cull", "D", "goblin_warrior", 6, 1400, 1800, 3),
             new BountyTemplate("awakening_system.bounty.forest_clearing", "D", "any_isekai", 10, 1200, 1500, 3),
             new BountyTemplate("awakening_system.bounty.skeleton_patrol", "D", "isekai_skeleton", 8, 1300, 1600, 3),
@@ -114,7 +111,6 @@ public class BountyBoardBlock extends HorizontalDirectionalBlock {
             new BountyTemplate("awakening_system.bounty.redstone_excavation", "D", "collect_redstone", 16, 1300, 1650, 3),
             new BountyTemplate("awakening_system.bounty.screaming_mandrake_harvest", "D", "mandrake_hunt", 4, 1500, 1900, 3),
 
-            // --- RANGO C (Veterano) ---
             new BountyTemplate("awakening_system.bounty.goblin_shaman_purge", "C", "goblin_shaman", 4, 1900, 2500, 5),
             new BountyTemplate("awakening_system.bounty.shadow_aberration", "C", "isekai_monster", 8, 1700, 2200, 4),
             new BountyTemplate("awakening_system.bounty.cave_spider_infestation", "C", "cave_spider", 10, 1850, 2400, 4),
@@ -126,7 +122,6 @@ public class BountyBoardBlock extends HorizontalDirectionalBlock {
             new BountyTemplate("awakening_system.bounty.swamp_witch_coven", "C", "witch_hunt", 4, 2150, 2750, 5),
             new BountyTemplate("awakening_system.bounty.nether_quartz_mining", "C", "collect_quartz", 16, 2000, 2600, 5),
 
-            // --- RANGO B (Élite) ---
             new BountyTemplate("awakening_system.bounty.goblin_clan_extermination", "B", "goblin_threat", 18, 3000, 3800, 7),
             new BountyTemplate("awakening_system.bounty.apex_beasts", "B", "giant_slime", 5, 2500, 3200, 6),
             new BountyTemplate("awakening_system.bounty.ruin_guardians", "B", "isekai_guardian", 5, 2800, 3600, 7),
@@ -138,7 +133,6 @@ public class BountyBoardBlock extends HorizontalDirectionalBlock {
             new BountyTemplate("awakening_system.bounty.blaze_core_harvest", "B", "collect_blaze_rod", 8, 3200, 4000, 8),
             new BountyTemplate("awakening_system.bounty.celestial_diamond_mining", "B", "collect_diamond", 6, 3500, 4500, 9),
 
-            // --- RANGO A (Maestro) ---
             new BountyTemplate("awakening_system.bounty.calamity_subjugation", "A", "any_isekai", 25, 4000, 5500, 10),
             new BountyTemplate("awakening_system.bounty.abyssal_commander", "A", "isekai_monster", 12, 4800, 6500, 12),
             new BountyTemplate("awakening_system.bounty.ant_soldier_invasion", "A", "ant_soldier", 12, 4600, 6200, 12),
@@ -148,7 +142,6 @@ public class BountyBoardBlock extends HorizontalDirectionalBlock {
             new BountyTemplate("awakening_system.bounty.ancestral_warden_trial", "A", "warden_hunt", 2, 5500, 7500, 15),
             new BountyTemplate("awakening_system.bounty.void_beholder_purge", "A", "isekai_beholder", 10, 4800, 6400, 12),
 
-            // --- RANGO S (Leyenda) ---
             new BountyTemplate("awakening_system.bounty.ancient_dragon_threat", "S", "dragon_threat", 1, 7500, 10000, 16),
             new BountyTemplate("awakening_system.bounty.world_calamity", "S", "any_isekai", 35, 9000, 13000, 20),
             new BountyTemplate("awakening_system.bounty.elemental_demon_king_bounty", "S", "boss_elemental_demon_king", 1, 8500, 12000, 18),
@@ -158,8 +151,6 @@ public class BountyBoardBlock extends HorizontalDirectionalBlock {
     );
 
     public static final List<BountyTemplate> BOUNTIES = ALL_BOUNTIES;
-
-    // --- Auxiliares de Identificación de Ítems de Recolección ---
 
     public static boolean isFlowerItem(ItemStack stack) {
         if (stack == null || stack.isEmpty()) return false;
@@ -317,8 +308,6 @@ public class BountyBoardBlock extends HorizontalDirectionalBlock {
         return true;
     }
 
-    // --- Sistema de Selección Aleatoria y Ponderación por Jugador ---
-
     public static int rankTier(String r) {
         return switch (r) {
             case "F" -> 0;
@@ -327,7 +316,7 @@ public class BountyBoardBlock extends HorizontalDirectionalBlock {
             case "C" -> 3;
             case "B" -> 4;
             case "A" -> 5;
-            default  -> 6; // S, EX, SS, SSS, etc.
+            default  -> 6;
         };
     }
 
@@ -643,6 +632,14 @@ public class BountyBoardBlock extends HorizontalDirectionalBlock {
                 sp.sendSystemMessage(Component.translatable("awakening_system.bounty.reward_summary", rewardCoins, rewardExp, rewardMedals)
                         .withStyle(ChatFormatting.GREEN));
                 sp.displayClientMessage(Component.translatable("awakening_system.bounty.claimed_toast"), true);
+
+                com.soybe.awakeningsystem.SystemEvents.grantFable(sp, "bounty_hunter_novice");
+                if (completedTotal >= 15) {
+                    com.soybe.awakeningsystem.SystemEvents.grantFable(sp, "guild_veteran");
+                }
+                if (completedTotal >= 50) {
+                    com.soybe.awakeningsystem.SystemEvents.grantFable(sp, "giant_story_star_stream_savior");
+                }
 
                 int nextReq = GuildRankManager.getNextRankNeeded(completedTotal);
                 PacketDistributor.sendToPlayer(sp, new OpenBountyBoardPayload(

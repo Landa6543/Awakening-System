@@ -1,0 +1,14 @@
+{
+    "replace":  false,
+    "values":  [
+                   "awakening_system:abyssal_shovel",
+                   "awakening_system:adamantite_shovel",
+                   "awakening_system:astral_shovel",
+                   "awakening_system:celestial_shovel",
+                   "awakening_system:mithril_shovel",
+                   "awakening_system:primordial_shovel",
+                   "awakening_system:spirit_jade_shovel",
+                   "awakening_system:soul_alloy_shovel",
+                   "awakening_system:astralite_shovel"
+               ]
+}

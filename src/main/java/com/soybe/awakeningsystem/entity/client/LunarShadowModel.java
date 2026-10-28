@@ -86,7 +86,6 @@ public class LunarShadowModel extends HierarchicalModel<LunarShadowEntity> {
         this.rightArm.xRot = Mth.cos(limbSwing * 0.6662F + (float) Math.PI) * 1.2F * limbSwingAmount;
         this.leftArm.xRot = Mth.cos(limbSwing * 0.6662F) * 1.2F * limbSwingAmount;
 
-        // Movimiento espectral flotante
         this.root.y = Mth.sin(ageInTicks * 0.15F) * 1.5F;
     }
 }

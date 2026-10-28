@@ -28,7 +28,6 @@ import java.util.List;
 public class SoulSolidSwordItem extends SwordItem implements AwakeningWeaponItem {
 
     public SoulSolidSwordItem(Properties properties) {
-        // Daño base elevado, velocidad de ataque alta de estoque (-1.6F => 2.4 golpes/segundo)
         super(Tiers.NETHERITE, properties
                 .rarity(Rarity.EPIC)
                 .attributes(SwordItem.createAttributes(Tiers.NETHERITE, 8, -1.6F)));
@@ -36,8 +35,7 @@ public class SoulSolidSwordItem extends SwordItem implements AwakeningWeaponItem
 
     @Override
     public boolean hurtEnemy(ItemStack stack, LivingEntity target, LivingEntity attacker) {
-        // Pasiva: Frío del Inframundo (Cold of the Underworld)
-        target.setTicksFrozen(200); // Efecto de congelamiento de nieve en polvo
+        target.setTicksFrozen(200);
         target.addEffect(new MobEffectInstance(MobEffects.MOVEMENT_SLOWDOWN, 100, 2, false, false, true));
 
         Level level = target.level();
@@ -58,20 +56,17 @@ public class SoulSolidSwordItem extends SwordItem implements AwakeningWeaponItem
             return InteractionResultHolder.fail(stack);
         }
 
-        // Habilidad Activa: Aubade Coup Droit / Estocada del Inframundo
-        player.getCooldowns().addCooldown(this, 160); // 8 segundos de enfriamiento
+        player.getCooldowns().addCooldown(this, 160);
 
         Vec3 look = player.getLookAngle();
         Vec3 forward = new Vec3(look.x, Math.max(0.1D, look.y * 0.4D), look.z).normalize();
 
-        // Impulso frontal rápido
         player.setDeltaMovement(forward.scale(1.75D));
         player.hurtMarked = true;
 
         if (!level.isClientSide() && player instanceof ServerPlayer sp) {
             ServerLevel sl = (ServerLevel) level;
 
-            // 1. Sello arcano de hielo de inframundo vertical
             net.neoforged.neoforge.network.PacketDistributor.sendToPlayersNear(
                     sl, null, sp.getX(), sp.getY(), sp.getZ(), 64.0D,
                     new com.soybe.awakeningsystem.SpawnMagicCirclePayload(
@@ -81,7 +76,6 @@ public class SoulSolidSwordItem extends SwordItem implements AwakeningWeaponItem
                     )
             );
 
-            // Sonidos cortantes de hielo de inframundo
             sl.playSound(null, sp.blockPosition(), SoundEvents.PLAYER_ATTACK_SWEEP, SoundSource.PLAYERS, 1.8F, 1.6F);
             sl.playSound(null, sp.blockPosition(), SoundEvents.GLASS_BREAK, SoundSource.PLAYERS, 1.5F, 1.4F);
             sl.playSound(null, sp.blockPosition(), SoundEvents.SOUL_ESCAPE.value(), SoundSource.PLAYERS, 1.6F, 1.2F);
@@ -90,14 +84,13 @@ public class SoulSolidSwordItem extends SwordItem implements AwakeningWeaponItem
 
             float dmg = (float) (24.0D * WeaponLevelManager.getDamageMultiplier(stack));
 
-            // 2. Estocada y Creciente Glacial del Inframundo (SlashWaveEntity Gélida)
             SlashWaveEntity frostBeam = new SlashWaveEntity(sl, sp, SlashWaveEntity.TYPE_FROST_WIND, dmg, 3.4F, 1.3F, 0.0F, 22, 8);
             frostBeam.setDeltaMovement(forward.scale(2.4D));
             sl.addFreshEntity(frostBeam);
 
             WeaponLevelManager.addExp(stack, 30, sp);
 
-            sp.displayClientMessage(Component.literal("§b✦ [Soul Solid] §f¡Aubade Coup Droit! Estocada de Hielo del Inframundo desatada."), true);
+            sp.displayClientMessage(Component.translatable("item.awakening_system.soul_solid.msg"), true);
         }
 
         return InteractionResultHolder.sidedSuccess(stack, level.isClientSide());
@@ -105,13 +98,13 @@ public class SoulSolidSwordItem extends SwordItem implements AwakeningWeaponItem
 
     @Override
     public void appendHoverText(ItemStack stack, TooltipContext context, List<Component> tooltipComponents, TooltipFlag tooltipFlag) {
-        tooltipComponents.add(Component.literal("§b✦ Espada-Bastón Shikomizue de Brook").withStyle(ChatFormatting.ITALIC));
-        tooltipComponents.add(Component.literal("§7\"El frío que emana del reino de los muertos congelará hasta tu alma.\""));
-        tooltipComponents.add(Component.literal(""));
-        tooltipComponents.add(Component.literal("§e✦ Pasiva: Frío del Inframundo").withStyle(ChatFormatting.YELLOW, ChatFormatting.BOLD));
-        tooltipComponents.add(Component.literal("  §7Tus tajos congelan intensamente al objetivo, aplicando lentitud y escarcha helada."));
-        tooltipComponents.add(Component.literal("§6✦ Activa (Clic Derecho): Aubade Coup Droit").withStyle(ChatFormatting.GOLD, ChatFormatting.BOLD));
-        tooltipComponents.add(Component.literal("  §7Arremete al frente en una estocada sónica perforante que congela y destruye a todos los enemigos en línea recta."));
+        tooltipComponents.add(Component.translatable("item.awakening_system.soul_solid.subtitle").withStyle(ChatFormatting.ITALIC));
+        tooltipComponents.add(Component.translatable("item.awakening_system.soul_solid.lore"));
+        tooltipComponents.add(Component.empty());
+        tooltipComponents.add(Component.translatable("item.awakening_system.soul_solid.passive.title").withStyle(ChatFormatting.YELLOW, ChatFormatting.BOLD));
+        tooltipComponents.add(Component.translatable("item.awakening_system.soul_solid.passive.desc"));
+        tooltipComponents.add(Component.translatable("item.awakening_system.soul_solid.active.title").withStyle(ChatFormatting.GOLD, ChatFormatting.BOLD));
+        tooltipComponents.add(Component.translatable("item.awakening_system.soul_solid.active.desc"));
         super.appendHoverText(stack, context, tooltipComponents, tooltipFlag);
     }
 }

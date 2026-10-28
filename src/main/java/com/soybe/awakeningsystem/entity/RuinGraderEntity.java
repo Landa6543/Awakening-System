@@ -52,7 +52,7 @@ public class RuinGraderEntity extends Monster {
 
     public RuinGraderEntity(EntityType<? extends Monster> entityType, Level level) {
         super(entityType, level);
-        this.setCustomName(Component.literal("§6§lDemoledor de las Ruinas"));
+        this.setCustomName(Component.translatable("boss.awakening_system.ruin_grader.name"));
         this.setCustomNameVisible(true);
         this.xpReward = 450;
     }
@@ -134,7 +134,6 @@ public class RuinGraderEntity extends Monster {
         double distSq = this.distanceToSqr(target);
 
         if (distSq > 36.0D) {
-            // Láser ocular frontal continuo
             this.entityData.set(DATA_FIRING_LASER, true);
             this.laserTicks = 30;
             sl.playSound(null, this.blockPosition(), SoundEvents.BEACON_ACTIVATE, SoundSource.HOSTILE, 2.0F, 1.2F);
@@ -151,7 +150,6 @@ public class RuinGraderEntity extends Monster {
                 target.setRemainingFireTicks(60);
             }
         } else {
-            // Pisotón sísmico doble
             sl.playSound(null, this.blockPosition(), SoundEvents.ANVIL_LAND, SoundSource.HOSTILE, 2.5F, 0.7F);
             sl.sendParticles(ParticleTypes.EXPLOSION, this.getX(), this.getY() + 0.5D, this.getZ(), 4, 1.0D, 0.3D, 1.0D, 0.0D);
 
@@ -168,10 +166,9 @@ public class RuinGraderEntity extends Monster {
     public boolean hurt(DamageSource source, float amount) {
         if (!this.level().isClientSide && !isStunned()) {
             if (source.is(net.minecraft.tags.DamageTypeTags.IS_PROJECTILE)) {
-                // Tiro al núcleo ocular / piernas aturde al Demoledor
                 if (this.random.nextFloat() < 0.25F) {
                     this.entityData.set(DATA_STUNNED, true);
-                    this.stunTimer = 140; // 7 segundos de aturdimiento
+                    this.stunTimer = 140;
                     if (this.level() instanceof ServerLevel sl) {
                         sl.playSound(null, this.blockPosition(), SoundEvents.SHIELD_BREAK, SoundSource.HOSTILE, 2.0F, 0.8F);
                         sl.sendParticles(ParticleTypes.FLASH, this.getX(), this.getY() + 3.0D, this.getZ(), 2, 0.2D, 0.2D, 0.2D, 0.0D);

@@ -34,7 +34,6 @@ public class PillOfPrimordialRebirthItem extends Item {
         if (!level.isClientSide() && player instanceof ServerPlayer sp) {
             SystemData data = SystemEvents.data(sp);
 
-            // Reiniciar clase y talentos sin perder nivel base ni estadísticas
             data.resetHunterClass();
             AwakeningSystemMod.sync(sp);
 
@@ -46,13 +45,12 @@ public class PillOfPrimordialRebirthItem extends Item {
             sp.playNotifySound(SoundEvents.TOTEM_USE, SoundSource.PLAYERS, 1.2F, 1.0F);
             sp.playNotifySound(SoundEvents.BEACON_ACTIVATE, SoundSource.PLAYERS, 1.5F, 1.2F);
 
-            sp.sendSystemMessage(Component.literal("§6§m=================================================="));
-            sp.sendSystemMessage(Component.literal("§6§l✦ [RENACIMIENTO PRIMORDIAL DEL DESTINO] ✦"));
-            sp.sendSystemMessage(Component.literal("§f\"Los hilos del destino cósmico se han deshecho y reconfigurado. Tus talentos de clase han sido disueltos en el éter mientras tu cuerpo y alma conservan todo su poder acumulado.\""));
-            sp.sendSystemMessage(Component.literal("§e✔ Elige tu nuevo sendero marcial y trascendente."));
-            sp.sendSystemMessage(Component.literal("§6§m=================================================="));
+            sp.sendSystemMessage(Component.translatable("item.awakening_system.pill_of_primordial_rebirth.divider"));
+            sp.sendSystemMessage(Component.translatable("item.awakening_system.pill_of_primordial_rebirth.title"));
+            sp.sendSystemMessage(Component.translatable("item.awakening_system.pill_of_primordial_rebirth.body"));
+            sp.sendSystemMessage(Component.translatable("item.awakening_system.pill_of_primordial_rebirth.prompt"));
+            sp.sendSystemMessage(Component.translatable("item.awakening_system.pill_of_primordial_rebirth.divider"));
 
-            // Abrir de inmediato la pantalla de selección de clase en el cliente
             PacketDistributor.sendToPlayer(sp, new OpenClassSelectionPayload());
 
             if (!sp.getAbilities().instabuild) {
@@ -65,13 +63,13 @@ public class PillOfPrimordialRebirthItem extends Item {
 
     @Override
     public void appendHoverText(ItemStack stack, TooltipContext context, List<Component> tooltipComponents, TooltipFlag tooltipFlag) {
-        tooltipComponents.add(Component.literal("§6✦ Píldora del Renacimiento Primordial").withStyle(ChatFormatting.GOLD, ChatFormatting.BOLD));
-        tooltipComponents.add(Component.literal("§7\"El elixir supremo capaz de recrear el destino del cazador.\""));
-        tooltipComponents.add(Component.literal(""));
-        tooltipComponents.add(Component.literal("§e✦ Efecto Único de Trascendencia:").withStyle(ChatFormatting.YELLOW));
-        tooltipComponents.add(Component.literal("  §fAl consumirla, disuelve tu clase actual y abre la pantalla"));
-        tooltipComponents.add(Component.literal("  §fde §6Selección de Clase §fpara escoger un nuevo destino."));
-        tooltipComponents.add(Component.literal("  §a✔ No se pierde nivel base, estadísticas ni progreso de cultivo."));
+        tooltipComponents.add(Component.translatable("item.awakening_system.primordial_rebirth_pill.title").withStyle(ChatFormatting.GOLD, ChatFormatting.BOLD));
+        tooltipComponents.add(Component.translatable("item.awakening_system.primordial_rebirth_pill.quote"));
+        tooltipComponents.add(Component.empty());
+        tooltipComponents.add(Component.translatable("item.awakening_system.primordial_rebirth_pill.effects_header").withStyle(ChatFormatting.YELLOW));
+        tooltipComponents.add(Component.translatable("item.awakening_system.primordial_rebirth_pill.desc1"));
+        tooltipComponents.add(Component.translatable("item.awakening_system.primordial_rebirth_pill.desc2"));
+        tooltipComponents.add(Component.translatable("item.awakening_system.primordial_rebirth_pill.desc3"));
         super.appendHoverText(stack, context, tooltipComponents, tooltipFlag);
     }
 }

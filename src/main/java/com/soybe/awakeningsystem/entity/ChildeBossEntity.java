@@ -58,7 +58,7 @@ public class ChildeBossEntity extends Monster {
             SynchedEntityData.defineId(ChildeBossEntity.class, EntityDataSerializers.INT);
 
     private final ServerBossEvent bossEvent = (ServerBossEvent) new ServerBossEvent(
-            Component.literal("§b§lTartaglia §7- §9Undécimo Heraldo de Fatui (Ojo de la Tormenta)"),
+            Component.translatable("boss.awakening_system.childe.boss_bar"),
             BossEvent.BossBarColor.BLUE,
             BossEvent.BossBarOverlay.NOTCHED_10
     ).setDarkenScreen(false);
@@ -72,7 +72,7 @@ public class ChildeBossEntity extends Monster {
     public ChildeBossEntity(EntityType<? extends Monster> entityType, Level level) {
         super(entityType, level);
         this.xpReward = 350;
-        this.setCustomName(Component.literal("§b§lTartaglia §7(Childe)"));
+        this.setCustomName(Component.translatable("boss.awakening_system.childe.name"));
         this.setCustomNameVisible(true);
     }
 
@@ -101,13 +101,13 @@ public class ChildeBossEntity extends Monster {
     public void setPhase(int phase) {
         this.entityData.set(DATA_PHASE, phase);
         if (phase == 2) {
-            bossEvent.setName(Component.literal("§d§lTartaglia §7- §5Legado del Mal (Engaño Electro)"));
+            bossEvent.setName(Component.translatable("boss.awakening_system.childe.phase2"));
             bossEvent.setColor(BossEvent.BossBarColor.PURPLE);
             this.getAttribute(Attributes.MOVEMENT_SPEED).setBaseValue(0.38D);
             this.getAttribute(Attributes.ATTACK_DAMAGE).setBaseValue(22.0D);
             this.setItemSlot(EquipmentSlot.MAINHAND, new ItemStack(Items.TRIDENT));
         } else {
-            bossEvent.setName(Component.literal("§b§lTartaglia §7- §9Undécimo Heraldo de Fatui (Ojo de la Tormenta)"));
+            bossEvent.setName(Component.translatable("boss.awakening_system.childe.boss_bar"));
             bossEvent.setColor(BossEvent.BossBarColor.BLUE);
             this.setItemSlot(EquipmentSlot.MAINHAND, new ItemStack(Items.BOW));
         }
@@ -142,19 +142,17 @@ public class ChildeBossEntity extends Monster {
         this.setInvulnerable(true);
 
         if (this.level() instanceof ServerLevel sl) {
-            // Onda de choque masiva de Engaño Electro
             sl.sendParticles(ParticleTypes.ELECTRIC_SPARK, this.getX(), this.getY() + 1.2D, this.getZ(), 80, 2.0D, 1.5D, 2.0D, 0.15D);
             sl.sendParticles(ParticleTypes.FLASH, this.getX(), this.getY() + 1.5D, this.getZ(), 4, 0.5D, 0.5D, 0.5D, 0.0D);
             sl.playSound(null, this.blockPosition(), SoundEvents.LIGHTNING_BOLT_THUNDER, SoundSource.HOSTILE, 1.8F, 1.2F);
             sl.playSound(null, this.blockPosition(), SoundEvents.GENERIC_EXPLODE.value(), SoundSource.HOSTILE, 1.5F, 1.0F);
 
-            // Empujar a todos los jugadores cercanos
             List<Player> nearby = sl.getEntitiesOfClass(Player.class, this.getBoundingBox().inflate(10.0D));
             for (Player p : nearby) {
                 Vec3 push = p.position().subtract(this.position()).normalize().scale(1.8D).add(0, 0.4D, 0);
                 p.setDeltaMovement(push);
                 p.hurtMarked = true;
-                p.displayClientMessage(Component.literal("§d§lTartaglia: §f\"¡No está mal! ¡Veamos si puedes soportar el poder del Engaño!\""), false);
+                p.displayClientMessage(Component.translatable("boss.awakening_system.childe.phase2"), false);
             }
         }
     }
@@ -166,7 +164,6 @@ public class ChildeBossEntity extends Monster {
         bossEvent.setProgress(this.getHealth() / this.getMaxHealth());
 
         if (this.level().isClientSide) {
-            // Partículas de agua o relámpago según fase
             if (getPhase() == 1) {
                 if (this.random.nextInt(3) == 0) {
                     this.level().addParticle(ParticleTypes.FALLING_WATER, this.getRandomX(0.6D), this.getY() + 0.8D + this.random.nextDouble() * 0.8D, this.getRandomZ(0.6D), 0, 0.05D, 0);
@@ -179,7 +176,6 @@ public class ChildeBossEntity extends Monster {
             return;
         }
 
-        // Música de combate instrumental de fondo
         long now = this.level().getGameTime();
         if (now - lastBgmStartTick > 1800L && this.level() instanceof ServerLevel sl) {
             lastBgmStartTick = now;
@@ -190,7 +186,6 @@ public class ChildeBossEntity extends Monster {
             }
         }
 
-        // Manejo de transición entre fases
         if (isTransitioning) {
             transitionTicks--;
             this.setDeltaMovement(0, 0.05D, 0);
@@ -198,7 +193,7 @@ public class ChildeBossEntity extends Monster {
                 isTransitioning = false;
                 this.setInvulnerable(false);
                 setPhase(2);
-                this.setHealth(this.getMaxHealth() * 0.85F); // Recupera vitalidad al activar Engaño
+                this.setHealth(this.getMaxHealth() * 0.85F);
                 if (this.level() instanceof ServerLevel sl) {
                     sl.playSound(null, this.blockPosition(), SoundEvents.TRIDENT_THUNDER.value(), SoundSource.HOSTILE, 2.0F, 1.4F);
                 }
@@ -211,26 +206,21 @@ public class ChildeBossEntity extends Monster {
 
         double distSq = this.distanceToSqr(target);
 
-        // Habilidades en Combate
         if (getPhase() == 1) {
-            // Fase 1: Ráfaga de Flechas de Agua Hydro
             attackCooldown--;
             if (attackCooldown <= 0 && distSq > 16.0D && distSq < 400.0D) {
                 attackCooldown = 80;
                 fireHydroArrows(target);
             }
         } else {
-            // Fase 2: Teletransporte Relámpago (Thunder Blink) y Juicio del Trueno
             attackCooldown--;
             ultimateCooldown--;
 
-            // Thunder Blink detrás del jugador
             if (attackCooldown <= 0 && distSq > 20.0D) {
                 attackCooldown = 70;
                 thunderBlink(target);
             }
 
-            // Ultimate: Juicio del Trueno (Lanzas Eléctricas)
             if (ultimateCooldown <= 0) {
                 ultimateCooldown = 180;
                 castJudgementOfThunder(target);
@@ -278,17 +268,15 @@ public class ChildeBossEntity extends Monster {
 
         this.playSound(SoundEvents.TRIDENT_THUNDER.value(), 1.8F, 1.1F);
         if (target instanceof ServerPlayer sp) {
-            sp.displayClientMessage(Component.literal("§5§lTartaglia: §d\"¡Que el trueno dicte tu sentencia!\""), true);
+            sp.displayClientMessage(Component.translatable("boss.awakening_system.childe.phase3"), true);
         }
 
-        // 4 Lanzas eléctricas que impactan en cruz alrededor del jugador
         int[][] offsets = {{-3, 0}, {3, 0}, {0, -3}, {0, 3}};
         for (int[] off : offsets) {
             Vec3 strikePos = target.position().add(off[0], 0, off[1]);
             sl.sendParticles(ParticleTypes.ELECTRIC_SPARK, strikePos.x, strikePos.y + 0.5D, strikePos.z, 40, 0.5D, 2.0D, 0.5D, 0.2D);
             sl.sendParticles(ParticleTypes.SWEEP_ATTACK, strikePos.x, strikePos.y + 0.2D, strikePos.z, 2, 0.4D, 0.1D, 0.4D, 0.05D);
 
-            // Explosión de rayo retardada 1 tick
             sl.playSound(null, strikePos.x, strikePos.y, strikePos.z, SoundEvents.LIGHTNING_BOLT_IMPACT, SoundSource.HOSTILE, 1.2F, 1.4F);
 
             List<LivingEntity> hit = sl.getEntitiesOfClass(LivingEntity.class, target.getBoundingBox().inflate(3.5D), e -> e != this);
@@ -304,14 +292,12 @@ public class ChildeBossEntity extends Monster {
         boolean success = super.doHurtTarget(entity);
         if (success && entity instanceof LivingEntity target) {
             if (getPhase() == 1) {
-                // Marca de Riptide Hydro (efecto de lentitud y explosión de agua)
                 target.addEffect(new MobEffectInstance(MobEffects.MOVEMENT_SLOWDOWN, 60, 1));
                 if (this.level() instanceof ServerLevel sl) {
                     sl.sendParticles(ParticleTypes.SPLASH, target.getX(), target.getY() + 1.0D, target.getZ(), 20, 0.3D, 0.5D, 0.3D, 0.1D);
                     sl.playSound(null, target.blockPosition(), SoundEvents.PLAYER_SPLASH, SoundSource.HOSTILE, 1.2F, 1.2F);
                 }
             } else {
-                // Descarga Electro
                 if (this.level() instanceof ServerLevel sl) {
                     sl.sendParticles(ParticleTypes.ELECTRIC_SPARK, target.getX(), target.getY() + 1.0D, target.getZ(), 25, 0.4D, 0.6D, 0.4D, 0.1D);
                     sl.playSound(null, target.blockPosition(), SoundEvents.LIGHTNING_BOLT_IMPACT, SoundSource.HOSTILE, 0.8F, 1.8F);
@@ -327,21 +313,17 @@ public class ChildeBossEntity extends Monster {
 
         if (this.level() instanceof ServerLevel sl) {
             sl.playSound(null, this.blockPosition(), SoundEvents.PLAYER_DEATH, SoundSource.HOSTILE, 1.5F, 0.9F);
-            // Mensaje de derrota canónico de Childe
             for (Player p : sl.players()) {
                 if (p.distanceToSqr(this) < 2500.0D) {
-                    p.displayClientMessage(Component.literal("§b§lTartaglia: §f\"Ja... Qué golpe... Parece que encontré a un rival digno...\""), false);
+                    p.displayClientMessage(Component.translatable("boss.awakening_system.childe.defeat"), false);
                 }
             }
 
-            // Drops de Jefe Semanal de Genshin
             boolean isTeyvat = sl.dimension().equals(com.soybe.awakeningsystem.TeyvatWorldManager.TEYVAT_WORLD);
-            // 1. Protogemas (100) - Exclusivo Teyvat
             if (isTeyvat) {
                 spawnItem(sl, new ItemStack(SystemItems.PRIMOGEM.get(), 100));
             }
 
-            // 2. Mora (50,000) - Exclusivo Teyvat
             if (isTeyvat) {
                 if (SystemItems.MORA_BUNDLE.isBound()) {
                     spawnItem(sl, new ItemStack(SystemItems.MORA_BUNDLE.get(), 2));
@@ -354,29 +336,24 @@ public class ChildeBossEntity extends Monster {
                 }
             }
 
-            // 3. Destino Entrelazado (Intertwined Fate para el Gacha)
             if (SystemItems.INTERTWINED_FATE.isBound()) {
                 spawnItem(sl, new ItemStack(SystemItems.INTERTWINED_FATE.get(), 1 + this.random.nextInt(2)));
             }
 
-            // 4. Peluche coleccionable de Tartaglia
             var tartagliaPlushie = SystemBlocks.PLUSHIE_BLOCKS.get("tartagliaplushie");
             if (tartagliaPlushie != null && tartagliaPlushie.isBound()) {
                 spawnItem(sl, new ItemStack(tartagliaPlushie.get(), 1));
             }
 
-            // 5. Artefacto 5★ aleatorio
             ItemStack artifact = createRandomGenshinArtifact();
             if (!artifact.isEmpty()) {
                 spawnItem(sl, artifact);
             }
 
-            // 6. Llave del Santuario de las Profundidades de Teyvat
             if (SystemItems.TEYVAT_SHRINE_KEY.isBound()) {
                 spawnItem(sl, new ItemStack(SystemItems.TEYVAT_SHRINE_KEY.get(), 1));
             }
 
-            // Detener BGM de combate
             for (ServerPlayer sp : sl.players()) {
                 if (sp.distanceToSqr(this) < 64.0D * 64.0D) {
                     sp.connection.send(new net.minecraft.network.protocol.game.ClientboundStopSoundPacket(ModSounds.CHILDE_BATTLE_BGM.get().getLocation(), SoundSource.RECORDS));
@@ -406,7 +383,9 @@ public class ChildeBossEntity extends Monster {
                 GenshinArtifactItem chosen = arts.get(this.random.nextInt(arts.size()));
                 return new ItemStack(chosen);
             }
-        } catch (Exception ignored) {}
+        } catch (Exception e) {
+            AwakeningSystemMod.LOGGER.debug("Error choosing artifact drop for Childe: {}", e.getMessage(), e);
+        }
         return ItemStack.EMPTY;
     }
 

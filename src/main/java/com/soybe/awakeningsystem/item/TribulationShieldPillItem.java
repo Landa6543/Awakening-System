@@ -34,7 +34,6 @@ public class TribulationShieldPillItem extends Item {
             SystemData data = SystemEvents.data(sp);
             ServerLevel sl = sp.serverLevel();
 
-            // Otorga 3 minutos (3600 ticks) de Escudo de Tribulación Celestial
             data.setTribulationShieldTicks(3600);
             sp.addEffect(new MobEffectInstance(MobEffects.DAMAGE_RESISTANCE, 3600, 1));
             sp.addEffect(new MobEffectInstance(MobEffects.FIRE_RESISTANCE, 3600, 0));

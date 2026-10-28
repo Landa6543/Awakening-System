@@ -31,7 +31,6 @@ public class MoraBlock extends Block {
     @Override
     public void onRemove(BlockState state, Level level, BlockPos pos, BlockState newState, boolean isMoving) {
         if (!state.is(newState.getBlock()) && !level.isClientSide() && level instanceof ServerLevel sl) {
-            // Soltar entre 4 y 9 Bolsas de Mora
             int count = 4 + level.random.nextInt(6);
             if (SystemItems.MORA_POUCH.isBound()) {
                 popResource(sl, pos, new ItemStack(SystemItems.MORA_POUCH.get(), count));

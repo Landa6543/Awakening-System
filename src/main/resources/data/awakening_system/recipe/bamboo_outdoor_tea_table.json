@@ -1,0 +1,21 @@
+{
+  "type": "minecraft:crafting_shaped",
+  "category": "building",
+  "pattern": [
+    "BBB",
+    " # ",
+    " # "
+  ],
+  "key": {
+    "B": {
+      "item": "minecraft:bamboo_slab"
+    },
+    "#": {
+      "item": "minecraft:bamboo"
+    }
+  },
+  "result": {
+    "count": 1,
+    "id": "awakening_system:bamboo_outdoor_tea_table"
+  }
+}

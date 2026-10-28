@@ -95,7 +95,6 @@ public class ElementalAltarBlock extends Block {
             return;
         }
 
-        // Si el Señor Elemental de esta ala sigue con vida, protege el altar
         AABB searchBox = new AABB(pos).inflate(35.0D);
         List<ElementalLordBossEntity> livingLords = level.getEntitiesOfClass(ElementalLordBossEntity.class, searchBox, e -> e.isAlive() && e.getElementalType() == type);
         if (!livingLords.isEmpty()) {
@@ -104,10 +103,8 @@ public class ElementalAltarBlock extends Block {
             return;
         }
 
-        // Activar el altar
         level.setBlock(pos, state.setValue(ACTIVE, true), 3);
 
-        // Efectos del elemento
         level.sendParticles(type.getParticle(),
                 pos.getX() + 0.5D, pos.getY() + 1.2D, pos.getZ() + 0.5D,
                 50, 0.4D, 0.4D, 0.4D, 0.1D);
@@ -118,7 +115,6 @@ public class ElementalAltarBlock extends Block {
         player.playNotifySound(SoundEvents.BEACON_ACTIVATE, SoundSource.BLOCKS, 1.2F, 1.2F);
         player.playNotifySound(SoundEvents.BELL_RESONATE, SoundSource.BLOCKS, 1.0F, 1.1F);
 
-        // Buscar cuántos altares de las 4 alas están activados en un radio de 120 bloques
         List<BlockPos> altars = findAltarsInComplex(level, pos);
         int activeCount = 0;
         for (BlockPos p : altars) {
@@ -131,7 +127,6 @@ public class ElementalAltarBlock extends Block {
         player.displayClientMessage(Component.translatable("awakening_system.altar.elemental_activated", type.getDisplayName(), activeCount), false);
 
         if (activeCount >= 4) {
-            // ¡Los 4 sellos se han desactivado! Disipar la Barrera Cuádruple del Salón del Trono Central
             disperseCentralBarrier(level, pos);
 
             level.sendParticles(ParticleTypes.TOTEM_OF_UNDYING,
@@ -164,7 +159,6 @@ public class ElementalAltarBlock extends Block {
             case STORM -> origin.west(48);
         };
 
-        // 1. Búsqueda directa y precisa en las 4 alas (Norte, Oeste, Sur, Este)
         BlockPos[] expected = new BlockPos[]{
                 center.north(48),
                 center.west(48),
@@ -187,7 +181,6 @@ public class ElementalAltarBlock extends Block {
             }
         }
 
-        // 2. Fallback general en caso de generación custom o desplazamiento
         if (list.size() < 4) {
             for (int dx = -60; dx <= 60; dx++) {
                 for (int dz = -60; dz <= 60; dz++) {
@@ -216,7 +209,6 @@ public class ElementalAltarBlock extends Block {
             case STORM -> origin.west(48);
         };
 
-        // Disipar la barrera central en toda la columna de ascensión (desde el Nexus hasta el Castillo Superior)
         for (int dx = -18; dx <= 18; dx++) {
             for (int dz = -18; dz <= 18; dz++) {
                 for (int dy = -4; dy <= 45; dy++) {

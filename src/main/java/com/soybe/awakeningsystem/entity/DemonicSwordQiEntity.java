@@ -38,7 +38,6 @@ public class DemonicSwordQiEntity extends ThrowableProjectile {
         lifeTicks++;
 
         if (this.level().isClientSide) {
-            // Estela cortante carmesí
             for (int i = 0; i < 3; i++) {
                 double ox = (this.random.nextDouble() - 0.5D) * 0.3D;
                 double oy = (this.random.nextDouble() - 0.5D) * 0.3D;

@@ -44,9 +44,7 @@ public class GenshinSlimeModel extends HierarchicalModel<GenshinSlimeEntity> {
         MeshDefinition mesh = new MeshDefinition();
         PartDefinition root = mesh.getRoot();
 
-        // Contenedor principal con base anclada al nivel del suelo (Y = 24.0)
         PartDefinition bb_main = root.addOrReplaceChild("bb_main", CubeListBuilder.create()
-                // 26 Cajas base del dumpling/mochi redondo original de Genshin Impact (UV 64x64)
                 .texOffs(0, 55).addBox(-4.0F, -1.0F, -4.0F, 8.0F, 1.0F, 8.0F, new CubeDeformation(0.0F))
                 .texOffs(0, 55).addBox(4.0F, -2.0F, -4.0F, 1.0F, 1.0F, 8.0F, new CubeDeformation(0.0F))
                 .texOffs(0, 55).addBox(5.0F, -3.0F, -4.0F, 1.0F, 1.0F, 8.0F, new CubeDeformation(0.0F))
@@ -61,14 +59,12 @@ public class GenshinSlimeModel extends HierarchicalModel<GenshinSlimeEntity> {
                 .texOffs(46, 0).addBox(4.0F, -9.0F, -4.0F, 1.0F, 1.0F, 8.0F, new CubeDeformation(0.0F))
                 .texOffs(46, 0).addBox(3.0F, -10.0F, -4.0F, 1.0F, 1.0F, 8.0F, new CubeDeformation(0.0F))
                 .texOffs(36, 0).addBox(-3.0F, -11.0F, -4.0F, 6.0F, 1.0F, 8.0F, new CubeDeformation(0.0F))
-                // Rostro frontal con ojos canónicos de Genshin (UV 0, 0)
                 .texOffs(0, 0).addBox(-4.0F, -9.0F, -5.0F, 8.0F, 8.0F, 1.0F, new CubeDeformation(0.0F))
                 .texOffs(60, 57).addBox(-5.0F, -8.0F, -5.0F, 1.0F, 6.0F, 1.0F, new CubeDeformation(0.0F))
                 .texOffs(60, 57).addBox(-6.0F, -7.0F, -5.0F, 1.0F, 4.0F, 1.0F, new CubeDeformation(0.0F))
                 .texOffs(60, 57).addBox(4.0F, -8.0F, -5.0F, 1.0F, 6.0F, 1.0F, new CubeDeformation(0.0F))
                 .texOffs(60, 57).addBox(5.0F, -7.0F, -5.0F, 1.0F, 4.0F, 1.0F, new CubeDeformation(0.0F))
                 .texOffs(0, 55).addBox(-3.0F, -10.0F, -5.0F, 6.0F, 1.0F, 1.0F, new CubeDeformation(0.0F))
-                // Dorso y laterales traseros
                 .texOffs(0, 58).addBox(5.0F, -7.0F, 4.0F, 1.0F, 4.0F, 1.0F, new CubeDeformation(0.0F))
                 .texOffs(0, 55).addBox(4.0F, -8.0F, 4.0F, 1.0F, 6.0F, 1.0F, new CubeDeformation(0.0F))
                 .texOffs(0, 57).addBox(-3.0F, -10.0F, 4.0F, 6.0F, 1.0F, 1.0F, new CubeDeformation(0.0F))
@@ -77,7 +73,6 @@ public class GenshinSlimeModel extends HierarchicalModel<GenshinSlimeEntity> {
                 .texOffs(0, 58).addBox(-6.0F, -7.0F, 4.0F, 1.0F, 4.0F, 1.0F, new CubeDeformation(0.0F)),
                 PartPose.offset(0.0F, 24.0F, 0.0F));
 
-        // 1. Alas Anemo (Anemo Wings)
         PartDefinition anemoWings = bb_main.addOrReplaceChild("anemo_wings", CubeListBuilder.create()
                 .texOffs(0, 29).mirror().addBox(-9.0F, -13.0F, -1.0F, 4.0F, 3.0F, 1.0F, new CubeDeformation(0.0F))
                 .texOffs(0, 31).addBox(5.0F, -11.0F, -1.5F, 3.0F, 1.0F, 1.0F, new CubeDeformation(0.0F))
@@ -88,7 +83,6 @@ public class GenshinSlimeModel extends HierarchicalModel<GenshinSlimeEntity> {
                 .texOffs(0, 36).addBox(-8.0F, -11.0F, -1.5F, 3.0F, 1.0F, 1.0F, new CubeDeformation(0.0F)),
                 PartPose.ZERO);
 
-        // 2. Puas de Hielo Cryo (Cryo Spikes)
         bb_main.addOrReplaceChild("cryo_spikes", CubeListBuilder.create()
                 .texOffs(56, 30).addBox(-1.0F, -10.0F, -6.0F, 2.0F, 2.0F, 1.0F, new CubeDeformation(0.0F))
                 .texOffs(56, 30).addBox(7.0F, -7.0F, -4.0F, 1.0F, 2.0F, 2.0F, new CubeDeformation(0.0F))
@@ -99,13 +93,11 @@ public class GenshinSlimeModel extends HierarchicalModel<GenshinSlimeEntity> {
                 .texOffs(56, 30).addBox(-8.0F, -7.0F, 2.0F, 1.0F, 2.0F, 2.0F, new CubeDeformation(0.0F)),
                 PartPose.ZERO);
 
-        // 3. Antena Electro (Electro Antenna)
         bb_main.addOrReplaceChild("electro_antenna", CubeListBuilder.create()
                 .texOffs(29, 33).addBox(-1.0F, -7.5F, -1.0F, 2.0F, 2.0F, 2.0F, new CubeDeformation(0.0F))
                 .texOffs(0, 55).addBox(-0.5F, -5.5F, -0.5F, 1.0F, 6.0F, 1.0F, new CubeDeformation(0.0F)),
                 PartPose.offsetAndRotation(0.0F, -10.5F, -0.5F, -0.4363F, 0.0F, 0.0F));
 
-        // 4. Cuernos Geo (Geo Horns)
         PartDefinition geoHorns = bb_main.addOrReplaceChild("geo_horns", CubeListBuilder.create(), PartPose.ZERO);
         geoHorns.addOrReplaceChild("horn1", CubeListBuilder.create()
                 .texOffs(0, 26).addBox(-5.0F, -5.5F, 3.0F, 2.0F, 4.0F, 2.0F, new CubeDeformation(0.0F)),
@@ -120,7 +112,6 @@ public class GenshinSlimeModel extends HierarchicalModel<GenshinSlimeEntity> {
                 .texOffs(0, 26).addBox(0.0F, -5.0F, 0.0F, 2.0F, 5.0F, 2.0F, new CubeDeformation(0.0F)),
                 PartPose.offsetAndRotation(2.0F, -10.0F, -3.0F, 0.0F, 0.0F, 0.4800F));
 
-        // 5. Brote Dendro (Dendro Foliage)
         PartDefinition dendroLeaves = bb_main.addOrReplaceChild("dendro_leaves", CubeListBuilder.create(), PartPose.ZERO);
         PartDefinition stem1 = dendroLeaves.addOrReplaceChild("stem1", CubeListBuilder.create()
                 .texOffs(15, 27).addBox(-0.5F, -2.0937F, -0.0774F, 1.0F, 3.0F, 1.0F, new CubeDeformation(0.0F)),
@@ -158,7 +149,6 @@ public class GenshinSlimeModel extends HierarchicalModel<GenshinSlimeEntity> {
         this.electroAntenna.resetPose();
         this.dendroLeaves.resetPose();
 
-        // Control de visibilidad elemental
         GenshinSlimeEntity.Element el = entity.getElement();
         this.anemoWings.visible = (el == GenshinSlimeEntity.Element.ANEMO);
         this.cryoSpikes.visible = (el == GenshinSlimeEntity.Element.CRYO);
@@ -166,34 +156,28 @@ public class GenshinSlimeModel extends HierarchicalModel<GenshinSlimeEntity> {
         this.geoHorns.visible = (el == GenshinSlimeEntity.Element.GEO);
         this.dendroLeaves.visible = (el == GenshinSlimeEntity.Element.DENDRO);
 
-        // Interpolación fluida de squash & stretch idéntica a la del slime Isekai
         float partialTick = ageInTicks - (float) entity.tickCount;
         float squishFactor = Mth.lerp(partialTick, entity.prevSquish, entity.squish);
 
-        // Respiración suave en reposo
         float breathe = 0.0F;
         if (Math.abs(squishFactor) < 0.25F) {
             breathe = Mth.sin(ageInTicks * 0.12F) * 0.035F;
         }
 
-        // Base siempre anclada al suelo (Y = 24.0)
         this.bb_main.y = 24.0F;
 
         if (squishFactor < 0.0F) {
-            // SQUASH: Impacto potente contra el piso (se aplasta y ensancha ampliamente)
-            float s = -squishFactor; // 0.0 a 1.45
+            float s = -squishFactor;
             this.bb_main.yScale = Math.max(0.30F, 1.0F - s * 0.45F) + breathe;
             this.bb_main.xScale = 1.0F + s * 0.40F - breathe * 0.5F;
             this.bb_main.zScale = 1.0F + s * 0.40F - breathe * 0.5F;
         } else {
-            // STRETCH: Salto parabólico en el aire (se estira esbelto hacia arriba)
-            float t = squishFactor; // 0.0 a 1.0
+            float t = squishFactor;
             this.bb_main.yScale = 1.0F + t * 0.55F + breathe;
             this.bb_main.xScale = Math.max(0.60F, 1.0F - t * 0.30F) - breathe * 0.5F;
             this.bb_main.zScale = Math.max(0.60F, 1.0F - t * 0.30F) - breathe * 0.5F;
         }
 
-        // Balanceo secundario elemental
         if (el == GenshinSlimeEntity.Element.ANEMO) {
             float flapSpeed = entity.onGround() ? 0.45F : 0.90F;
             float wingFlap = Mth.sin(ageInTicks * flapSpeed) * 0.45F;
@@ -206,4 +190,3 @@ public class GenshinSlimeModel extends HierarchicalModel<GenshinSlimeEntity> {
     }
 }
 
-

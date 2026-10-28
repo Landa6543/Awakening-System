@@ -37,7 +37,6 @@ public class AbyssMagePyroEntity extends AbstractAbyssMageEntity {
         if (this.level().isClientSide) return;
 
         if (this.random.nextFloat() < 0.65F) {
-            // Disparo de bola de fuego arcana
             Vec3 dir = target.getEyePosition().subtract(this.getEyePosition()).normalize();
             SmallFireball fireball = new SmallFireball(this.level(), this, dir);
             fireball.setPos(this.getX(), this.getY() + 1.2D, this.getZ());
@@ -46,7 +45,6 @@ public class AbyssMagePyroEntity extends AbstractAbyssMageEntity {
             this.level().playSound(null, this.getX(), this.getY(), this.getZ(),
                     SoundEvents.BLAZE_SHOOT, SoundSource.HOSTILE, 1.5F, 1.2F);
         } else {
-            // Ritual de pilares de llamas alrededor del jugador
             if (this.level() instanceof ServerLevel sl) {
                 sl.playSound(null, target.getX(), target.getY(), target.getZ(),
                         SoundEvents.FIRECHARGE_USE, SoundSource.HOSTILE, 1.8F, 0.9F);

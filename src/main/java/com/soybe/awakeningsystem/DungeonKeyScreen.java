@@ -14,12 +14,12 @@ public class DungeonKeyScreen extends Screen {
     private final String currentRank;
 
     private static final List<String> RANKS = List.of(
-            "F", "E", "D", "C", "B", "A", "S", "SS", "SSS", "NATIONAL", "MONARCH", "RULER", "DEMIGOD", "SUPREME_CREATOR", "ABSOLUTE_GOD"
+            "F", "E", "D", "C", "B", "A", "S", "EX", "SS", "SSS", "NATIONAL", "UR", "LR", "MR", "TRANSCENDENT", "TRANSCENDENTAL", "MONARCH", "RULER", "DEMIGOD", "GOD", "COSMIC", "PRIMORDIAL", "SUPREME_CREATOR", "ABSOLUTE_GOD"
     );
 
     private static final List<String> BIOMES = List.of(
             "crypt", "plains", "lush_plains", "cherry_plains", "autumn_plains", "tundra",
-            "ancient_temple", "crystal_cave", "abyssal_chasm", "magma_forge", "nether", "igris", "baran"
+            "ancient_temple", "crystal_cave", "abyssal_chasm", "magma_forge", "nether", "igris", "baran", "beru"
     );
 
     private String selectedRank = "E";
@@ -41,12 +41,21 @@ public class DungeonKeyScreen extends Screen {
             case "B" -> 30;
             case "A" -> 40;
             case "S" -> 50;
+            case "EX" -> 70;
             case "SS" -> 90;
             case "SSS" -> 110;
             case "NATIONAL" -> 130;
+            case "UR" -> 150;
+            case "LR" -> 190;
+            case "MR" -> 230;
+            case "TRANSCENDENT" -> 270;
+            case "TRANSCENDENTAL" -> 290;
             case "MONARCH" -> 310;
             case "RULER" -> 330;
             case "DEMIGOD" -> 370;
+            case "GOD" -> 400;
+            case "COSMIC" -> 490;
+            case "PRIMORDIAL" -> 580;
             case "SUPREME_CREATOR" -> 730;
             case "ABSOLUTE_GOD" -> 1000;
             default -> 1;
@@ -64,7 +73,6 @@ public class DungeonKeyScreen extends Screen {
 
     @Override
     public void renderBackground(GuiGraphics graphics, int mouseX, int mouseY, float partialTick) {
-        // Evita deliberadamente el desenfoque (blur shader) de Minecraft vanilla
     }
 
     private void drawAutoScaledCentered(GuiGraphics g, Component label, int centerX, int centerY, int maxWidth, int color) {
@@ -73,7 +81,7 @@ public class DungeonKeyScreen extends Screen {
             g.drawCenteredString(font, label, centerX, centerY, color);
             return;
         }
-        float scale = (float) maxWidth / textW;
+        float scale = Math.max(0.80F, (float) maxWidth / textW);
         var pose = g.pose();
         pose.pushPose();
         pose.translate(centerX, centerY + (1.0F - scale) * 4.0F, 0);
@@ -86,7 +94,7 @@ public class DungeonKeyScreen extends Screen {
         float scaleX = (float) this.width / 400.0F;
         float scaleY = (float) this.height / 260.0F;
         float scale = Math.min(scaleX, scaleY);
-        return Math.min(1.0F, Math.max(0.35F, scale));
+        return Math.min(1.0F, Math.max(0.75F, scale));
     }
 
     public double transformMouseX(double mouseX) {
@@ -105,7 +113,6 @@ public class DungeonKeyScreen extends Screen {
 
     @Override
     public void render(GuiGraphics g, int mouseX, int mouseY, float partialTick) {
-        // Fondo nítido translúcido sin blur
         g.fillGradient(0, 0, this.width, this.height, 0x90000000, 0xB0000000);
 
         float scale = getGuiScale();
@@ -122,26 +129,23 @@ public class DungeonKeyScreen extends Screen {
         }
 
         int panelW = 380;
-        int panelH = 240;
+        int panelH = 266;
         int left = (this.width - panelW) / 2;
         int top = (this.height - panelH) / 2;
 
-        // Marco cibernético de la interfaz
         g.fill(left - 2, top - 2, left + panelW + 2, top + panelH + 2, 0xFF276A82);
         g.fill(left, top, left + panelW, top + panelH, 0xEE10202D);
         g.fill(left, top, left + panelW, top + 28, 0xFF183042);
         g.fill(left, top + 27, left + panelW, top + 29, 0xFF39B9D5);
 
-        // Cabecera
         g.drawString(font, Component.translatable("awakening_system.screen.dungeon_key.title"), left + 14, top + 6, 0xFF70E8FF, false);
         g.drawString(font, Component.translatable("awakening_system.screen.dungeon_key.subtitle"), left + 14, top + 16, 0xFF8AAAB8, false);
 
-        // Sección 1: Selección de Rango (Grid de Botones)
         g.drawString(font, Component.translatable("awakening_system.screen.dungeon_key.portal_rank", playerLevel), left + 14, top + 34, 0xFFFFD866, false);
-        int rankBtnW = 44;
-        int rankBtnH = 17;
+        int rankBtnW = 42;
+        int rankBtnH = 15;
         int rStartX = left + 14;
-        int rStartY = top + 45;
+        int rStartY = top + 46;
 
         for (int i = 0; i < RANKS.size(); i++) {
             String rk = RANKS.get(i);
@@ -170,13 +174,12 @@ public class DungeonKeyScreen extends Screen {
             }
         }
 
-        // Sección 2: Selección de Bioma de Calabozo (Distribución 7 columnas x 2 filas)
-        g.drawString(font, Component.translatable("awakening_system.screen.dungeon_key.environment"), left + 14, top + 86, 0xFFFFD866, false);
+        g.drawString(font, Component.translatable("awakening_system.screen.dungeon_key.environment"), left + 14, top + 102, 0xFFFFD866, false);
         int bioCols = 7;
         int bioBtnW = 48;
-        int bioBtnH = 16;
+        int bioBtnH = 15;
         int bStartX = left + 14;
-        int bStartY = top + 98;
+        int bStartY = top + 114;
 
         for (int i = 0; i < BIOMES.size(); i++) {
             String bio = BIOMES.get(i);
@@ -201,11 +204,10 @@ public class DungeonKeyScreen extends Screen {
             }
         }
 
-        // Sección 3: Panel de Vista Previa y Dificultad
         int prevX = left + 14;
-        int prevY = top + 138;
+        int prevY = top + 152;
         int prevW = panelW - 28;
-        int prevH = 58;
+        int prevH = 62;
         g.fill(prevX, prevY, prevX + prevW, prevY + prevH, 0xFF0D1922);
         g.fill(prevX, prevY, prevX + prevW, prevY + 1, 0xFF276A82);
 
@@ -215,11 +217,10 @@ public class DungeonKeyScreen extends Screen {
         g.drawString(font, Component.translatable("awakening_system.screen.dungeon_key.threat_detail", danger.getString()), prevX + 8, prevY + 30, 0xFFFFFFFF, false);
         g.drawString(font, Component.translatable("awakening_system.screen.dungeon_key.env_detail", getBiomeDescription(selectedBiome).getString()), prevX + 8, prevY + 43, 0xFFDDECF2, false);
 
-        // Botón Principal: DESPLEGAR PORTAL
-        int btnW = 180;
+        int btnW = 200;
         int btnH = 24;
         int btnX = left + (panelW - btnW) / 2;
-        int btnY = top + 204;
+        int btnY = top + 224;
         boolean btnHover = mX >= btnX && mX <= btnX + btnW && mY >= btnY && mY <= btnY + btnH;
 
         g.fill(btnX, btnY, btnX + btnW, btnY + btnH, btnHover ? 0xFF58C8E8 : 0xFF39B9D5);
@@ -237,6 +238,15 @@ public class DungeonKeyScreen extends Screen {
             case "RULER" -> "RLR";
             case "DEMIGOD" -> "DMG";
             case "SUPREME_CREATOR" -> "CREAT";
+            case "EX" -> "EX";
+            case "UR" -> "UR";
+            case "LR" -> "LR";
+            case "MR" -> "MR";
+            case "TRANSCENDENT" -> "TR";
+            case "TRANSCENDENTAL" -> "TR+";
+            case "GOD" -> "GOD";
+            case "COSMIC" -> "COS";
+            case "PRIMORDIAL" -> "PRI";
             case "ABSOLUTE_GOD" -> "A.GOD";
             default -> rank;
         };
@@ -257,6 +267,7 @@ public class DungeonKeyScreen extends Screen {
         return switch (biome) {
             case "igris" -> Component.translatable("awakening_system.screen.dungeon_key.biome_desc.igris");
             case "baran" -> Component.translatable("awakening_system.screen.dungeon_key.biome_desc.baran");
+            case "beru" -> Component.translatable("awakening_system.screen.dungeon_key.biome_desc.beru");
             case "plains" -> Component.translatable("awakening_system.screen.dungeon_key.biome_desc.plains");
             case "lush_plains" -> Component.translatable("awakening_system.screen.dungeon_key.biome_desc.lush_plains");
             case "cherry_plains" -> Component.translatable("awakening_system.screen.dungeon_key.biome_desc.cherry_plains");
@@ -277,15 +288,14 @@ public class DungeonKeyScreen extends Screen {
         mouseY = transformMouseY(mouseY);
         if (button == 0) {
             int panelW = 380;
-            int panelH = 240;
+            int panelH = 266;
             int left = (this.width - panelW) / 2;
             int top = (this.height - panelH) / 2;
 
-            // Click en Rangos
-            int rankBtnW = 44;
-            int rankBtnH = 17;
+            int rankBtnW = 42;
+            int rankBtnH = 15;
             int rStartX = left + 14;
-            int rStartY = top + 45;
+            int rStartY = top + 46;
             for (int i = 0; i < RANKS.size(); i++) {
                 String rk = RANKS.get(i);
                 int rx = rStartX + (i % 8) * (rankBtnW + 2);
@@ -299,12 +309,11 @@ public class DungeonKeyScreen extends Screen {
                 }
             }
 
-            // Click en Biomas (7 columnas x 2 filas)
             int bioCols = 7;
             int bioBtnW = 48;
-            int bioBtnH = 16;
+            int bioBtnH = 15;
             int bStartX = left + 14;
-            int bStartY = top + 98;
+            int bStartY = top + 114;
             for (int i = 0; i < BIOMES.size(); i++) {
                 String bio = BIOMES.get(i);
                 int bx = bStartX + (i % bioCols) * (bioBtnW + 2);
@@ -316,11 +325,10 @@ public class DungeonKeyScreen extends Screen {
                 }
             }
 
-            // Click en botón DESPLEGAR PORTAL
-            int btnW = 180;
+            int btnW = 200;
             int btnH = 24;
             int btnX = left + (panelW - btnW) / 2;
-            int btnY = top + 204;
+            int btnY = top + 224;
             if (mouseX >= btnX && mouseX <= btnX + btnW && mouseY >= btnY && mouseY <= btnY + btnH) {
                 PacketDistributor.sendToServer(new SelectDungeonPayload(selectedRank, selectedBiome));
                 Minecraft.getInstance().player.playSound(ModSounds.DUNGEON_GATE_OPEN.value(), 1.0F, 0.9F);

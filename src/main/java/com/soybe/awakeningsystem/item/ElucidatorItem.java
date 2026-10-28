@@ -36,7 +36,7 @@ public class ElucidatorItem extends SwordItem implements AwakeningWeaponItem {
                 .rarity(Rarity.EPIC)
                 .fireResistant()
                 .durability(12000)
-                .attributes(SwordItem.createAttributes(Tiers.NETHERITE, 15, -2.4F))); // 19 Daño, 1.6 Velocidad
+                .attributes(SwordItem.createAttributes(Tiers.NETHERITE, 15, -2.4F)));
     }
 
     @Override
@@ -52,17 +52,15 @@ public class ElucidatorItem extends SwordItem implements AwakeningWeaponItem {
             long gameTime = level.getGameTime();
 
             int lvl = WeaponLevelManager.getLevel(stack);
-            int baseCd = (lvl >= 50) ? 320 : 500; // 16s o 25s
+            int baseCd = (lvl >= 50) ? 320 : 500;
 
             sp.getCooldowns().addCooldown(this, baseCd);
 
-            // Efectos de buf al usuario: Resistencia al empuje y celeridad de ataque
             sp.addEffect(new MobEffectInstance(MobEffects.DAMAGE_RESISTANCE, 80, 2, false, false, true));
             sp.addEffect(new MobEffectInstance(MobEffects.MOVEMENT_SPEED, 80, 1, false, false, true));
 
             Vec3 look = sp.getLookAngle();
 
-            // Invocar sello arcano oscuro en el suelo a los pies del espadachín
             net.neoforged.neoforge.network.PacketDistributor.sendToPlayersNear(
                     sl, null, sp.getX(), sp.getY(), sp.getZ(), 64.0D,
                     new com.soybe.awakeningsystem.SpawnMagicCirclePayload(
@@ -72,33 +70,26 @@ public class ElucidatorItem extends SwordItem implements AwakeningWeaponItem {
                     )
             );
 
-            // Audio sónico marcial
             sl.playSound(null, sp.getX(), sp.getY(), sp.getZ(), SoundEvents.PLAYER_ATTACK_SWEEP, SoundSource.PLAYERS, 1.6F, 1.3F);
             sl.playSound(null, sp.getX(), sp.getY(), sp.getZ(), SoundEvents.WITHER_SHOOT, SoundSource.PLAYERS, 1.2F, 1.5F);
             sl.playSound(null, sp.getX(), sp.getY(), sp.getZ(), SoundEvents.TRIDENT_THUNDER.value(), SoundSource.PLAYERS, 1.0F, 1.4F);
 
-            // Sacudida cinemática de cámara
             com.soybe.awakeningsystem.CameraShakePayload.sendToNearby(sl, sp.getX(), sp.getY(), sp.getZ(), 32.0D, 0.65F, 10);
 
             float baseDmg = (float) (22.0D * WeaponLevelManager.getDamageMultiplier(stack));
 
-            // Ráfaga Física de Tajos de Vacío (Starburst Stream V2)
-            // Tajo 1: Diagonal Izquierdo
             SlashWaveEntity slash1 = new SlashWaveEntity(sl, sp, SlashWaveEntity.TYPE_DARK_VOID, baseDmg * 0.75F, 2.6F, 1.3F, -38.0F, 22, 4);
             slash1.setDeltaMovement(look.scale(1.9D));
             sl.addFreshEntity(slash1);
 
-            // Tajo 2: Diagonal Derecho
             SlashWaveEntity slash2 = new SlashWaveEntity(sl, sp, SlashWaveEntity.TYPE_DARK_VOID, baseDmg * 0.75F, 2.6F, 1.3F, 38.0F, 22, 4);
             slash2.setDeltaMovement(look.scale(1.85D).add(look.y * 0.05D, 0.05D, 0));
             sl.addFreshEntity(slash2);
 
-            // Tajo 3: Horizontal Rápido de Corte
             SlashWaveEntity slash3 = new SlashWaveEntity(sl, sp, SlashWaveEntity.TYPE_DARK_VOID, baseDmg * 0.9F, 3.2F, 1.2F, 0.0F, 24, 6);
             slash3.setDeltaMovement(look.scale(2.1D));
             sl.addFreshEntity(slash3);
 
-            // Tajo 4 (FINALIZADOR 16º GOLPE): Titánica 'X' Cruzada de Fuego Oscuro
             SlashWaveEntity slashCross = new SlashWaveEntity(sl, sp, SlashWaveEntity.TYPE_DARK_VOID, baseDmg * 1.6F, 4.2F, 4.2F, 0.0F, 28, 8);
             slashCross.setCross(true);
             slashCross.setDeltaMovement(look.scale(2.35D));
@@ -106,7 +97,7 @@ public class ElucidatorItem extends SwordItem implements AwakeningWeaponItem {
 
             WeaponLevelManager.addExp(stack, 40, sp);
 
-            sp.displayClientMessage(Component.literal("§9§l✦ [STARBURST STREAM V2] §f¡Flurry de 16 cortes de vacío y Cruz Titánica desatados!"), true);
+            sp.displayClientMessage(Component.translatable("item.awakening_system.elucidator.starburst_stream"), true);
             return InteractionResultHolder.consume(stack);
         }
 

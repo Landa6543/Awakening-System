@@ -27,7 +27,6 @@ public class ShadowDirewolfRenderer extends MobRenderer<ShadowDirewolfEntity, Sh
 
     @Override
     protected void scale(ShadowDirewolfEntity entity, PoseStack poseStack, float partialTickTime) {
-        // Escala imponente de Lobo Alfa / Direwolf (1.3x tamaño respecto a modelo base)
         poseStack.scale(1.25F, 1.25F, 1.25F);
     }
 }

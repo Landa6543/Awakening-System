@@ -48,7 +48,7 @@ public final class TrackPlacementPreview {
         Minecraft mc = Minecraft.getInstance();
         if (mc.player != null) {
             mc.player.playSound(SoundEvents.EXPERIENCE_ORB_PICKUP, 1.0F, 1.4F);
-            mc.player.displayClientMessage(Component.literal(String.format("§6✦ [Trazado Create] §aInicio fijado en (%d, %d, %d). §f¡Apunta al destino para ver la línea guía!", pos.getX(), pos.getY(), pos.getZ())), false);
+            mc.player.displayClientMessage(Component.translatable("awakening_system.track_placement.start_set", pos.getX(), pos.getY(), pos.getZ()), false);
         }
     }
 
@@ -57,7 +57,7 @@ public final class TrackPlacementPreview {
             Minecraft mc = Minecraft.getInstance();
             if (mc.player != null) {
                 mc.player.playSound(SoundEvents.DISPENSER_FAIL, 0.8F, 1.1F);
-                mc.player.displayClientMessage(Component.literal("§c✦ [Trazado Create] Anclaje de vía cancelado."), true);
+                mc.player.displayClientMessage(Component.translatable("awakening_system.track_placement.cancelled"), true);
             }
         }
         anchorPos = null;
@@ -78,7 +78,6 @@ public final class TrackPlacementPreview {
     public static boolean onRightClick(Player player, InteractionHand hand, BlockPos clickedPos) {
         if (!isHoldingTrackItem(player)) return false;
 
-        // Shift cancela el anclaje
         if (player.isShiftKeyDown()) {
             if (hasAnchor()) {
                 reset();
@@ -90,7 +89,6 @@ public final class TrackPlacementPreview {
         Minecraft mc = Minecraft.getInstance();
         if (mc.level == null) return false;
 
-        // 1. Si no hay ancla, comprobar si el bloque clickeado es una vía funcional
         if (!hasAnchor()) {
             var state = mc.level.getBlockState(clickedPos);
             if (state.getBlock() instanceof SubwayRailTrackBlock) {
@@ -100,7 +98,6 @@ public final class TrackPlacementPreview {
             return false;
         }
 
-        // 2. Si ya hay ancla, el segundo clic coloca el tramo continuo hasta el destino
         BlockPos targetPos = clickedPos;
         var targetState = mc.level.getBlockState(targetPos);
         if (!(targetState.getBlock() instanceof SubwayRailTrackBlock)) {
@@ -114,12 +111,11 @@ public final class TrackPlacementPreview {
 
         int dist = Math.abs(targetPos.getX() - anchorPos.getX()) + Math.abs(targetPos.getZ() - anchorPos.getZ());
         if (dist > 48) {
-            player.displayClientMessage(Component.literal("§c⚠ [Trazado Create] La distancia máxima es de 48 bloques."), true);
+            player.displayClientMessage(Component.translatable("awakening_system.track_placement.max_distance"), true);
             player.playSound(SoundEvents.DISPENSER_FAIL, 1.0F, 0.8F);
             return true;
         }
 
-        // Enviar paquete al servidor para tender las vías
         PacketDistributor.sendToServer(new PlaceTrackLinePayload(anchorPos, targetPos, false));
         anchorPos = null;
         return true;
@@ -133,7 +129,6 @@ public final class TrackPlacementPreview {
 
         if (dx == 0 && dz == 0) return path;
 
-        // Tramo recto en Z (Norte - Sur)
         if (dx == 0) {
             int stepZ = dz > 0 ? 1 : -1;
             int count = Math.abs(dz);
@@ -144,7 +139,6 @@ public final class TrackPlacementPreview {
             return path;
         }
 
-        // Tramo recto en X (Este - Oeste)
         if (dz == 0) {
             int stepX = dx > 0 ? 1 : -1;
             int count = Math.abs(dx);
@@ -155,7 +149,6 @@ public final class TrackPlacementPreview {
             return path;
         }
 
-        // Tramo con curva en L: avanzar en el eje predominante primero y luego doblar 90 grados
         if (Math.abs(dz) >= Math.abs(dx)) {
             int stepZ = dz > 0 ? 1 : -1;
             int stepX = dx > 0 ? 1 : -1;
@@ -219,7 +212,6 @@ public final class TrackPlacementPreview {
         PoseStack poseStack = event.getPoseStack();
         MultiBufferSource bufferSource = mc.renderBuffers().bufferSource();
 
-        // Color holográfico estilo Create: verde neón / cian si es válido, rojo si excede distancia
         int r = isValidDist ? 34 : 255;
         int g = isValidDist ? 255 : 50;
         int b = isValidDist ? 170 : 50;
@@ -228,7 +220,6 @@ public final class TrackPlacementPreview {
 
         VertexConsumer beamBuffer = bufferSource.getBuffer(RenderType.lightning());
 
-        // 1. Línea láser continua 3D conectando el inicio con el destino a lo largo de cada tramo
         poseStack.pushPose();
         Matrix4f mat = poseStack.last().pose();
 
@@ -241,14 +232,12 @@ public final class TrackPlacementPreview {
             double curY = p.getY() + 0.25D - camPos.y;
             double curZ = p.getZ() + 0.5D - camPos.z;
 
-            // Dibujar segmento de rayo volumétrico (cinta horizontal y vertical)
             drawBeamSegment(mat, beamBuffer, prevX, prevY, prevZ, curX, curY, curZ, 0.12F, r, g, b, alpha);
             prevX = curX;
             prevY = curY;
             prevZ = curZ;
         }
 
-        // 2. Marcadores holográficos en cada bloque de la trayectoria (ghost track markers)
         for (BlockPos p : path) {
             double px = p.getX() + 0.5D - camPos.x;
             double py = p.getY() + 0.08D - camPos.y;
@@ -257,15 +246,16 @@ public final class TrackPlacementPreview {
             drawHologramDisc(mat, beamBuffer, px, py, pz, 0.45F, r, g, b, (int) (alpha * 0.45F));
         }
 
-        // 3. Balizas de inicio y destino
         drawHologramDisc(mat, beamBuffer, anchorPos.getX() + 0.5D - camPos.x, anchorPos.getY() + 0.12D - camPos.y, anchorPos.getZ() + 0.5D - camPos.z, 0.6F, 255, 215, 0, (int) (220 * pulse));
         drawHologramDisc(mat, beamBuffer, targetPos.getX() + 0.5D - camPos.x, targetPos.getY() + 0.12D - camPos.y, targetPos.getZ() + 0.5D - camPos.z, 0.6F, r, g, b, (int) (220 * pulse));
 
         poseStack.popPose();
 
-        // 4. Mostrar información en la barra de acción del HUD
-        mc.player.displayClientMessage(Component.literal(String.format("§6✦ [Trazado Create] §fVías necesarias: §e%d §7| %s §7| §aClic: §fColocar §7| §cShift: §fCancelar",
-                path.size(), isValidDist ? "§a✔ Trazado Válido" : "§c⚠ Distancia muy larga")), true);
+        Component status = isValidDist 
+                ? Component.translatable("awakening_system.track_placement.status_valid")
+                : Component.translatable("awakening_system.track_placement.status_too_long");
+        mc.player.displayClientMessage(Component.translatable("awakening_system.track_placement.guidance",
+                path.size(), status), true);
     }
 
     private static void drawBeamSegment(Matrix4f m, VertexConsumer b,

@@ -43,7 +43,6 @@ public class CrownOfInsightItem extends Item {
             stack.shrink(1);
             SystemData data = SystemEvents.data(sp);
 
-            // Aumento de nivel de habilidades existentes en +1
             for (String skillName : data.skills().keySet()) {
                 int currentLvl = data.skills().get(skillName);
                 if (currentLvl < 10) {
@@ -51,7 +50,6 @@ public class CrownOfInsightItem extends Item {
                 }
             }
 
-            // Bendición de la Corona (20 minutos de Fuerza III, Regeneración II y Suerte)
             sp.addEffect(new MobEffectInstance(MobEffects.DAMAGE_BOOST, 24000, 2, false, true, true));
             sp.addEffect(new MobEffectInstance(MobEffects.REGENERATION, 24000, 1, false, true, true));
             sp.addEffect(new MobEffectInstance(MobEffects.LUCK, 24000, 2, false, true, true));
@@ -63,7 +61,7 @@ public class CrownOfInsightItem extends Item {
                 sl.playSound(null, sp.getX(), sp.getY(), sp.getZ(), SoundEvents.AMETHYST_CLUSTER_STEP, SoundSource.PLAYERS, 2.0F, 0.8F);
             }
 
-            sp.displayClientMessage(Component.literal("§6§l✦ [CORONACIÓN CELESTIAL] §e¡Has coronado tus talentos! +1 Nivel a todas tus habilidades activas y 20m de Bendición Celestial."), false);
+            sp.displayClientMessage(Component.translatable("item.awakening_system.crown_of_insight.crowned"), false);
             AwakeningSystemMod.sync(sp);
             return InteractionResultHolder.sidedSuccess(stack, level.isClientSide());
         }
@@ -73,11 +71,11 @@ public class CrownOfInsightItem extends Item {
 
     @Override
     public void appendHoverText(ItemStack stack, TooltipContext context, List<Component> tooltip, TooltipFlag flag) {
-        tooltip.add(Component.literal("§6★★★★★ [Material Supremo de Talentos]").withStyle(ChatFormatting.GOLD, ChatFormatting.BOLD));
-        tooltip.add(Component.literal("§7Un precioso testimonio de sabiduría ancestral procedente de la cumbre de Celestia.").withStyle(ChatFormatting.GRAY));
+        tooltip.add(Component.translatable("item.awakening_system.crown_of_insight.badge").withStyle(ChatFormatting.GOLD, ChatFormatting.BOLD));
+        tooltip.add(Component.translatable("item.awakening_system.crown_of_insight.desc").withStyle(ChatFormatting.GRAY));
         tooltip.add(Component.literal(""));
-        tooltip.add(Component.literal("§e✦ Clic Derecho: Coronación Celestial").withStyle(ChatFormatting.YELLOW, ChatFormatting.BOLD));
-        tooltip.add(Component.literal("  §f• Otorga +1 Nivel a todas tus habilidades desbloqueadas."));
-        tooltip.add(Component.literal("  §f• Otorga 20 minutos de Fuerza III, Regeneración II y Suerte III."));
+        tooltip.add(Component.translatable("item.awakening_system.crown_of_insight.title").withStyle(ChatFormatting.YELLOW, ChatFormatting.BOLD));
+        tooltip.add(Component.translatable("item.awakening_system.crown_of_insight.desc1"));
+        tooltip.add(Component.translatable("item.awakening_system.crown_of_insight.desc2"));
     }
 }

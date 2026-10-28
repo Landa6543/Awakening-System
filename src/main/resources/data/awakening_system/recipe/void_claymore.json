@@ -1,0 +1,27 @@
+{
+  "type": "minecraft:crafting_shaped",
+  "category": "equipment",
+  "pattern": [
+    " C ",
+    "ASA",
+    " E "
+  ],
+  "key": {
+    "C": {
+      "item": "minecraft:crying_obsidian"
+    },
+    "A": {
+      "item": "awakening_system:abyssal_ingot"
+    },
+    "S": {
+      "item": "minecraft:netherite_sword"
+    },
+    "E": {
+      "item": "minecraft:echo_shard"
+    }
+  },
+  "result": {
+    "count": 1,
+    "id": "awakening_system:void_claymore"
+  }
+}

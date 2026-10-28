@@ -1,0 +1,6 @@
+{
+  "variants": {
+    "powered=false": { "model": "awakening_system:block/spirit_plum_pressure_plate" },
+    "powered=true": { "model": "awakening_system:block/spirit_plum_pressure_plate_down" }
+  }
+}

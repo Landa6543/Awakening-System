@@ -1,0 +1,9 @@
+{
+  "parent": "awakening_system:custom/aether_plushie",
+  "textures": {
+    "all": "awakening_system:block/arisplushie",
+    "particle": "awakening_system:block/arisplushie",
+    "0": "awakening_system:block/arisplushie"
+  },
+  "render_type": "cutout"
+}

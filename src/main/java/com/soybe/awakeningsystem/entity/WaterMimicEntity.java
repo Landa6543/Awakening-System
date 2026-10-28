@@ -72,7 +72,6 @@ public class WaterMimicEntity extends Monster {
     @Override
     public boolean hurt(DamageSource source, float amount) {
         if (source.is(net.minecraft.tags.DamageTypeTags.IS_FREEZING)) {
-            // Congelación / Electro reacciones duplican el daño
             this.addEffect(new MobEffectInstance(MobEffects.MOVEMENT_SLOWDOWN, 60, 2));
             amount *= 1.8F;
         }

@@ -52,6 +52,8 @@ javap_*.txt
 ### Root temporary debug previews & models ###
 /*.png
 !/purple_slime_icon.png
+!/banner.png
+!/logo.png
 /*.jpg
 /*.webm
 /*.bbmodel
@@ -60,9 +62,31 @@ javap_*.txt
 /*.java
 /*.json
 /*.py
+/*.ps1
+/*.js
+/*.cs
+/20
 implementation_plan.md
 walkthrough.md
 
-### Large archives ###
+### Root temporary directories ###
+.roxy/
+journeymap/
+logs/
+models_bbmodel/
+tools/
+/assets/
+/META-INF/
+
+### Large archives & Releases ###
+releases/
 Modpack_Awakening_System/*.zip
 Modpack_Awakening_System/overrides/mods/
+
+### Individual Version Changelogs ###
+CHANGELOG_*.md
+
+### Internal Developer Notes & Roadmaps ###
+ROADMAP_*.md
+PLAN_*.md
+NOTAS_*.md

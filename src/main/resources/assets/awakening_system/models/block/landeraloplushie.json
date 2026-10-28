@@ -1,0 +1,9 @@
+{
+  "parent": "awakening_system:custom/aether_plushie",
+  "textures": {
+    "all": "awakening_system:block/landeraloplushie",
+    "particle": "awakening_system:block/landeraloplushie",
+    "0": "awakening_system:block/landeraloplushie"
+  },
+  "render_type": "cutout"
+}

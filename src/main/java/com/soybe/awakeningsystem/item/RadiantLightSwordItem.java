@@ -45,11 +45,11 @@ public class RadiantLightSwordItem extends SwordItem implements AwakeningWeaponI
             long cdUntil = sp.getPersistentData().getLong("radiant_light_cd");
             if (gameTime < cdUntil) {
                 long sec = (cdUntil - gameTime) / 20;
-                sp.displayClientMessage(Component.literal("§c⏳ Espada de Luz en recarga (" + sec + "s)..."), true);
+                sp.displayClientMessage(Component.translatable("item.awakening_system.radiant_light_sword.cooldown", sec), true);
                 return InteractionResultHolder.fail(stack);
             }
 
-            sp.getPersistentData().putLong("radiant_light_cd", gameTime + 200L); // 10s cooldown
+            sp.getPersistentData().putLong("radiant_light_cd", gameTime + 200L);
             sp.getCooldowns().addCooldown(this, 200);
 
             Vec3 look = sp.getLookAngle();
@@ -57,7 +57,6 @@ public class RadiantLightSwordItem extends SwordItem implements AwakeningWeaponI
             sp.hurtMarked = true;
 
             if (level instanceof ServerLevel sl) {
-                // 1. Sello divino solar en el suelo
                 net.neoforged.neoforge.network.PacketDistributor.sendToPlayersNear(
                         sl, null, sp.getX(), sp.getY(), sp.getZ(), 64.0D,
                         new com.soybe.awakeningsystem.SpawnMagicCirclePayload(
@@ -75,18 +74,15 @@ public class RadiantLightSwordItem extends SwordItem implements AwakeningWeaponI
 
                 float dmg = (float) (25.0D * WeaponLevelManager.getDamageMultiplier(stack));
 
-                // 2. Danza de la Espada de Luz V2: Tajo Solar Horizontal
                 SlashWaveEntity solarWave = new SlashWaveEntity(sl, sp, SlashWaveEntity.TYPE_SOLAR_LIGHT, dmg, 4.2F, 1.4F, 0.0F, 24, 8);
                 solarWave.setDeltaMovement(look.scale(2.2D));
                 sl.addFreshEntity(solarWave);
 
-                // 3. Estocada de Luz Perforante (Solar Thrust Beam)
                 SlashWaveEntity solarBeam = new SlashWaveEntity(sl, sp, SlashWaveEntity.TYPE_SOLAR_LIGHT, dmg * 1.2F, 1.4F, 3.6F, 0.0F, 20, 10);
                 solarBeam.setDeltaMovement(look.scale(2.7D));
                 solarBeam.setArmorPenetration(0.40F);
                 sl.addFreshEntity(solarBeam);
 
-                // Purificación absoluta de estados negativos
                 sp.removeEffect(MobEffects.POISON);
                 sp.removeEffect(MobEffects.WITHER);
                 sp.removeEffect(MobEffects.MOVEMENT_SLOWDOWN);
@@ -95,13 +91,12 @@ public class RadiantLightSwordItem extends SwordItem implements AwakeningWeaponI
                 sp.removeEffect(MobEffects.DARKNESS);
                 sp.removeEffect(MobEffects.CONFUSION);
 
-                // Curación y bendición radiante
                 sp.heal(6.0F);
                 sp.addEffect(new MobEffectInstance(MobEffects.REGENERATION, 80, 1, false, true));
                 sp.addEffect(new MobEffectInstance(MobEffects.MOVEMENT_SPEED, 100, 1, false, true));
 
                 WeaponLevelManager.addExp(stack, 35, sp);
-                sp.displayClientMessage(Component.literal("§e§l✦ [DANZA DE LA ESPADA DE LUZ] §6¡Tajo solar radiante y haz purificador desatados!"), true);
+                sp.displayClientMessage(Component.translatable("item.awakening_system.radiant_light_sword.unleashed"), true);
             }
             return InteractionResultHolder.sidedSuccess(stack, false);
         }
@@ -126,7 +121,7 @@ public class RadiantLightSwordItem extends SwordItem implements AwakeningWeaponI
             target.addEffect(new MobEffectInstance(MobEffects.GLOWING, 120, 0));
             target.addEffect(new MobEffectInstance(MobEffects.WEAKNESS, 80, 0));
             if (target.isInvertedHealAndHarm() && attacker instanceof Player p) {
-                target.hurt(target.damageSources().playerAttack(p), 8.0F); // Daño sagrado extra a no-muertos
+                target.hurt(target.damageSources().playerAttack(p), 8.0F);
                 target.igniteForSeconds(3);
             }
         }

@@ -50,7 +50,7 @@ public class GreatSnowboarKingBossEntity extends Monster {
             SynchedEntityData.defineId(GreatSnowboarKingBossEntity.class, EntityDataSerializers.BOOLEAN);
 
     private final ServerBossEvent bossEvent = (ServerBossEvent) new ServerBossEvent(
-            Component.literal("§b§lGran Rey Jabalí de las Nieves §7- §fSoberano de Espinadragón"),
+            Component.translatable("boss.awakening_system.snowboar_king.boss_bar"),
             BossEvent.BossBarColor.BLUE,
             BossEvent.BossBarOverlay.NOTCHED_10
     ).setDarkenScreen(false);
@@ -61,7 +61,7 @@ public class GreatSnowboarKingBossEntity extends Monster {
 
     public GreatSnowboarKingBossEntity(EntityType<? extends Monster> entityType, Level level) {
         super(entityType, level);
-        this.setCustomName(Component.literal("§b§lGran Rey Jabalí de las Nieves"));
+        this.setCustomName(Component.translatable("boss.awakening_system.snowboar_king.name"));
         this.setCustomNameVisible(true);
         this.setPersistenceRequired();
         this.xpReward = 750;
@@ -112,7 +112,6 @@ public class GreatSnowboarKingBossEntity extends Monster {
         if (!this.level().isClientSide) {
             this.bossEvent.setProgress(this.getHealth() / this.getMaxHealth());
 
-            // Furia berserk cuando tiene poca vida
             if (!isEnraged() && (this.getHealth() / this.getMaxHealth()) <= 0.35F) {
                 this.entityData.set(DATA_ENRAGED, true);
                 this.addEffect(new MobEffectInstance(MobEffects.DAMAGE_BOOST, 99999, 1));
@@ -152,7 +151,6 @@ public class GreatSnowboarKingBossEntity extends Monster {
                     if (chargeCooldown > 0) {
                         chargeCooldown--;
                     } else if (this.distanceToSqr(target) > 16.0D && this.distanceToSqr(target) < 400.0D) {
-                        // Iniciar embestida de carga
                         this.entityData.set(DATA_CHARGING, true);
                         this.chargeTicks = 35;
                         double speed = isEnraged() ? 0.95D : 0.75D;
@@ -177,7 +175,7 @@ public class GreatSnowboarKingBossEntity extends Monster {
     @Override
     public boolean hurt(DamageSource source, float amount) {
         if (source.is(net.minecraft.tags.DamageTypeTags.IS_FREEZING)) {
-            return false; // Inmune al frío helado de Espinadragón
+            return false;
         }
         return super.hurt(source, amount);
     }
@@ -196,16 +194,15 @@ public class GreatSnowboarKingBossEntity extends Monster {
                     data.addMora(55000);
                     data.addPrimogems(30);
                     com.soybe.awakeningsystem.AwakeningSystemMod.sync(sp);
-                    sp.displayClientMessage(Component.literal("§b§l✦ ¡REY JABALÍ DE LAS NIEVES DERROTADO! §eHas ganado §6+55,000 Mora §ey §b+30 Protogemas§e."), false);
+                    sp.displayClientMessage(Component.translatable("boss.awakening_system.snowboar_king.defeated_teyvat"), false);
                 } else {
                     if (SystemItems.AWAKENING_COIN.isBound()) {
                         sp.addItem(new ItemStack(SystemItems.AWAKENING_COIN.get(), 20));
                     }
-                    sp.displayClientMessage(Component.literal("§b§l✦ ¡REY JABALÍ DE LAS NIEVES DERROTADO! §6+20 Monedas de Despertar§e."), false);
+                    sp.displayClientMessage(Component.translatable("boss.awakening_system.snowboar_king.defeated_vanilla"), false);
                 }
             }
 
-            // Drops: Carne Congelada, Jade Shivada, Protogemas y Fates
             this.spawnAtLocation(new ItemStack(Items.PORKCHOP, 12 + this.random.nextInt(8)));
             if (isTeyvat && SystemItems.PRIMOGEM.isBound()) {
                 this.spawnAtLocation(new ItemStack(SystemItems.PRIMOGEM.get(), 25 + this.random.nextInt(10)));

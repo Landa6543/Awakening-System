@@ -84,7 +84,6 @@ public class SubwayDoorBlock extends DoorBlock implements EntityBlock {
     protected InteractionResult useWithoutItem(BlockState state, Level level, BlockPos pos, Player player, BlockHitResult hitResult) {
         boolean newOpen = !state.getValue(OPEN);
 
-        // Actualizar ambas mitades (inferior y superior) de esta puerta
         setDoorOpen(level, pos, state, newOpen);
         if (newOpen) {
             level.playSound(null, pos, SoundEvents.IRON_DOOR_OPEN, SoundSource.BLOCKS, 0.9F, 1.1F);
@@ -94,7 +93,6 @@ public class SubwayDoorBlock extends DoorBlock implements EntityBlock {
             level.playSound(null, pos, SoundEvents.PISTON_CONTRACT, SoundSource.BLOCKS, 0.45F, 1.6F);
         }
 
-        // Sincronizar con la puerta hermana si es una puerta doble de vagón
         Direction facing = state.getValue(FACING);
         DoorHingeSide hinge = state.getValue(HINGE);
         Direction sisterDir = (hinge == DoorHingeSide.LEFT) ? facing.getClockWise() : facing.getCounterClockWise();

@@ -73,7 +73,6 @@ public class AbyssalBeholderRenderer extends MobRenderer<AbyssalBeholderEntity, 
         PoseStack.Pose lastPose = poseStack.last();
 
         float beamRadius = 0.18F;
-        // Tinte púrpura cósmico abisal
         int r = 230;
         int g = 40;
         int b = 170;
@@ -108,7 +107,7 @@ public class AbyssalBeholderRenderer extends MobRenderer<AbyssalBeholderEntity, 
                 .setColor(r, g, b, a)
                 .setUv(u, v)
                 .setOverlay(OverlayTexture.NO_OVERLAY)
-                .setLight(15728880) // Brillo total
+                .setLight(15728880)
                 .setNormal(pose, 0.0F, 1.0F, 0.0F);
     }
 

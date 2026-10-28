@@ -1,6 +1,6 @@
 {
-  "parent": "bettercombat:katana",
+  "parent": "bettercombat:claymore",
   "attributes": {
-    "attack_range": 3.2
+    "attack_range": 3.8
   }
 }

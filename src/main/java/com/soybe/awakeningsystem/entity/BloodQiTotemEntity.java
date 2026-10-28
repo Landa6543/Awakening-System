@@ -29,7 +29,7 @@ public class BloodQiTotemEntity extends LivingEntity {
 
     public BloodQiTotemEntity(EntityType<? extends LivingEntity> entityType, Level level) {
         super(entityType, level);
-        this.setCustomName(Component.literal("§4§l✦ Estandarte de Qi Demoníaco ✦"));
+        this.setCustomName(Component.translatable("entity.awakening_system.blood_qi_totem.name"));
         this.setCustomNameVisible(true);
         this.addTag("blood_sect_totem");
         this.addTag("no_shadow_extraction");
@@ -51,7 +51,6 @@ public class BloodQiTotemEntity extends LivingEntity {
 
     @Override
     protected void doPush(net.minecraft.world.entity.Entity entity) {
-        // Inmóvil
     }
 
     @Override
@@ -65,7 +64,6 @@ public class BloodQiTotemEntity extends LivingEntity {
         this.setDeltaMovement(Vec3.ZERO);
 
         if (this.level().isClientSide) {
-            // Efectos visuales de Qi Demoníaco
             double px = this.getX() + (this.random.nextDouble() - 0.5D) * 0.8D;
             double py = this.getY() + 0.4D + this.random.nextDouble() * 1.6D;
             double pz = this.getZ() + (this.random.nextDouble() - 0.5D) * 0.8D;
@@ -128,7 +126,6 @@ public class BloodQiTotemEntity extends LivingEntity {
             sl.playSound(null, this.getX(), this.getY(), this.getZ(), SoundEvents.WITHER_BREAK_BLOCK, SoundSource.HOSTILE, 1.4F, 0.9F);
             sl.playSound(null, this.getX(), this.getY(), this.getZ(), SoundEvents.GENERIC_EXPLODE.value(), SoundSource.HOSTILE, 1.0F, 1.2F);
 
-            // Contar totems restantes en la fortaleza
             AABB fortressArea = this.getBoundingBox().inflate(50.0D, 20.0D, 50.0D);
             List<BloodQiTotemEntity> remainingTotems = sl.getEntitiesOfClass(BloodQiTotemEntity.class, fortressArea,
                     t -> t != this && t.isAlive());

@@ -103,15 +103,15 @@ public class CompanionEntity extends TamableAnimal {
         double rankMult = 1.0D + ascRank * 0.15D;
         double constelDmgMult = 1.0D;
         double constelHpBonus = 0.0D;
-        if (constel >= 1) constelDmgMult += 0.15D; // C1
+        if (constel >= 1) constelDmgMult += 0.15D;
         if (constel >= 4) {
-            constelHpBonus += 80.0D; // C4
+            constelHpBonus += 80.0D;
             bonusHp *= 1.25F;
         }
         if (constel > 6) {
             int over = constel - 6;
-            constelDmgMult += over * 0.05D; // +5% por constelación infinita
-            constelHpBonus += over * 50.0D; // +50 HP por constelación infinita
+            constelDmgMult += over * 0.05D;
+            constelHpBonus += over * 50.0D;
         }
 
         double baseHp = (300.0D + (level - 1) * 10.0D + constelHpBonus) * rankMult + bonusHp;
@@ -171,7 +171,39 @@ public class CompanionEntity extends TamableAnimal {
 
         this.targetSelector.addGoal(1, new OwnerHurtByTargetGoal(this));
         this.targetSelector.addGoal(2, new OwnerHurtTargetGoal(this));
-        this.targetSelector.addGoal(3, new HurtByTargetGoal(this));
+        this.targetSelector.addGoal(3, new HurtByTargetGoal(this) {
+            @Override
+            public boolean canUse() {
+                if (mob.getLastHurtByMob() instanceof Player p && p.getUUID().equals(((CompanionEntity) mob).getOwnerUUID())) {
+                    return false;
+                }
+                return super.canUse();
+            }
+        });
+    }
+
+    @Override
+    public boolean canAttack(LivingEntity target) {
+        if (target instanceof Player p && p.getUUID().equals(this.getOwnerUUID())) {
+            return false;
+        }
+        return super.canAttack(target);
+    }
+
+    @Override
+    public boolean wantsToAttack(LivingEntity target, LivingEntity owner) {
+        if (target instanceof Player p && p.getUUID().equals(this.getOwnerUUID())) {
+            return false;
+        }
+        return super.wantsToAttack(target, owner);
+    }
+
+    @Override
+    public void setTarget(LivingEntity target) {
+        if (target instanceof Player p && p.getUUID().equals(this.getOwnerUUID())) {
+            return;
+        }
+        super.setTarget(target);
     }
 
     @Override
@@ -262,6 +294,12 @@ public class CompanionEntity extends TamableAnimal {
         this.entityData.set(PROFILE_ID, profile.id());
         this.updateCustomName();
         this.updateEquipmentForProfile();
+        this.refreshDimensions();
+    }
+
+    @Override
+    public float getScale() {
+        return this.getCompanionProfile() != null ? this.getCompanionProfile().getModelScale() : 1.0F;
     }
 
     public void updateEquipmentForProfile() {
@@ -299,11 +337,10 @@ public class CompanionEntity extends TamableAnimal {
             this.skillCooldownTicks--;
         }
 
-        // Ejecutar habilidad elemental activa durante el combate
         LivingEntity target = this.getTarget();
         if (target != null && target.isAlive() && !this.level().isClientSide() && this.skillCooldownTicks <= 0) {
             triggerElementalSkill(target);
-            this.skillCooldownTicks = 160; // 8 segundos de recarga
+            this.skillCooldownTicks = 160;
         }
     }
 
@@ -319,7 +356,6 @@ public class CompanionEntity extends TamableAnimal {
 
         switch (profile) {
             case COLUMBINA -> {
-                // Canto de las Tres Lunas (Aria, Sonnet, Canon)
                 AABB box = target.getBoundingBox().inflate(6.0D);
                 for (LivingEntity nearby : sl.getEntitiesOfClass(LivingEntity.class, box, e -> e != this && e != owner && !e.isAlliedTo(this))) {
                     nearby.hurt(this.damageSources().magic(), 32.0F);
@@ -332,11 +368,10 @@ public class CompanionEntity extends TamableAnimal {
                 if (owner instanceof ServerPlayer sp) {
                     sp.addEffect(new MobEffectInstance(MobEffects.REGENERATION, 120, 1, false, false, true));
                     sp.addEffect(new MobEffectInstance(MobEffects.DAMAGE_RESISTANCE, 120, 0, false, false, true));
-                    sp.displayClientMessage(Component.literal("§d§l✦ [COLUMBINA] §f«¡Que la luz de las Tres Lunas te proteja!»"), true);
+                    sp.displayClientMessage(Component.translatable("companion.awakening_system.columbina_protect"), true);
                 }
             }
             case RAIDEN_SHOGUN -> {
-                // Descarga de Trueno
                 LightningBolt bolt = EntityType.LIGHTNING_BOLT.create(sl);
                 if (bolt != null) {
                     bolt.moveTo(target.position());
@@ -352,7 +387,6 @@ public class CompanionEntity extends TamableAnimal {
                 this.playSound(SoundEvents.LIGHTNING_BOLT_THUNDER, 1.2F, 1.2F);
             }
             case HU_TAO -> {
-                // Ráfaga Mariposa Ardiente
                 target.setRemainingFireTicks(160);
                 target.hurt(this.damageSources().onFire(), 24.0F);
                 sl.sendParticles(ParticleTypes.FLAME, target.getX(), target.getY() + 1.0D, target.getZ(), 50, 0.6D, 0.8D, 0.6D, 0.15D);
@@ -360,7 +394,6 @@ public class CompanionEntity extends TamableAnimal {
                 this.playSound(SoundEvents.FIRECHARGE_USE, 1.0F, 1.0F);
             }
             case ZHONGLI -> {
-                // Dominio de Jade: Escudo sobre el dueño y petrificación
                 if (owner instanceof ServerPlayer sp) {
                     sp.addEffect(new MobEffectInstance(MobEffects.ABSORPTION, 300, 3, false, false));
                     sp.addEffect(new MobEffectInstance(MobEffects.DAMAGE_RESISTANCE, 300, 1, false, false));
@@ -371,7 +404,6 @@ public class CompanionEntity extends TamableAnimal {
                 this.playSound(SoundEvents.ANVIL_LAND, 1.0F, 0.8F);
             }
             case FURINA -> {
-                // Danza de Aguas Sanadoras
                 if (owner instanceof ServerPlayer sp) {
                     sp.addEffect(new MobEffectInstance(MobEffects.REGENERATION, 160, 1, false, false));
                 }
@@ -381,7 +413,6 @@ public class CompanionEntity extends TamableAnimal {
                 this.playSound(SoundEvents.PLAYER_SPLASH, 1.2F, 1.2F);
             }
             case NAHIDA -> {
-                // Templo de la Sabiduría: Enredaderas y Parálisis
                 target.addEffect(new MobEffectInstance(MobEffects.MOVEMENT_SLOWDOWN, 120, 4, false, false));
                 target.addEffect(new MobEffectInstance(MobEffects.POISON, 120, 1, false, false));
                 target.hurt(this.damageSources().magic(), 18.0F);
@@ -389,7 +420,6 @@ public class CompanionEntity extends TamableAnimal {
                 this.playSound(SoundEvents.AMETHYST_BLOCK_CHIME, 1.2F, 1.5F);
             }
             case KAZUHA -> {
-                // Torbellino Anemo: Atrae enemigos y los eleva
                 AABB pullBox = target.getBoundingBox().inflate(6.0D);
                 for (LivingEntity nearby : sl.getEntitiesOfClass(LivingEntity.class, pullBox)) {
                     if (nearby != this && nearby != owner && nearby.isAlive()) {
@@ -401,20 +431,17 @@ public class CompanionEntity extends TamableAnimal {
                 this.playSound(SoundEvents.ELYTRA_FLYING, 1.0F, 1.2F);
             }
             case SUNG_JINWOO -> {
-                // Ráfaga de Sombras
                 target.hurt(this.damageSources().mobAttack(this), 26.0F);
                 sl.sendParticles(ParticleTypes.SQUID_INK, target.getX(), target.getY() + 1.0D, target.getZ(), 40, 0.5D, 0.8D, 0.5D, 0.1D);
                 this.playSound(SoundEvents.WITHER_SHOOT, 0.9F, 1.4F);
             }
             case GOJO_SATORU -> {
-                // Técnica Inversa: Repulsión brutal
                 target.knockback(2.8D, this.getX() - target.getX(), this.getZ() - target.getZ());
                 target.hurt(this.damageSources().magic(), 32.0F);
                 sl.sendParticles(ParticleTypes.SONIC_BOOM, target.getX(), target.getY() + 1.0D, target.getZ(), 1, 0, 0, 0, 0);
                 this.playSound(SoundEvents.WARDEN_SONIC_BOOM, 0.8F, 1.2F);
             }
             case NOELLE -> {
-                // Guardia de Favonius: Escudo y Curación
                 if (owner instanceof ServerPlayer sp) {
                     sp.addEffect(new MobEffectInstance(MobEffects.ABSORPTION, 200, 1, false, false));
                     sp.heal(4.0F);
@@ -424,13 +451,11 @@ public class CompanionEntity extends TamableAnimal {
                 this.playSound(SoundEvents.SHIELD_BLOCK, 1.0F, 1.0F);
             }
             case CHA_HAEIN -> {
-                // Espada de Luz Sagrada
                 target.hurt(this.damageSources().mobAttack(this), 22.0F);
                 sl.sendParticles(ParticleTypes.END_ROD, target.getX(), target.getY() + 1.0D, target.getZ(), 35, 0.5D, 0.8D, 0.5D, 0.15D);
                 this.playSound(SoundEvents.PLAYER_ATTACK_SWEEP, 1.2F, 1.3F);
             }
             case DILUC -> {
-                // Amanecer del Fénix: Fuego ardiente y empuje masivo
                 target.setRemainingFireTicks(200);
                 target.hurt(this.damageSources().onFire(), 30.0F);
                 target.knockback(2.4D, this.getX() - target.getX(), this.getZ() - target.getZ());
@@ -439,7 +464,6 @@ public class CompanionEntity extends TamableAnimal {
                 this.playSound(SoundEvents.BLAZE_SHOOT, 1.2F, 0.8F);
             }
             case JEAN -> {
-                // Brisa de Diente de León: Campo curativo y repulsión en área
                 if (owner instanceof ServerPlayer sp) {
                     sp.heal(16.0F);
                     sp.addEffect(new MobEffectInstance(MobEffects.REGENERATION, 200, 1, false, false));
@@ -456,7 +480,6 @@ public class CompanionEntity extends TamableAnimal {
                 this.playSound(SoundEvents.PLAYER_SPLASH_HIGH_SPEED, 1.2F, 1.2F);
             }
             case BENNETT -> {
-                // Viaje Fantástico: Campo de inspiración con Fuerza y Regeneración
                 if (owner instanceof ServerPlayer sp) {
                     sp.addEffect(new MobEffectInstance(MobEffects.DAMAGE_BOOST, 240, 1, false, false));
                     sp.addEffect(new MobEffectInstance(MobEffects.REGENERATION, 240, 1, false, false));
@@ -468,7 +491,6 @@ public class CompanionEntity extends TamableAnimal {
                 this.playSound(SoundEvents.FIREWORK_ROCKET_BLAST, 1.0F, 1.1F);
             }
             case ACHERON -> {
-                // Corte del Fin: Lluvia carmesí y relámpago de Nihilidad
                 target.hurt(this.damageSources().magic(), 34.0F);
                 target.addEffect(new MobEffectInstance(MobEffects.MOVEMENT_SLOWDOWN, 120, 2, false, false));
                 target.addEffect(new MobEffectInstance(MobEffects.WEAKNESS, 120, 1, false, false));
@@ -477,7 +499,6 @@ public class CompanionEntity extends TamableAnimal {
                 this.playSound(SoundEvents.LIGHTNING_BOLT_THUNDER, 1.2F, 1.3F);
             }
             case KAFKA -> {
-                // Sugerencia Espiritual: Hilos eléctricos y DoT detonante
                 target.hurt(this.damageSources().magic(), 26.0F);
                 target.addEffect(new MobEffectInstance(MobEffects.GLOWING, 140, 0, false, false));
                 target.addEffect(new MobEffectInstance(MobEffects.WITHER, 100, 1, false, false));
@@ -486,7 +507,6 @@ public class CompanionEntity extends TamableAnimal {
                 this.playSound(SoundEvents.WARDEN_SONIC_BOOM, 0.8F, 1.5F);
             }
             case ELLEN_JOE -> {
-                // Caza de Mareas: Congelación y tajo glacial
                 target.hurt(this.damageSources().mobAttack(this), 24.0F);
                 target.setTicksFrozen(140);
                 target.addEffect(new MobEffectInstance(MobEffects.MOVEMENT_SLOWDOWN, 140, 3, false, false));
@@ -495,7 +515,6 @@ public class CompanionEntity extends TamableAnimal {
                 this.playSound(SoundEvents.GLASS_BREAK, 1.2F, 1.6F);
             }
             case IGRIS -> {
-                // Caballero Carmesí: Embestida de gran espada y tajo de sombra
                 this.teleportTo(target.getX() - 1.2D, target.getY(), target.getZ() - 1.2D);
                 target.hurt(this.damageSources().mobAttack(this), 30.0F);
                 target.knockback(1.8D, this.getX() - target.getX(), this.getZ() - target.getZ());
@@ -504,7 +523,6 @@ public class CompanionEntity extends TamableAnimal {
                 this.playSound(SoundEvents.PLAYER_ATTACK_SWEEP, 1.3F, 0.8F);
             }
             case BERU -> {
-                // Grito del Depredador: Chillido ensordecedor y veneno corrosivo
                 target.hurt(this.damageSources().mobAttack(this), 28.0F);
                 target.addEffect(new MobEffectInstance(MobEffects.POISON, 120, 2, false, false));
                 target.addEffect(new MobEffectInstance(MobEffects.WEAKNESS, 120, 1, false, false));
@@ -513,7 +531,6 @@ public class CompanionEntity extends TamableAnimal {
                 this.playSound(SoundEvents.RAVAGER_ROAR, 1.0F, 1.6F);
             }
             case SUKUNA -> {
-                // Desmantelar & Flecha de Fuego (Kamifuga)
                 target.hurt(this.damageSources().mobAttack(this), 36.0F);
                 target.setRemainingFireTicks(180);
                 target.knockback(2.2D, this.getX() - target.getX(), this.getZ() - target.getZ());
@@ -523,7 +540,6 @@ public class CompanionEntity extends TamableAnimal {
                 this.playSound(SoundEvents.GENERIC_EXPLODE.value(), 1.2F, 1.1F);
             }
             case YUJI_ITADORI -> {
-                // Destello Negro (Black Flash): Golpe crítico tremendo
                 target.hurt(this.damageSources().mobAttack(this), 22.0F);
                 target.knockback(3.0D, this.getX() - target.getX(), this.getZ() - target.getZ());
                 sl.sendParticles(ParticleTypes.SOUL_FIRE_FLAME, target.getX(), target.getY() + 1.0D, target.getZ(), 30, 0.6D, 0.6D, 0.6D, 0.2D);
@@ -531,7 +547,6 @@ public class CompanionEntity extends TamableAnimal {
                 this.playSound(SoundEvents.ANVIL_LAND, 1.0F, 1.6F);
             }
             case ARTORIA_PENDRAGON -> {
-                // Excalibur: Haz de luz dorada celestial y bendición
                 if (owner instanceof ServerPlayer sp) {
                     sp.addEffect(new MobEffectInstance(MobEffects.DAMAGE_RESISTANCE, 200, 1, false, false));
                     sp.addEffect(new MobEffectInstance(MobEffects.MOVEMENT_SPEED, 200, 1, false, false));
@@ -543,7 +558,6 @@ public class CompanionEntity extends TamableAnimal {
                 this.playSound(SoundEvents.BELL_RESONATE, 1.3F, 1.2F);
             }
             case GILGAMESH -> {
-                // Gate of Babylon: Lluvia de armas doradas
                 target.hurt(this.damageSources().mobAttack(this), 32.0F);
                 target.addEffect(new MobEffectInstance(MobEffects.MOVEMENT_SLOWDOWN, 80, 2, false, false));
                 sl.sendParticles(ParticleTypes.GLOW, target.getX(), target.getY() + 1.2D, target.getZ(), 50, 1.0D, 1.0D, 1.0D, 0.2D);
@@ -551,7 +565,6 @@ public class CompanionEntity extends TamableAnimal {
                 this.playSound(SoundEvents.AMETHYST_BLOCK_CHIME, 1.4F, 1.5F);
             }
             case RENGOKU -> {
-                // 9.ª Postura: Purgatorio - Fénix ígneo
                 if (owner instanceof ServerPlayer sp) {
                     sp.addEffect(new MobEffectInstance(MobEffects.DAMAGE_BOOST, 200, 1, false, false));
                 }
@@ -563,7 +576,6 @@ public class CompanionEntity extends TamableAnimal {
                 this.playSound(SoundEvents.FIRECHARGE_USE, 1.3F, 0.8F);
             }
             case TANJIRO -> {
-                // Danza del Dios del Fuego y Corte Acuático
                 if (owner instanceof ServerPlayer sp) {
                     sp.addEffect(new MobEffectInstance(MobEffects.MOVEMENT_SPEED, 180, 1, false, false));
                 }
@@ -574,7 +586,6 @@ public class CompanionEntity extends TamableAnimal {
                 this.playSound(SoundEvents.PLAYER_SPLASH, 1.1F, 1.3F);
             }
             case NEZUKO -> {
-                // Piroquinesis Carmesí: Llamas rosas curativas para amo y destructivas para hostiles
                 if (owner instanceof ServerPlayer sp) {
                     sp.heal(8.0F);
                     sp.addEffect(new MobEffectInstance(MobEffects.REGENERATION, 120, 1, false, false));
@@ -586,7 +597,6 @@ public class CompanionEntity extends TamableAnimal {
                 this.playSound(SoundEvents.FIREWORK_ROCKET_BLAST, 1.1F, 1.4F);
             }
             case XIAO -> {
-                // Azote de Todo Mal: Ataque descendente acrobático y torbellino de viento
                 if (owner instanceof ServerPlayer sp) {
                     sp.addEffect(new MobEffectInstance(MobEffects.JUMP, 160, 2, false, false));
                     sp.addEffect(new MobEffectInstance(MobEffects.MOVEMENT_SPEED, 160, 1, false, false));
@@ -598,7 +608,6 @@ public class CompanionEntity extends TamableAnimal {
                 this.playSound(SoundEvents.ELYTRA_FLYING, 1.3F, 1.4F);
             }
             case ARLECCHINO -> {
-                // Vasto Asolamiento: Ráfagas de fuego carmesí y corte de guadaña
                 target.hurt(this.damageSources().onFire(), 36.0F);
                 target.setRemainingFireTicks(180);
                 target.addEffect(new MobEffectInstance(MobEffects.WITHER, 100, 1, false, false));
@@ -607,7 +616,6 @@ public class CompanionEntity extends TamableAnimal {
                 this.playSound(SoundEvents.BLAZE_SHOOT, 1.2F, 0.7F);
             }
             case FIREFLY -> {
-                // Sobrecarga de SAM: Combustión ardiente e impacto explosivo
                 target.hurt(this.damageSources().mobAttack(this), 35.0F);
                 target.setRemainingFireTicks(200);
                 target.knockback(2.8D, this.getX() - target.getX(), this.getZ() - target.getZ());
@@ -616,7 +624,6 @@ public class CompanionEntity extends TamableAnimal {
                 this.playSound(SoundEvents.GENERIC_EXPLODE.value(), 1.1F, 1.3F);
             }
             case MEGUMI -> {
-                // Diez Sombras: Shikigami Nue y Perro Divino
                 target.hurt(this.damageSources().magic(), 22.0F);
                 target.addEffect(new MobEffectInstance(MobEffects.MOVEMENT_SLOWDOWN, 100, 2, false, false));
                 sl.sendParticles(ParticleTypes.SQUID_INK, target.getX(), target.getY() + 1.0D, target.getZ(), 35, 0.6D, 0.8D, 0.6D, 0.15D);
@@ -624,12 +631,296 @@ public class CompanionEntity extends TamableAnimal {
                 this.playSound(SoundEvents.LIGHTNING_BOLT_IMPACT, 1.0F, 1.5F);
             }
             case ARCHER -> {
-                // Unlimited Blade Works: Proyección de espadas Kanshou & Bakuya
                 target.hurt(this.damageSources().mobAttack(this), 24.0F);
                 target.knockback(1.8D, this.getX() - target.getX(), this.getZ() - target.getZ());
                 sl.sendParticles(ParticleTypes.CRIT, target.getX(), target.getY() + 1.0D, target.getZ(), 45, 0.8D, 1.0D, 0.8D, 0.2D);
                 sl.sendParticles(ParticleTypes.SWEEP_ATTACK, target.getX(), target.getY() + 1.0D, target.getZ(), 5, 0.5D, 0.5D, 0.5D, 0.1D);
                 this.playSound(SoundEvents.PLAYER_ATTACK_CRIT, 1.2F, 1.1F);
+            }
+            case HOSHIMI_MIYABI -> {
+                target.hurt(this.damageSources().mobAttack(this), 34.0F);
+                target.setTicksFrozen(120);
+                target.addEffect(new MobEffectInstance(MobEffects.MOVEMENT_SLOWDOWN, 100, 3, false, false));
+                sl.sendParticles(ParticleTypes.SOUL_FIRE_FLAME, target.getX(), target.getY() + 1.0D, target.getZ(), 45, 0.8D, 0.8D, 0.8D, 0.2D);
+                sl.sendParticles(ParticleTypes.SWEEP_ATTACK, target.getX(), target.getY() + 1.0D, target.getZ(), 6, 0.6D, 0.6D, 0.6D, 0.1D);
+                this.playSound(SoundEvents.PLAYER_ATTACK_SWEEP, 1.4F, 1.6F);
+            }
+            case JANE_DOE -> {
+                target.hurt(this.damageSources().mobAttack(this), 28.0F);
+                target.addEffect(new MobEffectInstance(MobEffects.WITHER, 80, 1, false, false));
+                target.knockback(1.5D, this.getX() - target.getX(), this.getZ() - target.getZ());
+                sl.sendParticles(ParticleTypes.CRIT, target.getX(), target.getY() + 1.0D, target.getZ(), 40, 0.6D, 0.8D, 0.6D, 0.25D);
+                sl.sendParticles(ParticleTypes.ENCHANTED_HIT, target.getX(), target.getY() + 1.0D, target.getZ(), 30, 0.5D, 0.5D, 0.5D, 0.2D);
+                this.playSound(SoundEvents.PLAYER_ATTACK_CRIT, 1.3F, 1.5F);
+            }
+            case CAESAR_KING -> {
+                if (owner instanceof ServerPlayer sp) {
+                    sp.addEffect(new MobEffectInstance(MobEffects.DAMAGE_RESISTANCE, 160, 2, false, false));
+                    sp.addEffect(new MobEffectInstance(MobEffects.ABSORPTION, 160, 1, false, false));
+                }
+                AABB box = this.getBoundingBox().inflate(5.0D);
+                for (LivingEntity nearby : sl.getEntitiesOfClass(LivingEntity.class, box, e -> e != this && e != owner && !e.isAlliedTo(this))) {
+                    nearby.hurt(this.damageSources().mobAttack(this), 26.0F);
+                    nearby.knockback(2.2D, this.getX() - nearby.getX(), this.getZ() - nearby.getZ());
+                    nearby.addEffect(new MobEffectInstance(MobEffects.MOVEMENT_SLOWDOWN, 60, 2, false, false));
+                }
+                sl.sendParticles(ParticleTypes.EXPLOSION, this.getX(), this.getY() + 1.0D, this.getZ(), 3, 0.6D, 0.6D, 0.6D, 0.1D);
+                sl.sendParticles(ParticleTypes.CRIT, this.getX(), this.getY() + 1.0D, this.getZ(), 50, 1.2D, 0.8D, 1.2D, 0.3D);
+                this.playSound(SoundEvents.SHIELD_BLOCK, 1.5F, 0.9F);
+            }
+            case BURNICE_WHITE -> {
+                AABB box = target.getBoundingBox().inflate(3.5D);
+                for (LivingEntity nearby : sl.getEntitiesOfClass(LivingEntity.class, box, e -> e != this && e != owner && !e.isAlliedTo(this))) {
+                    nearby.hurt(this.damageSources().onFire(), 30.0F);
+                    nearby.setRemainingFireTicks(160);
+                }
+                sl.sendParticles(ParticleTypes.FLAME, target.getX(), target.getY() + 1.0D, target.getZ(), 60, 1.0D, 1.2D, 1.0D, 0.2D);
+                sl.sendParticles(ParticleTypes.LAVA, target.getX(), target.getY() + 1.0D, target.getZ(), 20, 0.5D, 0.5D, 0.5D, 0.1D);
+                this.playSound(SoundEvents.BLAZE_SHOOT, 1.3F, 1.2F);
+            }
+            case NICOLE_DEMARA -> {
+                AABB box = target.getBoundingBox().inflate(6.0D);
+                for (LivingEntity nearby : sl.getEntitiesOfClass(LivingEntity.class, box, e -> e != this && e != owner && !e.isAlliedTo(this))) {
+                    nearby.hurt(this.damageSources().magic(), 22.0F);
+                    nearby.addEffect(new MobEffectInstance(MobEffects.WEAKNESS, 120, 1, false, false));
+                    nearby.addEffect(new MobEffectInstance(MobEffects.MOVEMENT_SLOWDOWN, 100, 2, false, false));
+                    double dx = target.getX() - nearby.getX();
+                    double dz = target.getZ() - nearby.getZ();
+                    nearby.push(dx * 0.25D, 0.1D, dz * 0.25D);
+                }
+                sl.sendParticles(ParticleTypes.PORTAL, target.getX(), target.getY() + 1.0D, target.getZ(), 70, 1.2D, 1.2D, 1.2D, 0.3D);
+                sl.sendParticles(ParticleTypes.REVERSE_PORTAL, target.getX(), target.getY() + 1.0D, target.getZ(), 40, 0.8D, 0.8D, 0.8D, 0.2D);
+                this.playSound(SoundEvents.EVOKER_CAST_SPELL, 1.2F, 1.3F);
+            }
+            case ZHU_YUAN -> {
+                target.hurt(this.damageSources().mobAttack(this), 32.0F);
+                target.knockback(2.0D, this.getX() - target.getX(), this.getZ() - target.getZ());
+                target.addEffect(new MobEffectInstance(MobEffects.MOVEMENT_SLOWDOWN, 80, 2, false, false));
+                sl.sendParticles(ParticleTypes.ELECTRIC_SPARK, target.getX(), target.getY() + 1.0D, target.getZ(), 45, 0.6D, 0.6D, 0.6D, 0.2D);
+                sl.sendParticles(ParticleTypes.SONIC_BOOM, target.getX(), target.getY() + 1.0D, target.getZ(), 1, 0, 0, 0, 0);
+                this.playSound(SoundEvents.GENERIC_EXPLODE.value(), 1.0F, 1.8F);
+            }
+            case JIYAN -> {
+                AABB box = target.getBoundingBox().inflate(4.0D);
+                for (LivingEntity nearby : sl.getEntitiesOfClass(LivingEntity.class, box, e -> e != this && e != owner && !e.isAlliedTo(this))) {
+                    nearby.hurt(this.damageSources().mobAttack(this), 36.0F);
+                    nearby.knockback(2.5D, this.getX() - nearby.getX(), this.getZ() - nearby.getZ());
+                    nearby.push(0.0D, 0.5D, 0.0D);
+                }
+                sl.sendParticles(ParticleTypes.HAPPY_VILLAGER, target.getX(), target.getY() + 1.2D, target.getZ(), 50, 1.2D, 1.2D, 1.2D, 0.2D);
+                sl.sendParticles(ParticleTypes.SWEEP_ATTACK, target.getX(), target.getY() + 1.0D, target.getZ(), 8, 0.8D, 0.8D, 0.8D, 0.1D);
+                sl.sendParticles(ParticleTypes.CLOUD, target.getX(), target.getY() + 0.5D, target.getZ(), 40, 1.5D, 0.5D, 1.5D, 0.2D);
+                this.playSound(SoundEvents.ENDER_DRAGON_FLAP, 1.3F, 1.1F);
+                this.playSound(SoundEvents.PLAYER_ATTACK_SWEEP, 1.4F, 0.8F);
+            }
+            case CHANGLI -> {
+                if (owner instanceof ServerPlayer sp) {
+                    sp.addEffect(new MobEffectInstance(MobEffects.MOVEMENT_SPEED, 120, 1, false, false));
+                    sp.addEffect(new MobEffectInstance(MobEffects.DAMAGE_BOOST, 120, 0, false, false));
+                }
+                AABB box = target.getBoundingBox().inflate(3.5D);
+                for (LivingEntity nearby : sl.getEntitiesOfClass(LivingEntity.class, box, e -> e != this && e != owner && !e.isAlliedTo(this))) {
+                    nearby.hurt(this.damageSources().onFire(), 35.0F);
+                    nearby.setRemainingFireTicks(160);
+                }
+                sl.sendParticles(ParticleTypes.FLAME, target.getX(), target.getY() + 1.0D, target.getZ(), 60, 1.2D, 1.2D, 1.2D, 0.2D);
+                sl.sendParticles(ParticleTypes.LAVA, target.getX(), target.getY() + 1.2D, target.getZ(), 20, 0.6D, 0.6D, 0.6D, 0.1D);
+                sl.sendParticles(ParticleTypes.SOUL_FIRE_FLAME, target.getX(), target.getY() + 1.0D, target.getZ(), 30, 0.8D, 0.8D, 0.8D, 0.15D);
+                this.playSound(SoundEvents.BLAZE_SHOOT, 1.2F, 0.8F);
+                this.playSound(SoundEvents.FIREWORK_ROCKET_BLAST, 1.2F, 1.2F);
+            }
+            case JINSHI -> {
+                target.hurt(this.damageSources().magic(), 38.0F);
+                target.addEffect(new MobEffectInstance(MobEffects.MOVEMENT_SLOWDOWN, 80, 2, false, false));
+                target.knockback(2.2D, this.getX() - target.getX(), this.getZ() - target.getZ());
+                sl.sendParticles(ParticleTypes.END_ROD, target.getX(), target.getY() + 1.5D, target.getZ(), 50, 0.8D, 1.5D, 0.8D, 0.25D);
+                sl.sendParticles(ParticleTypes.ELECTRIC_SPARK, target.getX(), target.getY() + 1.0D, target.getZ(), 40, 0.6D, 0.6D, 0.6D, 0.2D);
+                sl.sendParticles(ParticleTypes.ENCHANTED_HIT, target.getX(), target.getY() + 1.0D, target.getZ(), 30, 0.5D, 0.5D, 0.5D, 0.15D);
+                this.playSound(SoundEvents.BEACON_ACTIVATE, 1.2F, 1.6F);
+                this.playSound(SoundEvents.LIGHTNING_BOLT_IMPACT, 1.0F, 1.8F);
+            }
+            case YINLIN -> {
+                AABB box = target.getBoundingBox().inflate(5.5D);
+                for (LivingEntity nearby : sl.getEntitiesOfClass(LivingEntity.class, box, e -> e != this && e != owner && !e.isAlliedTo(this))) {
+                    nearby.hurt(this.damageSources().magic(), 28.0F);
+                    nearby.addEffect(new MobEffectInstance(MobEffects.MOVEMENT_SLOWDOWN, 70, 3, false, false));
+                }
+                sl.sendParticles(ParticleTypes.ELECTRIC_SPARK, target.getX(), target.getY() + 1.0D, target.getZ(), 60, 1.5D, 1.0D, 1.5D, 0.3D);
+                sl.sendParticles(ParticleTypes.PORTAL, target.getX(), target.getY() + 1.0D, target.getZ(), 40, 0.8D, 0.8D, 0.8D, 0.2D);
+                this.playSound(SoundEvents.LIGHTNING_BOLT_THUNDER, 1.1F, 1.5F);
+            }
+            case SHOREKEEPER -> {
+                if (owner instanceof ServerPlayer sp) {
+                    sp.addEffect(new MobEffectInstance(MobEffects.REGENERATION, 160, 2, false, false));
+                    sp.addEffect(new MobEffectInstance(MobEffects.ABSORPTION, 200, 1, false, false));
+                    sp.addEffect(new MobEffectInstance(MobEffects.DAMAGE_BOOST, 160, 1, false, false));
+                }
+                AABB box = this.getBoundingBox().inflate(6.5D);
+                for (LivingEntity nearby : sl.getEntitiesOfClass(LivingEntity.class, box, e -> e != this && e != owner && !e.isAlliedTo(this))) {
+                    nearby.hurt(this.damageSources().magic(), 26.0F);
+                    nearby.push(0.0D, 0.35D, 0.0D);
+                }
+                sl.sendParticles(ParticleTypes.END_ROD, this.getX(), this.getY() + 1.2D, this.getZ(), 50, 1.5D, 1.0D, 1.5D, 0.2D);
+                sl.sendParticles(ParticleTypes.REVERSE_PORTAL, this.getX(), this.getY() + 1.0D, this.getZ(), 45, 1.2D, 1.2D, 1.2D, 0.2D);
+                sl.sendParticles(ParticleTypes.HEART, this.getX(), this.getY() + 1.5D, this.getZ(), 15, 0.8D, 0.8D, 0.8D, 0.1D);
+                this.playSound(SoundEvents.AMETHYST_BLOCK_CHIME, 1.4F, 1.3F);
+                this.playSound(SoundEvents.BEACON_POWER_SELECT, 1.2F, 1.4F);
+            }
+            case CAMELLYA -> {
+                AABB box = target.getBoundingBox().inflate(4.0D);
+                for (LivingEntity nearby : sl.getEntitiesOfClass(LivingEntity.class, box, e -> e != this && e != owner && !e.isAlliedTo(this))) {
+                    nearby.hurt(this.damageSources().magic(), 34.0F);
+                    nearby.addEffect(new MobEffectInstance(MobEffects.WITHER, 100, 1, false, false));
+                    nearby.addEffect(new MobEffectInstance(MobEffects.MOVEMENT_SLOWDOWN, 80, 3, false, false));
+                }
+                this.heal(12.0F);
+                sl.sendParticles(ParticleTypes.CRIMSON_SPORE, target.getX(), target.getY() + 1.0D, target.getZ(), 50, 1.0D, 1.2D, 1.0D, 0.2D);
+                sl.sendParticles(ParticleTypes.SOUL_FIRE_FLAME, target.getX(), target.getY() + 1.0D, target.getZ(), 35, 0.8D, 0.8D, 0.8D, 0.15D);
+                sl.sendParticles(ParticleTypes.DAMAGE_INDICATOR, target.getX(), target.getY() + 1.2D, target.getZ(), 10, 0.5D, 0.5D, 0.5D, 0.1D);
+                this.playSound(SoundEvents.EVOKER_CAST_SPELL, 1.3F, 0.8F);
+            }
+            case ROVER -> {
+                AABB box = target.getBoundingBox().inflate(5.0D);
+                for (LivingEntity nearby : sl.getEntitiesOfClass(LivingEntity.class, box, e -> e != this && e != owner && !e.isAlliedTo(this))) {
+                    nearby.hurt(this.damageSources().mobAttack(this), 33.0F);
+                    nearby.knockback(2.6D, target.getX() - nearby.getX(), target.getZ() - nearby.getZ());
+                    nearby.addEffect(new MobEffectInstance(MobEffects.WEAKNESS, 100, 1, false, false));
+                }
+                sl.sendParticles(ParticleTypes.SONIC_BOOM, target.getX(), target.getY() + 1.0D, target.getZ(), 1, 0, 0, 0, 0);
+                sl.sendParticles(ParticleTypes.ELECTRIC_SPARK, target.getX(), target.getY() + 1.0D, target.getZ(), 50, 1.2D, 1.2D, 1.2D, 0.25D);
+                sl.sendParticles(ParticleTypes.SWEEP_ATTACK, target.getX(), target.getY() + 1.0D, target.getZ(), 6, 0.8D, 0.8D, 0.8D, 0.1D);
+                this.playSound(SoundEvents.WARDEN_SONIC_BOOM, 1.1F, 1.6F);
+                this.playSound(SoundEvents.GENERIC_EXPLODE.value(), 1.0F, 1.4F);
+            }
+            case CLORINDE -> {
+                target.hurt(this.damageSources().lightningBolt(), 36.0F);
+                target.addEffect(new MobEffectInstance(MobEffects.MOVEMENT_SLOWDOWN, 70, 2, false, false));
+                target.knockback(1.8D, this.getX() - target.getX(), this.getZ() - target.getZ());
+                AABB box = target.getBoundingBox().inflate(3.5D);
+                for (LivingEntity nearby : sl.getEntitiesOfClass(LivingEntity.class, box, e -> e != this && e != owner && !e.isAlliedTo(this))) {
+                    nearby.hurt(this.damageSources().magic(), 24.0F);
+                }
+                sl.sendParticles(ParticleTypes.ELECTRIC_SPARK, target.getX(), target.getY() + 1.0D, target.getZ(), 60, 0.8D, 0.8D, 0.8D, 0.3D);
+                sl.sendParticles(ParticleTypes.SWEEP_ATTACK, target.getX(), target.getY() + 1.0D, target.getZ(), 8, 0.6D, 0.6D, 0.6D, 0.1D);
+                sl.sendParticles(ParticleTypes.CRIT, target.getX(), target.getY() + 1.2D, target.getZ(), 30, 0.5D, 0.5D, 0.5D, 0.2D);
+                this.playSound(SoundEvents.LIGHTNING_BOLT_IMPACT, 1.1F, 1.7F);
+                this.playSound(SoundEvents.PLAYER_ATTACK_CRIT, 1.2F, 1.3F);
+            }
+            case SKIRK -> {
+                AABB box = target.getBoundingBox().inflate(6.0D);
+                for (LivingEntity nearby : sl.getEntitiesOfClass(LivingEntity.class, box, e -> e != this && e != owner && !e.isAlliedTo(this))) {
+                    nearby.hurt(this.damageSources().magic(), 38.0F);
+                    nearby.addEffect(new MobEffectInstance(MobEffects.MOVEMENT_SLOWDOWN, 100, 3, false, false));
+                    nearby.addEffect(new MobEffectInstance(MobEffects.WEAKNESS, 120, 1, false, false));
+                    double dx = target.getX() - nearby.getX();
+                    double dz = target.getZ() - nearby.getZ();
+                    nearby.push(dx * 0.3D, 0.1D, dz * 0.3D);
+                }
+                sl.sendParticles(ParticleTypes.PORTAL, target.getX(), target.getY() + 1.0D, target.getZ(), 80, 1.5D, 1.5D, 1.5D, 0.4D);
+                sl.sendParticles(ParticleTypes.REVERSE_PORTAL, target.getX(), target.getY() + 1.0D, target.getZ(), 50, 1.0D, 1.0D, 1.0D, 0.25D);
+                sl.sendParticles(ParticleTypes.DRAGON_BREATH, target.getX(), target.getY() + 1.0D, target.getZ(), 40, 1.2D, 0.8D, 1.2D, 0.1D);
+                this.playSound(SoundEvents.ENDERMAN_TELEPORT, 1.3F, 0.6F);
+                this.playSound(SoundEvents.EVOKER_CAST_SPELL, 1.2F, 0.9F);
+            }
+            case XILONEN -> {
+                if (owner instanceof ServerPlayer sp) {
+                    sp.addEffect(new MobEffectInstance(MobEffects.MOVEMENT_SPEED, 140, 1, false, false));
+                    sp.addEffect(new MobEffectInstance(MobEffects.DAMAGE_RESISTANCE, 140, 0, false, false));
+                }
+                AABB box = target.getBoundingBox().inflate(4.5D);
+                for (LivingEntity nearby : sl.getEntitiesOfClass(LivingEntity.class, box, e -> e != this && e != owner && !e.isAlliedTo(this))) {
+                    nearby.hurt(this.damageSources().mobAttack(this), 30.0F);
+                    nearby.addEffect(new MobEffectInstance(MobEffects.MOVEMENT_SLOWDOWN, 80, 2, false, false));
+                    nearby.addEffect(new MobEffectInstance(MobEffects.WEAKNESS, 100, 1, false, false));
+                }
+                sl.sendParticles(ParticleTypes.NOTE, target.getX(), target.getY() + 1.5D, target.getZ(), 25, 1.0D, 0.8D, 1.0D, 0.2D);
+                sl.sendParticles(ParticleTypes.CRIT, target.getX(), target.getY() + 1.0D, target.getZ(), 45, 1.0D, 1.0D, 1.0D, 0.2D);
+                this.playSound(SoundEvents.AMETHYST_BLOCK_RESONATE, 1.4F, 1.2F);
+                this.playSound(SoundEvents.ANVIL_LAND, 0.9F, 1.6F);
+            }
+            case MAVUIKA -> {
+                AABB box = target.getBoundingBox().inflate(5.0D);
+                for (LivingEntity nearby : sl.getEntitiesOfClass(LivingEntity.class, box, e -> e != this && e != owner && !e.isAlliedTo(this))) {
+                    nearby.hurt(this.damageSources().onFire(), 38.0F);
+                    nearby.setRemainingFireTicks(180);
+                    nearby.knockback(2.2D, this.getX() - nearby.getX(), this.getZ() - nearby.getZ());
+                }
+                sl.sendParticles(ParticleTypes.FLAME, target.getX(), target.getY() + 1.0D, target.getZ(), 80, 1.5D, 1.2D, 1.5D, 0.25D);
+                sl.sendParticles(ParticleTypes.LAVA, target.getX(), target.getY() + 1.2D, target.getZ(), 30, 0.8D, 0.8D, 0.8D, 0.15D);
+                sl.sendParticles(ParticleTypes.EXPLOSION_EMITTER, target.getX(), target.getY() + 1.0D, target.getZ(), 1, 0, 0, 0, 0);
+                this.playSound(SoundEvents.GENERIC_EXPLODE.value(), 1.2F, 1.1F);
+                this.playSound(SoundEvents.BLAZE_SHOOT, 1.4F, 0.8F);
+            }
+            case KINICH -> {
+                target.hurt(this.damageSources().mobAttack(this), 37.0F);
+                target.addEffect(new MobEffectInstance(MobEffects.POISON, 80, 1, false, false));
+                target.knockback(2.4D, this.getX() - target.getX(), this.getZ() - target.getZ());
+                AABB box = target.getBoundingBox().inflate(3.5D);
+                for (LivingEntity nearby : sl.getEntitiesOfClass(LivingEntity.class, box, e -> e != this && e != owner && !e.isAlliedTo(this))) {
+                    nearby.hurt(this.damageSources().magic(), 26.0F);
+                    nearby.addEffect(new MobEffectInstance(MobEffects.MOVEMENT_SLOWDOWN, 60, 1, false, false));
+                }
+                sl.sendParticles(ParticleTypes.HAPPY_VILLAGER, target.getX(), target.getY() + 1.0D, target.getZ(), 60, 1.0D, 1.0D, 1.0D, 0.2D);
+                sl.sendParticles(ParticleTypes.COMPOSTER, target.getX(), target.getY() + 1.2D, target.getZ(), 40, 0.8D, 0.8D, 0.8D, 0.15D);
+                sl.sendParticles(ParticleTypes.EXPLOSION, target.getX(), target.getY() + 1.0D, target.getZ(), 2, 0.5D, 0.5D, 0.5D, 0.1D);
+                this.playSound(SoundEvents.GENERIC_EXPLODE.value(), 1.0F, 1.7F);
+                this.playSound(SoundEvents.CROSSBOW_SHOOT, 1.3F, 1.2F);
+            }
+            case NANALLY -> {
+                if (owner instanceof ServerPlayer sp) {
+                    sp.addEffect(new MobEffectInstance(MobEffects.ABSORPTION, 160, 1, false, false));
+                    sp.addEffect(new MobEffectInstance(MobEffects.DAMAGE_RESISTANCE, 160, 0, false, false));
+                }
+                AABB box = target.getBoundingBox().inflate(6.0D);
+                for (LivingEntity nearby : sl.getEntitiesOfClass(LivingEntity.class, box, e -> e != this && e != owner && !e.isAlliedTo(this))) {
+                    nearby.hurt(this.damageSources().magic(), 35.0F);
+                    double dx = target.getX() - nearby.getX();
+                    double dz = target.getZ() - nearby.getZ();
+                    nearby.push(dx * 0.25D, 0.4D, dz * 0.25D);
+                    nearby.addEffect(new MobEffectInstance(MobEffects.MOVEMENT_SLOWDOWN, 100, 2, false, false));
+                }
+                sl.sendParticles(ParticleTypes.PORTAL, target.getX(), target.getY() + 1.0D, target.getZ(), 60, 1.5D, 1.2D, 1.5D, 0.3D);
+                sl.sendParticles(ParticleTypes.REVERSE_PORTAL, target.getX(), target.getY() + 1.0D, target.getZ(), 45, 1.2D, 1.0D, 1.2D, 0.2D);
+                sl.sendParticles(ParticleTypes.SONIC_BOOM, target.getX(), target.getY() + 1.0D, target.getZ(), 1, 0, 0, 0, 0);
+                sl.sendParticles(ParticleTypes.DRAGON_BREATH, target.getX(), target.getY() + 0.8D, target.getZ(), 30, 1.0D, 0.8D, 1.0D, 0.1D);
+                this.playSound(SoundEvents.WARDEN_SONIC_BOOM, 1.1F, 1.5F);
+                this.playSound(SoundEvents.PORTAL_TRAVEL, 1.3F, 1.7F);
+            }
+            case MINT -> {
+                if (owner instanceof ServerPlayer sp) {
+                    sp.addEffect(new MobEffectInstance(MobEffects.MOVEMENT_SPEED, 160, 1, false, false));
+                }
+                AABB box = target.getBoundingBox().inflate(5.0D);
+                for (LivingEntity nearby : sl.getEntitiesOfClass(LivingEntity.class, box, e -> e != this && e != owner && !e.isAlliedTo(this))) {
+                    nearby.hurt(this.damageSources().lightningBolt(), 24.0F);
+                    nearby.addEffect(new MobEffectInstance(MobEffects.WEAKNESS, 120, 1, false, false));
+                    nearby.addEffect(new MobEffectInstance(MobEffects.MOVEMENT_SLOWDOWN, 120, 1, false, false));
+                    nearby.addEffect(new MobEffectInstance(MobEffects.GLOWING, 100, 0, false, false));
+                }
+                sl.sendParticles(ParticleTypes.ELECTRIC_SPARK, target.getX(), target.getY() + 1.0D, target.getZ(), 60, 1.2D, 1.0D, 1.2D, 0.3D);
+                sl.sendParticles(ParticleTypes.FLASH, target.getX(), target.getY() + 1.5D, target.getZ(), 1, 0, 0, 0, 0);
+                sl.sendParticles(ParticleTypes.CRIT, target.getX(), target.getY() + 1.0D, target.getZ(), 35, 0.8D, 0.8D, 0.8D, 0.2D);
+                this.playSound(SoundEvents.LIGHTNING_BOLT_IMPACT, 1.1F, 1.6F);
+                this.playSound(SoundEvents.AMETHYST_BLOCK_CHIME, 1.4F, 1.8F);
+            }
+            case LACRIMOSA -> {
+                AABB box = target.getBoundingBox().inflate(6.0D);
+                for (LivingEntity nearby : sl.getEntitiesOfClass(LivingEntity.class, box, e -> e != this && e != owner && !e.isAlliedTo(this))) {
+                    nearby.hurt(this.damageSources().wither(), 38.0F);
+                    nearby.addEffect(new MobEffectInstance(MobEffects.WITHER, 120, 1, false, false));
+                    nearby.addEffect(new MobEffectInstance(MobEffects.MOVEMENT_SLOWDOWN, 120, 2, false, false));
+                }
+                this.heal(14.0F);
+                if (owner instanceof ServerPlayer sp) {
+                    sp.heal(6.0F);
+                    sp.addEffect(new MobEffectInstance(MobEffects.REGENERATION, 100, 0, false, false));
+                }
+                sl.sendParticles(ParticleTypes.SOUL_FIRE_FLAME, target.getX(), target.getY() + 1.0D, target.getZ(), 60, 1.4D, 1.2D, 1.4D, 0.25D);
+                sl.sendParticles(ParticleTypes.SOUL, target.getX(), target.getY() + 1.0D, target.getZ(), 40, 1.0D, 1.2D, 1.0D, 0.15D);
+                sl.sendParticles(ParticleTypes.SQUID_INK, target.getX(), target.getY() + 0.8D, target.getZ(), 35, 0.8D, 0.8D, 0.8D, 0.1D);
+                sl.sendParticles(ParticleTypes.DAMAGE_INDICATOR, target.getX(), target.getY() + 1.2D, target.getZ(), 15, 0.6D, 0.6D, 0.6D, 0.1D);
+                this.playSound(SoundEvents.WITHER_SHOOT, 1.2F, 0.7F);
+                this.playSound(SoundEvents.SCULK_CATALYST_BLOOM, 1.4F, 1.1F);
             }
         }
     }
@@ -644,10 +935,14 @@ public class CompanionEntity extends TamableAnimal {
         if (!this.level().isClientSide() && this.isOwnedBy(player)) {
             ItemStack held = player.getItemInHand(hand);
 
-            // Mejora de nivel con Ingenio del Héroe + Mora
-            if (held.is(com.soybe.awakeningsystem.SystemItems.HEROS_WIT.get())) {
+            if (held.is(com.soybe.awakeningsystem.SystemItems.HEROS_WIT.get()) || held.is(com.soybe.awakeningsystem.SystemItems.ADVENTURERS_EXPERIENCE.get())) {
+                int rankCap = com.soybe.awakeningsystem.entity.CompanionAscensionManager.getRankMaxLevel(getAscensionRank());
+                if (getCompanionLevel() >= rankCap) {
+                    player.displayClientMessage(Component.translatable("companion.awakening_system.phase_cap_reached", rankCap, getCompanionProfile().displayName()), true);
+                    return InteractionResult.SUCCESS;
+                }
                 if (getCompanionLevel() >= 90) {
-                    player.displayClientMessage(Component.literal("§e[Compañero] §f" + getCompanionProfile().displayName() + " ya ha alcanzado el nivel máximo (Nv. 90)."), true);
+                    player.displayClientMessage(Component.translatable("companion.awakening_system.max_level_reached", getCompanionProfile().displayName()), true);
                     return InteractionResult.SUCCESS;
                 }
                 int costMora = getCompanionLevel() * 2500;
@@ -666,16 +961,15 @@ public class CompanionEntity extends TamableAnimal {
                     if (player instanceof ServerPlayer sp) {
                         com.soybe.awakeningsystem.AwakeningSystemMod.sync(sp);
                     }
-                    player.displayClientMessage(Component.literal("§6§l¡✦ ASCENSIÓN DE COMPAÑERO! §f" + getCompanionProfile().displayName() + " subió al §eNv. " + getCompanionLevel() + " §f(-" + String.format("%,d", costMora) + " Mora)."), false);
+                    player.displayClientMessage(Component.translatable("companion.awakening_system.ascended_success", getCompanionProfile().displayName(), getCompanionLevel(), String.format(java.util.Locale.US, "%,d", costMora)), true);
                     return InteractionResult.SUCCESS;
                 } else {
-                    player.displayClientMessage(Component.literal("§cSaldo insuficiente de Mora. Necesitas §6" + String.format("%,d", costMora) + " Mora §cpara ascender a Nv. " + (getCompanionLevel() + 1) + "."), true);
+                    player.displayClientMessage(Component.translatable("companion.awakening_system.insufficient_mora", String.format(java.util.Locale.US, "%,d", costMora), (getCompanionLevel() + 1)), true);
                     return InteractionResult.CONSUME;
                 }
             }
 
             if (player.isShiftKeyDown()) {
-                // Guardar de regreso en el contrato de inventario con su nivel actual y artefactos
                 ItemStack contract = CompanionContractItem.createContract(getCompanionProfile(), getCompanionLevel());
                 CompoundTag contractTag = contract.getOrDefault(net.minecraft.core.component.DataComponents.CUSTOM_DATA, net.minecraft.world.item.component.CustomData.EMPTY).copyTag();
                 net.minecraft.nbt.ListTag artList = new net.minecraft.nbt.ListTag();
@@ -694,12 +988,13 @@ public class CompanionEntity extends TamableAnimal {
                     player.drop(contract, false);
                 }
                 this.playSound(SoundEvents.ITEM_PICKUP, 1.0F, 1.2F);
-                player.displayClientMessage(Component.literal("§e[Compañero] §f" + getCompanionProfile().displayName() + " regresó a su contrato."), true);
+                player.displayClientMessage(Component.translatable("companion.awakening_system.returned_to_contract", getCompanionProfile().displayName()), true);
                 this.discard();
                 return InteractionResult.SUCCESS;
             } else {
-                // Abrir pantalla de gestión de compañero e inspección de artefactos
                 if (!this.level().isClientSide() && player instanceof ServerPlayer sp) {
+                    sp.connection.send(new ClientboundStopSoundPacket(null, SoundSource.VOICE));
+                    this.playSound(getCompanionProfile().getAmbientSound(), 1.2F, 1.0F);
                     CompoundTag tag = new CompoundTag();
                     tag.putInt("EntityId", this.getId());
                     tag.putString("ProfileId", getCompanionProfile().id());
@@ -707,6 +1002,7 @@ public class CompanionEntity extends TamableAnimal {
                     tag.putInt("Level", getCompanionLevel());
                     tag.putInt("Stars", getCompanionProfile().stars());
                     tag.putString("Element", getCompanionProfile().element());
+                    tag.putInt("AscensionRank", getAscensionRank());
                     tag.putFloat("Health", this.getHealth());
                     tag.putFloat("MaxHealth", this.getMaxHealth());
                     tag.putBoolean("Guarding", isGuarding());
@@ -730,7 +1026,6 @@ public class CompanionEntity extends TamableAnimal {
 
     @Override
     public boolean hurt(DamageSource source, float amount) {
-        // Prevención de muerte definitiva: si va a morir, regresa al contrato del dueño con su nivel
         if (this.getHealth() - amount <= 0.0F) {
             LivingEntity owner = this.getOwner();
             if (owner instanceof Player p && !this.level().isClientSide()) {
@@ -751,7 +1046,7 @@ public class CompanionEntity extends TamableAnimal {
                 if (!p.getInventory().add(contract)) {
                     p.drop(contract, false);
                 }
-                p.displayClientMessage(Component.literal("§c[Compañero] ¡" + getCompanionProfile().displayName() + " quedó exhausto y regresó a su contrato para recuperarse!"), false);
+                p.displayClientMessage(Component.translatable("companion.awakening_system.exhausted_returned", getCompanionProfile().displayName()), true);
                 this.playSound(SoundEvents.TOTEM_USE, 0.8F, 1.5F);
             }
             this.discard();
@@ -836,13 +1131,13 @@ public class CompanionEntity extends TamableAnimal {
 
     @Override
     protected SoundEvent getAmbientSound() {
-        return null; // Silencia el spam automático de voces japonesas
+        return null;
     }
 
     @Override
     protected SoundEvent getHurtSound(DamageSource damageSource) {
         long now = this.level().getGameTime();
-        if (now - lastHurtVoiceTick > 60) { // Cooldown de 3 segundos
+        if (now - lastHurtVoiceTick > 60) {
             lastHurtVoiceTick = now;
             return getCompanionProfile().getHurtSound();
         }

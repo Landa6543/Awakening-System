@@ -8,6 +8,7 @@ import com.soybe.awakeningsystem.SystemEvents;
 import com.soybe.awakeningsystem.SystemItems;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.particles.ParticleTypes;
+import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.core.registries.Registries;
 import net.minecraft.network.chat.Component;
 import net.minecraft.resources.ResourceKey;
@@ -24,9 +25,24 @@ import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.Container;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.level.block.Blocks;
+import net.minecraft.world.level.block.ShulkerBoxBlock;
+import net.minecraft.world.level.block.entity.*;
 import net.minecraft.world.level.block.state.BlockState;
+import net.neoforged.neoforge.capabilities.Capabilities;
+import net.neoforged.neoforge.items.IItemHandler;
+import net.neoforged.neoforge.items.IItemHandlerModifiable;
 
 import java.util.List;
+import java.util.Optional;
+import java.io.InputStream;
+import net.minecraft.nbt.CompoundTag;
+import net.minecraft.nbt.NbtIo;
+import net.minecraft.nbt.NbtAccounter;
+import net.minecraft.world.level.block.Mirror;
+import net.minecraft.world.level.block.Rotation;
+import net.minecraft.world.level.levelgen.structure.templatesystem.StructureTemplate;
+import net.minecraft.world.level.levelgen.structure.templatesystem.StructureTemplateManager;
+import net.minecraft.world.level.levelgen.structure.templatesystem.StructurePlaceSettings;
 
 public final class SubspaceManager {
     public static final ResourceKey<Level> SUBSPACE_REALM = ResourceKey.create(
@@ -35,6 +51,17 @@ public final class SubspaceManager {
     );
 
     private SubspaceManager() {}
+
+    public static ServerLevel getSubspaceLevel(net.minecraft.server.MinecraftServer server) {
+        if (server == null) return null;
+        ServerLevel lvl = server.getLevel(SUBSPACE_REALM);
+        if (lvl != null) return lvl;
+        lvl = server.getLevel(com.soybe.awakeningsystem.PagodaTrialManager.PAGODA_REALM);
+        if (lvl != null) return lvl;
+        lvl = server.getLevel(com.soybe.awakeningsystem.MurimWorldManager.MURIM_WORLD);
+        if (lvl != null) return lvl;
+        return server.overworld();
+    }
 
     public static int getPlotOriginX(Player player) {
         int plotIndex = Math.abs(player.getUUID().hashCode() % 10000);
@@ -50,9 +77,174 @@ public final class SubspaceManager {
         return 80;
     }
 
+    public static boolean isExcludedStoragePath(String path) {
+        if (path == null) return true;
+        return path.contains("ender") || path.contains("crafting") || path.contains("furnace")
+                || path.contains("blast") || path.contains("smoker") || path.contains("brewing")
+                || path.contains("hopper") || path.contains("dispenser") || path.contains("dropper")
+                || path.contains("crafter") || path.contains("jukebox") || path.contains("lectern")
+                || path.contains("bookshelf") || path.contains("roulette") || path.contains("plushie")
+                || path.contains("pool") || path.contains("bell") || path.contains("respawn")
+                || path.contains("spawner");
+    }
+
+    public static boolean isStorageBlock(net.minecraft.world.level.block.entity.BlockEntity be, Level level) {
+        if (be == null || be.isRemoved()) return false;
+
+        if (be instanceof net.minecraft.world.level.block.entity.AbstractFurnaceBlockEntity
+                || be instanceof net.minecraft.world.level.block.entity.BrewingStandBlockEntity
+                || be instanceof net.minecraft.world.level.block.entity.HopperBlockEntity
+                || be instanceof net.minecraft.world.level.block.entity.DispenserBlockEntity
+                || be instanceof net.minecraft.world.level.block.entity.CrafterBlockEntity
+                || be instanceof net.minecraft.world.level.block.entity.EnderChestBlockEntity
+                || be instanceof net.minecraft.world.level.block.entity.ChiseledBookShelfBlockEntity
+                || be instanceof net.minecraft.world.level.block.entity.JukeboxBlockEntity
+                || be instanceof net.minecraft.world.level.block.entity.BeaconBlockEntity) {
+            return false;
+        }
+
+        String className = be.getClass().getName().toLowerCase(java.util.Locale.ROOT);
+        if (className.contains("roulette") || className.contains("plushie") || className.contains("pool")) {
+            return false;
+        }
+
+        if (be instanceof Container c) {
+            return c.getContainerSize() > 0;
+        }
+
+        if (level != null) {
+            try {
+                var handler = level.getCapability(Capabilities.ItemHandler.BLOCK,
+                        be.getBlockPos(), be.getBlockState(), be, null);
+                if (handler != null && handler.getSlots() > 0) {
+                    return true;
+                }
+            } catch (Throwable ignored) {}
+        }
+
+        return false;
+    }
+
+    public static boolean isStorageBlockState(BlockState state, Level level, BlockPos pos) {
+        if (state == null) return false;
+        if (state.is(Blocks.CHEST) || state.is(Blocks.TRAPPED_CHEST) || state.is(Blocks.BARREL)
+                || state.getBlock() instanceof ShulkerBoxBlock) {
+            return true;
+        }
+
+        ResourceLocation id = BuiltInRegistries.BLOCK.getKey(state.getBlock());
+        if (id != null) {
+            String path = id.getPath().toLowerCase(java.util.Locale.ROOT);
+            if (!isExcludedStoragePath(path)) {
+                if (path.contains("chest") || path.contains("barrel") || path.contains("crate")
+                        || path.contains("storage") || path.contains("vault") || path.contains("drawer")
+                        || path.contains("box") || path.contains("safe") || path.contains("cabinet")
+                        || path.contains("locker")) {
+                    return true;
+                }
+            }
+        }
+
+        if (level != null && pos != null) {
+            net.minecraft.world.level.block.entity.BlockEntity be = level.getBlockEntity(pos);
+            if (be != null && isStorageBlock(be, level)) {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    public static class ItemHandlerContainerWrapper implements Container {
+        private final IItemHandler handler;
+        private final net.minecraft.world.level.block.entity.BlockEntity blockEntity;
+
+        public ItemHandlerContainerWrapper(IItemHandler handler, net.minecraft.world.level.block.entity.BlockEntity blockEntity) {
+            this.handler = handler;
+            this.blockEntity = blockEntity;
+        }
+
+        public IItemHandler getHandler() {
+            return handler;
+        }
+
+        @Override
+        public int getContainerSize() {
+            return handler.getSlots();
+        }
+
+        @Override
+        public boolean isEmpty() {
+            for (int i = 0; i < handler.getSlots(); i++) {
+                if (!handler.getStackInSlot(i).isEmpty()) {
+                    return false;
+                }
+            }
+            return true;
+        }
+
+        @Override
+        public ItemStack getItem(int slot) {
+            if (slot < 0 || slot >= handler.getSlots()) {
+                return ItemStack.EMPTY;
+            }
+            return handler.getStackInSlot(slot);
+        }
+
+        @Override
+        public ItemStack removeItem(int slot, int amount) {
+            if (slot < 0 || slot >= handler.getSlots()) {
+                return ItemStack.EMPTY;
+            }
+            return handler.extractItem(slot, amount, false);
+        }
+
+        @Override
+        public ItemStack removeItemNoUpdate(int slot) {
+            if (slot < 0 || slot >= handler.getSlots()) {
+                return ItemStack.EMPTY;
+            }
+            ItemStack current = handler.getStackInSlot(slot);
+            return handler.extractItem(slot, current.getCount(), false);
+        }
+
+        @Override
+        public void setItem(int slot, ItemStack stack) {
+            if (slot < 0 || slot >= handler.getSlots()) {
+                return;
+            }
+            if (handler instanceof IItemHandlerModifiable modifiable) {
+                modifiable.setStackInSlot(slot, stack != null ? stack.copy() : ItemStack.EMPTY);
+            } else {
+                handler.extractItem(slot, handler.getSlotLimit(slot), false);
+                if (stack != null && !stack.isEmpty()) {
+                    handler.insertItem(slot, stack.copy(), false);
+                }
+            }
+        }
+
+        @Override
+        public void setChanged() {
+            if (blockEntity != null) {
+                blockEntity.setChanged();
+            }
+        }
+
+        @Override
+        public boolean stillValid(Player player) {
+            return blockEntity != null && !blockEntity.isRemoved();
+        }
+
+        @Override
+        public void clearContent() {
+            for (int i = 0; i < handler.getSlots(); i++) {
+                setItem(i, ItemStack.EMPTY);
+            }
+        }
+    }
+
     public static List<Container> getPlotChestContainers(ServerLevel level, int ox, int oy, int oz) {
         List<Container> result = new java.util.ArrayList<>();
-        int radius = 28;
+        int radius = 32;
         int minChunkX = (ox - radius) >> 4;
         int maxChunkX = (ox + radius) >> 4;
         int minChunkZ = (oz - radius) >> 4;
@@ -62,7 +254,7 @@ public final class SubspaceManager {
 
         for (int cx = minChunkX; cx <= maxChunkX; cx++) {
             for (int cz = minChunkZ; cz <= maxChunkZ; cz++) {
-                net.minecraft.world.level.chunk.LevelChunk chunk = level.getChunkSource().getChunkNow(cx, cz);
+                net.minecraft.world.level.chunk.LevelChunk chunk = level.getChunk(cx, cz);
                 if (chunk != null) {
                     List<net.minecraft.world.level.block.entity.BlockEntity> snapshot;
                     try {
@@ -75,9 +267,8 @@ public final class SubspaceManager {
                             BlockPos pos = be.getBlockPos();
                             if (pos.getX() >= ox - radius && pos.getX() <= ox + radius &&
                                     pos.getZ() >= oz - radius && pos.getZ() <= oz + radius &&
-                                    pos.getY() >= oy - 1 && pos.getY() <= oy + 10) {
-                                if (be instanceof net.minecraft.world.level.block.entity.ChestBlockEntity ||
-                                        be instanceof net.minecraft.world.level.block.entity.BarrelBlockEntity) {
+                                    pos.getY() >= oy - 5 && pos.getY() <= oy + 40) {
+                                if (isStorageBlock(be, level)) {
                                     chestEntities.add(be);
                                 }
                             }
@@ -87,7 +278,6 @@ public final class SubspaceManager {
             }
         }
 
-        // Ordenamiento determinista: Y (altura), luego X, luego Z
         chestEntities.sort(java.util.Comparator.comparingInt((net.minecraft.world.level.block.entity.BlockEntity be) -> be.getBlockPos().getY())
                 .thenComparingInt(be -> be.getBlockPos().getX())
                 .thenComparingInt(be -> be.getBlockPos().getZ()));
@@ -95,10 +285,48 @@ public final class SubspaceManager {
         for (net.minecraft.world.level.block.entity.BlockEntity be : chestEntities) {
             if (be instanceof Container c) {
                 result.add(c);
+            } else {
+                try {
+                    var handler = level.getCapability(Capabilities.ItemHandler.BLOCK,
+                            be.getBlockPos(), be.getBlockState(), be, null);
+                    if (handler != null && handler.getSlots() > 0) {
+                        result.add(new ItemHandlerContainerWrapper(handler, be));
+                    }
+                } catch (Throwable ignored) {}
             }
         }
 
         return result;
+    }
+
+    public static void reconcileSubspaceStorage(List<Container> containers, SystemData data) {
+        net.minecraft.core.NonNullList<ItemStack> items = data.getSubspaceItems();
+        int globalIndex = 0;
+        for (Container chest : containers) {
+            int cSize = chest.getContainerSize();
+            boolean changed = false;
+            for (int s = 0; s < cSize; s++) {
+                ItemStack virtualStack = (globalIndex < items.size()) ? items.get(globalIndex) : ItemStack.EMPTY;
+                ItemStack physicalStack = chest.getItem(s);
+
+                if (virtualStack.isEmpty() && !physicalStack.isEmpty()) {
+                    if (globalIndex < items.size()) {
+                        items.set(globalIndex, physicalStack.copy());
+                    }
+                } else if (!virtualStack.isEmpty() && physicalStack.isEmpty()) {
+                    chest.setItem(s, virtualStack.copy());
+                    changed = true;
+                } else if (!ItemStack.matches(virtualStack, physicalStack)) {
+                    if (globalIndex < items.size()) {
+                        items.set(globalIndex, physicalStack.copy());
+                    }
+                }
+                globalIndex++;
+            }
+            if (changed) {
+                chest.setChanged();
+            }
+        }
     }
 
     public static void syncWorldToSubspace(ServerLevel level, ServerPlayer player) {
@@ -108,23 +336,38 @@ public final class SubspaceManager {
             int oy = getPlotOriginY();
 
             List<Container> containers = getPlotChestContainers(level, ox, oy, oz);
+            int totalPhysicalSlots = 0;
+            for (Container c : containers) {
+                totalPhysicalSlots += c.getContainerSize();
+            }
             int chestCount = Math.max(2, containers.size());
-            int unlockedSlots = chestCount * 27;
 
             SystemData data = SystemEvents.data(player);
+            int unlockedSlots;
+            if (!containers.isEmpty() || totalPhysicalSlots > 0) {
+                unlockedSlots = Math.max(54, totalPhysicalSlots);
+                data.setSubspaceChestCount(chestCount);
+                data.setSubspaceUnlockedSlots(unlockedSlots);
+            } else {
+                unlockedSlots = Math.max(54, data.subspaceUnlockedSlots());
+            }
+
             data.ensureSubspaceCapacity(Math.max(54, unlockedSlots));
-            data.setSubspaceChestCount(chestCount);
-            data.setSubspaceUnlockedSlots(unlockedSlots);
 
             net.minecraft.core.NonNullList<ItemStack> items = data.getSubspaceItems();
-            for (int c = 0; c < containers.size(); c++) {
-                Container chest = containers.get(c);
-                for (int s = 0; s < 27; s++) {
-                    int globalIndex = c * 27 + s;
+            int globalIndex = 0;
+            for (Container chest : containers) {
+                int cSize = chest.getContainerSize();
+                for (int s = 0; s < cSize; s++) {
                     if (globalIndex < items.size()) {
                         items.set(globalIndex, chest.getItem(s).copy());
                     }
+                    globalIndex++;
                 }
+            }
+            while (globalIndex < unlockedSlots && globalIndex < items.size()) {
+                items.set(globalIndex, ItemStack.EMPTY);
+                globalIndex++;
             }
             AwakeningSystemMod.sync(player);
         } catch (Throwable t) {
@@ -142,16 +385,17 @@ public final class SubspaceManager {
             SystemData data = SystemEvents.data(player);
             net.minecraft.core.NonNullList<ItemStack> items = data.getSubspaceItems();
 
-            for (int c = 0; c < containers.size(); c++) {
-                Container chest = containers.get(c);
+            int globalIndex = 0;
+            for (Container chest : containers) {
+                int cSize = chest.getContainerSize();
                 boolean changed = false;
-                for (int s = 0; s < 27; s++) {
-                    int globalIndex = c * 27 + s;
+                for (int s = 0; s < cSize; s++) {
                     ItemStack stack = (globalIndex < items.size()) ? items.get(globalIndex) : ItemStack.EMPTY;
                     if (!ItemStack.matches(chest.getItem(s), stack)) {
                         chest.setItem(s, stack.copy());
                         changed = true;
                     }
+                    globalIndex++;
                 }
                 if (changed) {
                     chest.setChanged();
@@ -166,7 +410,6 @@ public final class SubspaceManager {
         try {
             SystemData data = SystemEvents.data(player);
 
-            // Si el jugador está físicamente dentro del Reino, sincronizar con los cofres de la plataforma
             if (player.serverLevel().dimension().equals(SUBSPACE_REALM)) {
                 syncWorldToSubspace(player.serverLevel(), player);
             }
@@ -180,13 +423,13 @@ public final class SubspaceManager {
             net.minecraft.world.inventory.SimpleContainerData menuData = new net.minecraft.world.inventory.SimpleContainerData(4);
             menuData.set(0, unlockedSlots);
             menuData.set(1, chestCount);
-            menuData.set(2, 0); // Página 0 al abrir
+            menuData.set(2, 0);
             menuData.set(3, totalPages);
 
             player.openMenu(new MenuProvider() {
                 @Override
                 public Component getDisplayName() {
-                    return Component.literal("§b✦ Subespacio del Sistema (Nivel " + data.subspaceLevel() + ") ✦");
+                    return Component.translatable("awakening_system.subspace.menu_title", data.subspaceLevel());
                 }
 
                 @Override
@@ -202,22 +445,22 @@ public final class SubspaceManager {
     }
 
     public static void enterSubspace(ServerPlayer player) {
+
         if (player.serverLevel().dimension().equals(SUBSPACE_REALM)) {
-            player.displayClientMessage(Component.literal("§e✦ Ya te encuentras dentro de tu Subespacio Dimensional."), true);
+            player.displayClientMessage(Component.translatable("awakening_system.subspace.msg.already_inside"), true);
             return;
         }
 
         SystemData data = SystemEvents.data(player);
-        // Guardar posición y dimensión actual para el retorno seguro
         data.setSubspaceReturnLocation(
                 player.level().dimension().location().toString(),
                 player.getX(), player.getY(), player.getZ(),
                 player.getYRot(), player.getXRot()
         );
 
-        ServerLevel subspaceLevel = player.getServer().getLevel(SUBSPACE_REALM);
+        ServerLevel subspaceLevel = getSubspaceLevel(player.getServer());
         if (subspaceLevel == null) {
-            player.sendSystemMessage(Component.literal("§c[ERROR] La dimensión del Subespacio no está disponible en este momento."));
+            player.sendSystemMessage(Component.translatable("awakening_system.subspace.msg.server_error"));
             return;
         }
 
@@ -225,21 +468,46 @@ public final class SubspaceManager {
         int originZ = getPlotOriginZ(player);
         int originY = getPlotOriginY();
 
-        // Teletransportar sobre la plataforma
         player.teleportTo(subspaceLevel, originX + 0.5D, originY + 1.0D, originZ - 2.5D, 0.0F, 0.0F);
         player.fallDistance = 0.0F;
 
-        ensureSubspaceStructure(subspaceLevel, originX, originY, originZ, data.subspaceLevel());
-        syncSubspaceToWorld(subspaceLevel, player);
+        // Si la estructura construida es inferior al nivel alcanzado o el área está vacía, construirla/actualizarla
+        if (data.subspaceBuiltLevel() < data.subspaceLevel()) {
+            regenerateSubspaceStructure(player);
+            data.setSubspaceBuiltLevel(data.subspaceLevel());
+            AwakeningSystemMod.sync(player);
+        } else {
+            BlockPos centerBelow = new BlockPos(originX, originY - 1, originZ);
+            BlockPos centerPos = new BlockPos(originX, originY, originZ);
+            if (subspaceLevel.getBlockState(centerBelow).isAir() && subspaceLevel.getBlockState(centerPos).isAir()) {
+                ensureSubspaceStructure(subspaceLevel, originX, originY, originZ, data.subspaceLevel());
+                data.setSubspaceBuiltLevel(data.subspaceLevel());
+                AwakeningSystemMod.sync(player);
+            }
+        }
+        clearBedrockBelow(subspaceLevel, originX, originZ, 20);
+
+        List<Container> containers = getPlotChestContainers(subspaceLevel, originX, originY, originZ);
+        int totalPhysicalSlots = 0;
+        for (Container c : containers) {
+            totalPhysicalSlots += c.getContainerSize();
+        }
+        if (totalPhysicalSlots > 0 || !containers.isEmpty()) {
+            int unlockedSlots = Math.max(54, totalPhysicalSlots);
+            data.setSubspaceChestCount(Math.max(2, containers.size()));
+            data.setSubspaceUnlockedSlots(unlockedSlots);
+            data.ensureSubspaceCapacity(unlockedSlots);
+        }
+        reconcileSubspaceStorage(containers, data);
 
         subspaceLevel.sendParticles(ParticleTypes.PORTAL, originX + 0.5D, originY + 1.5D, originZ - 2.5D, 40, 0.5D, 0.8D, 0.5D, 0.1D);
         player.playNotifySound(ModSounds.GATE_TRAVEL.value(), SoundSource.PLAYERS, 1.0F, 1.2F);
 
         int chests = data.subspaceChestCount();
         int slots = data.subspaceUnlockedSlots();
-        player.sendSystemMessage(Component.literal("§b🌌 ¡Has entrado a tu Subespacio Dimensional! §e(Nivel " + data.subspaceLevel() + ")"));
-        player.sendSystemMessage(Component.literal("§7✦ Almacén actual: §e" + chests + " Cofres §7(§b" + slots + " ranuras§7). Coloca más cofres para expandir el inventario."));
-        player.sendSystemMessage(Component.literal("§e✦ Haz clic en el Waypoint Central o usa §a/escape §7o §a/system subspace exit §7para regresar."));
+        player.sendSystemMessage(Component.translatable("awakening_system.subspace.msg.entered", data.subspaceLevel()));
+        player.sendSystemMessage(Component.translatable("awakening_system.subspace.msg.storage_info", chests, slots));
+        player.sendSystemMessage(Component.translatable("awakening_system.subspace.msg.return_hint"));
         AwakeningSystemMod.sync(player);
     }
 
@@ -273,14 +541,14 @@ public final class SubspaceManager {
         player.teleportTo(returnLevel, rx, ry, rz, data.subspaceReturnYaw(), data.subspaceReturnPitch());
         player.fallDistance = 0.0F;
         player.playNotifySound(SoundEvents.ENDERMAN_TELEPORT, SoundSource.PLAYERS, 1.0F, 1.0F);
-        player.displayClientMessage(Component.literal("§a✔ Regresaste exitosamente de tu Subespacio Dimensional."), true);
+        player.displayClientMessage(Component.translatable("awakening_system.subspace.msg.returned_success"), true);
     }
 
     public static boolean upgradeSubspace(ServerPlayer player) {
         SystemData data = SystemEvents.data(player);
         int curLvl = data.subspaceLevel();
-        if (curLvl >= 5) {
-            player.sendSystemMessage(Component.literal("§a✔ Tu Subespacio Dimensional ya ha alcanzado el Nivel Máximo (Nivel 5: Pequeño Mundo del Monarca)."));
+        if (curLvl >= 3) {
+            player.sendSystemMessage(Component.literal("§e[Subespacio] §bNivel 3§e alcanzado. Es el nivel máximo disponible por ahora (próximamente niveles 4 y 5)."));
             return false;
         }
 
@@ -318,8 +586,8 @@ public final class SubspaceManager {
         } else if (data.coins() >= coinCost) {
             data.setCoins(data.coins() - coinCost);
         } else {
-            player.sendSystemMessage(Component.literal("§cFondos insuficientes para mejorar el Subespacio a Nivel " + nextLvl + "."));
-            player.sendSystemMessage(Component.literal("§7Coste requerido: §6" + coinCost + " Monedas §7o §b1x Mineral de Mejora acorde."));
+            player.sendSystemMessage(Component.translatable("awakening_system.subspace.msg.insufficient_funds", nextLvl));
+            player.sendSystemMessage(Component.translatable("awakening_system.subspace.msg.required_cost", coinCost));
             player.playNotifySound(ModSounds.SYSTEM_ERROR.value(), SoundSource.PLAYERS, 1.0F, 1.0F);
             return false;
         }
@@ -328,31 +596,192 @@ public final class SubspaceManager {
         AwakeningSystemMod.sync(player);
         player.playNotifySound(ModSounds.SYSTEM_LEVEL_UP.value(), SoundSource.PLAYERS, 1.0F, 1.0F);
 
-        // Si el jugador está dentro de su subespacio, expandir la estructura en vivo
         if (player.serverLevel().dimension().equals(SUBSPACE_REALM)) {
-            int plotIndex = Math.abs(player.getUUID().hashCode() % 10000);
-            int originX = (plotIndex % 100) * 512;
-            int originZ = (plotIndex / 100) * 512;
-            int originY = 80;
-            ensureSubspaceStructure(player.serverLevel(), originX, originY, originZ, nextLvl);
-            player.serverLevel().sendParticles(ParticleTypes.END_ROD, originX + 0.5D, originY + 2.0D, originZ + 0.5D, 60, 2.0D, 1.5D, 2.0D, 0.1D);
+            // Actualizar la estructura física de la parcela inmediatamente al nuevo nivel
+            regenerateSubspaceStructure(player);
+            data.setSubspaceBuiltLevel(nextLvl);
+            AwakeningSystemMod.sync(player);
+        } else {
+            data.setSubspaceBuiltLevel(0);
         }
 
-        player.sendSystemMessage(Component.literal("§6✨ ¡Tu Subespacio Dimensional ha ascendido a NIVEL " + nextLvl + "!"));
-        player.sendSystemMessage(Component.literal("§7✦ El territorio se ha expandido significativamente. ¡Construye tu almacén y base sagrada!"));
+        player.sendSystemMessage(Component.translatable("awakening_system.subspace.msg.ascended", nextLvl));
+        player.sendSystemMessage(Component.literal("§a[Subespacio] ¡Tu parcela ha sido mejorada al diseño oficial de Nivel " + nextLvl + "!"));
         return true;
     }
 
+    public static void clearBedrockBelow(ServerLevel level, int ox, int oz, int radius) {
+        try {
+            BlockPos.MutableBlockPos mpos = new BlockPos.MutableBlockPos();
+            int minY = level.getMinBuildHeight();
+            for (int x = ox - radius; x <= ox + radius; x++) {
+                for (int z = oz - radius; z <= oz + radius; z++) {
+                    for (int y = minY; y <= 0; y++) {
+                        mpos.set(x, y, z);
+                        if (level.getBlockState(mpos).is(Blocks.BEDROCK)) {
+                            level.setBlock(mpos, Blocks.AIR.defaultBlockState(), 2);
+                        }
+                    }
+                }
+            }
+        } catch (Throwable ignored) {}
+    }
+
+    public static boolean placeSubspaceNbt(ServerLevel serverLevel, BlockPos center, String name, int offsetX, int offsetY, int offsetZ) {
+        try {
+            StructureTemplate template = null;
+            ResourceLocation id = ResourceLocation.fromNamespaceAndPath(AwakeningSystemMod.MOD_ID, name);
+            StructureTemplateManager stm = serverLevel.getStructureManager();
+            Optional<StructureTemplate> opt = stm.get(id);
+
+            if (opt.isPresent()) {
+                template = opt.get();
+            } else {
+                String[] paths = {
+                        "/data/awakening_system/structure/" + name + ".nbt",
+                        "/data/awakening_system/structures/" + name + ".nbt",
+                        "data/awakening_system/structure/" + name + ".nbt",
+                        "data/awakening_system/structures/" + name + ".nbt"
+                };
+                for (String p : paths) {
+                    try (InputStream in = SubspaceManager.class.getResourceAsStream(p)) {
+                        if (in != null) {
+                            CompoundTag tag = NbtIo.readCompressed(in, NbtAccounter.unlimitedHeap());
+                            template = new StructureTemplate();
+                            template.load(serverLevel.holderLookup(Registries.BLOCK), tag);
+                            break;
+                        }
+                    } catch (Exception ignored) {}
+                    if (template == null) {
+                        try (InputStream in = SubspaceManager.class.getClassLoader().getResourceAsStream(p.startsWith("/") ? p.substring(1) : p)) {
+                            if (in != null) {
+                                CompoundTag tag = NbtIo.readCompressed(in, NbtAccounter.unlimitedHeap());
+                                template = new StructureTemplate();
+                                template.load(serverLevel.holderLookup(Registries.BLOCK), tag);
+                                break;
+                            }
+                        } catch (Exception ignored) {}
+                    }
+                }
+            }
+
+            if (template != null) {
+                BlockPos origin = center.offset(offsetX, offsetY, offsetZ);
+                StructurePlaceSettings settings = new StructurePlaceSettings()
+                        .setIgnoreEntities(false)
+                        .setKnownShape(true)
+                        .setMirror(Mirror.NONE)
+                        .setRotation(Rotation.NONE);
+
+                template.placeInWorld(serverLevel, origin, origin, settings, serverLevel.getRandom(), 2);
+                return true;
+            }
+        } catch (Throwable t) {
+            AwakeningSystemMod.LOGGER.error("Error al colocar estructura NBT de subespacio: " + name, t);
+        }
+        return false;
+    }
+
+    public static void requestUpdateStructure(ServerPlayer player) {
+        SystemData data = SystemEvents.data(player);
+        int lvl = data.subspaceLevel();
+        player.sendSystemMessage(Component.literal("§e========================================"));
+        player.sendSystemMessage(Component.literal("§c§l[ADVERTENCIA: REGENERACIÓN DE SUBESPACIO]"));
+        player.sendSystemMessage(Component.literal("§eEsta acción limpiará tu parcela y regenerará el nuevo diseño oficial de §bNivel " + lvl + "§e."));
+        player.sendSystemMessage(Component.literal("§c¡PELIGRO! §fCualquier cofre, construcción o ítem en tu parcela actual será §c§lSOBRESCRITO§f."));
+        player.sendSystemMessage(Component.literal("§6Por favor, retira todos tus cofres y objetos valiosos antes de continuar."));
+        player.sendSystemMessage(Component.literal("§aSi estás listo y deseas proceder, ejecuta: §b/subspace update_structure confirm"));
+        player.sendSystemMessage(Component.literal("§e========================================"));
+    }
+
+    public static void regenerateSubspaceStructure(ServerPlayer player) {
+        if (!player.serverLevel().dimension().equals(SUBSPACE_REALM)) {
+            player.sendSystemMessage(Component.literal("§cDebes estar dentro de tu subespacio para regenerar la estructura."));
+            return;
+        }
+
+        SystemData data = SystemEvents.data(player);
+        int lvl = data.subspaceLevel();
+        int ox = getPlotOriginX(player);
+        int oz = getPlotOriginZ(player);
+        int oy = getPlotOriginY();
+        ServerLevel level = player.serverLevel();
+
+        // 1. Limpieza segura de la parcela previa
+        int cleanRadius = 16;
+        BlockPos.MutableBlockPos mpos = new BlockPos.MutableBlockPos();
+        for (int dx = -cleanRadius; dx <= cleanRadius; dx++) {
+            for (int dz = -cleanRadius; dz <= cleanRadius; dz++) {
+                for (int y = oy - 4; y <= oy + 22; y++) {
+                    mpos.set(ox + dx, y, oz + dz);
+                    if (!level.getBlockState(mpos).isAir()) {
+                        level.setBlock(mpos, Blocks.AIR.defaultBlockState(), 2);
+                    }
+                }
+            }
+        }
+        clearBedrockBelow(level, ox, oz, 20);
+
+        // 2. Colocar la nueva estructura del nivel correspondiente
+        ensureSubspaceStructure(level, ox, oy, oz, lvl);
+
+        // 3. Teletransportar al jugador a una posición segura frente al waypoint
+        player.teleportTo(level, ox + 0.5D, oy + 1.0D, oz - 2.5D, 0.0F, 0.0F);
+        player.fallDistance = 0.0F;
+
+        // 4. Sincronizar contenedores nuevos
+        List<Container> containers = getPlotChestContainers(level, ox, oy, oz);
+        reconcileSubspaceStorage(containers, data);
+        syncWorldToSubspace(level, player);
+
+        // 5. Notificación y efectos
+        level.sendParticles(ParticleTypes.END_ROD, ox + 0.5D, oy + 2.0D, oz + 0.5D, 80, 2.0D, 1.5D, 2.0D, 0.1D);
+        player.playNotifySound(SoundEvents.PLAYER_LEVELUP, SoundSource.PLAYERS, 1.0F, 1.0F);
+        player.sendSystemMessage(Component.literal("§a§l[Subespacio] ¡Tu subespacio ha sido regenerado con éxito al nuevo diseño oficial de Nivel " + lvl + "!"));
+        AwakeningSystemMod.sync(player);
+    }
+
     public static void ensureSubspaceStructure(ServerLevel level, int ox, int oy, int oz, int subLvl) {
-        int radius = switch (subLvl) {
-            case 1 -> 5;   // 11x11
-            case 2 -> 9;   // 19x19
-            case 3 -> 14;  // 29x29
-            case 4 -> 19;  // 39x39
-            default -> 26; // 53x53
+        clearBedrockBelow(level, ox, oz, 20);
+
+        String templateName = switch (subLvl) {
+            case 1 -> "subspace_level_1";
+            case 2 -> "subspace_level_2";
+            default -> "subspace_level_3";
         };
 
-        // Generar suelo y plataforma (SOLO reemplaza aire para no destruir cofres ni construcciones del jugador)
+        // Desfases calculados para alinear el waypoint exactamente en (ox, oy, oz)
+        int offsetX = switch (subLvl) {
+            case 1 -> -6;
+            case 2 -> -8;
+            default -> -12;
+        };
+        int offsetY = switch (subLvl) {
+            case 1 -> -1;
+            case 2 -> -2;
+            default -> -2;
+        };
+        int offsetZ = switch (subLvl) {
+            case 1 -> -6;
+            case 2 -> -9;
+            default -> -12;
+        };
+
+        boolean placed = placeSubspaceNbt(level, new BlockPos(ox, oy, oz), templateName, offsetX, offsetY, offsetZ);
+        if (!placed) {
+            placeProceduralSubspaceFallback(level, ox, oy, oz, subLvl);
+        }
+    }
+
+    public static void placeProceduralSubspaceFallback(ServerLevel level, int ox, int oy, int oz, int subLvl) {
+        int radius = switch (subLvl) {
+            case 1 -> 5;
+            case 2 -> 9;
+            case 3 -> 14;
+            case 4 -> 19;
+            default -> 26;
+        };
+
         for (int dx = -radius; dx <= radius; dx++) {
             for (int dz = -radius; dz <= radius; dz++) {
                 double dist = Math.sqrt(dx * dx + dz * dz);
@@ -376,7 +805,6 @@ public final class SubspaceManager {
             }
         }
 
-        // Colocar Waypoint Central de salida (en el centro)
         BlockPos centerPos = new BlockPos(ox, oy, oz);
         BlockPos belowCenter = new BlockPos(ox, oy - 1, oz);
         level.setBlockAndUpdate(belowCenter, Blocks.GILDED_BLACKSTONE.defaultBlockState());
@@ -384,7 +812,6 @@ public final class SubspaceManager {
             level.setBlockAndUpdate(centerPos, SystemBlocks.CELESTIAL_WAYPOINT.get().defaultBlockState());
         }
 
-        // Estructuras de bienvenida para Nivel 1 (Cofre Doble Inicial = 54 ranuras del Subespacio)
         BlockPos chest1 = new BlockPos(ox + 3, oy, oz);
         BlockPos chest2 = new BlockPos(ox + 3, oy, oz + 1);
         if (level.getBlockState(chest1).isAir() && level.getBlockState(chest2).isAir()) {
@@ -409,7 +836,6 @@ public final class SubspaceManager {
             level.setBlockAndUpdate(craftPos, Blocks.CRAFTING_TABLE.defaultBlockState());
         }
 
-        // Nivel 2+: Faroles en las 4 esquinas
         if (subLvl >= 2) {
             int[][] corners = {{6, 6}, {-6, 6}, {6, -6}, {-6, -6}};
             for (int[] c : corners) {
@@ -417,24 +843,6 @@ public final class SubspaceManager {
                 if (level.getBlockState(colPos).isAir()) {
                     level.setBlockAndUpdate(colPos, Blocks.POLISHED_DEEPSLATE_WALL.defaultBlockState());
                     level.setBlockAndUpdate(colPos.above(), Blocks.SEA_LANTERN.defaultBlockState());
-                }
-            }
-        }
-
-        // Nivel 4+: Zona de cultivo espiritual en un lateral
-        if (subLvl >= 4) {
-            for (int gx = -12; gx <= -8; gx++) {
-                for (int gz = -3; gz <= 3; gz++) {
-                    BlockPos gpos = new BlockPos(ox + gx, oy - 1, oz + gz);
-                    if (gx == -10 && gz == 0) {
-                        level.setBlockAndUpdate(gpos, Blocks.WATER.defaultBlockState());
-                    } else if (level.getBlockState(gpos).is(Blocks.POLISHED_DEEPSLATE)) {
-                        level.setBlockAndUpdate(gpos, Blocks.FARMLAND.defaultBlockState());
-                        BlockPos plantPos = gpos.above();
-                        if (level.getBlockState(plantPos).isAir()) {
-                            level.setBlockAndUpdate(plantPos, SystemBlocks.WILD_GINSENG.get().defaultBlockState());
-                        }
-                    }
                 }
             }
         }

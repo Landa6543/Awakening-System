@@ -33,23 +33,19 @@ public final class CreateCompatHandler {
         String namespace = typeId.getNamespace().toLowerCase(java.util.Locale.ROOT);
         String className = vehicle.getClass().getName().toLowerCase(java.util.Locale.ROOT);
 
-        // 1. Detección de Trenes de Create
         boolean isTrain = namespace.contains("create") && (path.contains("carriage") || path.contains("train") || path.contains("contraption"))
                 || className.contains("carriagecontraption") || className.contains("train");
 
         if (isTrain) {
-            // Reclamar primero primacía mundial, si ya se reclamó se le otorga la fábula de maestro
             if (!SystemEvents.grantFable(player, "first_create_train")) {
                 SystemEvents.grantFable(player, "steam_colossus");
             }
         }
 
-        // 2. Detección de Naves / Aeronaves de Create Aeronautics
         boolean isAirship = (namespace.contains("aeronautics") || namespace.contains("spaceeye") || path.contains("airship") || path.contains("aircraft") || path.contains("ship"))
                 || className.contains("aeronautics") || className.contains("airship") || className.contains("shipcontraption");
 
         if (isAirship) {
-            // Reclamar primero primacía mundial, si ya se reclamó se le otorga la fábula de almirante
             if (!SystemEvents.grantFable(player, "first_create_aircraft")) {
                 SystemEvents.grantFable(player, "sky_dreadnought_commander");
             }

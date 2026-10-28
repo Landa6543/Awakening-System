@@ -28,27 +28,15 @@ public class SlotReels {
     private static SlotSymbol[] generateReel(long seed) {
         List<SlotSymbol> symbols = new ArrayList<>(REEL_SIZE);
 
-        // Distribución equilibrada (~95% RTP):
-        // Slime: 85 (Whiff)
-        // Mora: 55 (Premios frecuentes menores)
-        // Polvo Estelar: 40 (8x)
-        // Brillo Estelar: 30 (15x)
-        // Protogema: 20 (25x)
-        // Destino Entrelazado: 14 (50x)
-        // Cono de Luz: 8 (100x)
-        // Paimon: 3 (200x)
-        // Siete Dorado: 1 (500x Jackpot)
         addSymbols(symbols, SlotSymbol.SLIME, 85);
         addSymbols(symbols, SlotSymbol.MORA, 55);
         addSymbols(symbols, SlotSymbol.STARDUST, 40);
         addSymbols(symbols, SlotSymbol.STARGLITTER, 30);
         addSymbols(symbols, SlotSymbol.PRIMOGEM, 20);
         addSymbols(symbols, SlotSymbol.INTERTWINED_FATE, 14);
-        addSymbols(symbols, SlotSymbol.LIGHT_CONE, 8);
-        addSymbols(symbols, SlotSymbol.PAIMON, 3);
+        addSymbols(symbols, SlotSymbol.LIGHT_CONE, 11);
         addSymbols(symbols, SlotSymbol.SEVEN, 1);
 
-        // Si faltan elementos para completar REEL_SIZE, rellenar con Slime
         while (symbols.size() < REEL_SIZE) {
             symbols.add(SlotSymbol.SLIME);
         }

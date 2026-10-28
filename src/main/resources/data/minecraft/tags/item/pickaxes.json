@@ -1,0 +1,15 @@
+{
+    "replace":  false,
+    "values":  [
+                   "awakening_system:abyssal_pickaxe",
+                   "awakening_system:adamantite_pickaxe",
+                   "awakening_system:astral_pickaxe",
+                   "awakening_system:celestial_pickaxe",
+                   "awakening_system:mithril_pickaxe",
+                   "awakening_system:primogem_pickaxe",
+                   "awakening_system:primordial_pickaxe",
+                   "awakening_system:spirit_jade_pickaxe",
+                   "awakening_system:soul_alloy_pickaxe",
+                   "awakening_system:astralite_pickaxe"
+               ]
+}

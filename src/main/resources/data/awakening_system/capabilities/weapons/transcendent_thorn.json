@@ -1,3 +1,4 @@
 {
-  "weapon_type": "epicfight:spear"
+  "type": "epicfight:dagger",
+  "weapon_type": "epicfight:dagger"
 }

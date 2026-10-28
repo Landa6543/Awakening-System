@@ -72,7 +72,7 @@ public class AdamantiteWarHammerItem extends SwordItem implements AwakeningWeapo
                 return InteractionResultHolder.fail(stack);
             }
 
-            sp.getPersistentData().putLong("adamantite_hammer_cd", gameTime + 120L); // 6s cooldown
+            sp.getPersistentData().putLong("adamantite_hammer_cd", gameTime + 120L);
             sp.getCooldowns().addCooldown(this, 120);
 
             if (!sp.onGround()) {
@@ -135,7 +135,6 @@ public class AdamantiteWarHammerItem extends SwordItem implements AwakeningWeapo
         level.playSound(null, px, py, pz, SoundEvents.ANVIL_LAND, SoundSource.PLAYERS, 1.6F, 0.5F);
         level.playSound(null, px, py, pz, SoundEvents.MUD_BREAK, SoundSource.PLAYERS, 1.5F, 0.5F);
 
-        // Sello Tectónico de Magma Ardiente en el suelo
         PacketDistributor.sendToPlayersNear(
                 level, null, px, py, pz, 64.0D,
                 new SpawnMagicCirclePayload(
@@ -145,7 +144,6 @@ public class AdamantiteWarHammerItem extends SwordItem implements AwakeningWeapo
                 )
         );
 
-        // Sacudida sísmica colosal
         CameraShakePayload.sendToNearby(level, px, py, pz, radius + 16.0D, 0.95F * powerMultiplier, (int)(12 * powerMultiplier));
 
         for (double r = 1.0D; r <= radius; r += 1.2D) {

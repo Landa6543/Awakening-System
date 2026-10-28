@@ -1,0 +1,23 @@
+{
+  "variants": {
+    "facing=north,shape=single": { "model": "awakening_system:block/racetrack_bleachers_single" },
+    "facing=east,shape=single":  { "model": "awakening_system:block/racetrack_bleachers_single", "y": 90 },
+    "facing=south,shape=single": { "model": "awakening_system:block/racetrack_bleachers_single", "y": 180 },
+    "facing=west,shape=single":  { "model": "awakening_system:block/racetrack_bleachers_single", "y": 270 },
+
+    "facing=north,shape=left":   { "model": "awakening_system:block/racetrack_bleachers_left" },
+    "facing=east,shape=left":    { "model": "awakening_system:block/racetrack_bleachers_left", "y": 90 },
+    "facing=south,shape=left":   { "model": "awakening_system:block/racetrack_bleachers_left", "y": 180 },
+    "facing=west,shape=left":    { "model": "awakening_system:block/racetrack_bleachers_left", "y": 270 },
+
+    "facing=north,shape=right":  { "model": "awakening_system:block/racetrack_bleachers_right" },
+    "facing=east,shape=right":   { "model": "awakening_system:block/racetrack_bleachers_right", "y": 90 },
+    "facing=south,shape=right":  { "model": "awakening_system:block/racetrack_bleachers_right", "y": 180 },
+    "facing=west,shape=right":   { "model": "awakening_system:block/racetrack_bleachers_right", "y": 270 },
+
+    "facing=north,shape=middle": { "model": "awakening_system:block/racetrack_bleachers_middle" },
+    "facing=east,shape=middle":  { "model": "awakening_system:block/racetrack_bleachers_middle", "y": 90 },
+    "facing=south,shape=middle": { "model": "awakening_system:block/racetrack_bleachers_middle", "y": 180 },
+    "facing=west,shape=middle":  { "model": "awakening_system:block/racetrack_bleachers_middle", "y": 270 }
+  }
+}

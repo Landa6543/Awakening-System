@@ -65,7 +65,6 @@ public class LunarShadowEntity extends Monster {
         super.aiStep();
 
         if (this.level().isClientSide) {
-            // Halo astral sutil de Aria
             if (this.random.nextFloat() < 0.12F) {
                 this.level().addParticle(ParticleTypes.SOUL_FIRE_FLAME,
                         this.getRandomX(0.4D), this.getY() + 0.2D + this.random.nextDouble() * 1.4D, this.getRandomZ(0.4D),
@@ -82,7 +81,6 @@ public class LunarShadowEntity extends Monster {
                 if (dashCooldown > 0) dashCooldown--;
                 double distSq = this.distanceToSqr(target);
 
-                // Embestida Astral Lunar si está entre 4 y 14 bloques
                 if (dashCooldown <= 0 && distSq >= 16.0D && distSq <= 196.0D) {
                     dashCooldown = 60 + this.random.nextInt(30);
                     Vec3 dir = target.position().subtract(this.position()).normalize();

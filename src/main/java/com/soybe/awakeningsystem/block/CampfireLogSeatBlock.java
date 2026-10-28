@@ -38,10 +38,7 @@ public class CampfireLogSeatBlock extends HorizontalDirectionalBlock {
     public static final MapCodec<CampfireLogSeatBlock> CODEC = simpleCodec(CampfireLogSeatBlock::new);
     public static final DirectionProperty FACING = HorizontalDirectionalBlock.FACING;
 
-    // Altura reducida de 8 píxeles (medio bloque): forma rústica de tronco cortado
-    // Cuando mira a Norte o Sur, el tronco se extiende horizontalmente a lo largo del eje X (ancho 16, fondo 12)
     private static final VoxelShape SHAPE_ALONG_X = Block.box(0.0D, 0.0D, 2.0D, 16.0D, 8.0D, 14.0D);
-    // Cuando mira a Este u Oeste, el tronco se extiende horizontalmente a lo largo del eje Z (ancho 12, fondo 16)
     private static final VoxelShape SHAPE_ALONG_Z = Block.box(2.0D, 0.0D, 0.0D, 14.0D, 8.0D, 16.0D);
 
     public CampfireLogSeatBlock(BlockBehaviour.Properties properties) {
@@ -61,7 +58,6 @@ public class CampfireLogSeatBlock extends HorizontalDirectionalBlock {
 
     @Override
     public BlockState getStateForPlacement(BlockPlaceContext context) {
-        // Se coloca mirando hacia el jugador
         return this.defaultBlockState().setValue(FACING, context.getHorizontalDirection().getOpposite());
     }
 
@@ -93,7 +89,6 @@ public class CampfireLogSeatBlock extends HorizontalDirectionalBlock {
             TavernSeatEntity seat = ModEntities.TAVERN_SEAT.get().create(sl);
             if (seat != null) {
                 Direction dir = state.getValue(FACING);
-                // Altura perfecta para quedar sentado sobre el tronco de 8 píxeles (0.50D)
                 seat.setPos(pos.getX() + 0.5D, pos.getY() + 0.50D, pos.getZ() + 0.5D);
                 seat.setYRot(dir.toYRot());
                 seat.setYHeadRot(dir.toYRot());

@@ -36,7 +36,7 @@ import net.minecraft.world.phys.Vec3;
 public class LunarGuardianEntity extends Monster {
 
     private final ServerBossEvent bossEvent =
-            new ServerBossEvent(Component.literal("§5✦ Guardián del Silencio Lunar (Canon)"),
+            new ServerBossEvent(Component.translatable("boss.awakening_system.lunar_guardian.boss_bar"),
                     BossEvent.BossBarColor.PURPLE, BossEvent.BossBarOverlay.NOTCHED_10);
 
     private int slamCooldown = 60;
@@ -96,20 +96,17 @@ public class LunarGuardianEntity extends Monster {
 
                 double distSq = this.distanceToSqr(target);
 
-                // 1. Golpe de Choque Gravitatorio (Slam en área)
                 if (slamCooldown <= 0 && distSq <= 36.0D) {
                     slamCooldown = 100;
                     performGravitySlam();
                 }
 
-                // 2. Teletransporte de Sombra Lunar (acercarse si el jugador huye)
                 if (teleportCooldown <= 0 && distSq > 64.0D && distSq <= 400.0D) {
                     teleportCooldown = 140;
                     teleportBehind(target);
                 }
             }
         } else {
-            // Partículas violeta del Silencio de Canon
             if (this.random.nextFloat() < 0.5F) {
                 this.level().addParticle(ParticleTypes.SOUL_FIRE_FLAME,
                         this.getRandomX(0.7D), this.getY() + 0.3D, this.getRandomZ(0.7D),

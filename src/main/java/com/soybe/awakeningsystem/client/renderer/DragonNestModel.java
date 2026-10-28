@@ -55,17 +55,14 @@ public class DragonNestModel extends Model {
         MeshDefinition mesh = new MeshDefinition();
         PartDefinition part = mesh.getRoot();
 
-        // 1. Base inferior de troncos entrelazados
         part.addOrReplaceChild("base", CubeListBuilder.create()
                 .texOffs(0, 0).addBox(-12.0F, 0.0F, -12.0F, 24.0F, 2.0F, 24.0F, new CubeDeformation(0.0F)),
                 PartPose.offset(0.0F, 22.0F, 0.0F));
 
-        // 2. Lecho central cóncavo de paja y ceniza volcánica (levemente hundido)
         part.addOrReplaceChild("straw_center", CubeListBuilder.create()
                 .texOffs(0, 28).addBox(-8.0F, 0.0F, -8.0F, 16.0F, 2.0F, 16.0F, new CubeDeformation(0.0F)),
                 PartPose.offset(0.0F, 21.0F, 0.0F));
 
-        // 3. Rebordes principales de ramas y troncos gruesos (Norte, Sur, Este, Oeste)
         part.addOrReplaceChild("rim_north", CubeListBuilder.create()
                 .texOffs(0, 48).addBox(-11.0F, -4.0F, -14.0F, 22.0F, 4.0F, 4.0F, new CubeDeformation(0.0F)),
                 PartPose.offset(0.0F, 22.0F, 0.0F));
@@ -82,7 +79,6 @@ public class DragonNestModel extends Model {
                 .texOffs(54, 48).addBox(-14.0F, -4.0F, -10.0F, 4.0F, 4.0F, 20.0F, new CubeDeformation(0.0F)),
                 PartPose.offset(0.0F, 22.0F, 0.0F));
 
-        // 4. Esquinas diagonales a 45 grados para redondear el cuenco del nido
         part.addOrReplaceChild("rim_corner_nw", CubeListBuilder.create()
                 .texOffs(0, 58).addBox(-4.0F, -4.5F, -3.0F, 8.0F, 4.0F, 6.0F, new CubeDeformation(0.0F)),
                 PartPose.offsetAndRotation(-9.5F, 22.0F, -9.5F, 0.0F, 0.7854F, 0.0F));

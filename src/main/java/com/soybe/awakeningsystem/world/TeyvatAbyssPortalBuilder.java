@@ -34,15 +34,15 @@ public final class TeyvatAbyssPortalBuilder {
     private TeyvatAbyssPortalBuilder() {}
 
     public enum BuildMode {
-        FULL_3D, // Monumento completo con podio, escalinata, plintos, alas y cresta cenital
-        FLAT     // Rebanada frontal plana 2D de 1 bloque de espesor
+        FULL_3D,
+        FLAT
     }
 
     public enum CenterMode {
-        AIR,     // Apertura transparente abierta (para ver el cielo en bloqueado o vórtice en activo)
-        GLASS,   // Paneles de cristal azul claro y cian celestial
-        PORTAL,  // Bloques de portal dimensional del mod
-        NETHER   // Portal del Nether clásico
+        AIR,
+        GLASS,
+        PORTAL,
+        NETHER
     }
 
     private static boolean portalGeneratedInTeyvat = false;
@@ -53,20 +53,47 @@ public final class TeyvatAbyssPortalBuilder {
     public static synchronized void ensureAbyssPortalInTeyvat(ServerLevel level) {
         if (portalGeneratedInTeyvat) return;
 
+        net.minecraft.server.MinecraftServer server = level.getServer();
+        if (server != null) {
+            try {
+                var data = TeyvatWorldManager.TeyvatAbyssSavedData.get(server);
+                if (data.isMuskReefBuilt()) {
+                    portalGeneratedInTeyvat = true;
+                    TeyvatWorldManager.registerAbyssPortal(level.dimension(), TeyvatWorldManager.MUSK_REEF_ISLAND_POS, TeyvatWorldManager.ABYSS_FACING, TeyvatWorldManager.isAbyssActive());
+                    return;
+                }
+            } catch (Exception e) {
+                AwakeningSystemMod.LOGGER.debug("Error checking TeyvatAbyssSavedData for Musk Reef: ", e);
+            }
+        }
+
         BlockPos islandCenter = TeyvatWorldManager.MUSK_REEF_ISLAND_POS;
         boolean active = TeyvatWorldManager.isAbyssActive();
 
-        // Comprobar si ya existe una estructura previa inspeccionando el nodo cenital
         BlockPos apexCheck = islandCenter.above(11);
         BlockState apexSt = level.getBlockState(apexCheck);
         if (apexSt.is(Blocks.SEA_LANTERN) || apexSt.is(Blocks.OCHRE_FROGLIGHT) || apexSt.is(Blocks.CUT_SANDSTONE) || apexSt.is(Blocks.STONE_BRICKS)) {
             portalGeneratedInTeyvat = true;
+            if (server != null) {
+                try {
+                    TeyvatWorldManager.TeyvatAbyssSavedData.get(server).setMuskReefBuilt(true);
+                } catch (Exception e) {
+                    AwakeningSystemMod.LOGGER.debug("Error setting TeyvatAbyssSavedData for Musk Reef: ", e);
+                }
+            }
             TeyvatWorldManager.registerAbyssPortal(level.dimension(), islandCenter, TeyvatWorldManager.ABYSS_FACING, active);
             return;
         }
 
         generateMuskReefIsland(level, islandCenter, TeyvatWorldManager.ABYSS_FACING, active);
         portalGeneratedInTeyvat = true;
+        if (server != null) {
+            try {
+                TeyvatWorldManager.TeyvatAbyssSavedData.get(server).setMuskReefBuilt(true);
+            } catch (Exception e) {
+                AwakeningSystemMod.LOGGER.debug("Error setting TeyvatAbyssSavedData for Musk Reef: ", e);
+            }
+        }
         AwakeningSystemMod.LOGGER.info("[Teyvat] Arrecife de Musk e Isla de la Espiral del Abismo generados en {}", islandCenter);
     }
 
@@ -77,9 +104,8 @@ public final class TeyvatAbyssPortalBuilder {
         int cx = islandCenter.getX();
         int cz = islandCenter.getZ();
         int seaLevel = 62;
-        int islandHeight = 64; // Altura de la terraza de la isla
+        int islandHeight = 64;
 
-        // 1. Cuenca oceánica despejada de 38 bloques de radio
         int rOcean = 38;
         for (int dx = -rOcean; dx <= rOcean; dx++) {
             for (int dz = -rOcean; dz <= rOcean; dz++) {
@@ -89,21 +115,19 @@ public final class TeyvatAbyssPortalBuilder {
                 int wx = cx + dx;
                 int wz = cz + dz;
 
-                // Despejar aire superior
-                for (int y = seaLevel + 1; y <= 95; y++) {
+                int maxClearY = (dist <= 20) ? 80 : (seaLevel + 3);
+                for (int y = seaLevel + 1; y <= maxClearY; y++) {
                     BlockPos p = new BlockPos(wx, y, wz);
                     if (!level.getBlockState(p).isAir()) {
                         level.setBlock(p, Blocks.AIR.defaultBlockState(), 2);
                     }
                 }
 
-                // Llenar agua oceánica profunda
                 for (int y = 48; y <= seaLevel; y++) {
                     BlockPos p = new BlockPos(wx, y, wz);
                     level.setBlock(p, Blocks.WATER.defaultBlockState(), 2);
                 }
 
-                // Lecho marino
                 for (int y = 40; y < 48; y++) {
                     BlockPos p = new BlockPos(wx, y, wz);
                     BlockState bed = (dist > 30) ? Blocks.GRAVEL.defaultBlockState() : Blocks.SAND.defaultBlockState();
@@ -112,11 +136,9 @@ public final class TeyvatAbyssPortalBuilder {
             }
         }
 
-        // 2. Masa rocosa y terreno orgánico del Arrecife de Musk
         for (int dx = -22; dx <= 22; dx++) {
             for (int dz = -22; dz <= 22; dz++) {
                 double angle = Math.atan2(dz, dx);
-                // Forma orgánica costera ondulada
                 double islandR = 17.5 + 2.0 * Math.sin(angle * 3.0) + 1.2 * Math.cos(angle * 2.0);
                 double dist = Math.sqrt(dx * dx + dz * dz);
                 if (dist > islandR) continue;
@@ -126,30 +148,24 @@ public final class TeyvatAbyssPortalBuilder {
 
                 int surfaceY;
                 if (dist > islandR - 3.0) {
-                    // Playa y orilla arenosa
                     surfaceY = seaLevel + (dist > islandR - 1.2 ? 0 : 1);
                 } else {
-                    // Terraza central nivelada para la plaza del portal
                     surfaceY = islandHeight;
                 }
 
-                // Cimientos de roca submarina
                 for (int y = 48; y < surfaceY - 2; y++) {
                     level.setBlock(new BlockPos(wx, y, wz), Blocks.STONE.defaultBlockState(), 2);
                 }
-                // Capa de tierra
                 for (int y = Math.max(48, surfaceY - 2); y < surfaceY; y++) {
                     level.setBlock(new BlockPos(wx, y, wz), Blocks.DIRT.defaultBlockState(), 2);
                 }
 
-                // Superficie según elevación
                 BlockPos surfPos = new BlockPos(wx, surfaceY, wz);
                 if (surfaceY <= seaLevel + 1 && dist > islandR - 3.0) {
                     level.setBlock(surfPos, Blocks.SAND.defaultBlockState(), 2);
                 } else {
                     level.setBlock(surfPos, Blocks.GRASS_BLOCK.defaultBlockState(), 2);
 
-                    // Vegetación costera en Teyvat (flores silvestres y césped corto)
                     if (dist > 8.0 && level.random.nextFloat() < 0.20F) {
                         BlockPos vegPos = surfPos.above();
                         float rf = level.random.nextFloat();
@@ -165,7 +181,6 @@ public final class TeyvatAbyssPortalBuilder {
             }
         }
 
-        // 3. Construir el Portal Monumental de la Espiral del Abismo en la cima de la isla
         BlockPos basePos = islandCenter.atY(islandHeight);
         build(level, basePos, facing, BuildMode.FULL_3D, CenterMode.AIR, active);
     }
@@ -182,31 +197,25 @@ public final class TeyvatAbyssPortalBuilder {
         Direction rightDir = facing.getOpposite().getClockWise();
         Direction leftDir = rightDir.getOpposite();
 
-        // Registrar dinámicamente en el gestor mundial para sincronización de rifts
         TeyvatWorldManager.registerAbyssPortal(level.dimension(), baseCenterPos, facing, active);
 
-        // 1. Cimientos sólidos bajo la plataforma para evitar cualquier bloque flotante
         if (mode == BuildMode.FULL_3D) {
             ensurePlatformFoundation(level, baseCenterPos, facing, rightDir);
             buildElevatedDaisAndSteps(level, baseCenterPos, facing, rightDir, leftDir);
         }
 
-        // 2. Anillo Central Principal (Capa dz = 0)
         buildPortalRingLayer(level, baseCenterPos, facing, rightDir, leftDir, 0, centerMode, active);
 
-        // 3. Relieves arquitectónicos 3D en las capas frontal (dz = -1) y trasera (dz = 1)
         if (mode == BuildMode.FULL_3D) {
             buildArchitecturalRelief(level, baseCenterPos, facing, rightDir, leftDir, active);
         }
 
-        // 4. Sincronizar rifts inmediatamente en clientes
         if (level.getServer() != null) {
             for (ServerPlayer player : level.getServer().getPlayerList().getPlayers()) {
                 com.soybe.awakeningsystem.DungeonManager.syncRiftsToPlayer(player);
             }
         }
 
-        // Efectos sonoros y partículas celestiales
         playBuildEffects(level, baseCenterPos, active);
     }
 
@@ -216,8 +225,6 @@ public final class TeyvatAbyssPortalBuilder {
     public static void updatePortalState(ServerLevel level, BlockPos baseCenterPos, Direction facing, boolean active) {
         Direction rightDir = facing.getOpposite().getClockWise();
 
-        // 4 Nodos cardinales luminosos celestiales:
-        // Cúspide (0, 11), Base (0, 3), Izquierda (-4, 7), Derecha (4, 7)
         int[][] cardinalCoords = {
                 {0, 11},
                 {0, 3},
@@ -249,7 +256,6 @@ public final class TeyvatAbyssPortalBuilder {
                                              CenterMode centerMode, boolean active) {
         Direction backDir = facing.getOpposite();
 
-        // Recorrer el volumen frontal 15x16 (dx = -7..7, dy = 0..15) con perfecta simetría bilateral
         for (int dx = -7; dx <= 7; dx++) {
             int absDx = Math.abs(dx);
             Direction outDir = (dx < 0) ? leftDir : rightDir;
@@ -260,16 +266,13 @@ public final class TeyvatAbyssPortalBuilder {
                 double rSq = dx * dx + (dy - 7) * (dy - 7);
                 double r = Math.sqrt(rSq);
 
-                // --- A. VANO INTERIOR CIRCULAR (Apertura de 7 bloques de diámetro, radio < 3.45) ---
                 if (r < 3.45) {
                     BlockState coreState = resolveCenterBlock(centerMode, dx, dy, facing);
                     level.setBlock(pos, coreState, 3);
                     continue;
                 }
 
-                // --- B. ANILLO CELESTIAL DE BRONCE Y GEMAS (Radio 3.45 <= r <= 4.75) ---
                 if (r <= 4.75) {
-                    // 1. Los 4 Nodos cardinales luminosos
                     boolean isApex = (dx == 0 && dy == 11);
                     boolean isBase = (dx == 0 && dy == 3);
                     boolean isLeft = (dx == -4 && dy == 7);
@@ -281,19 +284,16 @@ public final class TeyvatAbyssPortalBuilder {
                         continue;
                     }
 
-                    // 2. Nodos rúnicos diagonales dorados simétricos
                     boolean isDiagonalRune = (absDx == 3 && (dy == 4 || dy == 10));
                     if (isDiagonalRune) {
                         level.setBlock(pos, Blocks.GOLD_BLOCK.defaultBlockState(), 3);
                         continue;
                     }
 
-                    // 3. Ribete circular de cobre labrado (bronce celestial)
                     level.setBlock(pos, Blocks.WAXED_CUT_COPPER.defaultBlockState(), 3);
                     continue;
                 }
 
-                // --- C. CRESTA CENITAL DE DIAMANTE (Apex Emblem, dy = 12..15, absDx <= 2) 100% Simétrica ---
                 if (dy >= 12 && dy <= 15 && absDx <= 2) {
                     BlockState crestSt = resolveApexCrest(absDx, dx, dy, rightDir, leftDir);
                     if (crestSt != null) {
@@ -302,7 +302,6 @@ public final class TeyvatAbyssPortalBuilder {
                     }
                 }
 
-                // --- D. ALAS LATERALES DE RUINAS (Buttresses, absDx = 5..7, dy = 3..10) 100% Simétricas ---
                 if (absDx >= 5 && absDx <= 7 && dy >= 3 && dy <= 10) {
                     BlockState wingSt = resolveWing(absDx, dx, dy, outDir, inDir);
                     if (wingSt != null) {
@@ -311,21 +310,18 @@ public final class TeyvatAbyssPortalBuilder {
                     }
                 }
 
-                // --- E. MARCO EXTERIOR DE ARENISCA ANCESTRAL (Radio 4.75 < r <= 5.85) ---
                 if (r <= 5.85 && dy >= 3 && dy <= 11) {
                     BlockState frameSt = resolveRingOuterStair(absDx, dx, dy, outDir, inDir);
                     level.setBlock(pos, frameSt, 3);
                     continue;
                 }
 
-                // --- F. PLINTOS BALUSTRADOS DE ENTRADA (absDx = 4..5, dy = 0..3) ---
                 if (absDx >= 4 && absDx <= 5 && dy >= 0 && dy <= 3) {
                     BlockState pedestalSt = resolvePedestal(absDx, dy);
                     level.setBlock(pos, pedestalSt, 3);
                     continue;
                 }
 
-                // --- G. ESCALINATA / SUELO CENTRAL (absDx <= 3, dy = 0..2) ---
                 if (absDx <= 3 && dy >= 0 && dy <= 2) {
                     if (dy == 2) {
                         level.setBlock(pos, Blocks.SMOOTH_SANDSTONE.defaultBlockState(), 3);
@@ -335,7 +331,6 @@ public final class TeyvatAbyssPortalBuilder {
                     continue;
                 }
 
-                // Espacio libre exterior: despejar aire para garantizar silueta nítida
                 if (!level.getBlockState(pos).isAir()) {
                     level.setBlock(pos, Blocks.AIR.defaultBlockState(), 3);
                 }
@@ -354,7 +349,6 @@ public final class TeyvatAbyssPortalBuilder {
         for (int dz : new int[]{-1, 1}) {
             Direction stairFrontFacing = (dz < 0) ? facing : backDir;
 
-            // 1. Plintos de entrada simétricos (absDx = 4..5, dy = 0..3)
             for (int dx : new int[]{-5, -4, 4, 5}) {
                 for (int dy = 0; dy <= 3; dy++) {
                     BlockPos p = baseCenterPos.relative(rightDir, dx).above(dy).relative(backDir, dz);
@@ -370,7 +364,6 @@ public final class TeyvatAbyssPortalBuilder {
                 }
             }
 
-            // 2. Relieve en las dos alas laterales (ambos lados exactamente a dy = 4..8 en dx = ±6)
             for (int dy = 4; dy <= 8; dy++) {
                 BlockPos pLeft = baseCenterPos.relative(rightDir, -6).above(dy).relative(backDir, dz);
                 BlockPos pRight = baseCenterPos.relative(rightDir, 6).above(dy).relative(backDir, dz);
@@ -378,15 +371,13 @@ public final class TeyvatAbyssPortalBuilder {
                 level.setBlock(pRight, Blocks.SMOOTH_SANDSTONE_SLAB.defaultBlockState().setValue(SlabBlock.TYPE, SlabType.BOTTOM), 3);
             }
 
-            // 3. Relieve del Diamante Cenital (dy = 13, dx = 0)
             BlockPos apexRelief = baseCenterPos.above(13).relative(backDir, dz);
             level.setBlock(apexRelief, Blocks.SANDSTONE_SLAB.defaultBlockState().setValue(SlabBlock.TYPE, SlabType.BOTTOM), 3);
 
-            // 4. Asegurar que el vano interior en dz = -1 y dz = +1 permanezca COMPLETAMENTE LIBRE (sin túnel)
             for (int dx = -3; dx <= 3; dx++) {
                 for (int dy = 3; dy <= 11; dy++) {
                     double rSq = dx * dx + (dy - 7) * (dy - 7);
-                    if (rSq < 13.0) { // Radio < ~3.6
+                    if (rSq < 13.0) {
                         BlockPos coreAir = baseCenterPos.relative(rightDir, dx).above(dy).relative(backDir, dz);
                         level.setBlock(coreAir, Blocks.AIR.defaultBlockState(), 3);
                     }
@@ -402,7 +393,6 @@ public final class TeyvatAbyssPortalBuilder {
                                                   Direction rightDir, Direction leftDir) {
         Direction backDir = facing.getOpposite();
 
-        // 1. Gradas frontales de aproximación (dz = -2, -3)
         for (int step = 1; step <= 2; step++) {
             int dz = -1 - step;
             int stepY = 2 - step;
@@ -412,7 +402,6 @@ public final class TeyvatAbyssPortalBuilder {
                         .setValue(StairBlock.HALF, Half.BOTTOM)
                         .setValue(StairBlock.FACING, facing), 3);
 
-                // Relleno sólido debajo de las gradas
                 for (int y = stepY - 1; y >= 0; y--) {
                     BlockPos under = baseCenterPos.relative(rightDir, dx).above(y).relative(backDir, dz);
                     level.setBlock(under, Blocks.CUT_SANDSTONE.defaultBlockState(), 3);
@@ -420,7 +409,6 @@ public final class TeyvatAbyssPortalBuilder {
             }
         }
 
-        // 2. Gradas traseras de descenso simétricas (dz = 2, 3)
         for (int step = 1; step <= 2; step++) {
             int dz = 1 + step;
             int stepY = 2 - step;
@@ -437,11 +425,9 @@ public final class TeyvatAbyssPortalBuilder {
             }
         }
 
-        // 3. Suelo de la plataforma superior bajo el portal (dz = -1..1, dx = -6..6)
         for (int dz = -1; dz <= 1; dz++) {
             for (int dx = -6; dx <= 6; dx++) {
                 BlockPos p2 = baseCenterPos.relative(rightDir, dx).above(2).relative(backDir, dz);
-                // Si no es un bloque del arco o plinto
                 if (level.getBlockState(p2).isAir()) {
                     level.setBlock(p2, Blocks.SMOOTH_SANDSTONE.defaultBlockState(), 3);
                 }
@@ -464,7 +450,9 @@ public final class TeyvatAbyssPortalBuilder {
             }
             case PORTAL -> {
                 Direction.Axis axis = (facing.getAxis() == Direction.Axis.Z) ? Direction.Axis.X : Direction.Axis.Z;
-                return SystemBlocks.ASCENSION_PORTAL.get().defaultBlockState().setValue(BlockStateProperties.HORIZONTAL_AXIS, axis);
+                return SystemBlocks.ASCENSION_PORTAL.get().defaultBlockState()
+                        .setValue(BlockStateProperties.HORIZONTAL_FACING, facing)
+                        .setValue(BlockStateProperties.HORIZONTAL_AXIS, axis);
             }
             case AIR -> {
                 return Blocks.AIR.defaultBlockState();
@@ -478,12 +466,10 @@ public final class TeyvatAbyssPortalBuilder {
      */
     private static BlockState resolveRingOuterStair(int absDx, int dx, int dy, Direction outDir, Direction inDir) {
         if (dy >= 8) {
-            // Zona superior del arco: escaleras mirando hacia el centro
             return Blocks.SANDSTONE_STAIRS.defaultBlockState()
                     .setValue(StairBlock.HALF, Half.BOTTOM)
                     .setValue(StairBlock.FACING, inDir);
         } else {
-            // Zona inferior del arco: escaleras invertidas mirando hacia afuera
             return Blocks.SANDSTONE_STAIRS.defaultBlockState()
                     .setValue(StairBlock.HALF, Half.TOP)
                     .setValue(StairBlock.FACING, outDir);
@@ -498,7 +484,6 @@ public final class TeyvatAbyssPortalBuilder {
         Direction inDir = (dx < 0) ? rightDir : leftDir;
 
         if (dy == 12) {
-            // Lintel base horizontal
             if (absDx <= 1) return Blocks.CUT_SANDSTONE.defaultBlockState();
             if (absDx == 2) {
                 return Blocks.SANDSTONE_STAIRS.defaultBlockState()
@@ -506,7 +491,6 @@ public final class TeyvatAbyssPortalBuilder {
                         .setValue(StairBlock.FACING, outDir);
             }
         } else if (dy == 13) {
-            // Núcleo solar rúnico con oro en el centro
             if (absDx == 0) return Blocks.GOLD_BLOCK.defaultBlockState();
             if (absDx == 1) return Blocks.CHISELED_SANDSTONE.defaultBlockState();
             if (absDx == 2) {
@@ -515,7 +499,6 @@ public final class TeyvatAbyssPortalBuilder {
                         .setValue(StairBlock.FACING, outDir);
             }
         } else if (dy == 14) {
-            // Taper superior del diamante
             if (absDx == 0) return Blocks.SMOOTH_SANDSTONE.defaultBlockState();
             if (absDx == 1) {
                 return Blocks.SANDSTONE_STAIRS.defaultBlockState()
@@ -523,7 +506,6 @@ public final class TeyvatAbyssPortalBuilder {
                         .setValue(StairBlock.FACING, inDir);
             }
         } else if (dy == 15) {
-            // Cúspide piramidal única en el centro exacto
             if (absDx == 0) {
                 return Blocks.SANDSTONE_SLAB.defaultBlockState().setValue(SlabBlock.TYPE, SlabType.BOTTOM);
             }
@@ -537,7 +519,6 @@ public final class TeyvatAbyssPortalBuilder {
     private static BlockState resolveWing(int absDx, int dx, int dy, Direction outDir, Direction inDir) {
         if (dy == 10) {
             if (absDx == 6) {
-                // Remate superior idéntico en ambas alas
                 return Blocks.SANDSTONE_SLAB.defaultBlockState().setValue(SlabBlock.TYPE, SlabType.BOTTOM);
             }
             return null;
@@ -558,7 +539,6 @@ public final class TeyvatAbyssPortalBuilder {
                         .setValue(StairBlock.FACING, outDir);
             }
         } else {
-            // dy = 3..5
             if (absDx == 6) return Blocks.WAXED_CUT_COPPER.defaultBlockState();
             return Blocks.CUT_SANDSTONE.defaultBlockState();
         }
@@ -572,7 +552,6 @@ public final class TeyvatAbyssPortalBuilder {
         if (dy == 0) return Blocks.CUT_SANDSTONE.defaultBlockState();
         if (dy == 1) return Blocks.CHISELED_SANDSTONE.defaultBlockState();
         if (dy == 2) return Blocks.SMOOTH_SANDSTONE.defaultBlockState();
-        // dy = 3: Remate superior con losa
         return Blocks.SMOOTH_SANDSTONE_SLAB.defaultBlockState().setValue(SlabBlock.TYPE, SlabType.BOTTOM);
     }
 
@@ -606,7 +585,6 @@ public final class TeyvatAbyssPortalBuilder {
         Direction rightDir = facing.getOpposite().getClockWise();
 
         if (active) {
-            // Haces de luz cian verticales celestiales saliendo del suelo (Imagen 1)
             for (int i = 0; i < 3; i++) {
                 double offset = (level.random.nextDouble() - 0.5) * 6.5;
                 double forward = (level.random.nextDouble() - 0.5) * 1.5;
@@ -618,7 +596,6 @@ public final class TeyvatAbyssPortalBuilder {
                 level.sendParticles(ParticleTypes.END_ROD, px, py + 0.5, pz, 1, 0.05, 1.2, 0.05, 0.05);
             }
         } else {
-            // Sello carmesí arqueado en el perímetro interior circular (Imagen 2)
             for (int i = 0; i < 2; i++) {
                 double angle = level.random.nextDouble() * Math.PI * 2.0;
                 double radius = 3.2 + level.random.nextDouble() * 0.3;

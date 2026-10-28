@@ -124,7 +124,7 @@ public class LockedTreasureChestBlock extends BaseEntityBlock implements SimpleW
 
     @Override
     public BlockState getStateForPlacement(BlockPlaceContext context) {
-        Direction facing = context.getHorizontalDirection();
+        Direction facing = context.getHorizontalDirection().getOpposite();
         FluidState fluidState = context.getLevel().getFluidState(context.getClickedPos());
         return this.defaultBlockState()
                 .setValue(FACING, facing)
@@ -160,7 +160,6 @@ public class LockedTreasureChestBlock extends BaseEntityBlock implements SimpleW
         BlockEntity be = level.getBlockEntity(pos);
         if (be instanceof LockedTreasureChestBlockEntity chest) {
             if (!chest.isUnlockedFor(player.getUUID()) && !player.isCreative()) {
-                // Indestructible para un jugador que aún no ha desbloqueado su cofre
                 return 0.0F;
             }
         }
@@ -181,7 +180,6 @@ public class LockedTreasureChestBlock extends BaseEntityBlock implements SimpleW
             return ItemInteractionResult.PASS_TO_DEFAULT_BLOCK_INTERACTION;
         }
 
-        // Si el cofre ya está desbloqueado para este jugador: abrir su menú instanciado
         if (chest.isUnlockedFor(player.getUUID())) {
             if (!player.isSecondaryUseActive()) {
                 if (!level.isClientSide() && player instanceof ServerPlayer sp) {
@@ -193,7 +191,6 @@ public class LockedTreasureChestBlock extends BaseEntityBlock implements SimpleW
             return ItemInteractionResult.PASS_TO_DEFAULT_BLOCK_INTERACTION;
         }
 
-        // Si aún está cerrado para este jugador, verificar si sostiene la llave adecuada
         String dim = resolveChestDimension(level);
         boolean isKey = false;
         String requiredMessageKey = "block.awakening_system.locked_treasure_chest.requires_key";
@@ -221,25 +218,23 @@ public class LockedTreasureChestBlock extends BaseEntityBlock implements SimpleW
                     || (SystemItems.JADE_ANCESTRAL_KEY.isBound() && stack.is(SystemItems.JADE_ANCESTRAL_KEY.get()));
             requiredMessageKey = "block.awakening_system.locked_treasure_chest.requires_murim_key";
         } else {
-            // Overworld y cualquier otra dimensión
             isKey = (SystemItems.OVERWORLD_DUNGEON_KEY.isBound() && stack.is(SystemItems.OVERWORLD_DUNGEON_KEY.get()))
                     || (SystemItems.YGGDRASIL_TREANT_KEY.isBound() && stack.is(SystemItems.YGGDRASIL_TREANT_KEY.get()));
             requiredMessageKey = "block.awakening_system.locked_treasure_chest.requires_overworld_key";
         }
 
-        if (isKey) {
+        boolean isCreative = player.isCreative();
+        if (isKey || isCreative) {
             if (level.isClientSide()) {
                 return ItemInteractionResult.SUCCESS;
             }
 
-            if (!player.getAbilities().instabuild) {
+            if (!player.getAbilities().instabuild && !isCreative && !stack.isEmpty()) {
                 stack.shrink(1);
             }
 
-            // Desbloquear individualmente para este jugador (Lootr-style)
             chest.unlockFor(player.getUUID());
 
-            // Generar botín instanciado personal si su inventario está vacío
             NonNullList<ItemStack> playerInv = chest.getOrCreatePlayerInventory(player.getUUID());
             boolean hasItems = false;
             for (ItemStack it : playerInv) {
@@ -249,7 +244,8 @@ public class LockedTreasureChestBlock extends BaseEntityBlock implements SimpleW
                 }
             }
             if (!hasItems) {
-                populateDimensionalChestLoot(playerInv, dim, level.getRandom());
+                String currentRank = resolveDungeonRank(level, pos);
+                populateDimensionalChestLoot(playerInv, dim, currentRank, level.getRandom());
                 chest.setChanged();
             }
 
@@ -300,7 +296,30 @@ public class LockedTreasureChestBlock extends BaseEntityBlock implements SimpleW
             return InteractionResult.SUCCESS;
         }
 
-        // Si no está desbloqueado para el jugador
+        if (player.isCreative()) {
+            if (!level.isClientSide()) {
+                chest.unlockFor(player.getUUID());
+                NonNullList<ItemStack> playerInv = chest.getOrCreatePlayerInventory(player.getUUID());
+                boolean hasItems = false;
+                for (ItemStack it : playerInv) {
+                    if (!it.isEmpty()) {
+                        hasItems = true;
+                        break;
+                    }
+                }
+                if (!hasItems) {
+                    String currentRank = resolveDungeonRank(level, pos);
+                    populateDimensionalChestLoot(playerInv, resolveChestDimension(level), currentRank, level.getRandom());
+                    chest.setChanged();
+                }
+                if (player instanceof ServerPlayer sp) {
+                    sp.openMenu(chest.getMenuProviderFor(sp));
+                    level.playSound(null, pos, SoundEvents.CHEST_OPEN, SoundSource.BLOCKS, 0.9F, 1.0F);
+                }
+            }
+            return InteractionResult.SUCCESS;
+        }
+
         if (!level.isClientSide()) {
             String dim = resolveChestDimension(level);
             String requiredMessageKey = "block.awakening_system.locked_treasure_chest.requires_key";
@@ -328,7 +347,6 @@ public class LockedTreasureChestBlock extends BaseEntityBlock implements SimpleW
         if (!state.is(newState.getBlock())) {
             BlockEntity be = level.getBlockEntity(pos);
             if (be instanceof LockedTreasureChestBlockEntity chest) {
-                // En modo supervivencia, tirar los contenidos comunes o generales
                 Containers.dropContents(level, pos, chest);
                 level.updateNeighbourForOutputSignal(pos, this);
             }
@@ -336,60 +354,179 @@ public class LockedTreasureChestBlock extends BaseEntityBlock implements SimpleW
         }
     }
 
+    public static String resolveDungeonRank(Level level, BlockPos pos) {
+        if (pos != null) {
+            var session = com.soybe.awakeningsystem.DungeonManager.getSessionAt(pos);
+            if (session == null) {
+                session = com.soybe.awakeningsystem.DungeonManager.getSessionByChestPos(pos);
+            }
+            if (session != null && session.rank != null && !session.rank.isEmpty()) {
+                return session.rank.toUpperCase();
+            }
+        }
+        return "E";
+    }
+
     public static void populateDimensionalChestLoot(Level level, LockedTreasureChestBlockEntity chest, String dim, net.minecraft.util.RandomSource rand) {
-        populateDimensionalChestLoot(chest.getItems(), dim, rand);
+        String rank = resolveDungeonRank(level, chest.getBlockPos());
+        populateDimensionalChestLoot(chest.getItems(), dim, rank, rand);
         chest.setChanged();
     }
 
     public static void populateDimensionalChestLoot(NonNullList<ItemStack> targetList, String dim, net.minecraft.util.RandomSource rand) {
+        populateDimensionalChestLoot(targetList, dim, "E", rand);
+    }
+
+    public static void populateDimensionalChestLoot(NonNullList<ItemStack> targetList, String dim, String rank, net.minecraft.util.RandomSource rand) {
+        for (int i = 0; i < targetList.size(); i++) {
+            targetList.set(i, ItemStack.EMPTY);
+        }
+
+        java.util.List<Integer> availableSlots = new java.util.ArrayList<>();
+        for (int i = 0; i < targetList.size(); i++) {
+            availableSlots.add(i);
+        }
+        java.util.Collections.shuffle(availableSlots, new java.util.Random(rand.nextLong()));
+
+        java.util.List<ItemStack> rolledLoot = new java.util.ArrayList<>();
+        String r = (rank == null || rank.isEmpty()) ? "E" : rank.toUpperCase();
+
         if (dim.contains("nether")) {
-            targetList.set(0, new ItemStack(Items.NETHERITE_SCRAP, 1 + rand.nextInt(2)));
-            targetList.set(2, new ItemStack(Items.BLAZE_ROD, 3 + rand.nextInt(4)));
-            targetList.set(4, new ItemStack(Items.GOLD_INGOT, 8 + rand.nextInt(9)));
-            targetList.set(6, new ItemStack(Items.GHAST_TEAR, 1 + rand.nextInt(3)));
-            targetList.set(8, new ItemStack(Items.NETHER_WART, 4 + rand.nextInt(5)));
-            targetList.set(13, new ItemStack(SystemItems.NETHER_FLAME_KEY.get(), 1));
+            if (rand.nextFloat() < 0.70F) rolledLoot.add(new ItemStack(SystemItems.NETHER_FLAME_KEY.get(), 1));
+            rolledLoot.add(new ItemStack(Items.NETHERITE_SCRAP, 1 + rand.nextInt(3)));
+            rolledLoot.add(new ItemStack(Items.BLAZE_ROD, 2 + rand.nextInt(5)));
+            rolledLoot.add(new ItemStack(Items.GOLD_INGOT, 6 + rand.nextInt(12)));
+            rolledLoot.add(new ItemStack(Items.NETHER_WART, 3 + rand.nextInt(6)));
+            if (rand.nextFloat() < 0.40F) rolledLoot.add(new ItemStack(Items.GHAST_TEAR, 1 + rand.nextInt(3)));
+            if (rand.nextFloat() < 0.35F) rolledLoot.add(new ItemStack(Items.CRYING_OBSIDIAN, 2 + rand.nextInt(5)));
+            if (rand.nextFloat() < 0.25F) rolledLoot.add(new ItemStack(Items.MAGMA_CREAM, 2 + rand.nextInt(4)));
+            if (rand.nextFloat() < 0.20F) rolledLoot.add(new ItemStack(Items.WITHER_SKELETON_SKULL, 1));
+            if (rand.nextFloat() < 0.15F) rolledLoot.add(new ItemStack(Items.ANCIENT_DEBRIS, 1 + rand.nextInt(2)));
+            if (rand.nextFloat() < 0.12F) rolledLoot.add(new ItemStack(Items.NETHERITE_UPGRADE_SMITHING_TEMPLATE, 1));
+            rolledLoot.add(new ItemStack(SystemItems.AWAKENING_COIN.get(), 15 + rand.nextInt(25)));
         } else if (dim.contains("end")) {
-            targetList.set(0, new ItemStack(SystemItems.ASTRAL_UPGRADE_SMITHING_TEMPLATE.get(), 1));
-            targetList.set(4, new ItemStack(SystemItems.ASTRAL_INGOT.get(), 1 + rand.nextInt(2)));
-            targetList.set(8, new ItemStack(Items.SHULKER_SHELL, 2 + rand.nextInt(2)));
-            targetList.set(12, new ItemStack(Items.ENDER_PEARL, 4 + rand.nextInt(5)));
-            targetList.set(14, new ItemStack(Items.CHORUS_FRUIT, 8 + rand.nextInt(9)));
-            targetList.set(22, new ItemStack(SystemItems.END_VOID_KEY.get(), 1));
+            if (rand.nextFloat() < 0.70F) rolledLoot.add(new ItemStack(SystemItems.END_VOID_KEY.get(), 1));
+            if (rand.nextFloat() < 0.35F) rolledLoot.add(new ItemStack(Items.NETHERITE_UPGRADE_SMITHING_TEMPLATE, 1));
+            rolledLoot.add(new ItemStack(Items.ENDER_PEARL, 6 + rand.nextInt(10)));
+            rolledLoot.add(new ItemStack(Items.CHORUS_FRUIT, 8 + rand.nextInt(12)));
+            if (rand.nextFloat() < 0.50F) rolledLoot.add(new ItemStack(Items.SHULKER_SHELL, 1 + rand.nextInt(3)));
+            if (rand.nextFloat() < 0.45F) rolledLoot.add(new ItemStack(Items.DRAGON_BREATH, 1 + rand.nextInt(3)));
+            if (rand.nextFloat() < 0.25F) rolledLoot.add(new ItemStack(Items.END_CRYSTAL, 1));
+            if (rand.nextFloat() < 0.30F) rolledLoot.add(new ItemStack(Items.DIAMOND, 2 + rand.nextInt(4)));
+            if (rand.nextFloat() < 0.15F) rolledLoot.add(new ItemStack(Items.TOTEM_OF_UNDYING, 1));
+            rolledLoot.add(new ItemStack(SystemItems.AWAKENING_COIN.get(), 20 + rand.nextInt(30)));
         } else if (dim.contains("teyvat")) {
-            targetList.set(0, new ItemStack(SystemItems.MORA_BUNDLE.get(), 1));
-            targetList.set(4, new ItemStack(SystemItems.PRIMOGEM.get(), 4 + rand.nextInt(5)));
-            targetList.set(8, new ItemStack(SystemItems.MYSTIC_ENHANCEMENT_ORE.get(), 4 + rand.nextInt(5)));
-            targetList.set(12, new ItemStack(SystemItems.HEROS_WIT.get(), 2 + rand.nextInt(3)));
-            targetList.set(14, new ItemStack(SystemItems.TEYVAT_SHRINE_KEY.get(), 1));
-            if (!SystemItems.EXPANDED_ARTIFACTS.isEmpty()) {
-                targetList.set(22, new ItemStack(SystemItems.EXPANDED_ARTIFACTS.get(rand.nextInt(SystemItems.EXPANDED_ARTIFACTS.size())).get(), 1));
+            if (rand.nextFloat() < 0.70F) rolledLoot.add(new ItemStack(SystemItems.TEYVAT_SHRINE_KEY.get(), 1));
+            boolean isPrimordial = rand.nextFloat() < 0.40F;
+            if (rand.nextFloat() < 0.50F) {
+                rolledLoot.add(new ItemStack(isPrimordial ? SystemItems.PRIMORDIAL_UPGRADE_SMITHING_TEMPLATE.get() : SystemItems.CELESTIAL_UPGRADE_SMITHING_TEMPLATE.get(), 1));
             }
+            rolledLoot.add(new ItemStack(isPrimordial ? SystemItems.PRIMORDIAL_INGOT.get() : SystemItems.CELESTIAL_INGOT.get(), 1 + rand.nextInt(3)));
+            rolledLoot.add(new ItemStack(SystemItems.MORA_BUNDLE.get(), 1 + rand.nextInt(3)));
+            rolledLoot.add(new ItemStack(SystemItems.PRIMOGEM.get(), 6 + rand.nextInt(15)));
+            rolledLoot.add(new ItemStack(SystemItems.HEROS_WIT.get(), 2 + rand.nextInt(4)));
+            if (!SystemItems.EXPANDED_ARTIFACTS.isEmpty() && rand.nextFloat() < 0.60F) {
+                rolledLoot.add(new ItemStack(SystemItems.EXPANDED_ARTIFACTS.get(rand.nextInt(SystemItems.EXPANDED_ARTIFACTS.size())).get(), 1));
+            }
+            if (rand.nextFloat() < 0.35F) rolledLoot.add(new ItemStack(Items.GOLDEN_APPLE, 1 + rand.nextInt(2)));
+            rolledLoot.add(new ItemStack(SystemItems.AWAKENING_COIN.get(), 20 + rand.nextInt(30)));
         } else if (dim.contains("isekai")) {
-            targetList.set(0, new ItemStack(SystemItems.MITHRIL_UPGRADE_SMITHING_TEMPLATE.get(), 1));
-            targetList.set(4, new ItemStack(SystemItems.MITHRIL_INGOT.get(), 2 + rand.nextInt(3)));
-            targetList.set(8, new ItemStack(SystemItems.CHAOS_MANA_CORE.get(), 1 + rand.nextInt(2)));
-            targetList.set(12, new ItemStack(SystemItems.MANA_FRUIT.get(), 3 + rand.nextInt(4)));
-            targetList.set(14, new ItemStack(SystemItems.AWAKENING_COIN.get(), 15 + rand.nextInt(20)));
-            targetList.set(22, new ItemStack(SystemItems.ISEKAI_MANA_KEY.get(), 1));
+            if (rand.nextFloat() < 0.70F) rolledLoot.add(new ItemStack(SystemItems.ISEKAI_MANA_KEY.get(), 1));
+            boolean isAstral = rand.nextFloat() < 0.35F;
+            if (rand.nextFloat() < 0.50F) {
+                rolledLoot.add(new ItemStack(isAstral ? SystemItems.ASTRAL_UPGRADE_SMITHING_TEMPLATE.get() : SystemItems.MITHRIL_UPGRADE_SMITHING_TEMPLATE.get(), 1));
+            }
+            rolledLoot.add(new ItemStack(isAstral ? SystemItems.ASTRAL_INGOT.get() : SystemItems.MITHRIL_INGOT.get(), 1 + rand.nextInt(3)));
+            rolledLoot.add(new ItemStack(SystemItems.CHAOS_MANA_CORE.get(), 1 + rand.nextInt(2)));
+            rolledLoot.add(new ItemStack(SystemItems.MANA_FRUIT.get(), 3 + rand.nextInt(5)));
+            if (rand.nextFloat() < 0.45F) rolledLoot.add(new ItemStack(SystemItems.MANA_CRYSTAL_SHARD_C.get(), 2 + rand.nextInt(3)));
+            if (rand.nextFloat() < 0.25F) rolledLoot.add(new ItemStack(SystemItems.MANA_CRYSTAL_SHARD_B.get(), 1 + rand.nextInt(2)));
+            if (rand.nextFloat() < 0.35F) rolledLoot.add(new ItemStack(Items.LAPIS_LAZULI, 8 + rand.nextInt(12)));
+            if (rand.nextFloat() < 0.30F) rolledLoot.add(new ItemStack(Items.AMETHYST_SHARD, 4 + rand.nextInt(6)));
+            rolledLoot.add(new ItemStack(SystemItems.AWAKENING_COIN.get(), 20 + rand.nextInt(30)));
         } else if (dim.contains("murim")) {
-            boolean isJade = rand.nextBoolean();
-            targetList.set(0, new ItemStack(isJade ? SystemItems.SPIRIT_JADE_UPGRADE_SMITHING_TEMPLATE.get() : SystemItems.ADAMANTITE_UPGRADE_SMITHING_TEMPLATE.get(), 1));
-            targetList.set(4, new ItemStack(isJade ? SystemItems.SPIRIT_JADE.get() : SystemItems.ADAMANTITE_INGOT.get(), 2 + rand.nextInt(3)));
-            targetList.set(8, new ItemStack(SystemItems.WILD_GINSENG.get(), 2 + rand.nextInt(3)));
-            targetList.set(12, new ItemStack(SystemItems.FOUNDATION_BUILDING_PILL.get(), 2 + rand.nextInt(3)));
-            targetList.set(14, new ItemStack(SystemItems.AWAKENING_COIN.get(), 15 + rand.nextInt(20)));
-            targetList.set(22, new ItemStack(SystemItems.MURIM_DAO_KEY.get(), 1));
+            if (rand.nextFloat() < 0.70F) rolledLoot.add(new ItemStack(SystemItems.MURIM_DAO_KEY.get(), 1));
+            boolean isJade = rand.nextFloat() < 0.50F;
+            if (rand.nextFloat() < 0.50F) {
+                rolledLoot.add(new ItemStack(isJade ? SystemItems.SPIRIT_JADE_UPGRADE_SMITHING_TEMPLATE.get() : SystemItems.ADAMANTITE_UPGRADE_SMITHING_TEMPLATE.get(), 1));
+            }
+            rolledLoot.add(new ItemStack(isJade ? SystemItems.SPIRIT_JADE.get() : SystemItems.ADAMANTITE_INGOT.get(), 1 + rand.nextInt(3)));
+            rolledLoot.add(new ItemStack(SystemItems.WILD_GINSENG.get(), 2 + rand.nextInt(3)));
+            rolledLoot.add(new ItemStack(SystemItems.FOUNDATION_BUILDING_PILL.get(), 2 + rand.nextInt(4)));
+            if (rand.nextFloat() < 0.20F) rolledLoot.add(new ItemStack(SystemItems.THOUSAND_YEAR_GINSENG.get(), 1));
+            if (rand.nextFloat() < 0.40F) rolledLoot.add(new ItemStack(Items.GOLD_INGOT, 6 + rand.nextInt(8)));
+            if (rand.nextFloat() < 0.35F) rolledLoot.add(new ItemStack(Items.EMERALD, 4 + rand.nextInt(6)));
+            rolledLoot.add(new ItemStack(SystemItems.AWAKENING_COIN.get(), 20 + rand.nextInt(30)));
         } else {
-            // Overworld
-            targetList.set(0, new ItemStack(SystemItems.ABYSSAL_UPGRADE_SMITHING_TEMPLATE.get(), 1));
-            targetList.set(2, new ItemStack(SystemItems.ABYSSAL_INGOT.get(), 1 + rand.nextInt(2)));
-            targetList.set(4, new ItemStack(Items.DIAMOND, 3 + rand.nextInt(4)));
-            targetList.set(6, new ItemStack(Items.EMERALD, 6 + rand.nextInt(7)));
-            targetList.set(8, new ItemStack(Items.GOLDEN_APPLE, 1 + rand.nextInt(2)));
-            targetList.set(12, new ItemStack(Items.EXPERIENCE_BOTTLE, 6 + rand.nextInt(7)));
-            targetList.set(14, new ItemStack(SystemItems.AWAKENING_COIN.get(), 10 + rand.nextInt(15)));
-            targetList.set(22, new ItemStack(SystemItems.OVERWORLD_DUNGEON_KEY.get(), 1));
+            // Standard Dungeon / Overworld - Tiered by Dungeon Rank!
+            if (rand.nextFloat() < 0.65F) rolledLoot.add(new ItemStack(SystemItems.OVERWORLD_DUNGEON_KEY.get(), 1));
+
+            if (r.contains("S")) {
+                // RANK S: Calamity / Monarch tier - ONLY tier that gives Abyssal & Soulforge metals!
+                rolledLoot.add(new ItemStack(SystemItems.ABYSSAL_INGOT.get(), 1 + rand.nextInt(3)));
+                rolledLoot.add(new ItemStack(SystemItems.SOUL_ALLOY_INGOT.get(), 1 + rand.nextInt(2)));
+                if (rand.nextFloat() < 0.50F) rolledLoot.add(new ItemStack(SystemItems.ABYSSAL_UPGRADE_SMITHING_TEMPLATE.get(), 1));
+                rolledLoot.add(new ItemStack(Items.DIAMOND, 4 + rand.nextInt(6)));
+                rolledLoot.add(new ItemStack(Items.EMERALD, 8 + rand.nextInt(10)));
+                rolledLoot.add(new ItemStack(Items.GOLD_INGOT, 8 + rand.nextInt(12)));
+                if (rand.nextFloat() < 0.25F) rolledLoot.add(new ItemStack(Items.ENCHANTED_GOLDEN_APPLE, 1));
+                rolledLoot.add(new ItemStack(Items.GOLDEN_APPLE, 2 + rand.nextInt(3)));
+                if (rand.nextFloat() < 0.20F) rolledLoot.add(new ItemStack(Items.TOTEM_OF_UNDYING, 1));
+                if (rand.nextFloat() < 0.40F) rolledLoot.add(new ItemStack(SystemItems.MANA_CRYSTAL_SHARD_A.get(), 2 + rand.nextInt(3)));
+                if (rand.nextFloat() < 0.25F) rolledLoot.add(new ItemStack(SystemItems.MANA_CRYSTAL_SHARD_S.get(), 1));
+                rolledLoot.add(new ItemStack(Items.ENDER_PEARL, 4 + rand.nextInt(6)));
+                rolledLoot.add(new ItemStack(SystemItems.AWAKENING_COIN.get(), 80 + rand.nextInt(70)));
+            } else if (r.contains("A")) {
+                // RANK A: Legendary Hunter tier
+                rolledLoot.add(new ItemStack(Items.DIAMOND, 3 + rand.nextInt(4)));
+                rolledLoot.add(new ItemStack(Items.EMERALD, 6 + rand.nextInt(8)));
+                rolledLoot.add(new ItemStack(Items.GOLD_INGOT, 8 + rand.nextInt(10)));
+                rolledLoot.add(new ItemStack(Items.IRON_INGOT, 12 + rand.nextInt(12)));
+                if (rand.nextFloat() < 0.35F) rolledLoot.add(new ItemStack(Items.NETHERITE_SCRAP, 1 + rand.nextInt(2)));
+                rolledLoot.add(new ItemStack(Items.GOLDEN_APPLE, 1 + rand.nextInt(2)));
+                if (rand.nextFloat() < 0.45F) rolledLoot.add(new ItemStack(SystemItems.MANA_CRYSTAL_SHARD_B.get(), 2 + rand.nextInt(3)));
+                if (rand.nextFloat() < 0.20F) rolledLoot.add(new ItemStack(SystemItems.MANA_CRYSTAL_SHARD_A.get(), 1));
+                rolledLoot.add(new ItemStack(Items.ENDER_PEARL, 3 + rand.nextInt(4)));
+                rolledLoot.add(new ItemStack(SystemItems.AWAKENING_COIN.get(), 50 + rand.nextInt(45)));
+            } else if (r.contains("B")) {
+                // RANK B: Epic tier
+                rolledLoot.add(new ItemStack(Items.DIAMOND, 1 + rand.nextInt(3)));
+                rolledLoot.add(new ItemStack(Items.EMERALD, 4 + rand.nextInt(6)));
+                rolledLoot.add(new ItemStack(Items.GOLD_INGOT, 6 + rand.nextInt(8)));
+                rolledLoot.add(new ItemStack(Items.IRON_INGOT, 10 + rand.nextInt(10)));
+                if (rand.nextFloat() < 0.30F) rolledLoot.add(new ItemStack(Items.GOLDEN_APPLE, 1));
+                if (rand.nextFloat() < 0.50F) rolledLoot.add(new ItemStack(SystemItems.MANA_CRYSTAL_SHARD_C.get(), 2 + rand.nextInt(3)));
+                if (rand.nextFloat() < 0.20F) rolledLoot.add(new ItemStack(SystemItems.MANA_CRYSTAL_SHARD_B.get(), 1));
+                rolledLoot.add(new ItemStack(Items.LAPIS_LAZULI, 8 + rand.nextInt(10)));
+                rolledLoot.add(new ItemStack(Items.EXPERIENCE_BOTTLE, 6 + rand.nextInt(6)));
+                rolledLoot.add(new ItemStack(SystemItems.AWAKENING_COIN.get(), 30 + rand.nextInt(30)));
+            } else if (r.contains("C")) {
+                // RANK C: Rare tier
+                rolledLoot.add(new ItemStack(Items.GOLD_INGOT, 4 + rand.nextInt(6)));
+                rolledLoot.add(new ItemStack(Items.IRON_INGOT, 8 + rand.nextInt(10)));
+                rolledLoot.add(new ItemStack(Items.COPPER_INGOT, 10 + rand.nextInt(12)));
+                if (rand.nextFloat() < 0.50F) rolledLoot.add(new ItemStack(SystemItems.MANA_CRYSTAL_SHARD_D.get(), 2 + rand.nextInt(3)));
+                rolledLoot.add(new ItemStack(Items.LAPIS_LAZULI, 6 + rand.nextInt(8)));
+                rolledLoot.add(new ItemStack(Items.REDSTONE, 8 + rand.nextInt(12)));
+                rolledLoot.add(new ItemStack(Items.EXPERIENCE_BOTTLE, 4 + rand.nextInt(5)));
+                rolledLoot.add(new ItemStack(SystemItems.AWAKENING_COIN.get(), 20 + rand.nextInt(25)));
+            } else {
+                // RANK D & E: Common / Novice tier
+                rolledLoot.add(new ItemStack(Items.IRON_INGOT, 4 + rand.nextInt(6)));
+                rolledLoot.add(new ItemStack(Items.COPPER_INGOT, 6 + rand.nextInt(8)));
+                rolledLoot.add(new ItemStack(Items.COAL, 8 + rand.nextInt(10)));
+                rolledLoot.add(new ItemStack(Items.BREAD, 4 + rand.nextInt(6)));
+                rolledLoot.add(new ItemStack(Items.TORCH, 8 + rand.nextInt(10)));
+                if (rand.nextFloat() < 0.50F) rolledLoot.add(new ItemStack(SystemItems.MANA_CRYSTAL_SHARD_E.get(), 2 + rand.nextInt(3)));
+                rolledLoot.add(new ItemStack(Items.EXPERIENCE_BOTTLE, 2 + rand.nextInt(4)));
+                rolledLoot.add(new ItemStack(SystemItems.AWAKENING_COIN.get(), 10 + rand.nextInt(15)));
+            }
+        }
+
+        for (ItemStack item : rolledLoot) {
+            if (availableSlots.isEmpty()) break;
+            int randomSlotIndex = availableSlots.remove(rand.nextInt(availableSlots.size()));
+            targetList.set(randomSlotIndex, item);
         }
     }
 }

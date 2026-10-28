@@ -45,25 +45,22 @@ public class SpiritFoxModel extends HierarchicalModel<SpiritFoxEntity> {
         MeshDefinition mesh = new MeshDefinition();
         PartDefinition root = mesh.getRoot();
 
-        // Cuerpo principal (Y = 16.0F)
         PartDefinition body = root.addOrReplaceChild("body", CubeListBuilder.create()
                 .texOffs(0, 0)
                 .addBox(-3.0F, -3.0F, -6.0F, 6.0F, 6.0F, 12.0F, new CubeDeformation(0.0F)),
                 PartPose.offset(0.0F, 16.0F, 0.0F));
 
-        // Cabeza con hocico y orejas
         PartDefinition head = body.addOrReplaceChild("head", CubeListBuilder.create()
                 .texOffs(36, 0)
-                .addBox(-3.0F, -3.0F, -5.0F, 6.0F, 5.0F, 5.0F, new CubeDeformation(0.0F)) // Cráneo
+                .addBox(-3.0F, -3.0F, -5.0F, 6.0F, 5.0F, 5.0F, new CubeDeformation(0.0F))
                 .texOffs(0, 18)
-                .addBox(-1.5F, -0.8F, -8.0F, 3.0F, 2.0F, 3.0F, new CubeDeformation(0.0F)) // Hocico fino
+                .addBox(-1.5F, -0.8F, -8.0F, 3.0F, 2.0F, 3.0F, new CubeDeformation(0.0F))
                 .texOffs(14, 18)
-                .addBox(-2.8F, -6.0F, -3.5F, 2.0F, 3.0F, 1.0F, new CubeDeformation(0.0F)) // Oreja derecha
+                .addBox(-2.8F, -6.0F, -3.5F, 2.0F, 3.0F, 1.0F, new CubeDeformation(0.0F))
                 .texOffs(22, 18)
-                .addBox(0.8F, -6.0F, -3.5F, 2.0F, 3.0F, 1.0F, new CubeDeformation(0.0F)), // Oreja izquierda
+                .addBox(0.8F, -6.0F, -3.5F, 2.0F, 3.0F, 1.0F, new CubeDeformation(0.0F)),
                 PartPose.offset(0.0F, -1.5F, -5.5F));
 
-        // Patas delanteras pequeñitas y estilizadas (1.8x5.0x1.8)
         body.addOrReplaceChild("leg_front_right", CubeListBuilder.create()
                 .texOffs(0, 24)
                 .addBox(-0.9F, 0.0F, -0.9F, 1.8F, 5.0F, 1.8F, new CubeDeformation(0.0F)),
@@ -74,7 +71,6 @@ public class SpiritFoxModel extends HierarchicalModel<SpiritFoxEntity> {
                 .addBox(-0.9F, 0.0F, -0.9F, 1.8F, 5.0F, 1.8F, new CubeDeformation(0.0F)),
                 PartPose.offset(1.9F, 3.0F, -3.8F));
 
-        // Patas traseras pequeñitas y estilizadas (1.8x5.0x1.8)
         body.addOrReplaceChild("leg_back_right", CubeListBuilder.create()
                 .texOffs(10, 24)
                 .addBox(-0.9F, 0.0F, -0.9F, 1.8F, 5.0F, 1.8F, new CubeDeformation(0.0F)),
@@ -85,9 +81,6 @@ public class SpiritFoxModel extends HierarchicalModel<SpiritFoxEntity> {
                 .addBox(-0.9F, 0.0F, -0.9F, 1.8F, 5.0F, 1.8F, new CubeDeformation(0.0F)),
                 PartPose.offset(1.9F, 3.0F, 3.8F));
 
-        // Las Nueve Colas Espirituales en Abanico Radial Elevado hacia el Cielo
-        // Cada cola posee su propio origen distribuido en la grupa, grosor estilizado (1.7x1.7x9.5)
-        // y apertura tridimensional (yaw, pitch ascendente y roll de expansión)
         for (int i = 0; i < 9; i++) {
             int idx = i - 4;
             int dist = Math.abs(idx);
@@ -95,9 +88,9 @@ public class SpiritFoxModel extends HierarchicalModel<SpiritFoxEntity> {
             float rootY = -2.2F + dist * 0.12F;
             float rootZ = 5.6F - dist * 0.10F;
 
-            float pitch = 1.05F - dist * 0.08F; // Elevación arqueada hacia arriba
-            float yaw = idx * 0.30F;            // Despliegue en abanico abierto
-            float roll = idx * 0.16F;           // Inclinación 3D hacia los costados
+            float pitch = 1.05F - dist * 0.08F;
+            float yaw = idx * 0.30F;
+            float roll = idx * 0.16F;
 
             body.addOrReplaceChild("tail" + i, CubeListBuilder.create()
                     .texOffs(0, 36)
@@ -118,14 +111,12 @@ public class SpiritFoxModel extends HierarchicalModel<SpiritFoxEntity> {
                           float ageInTicks, float netHeadYaw, float headPitch) {
         this.root().getAllParts().forEach(ModelPart::resetPose);
 
-        // Movimiento de la cabeza
         this.head.xRot = headPitch * ((float) Math.PI / 180.0F);
         this.head.yRot = netHeadYaw * ((float) Math.PI / 180.0F);
 
         boolean isSitting = entity.isInSittingPose() || entity.isOrderedToSit();
 
         if (isSitting) {
-            // Postura de descanso / meditación: el zorro se asienta con elegancia
             this.body.y = 19.5F;
             this.body.xRot = -0.28F;
 
@@ -136,7 +127,6 @@ public class SpiritFoxModel extends HierarchicalModel<SpiritFoxEntity> {
             this.legBackRight.y = 1.2F;
             this.legBackLeft.y = 1.2F;
 
-            // Las 9 colas permanecen erguidas en abanico sagrado detrás de él
             for (int i = 0; i < 9; i++) {
                 int idx = i - 4;
                 int dist = Math.abs(idx);
@@ -150,17 +140,14 @@ public class SpiritFoxModel extends HierarchicalModel<SpiritFoxEntity> {
                 this.tails[i].zRot = sitRoll;
             }
         } else {
-            // Postura de pie / marcha
             this.body.y = 16.0F;
             this.body.xRot = 0.0F;
 
-            // Locomoción ágil de patas pequeñitas (trote ligero y vivaz)
             this.legFrontRight.xRot = Mth.cos(limbSwing * 0.85F) * 0.9F * limbSwingAmount;
             this.legFrontLeft.xRot = Mth.cos(limbSwing * 0.85F + (float) Math.PI) * 0.9F * limbSwingAmount;
             this.legBackRight.xRot = Mth.cos(limbSwing * 0.85F + (float) Math.PI) * 0.9F * limbSwingAmount;
             this.legBackLeft.xRot = Mth.cos(limbSwing * 0.85F) * 0.9F * limbSwingAmount;
 
-            // Las 9 colas se elevan hacia arriba, separadas en abanico y con ondulación mística continua
             for (int i = 0; i < 9; i++) {
                 int idx = i - 4;
                 int dist = Math.abs(idx);
@@ -168,7 +155,6 @@ public class SpiritFoxModel extends HierarchicalModel<SpiritFoxEntity> {
                 float baseYaw = idx * 0.30F;
                 float baseRoll = idx * 0.16F;
 
-                // Desfase armónico en cascada entre cola y cola
                 float phase = i * 0.48F;
                 float wavePitch = Mth.sin(ageInTicks * 0.09F + phase) * 0.08F;
                 float waveYaw = Mth.cos(ageInTicks * 0.08F + phase) * 0.07F;

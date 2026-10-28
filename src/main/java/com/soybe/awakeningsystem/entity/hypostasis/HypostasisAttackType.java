@@ -2,10 +2,10 @@ package com.soybe.awakeningsystem.entity.hypostasis;
 
 public enum HypostasisAttackType {
     NONE(0, 0),
-    CLAP(1, 70),          // 3.5 segundos: Carga, split, golpe y ondas
-    MISSILES(2, 90),      // 4.5 segundos: Cubos en círculo disparando
-    SPECIAL_ACTION(3, 110), // Anemo: Tornados / Electro: Taladro
-    BURST_ULTIMATE(4, 120); // Anemo: Mariposa / Electro: Láseres giratorios
+    CLAP(1, 70),
+    MISSILES(2, 90),
+    SPECIAL_ACTION(3, 110),
+    BURST_ULTIMATE(4, 120);
 
     private final int id;
     private final int durationTicks;

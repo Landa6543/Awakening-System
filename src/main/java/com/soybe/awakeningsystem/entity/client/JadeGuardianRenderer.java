@@ -13,6 +13,7 @@ public class JadeGuardianRenderer extends MobRenderer<JadeGuardianBossEntity, Ja
 
     public JadeGuardianRenderer(EntityRendererProvider.Context context) {
         super(context, new JadeGuardianModel(context.bakeLayer(JadeGuardianModel.LAYER_LOCATION)), 1.1F);
+        this.addLayer(new JadeGuardianGlowLayer(this));
     }
 
     @Override

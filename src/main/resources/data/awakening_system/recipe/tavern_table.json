@@ -1,0 +1,21 @@
+{
+  "type": "minecraft:crafting_shaped",
+  "category": "building",
+  "pattern": [
+    "SSS",
+    " # ",
+    " # "
+  ],
+  "key": {
+    "S": {
+      "item": "minecraft:oak_slab"
+    },
+    "#": {
+      "item": "minecraft:oak_fence"
+    }
+  },
+  "result": {
+    "count": 1,
+    "id": "awakening_system:tavern_table"
+  }
+}

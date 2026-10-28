@@ -1,0 +1,493 @@
+{
+  "credit": "Awakening System - 3D Dedita Casino Chip",
+  "textures": {
+    "chip": "awakening_system:item/casino_chip_bronze",
+    "particle": "awakening_system:item/casino_chip_bronze"
+  },
+  "elements": [
+    {
+      "name": "north_rim",
+      "from": [
+        3.0,
+        6.75,
+        1.5
+      ],
+      "to": [
+        13.0,
+        9.25,
+        3.0
+      ],
+      "faces": {
+        "north": {
+          "uv": [
+            4.0,
+            0.0,
+            8.0,
+            1.0
+          ],
+          "texture": "#chip"
+        },
+        "east": {
+          "uv": [
+            8.0,
+            7.0,
+            8.5,
+            8.0
+          ],
+          "texture": "#chip"
+        },
+        "south": {
+          "uv": [
+            4.0,
+            1.0,
+            8.0,
+            2.0
+          ],
+          "texture": "#chip"
+        },
+        "west": {
+          "uv": [
+            0.0,
+            8.5,
+            0.5,
+            9.5
+          ],
+          "texture": "#chip"
+        },
+        "up": {
+          "uv": [
+            0.0,
+            8.0,
+            4.0,
+            8.5
+          ],
+          "texture": "#chip"
+        },
+        "down": {
+          "uv": [
+            8.0,
+            0.0,
+            12.0,
+            0.5
+          ],
+          "texture": "#chip"
+        }
+      }
+    },
+    {
+      "name": "south_rim",
+      "from": [
+        3.0,
+        6.75,
+        13.0
+      ],
+      "to": [
+        13.0,
+        9.25,
+        14.5
+      ],
+      "faces": {
+        "north": {
+          "uv": [
+            4.0,
+            2.0,
+            8.0,
+            3.0
+          ],
+          "texture": "#chip"
+        },
+        "east": {
+          "uv": [
+            0.5,
+            8.5,
+            1.0,
+            9.5
+          ],
+          "texture": "#chip"
+        },
+        "south": {
+          "uv": [
+            4.0,
+            3.0,
+            8.0,
+            4.0
+          ],
+          "texture": "#chip"
+        },
+        "west": {
+          "uv": [
+            1.0,
+            8.5,
+            1.5,
+            9.5
+          ],
+          "texture": "#chip"
+        },
+        "up": {
+          "uv": [
+            8.0,
+            0.5,
+            12.0,
+            1.0
+          ],
+          "texture": "#chip"
+        },
+        "down": {
+          "uv": [
+            8.0,
+            1.0,
+            12.0,
+            1.5
+          ],
+          "texture": "#chip"
+        }
+      }
+    },
+    {
+      "name": "west_rim",
+      "from": [
+        1.5,
+        6.75,
+        3.0
+      ],
+      "to": [
+        3.0,
+        9.25,
+        13.0
+      ],
+      "faces": {
+        "north": {
+          "uv": [
+            1.5,
+            8.5,
+            2.0,
+            9.5
+          ],
+          "texture": "#chip"
+        },
+        "east": {
+          "uv": [
+            4.0,
+            4.0,
+            8.0,
+            5.0
+          ],
+          "texture": "#chip"
+        },
+        "south": {
+          "uv": [
+            8.5,
+            1.5,
+            9.0,
+            2.5
+          ],
+          "texture": "#chip"
+        },
+        "west": {
+          "uv": [
+            4.0,
+            5.0,
+            8.0,
+            6.0
+          ],
+          "texture": "#chip"
+        },
+        "up": {
+          "uv": [
+            8.0,
+            1.5,
+            8.5,
+            5.5
+          ],
+          "texture": "#chip"
+        },
+        "down": {
+          "uv": [
+            4.0,
+            8.0,
+            4.5,
+            12.0
+          ],
+          "texture": "#chip"
+        }
+      }
+    },
+    {
+      "name": "east_rim",
+      "from": [
+        13.0,
+        6.75,
+        3.0
+      ],
+      "to": [
+        14.5,
+        9.25,
+        13.0
+      ],
+      "faces": {
+        "north": {
+          "uv": [
+            2.0,
+            8.5,
+            2.5,
+            9.5
+          ],
+          "texture": "#chip"
+        },
+        "east": {
+          "uv": [
+            4.0,
+            6.0,
+            8.0,
+            7.0
+          ],
+          "texture": "#chip"
+        },
+        "south": {
+          "uv": [
+            2.5,
+            8.5,
+            3.0,
+            9.5
+          ],
+          "texture": "#chip"
+        },
+        "west": {
+          "uv": [
+            4.0,
+            7.0,
+            8.0,
+            8.0
+          ],
+          "texture": "#chip"
+        },
+        "up": {
+          "uv": [
+            4.5,
+            8.0,
+            5.0,
+            12.0
+          ],
+          "texture": "#chip"
+        },
+        "down": {
+          "uv": [
+            5.0,
+            8.0,
+            5.5,
+            12.0
+          ],
+          "texture": "#chip"
+        }
+      }
+    },
+    {
+      "name": "center_plate",
+      "from": [
+        3.0,
+        6.75,
+        3.0
+      ],
+      "to": [
+        13.0,
+        8.25,
+        13.0
+      ],
+      "faces": {
+        "north": {
+          "uv": [
+            5.5,
+            8.0,
+            9.5,
+            8.5
+          ],
+          "texture": "#chip"
+        },
+        "east": {
+          "uv": [
+            8.0,
+            5.5,
+            12.0,
+            6.0
+          ],
+          "texture": "#chip"
+        },
+        "south": {
+          "uv": [
+            8.0,
+            6.0,
+            12.0,
+            6.5
+          ],
+          "texture": "#chip"
+        },
+        "west": {
+          "uv": [
+            8.0,
+            6.5,
+            12.0,
+            7.0
+          ],
+          "texture": "#chip"
+        },
+        "up": {
+          "uv": [
+            0.0,
+            0.0,
+            4.0,
+            4.0
+          ],
+          "texture": "#chip"
+        },
+        "down": {
+          "uv": [
+            0.0,
+            4.0,
+            4.0,
+            8.0
+          ],
+          "texture": "#chip"
+        }
+      }
+    }
+  ],
+  "display": {
+    "thirdperson_righthand": {
+      "rotation": [
+        85,
+        0,
+        0
+      ],
+      "translation": [
+        0,
+        1.75,
+        1.25
+      ],
+      "scale": [
+        0.375,
+        0.375,
+        0.375
+      ]
+    },
+    "thirdperson_lefthand": {
+      "rotation": [
+        85,
+        0,
+        0
+      ],
+      "translation": [
+        0,
+        1.75,
+        1.25
+      ],
+      "scale": [
+        0.375,
+        0.375,
+        0.375
+      ]
+    },
+    "firstperson_righthand": {
+      "rotation": [
+        54,
+        -180,
+        -4
+      ],
+      "translation": [
+        1.5,
+        3.5,
+        0
+      ],
+      "scale": [
+        0.4,
+        0.4,
+        0.4
+      ]
+    },
+    "firstperson_lefthand": {
+      "rotation": [
+        54,
+        -180,
+        -4
+      ],
+      "translation": [
+        1.5,
+        3.5,
+        0
+      ],
+      "scale": [
+        0.4,
+        0.4,
+        0.4
+      ]
+    },
+    "ground": {
+      "rotation": [
+        0,
+        0,
+        0
+      ],
+      "translation": [
+        0,
+        1.75,
+        0
+      ],
+      "scale": [
+        0.4,
+        0.4,
+        0.4
+      ]
+    },
+    "gui": {
+      "rotation": [
+        30,
+        225,
+        0
+      ],
+      "translation": [
+        0,
+        0,
+        0
+      ],
+      "scale": [
+        1.0,
+        1.0,
+        1.0
+      ]
+    },
+    "head": {
+      "rotation": [
+        0,
+        0,
+        0
+      ],
+      "translation": [
+        0,
+        9.75,
+        0
+      ],
+      "scale": [
+        1.0,
+        1.0,
+        1.0
+      ]
+    },
+    "fixed": {
+      "rotation": [
+        -91,
+        0,
+        0
+      ],
+      "translation": [
+        0,
+        0,
+        -2
+      ],
+      "scale": [
+        1.0,
+        1.0,
+        1.0
+      ]
+    }
+  },
+  "gui_light": "side"
+}

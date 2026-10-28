@@ -1,0 +1,117 @@
+{
+  "credit": "Awakening System Mod - Blackjack High Roller Trophy",
+  "textures": {
+    "particle": "awakening_system:block/casino_trophy_blackjack",
+    "trophy": "awakening_system:block/casino_trophy_blackjack"
+  },
+  "elements": [
+    {
+      "name": "marble_base",
+      "from": [ 4, 0, 4 ],
+      "to": [ 12, 2.5, 12 ],
+      "faces": {
+        "north": { "uv": [ 0, 0, 8, 4 ], "texture": "#trophy" },
+        "south": { "uv": [ 0, 0, 8, 4 ], "texture": "#trophy" },
+        "east":  { "uv": [ 0, 0, 8, 4 ], "texture": "#trophy" },
+        "west":  { "uv": [ 0, 0, 8, 4 ], "texture": "#trophy" },
+        "up":    { "uv": [ 0, 0, 8, 8 ], "texture": "#trophy" },
+        "down":  { "uv": [ 0, 0, 8, 8 ], "texture": "#trophy" }
+      }
+    },
+    {
+      "name": "plaque_front",
+      "from": [ 4.5, 0.4, 3.8 ],
+      "to": [ 11.5, 2.1, 4.0 ],
+      "faces": {
+        "north": { "uv": [ 0, 4, 6, 6 ], "texture": "#trophy" }
+      }
+    },
+    {
+      "name": "sub_tier",
+      "from": [ 5, 2.5, 5 ],
+      "to": [ 11, 3.5, 11 ],
+      "faces": {
+        "north": { "uv": [ 0, 0, 6, 2 ], "texture": "#trophy" },
+        "south": { "uv": [ 0, 0, 6, 2 ], "texture": "#trophy" },
+        "east":  { "uv": [ 0, 0, 6, 2 ], "texture": "#trophy" },
+        "west":  { "uv": [ 0, 0, 6, 2 ], "texture": "#trophy" },
+        "up":    { "uv": [ 0, 0, 6, 6 ], "texture": "#trophy" }
+      }
+    },
+    {
+      "name": "chips_stack_black",
+      "from": [ 4.8, 3.5, 7.5 ],
+      "to": [ 7.2, 7.2, 9.9 ],
+      "faces": {
+        "north": { "uv": [ 0, 6, 4, 10 ], "texture": "#trophy" },
+        "south": { "uv": [ 0, 6, 4, 10 ], "texture": "#trophy" },
+        "east":  { "uv": [ 0, 6, 4, 10 ], "texture": "#trophy" },
+        "west":  { "uv": [ 0, 6, 4, 10 ], "texture": "#trophy" },
+        "up":    { "uv": [ 0, 6, 4, 10 ], "texture": "#trophy" }
+      }
+    },
+    {
+      "name": "chips_stack_red",
+      "from": [ 8.8, 3.5, 7.5 ],
+      "to": [ 11.2, 6.5, 9.9 ],
+      "faces": {
+        "north": { "uv": [ 4, 6, 8, 10 ], "texture": "#trophy" },
+        "south": { "uv": [ 4, 6, 8, 10 ], "texture": "#trophy" },
+        "east":  { "uv": [ 4, 6, 8, 10 ], "texture": "#trophy" },
+        "west":  { "uv": [ 4, 6, 8, 10 ], "texture": "#trophy" },
+        "up":    { "uv": [ 4, 6, 8, 10 ], "texture": "#trophy" }
+      }
+    },
+    {
+      "name": "chips_stack_gold",
+      "from": [ 6.8, 3.5, 4.6 ],
+      "to": [ 9.2, 4.8, 7.0 ],
+      "faces": {
+        "north": { "uv": [ 8, 6, 12, 10 ], "texture": "#trophy" },
+        "south": { "uv": [ 8, 6, 12, 10 ], "texture": "#trophy" },
+        "east":  { "uv": [ 8, 6, 12, 10 ], "texture": "#trophy" },
+        "west":  { "uv": [ 8, 6, 12, 10 ], "texture": "#trophy" },
+        "up":    { "uv": [ 8, 6, 12, 10 ], "texture": "#trophy" }
+      }
+    },
+    {
+      "name": "ace_of_spades",
+      "from": [ 4.8, 4.8, 6.2 ],
+      "to": [ 9.2, 13.5, 6.6 ],
+      "rotation": { "angle": -22.5, "axis": "z", "origin": [ 7.0, 4.8, 6.4 ] },
+      "faces": {
+        "north": { "uv": [ 8, 0, 12, 6 ], "texture": "#trophy" },
+        "south": { "uv": [ 6, 4, 8, 6 ], "texture": "#trophy" },
+        "east":  { "uv": [ 8, 0, 9, 6 ], "texture": "#trophy" },
+        "west":  { "uv": [ 8, 0, 9, 6 ], "texture": "#trophy" },
+        "up":    { "uv": [ 8, 0, 12, 1 ], "texture": "#trophy" }
+      }
+    },
+    {
+      "name": "ace_of_hearts",
+      "from": [ 6.8, 4.8, 6.8 ],
+      "to": [ 11.2, 13.5, 7.2 ],
+      "rotation": { "angle": 22.5, "axis": "z", "origin": [ 9.0, 4.8, 7.0 ] },
+      "faces": {
+        "north": { "uv": [ 12, 0, 16, 6 ], "texture": "#trophy" },
+        "south": { "uv": [ 6, 4, 8, 6 ], "texture": "#trophy" },
+        "east":  { "uv": [ 12, 0, 13, 6 ], "texture": "#trophy" },
+        "west":  { "uv": [ 12, 0, 13, 6 ], "texture": "#trophy" },
+        "up":    { "uv": [ 12, 0, 16, 1 ], "texture": "#trophy" }
+      }
+    },
+    {
+      "name": "vip_star_crest",
+      "from": [ 6.8, 12.8, 5.8 ],
+      "to": [ 9.2, 15.2, 6.4 ],
+      "faces": {
+        "north": { "uv": [ 12, 6, 16, 10 ], "texture": "#trophy" },
+        "south": { "uv": [ 12, 6, 16, 10 ], "texture": "#trophy" },
+        "east":  { "uv": [ 12, 6, 13, 10 ], "texture": "#trophy" },
+        "west":  { "uv": [ 12, 6, 13, 10 ], "texture": "#trophy" },
+        "up":    { "uv": [ 12, 6, 16, 7 ], "texture": "#trophy" },
+        "down":  { "uv": [ 12, 6, 16, 7 ], "texture": "#trophy" }
+      }
+    }
+  ]
+}

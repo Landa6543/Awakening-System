@@ -26,7 +26,7 @@ public class EnhancementOreItem extends Item {
     @Override
     public void appendHoverText(ItemStack stack, TooltipContext context, List<Component> tooltip, TooltipFlag flag) {
         String starsStr = "★".repeat(stars);
-        tooltip.add(Component.literal("§9" + starsStr + " [Mineral de Mejora de Armas y Artefactos]").withStyle(ChatFormatting.BOLD));
-        tooltip.add(Component.literal("§7Mineral condensado que contiene §e+" + String.format("%,d", expValue) + " EXP §7de fortalecimiento.").withStyle(ChatFormatting.GRAY));
+        tooltip.add(Component.translatable("item.awakening_system.enhancement_ore.tag", starsStr).withStyle(ChatFormatting.BLUE, ChatFormatting.BOLD));
+        tooltip.add(Component.translatable("item.awakening_system.enhancement_ore.desc", String.format("%,d", expValue)).withStyle(ChatFormatting.GRAY));
     }
 }

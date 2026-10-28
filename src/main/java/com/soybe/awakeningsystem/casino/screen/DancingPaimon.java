@@ -6,15 +6,15 @@ import net.minecraft.resources.ResourceLocation;
 
 public class DancingPaimon {
     public enum Phase {
-        NEUTRAL, // esperando / girando rodillos
-        LOSS,    // sin premio
-        WIN      // ¡premio conseguido!
+        NEUTRAL,
+        LOSS,
+        WIN
     }
 
     private static final ResourceLocation TEXTURE = ResourceLocation.fromNamespaceAndPath(AwakeningSystemMod.MOD_ID, "textures/gui/casino/misc/dancing_paimon.png");
     private final int width = 22;
     private final int frameHeight = 23;
-    private final int totalHeight = 138; // 6 frames
+    private final int totalHeight = 138;
 
     private Phase currentPhase = Phase.NEUTRAL;
     private int frameToggle = 0;

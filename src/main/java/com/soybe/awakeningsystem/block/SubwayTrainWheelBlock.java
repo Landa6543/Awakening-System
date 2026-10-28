@@ -38,10 +38,10 @@ public class SubwayTrainWheelBlock extends HorizontalDirectionalBlock {
     private static final VoxelShape SHAPE = Block.box(0.0D, 0.0D, 0.0D, 16.0D, 16.0D, 16.0D);
 
     public enum WheelType implements StringRepresentable {
-        DUAL("dual", "Juego Doble (Estándar)"),
-        LEFT("left", "Rueda Izquierda"),
-        RIGHT("right", "Rueda Derecha"),
-        AXLE("axle", "Eje Central");
+        DUAL("dual", "Double Set (Standard)"),
+        LEFT("left", "Left Wheel"),
+        RIGHT("right", "Right Wheel"),
+        AXLE("axle", "Central Axle");
 
         private final String name;
         private final String label;
@@ -88,7 +88,6 @@ public class SubwayTrainWheelBlock extends HorizontalDirectionalBlock {
         BlockPos clickedPos = context.getClickedPos();
         Direction playerHorizontal = context.getHorizontalDirection();
 
-        // Si se coloca sobre una vía decorativa ancha, heredar orientación y tipo de rueda inteligentemente
         BlockState below = level.getBlockState(clickedPos.below());
         if (below.getBlock() instanceof SubwayWideRailTrackBlock) {
             SubwayWideRailTrackBlock.WideTrackShape shape = below.getValue(SubwayWideRailTrackBlock.SHAPE);
@@ -113,12 +112,12 @@ public class SubwayTrainWheelBlock extends HorizontalDirectionalBlock {
                 Direction nextFacing = state.getValue(FACING).getClockWise();
                 level.setBlock(pos, state.setValue(FACING, nextFacing), 3);
                 level.playSound(null, pos, SoundEvents.ANVIL_USE, SoundSource.BLOCKS, 0.5F, 1.4F);
-                player.displayClientMessage(Component.literal("§e[Ruedas ORV] §7Orientación: §f" + nextFacing.getName().toUpperCase()), true);
+                player.displayClientMessage(Component.translatable("block.awakening_system.subway_wheel.facing", nextFacing.getName().toUpperCase()), true);
             } else {
                 WheelType next = state.getValue(TYPE).next();
                 level.setBlock(pos, state.setValue(TYPE, next), 3);
                 level.playSound(null, pos, SoundEvents.ARMOR_EQUIP_IRON.value(), SoundSource.BLOCKS, 0.8F, 1.0F);
-                player.displayClientMessage(Component.literal("§b[Ruedas ORV] §7Tipo: §f" + next.getLabel()), true);
+                player.displayClientMessage(Component.translatable("block.awakening_system.subway_wheel.type", next.getLabel()), true);
             }
         }
         return InteractionResult.sidedSuccess(level.isClientSide());

@@ -45,23 +45,22 @@ public class PlumBlossomSwordItem extends SwordItem implements AwakeningWeaponIt
             long cdUntil = sp.getPersistentData().getLong("plum_blossom_cd");
             if (gameTime < cdUntil) {
                 long sec = (cdUntil - gameTime) / 20;
-                sp.displayClientMessage(Component.literal("§c⏳ Flor de Ciruelo en recarga (" + sec + "s)..."), true);
+                sp.displayClientMessage(Component.translatable("item.awakening_system.plum_blossom_sword.cooldown", sec), true);
                 return InteractionResultHolder.fail(stack);
             }
 
-            sp.getPersistentData().putLong("plum_blossom_cd", gameTime + 200L); // 10s cooldown
+            sp.getPersistentData().putLong("plum_blossom_cd", gameTime + 200L);
             sp.getCooldowns().addCooldown(this, 200);
 
             if (level instanceof ServerLevel sl) {
                 Vec3 look = sp.getLookAngle();
 
-                // 1. Sello sagrado de la Secta del Monte Hua en el suelo (Círculo de Qi de Murim)
                 net.neoforged.neoforge.network.PacketDistributor.sendToPlayersNear(
                         sl, null, sp.getX(), sp.getY(), sp.getZ(), 64.0D,
                         new com.soybe.awakeningsystem.SpawnMagicCirclePayload(
                                 sp.getId(), sp.getX(), sp.getY(), sp.getZ(),
                                 (float) look.x, (float) look.y, (float) look.z,
-                                3.8F, 40, 0xFFB7C5, 2, false // circleType = 2 (Ground Murim)
+                                3.8F, 40, 0xFFB7C5, 2, false
                         )
                 );
 
@@ -73,24 +72,20 @@ public class PlumBlossomSwordItem extends SwordItem implements AwakeningWeaponIt
 
                 float dmg = (float) (24.0D * WeaponLevelManager.getDamageMultiplier(stack));
 
-                // 2. Danza de los 24 Pétalos del Monte Hua (Cuchillas Físicas de Qi Floral)
-                // Tajo Horizontal Amplio
                 SlashWaveEntity waveH = new SlashWaveEntity(sl, sp, SlashWaveEntity.TYPE_CHERRY_BLOSSOM, dmg * 1.1F, 4.2F, 1.4F, 0.0F, 24, 8);
                 waveH.setDeltaMovement(look.scale(2.1D));
                 sl.addFreshEntity(waveH);
 
-                // Tajo Diagonal Izquierdo
                 SlashWaveEntity waveD1 = new SlashWaveEntity(sl, sp, SlashWaveEntity.TYPE_CHERRY_BLOSSOM, dmg * 0.85F, 3.2F, 1.2F, -40.0F, 22, 6);
                 waveD1.setDeltaMovement(look.scale(1.95D));
                 sl.addFreshEntity(waveD1);
 
-                // Tajo Diagonal Derecho
                 SlashWaveEntity waveD2 = new SlashWaveEntity(sl, sp, SlashWaveEntity.TYPE_CHERRY_BLOSSOM, dmg * 0.85F, 3.2F, 1.2F, 40.0F, 22, 6);
                 waveD2.setDeltaMovement(look.scale(1.95D));
                 sl.addFreshEntity(waveD2);
 
                 sp.addEffect(new MobEffectInstance(MobEffects.MOVEMENT_SPEED, 160, 1, false, true));
-                sp.displayClientMessage(Component.literal("§d§l✦ [DANZA DE LOS 24 PÉTALOS] §f¡Cuchillas de Qi de Flor de Ciruelo desatadas!"), true);
+                sp.displayClientMessage(Component.translatable("item.awakening_system.plum_blossom_sword.unleashed"), true);
             }
             return InteractionResultHolder.sidedSuccess(stack, level.isClientSide());
         }
@@ -102,12 +97,10 @@ public class PlumBlossomSwordItem extends SwordItem implements AwakeningWeaponIt
         if (attacker.level() instanceof ServerLevel sl) {
             sl.sendParticles(ParticleTypes.CRIT, target.getX(), target.getY() + 1.0D, target.getZ(), 10, 0.3D, 0.3D, 0.3D, 0.1D);
 
-            // Sistema de Combo de Pétalos de Qi (1 a 5)
             int combo = attacker.getPersistentData().getInt("plum_blossom_combo") + 1;
             if (combo >= 5) {
                 attacker.getPersistentData().putInt("plum_blossom_combo", 0);
 
-                // ¡FLORECIMIENTO TOTAL DEL MONTE HUA!
                 sl.sendParticles(ParticleTypes.CHERRY_LEAVES, target.getX(), target.getY() + 1.0D, target.getZ(), 80, 1.2D, 1.0D, 1.2D, 0.2D);
                 sl.sendParticles(ParticleTypes.FIREWORK, target.getX(), target.getY() + 1.0D, target.getZ(), 30, 0.8D, 0.8D, 0.8D, 0.1D);
                 sl.sendParticles(ParticleTypes.SWEEP_ATTACK, target.getX(), target.getY() + 1.0D, target.getZ(), 5, 0.6D, 0.6D, 0.6D, 0.0D);

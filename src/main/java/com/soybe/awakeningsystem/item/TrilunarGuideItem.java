@@ -53,14 +53,14 @@ public class TrilunarGuideItem extends Item {
 
     @Override
     public void appendHoverText(ItemStack stack, TooltipContext context, List<Component> tooltip, TooltipFlag flag) {
-        tooltip.add(Component.literal("§d✦ Pergamino Sagrado de Columbina").withStyle(ChatFormatting.BOLD));
-        tooltip.add(Component.literal("§7Contiene la crónica de las Tres Diosas de la Luna.").withStyle(ChatFormatting.GRAY));
+        tooltip.add(Component.translatable("item.awakening_system.trilunar_guide.title").withStyle(ChatFormatting.BOLD));
+        tooltip.add(Component.translatable("item.awakening_system.trilunar_guide.desc").withStyle(ChatFormatting.GRAY));
         tooltip.add(Component.empty());
-        tooltip.add(Component.literal("§6Objetivo: §fAyuda a Columbina a recuperar su poder perdido.").withStyle(ChatFormatting.GOLD));
-        tooltip.add(Component.literal("§bMisión: §7Superar las pruebas de Aria, Sonnet y Canon.").withStyle(ChatFormatting.AQUA));
-        tooltip.add(Component.literal("§dMeta: §eDespertar su poder como Diosa Trilunar (+50% Protos/día).").withStyle(ChatFormatting.LIGHT_PURPLE));
+        tooltip.add(Component.translatable("item.awakening_system.trilunar_guide.goal").withStyle(ChatFormatting.GOLD));
+        tooltip.add(Component.translatable("item.awakening_system.trilunar_guide.mission").withStyle(ChatFormatting.AQUA));
+        tooltip.add(Component.translatable("item.awakening_system.trilunar_guide.target").withStyle(ChatFormatting.LIGHT_PURPLE));
         tooltip.add(Component.empty());
-        tooltip.add(Component.literal("§e▸ Clic derecho: §fConsultar estado de la misión y guía del santuario").withStyle(ChatFormatting.YELLOW));
+        tooltip.add(Component.translatable("item.awakening_system.trilunar_guide.use").withStyle(ChatFormatting.YELLOW));
         super.appendHoverText(stack, context, tooltip, flag);
     }
 }

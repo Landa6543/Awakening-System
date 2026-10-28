@@ -38,7 +38,7 @@ public class HerosWitItem extends Item {
                 sl.sendParticles(ParticleTypes.HAPPY_VILLAGER, sp.getX(), sp.getY() + 1.0D, sp.getZ(), 20, 0.4D, 0.6D, 0.4D, 0.1D);
             }
             sp.playNotifySound(SoundEvents.PLAYER_LEVELUP, SoundSource.PLAYERS, 0.9F, 1.2F);
-            sp.displayClientMessage(Component.literal("§a§l✦ [INGENIO DEL HÉROE] §f¡Has obtenido §e+" + totalExp + " EXP §f(" + count + "x libros)!"), true);
+            sp.displayClientMessage(Component.translatable("item.awakening_system.heros_wit.use_message", totalExp, count), true);
             return InteractionResultHolder.consume(stack);
         }
         return InteractionResultHolder.sidedSuccess(stack, level.isClientSide());
@@ -46,9 +46,9 @@ public class HerosWitItem extends Item {
 
     @Override
     public void appendHoverText(ItemStack stack, TooltipContext context, List<Component> tooltip, TooltipFlag flag) {
-        tooltip.add(Component.literal("§9⭐⭐⭐⭐ [Material de EXP de Aventurero]").withStyle(ChatFormatting.BLUE));
-        tooltip.add(Component.literal("§7Las experiencias y conocimientos de grandes héroes que caminaron por Teyvat.").withStyle(ChatFormatting.GRAY));
-        tooltip.add(Component.literal("§a▸ Clic derecho: §fConsumir para ganar §e+1,000 EXP").withStyle(ChatFormatting.GREEN));
-        tooltip.add(Component.literal("§a▸ Shift + Clic derecho: §fConsumir todo el stack de golpe").withStyle(ChatFormatting.DARK_GREEN));
+        tooltip.add(Component.translatable("item.awakening_system.heros_wit.badge").withStyle(ChatFormatting.BLUE));
+        tooltip.add(Component.translatable("item.awakening_system.heros_wit.desc").withStyle(ChatFormatting.GRAY));
+        tooltip.add(Component.translatable("item.awakening_system.heros_wit.use1").withStyle(ChatFormatting.GREEN));
+        tooltip.add(Component.translatable("item.awakening_system.heros_wit.use2").withStyle(ChatFormatting.DARK_GREEN));
     }
 }

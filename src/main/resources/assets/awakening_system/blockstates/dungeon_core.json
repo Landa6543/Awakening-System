@@ -1,0 +1,16 @@
+{
+  "variants": {
+    "activated=false,claimed=false": {
+      "model": "awakening_system:block/dungeon_core"
+    },
+    "activated=true,claimed=false": {
+      "model": "awakening_system:block/dungeon_core_active"
+    },
+    "activated=false,claimed=true": {
+      "model": "awakening_system:block/dungeon_core_claimed"
+    },
+    "activated=true,claimed=true": {
+      "model": "awakening_system:block/dungeon_core_claimed"
+    }
+  }
+}

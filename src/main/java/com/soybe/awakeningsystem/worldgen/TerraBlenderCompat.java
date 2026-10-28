@@ -30,6 +30,54 @@ public final class TerraBlenderCompat {
         }
     }
 
+    public static void registerSurfaceRules() {
+        try {
+            terrablender.api.SurfaceRuleManager.addSurfaceRules(
+                    terrablender.api.SurfaceRuleManager.RuleCategory.OVERWORLD,
+                    AwakeningSystemMod.MOD_ID,
+                    makeSurfaceRules()
+            );
+            AwakeningSystemMod.LOGGER.info("Awakening System: TerraBlender Overworld surface rules registered successfully!");
+        } catch (Throwable t) {
+            AwakeningSystemMod.LOGGER.error("Awakening System: Failed to register TerraBlender surface rules", t);
+        }
+    }
+
+    public static net.minecraft.world.level.levelgen.SurfaceRules.RuleSource makeSurfaceRules() {
+        ResourceKey<Biome> astralDripstone = ResourceKey.create(Registries.BIOME,
+                ResourceLocation.fromNamespaceAndPath(AwakeningSystemMod.MOD_ID, "overworld_astral_dripstone_chasm"));
+
+        net.minecraft.world.level.levelgen.SurfaceRules.RuleSource abyssalStone = net.minecraft.world.level.levelgen.SurfaceRules.state(
+                com.soybe.awakeningsystem.block.SystemBlocks.ABYSSAL_STONE.get().defaultBlockState());
+        net.minecraft.world.level.levelgen.SurfaceRules.RuleSource abyssalGrowth = net.minecraft.world.level.levelgen.SurfaceRules.state(
+                com.soybe.awakeningsystem.block.SystemBlocks.ABYSSAL_GROWTH.get().defaultBlockState());
+
+        net.minecraft.world.level.levelgen.SurfaceRules.RuleSource caveRules = net.minecraft.world.level.levelgen.SurfaceRules.sequence(
+                net.minecraft.world.level.levelgen.SurfaceRules.ifTrue(
+                        net.minecraft.world.level.levelgen.SurfaceRules.ON_CEILING,
+                        abyssalStone
+                ),
+                net.minecraft.world.level.levelgen.SurfaceRules.ifTrue(
+                        net.minecraft.world.level.levelgen.SurfaceRules.UNDER_CEILING,
+                        abyssalStone
+                ),
+                net.minecraft.world.level.levelgen.SurfaceRules.ifTrue(
+                        net.minecraft.world.level.levelgen.SurfaceRules.ON_FLOOR,
+                        abyssalGrowth
+                ),
+                net.minecraft.world.level.levelgen.SurfaceRules.ifTrue(
+                        net.minecraft.world.level.levelgen.SurfaceRules.UNDER_FLOOR,
+                        abyssalStone
+                ),
+                abyssalStone
+        );
+
+        return net.minecraft.world.level.levelgen.SurfaceRules.ifTrue(
+                net.minecraft.world.level.levelgen.SurfaceRules.isBiome(astralDripstone),
+                caveRules
+        );
+    }
+
     public static class AwakeningOverworldRegion extends Region {
         public AwakeningOverworldRegion(ResourceLocation name, int weight) {
             super(name, RegionType.OVERWORLD, weight);

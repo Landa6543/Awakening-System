@@ -1,0 +1,9 @@
+{
+  "parent": "awakening_system:custom/aether_plushie",
+  "textures": {
+    "all": "awakening_system:block/kaltsitplushie",
+    "particle": "awakening_system:block/kaltsitplushie",
+    "0": "awakening_system:block/kaltsitplushie"
+  },
+  "render_type": "cutout"
+}

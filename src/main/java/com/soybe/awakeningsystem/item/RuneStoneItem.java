@@ -27,33 +27,33 @@ import java.util.List;
 public class RuneStoneItem extends Item {
     public enum RuneType {
         RULERS_AUTHORITY(
-                "§9§l[PIEDRA DE RUNA: AUTORIDAD DEL GOBERNANTE]",
-                "§7Clic Derecho: §fDesata la telequinesis del Gobernante. §bAtrae enemigos hacia ti §f(o agáchate para §bempujarlos violentamente§f con una onda de gravedad). (6s CD)",
+                "§9§l[RUNE STONE: RULER'S AUTHORITY]",
+                "§b[Active Rune - System Socket [K]]: §fUnleash Ruler's Telekinesis. Pull enemies toward you or sneak to blast them with a violent gravity shockwave (Active Rune Key).",
                 "rulers_authority"
         ),
         DRAGON_EYES(
-                "§4§l[PIEDRA DE RUNA: OJOS DRACÓNICOS]",
-                "§7Clic Derecho: §fDespierta la visión dracónica. §cMuestra vida exacta, nivel y armadura §fde cualquier objetivo que mires en tu HUD.",
+                "§4§l[RUNE STONE: DRAGON EYES]",
+                "§d[Passive Rune - System Socket [K]]: §fAwaken draconic vision. Displays exact health, level, and armor of any target in your crosshairs.",
                 "dragon_eyes"
         ),
         BLOODTHIRST(
-                "§c§l[PIEDRA DE RUNA: SED DE SANGRE]",
-                "§7Clic Derecho: §fAsimila la runa marcial. Otorga §4Robo de Vida pasivo permanente §f(+15% del daño infligido devuelto como salud).",
+                "§c§l[RUNE STONE: BLOODTHIRST]",
+                "§d[Passive Rune - System Socket [K]]: §fAssimilate martial instinct. Grants +15% permanent Lifesteal returned as health.",
                 "bloodthirst"
         ),
         SHADOW_STEP(
-                "§5§l[PIEDRA DE RUNA: PASO SOMBRÍO]",
-                "§7Clic Derecho: §fTe desvaneces en las sombras y §dreapareces tras la espalda del objetivo §fcon golpe crítico e invisibilidad. (8s CD)",
+                "§5§l[RUNE STONE: SHADOW STEP]",
+                "§b[Active Rune - System Socket [K]]: §fVanish into shadows and reappear behind target with a guaranteed critical strike and invisibility (Active Rune Key).",
                 "shadow_step"
         ),
         FOURTH_WALL(
-                "§f§l[PIEDRA DE RUNA: LA CUARTA PARED]",
-                "§7Clic Derecho: §fInscribe la barrera psicológica de Kim Dokja. §fInmune a ceguera, oscuridad y previene la muerte. (5m CD)",
+                "§f§l[RUNE STONE: THE FOURTH WALL]",
+                "§d[Passive Rune - System Socket [K]]: §fInscribe Kim Dokja's psychological barrier. Grants immunity to blindness and darkness; prevents fatal death (5m cooldown).",
                 "fourth_wall"
         ),
         IRON_BODY(
-                "§7§l[PIEDRA DE RUNA: CUERPO DE HIERRO]",
-                "§7Clic Derecho: §fEndurece tu cuerpo como acero templado. Otorga §e+4 de Armadura pasiva permanente §fy resistencia a empuje.",
+                "§7§l[RUNE STONE: IRON BODY]",
+                "§d[Passive Rune - System Socket [K]]: §fHardens flesh like tempered steel. Grants +4 permanent Armor and massive knockback resistance.",
                 "enduring_flesh"
         );
 
@@ -82,71 +82,10 @@ public class RuneStoneItem extends Item {
     @Override
     public InteractionResultHolder<ItemStack> use(Level level, Player player, InteractionHand hand) {
         ItemStack stack = player.getItemInHand(hand);
-        if (!level.isClientSide() && player instanceof ServerPlayer sp) {
-            SystemData data = SystemEvents.data(sp);
-
-            if (runeType == RuneType.RULERS_AUTHORITY) {
-                long gameTime = level.getGameTime();
-                long cd = sp.getPersistentData().getLong("rulers_auth_cd");
-                if (gameTime < cd) {
-                    long sec = (cd - gameTime) / 20;
-                    sp.displayClientMessage(Component.translatable("awakening_system.rune_stone.cooldown", sec), true);
-                    return InteractionResultHolder.fail(stack);
-                }
-                sp.getPersistentData().putLong("rulers_auth_cd", gameTime + 120L); // 6s CD
-
-                Vec3 look = sp.getLookAngle();
-                boolean push = sp.isShiftKeyDown();
-
-                if (level instanceof ServerLevel sl) {
-                    sl.playSound(null, sp.getX(), sp.getY(), sp.getZ(), SoundEvents.AMETHYST_CLUSTER_BREAK, SoundSource.PLAYERS, 1.5F, 1.2F);
-                    sl.playSound(null, sp.getX(), sp.getY(), sp.getZ(), SoundEvents.WARDEN_SONIC_BOOM, SoundSource.PLAYERS, 0.8F, 1.8F);
-
-                    AABB box = sp.getBoundingBox().inflate(10.0D, 4.0D, 10.0D);
-                    for (LivingEntity nearby : level.getEntitiesOfClass(LivingEntity.class, box)) {
-                        if (nearby != sp && (nearby instanceof Enemy || nearby != player)) {
-                            if (push) {
-                                // Repel
-                                Vec3 force = nearby.position().subtract(sp.position()).normalize().scale(1.8D);
-                                nearby.setDeltaMovement(force.x, 0.5D, force.z);
-                                nearby.hurt(nearby.damageSources().playerAttack(sp), 12.0F);
-                                sl.sendParticles(ParticleTypes.SONIC_BOOM, nearby.getX(), nearby.getY() + 0.5D, nearby.getZ(), 1, 0, 0, 0, 0);
-                            } else {
-                                // Pull towards player
-                                Vec3 force = sp.position().subtract(nearby.position()).normalize().scale(1.4D);
-                                nearby.setDeltaMovement(force.x, 0.35D, force.z);
-                                nearby.hurt(nearby.damageSources().playerAttack(sp), 8.0F);
-                                sl.sendParticles(ParticleTypes.PORTAL, nearby.getX(), nearby.getY() + 0.5D, nearby.getZ(), 20, 0.4D, 0.4D, 0.4D, 0.1D);
-                            }
-                        }
-                    }
-                }
-                sp.displayClientMessage(Component.translatable(push ? "awakening_system.rune_stone.rulers_gravity_wave" : "awakening_system.rune_stone.rulers_attraction"), true);
-                return InteractionResultHolder.sidedSuccess(stack, level.isClientSide());
-            }
-
-            // Consumable skill unlock for the other runes:
-            if (!data.hasSkill(runeType.skillId)) {
-                data.unlockSkill(runeType.skillId);
-                data.enableSkill(runeType.skillId);
-                stack.shrink(1);
-                if (level instanceof ServerLevel sl) {
-                    sl.playSound(null, sp.getX(), sp.getY(), sp.getZ(), SoundEvents.AMETHYST_CLUSTER_BREAK, SoundSource.PLAYERS, 1.5F, 1.0F);
-                    sl.playSound(null, sp.getX(), sp.getY(), sp.getZ(), SoundEvents.PLAYER_LEVELUP, SoundSource.PLAYERS, 1.2F, 1.4F);
-                    sl.sendParticles(ParticleTypes.ENCHANT, sp.getX(), sp.getY() + 1.0D, sp.getZ(), 60, 0.8D, 1.0D, 0.8D, 0.2D);
-                }
-                AwakeningSystemMod.notify(sp, "awakening_system.rune_stone.skill_awakened_title",
-                        "awakening_system.rune_stone.skill_awakened_msg",
-                        0xFF50FA7B,
-                        Component.translatable("awakening_system.rune_stone." + runeType.name().toLowerCase() + ".header").getString());
-                AwakeningSystemMod.sync(sp);
-                return InteractionResultHolder.sidedSuccess(stack, level.isClientSide());
-            } else {
-                sp.displayClientMessage(Component.translatable("awakening_system.rune_stone.already_known"), true);
-                return InteractionResultHolder.fail(stack);
-            }
+        if (!level.isClientSide()) {
+            player.displayClientMessage(Component.translatable("item.awakening_system.rune_stone.socket_hint"), true);
         }
-        return InteractionResultHolder.sidedSuccess(stack, level.isClientSide());
+        return InteractionResultHolder.pass(stack);
     }
 
     @Override

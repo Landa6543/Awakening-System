@@ -121,7 +121,6 @@ public class JiangshiEntity extends Monster {
         if (!this.level().isClientSide) {
             if (frenzyTicks > 0) frenzyTicks--;
 
-            // Mecánica de saltos rítmicos característicos
             if (this.onGround() && !this.isInWater()) {
                 LivingEntity target = this.getTarget();
                 boolean moving = target != null || this.getNavigation().isInProgress();
@@ -150,10 +149,9 @@ public class JiangshiEntity extends Monster {
 
     @Override
     public boolean hurt(DamageSource source, float amount) {
-        // Si recibe fuego, el talismán se quema y entra en frenesí
         if (!talismanBurned && (source.is(net.minecraft.tags.DamageTypeTags.IS_FIRE) || this.isOnFire())) {
             talismanBurned = true;
-            frenzyTicks = 200; // 10 segundos de frenesí
+            frenzyTicks = 200;
             this.playSound(SoundEvents.FIRECHARGE_USE, 1.2F, 1.4F);
             this.playSound(SoundEvents.ZOMBIE_VILLAGER_CONVERTED, 1.2F, 0.7F);
 
@@ -170,7 +168,6 @@ public class JiangshiEntity extends Monster {
     public boolean doHurtTarget(net.minecraft.world.entity.Entity target) {
         boolean hurt = super.doHurtTarget(target);
         if (hurt && target instanceof LivingEntity living) {
-            // Qi Cadavérico (Yin Chill): Lentitud y fatiga
             living.addEffect(new MobEffectInstance(MobEffects.MOVEMENT_SLOWDOWN, 100, 1));
             living.addEffect(new MobEffectInstance(MobEffects.DIG_SLOWDOWN, 100, 0));
             this.playSound(SoundEvents.PLAYER_ATTACK_CRIT, 1.2F, 0.7F);
@@ -203,7 +200,7 @@ public class JiangshiEntity extends Monster {
         ItemStack held = player.getItemInHand(hand);
         if (SystemItems.TAOIST_TALISMAN != null && SystemItems.TAOIST_TALISMAN.isBound() && held.is(SystemItems.TAOIST_TALISMAN.get())) {
             if (!this.level().isClientSide) {
-                applyTalismanSeal(200); // 10 seconds freeze
+                applyTalismanSeal(200);
                 if (!player.getAbilities().instabuild) {
                     held.shrink(1);
                 }

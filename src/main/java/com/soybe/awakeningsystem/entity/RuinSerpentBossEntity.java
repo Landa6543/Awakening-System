@@ -49,7 +49,7 @@ public class RuinSerpentBossEntity extends Monster {
             SynchedEntityData.defineId(RuinSerpentBossEntity.class, EntityDataSerializers.BOOLEAN);
 
     private final ServerBossEvent bossEvent = (ServerBossEvent) new ServerBossEvent(
-            Component.literal("§8§lSerpiente de las Ruinas §7- §6Excavador de La Sima"),
+            Component.translatable("boss.awakening_system.ruin_serpent.boss_bar"),
             BossEvent.BossBarColor.PURPLE,
             BossEvent.BossBarOverlay.NOTCHED_10
     ).setDarkenScreen(false);
@@ -60,7 +60,7 @@ public class RuinSerpentBossEntity extends Monster {
 
     public RuinSerpentBossEntity(EntityType<? extends Monster> entityType, Level level) {
         super(entityType, level);
-        this.setCustomName(Component.literal("§8§lSerpiente de las Ruinas"));
+        this.setCustomName(Component.translatable("boss.awakening_system.ruin_serpent.name"));
         this.setCustomNameVisible(true);
         this.setPersistenceRequired();
         this.xpReward = 800;
@@ -132,7 +132,6 @@ public class RuinSerpentBossEntity extends Monster {
                 }
 
                 if (burrowTimer <= 0) {
-                    // Erupción hacia la superficie
                     this.entityData.set(DATA_BURROWED, false);
                     if (target != null && target.isAlive()) {
                         this.setPos(target.getX(), target.getY(), target.getZ());
@@ -166,13 +165,11 @@ public class RuinSerpentBossEntity extends Monster {
 
         int choice = this.random.nextInt(2);
         if (choice == 0) {
-            // Excavación subterránea
             this.entityData.set(DATA_BURROWED, true);
-            this.burrowTimer = 45; // 2.2 segundos bajo tierra
+            this.burrowTimer = 45;
             sl.playSound(null, this.blockPosition(), SoundEvents.STONE_BREAK, SoundSource.HOSTILE, 2.0F, 0.8F);
             sl.sendParticles(ParticleTypes.CAMPFIRE_COSY_SMOKE, this.getX(), this.getY() + 0.2D, this.getZ(), 20, 1.0D, 0.2D, 1.0D, 0.05D);
         } else {
-            // Barrido de cola y fango lodoso
             sl.playSound(null, this.blockPosition(), SoundEvents.PLAYER_ATTACK_SWEEP, SoundSource.HOSTILE, 2.0F, 0.7F);
             AABB sweepArea = this.getBoundingBox().inflate(4.0D, 2.0D, 4.0D);
             for (LivingEntity nearby : sl.getEntitiesOfClass(LivingEntity.class, sweepArea, e -> e != this && e.isAlive())) {
@@ -186,7 +183,7 @@ public class RuinSerpentBossEntity extends Monster {
     @Override
     public boolean hurt(DamageSource source, float amount) {
         if (isBurrowed()) {
-            return false; // Invulnerable bajo tierra
+            return false;
         }
         return super.hurt(source, amount);
     }
@@ -205,12 +202,12 @@ public class RuinSerpentBossEntity extends Monster {
                     data.addMora(60000);
                     data.addPrimogems(35);
                     com.soybe.awakeningsystem.AwakeningSystemMod.sync(sp);
-                    sp.displayClientMessage(Component.literal("§8§l✦ ¡SERPIENTE DE LAS RUINAS DERROTADA! §eHas ganado §6+60,000 Mora §ey §b+35 Protogemas§e."), false);
+                    sp.displayClientMessage(Component.translatable("boss.awakening_system.ruin_serpent.defeated_teyvat"), false);
                 } else {
                     if (SystemItems.AWAKENING_COIN.isBound()) {
                         sp.addItem(new ItemStack(SystemItems.AWAKENING_COIN.get(), 24));
                     }
-                    sp.displayClientMessage(Component.literal("§8§l✦ ¡SERPIENTE DE LAS RUINAS DERROTADA! §6+24 Monedas de Despertar§e."), false);
+                    sp.displayClientMessage(Component.translatable("boss.awakening_system.ruin_serpent.defeated_vanilla"), false);
                 }
             }
 

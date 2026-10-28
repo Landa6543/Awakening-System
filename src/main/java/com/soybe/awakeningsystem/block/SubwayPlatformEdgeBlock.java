@@ -35,7 +35,6 @@ public class SubwayPlatformEdgeBlock extends HorizontalDirectionalBlock {
 
     @Override
     public BlockState getStateForPlacement(BlockPlaceContext context) {
-        // Al colocar el borde mirando hacia la vía, se orienta en la dirección que mira el jugador
         return this.defaultBlockState().setValue(FACING, context.getHorizontalDirection());
     }
 }

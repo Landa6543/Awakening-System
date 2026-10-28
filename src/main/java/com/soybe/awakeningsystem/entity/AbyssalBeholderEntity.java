@@ -136,16 +136,21 @@ public class AbyssalBeholderEntity extends Monster {
 
     @Override
     protected void checkFallDamage(double y, boolean onGround, BlockState state, BlockPos pos) {
-        // Inmune total a caída
     }
 
     @Override
     public void tick() {
         super.tick();
         this.setNoGravity(true);
+        // Sensor de techo: Si hay un bloque solido encima, desciende para no atorarse en techos
+        if (!this.level().isClientSide() && this.tickCount % 4 == 0) {
+            BlockPos above = this.blockPosition().above(2);
+            if (!this.level().isEmptyBlock(above)) {
+                this.setDeltaMovement(this.getDeltaMovement().x, -0.15D, this.getDeltaMovement().z);
+            }
+        }
 
         if (this.level().isClientSide()) {
-            // Estela de partículas detrás del ojo en vuelo
             if (this.random.nextFloat() < 0.45F || this.isCharging()) {
                 Vec3 back = this.getLookAngle().reverse();
                 double px = this.getX() + back.x * 1.5D + (this.random.nextDouble() - 0.5D) * 0.8D;
@@ -195,27 +200,23 @@ public class AbyssalBeholderEntity extends Monster {
 
     @Override
     protected SoundEvent getAmbientSound() {
-        return ModSounds.ABYSSAL_BEHOLDER_AMBIENT.get();
+        return SoundEvents.ELDER_GUARDIAN_AMBIENT;
     }
 
     @Override
     protected SoundEvent getHurtSound(DamageSource damageSource) {
-        return ModSounds.ABYSSAL_BEHOLDER_HURT.get();
+        return SoundEvents.ELDER_GUARDIAN_HURT;
     }
 
     @Override
     protected SoundEvent getDeathSound() {
-        return ModSounds.ABYSSAL_BEHOLDER_DEATH.get();
+        return SoundEvents.ELDER_GUARDIAN_DEATH;
     }
 
     @Override
     protected float getSoundVolume() {
         return 1.2F;
     }
-
-    // ==========================================================
-    // IA: CONTROL DE VUELO REAL 3D EN EL CIELO
-    // ==========================================================
 
     static class CthulhuEyeFlightMoveControl extends MoveControl {
         private final AbyssalBeholderEntity beholder;
@@ -245,11 +246,9 @@ public class AbyssalBeholderEntity extends Monster {
                         speed *= 1.8D;
                     }
 
-                    // Aceleración 3D fluida y reactiva
                     Vec3 curMove = this.beholder.getDeltaMovement();
                     this.beholder.setDeltaMovement(curMove.add(dir.scale(speed * 0.35D)).scale(0.92D));
 
-                    // Rotación suave del ojo en 3D
                     float targetYaw = (float)(Mth.atan2(dir.z, dir.x) * (180F / (float)Math.PI)) - 90.0F;
                     this.beholder.setYRot(this.rotlerp(this.beholder.getYRot(), targetYaw, 18.0F));
                     this.beholder.yBodyRot = this.beholder.getYRot();
@@ -257,10 +256,6 @@ public class AbyssalBeholderEntity extends Monster {
             }
         }
     }
-
-    // ==========================================================
-    // IA: EMBESTIDA EN PICADA AÉREA (Estilo Eye of Cthulhu)
-    // ==========================================================
 
     static class CthulhuSwoopChargeGoal extends Goal {
         private final AbyssalBeholderEntity beholder;
@@ -288,7 +283,6 @@ public class AbyssalBeholderEntity extends Monster {
             this.beholder.setCharging(true);
             this.beholder.playSound(ModSounds.ABYSSAL_BEHOLDER_ROAR.get(), 1.6F, 1.0F);
 
-            // Vector directo desde el aire hacia la posición del objetivo
             Vec3 start = this.beholder.position();
             Vec3 dest = this.target.position().add(0, this.target.getBbHeight() * 0.5D, 0);
             this.chargeDirection = dest.subtract(start).normalize();
@@ -311,12 +305,10 @@ public class AbyssalBeholderEntity extends Monster {
             this.chargeTicks++;
 
             if (this.chargeTicks <= 12) {
-                // Retroceso preparatorio en el aire (Windup)
                 Vec3 back = this.chargeDirection.reverse().scale(0.35D);
                 this.beholder.setDeltaMovement(back.x, back.y + 0.1D, back.z);
                 this.beholder.getLookControl().setLookAt(this.target, 40.0F, 40.0F);
             } else if (this.chargeTicks <= 36) {
-                // Embestida supersónica en picada
                 double swoopSpeed = 1.35D;
                 this.beholder.setDeltaMovement(
                         this.chargeDirection.x * swoopSpeed,
@@ -324,7 +316,6 @@ public class AbyssalBeholderEntity extends Monster {
                         this.chargeDirection.z * swoopSpeed
                 );
 
-                // Colisión e impacto masivo
                 AABB hitBox = this.beholder.getBoundingBox().inflate(1.2D);
                 for (LivingEntity victim : this.beholder.level().getEntitiesOfClass(LivingEntity.class, hitBox)) {
                     if (victim != this.beholder && victim.isAlive() && !victim.isAlliedTo(this.beholder)) {
@@ -336,18 +327,13 @@ public class AbyssalBeholderEntity extends Monster {
                     }
                 }
             } else {
-                // Recuperación de altitud hacia el cielo
-                this.beholder.setDeltaMovement(this.beholder.getDeltaMovement().scale(0.8D).add(0, 0.45D, 0));
+                this.beholder.setDeltaMovement(this.beholder.getDeltaMovement().scale(0.85D));
                 if (this.chargeTicks >= 45) {
                     this.stop();
                 }
             }
         }
     }
-
-    // ==========================================================
-    // IA: ORBITA EN EL CIELO (Vuelo aéreo superior)
-    // ==========================================================
 
     static class CthulhuAerialOrbitGoal extends Goal {
         private final AbyssalBeholderEntity beholder;
@@ -370,11 +356,10 @@ public class AbyssalBeholderEntity extends Monster {
 
             this.beholder.getLookControl().setLookAt(target, 25.0F, 25.0F);
 
-            // Altitud en el cielo: 6 a 12 bloques por encima del suelo/jugador
-            double targetSkyY = target.getY() + 7.5D + Math.sin(this.beholder.tickCount * 0.05D) * 2.5D;
+            double targetSkyY = target.getY() + 1.8D + Math.sin(this.beholder.tickCount * 0.08D) * 0.7D;
 
             double angle = (this.beholder.tickCount * 0.045D);
-            double orbitRadius = 12.0D;
+            double orbitRadius = 4.5D;
             double ox = Math.cos(angle) * orbitRadius;
             double oz = Math.sin(angle) * orbitRadius;
 
@@ -386,10 +371,6 @@ public class AbyssalBeholderEntity extends Monster {
             );
         }
     }
-
-    // ==========================================================
-    // IA: VUELO LIBRE EN EL CIELO CUANDO ESTÁ INACTIVO
-    // ==========================================================
 
     static class CthulhuSkyWanderGoal extends Goal {
         private final AbyssalBeholderEntity beholder;
@@ -421,20 +402,15 @@ public class AbyssalBeholderEntity extends Monster {
             double tx = this.beholder.getX() + (rand.nextDouble() * 2.0D - 1.0D) * 16.0D;
             double tz = this.beholder.getZ() + (rand.nextDouble() * 2.0D - 1.0D) * 16.0D;
 
-            // Mantenerse a 8-15 bloques sobre el suelo
             BlockPos ground = BlockPos.containing(tx, this.beholder.getY(), tz);
             while (ground.getY() > this.beholder.level().getMinBuildHeight() && this.beholder.level().isEmptyBlock(ground)) {
                 ground = ground.below();
             }
-            double skyY = ground.getY() + 9.0D + rand.nextDouble() * 6.0D;
+            double skyY = ground.getY() + 2.2D + rand.nextDouble() * 1.5D;
 
             this.beholder.getMoveControl().setWantedPosition(tx, skyY, tz, 0.95D);
         }
     }
-
-    // ==========================================================
-    // IA: PULSO DE GRAVEDAD REPULSIVA
-    // ==========================================================
 
     static class GravityPulseGoal extends Goal {
         private final AbyssalBeholderEntity beholder;
@@ -449,7 +425,7 @@ public class AbyssalBeholderEntity extends Monster {
             if (this.beholder.pulseCooldown > 0 || this.beholder.isCharging()) return false;
             LivingEntity target = this.beholder.getTarget();
             if (target == null || !target.isAlive()) return false;
-            return this.beholder.distanceToSqr(target) <= 25.0D; // ~5 bloques
+            return this.beholder.distanceToSqr(target) <= 25.0D;
         }
 
         @Override
@@ -478,10 +454,6 @@ public class AbyssalBeholderEntity extends Monster {
             }
         }
     }
-
-    // ==========================================================
-    // IA: RAYO ANULADOR DEL ABISMO (Canalización de Rayo)
-    // ==========================================================
 
     static class AbyssalNullRayGoal extends Goal {
         private final AbyssalBeholderEntity beholder;

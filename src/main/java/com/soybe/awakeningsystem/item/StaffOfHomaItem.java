@@ -40,27 +40,25 @@ public class StaffOfHomaItem extends SwordItem implements AwakeningWeaponItem {
             long cdUntil = sp.getPersistentData().getLong("homa_skill_cd");
             if (gameTime < cdUntil) {
                 long sec = (cdUntil - gameTime) / 20;
-                sp.displayClientMessage(Component.literal("§c§l✦ Báculo de Homa en enfriamiento: §f" + sec + "s"), true);
+                sp.displayClientMessage(Component.translatableWithFallback("item.awakening_system.staff_of_homa.cd", "§c§l✦ Staff of Homa on cooldown: §f%ss", sec), true);
                 return InteractionResultHolder.fail(stack);
             }
 
-            sp.getPersistentData().putLong("homa_skill_cd", gameTime + 280L); // 14s cooldown
+            sp.getPersistentData().putLong("homa_skill_cd", gameTime + 280L);
 
-            // Sacrifica 15% de salud actual para activar Mariposa del Averno
             float currentHp = sp.getHealth();
             float sacrifice = currentHp * 0.15F;
             if (currentHp > 4.0F) {
                 sp.setHealth(Math.max(2.0F, currentHp - sacrifice));
             }
 
-            sp.addEffect(new MobEffectInstance(MobEffects.DAMAGE_BOOST, 240, 2, false, true, true)); // Strength III
+            sp.addEffect(new MobEffectInstance(MobEffects.DAMAGE_BOOST, 240, 2, false, true, true));
             sp.addEffect(new MobEffectInstance(MobEffects.FIRE_RESISTANCE, 400, 0, false, false, false));
             sp.addEffect(new MobEffectInstance(MobEffects.MOVEMENT_SPEED, 240, 1, false, false, true));
 
             if (level instanceof ServerLevel sl) {
                 Vec3 look = sp.getLookAngle();
 
-                // 1. Sello arcano de llamas espectrales en el suelo
                 net.neoforged.neoforge.network.PacketDistributor.sendToPlayersNear(
                         sl, null, sp.getX(), sp.getY(), sp.getZ(), 64.0D,
                         new com.soybe.awakeningsystem.SpawnMagicCirclePayload(
@@ -78,7 +76,6 @@ public class StaffOfHomaItem extends SwordItem implements AwakeningWeaponItem {
 
                 float dmg = (float) (32.0D * WeaponLevelManager.getDamageMultiplier(stack));
 
-                // 2. Creciente de Fuego Espectral de la Mariposa del Averno (SlashWaveEntity Ígnea)
                 SlashWaveEntity pyroSlash = new SlashWaveEntity(sl, sp, SlashWaveEntity.TYPE_PYRO_FLAME, dmg, 4.6F, 1.6F, 0.0F, 26, 10);
                 pyroSlash.setDeltaMovement(look.scale(2.3D));
                 sl.addFreshEntity(pyroSlash);
@@ -86,7 +83,7 @@ public class StaffOfHomaItem extends SwordItem implements AwakeningWeaponItem {
                 WeaponLevelManager.addExp(stack, 35, sp);
             }
 
-            sp.displayClientMessage(Component.literal("§6§l✦ [BÁCULO DE HOMA] §c§l¡MARIPOSA DEL AVERNO DESATADA! §e(Tajo ígneo espectral +45% ATQ)"), true);
+            sp.displayClientMessage(Component.translatableWithFallback("item.awakening_system.staff_of_homa.msg", "§6§l✦ [STAFF OF HOMA] §c§lNETHERWORLD BUTTERFLY UNLEASHED! §e(Spectral flame slash +45% ATK)"), true);
             return InteractionResultHolder.consume(stack);
         }
         return InteractionResultHolder.sidedSuccess(stack, level.isClientSide());
@@ -95,7 +92,6 @@ public class StaffOfHomaItem extends SwordItem implements AwakeningWeaponItem {
     @Override
     public boolean hurtEnemy(ItemStack stack, LivingEntity target, LivingEntity attacker) {
         if (attacker instanceof Player player) {
-            // Pasiva: Mariposa del Averno (si la salud está bajo el 50%, inflige daño ígneo adicional masivo)
             float hpRatio = player.getHealth() / player.getMaxHealth();
             if (hpRatio <= 0.50F) {
                 target.setRemainingFireTicks(120);
@@ -105,7 +101,6 @@ public class StaffOfHomaItem extends SwordItem implements AwakeningWeaponItem {
                     sl.sendParticles(ParticleTypes.LAVA, target.getX(), target.getY() + 1.0D, target.getZ(), 3, 0.2D, 0.2D, 0.2D, 0.05D);
                 }
             }
-            // Roba 3% de vida al impactar
             player.heal(player.getMaxHealth() * 0.03F);
         }
         return super.hurtEnemy(stack, target, attacker);
@@ -113,12 +108,12 @@ public class StaffOfHomaItem extends SwordItem implements AwakeningWeaponItem {
 
     @Override
     public void appendHoverText(ItemStack stack, TooltipContext context, List<Component> tooltip, TooltipFlag flag) {
-        tooltip.add(Component.literal("§6⭐⭐⭐⭐⭐ [Arma de Asta Legendaria 5★]").withStyle(ChatFormatting.GOLD));
-        tooltip.add(Component.literal("§7El legendario cetro de Hu Tao utilizado para purificar las almas.").withStyle(ChatFormatting.GRAY));
-        tooltip.add(Component.literal("§c▸ Habilidad: Guía del Más Allá (Clic derecho / ~)").withStyle(ChatFormatting.RED));
-        tooltip.add(Component.literal("  §7Sacrifica 15% HP para desatar Fuerza III y llamas fantasmales por 12s.").withStyle(ChatFormatting.DARK_GRAY));
-        tooltip.add(Component.literal("§6▸ Pasiva: Mariposa del Averno").withStyle(ChatFormatting.GOLD));
-        tooltip.add(Component.literal("  §7Al tener menos del 50% HP, los golpes incineran e infligen daño ígneo extra.").withStyle(ChatFormatting.DARK_GRAY));
-        tooltip.add(Component.literal("  §7Restaura 3% de Vida Máxima en cada impacto.").withStyle(ChatFormatting.DARK_GRAY));
+        tooltip.add(Component.translatable("item.awakening_system.staff_of_homa.badge").withStyle(ChatFormatting.GOLD));
+        tooltip.add(Component.translatable("item.awakening_system.staff_of_homa.desc").withStyle(ChatFormatting.GRAY));
+        tooltip.add(Component.translatable("item.awakening_system.staff_of_homa.active.title").withStyle(ChatFormatting.RED));
+        tooltip.add(Component.translatable("item.awakening_system.staff_of_homa.active.desc").withStyle(ChatFormatting.DARK_GRAY));
+        tooltip.add(Component.translatable("item.awakening_system.staff_of_homa.passive.title").withStyle(ChatFormatting.GOLD));
+        tooltip.add(Component.translatable("item.awakening_system.staff_of_homa.passive.desc1").withStyle(ChatFormatting.DARK_GRAY));
+        tooltip.add(Component.translatable("item.awakening_system.staff_of_homa.passive.desc2").withStyle(ChatFormatting.DARK_GRAY));
     }
 }

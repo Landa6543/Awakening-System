@@ -54,7 +54,7 @@ public class AzhdahaBossEntity extends Monster {
             SynchedEntityData.defineId(AzhdahaBossEntity.class, EntityDataSerializers.INT);
 
     private final ServerBossEvent bossEvent = (ServerBossEvent) new ServerBossEvent(
-            Component.literal("§6§lAzhdaha §7- §eSeñor de los Dragartos y Dragón Terrestre Sellado"),
+            Component.translatable("boss.awakening_system.azhdaha.boss_bar"),
             BossEvent.BossBarColor.YELLOW,
             BossEvent.BossBarOverlay.NOTCHED_10
     ).setDarkenScreen(false);
@@ -68,7 +68,7 @@ public class AzhdahaBossEntity extends Monster {
     public AzhdahaBossEntity(EntityType<? extends Monster> entityType, Level level) {
         super(entityType, level);
         this.xpReward = 500;
-        this.setCustomName(Component.literal("§6§lAzhdaha"));
+        this.setCustomName(Component.translatable("boss.awakening_system.azhdaha.name"));
         this.setCustomNameVisible(true);
     }
 
@@ -97,7 +97,7 @@ public class AzhdahaBossEntity extends Monster {
     public void setInfused(boolean infused) {
         this.entityData.set(DATA_INFUSED, infused);
         if (infused) {
-            bossEvent.setName(Component.literal("§c§lAzhdaha §7- §6Furia Primordial de la Tierra"));
+            bossEvent.setName(Component.translatable("boss.awakening_system.azhdaha.phase2"));
             bossEvent.setColor(BossEvent.BossBarColor.RED);
             this.getAttribute(Attributes.ATTACK_DAMAGE).setBaseValue(34.0D);
             this.getAttribute(Attributes.MOVEMENT_SPEED).setBaseValue(0.26D);
@@ -138,7 +138,6 @@ public class AzhdahaBossEntity extends Monster {
         setInfused(true);
 
         if (this.level() instanceof ServerLevel sl) {
-            // Rugido y temblor sísmico masivo
             sl.playSound(null, this.blockPosition(), SoundEvents.ENDER_DRAGON_GROWL, SoundSource.HOSTILE, 2.5F, 0.6F);
             sl.playSound(null, this.blockPosition(), SoundEvents.GENERIC_EXPLODE.value(), SoundSource.HOSTILE, 2.0F, 0.8F);
 
@@ -147,7 +146,7 @@ public class AzhdahaBossEntity extends Monster {
 
             for (Player p : sl.players()) {
                 if (p.distanceToSqr(this) < 3600.0D) {
-                    p.displayClientMessage(Component.literal("§6§lAzhdaha: §c\"¡La arrogancia de los mortales sacudirá los cimientos de la tierra!\""), false);
+                    p.displayClientMessage(Component.translatable("boss.awakening_system.azhdaha.intro"), false);
                 }
             }
         }
@@ -159,7 +158,6 @@ public class AzhdahaBossEntity extends Monster {
 
         bossEvent.setProgress(this.getHealth() / this.getMaxHealth());
 
-        // Manejo de animaciones
         if (animTicks > 0) {
             animTicks--;
             if (animTicks <= 0) {
@@ -168,7 +166,6 @@ public class AzhdahaBossEntity extends Monster {
         }
 
         if (this.level().isClientSide) {
-            // Partículas de tierra o magma alrededor del cuerpo
             if (this.random.nextInt(3) == 0) {
                 this.level().addParticle(new BlockParticleOption(ParticleTypes.BLOCK, Blocks.COARSE_DIRT.defaultBlockState()),
                         this.getRandomX(1.8D), this.getY() + 0.2D, this.getRandomZ(1.8D), 0, 0.1D, 0);
@@ -188,25 +185,22 @@ public class AzhdahaBossEntity extends Monster {
         rockFallCooldown--;
         tailSwipeCooldown--;
 
-        // 1. Pisoteo Sísmico (Seismic Slam)
         if (slamCooldown <= 0 && distSq < 144.0D) {
             slamCooldown = isInfused() ? 70 : 100;
             performSeismicSlam();
             return;
         }
 
-        // 2. Caída de Rocas del Techo (Rock Avalanche)
         if (rockFallCooldown <= 0 && distSq > 36.0D) {
             rockFallCooldown = isInfused() ? 120 : 160;
             performRockFall(target);
             return;
         }
 
-        // 3. Barrido de Cola (Tail Swipe si el jugador intenta flanquearlo)
         if (tailSwipeCooldown <= 0 && distSq < 64.0D) {
             Vec3 toTarget = target.position().subtract(this.position()).normalize();
             double dot = toTarget.dot(this.getLookAngle());
-            if (dot < -0.2D) { // Está detrás
+            if (dot < -0.2D) {
                 tailSwipeCooldown = 60;
                 performTailSwipe(target);
             }
@@ -216,13 +210,12 @@ public class AzhdahaBossEntity extends Monster {
     private void performSeismicSlam() {
         if (!(this.level() instanceof ServerLevel sl)) return;
 
-        setAttackAnim(1); // Slam anim
+        setAttackAnim(1);
         animTicks = 25;
 
         this.playSound(SoundEvents.ANVIL_LAND, 2.0F, 0.5F);
         this.playSound(SoundEvents.GENERIC_EXPLODE.value(), 1.8F, 0.7F);
 
-        // Ondas de choque concéntricas en radio de 9 bloques
         for (int r = 3; r <= 9; r += 3) {
             for (int angle = 0; angle < 360; angle += 20) {
                 double rad = Math.toRadians(angle);
@@ -236,7 +229,6 @@ public class AzhdahaBossEntity extends Monster {
             }
         }
 
-        // Golpear a todas las entidades en rango y lanzarlas al aire
         List<LivingEntity> hit = sl.getEntitiesOfClass(LivingEntity.class, this.getBoundingBox().inflate(9.0D), e -> e != this);
         for (LivingEntity e : hit) {
             e.hurt(this.damageSources().mobAttack(this), isInfused() ? 28.0F : 20.0F);
@@ -253,14 +245,12 @@ public class AzhdahaBossEntity extends Monster {
 
         this.playSound(SoundEvents.WARDEN_ROAR, 2.0F, 0.7F);
         if (target instanceof ServerPlayer sp) {
-            sp.displayClientMessage(Component.literal("§6§l¡Cuidado! §eEl techo de la caverna se está derrumbando..."), true);
+            sp.displayClientMessage(Component.translatable("boss.awakening_system.azhdaha.ceiling_collapse"), true);
         }
 
-        // Marcas de caída de roca sobre la posición del objetivo
         Vec3 tPos = target.position();
         sl.sendParticles(ParticleTypes.CAMPFIRE_COSY_SMOKE, tPos.x, tPos.y + 0.1D, tPos.z, 25, 1.5D, 0.1D, 1.5D, 0.05D);
 
-        // Desprendimiento retardado
         sl.getServer().tell(new net.minecraft.server.TickTask(sl.getServer().getTickCount() + 20, () -> {
             if (!this.isAlive()) return;
             sl.playSound(null, tPos.x, tPos.y, tPos.z, SoundEvents.ZOMBIE_BREAK_WOODEN_DOOR, SoundSource.HOSTILE, 1.8F, 0.5F);
@@ -279,7 +269,7 @@ public class AzhdahaBossEntity extends Monster {
     private void performTailSwipe(LivingEntity target) {
         if (!(this.level() instanceof ServerLevel sl)) return;
 
-        setAttackAnim(2); // Tail anim
+        setAttackAnim(2);
         animTicks = 20;
 
         this.playSound(SoundEvents.PLAYER_ATTACK_SWEEP, 2.0F, 0.8F);
@@ -307,18 +297,15 @@ public class AzhdahaBossEntity extends Monster {
 
             for (Player p : sl.players()) {
                 if (p.distanceToSqr(this) < 3600.0D) {
-                    p.displayClientMessage(Component.literal("§6§lAzhdaha: §f\"Morax... El rencor de la tierra nunca será olvidado...\""), false);
+                    p.displayClientMessage(Component.translatable("boss.awakening_system.azhdaha.defeat"), false);
                 }
             }
 
-            // Drops masivos de Jefe Semanal
             boolean isTeyvat = sl.dimension().equals(com.soybe.awakeningsystem.TeyvatWorldManager.TEYVAT_WORLD);
-            // 1. Protogemas (150) - Exclusivo Teyvat
             if (isTeyvat) {
                 spawnItem(sl, new ItemStack(SystemItems.PRIMOGEM.get(), 150));
             }
 
-            // 2. Mora (80,000) - Exclusivo Teyvat
             if (isTeyvat) {
                 if (SystemItems.MORA_BUNDLE.isBound()) {
                     spawnItem(sl, new ItemStack(SystemItems.MORA_BUNDLE.get(), 3));
@@ -331,18 +318,15 @@ public class AzhdahaBossEntity extends Monster {
                 }
             }
 
-            // 3. Destinos Entrelazados (2 tiradas de gacha)
             if (SystemItems.INTERTWINED_FATE.isBound()) {
                 spawnItem(sl, new ItemStack(SystemItems.INTERTWINED_FATE.get(), 2));
             }
 
-            // 4. Artefacto Dorado 5★ garantizado
             ItemStack artifact = createRandomGenshinArtifact();
             if (!artifact.isEmpty()) {
                 spawnItem(sl, artifact);
             }
 
-            // 5. Minerales ancestrales
             spawnItem(sl, new ItemStack(Items.DIAMOND, 2));
             spawnItem(sl, new ItemStack(Items.GOLD_INGOT, 10));
             spawnItem(sl, new ItemStack(Items.NETHERITE_SCRAP, 1));
@@ -370,7 +354,9 @@ public class AzhdahaBossEntity extends Monster {
                 GenshinArtifactItem chosen = arts.get(this.random.nextInt(arts.size()));
                 return new ItemStack(chosen);
             }
-        } catch (Exception ignored) {}
+        } catch (Exception e) {
+            AwakeningSystemMod.LOGGER.debug("Error choosing artifact drop for Azhdaha: {}", e.getMessage(), e);
+        }
         return ItemStack.EMPTY;
     }
 

@@ -53,7 +53,6 @@ public class MurimAlchemyScreen extends Screen {
         super.init();
         recipes.clear();
 
-        // 1. Píldora de Limpieza de Médula
         recipes.add(new AlchemyRecipe(
                 Component.translatable("awakening_system.alchemy.recipe.0.title"),
                 Component.translatable("awakening_system.alchemy.recipe.0.tier"),
@@ -65,7 +64,6 @@ public class MurimAlchemyScreen extends Screen {
                 0
         ));
 
-        // 2. Píldora del Dragón Naciente
         recipes.add(new AlchemyRecipe(
                 Component.translatable("awakening_system.alchemy.recipe.1.title"),
                 Component.translatable("awakening_system.alchemy.recipe.1.tier"),
@@ -77,7 +75,6 @@ public class MurimAlchemyScreen extends Screen {
                 1
         ));
 
-        // 3. Píldora de Ruptura de Reino
         recipes.add(new AlchemyRecipe(
                 Component.translatable("awakening_system.alchemy.recipe.2.title"),
                 Component.translatable("awakening_system.alchemy.recipe.2.tier"),
@@ -89,7 +86,6 @@ public class MurimAlchemyScreen extends Screen {
                 2
         ));
 
-        // 4. Elixir de la Tortuga Negra
         recipes.add(new AlchemyRecipe(
                 Component.translatable("awakening_system.alchemy.recipe.3.title"),
                 Component.translatable("awakening_system.alchemy.recipe.3.tier"),
@@ -101,7 +97,6 @@ public class MurimAlchemyScreen extends Screen {
                 3
         ));
 
-        // 5. Píldora del Escudo Celestial (Tribulación)
         recipes.add(new AlchemyRecipe(
                 Component.translatable("awakening_system.alchemy.recipe.4.title"),
                 Component.translatable("awakening_system.alchemy.recipe.4.tier"),
@@ -113,7 +108,6 @@ public class MurimAlchemyScreen extends Screen {
                 4
         ));
 
-        // 6. Píldora de Transformación del Alma
         recipes.add(new AlchemyRecipe(
                 Component.translatable("awakening_system.alchemy.recipe.5.title"),
                 Component.translatable("awakening_system.alchemy.recipe.5.tier"),
@@ -210,26 +204,21 @@ public class MurimAlchemyScreen extends Screen {
         int left = (this.width - GUI_WIDTH) / 2;
         int top = (this.height - GUI_HEIGHT) / 2;
 
-        // Marco exterior e interior
-        guiGraphics.fill(left - 2, top - 2, left + GUI_WIDTH + 2, top + GUI_HEIGHT + 2, 0xFF2A2012); // Borde oro antiguo
-        guiGraphics.fill(left, top, left + GUI_WIDTH, top + GUI_HEIGHT, 0xFA091412); // Fondo Jade oscuro
+        guiGraphics.fill(left - 2, top - 2, left + GUI_WIDTH + 2, top + GUI_HEIGHT + 2, 0xFF2A2012);
+        guiGraphics.fill(left, top, left + GUI_WIDTH, top + GUI_HEIGHT, 0xFA091412);
         guiGraphics.fill(left + 3, top + 3, left + GUI_WIDTH - 3, top + GUI_HEIGHT - 3, 0xEE0B1A17);
 
-        // Decoración de esquinas
         drawCornerOrnaments(guiGraphics, left, top, GUI_WIDTH, GUI_HEIGHT);
 
-        // Encabezado
         guiGraphics.drawCenteredString(this.font, Component.translatable("awakening_system.alchemy.header"), this.width / 2, top + 8, 0xFFFFFFFF);
         guiGraphics.drawCenteredString(this.font, Component.literal("§8§m━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"), this.width / 2, top + 19, 0xFF666666);
         guiGraphics.drawCenteredString(this.font, Component.translatable("awakening_system.alchemy.subtitle"), this.width / 2, top + 24, 0xFFA0D8EF);
 
-        // Botón cerrar '✕'
         int closeX = left + GUI_WIDTH - 16;
         int closeY = top + 7;
         boolean hoverClose = mX >= closeX && mX <= closeX + 10 && mY >= closeY && mY <= closeY + 10;
         guiGraphics.drawString(this.font, hoverClose ? "§c✕" : "§7✕", closeX, closeY, 0xFFFFFFFF, false);
 
-        // Banner de Estado del Fuego Espiritual
         int heatBannerY = top + 35;
         if (hasHeat) {
             guiGraphics.fill(left + 10, heatBannerY, left + GUI_WIDTH - 10, heatBannerY + 13, 0x551E5E2A);
@@ -245,7 +234,6 @@ public class MurimAlchemyScreen extends Screen {
         ItemStack hoveredStack = ItemStack.EMPTY;
         Component hoveredTooltip = null;
 
-        // Tarjetas de Recetas organizadas por columnas (Items | Info | Botón)
         int cardStartY = top + 50;
         int totalPages = Math.max(1, (int) Math.ceil((double) recipes.size() / RECIPES_PER_PAGE));
         int startIndex = currentPage * RECIPES_PER_PAGE;
@@ -260,42 +248,32 @@ public class MurimAlchemyScreen extends Screen {
 
             boolean canCraft = hasIngredients(player, r.recipeIndex);
 
-            // Fondo de la tarjeta
             int cardBg = canCraft && hasHeat ? 0x900E261F : 0x70081210;
             int cardBorder = canCraft && hasHeat ? 0xAA2ECC71 : 0x4033483E;
             guiGraphics.fill(cardX, cardY, cardX + cardW, cardY + cardH, cardBg);
             drawBoxOutline(guiGraphics, cardX, cardY, cardW, cardH, cardBorder);
 
-            // ==========================================
-            // COLUMNA 1: DIAGRAMA DE TRANSMUTACIÓN (Ítems)
-            // ==========================================
             int slotY = cardY + 14;
 
-            // Slot Ingrediente 1
             int slot1X = cardX + 8;
             guiGraphics.fill(slot1X, slotY, slot1X + 18, slotY + 18, 0x90000000);
             drawBoxOutline(guiGraphics, slot1X, slotY, 18, 18, 0x6033483E);
             guiGraphics.renderItem(r.in1, slot1X + 1, slotY + 1);
 
-            // Símbolo '+'
             guiGraphics.drawString(this.font, "§7+", slot1X + 21, slotY + 5, 0xFFFFFFFF, false);
 
-            // Slot Ingrediente 2
             int slot2X = slot1X + 30;
             guiGraphics.fill(slot2X, slotY, slot2X + 18, slotY + 18, 0x90000000);
             drawBoxOutline(guiGraphics, slot2X, slotY, 18, 18, 0x6033483E);
             guiGraphics.renderItem(r.in2, slot2X + 1, slotY + 1);
 
-            // Flecha '➔'
             guiGraphics.drawString(this.font, "§6➔", slot2X + 21, slotY + 5, 0xFFFFFFFF, false);
 
-            // Slot Píldora Resultante
             int slotOutX = slot2X + 34;
             guiGraphics.fill(slotOutX, slotY, slotOutX + 18, slotY + 18, 0x902A2000);
             drawBoxOutline(guiGraphics, slotOutX, slotY, 18, 18, 0xAAFFD700);
             guiGraphics.renderItem(r.output, slotOutX + 1, slotY + 1);
 
-            // Detección de hover para tooltips de ítems
             if (mX >= slot1X && mX <= slot1X + 18 && mY >= slotY && mY <= slotY + 18) {
                 hoveredStack = r.in1;
             } else if (mX >= slot2X && mX <= slot2X + 18 && mY >= slotY && mY <= slotY + 18) {
@@ -304,9 +282,6 @@ public class MurimAlchemyScreen extends Screen {
                 hoveredStack = r.output;
             }
 
-            // ==========================================
-            // COLUMNA 2: INFORMACIÓN Y EFECTOS
-            // ==========================================
             int infoX = cardX + 96;
             int btnW = 68;
             int btnH = 22;
@@ -331,9 +306,6 @@ public class MurimAlchemyScreen extends Screen {
             var d2Lines = this.font.split(r.descLine2, maxTextW);
             if (!d2Lines.isEmpty()) guiGraphics.drawString(this.font, d2Lines.get(0), infoX, cardY + 29, 0xFF88DDAA, false);
 
-            // ==========================================
-            // COLUMNA 3: BOTÓN DE REFINAR
-            // ==========================================
             boolean hoverBtn = mX >= btnX && mX <= btnX + btnW && mY >= btnY && mY <= btnY + btnH;
 
             if (!hasHeat) {
@@ -365,7 +337,6 @@ public class MurimAlchemyScreen extends Screen {
             }
         }
 
-        // Barra inferior de Navegación de Páginas
         int navY = top + 208;
         int btnNavW = 78;
         int btnNavH = 18;
@@ -378,27 +349,20 @@ public class MurimAlchemyScreen extends Screen {
         boolean hoverPrev = mX >= prevBtnX && mX <= prevBtnX + btnNavW && mY >= navY && mY <= navY + btnNavH;
         boolean hoverNext = mX >= nextBtnX && mX <= nextBtnX + btnNavW && mY >= navY && mY <= navY + btnNavH;
 
-        // Botón Anterior
         int prevBg = canPrev ? (hoverPrev ? 0xDD1B5E20 : 0xAA0E3E15) : 0x40202020;
         int prevBorder = canPrev ? (hoverPrev ? 0xFFFFD700 : 0xFF2ECC71) : 0x40444444;
         guiGraphics.fill(prevBtnX, navY, prevBtnX + btnNavW, navY + btnNavH, prevBg);
-        drawBoxOutline(guiGraphics, prevBtnX, navY, btnNavW, btnNavH, prevBorder);
-        guiGraphics.drawCenteredString(this.font, "§7◄ §fAnterior", prevBtnX + btnNavW / 2, navY + 5, canPrev ? 0xFFFFFFFF : 0xFF666666);
+        Component prevText = Component.translatable("awakening_system.screen.common.previous");
+        guiGraphics.drawCenteredString(this.font, prevText, prevBtnX + btnNavW / 2, navY + 5, canPrev ? 0xFFFFFFFF : 0xFF666666);
 
-        // Indicador de Página
-        String pageStr = "§ePágina §f" + (currentPage + 1) + " §7/ §f" + totalPages;
+        Component pageStr = Component.translatable("awakening_system.screen.common.page", currentPage + 1, totalPages);
         guiGraphics.drawCenteredString(this.font, pageStr, left + GUI_WIDTH / 2, navY + 5, 0xFFFFFFFF);
 
-        // Botón Siguiente
-        int nextBg = canNext ? (hoverNext ? 0xDD1B5E20 : 0xAA0E3E15) : 0x40202020;
-        int nextBorder = canNext ? (hoverNext ? 0xFFFFD700 : 0xFF2ECC71) : 0x40444444;
-        guiGraphics.fill(nextBtnX, navY, nextBtnX + btnNavW, navY + btnNavH, nextBg);
-        drawBoxOutline(guiGraphics, nextBtnX, navY, btnNavW, btnNavH, nextBorder);
-        guiGraphics.drawCenteredString(this.font, "§fSiguiente §7►", nextBtnX + btnNavW / 2, navY + 5, canNext ? 0xFFFFFFFF : 0xFF666666);
+        Component nextText = Component.translatable("awakening_system.screen.common.next");
+        guiGraphics.drawCenteredString(this.font, nextText, nextBtnX + btnNavW / 2, navY + 5, canNext ? 0xFFFFFFFF : 0xFF666666);
 
         guiGraphics.pose().popPose();
 
-        // Renderizado diferido de Tooltips
         if (!hoveredStack.isEmpty()) {
             guiGraphics.renderTooltip(this.font, hoveredStack, mouseX, mouseY);
         } else if (hoveredTooltip != null) {
@@ -414,7 +378,6 @@ public class MurimAlchemyScreen extends Screen {
             int left = (this.width - GUI_WIDTH) / 2;
             int top = (this.height - GUI_HEIGHT) / 2;
 
-            // Click en '✕'
             int closeX = left + GUI_WIDTH - 16;
             int closeY = top + 7;
             if (mouseX >= closeX && mouseX <= closeX + 10 && mouseY >= closeY && mouseY <= closeY + 10) {
@@ -422,7 +385,6 @@ public class MurimAlchemyScreen extends Screen {
                 return true;
             }
 
-            // Click en botones de Navegación de Páginas
             int navY = top + 208;
             int btnNavW = 78;
             int btnNavH = 18;
@@ -441,7 +403,6 @@ public class MurimAlchemyScreen extends Screen {
                 return true;
             }
 
-            // Click en botones Refinar
             Player player = Minecraft.getInstance().player;
             int cardStartY = top + 50;
             int startIndex = currentPage * RECIPES_PER_PAGE;
@@ -478,16 +439,12 @@ public class MurimAlchemyScreen extends Screen {
     private void drawCornerOrnaments(GuiGraphics guiGraphics, int x, int y, int w, int h) {
         int gold = 0xFFFFD700;
         int len = 8;
-        // Superior izquierda
         guiGraphics.fill(x + 1, y + 1, x + len, y + 2, gold);
         guiGraphics.fill(x + 1, y + 1, x + 2, y + len, gold);
-        // Superior derecha
         guiGraphics.fill(x + w - len, y + 1, x + w - 1, y + 2, gold);
         guiGraphics.fill(x + w - 2, y + 1, x + w - 1, y + len, gold);
-        // Inferior izquierda
         guiGraphics.fill(x + 1, y + h - 2, x + len, y + h - 1, gold);
         guiGraphics.fill(x + 1, y + h - len, x + 2, y + h - 1, gold);
-        // Inferior derecha
         guiGraphics.fill(x + w - len, y + h - 2, x + w - 1, y + h - 1, gold);
         guiGraphics.fill(x + w - 2, y + h - len, x + w - 1, y + h - 1, gold);
     }

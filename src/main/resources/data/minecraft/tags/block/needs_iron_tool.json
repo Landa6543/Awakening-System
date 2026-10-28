@@ -1,6 +1,9 @@
 {
   "replace": false,
   "values": [
+    "awakening_system:abyssal_stone_diamond_ore",
+    "awakening_system:abyssal_stone_gold_ore",
+    "awakening_system:abyssal_stone_redstone_ore",
     "awakening_system:primogem_ore",
     "awakening_system:deepslate_primogem_ore",
     "awakening_system:agnidus_agate_ore",

@@ -171,7 +171,6 @@ public class SpecterEntity extends Monster {
         super.aiStep();
 
         if (this.level().isClientSide) {
-            // Emisión de partículas elementales
             Element el = getElement();
             if (this.random.nextFloat() < (isEnraged() ? 0.6F : 0.25F)) {
                 switch (el) {
@@ -222,7 +221,6 @@ public class SpecterEntity extends Monster {
             Element el = getElement();
             sLevel.playSound(null, getX(), getY(), getZ(), SoundEvents.GENERIC_EXPLODE.value(), SoundSource.HOSTILE, 1.5F, 1.0F);
 
-            // Efecto AoE por elemento
             AABB area = this.getBoundingBox().inflate(4.0D);
             for (LivingEntity target : sLevel.getEntitiesOfClass(LivingEntity.class, area)) {
                 if (target == this) continue;
@@ -252,14 +250,15 @@ public class SpecterEntity extends Monster {
                 }
             }
 
-            // Drops
             Player nearestPlayer = sLevel.getNearestPlayer(this, 24.0D);
             if (nearestPlayer instanceof ServerPlayer sp) {
                 SystemEvents.data(sp).restoreMana(isEnraged() ? 35 : 20);
             }
 
-            ItemStack dropItem = new ItemStack(SystemItems.CRYSTAL_CORE.get(), 1);
-            this.spawnAtLocation(dropItem);
+            if (sLevel.dimension().equals(com.soybe.awakeningsystem.TeyvatWorldManager.TEYVAT_WORLD)) {
+                ItemStack dropItem = new ItemStack(SystemItems.CRYSTAL_CORE.get(), 1);
+                this.spawnAtLocation(dropItem);
+            }
         }
     }
 
@@ -297,8 +296,6 @@ public class SpecterEntity extends Monster {
             setEnraged(compound.getBoolean("Enraged"));
         }
     }
-
-    // --- Control de Vuelo y Objetivos ---
 
     static class SpecterMoveControl extends MoveControl {
         private final SpecterEntity specter;
@@ -374,7 +371,6 @@ public class SpecterEntity extends Monster {
             this.specter.getLookControl().setLookAt(target, 30.0F, 30.0F);
             double distSq = this.specter.distanceToSqr(target);
 
-            // Flotar a media distancia
             if (distSq > 100.0D) {
                 this.specter.getMoveControl().setWantedPosition(target.getX(), target.getY() + 2.5D, target.getZ(), 0.35D);
             } else if (distSq < 16.0D) {

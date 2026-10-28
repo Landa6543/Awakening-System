@@ -34,7 +34,6 @@ public class DragonNestBlockEntity extends BlockEntity {
         return this.eggVariant2;
     }
 
-    // Compatibilidad retrospectiva
     public int getEggVariant() {
         return this.eggVariant1;
     }
@@ -98,7 +97,6 @@ public class DragonNestBlockEntity extends BlockEntity {
         tag.putInt("EggCount", this.eggCount);
         tag.putInt("EggVariant1", this.eggVariant1);
         tag.putInt("EggVariant2", this.eggVariant2);
-        // Compatibilidad con versiones anteriores
         tag.putBoolean("HasEgg", this.eggCount > 0);
         tag.putInt("EggVariant", this.eggVariant1);
     }

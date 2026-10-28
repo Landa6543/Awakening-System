@@ -45,14 +45,12 @@ public class HoarfrostShardEntity extends ThrowableProjectile {
         lifeTicks++;
 
         if (this.level().isClientSide) {
-            // Estela de partículas de escarcha y copos de nieve
             double x = this.getX();
             double y = this.getY();
             double z = this.getZ();
             this.level().addParticle(ParticleTypes.SNOWFLAKE, x, y, z, 0.0D, 0.01D, 0.0D);
             this.level().addParticle(ParticleTypes.ITEM_SNOWBALL, x, y, z, 0.0D, 0.0D, 0.0D);
         } else {
-            // Persecución guiada suave hacia la víctima
             if (target != null && target.isAlive() && lifeTicks > 4) {
                 Vec3 targetPos = target.getEyePosition();
                 Vec3 dir = targetPos.subtract(this.position()).normalize();

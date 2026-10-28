@@ -67,16 +67,15 @@ public class SubwayGrabHandleBlock extends HorizontalDirectionalBlock {
             if (GRABBED_PLAYERS.containsKey(uuid) && GRABBED_PLAYERS.get(uuid).equals(pos)) {
                 GRABBED_PLAYERS.remove(uuid);
                 level.playSound(null, pos, SoundEvents.ARMOR_EQUIP_LEATHER.value(), SoundSource.PLAYERS, 0.8F, 1.0F);
-                player.displayClientMessage(Component.literal("§7[Metro] Has soltado el pasamanos."), true);
+                player.displayClientMessage(Component.translatable("block.awakening_system.subway_handle.released"), true);
                 return InteractionResult.CONSUME;
             }
 
-            // Anclar al jugador de pie directamente bajo el pasamanos
             GRABBED_PLAYERS.put(uuid, pos.immutable());
             player.teleportTo(pos.getX() + 0.5D, player.getY(), pos.getZ() + 0.5D);
             player.setDeltaMovement(0, 0, 0);
             level.playSound(null, pos, SoundEvents.ARMOR_EQUIP_LEATHER.value(), SoundSource.PLAYERS, 0.9F, 1.3F);
-            player.displayClientMessage(Component.literal("§b✦ [Metro de Seúl] §7Sujeto al pasamanos (de pie, inmune a inercias). Presiona Shift para soltar."), true);
+            player.displayClientMessage(Component.translatable("block.awakening_system.subway_handle.grabbed"), true);
         }
         return InteractionResult.sidedSuccess(level.isClientSide());
     }

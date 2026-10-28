@@ -1,7 +1,30 @@
 {
   "variants": {
-    "": {
+    "facing=up": {
       "model": "awakening_system:block/noctilucousjade"
+    },
+    "facing=down": {
+      "model": "awakening_system:block/noctilucousjade",
+      "x": 180
+    },
+    "facing=north": {
+      "model": "awakening_system:block/noctilucousjade",
+      "x": 90
+    },
+    "facing=south": {
+      "model": "awakening_system:block/noctilucousjade",
+      "x": 90,
+      "y": 180
+    },
+    "facing=west": {
+      "model": "awakening_system:block/noctilucousjade",
+      "x": 90,
+      "y": 270
+    },
+    "facing=east": {
+      "model": "awakening_system:block/noctilucousjade",
+      "x": 90,
+      "y": 90
     }
   }
 }

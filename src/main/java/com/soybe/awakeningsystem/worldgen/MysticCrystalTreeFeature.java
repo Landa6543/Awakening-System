@@ -28,19 +28,10 @@ public class MysticCrystalTreeFeature extends Feature<NoneFeatureConfiguration> 
         BlockPos origin = context.origin();
         RandomSource rand = context.random();
 
-        // 0. EXCLUSIÓN DE TEYVAT: Los árboles canónicos de Teyvat se generan proceduralmente
         if (level.getLevel().dimension().location().getPath().contains("teyvat")) {
             return false;
         }
 
-        if (level.getLevel().getServer() != null) {
-            var sData = com.soybe.awakeningsystem.world.SeriesStructureWorldGen.SeriesStructureData.get(level.getLevel().getServer());
-            if (sData.hasStructureNearby(origin, 45.0D)) {
-                return false;
-            }
-        }
-
-        // EXCLUSIÓN DEL SANTUARIO: Nunca generarse cerca del Gran Árbol del Mundo
         if (origin.getX() * origin.getX() + origin.getZ() * origin.getZ() < 130 * 130) {
             return false;
         }
@@ -48,7 +39,6 @@ public class MysticCrystalTreeFeature extends Feature<NoneFeatureConfiguration> 
         BlockPos ground = origin.below();
         BlockState groundState = level.getBlockState(ground);
 
-        // 1. Validación estricta de suelo natural
         boolean isNaturalSoil = groundState.is(BlockTags.DIRT)
                 || groundState.is(Blocks.GRASS_BLOCK)
                 || groundState.is(Blocks.DIRT)
@@ -60,7 +50,6 @@ public class MysticCrystalTreeFeature extends Feature<NoneFeatureConfiguration> 
 
         if (!isNaturalSoil) return false;
 
-        // 2. NUNCA sobre hojas, madera, raíces ni líquidos
         if (groundState.is(BlockTags.LEAVES)
                 || groundState.is(BlockTags.LOGS)
                 || groundState.getBlock() instanceof LeavesBlock
@@ -69,12 +58,10 @@ public class MysticCrystalTreeFeature extends Feature<NoneFeatureConfiguration> 
             return false;
         }
 
-        // 3. Origen libre
         if (!level.isEmptyBlock(origin) && !level.getBlockState(origin).canBeReplaced()) {
             return false;
         }
 
-        // 4. Despeje vertical de 16 bloques hacia arriba
         for (int dy = 1; dy <= 16; dy++) {
             BlockState above = level.getBlockState(origin.above(dy));
             if (above.is(BlockTags.LOGS) || above.is(BlockTags.LEAVES)) {
@@ -82,7 +69,6 @@ public class MysticCrystalTreeFeature extends Feature<NoneFeatureConfiguration> 
             }
         }
 
-        // 5. Despeje horizontal
         for (Direction d : Direction.Plane.HORIZONTAL) {
             for (int dist = 1; dist <= 3; dist++) {
                 BlockPos nearby = origin.relative(d, dist).above(2);
@@ -92,12 +78,11 @@ public class MysticCrystalTreeFeature extends Feature<NoneFeatureConfiguration> 
             }
         }
 
-        int height = 15 + rand.nextInt(10); // 15 a 24 bloques
+        int height = 15 + rand.nextInt(10);
         var trunkMat = SystemBlocks.MANA_WOOD_LOG.get().defaultBlockState();
         var foliagePrimary = SystemBlocks.MANA_WOOD_LEAVES.get().defaultBlockState().setValue(LeavesBlock.PERSISTENT, true);
         var foliageSecondary = SystemBlocks.MANA_WOOD_LEAVES.get().defaultBlockState().setValue(LeavesBlock.PERSISTENT, true);
 
-        // Tronco con curvatura o espiral mística suave anclado al suelo
         int curX = 0;
         int curZ = 0;
         for (int y = 0; y < height; y++) {
@@ -114,7 +99,6 @@ public class MysticCrystalTreeFeature extends Feature<NoneFeatureConfiguration> 
                 level.setBlock(tp.east().south(), trunkMat, 2);
             }
         }
-        // Anclar base
         for (int dx = 0; dx <= 1; dx++) {
             for (int dz = 0; dz <= 1; dz++) {
                 for (int dy = -1; dy >= -15; dy--) {
@@ -129,7 +113,6 @@ public class MysticCrystalTreeFeature extends Feature<NoneFeatureConfiguration> 
             }
         }
 
-        // Ramas espirituales y copa de cristal
         BlockPos topCenter = origin.offset(curX, height, curZ);
         int canopyR = 4 + rand.nextInt(3);
 
@@ -146,16 +129,6 @@ public class MysticCrystalTreeFeature extends Feature<NoneFeatureConfiguration> 
                             } else {
                                 level.setBlock(lp, (dx + dz + dy) % 2 == 0 ? foliagePrimary : foliageSecondary, 2);
                             }
-                        }
-                    }
-
-                    // Linternas de alma colgantes (SOLO si hay hojas/madera arriba)
-                    if (dist > 1.8 && dist < canopyR - 0.5 && rand.nextFloat() < 0.12F) {
-                        BlockPos hangBase = topCenter.offset(dx, -3, dz);
-                        BlockState above = level.getBlockState(hangBase.above());
-                        if ((above.is(BlockTags.LEAVES) || above.is(BlockTags.LOGS) || above.isSolid()) && level.isEmptyBlock(hangBase) && level.isEmptyBlock(hangBase.below())) {
-                            level.setBlock(hangBase, Blocks.CHAIN.defaultBlockState().setValue(ChainBlock.AXIS, Direction.Axis.Y), 2);
-                            level.setBlock(hangBase.below(), Blocks.SOUL_LANTERN.defaultBlockState().setValue(LanternBlock.HANGING, true), 2);
                         }
                     }
                 }

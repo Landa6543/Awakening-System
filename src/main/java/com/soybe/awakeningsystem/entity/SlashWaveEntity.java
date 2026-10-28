@@ -35,15 +35,17 @@ import java.util.Set;
  */
 public class SlashWaveEntity extends Projectile {
 
-    public static final int TYPE_DARK_VOID = 0;       // Elucidator / Shadow Daggers
-    public static final int TYPE_CRYSTAL_AQUA = 1;     // Dark Repulser
-    public static final int TYPE_SOLAR_LIGHT = 2;      // Lambent Light / Radiant Light
-    public static final int TYPE_CRIMSON_BLOOD = 3;    // La Doncella Transformed / Sky Demon
-    public static final int TYPE_SILVER_ROSE = 4;      // La Doncella Pure
-    public static final int TYPE_CHERRY_BLOSSOM = 5;   // Plum Blossom Sword
-    public static final int TYPE_COSMIC_AMETHYST = 6;  // Creator Claymore
-    public static final int TYPE_PYRO_FLAME = 7;       // Staff of Homa
-    public static final int TYPE_FROST_WIND = 8;       // Wolf's Gravestone
+    public static final int TYPE_DARK_VOID = 0;
+    public static final int TYPE_CRYSTAL_AQUA = 1;
+    public static final int TYPE_SOLAR_LIGHT = 2;
+    public static final int TYPE_CRIMSON_BLOOD = 3;
+    public static final int TYPE_SILVER_ROSE = 4;
+    public static final int TYPE_CHERRY_BLOSSOM = 5;
+    public static final int TYPE_COSMIC_AMETHYST = 6;
+    public static final int TYPE_PYRO_FLAME = 7;
+    public static final int TYPE_FROST_WIND = 8;
+    public static final int TYPE_CELESTIAL = 9;
+    public static final int TYPE_PRIMORDIAL_GENESIS = 10;
 
     private static final EntityDataAccessor<Integer> SLASH_TYPE =
             SynchedEntityData.defineId(SlashWaveEntity.class, EntityDataSerializers.INT);
@@ -135,14 +137,12 @@ public class SlashWaveEntity extends Projectile {
         Vec3 currentPos = this.position();
         Vec3 nextPos = currentPos.add(movement);
 
-        // Actualizar rotación hacia la dirección de movimiento si la velocidad es significativa
         if (movement.lengthSqr() > 0.01D) {
             double horiz = Math.sqrt(movement.x * movement.x + movement.z * movement.z);
             this.setYRot((float) (Math.atan2(movement.z, movement.x) * (180.0D / Math.PI)) - 90.0F);
             this.setXRot((float) (-(Math.atan2(movement.y, horiz) * (180.0D / Math.PI))));
         }
 
-        // Colisión con bloques (si impacta contra un bloque sólido grueso y no perfora bloques)
         BlockHitResult bhr = this.level().clip(new ClipContext(currentPos, nextPos,
                 ClipContext.Block.COLLIDER, ClipContext.Fluid.NONE, this));
         if (bhr.getType() != HitResult.Type.MISS) {
@@ -186,13 +186,10 @@ public class SlashWaveEntity extends Projectile {
 
             hitEntityIds.add(target.getId());
 
-            // Daño físico + perforación
             target.hurt(ds, dmg);
 
-            // Efectos según el tipo de corte
             applySlashEffect(target, owner);
 
-            // Sacudida cinemática de cámara en la vecindad
             if (this.level() instanceof ServerLevel sl) {
                 CameraShakePayload.sendToNearby(sl, target.getX(), target.getY(), target.getZ(), 28.0D, 0.45F, 7);
             }
@@ -230,7 +227,7 @@ public class SlashWaveEntity extends Projectile {
             case TYPE_CRIMSON_BLOOD -> {
                 target.addEffect(new MobEffectInstance(MobEffects.WITHER, 60, 1, false, true));
                 if (owner != null && owner.isAlive()) {
-                    owner.heal(getDamage() * 0.15F); // 15% Robo de Vida
+                    owner.heal(getDamage() * 0.15F);
                 }
                 this.playSound(SoundEvents.SWEET_BERRY_BUSH_PICK_BERRIES, 1.4F, 0.7F);
             }
@@ -259,6 +256,25 @@ public class SlashWaveEntity extends Projectile {
                 target.addEffect(new MobEffectInstance(MobEffects.MOVEMENT_SLOWDOWN, 80, 2, false, true));
                 this.playSound(SoundEvents.SNOW_GOLEM_SHOOT, 1.5F, 0.6F);
             }
+            case TYPE_CELESTIAL -> {
+                target.addEffect(new MobEffectInstance(MobEffects.GLOWING, 120, 0, false, true));
+                target.addEffect(new MobEffectInstance(MobEffects.LEVITATION, 20, 1, false, true));
+                if (owner != null && owner.isAlive()) {
+                    owner.addEffect(new MobEffectInstance(MobEffects.DAMAGE_RESISTANCE, 60, 0, false, true));
+                }
+                this.playSound(SoundEvents.BEACON_ACTIVATE, 1.2F, 1.8F);
+                this.playSound(SoundEvents.TRIDENT_THUNDER.value(), 1.0F, 1.6F);
+            }
+            case TYPE_PRIMORDIAL_GENESIS -> {
+                target.addEffect(new MobEffectInstance(MobEffects.WITHER, 80, 2, false, true));
+                target.addEffect(new MobEffectInstance(MobEffects.MOVEMENT_SLOWDOWN, 100, 3, false, true));
+                if (owner != null && owner.isAlive()) {
+                    owner.heal(getDamage() * 0.20F);
+                    owner.addEffect(new MobEffectInstance(MobEffects.REGENERATION, 60, 1, false, true));
+                }
+                this.playSound(SoundEvents.WARDEN_SONIC_BOOM, 1.0F, 1.5F);
+                this.playSound(SoundEvents.RESPAWN_ANCHOR_CHARGE, 1.3F, 1.2F);
+            }
             default -> this.playSound(SoundEvents.PLAYER_ATTACK_SWEEP, 1.2F, 1.2F);
         }
     }
@@ -280,7 +296,6 @@ public class SlashWaveEntity extends Projectile {
         Vec3 mov = this.getDeltaMovement();
         float w = getSlashWidth();
 
-        // Calcular vector lateral relativo
         Vec3 side = new Vec3(-mov.z, 0, mov.x).normalize().scale(w * 0.45D);
 
         for (int i = -2; i <= 2; i++) {
@@ -322,6 +337,16 @@ public class SlashWaveEntity extends Projectile {
                 }
                 case TYPE_FROST_WIND -> {
                     this.level().addParticle(ParticleTypes.SNOWFLAKE, px, py, pz, 0, 0.02D, 0);
+                }
+                case TYPE_CELESTIAL -> {
+                    this.level().addParticle(ParticleTypes.END_ROD, px, py, pz, 0, 0.03D, 0);
+                    this.level().addParticle(ParticleTypes.GLOW, px, py, pz, 0, 0.02D, 0);
+                    this.level().addParticle(ParticleTypes.FIREWORK, px, py, pz, 0, 0.01D, 0);
+                }
+                case TYPE_PRIMORDIAL_GENESIS -> {
+                    this.level().addParticle(ParticleTypes.PORTAL, px, py, pz, 0, 0.03D, 0);
+                    this.level().addParticle(ParticleTypes.SOUL_FIRE_FLAME, px, py, pz, 0, 0.02D, 0);
+                    this.level().addParticle(ParticleTypes.REVERSE_PORTAL, px, py, pz, 0, 0.02D, 0);
                 }
             }
         }

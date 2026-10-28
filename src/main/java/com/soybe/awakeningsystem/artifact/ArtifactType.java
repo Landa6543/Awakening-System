@@ -1,11 +1,11 @@
 package com.soybe.awakeningsystem.artifact;
 
 public enum ArtifactType {
-    FLOWER(0, "Flor de la Vida", "flower", "Vida Máxima", "+150 a +500 HP"),
-    PLUME(1, "Pluma de la Muerte", "plume", "Ataque Base", "+10 a +35 ATQ"),
-    SANDS(2, "Arenas del Eón", "sands", "Reloj de Eón", "+15% ATQ / Maná"),
-    GOBLET(3, "Cáliz de Eonothem", "goblet", "Cáliz Elemental", "+20% Daño Elemental"),
-    CIRCLET(4, "Tiara de Logos", "circlet", "Corona del Destino", "+12% Prob. Crítica / +30% Daño Crítico");
+    FLOWER(0, "Flower of Life", "flower", "Max Health", "+150 to +500 HP"),
+    PLUME(1, "Plume of Death", "plume", "Base Attack", "+10 to +35 ATK"),
+    SANDS(2, "Sands of Eon", "sands", "Aeon Clock", "+15% ATK / Mana"),
+    GOBLET(3, "Goblet of Eonothem", "goblet", "Elemental Goblet", "+20% Elemental DMG"),
+    CIRCLET(4, "Circlet of Logos", "circlet", "Crown of Destiny", "+12% CRIT Rate / +30% CRIT DMG");
 
     private final int slotIndex;
     private final String displayName;

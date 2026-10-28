@@ -79,10 +79,10 @@
     [],
     [
       "awakening_system:teyvat_hilichurl_camp",
+      "awakening_system:teyvat_regional_structure",
       "awakening_system:teyvat_shrine_of_depths",
       "awakening_system:teyvat_statue_of_the_seven",
-      "awakening_system:teyvat_teleport_waypoint",
-      "awakening_system:teyvat_regional_structure"
+      "awakening_system:teyvat_teleport_waypoint"
     ],
     [],
     [
@@ -92,10 +92,10 @@
     [],
     [],
     [
+      "minecraft:trees_snowy",
       "minecraft:freeze_top_layer",
       "minecraft:ice_patch",
-      "minecraft:ice_spike",
-      "minecraft:trees_snowy"
+      "minecraft:ice_spike"
     ],
     []
   ]

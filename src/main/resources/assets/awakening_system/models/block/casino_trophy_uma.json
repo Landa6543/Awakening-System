@@ -1,0 +1,145 @@
+{
+  "credit": "Awakening System Mod - UMA Derby Championship Trophy",
+  "textures": {
+    "particle": "awakening_system:block/casino_trophy_uma",
+    "trophy": "awakening_system:block/casino_trophy_uma"
+  },
+  "elements": [
+    {
+      "name": "base_pedestal",
+      "from": [ 4, 0, 4 ],
+      "to": [ 12, 2.5, 12 ],
+      "faces": {
+        "north": { "uv": [ 0, 0, 8, 4 ], "texture": "#trophy" },
+        "south": { "uv": [ 0, 0, 8, 4 ], "texture": "#trophy" },
+        "east":  { "uv": [ 0, 0, 8, 4 ], "texture": "#trophy" },
+        "west":  { "uv": [ 0, 0, 8, 4 ], "texture": "#trophy" },
+        "up":    { "uv": [ 0, 0, 8, 4 ], "texture": "#trophy" },
+        "down":  { "uv": [ 0, 0, 8, 4 ], "texture": "#trophy" }
+      }
+    },
+    {
+      "name": "plaque_front",
+      "from": [ 4.5, 0.4, 3.8 ],
+      "to": [ 11.5, 2.1, 4.0 ],
+      "faces": {
+        "north": { "uv": [ 0, 4, 6, 6 ], "texture": "#trophy" }
+      }
+    },
+    {
+      "name": "pedestal_step",
+      "from": [ 5.5, 2.5, 5.5 ],
+      "to": [ 10.5, 4.0, 10.5 ],
+      "faces": {
+        "north": { "uv": [ 0, 0, 5, 3 ], "texture": "#trophy" },
+        "south": { "uv": [ 0, 0, 5, 3 ], "texture": "#trophy" },
+        "east":  { "uv": [ 0, 0, 5, 3 ], "texture": "#trophy" },
+        "west":  { "uv": [ 0, 0, 5, 3 ], "texture": "#trophy" },
+        "up":    { "uv": [ 0, 0, 5, 4 ], "texture": "#trophy" },
+        "down":  { "uv": [ 0, 0, 5, 4 ], "texture": "#trophy" }
+      }
+    },
+    {
+      "name": "cup_stem",
+      "from": [ 7, 4.0, 7 ],
+      "to": [ 9, 6.5, 9 ],
+      "faces": {
+        "north": { "uv": [ 8, 0, 10, 3 ], "texture": "#trophy" },
+        "south": { "uv": [ 8, 0, 10, 3 ], "texture": "#trophy" },
+        "east":  { "uv": [ 8, 0, 10, 3 ], "texture": "#trophy" },
+        "west":  { "uv": [ 8, 0, 10, 3 ], "texture": "#trophy" },
+        "up":    { "uv": [ 8, 0, 10, 2 ], "texture": "#trophy" },
+        "down":  { "uv": [ 8, 0, 10, 2 ], "texture": "#trophy" }
+      }
+    },
+    {
+      "name": "cup_flare",
+      "from": [ 6, 6.5, 6 ],
+      "to": [ 10, 8.0, 10 ],
+      "faces": {
+        "north": { "uv": [ 8, 0, 12, 2 ], "texture": "#trophy" },
+        "south": { "uv": [ 8, 0, 12, 2 ], "texture": "#trophy" },
+        "east":  { "uv": [ 8, 0, 12, 2 ], "texture": "#trophy" },
+        "west":  { "uv": [ 8, 0, 12, 2 ], "texture": "#trophy" },
+        "up":    { "uv": [ 8, 0, 12, 4 ], "texture": "#trophy" },
+        "down":  { "uv": [ 8, 0, 12, 4 ], "texture": "#trophy" }
+      }
+    },
+    {
+      "name": "cup_bowl",
+      "from": [ 5, 8.0, 5 ],
+      "to": [ 11, 13.5, 11 ],
+      "faces": {
+        "north": { "uv": [ 8, 0, 14, 6 ], "texture": "#trophy" },
+        "south": { "uv": [ 8, 0, 14, 6 ], "texture": "#trophy" },
+        "east":  { "uv": [ 8, 0, 14, 6 ], "texture": "#trophy" },
+        "west":  { "uv": [ 8, 0, 14, 6 ], "texture": "#trophy" },
+        "up":    { "uv": [ 8, 0, 14, 6 ], "texture": "#trophy" },
+        "down":  { "uv": [ 8, 0, 14, 6 ], "texture": "#trophy" }
+      }
+    },
+    {
+      "name": "cup_rim",
+      "from": [ 4.7, 13.5, 4.7 ],
+      "to": [ 11.3, 14.5, 11.3 ],
+      "faces": {
+        "north": { "uv": [ 8, 0, 14, 1.5 ], "texture": "#trophy" },
+        "south": { "uv": [ 8, 0, 14, 1.5 ], "texture": "#trophy" },
+        "east":  { "uv": [ 8, 0, 14, 1.5 ], "texture": "#trophy" },
+        "west":  { "uv": [ 8, 0, 14, 1.5 ], "texture": "#trophy" },
+        "up":    { "uv": [ 8, 0, 14, 6 ], "texture": "#trophy" },
+        "down":  { "uv": [ 8, 0, 14, 6 ], "texture": "#trophy" }
+      }
+    },
+    {
+      "name": "handle_left",
+      "from": [ 3.5, 8.5, 7.5 ],
+      "to": [ 5.0, 13.0, 8.5 ],
+      "faces": {
+        "north": { "uv": [ 8, 0, 9.5, 5 ], "texture": "#trophy" },
+        "south": { "uv": [ 8, 0, 9.5, 5 ], "texture": "#trophy" },
+        "east":  { "uv": [ 8, 0, 9.5, 5 ], "texture": "#trophy" },
+        "west":  { "uv": [ 8, 0, 9.5, 5 ], "texture": "#trophy" },
+        "up":    { "uv": [ 8, 0, 9.5, 1 ], "texture": "#trophy" },
+        "down":  { "uv": [ 8, 0, 9.5, 1 ], "texture": "#trophy" }
+      }
+    },
+    {
+      "name": "handle_right",
+      "from": [ 11.0, 8.5, 7.5 ],
+      "to": [ 12.5, 13.0, 8.5 ],
+      "faces": {
+        "north": { "uv": [ 8, 0, 9.5, 5 ], "texture": "#trophy" },
+        "south": { "uv": [ 8, 0, 9.5, 5 ], "texture": "#trophy" },
+        "east":  { "uv": [ 8, 0, 9.5, 5 ], "texture": "#trophy" },
+        "west":  { "uv": [ 8, 0, 9.5, 5 ], "texture": "#trophy" },
+        "up":    { "uv": [ 8, 0, 9.5, 1 ], "texture": "#trophy" },
+        "down":  { "uv": [ 8, 0, 9.5, 1 ], "texture": "#trophy" }
+      }
+    },
+    {
+      "name": "horseshoe_crest",
+      "from": [ 6.5, 9.2, 4.7 ],
+      "to": [ 9.5, 12.2, 4.9 ],
+      "faces": {
+        "north": { "uv": [ 4, 8, 8, 12 ], "texture": "#trophy" }
+      }
+    },
+    {
+      "name": "laurel_left",
+      "from": [ 5.2, 8.8, 4.7 ],
+      "to": [ 6.5, 12.2, 4.9 ],
+      "faces": {
+        "north": { "uv": [ 0, 8, 2, 12 ], "texture": "#trophy" }
+      }
+    },
+    {
+      "name": "laurel_right",
+      "from": [ 9.5, 8.8, 4.7 ],
+      "to": [ 10.8, 12.2, 4.9 ],
+      "faces": {
+        "north": { "uv": [ 0, 8, 2, 12 ], "texture": "#trophy" }
+      }
+    }
+  ]
+}

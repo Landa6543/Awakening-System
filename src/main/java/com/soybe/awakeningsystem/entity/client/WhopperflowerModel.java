@@ -176,7 +176,6 @@ public class WhopperflowerModel<T extends WhopperflowerEntity> extends EntityMod
         this.rightArm.xRot = Mth.cos(limbSwing * 0.6662F + (float) Math.PI) * limbSwingAmount;
         this.leftArm.xRot = Mth.cos(limbSwing * 0.6662F) * limbSwingAmount;
 
-        // Balanceo sutil de la flor
         this.head.zRot = Mth.sin(ageInTicks * 0.08F) * 0.05F;
     }
 

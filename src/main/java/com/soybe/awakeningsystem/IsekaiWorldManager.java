@@ -45,28 +45,22 @@ public final class IsekaiWorldManager {
             return;
         }
 
-        // Si estaba en la Torre, remover sesion
         if (TowerManager.isInTower(player.getUUID())) {
             TowerManager.exitTowerToDimension(player, isekaiLevel, new BlockPos(0, YggdrasilTreeGenerator.BASE_Y + 1, 26));
         }
 
-        // Asegurar la generacion del Santuario y el Gran Arbol del Mundo solo si no existe
         ensureWorldTree(isekaiLevel);
 
-        // Teletransportar al mirador ceremonial del santuario frente al Arbol del Mundo (mirando al Norte hacia el arbol y el portal de retorno)
         player.teleportTo(isekaiLevel, 0.5D, YggdrasilTreeGenerator.BASE_Y + 1.0D, 26.0D, 180.0F, 0.0F);
 
-        // Sincronizar puertas dimensionales (incluyendo el portal de retorno del santuario)
         DungeonManager.syncRiftsToPlayer(player);
 
-        // Activar el protocolo de Actualizacion 2.0 del Sistema solo la primera vez (5 minutos = 6000 ticks)
         SystemData data = SystemEvents.data(player);
         if (!data.systemUpdated() && !data.isSystemUpdating()) {
             data.setSystemUpdating(true);
             data.setSystemUpdateRemainingTicks(5 * 60 * 20);
             AwakeningSystemMod.sync(player);
 
-            // Efectos cinematicos de inicio de actualizacion
             isekaiLevel.sendParticles(ParticleTypes.FLASH, 0.5D, YggdrasilTreeGenerator.BASE_Y + 2.0D, 26.0D, 6, 0, 0, 0, 0);
             isekaiLevel.sendParticles(ParticleTypes.END_ROD, 0.5D, YggdrasilTreeGenerator.BASE_Y + 1.5D, 26.0D, 120, 2.5D, 1.5D, 2.5D, 0.08D);
             isekaiLevel.sendParticles(ParticleTypes.PORTAL, 0.5D, YggdrasilTreeGenerator.BASE_Y + 1.5D, 26.0D, 80, 2.0D, 1.5D, 2.0D, 0.1D);
@@ -81,7 +75,6 @@ public final class IsekaiWorldManager {
 
             player.displayClientMessage(Component.translatable("awakening_system.hud.system_update_protocol_started"), true);
         } else {
-            // Ya actualizado previamente; efectos sutiles de llegada
             isekaiLevel.sendParticles(ParticleTypes.PORTAL, 0.5D, YggdrasilTreeGenerator.BASE_Y + 1.5D, 26.0D, 30, 1.0D, 0.5D, 1.0D, 0.05D);
             player.playNotifySound(ModSounds.GATE_TRAVEL.value(), SoundSource.PLAYERS, 0.8F, 0.85F);
             player.displayClientMessage(Component.translatable("awakening_system.dimension.isekai_welcome"), true);
@@ -114,7 +107,6 @@ public final class IsekaiWorldManager {
             return;
         }
 
-        // Cargar chunks esenciales alrededor de la meseta del Árbol (-4 a +4)
         for (int cx = -4; cx <= 4; cx++) {
             for (int cz = -4; cz <= 4; cz++) {
                 level.getChunk(cx, cz);
@@ -137,7 +129,6 @@ public final class IsekaiWorldManager {
         data.addCoins(145000);
         data.addExperience(25000);
 
-        // Desbloquear habilidades de series Isekai y Sistema 2.0
         data.unlockSkill("isekai_predator");
         data.unlockSkill("isekai_dimensional_slash");
         data.unlockSkill("isekai_dragon_roar");
@@ -162,7 +153,6 @@ public final class IsekaiWorldManager {
                 "awakening_system.tower.system_update_complete_desc",
                 0xFFFFD700);
 
-        // Reacciones de las 5 constelaciones y patrocinio masivo
         AwakeningSystemMod.notify(player, "awakening_system.tower.reaction_dokja_title", "awakening_system.tower.reaction_dokja_msg", 0xFFFFD700);
         AwakeningSystemMod.notify(player, "awakening_system.tower.reaction_dragon_title", "awakening_system.tower.reaction_dragon_msg", 0xFFFF5555);
         AwakeningSystemMod.notify(player, "awakening_system.tower.reaction_wukong_title", "awakening_system.tower.reaction_wukong_msg", 0xFF50FA7B);
@@ -178,7 +168,6 @@ public final class IsekaiWorldManager {
     public static void generateArrivalSanctuary(ServerLevel level, BlockPos plazaCenter) {
         int r = 6;
 
-        // Plataforma circular ceremonial
         for (int dx = -r; dx <= r; dx++) {
             for (int dz = -r; dz <= r; dz++) {
                 double dist = Math.sqrt(dx * dx + dz * dz);
@@ -189,7 +178,6 @@ public final class IsekaiWorldManager {
                     level.setBlock(p, mat.defaultBlockState(), 2);
                     level.setBlock(p.below(), Blocks.POLISHED_BLACKSTONE.defaultBlockState(), 2);
 
-                    // Despejar espacio de movimiento sobre la plataforma ceremonial
                     for (int h = 1; h <= 5; h++) {
                         BlockPos above = p.above(h);
                         if (!level.getBlockState(above).isAir()) {
@@ -200,7 +188,6 @@ public final class IsekaiWorldManager {
             }
         }
 
-        // Linternas marinas perimetrales
         for (int i = 0; i < 360; i += 45) {
             double rad = Math.toRadians(i);
             int px = (int) Math.round(Math.cos(rad) * 5.0D);
@@ -209,14 +196,12 @@ public final class IsekaiWorldManager {
             level.setBlock(plazaCenter.offset(px, 0, pz), Blocks.GOLD_BLOCK.defaultBlockState(), 2);
         }
 
-        // Construir el portal sagrado de Retorno al Overworld en las raíces de Yggdrasil (0, BASE_Y, 20)
         buildOverworldReturnGate(level, YggdrasilTreeGenerator.OVERWORLD_RETURN_GATE_POS);
     }
 
     public static void ensureSanctuaryPortals(ServerLevel level) {
         BlockPos overworldGate = YggdrasilTreeGenerator.OVERWORLD_RETURN_GATE_POS;
 
-        // Si falta el arco del portal al Overworld, regenerarlo
         if (!level.getBlockState(overworldGate.offset(2, 2, 0)).is(Blocks.CHISELED_QUARTZ_BLOCK)) {
             buildOverworldReturnGate(level, overworldGate);
         }
@@ -227,7 +212,6 @@ public final class IsekaiWorldManager {
         int cy = gateBase.getY();
         int cz = gateBase.getZ();
 
-        // 0. Despeje de seguridad total del volumen del portal contra rocas o escombros residuales
         for (int dx = -4; dx <= 4; dx++) {
             for (int dz = -3; dz <= 3; dz++) {
                 for (int dy = 1; dy <= 8; dy++) {
@@ -239,7 +223,6 @@ public final class IsekaiWorldManager {
             }
         }
 
-        // 1. Suelo ceremonial limpio del portal
         for (int dx = -2; dx <= 2; dx++) {
             for (int dz = -2; dz <= 2; dz++) {
                 BlockPos floorPos = new BlockPos(cx + dx, cy, cz + dz);
@@ -249,7 +232,6 @@ public final class IsekaiWorldManager {
             }
         }
 
-        // 2. Pilares del Torii Sagrado en X = -2 y X = +2
         for (int sign : new int[]{-2, 2}) {
             int px = cx + sign;
             level.setBlock(new BlockPos(px, cy + 1, cz), Blocks.GILDED_BLACKSTONE.defaultBlockState(), 2);
@@ -258,13 +240,11 @@ public final class IsekaiWorldManager {
             level.setBlock(new BlockPos(px, cy + 4, cz), Blocks.SEA_LANTERN.defaultBlockState(), 2);
         }
 
-        // 3. Dintel y remate del Torii a cy + 5 y cy + 6
         for (int dx = -3; dx <= 3; dx++) {
             level.setBlock(new BlockPos(cx + dx, cy + 5, cz), Blocks.QUARTZ_BLOCK.defaultBlockState(), 2);
             level.setBlock(new BlockPos(cx + dx, cy + 6, cz), Blocks.SMOOTH_QUARTZ_SLAB.defaultBlockState(), 2);
         }
 
-        // 4. Despejar completamente el vano interior del Torii para el portal estático
         for (int dx = -1; dx <= 1; dx++) {
             for (int h = 1; h <= 4; h++) {
                 BlockPos p = new BlockPos(cx + dx, cy + h, cz);
@@ -276,7 +256,6 @@ public final class IsekaiWorldManager {
     }
 
     public static void ensureSacredBiome(ServerLevel level) {
-        // Desactivado: El generador de dimension de ruido ya aplica el bioma correctamente
     }
 
     public static volatile boolean USE_PROCEDURAL_YGGDRASIL = true;
@@ -304,8 +283,6 @@ public final class IsekaiWorldManager {
      */
     public static void generateWorldTreeFromNBT(ServerLevel level) {
         try {
-            // 1. Cimentacion montanosa natural: rellena cualquier vacio/agua debajo del arbol
-            // y genera laderas suaves de cesped hacia el exterior para integracion total
             int treeRadius = 75;
             int blendRadius = 98;
             for (int dx = -blendRadius; dx <= blendRadius; dx++) {
@@ -325,7 +302,6 @@ public final class IsekaiWorldManager {
                     BlockPos surfPos = new BlockPos(dx, targetY, dz);
                     if (dist > treeRadius - 2) {
                         level.setBlock(surfPos, Blocks.GRASS_BLOCK.defaultBlockState(), 2);
-                        // Despejar aire arriba
                         for (int h = 1; h <= 8; h++) {
                             BlockPos above = surfPos.above(h);
                             if (!level.getBlockState(above).isAir()) {
@@ -334,7 +310,6 @@ public final class IsekaiWorldManager {
                         }
                     }
 
-                    // Rellenar solidamente hacia abajo para anclar al lecho continental
                     for (int y = targetY - 1; y >= 38; y--) {
                         BlockPos bp = new BlockPos(dx, y, dz);
                         BlockState existing = level.getBlockState(bp);
@@ -353,7 +328,6 @@ public final class IsekaiWorldManager {
                 }
             }
 
-            // 2. Colocacion de la estructura NBT oficial
             ResourceLocation templateId = ResourceLocation.fromNamespaceAndPath(AwakeningSystemMod.MOD_ID, "world_tree");
             StructureTemplateManager stm = level.getStructureManager();
             Optional<StructureTemplate> opt = stm.get(templateId);

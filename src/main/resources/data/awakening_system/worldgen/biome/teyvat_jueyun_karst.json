@@ -67,10 +67,10 @@
     [],
     [
       "awakening_system:teyvat_hilichurl_camp",
+      "awakening_system:teyvat_regional_structure",
       "awakening_system:teyvat_shrine_of_depths",
       "awakening_system:teyvat_statue_of_the_seven",
-      "awakening_system:teyvat_teleport_waypoint",
-      "awakening_system:teyvat_regional_structure"
+      "awakening_system:teyvat_teleport_waypoint"
     ],
     [],
     [],
@@ -78,10 +78,10 @@
     [],
     [
       "minecraft:patch_tall_grass",
-      "awakening_system:teyvat_sandbearer_tree",
       "minecraft:flower_flower_forest",
       "minecraft:trees_cherry",
-      "awakening_system:patch_wild_ginseng"
+      "awakening_system:patch_wild_ginseng",
+      "awakening_system:teyvat_sandbearer_tree"
     ],
     []
   ]

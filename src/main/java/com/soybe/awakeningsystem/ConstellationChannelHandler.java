@@ -48,15 +48,15 @@ public final class ConstellationChannelHandler {
 
             String activity;
             if (DungeonManager.isInDungeon(p.getUUID())) {
-                activity = "En Calabozo";
+                activity = "In Dungeon";
             } else if (p.getHealth() <= p.getMaxHealth() * 0.3F) {
-                activity = "¡Herido Crítico!";
+                activity = "Critically Wounded!";
             } else if (d.isInTrance()) {
-                activity = "¡Modo Trance!";
+                activity = "Trance Mode!";
             } else if (p.level().isNight()) {
-                activity = "Cacería Nocturna";
+                activity = "Night Hunting";
             } else {
-                activity = "Explorando";
+                activity = "Exploring";
             }
 
             entries.add(new SyncStarStreamPayload.IncarnationEntry(
@@ -71,7 +71,6 @@ public final class ConstellationChannelHandler {
             ));
         }
 
-        // Si está en solitario o no hay más jugadores, incluir encarnaciones narrativas para pruebas
         if (entries.size() <= 1) {
             entries.add(new SyncStarStreamPayload.IncarnationEntry(
                     UUID.fromString("00000000-0000-0000-0000-000000000001"),
@@ -123,13 +122,12 @@ public final class ConstellationChannelHandler {
         donorData.spendCoins(amount);
 
         String rawMod = donorData.constellationModifier();
-        String modifier = (rawMod != null && !rawMod.isEmpty())
-                ? ConstellationAscension.getTranslatedTitleComponent(rawMod).getString()
-                : donor.getScoreboardName();
+        String titleKey = ConstellationAscension.getTitleTranslationKey(rawMod);
+        String modifier = (titleKey != null) ? titleKey : ((rawMod != null && !rawMod.isEmpty()) ? rawMod : donor.getScoreboardName());
 
-        String commentText = getCommentText(payload.commentKey(), modifier, amount);
+        String cleanKey = (payload.commentKey() != null ? payload.commentKey().toLowerCase() : "satisfied");
+        String commentArg = "awakening_system.constellation.comment_text." + cleanKey + "@@@" + modifier;
 
-        // Buscar si es un jugador real online
         ServerPlayer target = donor.getServer().getPlayerList().getPlayer(payload.targetPlayerId());
         String targetName;
         if (target != null) {
@@ -140,11 +138,10 @@ public final class ConstellationChannelHandler {
                 AwakeningSystemMod.sync(target);
             }
 
-            // Notificación emergente holográfica al receptor
             AwakeningSystemMod.notify(target,
                     "awakening_system.notification.constellation.sponsor_received_title",
                     "awakening_system.notification.constellation.sponsor_received_msg",
-                    0xFFFFD866, modifier, amount, commentText);
+                    0xFFFFD866, modifier, amount, commentArg);
             target.playNotifySound(SoundEvents.PLAYER_LEVELUP, SoundSource.PLAYERS, 0.7F, 1.4F);
         } else {
             targetName = switch (payload.targetPlayerId().toString()) {
@@ -154,26 +151,23 @@ public final class ConstellationChannelHandler {
             };
         }
 
-        // Notificación emergente holográfica en pantalla al donante
         AwakeningSystemMod.notify(donor,
                 "awakening_system.notification.constellation.sponsor_sent_title",
                 "awakening_system.notification.constellation.sponsor_sent_msg",
-                0xFFFFD866, amount, targetName, commentText);
+                0xFFFFD866, amount, targetName, commentArg);
 
-        // Notificación a los demás jugadores conectados en el servidor
         for (ServerPlayer p : donor.getServer().getPlayerList().getPlayers()) {
             if (!p.getUUID().equals(donor.getUUID()) && (target == null || !p.getUUID().equals(target.getUUID()))) {
                 AwakeningSystemMod.notify(p,
                         "awakening_system.notification.constellation.sponsor_broadcast_title",
                         "awakening_system.notification.constellation.sponsor_broadcast_msg",
-                        0xFFFFD866, modifier, amount, targetName, commentText);
+                        0xFFFFD866, modifier, amount, targetName, commentArg);
             }
         }
 
         donor.playNotifySound(SoundEvents.EXPERIENCE_ORB_PICKUP, SoundSource.PLAYERS, 0.8F, 1.2F);
         AwakeningSystemMod.sync(donor);
 
-        // Actualizar la lista para el donante
         handleRequestStarStream(donor);
     }
 

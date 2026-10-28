@@ -146,14 +146,13 @@ public abstract class AbstractAbyssMageEntity extends Monster {
     protected void customServerAiStep() {
         super.customServerAiStep();
 
-        // 1. Mecánica de Aturdimiento tras ruptura de escudo
         if (isStunned()) {
             this.stunTicks--;
             this.getNavigation().stop();
             if (this.stunTicks <= 0) {
                 setStunned(false);
                 setChanting(true);
-                this.chantTicks = 100; // 5 segundos para canalizar la recuperación
+                this.chantTicks = 100;
                 if (this.level() instanceof ServerLevel sl) {
                     sl.playSound(null, this.getX(), this.getY(), this.getZ(),
                             SoundEvents.EVOKER_PREPARE_ATTACK, SoundSource.HOSTILE, 1.6F, 1.4F);
@@ -162,7 +161,6 @@ public abstract class AbstractAbyssMageEntity extends Monster {
             return;
         }
 
-        // 2. Mecánica de Ritual de Regeneración de Escudo
         if (isChanting()) {
             this.chantTicks--;
             this.getNavigation().stop();
@@ -171,7 +169,6 @@ public abstract class AbstractAbyssMageEntity extends Monster {
                         SoundEvents.ILLUSIONER_PREPARE_BLINDNESS, SoundSource.HOSTILE, 1.4F, 1.3F);
             }
             if (this.chantTicks <= 0) {
-                // Regenerar escudo con onda expansiva
                 setChanting(false);
                 setShielded(true);
                 this.shieldHealth = this.maxShieldHealth;
@@ -196,7 +193,6 @@ public abstract class AbstractAbyssMageEntity extends Monster {
             return;
         }
 
-        // 3. Flotación suave sobre el terreno mientras tiene escudo
         if (isShielded()) {
             int groundY = this.level().getHeight(Heightmap.Types.MOTION_BLOCKING_NO_LEAVES, this.getBlockX(), this.getBlockZ());
             double targetY = groundY + 1.2D;
@@ -207,7 +203,6 @@ public abstract class AbstractAbyssMageEntity extends Monster {
             }
         }
 
-        // 4. Teletransporte Evasivo si el jugador se acerca demasiado
         LivingEntity target = this.getTarget();
         if (target != null && isShielded() && this.teleportCooldown <= 0 && this.distanceToSqr(target) < 16.0D) {
             teleportEvade(target);
@@ -233,17 +228,15 @@ public abstract class AbstractAbyssMageEntity extends Monster {
         sl.playSound(null, newX, newY, newZ,
                 SoundEvents.ENDERMAN_TELEPORT, SoundSource.HOSTILE, 1.5F, 1.2F);
 
-        this.teleportCooldown = 140; // 7 segundos de enfriamiento
+        this.teleportCooldown = 140;
     }
 
     @Override
     public boolean hurt(DamageSource source, float amount) {
-        // Daño aumentado mientras está pataleando indefenso en el suelo
         if (isStunned()) {
             return super.hurt(source, amount * 2.0F);
         }
 
-        // Si está cantando para recuperar el escudo, 22 de daño cancela el ritual
         if (isChanting()) {
             if (amount >= 20.0F) {
                 setChanting(false);
@@ -257,7 +250,6 @@ public abstract class AbstractAbyssMageEntity extends Monster {
             return super.hurt(source, amount);
         }
 
-        // Daño al escudo elemental
         if (isShielded()) {
             float shieldDamage = calculateElementalShieldDamage(source, amount);
             this.shieldHealth -= shieldDamage;
@@ -272,7 +264,6 @@ public abstract class AbstractAbyssMageEntity extends Monster {
                 breakShield();
             }
 
-            // El escudo mitiga el daño directo a la vida en un 80%
             return super.hurt(source, amount * 0.20F);
         }
 
@@ -286,7 +277,7 @@ public abstract class AbstractAbyssMageEntity extends Monster {
 
         switch (getMageElement()) {
             case PYRO -> {
-                if (isFire) return 0.0F; // Inmune a fuego
+                if (isFire) return 0.0F;
                 if (source.is(DamageTypes.DROWN)) return amount * 4.0F;
                 return isExplosion ? amount * 1.5F : amount * 0.4F;
             }
@@ -298,12 +289,12 @@ public abstract class AbstractAbyssMageEntity extends Monster {
             }
             case CRYO -> {
                 if (source.is(DamageTypes.FREEZE)) return 0.0F;
-                if (isFire) return amount * 3.5F; // El fuego pulveriza el escudo Cryo
+                if (isFire) return amount * 3.5F;
                 return amount * 0.4F;
             }
             case ELECTRO -> {
                 if (isLightning) return 0.0F;
-                if (isFire) return amount * 2.5F; // Reacción de Sobrecarga
+                if (isFire) return amount * 2.5F;
                 return amount * 0.4F;
             }
             default -> {
@@ -315,7 +306,7 @@ public abstract class AbstractAbyssMageEntity extends Monster {
     private void breakShield() {
         setShielded(false);
         setStunned(true);
-        this.stunTicks = 160; // 8 segundos aturdido
+        this.stunTicks = 160;
 
         if (this.level() instanceof ServerLevel sl) {
             sl.playSound(null, this.getX(), this.getY(), this.getZ(),
@@ -331,7 +322,6 @@ public abstract class AbstractAbyssMageEntity extends Monster {
     protected void dropCustomDeathLoot(ServerLevel level, DamageSource damageSource, boolean recentlyHit) {
         super.dropCustomDeathLoot(level, damageSource, recentlyHit);
 
-        // Drops canónicos de Ramas y Brotes de Líneas Ley de Genshin Impact
         if (SystemItems.DEAD_LEY_LINE_BRANCH.isBound()) {
             this.spawnAtLocation(new ItemStack(SystemItems.DEAD_LEY_LINE_BRANCH.get(), 1 + this.random.nextInt(3)));
         }
@@ -355,7 +345,6 @@ public abstract class AbstractAbyssMageEntity extends Monster {
 
     public abstract void performElementalAttack(LivingEntity target);
 
-    // === IA: LANZAMIENTO DE HECHIZOS ELEMENTALES ===
     static class AbyssMageSpellGoal extends Goal {
         private final AbstractAbyssMageEntity mage;
         private int attackTimer = 0;
@@ -388,7 +377,6 @@ public abstract class AbstractAbyssMageEntity extends Monster {
             if (distSqr > 49.0D) {
                 this.mage.getNavigation().moveTo(target, 1.0D);
             } else if (distSqr < 16.0D) {
-                // Retroceder un poco
                 Vec3 away = this.mage.position().subtract(target.position()).normalize().scale(1.5D);
                 this.mage.getNavigation().moveTo(this.mage.getX() + away.x, this.mage.getY(), this.mage.getZ() + away.z, 1.1D);
             } else {

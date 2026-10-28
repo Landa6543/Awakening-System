@@ -114,11 +114,12 @@
       "minecraft:ore_redstone",
       "minecraft:ore_redstone_lower",
       "minecraft:ore_diamond",
+      "minecraft:ore_diamond_medium",
       "minecraft:ore_diamond_large",
       "minecraft:ore_diamond_buried",
       "minecraft:ore_lapis",
       "minecraft:ore_lapis_buried",
-      "minecraft:ore_copper_large",
+      "minecraft:ore_copper",
       "minecraft:underwater_magma",
       "minecraft:disk_sand",
       "minecraft:disk_clay",
@@ -131,15 +132,16 @@
     ],
     [
       "minecraft:glow_lichen",
-      "minecraft:flower_flower_forest",
+      "minecraft:forest_flowers",
+      "minecraft:trees_birch_and_oak",
+      "minecraft:flower_default",
       "minecraft:patch_grass_forest",
-      "minecraft:lush_caves_vegetation",
-      "minecraft:spore_blossom",
+      "minecraft:brown_mushroom_normal",
+      "minecraft:red_mushroom_normal",
+      "minecraft:patch_sugar_cane",
+      "minecraft:patch_pumpkin",
       "awakening_system:giant_fantasy_tree",
-      "awakening_system:golden_autumn_tree",
-      "awakening_system:mystic_crystal_tree",
-      "awakening_system:patch_wild_ginseng",
-      "minecraft:patch_berry_bush"
+      "awakening_system:patch_wild_ginseng"
     ],
     [
       "minecraft:freeze_top_layer"

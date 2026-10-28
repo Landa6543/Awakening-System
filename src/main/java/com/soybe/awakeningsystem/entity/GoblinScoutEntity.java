@@ -62,7 +62,6 @@ public class GoblinScoutEntity extends Monster {
     public boolean doHurtTarget(net.minecraft.world.entity.Entity target) {
         boolean hurt = super.doHurtTarget(target);
         if (hurt && target instanceof LivingEntity living) {
-            // Apuñalamiento con veneno leve
             living.addEffect(new MobEffectInstance(MobEffects.POISON, 60, 0));
             this.playSound(com.soybe.awakeningsystem.ModSounds.GOBLIN_SCOUT_SCREECH.get(), 1.0F, 1.2F);
             this.playSound(SoundEvents.PLAYER_ATTACK_CRIT, 1.0F, 1.6F);

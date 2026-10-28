@@ -39,16 +39,18 @@
     ],
     "creature": [
       {
-        "type": "minecraft:dolphin",
-        "weight": 8,
-        "minCount": 2,
-        "maxCount": 4
-      },
-      {
         "type": "minecraft:turtle",
         "weight": 6,
         "minCount": 1,
         "maxCount": 3
+      }
+    ],
+    "water_creature": [
+      {
+        "type": "minecraft:dolphin",
+        "weight": 8,
+        "minCount": 2,
+        "maxCount": 4
       }
     ]
   },
@@ -67,8 +69,8 @@
     [],
     [],
     [
-      "minecraft:flower_flower_forest",
-      "minecraft:trees_plains"
+      "minecraft:trees_plains",
+      "minecraft:flower_flower_forest"
     ],
     []
   ]

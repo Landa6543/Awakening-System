@@ -22,7 +22,6 @@ public class YggdrasilTreantRenderer extends MobRenderer<YggdrasilTreantBossEnti
 
     @Override
     protected void scale(YggdrasilTreantBossEntity entity, PoseStack poseStack, float partialTickTime) {
-        // Escala imponente del Treant Ancestral (1.7x)
         poseStack.scale(1.7F, 1.7F, 1.7F);
         super.scale(entity, poseStack, partialTickTime);
     }

@@ -86,7 +86,6 @@ public class WelkinMoonScreen extends Screen {
         super.init();
         this.openTime = System.currentTimeMillis();
 
-        // 1. Campo de estrellas del firmamento
         stars.clear();
         Random starRng = new Random(42L);
         for (int i = 0; i < 90; i++) {
@@ -99,7 +98,6 @@ public class WelkinMoonScreen extends Screen {
             ));
         }
 
-        // 2. Polvo celestial flotante ascendente
         dustMotes.clear();
         for (int i = 0; i < 35; i++) {
             dustMotes.add(new Dust(
@@ -126,14 +124,12 @@ public class WelkinMoonScreen extends Screen {
         int cx = this.width / 2;
         int cy = this.height / 2;
 
-        // 1. Fondo cósmico profundo de Teyvat (Columbina usa gradiente índigo y amatista místico)
         if (isEnhanced) {
             graphics.fillGradient(0, 0, this.width, this.height, 0xF8080518, 0xF81C103C);
         } else {
             graphics.fillGradient(0, 0, this.width, this.height, 0xF8030510, 0xF8121634);
         }
 
-        // 2. Estrellas parpadeantes
         for (Star star : stars) {
             float blink = (float) Math.sin((elapsed / 1000.0F) * star.speed + star.phase);
             int alpha = (int) (Math.max(0.08F, (blink + 1.0F) * 0.45F) * 255 * introAlpha);
@@ -145,7 +141,6 @@ public class WelkinMoonScreen extends Screen {
             }
         }
 
-        // 3. Motes de polvo celestial ascendentes
         for (Dust dust : dustMotes) {
             float yPos = ((1.0F - (elapsed * 0.00005F * dust.speedY * 20.0F + dust.phase) % 1.0F)) * this.height;
             float xOffset = (float) Math.sin((elapsed * 0.001F) + dust.phase) * 12.0F;
@@ -156,18 +151,14 @@ public class WelkinMoonScreen extends Screen {
             graphics.fill(dx, dy, dx + (int) dust.size, dy + (int) dust.size, dustCol);
         }
 
-        // 4. Centro visual: Cálculo de dimensiones adaptativas
         int maidenSize = Math.min(220, Math.min(this.width - 40, this.height - 130));
         float floatOffset = (float) Math.sin(elapsed / 900.0F) * 3.5F;
         int maidenCenterY = cy - 8;
 
-        // 5. Astrolabio Sagrado: Anillos orbitales concéntricos y nodos astrales
         drawAstrolabe(graphics, cx, maidenCenterY + (int) floatOffset, maidenSize, elapsed);
 
-        // 6. Resplandor celestial pulsante detrás de la Doncella
         drawCelestialHalo(graphics, cx, maidenCenterY + (int) floatOffset, maidenSize, elapsed);
 
-        // 7. Renderizado de la Doncella Lunar (Estándar o Columbina Ascendida)
         int maidenX = cx - (maidenSize / 2);
         int maidenY = maidenCenterY - (maidenSize / 2) + (int) floatOffset;
 
@@ -176,7 +167,6 @@ public class WelkinMoonScreen extends Screen {
         graphics.blit(isEnhanced ? COLUMBINA_TEX : MAIDEN_TEX, maidenX, maidenY, maidenSize, maidenSize, 0.0F, 0.0F, 512, 512, 512, 512);
         RenderSystem.disableBlend();
 
-        // 8. Título y Cabecera Sagrada Genshin
         int titleY = Math.max(12, maidenY - 42);
         if (isEnhanced) {
             graphics.drawCenteredString(this.font, Component.translatable("awakening_system.welkin.columbina_header").getString(), cx, titleY, 0xFFE1BEE7);
@@ -186,14 +176,12 @@ public class WelkinMoonScreen extends Screen {
             graphics.drawCenteredString(this.font, Component.translatable("awakening_system.welkin.subtitle").getString(), cx, titleY + 12, 0xFF80D8FF);
         }
 
-        // Divisor celestial con gema central
         int divHalfW = Math.min(180, this.width / 3);
         int divCol = isEnhanced ? 0x66CE93D8 : 0x66FFE082;
         graphics.fill(cx - divHalfW, titleY + 24, cx - 10, titleY + 25, divCol);
         graphics.drawCenteredString(this.font, isEnhanced ? "§d✦" : "§6✦", cx, titleY + 20, isEnhanced ? 0xFFCE93D8 : 0xFFFFD700);
         graphics.fill(cx + 10, titleY + 24, cx + divHalfW, titleY + 25, divCol);
 
-        // 9. Medidor de Días Restantes (Píldora estilizada translúcida)
         int currentDays = claimed ? Math.max(0, initialDaysRemaining - (canClaimToday ? 1 : 0)) : initialDaysRemaining;
         int badgeW = isEnhanced ? 240 : 210;
         int badgeH = 20;
@@ -209,7 +197,6 @@ public class WelkinMoonScreen extends Screen {
                 : Component.translatable("awakening_system.welkin.days_remaining", currentDays).getString();
         graphics.drawCenteredString(this.font, daysText, cx, badgeY + 6, isEnhanced ? 0xFFF3E5F5 : 0xFFFFFFFF);
 
-        // 10. Misión de Ascensión de Columbina (Píldora informativa/botón)
         int questY = badgeY + badgeH + 6;
         int questW = 280;
         int questH = 17;
@@ -223,22 +210,22 @@ public class WelkinMoonScreen extends Screen {
             int qTextCol;
 
             if (questStep <= 0) {
-                questLabel = "✦ Iniciar Misión: El Despertar Trilunar (+50%) ✦";
+                questLabel = "✦ Start Quest: Tri-Lunar Awakening (+50%) ✦";
                 qBg = questHover ? 0xDD4A148C : 0x99230D42;
                 qBorder = questHover ? 0xFFFFD700 : 0xFFBA68C8;
                 qTextCol = questHover ? 0xFFFFF176 : 0xFFE1BEE7;
             } else if (questStep == 1) {
-                questLabel = "✦ Misión: Viaja al Santuario de las Tres Lunas ✦";
+                questLabel = "✦ Quest: Journey to the Three Moons Shrine ✦";
                 qBg = 0xAA1E1236;
                 qBorder = 0xFFAB47BC;
                 qTextCol = 0xFFE1BEE7;
             } else if (questStep == 2) {
-                questLabel = "✦ Misión: Pruebas de Aria, Sonnet y Canon ✦";
+                questLabel = "✦ Quest: Trials of Aria, Sonnet, and Canon ✦";
                 qBg = 0xAA2B0B3A;
                 qBorder = 0xFFFF7043;
                 qTextCol = 0xFFFFCC80;
             } else {
-                questLabel = "✦ Rito Final: Consagración en el Altar Trilunar ✦";
+                questLabel = "✦ Final Rite: Consecration at the Tri-Lunar Altar ✦";
                 qBg = 0xAA0B243B;
                 qBorder = 0xFF4DD0E1;
                 qTextCol = 0xFFB2EBF2;
@@ -248,13 +235,11 @@ public class WelkinMoonScreen extends Screen {
             graphics.renderOutline(questX, questY, questW, questH, qBorder);
             graphics.drawCenteredString(this.font, questLabel, cx, questY + 5, qTextCol);
         } else {
-            // Distintivo de Gracia de Columbina Activa
             graphics.fill(questX, questY, questX + questW, questY + questH, 0x882A084E);
             graphics.renderOutline(questX, questY, questW, questH, 0xAAAB47BC);
-            graphics.drawCenteredString(this.font, "✦ DIOSA TRILUNAR DESPERTADA (+50% PROTOGEMAS) ✦", cx, questY + 5, 0xFFE1BEE7);
+            graphics.drawCenteredString(this.font, "✦ TRI-LUNAR GODDESS AWAKENED (+50% PRIMOGEMS) ✦", cx, questY + 5, 0xFFE1BEE7);
         }
 
-        // 11. Recompensa / Botón interactivo inferior
         int btnY = questY + questH + 8;
         int btnW = Math.min(340, this.width - 32);
         int btnX = cx - (btnW / 2);
@@ -298,7 +283,6 @@ public class WelkinMoonScreen extends Screen {
             graphics.drawCenteredString(this.font, Component.translatable("awakening_system.welkin.continue_prompt").getString(), cx, btnY + btnH + 8, promptCol);
         }
 
-        // 12. Animación cinemática de Reclamo
         renderClaimCelebration(graphics, cx, maidenCenterY, elapsed);
     }
 
@@ -395,10 +379,10 @@ public class WelkinMoonScreen extends Screen {
             }
 
             if (isEnhanced) {
-                graphics.drawCenteredString(this.font, "§d§l✦ §6§l+" + rewardPrimos + " PROTOGEMAS §d§l✦", cx, cy + 30, 0xFFFFD700);
-                graphics.drawCenteredString(this.font, "§b✦ GRACIA DE COLUMBINA (+50% BONUS) ✦", cx, cy + 42, 0xFF80D8FF);
+                graphics.drawCenteredString(this.font, "§d§l✦ §6§l+" + rewardPrimos + " PRIMOGEMS §d§l✦", cx, cy + 30, 0xFFFFD700);
+                graphics.drawCenteredString(this.font, "§b✦ COLUMBINA'S GRACE (+50% BONUS) ✦", cx, cy + 42, 0xFF80D8FF);
             } else {
-                graphics.drawCenteredString(this.font, "§6§l✦ §e§l+" + rewardPrimos + " PROTOGEMAS §6§l✦", cx, cy + 32, 0xFFFFD700);
+                graphics.drawCenteredString(this.font, "§6§l✦ §e§l+" + rewardPrimos + " PRIMOGEMS §6§l✦", cx, cy + 32, 0xFFFFD700);
             }
         }
     }
@@ -417,7 +401,6 @@ public class WelkinMoonScreen extends Screen {
     @Override
     public boolean mouseClicked(double mouseX, double mouseY, int button) {
         if (button == 0) {
-            // Si el jugador hace clic en el botón de iniciar misión cuando aún no está mejorada
             if (!isEnhanced && questStep <= 0) {
                 int maidenSize = Math.min(220, Math.min(this.width - 40, this.height - 130));
                 int maidenCenterY = (this.height / 2) - 24;
@@ -433,7 +416,9 @@ public class WelkinMoonScreen extends Screen {
                     PacketDistributor.sendToServer(new StartWelkinQuestPayload());
                     try {
                         Minecraft.getInstance().getSoundManager().play(SimpleSoundInstance.forUI(SoundEvents.UI_BUTTON_CLICK, 1.2F));
-                    } catch (Throwable ignored) {}
+                    } catch (Throwable t) {
+                        AwakeningSystemMod.LOGGER.debug("Error playing UI button click sound: {}", t.getMessage());
+                    }
                     return true;
                 }
             }
@@ -445,11 +430,11 @@ public class WelkinMoonScreen extends Screen {
 
     @Override
     public boolean keyPressed(int keyCode, int scanCode, int modifiers) {
-        if (keyCode == 32 || keyCode == 257) { // Espacio o Enter
+        if (keyCode == 32 || keyCode == 257) {
             handleClaimOrClose();
             return true;
         }
-        if (keyCode == 256) { // Escape
+        if (keyCode == 256) {
             this.onClose();
             return true;
         }
@@ -466,7 +451,9 @@ public class WelkinMoonScreen extends Screen {
 
             try {
                 Minecraft.getInstance().getSoundManager().play(SimpleSoundInstance.forUI(SoundEvents.UI_TOAST_CHALLENGE_COMPLETE, 1.1F));
-            } catch (Throwable ignored) {}
+            } catch (Throwable t) {
+                AwakeningSystemMod.LOGGER.debug("Error playing claim reward sound: {}", t.getMessage());
+            }
 
             int cx = this.width / 2;
             int cy = (this.height / 2) - 24;

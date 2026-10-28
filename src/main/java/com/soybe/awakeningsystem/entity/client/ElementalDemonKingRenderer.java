@@ -13,6 +13,7 @@ public class ElementalDemonKingRenderer extends MobRenderer<ElementalDemonKingBo
 
     public ElementalDemonKingRenderer(EntityRendererProvider.Context context) {
         super(context, new ElementalDemonKingModel(context.bakeLayer(ElementalDemonKingModel.LAYER_LOCATION)), 1.2F);
+        this.addLayer(new ElementalDemonKingGlowLayer(this));
     }
 
     @Override

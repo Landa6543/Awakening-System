@@ -1,0 +1,20 @@
+{
+    "pools":  [
+                  {
+                      "bonus_rolls":  0,
+                      "entries":  [
+                                      {
+                                          "name":  "awakening_system:teyvat_jar",
+                                          "type":  "minecraft:item"
+                                      }
+                                  ],
+                      "rolls":  1,
+                      "conditions":  [
+                                         {
+                                             "condition":  "minecraft:survives_explosion"
+                                         }
+                                     ]
+                  }
+              ],
+    "type":  "minecraft:block"
+}

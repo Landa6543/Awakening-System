@@ -32,13 +32,11 @@ public class MeditationSeatEntity extends Entity {
 
     @Override
     protected Vec3 getPassengerAttachmentPoint(Entity entity, net.minecraft.world.entity.EntityDimensions dimensions, float scale) {
-        // Posición erguida sobre el suelo (sin hundirse en los bloques)
         return new Vec3(0.0D, 0.05D, 0.0D);
     }
 
     @Override
     public Vec3 getDismountLocationForPassenger(LivingEntity passenger) {
-        // Garantizar que al desmontar el jugador aparezca de pie sobre la superficie del bloque
         return new Vec3(this.getX(), this.getY(), this.getZ());
     }
 

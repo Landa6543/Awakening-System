@@ -48,17 +48,16 @@ public class PrimogemSwordItem extends SwordItem implements AwakeningWeaponItem 
             long cdUntil = sp.getPersistentData().getLong("primogem_sword_skill_cd");
             if (gameTime < cdUntil) {
                 long sec = (cdUntil - gameTime) / 20;
-                sp.displayClientMessage(Component.literal("§d✦ Deseo del Destino en enfriamiento: §f" + sec + "s"), true);
+                sp.displayClientMessage(Component.translatableWithFallback("item.awakening_system.primogem_sword.cd", "§d✦ Destiny's Wish on cooldown: §f%ss", sec), true);
                 return InteractionResultHolder.fail(stack);
             }
 
-            sp.getPersistentData().putLong("primogem_sword_skill_cd", gameTime + 280L); // 14s cd
+            sp.getPersistentData().putLong("primogem_sword_skill_cd", gameTime + 280L);
             sp.getCooldowns().addCooldown(this, 280);
 
             if (level instanceof ServerLevel sl) {
                 Vec3 look = sp.getLookAngle();
 
-                // 1. Sello Astral Estelar (Púrpura Amatista / Destello de Deseo)
                 PacketDistributor.sendToPlayersNear(
                         sl, null, sp.getX(), sp.getY(), sp.getZ(), 64.0D,
                         new SpawnMagicCirclePayload(
@@ -74,13 +73,11 @@ public class PrimogemSwordItem extends SwordItem implements AwakeningWeaponItem 
 
                 CameraShakePayload.sendToNearby(sl, sp.getX(), sp.getY(), sp.getZ(), 28.0D, 0.55F, 8);
 
-                // 2. Tajo Creciente Astral de Protogema
                 float dmg = (float) (24.0D * WeaponLevelManager.getDamageMultiplier(stack));
                 SlashWaveEntity starSlash = new SlashWaveEntity(sl, sp, SlashWaveEntity.TYPE_COSMIC_AMETHYST, dmg, 4.2F, 1.5F, 0.0F, 26, 8);
                 starSlash.setDeltaMovement(look.scale(2.2D));
                 sl.addFreshEntity(starSlash);
 
-                // Curación y bendición astral
                 sp.heal(5.0F);
                 sp.addEffect(new MobEffectInstance(MobEffects.MOVEMENT_SPEED, 140, 1, false, true));
                 sp.addEffect(new MobEffectInstance(MobEffects.LUCK, 200, 1, false, true));
@@ -88,7 +85,7 @@ public class PrimogemSwordItem extends SwordItem implements AwakeningWeaponItem 
                 WeaponLevelManager.addExp(stack, 30, sp);
             }
 
-            sp.displayClientMessage(Component.literal("§5§l✦ [ESPADA DE PROTOGEMAS] §d¡Deseo Astral del Destino liberado! (+Salud restaurada)"), true);
+            sp.displayClientMessage(Component.translatableWithFallback("item.awakening_system.primogem_sword.msg", "§5§l✦ [PRIMOGEM SWORD] §dAstral Wish of Destiny unleashed! (+Health restored)"), true);
             return InteractionResultHolder.sidedSuccess(stack, false);
         }
 
@@ -119,10 +116,10 @@ public class PrimogemSwordItem extends SwordItem implements AwakeningWeaponItem 
 
     @Override
     public void appendHoverText(ItemStack stack, TooltipContext context, List<Component> tooltip, TooltipFlag flag) {
-        tooltip.add(Component.literal("§5§l[HOJA VIVIENTE DEL DESTINO]").withStyle(ChatFormatting.BOLD));
-        tooltip.add(Component.literal("§7Forjada con los cristales primordiales de los deseos de Teyvat."));
-        tooltip.add(Component.literal("§d✦ Habilidad: Clic Derecho — Deseo Astral del Destino (Tajo de Amatista + Cura)."));
-        tooltip.add(Component.literal("§a✦ Drenaje Astral: Los impactos críticos absorben vitalidad enemiga."));
+        tooltip.add(Component.translatable("item.awakening_system.primogem_sword.badge").withStyle(ChatFormatting.BOLD));
+        tooltip.add(Component.translatable("item.awakening_system.primogem_sword.desc"));
+        tooltip.add(Component.translatable("item.awakening_system.primogem_sword.active"));
+        tooltip.add(Component.translatable("item.awakening_system.primogem_sword.passive"));
         super.appendHoverText(stack, context, tooltip, flag);
     }
 }

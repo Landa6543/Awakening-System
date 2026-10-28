@@ -38,7 +38,6 @@ public class CelestialDragonBreathRenderer extends EntityRenderer<CelestialDrago
         poseStack.mulPose(Axis.ZP.rotationDegrees(time * 18.0F));
         poseStack.scale(1.2F, 1.2F, 1.2F);
 
-        // Renderizar perla/orbe místico con brillo emisivo completo (15728880)
         ItemStack stack = new ItemStack(SystemItems.CELESTIAL_DRAGON_PEARL.get());
         this.itemRenderer.renderStatic(stack, ItemDisplayContext.FIXED, 15728880,
                 OverlayTexture.NO_OVERLAY, poseStack, buffer, entity.level(), entity.getId());

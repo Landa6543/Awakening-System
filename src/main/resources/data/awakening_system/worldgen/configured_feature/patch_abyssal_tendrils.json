@@ -1,0 +1,17 @@
+{
+  "type": "minecraft:multiface_growth",
+  "config": {
+    "block": "awakening_system:abyssal_tendrils",
+    "search_range": 20,
+    "can_place_on_floor": true,
+    "can_place_on_ceiling": true,
+    "can_place_on_wall": true,
+    "chance_of_spreading": 0.6,
+    "can_be_placed_on": [
+      "awakening_system:abyssal_stone",
+      "awakening_system:abyssal_growth",
+      "minecraft:stone",
+      "minecraft:deepslate"
+    ]
+  }
+}

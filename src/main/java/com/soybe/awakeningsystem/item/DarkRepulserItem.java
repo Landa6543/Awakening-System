@@ -36,13 +36,12 @@ public class DarkRepulserItem extends SwordItem implements AwakeningWeaponItem {
                 .rarity(Rarity.EPIC)
                 .fireResistant()
                 .durability(12000)
-                .attributes(SwordItem.createAttributes(Tiers.NETHERITE, 14, -2.2F))); // 18 Daño, 1.8 Velocidad
+                .attributes(SwordItem.createAttributes(Tiers.NETHERITE, 14, -2.2F)));
     }
 
     @Override
     public void inventoryTick(ItemStack stack, Level level, Entity entity, int slotId, boolean isSelected) {
         if (!level.isClientSide() && entity instanceof ServerPlayer sp && (isSelected || slotId == 40)) {
-            // Chequeo de sinergia de doble empuñadura con Elucidator
             ItemStack main = sp.getMainHandItem();
             ItemStack off = sp.getOffhandItem();
             boolean hasDualBlades = (main.getItem() instanceof ElucidatorItem && off.getItem() instanceof DarkRepulserItem)
@@ -70,10 +69,9 @@ public class DarkRepulserItem extends SwordItem implements AwakeningWeaponItem {
             ServerLevel sl = (ServerLevel) level;
 
             int lvl = WeaponLevelManager.getLevel(stack);
-            int baseCd = (lvl >= 50) ? 260 : 400; // 13s o 20s
+            int baseCd = (lvl >= 50) ? 260 : 400;
             sp.getCooldowns().addCooldown(this, baseCd);
 
-            // Comprobación de Sinergia de Doble Empuñadura con Elucidator
             ItemStack main = sp.getMainHandItem();
             ItemStack off = sp.getOffhandItem();
             boolean hasDualBlades = (main.getItem() instanceof ElucidatorItem && off.getItem() instanceof DarkRepulserItem)
@@ -83,8 +81,6 @@ public class DarkRepulserItem extends SwordItem implements AwakeningWeaponItem {
             float baseDmg = (float) (20.0D * WeaponLevelManager.getDamageMultiplier(stack));
 
             if (hasDualBlades) {
-                // ==================== [DUAL ECLIPSE: ECLIPSE DUAL SUPREMO] ====================
-                // Doble sello mágico: Suelo cian + Sello vertical oscuro
                 net.neoforged.neoforge.network.PacketDistributor.sendToPlayersNear(
                         sl, null, sp.getX(), sp.getY(), sp.getZ(), 64.0D,
                         new com.soybe.awakeningsystem.SpawnMagicCirclePayload(
@@ -108,7 +104,6 @@ public class DarkRepulserItem extends SwordItem implements AwakeningWeaponItem {
 
                 com.soybe.awakeningsystem.CameraShakePayload.sendToNearby(sl, sp.getX(), sp.getY(), sp.getZ(), 36.0D, 0.75F, 12);
 
-                // Vórtice gravitational: atraer enemigos hacia el centro del vórtice
                 AABB pullBox = sp.getBoundingBox().inflate(8.5D);
                 for (LivingEntity nearby : sl.getEntitiesOfClass(LivingEntity.class, pullBox,
                         e -> e != sp && e.isAlive() && !(e instanceof Player && !sp.canHarmPlayer((Player) e)))) {
@@ -117,17 +112,14 @@ public class DarkRepulserItem extends SwordItem implements AwakeningWeaponItem {
                     nearby.hurtMarked = true;
                 }
 
-                // Tajo Dual 1: Cristal Aguamarina (Dark Repulser)
                 SlashWaveEntity dualCrystal = new SlashWaveEntity(sl, sp, SlashWaveEntity.TYPE_CRYSTAL_AQUA, baseDmg * 1.3F, 3.8F, 1.4F, -30.0F, 26, 6);
                 dualCrystal.setDeltaMovement(look.scale(2.2D));
                 sl.addFreshEntity(dualCrystal);
 
-                // Tajo Dual 2: Fuego de Sombra de Vacío (Elucidator)
                 SlashWaveEntity dualVoid = new SlashWaveEntity(sl, sp, SlashWaveEntity.TYPE_DARK_VOID, baseDmg * 1.4F, 3.8F, 1.4F, 30.0F, 26, 6);
                 dualVoid.setDeltaMovement(look.scale(2.2D));
                 sl.addFreshEntity(dualVoid);
 
-                // Tajo Dual 3: Cruz Colosal 'X' Eclipse
                 SlashWaveEntity dualCross = new SlashWaveEntity(sl, sp, SlashWaveEntity.TYPE_CRYSTAL_AQUA, baseDmg * 1.8F, 4.6F, 4.6F, 0.0F, 30, 8);
                 dualCross.setCross(true);
                 dualCross.setDeltaMovement(look.scale(2.4D));
@@ -136,10 +128,9 @@ public class DarkRepulserItem extends SwordItem implements AwakeningWeaponItem {
                 sp.heal(10.0F);
                 WeaponLevelManager.addExp(stack, 50, sp);
 
-                sp.displayClientMessage(Component.literal("§b§l✦ [DUAL ECLIPSE] §f¡Vórtice binario de Cristal y Fuego Oscuro desatado con Doble Empuñadura!"), true);
+                sp.displayClientMessage(Component.translatable("item.awakening_system.dark_repulser.dual_eclipse"), true);
 
             } else {
-                // ==================== [CRYSTALLINE RESONANCE: RESONANCIA CRISTALINA] ====================
                 net.neoforged.neoforge.network.PacketDistributor.sendToPlayersNear(
                         sl, null, sp.getX(), sp.getY(), sp.getZ(), 64.0D,
                         new com.soybe.awakeningsystem.SpawnMagicCirclePayload(
@@ -155,12 +146,10 @@ public class DarkRepulserItem extends SwordItem implements AwakeningWeaponItem {
 
                 com.soybe.awakeningsystem.CameraShakePayload.sendToNearby(sl, sp.getX(), sp.getY(), sp.getZ(), 28.0D, 0.5F, 8);
 
-                // Tajo 1: Onda Horizontal de Cristal de Dragón (congela y empala)
                 SlashWaveEntity wave1 = new SlashWaveEntity(sl, sp, SlashWaveEntity.TYPE_CRYSTAL_AQUA, baseDmg * 1.1F, 3.6F, 1.3F, 0.0F, 24, 6);
                 wave1.setDeltaMovement(look.scale(2.1D));
                 sl.addFreshEntity(wave1);
 
-                // Tajo 2: Corte Ascendente Vertical de Cristal
                 SlashWaveEntity wave2 = new SlashWaveEntity(sl, sp, SlashWaveEntity.TYPE_CRYSTAL_AQUA, baseDmg * 0.9F, 2.8F, 1.8F, 90.0F, 22, 4);
                 wave2.setDeltaMovement(look.scale(2.0D));
                 sl.addFreshEntity(wave2);
@@ -168,7 +157,7 @@ public class DarkRepulserItem extends SwordItem implements AwakeningWeaponItem {
                 sp.heal(6.0F);
                 WeaponLevelManager.addExp(stack, 35, sp);
 
-                sp.displayClientMessage(Component.literal("§a§l✦ [RESONANCIA CRISTALINA] §f¡Cortes de cristal de dragón aguamarina desatados!"), true);
+                sp.displayClientMessage(Component.translatable("item.awakening_system.dark_repulser.crystal_resonance"), true);
             }
             return InteractionResultHolder.consume(stack);
         }

@@ -75,17 +75,71 @@ public class SystemMaintenanceScreen extends Screen {
         }
     }
 
+    public float getGuiScale() {
+        float scaleX = (float) this.width / 360.0F;
+        float scaleY = (float) this.height / 250.0F;
+        float scale = Math.min(scaleX, scaleY);
+        return Math.min(1.0F, Math.max(0.35F, scale));
+    }
+
+    public double transformMouseX(double mouseX) {
+        float scale = getGuiScale();
+        if (scale >= 1.0F) return mouseX;
+        double cx = this.width / 2.0;
+        return (mouseX - cx) / scale + cx;
+    }
+
+    public double transformMouseY(double mouseY) {
+        float scale = getGuiScale();
+        if (scale >= 1.0F) return mouseY;
+        double cy = this.height / 2.0;
+        return (mouseY - cy) / scale + cy;
+    }
+
+    @Override
+    public boolean mouseClicked(double mouseX, double mouseY, int button) {
+        return super.mouseClicked(transformMouseX(mouseX), transformMouseY(mouseY), button);
+    }
+
+    @Override
+    public boolean mouseReleased(double mouseX, double mouseY, int button) {
+        return super.mouseReleased(transformMouseX(mouseX), transformMouseY(mouseY), button);
+    }
+
+    @Override
+    public boolean mouseDragged(double mouseX, double mouseY, int button, double dragX, double dragY) {
+        return super.mouseDragged(transformMouseX(mouseX), transformMouseY(mouseY), button, dragX, dragY);
+    }
+
     @Override
     public void renderBackground(GuiGraphics graphics, int mouseX, int mouseY, float partialTick) {
-        // No-op intencional: Desactiva por completo el efecto de blur y oscurecimiento del fondo
     }
 
     @Override
     public void render(GuiGraphics graphics, int mouseX, int mouseY, float partialTick) {
+        float scale = getGuiScale();
+        int mX = (int) Math.round(transformMouseX(mouseX));
+        int mY = (int) Math.round(transformMouseY(mouseY));
+
+        graphics.pose().pushPose();
+        if (scale < 1.0F) {
+            float cxF = this.width / 2.0F;
+            float cyF = this.height / 2.0F;
+            graphics.pose().translate(cxF, cyF, 0.0F);
+            graphics.pose().scale(scale, scale, 1.0F);
+            graphics.pose().translate(-cxF, -cyF, 0.0F);
+        }
+
         Minecraft mc = Minecraft.getInstance();
-        if (mc.player == null) return;
+        if (mc.player == null) {
+            graphics.pose().popPose();
+            return;
+        }
         SystemData data = mc.player.getData(AwakeningSystemMod.PLAYER_SYSTEM);
-        if (data == null) return;
+        if (data == null) {
+            graphics.pose().popPose();
+            return;
+        }
 
         boolean is40 = data.isSystem40Updating();
         boolean is30 = data.isSystem30Updating();
@@ -130,12 +184,10 @@ public class SystemMaintenanceScreen extends Screen {
         int boxX = (this.width - boxW) / 2;
         int boxY = Math.max(8, (this.height - boxH) / 2);
 
-        // Reposicionar botón inferior de forma dinámica
         if (this.closeButton != null) {
             this.closeButton.setPosition((this.width - this.closeButton.getWidth()) / 2, boxY + boxH - 30);
         }
 
-        // Colores temáticos
         int outerBorder = is40 ? 0xFFDFB76C : (is30 ? 0xFFD4AF37 : 0xFFFFD700);
         int innerBorder = is40 ? 0xFF4EE2EC : (is30 ? 0xFF50FA7B : 0xFF9D4EDD);
         int bg = is40 ? 0xF00A1324 : (is30 ? 0xF00A1815 : 0xF0140B24);
@@ -146,12 +198,10 @@ public class SystemMaintenanceScreen extends Screen {
         int textCol = is40 ? 0xFFE2F1FF : (is30 ? 0xFFD8FBE4 : 0xFFEDE4F8);
         int alertCol = 0xFFFF8080;
 
-        // Fondo y marcos
         graphics.fill(boxX - 2, boxY - 2, boxX + boxW + 2, boxY + boxH + 2, outerBorder);
         graphics.fill(boxX - 1, boxY - 1, boxX + boxW + 1, boxY + boxH + 1, innerBorder);
         graphics.fill(boxX, boxY, boxX + boxW, boxY + boxH, bg);
 
-        // Esquinas holográficas
         graphics.fill(boxX, boxY, boxX + 12, boxY + 2, cornerAccent);
         graphics.fill(boxX, boxY, boxX + 2, boxY + 12, cornerAccent);
         graphics.fill(boxX + boxW - 12, boxY, boxX + boxW, boxY + 2, cornerAccent);
@@ -161,15 +211,12 @@ public class SystemMaintenanceScreen extends Screen {
         graphics.fill(boxX + boxW - 12, boxY + boxH - 2, boxX + boxW, boxY + boxH, cornerAccent);
         graphics.fill(boxX + boxW - 2, boxY + boxH - 12, boxX + boxW, boxY + boxH, cornerAccent);
 
-        // Encabezado
         graphics.drawCenteredString(this.font, title, this.width / 2, boxY + 12, titleCol);
         graphics.drawCenteredString(this.font, subtitle, this.width / 2, boxY + 26, subCol);
 
-        // Línea divisoria
         graphics.fill(boxX + 20, boxY + 39, boxX + boxW - 20, boxY + 40, divBg);
         graphics.fill(this.width / 2 - 20, boxY + 39, this.width / 2 + 20, boxY + 40, cornerAccent);
 
-        // Renderizado de descripciones con ajuste de línea exacto (cero desborde)
         int curY = boxY + 47;
         for (FormattedCharSequence line : lines1) {
             graphics.drawCenteredString(this.font, line, this.width / 2, curY, textCol);
@@ -184,7 +231,6 @@ public class SystemMaintenanceScreen extends Screen {
             curY += 12;
         }
 
-        // Contador regresivo
         int ticks = is40
                 ? data.system40UpdateRemainingTicks()
                 : (is30 ? data.system30UpdateRemainingTicks() : data.systemUpdateRemainingTicks());
@@ -197,7 +243,6 @@ public class SystemMaintenanceScreen extends Screen {
         int timeY = curY + 6;
         graphics.drawCenteredString(this.font, timeComp, this.width / 2, timeY, is40 ? 0xFF8BE9FD : (is30 ? 0xFF88FFB0 : 0xFFFFEE88));
 
-        // Barra de progreso animada
         int barW = Math.min(280, boxW - 40);
         int barH = 14;
         int barX = (this.width - barW) / 2;
@@ -218,8 +263,8 @@ public class SystemMaintenanceScreen extends Screen {
         int percent = (int) (progress * 100);
         graphics.drawCenteredString(this.font, Component.literal(percent + "%"), this.width / 2, barY + 3, is40 ? 0xFF07111D : (is30 ? 0xFF0A1815 : 0xFF140B24));
 
-        // Render widgets (button) on top
-        super.render(graphics, mouseX, mouseY, partialTick);
+        super.render(graphics, mX, mY, partialTick);
+        graphics.pose().popPose();
     }
 
     @Override

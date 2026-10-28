@@ -113,7 +113,6 @@ public class WhiteThunderTigerEntity extends TamableAnimal implements PlayerRide
     public InteractionResult mobInteract(Player player, InteractionHand hand) {
         ItemStack itemstack = player.getItemInHand(hand);
 
-        // 1. Si NO está domesticado
         if (!this.isTame()) {
             if (this.isFood(itemstack)) {
                 this.usePlayerItem(player, hand, itemstack);
@@ -123,9 +122,9 @@ public class WhiteThunderTigerEntity extends TamableAnimal implements PlayerRide
                         this.navigation.stop();
                         this.setTarget(null);
                         this.setOrderedToSit(true);
-                        this.level().broadcastEntityEvent(this, (byte) 7); // Corazones
+                        this.level().broadcastEntityEvent(this, (byte) 7);
                     } else {
-                        this.level().broadcastEntityEvent(this, (byte) 6); // Humo
+                        this.level().broadcastEntityEvent(this, (byte) 6);
                     }
                 }
                 return InteractionResult.sidedSuccess(this.level().isClientSide);
@@ -133,9 +132,7 @@ public class WhiteThunderTigerEntity extends TamableAnimal implements PlayerRide
             return super.mobInteract(player, hand);
         }
 
-        // 2. Si YA está domesticado y pertenece al jugador
         if (this.isOwnedBy(player)) {
-            // Curar con comida si está herido
             if (this.isFood(itemstack) && this.getHealth() < this.getMaxHealth()) {
                 this.usePlayerItem(player, hand, itemstack);
                 this.heal(8.0F);
@@ -145,7 +142,6 @@ public class WhiteThunderTigerEntity extends TamableAnimal implements PlayerRide
                 return InteractionResult.sidedSuccess(this.level().isClientSide);
             }
 
-            // Shift + Clic derecho: Alternar sentarse / levantarse
             if (player.isShiftKeyDown()) {
                 boolean wantsToSit = !this.isOrderedToSit();
                 this.setOrderedToSit(wantsToSit);
@@ -156,7 +152,6 @@ public class WhiteThunderTigerEntity extends TamableAnimal implements PlayerRide
                 return InteractionResult.SUCCESS;
             }
 
-            // Si está parado y no tiene jinete: Montar
             if (!this.isInSittingPose() && !this.isVehicle()) {
                 this.doPlayerRide(player);
                 return InteractionResult.SUCCESS;
@@ -207,7 +202,6 @@ public class WhiteThunderTigerEntity extends TamableAnimal implements PlayerRide
     public boolean doHurtTarget(Entity target) {
         boolean hurt = super.doHurtTarget(target);
         if (hurt && target instanceof LivingEntity living) {
-            // Zarpazo eléctrico: oportunidad de electrocutar/ralentizar
             living.addEffect(new MobEffectInstance(MobEffects.MOVEMENT_SLOWDOWN, 40, 1));
             if (this.level() instanceof ServerLevel sl) {
                 sl.sendParticles(ParticleTypes.ELECTRIC_SPARK, target.getX(), target.getY() + 0.8D, target.getZ(), 12, 0.4D, 0.4D, 0.4D, 0.1D);
@@ -233,14 +227,12 @@ public class WhiteThunderTigerEntity extends TamableAnimal implements PlayerRide
             }
         }
 
-        // Rugido automático en combate
         if (!this.level().isClientSide && this.isAlive() && this.roarCooldown <= 0) {
             if (this.getTarget() != null && this.distanceToSqr(this.getTarget()) < 64.0D) {
                 triggerThunderRoar();
             }
         }
 
-        // Partículas místicas de relámpago en el pelaje
         if (this.level().isClientSide && this.random.nextInt(3) == 0) {
             double rx = (this.random.nextDouble() - 0.5D) * 1.3D;
             double ry = this.random.nextDouble() * 1.0D + 0.2D;
@@ -271,7 +263,6 @@ public class WhiteThunderTigerEntity extends TamableAnimal implements PlayerRide
         this.playSound(com.soybe.awakeningsystem.ModSounds.WHITE_TIGER_ROAR.get(), 1.5F, 1.0F);
         this.playSound(SoundEvents.LIGHTNING_BOLT_THUNDER, 0.8F, 1.4F);
 
-        // Buffs de cultivo de trueno
         this.addEffect(new MobEffectInstance(MobEffects.MOVEMENT_SPEED, 260, 1));
         this.addEffect(new MobEffectInstance(MobEffects.DAMAGE_BOOST, 260, 1));
         this.addEffect(new MobEffectInstance(MobEffects.DAMAGE_RESISTANCE, 260, 0));
@@ -282,7 +273,6 @@ public class WhiteThunderTigerEntity extends TamableAnimal implements PlayerRide
             owner.addEffect(new MobEffectInstance(MobEffects.DAMAGE_BOOST, 260, 1));
         }
 
-        // Onda expansiva de daño y retroceso a enemigos
         AABB blastArea = this.getBoundingBox().inflate(6.0D);
         List<LivingEntity> targets = this.level().getEntitiesOfClass(LivingEntity.class, blastArea,
                 e -> e != this && e != owner && (!this.isTame() || !this.isAlliedTo(e)));
@@ -293,7 +283,6 @@ public class WhiteThunderTigerEntity extends TamableAnimal implements PlayerRide
             enemy.addEffect(new MobEffectInstance(MobEffects.MOVEMENT_SLOWDOWN, 60, 2));
             enemy.addEffect(new MobEffectInstance(MobEffects.WEAKNESS, 60, 0));
 
-            // Knockback alejándose del tigre
             double dx = enemy.getX() - this.getX();
             double dz = enemy.getZ() - this.getZ();
             enemy.knockback(0.8D, -dx, -dz);

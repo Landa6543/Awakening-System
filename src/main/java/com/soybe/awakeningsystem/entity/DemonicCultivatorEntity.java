@@ -73,7 +73,6 @@ public class DemonicCultivatorEntity extends Monster {
             if (target != null && target.isAlive()) {
                 double distSq = this.distanceToSqr(target);
 
-                // Tajo de Espada de Qi Carmesí a distancia media (4 a 20 bloques)
                 if (slashCooldown <= 0 && distSq >= 16.0D && distSq <= 400.0D && this.hasLineOfSight(target)) {
                     performSwordQiSlash(target);
                     slashCooldown = 70 + this.random.nextInt(30);
@@ -114,7 +113,6 @@ public class DemonicCultivatorEntity extends Monster {
     public boolean hurt(DamageSource source, float amount) {
         boolean hurt = super.hurt(source, amount);
 
-        // Qinggong Evasivo al recibir daño
         if (hurt && !this.level().isClientSide && dashCooldown <= 0) {
             dashCooldown = 90;
             LivingEntity target = this.getTarget();

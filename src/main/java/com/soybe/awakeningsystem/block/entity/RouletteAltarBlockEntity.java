@@ -31,7 +31,7 @@ import net.neoforged.neoforge.registries.DeferredHolder;
 import java.util.UUID;
 
 public class RouletteAltarBlockEntity extends BlockEntity {
-    public static final int SPIN_DURATION_TICKS = 100; // 5 segundos de giro físico
+    public static final int SPIN_DURATION_TICKS = 100;
 
     private final NonNullList<ItemStack> slotItems = NonNullList.withSize(8, ItemStack.EMPTY);
 
@@ -41,7 +41,7 @@ public class RouletteAltarBlockEntity extends BlockEntity {
     private float prevWheelAngle = 0.0F;
     private float startAngle = 0.0F;
     private float totalSpinAngle = 0.0F;
-    private int targetSlot = 0; // 0..7
+    private int targetSlot = 0;
     private int coinsWon = 150;
     private UUID spinningPlayerId = null;
     private int winDisplayTicks = 0;
@@ -127,22 +127,20 @@ public class RouletteAltarBlockEntity extends BlockEntity {
         this.winDisplayTicks = 0;
         this.startAngle = this.wheelAngle % 360.0F;
 
-        // Selección ponderada del slot ganador (0 a 7)
         int roll = player.getRandom().nextInt(100);
-        if (roll < 6) this.targetSlot = 0;       // 6% Espada del Ciruelo
-        else if (roll < 14) this.targetSlot = 1; // 8% Perla del Dragón Celestial
-        else if (roll < 24) this.targetSlot = 2; // 10% Dagas de las Sombras
-        else if (roll < 34) this.targetSlot = 3; // 10% Espada Demonio Celestial
-        else if (roll < 50) this.targetSlot = 4; // 16% Escama de Dragón Inmortal x2
-        else if (roll < 66) this.targetSlot = 5; // 16% Ginseng Milenario x2
-        else if (roll < 82) this.targetSlot = 6; // 16% Loto de Nieve x2
-        else this.targetSlot = 7;                // 18% Monedas del Sistema x64
+        if (roll < 6) this.targetSlot = 0;
+        else if (roll < 14) this.targetSlot = 1;
+        else if (roll < 24) this.targetSlot = 2;
+        else if (roll < 34) this.targetSlot = 3;
+        else if (roll < 50) this.targetSlot = 4;
+        else if (roll < 66) this.targetSlot = 5;
+        else if (roll < 82) this.targetSlot = 6;
+        else this.targetSlot = 7;
 
         this.coinsWon = 75 + player.getRandom().nextInt(151);
 
-        // Alineación geométrica exacta con la aguja indicadora fija en 0° (Norte)
         float targetAngleNormalized = (360.0F - (this.targetSlot * 45.0F)) % 360.0F;
-        float turns = 5.0F * 360.0F; // 5 giros completos
+        float turns = 5.0F * 360.0F;
         float currentNorm = this.startAngle % 360.0F;
         float diff = targetAngleNormalized - currentNorm;
         if (diff <= 0) diff += 360.0F;
@@ -165,12 +163,10 @@ public class RouletteAltarBlockEntity extends BlockEntity {
         if (be.isSpinning) {
             be.spinTicks++;
 
-            // Curva cúbica de desaceleración física
             float p = Math.min(1.0F, (float) be.spinTicks / (float) SPIN_DURATION_TICKS);
             float easeOut = 1.0F - (float) Math.pow(1.0F - p, 3.0);
             be.wheelAngle = be.startAngle + be.totalSpinAngle * easeOut;
 
-            // Sonido adictivo de trinquete de ruleta de casino mecánica: clic seco + campana de ranura
             float angleDelta = Math.abs(be.wheelAngle - be.prevWheelAngle);
             if (angleDelta > 0.05F) {
                 int prevSector = (int) (be.prevWheelAngle / 45.0F);
@@ -187,7 +183,6 @@ public class RouletteAltarBlockEntity extends BlockEntity {
                 }
             }
 
-            // Partículas alrededor de la pista circular de la gran ruleta vertical (radio ~0.85D)
             if (level.isClientSide && be.spinTicks % 2 == 0) {
                 double rad = Math.toRadians(be.wheelAngle * 2.5D);
                 double px = pos.getX() + 0.5D + Math.cos(rad) * 0.85D;
@@ -196,7 +191,6 @@ public class RouletteAltarBlockEntity extends BlockEntity {
                 level.addParticle(ParticleTypes.GLOW, px, py, pz, 0, 0.01, 0);
             }
 
-            // Finalización del giro (Tick 100)
             if (be.spinTicks >= SPIN_DURATION_TICKS) {
                 be.isSpinning = false;
                 be.winDisplayTicks = 45;
@@ -244,7 +238,6 @@ public class RouletteAltarBlockEntity extends BlockEntity {
             }
         } else {
             if (be.winDisplayTicks > 0) {
-                // Cascada de campanas de casino y monedas mientras se muestra el premio ganador
                 if (be.winDisplayTicks > 15 && be.winDisplayTicks % 2 == 0) {
                     int step = (45 - be.winDisplayTicks) / 2;
                     float bellPitch = Math.min(2.0F, 1.2F + (step * 0.12F));

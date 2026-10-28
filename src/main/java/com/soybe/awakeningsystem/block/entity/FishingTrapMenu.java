@@ -15,12 +15,10 @@ public class FishingTrapMenu extends AbstractContainerMenu {
     private final Container container;
     private final ContainerData data;
 
-    // Constructor del lado del cliente
     public FishingTrapMenu(int containerId, Inventory playerInventory) {
         this(containerId, playerInventory, new SimpleContainer(FishingTrapBlockEntity.CONTAINER_SIZE), new SimpleContainerData(5));
     }
 
-    // Constructor del lado del servidor
     public FishingTrapMenu(int containerId, Inventory playerInventory, Container container, ContainerData data) {
         super(ModMenus.FISHING_TRAP_MENU.get(), containerId);
         checkContainerSize(container, FishingTrapBlockEntity.CONTAINER_SIZE);
@@ -30,28 +28,23 @@ public class FishingTrapMenu extends AbstractContainerMenu {
         this.addDataSlots(data);
         container.startOpen(playerInventory.player);
 
-        // --- RANURAS DE SALIDA (Peces Capturados, slots 0..3) ---
-        // Coordenadas idénticas a la interfaz original de Genshin Nature
         this.addSlot(new OutputOnlySlot(container, 0, 118, 57));
         this.addSlot(new OutputOnlySlot(container, 1, 98, 57));
         this.addSlot(new OutputOnlySlot(container, 2, 58, 57));
         this.addSlot(new OutputOnlySlot(container, 3, 78, 57));
 
-        // --- RANURAS DE ENTRADA (Cebos / Bait, slots 4..8) ---
         this.addSlot(new BaitSlot(container, 4, 53, 17));
         this.addSlot(new BaitSlot(container, 5, 73, 17));
         this.addSlot(new BaitSlot(container, 6, 93, 17));
         this.addSlot(new BaitSlot(container, 7, 113, 17));
         this.addSlot(new BaitSlot(container, 8, 133, 17));
 
-        // --- INVENTARIO DEL JUGADOR (3 filas x 9 columnas) ---
         for (int row = 0; row < 3; ++row) {
             for (int col = 0; col < 9; ++col) {
                 this.addSlot(new Slot(playerInventory, col + row * 9 + 9, 20 + col * 18, 116 + row * 18));
             }
         }
 
-        // --- BARRA DE ACCESO RÁPIDO (Hotbar, 9 columnas) ---
         for (int col = 0; col < 9; ++col) {
             this.addSlot(new Slot(playerInventory, col, 20 + col * 18, 174));
         }
@@ -110,14 +103,12 @@ public class FishingTrapMenu extends AbstractContainerMenu {
             ItemStack stackInSlot = slot.getItem();
             itemstack = stackInSlot.copy();
 
-            // De la trampa de pesca al inventario del jugador
             if (index < 9) {
                 if (!this.moveItemStackTo(stackInSlot, 9, 45, true)) {
                     return ItemStack.EMPTY;
                 }
                 slot.onQuickCraft(stackInSlot, itemstack);
             } else {
-                // Del inventario a la trampa: si es cebo a las ranuras 4..8
                 if (FishingTrapBlockEntity.isBait(stackInSlot)) {
                     if (!this.moveItemStackTo(stackInSlot, 4, 9, false)) {
                         return ItemStack.EMPTY;

@@ -16,10 +16,10 @@ import java.util.List;
 public class TeyvatShrineKeyItem extends Item {
 
     public enum ShrineRegion {
-        ANEMO("Mondstadt", "Santuario de las Profundidades de Anemo", ChatFormatting.GREEN),
-        GEO("Liyue", "Santuario de las Profundidades de Geo", ChatFormatting.GOLD),
-        ELECTRO("Inazuma", "Santuario de las Profundidades de Electro", ChatFormatting.LIGHT_PURPLE),
-        DENDRO("Sumeru", "Santuario de las Profundidades de Dendro", ChatFormatting.DARK_GREEN);
+        ANEMO("Mondstadt", "Anemo Shrine of Depths", ChatFormatting.GREEN),
+        GEO("Liyue", "Geo Shrine of Depths", ChatFormatting.GOLD),
+        ELECTRO("Inazuma", "Electro Shrine of Depths", ChatFormatting.LIGHT_PURPLE),
+        DENDRO("Sumeru", "Dendro Shrine of Depths", ChatFormatting.DARK_GREEN);
 
         public final String region;
         public final String title;
@@ -45,8 +45,8 @@ public class TeyvatShrineKeyItem extends Item {
 
     @Override
     public void appendHoverText(ItemStack stack, TooltipContext context, List<Component> tooltip, TooltipFlag flag) {
-        tooltip.add(Component.literal("§7Nación: " + region.format + region.region));
+        tooltip.add(Component.translatable("item.awakening_system.teyvat_shrine_key.nation", region.format + region.region));
         tooltip.add(Component.literal("§e" + region.title));
-        tooltip.add(Component.literal("§8Capaz de romper los sellos sagrados que bloquean el acceso al tesoro de las civilizaciones pasadas."));
+        tooltip.add(Component.translatable("item.awakening_system.teyvat_shrine_key.lore"));
     }
 }

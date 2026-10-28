@@ -5,10 +5,10 @@ import net.minecraft.core.particles.ParticleTypes;
 import net.minecraft.util.StringRepresentable;
 
 public enum ElementalType implements StringRepresentable {
-    WIND("wind", "§bViento Celestial", 0x55FFFF, ParticleTypes.CLOUD),
-    FROST("frost", "§9Escarcha Glacial", 0x3399FF, ParticleTypes.SNOWFLAKE),
-    FIRE("fire", "§cFuria Ígnea", 0xFF3300, ParticleTypes.FLAME),
-    STORM("storm", "§eRayo Primordial", 0xFFFF33, ParticleTypes.ELECTRIC_SPARK);
+    WIND("wind", "§bCelestial Wind", 0x55FFFF, ParticleTypes.CLOUD),
+    FROST("frost", "§9Glacial Frost", 0x3399FF, ParticleTypes.SNOWFLAKE),
+    FIRE("fire", "§cBlazing Fury", 0xFF3300, ParticleTypes.FLAME),
+    STORM("storm", "§ePrimordial Lightning", 0xFFFF33, ParticleTypes.ELECTRIC_SPARK);
 
     private final String name;
     private final String displayName;

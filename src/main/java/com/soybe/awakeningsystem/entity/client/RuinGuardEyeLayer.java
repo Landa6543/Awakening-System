@@ -28,7 +28,6 @@ public class RuinGuardEyeLayer extends RenderLayer<RuinGuardEntity, RuinGuardMod
     public void render(PoseStack poseStack, MultiBufferSource buffer, int packedLight, RuinGuardEntity entity,
                        float limbSwing, float limbSwingAmount, float partialTick, float ageInTicks,
                        float netHeadYaw, float headPitch) {
-        // Si el Guardián está aturdido (ojo roto) o muerto, el ojo se apaga completamente
         if (entity.isStunned() || !entity.isAlive()) {
             return;
         }

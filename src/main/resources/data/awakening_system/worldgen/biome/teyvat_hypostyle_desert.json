@@ -1,17 +1,18 @@
 {
   "has_precipitation": false,
-  "temperature": 1.8,
+  "temperature": 1.9,
   "downfall": 0.0,
   "effects": {
-    "sky_color": 16766287,
-    "fog_color": 16772275,
+    "sky_color": 4400238,
+    "fog_color": 2824794,
     "water_color": 5099745,
     "water_fog_color": 33679,
     "grass_color": 12622160,
     "foliage_color": 12434877,
+    "ambient_sound": "minecraft:ambient.nether_wastes.loop",
     "particle": {
       "options": {
-        "type": "minecraft:wax_on"
+        "type": "minecraft:portal"
       },
       "probability": 0.015
     }
@@ -19,20 +20,32 @@
   "spawners": {
     "monster": [
       {
-        "type": "awakening_system:genshin_slime",
-        "weight": 50,
-        "minCount": 2,
-        "maxCount": 4
+        "type": "awakening_system:ruin_sentinel",
+        "weight": 35,
+        "minCount": 1,
+        "maxCount": 3
       },
       {
-        "type": "awakening_system:hilichurl",
-        "weight": 45,
-        "minCount": 2,
-        "maxCount": 5
+        "type": "awakening_system:ruin_guard",
+        "weight": 20,
+        "minCount": 1,
+        "maxCount": 1
       },
       {
-        "type": "awakening_system:mitachurl",
-        "weight": 2,
+        "type": "awakening_system:ruin_hunter",
+        "weight": 20,
+        "minCount": 1,
+        "maxCount": 1
+      },
+      {
+        "type": "awakening_system:ruin_drake",
+        "weight": 15,
+        "minCount": 1,
+        "maxCount": 1
+      },
+      {
+        "type": "awakening_system:thunderhelm_lawachurl",
+        "weight": 15,
         "minCount": 1,
         "maxCount": 1
       }
@@ -40,15 +53,9 @@
     "creature": [
       {
         "type": "minecraft:camel",
-        "weight": 8,
+        "weight": 6,
         "minCount": 1,
         "maxCount": 2
-      },
-      {
-        "type": "minecraft:armadillo",
-        "weight": 6,
-        "minCount": 2,
-        "maxCount": 4
       }
     ]
   },
@@ -59,23 +66,16 @@
     [],
     [],
     [],
-    [
-      "awakening_system:teyvat_hilichurl_camp",
-      "awakening_system:teyvat_shrine_of_depths",
-      "awakening_system:teyvat_statue_of_the_seven",
-      "awakening_system:teyvat_teleport_waypoint",
-      "awakening_system:teyvat_regional_structure"
-    ],
     [],
-    [
-      "awakening_system:ore_agnidus_agate",
-      "awakening_system:ore_prithiva_topaz"
-    ],
+    [],
+    [],
     [],
     [],
     [
       "minecraft:patch_dead_bush",
-      "minecraft:patch_cactus"
+      "minecraft:patch_cactus",
+      "awakening_system:teyvat_shrine_of_depths",
+      "awakening_system:teyvat_teleport_waypoint"
     ],
     []
   ]

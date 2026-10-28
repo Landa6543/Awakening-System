@@ -1,0 +1,18 @@
+{
+  "type": "minecraft:crafting_shaped",
+  "category": "misc",
+  "pattern": [
+    "#I#",
+    "#C#",
+    "###"
+  ],
+  "key": {
+    "#": { "item": "minecraft:diamond" },
+    "I": { "item": "awakening_system:spirit_jade" },
+    "C": { "item": "minecraft:emerald_block" }
+  },
+  "result": {
+    "count": 1,
+    "id": "awakening_system:spirit_jade_upgrade_smithing_template"
+  }
+}

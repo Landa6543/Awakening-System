@@ -57,33 +57,21 @@ public class ManaPixieModel<T extends ManaPixieEntity> extends EntityModel<T> {
         MeshDefinition mesh = new MeshDefinition();
         PartDefinition root = mesh.getRoot();
 
-        // Torso / vestido feérico (3x4x2) + falda de pétalos acampanada (5x3x4)
         PartDefinition body = root.addOrReplaceChild("body", CubeListBuilder.create()
-                // Torso / corsé
                 .texOffs(0, 11).addBox(-1.5F, 0.0F, -1.0F, 3.0F, 4.0F, 2.0F, new CubeDeformation(0.0F))
-                // Falda de pétalos acampanada
                 .texOffs(10, 11).addBox(-2.5F, 3.0F, -2.0F, 5.0F, 3.0F, 4.0F, new CubeDeformation(0.0F)),
                 PartPose.offset(0.0F, 14.0F, 0.0F));
 
-        // Cabeza estilizada (5x5x5) con volumen de cabello trasero, mechones laterales, orejas élficas y flor
         body.addOrReplaceChild("head", CubeListBuilder.create()
-                // Cabeza base y rostro
                 .texOffs(0, 0).addBox(-2.5F, -5.0F, -2.5F, 5.0F, 5.0F, 5.0F, new CubeDeformation(0.0F))
-                // Cabello posterior estilizado que termina sobre los hombros (5x4x1)
                 .texOffs(20, 0).addBox(-2.5F, -5.0F, 2.5F, 5.0F, 4.0F, 1.0F, new CubeDeformation(0.0F))
-                // Mechón lateral izquierdo
                 .texOffs(34, 0).addBox(-3.0F, -3.0F, -2.5F, 1.0F, 5.0F, 1.0F, new CubeDeformation(0.0F))
-                // Mechón lateral derecho
                 .texOffs(38, 0).addBox(2.0F, -3.0F, -2.5F, 1.0F, 5.0F, 1.0F, new CubeDeformation(0.0F))
-                // Oreja élfica puntiaguda izquierda
                 .texOffs(42, 0).addBox(-4.5F, -3.5F, 0.0F, 2.0F, 2.0F, 1.0F, new CubeDeformation(0.0F))
-                // Oreja élfica puntiaguda derecha
                 .texOffs(48, 0).addBox(2.5F, -3.5F, 0.0F, 2.0F, 2.0F, 1.0F, new CubeDeformation(0.0F))
-                // Horquilla de flor silvestre
                 .texOffs(54, 0).addBox(-2.5F, -6.2F, -1.5F, 2.0F, 2.0F, 2.0F, new CubeDeformation(0.0F)),
                 PartPose.offset(0.0F, 0.0F, -0.5F));
 
-        // Brazos delicados (1x4x1)
         body.addOrReplaceChild("left_arm", CubeListBuilder.create()
                 .texOffs(28, 11).addBox(-0.5F, 0.0F, -0.5F, 1.0F, 4.0F, 1.0F, new CubeDeformation(0.0F)),
                 PartPose.offsetAndRotation(-1.8F, 1.0F, 0.0F, -0.6F, 0.25F, 0.15F));
@@ -92,7 +80,6 @@ public class ManaPixieModel<T extends ManaPixieEntity> extends EntityModel<T> {
                 .texOffs(32, 11).addBox(-0.5F, 0.0F, -0.5F, 1.0F, 4.0F, 1.0F, new CubeDeformation(0.0F)),
                 PartPose.offsetAndRotation(1.8F, 1.0F, 0.0F, -0.6F, -0.25F, -0.15F));
 
-        // Piernas feéricas delicadas (1x4x1)
         body.addOrReplaceChild("left_leg", CubeListBuilder.create()
                 .texOffs(36, 11).addBox(-0.5F, 0.0F, -0.5F, 1.0F, 4.0F, 1.0F, new CubeDeformation(0.0F)),
                 PartPose.offsetAndRotation(-1.0F, 5.5F, 0.0F, 0.25F, 0.0F, 0.08F));
@@ -101,12 +88,10 @@ public class ManaPixieModel<T extends ManaPixieEntity> extends EntityModel<T> {
                 .texOffs(40, 11).addBox(-0.5F, 0.0F, -0.5F, 1.0F, 4.0F, 1.0F, new CubeDeformation(0.0F)),
                 PartPose.offsetAndRotation(1.0F, 5.5F, 0.0F, 0.25F, 0.0F, -0.08F));
 
-        // Orbe de Maná Puro (3x3x3)
         body.addOrReplaceChild("mana_orb", CubeListBuilder.create()
                 .texOffs(44, 11).addBox(-1.5F, -1.5F, -1.5F, 3.0F, 3.0F, 3.0F, new CubeDeformation(0.0F)),
                 PartPose.offset(0.0F, 2.5F, -2.6F));
 
-        // 4 Alas Feéricas Anguladas hacia Atrás (dx=0, siluetas botánicas/vitral)
         body.addOrReplaceChild("left_wing_upper", CubeListBuilder.create()
                 .texOffs(0, 20).addBox(0.0F, -6.0F, 0.0F, 0.0F, 7.0F, 8.0F, new CubeDeformation(0.0F)),
                 PartPose.offsetAndRotation(-0.5F, 1.2F, 0.8F, 0.25F, 0.75F, -0.20F));
@@ -130,21 +115,17 @@ public class ManaPixieModel<T extends ManaPixieEntity> extends EntityModel<T> {
     public void setupAnim(T entity, float limbSwing, float limbSwingAmount, float ageInTicks, float netHeadYaw, float headPitch) {
         this.root.getAllParts().forEach(ModelPart::resetPose);
 
-        // Flotación senoidal suave en el aire
         this.body.y = 14.0F + Mth.sin(ageInTicks * 0.15F) * 1.2F;
 
-        // Cabeceo y giro de cabeza
         this.head.yRot = netHeadYaw * ((float)Math.PI / 180F);
         this.head.xRot = headPitch * ((float)Math.PI / 180F);
 
-        // Aleteo feérico suave de alta frecuencia (flutter hacia atrás y afuera sin atravesar el cuerpo)
         float flutter = Mth.cos(ageInTicks * 22.0F * ((float)Math.PI / 180F)) * (float)Math.PI * 0.12F;
         this.leftWingUpper.yRot = 0.75F - flutter;
         this.rightWingUpper.yRot = -0.75F + flutter;
         this.leftWingLower.yRot = 0.60F - flutter * 0.8F;
         this.rightWingLower.yRot = -0.60F + flutter * 0.8F;
 
-        // Rotación y levitación del Orbe de Maná
         this.manaOrb.yRot = ageInTicks * 0.08F;
         this.manaOrb.y = 3.0F + Mth.sin(ageInTicks * 0.22F) * 0.4F;
     }

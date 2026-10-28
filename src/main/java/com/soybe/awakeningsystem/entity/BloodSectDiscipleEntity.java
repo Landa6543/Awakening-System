@@ -37,7 +37,7 @@ public class BloodSectDiscipleEntity extends Monster {
     public BloodSectDiscipleEntity(EntityType<? extends Monster> entityType, Level level) {
         super(entityType, level);
         this.xpReward = 45;
-        this.setCustomName(Component.literal("§cDiscípulo de la Secta de Sangre"));
+        this.setCustomName(Component.translatable("entity.awakening_system.blood_sect_disciple.name"));
         this.setCustomNameVisible(true);
         this.addTag("blood_sect");
         this.addTag("no_shadow_extraction");
@@ -87,7 +87,6 @@ public class BloodSectDiscipleEntity extends Monster {
             LivingEntity target = this.getTarget();
             double distSq = this.distanceToSqr(target);
 
-            // Embestida marcial de corte carmesí (distancia 4 a 14 bloques)
             if (this.dashCooldown <= 0 && distSq >= 16.0D && distSq <= 196.0D) {
                 this.dashCooldown = 100 + this.random.nextInt(60);
                 Vec3 dir = target.position().subtract(this.position()).normalize().scale(1.1D);

@@ -1,0 +1,6 @@
+{
+    "textures":  {
+                     "all":  "awakening_system:block/abyssal_stone_iron_ore"
+                 },
+    "parent":  "minecraft:block/cube_all"
+}

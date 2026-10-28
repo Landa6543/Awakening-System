@@ -1,0 +1,16 @@
+{
+  "replace": false,
+  "values": [
+    "awakening_system:racetrack_paddock_fence",
+    "awakening_system:spirit_plum_fence",
+    "awakening_system:celestial_pine_fence",
+    "awakening_system:cuihua_fence",
+    "awakening_system:sandbearer_fence",
+    "awakening_system:adhigama_fence",
+    "awakening_system:aralia_fence",
+    "awakening_system:yumemiru_fence",
+    "awakening_system:otogi_fence",
+    "awakening_system:bamboo_fence",
+    "awakening_system:maple_fence"
+  ]
+}

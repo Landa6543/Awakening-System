@@ -1,0 +1,92 @@
+{
+  "parent": "minecraft:block/block",
+  "textures": {
+    "particle": "minecraft:block/gold_block",
+    "brass": "minecraft:block/gold_block",
+    "rope": "minecraft:block/red_wool"
+  },
+  "elements": [
+    {
+      "name": "base",
+      "from": [5, 0, 5],
+      "to": [11, 1.5, 11],
+      "faces": {
+        "north": { "texture": "#brass", "uv": [5, 14, 11, 16] },
+        "east": { "texture": "#brass", "uv": [5, 14, 11, 16] },
+        "south": { "texture": "#brass", "uv": [5, 14, 11, 16] },
+        "west": { "texture": "#brass", "uv": [5, 14, 11, 16] },
+        "up": { "texture": "#brass", "uv": [5, 5, 11, 11] },
+        "down": { "texture": "#brass", "uv": [5, 5, 11, 11] }
+      }
+    },
+    {
+      "name": "pole",
+      "from": [7, 1.5, 7],
+      "to": [9, 13.5, 9],
+      "faces": {
+        "north": { "texture": "#brass", "uv": [7, 2, 9, 14] },
+        "east": { "texture": "#brass", "uv": [7, 2, 9, 14] },
+        "south": { "texture": "#brass", "uv": [7, 2, 9, 14] },
+        "west": { "texture": "#brass", "uv": [7, 2, 9, 14] }
+      }
+    },
+    {
+      "name": "finial",
+      "from": [6.5, 13.5, 6.5],
+      "to": [9.5, 16, 9.5],
+      "faces": {
+        "north": { "texture": "#brass", "uv": [6, 13, 10, 16] },
+        "east": { "texture": "#brass", "uv": [6, 13, 10, 16] },
+        "south": { "texture": "#brass", "uv": [6, 13, 10, 16] },
+        "west": { "texture": "#brass", "uv": [6, 13, 10, 16] },
+        "up": { "texture": "#brass", "uv": [6, 6, 10, 10] },
+        "down": { "texture": "#brass", "uv": [6, 6, 10, 10] }
+      }
+    },
+    {
+      "name": "rope_loop",
+      "from": [7, 9, 4],
+      "to": [9, 13, 7],
+      "faces": {
+        "north": { "texture": "#rope", "uv": [7, 9, 9, 13] },
+        "east": { "texture": "#rope", "uv": [4, 9, 7, 13] },
+        "south": { "texture": "#rope", "uv": [7, 9, 9, 13] },
+        "west": { "texture": "#rope", "uv": [4, 9, 7, 13] },
+        "up": { "texture": "#rope", "uv": [7, 4, 9, 7] },
+        "down": { "texture": "#rope", "uv": [7, 4, 9, 7] }
+      }
+    }
+  ],
+  "display": {
+    "gui": {
+      "rotation": [30, 225, 0],
+      "translation": [0, 0, 0],
+      "scale": [0.625, 0.625, 0.625]
+    },
+    "ground": {
+      "rotation": [0, 0, 0],
+      "translation": [0, 3, 0],
+      "scale": [0.25, 0.25, 0.25]
+    },
+    "fixed": {
+      "rotation": [0, 0, 0],
+      "translation": [0, 0, 0],
+      "scale": [0.5, 0.5, 0.5]
+    },
+    "thirdperson_righthand": {
+      "rotation": [75, 45, 0],
+      "translation": [0, 2.5, 0],
+      "scale": [0.375, 0.375, 0.375]
+    },
+    "firstperson_righthand": {
+      "rotation": [0, 45, 0],
+      "translation": [0, 0, 0],
+      "scale": [0.4, 0.4, 0.4]
+    },
+    "firstperson_lefthand": {
+      "rotation": [0, 225, 0],
+      "translation": [0, 0, 0],
+      "scale": [0.4, 0.4, 0.4]
+    }
+  }
+}

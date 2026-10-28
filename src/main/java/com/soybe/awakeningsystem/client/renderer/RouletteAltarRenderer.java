@@ -33,7 +33,6 @@ public class RouletteAltarRenderer implements BlockEntityRenderer<RouletteAltarB
     public void render(RouletteAltarBlockEntity blockEntity, float partialTick, PoseStack poseStack, MultiBufferSource bufferSource, int packedLight, int packedOverlay) {
         poseStack.pushPose();
 
-        // 1. Orientar la ruleta hacia el jugador, apoyada directamente en el piso (Y=0.0D)
         Direction facing = blockEntity.getBlockState().hasProperty(RouletteAltarBlock.FACING)
                 ? blockEntity.getBlockState().getValue(RouletteAltarBlock.FACING)
                 : Direction.NORTH;
@@ -43,10 +42,8 @@ public class RouletteAltarRenderer implements BlockEntityRenderer<RouletteAltarB
 
         VertexConsumer vertexConsumer = bufferSource.getBuffer(RenderType.entityCutoutNoCull(TEXTURE));
 
-        // 2. Renderizar soporte de caballete en A (ESTRICTAMENTE DETRÁS DE LA RUEDA)
         model.stand.render(poseStack, vertexConsumer, packedLight, packedOverlay, 0xFFFFFFFF);
 
-        // 3. Animación de aleteo elástico de la aguja superior al chocar contra las 16 clavijas
         float wheelAngle = Mth.lerp(partialTick, blockEntity.getPrevWheelAngle(), blockEntity.getWheelAngle());
         float needleAngle = 0.0F;
         if (blockEntity.isSpinning()) {
@@ -61,20 +58,15 @@ public class RouletteAltarRenderer implements BlockEntityRenderer<RouletteAltarB
         model.pointer.zRot = (float) Math.toRadians(needleAngle);
         model.pointer.render(poseStack, vertexConsumer, packedLight, packedOverlay, 0xFFFFFFFF);
 
-        // 4. Renderizar la Gran Rueda Vertical Monumental (Diámetro 2.0 bloques = Radio 1.0D)
         poseStack.pushPose();
-        // Centro del eje vertical a 1.25 bloques sobre el suelo
         poseStack.translate(0.0D, 1.25D, 0.05D);
         poseStack.mulPose(Axis.ZP.rotationDegrees(-wheelAngle));
 
-        // Renderizar el buje central compacto y las 16 clavijas físicas 3D
         model.wheel.render(poseStack, vertexConsumer, packedLight, packedOverlay, 0xFFFFFFFF);
 
-        // Renderizar carátula circular de alta definición (Doble cara: Frontal y Trasera)
-        float r = 1.0F; // 1.0 bloque de radio = 2.0 bloques de diámetro
+        float r = 1.0F;
         var matrix = poseStack.last().pose();
 
-        // Cara frontal (+Z): UV [0.5, 1.0], [0.5, 1.0]
         float zFront = 0.02F;
         vertexConsumer.addVertex(matrix, -r, -r, zFront).setColor(255, 255, 255, 255).setUv(0.5F, 1.0F)
                 .setOverlay(packedOverlay).setLight(packedLight).setNormal(0, 0, 1);
@@ -85,7 +77,6 @@ public class RouletteAltarRenderer implements BlockEntityRenderer<RouletteAltarB
         vertexConsumer.addVertex(matrix, -r, r, zFront).setColor(255, 255, 255, 255).setUv(0.5F, 0.5F)
                 .setOverlay(packedOverlay).setLight(packedLight).setNormal(0, 0, 1);
 
-        // Cara posterior (-Z): UV [0.5, 1.0], [0.0, 0.5]
         float zBack = -0.02F;
         vertexConsumer.addVertex(matrix, -r, r, zBack).setColor(255, 255, 255, 255).setUv(0.5F, 0.0F)
                 .setOverlay(packedOverlay).setLight(packedLight).setNormal(0, 0, -1);
@@ -96,7 +87,6 @@ public class RouletteAltarRenderer implements BlockEntityRenderer<RouletteAltarB
         vertexConsumer.addVertex(matrix, -r, -r, zBack).setColor(255, 255, 255, 255).setUv(0.5F, 0.5F)
                 .setOverlay(packedOverlay).setLight(packedLight).setNormal(0, 0, -1);
 
-        // Renderizar los 8 ítems físicos en 3D en las 8 casillas (radio generoso r = 0.65D)
         for (int i = 0; i < 8; i++) {
             ItemStack stack = blockEntity.getSlotItem(i);
             if (stack.isEmpty()) continue;
@@ -117,9 +107,8 @@ public class RouletteAltarRenderer implements BlockEntityRenderer<RouletteAltarB
             poseStack.popPose();
         }
 
-        poseStack.popPose(); // Fin rotación de la rueda
+        poseStack.popPose();
 
-        // 5. Presentación triunfal del ítem ganador al detenerse
         if (blockEntity.getWinDisplayTicks() > 0) {
             float winProgress = (45.0F - blockEntity.getWinDisplayTicks() + partialTick) / 45.0F;
             float elevateY = 1.25F + (float) Math.sin(winProgress * Math.PI) * 0.40F;

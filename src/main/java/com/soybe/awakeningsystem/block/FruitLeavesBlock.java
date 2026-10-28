@@ -77,7 +77,6 @@ public class FruitLeavesBlock extends LeavesBlock implements BonemealableBlock {
     @Override
     protected void randomTick(BlockState state, ServerLevel level, BlockPos pos, RandomSource random) {
         super.randomTick(state, level, pos, random);
-        // Si no tiene fruta y recibe suficiente luz, madura fruta gradualmente
         if (!state.getValue(HAS_FRUIT) && level.getMaxLocalRawBrightness(pos.above()) >= 9) {
             if (random.nextInt(6) == 0) {
                 level.setBlock(pos, state.setValue(HAS_FRUIT, true), 3);
@@ -128,7 +127,7 @@ public class FruitLeavesBlock extends LeavesBlock implements BonemealableBlock {
         if (!level.isClientSide()) {
             Item fruit = fruitSupplier.get();
             if (fruit != null && fruit != Items.AIR) {
-                int count = 1 + level.random.nextInt(2); // 1 a 2 frutas por recolección
+                int count = 1 + level.random.nextInt(2);
                 ItemStack fruitStack = new ItemStack(fruit, count);
                 if (player == null || !player.addItem(fruitStack)) {
                     net.minecraft.world.entity.item.ItemEntity itemEntity = new net.minecraft.world.entity.item.ItemEntity(

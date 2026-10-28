@@ -62,7 +62,7 @@ public class WyvernEntity extends TamableAnimal implements FlyingAnimal, RangedA
     public static final int VARIANT_FIRE = 1;
     public static final int VARIANT_LIGHTNING = 2;
 
-    public static final int ADULT_AGE_TICKS = 72000; // ~1 hora de juego para ser adulto
+    public static final int ADULT_AGE_TICKS = 72000;
 
     private int roarTimer = 0;
     private int breathCooldown = 0;
@@ -201,12 +201,10 @@ public class WyvernEntity extends TamableAnimal implements FlyingAnimal, RangedA
             }
         }
 
-        // Crecimiento pasivo
         if (!this.level().isClientSide() && !this.isAdult()) {
             setWyvernAge(getWyvernAge() + 1);
         }
 
-        // Partículas elementales según variante
         if (this.level() instanceof ServerLevel sl && this.tickCount % 5 == 0) {
             Vec3 headPos = this.position().add(this.getLookAngle().scale(1.5D)).add(0, 1.2D, 0);
             if (getVariant() == VARIANT_POISON) {
@@ -265,7 +263,6 @@ public class WyvernEntity extends TamableAnimal implements FlyingAnimal, RangedA
         }
     }
 
-    // Físicas de vuelo montado para el Wyvern
     @Override
     public void travel(Vec3 travelVector) {
         if (this.isAlive()) {
@@ -301,7 +298,7 @@ public class WyvernEntity extends TamableAnimal implements FlyingAnimal, RangedA
                     if (this.clientSpaceHeld) {
                         targetPitch = -20.0F;
                     } else if (this.clientShiftHeld) {
-                        targetPitch = 25.0F; // Picada aerodinámica
+                        targetPitch = 25.0F;
                     }
                     this.setXRot(Mth.rotLerp(0.25F, this.getXRot(), targetPitch));
 
@@ -321,7 +318,7 @@ public class WyvernEntity extends TamableAnimal implements FlyingAnimal, RangedA
                     if (this.clientSpaceHeld) {
                         vy = 0.85D;
                     } else if (this.clientShiftHeld) {
-                        vy = -1.25D; // Aceleración en picada
+                        vy = -1.25D;
                     } else {
                         vy = Math.sin(this.tickCount * 0.15D) * 0.03D;
                     }
@@ -343,7 +340,6 @@ public class WyvernEntity extends TamableAnimal implements FlyingAnimal, RangedA
     public InteractionResult mobInteract(Player player, InteractionHand hand) {
         ItemStack itemInHand = player.getItemInHand(hand);
 
-        // 1. Alimentación y domesticación con Carne de Maná o carne cocinada
         if (!this.isTame() && (itemInHand.is(SystemItems.MANA_BEEF.get()) || itemInHand.is(SystemItems.MANA_MUTTON.get()) || itemInHand.is(Items.COOKED_BEEF))) {
             if (!this.level().isClientSide()) {
                 itemInHand.shrink(1);
@@ -352,7 +348,7 @@ public class WyvernEntity extends TamableAnimal implements FlyingAnimal, RangedA
                     this.navigation.stop();
                     this.setTarget(null);
                     this.level().broadcastEntityEvent(this, (byte) 7);
-                    player.displayClientMessage(Component.literal("§6§l✦ ¡Has domado con éxito a este feroz Wyvern! ✦"), false);
+                    player.displayClientMessage(Component.translatable("entity.awakening_system.wyvern.tamed"), false);
                 } else {
                     this.level().broadcastEntityEvent(this, (byte) 6);
                 }
@@ -360,9 +356,7 @@ public class WyvernEntity extends TamableAnimal implements FlyingAnimal, RangedA
             return InteractionResult.sidedSuccess(this.level().isClientSide());
         }
 
-        // 2. Si ya está domesticado
         if (this.isTame() && this.isOwnedBy(player)) {
-            // Curar con carnes
             if (this.getHealth() < this.getMaxHealth() && (itemInHand.is(SystemItems.MANA_BEEF.get()) || itemInHand.is(Items.COOKED_BEEF))) {
                 itemInHand.shrink(1);
                 this.heal(30.0F);
@@ -370,18 +364,16 @@ public class WyvernEntity extends TamableAnimal implements FlyingAnimal, RangedA
                 return InteractionResult.sidedSuccess(this.level().isClientSide());
             }
 
-            // Poner montura
             if (!this.isSaddled() && (itemInHand.is(Items.SADDLE) || (SystemItems.WYVERN_SADDLE.isBound() && itemInHand.is(SystemItems.WYVERN_SADDLE.get())))) {
                 if (!player.getAbilities().instabuild) {
                     itemInHand.shrink(1);
                 }
                 this.setSaddled(true);
                 this.playSound(SoundEvents.HORSE_SADDLE, 1.0F, 1.0F);
-                player.displayClientMessage(Component.literal("§aWyvern equipado con montura. ¡Listo para alzar el vuelo!"), false);
+                player.displayClientMessage(Component.translatable("entity.awakening_system.wyvern.saddled"), false);
                 return InteractionResult.sidedSuccess(this.level().isClientSide());
             }
 
-            // Montar al Wyvern con montura
             if (this.isSaddled() && !player.isShiftKeyDown() && itemInHand.isEmpty()) {
                 if (!this.level().isClientSide()) {
                     player.startRiding(this);
@@ -389,10 +381,9 @@ public class WyvernEntity extends TamableAnimal implements FlyingAnimal, RangedA
                 return InteractionResult.sidedSuccess(this.level().isClientSide());
             }
 
-            // Agacharse con mano vacía -> Alternar Sentarse / Seguir
             if (player.isShiftKeyDown() && itemInHand.isEmpty()) {
                 this.setOrderedToSit(!this.isOrderedToSit());
-                player.displayClientMessage(Component.literal(this.isOrderedToSit() ? "§eWyvern en guardia (esperando ordenes)." : "§aWyvern siguiéndote atentamente."), true);
+                player.displayClientMessage(Component.translatable(this.isOrderedToSit() ? "entity.awakening_system.wyvern.waiting" : "entity.awakening_system.wyvern.following"), true);
                 return InteractionResult.sidedSuccess(this.level().isClientSide());
             }
         }
@@ -456,7 +447,6 @@ public class WyvernEntity extends TamableAnimal implements FlyingAnimal, RangedA
 
     @Override
     protected void playBlockFallSound() {
-        // Silenciado para evitar el sonido de madera o choque al descender o colisionar con bloques
     }
 
     @Override
@@ -466,6 +456,5 @@ public class WyvernEntity extends TamableAnimal implements FlyingAnimal, RangedA
 
     @Override
     protected void checkFallDamage(double y, boolean onGround, BlockState state, BlockPos pos) {
-        // Sin impacto ni sonido de bloque al descender
     }
 }

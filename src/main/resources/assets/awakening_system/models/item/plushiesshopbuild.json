@@ -1,6 +1,15 @@
 {
   "parent": "item/generated",
   "textures": {
-    "layer0": "awakening_system:items/structure_building"
+    "layer0": "awakening_system:item/structure_building"
+  },
+  "display": {
+    "head": {
+      "scale": [
+        0,
+        0,
+        0
+      ]
+    }
   }
 }

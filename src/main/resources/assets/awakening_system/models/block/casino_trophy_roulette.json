@@ -1,0 +1,115 @@
+{
+  "credit": "Awakening System Mod - Jackpot Roulette Champion Trophy",
+  "textures": {
+    "particle": "awakening_system:block/casino_trophy_roulette",
+    "trophy": "awakening_system:block/casino_trophy_roulette"
+  },
+  "elements": [
+    {
+      "name": "mahogany_base",
+      "from": [ 4, 0, 4 ],
+      "to": [ 12, 2.5, 12 ],
+      "faces": {
+        "north": { "uv": [ 0, 0, 8, 4 ], "texture": "#trophy" },
+        "south": { "uv": [ 0, 0, 8, 4 ], "texture": "#trophy" },
+        "east":  { "uv": [ 0, 0, 8, 4 ], "texture": "#trophy" },
+        "west":  { "uv": [ 0, 0, 8, 4 ], "texture": "#trophy" },
+        "up":    { "uv": [ 0, 0, 8, 4 ], "texture": "#trophy" },
+        "down":  { "uv": [ 0, 0, 8, 4 ], "texture": "#trophy" }
+      }
+    },
+    {
+      "name": "plaque_front",
+      "from": [ 4.5, 0.4, 3.8 ],
+      "to": [ 11.5, 2.1, 4.0 ],
+      "faces": {
+        "north": { "uv": [ 12, 8, 16, 12 ], "texture": "#trophy" }
+      }
+    },
+    {
+      "name": "green_felt_cloth",
+      "from": [ 4.5, 2.5, 4.5 ],
+      "to": [ 11.5, 3.0, 11.5 ],
+      "faces": {
+        "north": { "uv": [ 0, 4, 8, 6 ], "texture": "#trophy" },
+        "south": { "uv": [ 0, 4, 8, 6 ], "texture": "#trophy" },
+        "east":  { "uv": [ 0, 4, 8, 6 ], "texture": "#trophy" },
+        "west":  { "uv": [ 0, 4, 8, 6 ], "texture": "#trophy" },
+        "up":    { "uv": [ 0, 4, 8, 8 ], "texture": "#trophy" }
+      }
+    },
+    {
+      "name": "wheel_cabinet_rim",
+      "from": [ 3.5, 3.0, 7.5 ],
+      "to": [ 12.5, 14.5, 9.0 ],
+      "faces": {
+        "north": { "uv": [ 0, 0, 8, 4 ], "texture": "#trophy" },
+        "south": { "uv": [ 0, 0, 8, 4 ], "texture": "#trophy" },
+        "east":  { "uv": [ 0, 0, 2, 4 ], "texture": "#trophy" },
+        "west":  { "uv": [ 0, 0, 2, 4 ], "texture": "#trophy" },
+        "up":    { "uv": [ 0, 0, 8, 2 ], "texture": "#trophy" },
+        "down":  { "uv": [ 0, 0, 8, 2 ], "texture": "#trophy" }
+      }
+    },
+    {
+      "name": "roulette_bowl_face",
+      "from": [ 3.8, 3.3, 7.2 ],
+      "to": [ 12.2, 14.2, 7.5 ],
+      "faces": {
+        "north": { "uv": [ 8, 0, 16, 8 ], "texture": "#trophy" }
+      }
+    },
+    {
+      "name": "turret_spindle_hub",
+      "from": [ 7.2, 8.0, 6.7 ],
+      "to": [ 8.8, 9.6, 7.2 ],
+      "faces": {
+        "north": { "uv": [ 0, 8, 4, 12 ], "texture": "#trophy" },
+        "south": { "uv": [ 0, 8, 4, 12 ], "texture": "#trophy" },
+        "east":  { "uv": [ 0, 8, 2, 12 ], "texture": "#trophy" },
+        "west":  { "uv": [ 0, 8, 2, 12 ], "texture": "#trophy" },
+        "up":    { "uv": [ 0, 8, 4, 10 ], "texture": "#trophy" },
+        "down":  { "uv": [ 0, 8, 4, 10 ], "texture": "#trophy" }
+      }
+    },
+    {
+      "name": "turret_arm_horizontal",
+      "from": [ 6.5, 8.5, 6.5 ],
+      "to": [ 9.5, 9.1, 6.8 ],
+      "faces": {
+        "north": { "uv": [ 0, 8, 4, 10 ], "texture": "#trophy" },
+        "south": { "uv": [ 0, 8, 4, 10 ], "texture": "#trophy" },
+        "up":    { "uv": [ 0, 8, 4, 10 ], "texture": "#trophy" },
+        "down":  { "uv": [ 0, 8, 4, 10 ], "texture": "#trophy" },
+        "east":  { "uv": [ 0, 8, 1, 10 ], "texture": "#trophy" },
+        "west":  { "uv": [ 0, 8, 1, 10 ], "texture": "#trophy" }
+      }
+    },
+    {
+      "name": "turret_arm_vertical",
+      "from": [ 7.7, 7.3, 6.5 ],
+      "to": [ 8.3, 10.3, 6.8 ],
+      "faces": {
+        "north": { "uv": [ 0, 8, 2, 12 ], "texture": "#trophy" },
+        "south": { "uv": [ 0, 8, 2, 12 ], "texture": "#trophy" },
+        "east":  { "uv": [ 0, 8, 1, 12 ], "texture": "#trophy" },
+        "west":  { "uv": [ 0, 8, 1, 12 ], "texture": "#trophy" },
+        "up":    { "uv": [ 0, 8, 2, 10 ], "texture": "#trophy" },
+        "down":  { "uv": [ 0, 8, 2, 10 ], "texture": "#trophy" }
+      }
+    },
+    {
+      "name": "silver_ball",
+      "from": [ 7.3, 3.0, 5.5 ],
+      "to": [ 8.7, 4.4, 6.9 ],
+      "faces": {
+        "north": { "uv": [ 8, 8, 12, 12 ], "texture": "#trophy" },
+        "south": { "uv": [ 8, 8, 12, 12 ], "texture": "#trophy" },
+        "east":  { "uv": [ 8, 8, 12, 12 ], "texture": "#trophy" },
+        "west":  { "uv": [ 8, 8, 12, 12 ], "texture": "#trophy" },
+        "up":    { "uv": [ 8, 8, 12, 12 ], "texture": "#trophy" },
+        "down":  { "uv": [ 8, 8, 12, 12 ], "texture": "#trophy" }
+      }
+    }
+  ]
+}

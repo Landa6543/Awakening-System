@@ -3,163 +3,163 @@ package com.soybe.awakeningsystem.artifact;
 public enum ArtifactSet {
     CRIMSON_WITCH(
             "crimson_witch",
-            "Bruja Carmesí en Llamas",
+            "Crimson Witch of Flames",
             "§c",
             5,
-            "+20% Daño de Fuego y Habilidades Pyro.",
-            "Explosiones y quemaduras infligen +40% de daño adicional y queman por el doble de tiempo."
+            "+20% Fire Damage and Pyro Skills.",
+            "Explosions and burns deal +40% additional damage and burn twice as long."
     ),
     GLADIATORS_FINALE(
             "gladiator",
-            "Final del Gladiador",
+            "Gladiator's Finale",
             "§6",
             5,
-            "+18% Ataque Físico y Daño Base.",
-            "+35% de Daño adicional al golpear con Espadas, Dagas y Lanzas."
+            "+18% Physical Attack and Base DMG.",
+            "+35% additional damage when hitting with Swords, Daggers, and Spears."
     ),
     VIRIDESCENT_VENERER(
             "viridescent",
-            "Sombra Verde Esmeralda",
+            "Viridescent Venerer",
             "§a",
             5,
-            "+20% Daño Anemo / Viento y +15% Velocidad.",
-            "Los torbellinos de viento reducen la resistencia física y elemental del enemigo un 30%."
+            "+20% Anemo / Wind DMG and +15% Speed.",
+            "Swirls reduce enemy physical and elemental resistance by 30%."
     ),
     MAIDEN_BELOVED(
             "maiden",
-            "Doncella Amada",
+            "Maiden Beloved",
             "§d",
             5,
-            "+20% Eficacia de Curación y Regeneración.",
-            "Al curarte a ti o a un compañero, restaura un 25% de salud adicional a todos los aliados cercanos."
+            "+20% Healing Effectiveness and Regeneration.",
+            "Healing yourself or a companion restores an additional 25% health to nearby allies."
     ),
     BLOODSTAINED_CHIVALRY(
             "bloodstained",
-            "Caballero Sanguinario",
+            "Bloodstained Chivalry",
             "§4",
             5,
-            "+25% Daño Físico y Penetración.",
-            "Derrotar a un enemigo otorga +50% de Daño al siguiente impacto y derriba al objetivo."
+            "+25% Physical DMG and Penetration.",
+            "Defeating an enemy grants +50% DMG to the next strike and knocks down the target."
     ),
     BERSERKER(
             "berserker",
             "Berserker",
             "§c",
             4,
-            "+12% Probabilidad de Golpe Crítico.",
-            "Al estar por debajo del 70% de vida, la Probabilidad Crítica aumenta un +24% adicional."
+            "+12% Critical Hit Rate.",
+            "When HP drops below 70%, Critical Rate increases by an additional +24%."
     ),
     THE_EXILE(
             "exile",
-            "El Exiliado",
+            "The Exile",
             "§b",
             4,
-            "+20% Recarga de Maná y Energía.",
-            "Activar una habilidad definitiva o elemental regenera Maná instantáneo para ti y tus aliados."
+            "+20% Mana and Energy Recharge.",
+            "Activating an ultimate or elemental skill instantly restores Mana for you and allies."
     ),
     BRAVE_HEART(
             "brave_heart",
-            "Corazón del Guerrero",
+            "Brave Heart",
             "§e",
             4,
-            "+18% Ataque General.",
-            "+30% de Daño aumentado contra enemigos que tengan más del 50% de su vida restante."
+            "+18% General Attack.",
+            "+30% increased DMG against enemies that have more than 50% HP remaining."
     ),
     NOBLESSE_OBLIGE(
             "noblesse",
-            "Nobleza del Antiguo Régimen",
+            "Noblesse Oblige",
             "§9",
             5,
-            "+20% Daño de Habilidad Definitiva.",
-            "Lanzar una Habilidad Definitiva aumenta el ATQ de todos los miembros del equipo un 20% durante 12s."
+            "+20% Ultimate Skill DMG.",
+            "Using an Ultimate increases all team members' ATK by 20% for 12s."
     ),
     EMBLEM_OF_SEVERED_FATE(
             "emblem",
-            "Emblema del Destino",
+            "Emblem of Severed Fate",
             "§5",
             5,
-            "+20% Recarga de Energía y Maná.",
-            "Aumenta el daño de las Habilidades Definitivas en un 25% de la Recarga de Energía total (máx. 75%)."
+            "+20% Energy and Mana Recharge.",
+            "Increases Ultimate Skill DMG by 25% of total Energy Recharge (max 75%)."
     ),
     THUNDERING_FURY(
             "thundering_fury",
-            "Furia del Trueno",
+            "Thundering Fury",
             "§d",
             5,
-            "+15% Bono de Daño Electro.",
-            "Aumenta el daño infligido por Sobrecarga, Electrocargado y Superconductor un 40%."
+            "+15% Electro DMG Bonus.",
+            "Increases damage dealt by Overloaded, Electro-Charged, and Superconduct by 40%."
     ),
     BLIZZARD_STRAYER(
             "blizzard_strayer",
-            "Nómada del Invierno",
+            "Blizzard Strayer",
             "§b",
             5,
-            "+15% Bono de Daño Cryo.",
-            "Al atacar a un enemigo afectado por Cryo, Prob. CRIT +20%. Si el enemigo está Congelado, +20% adicional."
+            "+15% Cryo DMG Bonus.",
+            "When attacking Cryo-affected enemies, CRIT Rate +20%. If Frozen, additional +20%."
     ),
     HEART_OF_DEPTH(
             "heart_of_depth",
-            "Corazón de las Profundidades",
+            "Heart of Depth",
             "§1",
             5,
-            "+15% Bono de Daño Hydro.",
-            "Tras usar una Habilidad Elemental, aumenta el daño de Ataques Normales y Cargados un 30% por 15s."
+            "+15% Hydro DMG Bonus.",
+            "After using an Elemental Skill, increases Normal and Charged Attack DMG by 30% for 15s."
     ),
     ARCHAIC_PETRA(
             "archaic_petra",
-            "Petra Arcaica",
+            "Archaic Petra",
             "§6",
             5,
-            "+15% Bono de Daño Geo.",
-            "Al obtener un fragmento generado por Cristalización, todos los aliados obtienen +35% de Bono de Daño Elemental."
+            "+15% Geo DMG Bonus.",
+            "Upon obtaining an elemental shard from Crystallize, all party members gain +35% DMG Bonus for that element."
     ),
     DEEPWOOD_MEMORIES(
             "deepwood",
-            "Recuerdos de la Floresta",
+            "Deepwood Memories",
             "§2",
             5,
-            "+15% Bono de Daño Dendro.",
-            "Las Habilidades reducen la Resistencia Dendro de los enemigos golpeados en un 30% durante 8s."
+            "+15% Dendro DMG Bonus.",
+            "Skills decrease the Dendro RES of hit opponents by 30% for 8s."
     ),
     SHIMENAWA_REMINISCENCE(
             "shimenawa",
-            "Reminiscencia de la Purificación",
+            "Shimenawa's Reminiscence",
             "§c",
             5,
-            "+18% Ataque General.",
-            "Al usar una Habilidad Elemental con 15+ de Energía, consume energía para aumentar el daño normal y cargado un 50%."
+            "+18% General Attack.",
+            "When using an Elemental Skill with 15+ Energy, consumes energy to increase Normal/Charged DMG by 50%."
     ),
     DESERT_PAVILION(
             "desert_pavilion",
-            "Épica del Pabellón del Desierto",
+            "Desert Pavilion Chronicle",
             "§3",
             5,
-            "+15% Bono de Daño Anemo.",
-            "Al golpear con un Ataque Cargado, la Vel. de Ataque aumenta un 10% y el daño infligido un 40% por 15s."
+            "+15% Anemo DMG Bonus.",
+            "When a Charged Attack hits, Normal Attack SPD +10% and attack DMG increases by 40% for 15s."
     ),
     OCEAN_HUED_CLAM(
             "ocean_clam",
-            "Perla Oceánica",
+            "Ocean-Hued Clam",
             "§b",
             5,
-            "+15% Bono de Curación.",
-            "Acumula la salud restaurada en una Burbuja Espumosa marina que explota infligiendo daño físico equivalente al 90%."
+            "+15% Healing Bonus.",
+            "Accumulates restored health into a Sea-Dyed Foam bubble that explodes dealing Physical DMG equal to 90%."
     ),
     TENACITY_OF_THE_MILLELITH(
             "tenacity",
-            "Tenacidad de la Geoarmada",
+            "Tenacity of the Millelith",
             "§e",
             5,
-            "+20% Vida Máxima.",
-            "Al golpear a un enemigo con una Habilidad, los miembros del equipo obtienen +20% ATQ y +30% Protección de Escudo."
+            "+20% Max Health.",
+            "When an Elemental Skill hits an opponent, party members gain +20% ATK and +30% Shield Strength."
     ),
     GOLDEN_TROUPE(
             "golden_troupe",
-            "Compañía Dorada",
+            "Golden Troupe",
             "§6",
             5,
-            "+20% Daño de Habilidad Elemental.",
-            "Aumenta el daño de Habilidad Elemental un 25% adicional mientras el personaje no esté en combate activo."
+            "+20% Elemental Skill DMG.",
+            "Increases Elemental Skill DMG by an additional 25% while the character is not active in combat."
     );
 
     private final String idName;
@@ -203,14 +203,14 @@ public enum ArtifactSet {
     }
 
     public net.minecraft.network.chat.Component getDisplayNameComponent() {
-        return net.minecraft.network.chat.Component.literal(colorCode + displayName);
+        return net.minecraft.network.chat.Component.literal(colorCode).append(net.minecraft.network.chat.Component.translatableWithFallback("awakening_system.artifact_set." + idName + ".name", displayName));
     }
 
     public net.minecraft.network.chat.Component getBonus2pComponent() {
-        return net.minecraft.network.chat.Component.literal("§7(2) " + bonus2p);
+        return net.minecraft.network.chat.Component.translatableWithFallback("awakening_system.artifact_set." + idName + ".bonus2p", bonus2p);
     }
 
     public net.minecraft.network.chat.Component getBonus4pComponent() {
-        return net.minecraft.network.chat.Component.literal("§7(4) " + bonus4p);
+        return net.minecraft.network.chat.Component.translatableWithFallback("awakening_system.artifact_set." + idName + ".bonus4p", bonus4p);
     }
 }

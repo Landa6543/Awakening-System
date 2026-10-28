@@ -19,12 +19,10 @@ public class PouchMenu extends AbstractContainerMenu {
     private final ItemStack pouchStack;
     private final IItemHandler pouchHandler;
 
-    // Client-side constructor from RegistryFriendlyByteBuf
     public PouchMenu(int containerId, Inventory playerInventory, RegistryFriendlyByteBuf extraData) {
         this(containerId, playerInventory, extraData.readEnum(InteractionHand.class), extraData.readEnum(PouchTier.class));
     }
 
-    // Server-side constructor
     public PouchMenu(int containerId, Inventory playerInventory, InteractionHand hand, PouchTier tier) {
         super(ModMenus.POUCH_MENU.get(), containerId);
         this.tier = tier;
@@ -43,7 +41,6 @@ public class PouchMenu extends AbstractContainerMenu {
     private void setupPouchSlots() {
         switch (tier) {
             case WANDERER -> {
-                // 18 slots: 2 rows of 9 (x: 8 + col * 18, y: 20 + row * 18)
                 for (int row = 0; row < 2; row++) {
                     for (int col = 0; col < 9; col++) {
                         addSlot(new PouchSlot(pouchHandler, col + row * 9, 8 + col * 18, 20 + row * 18));
@@ -51,7 +48,6 @@ public class PouchMenu extends AbstractContainerMenu {
                 }
             }
             case ADVENTURER -> {
-                // 27 slots: 3 rows of 9 (x: 8 + col * 18, y: 18 + row * 18)
                 for (int row = 0; row < 3; row++) {
                     for (int col = 0; col < 9; col++) {
                         addSlot(new PouchSlot(pouchHandler, col + row * 9, 8 + col * 18, 18 + row * 18));
@@ -59,7 +55,6 @@ public class PouchMenu extends AbstractContainerMenu {
                 }
             }
             case OUTLANDER -> {
-                // 66 slots: 6 rows of 11 (x: 10 + col * 18, y: 16 + row * 18)
                 for (int row = 0; row < 6; row++) {
                     for (int col = 0; col < 11; col++) {
                         addSlot(new PouchSlot(pouchHandler, col + row * 11, 10 + col * 18, 16 + row * 18));
@@ -67,20 +62,16 @@ public class PouchMenu extends AbstractContainerMenu {
                 }
             }
             case EMERGENCY -> {
-                // 143 slots:
-                // Upper body: 17 columns x 7 rows = 119 slots (x: 9 + col * 18, y: 20 + row * 18)
                 for (int row = 0; row < 7; row++) {
                     for (int col = 0; col < 17; col++) {
                         addSlot(new PouchSlot(pouchHandler, col + row * 17, 9 + col * 18, 20 + row * 18));
                     }
                 }
-                // Left wing: 3 cols x 4 rows (12 slots, indices 119..130)
                 for (int row = 0; row < 4; row++) {
                     for (int col = 0; col < 3; col++) {
                         addSlot(new PouchSlot(pouchHandler, 119 + col + row * 3, 9 + col * 18, 151 + row * 18));
                     }
                 }
-                // Right wing: 3 cols x 4 rows (12 slots, indices 131..142)
                 for (int row = 0; row < 4; row++) {
                     for (int col = 0; col < 3; col++) {
                         addSlot(new PouchSlot(pouchHandler, 131 + col + row * 3, 261 + col * 18, 151 + row * 18));
@@ -118,7 +109,6 @@ public class PouchMenu extends AbstractContainerMenu {
             }
         }
 
-        // Player main inventory (3 rows of 9)
         for (int row = 0; row < 3; row++) {
             for (int col = 0; col < 9; col++) {
                 int slotIndex = col + row * 9 + 9;
@@ -131,7 +121,6 @@ public class PouchMenu extends AbstractContainerMenu {
             }
         }
 
-        // Hotbar (1 row of 9)
         for (int col = 0; col < 9; col++) {
             addSlot(new Slot(playerInv, col, invX + col * 18, hotbarY) {
                 @Override
@@ -158,12 +147,10 @@ public class PouchMenu extends AbstractContainerMenu {
 
             int pouchSlotCount = tier.getSlotCount();
             if (index < pouchSlotCount) {
-                // Moving from pouch to player inventory
                 if (!this.moveItemStackTo(slotStack, pouchSlotCount, this.slots.size(), true)) {
                     return ItemStack.EMPTY;
                 }
             } else {
-                // Moving from player inventory to pouch (disallow pouches)
                 if (slotStack.getItem() instanceof PouchItem) {
                     return ItemStack.EMPTY;
                 }

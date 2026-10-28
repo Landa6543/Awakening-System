@@ -27,14 +27,12 @@ public final class WorldBossScalingManager {
         if (entity == null || entity.level().isClientSide()) return false;
         Level level = entity.level();
 
-        // Excluir dimensiones de calabozos, torres y pagodas
         if (level.dimension().equals(DungeonManager.DUNGEON_REALM)
                 || level.dimension().equals(TowerManager.RANKER_TOWER)
                 || level.dimension().equals(PagodaTrialManager.PAGODA_REALM)) {
             return false;
         }
 
-        // Excluir entidades marcadas como tropas o jefes de dungeon / torre / sombras
         if (entity.getTags().contains("dungeon_mob")
                 || entity.getTags().contains("dungeon_boss")
                 || entity.getTags().contains("tower_mob")
@@ -43,7 +41,6 @@ public final class WorldBossScalingManager {
             return false;
         }
 
-        // Instancias específicas de jefes de mundo del mod y vanilla
         if (entity instanceof com.soybe.awakeningsystem.entity.hypostasis.HypostasisBaseBossEntity
                 || entity instanceof com.soybe.awakeningsystem.entity.AzhdahaBossEntity
                 || entity instanceof com.soybe.awakeningsystem.entity.ChildeBossEntity
@@ -61,8 +58,6 @@ public final class WorldBossScalingManager {
                 || entity instanceof com.soybe.awakeningsystem.entity.ElementalDemonKingBossEntity
                 || entity instanceof com.soybe.awakeningsystem.entity.ElementalLordBossEntity
                 || entity instanceof com.soybe.awakeningsystem.entity.AncientCelestialDragonBossEntity
-                || entity instanceof com.soybe.awakeningsystem.entity.AncientDragonEntity
-                || entity instanceof com.soybe.awakeningsystem.entity.CelestialDragonEntity
                 || entity instanceof com.soybe.awakeningsystem.entity.YggdrasilTreantBossEntity
                 || entity instanceof com.soybe.awakeningsystem.entity.ShadowMonarchBossEntity
                 || entity instanceof com.soybe.awakeningsystem.entity.BaranBossEntity
@@ -72,8 +67,7 @@ public final class WorldBossScalingManager {
             return true;
         }
 
-        // Jefes generales con vida base alta persistente en el mundo abierto
-        return entity.getMaxHealth() >= 400.0F && entity instanceof Mob mob && mob.isPersistenceRequired();
+        return false;
     }
 
     /**
@@ -96,8 +90,6 @@ public final class WorldBossScalingManager {
                 || boss instanceof com.soybe.awakeningsystem.entity.RhodeiaOceanidBossEntity
                 || boss instanceof com.soybe.awakeningsystem.entity.RuinSerpentBossEntity
                 || boss instanceof com.soybe.awakeningsystem.entity.BloodPatriarchBossEntity
-                || boss instanceof com.soybe.awakeningsystem.entity.CelestialDragonEntity
-                || boss instanceof com.soybe.awakeningsystem.entity.AncientDragonEntity
                 || boss instanceof com.soybe.awakeningsystem.entity.JadeGuardianBossEntity
                 || boss instanceof com.soybe.awakeningsystem.entity.YggdrasilTreantBossEntity) {
             return 60;
@@ -126,10 +118,8 @@ public final class WorldBossScalingManager {
         int targetLevel = Math.max(baseLevel, playerLevel);
         int currentScaledLevel = boss.getPersistentData().getInt("world_boss_scaled_level");
 
-        // Si ya está escalado a este nivel o superior, no degradar
         if (targetLevel <= currentScaledLevel) return;
 
-        // Registrar estadísticas base originales si aún no existen
         if (!boss.getPersistentData().contains("rpg_base_boss_hp")) {
             boss.getPersistentData().putDouble("rpg_base_boss_hp", boss.getMaxHealth());
             var dmgAttr = boss.getAttribute(Attributes.ATTACK_DAMAGE);
@@ -140,20 +130,15 @@ public final class WorldBossScalingManager {
         double baseDmg = boss.getPersistentData().getDouble("rpg_base_boss_dmg");
 
         int diff = targetLevel - baseLevel;
-        // Escalar vida: +6.5% de vida extra por cada nivel por encima del base
-        // (Ejemplo: nivel 500 con base 60 = 440 niveles = 28.6x de vida base -> ~110,000 HP)
         double hpMult = 1.0D + (diff * 0.065D);
         double newMaxHp = baseHp * hpMult;
 
-        // Escalar daño: +1.5% de daño extra por cada nivel
         double dmgMult = 1.0D + (diff * 0.015D);
         double newDmg = baseDmg * dmgMult;
 
-        // Escalar armadura y tenacidad
         double bonusArmor = Math.min(36.0D, diff * 0.08D);
         double bonusToughness = Math.min(24.0D, diff * 0.05D);
 
-        // Aplicar manteniendo el porcentaje de vida actual
         float currentRatio = Math.max(0.05F, boss.getHealth() / boss.getMaxHealth());
 
         var hpAttr = boss.getAttribute(Attributes.MAX_HEALTH);
@@ -177,7 +162,6 @@ public final class WorldBossScalingManager {
             toughAttr.setBaseValue(toughAttr.getBaseValue() + bonusToughness);
         }
 
-        // Actualizar etiqueta de nombre visible con el nivel escalado
         String originalName = boss.getPersistentData().getString("rpg_boss_original_name");
         if (originalName.isEmpty()) {
             originalName = boss.getType().getDescription().getString();
@@ -185,7 +169,7 @@ public final class WorldBossScalingManager {
         }
 
         String titleColor = targetLevel >= 500 ? "§5§l" : (targetLevel >= 250 ? "§4§l" : (targetLevel >= 100 ? "§c§l" : "§6§l"));
-        boss.setCustomName(Component.literal(titleColor + "[JEFE DE MUNDO - Nv. " + targetLevel + "] §f" + originalName));
+        boss.setCustomName(Component.translatable("awakening_system.boss.world_boss_title", titleColor, targetLevel, originalName));
         boss.setCustomNameVisible(true);
 
         boss.getPersistentData().putInt("world_boss_scaled_level", targetLevel);
@@ -224,25 +208,20 @@ public final class WorldBossScalingManager {
     public static void handleWorldBossIncomingDamage(LivingDamageEvent.Pre event, Mob boss, ServerPlayer attacker) {
         if (boss == null || attacker == null) return;
 
-        // 1. Escalar dinámicamente si el atacante tiene nivel superior
         scaleWorldBossToPlayer(boss, attacker);
 
-        // 2. Tope de daño por golpe (Máximo 5% de la salud máxima del jefe por golpe)
-        // Esto previene que armas rotas o combinaciones infinitas eliminen al jefe de 1-2 golpes.
         float maxSingleHit = (float) (boss.getMaxHealth() * 0.05D);
         if (event.getNewDamage() > maxSingleHit) {
             event.setNewDamage(maxSingleHit);
         }
 
-        // 3. Resistencia a spam masivo de golpes (Defensa Adaptativa)
         long now = boss.level().getGameTime();
         long lastHitTime = boss.getPersistentData().getLong("wb_last_hit_tick");
         int burstHitCount = boss.getPersistentData().getInt("wb_burst_hit_count");
 
-        if (now - lastHitTime < 15) { // Golpes en menos de 0.75 segundos
+        if (now - lastHitTime < 15) {
             burstHitCount++;
             if (burstHitCount >= 3) {
-                // Reducir daño de spam continuo para forzar interacción y tiempos de recarga
                 event.setNewDamage(event.getNewDamage() * 0.65F);
             }
         } else {
@@ -264,14 +243,15 @@ public final class WorldBossScalingManager {
         if (boss == null || boss.level().isClientSide() || !boss.isAlive()) return;
         net.minecraft.nbt.CompoundTag tag = boss.getPersistentData();
 
-        // Si no tiene centro explícito registrado pero califica como World Boss, anclar a su ubicación actual
         if (!tag.contains("arena_center_x")) {
+            if (tag.getBoolean("not_boss_leash")) return;
             if (isWorldBoss(boss) || tag.getBoolean("is_overworld_miniboss")) {
                 tag.putDouble("arena_center_x", boss.getX());
                 tag.putDouble("arena_center_y", boss.getY());
                 tag.putDouble("arena_center_z", boss.getZ());
                 tag.putDouble("arena_max_radius", 35.0D);
             } else {
+                tag.putBoolean("not_boss_leash", true);
                 return;
             }
         }
@@ -280,7 +260,7 @@ public final class WorldBossScalingManager {
         double cy = tag.getDouble("arena_center_y");
         double cz = tag.getDouble("arena_center_z");
         double maxRadius = tag.contains("arena_max_radius") ? tag.getDouble("arena_max_radius") : 35.0D;
-        double resetRadius = maxRadius + 12.0D; // ~47 bloques
+        double resetRadius = maxRadius + 12.0D;
 
         double dx = boss.getX() - cx;
         double dy = boss.getY() - cy;
@@ -288,7 +268,6 @@ public final class WorldBossScalingManager {
         double distSq = dx * dx + dz * dz;
 
         if (distSq > resetRadius * resetRadius || Math.abs(dy) > 28.0D) {
-            // Reset total por fuga/abuso de rango
             boss.setTarget(null);
             boss.teleportTo(cx, cy, cz);
             boss.setDeltaMovement(0, 0, 0);
@@ -301,7 +280,6 @@ public final class WorldBossScalingManager {
                 sl.playSound(null, cx, cy, cz, net.minecraft.sounds.SoundEvents.RAVAGER_ROAR, net.minecraft.sounds.SoundSource.HOSTILE, 1.5F, 1.2F);
             }
         } else if (distSq > maxRadius * maxRadius) {
-            // Fuera de la arena permitida: Retorno forzado hacia el centro
             boss.setTarget(null);
             boss.getNavigation().moveTo(cx, cy, cz, 1.25D);
             if (boss.level() instanceof ServerLevel sl && boss.tickCount % 40 == 0) {

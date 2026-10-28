@@ -53,6 +53,23 @@ public final class BossCompatibilityManager {
             "lich", "hydra", "demon_king", "patriarch", "wither", "warden"
     ));
 
+    private static final Set<String> BLACKLIST_ENTITIES = new HashSet<>(List.of(
+            "komodo_dragon",
+            "alexsmobs:komodo_dragon",
+            "dragonfly",
+            "alexsmobs:dragonfly",
+            "bearded_dragon",
+            "flying_dragon",
+            "fairy_dragon",
+            "dragon_carp",
+            "tadpole",
+            "baby_dragon",
+            "fire_dragon_egg",
+            "ice_dragon_egg",
+            "lightning_dragon_egg",
+            "elder_guardian_ghost"
+    ));
+
     private static boolean autoDetect = true;
     private static float minHealth = 80.0F;
     private static boolean initialized = false;
@@ -129,16 +146,27 @@ public final class BossCompatibilityManager {
             JsonArray whitelist = new JsonArray();
             addBoss(whitelist, "minecraft:ender_dragon", 500, 300, "solo_dragon_slayer");
             addBoss(whitelist, "minecraft:wither", 400, 250, "first_wither");
-            addBoss(whitelist, "minecraft:warden", 450, 300, "warden_subjugator");
+            addBoss(whitelist, "minecraft:warden", 450, 300, "deep_dark_explorer");
             addBoss(whitelist, "minecraft:elder_guardian", 200, 150, "");
-            addBoss(whitelist, "awakening_system:baran_boss", 600, 500, "first_monarch_defeat");
-            addBoss(whitelist, "awakening_system:igris_boss", 550, 450, "first_monarch_defeat");
+            addBoss(whitelist, "awakening_system:baran_boss", 600, 500, "demon_king_subjugator");
+            addBoss(whitelist, "awakening_system:igris_boss", 550, 450, "igris_crimson_conqueror");
+            addBoss(whitelist, "awakening_system:beru_boss", 650, 500, "beru_ant_king_crusher");
+            addBoss(whitelist, "awakening_system:shadow_monarch_boss", 1000, 800, "first_monarch_defeat");
+            addBoss(whitelist, "awakening_system:statue_of_god", 900, 750, "god_slayer_statue");
             addBoss(whitelist, "awakening_system:ancient_celestial_dragon_boss", 800, 600, "solo_dragon_slayer");
             addBoss(whitelist, "awakening_system:elemental_demon_king", 600, 500, "giant_story_demon_king");
             addBoss(whitelist, "awakening_system:blood_patriarch", 650, 500, "");
             addBoss(whitelist, "awakening_system:yggdrasil_treant", 500, 400, "");
 
             // Jefes conocidos de mods populares
+            addBoss(whitelist, "iceandfire:fire_dragon", 800, 600, "solo_dragon_slayer");
+            addBoss(whitelist, "iceandfire:ice_dragon", 800, 600, "solo_dragon_slayer");
+            addBoss(whitelist, "iceandfire:lightning_dragon", 850, 650, "solo_dragon_slayer");
+            addBoss(whitelist, "iceandfire:hydra", 700, 550, "");
+            addBoss(whitelist, "iceandfire:gorgon", 500, 400, "");
+            addBoss(whitelist, "iceandfire:cyclops", 500, 400, "");
+            addBoss(whitelist, "iceandfire:sea_serpent", 650, 500, "");
+            addBoss(whitelist, "iceandfire:dread_lich", 600, 500, "");
             addBoss(whitelist, "cataclysm:netherite_monstrosity", 700, 600, "");
             addBoss(whitelist, "cataclysm:the_harbinger", 750, 650, "");
             addBoss(whitelist, "cataclysm:the_leviathan", 800, 700, "");
@@ -187,8 +215,20 @@ public final class BossCompatibilityManager {
         EntityType<?> type = entity.getType();
         ResourceLocation id = BuiltInRegistries.ENTITY_TYPE.getKey(type);
         String idStr = (id != null) ? id.toString() : "";
+        String path = (id != null) ? id.getPath().toLowerCase() : "";
+        String ns = (id != null) ? id.getNamespace() : "";
 
-        // 1. Whitelist explícita en JSON
+        // 0. Lista negra de criaturas comunes o animales (no son jefes aunque contengan 'dragon' u otra palabra)
+        if (BLACKLIST_ENTITIES.contains(idStr) || BLACKLIST_ENTITIES.contains(path)) {
+            return false;
+        }
+
+        // Si es un mob común escalado por el sistema RPG de zonas, NO es un jefe
+        if (entity.getTags().contains("rpg_scaled") && !path.contains("boss")) {
+            return false;
+        }
+
+        // 1. Whitelist explicita en JSON
         if (WHITELIST_BOSSES.containsKey(idStr)) {
             return true;
         }
@@ -198,37 +238,45 @@ public final class BossCompatibilityManager {
             return true;
         }
 
-        // 3. Jefes vanilla clásicos
+        // 3. Jefes vanilla clasicos
         if (entity instanceof EnderDragon || entity instanceof WitherBoss || entity instanceof Warden || entity instanceof ElderGuardian) {
             return true;
         }
 
+        // Criaturas de Minecraft vanilla NUNCA son jefes fuera de los 4 clásicos anteriores
+        if ("minecraft".equals(ns)) {
+            return false;
+        }
+
         // 4. Jefes nativos de Awakening System
-        String ns = (id != null) ? id.getNamespace() : "";
         if ("awakening_system".equals(ns)) {
-            String path = id.getPath();
-            if (path.contains("boss") || path.contains("demon_king") || path.contains("patriarch") || path.contains("treant") || path.contains("hypostasis") || path.contains("dragon")) {
+            if (path.contains("boss") || path.contains("demon_king") || path.contains("patriarch") || path.contains("treant") || path.contains("hypostasis")) {
+                return true;
+            }
+            if (entity instanceof com.soybe.awakeningsystem.entity.MotherSpiderEntity ms && ms.isBoss()) {
                 return true;
             }
         }
 
-        // 5. Detección heurística de jefes de otros mods
+        // 5. Deteccion heuristica para jefes de otros mods
         if (autoDetect) {
-            String path = (id != null) ? id.getPath().toLowerCase() : "";
+            var category = type.getCategory();
+            if (category == net.minecraft.world.entity.MobCategory.AMBIENT
+                    || category == net.minecraft.world.entity.MobCategory.CREATURE
+                    || category == net.minecraft.world.entity.MobCategory.WATER_CREATURE
+                    || category == net.minecraft.world.entity.MobCategory.WATER_AMBIENT
+                    || category == net.minecraft.world.entity.MobCategory.AXOLOTLS
+                    || category == net.minecraft.world.entity.MobCategory.UNDERGROUND_WATER_CREATURE) {
+                return false;
+            }
+            if (entity instanceof net.minecraft.world.entity.animal.Animal && !(entity instanceof EnderDragon)) {
+                return false;
+            }
+
             for (String kw : KEYWORDS) {
                 if (path.contains(kw)) {
                     return true;
                 }
-            }
-
-            // Entidades que no pueden cambiar de dimensión y tienen mucha vida (típico de jefes de mods)
-            if (!entity.canChangeDimensions(entity.level(), entity.level()) && entity.getMaxHealth() >= minHealth) {
-                return true;
-            }
-
-            // Vida extrema
-            if (entity.getMaxHealth() >= 200.0F) {
-                return true;
             }
         }
 
@@ -236,12 +284,21 @@ public final class BossCompatibilityManager {
     }
 
     /**
-     * Procesa la derrota de un jefe compatible: recompensas de EXP, monedas, fábulas y anuncios.
+     * Procesa la derrota de un jefe compatible: recompensas de EXP, monedas, fabulas y anuncios.
      */
     public static void handleBossDefeat(LivingEntity boss, ServerPlayer player, SystemData data) {
+        if (boss == null || boss.getPersistentData().getBoolean("awakening_boss_defeat_processed")) {
+            return;
+        }
+        boss.getPersistentData().putBoolean("awakening_boss_defeat_processed", true);
         init();
         ResourceLocation id = BuiltInRegistries.ENTITY_TYPE.getKey(boss.getType());
         String idStr = (id != null) ? id.toString() : "";
+        String path = (id != null) ? id.getPath().toLowerCase() : "";
+
+        if (BLACKLIST_ENTITIES.contains(idStr) || BLACKLIST_ENTITIES.contains(path)) {
+            return;
+        }
         BossEntry entry = WHITELIST_BOSSES.get(idStr);
 
         // 1. Experiencia de jefe
@@ -254,12 +311,12 @@ public final class BossCompatibilityManager {
         int bonusCoins = (entry != null && entry.coinBonus() > 0) ? entry.coinBonus() : 150;
         data.addCoins(bonusCoins);
 
-        // 3. Fábulas y logros
+        // 3. Fabulas y logros
         if (entry != null && entry.fable() != null && !entry.fable().isEmpty()) {
             SystemEvents.grantFable(player, entry.fable());
         }
 
-        // 4. Caída especial: Esencia del Jefe / Núcleo de Maná / Ficha de Ruleta
+        // 4. Caida especial: Esencia del Jefe / Nucleo de Mana / Ficha de Ruleta
         if (player.getRandom().nextFloat() < 0.40F) {
             ItemStack token = new ItemStack(SystemItems.ROULETTE_TOKEN.get(), 1 + player.getRandom().nextInt(2));
             boss.spawnAtLocation(token);
@@ -271,8 +328,8 @@ public final class BossCompatibilityManager {
 
         // 5. Anuncio en chat del Sistema
         String bossName = boss.getDisplayName().getString();
-        Component msg = Component.literal(String.format("§6✦ [SISTEMA] §e¡El cazador §f%s §eha derrotado al Jefe §c%s§e! §7(+%d EXP, +%d Monedas)",
-                player.getGameProfile().getName(), bossName, exp, bonusCoins));
+        Component msg = Component.translatable("awakening_system.boss.defeated_broadcast",
+                player.getScoreboardName(), bossName, exp, bonusCoins);
         player.serverLevel().players().forEach(p -> p.sendSystemMessage(msg));
     }
 }

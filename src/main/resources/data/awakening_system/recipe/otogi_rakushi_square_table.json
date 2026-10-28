@@ -1,0 +1,21 @@
+{
+  "type": "minecraft:crafting_shaped",
+  "category": "building",
+  "pattern": [
+    "SSS",
+    "P P",
+    "P P"
+  ],
+  "key": {
+    "S": {
+      "item": "minecraft:dark_oak_slab"
+    },
+    "P": {
+      "item": "minecraft:dark_oak_planks"
+    }
+  },
+  "result": {
+    "count": 1,
+    "id": "awakening_system:otogi_rakushi_square_table"
+  }
+}

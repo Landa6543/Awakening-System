@@ -16,8 +16,8 @@ import java.util.List;
 public class ForgeBilletItem extends Item {
 
     public enum BilletSeries {
-        NORTHLANDER("Tierras del Norte", "Mondstadt / Liyue / Inazuma", ChatFormatting.AQUA),
-        MIDLANDER("Tierras Centrales", "Sumeru / Fontaine / Natlan", ChatFormatting.GOLD);
+        NORTHLANDER("Northlander", "Mondstadt / Liyue / Inazuma", ChatFormatting.AQUA),
+        MIDLANDER("Midlander", "Sumeru / Fontaine / Natlan", ChatFormatting.GOLD);
 
         public final String title;
         public final String regions;
@@ -31,11 +31,11 @@ public class ForgeBilletItem extends Item {
     }
 
     public enum WeaponCategory {
-        SWORD("Espada Ligera", "Espadas ágiles de una mano"),
-        CLAYMORE("Mandoble", "Grandes espadas pesadas de dos manos"),
-        BOW("Arco", "Arcos de precisión de largo alcance"),
-        CATALYST("Catalizador", "Orbes y grimorios de canalización mágica"),
-        POLEARM("Lanza", "Lanzas y alabardas perforantes");
+        SWORD("Sword", "Agile one-handed swords"),
+        CLAYMORE("Claymore", "Heavy two-handed greatswords"),
+        BOW("Bow", "Long-range precision bows"),
+        CATALYST("Catalyst", "Magical channeling orbs and grimoires"),
+        POLEARM("Polearm", "Piercing spears and halberds");
 
         public final String name;
         public final String desc;
@@ -65,9 +65,11 @@ public class ForgeBilletItem extends Item {
 
     @Override
     public void appendHoverText(ItemStack stack, TooltipContext context, List<Component> tooltip, TooltipFlag flag) {
-        tooltip.add(Component.literal("§7Serie: " + series.format + series.title));
-        tooltip.add(Component.literal("§7Tipo de Arma: §f" + category.name));
-        tooltip.add(Component.literal("§8" + category.desc));
-        tooltip.add(Component.literal("§eMaterial de Forja: §7Se usa con Cristal Mágico y Trozos de Hierro Blanco para crear armas de 4 estrellas."));
+        Component seriesComp = Component.translatableWithFallback("item.awakening_system.forge_billet.series_name." + series.name().toLowerCase(), series.title).withStyle(series.format);
+        tooltip.add(Component.translatable("item.awakening_system.forge_billet.series", seriesComp));
+        Component catComp = Component.translatableWithFallback("item.awakening_system.forge_billet.category_name." + category.name().toLowerCase(), category.name);
+        tooltip.add(Component.translatable("item.awakening_system.forge_billet.category", catComp));
+        tooltip.add(Component.translatableWithFallback("item.awakening_system.forge_billet.category_desc." + category.name().toLowerCase(), "§8" + category.desc).withStyle(ChatFormatting.DARK_GRAY));
+        tooltip.add(Component.translatable("item.awakening_system.forge_billet.material"));
     }
 }

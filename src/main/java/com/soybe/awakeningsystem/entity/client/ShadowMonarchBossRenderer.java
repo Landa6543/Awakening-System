@@ -36,7 +36,7 @@ public class ShadowMonarchBossRenderer extends MobRenderer<ShadowMonarchBossEnti
 
     @Override
     protected void scale(ShadowMonarchBossEntity entity, PoseStack poseStack, float partialTickTime) {
-        poseStack.scale(1.25F, 1.25F, 1.25F); // Escala imponente de jefe
+        poseStack.scale(1.25F, 1.25F, 1.25F);
     }
 
     @Override

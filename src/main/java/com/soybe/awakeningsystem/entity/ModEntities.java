@@ -15,6 +15,50 @@ public final class ModEntities {
     public static final DeferredRegister<EntityType<?>> ENTITY_TYPES =
             DeferredRegister.create(Registries.ENTITY_TYPE, AwakeningSystemMod.MOD_ID);
 
+    public static final Supplier<EntityType<SculkGolemEntity>> SCULK_GOLEM =
+            ENTITY_TYPES.register("sculk_golem", () ->
+                    EntityType.Builder.<SculkGolemEntity>of(SculkGolemEntity::new, MobCategory.MONSTER)
+                            .sized(1.4F, 2.7F)
+                            .eyeHeight(2.3F)
+                            .clientTrackingRange(48)
+                            .updateInterval(2)
+                            .build("sculk_golem"));
+
+    public static final Supplier<EntityType<ColossalSculkWardenEntity>> COLOSSAL_SCULK_WARDEN =
+            ENTITY_TYPES.register("colossal_sculk_warden", () ->
+                    EntityType.Builder.<ColossalSculkWardenEntity>of(ColossalSculkWardenEntity::new, MobCategory.MONSTER)
+                            .sized(2.0F, 6.0F)
+                            .eyeHeight(5.0F)
+                            .clientTrackingRange(64)
+                            .updateInterval(2)
+                            .fireImmune()
+                            .build("colossal_sculk_warden"));
+
+    public static final Supplier<EntityType<MotherSpiderEntity>> MOTHER_SPIDER =
+            ENTITY_TYPES.register("mother_spider", () ->
+                    EntityType.Builder.<MotherSpiderEntity>of(MotherSpiderEntity::new, MobCategory.MONSTER)
+                            .sized(1.8F, 1.2F)
+                            .clientTrackingRange(32)
+                            .updateInterval(2)
+                            .build("mother_spider"));
+
+    public static final Supplier<EntityType<MotherSpiderBossEntity>> MOTHER_SPIDER_BOSS =
+            ENTITY_TYPES.register("mother_spider_boss", () ->
+                    EntityType.Builder.<MotherSpiderBossEntity>of(MotherSpiderBossEntity::new, MobCategory.MONSTER)
+                            .sized(4.5F, 4.0F)
+                            .eyeHeight(3.2F)
+                            .clientTrackingRange(64)
+                            .updateInterval(2)
+                            .build("mother_spider_boss"));
+
+    public static final Supplier<EntityType<SpiderWebProjectileEntity>> SPIDER_WEB_PROJECTILE =
+            ENTITY_TYPES.register("spider_web_projectile", () ->
+                    EntityType.Builder.<SpiderWebProjectileEntity>of(SpiderWebProjectileEntity::new, MobCategory.MISC)
+                            .sized(0.5F, 0.5F)
+                            .clientTrackingRange(32)
+                            .updateInterval(2)
+                            .build("spider_web_projectile"));
+
     public static final Supplier<EntityType<ShadowInfantryEntity>> SHADOW_INFANTRY =
             ENTITY_TYPES.register("shadow_infantry", () ->
                     EntityType.Builder.of(ShadowInfantryEntity::new, MobCategory.MONSTER)
@@ -46,7 +90,6 @@ public final class ModEntities {
                             .sized(0.6F, 1.95F)
                             .build("frost_elf_assassin"));
 
-    // Soldado Hormiga Gigante (Ant Soldier / Beru - Quimera de Choque)
     public static final Supplier<EntityType<AntSoldierEntity>> ANT_SOLDIER =
             ENTITY_TYPES.register("ant_soldier", () ->
                     EntityType.Builder.<AntSoldierEntity>of(AntSoldierEntity::new, MobCategory.MONSTER)
@@ -56,7 +99,69 @@ public final class ModEntities {
                             .updateInterval(2)
                             .build("ant_soldier"));
 
-    // Ojo Vigilante del Abismo (Abyssal Beholder - Ojo colosal de Cthulhu flotante)
+    public static final Supplier<EntityType<LimboOphanimEntity>> LIMBO_OPHANIM =
+            ENTITY_TYPES.register("limbo_ophanim", () ->
+                    EntityType.Builder.<LimboOphanimEntity>of(LimboOphanimEntity::new, MobCategory.MONSTER)
+                            .sized(3.6F, 3.6F)
+                            .eyeHeight(1.8F)
+                            .clientTrackingRange(64)
+                            .updateInterval(2)
+                            .fireImmune()
+                            .build("limbo_ophanim"));
+
+    public static final Supplier<EntityType<StiltWalkerEntity>> STILT_WALKER =
+            ENTITY_TYPES.register("stilt_walker", () ->
+                    EntityType.Builder.<StiltWalkerEntity>of(StiltWalkerEntity::new, MobCategory.MONSTER)
+                            .sized(0.9F, 3.2F)
+                            .eyeHeight(2.8F)
+                            .clientTrackingRange(48)
+                            .updateInterval(2)
+                            .build("stilt_walker"));
+
+    public static final Supplier<EntityType<SpiderHeadEntity>> SPIDER_HEAD =
+            ENTITY_TYPES.register("spider_head", () ->
+                    EntityType.Builder.<SpiderHeadEntity>of(SpiderHeadEntity::new, MobCategory.MONSTER)
+                            .sized(1.2F, 1.0F)
+                            .eyeHeight(0.8F)
+                            .clientTrackingRange(48)
+                            .updateInterval(2)
+                            .build("spider_head"));
+
+    public static final Supplier<EntityType<LimboEntity>> LIMBO_ENTITY =
+            ENTITY_TYPES.register("limbo_entity", () ->
+                    EntityType.Builder.<LimboEntity>of(LimboEntity::new, MobCategory.MONSTER)
+                            .sized(1.0F, 3.2F)
+                            .eyeHeight(2.8F)
+                            .clientTrackingRange(48)
+                            .updateInterval(2)
+                            .build("limbo_entity"));
+
+    public static final Supplier<EntityType<TallStalkerEntity>> TALL_STALKER =
+            ENTITY_TYPES.register("tall_stalker", () ->
+                    EntityType.Builder.<TallStalkerEntity>of(TallStalkerEntity::new, MobCategory.MONSTER)
+                            .sized(0.8F, 3.0F)
+                            .eyeHeight(2.6F)
+                            .clientTrackingRange(48)
+                            .updateInterval(2)
+                            .build("tall_stalker"));
+
+    public static final Supplier<EntityType<LimboDoorEntity>> LIMBO_DOOR =
+            ENTITY_TYPES.register("limbo_door", () ->
+                    EntityType.Builder.<LimboDoorEntity>of(LimboDoorEntity::new, MobCategory.MISC)
+                            .sized(7.2F, 10.5F)
+                            .clientTrackingRange(128)
+                            .updateInterval(2)
+                            .fireImmune()
+                            .build("limbo_door"));
+
+    public static final Supplier<EntityType<LimboDivineOrbProjectileEntity>> LIMBO_DIVINE_ORB =
+            ENTITY_TYPES.register("limbo_divine_orb", () ->
+                    EntityType.Builder.<LimboDivineOrbProjectileEntity>of(LimboDivineOrbProjectileEntity::new, MobCategory.MISC)
+                            .sized(0.8F, 0.8F)
+                            .clientTrackingRange(48)
+                            .updateInterval(2)
+                            .build("limbo_divine_orb"));
+
     public static final Supplier<EntityType<AbyssalBeholderEntity>> ABYSSAL_BEHOLDER =
             ENTITY_TYPES.register("abyssal_beholder", () ->
                     EntityType.Builder.<AbyssalBeholderEntity>of(AbyssalBeholderEntity::new, MobCategory.MONSTER)
@@ -66,25 +171,22 @@ public final class ModEntities {
                             .updateInterval(2)
                             .build("abyssal_beholder"));
 
-    // Slime de Fantasía Isekai (Gota anime redondeada multicolor)
     public static final Supplier<EntityType<IsekaiSlimeEntity>> ISEKAI_SLIME =
             ENTITY_TYPES.register("isekai_slime", () ->
                     EntityType.Builder.<IsekaiSlimeEntity>of(IsekaiSlimeEntity::new, MobCategory.MONSTER)
-                            .sized(0.75F, 0.85F)
+                            .sized(0.85F, 0.95F)
                             .clientTrackingRange(32)
                             .updateInterval(2)
                             .build("isekai_slime"));
 
-    // Slime Elemental de Genshin Impact (7 elementos con ataques y silueta canónica)
     public static final Supplier<EntityType<GenshinSlimeEntity>> GENSHIN_SLIME =
             ENTITY_TYPES.register("genshin_slime", () ->
                     EntityType.Builder.<GenshinSlimeEntity>of(GenshinSlimeEntity::new, MobCategory.MONSTER)
-                            .sized(1.2F, 1.15F)
+                            .sized(0.90F, 0.80F)
                             .clientTrackingRange(32)
                             .updateInterval(2)
                             .build("genshin_slime"));
 
-    // Hilichurl de Genshin Impact (Máscara de hueso tribal, Berserker/Guardia/Tirador)
     public static final Supplier<EntityType<HilichurlEntity>> HILICHURL =
             ENTITY_TYPES.register("hilichurl", () ->
                     EntityType.Builder.<HilichurlEntity>of(HilichurlEntity::new, MobCategory.MONSTER)
@@ -93,7 +195,6 @@ public final class ModEntities {
                             .updateInterval(2)
                             .build("hilichurl"));
 
-    // Mitachurl de Genshin Impact (Cacique colosal con cuernos masivos, Hacha ardiente y Muro de escudos)
     public static final Supplier<EntityType<MitachurlEntity>> MITACHURL =
             ENTITY_TYPES.register("mitachurl", () ->
                     EntityType.Builder.<MitachurlEntity>of(MitachurlEntity::new, MobCategory.MONSTER)
@@ -103,7 +204,6 @@ public final class ModEntities {
                             .updateInterval(2)
                             .build("mitachurl"));
 
-    // Zorro Espiritual de Nueve Colas del Reino Murim
     public static final Supplier<EntityType<SpiritFoxEntity>> SPIRIT_FOX =
             ENTITY_TYPES.register("spirit_fox", () ->
                     EntityType.Builder.<SpiritFoxEntity>of(SpiritFoxEntity::new, MobCategory.CREATURE)
@@ -112,7 +212,6 @@ public final class ModEntities {
                             .updateInterval(2)
                             .build("spirit_fox"));
 
-    // Dragón Bebé de Cristal Astral (Criatura mística voladora del Reino Isekai)
     public static final Supplier<EntityType<AstralDragonEntity>> ASTRAL_DRAGON =
             ENTITY_TYPES.register("astral_dragon", () ->
                     EntityType.Builder.<AstralDragonEntity>of(AstralDragonEntity::new, MobCategory.CREATURE)
@@ -121,7 +220,6 @@ public final class ModEntities {
                             .updateInterval(2)
                             .build("astral_dragon"));
 
-    // Lobo Plateado de las Sombras (Shadow Direwolf - Ranga)
     public static final Supplier<EntityType<ShadowDirewolfEntity>> SHADOW_DIREWOLF =
             ENTITY_TYPES.register("shadow_direwolf", () ->
                     EntityType.Builder.<ShadowDirewolfEntity>of(ShadowDirewolfEntity::new, MobCategory.CREATURE)
@@ -131,7 +229,6 @@ public final class ModEntities {
                             .updateInterval(2)
                             .build("shadow_direwolf"));
 
-    // Tigre Blanco del Trueno (White Thunder Tiger / Byakko)
     public static final Supplier<EntityType<WhiteThunderTigerEntity>> WHITE_THUNDER_TIGER =
             ENTITY_TYPES.register("white_thunder_tiger", () ->
                     EntityType.Builder.<WhiteThunderTigerEntity>of(WhiteThunderTigerEntity::new, MobCategory.CREATURE)
@@ -141,7 +238,6 @@ public final class ModEntities {
                             .updateInterval(2)
                             .build("white_thunder_tiger"));
 
-    // Grulla Celestial de las Nubes (Cloud Crane - Montura voladora mística de cultivadores)
     public static final Supplier<EntityType<CloudCraneEntity>> CLOUD_CRANE =
             ENTITY_TYPES.register("cloud_crane", () ->
                     EntityType.Builder.<CloudCraneEntity>of(CloudCraneEntity::new, MobCategory.CREATURE)
@@ -151,7 +247,6 @@ public final class ModEntities {
                             .updateInterval(2)
                             .build("cloud_crane"));
 
-    // Hada de Maná Silvana (Mana Pixie - Ser feérico alado del Árbol del Mundo)
     public static final Supplier<EntityType<ManaPixieEntity>> MANA_PIXIE =
             ENTITY_TYPES.register("mana_pixie", () ->
                     EntityType.Builder.<ManaPixieEntity>of(ManaPixieEntity::new, MobCategory.CREATURE)
@@ -161,7 +256,6 @@ public final class ModEntities {
                             .updateInterval(2)
                             .build("mana_pixie"));
 
-    // Mandrágora Cantarina (Screaming Mandrake - Planta mágica viva que grita al cosecharse)
     public static final Supplier<EntityType<ScreamingMandrakeEntity>> SCREAMING_MANDRAKE =
             ENTITY_TYPES.register("screaming_mandrake", () ->
                     EntityType.Builder.<ScreamingMandrakeEntity>of(ScreamingMandrakeEntity::new, MobCategory.CREATURE)
@@ -171,7 +265,6 @@ public final class ModEntities {
                             .updateInterval(2)
                             .build("screaming_mandrake"));
 
-    // Dragón Chino Celestial Ancestral de Murim (Shenlong / Qinglong)
     public static final Supplier<EntityType<CelestialDragonEntity>> CELESTIAL_DRAGON =
             ENTITY_TYPES.register("celestial_dragon", () ->
                     EntityType.Builder.<CelestialDragonEntity>of(CelestialDragonEntity::new, MobCategory.MONSTER)
@@ -181,7 +274,6 @@ public final class ModEntities {
                             .updateInterval(2)
                             .build("celestial_dragon"));
 
-    // Dragón Celestial Ancestral Titánico (Variante Boss +100 bloques, robusto y destructor de bloques)
     public static final Supplier<EntityType<AncientCelestialDragonBossEntity>> ANCIENT_CELESTIAL_DRAGON =
             ENTITY_TYPES.register("ancient_celestial_dragon", () ->
                     EntityType.Builder.<AncientCelestialDragonBossEntity>of(AncientCelestialDragonBossEntity::new, MobCategory.MONSTER)
@@ -191,7 +283,6 @@ public final class ModEntities {
                             .updateInterval(2)
                             .build("ancient_celestial_dragon"));
 
-    // Goblins del Reino Isekai
     public static final Supplier<EntityType<GoblinScoutEntity>> GOBLIN_SCOUT =
             ENTITY_TYPES.register("goblin_scout", () ->
                     EntityType.Builder.<GoblinScoutEntity>of(GoblinScoutEntity::new, MobCategory.MONSTER)
@@ -216,7 +307,6 @@ public final class ModEntities {
                             .updateInterval(2)
                             .build("goblin_shaman"));
 
-    // Hombre Bestia del Reino Isekai
     public static final Supplier<EntityType<BeastmanWarriorEntity>> BEASTMAN_WARRIOR =
             ENTITY_TYPES.register("beastman_warrior", () ->
                     EntityType.Builder.<BeastmanWarriorEntity>of(BeastmanWarriorEntity::new, MobCategory.MONSTER)
@@ -225,7 +315,6 @@ public final class ModEntities {
                             .updateInterval(2)
                             .build("beastman_warrior"));
 
-    // Jiangshi (Zombi Saltador Taoísta de Murim)
     public static final Supplier<EntityType<JiangshiEntity>> JIANGSHI =
             ENTITY_TYPES.register("jiangshi", () ->
                     EntityType.Builder.<JiangshiEntity>of(JiangshiEntity::new, MobCategory.MONSTER)
@@ -234,7 +323,6 @@ public final class ModEntities {
                             .updateInterval(2)
                             .build("jiangshi"));
 
-    // Cultivador Hereje del Culto Demoníaco de Murim
     public static final Supplier<EntityType<DemonicCultivatorEntity>> DEMONIC_CULTIVATOR =
             ENTITY_TYPES.register("demonic_cultivator", () ->
                     EntityType.Builder.<DemonicCultivatorEntity>of(DemonicCultivatorEntity::new, MobCategory.MONSTER)
@@ -243,7 +331,6 @@ public final class ModEntities {
                             .updateInterval(2)
                             .build("demonic_cultivator"));
 
-    // Proyectil de Tajo de Espada de Qi Carmesí
     public static final Supplier<EntityType<DemonicSwordQiEntity>> DEMONIC_SWORD_QI =
             ENTITY_TYPES.register("demonic_sword_qi", () ->
                     EntityType.Builder.<DemonicSwordQiEntity>of(DemonicSwordQiEntity::new, MobCategory.MISC)
@@ -252,7 +339,6 @@ public final class ModEntities {
                             .updateInterval(1)
                             .build("demonic_sword_qi"));
 
-    // Espada Voladora Teledirigida de Murim (Jade Feijian)
     public static final Supplier<EntityType<JadeFeijianEntity>> JADE_FEIJIAN =
             ENTITY_TYPES.register("jade_feijian", () ->
                     EntityType.Builder.<JadeFeijianEntity>of(JadeFeijianEntity::new, MobCategory.MISC)
@@ -261,7 +347,6 @@ public final class ModEntities {
                             .updateInterval(1)
                             .build("jade_feijian"));
 
-    // Creciente de Dragón Celestial (Guandao Astral)
     public static final Supplier<EntityType<AstralDragonCrescentEntity>> ASTRAL_DRAGON_CRESCENT =
             ENTITY_TYPES.register("astral_dragon_crescent", () ->
                     EntityType.Builder.<AstralDragonCrescentEntity>of(AstralDragonCrescentEntity::new, MobCategory.MISC)
@@ -270,7 +355,6 @@ public final class ModEntities {
                             .updateInterval(1)
                             .build("astral_dragon_crescent"));
 
-    // Onda de Corte 3D y Tajos Cinemáticos (Iron's Spells / Mahou Tsukai Style)
     public static final Supplier<EntityType<SlashWaveEntity>> SLASH_WAVE =
             ENTITY_TYPES.register("slash_wave", () ->
                     EntityType.Builder.<SlashWaveEntity>of(SlashWaveEntity::new, MobCategory.MISC)
@@ -279,7 +363,6 @@ public final class ModEntities {
                             .updateInterval(1)
                             .build("slash_wave"));
 
-    // Bestia Acorazada de Jade Espiritual de Murim
     public static final Supplier<EntityType<JadeArmoredBeastEntity>> JADE_ARMORED_BEAST =
             ENTITY_TYPES.register("jade_armored_beast", () ->
                     EntityType.Builder.<JadeArmoredBeastEntity>of(JadeArmoredBeastEntity::new, MobCategory.MONSTER)
@@ -288,7 +371,6 @@ public final class ModEntities {
                             .updateInterval(2)
                             .build("jade_armored_beast"));
 
-    // Discípulo de la Secta del Monte Hua de Murim (Espadachín Ortodoxo)
     public static final Supplier<EntityType<MountHuaDiscipleEntity>> MOUNT_HUA_DISCIPLE =
             ENTITY_TYPES.register("mount_hua_disciple", () ->
                     EntityType.Builder.<MountHuaDiscipleEntity>of(MountHuaDiscipleEntity::new, MobCategory.CREATURE)
@@ -297,8 +379,6 @@ public final class ModEntities {
                             .updateInterval(2)
                             .build("mount_hua_disciple"));
 
-
-    // Proyectil de Aliento de Qi Celestial
     public static final Supplier<EntityType<CelestialDragonBreathEntity>> CELESTIAL_DRAGON_BREATH =
             ENTITY_TYPES.register("celestial_dragon_breath", () ->
                     EntityType.Builder.<CelestialDragonBreathEntity>of(CelestialDragonBreathEntity::new, MobCategory.MISC)
@@ -307,7 +387,6 @@ public final class ModEntities {
                             .updateInterval(1)
                             .build("celestial_dragon_breath"));
 
-    // Proyectil de Aliento Astral
     public static final Supplier<EntityType<AstralBreathProjectileEntity>> ASTRAL_BREATH =
             ENTITY_TYPES.register("astral_breath", () ->
                     EntityType.Builder.<AstralBreathProjectileEntity>of(AstralBreathProjectileEntity::new, MobCategory.MISC)
@@ -316,7 +395,6 @@ public final class ModEntities {
                             .updateInterval(1)
                             .build("astral_breath"));
 
-    // Resto de Alma de Sombra (Para extracción con 'Surge')
     public static final Supplier<EntityType<ShadowSoulEntity>> SHADOW_SOUL =
             ENTITY_TYPES.register("shadow_soul", () ->
                     EntityType.Builder.<ShadowSoulEntity>of(ShadowSoulEntity::new, MobCategory.MISC)
@@ -325,7 +403,6 @@ public final class ModEntities {
                             .updateInterval(3)
                             .build("shadow_soul"));
 
-    // Asiento de Meditación de Loto para Cultivo de Qi
     public static final Supplier<EntityType<MeditationSeatEntity>> MEDITATION_SEAT =
             ENTITY_TYPES.register("meditation_seat", () ->
                     EntityType.Builder.<MeditationSeatEntity>of(MeditationSeatEntity::new, MobCategory.MISC)
@@ -333,7 +410,6 @@ public final class ModEntities {
                             .noSave()
                             .build("meditation_seat"));
 
-    // Asiento de Silla de Taberna (Sin meditación ni cultivo de Qi)
     public static final Supplier<EntityType<TavernSeatEntity>> TAVERN_SEAT =
             ENTITY_TYPES.register("tavern_seat", () ->
                     EntityType.Builder.<TavernSeatEntity>of(TavernSeatEntity::new, MobCategory.MISC)
@@ -341,7 +417,6 @@ public final class ModEntities {
                             .noSave()
                             .build("tavern_seat"));
 
-    // Asiento de Conducción de Metro (Control por W/S estilo Create)
     public static final Supplier<EntityType<SubwayPilotSeatEntity>> SUBWAY_PILOT_SEAT =
             ENTITY_TYPES.register("subway_pilot_seat", () ->
                     EntityType.Builder.<SubwayPilotSeatEntity>of(SubwayPilotSeatEntity::new, MobCategory.MISC)
@@ -349,7 +424,6 @@ public final class ModEntities {
                             .noSave()
                             .build("subway_pilot_seat"));
 
-    // Espada Voladora de Cultivo 3D
     public static final Supplier<EntityType<FlyingSwordEntity>> FLYING_SWORD =
             ENTITY_TYPES.register("flying_sword", () ->
                     EntityType.Builder.<FlyingSwordEntity>of(FlyingSwordEntity::new, MobCategory.MISC)
@@ -358,7 +432,6 @@ public final class ModEntities {
                             .updateInterval(1)
                             .build("flying_sword"));
 
-    // Vagón de Metro Funcional (ORV Coche 3707)
     public static final Supplier<EntityType<SubwayTrainCarriageEntity>> SUBWAY_TRAIN_CARRIAGE =
             ENTITY_TYPES.register("subway_train_carriage", () ->
                     EntityType.Builder.<SubwayTrainCarriageEntity>of(SubwayTrainCarriageEntity::new, MobCategory.MISC)
@@ -367,7 +440,6 @@ public final class ModEntities {
                             .updateInterval(1)
                             .build("subway_train_carriage"));
 
-    // Proyectil Físico de Moneda del Despertar / Ficha de Ruleta
     public static final Supplier<EntityType<AwakeningCoinEntity>> AWAKENING_COIN_PROJECTILE =
             ENTITY_TYPES.register("awakening_coin_projectile", () ->
                     EntityType.Builder.<AwakeningCoinEntity>of(AwakeningCoinEntity::new, MobCategory.MISC)
@@ -376,7 +448,6 @@ public final class ModEntities {
                             .updateInterval(1)
                             .build("awakening_coin_projectile"));
 
-    // NPCs de Series Manhwa
     public static final Supplier<EntityType<SeriesNpcEntity>> SERIES_NPC =
             ENTITY_TYPES.register("series_npc", () ->
                     EntityType.Builder.<SeriesNpcEntity>of(SeriesNpcEntity::new, MobCategory.CREATURE)
@@ -455,6 +526,12 @@ public final class ModEntities {
                             .sized(0.6F, 1.95F)
                             .build("twenty_fifth_baam"));
 
+    public static final Supplier<EntityType<SeriesNpcEntity>> BLACK_MARKET_DEALER =
+            ENTITY_TYPES.register("black_market_dealer", () ->
+                    EntityType.Builder.<SeriesNpcEntity>of((type, level) -> new SeriesNpcEntity(type, level, NpcProfile.BLACK_MARKET_DEALER), MobCategory.CREATURE)
+                            .sized(0.6F, 1.95F)
+                            .build("black_market_dealer"));
+
     public static final Supplier<EntityType<DokkaebiEntity>> DOKKAEBI =
             ENTITY_TYPES.register("dokkaebi", () ->
                     EntityType.Builder.<DokkaebiEntity>of(DokkaebiEntity::new, MobCategory.CREATURE)
@@ -463,7 +540,6 @@ public final class ModEntities {
                             .updateInterval(2)
                             .build("dokkaebi"));
 
-    // Compañera Paimon del Sistema Gacha
     public static final Supplier<EntityType<PaimonEntity>> PAIMON =
             ENTITY_TYPES.register("paimon", () ->
                     EntityType.Builder.<PaimonEntity>of(PaimonEntity::new, MobCategory.CREATURE)
@@ -472,7 +548,6 @@ public final class ModEntities {
                             .updateInterval(2)
                             .build("paimon"));
 
-    // Compañeros Invocables del Sistema Gacha (Personajes con Skin)
     public static final Supplier<EntityType<CompanionEntity>> COMPANION =
             ENTITY_TYPES.register("companion", () ->
                     EntityType.Builder.<CompanionEntity>of(CompanionEntity::new, MobCategory.CREATURE)
@@ -481,7 +556,6 @@ public final class ModEntities {
                             .updateInterval(2)
                             .build("companion"));
 
-    // Wyvern Depredador Aéreo del Mundo RPG
     public static final Supplier<EntityType<WyvernEntity>> WYVERN =
             ENTITY_TYPES.register("wyvern", () ->
                     EntityType.Builder.<WyvernEntity>of(WyvernEntity::new, MobCategory.CREATURE)
@@ -490,7 +564,6 @@ public final class ModEntities {
                             .updateInterval(2)
                             .build("wyvern"));
 
-    // Jefes de Manhwa Emblemáticos
     public static final Supplier<EntityType<IgrisBossEntity>> IGRIS_BOSS =
             ENTITY_TYPES.register("igris_boss", () ->
                     EntityType.Builder.<IgrisBossEntity>of(IgrisBossEntity::new, MobCategory.MONSTER)
@@ -509,7 +582,26 @@ public final class ModEntities {
                             .updateInterval(2)
                             .build("baran_boss"));
 
-    // Entidades de la Fortaleza de la Secta de Sangre (Culto Demoníaco)
+    public static final Supplier<EntityType<StatueOfGodEntity>> STATUE_OF_GOD =
+            ENTITY_TYPES.register("statue_of_god", () ->
+                    EntityType.Builder.<StatueOfGodEntity>of(StatueOfGodEntity::new, MobCategory.MONSTER)
+                            .sized(4.0F, 10.0F)
+                            .eyeHeight(9.5F)
+                            .clientTrackingRange(96)
+                            .updateInterval(2)
+                            .fireImmune()
+                            .build("statue_of_god"));
+
+    public static final Supplier<EntityType<BeruBossEntity>> BERU_BOSS =
+            ENTITY_TYPES.register("beru_boss", () ->
+                    EntityType.Builder.<BeruBossEntity>of(BeruBossEntity::new, MobCategory.MONSTER)
+                            .sized(1.2F, 2.8F)
+                            .eyeHeight(2.4F)
+                            .clientTrackingRange(64)
+                            .updateInterval(2)
+                            .build("beru_boss"));
+
+
     public static final Supplier<EntityType<BloodQiTotemEntity>> BLOOD_QI_TOTEM =
             ENTITY_TYPES.register("blood_qi_totem", () ->
                     EntityType.Builder.<BloodQiTotemEntity>of(BloodQiTotemEntity::new, MobCategory.MISC)
@@ -572,7 +664,6 @@ public final class ModEntities {
                             .updateInterval(2)
                             .build("elemental_lord"));
 
-    // Variantes de Bestias de Maná / Animales Místicos
     public static final Supplier<EntityType<com.soybe.awakeningsystem.entity.animal.ManaCowEntity>> MANA_COW =
             ENTITY_TYPES.register("mana_cow", () ->
                     EntityType.Builder.<com.soybe.awakeningsystem.entity.animal.ManaCowEntity>of(com.soybe.awakeningsystem.entity.animal.ManaCowEntity::new, MobCategory.CREATURE)
@@ -601,7 +692,6 @@ public final class ModEntities {
                             .clientTrackingRange(10)
                             .build("mana_chicken"));
 
-    // Dragón Ancestral Occidental (True Hexapod Dragon)
     public static final Supplier<EntityType<AncientDragonEntity>> ANCIENT_DRAGON =
             ENTITY_TYPES.register("ancient_dragon", () ->
                     EntityType.Builder.<AncientDragonEntity>of(AncientDragonEntity::new, MobCategory.CREATURE)
@@ -611,7 +701,6 @@ public final class ModEntities {
                             .updateInterval(2)
                             .build("ancient_dragon"));
 
-    // Proyectil de Aliento Elemental Dracónico
     public static final Supplier<EntityType<AncientDragonBreathEntity>> ANCIENT_DRAGON_BREATH =
             ENTITY_TYPES.register("ancient_dragon_breath", () ->
                     EntityType.Builder.<AncientDragonBreathEntity>of(AncientDragonBreathEntity::new, MobCategory.MISC)
@@ -620,7 +709,6 @@ public final class ModEntities {
                             .updateInterval(2)
                             .build("ancient_dragon_breath"));
 
-    // Monolito de las Líneas Ley de Genshin Impact (Abismo)
     public static final Supplier<EntityType<LeyLineMonolithEntity>> LEY_LINE_MONOLITH =
             ENTITY_TYPES.register("ley_line_monolith", () ->
                     EntityType.Builder.<LeyLineMonolithEntity>of(LeyLineMonolithEntity::new, MobCategory.MISC)
@@ -629,7 +717,6 @@ public final class ModEntities {
                             .updateInterval(2)
                             .build("ley_line_monolith"));
 
-    // Llave Roja de Desafío del Abismo de Genshin Impact
     public static final Supplier<EntityType<AbyssChallengeKeyEntity>> ABYSS_CHALLENGE_KEY =
             ENTITY_TYPES.register("abyss_challenge_key", () ->
                     EntityType.Builder.<AbyssChallengeKeyEntity>of(AbyssChallengeKeyEntity::new, MobCategory.MISC)
@@ -638,7 +725,6 @@ public final class ModEntities {
                             .updateInterval(2)
                             .build("abyss_challenge_key"));
 
-    // === JEFES HIPÓSTASIS ELEMENTALES DE GENSHIN IMPACT ===
     public static final Supplier<EntityType<com.soybe.awakeningsystem.entity.hypostasis.AnemoHypostasisBossEntity>> ANEMO_HYPOSTASIS =
             ENTITY_TYPES.register("anemo_hypostasis", () ->
                     EntityType.Builder.<com.soybe.awakeningsystem.entity.hypostasis.AnemoHypostasisBossEntity>of(com.soybe.awakeningsystem.entity.hypostasis.AnemoHypostasisBossEntity::new, MobCategory.MONSTER)
@@ -719,7 +805,6 @@ public final class ModEntities {
                             .updateInterval(2)
                             .build("dendro_revival_pith"));
 
-    // === ENTIDADES LUNARES CUSTOM DEL ALTAR TRILUNAR ===
     public static final Supplier<EntityType<LunarShadowEntity>> LUNAR_SHADOW =
             ENTITY_TYPES.register("lunar_shadow", () ->
                     EntityType.Builder.<LunarShadowEntity>of(LunarShadowEntity::new, MobCategory.MONSTER)
@@ -737,7 +822,6 @@ public final class ModEntities {
                             .updateInterval(2)
                             .build("lunar_guardian"));
 
-    // === JEFE WILDFIRE ARDIENTE ===
     public static final Supplier<EntityType<WildfireEntity>> WILDFIRE =
             ENTITY_TYPES.register("wildfire", () ->
                     EntityType.Builder.<WildfireEntity>of(WildfireEntity::new, MobCategory.MONSTER)
@@ -748,7 +832,6 @@ public final class ModEntities {
                             .updateInterval(2)
                             .build("wildfire"));
 
-    // === GLARE (MIRADA) ===
     public static final Supplier<EntityType<GlareEntity>> GLARE =
             ENTITY_TYPES.register("glare", () ->
                     EntityType.Builder.<GlareEntity>of(GlareEntity::new, MobCategory.CREATURE)
@@ -757,7 +840,6 @@ public final class ModEntities {
                             .updateInterval(2)
                             .build("glare"));
 
-    // === AUTÓMATAS DE RUINAS (GENSHIN IMPACT) ===
     public static final Supplier<EntityType<RuinGuardEntity>> RUIN_GUARD =
             ENTITY_TYPES.register("ruin_guard", () ->
                     EntityType.Builder.<RuinGuardEntity>of(RuinGuardEntity::new, MobCategory.MONSTER)
@@ -784,7 +866,6 @@ public final class ModEntities {
                             .updateInterval(1)
                             .build("ruin_missile"));
 
-    // === MITACHURL / LAWACHURL (GENSHIN IMPACT) ===
     public static final Supplier<EntityType<StonehideLawachurlEntity>> STONEHIDE_LAWACHURL =
             ENTITY_TYPES.register("stonehide_lawachurl", () ->
                     EntityType.Builder.<StonehideLawachurlEntity>of(StonehideLawachurlEntity::new, MobCategory.MONSTER)
@@ -794,7 +875,6 @@ public final class ModEntities {
                             .updateInterval(2)
                             .build("stonehide_lawachurl"));
 
-    // === REGISVID CRIOGÉNICA / CRYO REGISVINE (GENSHIN IMPACT) ===
     public static final Supplier<EntityType<CryoRegisvineEntity>> CRYO_REGISVINE =
             ENTITY_TYPES.register("cryo_regisvine", () ->
                     EntityType.Builder.<CryoRegisvineEntity>of(CryoRegisvineEntity::new, MobCategory.MONSTER)
@@ -804,7 +884,6 @@ public final class ModEntities {
                             .updateInterval(2)
                             .build("cryo_regisvine"));
 
-    // === REGISVID PIROTÉCNICA / PYRO REGISVINE (GENSHIN IMPACT) ===
     public static final Supplier<EntityType<PyroRegisvineEntity>> PYRO_REGISVINE =
             ENTITY_TYPES.register("pyro_regisvine", () ->
                     EntityType.Builder.<PyroRegisvineEntity>of(PyroRegisvineEntity::new, MobCategory.MONSTER)
@@ -814,7 +893,6 @@ public final class ModEntities {
                             .updateInterval(2)
                             .build("pyro_regisvine"));
 
-    // === REGISVID ELECTRO / ELECTRO REGISVINE (GENSHIN IMPACT) ===
     public static final Supplier<EntityType<ElectroRegisvineEntity>> ELECTRO_REGISVINE =
             ENTITY_TYPES.register("electro_regisvine", () ->
                     EntityType.Builder.<ElectroRegisvineEntity>of(ElectroRegisvineEntity::new, MobCategory.MONSTER)
@@ -832,7 +910,6 @@ public final class ModEntities {
                             .updateInterval(1)
                             .build("hoarfrost_shard"));
 
-    // === JEFES MAZMORRAS LEGENDARIAS DE TEYVAT ===
     public static final Supplier<EntityType<ChildeBossEntity>> CHILDE_BOSS =
             ENTITY_TYPES.register("childe_boss", () ->
                     EntityType.Builder.<ChildeBossEntity>of(ChildeBossEntity::new, MobCategory.MONSTER)
@@ -869,7 +946,6 @@ public final class ModEntities {
                             .updateInterval(2)
                             .build("golden_wolflord_boss"));
 
-    // === MAGOS DEL ABISMO / ABYSS MAGES (GENSHIN IMPACT) ===
     public static final Supplier<EntityType<AbyssMagePyroEntity>> ABYSS_MAGE_PYRO =
             ENTITY_TYPES.register("abyss_mage_pyro", () ->
                     EntityType.Builder.<AbyssMagePyroEntity>of(AbyssMagePyroEntity::new, MobCategory.MONSTER)
@@ -914,7 +990,6 @@ public final class ModEntities {
                             .updateInterval(1)
                             .build("abyss_bubble"));
 
-    // === JEFES MUNDIALES Y SEMANALES DE GENSHIN IMPACT ===
     public static final Supplier<EntityType<GreatSnowboarKingBossEntity>> GREAT_SNOWBOAR_KING =
             ENTITY_TYPES.register("great_snowboar_king", () ->
                     EntityType.Builder.<GreatSnowboarKingBossEntity>of(GreatSnowboarKingBossEntity::new, MobCategory.MONSTER)
@@ -951,7 +1026,6 @@ public final class ModEntities {
                             .updateInterval(2)
                             .build("perpetual_mechanical_array"));
 
-    // === MAQUINARIA Y AUTÓMATAS DE RUINAS DE GENSHIN IMPACT ===
     public static final Supplier<EntityType<RuinSentinelEntity>> RUIN_SENTINEL =
             ENTITY_TYPES.register("ruin_sentinel", () ->
                     EntityType.Builder.<RuinSentinelEntity>of(RuinSentinelEntity::new, MobCategory.MONSTER)
@@ -987,7 +1061,6 @@ public final class ModEntities {
                             .updateInterval(2)
                             .build("ruin_serpent"));
 
-    // === TRIBUS HILICHURL Y LAWACHURLS ELEMENTALES ===
     public static final Supplier<EntityType<FrostarmLawachurlEntity>> FROSTARM_LAWACHURL =
             ENTITY_TYPES.register("frostarm_lawachurl", () ->
                     EntityType.Builder.<FrostarmLawachurlEntity>of(FrostarmLawachurlEntity::new, MobCategory.MONSTER)
@@ -1022,7 +1095,6 @@ public final class ModEntities {
                             .updateInterval(2)
                             .build("hilichurl_berserker"));
 
-    // === DRAGARTOS, ESPECTROS Y MEGAFLORAS ===
     public static final Supplier<EntityType<GeovishapEntity>> GEOVISHAP =
             ENTITY_TYPES.register("geovishap", () ->
                     EntityType.Builder.<GeovishapEntity>of(GeovishapEntity::new, MobCategory.MONSTER)
@@ -1057,7 +1129,29 @@ public final class ModEntities {
                             .updateInterval(2)
                             .build("whopperflower"));
 
+    public static final Supplier<EntityType<com.soybe.awakeningsystem.uma.UmaRacerEntity>> UMA_RACER =
+            ENTITY_TYPES.register("uma_racer", () ->
+                    EntityType.Builder.<com.soybe.awakeningsystem.uma.UmaRacerEntity>of(com.soybe.awakeningsystem.uma.UmaRacerEntity::new, MobCategory.CREATURE)
+                            .sized(0.6F, 1.85F)
+                            .clientTrackingRange(48)
+                            .updateInterval(2)
+                            .build("uma_racer"));
+
+    public static final Supplier<EntityType<com.soybe.awakeningsystem.casino.darts.DartEntity>> DART =
+            ENTITY_TYPES.register("dart", () ->
+                    EntityType.Builder.<com.soybe.awakeningsystem.casino.darts.DartEntity>of(com.soybe.awakeningsystem.casino.darts.DartEntity::new, MobCategory.MISC)
+                            .sized(0.25F, 0.25F)
+                            .clientTrackingRange(64)
+                            .updateInterval(1)
+                            .build("dart"));
+
     public static void registerAttributes(EntityAttributeCreationEvent event) {
+        event.put(LIMBO_OPHANIM.get(), LimboOphanimEntity.createAttributes().build());
+        event.put(STILT_WALKER.get(), StiltWalkerEntity.createAttributes().build());
+        event.put(SPIDER_HEAD.get(), SpiderHeadEntity.createAttributes().build());
+        event.put(TALL_STALKER.get(), TallStalkerEntity.createAttributes().build());
+        event.put(LIMBO_ENTITY.get(), LimboEntity.createAttributes().build());
+        event.put(UMA_RACER.get(), com.soybe.awakeningsystem.uma.UmaRacerEntity.createAttributes().build());
         event.put(ABYSS_MAGE_PYRO.get(), AbstractAbyssMageEntity.createAbyssMageAttributes().build());
         event.put(ABYSS_MAGE_HYDRO.get(), AbstractAbyssMageEntity.createAbyssMageAttributes().build());
         event.put(ABYSS_MAGE_CRYO.get(), AbstractAbyssMageEntity.createAbyssMageAttributes().build());
@@ -1070,6 +1164,10 @@ public final class ModEntities {
         event.put(PYRO_REGISVINE.get(), PyroRegisvineEntity.createAttributes().build());
         event.put(ELECTRO_REGISVINE.get(), ElectroRegisvineEntity.createAttributes().build());
         event.put(STONEHIDE_LAWACHURL.get(), StonehideLawachurlEntity.createAttributes().build());
+        event.put(SCULK_GOLEM.get(), SculkGolemEntity.createAttributes().build());
+        event.put(COLOSSAL_SCULK_WARDEN.get(), ColossalSculkWardenEntity.createAttributes().build());
+        event.put(MOTHER_SPIDER.get(), MotherSpiderEntity.createAttributes().build());
+        event.put(MOTHER_SPIDER_BOSS.get(), MotherSpiderBossEntity.createBossAttributes().build());
         event.put(RUIN_GUARD.get(), RuinGuardEntity.createAttributes().build());
         event.put(RUIN_HUNTER.get(), RuinHunterEntity.createAttributes().build());
         event.put(GLARE.get(), GlareEntity.createAttributes().build());
@@ -1109,8 +1207,6 @@ public final class ModEntities {
         event.put(CELESTIAL_DRAGON.get(), CelestialDragonEntity.createAttributes().build());
         event.put(ANCIENT_CELESTIAL_DRAGON.get(), AncientCelestialDragonBossEntity.createAttributes().build());
 
-
-        // Atributos de NPCs
         var npcAttrs = SeriesNpcEntity.createAttributes().build();
         event.put(SERIES_NPC.get(), npcAttrs);
         event.put(SUNG_JINWOO.get(), npcAttrs);
@@ -1125,12 +1221,15 @@ public final class ModEntities {
         event.put(CHUNG_MYUNG.get(), npcAttrs);
         event.put(RYU_HANBIN.get(), npcAttrs);
         event.put(TWENTY_FIFTH_BAAM.get(), npcAttrs);
+        event.put(BLACK_MARKET_DEALER.get(), npcAttrs);
         event.put(DOKKAEBI.get(), DokkaebiEntity.createAttributes().build());
         event.put(PAIMON.get(), PaimonEntity.createAttributes().build());
         event.put(COMPANION.get(), CompanionEntity.createAttributes().build());
         event.put(WYVERN.get(), WyvernEntity.createAttributes().build());
         event.put(IGRIS_BOSS.get(), IgrisBossEntity.createAttributes().build());
         event.put(BARAN_BOSS.get(), BaranBossEntity.createAttributes().build());
+        event.put(STATUE_OF_GOD.get(), StatueOfGodEntity.createAttributes().build());
+        event.put(BERU_BOSS.get(), BeruBossEntity.createAttributes().build());
         event.put(BLOOD_QI_TOTEM.get(), BloodQiTotemEntity.createAttributes().build());
         event.put(BLOOD_SECT_DISCIPLE.get(), BloodSectDiscipleEntity.createAttributes().build());
         event.put(BLOOD_PATRIARCH_BOSS.get(), BloodPatriarchBossEntity.createAttributes().build());
@@ -1139,7 +1238,6 @@ public final class ModEntities {
         event.put(ELEMENTAL_DEMON_KING.get(), ElementalDemonKingBossEntity.createAttributes().build());
         event.put(ELEMENTAL_LORD.get(), ElementalLordBossEntity.createAttributes().build());
 
-        // Nuevos Mobs Isekai & Murim
         event.put(GOBLIN_SCOUT.get(), GoblinScoutEntity.createAttributes().build());
         event.put(GOBLIN_WARRIOR.get(), GoblinWarriorEntity.createAttributes().build());
         event.put(GOBLIN_SHAMAN.get(), GoblinShamanEntity.createAttributes().build());
@@ -1149,16 +1247,13 @@ public final class ModEntities {
         event.put(JADE_ARMORED_BEAST.get(), JadeArmoredBeastEntity.createAttributes().build());
         event.put(MOUNT_HUA_DISCIPLE.get(), MountHuaDiscipleEntity.createAttributes().build());
 
-        // Mobs Canónicos de Genshin Impact
         event.put(GENSHIN_SLIME.get(), GenshinSlimeEntity.createAttributes().build());
         event.put(HILICHURL.get(), HilichurlEntity.createAttributes().build());
         event.put(MITACHURL.get(), MitachurlEntity.createAttributes().build());
 
-        // Elementos Emblemáticos del Abismo de Genshin Impact
         event.put(LEY_LINE_MONOLITH.get(), LeyLineMonolithEntity.createAttributes().build());
         event.put(ABYSS_CHALLENGE_KEY.get(), AbyssChallengeKeyEntity.createAttributes().build());
 
-        // Nuevos Jefes y Criaturas de Genshin Impact (Árbol 407 Criaturas)
         event.put(GREAT_SNOWBOAR_KING.get(), GreatSnowboarKingBossEntity.createAttributes().build());
         event.put(RHODEIA_OCEANID.get(), RhodeiaOceanidBossEntity.createAttributes().build());
         event.put(WATER_MIMIC.get(), WaterMimicEntity.createAttributes().build());
@@ -1177,7 +1272,69 @@ public final class ModEntities {
         event.put(WHOPPERFLOWER.get(), WhopperflowerEntity.createAttributes().build());
     }
 
+    public static <T extends net.minecraft.world.entity.monster.Monster> boolean checkLimboStalkerSpawnRules(
+            net.minecraft.world.entity.EntityType<T> type,
+            net.minecraft.world.level.ServerLevelAccessor level,
+            net.minecraft.world.entity.MobSpawnType reason,
+            net.minecraft.core.BlockPos pos,
+            net.minecraft.util.RandomSource random) {
+        // 1. Zona de exclusión del santuario de spawn (mínimo 160 bloques del origen)
+        if (pos.closerThan(new net.minecraft.core.Vec3i(0, 2, 0), 160.0D)) {
+            return false;
+        }
+
+        // 1.1 Zona de exclusión sagrada de las 4 Puertas Monumentales del Limbo (mínimo 96 bloques de distancia)
+        for (net.minecraft.core.BlockPos doorPos : com.soybe.awakeningsystem.limbo.LimboWorldManager.CARDINAL_DOORS) {
+            if (pos.closerThan(doorPos, 96.0D)) {
+                return false;
+            }
+        }
+
+        // 2. Probabilidad muy baja por ciclo de spawn natural para evitar acumulación
+        if (random.nextFloat() > 0.04F) {
+            return false;
+        }
+
+        // 3. Separación estricta y tope poblacional en el área cargada
+        net.minecraft.world.level.Level l = level.getLevel();
+        if (l instanceof net.minecraft.server.level.ServerLevel sl) {
+            // Anti-amontonamiento: ninguna criatura acechante puede spawnear a menos de 48 bloques de otra
+            net.minecraft.world.phys.AABB densityBox = new net.minecraft.world.phys.AABB(pos).inflate(48.0D);
+            if (!sl.getEntitiesOfClass(net.minecraft.world.entity.monster.Monster.class, densityBox, e -> e instanceof LimboStalkerCreature).isEmpty()) {
+                return false;
+            }
+
+            // Límite de presencia atmosférica: máximo 6 acechadores en 160 bloques a la redonda
+            net.minecraft.world.phys.AABB areaBox = new net.minecraft.world.phys.AABB(pos).inflate(160.0D);
+            if (sl.getEntitiesOfClass(net.minecraft.world.entity.monster.Monster.class, areaBox, e -> e instanceof LimboStalkerCreature).size() >= 6) {
+                return false;
+            }
+        }
+
+        return net.minecraft.world.entity.monster.Monster.checkAnyLightMonsterSpawnRules(type, level, reason, pos, random);
+    }
+
     public static void registerSpawnPlacements(net.neoforged.neoforge.event.entity.RegisterSpawnPlacementsEvent event) {
+        event.register(STILT_WALKER.get(),
+                net.minecraft.world.entity.SpawnPlacementTypes.ON_GROUND,
+                net.minecraft.world.level.levelgen.Heightmap.Types.MOTION_BLOCKING_NO_LEAVES,
+                ModEntities::checkLimboStalkerSpawnRules,
+                net.neoforged.neoforge.event.entity.RegisterSpawnPlacementsEvent.Operation.REPLACE);
+        event.register(SPIDER_HEAD.get(),
+                net.minecraft.world.entity.SpawnPlacementTypes.ON_GROUND,
+                net.minecraft.world.level.levelgen.Heightmap.Types.MOTION_BLOCKING_NO_LEAVES,
+                ModEntities::checkLimboStalkerSpawnRules,
+                net.neoforged.neoforge.event.entity.RegisterSpawnPlacementsEvent.Operation.REPLACE);
+        event.register(LIMBO_ENTITY.get(),
+                net.minecraft.world.entity.SpawnPlacementTypes.ON_GROUND,
+                net.minecraft.world.level.levelgen.Heightmap.Types.MOTION_BLOCKING_NO_LEAVES,
+                ModEntities::checkLimboStalkerSpawnRules,
+                net.neoforged.neoforge.event.entity.RegisterSpawnPlacementsEvent.Operation.REPLACE);
+        event.register(TALL_STALKER.get(),
+                net.minecraft.world.entity.SpawnPlacementTypes.ON_GROUND,
+                net.minecraft.world.level.levelgen.Heightmap.Types.MOTION_BLOCKING_NO_LEAVES,
+                ModEntities::checkLimboStalkerSpawnRules,
+                net.neoforged.neoforge.event.entity.RegisterSpawnPlacementsEvent.Operation.REPLACE);
         event.register(MOUNT_HUA_DISCIPLE.get(),
                 net.minecraft.world.entity.SpawnPlacementTypes.ON_GROUND,
                 net.minecraft.world.level.levelgen.Heightmap.Types.MOTION_BLOCKING_NO_LEAVES,
@@ -1363,7 +1520,6 @@ public final class ModEntities {
                 (type, level, reason, pos, random) -> level.getBlockState(pos.below()).isSolid() && level.getFluidState(pos).isEmpty(),
                 net.neoforged.neoforge.event.entity.RegisterSpawnPlacementsEvent.Operation.REPLACE);
 
-        // Genshin Impact Field Mobs
         event.register(HILICHURL_SHOOTER.get(),
                 net.minecraft.world.entity.SpawnPlacementTypes.ON_GROUND,
                 net.minecraft.world.level.levelgen.Heightmap.Types.MOTION_BLOCKING_NO_LEAVES,
@@ -1371,6 +1527,24 @@ public final class ModEntities {
                 net.neoforged.neoforge.event.entity.RegisterSpawnPlacementsEvent.Operation.REPLACE);
 
         event.register(HILICHURL_BERSERKER.get(),
+                net.minecraft.world.entity.SpawnPlacementTypes.ON_GROUND,
+                net.minecraft.world.level.levelgen.Heightmap.Types.MOTION_BLOCKING_NO_LEAVES,
+                net.minecraft.world.entity.monster.Monster::checkMonsterSpawnRules,
+                net.neoforged.neoforge.event.entity.RegisterSpawnPlacementsEvent.Operation.REPLACE);
+
+        event.register(SCULK_GOLEM.get(),
+                net.minecraft.world.entity.SpawnPlacementTypes.ON_GROUND,
+                net.minecraft.world.level.levelgen.Heightmap.Types.MOTION_BLOCKING_NO_LEAVES,
+                net.minecraft.world.entity.monster.Monster::checkMonsterSpawnRules,
+                net.neoforged.neoforge.event.entity.RegisterSpawnPlacementsEvent.Operation.REPLACE);
+
+        event.register(COLOSSAL_SCULK_WARDEN.get(),
+                net.minecraft.world.entity.SpawnPlacementTypes.NO_RESTRICTIONS,
+                net.minecraft.world.level.levelgen.Heightmap.Types.MOTION_BLOCKING_NO_LEAVES,
+                (type, level, reason, pos, rand) -> true,
+                net.neoforged.neoforge.event.entity.RegisterSpawnPlacementsEvent.Operation.REPLACE);
+
+        event.register(MOTHER_SPIDER.get(),
                 net.minecraft.world.entity.SpawnPlacementTypes.ON_GROUND,
                 net.minecraft.world.level.levelgen.Heightmap.Types.MOTION_BLOCKING_NO_LEAVES,
                 net.minecraft.world.entity.monster.Monster::checkMonsterSpawnRules,
@@ -1425,36 +1599,6 @@ public final class ModEntities {
                 net.neoforged.neoforge.event.entity.RegisterSpawnPlacementsEvent.Operation.REPLACE);
 
         event.register(WHOPPERFLOWER.get(),
-                net.minecraft.world.entity.SpawnPlacementTypes.ON_GROUND,
-                net.minecraft.world.level.levelgen.Heightmap.Types.MOTION_BLOCKING_NO_LEAVES,
-                net.minecraft.world.entity.monster.Monster::checkMonsterSpawnRules,
-                net.neoforged.neoforge.event.entity.RegisterSpawnPlacementsEvent.Operation.REPLACE);
-
-        event.register(WILDFIRE.get(),
-                net.minecraft.world.entity.SpawnPlacementTypes.ON_GROUND,
-                net.minecraft.world.level.levelgen.Heightmap.Types.MOTION_BLOCKING_NO_LEAVES,
-                net.minecraft.world.entity.monster.Monster::checkMonsterSpawnRules,
-                net.neoforged.neoforge.event.entity.RegisterSpawnPlacementsEvent.Operation.REPLACE);
-
-        event.register(YGGDRASIL_TREANT_BOSS.get(),
-                net.minecraft.world.entity.SpawnPlacementTypes.ON_GROUND,
-                net.minecraft.world.level.levelgen.Heightmap.Types.MOTION_BLOCKING_NO_LEAVES,
-                net.minecraft.world.entity.monster.Monster::checkMonsterSpawnRules,
-                net.neoforged.neoforge.event.entity.RegisterSpawnPlacementsEvent.Operation.REPLACE);
-
-        event.register(JADE_GUARDIAN_BOSS.get(),
-                net.minecraft.world.entity.SpawnPlacementTypes.ON_GROUND,
-                net.minecraft.world.level.levelgen.Heightmap.Types.MOTION_BLOCKING_NO_LEAVES,
-                net.minecraft.world.entity.monster.Monster::checkMonsterSpawnRules,
-                net.neoforged.neoforge.event.entity.RegisterSpawnPlacementsEvent.Operation.REPLACE);
-
-        event.register(ELEMENTAL_LORD.get(),
-                net.minecraft.world.entity.SpawnPlacementTypes.ON_GROUND,
-                net.minecraft.world.level.levelgen.Heightmap.Types.MOTION_BLOCKING_NO_LEAVES,
-                net.minecraft.world.entity.monster.Monster::checkMonsterSpawnRules,
-                net.neoforged.neoforge.event.entity.RegisterSpawnPlacementsEvent.Operation.REPLACE);
-
-        event.register(GREAT_SNOWBOAR_KING.get(),
                 net.minecraft.world.entity.SpawnPlacementTypes.ON_GROUND,
                 net.minecraft.world.level.levelgen.Heightmap.Types.MOTION_BLOCKING_NO_LEAVES,
                 net.minecraft.world.entity.monster.Monster::checkMonsterSpawnRules,

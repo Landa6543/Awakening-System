@@ -38,7 +38,6 @@ public class AstralBreathRenderer extends EntityRenderer<AstralBreathProjectileE
         poseStack.mulPose(Axis.XP.rotationDegrees(time * 15.0F));
         poseStack.scale(0.7F, 0.7F, 0.7F);
 
-        // Brillo constante 15728880 (luz máxima de noche)
         ItemStack stack = new ItemStack(Items.AMETHYST_SHARD);
         this.itemRenderer.renderStatic(stack, ItemDisplayContext.FIXED, 15728880,
                 OverlayTexture.NO_OVERLAY, poseStack, buffer, entity.level(), entity.getId());

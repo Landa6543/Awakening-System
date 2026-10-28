@@ -60,6 +60,8 @@ public class SlashWaveRenderer extends EntityRenderer<SlashWaveEntity> {
             case SlashWaveEntity.TYPE_COSMIC_AMETHYST -> { r = 160; g = 60; b = 255; }
             case SlashWaveEntity.TYPE_PYRO_FLAME -> { r = 255; g = 110; b = 20; }
             case SlashWaveEntity.TYPE_FROST_WIND -> { r = 165; g = 230; b = 255; }
+            case SlashWaveEntity.TYPE_CELESTIAL -> { r = 90; g = 235; b = 255; }
+            case SlashWaveEntity.TYPE_PRIMORDIAL_GENESIS -> { r = 195; g = 65; b = 255; }
             default -> { r = 255; g = 255; b = 255; }
         }
 
@@ -78,7 +80,6 @@ public class SlashWaveRenderer extends EntityRenderer<SlashWaveEntity> {
 
         Matrix4f matrix = poseStack.last().pose();
 
-        // 1. Capa Principal: Cara superior e inferior
         drawVertex(builder, matrix, -halfL, 0.0F, -halfW, 0.0F, 1.0F, r, g, b, a);
         drawVertex(builder, matrix, halfL, 0.0F, -halfW, 0.0F, 0.0F, r, g, b, a);
         drawVertex(builder, matrix, halfL, 0.0F, halfW, 1.0F, 0.0F, r, g, b, a);
@@ -89,7 +90,6 @@ public class SlashWaveRenderer extends EntityRenderer<SlashWaveEntity> {
         drawVertex(builder, matrix, halfL, 0.0F, -halfW, 0.0F, 0.0F, r, g, b, a);
         drawVertex(builder, matrix, -halfL, 0.0F, -halfW, 0.0F, 1.0F, r, g, b, a);
 
-        // 2. Capa de Resplandor Núcleo (Core más intenso)
         float coreW = halfW * 0.65F;
         float coreL = halfL * 0.65F;
         int cr = Math.min(255, r + 60);

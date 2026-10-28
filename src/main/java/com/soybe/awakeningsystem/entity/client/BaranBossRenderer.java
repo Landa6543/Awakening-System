@@ -1,31 +1,25 @@
 package com.soybe.awakeningsystem.entity.client;
 
 import com.mojang.blaze3d.vertex.PoseStack;
-import com.soybe.awakeningsystem.AwakeningSystemMod;
 import com.soybe.awakeningsystem.entity.BaranBossEntity;
-import net.minecraft.client.model.PlayerModel;
-import net.minecraft.client.model.geom.ModelLayers;
 import net.minecraft.client.renderer.entity.EntityRendererProvider;
-import net.minecraft.client.renderer.entity.HumanoidMobRenderer;
-import net.minecraft.client.renderer.entity.layers.ItemInHandLayer;
-import net.minecraft.resources.ResourceLocation;
+import software.bernie.geckolib.cache.object.BakedGeoModel;
+import software.bernie.geckolib.renderer.GeoEntityRenderer;
 
-public class BaranBossRenderer extends HumanoidMobRenderer<BaranBossEntity, PlayerModel<BaranBossEntity>> {
-    private static final ResourceLocation BARAN_TEXTURE =
-            ResourceLocation.fromNamespaceAndPath(AwakeningSystemMod.MOD_ID, "textures/entity/baran.png");
+/**
+ * Renderer GeckoLib 3D para el Monarca Demonio Baran.
+ */
+public class BaranBossRenderer extends GeoEntityRenderer<BaranBossEntity> {
 
     public BaranBossRenderer(EntityRendererProvider.Context context) {
-        super(context, new PlayerModel<>(context.bakeLayer(ModelLayers.PLAYER), false), 0.75F);
-        this.addLayer(new ItemInHandLayer<>(this, context.getItemInHandRenderer()));
+        super(context, new BaranBossGeoModel());
+        this.shadowRadius = 0.75F;
+        this.addRenderLayer(new BaranGlowLayer(this));
     }
 
     @Override
-    protected void scale(BaranBossEntity entity, PoseStack poseStack, float partialTickTime) {
-        poseStack.scale(1.25F, 1.25F, 1.25F);
-    }
-
-    @Override
-    public ResourceLocation getTextureLocation(BaranBossEntity entity) {
-        return BARAN_TEXTURE;
+    public void scaleModelForRender(float widthScale, float heightScale, PoseStack poseStack, BaranBossEntity animatable, BakedGeoModel model, boolean isReRender, float partialTick, int packedLight, int packedOverlay) {
+        float scale = 1.35F;
+        super.scaleModelForRender(widthScale * scale, heightScale * scale, poseStack, animatable, model, isReRender, partialTick, packedLight, packedOverlay);
     }
 }

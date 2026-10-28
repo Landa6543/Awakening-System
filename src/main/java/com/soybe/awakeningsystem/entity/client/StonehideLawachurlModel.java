@@ -765,14 +765,12 @@ public class StonehideLawachurlModel<T extends Monster> extends EntityModel<T> {
         this.head.yRot = netHeadYaw * ((float) Math.PI / 180F);
         this.head.xRot = headPitch * ((float) Math.PI / 180F);
 
-        // Marcha de simio colosal
         this.rightLeg.xRot = Mth.cos(limbSwing * 1.0F) * 1.0F * limbSwingAmount;
         this.leftLeg.xRot = Mth.cos(limbSwing * 1.0F) * -1.0F * limbSwingAmount;
         this.rightHand.xRot = Mth.cos(limbSwing * 0.6662F + (float) Math.PI) * limbSwingAmount;
         this.leftHand.xRot = Mth.cos(limbSwing * 0.6662F) * limbSwingAmount;
 
         if (entity instanceof StonehideLawachurlEntity sl && sl.isLeaping()) {
-            // Brazos alzados para el impacto sísmico hacia el suelo
             this.rightHand.xRot = -2.2F;
             this.leftHand.xRot = -2.2F;
         }

@@ -27,7 +27,6 @@ public class CloudCraneRenderer extends MobRenderer<CloudCraneEntity, CloudCrane
 
     @Override
     protected void scale(CloudCraneEntity entity, PoseStack poseStack, float partialTickTime) {
-        // Escala esbelta y majestuosa de ave sagrada (1.2x)
         poseStack.scale(1.2F, 1.2F, 1.2F);
     }
 }

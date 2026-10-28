@@ -69,7 +69,6 @@ public class GlareEntity extends PathfinderMob implements FlyingAnimal {
         super.aiStep();
 
         if (this.level().isClientSide()) {
-            // Partículas de esporas de musgo
             if (this.random.nextInt(4) == 0) {
                 double px = this.getX() + (this.random.nextDouble() - 0.5D) * 0.8D;
                 double py = this.getY() + 0.2D + this.random.nextDouble() * 0.6D;
@@ -77,13 +76,11 @@ public class GlareEntity extends PathfinderMob implements FlyingAnimal {
                 this.level().addParticle(ParticleTypes.SPORE_BLOSSOM_AIR, px, py, pz, 0, 0, 0);
             }
         } else {
-            // Detectar oscuridad que permite el spawn de monstruos
             if (--grumbleCooldown <= 0) {
                 grumbleCooldown = 80 + this.random.nextInt(60);
                 BlockPos pos = this.blockPosition();
                 int light = this.level().getBrightness(LightLayer.BLOCK, pos);
                 if (light <= 2) {
-                    // Mas oscuro: aviso sonoro y partículas de disgusto
                     this.level().playSound(null, pos, SoundEvents.MOSS_FALL, SoundSource.NEUTRAL, 1.2F, 0.7F);
                     ((ServerLevel) this.level()).sendParticles(ParticleTypes.ANGRY_VILLAGER,
                             this.getX(), this.getY() + 0.8D, this.getZ(), 2, 0.2D, 0.2D, 0.2D, 0.0D);
@@ -141,6 +138,5 @@ public class GlareEntity extends PathfinderMob implements FlyingAnimal {
 
     @Override
     protected void checkFallDamage(double y, boolean onGround, BlockState state, BlockPos pos) {
-        // No recibe daño de caída
     }
 }

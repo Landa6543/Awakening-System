@@ -28,14 +28,12 @@ public class TeyvatAdhigamaTreeFeature extends Feature<NoneFeatureConfiguration>
         BlockPos origin = context.origin();
         RandomSource rand = context.random();
 
-        // 1. Suelo fértil selvático (tierra, césped, musgo, podzol)
         BlockState ground = level.getBlockState(origin.below());
         if (!ground.is(BlockTags.DIRT) && !ground.is(Blocks.GRASS_BLOCK) && !ground.is(Blocks.MOSS_BLOCK)
                 && !ground.is(Blocks.PODZOL)) {
             return false;
         }
 
-        // 2. El punto base debe ser aire o vegetación reemplazable
         if (!level.isEmptyBlock(origin) && !level.getBlockState(origin).canBeReplaced()) {
             return false;
         }

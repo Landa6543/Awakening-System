@@ -40,7 +40,7 @@ public class ElectroHypostasisBossEntity extends HypostasisBaseBossEntity {
 
     @Override
     protected Component getBossTitle() {
-        return Component.literal("§d✦ Aleph — Hipóstasis Electro ✦");
+        return Component.translatable("boss.awakening_system.hypostasis.electro");
     }
 
     @Override
@@ -55,7 +55,7 @@ public class ElectroHypostasisBossEntity extends HypostasisBaseBossEntity {
 
     @Override
     public int getElementalColorHex() {
-        return 0xBF00FF; // Púrpura / Violeta Electro
+        return 0xBF00FF;
     }
 
     @Override
@@ -64,7 +64,6 @@ public class ElectroHypostasisBossEntity extends HypostasisBaseBossEntity {
 
         switch (attack) {
             case CLAP -> {
-                // Golpe de Clap en el 60% del progreso con trueno nítido y chispas
                 if (progress >= 0.58F && progress <= 0.65F) {
                     sl.playSound(null, this.getX(), this.getY(), this.getZ(), SoundEvents.LIGHTNING_BOLT_THUNDER, SoundSource.HOSTILE, 1.2F, 1.4F);
                     sl.playSound(null, this.getX(), this.getY(), this.getZ(), SoundEvents.PLAYER_ATTACK_CRIT, SoundSource.HOSTILE, 1.5F, 1.2F);
@@ -73,7 +72,6 @@ public class ElectroHypostasisBossEntity extends HypostasisBaseBossEntity {
                     sl.sendParticles(ParticleTypes.FLASH, strikePos.x, strikePos.y, strikePos.z, 1, 0, 0, 0, 0);
                     sl.sendParticles(ParticleTypes.ELECTRIC_SPARK, strikePos.x, strikePos.y, strikePos.z, 60, 1.5D, 1.0D, 1.5D, 0.2D);
 
-                    // Línea de rayos frontales
                     for (int i = 1; i <= 4; i++) {
                         Vec3 boltPos = this.position().add(toTarget.scale(i * 2.2D));
                         LightningBolt bolt = EntityType.LIGHTNING_BOLT.create(sl);
@@ -96,7 +94,6 @@ public class ElectroHypostasisBossEntity extends HypostasisBaseBossEntity {
                 }
             }
             case MISSILES -> {
-                // Ráfaga de proyectiles de electro
                 int step = (int) (progress * 12);
                 if (progress > 0.20F && progress < 0.85F && (step % 2 == 0)) {
                     sl.playSound(null, this.getX(), this.getY(), this.getZ(), SoundEvents.ARROW_SHOOT, SoundSource.HOSTILE, 0.8F, 1.8F);
@@ -113,13 +110,11 @@ public class ElectroHypostasisBossEntity extends HypostasisBaseBossEntity {
                 }
             }
             case SPECIAL_ACTION -> {
-                // Taladro de Electro (Drill charge)
                 if (progress >= 0.28F && progress <= 0.34F) {
                     sl.playSound(null, this.getX(), this.getY(), this.getZ(), SoundEvents.TRIDENT_RIPTIDE_2.value(), SoundSource.HOSTILE, 1.8F, 1.2F);
                 }
 
                 if (progress >= 0.30F && progress <= 0.70F) {
-                    // Carga frontal a toda velocidad
                     this.setDeltaMovement(toTarget.x * 0.95D, 0, toTarget.z * 0.95D);
                     sl.sendParticles(ParticleTypes.ELECTRIC_SPARK, this.getX(), this.getY() + 0.8D, this.getZ(), 20, 0.4D, 0.4D, 0.4D, 0.1D);
 
@@ -134,13 +129,12 @@ public class ElectroHypostasisBossEntity extends HypostasisBaseBossEntity {
                 }
             }
             case BURST_ULTIMATE -> {
-                // Láseres Giratorios: 4 rayos rotativos exteriores
                 if (progress >= 0.04F && progress <= 0.08F) {
                     sl.playSound(null, this.getX(), this.getY(), this.getZ(), SoundEvents.BEACON_DEACTIVATE, SoundSource.HOSTILE, 1.5F, 1.8F);
                     sl.playSound(null, this.getX(), this.getY(), this.getZ(), SoundEvents.LIGHTNING_BOLT_IMPACT, SoundSource.HOSTILE, 1.2F, 1.6F);
                 }
 
-                double rotAngle = progress * Math.PI * 4; // Gira 2 vueltas completas
+                double rotAngle = progress * Math.PI * 4;
 
                 for (int beam = 0; beam < 4; beam++) {
                     double beamAngle = rotAngle + (Math.PI / 2) * beam;
@@ -152,7 +146,6 @@ public class ElectroHypostasisBossEntity extends HypostasisBaseBossEntity {
                         sl.sendParticles(ParticleTypes.PORTAL, beamPos.x, beamPos.y, beamPos.z, 2, 0.1D, 0.1D, 0.1D, 0.02D);
                     }
 
-                    // Chequeo de colisión de láser
                     Vec3 checkPos = this.position().add(beamDir.scale(target.distanceTo(this))).add(0, 0.8D, 0);
                     if (target.distanceToSqr(this) >= 4.0D && target.distanceToSqr(this) <= 81.0D && target.position().distanceToSqr(checkPos) < 2.5D) {
                         target.hurt(target.damageSources().lightningBolt(), 15.0F);
@@ -184,7 +177,7 @@ public class ElectroHypostasisBossEntity extends HypostasisBaseBossEntity {
         }
 
         for (ServerPlayer player : sl.getPlayers(p -> p.distanceToSqr(this) < 1600.0D)) {
-            player.displayClientMessage(Component.literal("§d§l✦ [ALEPH EN CRISIS] §f¡Destruye los §d3 Prismas Electro §fantes de que Aleph recupere su energía!"), true);
+            player.displayClientMessage(Component.translatable("boss.awakening_system.electro_hypostasis.crisis"), true);
         }
     }
 
@@ -214,17 +207,16 @@ public class ElectroHypostasisBossEntity extends HypostasisBaseBossEntity {
                     data.addMora(60000);
                     data.addPrimogems(30);
                     com.soybe.awakeningsystem.AwakeningSystemMod.sync(sp);
-                    sp.displayClientMessage(Component.literal("§d§l✦ ¡HIPÓSTASIS ELECTRO DERROTADO! §eHas ganado §6+60,000 Mora §ey §b+30 Protogemas§e."), false);
+                    sp.displayClientMessage(Component.translatable("boss.awakening_system.electro_hypostasis.defeated_teyvat"), false);
                 } else {
                     if (SystemItems.AWAKENING_COIN.isBound()) {
                         sp.addItem(new ItemStack(SystemItems.AWAKENING_COIN.get(), 24));
                     }
-                    sp.displayClientMessage(Component.literal("§d§l✦ ¡HIPÓSTASIS ELECTRO DERROTADO! §6+24 Monedas de Despertar§e."), false);
+                    sp.displayClientMessage(Component.translatable("boss.awakening_system.electro_hypostasis.defeated_vanilla"), false);
                 }
             }
         }
 
-        // Drops físicos: Amatistas Vajrada, Protogemas y Destinos
         if (isTeyvat && SystemItems.PRIMOGEM.isBound()) {
             sl.addFreshEntity(new ItemEntity(sl, this.getX(), this.getY(), this.getZ(), new ItemStack(SystemItems.PRIMOGEM.get(), 25)));
         }

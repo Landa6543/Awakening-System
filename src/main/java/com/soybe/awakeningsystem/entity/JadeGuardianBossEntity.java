@@ -5,6 +5,9 @@ import com.soybe.awakeningsystem.SystemEvents;
 import com.soybe.awakeningsystem.SystemItems;
 import net.minecraft.core.particles.ParticleTypes;
 import net.minecraft.network.chat.Component;
+import net.minecraft.network.syncher.EntityDataAccessor;
+import net.minecraft.network.syncher.EntityDataSerializers;
+import net.minecraft.network.syncher.SynchedEntityData;
 import net.minecraft.server.level.ServerBossEvent;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.server.level.ServerPlayer;
@@ -36,6 +39,9 @@ import net.minecraft.world.phys.Vec3;
 import java.util.List;
 
 public class JadeGuardianBossEntity extends Monster {
+    private static final EntityDataAccessor<Byte> DATA_ATTACK_STATE =
+            SynchedEntityData.defineId(JadeGuardianBossEntity.class, EntityDataSerializers.BYTE);
+
     private final ServerBossEvent bossEvent = (ServerBossEvent) new ServerBossEvent(
             Component.translatable("awakening_system.boss.jade_guardian.name"),
             BossEvent.BossBarColor.GREEN,
@@ -45,6 +51,7 @@ public class JadeGuardianBossEntity extends Monster {
     private int jadePalmCooldown = 80;
     private int earthTremorCooldown = 140;
     private int qiBarrierCooldown = 220;
+    private int attackAnimationTicks = 0;
 
     public JadeGuardianBossEntity(EntityType<? extends Monster> entityType, Level level) {
         super(entityType, level);
@@ -54,6 +61,25 @@ public class JadeGuardianBossEntity extends Monster {
         this.addTag("jade_grotto_boss");
         this.addTag("no_shadow_extraction");
         this.addTag("no_block_destroy");
+    }
+
+    @Override
+    protected void defineSynchedData(SynchedEntityData.Builder builder) {
+        super.defineSynchedData(builder);
+        builder.define(DATA_ATTACK_STATE, (byte) 0);
+    }
+
+    public byte getAttackState() {
+        return this.entityData.get(DATA_ATTACK_STATE);
+    }
+
+    public void setAttackState(byte state, int durationTicks) {
+        this.entityData.set(DATA_ATTACK_STATE, state);
+        this.attackAnimationTicks = durationTicks;
+    }
+
+    public int getAttackAnimationTicks() {
+        return this.attackAnimationTicks;
     }
 
     public static AttributeSupplier.Builder createAttributes() {
@@ -83,6 +109,13 @@ public class JadeGuardianBossEntity extends Monster {
     public void aiStep() {
         super.aiStep();
 
+        if (this.attackAnimationTicks > 0) {
+            this.attackAnimationTicks--;
+            if (this.attackAnimationTicks <= 0) {
+                this.entityData.set(DATA_ATTACK_STATE, (byte) 0);
+            }
+        }
+
         if (this.level().isClientSide()) {
             if (this.random.nextInt(3) == 0) {
                 this.level().addParticle(ParticleTypes.HAPPY_VILLAGER,
@@ -100,11 +133,11 @@ public class JadeGuardianBossEntity extends Monster {
         if (target != null && target.isAlive()) {
             double distSq = this.distanceToSqr(target);
 
-            // 1. Habilidad: Palma de Jade Rompedora de Montañas (Melee devastador con Qi)
             if (this.jadePalmCooldown > 0) {
                 this.jadePalmCooldown--;
             } else if (distSq <= 16.0D) {
                 this.jadePalmCooldown = 80;
+                this.setAttackState((byte) 1, 20);
                 this.level().playSound(null, this.blockPosition(), SoundEvents.WARDEN_ATTACK_IMPACT, SoundSource.HOSTILE, 1.4F, 0.85F);
                 target.hurt(this.damageSources().mobAttack(this), 24.0F);
                 target.addEffect(new MobEffectInstance(MobEffects.MOVEMENT_SLOWDOWN, 100, 1));
@@ -116,11 +149,11 @@ public class JadeGuardianBossEntity extends Monster {
                 }
             }
 
-            // 2. Habilidad: Temblor Terrestre de Qi (Onda expansiva en área)
             if (this.earthTremorCooldown > 0) {
                 this.earthTremorCooldown--;
             } else if (distSq <= 120.0D) {
                 this.earthTremorCooldown = 140;
+                this.setAttackState((byte) 2, 28);
                 this.level().playSound(null, this.blockPosition(), SoundEvents.GENERIC_EXPLODE.value(), SoundSource.HOSTILE, 1.2F, 1.3F);
                 this.level().playSound(null, this.blockPosition(), SoundEvents.BELL_RESONATE, SoundSource.HOSTILE, 1.5F, 0.7F);
 
@@ -138,11 +171,11 @@ public class JadeGuardianBossEntity extends Monster {
                 }
             }
 
-            // 3. Habilidad: Barrera Elemental Wu Xing (Escudo de resistencia y regeneración)
             if (this.qiBarrierCooldown > 0) {
                 this.qiBarrierCooldown--;
             } else if (this.getHealth() < this.getMaxHealth() * 0.6F) {
                 this.qiBarrierCooldown = 220;
+                this.setAttackState((byte) 3, 30);
                 this.addEffect(new MobEffectInstance(MobEffects.DAMAGE_RESISTANCE, 100, 1));
                 this.addEffect(new MobEffectInstance(MobEffects.REGENERATION, 100, 1));
                 this.level().playSound(null, this.blockPosition(), SoundEvents.BEACON_POWER_SELECT, SoundSource.HOSTILE, 1.4F, 1.2F);
@@ -174,7 +207,6 @@ public class JadeGuardianBossEntity extends Monster {
         if (!this.level().isClientSide()) {
             ServerLevel sl = (ServerLevel) this.level();
 
-            // Soltar la Llave de Jade Ancestral para desbloquear el Sarcófago
             if (SystemItems.JADE_ANCESTRAL_KEY.isBound()) {
                 ItemStack keyStack = new ItemStack(SystemItems.JADE_ANCESTRAL_KEY.get());
                 ItemEntity drop = new ItemEntity(sl, this.getX(), this.getY() + 0.5D, this.getZ(), keyStack);
@@ -182,7 +214,6 @@ public class JadeGuardianBossEntity extends Monster {
                 sl.addFreshEntity(drop);
             }
 
-            // Premiar al jugador asesino con Qi de cultivo y Monedas
             if (damageSource.getEntity() instanceof ServerPlayer killer) {
                 var data = SystemEvents.data(killer);
                 data.addCultivationQi(800);

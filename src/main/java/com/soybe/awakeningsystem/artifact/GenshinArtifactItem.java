@@ -106,7 +106,6 @@ public class GenshinArtifactItem extends Item {
         tooltip.add(Component.translatable("awakening_system.artifact.tooltip.type", type.getDisplayNameComponent(), lvl));
         tooltip.add(Component.empty());
 
-        // Atributo principal
         switch (type) {
             case FLOWER -> tooltip.add(Component.translatable("awakening_system.artifact.tooltip.hp", (int) getHpBonus(stack)));
             case PLUME -> tooltip.add(Component.translatable("awakening_system.artifact.tooltip.atk", String.format("%.1f", getAttackBonus(stack))));

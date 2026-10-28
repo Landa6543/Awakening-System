@@ -27,15 +27,12 @@ public class FishingTrapScreen extends AbstractContainerScreen<FishingTrapMenu> 
     protected void init() {
         super.init();
 
-        // Botón Activar / Desactivar centrado y alineado con las ranuras de salida
-        // Ranuras van de x=58 a x=136. Botón de ancho 80 en x=60, y=78, alto=18
-        this.toggleBtn = Button.builder(Component.literal("..."), button -> {
+        this.toggleBtn = new AestheticTrapButton(this.leftPos + 55, this.topPos + 76, 90, 18, button -> {
             if (this.minecraft != null && this.minecraft.gameMode != null) {
                 this.minecraft.getSoundManager().play(SimpleSoundInstance.forUI(SoundEvents.UI_BUTTON_CLICK, 1.0F));
                 this.minecraft.gameMode.handleInventoryButtonClick(this.menu.containerId, 0);
             }
-        }).bounds(this.leftPos + 60, this.topPos + 78, 80, 18)
-        .build();
+        });
 
         this.addRenderableWidget(this.toggleBtn);
         updateButtonVisual();
@@ -51,18 +48,64 @@ public class FishingTrapScreen extends AbstractContainerScreen<FishingTrapMenu> 
         if (this.toggleBtn == null) return;
         boolean active = this.menu.isActive();
         if (active) {
-            this.toggleBtn.setMessage(Component.literal("§cDesactivar"));
-            this.toggleBtn.setTooltip(Tooltip.create(Component.literal("§bPesca automática: §aACTIVADA\n§7Haz clic para §cdesactivar§7 la trampa.")));
+            this.toggleBtn.setMessage(Component.translatable("block.awakening_system.fishing_trap.btn.deactivate"));
+            this.toggleBtn.setTooltip(Tooltip.create(Component.translatable("block.awakening_system.fishing_trap.btn.deactivate.tooltip")));
         } else {
-            this.toggleBtn.setMessage(Component.literal("§aActivar"));
-            this.toggleBtn.setTooltip(Tooltip.create(Component.literal("§bPesca automática: §cDESACTIVADA\n§7Haz clic para §aactivar§7 la trampa cada 5s.")));
+            this.toggleBtn.setMessage(Component.translatable("block.awakening_system.fishing_trap.btn.activate"));
+            this.toggleBtn.setTooltip(Tooltip.create(Component.translatable("block.awakening_system.fishing_trap.btn.activate.tooltip")));
+        }
+    }
+
+    private class AestheticTrapButton extends Button {
+        public AestheticTrapButton(int x, int y, int width, int height, OnPress onPress) {
+            super(x, y, width, height, Component.empty(), onPress, DEFAULT_NARRATION);
+        }
+
+        @Override
+        public void renderWidget(GuiGraphics g, int mouseX, int mouseY, float partialTick) {
+            boolean active = menu.isActive();
+            boolean hovered = this.isHoveredOrFocused();
+
+            int bx = getX();
+            int by = getY();
+            int bw = getWidth();
+            int bh = getHeight();
+
+            int bgTop = active ? (hovered ? 0xF0183F2B : 0xEE0E2B1D) : (hovered ? 0xF03B1E1E : 0xEE2A1313);
+            int bgBottom = active ? (hovered ? 0xFA0E281C : 0xF5081A12) : (hovered ? 0xFA241111 : 0xF5180B0B);
+            int borderCol = active ? (hovered ? 0xFF55FFAA : 0xFF2ECC71) : (hovered ? 0xFFFF7777 : 0xFFE74C3C);
+            int innerBorder = active ? (hovered ? 0x882ECC71 : 0x442ECC71) : (hovered ? 0x88E74C3C : 0x44E74C3C);
+
+            g.fillGradient(bx, by, bx + bw, by + bh, bgTop, bgBottom);
+            g.renderOutline(bx, by, bw, bh, borderCol);
+            g.renderOutline(bx + 1, by + 1, bw - 2, bh - 2, innerBorder);
+
+            if (hovered) {
+                g.renderOutline(bx + 1, by + 1, bw - 2, bh - 2, 0x66FFFFFF);
+            }
+
+            int accentCol = active ? 0xFF00FFCC : 0xFFFF5555;
+            g.fill(bx, by, bx + 3, by + 1, accentCol);
+            g.fill(bx, by, bx + 1, by + 3, accentCol);
+            g.fill(bx + bw - 3, by, bx + bw, by + 1, accentCol);
+            g.fill(bx + bw - 1, by, bx + bw, by + 3, accentCol);
+            g.fill(bx, by + bh - 1, bx + 3, by + bh, accentCol);
+            g.fill(bx, by + bh - 3, bx + 1, by + bh, accentCol);
+            g.fill(bx + bw - 3, by + bh - 1, bx + bw, by + bh, accentCol);
+            g.fill(bx + bw - 1, by + bh - 3, bx + bw, by + bh, accentCol);
+
+            Component msg = getMessage();
+            int textW = font.width(msg);
+            int textX = bx + (bw - textW) / 2;
+            int textY = by + (bh - 8) / 2;
+            int textColor = active ? (hovered ? 0xFFFFFFFF : 0xFFB9F6CA) : (hovered ? 0xFFFFFFFF : 0xFFFFCDD2);
+            g.drawString(font, msg, textX, textY, textColor, true);
         }
     }
 
     @Override
     public void renderBackground(GuiGraphics g, int mouseX, int mouseY, float partialTick) {
-        // Tinte suave nítido sin activar el post-processing shader de desenfoque (blur)
-        g.fill(0, 0, this.width, this.height, 0x55060D15);
+        g.fill(0, 0, this.width, this.height, 0x77060D15);
     }
 
     @Override
@@ -73,64 +116,67 @@ public class FishingTrapScreen extends AbstractContainerScreen<FishingTrapMenu> 
 
     @Override
     protected void renderLabels(GuiGraphics g, int mouseX, int mouseY) {
-        // Textos canónicos de la interfaz original
-        g.drawString(this.font, Component.literal("Bait"), 22, 21, 0xFFE0E0E0, false);
-        g.drawString(this.font, Component.literal("Cebo"), 157, 21, 0xFFE0E0E0, false);
+        g.drawString(this.font, Component.translatable("block.awakening_system.fishing_trap.bait_label"), 12, 21, 0xFFB0BEC5, false);
+        g.drawString(this.font, Component.translatable("block.awakening_system.fishing_trap.catch_label"), 12, 61, 0xFFB0BEC5, false);
+        g.drawString(this.font, this.playerInventoryTitle, 20, 105, 0xFFB0BEC5, false);
 
-        // Indicador de estado centrado debajo del botón y sobre la barra de progreso (y = 98)
         int status = this.menu.getStatus();
-        String statusText;
+        Component statusComponent;
         int statusColor;
         switch (status) {
             case 4 -> {
-                statusText = "§7⏸ Desactivada";
+                statusComponent = Component.translatable("block.awakening_system.fishing_trap.status.disabled");
                 statusColor = 0xFFAAAAAA;
             }
             case 5 -> {
-                statusText = "§c⚡ Pausada por Redstone";
+                statusComponent = Component.translatable("block.awakening_system.fishing_trap.status.redstone");
                 statusColor = 0xFFFF5555;
             }
             case 0 -> {
-                statusText = "§c⚠ Requiere agua";
+                statusComponent = Component.translatable("block.awakening_system.fishing_trap.status.requires_water");
                 statusColor = 0xFFFF5555;
             }
             case 1 -> {
-                statusText = "§e⚠ Requiere cebo";
+                statusComponent = Component.translatable("block.awakening_system.fishing_trap.status.requires_bait");
                 statusColor = 0xFFFFAA00;
             }
             case 3 -> {
-                statusText = "§6⚠ Salidas llenas";
+                statusComponent = Component.translatable("block.awakening_system.fishing_trap.status.full");
                 statusColor = 0xFFFFAA00;
             }
             default -> {
                 int progress = this.menu.getProgress();
                 int totalTime = this.menu.getTotalTime();
                 int pct = (totalTime > 0) ? Math.min(100, progress * 100 / totalTime) : 0;
-                statusText = "§b⚡ Pescando: §a" + pct + "%";
+                statusComponent = Component.translatable("block.awakening_system.fishing_trap.status.fishing", pct);
                 statusColor = 0xFF55FFFF;
             }
         }
 
-        int textW = this.font.width(statusText);
-        g.drawString(this.font, statusText, (this.imageWidth - textW) / 2, 98, statusColor, false);
+        int textW = this.font.width(statusComponent);
+        g.drawString(this.font, statusComponent, (this.imageWidth - textW) / 2, 98, statusColor, false);
     }
 
     @Override
     protected void renderBg(GuiGraphics g, float partialTick, int mouseX, int mouseY) {
         int x = this.leftPos;
         int y = this.topPos;
+
+        // Panel de fondo sólido para evitar que los bloques y mundo se trasluzcan o solapen
+        g.fill(x - 2, y - 2, x + this.imageWidth + 2, y + this.imageHeight + 2, 0xFF1B2A4A);
+        g.fill(x, y, x + this.imageWidth, y + this.imageHeight, 0xFF0D1829);
+        g.fill(x, y, x + this.imageWidth, y + 14, 0xFF14243B);
+        g.fill(x, y + 13, x + this.imageWidth, y + 14, 0xFF4A90E2);
+
+        com.mojang.blaze3d.systems.RenderSystem.setShaderColor(1.0F, 1.0F, 1.0F, 1.0F);
         g.blit(TEXTURE, x, y, 0, 0, this.imageWidth, this.imageHeight, 200, 200);
 
-        // Barra de progreso reposicionada elegantemente en la zona inferior (y + 108)
-        // Ancho 80 píxeles, centrada exactamente con el botón y las ranuras
         int barX = x + 60;
         int barY = y + 108;
         int barW = 80;
         int barH = 5;
 
-        // Borde exterior
         g.fill(barX - 1, barY - 1, barX + barW + 1, barY + barH + 1, 0xFF373737);
-        // Fondo interior de la ranura
         g.fill(barX, barY, barX + barW, barY + barH, 0xFF141923);
 
         int status = this.menu.getStatus();
@@ -139,7 +185,6 @@ public class FishingTrapScreen extends AbstractContainerScreen<FishingTrapMenu> 
             int totalTime = this.menu.getTotalTime();
             int filled = (totalTime > 0) ? Math.min(barW, progress * barW / totalTime) : 0;
             if (filled > 0) {
-                // Brillo superior cian claro y base cian profundo
                 g.fill(barX, barY, barX + filled, barY + 2, 0xFF55FFFF);
                 g.fill(barX, barY + 2, barX + filled, barY + barH, 0xFF00AAAA);
             }

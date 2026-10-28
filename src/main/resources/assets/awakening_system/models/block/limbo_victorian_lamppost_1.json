@@ -1,0 +1,127 @@
+{
+  "credit": "Victorian Gothic Lamppost Lower Shaft (Awakening System)",
+  "ambientocclusion": true,
+  "textures": {
+    "particle": "awakening_system:block/limbo_victorian_lamppost",
+    "iron": "awakening_system:block/limbo_victorian_lamppost",
+    "fluted": "awakening_system:block/limbo_victorian_lamppost",
+    "brass": "awakening_system:block/limbo_victorian_lamppost"
+  },
+  "elements": [
+    {
+      "name": "lower_ring",
+      "from": [
+        4.5,
+        0,
+        4.5
+      ],
+      "to": [
+        11.5,
+        2,
+        11.5
+      ],
+      "faces": {
+        "north": {
+          "uv": [
+            12,
+            0,
+            15,
+            2
+          ],
+          "texture": "#brass"
+        },
+        "east": {
+          "uv": [
+            12,
+            0,
+            15,
+            2
+          ],
+          "texture": "#brass"
+        },
+        "south": {
+          "uv": [
+            12,
+            0,
+            15,
+            2
+          ],
+          "texture": "#brass"
+        },
+        "west": {
+          "uv": [
+            12,
+            0,
+            15,
+            2
+          ],
+          "texture": "#brass"
+        },
+        "up": {
+          "uv": [
+            12,
+            0,
+            15,
+            3
+          ],
+          "texture": "#brass"
+        }
+      }
+    },
+    {
+      "name": "fluted_column_lower",
+      "from": [
+        5,
+        2,
+        5
+      ],
+      "to": [
+        11,
+        16,
+        11
+      ],
+      "faces": {
+        "north": {
+          "uv": [
+            8,
+            0,
+            12,
+            8
+          ],
+          "texture": "#fluted"
+        },
+        "east": {
+          "uv": [
+            8,
+            0,
+            12,
+            8
+          ],
+          "texture": "#fluted"
+        },
+        "south": {
+          "uv": [
+            8,
+            0,
+            12,
+            8
+          ],
+          "texture": "#fluted"
+        },
+        "west": {
+          "uv": [
+            8,
+            0,
+            12,
+            8
+          ],
+          "texture": "#fluted"
+        }
+      }
+    }
+  ],
+  "texture_size": [
+    32,
+    32
+  ]
+}

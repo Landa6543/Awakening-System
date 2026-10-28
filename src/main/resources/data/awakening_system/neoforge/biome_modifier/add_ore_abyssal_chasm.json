@@ -1,0 +1,16 @@
+{
+    "step":  "underground_ores",
+    "features":  [
+                     "awakening_system:ore_abyssal_dense",
+                     "awakening_system:blob_abyssal_stone",
+                     "awakening_system:ore_abyssal_stone_diamond",
+                     "awakening_system:ore_abyssal_stone_iron",
+                     "awakening_system:ore_abyssal_stone_gold",
+                     "awakening_system:ore_abyssal_stone_redstone",
+                     "awakening_system:ore_abyssal_stone_lapis",
+                     "awakening_system:ore_abyssal_stone_copper",
+                     "awakening_system:ore_abyssal_stone_coal"
+                 ],
+    "type":  "neoforge:add_features",
+    "biomes":  "awakening_system:overworld_astral_dripstone_chasm"
+}

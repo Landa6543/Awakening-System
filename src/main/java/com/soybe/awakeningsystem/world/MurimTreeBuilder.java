@@ -41,7 +41,7 @@ public final class MurimTreeBuilder {
             boolean hasFruit = rand.nextInt(5) == 0;
             BlockState leafState = SystemBlocks.SPIRIT_PLUM_LEAVES.get().defaultBlockState()
                     .setValue(FruitLeavesBlock.DISTANCE, 1)
-                    .setValue(FruitLeavesBlock.PERSISTENT, true)
+                    .setValue(FruitLeavesBlock.PERSISTENT, false)
                     .setValue(FruitLeavesBlock.HAS_FRUIT, hasFruit);
             level.setBlock(pos, leafState, 3);
         }
@@ -51,14 +51,11 @@ public final class MurimTreeBuilder {
         if (canReplace(level, pos)) {
             BlockState leafState = SystemBlocks.CELESTIAL_PINE_LEAVES.get().defaultBlockState()
                     .setValue(LeavesBlock.DISTANCE, 1)
-                    .setValue(LeavesBlock.PERSISTENT, true);
+                    .setValue(LeavesBlock.PERSISTENT, false);
             level.setBlock(pos, leafState, 3);
         }
     }
 
-    // ========================================================
-    // 1. CIRUELO ESPIRITUAL DEL MONTE HUA (Estándar: 8 - 13 bloques)
-    // ========================================================
     public static boolean generateSpiritPlumTree(ServerLevel level, BlockPos origin, RandomSource rand, boolean fromSapling) {
         BlockPos ground = origin.below();
         if (!fromSapling && !level.getBlockState(ground).is(BlockTags.DIRT)) {
@@ -68,7 +65,6 @@ public final class MurimTreeBuilder {
         int height = 7 + rand.nextInt(5);
         BlockState log = SystemBlocks.SPIRIT_PLUM_LOG.get().defaultBlockState();
 
-        // Tronco con leve curvatura natural hacia una dirección
         Direction lean = Direction.Plane.HORIZONTAL.getRandomDirection(rand);
         BlockPos current = origin;
         for (int y = 0; y < height; y++) {
@@ -79,14 +75,12 @@ public final class MurimTreeBuilder {
             current = current.above();
         }
 
-        // Borde de raíces de apoyo
         for (Direction d : Direction.Plane.HORIZONTAL) {
             if (rand.nextBoolean()) {
                 setLog(level, origin.relative(d), log.setValue(RotatedPillarBlock.AXIS, d.getAxis()));
             }
         }
 
-        // Ramas extendidas y copa de flores
         BlockPos top = current.below();
         int canopyRadius = 3 + rand.nextInt(2);
 
@@ -101,7 +95,6 @@ public final class MurimTreeBuilder {
             }
         }
 
-        // Linternas espirituales colgantes
         if (rand.nextFloat() < 0.65F) {
             BlockPos lanternPos = top.relative(lean, canopyRadius - 1).below();
             if (level.isEmptyBlock(lanternPos) && level.getBlockState(lanternPos.above()).is(BlockTags.LEAVES)) {
@@ -112,14 +105,10 @@ public final class MurimTreeBuilder {
         return true;
     }
 
-    // ========================================================
-    // 2. CIRUELO ESPIRITUAL GIGANTE 2x2 (16 - 24 bloques)
-    // ========================================================
     public static boolean generateLargeSpiritPlumTree(ServerLevel level, BlockPos origin, RandomSource rand, boolean fromSapling) {
         int height = 15 + rand.nextInt(8);
         BlockState log = SystemBlocks.SPIRIT_PLUM_LOG.get().defaultBlockState();
 
-        // Tronco 2x2
         for (int y = 0; y < height; y++) {
             setLog(level, origin.offset(0, y, 0), log);
             setLog(level, origin.offset(1, y, 0), log);
@@ -127,7 +116,6 @@ public final class MurimTreeBuilder {
             setLog(level, origin.offset(1, y, 1), log);
         }
 
-        // 4 Ramas principales extendidas
         Direction[] dirs = {Direction.NORTH, Direction.SOUTH, Direction.EAST, Direction.WEST};
         for (Direction d : dirs) {
             int branchLen = 3 + rand.nextInt(3);
@@ -140,14 +128,12 @@ public final class MurimTreeBuilder {
                 bPos = bPos.relative(d).above(i % 2 == 0 ? 1 : 0);
                 setLog(level, bPos, log.setValue(RotatedPillarBlock.AXIS, d.getAxis()));
 
-                // Cobertura vegetal sobre la rama
                 for (int dx = -1; dx <= 1; dx++) {
                     for (int dz = -1; dz <= 1; dz++) {
                         setPlumLeaves(level, bPos.offset(dx, 1, dz), rand);
                     }
                 }
 
-                // Subcopas en las puntas de las ramas
                 if (i >= branchLen - 1) {
                     for (int dx = -2; dx <= 2; dx++) {
                         for (int dz = -2; dz <= 2; dz++) {
@@ -162,7 +148,6 @@ public final class MurimTreeBuilder {
             }
         }
 
-        // Cúpula central
         BlockPos apex = origin.above(height);
         for (int dx = -4; dx <= 5; dx++) {
             for (int dz = -4; dz <= 5; dz++) {
@@ -177,9 +162,6 @@ public final class MurimTreeBuilder {
         return true;
     }
 
-    // ========================================================
-    // 3. PINO CELESTIAL MILENARIO (Estándar: 11 - 18 bloques)
-    // ========================================================
     public static boolean generateCelestialPineTree(ServerLevel level, BlockPos origin, RandomSource rand, boolean fromSapling) {
         BlockPos ground = origin.below();
         if (!fromSapling && !level.getBlockState(ground).is(BlockTags.DIRT)) {
@@ -189,7 +171,6 @@ public final class MurimTreeBuilder {
         int height = 11 + rand.nextInt(7);
         BlockState log = SystemBlocks.CELESTIAL_PINE_LOG.get().defaultBlockState();
 
-        // Tronco estilizado tipo Bonsai / Huangshan con ligera inclinación
         Direction lean = Direction.Plane.HORIZONTAL.getRandomDirection(rand);
         BlockPos curr = origin;
         for (int y = 0; y < height; y++) {
@@ -202,7 +183,6 @@ public final class MurimTreeBuilder {
 
         BlockPos topOfTrunk = curr.below();
 
-        // Pisos de follaje aplanados horizontales (típicos de pinos de montaña)
         int levels = 3 + rand.nextInt(2);
         for (int i = 0; i < levels; i++) {
             int padY = height - 2 - (i * 3);
@@ -223,7 +203,6 @@ public final class MurimTreeBuilder {
             }
         }
 
-        // Cúspide cónica perfectamente centrada en la copa del tronco
         setPineLeaves(level, topOfTrunk.above());
         setPineLeaves(level, topOfTrunk.above(2));
         for (Direction d : Direction.Plane.HORIZONTAL) {
@@ -234,14 +213,10 @@ public final class MurimTreeBuilder {
         return true;
     }
 
-    // ========================================================
-    // 4. PINO CELESTIAL MILENARIO 2x2 (20 - 30 bloques)
-    // ========================================================
     public static boolean generateLargeCelestialPineTree(ServerLevel level, BlockPos origin, RandomSource rand, boolean fromSapling) {
         int height = 20 + rand.nextInt(10);
         BlockState log = SystemBlocks.CELESTIAL_PINE_LOG.get().defaultBlockState();
 
-        // Tronco 2x2 robusto
         for (int y = 0; y < height; y++) {
             setLog(level, origin.offset(0, y, 0), log);
             setLog(level, origin.offset(1, y, 0), log);
@@ -249,13 +224,11 @@ public final class MurimTreeBuilder {
             setLog(level, origin.offset(1, y, 1), log);
         }
 
-        // Raíces gruesas
         for (Direction d : Direction.Plane.HORIZONTAL) {
             setLog(level, origin.relative(d).above(0), log);
             setLog(level, origin.relative(d).above(1), log);
         }
 
-        // Almohadillas de ramas horizontales tipo Shanshui (estrictamente limitadas bajo la copa)
         int padCount = 4 + rand.nextInt(3);
         int minPadY = Math.max(6, height / 3);
         int maxPadY = height - 4;
@@ -281,7 +254,6 @@ public final class MurimTreeBuilder {
                 }
             }
 
-            // Plato horizontal de hojas en el extremo
             int r = 2 + rand.nextInt(2);
             for (int dx = -r; dx <= r; dx++) {
                 for (int dz = -r; dz <= r; dz++) {
@@ -293,7 +265,6 @@ public final class MurimTreeBuilder {
             }
         }
 
-        // Corona superior 2x2 centrada y tupida
         for (int dx = -3; dx <= 4; dx++) {
             for (int dz = -3; dz <= 4; dz++) {
                 for (int dy = -1; dy <= 3; dy++) {

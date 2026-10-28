@@ -1,0 +1,24 @@
+{
+  "type": "minecraft:crafting_shaped",
+  "category": "misc",
+  "pattern": [
+    " C ",
+    " P ",
+    " L "
+  ],
+  "key": {
+    "C": {
+      "item": "minecraft:chain"
+    },
+    "P": {
+      "item": "minecraft:carved_pumpkin"
+    },
+    "L": {
+      "item": "minecraft:soul_lantern"
+    }
+  },
+  "result": {
+    "count": 1,
+    "id": "awakening_system:jack_pumpkin"
+  }
+}

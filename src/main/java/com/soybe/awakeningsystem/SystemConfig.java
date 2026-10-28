@@ -17,7 +17,6 @@ public final class SystemConfig {
     public static final ModConfigSpec.IntValue DAILY_LOGIN_BONUS_COINS;
     public static final ModConfigSpec.IntValue DAILY_LOGIN_BONUS_EXP;
 
-    // --- ESCALADO DE CRIATURAS POR DISTANCIA ---
     public static final ModConfigSpec.BooleanValue MOB_SCALING_ENABLED;
     public static final ModConfigSpec.IntValue MOB_SCALING_BLOCKS_PER_TIER;
     public static final ModConfigSpec.DoubleValue MOB_SCALING_HEALTH_PER_TIER;
@@ -93,7 +92,7 @@ public final class SystemConfig {
         MOB_SCALING_EXP_BONUS_PER_TIER = builder.comment("Bonus EXP dropped per tier (0.10 = +10% EXP per tier)")
                 .defineInRange("exp_bonus_per_tier", 0.10D, 0.0D, 5.0D);
 
-        MOB_SCALING_SHOW_NAME_TAG = builder.comment("Show level indicator [Nv. X] when looking at scaled mobs")
+        MOB_SCALING_SHOW_NAME_TAG = builder.comment("Show level indicator [Lv. X] when looking at scaled mobs")
                 .define("show_level_name_tag", true);
 
         MOB_SCALING_EXCLUDE_BOSSES = builder.comment("Exclude custom bosses from generic distance scaling")

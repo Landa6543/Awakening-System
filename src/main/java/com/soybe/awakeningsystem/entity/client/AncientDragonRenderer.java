@@ -47,7 +47,6 @@ public class AncientDragonRenderer extends MobRenderer<AncientDragonEntity, Anci
     protected void scale(AncientDragonEntity entity, PoseStack poseStack, float partialTickTime) {
         float dragonScale = entity.getDragonScale();
         poseStack.scale(dragonScale, dragonScale, dragonScale);
-        // Compensación de elevación para que las patas toquen exactamente la superficie del suelo sin hundirse
         poseStack.translate(0.0D, -0.8125D, 0.0D);
         this.shadowRadius = 1.05F * dragonScale;
         super.scale(entity, poseStack, partialTickTime);

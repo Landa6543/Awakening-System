@@ -172,12 +172,10 @@ public class AntSoldierEntity extends Monster {
                 this.screechCooldown--;
             }
 
-            // Chillido al caer por debajo del 50% de HP
             if (!this.hasEnraged && this.getHealth() < this.getMaxHealth() * 0.5F && this.screechCooldown <= 0) {
                 this.performSwarmScreech();
             }
 
-            // Partículas sutiles de quitina/sombras al correr
             if (this.isPouncing() && this.level() instanceof ServerLevel sl) {
                 sl.sendParticles(ParticleTypes.WITCH, this.getX(), this.getY() + 0.8D, this.getZ(),
                         3, 0.2D, 0.2D, 0.2D, 0.02D);
@@ -202,7 +200,6 @@ public class AntSoldierEntity extends Monster {
             sl.sendParticles(ParticleTypes.SOUL, this.getX(), this.getY() + 1.0D, this.getZ(),
                     20, 0.5D, 0.6D, 0.5D, 0.05D);
 
-            // Alerta a monstruos cercanos
             var nearby = sl.getEntitiesOfClass(Monster.class, this.getBoundingBox().inflate(18.0D));
             for (Monster m : nearby) {
                 if (m != this && m.getTarget() == null && this.getTarget() != null) {
@@ -216,7 +213,6 @@ public class AntSoldierEntity extends Monster {
     public boolean doHurtTarget(net.minecraft.world.entity.Entity target) {
         boolean hurt = super.doHurtTarget(target);
         if (hurt && target instanceof LivingEntity living) {
-            // Desgarro / Veneno de quitina
             living.addEffect(new MobEffectInstance(MobEffects.POISON, 60, 1));
             living.addEffect(new MobEffectInstance(MobEffects.WEAKNESS, 80, 0));
 
@@ -235,7 +231,6 @@ public class AntSoldierEntity extends Monster {
 
     @Override
     public boolean hurt(DamageSource source, float amount) {
-        // Resistencia parcial a daño indirecto por quitina dura
         if (source.is(net.minecraft.tags.DamageTypeTags.IS_PROJECTILE)) {
             amount *= 0.75F;
         }

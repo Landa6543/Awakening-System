@@ -1,0 +1,8 @@
+{
+  "variants": {
+    "facing=north": { "model": "awakening_system:block/clandestine_cashier" },
+    "facing=south": { "model": "awakening_system:block/clandestine_cashier", "y": 180 },
+    "facing=west":  { "model": "awakening_system:block/clandestine_cashier", "y": 270 },
+    "facing=east":  { "model": "awakening_system:block/clandestine_cashier", "y": 90 }
+  }
+}

@@ -19,6 +19,13 @@ public class CompanionRenderer extends MobRenderer<CompanionEntity, CompanionMod
     }
 
     @Override
+    protected void scale(CompanionEntity entity, PoseStack poseStack, float partialTickTime) {
+        float s = entity.getCompanionProfile() != null ? entity.getCompanionProfile().getModelScale() : 1.0F;
+        poseStack.scale(s, s, s);
+        super.scale(entity, poseStack, partialTickTime);
+    }
+
+    @Override
     public void render(CompanionEntity entity, float entityYaw, float partialTicks, PoseStack poseStack, MultiBufferSource buffer, int packedLight) {
         this.model = entity.getCompanionProfile().isSlim() ? this.slimModel : this.defaultModel;
         super.render(entity, entityYaw, partialTicks, poseStack, buffer, packedLight);

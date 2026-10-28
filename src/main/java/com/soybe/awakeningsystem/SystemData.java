@@ -45,6 +45,47 @@ public final class SystemData implements INBTSerializable<CompoundTag> {
     public static final int ARTIFACT_SLOTS = 5;
     private final NonNullList<ItemStack> artifactSlots = NonNullList.withSize(ARTIFACT_SLOTS, ItemStack.EMPTY);
 
+    private ItemStack equippedLightCone = ItemStack.EMPTY;
+
+    public static final int ACTIVE_RUNE_SLOTS = 2;
+    public static final int PASSIVE_RUNE_SLOTS = 2;
+    private final NonNullList<ItemStack> activeRuneSlots = NonNullList.withSize(ACTIVE_RUNE_SLOTS, ItemStack.EMPTY);
+    private final NonNullList<ItemStack> passiveRuneSlots = NonNullList.withSize(PASSIVE_RUNE_SLOTS, ItemStack.EMPTY);
+    private final long[] activeRuneCooldownUntil = new long[ACTIVE_RUNE_SLOTS];
+
+    private boolean hasChosenInitialVision = false;
+    private long visionResonanceCooldownUntil = 0L;
+
+    private int carats = 1500;
+    private final Map<String, com.soybe.awakeningsystem.uma.model.OwnedUma> ownedUmas = new LinkedHashMap<>() {{
+        put("special_week", new com.soybe.awakeningsystem.uma.model.OwnedUma("special_week", 3));
+    }};
+    private String activeUmaId = "special_week";
+
+    private int dartHighScore = 0;
+    private long casinoTotalWon = 0L;
+    private int casinoMaxPayout = 0;
+    private int poolMatchesWon = 0;
+
+    public int getDartHighScore() { return dartHighScore; }
+    public void recordDartScore(int score) {
+        if (score > this.dartHighScore) {
+            this.dartHighScore = score;
+        }
+    }
+    public long getCasinoTotalWon() { return casinoTotalWon; }
+    public void addCasinoWinnings(long amount) {
+        if (amount > 0) {
+            this.casinoTotalWon += amount;
+            if (amount > this.casinoMaxPayout) {
+                this.casinoMaxPayout = (int) Math.min(Integer.MAX_VALUE, amount);
+            }
+        }
+    }
+    public int getCasinoMaxPayout() { return casinoMaxPayout; }
+    public int getPoolMatchesWon() { return poolMatchesWon; }
+    public void incrementPoolMatchesWon() { this.poolMatchesWon++; }
+
     private int level = 1;
     private int experience;
     private int attributePoints;
@@ -55,6 +96,7 @@ public final class SystemData implements INBTSerializable<CompoundTag> {
     private int perception = ATTR_BASE;
     private int intelligence = ATTR_BASE;
     private int willpower = ATTR_BASE;
+    private boolean agilitySpeedEnabled = true;
     private final Map<String, Integer> affinities = new LinkedHashMap<>();
     private final Map<String, Integer> skills = new LinkedHashMap<>();
     private final Map<String, Integer> skillProgress = new LinkedHashMap<>();
@@ -98,9 +140,13 @@ public final class SystemData implements INBTSerializable<CompoundTag> {
     private boolean classMissionComplete;
     private int highestRankReward;
     private String equippedTitle = "";
+    private boolean isCreator = false;
+    private boolean isNanda = false;
+    private boolean isMisticPotato = false;
+    private boolean isSchvis = false;
+    private boolean isTomcraft = false;
     private final Map<String, Integer> repeatedActions = new LinkedHashMap<>();
 
-    // Manhwa Multiverse: Combo/Trance, Constellation Sponsor, and Scenarios
     private int comboCount;
     private int comboTicks;
     private int tranceTicks;
@@ -118,11 +164,9 @@ public final class SystemData implements INBTSerializable<CompoundTag> {
     private final java.util.Set<String> disabledSkills = new java.util.HashSet<>();
     private final java.util.List<CompoundTag> storedShadowArmy = new java.util.ArrayList<>();
 
-    // 5 Ranuras de Habilidades Activas y 3 de Talentos Pasivos
     private final java.util.List<String> equippedActiveSkills = new java.util.ArrayList<>(java.util.List.of("", "", "", "", ""));
     private final java.util.List<String> equippedPassiveSkills = new java.util.ArrayList<>(java.util.List.of("", "", ""));
 
-    // Cultivo Murim (Dantian, Qi, Sub-niveles 1-9 y 12 Meridianos Mayores)
     private int dantianRealm = 0;
     private int cultivationSubLevel = 1;
     private int cultivationQi = 0;
@@ -150,22 +194,27 @@ public final class SystemData implements INBTSerializable<CompoundTag> {
     private boolean system40Updating = false;
     private int system40UpdateRemainingTicks = 0;
     private boolean teyvatUnlocked = false;
+    private int anemoStatueLevel = 1;
+    private int anemoOculiProgress = 0;
+    private int geoStatueLevel = 1;
+    private int geoOculiProgress = 0;
+    private int electroStatueLevel = 1;
+    private int electroOculiProgress = 0;
+    private int dendroStatueLevel = 1;
+    private int dendroOculiProgress = 0;
+    private int statueEnergyBonus = 0;
     private final Set<String> visitedDimensions = new HashSet<>();
 
-    // Tribulación Celestial (Heavenly Tribulation)
     private int tribulationTicks = 0;
     private int tribulationStrikesRemaining = 0;
     private int tribulationTotalStrikes = 0;
     private int pendingTribulationRealm = 0;
 
-    // Enfriamiento de Habilidad Activa de Físico Marcial
     private int physiqueSkillCooldown = 0;
 
-    // Puntos de Habilidad (SP) para el Árbol de Clases
     private int skillPoints = 0;
     private int spentSkillPoints = 0;
 
-    // Sistema Gacha Auténtico (Paimon, Pity, 50/50 y Divisas)
     private int gachaPity5Star = 0;
     private int gachaPity4Star = 0;
     private boolean gachaGuaranteedRateUp = false;
@@ -215,8 +264,8 @@ public final class SystemData implements INBTSerializable<CompoundTag> {
     public int totalGachaPulls() { return totalGachaPulls; }
     public void incrementTotalGachaPulls(int v) { this.totalGachaPulls += v; }
 
-    // === SUBESPACIO DIMENSIONAL / REINO INTERIOR ===
     private int subspaceLevel = 1;
+    private int subspaceBuiltLevel = 0;
     private String subspaceReturnDim = "minecraft:overworld";
     private double subspaceReturnX = 0.0;
     private double subspaceReturnY = 64.0;
@@ -226,6 +275,8 @@ public final class SystemData implements INBTSerializable<CompoundTag> {
 
     public int subspaceLevel() { return Math.max(1, Math.min(5, subspaceLevel)); }
     public void setSubspaceLevel(int lvl) { this.subspaceLevel = Math.max(1, Math.min(5, lvl)); }
+    public int subspaceBuiltLevel() { return subspaceBuiltLevel; }
+    public void setSubspaceBuiltLevel(int lvl) { this.subspaceBuiltLevel = lvl; }
     public String subspaceReturnDim() { return subspaceReturnDim; }
     public double subspaceReturnX() { return subspaceReturnX; }
     public double subspaceReturnY() { return subspaceReturnY; }
@@ -256,7 +307,6 @@ public final class SystemData implements INBTSerializable<CompoundTag> {
         this.subspaceReturnPitch = pitch;
     }
 
-    // === GACHA EXTENSION & PAIMON BARGAINS ===
     private int stardust = 0;
     private int starglitter = 0;
     private int beginnerPulls = 0;
@@ -304,22 +354,33 @@ public final class SystemData implements INBTSerializable<CompoundTag> {
         return false;
     }
 
-    // === SENDA DIVINA (EPITOMIZED PATH) & MORA ===
     private int mora = 0;
-    private int weaponBannerTarget = 0; // 0 = no fijada, 1 = arma primaria, 2 = arma secundaria
-    private int weaponBannerFatePoints = 0; // 0 o 1 punto de destino
-    private int characterBannerTarget = 0; // 0 = primario, 1 = secundario (en banners dobles)
+    private int weaponBannerTarget = 0;
+    private int weaponBannerFatePoints = 0;
+    private int characterBannerTarget = 0;
 
-    // === RECARGAS Y MONEDA EQUIVALENTE A USD (GIFT CARDS & CRISTALES) ===
     private double usdBalance = 0.0;
     private int genesisCrystals = 0;
     private int stellarJade = 0;
     private int welkinDays = 0;
     private long lastWelkinClaimDay = -1;
     private boolean welkinEnhanced = false;
-    private int welkinQuestStep = 0; // 0 = no iniciada, 1 = fase 1 (kills nocturnos/teyvat), 2 = fase 2 (jefe), 3 = fase 3 (sintonización waypoint), 4 = completada
+    private int welkinQuestStep = 0;
     private int welkinQuestProgress = 0;
-    private int firstTopUpMask = 0; // bit i = 1 si ya compró el pack i (0 a 5) con bonificación doble 2x
+    private int firstTopUpMask = 0;
+    private int firstJadeTopUpMask = 0;
+    private int lastClaimedMaintenanceVersion = 0;
+    private long gachaEpochTick = 0L;
+    private long casinoVipUntilTick = 0L;
+
+    public int lastClaimedMaintenanceVersion() { return lastClaimedMaintenanceVersion; }
+    public void setLastClaimedMaintenanceVersion(int v) { this.lastClaimedMaintenanceVersion = v; }
+    public long gachaEpochTick() { return gachaEpochTick; }
+    public void setGachaEpochTick(long v) { this.gachaEpochTick = Math.max(0L, v); }
+    public long casinoVipUntilTick() { return casinoVipUntilTick; }
+    public void setCasinoVipUntilTick(long v) { this.casinoVipUntilTick = v; }
+    public boolean isCasinoVip() { return casinoVipUntilTick == -1L || casinoVipUntilTick > 0L; }
+    public boolean isCasinoVip(long currentTick) { return casinoVipUntilTick == -1L || (casinoVipUntilTick > 0L && currentTick < casinoVipUntilTick); }
 
     public boolean hasClaimedFirstTopUp(int pack) {
         if (pack < 0 || pack > 5) return false;
@@ -338,6 +399,25 @@ public final class SystemData implements INBTSerializable<CompoundTag> {
 
     public void setFirstTopUpMask(int mask) {
         this.firstTopUpMask = mask;
+    }
+
+    public boolean hasClaimedFirstJadeTopUp(int pack) {
+        if (pack < 0 || pack > 5) return false;
+        return (firstJadeTopUpMask & (1 << pack)) != 0;
+    }
+
+    public void setClaimedFirstJadeTopUp(int pack) {
+        if (pack >= 0 && pack <= 5) {
+            firstJadeTopUpMask |= (1 << pack);
+        }
+    }
+
+    public int firstJadeTopUpMask() {
+        return firstJadeTopUpMask;
+    }
+
+    public void setFirstJadeTopUpMask(int mask) {
+        this.firstJadeTopUpMask = mask;
     }
 
     public double usdBalance() { return usdBalance; }
@@ -386,7 +466,6 @@ public final class SystemData implements INBTSerializable<CompoundTag> {
     public void setWelkinQuestProgress(int v) { this.welkinQuestProgress = Math.max(0, v); }
     public void addWelkinQuestProgress(int v) { this.welkinQuestProgress = Math.max(0, this.welkinQuestProgress + v); }
 
-
     public int mora() { return mora; }
     public void setMora(int v) { this.mora = Math.max(0, v); }
     public void addMora(int v) { this.mora = Math.max(0, this.mora + v); }
@@ -433,7 +512,6 @@ public final class SystemData implements INBTSerializable<CompoundTag> {
     }
     public int spentSkillPoints() { return spentSkillPoints; }
 
-    // Maná de Cazador (MP) - Totalmente independiente del Qi de Murim
     public int mana() { return energy(); }
     public int maxMana() { return maxEnergy(); }
     public int manaRegenRate() { return energyRegenRate(); }
@@ -602,6 +680,16 @@ public final class SystemData implements INBTSerializable<CompoundTag> {
         }
     }
 
+    public void addDokkaebiScenarioKills(int amount) {
+        if (dokkaebiScenarioActive && amount > 0) {
+            this.dokkaebiScenarioKills += amount;
+        }
+    }
+
+    public void setDokkaebiScenarioKills(int amount) {
+        this.dokkaebiScenarioKills = Math.max(0, amount);
+    }
+
     public void tickDokkaebiTimer() {
         if (dokkaebiScenarioActive && dokkaebiScenarioTimer > 0) {
             dokkaebiScenarioTimer--;
@@ -660,7 +748,7 @@ public final class SystemData implements INBTSerializable<CompoundTag> {
         else if ("beast_monarch".equalsIgnoreCase(hunterClass)) classBonus = 30;
         else if ("colossal_berserker".equalsIgnoreCase(hunterClass)) classBonus = 20;
         int treeBonus = (int) ClassSkillTree.getTotalAttributeBonus(this, ClassSkillTree.StatType.MAX_MANA);
-        return Math.max(100, base + intBonus + willBonus + classBonus + treeBonus);
+        return Math.max(100, base + intBonus + willBonus + classBonus + treeBonus + statueEnergyBonus);
     }
 
     public int energyRegenRate() {
@@ -692,7 +780,7 @@ public final class SystemData implements INBTSerializable<CompoundTag> {
         else adjustedAmount = amount;
         affinities.merge(affinity, adjustedAmount, Integer::sum);
         int progress = affinities.get(affinity);
-        if ("mining".equals(affinity) && progress >= SKILL_UNLOCK_AFFINITY) skills.putIfAbsent("stone_strike", 1);
+        if ("mining".equals(affinity) && progress >= 250) skills.putIfAbsent("stone_strike", 1);
         if ("combat".equals(affinity) && progress >= SKILL_UNLOCK_AFFINITY) skills.putIfAbsent("combat_instinct", 1);
         if ("survival".equals(affinity) && progress >= SKILL_UNLOCK_AFFINITY) skills.putIfAbsent("enduring_flesh", 1);
         if ("mobility".equals(affinity) && progress >= SKILL_UNLOCK_AFFINITY) skills.putIfAbsent("windrunner", 1);
@@ -810,6 +898,14 @@ public final class SystemData implements INBTSerializable<CompoundTag> {
         return true;
     }
 
+    public void setEnergy(int amount) {
+        this.energy = Math.max(0, Math.min(maxEnergy(), amount));
+    }
+
+    public void addEnergy(int amount) {
+        restoreEnergy(amount);
+    }
+
     public boolean consumeEnergy(int amount) {
         if (this.energy >= amount) {
             this.energy -= amount;
@@ -919,12 +1015,10 @@ public final class SystemData implements INBTSerializable<CompoundTag> {
         level = 1;
         experience = 0;
         attributePoints = 0;
-        // Bonificación de Atributos Base Permanentes: +2 a cada atributo por nivel de prestigio
         int permanentBase = ATTR_BASE + (prestige * 2);
         strength = vitality = agility = perception = intelligence = willpower = permanentBase;
         affinities.clear();
 
-        // Hito Prestigio 1: Conserva 1 habilidad activa favorita tras renacer
         if (prestige >= 1 && !skills.isEmpty()) {
             String preservedSkill = skills.keySet().iterator().next();
             int preservedLvl = skills.get(preservedSkill);
@@ -940,7 +1034,7 @@ public final class SystemData implements INBTSerializable<CompoundTag> {
         energy = MAX_ENERGY;
         awakeningMining = awakeningCombat = 0;
         awakeningComplete = false;
-        equippedTitle = "";
+        if (!isConstellation) equippedTitle = "";
         return true;
     }
 
@@ -1189,9 +1283,8 @@ public final class SystemData implements INBTSerializable<CompoundTag> {
 
     public boolean addAttribute(String attribute) {
         if (attributePoints <= 0 || attribute == null) return false;
-        String normalized = attribute.trim().toLowerCase(java.util.Locale.ROOT)
-                .replace("á", "a").replace("é", "e").replace("í", "i")
-                .replace("ó", "o").replace("ú", "u");
+        String normalized = java.text.Normalizer.normalize(attribute.trim().toLowerCase(java.util.Locale.ROOT), java.text.Normalizer.Form.NFD)
+                .replaceAll("\\p{M}", "");
         switch (normalized) {
             case "fuerza", "strength" -> strength++;
             case "vitalidad", "vitality" -> vitality++;
@@ -1258,10 +1351,16 @@ public final class SystemData implements INBTSerializable<CompoundTag> {
         if (sponsorConstellation == null) {
             sponsorConstellation = "";
         }
+        ensureEquippedActiveSlots();
+        ensureEquippedPassiveSlots();
     }
 
     public void removeUnavailableContent() {
-        skills.keySet().removeIf(skill -> !SkillDefinitions.isAvailable(skill));
+        skills.keySet().removeIf(skill -> {
+            if (skill == null || skill.isEmpty()) return true;
+            if (ClassSkillTree.isSkillTreeNode(skill)) return false;
+            return !SkillDefinitions.isAvailable(skill);
+        });
         if (!equippedTitle.isEmpty() && !TitleDefinitions.available(this).contains(equippedTitle)) equippedTitle = "";
     }
 
@@ -1277,12 +1376,25 @@ public final class SystemData implements INBTSerializable<CompoundTag> {
         coins -= amount;
         return true;
     }
-    public int strength() { return strength; }
-    public int vitality() { return vitality; }
-    public int agility() { return agility; }
-    public int perception() { return perception; }
-    public int intelligence() { return intelligence; }
-    public int willpower() { return willpower; }
+    public int getCultivationStatBonus() {
+        return (dantianRealm * 10) + Math.max(0, cultivationSubLevel - 1) * 2;
+    }
+
+    public int rawStrength() { return strength; }
+    public int rawVitality() { return vitality; }
+    public int rawAgility() { return agility; }
+    public int rawPerception() { return perception; }
+    public int rawIntelligence() { return intelligence; }
+    public int rawWillpower() { return willpower; }
+
+    public int strength() { return strength + getCultivationStatBonus(); }
+    public int vitality() { return vitality + getCultivationStatBonus(); }
+    public int agility() { return agility + getCultivationStatBonus(); }
+    public int perception() { return perception + getCultivationStatBonus(); }
+    public int intelligence() { return intelligence + getCultivationStatBonus(); }
+    public int willpower() { return willpower + getCultivationStatBonus(); }
+    public boolean agilitySpeedEnabled() { return agilitySpeedEnabled; }
+    public void setAgilitySpeedEnabled(boolean enabled) { this.agilitySpeedEnabled = enabled; }
     public boolean hasNoAffinityProgress() { return affinities.isEmpty(); }
     public Map<String, Integer> skills() { return skills; }
     public boolean hasEvolvedSkill() { return skills.values().stream().anyMatch(level -> level >= 6); }
@@ -1352,6 +1464,46 @@ public final class SystemData implements INBTSerializable<CompoundTag> {
         this.equippedTitle = title == null ? "" : title;
     }
 
+    public boolean isCreator() {
+        return isCreator;
+    }
+
+    public void setCreator(boolean creator) {
+        this.isCreator = creator;
+    }
+
+    public boolean isNanda() {
+        return isNanda;
+    }
+
+    public void setNanda(boolean nanda) {
+        this.isNanda = nanda;
+    }
+
+    public boolean isMisticPotato() {
+        return isMisticPotato;
+    }
+
+    public void setMisticPotato(boolean misticPotato) {
+        this.isMisticPotato = misticPotato;
+    }
+
+    public boolean isSchvis() {
+        return isSchvis;
+    }
+
+    public void setSchvis(boolean schvis) {
+        this.isSchvis = schvis;
+    }
+
+    public boolean isTomcraft() {
+        return isTomcraft;
+    }
+
+    public void setTomcraft(boolean tomcraft) {
+        this.isTomcraft = tomcraft;
+    }
+
     public String classId() {
         String dominant = null;
         int best = -1;
@@ -1388,7 +1540,7 @@ public final class SystemData implements INBTSerializable<CompoundTag> {
         comboCount++;
         if (comboCount >= 10) {
             comboCount = 10;
-            tranceTicks = 200; // 10 segundos de Modo Trance
+            tranceTicks = 200;
             return true;
         }
         return false;
@@ -1583,14 +1735,14 @@ public final class SystemData implements INBTSerializable<CompoundTag> {
         if (count >= 5) return 5;
         if (count >= 3) return 4;
         if (count >= 1) return 3;
-        return 2; // Ranuras base iniciales: 2 (Slots 0 y 1)
+        return 2;
     }
 
     public int getUnlockedPassiveSkillSlots() {
         int count = getUnlockedTreeSkillsCount();
         if (count >= 4) return 3;
         if (count >= 2) return 2;
-        return 1; // Ranuras base iniciales: 1 (Slot 0)
+        return 1;
     }
 
     public java.util.List<String> equippedActiveSkills() {
@@ -1713,7 +1865,8 @@ public final class SystemData implements INBTSerializable<CompoundTag> {
         if (allEmpty) {
             int idx = 0;
             for (String sk : skills.keySet()) {
-                if (SkillDefinitions.isAvailable(sk) && SkillDefinitions.isPassive(sk) && !disabledSkills.contains(sk)) {
+                if (sk != null && !sk.isEmpty() && SkillDefinitions.isAvailable(sk) && SkillDefinitions.isPassive(sk) && !disabledSkills.contains(sk)) {
+                    while (equippedPassiveSkills.size() <= idx) equippedPassiveSkills.add("");
                     equippedPassiveSkills.set(idx++, sk);
                     if (idx >= 3) break;
                 }
@@ -1721,7 +1874,6 @@ public final class SystemData implements INBTSerializable<CompoundTag> {
         }
     }
 
-    // --- Cultivo Murim (Dantian, Qi, Sub-niveles y Meridianos) ---
     public int dantianRealm() { return dantianRealm; }
     public void setDantianRealm(int realm) { this.dantianRealm = Math.max(0, Math.min(9, realm)); }
     public int cultivationSubLevel() { return cultivationSubLevel; }
@@ -1760,7 +1912,6 @@ public final class SystemData implements INBTSerializable<CompoundTag> {
     public boolean isekaiUnlocked() { return isekaiUnlocked; }
     public void setIsekaiUnlocked(boolean unlocked) { this.isekaiUnlocked = unlocked; }
 
-    // --- Físicos Marciales de Murim & Sistema 3.0 ---
     public String murimPhysique() { return murimPhysique == null ? "" : murimPhysique; }
     public void setMurimPhysique(String physique) { this.murimPhysique = physique == null ? "" : physique; }
     public boolean murimUnlocked() { return murimUnlocked; }
@@ -1772,13 +1923,51 @@ public final class SystemData implements INBTSerializable<CompoundTag> {
     public boolean teyvatUnlocked() { return teyvatUnlocked; }
     public void setTeyvatUnlocked(boolean unlocked) { this.teyvatUnlocked = unlocked; }
 
-    // --- Dimensiones Descubiertas / Visitadas ---
+    public int anemoStatueLevel() { return Math.max(1, anemoStatueLevel); }
+    public void setAnemoStatueLevel(int v) { this.anemoStatueLevel = Math.min(10, Math.max(1, v)); }
+    public int anemoOculiProgress() { return Math.max(0, anemoOculiProgress); }
+    public void setAnemoOculiProgress(int v) { this.anemoOculiProgress = Math.max(0, v); }
+
+    public int geoStatueLevel() { return Math.max(1, geoStatueLevel); }
+    public void setGeoStatueLevel(int v) { this.geoStatueLevel = Math.min(10, Math.max(1, v)); }
+    public int geoOculiProgress() { return Math.max(0, geoOculiProgress); }
+    public void setGeoOculiProgress(int v) { this.geoOculiProgress = Math.max(0, v); }
+
+    public int electroStatueLevel() { return Math.max(1, electroStatueLevel); }
+    public void setElectroStatueLevel(int v) { this.electroStatueLevel = Math.min(10, Math.max(1, v)); }
+    public int electroOculiProgress() { return Math.max(0, electroOculiProgress); }
+    public void setElectroOculiProgress(int v) { this.electroOculiProgress = Math.max(0, v); }
+
+    public int dendroStatueLevel() { return Math.max(1, dendroStatueLevel); }
+    public void setDendroStatueLevel(int v) { this.dendroStatueLevel = Math.min(10, Math.max(1, v)); }
+    public int dendroOculiProgress() { return Math.max(0, dendroOculiProgress); }
+    public void setDendroOculiProgress(int v) { this.dendroOculiProgress = Math.max(0, v); }
+
+    public int statueEnergyBonus() { return statueEnergyBonus; }
+    public void setStatueEnergyBonus(int v) { this.statueEnergyBonus = Math.max(0, v); }
+    public void addStatueEnergyBonus(int v) { this.statueEnergyBonus = Math.max(0, this.statueEnergyBonus + v); }
+
+    public static int getOculiRequiredForLevel(int targetLevel) {
+        return switch (targetLevel) {
+            case 2 -> 1;
+            case 3 -> 2;
+            case 4 -> 4;
+            case 5 -> 6;
+            case 6 -> 8;
+            case 7 -> 10;
+            case 8 -> 12;
+            case 9 -> 15;
+            case 10 -> 20;
+            default -> 999;
+        };
+    }
+
     public boolean hasVisitedDimension(String dim) {
         if (dim == null || dim.isEmpty()) return true;
         if ("minecraft:overworld".equals(dim) || "overworld".equals(dim)) return true;
         if (("awakening_system:isekai".equals(dim) || "isekai".equals(dim)) && (systemUpdated || isekaiUnlocked)) return true;
         if (("awakening_system:murim".equals(dim) || "murim".equals(dim)) && (system30Updated || murimUnlocked)) return true;
-        if (("awakening_system:teyvat_world".equals(dim) || "teyvat_world".equals(dim) || "teyvat".equals(dim)) && (system40Updated || teyvatUnlocked)) return true;
+        if (("awakening_system:teyvat_world".equals(dim) || "awakening_system:teyvat".equals(dim) || "teyvat_world".equals(dim) || "teyvat".equals(dim)) && (system40Updated || teyvatUnlocked)) return true;
         return visitedDimensions.contains(dim) || visitedDimensions.contains(dim.replace("minecraft:", ""));
     }
 
@@ -1830,7 +2019,6 @@ public final class SystemData implements INBTSerializable<CompoundTag> {
         };
     }
 
-    // Tribulación Celestial (Heavenly Tribulation)
     public boolean isUnderTribulation() { return tribulationStrikesRemaining > 0 || tribulationTicks > 0; }
     public int getTribulationTicks() { return tribulationTicks; }
     public int getTribulationStrikesRemaining() { return tribulationStrikesRemaining; }
@@ -1840,7 +2028,7 @@ public final class SystemData implements INBTSerializable<CompoundTag> {
         this.pendingTribulationRealm = targetRealm;
         this.tribulationStrikesRemaining = strikes;
         this.tribulationTotalStrikes = strikes;
-        this.tribulationTicks = 40; // 2s before first strike
+        this.tribulationTicks = 40;
     }
     public void tickTribulation() { if (tribulationTicks > 0) tribulationTicks--; }
     public void resetTribulationTicks(int nextDelay) { this.tribulationTicks = nextDelay; }
@@ -1852,7 +2040,6 @@ public final class SystemData implements INBTSerializable<CompoundTag> {
         this.pendingTribulationRealm = 0;
     }
 
-    // Enfriamiento de Habilidad de Físico Marcial
     public int getPhysiqueSkillCooldown() { return physiqueSkillCooldown; }
     public void setPhysiqueSkillCooldown(int cd) { this.physiqueSkillCooldown = Math.max(0, cd); }
     public void tickPhysiqueSkillCooldown() { if (physiqueSkillCooldown > 0) physiqueSkillCooldown--; }
@@ -1887,7 +2074,6 @@ public final class SystemData implements INBTSerializable<CompoundTag> {
 
         int limit = Math.min(subspaceItems.size(), Math.max(27, subspaceUnlockedSlots));
 
-        // 1. Intentar apilar en casillas con el mismo objeto dentro del límite desbloqueado
         for (int i = 0; i < limit; i++) {
             ItemStack existing = subspaceItems.get(i);
             if (!existing.isEmpty() && ItemStack.isSameItemSameComponents(existing, toAdd)) {
@@ -1902,7 +2088,6 @@ public final class SystemData implements INBTSerializable<CompoundTag> {
             }
         }
 
-        // 2. Colocar en la primera casilla vacía dentro del límite desbloqueado
         for (int i = 0; i < limit; i++) {
             if (subspaceItems.get(i).isEmpty()) {
                 subspaceItems.set(i, toAdd.copy());
@@ -1986,6 +2171,130 @@ public final class SystemData implements INBTSerializable<CompoundTag> {
         return getActiveArtifactSetPieces().getOrDefault(set, 0) >= count;
     }
 
+    public ItemStack getEquippedLightCone() {
+        return equippedLightCone != null ? equippedLightCone : ItemStack.EMPTY;
+    }
+
+    public void setEquippedLightCone(ItemStack stack) {
+        this.equippedLightCone = stack == null ? ItemStack.EMPTY : stack;
+    }
+
+    public boolean hasEquippedLightCone() {
+        return equippedLightCone != null && !equippedLightCone.isEmpty();
+    }
+
+    public float getLightConeBonusAttack() {
+        if (!hasEquippedLightCone()) return 0.0F;
+        net.minecraft.world.item.Item item = equippedLightCone.getItem();
+        if (item == SystemItems.LIGHT_CONE_PASSING_SHORE.get()) return 0.25F;
+        if (item == SystemItems.LIGHT_CONE_DREAMS_REST.get()) return 0.25F;
+        if (item == SystemItems.LIGHT_CONE_PATIENCE.get()) return 0.24F;
+        if (item == SystemItems.LIGHT_CONE_MILKY_WAY.get()) return 0.20F;
+        if (item == SystemItems.LIGHT_CONE_BEFORE_DAWN.get()) return 0.20F;
+        return 0.15F;
+    }
+
+    public float getLightConeBonusCritRate() {
+        if (!hasEquippedLightCone()) return 0.0F;
+        net.minecraft.world.item.Item item = equippedLightCone.getItem();
+        if (item == SystemItems.LIGHT_CONE_PASSING_SHORE.get()) return 0.12F;
+        if (item == SystemItems.LIGHT_CONE_PATIENCE.get()) return 0.10F;
+        if (item == SystemItems.LIGHT_CONE_MILKY_WAY.get()) return 0.08F;
+        return 0.05F;
+    }
+
+    public float getLightConeBonusCritDmg() {
+        if (!hasEquippedLightCone()) return 0.0F;
+        net.minecraft.world.item.Item item = equippedLightCone.getItem();
+        if (item == SystemItems.LIGHT_CONE_BEFORE_DAWN.get()) return 0.35F;
+        if (item == SystemItems.LIGHT_CONE_PASSING_SHORE.get()) return 0.30F;
+        if (item == SystemItems.LIGHT_CONE_DREAMS_REST.get()) return 0.20F;
+        if (item == SystemItems.LIGHT_CONE_MILKY_WAY.get()) return 0.15F;
+        return 0.15F;
+    }
+
+    public float getLightConeBonusEnergyRecharge() {
+        if (!hasEquippedLightCone()) return 0.0F;
+        net.minecraft.world.item.Item item = equippedLightCone.getItem();
+        if (item == SystemItems.LIGHT_CONE_MILKY_WAY.get()) return 0.20F;
+        if (item == SystemItems.LIGHT_CONE_DREAMS_REST.get()) return 0.25F;
+        return 0.10F;
+    }
+
+    public ItemStack getActiveRune(int slot) {
+        if (slot >= 0 && slot < ACTIVE_RUNE_SLOTS) return activeRuneSlots.get(slot);
+        return ItemStack.EMPTY;
+    }
+
+    public void setActiveRune(int slot, ItemStack stack) {
+        if (slot >= 0 && slot < ACTIVE_RUNE_SLOTS) {
+            activeRuneSlots.set(slot, stack == null ? ItemStack.EMPTY : stack);
+        }
+    }
+
+    public ItemStack getPassiveRune(int slot) {
+        if (slot >= 0 && slot < PASSIVE_RUNE_SLOTS) return passiveRuneSlots.get(slot);
+        return ItemStack.EMPTY;
+    }
+
+    public void setPassiveRune(int slot, ItemStack stack) {
+        if (slot >= 0 && slot < PASSIVE_RUNE_SLOTS) {
+            passiveRuneSlots.set(slot, stack == null ? ItemStack.EMPTY : stack);
+        }
+    }
+
+    public NonNullList<ItemStack> getActiveRuneSlots() {
+        return activeRuneSlots;
+    }
+
+    public NonNullList<ItemStack> getPassiveRuneSlots() {
+        return passiveRuneSlots;
+    }
+
+    public boolean hasPassiveRune(com.soybe.awakeningsystem.item.RuneStoneItem.RuneType type) {
+        for (ItemStack s : passiveRuneSlots) {
+            if (!s.isEmpty() && s.getItem() instanceof com.soybe.awakeningsystem.item.RuneStoneItem rune && rune.getRuneType() == type) {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    public long getActiveRuneCooldownUntil(int slot) {
+        if (slot >= 0 && slot < ACTIVE_RUNE_SLOTS) return activeRuneCooldownUntil[slot];
+        return 0L;
+    }
+
+    public void setActiveRuneCooldownUntil(int slot, long cdUntil) {
+        if (slot >= 0 && slot < ACTIVE_RUNE_SLOTS) {
+            activeRuneCooldownUntil[slot] = cdUntil;
+        }
+    }
+
+    public int getActiveRuneCooldownSeconds(int slot, long gameTime) {
+        if (slot >= 0 && slot < ACTIVE_RUNE_SLOTS) {
+            long remainingTicks = activeRuneCooldownUntil[slot] - gameTime;
+            return remainingTicks > 0 ? (int) Math.ceil(remainingTicks / 20.0) : 0;
+        }
+        return 0;
+    }
+
+    public boolean hasChosenInitialVision() {
+        return hasChosenInitialVision;
+    }
+
+    public void setChosenInitialVision(boolean chosen) {
+        this.hasChosenInitialVision = chosen;
+    }
+
+    public long getVisionResonanceCooldownUntil() {
+        return visionResonanceCooldownUntil;
+    }
+
+    public void setVisionResonanceCooldownUntil(long until) {
+        this.visionResonanceCooldownUntil = until;
+    }
+
     @Override
     public CompoundTag serializeNBT(HolderLookup.Provider registries) {
         CompoundTag tag = new CompoundTag();
@@ -1999,6 +2308,7 @@ public final class SystemData implements INBTSerializable<CompoundTag> {
         tag.putInt("perception", perception);
         tag.putInt("intelligence", intelligence);
         tag.putInt("willpower", willpower);
+        tag.putBoolean("agilitySpeedEnabled", agilitySpeedEnabled);
         CompoundTag affinityTag = new CompoundTag();
         affinities.forEach(affinityTag::putInt);
         tag.put("affinities", affinityTag);
@@ -2054,6 +2364,11 @@ public final class SystemData implements INBTSerializable<CompoundTag> {
         tag.putBoolean("class_mission_complete", classMissionComplete);
         tag.putInt("highest_rank_reward", highestRankReward);
         tag.putString("equipped_title", equippedTitle);
+        tag.putBoolean("is_creator", isCreator);
+        tag.putBoolean("is_nanda", isNanda);
+        tag.putBoolean("is_mistic_potato", isMisticPotato);
+        tag.putBoolean("is_schvis", isSchvis);
+        tag.putBoolean("is_tomcraft", isTomcraft);
         CompoundTag repetitionTag = new CompoundTag();
         repeatedActions.forEach(repetitionTag::putInt);
         tag.put("repeated_actions", repetitionTag);
@@ -2125,6 +2440,15 @@ public final class SystemData implements INBTSerializable<CompoundTag> {
         tag.putBoolean("system_40_updating", system40Updating);
         tag.putInt("system_40_update_remaining_ticks", system40UpdateRemainingTicks);
         tag.putBoolean("teyvat_unlocked", teyvatUnlocked);
+        tag.putInt("anemo_statue_lvl", anemoStatueLevel);
+        tag.putInt("anemo_oculi_prog", anemoOculiProgress);
+        tag.putInt("geo_statue_lvl", geoStatueLevel);
+        tag.putInt("geo_oculi_prog", geoOculiProgress);
+        tag.putInt("electro_statue_lvl", electroStatueLevel);
+        tag.putInt("electro_oculi_prog", electroOculiProgress);
+        tag.putInt("dendro_statue_lvl", dendroStatueLevel);
+        tag.putInt("dendro_oculi_prog", dendroOculiProgress);
+        tag.putInt("statue_energy_bonus", statueEnergyBonus);
         ListTag dimsTag = new ListTag();
         for (String dim : visitedDimensions) {
             dimsTag.add(StringTag.valueOf(dim));
@@ -2158,6 +2482,10 @@ public final class SystemData implements INBTSerializable<CompoundTag> {
         tag.putInt("welkin_quest_step", welkinQuestStep);
         tag.putInt("welkin_quest_progress", welkinQuestProgress);
         tag.putInt("first_topup_mask", firstTopUpMask);
+        tag.putInt("first_jade_topup_mask", firstJadeTopUpMask);
+        tag.putInt("last_claimed_maintenance_version", lastClaimedMaintenanceVersion);
+        tag.putLong("gacha_epoch_tick", gachaEpochTick);
+        tag.putLong("casino_vip_until_tick", casinoVipUntilTick);
         net.minecraft.nbt.ListTag wishList = new net.minecraft.nbt.ListTag();
         for (WishLogEntry entry : wishHistory) {
             wishList.add(entry.toNBT());
@@ -2183,6 +2511,7 @@ public final class SystemData implements INBTSerializable<CompoundTag> {
         subspaceTag.put("Items", subspaceList);
         tag.put("subspace_inventory", subspaceTag);
         tag.putInt("subspace_level", subspaceLevel);
+        tag.putInt("subspace_built_level", subspaceBuiltLevel);
         tag.putInt("subspace_unlocked_slots", subspaceUnlockedSlots);
         tag.putInt("subspace_chest_count", subspaceChestCount);
         tag.putString("subspace_ret_dim", subspaceReturnDim);
@@ -2194,7 +2523,38 @@ public final class SystemData implements INBTSerializable<CompoundTag> {
         CompoundTag artifactTag = new CompoundTag();
         ContainerHelper.saveAllItems(artifactTag, artifactSlots, registries);
         tag.put("artifact_inventory", artifactTag);
+
+        if (equippedLightCone != null && !equippedLightCone.isEmpty()) {
+            tag.put("equipped_light_cone", equippedLightCone.save(registries));
+        }
+
+        CompoundTag activeRunesTag = new CompoundTag();
+        ContainerHelper.saveAllItems(activeRunesTag, activeRuneSlots, registries);
+        tag.put("active_runes", activeRunesTag);
+
+        CompoundTag passiveRunesTag = new CompoundTag();
+        ContainerHelper.saveAllItems(passiveRunesTag, passiveRuneSlots, registries);
+        tag.put("passive_runes", passiveRunesTag);
+        tag.putLong("active_rune_cd_0", activeRuneCooldownUntil[0]);
+        tag.putLong("active_rune_cd_1", activeRuneCooldownUntil[1]);
+
         tag.putString("active_vision", activeVision != null ? activeVision : "NONE");
+        tag.putBoolean("has_chosen_initial_vision", hasChosenInitialVision);
+        tag.putLong("vision_cooldown_until", visionResonanceCooldownUntil);
+
+        tag.putInt("uma_carats", carats);
+        tag.putString("active_uma_id", activeUmaId != null ? activeUmaId : "special_week");
+        ListTag umaListTag = new ListTag();
+        for (com.soybe.awakeningsystem.uma.model.OwnedUma ou : ownedUmas.values()) {
+            umaListTag.add(ou.toNBT());
+        }
+        tag.put("owned_umas", umaListTag);
+
+        tag.putInt("dart_high_score", dartHighScore);
+        tag.putLong("casino_total_won", casinoTotalWon);
+        tag.putInt("casino_max_payout", casinoMaxPayout);
+        tag.putInt("pool_matches_won", poolMatchesWon);
+
         return tag;
     }
 
@@ -2210,6 +2570,7 @@ public final class SystemData implements INBTSerializable<CompoundTag> {
         perception = Math.max(1, tag.getInt("perception"));
         intelligence = Math.max(1, tag.getInt("intelligence"));
         willpower = Math.max(1, tag.getInt("willpower"));
+        agilitySpeedEnabled = !tag.contains("agilitySpeedEnabled") || tag.getBoolean("agilitySpeedEnabled");
         affinities.clear();
         CompoundTag affinityTag = tag.getCompound("affinities");
         affinityTag.getAllKeys().forEach(key -> affinities.put(key, affinityTag.getInt(key)));
@@ -2265,6 +2626,11 @@ public final class SystemData implements INBTSerializable<CompoundTag> {
         classMissionComplete = tag.getBoolean("class_mission_complete");
         highestRankReward = tag.getInt("highest_rank_reward");
         equippedTitle = tag.contains("equipped_title") ? tag.getString("equipped_title") : "";
+        isCreator = tag.getBoolean("is_creator");
+        isNanda = tag.getBoolean("is_nanda");
+        isMisticPotato = tag.getBoolean("is_mistic_potato");
+        isSchvis = tag.getBoolean("is_schvis");
+        isTomcraft = tag.getBoolean("is_tomcraft");
         CompoundTag repetitionTag = tag.getCompound("repeated_actions");
         repetitionTag.getAllKeys().forEach(key -> repeatedActions.put(key, repetitionTag.getInt(key)));
         comboCount = tag.getInt("combo_count");
@@ -2350,6 +2716,15 @@ public final class SystemData implements INBTSerializable<CompoundTag> {
         system40Updating = tag.getBoolean("system_40_updating");
         system40UpdateRemainingTicks = tag.getInt("system_40_update_remaining_ticks");
         teyvatUnlocked = tag.getBoolean("teyvat_unlocked");
+        anemoStatueLevel = tag.contains("anemo_statue_lvl") ? Math.max(1, tag.getInt("anemo_statue_lvl")) : 1;
+        anemoOculiProgress = tag.getInt("anemo_oculi_prog");
+        geoStatueLevel = tag.contains("geo_statue_lvl") ? Math.max(1, tag.getInt("geo_statue_lvl")) : 1;
+        geoOculiProgress = tag.getInt("geo_oculi_prog");
+        electroStatueLevel = tag.contains("electro_statue_lvl") ? Math.max(1, tag.getInt("electro_statue_lvl")) : 1;
+        electroOculiProgress = tag.getInt("electro_oculi_prog");
+        dendroStatueLevel = tag.contains("dendro_statue_lvl") ? Math.max(1, tag.getInt("dendro_statue_lvl")) : 1;
+        dendroOculiProgress = tag.getInt("dendro_oculi_prog");
+        statueEnergyBonus = tag.getInt("statue_energy_bonus");
         visitedDimensions.clear();
         if (tag.contains("visited_dimensions", Tag.TAG_LIST)) {
             ListTag list = tag.getList("visited_dimensions", Tag.TAG_STRING);
@@ -2385,6 +2760,10 @@ public final class SystemData implements INBTSerializable<CompoundTag> {
         welkinQuestStep = tag.contains("welkin_quest_step") ? tag.getInt("welkin_quest_step") : 0;
         welkinQuestProgress = tag.contains("welkin_quest_progress") ? tag.getInt("welkin_quest_progress") : 0;
         firstTopUpMask = tag.contains("first_topup_mask") ? tag.getInt("first_topup_mask") : 0;
+        firstJadeTopUpMask = tag.contains("first_jade_topup_mask") ? tag.getInt("first_jade_topup_mask") : 0;
+        lastClaimedMaintenanceVersion = tag.contains("last_claimed_maintenance_version") ? tag.getInt("last_claimed_maintenance_version") : 0;
+        gachaEpochTick = tag.contains("gacha_epoch_tick") ? tag.getLong("gacha_epoch_tick") : 0L;
+        casinoVipUntilTick = tag.contains("casino_vip_until_tick") ? tag.getLong("casino_vip_until_tick") : 0L;
         wishHistory.clear();
         if (tag.contains("wish_history", net.minecraft.nbt.Tag.TAG_LIST)) {
             net.minecraft.nbt.ListTag wishList = tag.getList("wish_history", net.minecraft.nbt.Tag.TAG_COMPOUND);
@@ -2418,6 +2797,7 @@ public final class SystemData implements INBTSerializable<CompoundTag> {
             }
         }
         subspaceLevel = tag.contains("subspace_level") ? Math.max(1, Math.min(5, tag.getInt("subspace_level"))) : 1;
+        subspaceBuiltLevel = tag.contains("subspace_built_level") ? tag.getInt("subspace_built_level") : 0;
         subspaceUnlockedSlots = tag.contains("subspace_unlocked_slots") ? tag.getInt("subspace_unlocked_slots") : 54;
         subspaceChestCount = tag.contains("subspace_chest_count") ? tag.getInt("subspace_chest_count") : 2;
         ensureSubspaceCapacity(Math.max(54, subspaceUnlockedSlots));
@@ -2431,6 +2811,25 @@ public final class SystemData implements INBTSerializable<CompoundTag> {
         if (tag.contains("artifact_inventory", net.minecraft.nbt.Tag.TAG_COMPOUND)) {
             ContainerHelper.loadAllItems(tag.getCompound("artifact_inventory"), artifactSlots, registries);
         }
+
+        if (tag.contains("equipped_light_cone", net.minecraft.nbt.Tag.TAG_COMPOUND)) {
+            this.equippedLightCone = ItemStack.parse(registries, tag.getCompound("equipped_light_cone")).orElse(ItemStack.EMPTY);
+        } else {
+            this.equippedLightCone = ItemStack.EMPTY;
+        }
+
+        java.util.Collections.fill(activeRuneSlots, ItemStack.EMPTY);
+        if (tag.contains("active_runes", net.minecraft.nbt.Tag.TAG_COMPOUND)) {
+            ContainerHelper.loadAllItems(tag.getCompound("active_runes"), activeRuneSlots, registries);
+        }
+
+        java.util.Collections.fill(passiveRuneSlots, ItemStack.EMPTY);
+        if (tag.contains("passive_runes", net.minecraft.nbt.Tag.TAG_COMPOUND)) {
+            ContainerHelper.loadAllItems(tag.getCompound("passive_runes"), passiveRuneSlots, registries);
+        }
+        activeRuneCooldownUntil[0] = tag.getLong("active_rune_cd_0");
+        activeRuneCooldownUntil[1] = tag.getLong("active_rune_cd_1");
+
         if (tag.contains("received_hunter_guide")) {
             this.receivedHunterGuide = tag.getBoolean("received_hunter_guide");
         }
@@ -2439,5 +2838,89 @@ public final class SystemData implements INBTSerializable<CompoundTag> {
         } else {
             this.activeVision = "NONE";
         }
+        this.hasChosenInitialVision = tag.getBoolean("has_chosen_initial_vision");
+        this.visionResonanceCooldownUntil = tag.getLong("vision_cooldown_until");
+
+        this.carats = tag.contains("uma_carats") ? tag.getInt("uma_carats") : 1500;
+        this.activeUmaId = tag.contains("active_uma_id") ? tag.getString("active_uma_id") : "special_week";
+        this.ownedUmas.clear();
+        if (tag.contains("owned_umas", net.minecraft.nbt.Tag.TAG_LIST)) {
+            ListTag umaList = tag.getList("owned_umas", net.minecraft.nbt.Tag.TAG_COMPOUND);
+            for (int i = 0; i < umaList.size(); i++) {
+                com.soybe.awakeningsystem.uma.model.OwnedUma ou = new com.soybe.awakeningsystem.uma.model.OwnedUma(umaList.getCompound(i));
+                this.ownedUmas.put(ou.getUmaId(), ou);
+            }
+        }
+        if (this.ownedUmas.isEmpty()) {
+            com.soybe.awakeningsystem.uma.model.OwnedUma starter = new com.soybe.awakeningsystem.uma.model.OwnedUma("special_week", 3);
+            this.ownedUmas.put("special_week", starter);
+            this.activeUmaId = "special_week";
+        }
+
+        this.dartHighScore = tag.contains("dart_high_score") ? tag.getInt("dart_high_score") : 0;
+        this.casinoTotalWon = tag.contains("casino_total_won") ? tag.getLong("casino_total_won") : 0L;
+        this.casinoMaxPayout = tag.contains("casino_max_payout") ? tag.getInt("casino_max_payout") : 0;
+        this.poolMatchesWon = tag.contains("pool_matches_won") ? tag.getInt("pool_matches_won") : 0;
+    }
+
+    public int getCarats() { return carats; }
+    public void setCarats(int amount) { this.carats = Math.max(0, amount); }
+    public void addCarats(int amount) { if (amount > 0) this.carats += amount; }
+    public boolean spendCarats(int amount) {
+        if (amount > 0 && this.carats >= amount) {
+            this.carats -= amount;
+            return true;
+        }
+        return false;
+    }
+    public Map<String, com.soybe.awakeningsystem.uma.model.OwnedUma> getOwnedUmas() { return ownedUmas; }
+    public com.soybe.awakeningsystem.uma.model.OwnedUma getOwnedUma(String id) { return ownedUmas.get(id); }
+    public String getActiveUmaId() { return activeUmaId; }
+    public void setActiveUmaId(String id) {
+        if (ownedUmas.containsKey(id)) {
+            this.activeUmaId = id;
+        }
+    }
+    public com.soybe.awakeningsystem.uma.model.OwnedUma getActiveUma() {
+        return ownedUmas.getOrDefault(activeUmaId, ownedUmas.values().stream().findFirst().orElse(null));
+    }
+
+    /**
+     * Añade una nueva Uma al establo o le otorga shards si ya la posee (dupe).
+     * Retorna true si es nueva, false si fue duplicado convertido en shards.
+     */
+    public boolean addOrUpgradeUma(String umaId, int baseRarity) {
+        if (ownedUmas.containsKey(umaId)) {
+            int shardBonus = switch (baseRarity) {
+                case 3 -> 20;
+                case 2 -> 10;
+                default -> 5;
+            };
+            ownedUmas.get(umaId).addShards(shardBonus);
+            return false;
+        } else {
+            ownedUmas.put(umaId, new com.soybe.awakeningsystem.uma.model.OwnedUma(umaId, baseRarity));
+            return true;
+        }
+    }
+
+    public boolean trainUmaStat(String umaId, String statName, int costCarats, int costCoins) {
+        com.soybe.awakeningsystem.uma.model.OwnedUma uma = ownedUmas.get(umaId);
+        if (uma == null) return false;
+        if (this.carats < costCarats || this.coins < costCoins) return false;
+
+        boolean trained = uma.trainStat(statName, 15 + level / 10);
+        if (trained) {
+            this.spendCarats(costCarats);
+            this.spendCoins(costCoins);
+            return true;
+        }
+        return false;
+    }
+
+    public boolean bloomUma(String umaId) {
+        com.soybe.awakeningsystem.uma.model.OwnedUma uma = ownedUmas.get(umaId);
+        if (uma == null) return false;
+        return uma.bloom();
     }
 }

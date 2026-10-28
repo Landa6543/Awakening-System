@@ -103,7 +103,6 @@ public class BloodPatriarchBossEntity extends Monster {
     public boolean hurt(DamageSource source, float amount) {
         if (this.isDeadOrDying() || this.isRemoved()) return false;
 
-        // Si los estandartes siguen activos, el Patriarca recibe 75% menos de daño
         if (hasActiveTotems()) {
             amount *= 0.25F;
             if (this.level() instanceof ServerLevel sl) {
@@ -124,7 +123,6 @@ public class BloodPatriarchBossEntity extends Monster {
     public boolean doHurtTarget(net.minecraft.world.entity.Entity target) {
         boolean hurt = super.doHurtTarget(target);
         if (hurt && target instanceof LivingEntity living) {
-            // Drenaje de Esencia Vital: cura un 30% del daño infligido
             float healAmount = 6.0F;
             this.heal(healAmount);
 
@@ -146,14 +144,12 @@ public class BloodPatriarchBossEntity extends Monster {
             LivingEntity target = this.getTarget();
             double distSq = this.distanceToSqr(target);
 
-            // 1. Corte en Abanico Carmesí (Área frontal)
             this.crimsonWaveCooldown--;
             if (this.crimsonWaveCooldown <= 0 && distSq <= 100.0D) {
                 this.crimsonWaveCooldown = 90 + this.random.nextInt(40);
                 triggerCrimsonWave();
             }
 
-            // 2. Niebla Demoníaca y Teletransporte (Fase de Furia cuando tiene menos del 50% de HP)
             if (this.getHealth() < this.getMaxHealth() * 0.5F) {
                 this.bloodMistCooldown--;
                 if (this.bloodMistCooldown <= 0 && distSq >= 16.0D) {
@@ -189,12 +185,10 @@ public class BloodPatriarchBossEntity extends Monster {
     private void triggerBloodMistBlink(LivingEntity target) {
         if (!(this.level() instanceof ServerLevel sl)) return;
 
-        // Desvanecerse en niebla
         sl.sendParticles(ParticleTypes.CAMPFIRE_COSY_SMOKE, this.getX(), this.getY() + 1.0D, this.getZ(), 30, 0.4D, 0.8D, 0.4D, 0.05D);
         sl.sendParticles(ParticleTypes.CRIMSON_SPORE, this.getX(), this.getY() + 1.0D, this.getZ(), 35, 0.5D, 0.8D, 0.5D, 0.05D);
         sl.playSound(null, this.getX(), this.getY(), this.getZ(), SoundEvents.ENDERMAN_TELEPORT, SoundSource.HOSTILE, 1.2F, 0.6F);
 
-        // Aparecer a espaldas del jugador
         Vec3 back = target.getViewVector(1.0F).scale(-2.2D);
         double tx = target.getX() + back.x;
         double ty = target.getY();
@@ -218,14 +212,12 @@ public class BloodPatriarchBossEntity extends Monster {
             sl.sendParticles(ParticleTypes.TOTEM_OF_UNDYING, this.getX(), this.getY() + 1.5D, this.getZ(), 80, 1.5D, 1.5D, 1.5D, 0.2D);
             sl.playSound(null, this.getX(), this.getY(), this.getZ(), SoundEvents.UI_TOAST_CHALLENGE_COMPLETE, SoundSource.PLAYERS, 1.6F, 0.9F);
 
-            // Recompensa legendaria: Manual del Arte Secreto de la Secta de Sangre
             ItemStack relic = SeriesStructureBuilder.makeRelic(Items.WRITTEN_BOOK, 1,
-                    "§4§l✦ Manual del Arte Secreto de la Secta de Sangre ✦",
-                    "Secta de Sangre - Murim",
-                    "Técnica prohibida del Culto Demoníaco. Otorga maestría marcial oscura y desata el Qi Carmesí.");
+                    "§4§l✦ Blood Sect Secret Art Manual ✦",
+                    "Blood Sect - Murim",
+                    "Forbidden technique of the Demonic Cult. Grants dark martial mastery and unleashes Crimson Qi.");
             sl.addFreshEntity(new ItemEntity(sl, this.getX(), this.getY() + 0.5D, this.getZ(), relic));
 
-            // Si el asesino fue un jugador, otorgar título y monedas
             if (damageSource.getEntity() instanceof ServerPlayer player) {
                 var data = SystemEvents.data(player);
                 data.setConqueredBloodSect(true);

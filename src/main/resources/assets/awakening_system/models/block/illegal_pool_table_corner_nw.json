@@ -1,0 +1,76 @@
+{
+    "credit": "Awakening System - Pool Multiblock Corner NW",
+    "textures": {
+        "wood": "awakening_system:block/casino_table_wood_illegal",
+        "felt": "awakening_system:block/casino_table_felt_illegal_pool",
+        "brass": "awakening_system:block/casino_table_brass_illegal",
+        "particle": "awakening_system:block/casino_table_felt_illegal_pool"
+    },
+    "elements": [
+        {
+            "name": "leg_sw",
+            "from": [0, 0, 12],
+            "to": [4, 11, 16],
+            "faces": {
+                "north": { "texture": "#wood" },
+                "east": { "texture": "#wood" },
+                "south": { "texture": "#wood" },
+                "west": { "texture": "#wood" },
+                "down": { "texture": "#wood" }
+            }
+        },
+        {
+            "name": "base",
+            "from": [0, 11, 0],
+            "to": [16, 13.5, 16],
+            "faces": {
+                "west": { "texture": "#wood" },
+                "south": { "texture": "#wood" },
+                "down": { "texture": "#wood" }
+            }
+        },
+        {
+            "name": "rim_w",
+            "from": [0, 13.5, 0],
+            "to": [2.5, 15.5, 12],
+            "faces": {
+                "west": { "texture": "#wood" },
+                "up": { "texture": "#wood" },
+                "east": { "texture": "#felt" },
+                "down": { "texture": "#wood" }
+            }
+        },
+        {
+            "name": "rim_s",
+            "from": [4, 13.5, 13.5],
+            "to": [16, 15.5, 16],
+            "faces": {
+                "south": { "texture": "#wood" },
+                "up": { "texture": "#wood" },
+                "north": { "texture": "#felt" },
+                "down": { "texture": "#wood" }
+            }
+        },
+        {
+            "name": "pocket_sw",
+            "from": [0, 13.5, 12],
+            "to": [4, 16, 16],
+            "faces": {
+                "up": { "texture": "#brass" },
+                "south": { "texture": "#brass" },
+                "west": { "texture": "#brass" },
+                "north": { "texture": "#brass" },
+                "east": { "texture": "#brass" },
+                "down": { "texture": "#brass" }
+            }
+        },
+        {
+            "name": "felt",
+            "from": [2.5, 13.8, 0],
+            "to": [16, 14.0, 13.5],
+            "faces": {
+                "up": { "uv": [0, 12, 5.33, 16], "texture": "#felt" }
+            }
+        }
+    ]
+}

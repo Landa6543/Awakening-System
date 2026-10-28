@@ -12,7 +12,7 @@ public record SpawnMagicCirclePayload(
         float radius,
         int durationTicks,
         int color,
-        int circleType, // 0 = ground arcane, 1 = vertical arcane, 2 = ground murim, 3 = vertical murim
+        int circleType,
         boolean isCharging
 ) implements CustomPacketPayload {
     public static final Type<SpawnMagicCirclePayload> TYPE = new Type<>(

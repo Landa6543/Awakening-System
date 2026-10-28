@@ -1,0 +1,6 @@
+{
+  "parent": "minecraft:item/generated",
+  "textures": {
+    "layer0": "awakening_system:item/light_cone_the_day_cosmos_fell"
+  }
+}

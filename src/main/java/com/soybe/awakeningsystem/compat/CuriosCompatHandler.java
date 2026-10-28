@@ -32,7 +32,6 @@ public final class CuriosCompatHandler {
         if (player == null) return;
         UUID uuid = player.getUUID();
 
-        // 1. Compatibilidad con Curios API (top.theillusivec4.curios.api)
         if (ModList.get().isLoaded("curios")) {
             try {
                 Class<?> apiClass = Class.forName("top.theillusivec4.curios.api.CuriosApi");
@@ -127,7 +126,6 @@ public final class CuriosCompatHandler {
                                 setStackMethod.invoke(itemHandler, entry.slot, entry.stack.copy());
                                 restoredCount++;
                             } else {
-                                // Si el slot cambió o ya no existe, añadir al inventario principal
                                 newPlayer.getInventory().add(entry.stack.copy());
                             }
                         }
@@ -137,13 +135,11 @@ public final class CuriosCompatHandler {
                 }
             } catch (Throwable t) {
                 AwakeningSystemMod.LOGGER.warn("No se pudo restaurar Curios por reflexión: {}", t.getMessage());
-                // Fallback de emergencia: entregar en el inventario normal para que no se pierdan bajo ningún concepto
                 for (CuriosSlotEntry entry : entries) {
                     newPlayer.getInventory().add(entry.stack.copy());
                 }
             }
         } else {
-            // Si el mod fue desinstalado entretanto, devolver al inventario regular
             for (CuriosSlotEntry entry : entries) {
                 newPlayer.getInventory().add(entry.stack.copy());
             }

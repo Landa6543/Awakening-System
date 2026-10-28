@@ -1,0 +1,152 @@
+{
+  "credit": "Awakening System - Blackjack Multiblock Front Left",
+  "textures": {
+    "wood": "awakening_system:block/casino_table_wood",
+    "felt": "awakening_system:block/casino_table_felt_blackjack",
+    "brass": "awakening_system:block/casino_table_brass",
+    "particle": "awakening_system:block/casino_table_felt_blackjack"
+  },
+  "elements": [
+    {
+      "name": "leg_sw",
+      "from": [
+        1,
+        0,
+        12
+      ],
+      "to": [
+        4,
+        12,
+        15
+      ],
+      "faces": {
+        "north": {
+          "texture": "#wood"
+        },
+        "east": {
+          "texture": "#wood"
+        },
+        "south": {
+          "texture": "#wood"
+        },
+        "west": {
+          "texture": "#wood"
+        },
+        "down": {
+          "texture": "#wood"
+        }
+      }
+    },
+    {
+      "name": "base",
+      "from": [
+        1,
+        11,
+        0
+      ],
+      "to": [
+        16,
+        13.5,
+        15
+      ],
+      "faces": {
+        "west": {
+          "texture": "#wood"
+        },
+        "south": {
+          "texture": "#wood"
+        },
+        "down": {
+          "texture": "#wood"
+        },
+        "up": {
+          "texture": "#wood"
+        }
+      }
+    },
+    {
+      "name": "rim_w",
+      "from": [
+        0,
+        13.5,
+        0
+      ],
+      "to": [
+        2,
+        15.5,
+        14
+      ],
+      "faces": {
+        "west": {
+          "texture": "#wood"
+        },
+        "up": {
+          "texture": "#brass"
+        },
+        "down": {
+          "texture": "#wood"
+        },
+        "east": {
+          "texture": "#brass"
+        }
+      }
+    },
+    {
+      "name": "rim_s",
+      "from": [
+        0,
+        13.5,
+        14
+      ],
+      "to": [
+        16,
+        15.5,
+        16
+      ],
+      "faces": {
+        "south": {
+          "texture": "#wood"
+        },
+        "up": {
+          "texture": "#brass"
+        },
+        "down": {
+          "texture": "#wood"
+        },
+        "north": {
+          "texture": "#brass"
+        },
+        "west": {
+          "texture": "#wood"
+        },
+        "east": {
+          "texture": "#wood"
+        }
+      }
+    },
+    {
+      "name": "felt",
+      "from": [
+        2,
+        13.8,
+        0
+      ],
+      "to": [
+        16,
+        14.0,
+        14
+      ],
+      "faces": {
+        "up": {
+          "uv": [
+            0,
+            8,
+            8,
+            16
+          ],
+          "texture": "#felt"
+        }
+      }
+    }
+  ]
+}

@@ -1,0 +1,24 @@
+{
+  "type": "minecraft:crafting_shaped",
+  "category": "misc",
+  "pattern": [
+    "CCC",
+    "WPW",
+    "W W"
+  ],
+  "key": {
+    "C": {
+      "item": "minecraft:green_carpet"
+    },
+    "W": {
+      "item": "minecraft:spruce_planks"
+    },
+    "P": {
+      "item": "minecraft:iron_ingot"
+    }
+  },
+  "result": {
+    "count": 1,
+    "id": "awakening_system:pool_table"
+  }
+}

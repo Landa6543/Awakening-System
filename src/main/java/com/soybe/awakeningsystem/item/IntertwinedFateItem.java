@@ -34,7 +34,7 @@ public class IntertwinedFateItem extends Item {
             stack.shrink(count);
             AwakeningSystemMod.sync(sp);
             sp.playNotifySound(SoundEvents.AMETHYST_BLOCK_RESONATE, SoundSource.PLAYERS, 1.0F, 1.6F);
-            sp.displayClientMessage(Component.literal("§6§l✦ [DESTINO ENTRELAZADO] §fHas depositado §6+" + count + " Destino(s) §f(Total: §e" + data.intertwinedFates() + "§f)"), true);
+            sp.displayClientMessage(Component.translatable("item.awakening_system.intertwined_fate.deposit_msg", count, data.intertwinedFates()), true);
             return InteractionResultHolder.consume(stack);
         }
         return InteractionResultHolder.sidedSuccess(stack, level.isClientSide());
@@ -42,9 +42,9 @@ public class IntertwinedFateItem extends Item {
 
     @Override
     public void appendHoverText(ItemStack stack, TooltipContext context, List<Component> tooltip, TooltipFlag flag) {
-        tooltip.add(Component.literal("§7Semilla del destino que entrelaza los deseos de diferentes realidades.").withStyle(ChatFormatting.GRAY));
-        tooltip.add(Component.literal("§7Se utiliza en el §6Banner Promocional de Evento §7para obtener equipo 5★.").withStyle(ChatFormatting.DARK_GRAY));
-        tooltip.add(Component.literal("§e▸ Clic derecho: §fDepositar en el monedero de Deseos").withStyle(ChatFormatting.GOLD));
-        tooltip.add(Component.literal("§e▸ Shift + Clic derecho: §fDepositar todo el stack").withStyle(ChatFormatting.GOLD));
+        tooltip.add(Component.translatable("item.awakening_system.intertwined_fate.desc1").withStyle(ChatFormatting.GRAY));
+        tooltip.add(Component.translatable("item.awakening_system.intertwined_fate.desc2").withStyle(ChatFormatting.DARK_GRAY));
+        tooltip.add(Component.translatable("item.awakening_system.intertwined_fate.use1").withStyle(ChatFormatting.GOLD));
+        tooltip.add(Component.translatable("item.awakening_system.intertwined_fate.use2").withStyle(ChatFormatting.GOLD));
     }
 }

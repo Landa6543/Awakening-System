@@ -6,7 +6,6 @@ import java.util.List;
 
 public final class SkillDefinitions {
     public static final List<String> ALL_BASE_SKILLS = List.of(
-            // Original skills
             "stone_strike", "combat_instinct", "enduring_flesh", "windrunner", "deep_breath",
             "ore_sense", "fire_ward", "green_thumb", "artisan_hand", "alchemist_eye",
             "shadow_step", "magnetic_pull", "guardian_stance", "deadeye",
@@ -14,25 +13,20 @@ public final class SkillDefinitions {
             "piercing_shot", "web_snare", "kinetic_blast", "tidal_surge",
             "shadow_monarch", "phoenix_rebirth", "bloodthirst",
 
-            // New Manhwa skills
             "rulers_authority", "asrahan_mana_blade", "electrification", "nano_blade_overdrive",
             "dragon_dive", "black_fire_wave", "caregiver_blessing", "fourth_wall",
             "estate_workmanship", "nano_healing", "blue_dragon_scales", "dragon_sense", "iron_will",
             "death_king_rewind",
 
-            // Mod integration skills
             "system_core", "beast_bond", "cataclysm_breaker", "twilight_attunement",
             "aether_ascension", "deep_dark_resonance", "adventurer_instinct",
             "eclipse_edge", "eclipse_core",
 
-            // Habilidades de Rango Único (1 Jugador por Mundo/Server)
             "unique_absolute_extraction", "unique_rulers_authority_prime",
             "unique_fourth_wall_infinite", "unique_dragon_breath_annihilation",
 
-            // Habilidades de Series Isekai (Multiverso 2.0)
             "isekai_predator", "isekai_dimensional_slash", "isekai_dragon_roar", "isekai_mana_burst",
 
-            // Habilidades Shonen Legendarias (Multiverso Anime 3.0)
             "shonen_infinite_void", "shonen_getsuga_tensho", "shonen_conquerors_haki", "shonen_zoltraak", "shonen_rasenshuriken"
     );
 
@@ -160,6 +154,7 @@ public final class SkillDefinitions {
     }
 
     public static Definition get(String skillId) {
+        if (skillId == null || skillId.isEmpty()) return null;
         String baseSkillId = skillId.endsWith("_evolution") ? skillId.substring(0, skillId.length() - 10) : skillId;
         return switch (baseSkillId) {
             case "stone_strike" -> new Definition(
@@ -384,7 +379,6 @@ public final class SkillDefinitions {
                     "awakening_system.skill.isekai_mana_burst.effect",
                     Rarity.MYTHIC, "");
 
-            // --- Habilidades Shonen Legendarias (Multiverso Anime 3.0) ---
             case "shonen_infinite_void" -> new Definition(
                     "awakening_system.skill.shonen_infinite_void.name",
                     "awakening_system.skill.shonen_infinite_void.description",
@@ -411,8 +405,6 @@ public final class SkillDefinitions {
                     "awakening_system.skill.shonen_rasenshuriken.effect",
                     Rarity.LEGENDARY, "");
 
-            // --- Árbol de Habilidades de Clase (8 Clases de Cazador) ---
-            // 1. Monarca de las Sombras
             case "shadow_exchange" -> new Definition("awakening_system.skill.shadow_exchange.name", "awakening_system.skill.shadow_exchange.description", "awakening_system.skill.shadow_exchange.effect", Rarity.EPIC, "");
             case "monarchs_domain" -> new Definition("awakening_system.skill.monarchs_domain.name", "awakening_system.skill.monarchs_domain.description", "awakening_system.skill.monarchs_domain.effect", Rarity.LEGENDARY, "");
             case "shadow_colossus_infusion" -> new Definition("awakening_system.skill.shadow_colossus_infusion.name", "awakening_system.skill.shadow_colossus_infusion.description", "awakening_system.skill.shadow_colossus_infusion.effect", Rarity.MYTHIC, "");
@@ -422,7 +414,6 @@ public final class SkillDefinitions {
             case "phantom_ambush" -> new Definition("awakening_system.skill.phantom_ambush.name", "awakening_system.skill.phantom_ambush.description", "awakening_system.skill.phantom_ambush.effect", Rarity.EPIC, "");
             case "death_mark_execution" -> new Definition("awakening_system.skill.death_mark_execution.name", "awakening_system.skill.death_mark_execution.description", "awakening_system.skill.death_mark_execution.effect", Rarity.EPIC, "");
 
-            // 2. Santo de la Espada de Hua
             case "plum_blossom_rain" -> new Definition("awakening_system.skill.plum_blossom_rain.name", "awakening_system.skill.plum_blossom_rain.description", "awakening_system.skill.plum_blossom_rain.effect", Rarity.EPIC, "");
             case "twenty_four_sword_forms" -> new Definition("awakening_system.skill.twenty_four_sword_forms.name", "awakening_system.skill.twenty_four_sword_forms.description", "awakening_system.skill.twenty_four_sword_forms.effect", Rarity.LEGENDARY, "");
             case "plum_blossom_domain" -> new Definition("awakening_system.skill.plum_blossom_domain.name", "awakening_system.skill.plum_blossom_domain.description", "awakening_system.skill.plum_blossom_domain.effect", Rarity.MYTHIC, "");
@@ -432,7 +423,6 @@ public final class SkillDefinitions {
             case "limitless_sword_intent" -> new Definition("awakening_system.skill.limitless_sword_intent.name", "awakening_system.skill.limitless_sword_intent.description", "awakening_system.skill.limitless_sword_intent.effect", Rarity.LEGENDARY, "");
             case "plum_blossom_sword_god" -> new Definition("awakening_system.skill.plum_blossom_sword_god.name", "awakening_system.skill.plum_blossom_sword_god.description", "awakening_system.skill.plum_blossom_sword_god.effect", Rarity.MYTHIC, "");
 
-            // 3. Apóstol del Star Stream
             case "readers_viewpoint" -> new Definition("awakening_system.skill.readers_viewpoint.name", "awakening_system.skill.readers_viewpoint.description", "awakening_system.skill.readers_viewpoint.effect", Rarity.EPIC, "");
             case "constellation_favor" -> new Definition("awakening_system.skill.constellation_favor.name", "awakening_system.skill.constellation_favor.description", "awakening_system.skill.constellation_favor.effect", Rarity.LEGENDARY, "");
             case "fourth_wall_shatter" -> new Definition("awakening_system.skill.fourth_wall_shatter.name", "awakening_system.skill.fourth_wall_shatter.description", "awakening_system.skill.fourth_wall_shatter.effect", Rarity.MYTHIC, "");
@@ -442,7 +432,6 @@ public final class SkillDefinitions {
             case "character_summary_scan" -> new Definition("awakening_system.skill.character_summary_scan.name", "awakening_system.skill.character_summary_scan.description", "awakening_system.skill.character_summary_scan.effect", Rarity.LEGENDARY, "");
             case "star_stream_climax" -> new Definition("awakening_system.skill.star_stream_climax.name", "awakening_system.skill.star_stream_climax.description", "awakening_system.skill.star_stream_climax.effect", Rarity.MYTHIC, "");
 
-            // 4. Berserker Colosal
             case "aura_smash" -> new Definition("awakening_system.skill.aura_smash.name", "awakening_system.skill.aura_smash.description", "awakening_system.skill.aura_smash.effect", Rarity.EPIC, "");
             case "cross_impact" -> new Definition("awakening_system.skill.cross_impact.name", "awakening_system.skill.cross_impact.description", "awakening_system.skill.cross_impact.effect", Rarity.LEGENDARY, "");
             case "valterian_gigantomachia" -> new Definition("awakening_system.skill.valterian_gigantomachia.name", "awakening_system.skill.valterian_gigantomachia.description", "awakening_system.skill.valterian_gigantomachia.effect", Rarity.MYTHIC, "");
@@ -451,7 +440,6 @@ public final class SkillDefinitions {
             case "blood_frenzy_passive" -> new Definition("awakening_system.skill.blood_frenzy_passive.name", "awakening_system.skill.blood_frenzy_passive.description", "awakening_system.skill.blood_frenzy_passive.effect", Rarity.EPIC, "");
             case "immortal_berserk" -> new Definition("awakening_system.skill.immortal_berserk.name", "awakening_system.skill.immortal_berserk.description", "awakening_system.skill.immortal_berserk.effect", Rarity.MYTHIC, "");
 
-            // 5. Demonio Celestial
             case "heavenly_demon_steps" -> new Definition("awakening_system.skill.heavenly_demon_steps.name", "awakening_system.skill.heavenly_demon_steps.description", "awakening_system.skill.heavenly_demon_steps.effect", Rarity.EPIC, "");
             case "demonic_blood_slash" -> new Definition("awakening_system.skill.demonic_blood_slash.name", "awakening_system.skill.demonic_blood_slash.description", "awakening_system.skill.demonic_blood_slash.effect", Rarity.LEGENDARY, "");
             case "sky_demon_nine_reversals" -> new Definition("awakening_system.skill.sky_demon_nine_reversals.name", "awakening_system.skill.sky_demon_nine_reversals.description", "awakening_system.skill.sky_demon_nine_reversals.effect", Rarity.MYTHIC, "");
@@ -460,7 +448,6 @@ public final class SkillDefinitions {
             case "asura_bloodline" -> new Definition("awakening_system.skill.asura_bloodline.name", "awakening_system.skill.asura_bloodline.description", "awakening_system.skill.asura_bloodline.effect", Rarity.LEGENDARY, "");
             case "nano_overdrive_suit" -> new Definition("awakening_system.skill.nano_overdrive_suit.name", "awakening_system.skill.nano_overdrive_suit.description", "awakening_system.skill.nano_overdrive_suit.effect", Rarity.MYTHIC, "");
 
-            // 6. Asesino del Vacío
             case "shadow_step_blink" -> new Definition("awakening_system.skill.shadow_step_blink.name", "awakening_system.skill.shadow_step_blink.description", "awakening_system.skill.shadow_step_blink.effect", Rarity.EPIC, "");
             case "vital_strike" -> new Definition("awakening_system.skill.vital_strike.name", "awakening_system.skill.vital_strike.description", "awakening_system.skill.vital_strike.effect", Rarity.LEGENDARY, "");
             case "infinite_mirror_blades" -> new Definition("awakening_system.skill.infinite_mirror_blades.name", "awakening_system.skill.infinite_mirror_blades.description", "awakening_system.skill.infinite_mirror_blades.effect", Rarity.MYTHIC, "");
@@ -468,7 +455,6 @@ public final class SkillDefinitions {
             case "smoke_bomb_escape" -> new Definition("awakening_system.skill.smoke_bomb_escape.name", "awakening_system.skill.smoke_bomb_escape.description", "awakening_system.skill.smoke_bomb_escape.effect", Rarity.LEGENDARY, "");
             case "max_level_privilege" -> new Definition("awakening_system.skill.max_level_privilege.name", "awakening_system.skill.max_level_privilege.description", "awakening_system.skill.max_level_privilege.effect", Rarity.MYTHIC, "");
 
-            // 7. Gran Archimago
             case "elemental_spear" -> new Definition("awakening_system.skill.elemental_spear.name", "awakening_system.skill.elemental_spear.description", "awakening_system.skill.elemental_spear.effect", Rarity.EPIC, "");
             case "gravity_crush" -> new Definition("awakening_system.skill.gravity_crush.name", "awakening_system.skill.gravity_crush.description", "awakening_system.skill.gravity_crush.effect", Rarity.LEGENDARY, "");
             case "supernova_incineration" -> new Definition("awakening_system.skill.supernova_incineration.name", "awakening_system.skill.supernova_incineration.description", "awakening_system.skill.supernova_incineration.effect", Rarity.MYTHIC, "");
@@ -476,7 +462,6 @@ public final class SkillDefinitions {
             case "arcane_overload" -> new Definition("awakening_system.skill.arcane_overload.name", "awakening_system.skill.arcane_overload.description", "awakening_system.skill.arcane_overload.effect", Rarity.LEGENDARY, "");
             case "time_dilation" -> new Definition("awakening_system.skill.time_dilation.name", "awakening_system.skill.time_dilation.description", "awakening_system.skill.time_dilation.effect", Rarity.MYTHIC, "");
 
-            // 8. Soberano Dragón
             case "dragon_breath" -> new Definition("awakening_system.skill.dragon_breath.name", "awakening_system.skill.dragon_breath.description", "awakening_system.skill.dragon_breath.effect", Rarity.EPIC, "");
             case "meteor_fall" -> new Definition("awakening_system.skill.meteor_fall.name", "awakening_system.skill.meteor_fall.description", "awakening_system.skill.meteor_fall.effect", Rarity.LEGENDARY, "");
             case "breath_of_annihilation" -> new Definition("awakening_system.skill.breath_of_annihilation.name", "awakening_system.skill.breath_of_annihilation.description", "awakening_system.skill.breath_of_annihilation.effect", Rarity.MYTHIC, "");
@@ -486,7 +471,6 @@ public final class SkillDefinitions {
             case "dm_dragon_dive" -> new Definition("awakening_system.skill.dm_dragon_dive.name", "awakening_system.skill.dm_dragon_dive.description", "awakening_system.skill.dm_dragon_dive.effect", Rarity.EPIC, "");
             case "dm_bloodthirst" -> new Definition("awakening_system.skill.dm_bloodthirst.name", "awakening_system.skill.dm_bloodthirst.description", "awakening_system.skill.dm_bloodthirst.effect", Rarity.EPIC, "");
 
-            // 9. Sanador Celestial (The S-Classes That I Raised)
             case "sh_caregiver_blessing" -> new Definition("awakening_system.skill.sh_caregiver_blessing.name", "awakening_system.skill.sh_caregiver_blessing.description", "awakening_system.skill.sh_caregiver_blessing.effect", Rarity.UNIQUE, "");
             case "sh_holy_touch" -> new Definition("awakening_system.skill.sh_holy_touch.name", "awakening_system.skill.sh_holy_touch.description", "awakening_system.skill.sh_holy_touch.effect", Rarity.EPIC, "");
             case "sh_divine_grace" -> new Definition("awakening_system.skill.sh_divine_grace.name", "awakening_system.skill.sh_divine_grace.description", "awakening_system.skill.sh_divine_grace.effect", Rarity.LEGENDARY, "");
@@ -498,7 +482,6 @@ public final class SkillDefinitions {
             case "sh_awakening_inspire" -> new Definition("awakening_system.skill.sh_awakening_inspire.name", "awakening_system.skill.sh_awakening_inspire.description", "awakening_system.skill.sh_awakening_inspire.effect", Rarity.LEGENDARY, "");
             case "sh_beast_empathy" -> new Definition("awakening_system.skill.sh_beast_empathy.name", "awakening_system.skill.sh_beast_empathy.description", "awakening_system.skill.sh_beast_empathy.effect", Rarity.EPIC, "");
 
-            // 10. Emperador del Relámpago (Lightning Degree)
             case "le_electrification" -> new Definition("awakening_system.skill.le_electrification.name", "awakening_system.skill.le_electrification.description", "awakening_system.skill.le_electrification.effect", Rarity.UNIQUE, "");
             case "le_thunder_spear" -> new Definition("awakening_system.skill.le_thunder_spear.name", "awakening_system.skill.le_thunder_spear.description", "awakening_system.skill.le_thunder_spear.effect", Rarity.EPIC, "");
             case "le_plasma_burst" -> new Definition("awakening_system.skill.le_plasma_burst.name", "awakening_system.skill.le_plasma_burst.description", "awakening_system.skill.le_plasma_burst.effect", Rarity.LEGENDARY, "");
@@ -510,7 +493,6 @@ public final class SkillDefinitions {
             case "le_grounding_soul" -> new Definition("awakening_system.skill.le_grounding_soul.name", "awakening_system.skill.le_grounding_soul.description", "awakening_system.skill.le_grounding_soul.effect", Rarity.LEGENDARY, "");
             case "le_vajra_indestructible" -> new Definition("awakening_system.skill.le_vajra_indestructible.name", "awakening_system.skill.le_vajra_indestructible.description", "awakening_system.skill.le_vajra_indestructible.effect", Rarity.MYTHIC, "");
 
-            // 11. Emperador de Sangre (Doom Breaker)
             case "be_bloodthirst" -> new Definition("awakening_system.skill.be_bloodthirst.name", "awakening_system.skill.be_bloodthirst.description", "awakening_system.skill.be_bloodthirst.effect", Rarity.UNIQUE, "");
             case "be_blood_lance" -> new Definition("awakening_system.skill.be_blood_lance.name", "awakening_system.skill.be_blood_lance.description", "awakening_system.skill.be_blood_lance.effect", Rarity.EPIC, "");
             case "be_crimson_eruption" -> new Definition("awakening_system.skill.be_crimson_eruption.name", "awakening_system.skill.be_crimson_eruption.description", "awakening_system.skill.be_crimson_eruption.effect", Rarity.LEGENDARY, "");
@@ -522,7 +504,6 @@ public final class SkillDefinitions {
             case "be_undying_vitality" -> new Definition("awakening_system.skill.be_undying_vitality.name", "awakening_system.skill.be_undying_vitality.description", "awakening_system.skill.be_undying_vitality.effect", Rarity.LEGENDARY, "");
             case "be_dragon_blood_avatar" -> new Definition("awakening_system.skill.be_dragon_blood_avatar.name", "awakening_system.skill.be_dragon_blood_avatar.description", "awakening_system.skill.be_dragon_blood_avatar.effect", Rarity.MYTHIC, "");
 
-            // 12. Monarca de las Bestias (Solo Leveling / White Tiger)
             case "bm_seismic_roar" -> new Definition("awakening_system.skill.bm_seismic_roar.name", "awakening_system.skill.bm_seismic_roar.description", "awakening_system.skill.bm_seismic_roar.effect", Rarity.UNIQUE, "");
             case "bm_predator_leap" -> new Definition("awakening_system.skill.bm_predator_leap.name", "awakening_system.skill.bm_predator_leap.description", "awakening_system.skill.bm_predator_leap.effect", Rarity.EPIC, "");
             case "bm_feral_rend" -> new Definition("awakening_system.skill.bm_feral_rend.name", "awakening_system.skill.bm_feral_rend.description", "awakening_system.skill.bm_feral_rend.effect", Rarity.LEGENDARY, "");
@@ -534,7 +515,6 @@ public final class SkillDefinitions {
             case "bm_wild_resilience" -> new Definition("awakening_system.skill.bm_wild_resilience.name", "awakening_system.skill.bm_wild_resilience.description", "awakening_system.skill.bm_wild_resilience.effect", Rarity.LEGENDARY, "");
             case "bm_titan_roar" -> new Definition("awakening_system.skill.bm_titan_roar.name", "awakening_system.skill.bm_titan_roar.description", "awakening_system.skill.bm_titan_roar.effect", Rarity.MYTHIC, "");
 
-            // Variantes y alias de clase
             case "cb_valterian_instinct" -> new Definition("awakening_system.skill.cb_valterian_instinct.name", "awakening_system.skill.cb_valterian_instinct.description", "awakening_system.skill.cb_valterian_instinct.effect", Rarity.UNIQUE, "");
             case "cb_bloodthirst" -> new Definition("awakening_system.skill.cb_bloodthirst.name", "awakening_system.skill.cb_bloodthirst.description", "awakening_system.skill.cb_bloodthirst.effect", Rarity.EPIC, "");
             case "cb_pain_suppression" -> new Definition("awakening_system.skill.cb_pain_suppression.name", "awakening_system.skill.cb_pain_suppression.description", "awakening_system.skill.cb_pain_suppression.effect", Rarity.EPIC, "");
@@ -591,13 +571,9 @@ public final class SkillDefinitions {
     }
 
     public static boolean isActive(String skillId) {
-        if (skillId == null) return false;
+        if (skillId == null || skillId.isEmpty()) return false;
         String base = skillId.endsWith("_evolution") ? skillId.substring(0, skillId.length() - 10) : skillId;
-        ClassSkillTree.SkillNode treeNode = ClassSkillTree.getNode(base);
-        if (treeNode != null) {
-            return treeNode.isActive();
-        }
-        return switch (base) {
+        boolean inSwitch = switch (base) {
             case "stone_strike", "dimensional_blink", "shadow_step", "kinetic_blast", "tidal_surge",
                  "piercing_shot", "web_snare", "seismic_roar", "blaze_ignition",
                  "spectral_shift", "magnetic_pull", "shadow_monarch",
@@ -605,7 +581,7 @@ public final class SkillDefinitions {
                  "nano_blade_overdrive", "dragon_dive", "black_fire_wave", "caregiver_blessing",
                  "unique_absolute_extraction", "unique_rulers_authority_prime",
                  "unique_fourth_wall_infinite", "unique_dragon_breath_annihilation", "isekai_predator", "isekai_dimensional_slash", "isekai_dragon_roar", "isekai_mana_burst",
-                 "shadow_exchange", "monarchs_domain", "shadow_colossus_infusion", "stealth_stalker", "bloodlust_gaze",
+                 "shadow_exchange", "monarchs_domain", "stealth_stalker", "bloodlust_gaze",
                  "plum_blossom_rain", "twenty_four_sword_forms", "plum_blossom_domain", "daoist_clarity",
                  "readers_viewpoint", "constellation_favor", "fourth_wall_shatter", "star_stream_climax",
                  "aura_smash", "cross_impact", "valterian_gigantomachia", "iron_muscle_hardening",
@@ -616,6 +592,9 @@ public final class SkillDefinitions {
                  "shonen_infinite_void", "shonen_getsuga_tensho", "shonen_conquerors_haki", "shonen_zoltraak", "shonen_rasenshuriken" -> true;
             default -> false;
         };
+        if (inSwitch) return true;
+        ClassSkillTree.SkillNode treeNode = ClassSkillTree.getNode(base);
+        return treeNode != null && treeNode.isActive();
     }
 
     public static boolean isPassive(String skillId) {

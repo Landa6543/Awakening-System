@@ -56,12 +56,11 @@ public class AstralGuandaoItem extends SwordItem implements AwakeningWeaponItem 
                 sp.displayClientMessage(Component.translatable("awakening_system.item.guandao.cooldown", rem), true);
                 return InteractionResultHolder.fail(stack);
             }
-            sp.getPersistentData().putLong("astral_guandao_cd", gameTime + 80L); // 4s cooldown
+            sp.getPersistentData().putLong("astral_guandao_cd", gameTime + 80L);
             sp.getCooldowns().addCooldown(this, 80);
 
             Vec3 look = sp.getLookAngle();
 
-            // 1. Sello vertical del Dragón Astral en el aire
             net.neoforged.neoforge.network.PacketDistributor.sendToPlayersNear(
                     (ServerLevel) level, null, sp.getX(), sp.getY(), sp.getZ(), 64.0D,
                     new com.soybe.awakeningsystem.SpawnMagicCirclePayload(
@@ -71,7 +70,6 @@ public class AstralGuandaoItem extends SwordItem implements AwakeningWeaponItem 
                     )
             );
 
-            // 2. Creciente Astral de Dragón Celestial (SlashWaveEntity Cósmica)
             float dmg = (float) (28.0D * WeaponLevelManager.getDamageMultiplier(stack));
             SlashWaveEntity crescent = new SlashWaveEntity(level, sp, SlashWaveEntity.TYPE_COSMIC_AMETHYST, dmg, 4.8F, 1.8F, 0.0F, 26, 10);
             crescent.setDeltaMovement(look.scale(2.2D));
@@ -87,7 +85,7 @@ public class AstralGuandaoItem extends SwordItem implements AwakeningWeaponItem 
             sp.swing(hand, true);
             WeaponLevelManager.addExp(stack, 30, sp);
 
-            sp.displayClientMessage(Component.literal("§d§l✦ [CRECIENTE DRACÓNICO] §5¡Corte cósmico del Dragón Celestial desatado!"), true);
+            sp.displayClientMessage(Component.translatable("item.awakening_system.astral_guandao.unleashed"), true);
             return InteractionResultHolder.sidedSuccess(stack, level.isClientSide());
         }
 

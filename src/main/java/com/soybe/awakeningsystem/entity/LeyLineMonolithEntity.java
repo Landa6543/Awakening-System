@@ -32,7 +32,7 @@ public class LeyLineMonolithEntity extends LivingEntity {
 
     public LeyLineMonolithEntity(EntityType<? extends LivingEntity> entityType, Level level) {
         super(entityType, level);
-        this.setCustomName(Component.literal("§b§l✦ Monolito de las Líneas Ley [100%] ✦"));
+        this.setCustomName(Component.translatable("entity.awakening_system.ley_line_monolith.full"));
         this.setCustomNameVisible(true);
         this.addTag("ley_line_monolith");
         this.addTag("abyss_defense_target");
@@ -55,7 +55,6 @@ public class LeyLineMonolithEntity extends LivingEntity {
 
     @Override
     protected void doPush(net.minecraft.world.entity.Entity entity) {
-        // Obelisco masivo anclado por magia antigua
     }
 
     @Override
@@ -70,7 +69,6 @@ public class LeyLineMonolithEntity extends LivingEntity {
 
     @Override
     public boolean hurt(DamageSource source, float amount) {
-        // INMUNIDAD TOTAL a daño causado directa o indirectamente por el jugador
         if (source.getEntity() instanceof net.minecraft.world.entity.player.Player ||
             source.getDirectEntity() instanceof net.minecraft.world.entity.player.Player) {
             return false;
@@ -89,25 +87,21 @@ public class LeyLineMonolithEntity extends LivingEntity {
             return false;
         }
 
-        // Enfriamiento interno de daño (I-Frames): máximo 1 impacto registrado cada 12 ticks (~1.6 impactos/seg)
         if (this.invulnTicks > 0) {
             return false;
         }
         this.invulnTicks = 12;
 
-        // Limitar daño por golpe individual (máximo 15.0F = 0.5% de vida) para evitar que lo destrocen en segundos
         float cappedAmount = Math.min(amount, 15.0F);
 
         boolean damaged = super.hurt(source, cappedAmount);
         if (damaged) {
-            // Sonido canónico de cristal resonante e impacto de piedra
             this.level().playSound(null, this.getX(), this.getY() + 1.5, this.getZ(),
                     SoundEvents.AMETHYST_BLOCK_HIT, SoundSource.HOSTILE, 1.2F, 0.8F);
             this.level().playSound(null, this.getX(), this.getY() + 1.5, this.getZ(),
                     SoundEvents.DECORATED_POT_HIT, SoundSource.HOSTILE, 1.0F, 0.6F);
 
             if (this.level() instanceof ServerLevel sl) {
-                // Chispas celestes al recibir impacto
                 sl.sendParticles(ParticleTypes.ELECTRIC_SPARK,
                         this.getX(), this.getY() + 1.8, this.getZ(),
                         12, 0.6, 0.8, 0.6, 0.1);
@@ -116,10 +110,9 @@ public class LeyLineMonolithEntity extends LivingEntity {
                         6, 0.4, 0.5, 0.4, 0.02);
             }
 
-            // Actualizar porcentaje de vida en la etiqueta holográfica
             float pct = Math.max(0.0F, this.getHealth() / this.getMaxHealth());
             String color = pct >= 0.6F ? "§a" : (pct >= 0.3F ? "§e" : "§c");
-            this.setCustomName(Component.literal("§b§l✦ Monolito: " + color + (int)(pct * 100) + "% §b✦"));
+            this.setCustomName(Component.translatable("entity.awakening_system.ley_line_monolith.status", color + (int)(pct * 100) + "%"));
         }
         return damaged;
     }
@@ -128,7 +121,6 @@ public class LeyLineMonolithEntity extends LivingEntity {
     public void die(DamageSource source) {
         super.die(source);
         if (this.level() instanceof ServerLevel sl) {
-            // Destrucción catastrófica del monolito
             sl.sendParticles(ParticleTypes.EXPLOSION_EMITTER, this.getX(), this.getY() + 1.5, this.getZ(), 1, 0, 0, 0, 0);
             sl.sendParticles(ParticleTypes.SOUL_FIRE_FLAME, this.getX(), this.getY() + 1.5, this.getZ(), 80, 1.5, 1.5, 1.5, 0.2);
             sl.sendParticles(ParticleTypes.FLASH, this.getX(), this.getY() + 1.5, this.getZ(), 3, 0, 0, 0, 0);
@@ -149,7 +141,6 @@ public class LeyLineMonolithEntity extends LivingEntity {
         }
 
         if (this.level().isClientSide) {
-            // Partículas cian y runas que flotan alrededor del monolito
             double angle = (this.tickCount * 0.06D);
             double radius = 1.3D;
             double px = this.getX() + Math.cos(angle) * radius;
@@ -165,7 +156,6 @@ public class LeyLineMonolithEntity extends LivingEntity {
                         0.0D, 0.03D, 0.0D);
             }
         } else {
-            // Pulso de provocación / aggro hacia los monstruos del Abismo
             this.aggroPulseCooldown--;
             if (this.aggroPulseCooldown <= 0) {
                 this.aggroPulseCooldown = 20;
@@ -182,12 +172,10 @@ public class LeyLineMonolithEntity extends LivingEntity {
                 m -> m.isAlive() && !m.getTags().contains("abyss_defense_target") && !m.getTags().contains("abyss_friendly"));
 
         for (Mob mob : hostiles) {
-            // Si el monstruo ya está peleando contra un jugador o aliado, ¡NUNCA robarle el aggro!
             if (mob.getTarget() instanceof net.minecraft.world.entity.player.Player ||
                 (mob.getTarget() != null && mob.getTarget().getTags().contains("abyss_friendly"))) {
                 continue;
             }
-            // Solo los monstruos sin objetivo se dirigen hacia el monolito
             if (mob.getTarget() == null) {
                 mob.setTarget(this);
             }

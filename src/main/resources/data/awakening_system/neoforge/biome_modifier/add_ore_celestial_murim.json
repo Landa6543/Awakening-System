@@ -1,0 +1,6 @@
+{
+  "type": "neoforge:add_features",
+  "biomes": "awakening_system:murim_celestial_peaks",
+  "features": "awakening_system:ore_celestial",
+  "step": "underground_ores"
+}

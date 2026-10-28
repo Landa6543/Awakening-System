@@ -3,8 +3,8 @@
   "temperature": 0.5,
   "downfall": 0.3,
   "effects": {
-    "sky_color": 10536447,
-    "fog_color": 14476031,
+    "sky_color": 8436479,
+    "fog_color": 12046591,
     "water_color": 4159204,
     "water_fog_color": 329011,
     "grass_color": 7247738,
@@ -14,29 +14,48 @@
       "options": {
         "type": "minecraft:cherry_leaves"
       },
-      "probability": 0.02
+      "probability": 0.025
     }
   },
   "spawners": {
-    "monster": [],
-    "creature": [
+    "monster": [
       {
-        "type": "minecraft:allay",
-        "weight": 10,
-        "minCount": 1,
-        "maxCount": 3
-      },
-      {
-        "type": "minecraft:fox",
-        "weight": 6,
+        "type": "awakening_system:demonic_cultivator",
+        "weight": 35,
         "minCount": 1,
         "maxCount": 2
+      },
+      {
+        "type": "awakening_system:goblin_shaman",
+        "weight": 35,
+        "minCount": 1,
+        "maxCount": 2
+      },
+      {
+        "type": "awakening_system:beastman_warrior",
+        "weight": 25,
+        "minCount": 1,
+        "maxCount": 2
+      },
+      {
+        "type": "awakening_system:jade_armored_beast",
+        "weight": 20,
+        "minCount": 1,
+        "maxCount": 1
+      }
+    ],
+    "creature": [
+      {
+        "type": "awakening_system:cloud_crane",
+        "weight": 15,
+        "minCount": 1,
+        "maxCount": 3
       },
       {
         "type": "awakening_system:spirit_fox",
         "weight": 12,
         "minCount": 1,
-        "maxCount": 3
+        "maxCount": 2
       }
     ]
   },

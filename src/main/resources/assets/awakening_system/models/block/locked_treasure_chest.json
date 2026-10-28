@@ -1,0 +1,449 @@
+{
+  "credit": "Awakening System 3D Chest Model matching placed chest entity",
+  "textures": {
+    "particle": "awakening_system:block/locked_treasure_chest_entity",
+    "texture": "awakening_system:block/locked_treasure_chest_entity"
+  },
+  "display": {
+    "gui": {
+      "rotation": [
+        30,
+        225,
+        0
+      ],
+      "translation": [
+        0,
+        0,
+        0
+      ],
+      "scale": [
+        0.625,
+        0.625,
+        0.625
+      ]
+    },
+    "ground": {
+      "rotation": [
+        0,
+        0,
+        0
+      ],
+      "translation": [
+        0,
+        3,
+        0
+      ],
+      "scale": [
+        0.25,
+        0.25,
+        0.25
+      ]
+    },
+    "fixed": {
+      "rotation": [
+        0,
+        0,
+        0
+      ],
+      "translation": [
+        0,
+        0,
+        0
+      ],
+      "scale": [
+        0.5,
+        0.5,
+        0.5
+      ]
+    },
+    "thirdperson_righthand": {
+      "rotation": [
+        75,
+        45,
+        0
+      ],
+      "translation": [
+        0,
+        2.5,
+        0
+      ],
+      "scale": [
+        0.375,
+        0.375,
+        0.375
+      ]
+    },
+    "firstperson_righthand": {
+      "rotation": [
+        0,
+        45,
+        0
+      ],
+      "translation": [
+        0,
+        0,
+        0
+      ],
+      "scale": [
+        0.4,
+        0.4,
+        0.4
+      ]
+    },
+    "firstperson_lefthand": {
+      "rotation": [
+        0,
+        225,
+        0
+      ],
+      "translation": [
+        0,
+        0,
+        0
+      ],
+      "scale": [
+        0.4,
+        0.4,
+        0.4
+      ]
+    }
+  },
+  "elements": [
+    {
+      "name": "bottom",
+      "from": [
+        1,
+        0,
+        1
+      ],
+      "to": [
+        15,
+        9,
+        15
+      ],
+      "faces": {
+        "north": {
+          "uv": [
+            3.5,
+            8.25,
+            7,
+            10.5
+          ],
+          "texture": "#texture"
+        },
+        "east": {
+          "uv": [
+            7,
+            8.25,
+            10.5,
+            10.5
+          ],
+          "texture": "#texture"
+        },
+        "south": {
+          "uv": [
+            10.5,
+            8.25,
+            14,
+            10.5
+          ],
+          "texture": "#texture"
+        },
+        "west": {
+          "uv": [
+            0,
+            8.25,
+            3.5,
+            10.5
+          ],
+          "texture": "#texture"
+        },
+        "up": {
+          "uv": [
+            3.5,
+            4.75,
+            7,
+            8.25
+          ],
+          "texture": "#texture"
+        },
+        "down": {
+          "uv": [
+            7,
+            4.75,
+            10.5,
+            8.25
+          ],
+          "texture": "#texture"
+        }
+      }
+    },
+    {
+      "name": "lid",
+      "from": [
+        1,
+        9,
+        1
+      ],
+      "to": [
+        15,
+        14,
+        15
+      ],
+      "faces": {
+        "north": {
+          "uv": [
+            3.5,
+            3.5,
+            7,
+            4.75
+          ],
+          "texture": "#texture"
+        },
+        "east": {
+          "uv": [
+            7,
+            3.5,
+            10.5,
+            4.75
+          ],
+          "texture": "#texture"
+        },
+        "south": {
+          "uv": [
+            10.5,
+            3.5,
+            14,
+            4.75
+          ],
+          "texture": "#texture"
+        },
+        "west": {
+          "uv": [
+            0,
+            3.5,
+            3.5,
+            4.75
+          ],
+          "texture": "#texture"
+        },
+        "up": {
+          "uv": [
+            3.5,
+            0,
+            7,
+            3.5
+          ],
+          "texture": "#texture"
+        },
+        "down": {
+          "uv": [
+            7,
+            0,
+            10.5,
+            3.5
+          ],
+          "texture": "#texture"
+        }
+      }
+    },
+    {
+      "name": "latch",
+      "from": [
+        7,
+        7,
+        0.5
+      ],
+      "to": [
+        9,
+        11,
+        1.5
+      ],
+      "faces": {
+        "north": {
+          "uv": [
+            0.25,
+            0.25,
+            0.75,
+            1.25
+          ],
+          "texture": "#texture"
+        },
+        "east": {
+          "uv": [
+            0.75,
+            0.25,
+            1,
+            1.25
+          ],
+          "texture": "#texture"
+        },
+        "south": {
+          "uv": [
+            1,
+            0.25,
+            1.5,
+            1.25
+          ],
+          "texture": "#texture"
+        },
+        "west": {
+          "uv": [
+            0,
+            0.25,
+            0.25,
+            1.25
+          ],
+          "texture": "#texture"
+        },
+        "up": {
+          "uv": [
+            0.25,
+            0,
+            0.75,
+            0.25
+          ],
+          "texture": "#texture"
+        },
+        "down": {
+          "uv": [
+            0.75,
+            0,
+            1.25,
+            0.25
+          ],
+          "texture": "#texture"
+        }
+      }
+    },
+    {
+      "name": "padlock",
+      "from": [
+        6,
+        4,
+        0.2
+      ],
+      "to": [
+        10,
+        8.5,
+        0.8
+      ],
+      "faces": {
+        "north": {
+          "uv": [
+            10.25,
+            11.25,
+            11.25,
+            12.25
+          ],
+          "texture": "#texture"
+        },
+        "east": {
+          "uv": [
+            11.25,
+            11.25,
+            11.5,
+            12.25
+          ],
+          "texture": "#texture"
+        },
+        "south": {
+          "uv": [
+            11.25,
+            11.25,
+            12.25,
+            12.25
+          ],
+          "texture": "#texture"
+        },
+        "west": {
+          "uv": [
+            10,
+            11.25,
+            10.25,
+            12.25
+          ],
+          "texture": "#texture"
+        },
+        "up": {
+          "uv": [
+            10.25,
+            11,
+            11.25,
+            11.25
+          ],
+          "texture": "#texture"
+        },
+        "down": {
+          "uv": [
+            11.25,
+            11,
+            12.25,
+            11.25
+          ],
+          "texture": "#texture"
+        }
+      }
+    },
+    {
+      "name": "padlock_shackle",
+      "from": [
+        6.5,
+        8.5,
+        0.2
+      ],
+      "to": [
+        9.5,
+        10.5,
+        0.8
+      ],
+      "faces": {
+        "north": {
+          "uv": [
+            10.25,
+            13.5,
+            11,
+            14
+          ],
+          "texture": "#texture"
+        },
+        "east": {
+          "uv": [
+            11,
+            13.5,
+            11.25,
+            14
+          ],
+          "texture": "#texture"
+        },
+        "south": {
+          "uv": [
+            11,
+            13.5,
+            11.75,
+            14
+          ],
+          "texture": "#texture"
+        },
+        "west": {
+          "uv": [
+            10,
+            13.5,
+            10.25,
+            14
+          ],
+          "texture": "#texture"
+        },
+        "up": {
+          "uv": [
+            10.25,
+            13.5,
+            11,
+            13.75
+          ],
+          "texture": "#texture"
+        }
+      }
+    }
+  ]
+}

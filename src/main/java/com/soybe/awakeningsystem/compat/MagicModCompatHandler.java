@@ -42,35 +42,27 @@ public final class MagicModCompatHandler {
         String hClass = data.hunterClass();
         String vision = data.activeVision() != null ? data.activeVision().toUpperCase(java.util.Locale.ROOT) : "NONE";
 
-        // ==========================================
-        // 1. SINERGIA CON IRON'S SPELLS 'N SPELLBOOKS
-        // ==========================================
         if (isIronsSpellsLoaded()) {
-            // A. Maná Máximo (+2 maná por punto de INT arriba de 10)
             double extraMaxMana = Math.max(0.0, (intStat - 10) * 2.0);
             if ("grand_archmage".equals(hClass)) extraMaxMana += 60.0;
             if ("spiritual_healer".equals(hClass)) extraMaxMana += 40.0;
             applyModifier(player, IRONS_SPELLS, "max_mana", "irons_compat_max_mana", extraMaxMana, AttributeModifier.Operation.ADD_VALUE);
 
-            // B. Poder de Hechizos Global (+0.5% por punto de INT)
             double globalSpellPower = Math.max(0.0, (intStat - 10) * 0.005);
             if ("grand_archmage".equals(hClass)) globalSpellPower += 0.25;
             if ("star_apostle".equals(hClass)) globalSpellPower += 0.15;
             applyModifier(player, IRONS_SPELLS, "spell_power", "irons_compat_spell_power", globalSpellPower, AttributeModifier.Operation.ADD_MULTIPLIED_BASE);
 
-            // C. Regeneración de Maná (+0.8% por punto de INT)
             double manaRegen = Math.max(0.0, (intStat - 10) * 0.008);
             if ("grand_archmage".equals(hClass)) manaRegen += 0.20;
             if ("HYDRO".equals(vision)) manaRegen += 0.15;
             applyModifier(player, IRONS_SPELLS, "mana_regen", "irons_compat_mana_regen", manaRegen, AttributeModifier.Operation.ADD_MULTIPLIED_BASE);
 
-            // D. Reducción de Enfriamientos (Cooldown Reduction, cap 30%)
             double cdr = Math.min(0.30, Math.max(0.0, (intStat - 10) * 0.003));
             if ("grand_archmage".equals(hClass)) cdr += 0.10;
             if ("ANEMO".equals(vision)) cdr += 0.10;
             applyModifier(player, IRONS_SPELLS, "cooldown_reduction", "irons_compat_cdr", cdr, AttributeModifier.Operation.ADD_MULTIPLIED_BASE);
 
-            // E. Afinidades Elementales y Escuelas de Magia
             double firePower = ("dragon_monarch".equals(hClass) ? 0.30 : 0.0) + ("PYRO".equals(vision) ? 0.20 : 0.0);
             applyModifier(player, IRONS_SPELLS, "fire_spell_power", "irons_compat_fire", firePower, AttributeModifier.Operation.ADD_MULTIPLIED_BASE);
 
@@ -94,9 +86,6 @@ public final class MagicModCompatHandler {
             applyModifier(player, IRONS_SPELLS, "evocation_spell_power", "irons_compat_evocation", naturePower, AttributeModifier.Operation.ADD_MULTIPLIED_BASE);
         }
 
-        // ==========================================
-        // 2. SINERGIA CON ARS NOUVEAU
-        // ==========================================
         if (isArsNouveauLoaded()) {
             double arsMana = Math.max(0.0, (intStat - 10) * 1.5);
             if ("grand_archmage".equals(hClass)) arsMana += 50.0;
@@ -143,10 +132,10 @@ public final class MagicModCompatHandler {
                 if (data != null) {
                     float bonus = 1.0F;
                     if ("grand_archmage".equals(data.hunterClass())) {
-                        bonus += 0.20F; // +20% a todos los hechizos
+                        bonus += 0.20F;
                     }
                     if (data.intelligence() > 20) {
-                        bonus += (data.intelligence() - 20) * 0.003F; // +0.3% por punto de INT alto
+                        bonus += (data.intelligence() - 20) * 0.003F;
                     }
                     if (bonus > 1.0F) {
                         event.setNewDamage(event.getNewDamage() * bonus);

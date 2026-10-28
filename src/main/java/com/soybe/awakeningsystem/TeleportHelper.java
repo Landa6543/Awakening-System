@@ -5,6 +5,8 @@ import net.minecraft.world.entity.Entity;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.level.block.Blocks;
 import net.minecraft.world.level.block.state.BlockState;
+import net.minecraft.world.phys.BlockHitResult;
+import net.minecraft.world.phys.HitResult;
 import net.minecraft.world.phys.Vec3;
 
 public final class TeleportHelper {
@@ -12,7 +14,7 @@ public final class TeleportHelper {
     private TeleportHelper() {}
 
     /**
-     * Finds a safe position for the entity to teleport to, avoiding solid walls, ceilings, and lava.
+     * Finds a safe position for the entity to teleport to, avoiding solid walls, ceilings, lava, and barriers.
      * If candidate is unsafe, searches neighboring offsets. If none are safe, falls back to fallbackPos.
      */
     public static Vec3 findSafeTeleportPos(Level level, Entity entity, double targetX, double targetY, double targetZ, Vec3 fallbackPos) {
@@ -54,15 +56,28 @@ public final class TeleportHelper {
         BlockState feet = level.getBlockState(pos);
         BlockState head = level.getBlockState(pos.above());
 
-        // Floor must be solid and not hazardous
         if (!below.isSolid() || below.is(Blocks.BARRIER) || below.is(Blocks.LAVA)) return false;
 
-        // Feet and head must not have solid collision shapes
-        if (!feet.getCollisionShape(level, pos).isEmpty()) return false;
-        if (!head.getCollisionShape(level, pos.above()).isEmpty()) return false;
+        if (!feet.getCollisionShape(level, pos).isEmpty() || feet.is(Blocks.BARRIER)) return false;
+        if (!head.getCollisionShape(level, pos.above()).isEmpty() || head.is(Blocks.BARRIER)) return false;
 
-        // Verify entity bounding box collision
         if (entity != null) {
+            // Prevent teleporting across magical barrier walls (line-of-sight barrier check)
+            Vec3 start = entity.position().add(0, entity.getEyeHeight() * 0.5D, 0);
+            Vec3 end = new Vec3(pos.getX() + 0.5D, pos.getY() + 0.5D, pos.getZ() + 0.5D);
+            BlockHitResult hit = level.clip(new net.minecraft.world.level.ClipContext(
+                    start, end,
+                    net.minecraft.world.level.ClipContext.Block.COLLIDER,
+                    net.minecraft.world.level.ClipContext.Fluid.NONE,
+                    entity
+            ));
+            if (hit.getType() != HitResult.Type.MISS) {
+                BlockState hitState = level.getBlockState(hit.getBlockPos());
+                if (hitState.is(Blocks.BARRIER)) {
+                    return false;
+                }
+            }
+
             double dx = (pos.getX() + 0.5D) - entity.getX();
             double dy = pos.getY() - entity.getY();
             double dz = (pos.getZ() + 0.5D) - entity.getZ();

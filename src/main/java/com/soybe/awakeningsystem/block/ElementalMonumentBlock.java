@@ -53,18 +53,17 @@ public class ElementalMonumentBlock extends Block implements SimpleWaterloggedBl
     public static final DirectionProperty FACING = HorizontalDirectionalBlock.FACING;
     public static final BooleanProperty WATERLOGGED = BlockStateProperties.WATERLOGGED;
 
-    // 15x30x15: dimensiones auténticas de monumentos de Genshin
     protected static final VoxelShape SHAPE = Block.box(1.0D, 0.0D, 1.0D, 15.0D, 30.0D, 15.0D);
 
     public enum MonumentElement {
-        ANEMO("anemo", "Anemo", ChatFormatting.AQUA, "Viento"),
-        GEO("geo", "Geo", ChatFormatting.GOLD, "Tierra / Roca"),
-        ELECTRO("electro", "Electro", ChatFormatting.DARK_PURPLE, "Rayo / Trueno"),
-        DENDRO("dendro", "Dendro", ChatFormatting.GREEN, "Naturaleza / Flora"),
-        HYDRO("hydro", "Hydro", ChatFormatting.BLUE, "Agua / Hidro"),
-        PYRO("pyro", "Pyro", ChatFormatting.RED, "Fuego / Piro"),
-        CRYO("cryo", "Cryo", ChatFormatting.LIGHT_PURPLE, "Hielo / Escarcha"),
-        BLANK("blank", "Inactivo", ChatFormatting.GRAY, "Vacío");
+        ANEMO("anemo", "Anemo", ChatFormatting.AQUA, "Wind"),
+        GEO("geo", "Geo", ChatFormatting.GOLD, "Earth / Rock"),
+        ELECTRO("electro", "Electro", ChatFormatting.DARK_PURPLE, "Lightning / Thunder"),
+        DENDRO("dendro", "Dendro", ChatFormatting.GREEN, "Nature / Flora"),
+        HYDRO("hydro", "Hydro", ChatFormatting.BLUE, "Water / Hydro"),
+        PYRO("pyro", "Pyro", ChatFormatting.RED, "Fire / Pyro"),
+        CRYO("cryo", "Cryo", ChatFormatting.LIGHT_PURPLE, "Ice / Frost"),
+        BLANK("blank", "Inactive", ChatFormatting.GRAY, "Empty");
 
         private final String id;
         private final String displayName;
@@ -101,7 +100,7 @@ public class ElementalMonumentBlock extends Block implements SimpleWaterloggedBl
     private final MonumentElement element;
 
     public ElementalMonumentBlock(MonumentElement element, BlockBehaviour.Properties properties) {
-        super(properties);
+        super(properties.noOcclusion());
         this.element = element;
         this.registerDefaultState(this.stateDefinition.any()
                 .setValue(FACING, Direction.NORTH)
@@ -166,7 +165,6 @@ public class ElementalMonumentBlock extends Block implements SimpleWaterloggedBl
     public boolean matchesElement(Player player, ItemStack stack) {
         if (this.element == MonumentElement.BLANK) return false;
 
-        // 1. Visión activa seleccionada por el jugador en su interfaz
         SystemData data = SystemEvents.data(player);
         if (data != null && data.hasActiveVision()) {
             String active = data.activeVision();
@@ -175,7 +173,6 @@ public class ElementalMonumentBlock extends Block implements SimpleWaterloggedBl
             }
         }
 
-        // 2. Ítems, catalizadores y esencias sostenidos en mano
         if (stack != null && !stack.isEmpty()) {
             String name = stack.getItem().toString().toLowerCase(Locale.ROOT);
             String desc = stack.getHoverName().getString().toLowerCase(Locale.ROOT);
@@ -248,7 +245,7 @@ public class ElementalMonumentBlock extends Block implements SimpleWaterloggedBl
     protected ItemInteractionResult useItemOn(ItemStack stack, BlockState state, Level level, BlockPos pos, Player player, InteractionHand hand, BlockHitResult hitResult) {
         if (this.element == MonumentElement.BLANK) {
             if (!level.isClientSide()) {
-                player.displayClientMessage(Component.literal("§7✦ La energía elemental de este monumento ya descansa en paz. ✦"), true);
+                player.displayClientMessage(Component.translatable("block.awakening_system.elemental_monument.at_peace"), true);
             }
             return ItemInteractionResult.SUCCESS;
         }
@@ -266,7 +263,7 @@ public class ElementalMonumentBlock extends Block implements SimpleWaterloggedBl
     protected InteractionResult useWithoutItem(BlockState state, Level level, BlockPos pos, Player player, BlockHitResult hitResult) {
         if (this.element == MonumentElement.BLANK) {
             if (!level.isClientSide()) {
-                player.displayClientMessage(Component.literal("§7✦ La energía elemental de este monumento ya descansa en paz. ✦"), true);
+                player.displayClientMessage(Component.translatable("block.awakening_system.elemental_monument.at_peace"), true);
             }
             return InteractionResult.SUCCESS;
         }
@@ -317,7 +314,7 @@ public class ElementalMonumentBlock extends Block implements SimpleWaterloggedBl
     private void sendMismatchHint(Level level, Player player) {
         if (!level.isClientSide()) {
             level.playSound(null, player.blockPosition(), SoundEvents.SHIELD_BLOCK, SoundSource.BLOCKS, 0.8F, 1.2F);
-            player.displayClientMessage(Component.literal("§c✦ Requiere poder elemental de " + this.element.getColor() + "§l" + this.element.getDisplayName() + "§r§c (" + this.element.getDescription() + ") ✦"), true);
+            player.displayClientMessage(Component.translatable("block.awakening_system.elemental_monument.requires_element", this.element.getColor().toString(), this.element.getDisplayName(), this.element.getDescription()), true);
         }
     }
 
@@ -325,7 +322,6 @@ public class ElementalMonumentBlock extends Block implements SimpleWaterloggedBl
         if (level.isClientSide()) return;
         ServerLevel sl = (ServerLevel) level;
 
-        // 1. Transformar a BlankMonumentBlock conservando orientación y agua
         Direction facing = state.getValue(FACING);
         boolean waterlogged = state.getValue(WATERLOGGED);
         BlockState blankState = SystemBlocks.BLANK_MONUMENT.get().defaultBlockState()
@@ -333,12 +329,10 @@ public class ElementalMonumentBlock extends Block implements SimpleWaterloggedBl
                 .setValue(WATERLOGGED, waterlogged);
         sl.setBlock(pos, blankState, 3);
 
-        // 2. Efectos de sonido mágicos auténticos
         sl.playSound(null, pos, SoundEvents.AMETHYST_BLOCK_CHIME, SoundSource.BLOCKS, 2.0F, 0.9F);
         sl.playSound(null, pos, SoundEvents.PLAYER_LEVELUP, SoundSource.PLAYERS, 1.2F, 1.4F);
         sl.playSound(null, pos, SoundEvents.ENCHANTMENT_TABLE_USE, SoundSource.BLOCKS, 1.4F, 1.1F);
 
-        // 3. Estallido de partículas elementales
         double px = pos.getX() + 0.5D;
         double py = pos.getY() + 1.8D;
         double pz = pos.getZ() + 0.5D;
@@ -375,28 +369,25 @@ public class ElementalMonumentBlock extends Block implements SimpleWaterloggedBl
             default -> {}
         }
 
-        // 4. Recompensas directas y sincronización al jugador
         if (player instanceof ServerPlayer sp) {
             SystemData data = SystemEvents.data(sp);
             if (data != null) {
-                int primogems = 20 + sl.random.nextInt(16); // 20 a 35 Protogemas
-                int mora = 12000 + sl.random.nextInt(15001); // 12,000 a 27,000 Mora
+                int primogems = 20 + sl.random.nextInt(16);
+                int mora = 12000 + sl.random.nextInt(15001);
                 data.addPrimogems(primogems);
                 data.addMora(mora);
                 data.addExperience(600);
                 AwakeningSystemMod.sync(sp);
 
-                sp.displayClientMessage(Component.literal("§6✦ ¡MONUMENTO " + this.element.getDisplayName().toUpperCase(Locale.ROOT) + " DESPERTADO! ✦"), true);
-                sp.sendSystemMessage(Component.literal("§e✦ ¡Has canalizado el poder de " + this.element.getColor() + this.element.getDisplayName() + "§e y resuelto el misterio! Recibes §b+" + primogems + " Protogemas §ey §6+" + String.format("%,d", mora) + " Mora§e. ✦"));
+                sp.displayClientMessage(Component.translatable("block.awakening_system.elemental_monument.awakened", this.element.getDisplayName().toUpperCase(Locale.ROOT)), true);
+                sp.sendSystemMessage(Component.translatable("block.awakening_system.elemental_monument.reward", this.element.getColor() + this.element.getDisplayName(), primogems, String.format("%,d", mora)));
             }
         }
 
-        // 5. Spawnear Cofre del Tesoro desbloqueado frente al monumento
         spawnRewardChest(sl, pos, facing);
     }
 
     private void spawnRewardChest(ServerLevel sl, BlockPos monumentPos, Direction facing) {
-        // Buscar un bloque adyacente despejado para el cofre (preferentemente al frente)
         BlockPos targetPos = monumentPos.relative(facing, 2);
         if (!sl.getBlockState(targetPos).isAir() && !sl.getBlockState(targetPos).canBeReplaced()) {
             targetPos = monumentPos.relative(facing, 1);
@@ -405,7 +396,6 @@ public class ElementalMonumentBlock extends Block implements SimpleWaterloggedBl
             }
         }
 
-        // Asegurar que el cofre no quede flotando en el vacío
         while (targetPos.getY() > sl.getMinBuildHeight() && sl.getBlockState(targetPos.below()).isAir()) {
             targetPos = targetPos.below();
         }
@@ -416,16 +406,12 @@ public class ElementalMonumentBlock extends Block implements SimpleWaterloggedBl
 
         sl.setBlock(targetPos, chestState, 3);
 
-        // Llenar botín exquisito en el cofre
         BlockEntity be = sl.getBlockEntity(targetPos);
         if (be instanceof LockedTreasureChestBlockEntity chestBe) {
             int slot = 0;
-            // Protogemas físicas
             chestBe.setItem(slot++, SystemItems.PRIMOGEM.get().getDefaultInstance().copyWithCount(10 + sl.random.nextInt(11)));
-            // Mora
             chestBe.setItem(slot++, SystemItems.MORA_POUCH.get().getDefaultInstance().copyWithCount(1 + sl.random.nextInt(2)));
 
-            // Fragmento / Trozo elemental según el elemento del monumento
             ItemStack gemPiece = switch (this.element) {
                 case PYRO -> SystemItems.AGNIDUS_AGATE_FRAGMENT.get().getDefaultInstance();
                 case HYDRO -> SystemItems.VARUNADA_LAZURITE_FRAGMENT.get().getDefaultInstance();
@@ -438,17 +424,14 @@ public class ElementalMonumentBlock extends Block implements SimpleWaterloggedBl
             };
             chestBe.setItem(slot++, gemPiece);
 
-            // 35% de probabilidad de Destino Entrelazado (Tirada Gacha)
             if (sl.random.nextFloat() < 0.35F) {
                 chestBe.setItem(slot++, SystemItems.INTERTWINED_FATE.get().getDefaultInstance());
             }
 
-            // 20% de probabilidad de Llave del Santuario de Teyvat
             if (sl.random.nextFloat() < 0.20F) {
                 chestBe.setItem(slot++, SystemItems.TEYVAT_SHRINE_KEY.get().getDefaultInstance());
             }
 
-            // Artefacto de Genshin aleatorio (Bruja Carmesí o Gladiador)
             ItemStack[] artifacts = new ItemStack[] {
                     SystemItems.ARTIFACT_CRIMSON_WITCH_FLOWER.get().getDefaultInstance(),
                     SystemItems.ARTIFACT_CRIMSON_WITCH_PLUME.get().getDefaultInstance(),
@@ -465,7 +448,6 @@ public class ElementalMonumentBlock extends Block implements SimpleWaterloggedBl
             chestBe.setItem(slot++, artifact);
         }
 
-        // Partículas doradas de aparición celestial de cofre
         sl.sendParticles(ParticleTypes.TOTEM_OF_UNDYING, targetPos.getX() + 0.5D, targetPos.getY() + 0.6D, targetPos.getZ() + 0.5D, 35, 0.4D, 0.4D, 0.4D, 0.1D);
         sl.sendParticles(ParticleTypes.WAX_OFF, targetPos.getX() + 0.5D, targetPos.getY() + 0.5D, targetPos.getZ() + 0.5D, 20, 0.3D, 0.3D, 0.3D, 0.08D);
         sl.playSound(null, targetPos, SoundEvents.CHEST_OPEN, SoundSource.BLOCKS, 1.0F, 1.2F);

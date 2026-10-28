@@ -34,9 +34,9 @@ public class VisionsMenuItem extends Item {
 
     @Override
     public void appendHoverText(ItemStack stack, TooltipContext context, List<Component> tooltip, TooltipFlag flag) {
-        tooltip.add(Component.literal("§6⭐⭐⭐⭐⭐ [Compendio Elemental de Teyvat]").withStyle(ChatFormatting.GOLD));
-        tooltip.add(Component.literal("§7Un tomo arcaico otorgado por las Siete Estatuas de Los Siete.").withStyle(ChatFormatting.GRAY));
-        tooltip.add(Component.literal("§e▸ Clic derecho: §fAbre el menú para resonar con cualquiera de los 7 elementos primordiales.").withStyle(ChatFormatting.YELLOW));
-        tooltip.add(Component.literal("§b▸ Como el Viajero, puedes cambiar tu elemento libremente.").withStyle(ChatFormatting.AQUA));
+        tooltip.add(Component.translatable("item.awakening_system.visions_menu.badge").withStyle(ChatFormatting.GOLD));
+        tooltip.add(Component.translatable("item.awakening_system.visions_menu.desc").withStyle(ChatFormatting.GRAY));
+        tooltip.add(Component.translatable("item.awakening_system.visions_menu.use").withStyle(ChatFormatting.YELLOW));
+        tooltip.add(Component.translatable("item.awakening_system.visions_menu.hint").withStyle(ChatFormatting.AQUA));
     }
 }

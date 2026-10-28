@@ -1,0 +1,12 @@
+{
+    "cookingtime":  200,
+    "experience":  0.2,
+    "ingredient":  {
+                       "item":  "awakening_system:abyssal_stone_lapis_ore"
+                   },
+    "type":  "minecraft:smelting",
+    "category":  "misc",
+    "result":  {
+                   "id":  "minecraft:lapis_lazuli"
+               }
+}

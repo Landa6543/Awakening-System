@@ -17,7 +17,6 @@ public final class ClassSkillTreeScreen extends Screen {
     private final Screen parentScreen;
     private String selectedSkillId = null;
 
-    // Cámara, Navegación y Zoom (MU Online Master Skill Tree)
     private double camX = 0.0;
     private double camY = 0.0;
     private float zoom = 1.0f;
@@ -29,6 +28,12 @@ public final class ClassSkillTreeScreen extends Screen {
     public ClassSkillTreeScreen(Screen parentScreen) {
         super(Component.translatable("awakening_system.screen.skill_tree.title"));
         this.parentScreen = parentScreen;
+    }
+
+    @Override
+    protected void init() {
+        super.init();
+        PacketDistributor.sendToServer(new com.soybe.awakeningsystem.network.RequestSyncPayload());
     }
 
     @Override
@@ -44,7 +49,6 @@ public final class ClassSkillTreeScreen extends Screen {
 
     @Override
     public void renderBackground(GuiGraphics graphics, int mouseX, int mouseY, float partialTick) {
-        // Evita el desenfoque vanilla
     }
 
     @Override
@@ -144,13 +148,11 @@ public final class ClassSkillTreeScreen extends Screen {
         boolean sys30 = data.system30Updated();
         boolean sys20 = (data.systemUpdated() || data.isSystemUpdating()) && !sys30;
 
-        // Marco exterior
         int borderCol = sys30 ? 0xC01B5E20 : (sys20 ? 0xC04A148C : 0xC000838F);
         int bgCol = sys30 ? 0xF0081814 : (sys20 ? 0xF0120822 : 0xF007131D);
         graphics.fill(left - 2, top - 2, left + panelW + 2, top + panelH + 2, borderCol);
         graphics.fill(left, top, left + panelW, top + panelH, bgCol);
 
-        // Esquinas holográficas
         int cornerColor = (sys30 || sys20) ? 0xFFFFD700 : 0xFF00E5FF;
         graphics.fill(left, top, left + 10, top + 2, cornerColor);
         graphics.fill(left, top, left + 2, top + 10, cornerColor);
@@ -161,7 +163,6 @@ public final class ClassSkillTreeScreen extends Screen {
         graphics.fill(left + panelW - 10, top + panelH - 2, left + panelW, top + panelH, cornerColor);
         graphics.fill(left + panelW - 2, top + panelH - 10, left + panelW, top + panelH, cornerColor);
 
-        // 1. Cabecera Estilo MU Master Skill Tree
         Component className = Component.translatable("awakening_system.class." + data.hunterClass() + ".name");
         Component headerTitle = Component.translatable("awakening_system.skill_tree.header", className).withStyle(ChatFormatting.BOLD);
         graphics.drawString(font, headerTitle, left + 14, top + 8, 0xFFFFD700);
@@ -171,7 +172,6 @@ public final class ClassSkillTreeScreen extends Screen {
         Component subHeader = Component.translatable("awakening_system.skill_tree.subheader", sp, treeCount);
         graphics.drawString(font, subHeader, left + 14, top + 20, 0xFFCCE3EC);
 
-        // Botón Cerrar
         int closeBtnW = 60;
         int closeBtnH = 18;
         int closeBtnX = left + panelW - closeBtnW - 10;
@@ -181,7 +181,6 @@ public final class ClassSkillTreeScreen extends Screen {
         drawBorder(graphics, closeBtnX, closeBtnY, closeBtnW, closeBtnH, closeHov ? 0xFFFF5555 : 0xFF2D7691);
         graphics.drawCenteredString(font, Component.translatable("awakening_system.screen.close_x"), closeBtnX + closeBtnW / 2, closeBtnY + 5, closeHov ? 0xFFFFFFFF : 0xFFCCE3EC);
 
-        // Definición de Áreas
         int canvasX = left + 8;
         int canvasY = top + 32;
         int canvasW = panelW - 232;
@@ -192,13 +191,10 @@ public final class ClassSkillTreeScreen extends Screen {
         int inspW = 212;
         int inspH = panelH - 74;
 
-        // 2. Lienzo MU Online con 3 Columnas, Zoom real y Niebla de Guerra
         renderTreeCanvas(graphics, data, canvasX, canvasY, canvasW, canvasH, mX, mY);
 
-        // 3. Consola de Inspección Lateral (Anti-Desborde)
         renderInspectionPanel(graphics, data, inspX, inspY, inspW, inspH, mX, mY);
 
-        // 4. Panel Inferior de Ranuras de Combate
         int slotBarX = left + 8;
         int slotBarY = top + panelH - 38;
         int slotBarW = panelW - 16;
@@ -210,11 +206,9 @@ public final class ClassSkillTreeScreen extends Screen {
     }
 
     private void renderTreeCanvas(GuiGraphics graphics, SystemData data, int x, int y, int w, int h, int mouseX, int mouseY) {
-        // Fondo del visor
         graphics.fill(x, y, x + w, y + h, 0xFF060B10);
         drawBorder(graphics, x, y, w, h, 0xFF153344);
 
-        // Tijera de recorte para el lienzo navegable
         enableScissorScaled(graphics, x + 1, y + 1, x + w - 1, y + h - 1);
 
         var pose = graphics.pose();
@@ -222,7 +216,6 @@ public final class ClassSkillTreeScreen extends Screen {
         pose.translate(x + camX, y + camY, 0);
         pose.scale(zoom, zoom, 1.0f);
 
-        // Fondo de cuadrícula y columnas MU Online
         int gridSpacing = 24;
         for (int gx = -100; gx < 620; gx += gridSpacing) {
             for (int gy = -50; gy < 420; gy += gridSpacing) {
@@ -230,29 +223,24 @@ public final class ClassSkillTreeScreen extends Screen {
             }
         }
 
-        // Líneas divisorias de columnas en el lienzo (Solidity | Fighting Spirit | Ultimatum)
         graphics.fill(170, 48, 171, 360, 0x503A4E5C);
         graphics.fill(340, 48, 341, 360, 0x503A4E5C);
 
-        // Puntos invertidos por rama (MU Online: Solidity, Fighting Spirit, Ultimatum)
         int ptsSolidity = ClassSkillTree.getPointsInBranch(data, data.hunterClass(), "branch_c");
         int ptsFighting = ClassSkillTree.getPointsInBranch(data, data.hunterClass(), "branch_a");
         int ptsUltimatum = ClassSkillTree.getPointsInBranch(data, data.hunterClass(), "branch_b");
 
-        // Banners de cabecera de rama en coordenadas del mundo
         renderBranchHeader(graphics, 85, 52, Component.translatable("awakening_system.skill_tree.branch.solidity").getString() + ": " + ptsSolidity, 0xFF2A5060, 0xFF50FA7B);
         renderBranchHeader(graphics, 255, 52, Component.translatable("awakening_system.skill_tree.branch.fighting_spirit").getString() + ": " + ptsFighting, 0xFF602A2A, 0xFFFF7666);
         renderBranchHeader(graphics, 425, 52, Component.translatable("awakening_system.skill_tree.branch.ultimatum").getString() + ": " + ptsUltimatum, 0xFF502A60, 0xFFE056FD);
 
-        // Transformación de ratón a coordenadas locales del mundo
         float worldMouseX = (float) ((mouseX - (x + camX)) / zoom);
         float worldMouseY = (float) ((mouseY - (y + camY)) / zoom);
 
         List<ClassSkillTree.SkillNode> nodes = ClassSkillTree.getNodesForClass(data.hunterClass());
 
-        // A. Dibujar líneas de conexión entre nodos revelados
         for (ClassSkillTree.SkillNode node : nodes) {
-            if (!ClassSkillTree.isRevealed(data, node)) continue; // Niebla de guerra
+            if (!ClassSkillTree.isRevealed(data, node)) continue;
 
             int nx = node.gridX();
             int ny = node.gridY();
@@ -268,20 +256,17 @@ public final class ClassSkillTreeScreen extends Screen {
                 boolean parentUnlocked = data.skills().containsKey(parent.skillId());
 
                 if (bothUnlocked) {
-                    // Oro brillante para camino activo
                     drawThickLine(graphics, px, py, nx, ny, 2, 0xFFFFD700);
                     drawDownwardArrow(graphics, nx, ny, 14, 0xFFFFD700);
                 } else if (parentUnlocked) {
-                    // Cian suave para camino disponible
                     drawThickLine(graphics, px, py, nx, ny, 1, 0x9000E5FF);
                     drawDownwardArrow(graphics, nx, ny, 14, 0x9000E5FF);
                 }
             }
         }
 
-        // B. Dibujar Nodos Cuadrados RPG (Estilo MU Online Master Skill Tree)
         for (ClassSkillTree.SkillNode node : nodes) {
-            if (!ClassSkillTree.isRevealed(data, node)) continue; // Oculto en la niebla ("no se deberían de ver")
+            if (!ClassSkillTree.isRevealed(data, node)) continue;
 
             int nx = node.gridX();
             int ny = node.gridY();
@@ -300,15 +285,12 @@ public final class ClassSkillTreeScreen extends Screen {
                 borderColor = (alpha << 24) | 0x00E5FF;
             }
 
-            // Ranura Cuadrada con bisel RPG
             drawSquareSlot(graphics, nx, ny, half, slotBg, borderColor, node.isRoot());
 
-            // Icono / Glifo
             String glyph = node.iconSymbol();
             int glyphColor = isUnlocked ? 0xFFFFD700 : (canUnlock ? 0xFF50FA7B : 0xFF88A0B0);
             graphics.drawCenteredString(font, Component.literal(glyph), nx, ny - 4, glyphColor);
 
-            // Contador de rango estilo MU Online al lado del cuadro (ej. 15, 10, 3, 0)
             int rankNum;
             if (node.isRoot()) {
                 rankNum = isUnlocked ? 1 : 0;
@@ -321,7 +303,6 @@ public final class ClassSkillTreeScreen extends Screen {
             int rankColor = isUnlocked ? 0xFFFFD700 : (canUnlock ? 0xFF00E5FF : 0xFF667788);
             graphics.drawString(font, Component.literal(String.valueOf(rankNum)), nx + half + 3, ny - 4, rankColor);
 
-            // Indicador de subida disponible
             if (!node.isAttribute() && !node.isRoot() && isUnlocked && ClassSkillTree.canUpgrade(data, node.skillId())) {
                 graphics.drawCenteredString(font, Component.literal("▲").withStyle(ChatFormatting.GREEN, ChatFormatting.BOLD), nx, ny - half - 8, 0xFF50FA7B);
             }
@@ -330,12 +311,9 @@ public final class ClassSkillTreeScreen extends Screen {
         pose.popPose();
         graphics.disableScissor();
 
-        // Controles de interfaz fijos sobre el lienzo
-        // Indicador de navegación y nivel de Zoom
         String zoomPercent = String.format(Locale.US, "%.0f%%", zoom * 100);
         graphics.drawString(font, Component.translatable("awakening_system.skill_tree.zoom_controls", zoomPercent), x + 8, y + h - 14, 0xFF446677);
 
-        // Botón de recentrado [ ⌖ ]
         int resetBtnX = x + w - 24;
         int resetBtnY = y + 6;
         boolean resetHov = mouseX >= resetBtnX && mouseX < resetBtnX + 18 && mouseY >= resetBtnY && mouseY < resetBtnY + 18;
@@ -352,18 +330,14 @@ public final class ClassSkillTreeScreen extends Screen {
     }
 
     private void drawSquareSlot(GuiGraphics g, int cx, int cy, int half, int bg, int border, boolean isRoot) {
-        // Fondo
         g.fill(cx - half, cy - half, cx + half + 1, cy + half + 1, bg);
-        // Marco exterior
         drawBorder(g, cx - half, cy - half, half * 2 + 1, half * 2 + 1, border);
         if (isRoot) {
-            // Doble marco para raíz
             drawBorder(g, cx - half + 2, cy - half + 2, half * 2 - 3, half * 2 - 3, 0x80FFA500);
         }
     }
 
     private void drawDownwardArrow(GuiGraphics g, int nx, int ny, int half, int color) {
-        // Flecha direccional hacia abajo sobre el nodo objetivo
         int tipY = ny - half - 1;
         g.fill(nx - 2, tipY - 2, nx + 3, tipY - 1, color);
         g.fill(nx - 1, tipY - 1, nx + 2, tipY, color);
@@ -371,7 +345,6 @@ public final class ClassSkillTreeScreen extends Screen {
     }
 
     private void renderInspectionPanel(GuiGraphics graphics, SystemData data, int x, int y, int w, int h, int mouseX, int mouseY) {
-        // Fondo y marco
         graphics.fill(x, y, x + w, y + h, 0xF5060D14);
         drawBorder(graphics, x, y, w, h, 0xFF1D3B4E);
         graphics.fill(x, y, x + w, y + 2, 0xFFFFD700);
@@ -394,7 +367,6 @@ public final class ClassSkillTreeScreen extends Screen {
 
         int curY = y + 8;
 
-        // 1. Título (Anti-Desborde con split estricto)
         List<FormattedCharSequence> titleLines = font.split(node.getName().copy().withStyle(ChatFormatting.BOLD), innerW);
         for (FormattedCharSequence line : titleLines) {
             graphics.drawString(font, line, x + 8, curY, rarityColor(node.getRarity()));
@@ -402,7 +374,6 @@ public final class ClassSkillTreeScreen extends Screen {
         }
         curY += 2;
 
-        // 2. Tipo y Rango
         Component typeStr = node.isRoot()
                 ? Component.translatable("awakening_system.skill_tree.node.master")
                 : (node.isAttribute()
@@ -426,11 +397,9 @@ public final class ClassSkillTreeScreen extends Screen {
             }
         }
 
-        // Separador
         graphics.fill(x + 8, curY, x + w - 8, curY + 1, 0xFF1D3B4E);
         curY += 5;
 
-        // 3. Descripción (Wrap limpio)
         List<FormattedCharSequence> descLines = font.split(node.getDescription(), innerW);
         for (int i = 0; i < Math.min(3, descLines.size()); i++) {
             graphics.drawString(font, descLines.get(i), x + 8, curY, 0xFFCCE3EC);
@@ -438,7 +407,6 @@ public final class ClassSkillTreeScreen extends Screen {
         }
         curY += 3;
 
-        // 4. Efecto
         Component eff = node.getEffect();
         if (!eff.getString().isEmpty()) {
             graphics.drawString(font, Component.translatable("awakening_system.skill_tree.effect_label"), x + 8, curY, 0xFF70E8FF);
@@ -451,7 +419,6 @@ public final class ClassSkillTreeScreen extends Screen {
             curY += 3;
         }
 
-        // 5. Cuadro de Mejora de Rango (si aplica)
         if (!node.isAttribute() && !node.isRoot()) {
             int curLvl = data.skills().getOrDefault(node.skillId(), 0);
             if (curLvl >= 1 && curLvl < ClassSkillTree.MAX_SKILL_LEVEL) {
@@ -474,7 +441,6 @@ public final class ClassSkillTreeScreen extends Screen {
             }
         }
 
-        // 6. Botón de Acción Interactivo
         int btnX = x + 8;
         int btnY = y + h - 28;
         int btnW = w - 16;
@@ -590,7 +556,6 @@ public final class ClassSkillTreeScreen extends Screen {
         int canvasW = panelW - 232;
         int canvasH = panelH - 74;
 
-        // Botón recentrar [ ⌖ ]
         int resetBtnX = canvasX + canvasW - 24;
         int resetBtnY = canvasY + 6;
         if (mouseX >= resetBtnX && mouseX < resetBtnX + 18 && mouseY >= resetBtnY && mouseY < resetBtnY + 18) {
@@ -601,7 +566,6 @@ public final class ClassSkillTreeScreen extends Screen {
             return true;
         }
 
-        // Clic en el botón de acción de la consola lateral
         int inspX = left + panelW - 220;
         int inspY = top + 32;
         int inspW = 212;
@@ -626,7 +590,6 @@ public final class ClassSkillTreeScreen extends Screen {
             }
         }
 
-        // Clic en nodos dentro del lienzo (Transformando con zoom y cámara)
         if (mouseX >= canvasX && mouseX < canvasX + canvasW && mouseY >= canvasY && mouseY < canvasY + canvasH) {
             float worldMouseX = (float) ((mouseX - (canvasX + camX)) / zoom);
             float worldMouseY = (float) ((mouseY - (canvasY + camY)) / zoom);
@@ -649,7 +612,6 @@ public final class ClassSkillTreeScreen extends Screen {
                 }
             }
 
-            // Si se hace clic en área vacía del lienzo, iniciar arrastre
             isDragging = true;
             lastMouseX = mouseX;
             lastMouseY = mouseY;
@@ -672,7 +634,6 @@ public final class ClassSkillTreeScreen extends Screen {
             camX += dragX / scale;
             camY += dragY / scale;
 
-            // Límites para evitar perder el árbol
             camX = Math.max(-500.0 * zoom, Math.min(300.0, camX));
             camY = Math.max(-400.0 * zoom, Math.min(250.0, camY));
             return true;

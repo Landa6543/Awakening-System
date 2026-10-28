@@ -14,7 +14,7 @@ import java.util.List;
 public final class ClassSelectionScreen extends Screen {
     private final Screen parentScreen;
     private int selectedIndex = 0;
-    private int currentCategory = 0; // 0 = Guerreros, 1 = Arcano & Monarcas, 2 = Murim & Espiritual, 3 = Todas
+    private int currentCategory = 0;
     private boolean showConfirmDialog = false;
 
     public record ClassOption(
@@ -60,19 +60,16 @@ public final class ClassSelectionScreen extends Screen {
     }
 
     private static final List<ClassOption> ALL_CLASSES = List.of(
-            // Categoría 0: Guerreros & Combate (Físico / CaC)
             new ClassOption("colossal_berserker", "Survival Story of a Sword King", "Sword King", 0xFFFF5555, "cb_valterian_instinct", 0),
             new ClassOption("sword_saint", "Return of the Blossoming Blade", "Blossoming Blade", 0xFF50FA7B, "asrahan_mana_blade", 0),
             new ClassOption("void_assassin", "Solo Max-Level Newbie", "Max-Level Newbie", 0xFF00E5FF, "nano_blade_overdrive", 0),
             new ClassOption("beast_monarch", "Solo Leveling / White Tiger", "Solo Leveling", 0xFFFFA500, "bm_seismic_roar", 0),
 
-            // Categoría 1: Arcano & Monarcas (Magia / Nigromancia / Destrucción)
             new ClassOption("shadow_monarch", "Solo Leveling", "Solo Leveling", 0xFF9966FF, "shadow_monarch", 1),
             new ClassOption("dragon_monarch", "Solo Leveling / Dragon Sovereign", "Dragon Sovereign", 0xFFFF6E40, "isekai_dragon_roar", 1),
             new ClassOption("grand_archmage", "The Archmage Returns After 4000 Years", "4000Y Archmage", 0xFF7C4DFF, "isekai_mana_burst", 1),
             new ClassOption("blood_emperor", "Doom Breaker", "Doom Breaker", 0xFFFF1744, "be_bloodthirst", 1),
 
-            // Categoría 2: Murim & Espiritual (Qi / Cultivo / Soporte)
             new ClassOption("demonic_cultivator", "Nano Machine", "Nano Machine", 0xFFE040FB, "black_fire_wave", 2),
             new ClassOption("star_apostle", "Omniscient Reader's Viewpoint", "Star Stream", 0xFFFFD866, "fourth_wall", 2),
             new ClassOption("lightning_emperor", "Lightning Degree", "Lightning Degree", 0xFF00E5FF, "le_electrification", 2),
@@ -105,7 +102,6 @@ public final class ClassSelectionScreen extends Screen {
 
     @Override
     public void renderBackground(GuiGraphics graphics, int mouseX, int mouseY, float partialTick) {
-        // Evita el blur vanilla
     }
 
     @Override
@@ -155,17 +151,13 @@ public final class ClassSelectionScreen extends Screen {
     }
 
     private void playClickSound() {
-        if (minecraft != null && minecraft.player != null) {
-            minecraft.player.playSound(SoundEvents.UI_BUTTON_CLICK.value(), 0.8F, 1.2F);
-        }
+        AwakeningSystemClient.playButtonClick();
     }
 
     private void openConfirmDialog() {
         SystemData cData = Minecraft.getInstance().player == null ? null : Minecraft.getInstance().player.getData(AwakeningSystemMod.PLAYER_SYSTEM);
         if (cData != null && cData.hasHunterClass()) {
-            if (minecraft != null && minecraft.player != null) {
-                minecraft.player.playSound(SoundEvents.VILLAGER_NO, 1.0F, 1.0F);
-            }
+            AwakeningSystemClient.playUiSound(SoundEvents.VILLAGER_NO, 1.0F, 1.0F);
             return;
         }
         showConfirmDialog = true;
@@ -175,18 +167,15 @@ public final class ClassSelectionScreen extends Screen {
     private void confirmSelection() {
         SystemData cData = Minecraft.getInstance().player == null ? null : Minecraft.getInstance().player.getData(AwakeningSystemMod.PLAYER_SYSTEM);
         if (cData != null && cData.hasHunterClass()) {
-            if (minecraft != null && minecraft.player != null) {
-                minecraft.player.playSound(SoundEvents.VILLAGER_NO, 1.0F, 1.0F);
-            }
+            AwakeningSystemClient.playUiSound(SoundEvents.VILLAGER_NO, 1.0F, 1.0F);
             return;
         }
 
         showConfirmDialog = false;
         ClassOption chosen = getSelectedClass();
         PacketDistributor.sendToServer(new SelectHunterClassPayload(chosen.id()));
-        if (minecraft != null && minecraft.player != null) {
-            minecraft.player.playSound(SoundEvents.UI_TOAST_CHALLENGE_COMPLETE, 1.2F, 1.0F);
-        }
+        AwakeningSystemClient.playButtonClick();
+        AwakeningSystemClient.playUiSound(SoundEvents.UI_TOAST_CHALLENGE_COMPLETE, 1.2F, 1.0F);
         onClose();
     }
 
@@ -245,11 +234,9 @@ public final class ClassSelectionScreen extends Screen {
         boolean sys20 = cData != null && (cData.systemUpdated() || cData.isSystemUpdating()) && !sys30;
         boolean alreadyChosen = cData != null && cData.hasHunterClass();
 
-        // Fondo y marcos
         graphics.fill(left - 2, top - 2, left + panelW + 2, top + panelH + 2, sys30 ? 0xC0163E2A : (sys20 ? 0xC03A1259 : 0xC010202D));
         graphics.fill(left, top, left + panelW, top + panelH, sys30 ? 0xF00B1513 : (sys20 ? 0xF0140B22 : 0xF008121A));
 
-        // Esquinas holográficas tipo HUD
         int cornerColor = (sys30 || sys20) ? 0xFFFFD700 : 0xFF70E8FF;
         graphics.fill(left, top, left + 8, top + 2, cornerColor);
         graphics.fill(left, top, left + 2, top + 8, cornerColor);
@@ -260,10 +247,8 @@ public final class ClassSelectionScreen extends Screen {
         graphics.fill(left + panelW - 8, top + panelH - 2, left + panelW, top + panelH, cornerColor);
         graphics.fill(left + panelW - 2, top + panelH - 8, left + panelW, top + panelH, cornerColor);
 
-        // Cabecera de la ventana
         graphics.drawCenteredString(font, Component.translatable("awakening_system.screen.class_select.header"), left + panelW / 2, top + 6, 0xFFFFD700);
 
-        // 1. Pestañas de Categoría / Arquetipos
         int catTabW = (panelW - 30) / 4;
         String[] catLabels = {"⚔ Guerreros", "🧙 Arcano", "🥋 Murim", "✦ Todas"};
         int catY = top + 18;
@@ -282,13 +267,11 @@ public final class ClassSelectionScreen extends Screen {
             graphics.drawCenteredString(font, catLabels[c], cx + (catTabW - 2) / 2, catY + 4, act ? 0xFF00E5FF : (hov ? 0xFFFFFFFF : 0xFFAAAAAA));
         }
 
-        // 2. Selector de Clases (Tarjetas de la categoría actual)
         List<ClassOption> visible = getVisibleClasses();
         boolean isAllMode = (currentCategory == 3);
 
         int cardStartY = top + 38;
         if (!isAllMode) {
-            // Modo Categoría (4 clases en una sola fila espaciosa)
             int cardW = (panelW - 30 - 3 * 6) / 4;
             int cardH = 34;
             int spacingX = 6;
@@ -323,7 +306,6 @@ public final class ClassSelectionScreen extends Screen {
                 graphics.disableScissor();
             }
         } else {
-            // Modo Todas (2 filas de 6 clases)
             int cardW = (panelW - 30 - 5 * 4) / 6;
             int cardH = 26;
             int spacingX = 4;
@@ -355,18 +337,15 @@ public final class ClassSelectionScreen extends Screen {
             }
         }
 
-        // 3. Cámara de Inspección Detallada de la Clase Seleccionada
         ClassOption sel = getSelectedClass();
         int chamberX = left + 15;
         int chamberY = isAllMode ? (top + 100) : (top + 78);
         int chamberW = panelW - 30;
         int chamberH = isAllMode ? 144 : 166;
 
-        // Fondo y marco holográfico del panel de inspección
         graphics.fill(chamberX - 1, chamberY - 1, chamberX + chamberW + 1, chamberY + chamberH + 1, sel.color());
         graphics.fill(chamberX, chamberY, chamberX + chamberW, chamberY + chamberH, 0xF508121B);
 
-        // Esquinas estilizadas de la cámara
         graphics.fill(chamberX, chamberY, chamberX + 6, chamberY + 2, sel.color());
         graphics.fill(chamberX, chamberY, chamberX + 2, chamberY + 6, sel.color());
         graphics.fill(chamberX + chamberW - 6, chamberY, chamberX + chamberW, chamberY + 2, sel.color());
@@ -376,12 +355,10 @@ public final class ClassSelectionScreen extends Screen {
         graphics.fill(chamberX + chamberW - 6, chamberY + chamberH - 2, chamberX + chamberW, chamberY + chamberH, sel.color());
         graphics.fill(chamberX + chamberW - 2, chamberY + chamberH - 6, chamberX + chamberW, chamberY + chamberH, sel.color());
 
-        // Cabecera interior: Título y Manhwa de origen
         graphics.drawString(font, Component.literal("✦ ").append(sel.getName()).append(" ✦").withStyle(s -> s.withBold(true).withColor(sel.color())), chamberX + 10, chamberY + 7, sel.color());
         Component manhwaTag = Component.translatable("awakening_system.screen.class_select.manhwa", sel.manhwa());
         graphics.drawString(font, manhwaTag, chamberX + chamberW - 10 - font.width(manhwaTag), chamberY + 7, 0xFF70E8FF);
 
-        // Subtítulo con Rol y Cita de Lore
         Component roleComp = Component.translatable("awakening_system.screen.class_select.role_label", sel.getRoleTag().getString(), sel.getDescription().getString());
         var roleLines = font.split(roleComp, chamberW - 20);
         int curTextY = chamberY + 19;
@@ -390,7 +367,6 @@ public final class ClassSelectionScreen extends Screen {
             curTextY += 10;
         }
 
-        // Bloque destacado: Habilidad Activa Distintiva de la Clase
         int skillBoxY = curTextY + 2;
         graphics.fill(chamberX + 8, skillBoxY, chamberX + chamberW - 8, skillBoxY + 16, 0x30FFFFFF);
         graphics.fill(chamberX + 8, skillBoxY, chamberX + 10, skillBoxY + 16, sel.color());
@@ -405,14 +381,11 @@ public final class ClassSelectionScreen extends Screen {
         }
         graphics.drawString(font, sigSkillStatus, chamberX + chamberW - 14 - font.width(sigSkillStatus), skillBoxY + 4, 0xFF50FA7B);
 
-        // Línea divisoria
         int divY = skillBoxY + 19;
         graphics.fill(chamberX + 10, divY, chamberX + chamberW - 10, divY + 1, 0x40FFFFFF);
 
-        // Encabezado de Perks Pasivos
         graphics.drawString(font, Component.translatable("awakening_system.screen.class_select.perks_header"), chamberX + 10, divY + 4, 0xFFFFD700);
 
-        // Renderizado de las 3 habilidades pasivas
         int perkY = divY + 14;
         for (Component perk : sel.getPerks()) {
             var lines = font.split(Component.literal("§e✦ §f").append(perk), chamberW - 24);
@@ -424,12 +397,10 @@ public final class ClassSelectionScreen extends Screen {
         }
 
         if (!showConfirmDialog) {
-            // Aviso de Advertencia Permanente encima del botón
             if (!alreadyChosen) {
                 graphics.drawCenteredString(font, Component.translatable("awakening_system.screen.class_select.warning_permanent"), left + panelW / 2, top + 256, 0xFFFF6666);
             }
 
-            // 4. Botón de Confirmación / Despertar o Aviso de Clase Bloqueada
             int btnW = 240;
             int btnH = 20;
             int btnX = left + (panelW - btnW) / 2;
@@ -448,13 +419,11 @@ public final class ClassSelectionScreen extends Screen {
             }
         }
 
-        // 5. Modal de Confirmación y Advertencia Crítica (si se activó al hacer clic)
         if (showConfirmDialog) {
             graphics.flush();
             graphics.pose().pushPose();
             graphics.pose().translate(0.0F, 0.0F, 300.0F);
 
-            // Telón de fondo oscuro de alta opacidad
             graphics.fill(0, 0, this.width, this.height, 0xD8000000);
 
             int modalW = 320;
@@ -465,7 +434,6 @@ public final class ClassSelectionScreen extends Screen {
             graphics.fill(modalX - 2, modalY - 2, modalX + modalW + 2, modalY + modalH + 2, 0xFFFF3333);
             graphics.fill(modalX, modalY, modalX + modalW, modalY + modalH, 0xFF0E1318);
 
-            // Esquinas doradas
             graphics.fill(modalX, modalY, modalX + 8, modalY + 2, 0xFFFFD700);
             graphics.fill(modalX, modalY, modalX + 2, modalY + 8, 0xFFFFD700);
             graphics.fill(modalX + modalW - 8, modalY, modalX + modalW, modalY + 2, 0xFFFFD700);
@@ -475,13 +443,10 @@ public final class ClassSelectionScreen extends Screen {
             graphics.fill(modalX + modalW - 8, modalY + modalH - 2, modalX + modalW, modalY + modalH, 0xFFFFD700);
             graphics.fill(modalX + modalW - 2, modalY + modalH - 8, modalX + modalW, modalY + modalH, 0xFFFFD700);
 
-            // Título
             graphics.drawCenteredString(font, Component.translatable("awakening_system.screen.class_select.confirm_title").copy().withStyle(ChatFormatting.BOLD), modalX + modalW / 2, modalY + 9, 0xFFFF5555);
 
-            // Pregunta de selección
             graphics.drawCenteredString(font, Component.translatable("awakening_system.screen.class_select.confirm_question", sel.getName()), modalX + modalW / 2, modalY + 24, 0xFFFFFFFF);
 
-            // Caja de advertencia roja
             int warnBoxY = modalY + 38;
             graphics.fill(modalX + 12, warnBoxY, modalX + modalW - 12, warnBoxY + 34, 0x603A0000);
             graphics.fill(modalX + 12, warnBoxY, modalX + 14, warnBoxY + 34, 0xFFFF4444);
@@ -489,7 +454,6 @@ public final class ClassSelectionScreen extends Screen {
             graphics.drawCenteredString(font, Component.translatable("awakening_system.screen.class_select.confirm_warning_1").copy().withStyle(ChatFormatting.BOLD), modalX + modalW / 2, warnBoxY + 5, 0xFFFF6B6B);
             graphics.drawCenteredString(font, Component.translatable("awakening_system.screen.class_select.confirm_warning_2"), modalX + modalW / 2, warnBoxY + 17, 0xFFFFD866);
 
-            // Botones
             int mBtnW = 120;
             int mBtnH = 20;
             int mBtnY = modalY + modalH - 28;
@@ -499,12 +463,10 @@ public final class ClassSelectionScreen extends Screen {
             boolean yesHovered = mX >= yesX && mX < yesX + mBtnW && mY >= mBtnY && mY < mBtnY + mBtnH;
             boolean noHovered = mX >= noX && mX < noX + mBtnW && mY >= mBtnY && mY < mBtnY + mBtnH;
 
-            // Sí, Confirmar
             graphics.fill(yesX - 1, mBtnY - 1, yesX + mBtnW + 1, mBtnY + mBtnH + 1, yesHovered ? 0xFFFFFFFF : 0xFF2E7D32);
             graphics.fill(yesX, mBtnY, yesX + mBtnW, mBtnY + mBtnH, yesHovered ? 0xFF388E3C : 0xEE1B5E20);
             graphics.drawCenteredString(font, Component.translatable("awakening_system.screen.class_select.confirm_yes").copy().withStyle(ChatFormatting.BOLD), yesX + mBtnW / 2, mBtnY + 6, 0xFFFFFFFF);
 
-            // Cancelar
             graphics.fill(noX - 1, mBtnY - 1, noX + mBtnW + 1, mBtnY + mBtnH + 1, noHovered ? 0xFFFFFFFF : 0xFF757575);
             graphics.fill(noX, mBtnY, noX + mBtnW, mBtnY + mBtnH, noHovered ? 0xFF882222 : 0xEE333333);
             graphics.drawCenteredString(font, Component.translatable("awakening_system.screen.class_select.confirm_no"), noX + mBtnW / 2, mBtnY + 6, 0xFFE0E0E0);
@@ -554,7 +516,6 @@ public final class ClassSelectionScreen extends Screen {
             int left = (width - panelW) / 2;
             int top = (height - panelH) / 2;
 
-            // 1. Pestañas de categoría
             int catTabW = (panelW - 30) / 4;
             int catY = top + 18;
             int catH = 16;
@@ -570,7 +531,6 @@ public final class ClassSelectionScreen extends Screen {
                 }
             }
 
-            // 2. Tarjetas de Clases
             List<ClassOption> visible = getVisibleClasses();
             boolean isAllMode = (currentCategory == 3);
             int cardStartY = top + 38;
@@ -608,7 +568,6 @@ public final class ClassSelectionScreen extends Screen {
                 }
             }
 
-            // 3. Botón de Confirmación / Despertar
             int btnW = 240;
             int btnH = 20;
             int btnX = left + (panelW - btnW) / 2;

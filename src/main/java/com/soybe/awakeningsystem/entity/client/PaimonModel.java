@@ -45,14 +45,12 @@ public class PaimonModel extends HierarchicalModel<PaimonEntity> {
         PartDefinition bone10 = root.addOrReplaceChild("bone10", CubeListBuilder.create(),
                 PartPose.offset(0.0F, 24.0F, 0.0F));
 
-        // Cuerpo (torso + falda)
         PartDefinition body = bone10.addOrReplaceChild("body", CubeListBuilder.create()
                         .texOffs(16, 29).addBox(-2.5F, -1.5659F, -2.7651F, 5.0F, 7.0F, 4.0F)
                         .texOffs(51, 43).addBox(1.0F, 5.0341F, -3.2651F, 2.0F, 1.0F, 4.0F)
                         .texOffs(27, 50).addBox(-3.0F, 5.0341F, -3.2651F, 2.0F, 1.0F, 4.0F),
                 PartPose.offsetAndRotation(0.0F, -7.3F, 0.9F, 0.2182F, 0.0F, 0.0F));
 
-        // Brazos
         PartDefinition arms = body.addOrReplaceChild("arms", CubeListBuilder.create(),
                 PartPose.offset(0.0F, 7.3F, -1.9F));
 
@@ -66,7 +64,6 @@ public class PaimonModel extends HierarchicalModel<PaimonEntity> {
                         .texOffs(16, 56).addBox(-0.6745F, 0.3203F, -1.0F, 2.0F, 6.0F, 2.0F),
                 PartPose.offsetAndRotation(-3.25F, -8.0F, 1.0F, 0.0F, 0.0F, 0.7418F));
 
-        // Piernas
         body.addOrReplaceChild("legs", CubeListBuilder.create()
                         .texOffs(0, 56).addBox(-2.25F, -1.25F, -0.75F, 2.0F, 6.0F, 2.0F)
                         .texOffs(41, 56).addBox(-2.75F, 2.25F, -1.25F, 1.0F, 1.0F, 3.0F)
@@ -74,7 +71,6 @@ public class PaimonModel extends HierarchicalModel<PaimonEntity> {
                         .texOffs(26, 55).addBox(0.25F, -1.25F, -0.75F, 2.0F, 6.0F, 2.0F),
                 PartPose.offsetAndRotation(0.0F, 6.0841F, -1.0151F, 0.3927F, 0.0F, 0.0F));
 
-        // Capa / Bufanda estrellada con pliegues
         PartDefinition bone7 = body.addOrReplaceChild("bone7", CubeListBuilder.create()
                         .texOffs(56, 40).addBox(-2.0F, -8.0F, 2.4F, 4.0F, 1.0F, 1.0F)
                         .texOffs(53, 28).addBox(-3.0F, -7.0F, 1.9F, 6.0F, 1.0F, 1.0F)
@@ -132,26 +128,22 @@ public class PaimonModel extends HierarchicalModel<PaimonEntity> {
                         .texOffs(51, 44).addBox(1.9F, 1.0F, 4.4F, 1.0F, 1.0F, 1.0F),
                 PartPose.offset(0.0F, 0.0F, 0.0F));
 
-        // Cabeza
         PartDefinition head = bone10.addOrReplaceChild("head", CubeListBuilder.create()
                         .texOffs(21, 19).addBox(-3.0F, -13.0F, -2.5F, 6.0F, 5.0F, 5.0F),
                 PartPose.offset(0.0F, 0.0F, 0.0F));
 
-        // Horquilla de estrella de Paimon
         head.addOrReplaceChild("cube_r5", CubeListBuilder.create()
                         .texOffs(0, 0).addBox(-2.6F, -0.35F, -0.3F, 1.0F, 1.0F, 0.0F)
                         .texOffs(0, 1).addBox(-0.6F, -0.35F, -0.3F, 1.0F, 1.0F, 0.0F)
                         .texOffs(13, 24).addBox(-1.6F, -1.1F, -0.3F, 1.0F, 3.0F, 0.0F),
                 PartPose.offsetAndRotation(4.5F, -15.5F, -4.0F, 0.0F, -0.1309F, -0.3927F));
 
-        // Capa de expresión de ojos
         head.addOrReplaceChild("blink", CubeListBuilder.create()
                         .texOffs(18, 45).addBox(3.0F, -11.0F, -2.6F, 1.0F, 1.0F, 0.0F)
                         .texOffs(38, 6).addBox(-4.0F, -11.0F, -2.6F, 1.0F, 1.0F, 0.0F)
                         .texOffs(48, 7).addBox(-3.0F, -13.0F, -2.6F, 6.0F, 5.0F, 0.0F),
                 PartPose.offset(0.0F, 0.0F, 0.0F));
 
-        // Corona / Tiara flotante
         head.addOrReplaceChild("bone6", CubeListBuilder.create()
                         .texOffs(0, 16).addBox(-0.5F, -1.5833F, -2.5F, 1.0F, 4.0F, 1.0F)
                         .texOffs(33, 62).addBox(2.5F, -0.5833F, -1.5F, 1.0F, 1.0F, 1.0F)
@@ -165,7 +157,6 @@ public class PaimonModel extends HierarchicalModel<PaimonEntity> {
                         .texOffs(49, 56).addBox(-4.5F, -0.5833F, -0.5F, 1.0F, 1.0F, 3.0F),
                 PartPose.offsetAndRotation(0.0F, -19.3167F, 0.05F, -0.2531F, 0.0F, 0.0F));
 
-        // Cabello detallado y mechones
         head.addOrReplaceChild("bone5", CubeListBuilder.create()
                         .texOffs(0, 8).addBox(-4.0F, -16.0F, -3.0F, 8.0F, 1.0F, 7.0F)
                         .texOffs(0, 16).addBox(-3.0F, -17.0F, -3.0F, 6.0F, 1.0F, 7.0F)
@@ -275,7 +266,6 @@ public class PaimonModel extends HierarchicalModel<PaimonEntity> {
             this.legs.xRot = (float) Math.toRadians(-2.5D + 5.0D * floatSine);
         }
 
-        // Parpadeo de ojos natural cada 40 ticks
         long tickMod = (long) ageInTicks % 40;
         this.blink.visible = (tickMod >= 2 && tickMod <= 5);
     }

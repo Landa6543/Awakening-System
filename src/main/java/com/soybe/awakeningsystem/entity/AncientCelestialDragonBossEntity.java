@@ -74,7 +74,6 @@ public class AncientCelestialDragonBossEntity extends Monster implements FlyingA
             BossEvent.BossBarOverlay.NOTCHED_20
     )).setDarkenScreen(true).setPlayBossMusic(true);
 
-    // Cinemática de 64 vértebras (~100-115 bloques de longitud real en mundo)
     public static final int SEGMENT_COUNT = 64;
     public final float[] segmentYaw = new float[SEGMENT_COUNT];
     public final float[] segmentYawO = new float[SEGMENT_COUNT];
@@ -82,7 +81,6 @@ public class AncientCelestialDragonBossEntity extends Monster implements FlyingA
     public final float[] segmentPitchO = new float[SEGMENT_COUNT];
     private boolean segmentsInitialized = false;
 
-    // 16 Partes de Hitbox distribuidas a lo largo de los 100+ bloques del cuerpo
     public final DragonBodyPart[] subParts;
     public static final int[] PART_SEGMENT_INDICES = new int[] {
         3, 7, 11, 15, 19, 23, 27, 31, 35, 39, 43, 47, 51, 55, 59, 63
@@ -94,7 +92,7 @@ public class AncientCelestialDragonBossEntity extends Monster implements FlyingA
     private int thunderStormCooldown = 160;
     private int blockBreakCooldown = 0;
     private int tailSweepCooldown = 120;
-    private int descentTicks = 160; // Descenso cinemático inicial al ser invocado
+    private int descentTicks = 160;
     private boolean descentCompleted = false;
     private boolean groundImpactDone = false;
 
@@ -149,10 +147,10 @@ public class AncientCelestialDragonBossEntity extends Monster implements FlyingA
 
         float multiplier = 1.0F;
         if (part.partName.contains("chest")) {
-            multiplier = 1.25F; // Núcleo de Qi del pecho vulnerable
+            multiplier = 1.25F;
             this.level().playSound(null, part.getX(), part.getY(), part.getZ(), SoundEvents.PLAYER_ATTACK_CRIT, SoundSource.HOSTILE, 1.5F, 0.9F);
         } else if (part.partName.contains("tail")) {
-            multiplier = 0.85F; // Escamas protectoras de la cola
+            multiplier = 0.85F;
         }
 
         boolean damaged = this.hurt(source, amount * multiplier);
@@ -257,9 +255,8 @@ public class AncientCelestialDragonBossEntity extends Monster implements FlyingA
         this.descentTicks = 0;
         this.descentCompleted = true;
         this.setNoGravity(false);
-        this.setHealth(10.0F); // Asignado exactamente UNA vez al caer
+        this.setHealth(10.0F);
 
-        // Guiar el vector de caída directamente hacia el centro del altar
         if (this.homeSanctuaryPos != null) {
             double ax = this.homeSanctuaryPos.getX() + 0.5D;
             double az = this.homeSanctuaryPos.getZ() + 0.5D;
@@ -279,12 +276,12 @@ public class AncientCelestialDragonBossEntity extends Monster implements FlyingA
     }
 
     public float getSegmentYaw(int index, float partialTick) {
-        if (index < 0 || index >= SEGMENT_COUNT) return this.getYRot();
+        if (!this.segmentsInitialized || index < 0 || index >= SEGMENT_COUNT) return this.getYRot();
         return Mth.rotLerp(partialTick, this.segmentYawO[index], this.segmentYaw[index]);
     }
 
     public float getSegmentPitch(int index, float partialTick) {
-        if (index < 0 || index >= SEGMENT_COUNT) return this.getXRot();
+        if (!this.segmentsInitialized || index < 0 || index >= SEGMENT_COUNT) return this.getXRot();
         return Mth.lerp(partialTick, this.segmentPitchO[index], this.segmentPitch[index]);
     }
 
@@ -296,12 +293,16 @@ public class AncientCelestialDragonBossEntity extends Monster implements FlyingA
         }
 
         this.yRotO = this.getYRot();
-        this.yBodyRotO = this.yBodyRot;
+        this.yBodyRotO = this.getYRot();
+        this.yBodyRot = this.getYRot();
+        this.yHeadRotO = this.getYRot();
+        this.yHeadRot = this.getYRot();
         this.xRotO = this.getXRot();
 
         super.tick();
 
-        // 1. Inicialización cinemática de las 64 vértebras
+        this.yBodyRot = this.getYRot();
+
         if (!this.segmentsInitialized) {
             float initPitch = (this.descentTicks > 0) ? 85.0F : this.getXRot();
             float initYaw = this.getYRot();
@@ -315,7 +316,6 @@ public class AncientCelestialDragonBossEntity extends Monster implements FlyingA
             this.segmentsInitialized = true;
         }
 
-        // 2. Ondulación serpentina progresiva vértebra a vértebra
         this.segmentYawO[0] = this.segmentYaw[0];
         this.segmentPitchO[0] = this.segmentPitch[0];
         this.segmentYaw[0] = this.getYRot();
@@ -333,7 +333,6 @@ public class AncientCelestialDragonBossEntity extends Monster implements FlyingA
             this.segmentPitch[i] += diffPitch * followSpeed;
         }
 
-        // 3. Actualizar posiciones espaciales 3D de todas las 64 vértebras
         this.segmentPositions[0] = this.position();
         double segDist = 1.65D;
         for (int i = 1; i < SEGMENT_COUNT; i++) {
@@ -345,7 +344,6 @@ public class AncientCelestialDragonBossEntity extends Monster implements FlyingA
             this.segmentPositions[i] = this.segmentPositions[i - 1].add(dx, dy, dz);
         }
 
-        // Posicionar cada una de las 16 subPartes móviles en su vértebra correspondiente
         for (int k = 0; k < this.subParts.length; k++) {
             int segIdx = PART_SEGMENT_INDICES[k];
             Vec3 p = this.segmentPositions[segIdx];
@@ -359,20 +357,17 @@ public class AncientCelestialDragonBossEntity extends Monster implements FlyingA
             part.setPos(p.x, p.y, p.z);
         }
 
-        // 4. Ruptura de bloques estilo Ender Dragon a su paso
         if (!this.level().isClientSide) {
             this.blockBreakCooldown--;
             if (this.blockBreakCooldown <= 0) {
                 checkBlockDestruction();
-                this.blockBreakCooldown = 2; // Revisar cada 2 ticks para óptima respuesta sin sobrecarga
+                this.blockBreakCooldown = 2;
             }
 
-            // Actualizar barra de jefe si sigue en combate activo
             if (!this.isFallen()) {
                 this.bossEvent.setProgress(this.getHealth() / this.getMaxHealth());
             }
 
-            // 5. Lógica de Descenso Cinemático en Picada Vertical (cabeza abajo)
             if (this.descentTicks > 0) {
                 this.descentTicks--;
                 this.entityData.set(DATA_DIVING, true);
@@ -386,7 +381,6 @@ public class AncientCelestialDragonBossEntity extends Monster implements FlyingA
                         double hDz = (this.homeSanctuaryPos.getZ() + 0.5D) - this.getZ();
                         this.setDeltaMovement(hDx * 0.08D, -0.80D, hDz * 0.08D);
                     } else {
-                        // Nivelar al llegar al santuario y rugir UNA SOLA VEZ
                         this.setXRot(0.0F);
                         this.xRotO = 0.0F;
                         this.descentTicks = 0;
@@ -401,16 +395,13 @@ public class AncientCelestialDragonBossEntity extends Monster implements FlyingA
                 this.descentCompleted = true;
             }
 
-            // 6. Lógica de Dragón Derrotado / Caído en el Suelo (A la espera del golpe de gracia)
             if (this.isFallen()) {
                 this.setTarget(null);
                 if (!this.onGround()) {
-                    // Caída pesada forzada por gravedad hacia el suelo
                     this.setDeltaMovement(this.getDeltaMovement().x * 0.8D, Math.max(-0.85D, this.getDeltaMovement().y - 0.08D), this.getDeltaMovement().z * 0.8D);
                     this.setXRot(Mth.rotLerp(0.1F, this.getXRot(), 25.0F));
                     this.hasImpulse = true;
                 } else {
-                    // En el suelo: inmóvil, reposando sobre el altar
                     this.setDeltaMovement(Vec3.ZERO);
                     this.setXRot(Mth.rotLerp(0.2F, this.getXRot(), 0.0F));
                     this.bossEvent.setProgress(0.01F);
@@ -426,7 +417,6 @@ public class AncientCelestialDragonBossEntity extends Monster implements FlyingA
                 }
             }
 
-            // 7. Tormenta de Rayos celestiales y Coletazo (solo activos si no está caído)
             if (!this.isFallen() && this.getTarget() != null && this.getTarget().isAlive()) {
                 this.thunderStormCooldown--;
                 if (this.thunderStormCooldown <= 0) {
@@ -434,7 +424,6 @@ public class AncientCelestialDragonBossEntity extends Monster implements FlyingA
                     this.thunderStormCooldown = 180 + this.random.nextInt(100);
                 }
 
-                // Coletazo físico giratorio si el objetivo está a media distancia
                 this.tailSweepCooldown--;
                 if (this.tailSweepCooldown <= 0 && this.distanceTo(this.getTarget()) < 24.0D) {
                     triggerTailSweep();
@@ -442,7 +431,6 @@ public class AncientCelestialDragonBossEntity extends Monster implements FlyingA
                 }
             }
         } else {
-            // Efectos visuales en cliente: partículas de nubes y escamas de Qi titánico
             double px = this.getX() + (this.random.nextDouble() - 0.5D) * 4.5D;
             double py = this.getY() + this.random.nextDouble() * 3.5D;
             double pz = this.getZ() + (this.random.nextDouble() - 0.5D) * 4.5D;
@@ -586,7 +574,6 @@ public class AncientCelestialDragonBossEntity extends Monster implements FlyingA
         double dy = target.getY(0.5D) - (this.getY() + 2.5D);
         double dz = target.getZ() - this.getZ();
 
-        // Ráfaga doble de aliento de Qi
         for (int i = 0; i < 2; i++) {
             double spreadX = (this.random.nextDouble() - 0.5D) * 0.04D;
             double spreadZ = (this.random.nextDouble() - 0.5D) * 0.04D;
@@ -607,22 +594,18 @@ public class AncientCelestialDragonBossEntity extends Monster implements FlyingA
             return false;
         }
 
-        // Si ya está caído en el suelo:
         if (this.isFallen()) {
             if (this.onGround()) {
-                // El jugador le da el golpe de gracia en el piso: permitir muerte definitiva
                 boolean damaged = super.hurt(source, amount);
                 if (this.getHealth() <= 0.0F || !this.isAlive()) {
                     this.die(source);
                 }
                 return damaged;
             } else {
-                // Sigue cayendo al piso hacia el altar: proteger para no morir en el aire
                 return false;
             }
         }
 
-        // Si este golpe dejaría su vida en <= 30 HP, activar estado de caída directa al altar
         if (this.getHealth() - amount <= 30.0F) {
             triggerFallenState();
             return false;
@@ -671,7 +654,6 @@ public class AncientCelestialDragonBossEntity extends Monster implements FlyingA
     protected void dropCustomDeathLoot(ServerLevel level, DamageSource damageSource, boolean recentlyHit) {
         super.dropCustomDeathLoot(level, damageSource, recentlyHit);
 
-        // Drops de Jefe Supremo directamente en el piso
         this.spawnAtLocation(new ItemStack(SystemItems.IMMORTAL_DRAGON_SCALE.get(), 18 + this.random.nextInt(10)));
         this.spawnAtLocation(new ItemStack(SystemItems.CELESTIAL_DRAGON_PEARL.get(), 2 + this.random.nextInt(2)));
         this.spawnAtLocation(new ItemStack(SystemItems.THOUSAND_YEAR_GINSENG.get(), 3));
@@ -695,8 +677,6 @@ public class AncientCelestialDragonBossEntity extends Monster implements FlyingA
     public boolean isFlying() {
         return !this.isFallen() && !this.onGround();
     }
-
-    // --- Metas de IA del Jefe ---
 
     static class BossDiveAttackGoal extends Goal {
         private final AncientCelestialDragonBossEntity dragon;
@@ -821,11 +801,9 @@ public class AncientCelestialDragonBossEntity extends Monster implements FlyingA
             double targetZ;
 
             if (distH > 14.0D) {
-                // Volar directamente hacia el centro del altar
                 targetX = centerX;
                 targetZ = centerZ;
             } else {
-                // Una vez sobre el santuario, orbitar en círculo cerrado directamente sobre la tarima
                 this.orbitAngle += 0.045D;
                 targetX = centerX + Math.cos(this.orbitAngle) * this.orbitRadius;
                 targetZ = centerZ + Math.sin(this.orbitAngle) * this.orbitRadius;
@@ -852,7 +830,6 @@ public class AncientCelestialDragonBossEntity extends Monster implements FlyingA
 
             this.dragon.getMoveControl().setWantedPosition(targetX, targetY, targetZ, 0.65D);
 
-            // Si durante el retorno o sobrevuelo baja a <= 30 HP, desplomarse al centro del altar
             if (this.dragon.getHealth() <= 30.0F) {
                 this.dragon.triggerFallenState();
             }
@@ -897,13 +874,12 @@ public class AncientCelestialDragonBossEntity extends Monster implements FlyingA
         @Override
         public void tick() {
             BlockPos center = getCenter();
-            this.orbitAngle += 0.024D; // Velocidad de órbita fluida y majestuosa
+            this.orbitAngle += 0.024D;
 
             double centerX = center.getX() + 0.5D;
             double centerZ = center.getZ() + 0.5D;
             double baseY = center.getY() + 24.0D;
 
-            // Ondulación senoidal en altura para serpentear en 3D
             double waveY = Math.sin(this.orbitAngle * 2.2D) * 7.5D;
             double targetY = Math.min(this.dragon.level().getMaxBuildHeight() - 15, baseY + waveY);
 

@@ -2,7 +2,7 @@ package com.soybe.awakeningsystem.item;
 
 import com.soybe.awakeningsystem.SystemItems;
 import net.minecraft.ChatFormatting;
-import net.minecraft.client.Minecraft;
+import net.neoforged.fml.loading.FMLEnvironment;
 import net.minecraft.core.particles.ParticleTypes;
 import net.minecraft.network.chat.Component;
 import net.minecraft.server.level.ServerLevel;
@@ -56,7 +56,6 @@ public class RobeOfTheBeautyItem extends Item {
 
         int fragments = countCosmicFragments(player);
         int tiers = fragments / 100;
-        // +16% por cada 100 fragmentos, hasta un tope de +80% (5 tiers)
         double bonus = Math.min(0.80, tiers * 0.16);
         return 1.0 + bonus;
     }
@@ -65,7 +64,6 @@ public class RobeOfTheBeautyItem extends Item {
         int fragments = countCosmicFragments(player);
         if (fragments < 30) return false;
 
-        // Consumir 30 fragmentos cósmicos del inventario
         int toRemove = 30;
         for (ItemStack stack : player.getInventory().items) {
             if (!stack.isEmpty() && SystemItems.COSMIC_FRAGMENT.isBound() && stack.is(SystemItems.COSMIC_FRAGMENT.get())) {
@@ -76,7 +74,6 @@ public class RobeOfTheBeautyItem extends Item {
             }
         }
 
-        // Otorgar resistencia y regeneración de emergencia
         player.addEffect(new MobEffectInstance(MobEffects.DAMAGE_RESISTANCE, 60, 2, false, false, true));
         player.addEffect(new MobEffectInstance(MobEffects.ABSORPTION, 100, 1, false, false, true));
 
@@ -87,30 +84,38 @@ public class RobeOfTheBeautyItem extends Item {
             sl.playSound(null, player.getX(), player.getY(), player.getZ(), SoundEvents.SHIELD_BLOCK, SoundSource.PLAYERS, 1.5F, 0.9F);
         }
 
-        player.displayClientMessage(Component.literal("§d✦ [MANTO DE LA BELLEZA] §f¡Preservación Cósmica activada! (-30 Fragmentos Cósmicos) Daño mitigado."), true);
+        player.displayClientMessage(Component.translatable("item.awakening_system.robe_of_the_beauty.preservation_msg"), true);
         return true;
     }
 
     @Override
     @OnlyIn(Dist.CLIENT)
     public void appendHoverText(ItemStack stack, TooltipContext context, List<Component> tooltip, TooltipFlag flag) {
-        tooltip.add(Component.literal("§d⭐⭐⭐⭐⭐ [Curio del Universo Simulado]").withStyle(ChatFormatting.LIGHT_PURPLE));
-        tooltip.add(Component.literal("§7Un majestuoso manto celestial bendecido por Idrila, la Belleza Cósmica.").withStyle(ChatFormatting.GRAY));
+        tooltip.add(Component.translatable("item.awakening_system.robe_of_the_beauty.badge").withStyle(ChatFormatting.LIGHT_PURPLE));
+        tooltip.add(Component.translatable("item.awakening_system.robe_of_the_beauty.desc").withStyle(ChatFormatting.GRAY));
         tooltip.add(Component.literal(""));
-        tooltip.add(Component.literal("§6✦ Efecto Pasivo: El Manto de la Belleza").withStyle(ChatFormatting.GOLD, ChatFormatting.BOLD));
-        tooltip.add(Component.literal("  §7Por cada §e100 Fragmentos Cósmicos §7en tu inventario,"));
-        tooltip.add(Component.literal("  §7tu daño infligido aumenta en §a+16% §7(máx. §a+80%§7)."));
+        tooltip.add(Component.translatable("item.awakening_system.robe_of_the_beauty.passive_title").withStyle(ChatFormatting.GOLD, ChatFormatting.BOLD));
+        tooltip.add(Component.translatable("item.awakening_system.robe_of_the_beauty.passive_desc1"));
+        tooltip.add(Component.translatable("item.awakening_system.robe_of_the_beauty.passive_desc2"));
 
-        Player clientPlayer = Minecraft.getInstance().player;
-        if (clientPlayer != null) {
-            int frags = countCosmicFragments(clientPlayer);
-            int bonus = (int) (Math.min(0.80, (frags / 100) * 0.16) * 100);
-            tooltip.add(Component.literal("  §b▸ Bono Actual: §f+" + bonus + "% de Daño §7(§e" + frags + " §7Fragmentos poseídos)"));
+        if (FMLEnvironment.dist == Dist.CLIENT) {
+            ClientTooltip.addCosmicFragmentTooltip(tooltip);
         }
 
         tooltip.add(Component.literal(""));
-        tooltip.add(Component.literal("§d✦ Preservación Sagrada:").withStyle(ChatFormatting.LIGHT_PURPLE));
-        tooltip.add(Component.literal("  §7Al recibir daño crítico, consume §e30 Fragmentos Cósmicos"));
-        tooltip.add(Component.literal("  §7para mitigar el 50% del daño y ganar invulnerabilidad breve."));
+        tooltip.add(Component.translatable("item.awakening_system.robe_of_the_beauty.preservation_title").withStyle(ChatFormatting.LIGHT_PURPLE));
+        tooltip.add(Component.translatable("item.awakening_system.robe_of_the_beauty.preservation_desc1"));
+        tooltip.add(Component.translatable("item.awakening_system.robe_of_the_beauty.preservation_desc2"));
+    }
+
+    private static class ClientTooltip {
+        static void addCosmicFragmentTooltip(List<Component> tooltip) {
+            net.minecraft.world.entity.player.Player clientPlayer = net.minecraft.client.Minecraft.getInstance().player;
+            if (clientPlayer != null) {
+                int frags = countCosmicFragments(clientPlayer);
+                int bonus = (int) (Math.min(0.80, (frags / 100) * 0.16) * 100);
+                tooltip.add(Component.translatable("item.awakening_system.robe_of_the_beauty.current_bonus", bonus, frags));
+            }
+        }
     }
 }

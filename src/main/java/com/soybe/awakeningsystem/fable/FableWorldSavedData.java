@@ -58,7 +58,10 @@ public class FableWorldSavedData extends SavedData {
 
     public synchronized boolean tryClaimWorldFirst(String fableId, UUID playerUuid, String playerName) {
         if (worldFirstHolders.containsKey(fableId)) {
-            return false; // Ya fue reclamada por otro jugador
+            if (playerUuid != null && playerUuid.equals(worldFirstHolders.get(fableId))) {
+                return true;
+            }
+            return false;
         }
         worldFirstHolders.put(fableId, playerUuid);
         worldFirstPlayerNames.put(fableId, playerName);

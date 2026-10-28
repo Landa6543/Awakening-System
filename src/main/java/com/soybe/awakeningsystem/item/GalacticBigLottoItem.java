@@ -36,7 +36,6 @@ public class GalacticBigLottoItem extends Item {
             RandomSource rand = sp.getRandom();
             float roll = rand.nextFloat();
 
-            // 20% probabilidad de rotura dramática (Curio Break) y reducir vida a 1 HP (medio corazón)
             if (roll < 0.20F) {
                 stack.shrink(1);
                 sp.setHealth(1.0F);
@@ -48,46 +47,40 @@ public class GalacticBigLottoItem extends Item {
                     sl.playSound(null, sp.getX(), sp.getY(), sp.getZ(), SoundEvents.GLASS_BREAK, SoundSource.PLAYERS, 1.5F, 0.8F);
                 }
                 sp.playNotifySound(ModSounds.CURIO_BREAK.get(), SoundSource.PLAYERS, 2.0F, 1.0F);
-                sp.displayClientMessage(Component.literal("§c§l✦ [GRAN LOTERÍA INTERGALÁCTICA] §4¡CRACK! ¡La Lotería se ha roto en mil pedazos! Tu salud cae a 1 HP..."), true);
+                sp.displayClientMessage(Component.translatable("item.awakening_system.galactic_big_lotto.broken"), true);
                 return InteractionResultHolder.consume(stack);
             }
 
-            // 80% éxito: Gran recompensa
             String rewardText;
             int prizeTier = rand.nextInt(5);
             switch (prizeTier) {
                 case 0 -> {
-                    // Protogemas
                     SystemEvents.data(sp).addPrimogems(320);
                     AwakeningSystemMod.sync(sp);
-                    rewardText = "§d+320 Protogemas";
+                    rewardText = "§d+320 Primogems";
                 }
                 case 1 -> {
-                    // Deseo Entrelazado
                     ItemStack fates = new ItemStack(SystemItems.INTERTWINED_FATE.get(), 2);
                     if (!sp.addItem(fates)) sp.drop(fates, false);
-                    rewardText = "§b2x Deseo Entrelazado";
+                    rewardText = "§b2x Intertwined Fate";
                 }
                 case 2 -> {
-                    // Fragmentos Cósmicos
                     int frags = 30 + rand.nextInt(31);
                     ItemStack cosmic = new ItemStack(SystemItems.COSMIC_FRAGMENT.get(), frags);
                     if (!sp.addItem(cosmic)) sp.drop(cosmic, false);
-                    rewardText = "§6" + frags + "x Fragmentos Cósmicos";
+                    rewardText = "§6" + frags + "x Cosmic Fragments";
                 }
                 case 3 -> {
-                    // Ingenio del Héroe
                     ItemStack wit = new ItemStack(SystemItems.HEROS_WIT.get(), 4);
                     if (!sp.addItem(wit)) sp.drop(wit, false);
-                    rewardText = "§a4x Ingenio del Héroe (+4,000 EXP)";
+                    rewardText = "§a4x Hero's Wit (+4,000 EXP)";
                 }
                 default -> {
-                    // Diamantes y Manzana de Oro
                     ItemStack apple = new ItemStack(Items.GOLDEN_APPLE, 2);
                     ItemStack diamonds = new ItemStack(Items.DIAMOND, 5);
                     if (!sp.addItem(apple)) sp.drop(apple, false);
                     if (!sp.addItem(diamonds)) sp.drop(diamonds, false);
-                    rewardText = "§b5x Diamantes + 2x Manzanas Doradas";
+                    rewardText = "§b5x Diamonds + 2x Golden Apples";
                 }
             }
 
@@ -96,7 +89,7 @@ public class GalacticBigLottoItem extends Item {
                 sl.sendParticles(ParticleTypes.ENCHANTED_HIT, sp.getX(), sp.getY() + 1.2D, sp.getZ(), 25, 0.4D, 0.4D, 0.4D, 0.1D);
             }
             sp.playNotifySound(SoundEvents.UI_TOAST_CHALLENGE_COMPLETE, SoundSource.PLAYERS, 1.2F, 1.0F);
-            sp.displayClientMessage(Component.literal("§6§l✦ [GRAN LOTERÍA INTERGALÁCTICA] §e¡PREMIO MAYOR! §fHas ganado: " + rewardText), true);
+            sp.displayClientMessage(Component.translatable("item.awakening_system.galactic_big_lotto.jackpot", rewardText), true);
             return InteractionResultHolder.sidedSuccess(stack, level.isClientSide());
         }
         return InteractionResultHolder.sidedSuccess(stack, level.isClientSide());
@@ -104,9 +97,9 @@ public class GalacticBigLottoItem extends Item {
 
     @Override
     public void appendHoverText(ItemStack stack, TooltipContext context, List<Component> tooltip, TooltipFlag flag) {
-        tooltip.add(Component.literal("§e⭐⭐⭐⭐⭐ [Curiosidad del Universo Simulado]").withStyle(ChatFormatting.GOLD));
-        tooltip.add(Component.literal("§7Un billete de lotería de dudosa procedencia cósmica.").withStyle(ChatFormatting.GRAY));
-        tooltip.add(Component.literal("§6▸ Clic derecho: §fTentar a la suerte por fabulosos premios.").withStyle(ChatFormatting.YELLOW));
-        tooltip.add(Component.literal("§c⚠ ADVERTENCIA: §420% de probabilidad de que se destruya y deje tu salud en 1 HP.").withStyle(ChatFormatting.RED));
+        tooltip.add(Component.translatable("item.awakening_system.galactic_big_lotto.badge").withStyle(ChatFormatting.GOLD));
+        tooltip.add(Component.translatable("item.awakening_system.galactic_big_lotto.desc").withStyle(ChatFormatting.GRAY));
+        tooltip.add(Component.translatable("item.awakening_system.galactic_big_lotto.use").withStyle(ChatFormatting.YELLOW));
+        tooltip.add(Component.translatable("item.awakening_system.galactic_big_lotto.warn").withStyle(ChatFormatting.RED));
     }
 }

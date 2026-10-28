@@ -27,7 +27,6 @@ public class HilichurlModel<T extends HilichurlEntity> extends HierarchicalModel
     private final ModelPart rightLeg;
     private final ModelPart leftLeg;
 
-    // Armas y equipamiento intercambiable segun el Rol
     private final ModelPart fighterClub;
     private final ModelPart berserkerClub;
     private final ModelPart crossbow;
@@ -52,7 +51,6 @@ public class HilichurlModel<T extends HilichurlEntity> extends HierarchicalModel
         MeshDefinition mesh = new MeshDefinition();
         PartDefinition root = mesh.getRoot();
 
-        // 1. Cabeza con mascara tallada y relieves faciales
         PartDefinition head = root.addOrReplaceChild("head", CubeListBuilder.create()
                 .texOffs(0, 0).addBox(-4.0F, -8.0F, -4.0F, 8.0F, 8.0F, 8.0F, new CubeDeformation(0.0F))
                 .texOffs(49, 0).addBox(-2.0F, -8.0F, -5.0F, 1.0F, 1.0F, 1.0F, new CubeDeformation(0.0F))
@@ -65,35 +63,29 @@ public class HilichurlModel<T extends HilichurlEntity> extends HierarchicalModel
                 .texOffs(50, 7).addBox(-1.0F, -1.0F, -5.0F, 2.0F, 1.0F, 1.0F, new CubeDeformation(0.0F)),
                 PartPose.ZERO);
 
-        // Orejas / mechones laterales inclinados (cube_r1)
         PartDefinition ears = head.addOrReplaceChild("ears", CubeListBuilder.create()
                 .texOffs(26, 0).mirror() .addBox(-5.5000F, -0.5000F, -1.5000F, 1.0F, 1.0F, 6.0F, new CubeDeformation(0.0F))
                 .texOffs(26, 0).addBox(-0.5000F, -0.5000F, -1.5000F, 1.0F, 1.0F, 6.0F, new CubeDeformation(0.0F)),
                 PartPose.offsetAndRotation(2.5000F, -8.5000F, -1.5000F, 0.6545F, 0.0F, 0.0F));
 
-        // 2. Torso tribal
         PartDefinition body = root.addOrReplaceChild("body", CubeListBuilder.create()
                 .texOffs(16, 16).addBox(-4.0F, 0.0F, -2.0F, 8.0F, 12.0F, 4.0F, new CubeDeformation(0.0F)),
                 PartPose.ZERO);
 
-        // 3. Brazo derecho
         PartDefinition rightArm = root.addOrReplaceChild("right_arm", CubeListBuilder.create()
                 .texOffs(40, 16).addBox(-2.0F, -2.0F, -2.0F, 3.0F, 12.0F, 4.0F, new CubeDeformation(0.0F)),
                 PartPose.offset(-5.0F, 2.0F, 0.0F));
 
-        // Garrote de Hilichurl Luchador (Fighter Club)
         PartDefinition fighterClub = rightArm.addOrReplaceChild("fighter_club", CubeListBuilder.create()
                 .texOffs(0, 52).addBox(-1.0F, 9.5000F, -4.0F, 1.0F, 1.0F, 7.0F, new CubeDeformation(0.0F))
                 .texOffs(48, 51).addBox(-2.0F, 8.5000F, -9.0F, 3.0F, 3.0F, 5.0F, new CubeDeformation(0.0F)),
                 PartPose.ZERO);
 
-        // Garrote ardiente de Hilichurl Berserker
         PartDefinition berserkerClub = rightArm.addOrReplaceChild("berserker_club", CubeListBuilder.create()
                 .texOffs(0, 56).addBox(-1.0F, 9.5000F, -4.0F, 1.0F, 1.0F, 7.0F, new CubeDeformation(0.0F))
                 .texOffs(42, 53).addBox(-2.0F, 8.5000F, -12.0F, 3.0F, 3.0F, 8.0F, new CubeDeformation(0.0F)),
                 PartPose.ZERO);
 
-        // Ballesta de Hilichurl Tirador (Crossbow)
         PartDefinition crossbow = rightArm.addOrReplaceChild("crossbow", CubeListBuilder.create(), PartPose.ZERO);
         PartDefinition cb_r2 = crossbow.addOrReplaceChild("cb_r2", CubeListBuilder.create()
                 .texOffs(52, 61).addBox(-1.9683F, 1.5000F, -7.2172F, 4.0F, 1.0F, 2.0F, new CubeDeformation(0.0F)),
@@ -107,12 +99,10 @@ public class HilichurlModel<T extends HilichurlEntity> extends HierarchicalModel
                 .texOffs(0, 53).addBox(-1.5000F, 1.5000F, -7.0F, 2.0F, 1.0F, 10.0F, new CubeDeformation(0.0F)),
                 PartPose.offsetAndRotation(1.0F, 10.0F, -4.0F, 0.9207F, -0.0891F, 0.2959F));
 
-        // 4. Brazo izquierdo
         PartDefinition leftArm = root.addOrReplaceChild("left_arm", CubeListBuilder.create()
                 .texOffs(40, 16).mirror() .addBox(-1.0F, -2.0F, -2.0F, 3.0F, 12.0F, 4.0F, new CubeDeformation(0.0F)),
                 PartPose.offset(5.0F, 2.0F, 0.0F));
 
-        // Escudo de madera de Hilichurl Guardia (Wooden Shield)
         PartDefinition shield = leftArm.addOrReplaceChild("shield", CubeListBuilder.create()
                 .texOffs(50, 52).addBox(2.0F, 4.0F, -3.0F, 1.0F, 6.0F, 6.0F, new CubeDeformation(0.0F))
                 .texOffs(58, 47).addBox(2.0F, 5.0F, 3.0F, 1.0F, 2.0F, 2.0F, new CubeDeformation(0.0F))
@@ -122,7 +112,6 @@ public class HilichurlModel<T extends HilichurlEntity> extends HierarchicalModel
                 .texOffs(45, 51).addBox(2.0F, 10.0F, -2.0F, 1.0F, 2.0F, 4.0F, new CubeDeformation(0.0F)),
                 PartPose.ZERO);
 
-        // 5. Piernas
         PartDefinition rightLeg = root.addOrReplaceChild("right_leg", CubeListBuilder.create()
                 .texOffs(0, 16).addBox(-2.0F, 0.0F, -2.0F, 4.0F, 12.0F, 4.0F, new CubeDeformation(0.0F)),
                 PartPose.offset(-1.9000F, 12.0F, 0.0F));
@@ -144,17 +133,14 @@ public class HilichurlModel<T extends HilichurlEntity> extends HierarchicalModel
                           float ageInTicks, float netHeadYaw, float headPitch) {
         this.root().getAllParts().forEach(ModelPart::resetPose);
 
-        // Movimiento de cabeza
         this.head.yRot = netHeadYaw * (Mth.PI / 180F);
         this.head.xRot = headPitch * (Mth.PI / 180F);
 
-        // Animacion natural de caminata sincronizada
         this.rightArm.xRot = Mth.cos(limbSwing * 0.6662F + Mth.PI) * limbSwingAmount;
         this.leftArm.xRot = Mth.cos(limbSwing * 0.6662F) * limbSwingAmount;
         this.rightLeg.xRot = Mth.cos(limbSwing) * 1.0F * limbSwingAmount;
         this.leftLeg.xRot = -Mth.cos(limbSwing) * 1.0F * limbSwingAmount;
 
-        // Configuracion y animaciones segun el Rol de Genshin Impact
         HilichurlEntity.HilichurlRole role = entity.getRole();
         boolean isShooter = (role == HilichurlEntity.HilichurlRole.SHOOTER);
         boolean isGuard = (role == HilichurlEntity.HilichurlRole.GUARD);
@@ -167,19 +153,16 @@ public class HilichurlModel<T extends HilichurlEntity> extends HierarchicalModel
         this.shield.visible = isGuard;
 
         if (isBerserker && entity.getTarget() != null) {
-            // Carga furiosa Berserker con garrote en alto
             this.rightArm.xRot = -2.2F + Mth.sin(ageInTicks * 0.35F) * 0.25F;
             this.rightArm.zRot = -0.2F;
             this.leftArm.xRot = 0.4F;
         } else if (isGuard && entity.isBlocking()) {
-            // Guardia con escudo alzado protegiendose
             this.leftArm.xRot = -1.2F;
             this.leftArm.yRot = 0.55F;
             this.leftArm.zRot = 0.45F;
             this.rightArm.xRot = -0.7F;
             this.rightArm.yRot = -0.2F;
         } else if (isShooter) {
-            // Postura de arquero con ballesta levantada
             if (entity.getTarget() != null) {
                 this.rightArm.xRot = -1.55F + headPitch * (Mth.PI / 180F);
                 this.rightArm.yRot = -0.35F + netHeadYaw * (Mth.PI / 180F);

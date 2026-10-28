@@ -23,7 +23,6 @@ public class AntSoldierRenderer extends MobRenderer<AntSoldierEntity, AntSoldier
 
     @Override
     protected void scale(AntSoldierEntity entity, PoseStack poseStack, float partialTickTime) {
-        // Envergadura imponente de bestia quimérica
         poseStack.scale(1.15F, 1.15F, 1.15F);
     }
 }

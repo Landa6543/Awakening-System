@@ -1,0 +1,7 @@
+{
+  "type": "minecraft:smithing_transform",
+  "template": { "item": "awakening_system:primordial_upgrade_smithing_template" },
+  "base": { "item": "awakening_system:celestial_axe" },
+  "addition": { "item": "awakening_system:primordial_ingot" },
+  "result": { "id": "awakening_system:primordial_axe" }
+}

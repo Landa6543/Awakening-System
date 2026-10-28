@@ -86,7 +86,6 @@ public class ManaPixieEntity extends PathfinderMob implements FlyingAnimal {
         super.aiStep();
 
         if (this.level().isClientSide()) {
-            // Estela sutil de polvo de hadas luminiscente
             if (this.random.nextFloat() < 0.35F) {
                 this.level().addParticle(ParticleTypes.GLOW,
                         this.getX() + (this.random.nextDouble() - 0.5D) * 0.4D,
@@ -102,7 +101,6 @@ public class ManaPixieEntity extends PathfinderMob implements FlyingAnimal {
                         0.0D, 0.01D, 0.0D);
             }
         } else {
-            // Aura de bendición de Maná cada 50 ticks (~2.5 segundos)
             if (--this.blessCooldown <= 0) {
                 this.blessCooldown = 50 + this.random.nextInt(20);
                 this.applyManaBlessing();
@@ -172,7 +170,6 @@ public class ManaPixieEntity extends PathfinderMob implements FlyingAnimal {
     public boolean hurt(DamageSource source, float amount) {
         boolean result = super.hurt(source, amount);
         if (result && this.level() instanceof ServerLevel sl) {
-            // Emite destellos de polvo desorientador al ser golpeada
             sl.sendParticles(ParticleTypes.GLOW, this.getX(), this.getY() + 0.3D, this.getZ(),
                     20, 0.5D, 0.5D, 0.5D, 0.1D);
         }
@@ -206,6 +203,5 @@ public class ManaPixieEntity extends PathfinderMob implements FlyingAnimal {
 
     @Override
     protected void checkFallDamage(double y, boolean onGround, BlockState state, BlockPos pos) {
-        // Inmune al daño por caída
     }
 }

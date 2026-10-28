@@ -50,7 +50,7 @@ public class PerpetualMechanicalArrayBossEntity extends Monster {
             SynchedEntityData.defineId(PerpetualMechanicalArrayBossEntity.class, EntityDataSerializers.BOOLEAN);
 
     private final ServerBossEvent bossEvent = (ServerBossEvent) new ServerBossEvent(
-            Component.literal("§6§lMatriz Mecánica Perpetua §7- §eIngenio de Ruinas Estelar"),
+            Component.translatable("boss.awakening_system.perpetual_array.boss_bar"),
             BossEvent.BossBarColor.YELLOW,
             BossEvent.BossBarOverlay.NOTCHED_10
     ).setDarkenScreen(false);
@@ -62,7 +62,7 @@ public class PerpetualMechanicalArrayBossEntity extends Monster {
 
     public PerpetualMechanicalArrayBossEntity(EntityType<? extends Monster> entityType, Level level) {
         super(entityType, level);
-        this.setCustomName(Component.literal("§6§lMatriz Mecánica Perpetua"));
+        this.setCustomName(Component.translatable("boss.awakening_system.perpetual_array.name"));
         this.setCustomNameVisible(true);
         this.setPersistenceRequired();
         this.xpReward = 850;
@@ -126,24 +126,22 @@ public class PerpetualMechanicalArrayBossEntity extends Monster {
                 this.setDeltaMovement(0, this.getDeltaMovement().y, 0);
                 this.activeSentinels.removeIf(s -> !s.isAlive() || s.isRemoved());
                 if (this.activeSentinels.isEmpty()) {
-                    // Todos los centinelas derrotados: la matriz colapsa aturdida
                     this.entityData.set(DATA_DEFENSE_MODE, false);
                     this.entityData.set(DATA_PARALYZED, true);
-                    this.paralyzeTimer = 240; // 12 segundos aturdida
+                    this.paralyzeTimer = 240;
 
                     if (this.level() instanceof ServerLevel sl) {
                         sl.playSound(null, this.blockPosition(), SoundEvents.ANVIL_LAND, SoundSource.HOSTILE, 2.0F, 0.6F);
                         sl.sendParticles(ParticleTypes.EXPLOSION, this.getX(), this.getY() + 1.5D, this.getZ(), 5, 0.5D, 0.5D, 0.5D, 0.0D);
 
                         for (ServerPlayer player : sl.getPlayers(p -> p.distanceToSqr(this) < 1600.0D)) {
-                            player.displayClientMessage(Component.literal("§6§l✦ [COLAPSO DE MATRIZ] §f¡La Matriz Mecánica ha entrado en estado de colapso y es vulnerable!"), true);
+                            player.displayClientMessage(Component.translatable("boss.awakening_system.perpetual_mechanical.collapse"), true);
                         }
                     }
                 }
                 return;
             }
 
-            // Desencadenar división al 50% de HP
             if (!splitTriggered && (this.getHealth() / this.getMaxHealth()) <= 0.55F) {
                 triggerSplitDefense();
                 return;
@@ -158,7 +156,6 @@ public class PerpetualMechanicalArrayBossEntity extends Monster {
                 }
             }
         } else {
-            // Partículas de engranajes y núcleo de energía dorada
             if (this.random.nextFloat() < 0.3F) {
                 this.level().addParticle(ParticleTypes.CRIT,
                         this.getX() + (this.random.nextDouble() - 0.5D) * 1.5D,
@@ -178,10 +175,9 @@ public class PerpetualMechanicalArrayBossEntity extends Monster {
         sl.playSound(null, this.blockPosition(), SoundEvents.IRON_GOLEM_DEATH, SoundSource.HOSTILE, 2.5F, 0.8F);
 
         for (ServerPlayer player : sl.getPlayers(p -> p.distanceToSqr(this) < 1600.0D)) {
-            player.displayClientMessage(Component.literal("§6§l✦ [MODO DEFENSIVO] §f¡La Matriz se ha fragmentado! ¡Destruye a sus Centinelas Ruina!"), true);
+            player.displayClientMessage(Component.translatable("boss.awakening_system.perpetual_mechanical.defense_mode"), true);
         }
 
-        // Invocar los 4 Centinelas (Cruiser, Defender, Destroyer, Scout)
         RuinSentinelEntity.SentinelType[] types = RuinSentinelEntity.SentinelType.values();
         for (int i = 0; i < 4; i++) {
             double angle = (i * Math.PI / 2.0D);
@@ -206,7 +202,6 @@ public class PerpetualMechanicalArrayBossEntity extends Monster {
 
         int choice = this.random.nextInt(2);
         if (choice == 0) {
-            // Cañón láser ocular frontal
             sl.playSound(null, this.blockPosition(), SoundEvents.BEACON_ACTIVATE, SoundSource.HOSTILE, 2.0F, 1.4F);
             Vec3 dir = target.position().subtract(this.position()).normalize();
             for (double d = 1.0D; d <= 18.0D; d += 0.8D) {
@@ -218,7 +213,6 @@ public class PerpetualMechanicalArrayBossEntity extends Monster {
                 target.knockback(0.8D, -dir.x, -dir.z);
             }
         } else {
-            // Embestida en forma de espada vertical
             sl.playSound(null, target.blockPosition(), SoundEvents.ANVIL_FALL, SoundSource.HOSTILE, 2.0F, 1.0F);
             sl.sendParticles(ParticleTypes.EXPLOSION, target.getX(), target.getY() + 0.5D, target.getZ(), 3, 0.5D, 0.5D, 0.5D, 0.0D);
             target.hurt(this.damageSources().mobAttack(this), 28.0F);
@@ -229,10 +223,10 @@ public class PerpetualMechanicalArrayBossEntity extends Monster {
     @Override
     public boolean hurt(DamageSource source, float amount) {
         if (isDefenseMode()) {
-            return false; // Totalmente invulnerable durante la fase de centinelas
+            return false;
         }
         if (isParalyzed()) {
-            amount *= 2.0F; // Vulnerabilidad crítica al estar colapsada
+            amount *= 2.0F;
         }
         return super.hurt(source, amount);
     }
@@ -251,12 +245,12 @@ public class PerpetualMechanicalArrayBossEntity extends Monster {
                     data.addMora(65000);
                     data.addPrimogems(35);
                     com.soybe.awakeningsystem.AwakeningSystemMod.sync(sp);
-                    sp.displayClientMessage(Component.literal("§6§l✦ ¡MATRIZ MECÁNICA PERPETUA DERROTADA! §eHas ganado §6+65,000 Mora §ey §b+35 Protogemas§e."), false);
+                    sp.displayClientMessage(Component.translatable("boss.awakening_system.perpetual_mechanical.defeated_teyvat"), false);
                 } else {
                     if (SystemItems.AWAKENING_COIN.isBound()) {
                         sp.addItem(new ItemStack(SystemItems.AWAKENING_COIN.get(), 24));
                     }
-                    sp.displayClientMessage(Component.literal("§6§l✦ ¡MATRIZ MECÁNICA PERPETUA DERROTADA! §6+24 Monedas de Despertar§e."), false);
+                    sp.displayClientMessage(Component.translatable("boss.awakening_system.perpetual_mechanical.defeated_vanilla"), false);
                 }
             }
 

@@ -91,7 +91,7 @@ public final class PhysicalRouletteManager {
 
         UUID spinId = UUID.randomUUID();
         ItemStack winning = rollWinningLoot(player);
-        int bonusCoins = 50 * (1 + player.getRandom().nextInt(4)); // 50, 100, 150 o 200 Monedas limpias
+        int bonusCoins = 50 * (1 + player.getRandom().nextInt(4));
 
         ActiveSpin spin = new ActiveSpin(spinId, player.getUUID(), level, targetPos, onAltarBlock, winning, bonusCoins);
 
@@ -107,7 +107,6 @@ public final class PhysicalRouletteManager {
 
         ACTIVE_SPINS.put(spinId, spin);
 
-        // Sonido inicial de activación
         level.playSound(null, targetPos.x, targetPos.y, targetPos.z,
                 SoundEvents.BEACON_ACTIVATE, SoundSource.BLOCKS, 1.2F, 1.5F);
         level.playSound(null, targetPos.x, targetPos.y, targetPos.z,
@@ -130,13 +129,11 @@ public final class PhysicalRouletteManager {
             Vec3 pos = spin.centerPos;
             ServerPlayer player = server.getPlayerList().getPlayer(spin.playerId);
 
-            // Si la entidad flotante fue eliminada prematuramente, abortar
             if (spin.floatingItem == null || !spin.floatingItem.isAlive()) {
                 iter.remove();
                 continue;
             }
 
-            // 1. Efectos visuales de la Ruleta Física (Círculo Rúnico con 8 sectores)
             int sectors = 8;
             double radius = 1.35D;
             double baseY = pos.y + (spin.onAltarBlock ? 1.02D : 0.05D);
@@ -150,7 +147,6 @@ public final class PhysicalRouletteManager {
                 }
             }
 
-            // 2. Bola de luz que orbita a toda velocidad y desacelera como en una ruleta real
             double speedFactor = Math.max(0.04D, 0.65D * (1.0D - (double) spin.ticks / 78.0D));
             spin.ballAngle += speedFactor;
             double ballDist = Math.max(0.35D, radius * (1.0D - (double) spin.ticks / 90.0D));
@@ -159,12 +155,10 @@ public final class PhysicalRouletteManager {
             level.sendParticles(ParticleTypes.END_ROD, bx, baseY + 0.15D, bz, 1, 0, 0.01, 0, 0.02);
             level.sendParticles(ParticleTypes.SOUL_FIRE_FLAME, bx, baseY + 0.12D, bz, 1, 0, 0, 0, 0.01);
 
-            // 3. Desaceleración del ciclo de ítems candidatos
             int cycleInterval = spin.ticks < 25 ? 2 : (spin.ticks < 45 ? 4 : (spin.ticks < 60 ? 7 : (spin.ticks < 72 ? 11 : 16)));
             if (spin.ticks < 75 && spin.ticks % cycleInterval == 0) {
                 spin.floatingItem.setItem(getCandidate(spin.ticks / cycleInterval));
 
-                // Sonido adictivo de trinquete de ruleta mecánica: clic seco + campana de ranura + chime (idéntico al sistema)
                 float progress = Math.min(1.0F, (float) spin.ticks / 75.0F);
                 int sectorIndex = (int) (spin.ballAngle / (Math.PI / 4.0D));
                 float clickPitch = 1.5F + (progress * 0.5F);
@@ -173,20 +167,16 @@ public final class PhysicalRouletteManager {
                         ModSounds.ROULETTE_SPIN.value(), SoundSource.BLOCKS, 0.9F, clickPitch);
             }
 
-            // Flotación suave
             spin.floatingItem.setDeltaMovement(0, Math.sin(spin.ticks * 0.2D) * 0.003D, 0);
 
-            // 4. Parada en el ítem premiado (Tick 75)
             if (spin.ticks == 75) {
                 spin.floatingItem.setItem(spin.winningStack.copy());
                 spin.floatingItem.setDeltaMovement(0, 0, 0);
 
-                // Gran explosión de fanfarria
                 level.sendParticles(ParticleTypes.TOTEM_OF_UNDYING, pos.x, baseY + 0.5D, pos.z, 90, 0.45D, 0.5D, 0.45D, 0.25D);
                 level.sendParticles(ParticleTypes.FIREWORK, pos.x, baseY + 0.5D, pos.z, 45, 0.35D, 0.4D, 0.35D, 0.12D);
                 level.sendParticles(ParticleTypes.FLASH, pos.x, baseY + 0.5D, pos.z, 2, 0, 0, 0, 0);
 
-                // Fanfarria triunfal de parada con el sonido custom de la Ruleta del Sistema
                 level.playSound(null, pos.x, pos.y + 1.0D, pos.z,
                         ModSounds.ROULETTE_WIN.value(), SoundSource.BLOCKS, 1.4F, 1.0F);
 
@@ -213,7 +203,6 @@ public final class PhysicalRouletteManager {
                 }
             }
 
-            // Cascada de campanadas musicales y monedas mientras el ítem premiado flota y se entrega al jugador (ticks 76 a 92)
             if (spin.ticks > 75 && spin.ticks <= 92 && spin.ticks % 2 == 0) {
                 int step = (spin.ticks - 76) / 2;
                 float bellPitch = Math.min(2.0F, 1.2F + (step * 0.12F));
@@ -228,7 +217,6 @@ public final class PhysicalRouletteManager {
                         SoundEvents.CHAIN_STEP, SoundSource.BLOCKS, 0.5F, 1.6F);
             }
 
-            // 5. Finalización y limpieza (Tick 95)
             if (spin.ticks >= 95) {
                 spin.floatingItem.discard();
                 level.sendParticles(ParticleTypes.POOF, pos.x, baseY + 0.5D, pos.z, 15, 0.2D, 0.2D, 0.2D, 0.05D);
@@ -240,7 +228,6 @@ public final class PhysicalRouletteManager {
     private static ItemStack rollWinningLoot(ServerPlayer player) {
         int roll = player.getRandom().nextInt(100);
 
-        // 10% Botín Legendario Mítico
         if (roll < 2) {
             if (SystemItems.PLUM_BLOSSOM_SWORD.isBound()) return new ItemStack(SystemItems.PLUM_BLOSSOM_SWORD.get());
             return new ItemStack(Items.NETHERITE_INGOT, 2);
@@ -257,7 +244,6 @@ public final class PhysicalRouletteManager {
             if (SystemItems.SKY_DEMON_SWORD.isBound()) return new ItemStack(SystemItems.SKY_DEMON_SWORD.get());
             return new ItemStack(Items.NETHERITE_INGOT, 2);
         }
-        // 25% Botín Épico / Manhwa Raro
         else if (roll < 14) {
             if (SystemItems.THOUSAND_YEAR_GINSENG.isBound()) return new ItemStack(SystemItems.THOUSAND_YEAR_GINSENG.get(), 2);
             return new ItemStack(Items.DIAMOND_BLOCK, 2);
@@ -277,7 +263,6 @@ public final class PhysicalRouletteManager {
             if (SystemItems.AWAKENING_COIN.isBound()) return new ItemStack(SystemItems.AWAKENING_COIN.get(), 64);
             return new ItemStack(Items.EMERALD_BLOCK, 4);
         }
-        // 40% Botín Valioso de Aventura
         else if (roll < 45) {
             return new ItemStack(Items.DIAMOND, 8);
         } else if (roll < 55) {
@@ -288,7 +273,6 @@ public final class PhysicalRouletteManager {
             if (SystemItems.AWAKENING_COIN.isBound()) return new ItemStack(SystemItems.AWAKENING_COIN.get(), 32);
             return new ItemStack(Items.GOLD_INGOT, 16);
         }
-        // 25% Botín Especial / Cómico con Encantamientos
         else if (roll < 83) {
             ItemStack stick = new ItemStack(Items.STICK, 1);
             stick.set(net.minecraft.core.component.DataComponents.CUSTOM_NAME, Component.translatable("awakening_system.roulette.fate_stick"));
@@ -302,5 +286,9 @@ public final class PhysicalRouletteManager {
         } else {
             return new ItemStack(Items.ENDER_PEARL, 8);
         }
+    }
+
+    public static void clearAll() {
+        ACTIVE_SPINS.clear();
     }
 }

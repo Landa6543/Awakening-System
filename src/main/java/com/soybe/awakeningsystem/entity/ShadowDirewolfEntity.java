@@ -114,7 +114,6 @@ public class ShadowDirewolfEntity extends TamableAnimal implements PlayerRideabl
             return canInteract ? InteractionResult.CONSUME : InteractionResult.PASS;
         }
 
-        // 1. Domesticación
         if (!this.isTame() && isFood(itemstack)) {
             if (!player.getAbilities().instabuild) {
                 itemstack.shrink(1);
@@ -134,9 +133,7 @@ public class ShadowDirewolfEntity extends TamableAnimal implements PlayerRideabl
             return InteractionResult.SUCCESS;
         }
 
-        // 2. Interacciones con lobo domesticado
         if (this.isTame() && this.isOwnedBy(player)) {
-            // A. Alimentar para curar
             if (isFood(itemstack) && this.getHealth() < this.getMaxHealth()) {
                 if (!player.getAbilities().instabuild) {
                     itemstack.shrink(1);
@@ -149,7 +146,6 @@ public class ShadowDirewolfEntity extends TamableAnimal implements PlayerRideabl
                 return InteractionResult.SUCCESS;
             }
 
-            // B. Si el dueño se agacha (Shift + Clic derecho): Alternar sentarse / pararse
             if (player.isShiftKeyDown()) {
                 boolean wantsToSit = !this.isOrderedToSit();
                 this.setOrderedToSit(wantsToSit);
@@ -160,7 +156,6 @@ public class ShadowDirewolfEntity extends TamableAnimal implements PlayerRideabl
                 return InteractionResult.SUCCESS;
             }
 
-            // C. Si el lobo está parado y el jugador hace clic derecho: ¡Montar!
             if (!this.isInSittingPose() && !this.isVehicle()) {
                 this.doPlayerRide(player);
                 return InteractionResult.SUCCESS;
@@ -318,22 +313,31 @@ public class ShadowDirewolfEntity extends TamableAnimal implements PlayerRideabl
 
     @Override
     protected SoundEvent getAmbientSound() {
-        return com.soybe.awakeningsystem.ModSounds.SHADOW_WOLF_AMBIENT.get();
+        if (this.getTarget() != null) {
+            return SoundEvents.WOLF_GROWL;
+        }
+        return this.random.nextInt(3) == 0 ? SoundEvents.WOLF_HOWL : SoundEvents.WOLF_AMBIENT;
     }
 
     @Override
     protected SoundEvent getHurtSound(DamageSource damageSource) {
-        return com.soybe.awakeningsystem.ModSounds.SHADOW_WOLF_HURT.get();
+        return SoundEvents.WOLF_HURT;
     }
 
     @Override
     protected SoundEvent getDeathSound() {
-        return com.soybe.awakeningsystem.ModSounds.SHADOW_WOLF_DEATH.get();
+        return SoundEvents.WOLF_DEATH;
+    }
+
+    @Override
+    public float getVoicePitch() {
+        // Tono grave e imponente de lobo gigante alfa (0.68F - 0.74F)
+        return (this.random.nextFloat() - this.random.nextFloat()) * 0.06F + 0.70F;
     }
 
     @Override
     protected float getSoundVolume() {
-        return 0.7F;
+        return 0.85F;
     }
 
     @Nullable

@@ -73,7 +73,6 @@ public class CelestialWaypointBlock extends Block {
         boolean inTeyvat = currentLevel.dimension().equals(TeyvatWorldManager.TEYVAT_WORLD);
 
         if (inTeyvat) {
-            // Regresar al Overworld
             ServerLevel overworld = player.getServer().overworld();
             BlockPos targetPos = player.getRespawnPosition();
             if (targetPos == null) {
@@ -85,7 +84,6 @@ public class CelestialWaypointBlock extends Block {
             player.playNotifySound(SoundEvents.BEACON_ACTIVATE, SoundSource.PLAYERS, 1.0F, 1.4F);
             player.displayClientMessage(Component.translatable("awakening_system.waypoint.teleport_overworld"), true);
         } else {
-            // Teletransportar a Teyvat (Requiere bendición de Yggdrasil/Isekai y Cultivo Marcial Murim)
             boolean hasIsekai = data.systemUpdated() || data.isekaiUnlocked() || data.conqueredRankerTower() || data.conqueredYggdrasilLabyrinth() || player.getAbilities().instabuild;
             boolean hasMurim = data.system30Updated() || data.murimUnlocked() || data.dantianRealm() >= 1 || data.conqueredNineTribulationsPagoda() || player.getAbilities().instabuild;
 

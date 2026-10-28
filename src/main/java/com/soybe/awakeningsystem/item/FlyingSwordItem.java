@@ -32,7 +32,7 @@ public class FlyingSwordItem extends SwordItem implements AwakeningWeaponItem {
             sl.sendParticles(net.minecraft.core.particles.ParticleTypes.CLOUD, target.getX(), target.getY() + 1.0D, target.getZ(), 8, 0.3D, 0.3D, 0.3D, 0.03D);
             sl.playSound(null, target.getX(), target.getY(), target.getZ(), SoundEvents.PLAYER_ATTACK_SWEEP, SoundSource.PLAYERS, 1.1F, 1.4F);
             if (attacker instanceof Player p) {
-                target.hurt(target.damageSources().playerAttack(p), 3.0F); // Daño cortante de viento
+                target.hurt(target.damageSources().playerAttack(p), 3.0F);
             }
         }
         attacker.addEffect(new net.minecraft.world.effect.MobEffectInstance(net.minecraft.world.effect.MobEffects.MOVEMENT_SPEED, 60, 0, false, false));

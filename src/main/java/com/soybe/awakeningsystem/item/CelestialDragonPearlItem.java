@@ -53,12 +53,10 @@ public class CelestialDragonPearlItem extends Item {
         if (!level.isClientSide && player instanceof ServerPlayer sp) {
             SystemData data = SystemEvents.data(sp);
 
-            // Avance masivo de Qi y curación absoluta
             data.addCultivationQi(1000);
             data.restoreEnergy(data.maxEnergy());
             sp.heal(sp.getMaxHealth());
 
-            // Efectos divinos celestiales (Regeneración III, Fuerza III, Resistencia III, Resistencia al Fuego por 5 min)
             sp.addEffect(new MobEffectInstance(MobEffects.REGENERATION, 600, 2));
             sp.addEffect(new MobEffectInstance(MobEffects.DAMAGE_BOOST, 600, 2));
             sp.addEffect(new MobEffectInstance(MobEffects.DAMAGE_RESISTANCE, 600, 2));
@@ -70,7 +68,6 @@ public class CelestialDragonPearlItem extends Item {
                 serverLevel.sendParticles(ParticleTypes.DRAGON_BREATH, sp.getX(), sp.getY() + 1.0, sp.getZ(), 50, 1.0, 0.8, 1.0, 0.05);
             }
 
-            // Sonidos místicos de Dragón y Resonancia Celestial (CERO fanfarrias de aldea)
             level.playSound(null, sp.blockPosition(), SoundEvents.ENDER_DRAGON_GROWL, SoundSource.PLAYERS, 1.2F, 1.1F);
             level.playSound(null, sp.blockPosition(), SoundEvents.BEACON_ACTIVATE, SoundSource.PLAYERS, 1.5F, 1.2F);
             level.playSound(null, sp.blockPosition(), SoundEvents.AMETHYST_BLOCK_CHIME, SoundSource.PLAYERS, 1.5F, 0.9F);
@@ -82,7 +79,6 @@ public class CelestialDragonPearlItem extends Item {
 
             sp.displayClientMessage(Component.translatable("awakening_system.item.celestial_dragon_pearl.chat"), false);
 
-            // Sincronización crucial e inmediata con el cliente
             AwakeningSystemMod.sync(sp);
 
             if (!player.getAbilities().instabuild) {

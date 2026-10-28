@@ -207,12 +207,10 @@ public class CryoRegisvineModel extends EntityModel<CryoRegisvineEntity> {
 
     @Override
     public void setupAnim(CryoRegisvineEntity entity, float limbSwing, float limbSwingAmount, float ageInTicks, float netHeadYaw, float headPitch) {
-        // Movimiento base de balanceo de planta viva
         float breathe = Mth.sin(ageInTicks * 0.05F) * 0.04F;
         this.bone.zRot = breathe;
 
         if (entity.isStunned()) {
-            // Estado noqueado: la cabeza yace desplomada en el suelo
             this.head.xRot = 0.95F;
             this.head.yRot = 0.0F;
             this.head.zRot = 0.0F;
@@ -221,7 +219,6 @@ public class CryoRegisvineModel extends EntityModel<CryoRegisvineEntity> {
             this.rightarm.xRot = -2.4F;
             this.rightarm.zRot = 2.4F;
         } else if (entity.isSlamming()) {
-            // Animación de cabezazo sísmico al suelo
             float progress = entity.getSlamProgress(ageInTicks);
             float slamAngle = Mth.sin(progress * (float) Math.PI) * 1.1F;
             this.head.xRot = slamAngle;
@@ -229,18 +226,15 @@ public class CryoRegisvineModel extends EntityModel<CryoRegisvineEntity> {
             this.leftarm.xRot = slamAngle * 0.6F;
             this.rightarm.xRot = -2.9138F + slamAngle * 0.6F;
         } else if (entity.isSpinning()) {
-            // Giro devastador en 360 grados de látigos y ramas
             float spin = ageInTicks * 0.45F;
             this.head.yRot = spin;
             this.head.xRot = 0.2F;
             this.leftarm.yRot = spin;
             this.rightarm.yRot = spin;
         } else {
-            // Seguimiento del objetivo con la cabeza corola
             this.head.yRot = netHeadYaw * ((float) Math.PI / 180F);
             this.head.xRot = headPitch * ((float) Math.PI / 180F) * 0.6F;
 
-            // Ondulación natural de látigos de sarmiento
             float armWave = Mth.cos(ageInTicks * 0.08F) * 0.12F;
             this.leftarm.xRot = armWave;
             this.rightarm.xRot = -2.9138F - armWave;

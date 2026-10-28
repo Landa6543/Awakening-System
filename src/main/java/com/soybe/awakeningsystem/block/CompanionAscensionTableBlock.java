@@ -33,8 +33,6 @@ public class CompanionAscensionTableBlock extends HorizontalDirectionalBlock {
     public static final MapCodec<CompanionAscensionTableBlock> CODEC = simpleCodec(CompanionAscensionTableBlock::new);
     public static final DirectionProperty FACING = BlockStateProperties.HORIZONTAL_FACING;
 
-    // VoxelShape realista de mesa de trabajo 3D ornamental:
-    // Tablero superior voladizo + 4 patas estilizadas + estante inferior con núcleo de maná
     protected static final VoxelShape TABLE_TOP = Block.box(0.0D, 11.0D, 0.0D, 16.0D, 16.0D, 16.0D);
     protected static final VoxelShape LEG_NW = Block.box(1.0D, 0.0D, 1.0D, 4.0D, 11.0D, 4.0D);
     protected static final VoxelShape LEG_NE = Block.box(12.0D, 0.0D, 1.0D, 15.0D, 11.0D, 4.0D);
@@ -89,7 +87,6 @@ public class CompanionAscensionTableBlock extends HorizontalDirectionalBlock {
             double cy = pos.getY() + 1.0D;
             double cz = pos.getZ() + 0.5D;
 
-            // Partículas de runas arcanas flotando hacia el dial astrolábico
             level.addParticle(ParticleTypes.ENCHANT,
                     cx + (random.nextDouble() - 0.5D) * 0.8D,
                     cy + 0.2D + random.nextDouble() * 0.3D,
@@ -101,7 +98,6 @@ public class CompanionAscensionTableBlock extends HorizontalDirectionalBlock {
         }
 
         if (random.nextInt(5) == 0) {
-            // Chispas celestiales de End Rod sobre la estrella astrolábica
             double px = pos.getX() + 0.3D + random.nextDouble() * 0.4D;
             double py = pos.getY() + 1.0D;
             double pz = pos.getZ() + 0.3D + random.nextDouble() * 0.4D;
@@ -109,7 +105,6 @@ public class CompanionAscensionTableBlock extends HorizontalDirectionalBlock {
         }
 
         if (random.nextInt(8) == 0) {
-            // Brillo místico sutil en el orbe/relicario del estante inferior
             double cx = pos.getX() + 0.5D;
             double cy = pos.getY() + 0.35D;
             double cz = pos.getZ() + 0.5D;

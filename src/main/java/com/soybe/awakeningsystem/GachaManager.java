@@ -15,20 +15,49 @@ import java.util.List;
 import java.util.Random;
 
 public final class GachaManager {
+    public static final int BANNER_UMA = 11;
+    public static final int BANNER_STELLAR_WARP = 12;
+    public static final int BANNER_PROMO_2 = 13;
     private static final Random RNG = new Random();
+
+    public static ItemStack createUmaContract(com.soybe.awakeningsystem.uma.UmaProfile profile, int rarity, boolean isNew, int shards) {
+        ItemStack stack = new ItemStack(SystemItems.COMPANION_CONTRACT.get());
+        net.minecraft.nbt.CompoundTag tag = new net.minecraft.nbt.CompoundTag();
+        tag.putString("UmaId", profile.getId());
+        tag.putInt("UmaRarity", rarity);
+        tag.putBoolean("UmaNew", isNew);
+        tag.putInt("UmaShards", shards);
+        tag.putInt("UmaStatues", rarity == 3 ? 20 : (rarity == 2 ? 3 : 1));
+        stack.set(net.minecraft.core.component.DataComponents.CUSTOM_DATA, net.minecraft.world.item.component.CustomData.of(tag));
+        String col = rarity == 3 ? "§6§l" : (rarity == 2 ? "§d§l" : "§b§l");
+        stack.set(net.minecraft.core.component.DataComponents.CUSTOM_NAME, Component.literal(col + profile.getDisplayName() + " (" + "★".repeat(rarity) + ")"));
+        return stack;
+    }
 
     private GachaManager() {}
 
     public static void openGachaScreen(ServerPlayer player) {
         SystemData data = SystemEvents.data(player);
+        if (!data.teyvatUnlocked()) {
+            player.sendSystemMessage(Component.translatable("awakening_system.gacha.unlock_required"));
+            return;
+        }
+        VersionBannerManager.checkAndAwardMaintenanceCompensation(player, data);
+
         List<String> histStrings = new ArrayList<>();
         for (SystemData.WishLogEntry entry : data.wishHistory()) {
             histStrings.add(entry.itemName() + "::" + entry.stars() + "::" + entry.bannerName() + "::" + entry.timestamp());
         }
 
-        // Chequeo diario de la Bendición Lunar (Welkin Moon)
         long currentDay = player.serverLevel().getDayTime() / 24000L;
         boolean unclaimedWelkin = (data.welkinDays() > 0 && currentDay > data.lastWelkinClaimDay());
+
+        long epochTick = data.gachaEpochTick();
+        if (epochTick == 0L) {
+            epochTick = player.serverLevel().getDayTime();
+            data.setGachaEpochTick(epochTick);
+        }
+        PromotionalBanner.setBannerEpochTick(epochTick);
 
         PacketDistributor.sendToPlayer(player, new OpenGachaScreenPayload(
                 data.primogems(),
@@ -50,6 +79,7 @@ public final class GachaManager {
                 data.stellarJade(),
                 data.welkinDays(),
                 data.totalGachaPulls(),
+                epochTick,
                 histStrings
         ));
 
@@ -70,7 +100,6 @@ public final class GachaManager {
         if (stack == null || stack.isEmpty()) return;
         ItemStack remaining = stack.copy();
 
-        // 1. Si el objeto es apilable (monedas, carne, lingotes, lapis, etc.), intentar fusionar en stacks existentes del inventario
         if (remaining.isStackable()) {
             for (int i = 0; i < player.getInventory().items.size(); i++) {
                 ItemStack slotStack = player.getInventory().items.get(i);
@@ -90,7 +119,6 @@ public final class GachaManager {
             }
         }
 
-        // 2. Si aún quedan unidades o es no apilable (armas, contratos), buscar un slot libre en el inventario (0..35)
         int freeSlot = player.getInventory().getFreeSlot();
         if (freeSlot >= 0) {
             player.getInventory().items.set(freeSlot, remaining.copy());
@@ -99,13 +127,10 @@ public final class GachaManager {
             return;
         }
 
-        // 3. El inventario del jugador está 100% LLENO (freeSlot == -1):
-        // Enviar DIRECTAMENTE al Subespacio del Sistema (evita que el modo creativo de Minecraft destruya el objeto)
         ItemStack leftover = data.addToSubspace(remaining);
         if (sentToSubspace != null && sentToSubspace.length > 0) sentToSubspace[0] = true;
         if (subspaceCounter != null && subspaceCounter.length > 0) subspaceCounter[0]++;
 
-        // 4. Si incluso el Subespacio de 54 casillas estuviera lleno, soltar al suelo para no perderlo jamás
         if (!leftover.isEmpty()) {
             player.drop(leftover, false);
         }
@@ -116,61 +141,370 @@ public final class GachaManager {
     }
 
     public static void handleWish(ServerPlayer player, GachaWishPayload payload) {
+        long dayTime = player.serverLevel().getDayTime();
         SystemData data = SystemEvents.data(player);
+        if (!data.teyvatUnlocked()) {
+            player.sendSystemMessage(Component.translatable("awakening_system.gacha.unlock_required"));
+            return;
+        }
+        VersionBannerManager.checkAndAwardMaintenanceCompensation(player, data);
+
+        long playerEffTime = Math.max(0L, dayTime - data.gachaEpochTick());
+        if (VersionBannerManager.isUnderMaintenanceByEffectiveTicks(playerEffTime)) {
+            player.displayClientMessage(Component.translatable("awakening_system.gacha.maintenance_technical", VersionBannerManager.getMaintenanceRemainingFormatted(dayTime)), true);
+            player.playNotifySound(SoundEvents.VILLAGER_NO, SoundSource.PLAYERS, 0.8F, 1.0F);
+            return;
+        }
+
         int banner = payload.bannerId();
         int count = Math.min(10, Math.max(1, payload.pullCount()));
 
-        PromotionalBanner.BannerPhase rotatingPromoPhase = PromotionalBanner.getActivePhase(player.serverLevel().getDayTime());
+        boolean isPromo2 = (banner == BANNER_PROMO_2);
+        int promoIdx = isPromo2 ? 1 : 0;
+        PromotionalBanner.BannerPhase rotatingPromoPhase = PromotionalBanner.getActivePhaseByEffectiveTicks(playerEffTime, promoIdx);
         PromotionalBanner.Franchise promoFranchise = rotatingPromoPhase.franchise();
 
         String bannerName;
-        if (banner == 0) bannerName = "Armas 5★";
-        else if (banner == 2) bannerName = "Permanente";
-        else if (banner == 3) bannerName = "Principiantes";
+        if (banner == 0) bannerName = "5★ Weapons";
+        else if (banner == 2) bannerName = "Standard";
+        else if (banner == 3) bannerName = "Beginners";
+        else if (banner == BANNER_UMA) bannerName = "Tracen Academy";
+        else if (banner == BANNER_STELLAR_WARP) bannerName = "Stellar Warp (HSR)";
         else {
             bannerName = rotatingPromoPhase.bannerTitle();
         }
 
-        // Cobro y verificación según Banner
-        boolean isPromotional = (banner == 0 || banner == 1 || (banner >= 4 && banner <= 8));
-        if (banner == 3) {
-            // BANNER DE PRINCIPIANTES (Beginners' Wish)
-            if (data.beginnerPulls() >= 20) {
-                player.displayClientMessage(Component.literal("§c[Gacha] ¡Has completado el límite máximo de 20 tiradas del Deseo de Principiantes!"), true);
+        if (banner == BANNER_STELLAR_WARP) {
+            int passesNeeded = count;
+            int passesAvailable = 0;
+            for (ItemStack invStack : player.getInventory().items) {
+                if (!invStack.isEmpty() && invStack.is(SystemItems.STAR_RAIL_SPECIAL_PASS.get())) {
+                    passesAvailable += invStack.getCount();
+                }
+            }
+            int intertwinedAvailable = data.intertwinedFates();
+            int totalFreeTickets = passesAvailable + intertwinedAvailable;
+
+            int ticketsToUse = Math.min(passesNeeded, totalFreeTickets);
+            int remainingPulls = passesNeeded - ticketsToUse;
+            int totalCostCurrency = remainingPulls * 160;
+
+            int availableCurrency = data.stellarJade() + data.primogems();
+            if (remainingPulls > 0 && availableCurrency < totalCostCurrency) {
+                player.displayClientMessage(Component.translatable("awakening_system.gacha.stellar_warp.insufficient_currency", totalCostCurrency), true);
                 player.playNotifySound(SoundEvents.VILLAGER_NO, SoundSource.PLAYERS, 0.8F, 1.0F);
                 return;
             }
-            count = 10; // Solo se tira de 10 en 10
-            int fateCost = 8; // 20% de descuento (8 destinos del encuentro)
-            int primoCost = 1280; // 20% de descuento (1,280 protogemas)
+
+            int passesToDeduct = Math.min(passesAvailable, ticketsToUse);
+            if (passesToDeduct > 0) {
+                int toDeduct = passesToDeduct;
+                for (ItemStack invStack : player.getInventory().items) {
+                    if (!invStack.isEmpty() && invStack.is(SystemItems.STAR_RAIL_SPECIAL_PASS.get())) {
+                        int take = Math.min(toDeduct, invStack.getCount());
+                        invStack.shrink(take);
+                        toDeduct -= take;
+                        if (toDeduct <= 0) break;
+                    }
+                }
+                player.inventoryMenu.broadcastChanges();
+            }
+
+            int fatesToDeduct = ticketsToUse - passesToDeduct;
+            if (fatesToDeduct > 0) {
+                data.spendIntertwinedFates(fatesToDeduct);
+            }
+
+            if (totalCostCurrency > 0) {
+                int jadeToSpend = Math.min(totalCostCurrency, data.stellarJade());
+                if (jadeToSpend > 0) {
+                    data.spendStellarJade(jadeToSpend);
+                }
+                int primosToSpend = totalCostCurrency - jadeToSpend;
+                if (primosToSpend > 0) {
+                    data.spendPrimogems(primosToSpend);
+                }
+            }
+
+            List<ItemStack> wonItems = new ArrayList<>();
+            List<Integer> itemRarities = new ArrayList<>();
+            int highestRarity = 3;
+
+            List<CompanionProfile> hsr5Stars = List.of(
+                    CompanionProfile.ACHERON, CompanionProfile.KAFKA, CompanionProfile.FIREFLY,
+                    CompanionProfile.DAN_HENG_IL, CompanionProfile.FEIXIAO, CompanionProfile.AVENTURINE,
+                    CompanionProfile.ROBIN, CompanionProfile.JING_YUAN, CompanionProfile.JINGLIU,
+                    CompanionProfile.BAILU, CompanionProfile.CLARA, CompanionProfile.HUOHUO,
+                    CompanionProfile.SPARKLE, CompanionProfile.BLACK_SWAN, CompanionProfile.TOPAZ,
+                    CompanionProfile.RUAN_MEI, CompanionProfile.SUNDAY
+            );
+
+            List<java.util.function.Supplier<ItemStack>> hsr5LightCones = List.of(
+                    () -> new ItemStack(SystemItems.LIGHT_CONE_PASSING_SHORE.get()),
+                    () -> new ItemStack(SystemItems.LIGHT_CONE_DREAMS_REST.get()),
+                    () -> new ItemStack(SystemItems.LIGHT_CONE_PATIENCE.get()),
+                    () -> new ItemStack(SystemItems.LIGHT_CONE_BEFORE_DAWN.get()),
+                    () -> new ItemStack(SystemItems.LIGHT_CONE_MILKY_WAY.get())
+            );
+
+            List<CompanionProfile> hsr4Stars = List.of(
+                    CompanionProfile.MARCH_7TH, CompanionProfile.DAN_HENG, CompanionProfile.HERTA,
+                    CompanionProfile.SERVAL, CompanionProfile.NATASHA, CompanionProfile.ASTA,
+                    CompanionProfile.TINGYUN, CompanionProfile.QINGQUE, CompanionProfile.GALLAGHER,
+                    CompanionProfile.XUEYI, CompanionProfile.LYNX
+            );
+
+            List<java.util.function.Supplier<ItemStack>> hsr4LightCones = List.of(
+                    () -> new ItemStack(SystemItems.LIGHT_CONE_DANCE_DANCE_DANCE.get()),
+                    () -> new ItemStack(SystemItems.LIGHT_CONE_GOOD_NIGHT_SLEEP_WELL.get()),
+                    () -> new ItemStack(SystemItems.LIGHT_CONE_THE_DAY_COSMOS_FELL.get()),
+                    () -> new ItemStack(SystemItems.LIGHT_CONE_EYES_OF_THE_PREY.get()),
+                    () -> new ItemStack(SystemItems.LIGHT_CONE_POST_OP_CONVERSATION.get()),
+                    () -> new ItemStack(SystemItems.LIGHT_CONE_BIRTH_OF_THE_SELF.get())
+            );
+
+            List<java.util.function.Supplier<ItemStack>> hsr3LightCones = List.of(
+                    () -> new ItemStack(SystemItems.LIGHT_CONE_ARROWS.get()),
+                    () -> new ItemStack(SystemItems.LIGHT_CONE_MULTIPLICATION.get()),
+                    () -> new ItemStack(SystemItems.LIGHT_CONE_DEFENSE.get()),
+                    () -> new ItemStack(SystemItems.LIGHT_CONE_PASSKEY.get()),
+                    () -> new ItemStack(SystemItems.LIGHT_CONE_CHORUS.get()),
+                    () -> new ItemStack(SystemItems.LIGHT_CONE_LOOP.get()),
+                    () -> new ItemStack(SystemItems.LIGHT_CONE_COLLAPSING_SKY.get()),
+                    () -> new ItemStack(SystemItems.LIGHT_CONE_CORNUCOPIA.get()),
+                    () -> new ItemStack(SystemItems.LIGHT_CONE_VOID.get()),
+                    () -> new ItemStack(SystemItems.LIGHT_CONE_AMBER.get())
+            );
+
+            for (int i = 0; i < count; i++) {
+                data.incrementTotalGachaPulls(1);
+                int pity5 = data.gachaPity5Star();
+                int pity4 = data.gachaPity4Star();
+
+                double rate5 = 0.006D;
+                if (pity5 >= 73) rate5 += (pity5 - 73) * 0.075D;
+                if (pity5 >= 79) rate5 = 1.0D;
+
+                double rate4 = 0.051D;
+                if (pity4 >= 8) rate4 += (pity4 - 8) * 0.35D;
+                if (pity4 >= 9) rate4 = 1.0D;
+
+                double roll = RNG.nextDouble();
+                if (roll < rate5) {
+                    data.setGachaPity5Star(0);
+                    data.incrementGachaPity4Star();
+                    highestRarity = 5;
+
+                    ItemStack won;
+                    String dropName;
+                    if (RNG.nextDouble() < 0.70D || hsr5LightCones.isEmpty()) {
+                        CompanionProfile wonProf = hsr5Stars.get(RNG.nextInt(hsr5Stars.size()));
+                        won = CompanionContractItem.createContract(wonProf);
+                        dropName = wonProf.displayName() + " (5★)";
+                        Component ann = Component.literal("§b§l✦✦✦✦✦ [STELLAR WARP] §fYou summoned §d§l" + wonProf.displayName() + " §ffrom the Astral Express!");
+                        player.displayClientMessage(ann, true);
+                    } else {
+                        won = hsr5LightCones.get(RNG.nextInt(hsr5LightCones.size())).get().copy();
+                        dropName = won.getHoverName().getString() + " (5★)";
+                        Component ann = Component.literal("§6§l✦✦✦✦✦ [STELLAR WARP] §fYou obtained the Legendary Light Cone §e§l" + won.getHoverName().getString() + "§f!");
+                        player.displayClientMessage(ann, true);
+                    }
+
+                    wonItems.add(won);
+                    itemRarities.add(5);
+                    data.addStarglitter(10);
+                    data.addWishHistoryEntry(dropName, 5, "Salto Estelar (HSR)");
+                    deliverGachaReward(player, data, won);
+
+                    player.serverLevel().playSound(null, player.getX(), player.getY(), player.getZ(),
+                            SoundEvents.UI_TOAST_CHALLENGE_COMPLETE, SoundSource.PLAYERS, 1.2F, 1.0F);
+                } else if (roll < (rate5 + rate4)) {
+                    data.incrementGachaPity5Star();
+                    data.setGachaPity4Star(0);
+
+                    ItemStack won;
+                    String dropName;
+                    if (RNG.nextBoolean() && !hsr4Stars.isEmpty()) {
+                        CompanionProfile won4 = hsr4Stars.get(RNG.nextInt(hsr4Stars.size()));
+                        won = CompanionContractItem.createContract(won4);
+                        dropName = won4.displayName() + " (4★)";
+                    } else {
+                        won = hsr4LightCones.get(RNG.nextInt(hsr4LightCones.size())).get().copy();
+                        dropName = won.getHoverName().getString() + " (4★)";
+                    }
+
+                    wonItems.add(won);
+                    itemRarities.add(4);
+                    data.addStarglitter(2);
+                    data.addWishHistoryEntry(dropName, 4, "Salto Estelar (HSR)");
+                    deliverGachaReward(player, data, won);
+                } else {
+                    data.incrementGachaPity5Star();
+                    data.incrementGachaPity4Star();
+                    ItemStack cone3 = hsr3LightCones.get(RNG.nextInt(hsr3LightCones.size())).get().copy();
+                    wonItems.add(cone3);
+                    itemRarities.add(3);
+                    data.addStardust(15);
+                    data.addWishHistoryEntry(cone3.getHoverName().getString() + " (3★)", 3, "Salto Estelar (HSR)");
+                    deliverGachaReward(player, data, cone3);
+                }
+            }
+
+            data.incrementTotalGachaPulls(count);
+            AwakeningSystemMod.sync(player);
+
+            PacketDistributor.sendToPlayer(player, new GachaWishResultPayload(
+                    highestRarity,
+                    wonItems,
+                    itemRarities,
+                    data.gachaPity5Star(),
+                    data.gachaGuaranteedRateUp(),
+                    data.primogems(),
+                    data.intertwinedFates(),
+                    data.acquaintFates(),
+                    data.stardust(),
+                    data.starglitter(),
+                    data.beginnerPulls(),
+                    data.mora(),
+                    data.weaponBannerTarget(),
+                    data.weaponBannerFatePoints(),
+                    data.characterBannerTarget(),
+                    data.totalGachaPulls()
+            ));
+            return;
+        }
+
+        if (banner == BANNER_UMA) {
+            int pullsNeeded = count;
+            int ticketsAvailable = 0;
+            for (ItemStack invStack : player.getInventory().items) {
+                if (!invStack.isEmpty() && (invStack.is(SystemItems.GACHA_TICKET.get()) || invStack.is(SystemItems.GOLDEN_GACHA_TICKET.get()))) {
+                    ticketsAvailable += invStack.getCount();
+                }
+            }
+            int intertwinedAvailable = data.intertwinedFates();
+            int totalFreeTickets = ticketsAvailable + intertwinedAvailable;
+
+            int ticketsToUse = Math.min(pullsNeeded, totalFreeTickets);
+            int remainingPulls = pullsNeeded - ticketsToUse;
+
+            int caratsAvailable = data.getCarats();
+            int caratsPulls = Math.min(remainingPulls, caratsAvailable / 150);
+            int pullsStillNeeded = remainingPulls - caratsPulls;
+            int primosNeeded = pullsStillNeeded * 160;
+
+            if (pullsStillNeeded > 0 && data.primogems() < primosNeeded) {
+                player.displayClientMessage(Component.translatable("awakening_system.gacha.tracen.insufficient_currency"), true);
+                player.playNotifySound(SoundEvents.VILLAGER_NO, SoundSource.PLAYERS, 0.8F, 1.0F);
+                return;
+            }
+
+            int ticketsToDeduct = Math.min(ticketsAvailable, ticketsToUse);
+            if (ticketsToDeduct > 0) {
+                int toDeduct = ticketsToDeduct;
+                for (ItemStack invStack : player.getInventory().items) {
+                    if (!invStack.isEmpty() && (invStack.is(SystemItems.GACHA_TICKET.get()) || invStack.is(SystemItems.GOLDEN_GACHA_TICKET.get()))) {
+                        int take = Math.min(toDeduct, invStack.getCount());
+                        invStack.shrink(take);
+                        toDeduct -= take;
+                        if (toDeduct <= 0) break;
+                    }
+                }
+                player.inventoryMenu.broadcastChanges();
+            }
+
+            int fatesToDeduct = ticketsToUse - ticketsToDeduct;
+            if (fatesToDeduct > 0) {
+                data.spendIntertwinedFates(fatesToDeduct);
+            }
+
+            if (caratsPulls > 0) {
+                data.spendCarats(caratsPulls * 150);
+            }
+
+            if (primosNeeded > 0) {
+                data.spendPrimogems(primosNeeded);
+            }
+
+            com.soybe.awakeningsystem.uma.gacha.UmaGachaManager.BannerPhase umaPhase = com.soybe.awakeningsystem.uma.gacha.UmaGachaManager.getActivePhase(player.serverLevel().getDayTime());
+            List<com.soybe.awakeningsystem.uma.gacha.UmaGachaManager.PullResult> results = com.soybe.awakeningsystem.uma.gacha.UmaGachaManager.performPullWithoutCarats(player, data, umaPhase, count);
+
+            List<ItemStack> wonItems = new ArrayList<>();
+            List<Integer> itemRarities = new ArrayList<>();
+            int highestRarity = 3;
+
+            for (var r : results) {
+                com.soybe.awakeningsystem.uma.UmaProfile profile = com.soybe.awakeningsystem.uma.UmaProfile.byId(r.umaId());
+                int rarity = r.rarity();
+                int visualStars = rarity == 3 ? 5 : (rarity == 2 ? 4 : 3);
+                highestRarity = Math.max(highestRarity, visualStars);
+
+                ItemStack item = createUmaContract(profile, rarity, r.isNew(), r.shardsGained());
+                wonItems.add(item);
+                itemRarities.add(visualStars);
+                data.addWishHistoryEntry(profile.getDisplayName() + " (" + rarity + "★)", visualStars, "Academia Tracen");
+            }
+
+            data.incrementTotalGachaPulls(count);
+            AwakeningSystemMod.sync(player);
+
+            PacketDistributor.sendToPlayer(player, new GachaWishResultPayload(
+                    highestRarity,
+                    wonItems,
+                    itemRarities,
+                    data.gachaPity5Star(),
+                    data.gachaGuaranteedRateUp(),
+                    data.primogems(),
+                    data.intertwinedFates(),
+                    data.acquaintFates(),
+                    data.stardust(),
+                    data.starglitter(),
+                    data.beginnerPulls(),
+                    data.mora(),
+                    data.weaponBannerTarget(),
+                    data.weaponBannerFatePoints(),
+                    data.characterBannerTarget(),
+                    data.totalGachaPulls()
+            ));
+            return;
+        }
+
+        boolean isPromotional = (banner == 0 || banner == 1 || banner == BANNER_PROMO_2 || (banner >= 4 && banner <= 10));
+        if (banner == 3) {
+            if (data.beginnerPulls() >= 20) {
+                player.displayClientMessage(Component.translatable("awakening_system.gacha.beginner_limit_reached"), true);
+                player.playNotifySound(SoundEvents.VILLAGER_NO, SoundSource.PLAYERS, 0.8F, 1.0F);
+                return;
+            }
+            count = 10;
+            int fateCost = 8;
+            int primoCost = 1280;
 
             if (data.acquaintFates() >= fateCost) {
                 data.spendAcquaintFates(fateCost);
             } else if (!data.spendPrimogems(primoCost)) {
-                player.displayClientMessage(Component.literal("§c[Gacha] ¡No tienes suficientes Destinos del Encuentro (8) ni Protogemas (" + primoCost + " requeridas con 20% dto.)!"), true);
+                player.displayClientMessage(Component.translatable("awakening_system.gacha.beginner_insufficient_primos", primoCost), true);
                 player.playNotifySound(SoundEvents.VILLAGER_NO, SoundSource.PLAYERS, 0.8F, 1.0F);
                 return;
             }
         } else if (isPromotional) {
-            // BANNERS PROMOCIONALES MULTIVERSO (Destinos Entrelazados o Protogemas)
             if (data.intertwinedFates() >= count) {
                 data.spendIntertwinedFates(count);
             } else {
                 int costPrimos = count * 160;
                 if (!data.spendPrimogems(costPrimos)) {
-                    player.displayClientMessage(Component.literal("§c[Gacha] ¡No tienes suficientes Destinos Entrelazados ni Protogemas (" + costPrimos + " requeridas)!"), true);
+                    player.displayClientMessage(Component.translatable("awakening_system.gacha.promo_insufficient_primos", costPrimos), true);
                     player.playNotifySound(SoundEvents.VILLAGER_NO, SoundSource.PLAYERS, 0.8F, 1.0F);
                     return;
                 }
             }
         } else {
-            // BANNER PERMANENTE ESTÁNDAR (Destinos del Encuentro o Protogemas)
             if (data.acquaintFates() >= count) {
                 data.spendAcquaintFates(count);
             } else {
                 int costPrimos = count * 160;
                 if (!data.spendPrimogems(costPrimos)) {
-                    player.displayClientMessage(Component.literal("§c[Gacha] ¡No tienes suficientes Destinos del Encuentro ni Protogemas (" + costPrimos + " requeridas)!"), true);
+                    player.displayClientMessage(Component.translatable("awakening_system.gacha.standard_insufficient_primos", costPrimos), true);
                     player.playNotifySound(SoundEvents.VILLAGER_NO, SoundSource.PLAYERS, 0.8F, 1.0F);
                     return;
                 }
@@ -188,7 +522,6 @@ public final class GachaManager {
             int pity5 = data.gachaPity5Star();
             int pity4 = data.gachaPity4Star();
 
-            // Si es la primera tirada de 10 del banner de principiantes, garantizar a Noelle en el slot 0
             if (guaranteedNoelleThisMulti && i == 0) {
                 highestRarity = Math.max(highestRarity, 4);
                 data.incrementGachaPity5Star();
@@ -201,14 +534,13 @@ public final class GachaManager {
                 continue;
             }
 
-            // 0. Chequeo de Mandoble del Creador: Juicio del Génesis (0.008% / ~1 en 12500 tiradas)
             if (RNG.nextDouble() < 0.00008D) {
                 highestRarity = 5;
                 ItemStack creatorSword = new ItemStack(SystemItems.CREATOR_CLAYMORE.get());
                 wonItems.add(creatorSword);
                 itemRarities.add(5);
-                data.addStarglitter(100); // 100 Brillo Estelar por reliquia del Creador
-                data.addMora(250000); // 250,000 Mora
+                data.addStarglitter(100);
+                data.addMora(250000);
                 data.addWishHistoryEntry(creatorSword.getHoverName().getString(), 5, bannerName);
 
                 player.serverLevel().playSound(null, player.getX(), player.getY(), player.getZ(),
@@ -218,22 +550,21 @@ public final class GachaManager {
                 player.serverLevel().playSound(null, player.getX(), player.getY(), player.getZ(),
                         SoundEvents.TOTEM_USE, SoundSource.PLAYERS, 1.0F, 1.2F);
 
-                Component creatorAnnounce = Component.literal("§6§l✦✦✦✦✦✦✦ ¡¡¡CREACIÓN SUPREMA DEL CREADOR (0.008%)!!! §e" + player.getName().getString() +
-                        " §fha obtenido del Gacha la mítica arma: §6" + creatorSword.getHoverName().getString() + "§6§l! ✦✦✦✦✦✦✦");
-                for (ServerPlayer online : player.server.getPlayerList().getPlayers()) {
-                    online.displayClientMessage(creatorAnnounce, false);
-                }
+                PacketDistributor.sendToAllPlayers(new com.soybe.awakeningsystem.network.SystemAnnouncementPayload(
+                        "✦ SUPREME MYTHIC DISCOVERY (0.008%)! ✦",
+                        player.getName().getString() + " obtained: " + creatorSword.getHoverName().getString(),
+                        0xFFFFD700
+                ));
                 continue;
             }
 
-            // 0.1 Chequeo de La Doncella (0.02% / ~1 en 5000 tiradas directas en cualquier banner)
             if (RNG.nextDouble() < 0.00020D) {
                 highestRarity = 5;
                 ItemStack doncellaSword = new ItemStack(SystemItems.LA_DONCELLA.get());
                 wonItems.add(doncellaSword);
                 itemRarities.add(5);
-                data.addStarglitter(30); // 30 Brillo Estelar
-                data.addMora(50000); // 50,000 Mora
+                data.addStarglitter(30);
+                data.addMora(50000);
                 data.addWishHistoryEntry(doncellaSword.getHoverName().getString(), 5, bannerName);
 
                 player.serverLevel().playSound(null, player.getX(), player.getY(), player.getZ(),
@@ -241,15 +572,14 @@ public final class GachaManager {
                 player.serverLevel().playSound(null, player.getX(), player.getY(), player.getZ(),
                         SoundEvents.EXPERIENCE_ORB_PICKUP, SoundSource.PLAYERS, 1.0F, 1.5F);
 
-                Component doncellaAnnounce = Component.literal("§d§l✦✦✦✦✦ ¡RELIQUIA DESPIERTA (0.02%)! §e" + player.getName().getString() +
-                        " §fha obtenido del Gacha: §d" + doncellaSword.getHoverName().getString() + "§d§l! ✦✦✦✦✦");
-                for (ServerPlayer online : player.server.getPlayerList().getPlayers()) {
-                    online.displayClientMessage(doncellaAnnounce, false);
-                }
+                PacketDistributor.sendToAllPlayers(new com.soybe.awakeningsystem.network.SystemAnnouncementPayload(
+                        "✦ AWAKENED 5★ RELIC (0.02%)! ✦",
+                        player.getName().getString() + " obtained: " + doncellaSword.getHoverName().getString(),
+                        0xFFFF55FF
+                ));
                 continue;
             }
 
-            // Probabilidad 5★ con Pity suave (73+) y Hard Pity (80)
             double rate5 = 0.006D;
             if (pity5 >= 73) {
                 rate5 += (pity5 - 73) * 0.075D;
@@ -258,7 +588,6 @@ public final class GachaManager {
                 rate5 = 1.0D;
             }
 
-            // Probabilidad 4★ (Hard pity en 10)
             double rate4 = 0.051D;
             if (pity4 >= 9) {
                 rate4 = 1.0D;
@@ -266,14 +595,13 @@ public final class GachaManager {
 
             double roll = RNG.nextDouble();
             if (roll < rate5) {
-                // 5★ OBTENIDO
                 highestRarity = 5;
                 data.setGachaPity5Star(0);
                 data.incrementGachaPity4Star();
 
                 ItemStack item5;
                 if (banner == 0) {
-                    PromotionalBanner.BannerPhase phase = PromotionalBanner.getActivePhase(player.serverLevel().getDayTime());
+                    PromotionalBanner.BannerPhase phase = PromotionalBanner.getActiveWeaponPhaseByEffectiveTicks(playerEffTime);
                     boolean winFeatured = data.gachaGuaranteedRateUp() || (RNG.nextDouble() < 0.75D);
                     ItemStack wp1 = phase.primaryFeaturedWeapon().get();
                     ItemStack wp2 = phase.secondaryFeaturedWeapon() != null ? phase.secondaryFeaturedWeapon().get() : wp1;
@@ -285,34 +613,34 @@ public final class GachaManager {
                             if (data.weaponBannerFatePoints() >= 1) {
                                 item5 = wp1.copy();
                                 data.setWeaponBannerFatePoints(0);
-                                player.displayClientMessage(Component.literal("§6§l✦✦✦✦✦ ¡SENDA DIVINA CUMPLIDA! Has obtenido tu arma fijada: " + item5.getHoverName().getString() + "! ✦✦✦✦✦"), false);
+                                player.displayClientMessage(Component.translatable("awakening_system.gacha.epitomized_fulfilled", item5.getHoverName()), true);
                             } else if (RNG.nextBoolean()) {
                                 item5 = wp1.copy();
                                 data.setWeaponBannerFatePoints(0);
-                                player.displayClientMessage(Component.literal("§6§l✦✦✦✦✦ ¡SENDA DIVINA ACERTADA! Has obtenido tu arma fijada: " + item5.getHoverName().getString() + "! ✦✦✦✦✦"), false);
+                                player.displayClientMessage(Component.translatable("awakening_system.gacha.epitomized_won", item5.getHoverName()), true);
                             } else {
                                 item5 = wp2.copy();
                                 data.setWeaponBannerFatePoints(1);
-                                player.displayClientMessage(Component.literal("§e[Senda Divina] Has obtenido la otra arma promocional (" + item5.getHoverName().getString() + "). §6¡Punto de Destino (1/1)! Tu próxima arma será la elegida."), false);
+                                player.displayClientMessage(Component.translatable("awakening_system.gacha.epitomized_fate_point", item5.getHoverName()), true);
                             }
                         } else if (target == 2) {
                             if (data.weaponBannerFatePoints() >= 1) {
                                 item5 = wp2.copy();
                                 data.setWeaponBannerFatePoints(0);
-                                player.displayClientMessage(Component.literal("§6§l✦✦✦✦✦ ¡SENDA DIVINA CUMPLIDA! Has obtenido tu arma fijada: " + item5.getHoverName().getString() + "! ✦✦✦✦✦"), false);
+                                player.displayClientMessage(Component.translatable("awakening_system.gacha.epitomized_fulfilled", item5.getHoverName()), true);
                             } else if (RNG.nextBoolean()) {
                                 item5 = wp2.copy();
                                 data.setWeaponBannerFatePoints(0);
-                                player.displayClientMessage(Component.literal("§6§l✦✦✦✦✦ ¡SENDA DIVINA ACERTADA! Has obtenido tu arma fijada: " + item5.getHoverName().getString() + "! ✦✦✦✦✦"), false);
+                                player.displayClientMessage(Component.translatable("awakening_system.gacha.epitomized_won", item5.getHoverName()), true);
                             } else {
                                 item5 = wp1.copy();
                                 data.setWeaponBannerFatePoints(1);
-                                player.displayClientMessage(Component.literal("§e[Senda Divina] Has obtenido la otra arma promocional (" + item5.getHoverName().getString() + "). §6¡Punto de Destino (1/1)! Tu próxima arma será la elegida."), false);
+                                player.displayClientMessage(Component.translatable("awakening_system.gacha.epitomized_fate_point", item5.getHoverName()), true);
                             }
                         } else {
                             ItemStack featuredWp = (phase.secondaryFeaturedWeapon() != null && RNG.nextBoolean()) ? wp2 : wp1;
                             item5 = featuredWp.copy();
-                            player.displayClientMessage(Component.literal("§6§l✦✦✦✦✦ ¡HAS OBTENIDO EL ARMA CELESTIAL PROMOCIONAL: " + item5.getHoverName().getString() + "! ✦✦✦✦✦"), false);
+                            player.displayClientMessage(Component.translatable("awakening_system.gacha.won_featured_weapon", item5.getHoverName()), true);
                         }
                     } else {
                         data.setGachaGuaranteedRateUp(true);
@@ -320,27 +648,27 @@ public final class GachaManager {
                             data.setWeaponBannerFatePoints(1);
                         }
                         item5 = rollStandardWeapon5Star();
-                        player.displayClientMessage(Component.literal("§c[Gacha] ¡Has perdido el 75/25 con un arma estándar (" + item5.getHoverName().getString() + ")! ¡Tu próxima arma 5★ está 100% GARANTIZADA!"), false);
+                        player.displayClientMessage(Component.translatable("awakening_system.gacha.lost_75_25", item5.getHoverName()), true);
                     }
-                } else if (banner == 1 || (banner >= 4 && banner <= 9)) {
+                } else if (banner == 1 || banner == BANNER_PROMO_2 || (banner >= 4 && banner <= 10)) {
                     PromotionalBanner.BannerPhase phase = rotatingPromoPhase;
                     boolean winFeatured = data.gachaGuaranteedRateUp() || RNG.nextBoolean();
                     if (winFeatured) {
                         data.setGachaGuaranteedRateUp(false);
-                        CompanionProfile targetProfile;
-                        if (phase.secondaryFeaturedCharacter() != null) {
-                            targetProfile = (data.characterBannerTarget() == 1) ? phase.secondaryFeaturedCharacter() : phase.featuredCharacter();
-                        } else {
-                            targetProfile = phase.featuredCharacter();
-                        }
+                        CompanionProfile targetProfile = phase.featuredCharacter();
                         item5 = CompanionContractItem.createContract(targetProfile);
-                        player.displayClientMessage(Component.literal("§6§l✦✦✦✦✦ ¡HAS OBTENIDO AL PERSONAJE PROMOCIONAL: " + targetProfile.displayName() + " 5★ (" + promoFranchise.displayName() + ")! ✦✦✦✦✦"), false);
+                        player.displayClientMessage(Component.translatable("awakening_system.gacha.won_featured_character", targetProfile.displayName()), true);
                     } else {
                         data.setGachaGuaranteedRateUp(true);
-                        CompanionProfile[] perm5Pool = {CompanionProfile.DILUC, CompanionProfile.JEAN, CompanionProfile.ZHONGLI, CompanionProfile.GANYU};
+                        CompanionProfile[] perm5Pool = {
+                                CompanionProfile.DILUC, CompanionProfile.JEAN, CompanionProfile.QIQI,
+                                CompanionProfile.BAILU, CompanionProfile.CLARA,
+                                CompanionProfile.VERINA, CompanionProfile.JIANXIN, CompanionProfile.CALCHARO,
+                                CompanionProfile.KOLEDA_BELOBOG, CompanionProfile.GRACE_HOWARD
+                        };
                         CompanionProfile perm5 = perm5Pool[RNG.nextInt(perm5Pool.length)];
                         item5 = CompanionContractItem.createContract(perm5);
-                        player.displayClientMessage(Component.literal("§c[Gacha] ¡Has perdido el 50/50 con " + perm5.displayName() + " 5★ (Permanente)! ¡Tu próximo 5★ está 100% GARANTIZADO!"), false);
+                        player.displayClientMessage(Component.translatable("awakening_system.gacha.lost_50_50", perm5.displayName()), true);
                     }
                 } else {
                     item5 = rollStandard5Star();
@@ -348,32 +676,30 @@ public final class GachaManager {
 
                 wonItems.add(item5);
                 itemRarities.add(5);
-                data.addStarglitter(10); // 10 Brillo Estelar por 5★
-                data.addMora(25000); // 25,000 Mora por 5★
+                data.addStarglitter(10);
+                data.addMora(25000);
                 data.addWishHistoryEntry(item5.getHoverName().getString(), 5, bannerName);
 
             } else if (roll < rate5 + rate4) {
-                // 4★ OBTENIDO
                 highestRarity = Math.max(highestRarity, 4);
                 data.incrementGachaPity5Star();
                 data.setGachaPity4Star(0);
 
-                ItemStack item4 = roll4StarReward(banner, player.serverLevel().getDayTime());
+                ItemStack item4 = roll4StarReward(banner, playerEffTime);
                 wonItems.add(item4);
                 itemRarities.add(4);
-                data.addStarglitter(2); // 2 Brillo Estelar por 4★
-                data.addMora(5000); // 5,000 Mora por 4★
+                data.addStarglitter(2);
+                data.addMora(5000);
                 data.addWishHistoryEntry(item4.getHoverName().getString(), 4, bannerName);
             } else {
-                // 3★ OBTENIDO
                 data.incrementGachaPity5Star();
                 data.incrementGachaPity4Star();
 
                 ItemStack item3 = roll3StarReward();
                 wonItems.add(item3);
                 itemRarities.add(3);
-                data.addStardust(15); // 15 Polvo Estelar por 3★
-                data.addMora(1000); // 1,000 Mora por 3★
+                data.addStardust(15);
+                data.addMora(1000);
                 data.addWishHistoryEntry(item3.getHoverName().getString(), 3, bannerName);
             }
         }
@@ -382,7 +708,6 @@ public final class GachaManager {
             data.incrementBeginnerPulls(10);
         }
 
-        // Entregar objetos al jugador (con protección automática al Subespacio si el inventario está lleno)
         boolean[] anySentToSubspace = new boolean[]{false};
         int[] subspaceCount = new int[]{0};
         for (ItemStack stack : wonItems) {
@@ -390,13 +715,12 @@ public final class GachaManager {
         }
 
         if (anySentToSubspace[0]) {
-            player.displayClientMessage(Component.literal("§6✦ [SISTEMA] §e¡Tu inventario estaba lleno! §b" + subspaceCount[0] + " objeto(s) §fse guardaron de forma segura en tu §eSubespacio del Sistema§f."), false);
+            player.displayClientMessage(Component.translatable("awakening_system.gacha.subspace_stored", subspaceCount[0]), false);
             player.playNotifySound(SoundEvents.AMETHYST_BLOCK_CHIME, SoundSource.PLAYERS, 0.8F, 1.4F);
         }
 
         AwakeningSystemMod.sync(player);
 
-        // Enviar resultado visual a la pantalla del cliente con saldo sincronizado
         PacketDistributor.sendToPlayer(player, new GachaWishResultPayload(
                 highestRarity,
                 wonItems,
@@ -423,7 +747,7 @@ public final class GachaManager {
         int count = Math.max(1, Math.min(20, payload.count()));
 
         switch (offer) {
-            case 0 -> { // 75 Polvo Estelar -> 1 Destino Entrelazado
+            case 0 -> {
                 int cost = 75 * count;
                 if (data.spendStardust(cost)) {
                     data.addIntertwinedFates(count);
@@ -435,7 +759,7 @@ public final class GachaManager {
                     return;
                 }
             }
-            case 1 -> { // 75 Polvo Estelar -> 1 Destino del Encuentro
+            case 1 -> {
                 int cost = 75 * count;
                 if (data.spendStardust(cost)) {
                     data.addAcquaintFates(count);
@@ -447,7 +771,7 @@ public final class GachaManager {
                     return;
                 }
             }
-            case 2 -> { // 5 Brillo Estelar -> 1 Destino Entrelazado
+            case 2 -> {
                 int cost = 5 * count;
                 if (data.spendStarglitter(cost)) {
                     data.addIntertwinedFates(count);
@@ -459,7 +783,7 @@ public final class GachaManager {
                     return;
                 }
             }
-            case 3 -> { // 5 Brillo Estelar -> 1 Destino del Encuentro
+            case 3 -> {
                 int cost = 5 * count;
                 if (data.spendStarglitter(cost)) {
                     data.addAcquaintFates(count);
@@ -471,7 +795,7 @@ public final class GachaManager {
                     return;
                 }
             }
-            case 4 -> { // 34 Brillo Estelar -> Contrato: Noelle (4★)
+            case 4 -> {
                 int cost = 34;
                 if (data.spendStarglitter(cost)) {
                     ItemStack contract = CompanionContractItem.createContract(CompanionProfile.NOELLE);
@@ -484,7 +808,7 @@ public final class GachaManager {
                     return;
                 }
             }
-            case 5 -> { // 34 Brillo Estelar -> Contrato: Cha Hae-In (4★)
+            case 5 -> {
                 int cost = 34;
                 if (data.spendStarglitter(cost)) {
                     ItemStack contract = CompanionContractItem.createContract(CompanionProfile.CHA_HAEIN);
@@ -497,7 +821,7 @@ public final class GachaManager {
                     return;
                 }
             }
-            case 6 -> { // 15 Polvo Estelar -> 15,000 Mora
+            case 6 -> {
                 int cost = 15 * count;
                 if (data.spendStardust(cost)) {
                     data.addMora(15000 * count);
@@ -509,7 +833,7 @@ public final class GachaManager {
                     return;
                 }
             }
-            case 7 -> { // 10 Polvo Estelar -> 8 Botellas de Experiencia
+            case 7 -> {
                 int cost = 10 * count;
                 if (data.spendStardust(cost)) {
                     ItemStack exp = new ItemStack(Items.EXPERIENCE_BOTTLE, 8 * count);
@@ -522,7 +846,7 @@ public final class GachaManager {
                     return;
                 }
             }
-            case 8 -> { // 10 Brillo Estelar -> 50,000 Mora
+            case 8 -> {
                 int cost = 10 * count;
                 if (data.spendStarglitter(cost)) {
                     data.addMora(50000 * count);
@@ -534,7 +858,7 @@ public final class GachaManager {
                     return;
                 }
             }
-            default -> { // 30,000 Mora -> 1 Destino del Encuentro
+            default -> {
                 int cost = 30000 * count;
                 if (data.spendMora(cost)) {
                     data.addAcquaintFates(count);
@@ -555,15 +879,13 @@ public final class GachaManager {
     public static void handleSetPath(ServerPlayer player, SetGachaPathPayload payload) {
         SystemData data = SystemEvents.data(player);
         if (payload.bannerType() == 0) {
-            // Senda divina para armas
             if (data.weaponBannerTarget() != payload.targetIndex()) {
                 data.setWeaponBannerTarget(payload.targetIndex());
-                data.setWeaponBannerFatePoints(0); // Reiniciar puntos de destino al cambiar de arma
+                data.setWeaponBannerFatePoints(0);
                 player.playNotifySound(SoundEvents.UI_BUTTON_CLICK.value(), SoundSource.PLAYERS, 1.0F, 1.2F);
-                player.displayClientMessage(Component.literal("§6[Senda Divina] §fHas fijado el arma objetivo para la Encarnación Divina."), true);
+                player.displayClientMessage(Component.translatable("awakening_system.gacha.epitomized_target_set"), true);
             }
         } else if (payload.bannerType() == 1) {
-            // Objetivo en banner doble de personajes
             data.setCharacterBannerTarget(payload.targetIndex());
             player.playNotifySound(SoundEvents.UI_BUTTON_CLICK.value(), SoundSource.PLAYERS, 1.0F, 1.2F);
         }
@@ -586,7 +908,7 @@ public final class GachaManager {
     }
 
     public static ItemStack rollFeaturedWeapon5Star() {
-        int pick = RNG.nextInt(23);
+        int pick = RNG.nextInt(22);
         return switch (pick) {
             case 0 -> SystemItems.STAFF_OF_HOMA.isBound() ? new ItemStack(SystemItems.STAFF_OF_HOMA.get()) : new ItemStack(Items.NETHERITE_SWORD);
             case 1 -> SystemItems.ENGULFING_LIGHTNING.isBound() ? new ItemStack(SystemItems.ENGULFING_LIGHTNING.get()) : new ItemStack(Items.NETHERITE_SWORD);
@@ -602,7 +924,6 @@ public final class GachaManager {
             case 11 -> SystemItems.ABSOLUTION.isBound() ? new ItemStack(SystemItems.ABSOLUTION.get()) : new ItemStack(Items.DIAMOND_SWORD);
             case 12 -> SystemItems.VORTEX_VANQUISHER.isBound() ? new ItemStack(SystemItems.VORTEX_VANQUISHER.get()) : new ItemStack(Items.NETHERITE_SWORD);
             case 13 -> SystemItems.SKYWARD_BLADE.isBound() ? new ItemStack(SystemItems.SKYWARD_BLADE.get()) : new ItemStack(Items.DIAMOND_SWORD);
-            // HSR & ZZZ & Honkai 5★
             case 14 -> SystemItems.HERTA_HAMMER.isBound() ? new ItemStack(SystemItems.HERTA_HAMMER.get()) : new ItemStack(Items.NETHERITE_AXE);
             case 15 -> SystemItems.QINGMING_SWORD.isBound() ? new ItemStack(SystemItems.QINGMING_SWORD.get()) : new ItemStack(Items.DIAMOND_SWORD);
             case 16 -> SystemItems.TAILLESS.isBound() ? new ItemStack(SystemItems.TAILLESS.get()) : new ItemStack(Items.NETHERITE_SWORD);
@@ -611,15 +932,13 @@ public final class GachaManager {
             case 19 -> SystemItems.LIGHT_CONE_PATIENCE.isBound() ? new ItemStack(SystemItems.LIGHT_CONE_PATIENCE.get()) : new ItemStack(Items.TOTEM_OF_UNDYING);
             case 20 -> SystemItems.LIGHT_CONE_DREAMS_REST.isBound() ? new ItemStack(SystemItems.LIGHT_CONE_DREAMS_REST.get()) : new ItemStack(Items.NETHERITE_SWORD);
             case 21 -> SystemItems.LIGHT_CONE_BEFORE_DAWN.isBound() ? new ItemStack(SystemItems.LIGHT_CONE_BEFORE_DAWN.get()) : new ItemStack(Items.DIAMOND_SWORD);
-            case 22 -> SystemItems.LA_DONCELLA.isBound() ? new ItemStack(SystemItems.LA_DONCELLA.get()) : new ItemStack(Items.NETHERITE_SWORD);
             default -> SystemItems.DOMAIN_OF_SANCTION.isBound() ? new ItemStack(SystemItems.DOMAIN_OF_SANCTION.get()) : new ItemStack(Items.DIAMOND_SWORD);
         };
     }
 
     public static ItemStack rollFeaturedShonen5Star() {
-        int pick = RNG.nextInt(28);
+        int pick = RNG.nextInt(71);
         return switch (pick) {
-            // Compañeros Invocables 5★ (Genshin, WuWa, HSR & Shonen)
             case 0 -> CompanionContractItem.createContract(CompanionProfile.RAIDEN_SHOGUN);
             case 1 -> CompanionContractItem.createContract(CompanionProfile.HU_TAO);
             case 2 -> CompanionContractItem.createContract(CompanionProfile.ZHONGLI);
@@ -635,25 +954,67 @@ public final class GachaManager {
             case 12 -> CompanionContractItem.createContract(CompanionProfile.ROBIN);
             case 13 -> CompanionContractItem.createContract(CompanionProfile.FEIXIAO);
             case 14 -> CompanionContractItem.createContract(CompanionProfile.ARLECCHINO);
-            // Armas & Reliquias Místicas 5★
-            case 15 -> SystemItems.LIGHT_CONE_MILKY_WAY.isBound() ? new ItemStack(SystemItems.LIGHT_CONE_MILKY_WAY.get()) : new ItemStack(Items.TOTEM_OF_UNDYING);
-            case 16 -> SystemItems.COMMAND_SPELL.isBound() ? new ItemStack(SystemItems.COMMAND_SPELL.get()) : new ItemStack(Items.NETHER_STAR);
-            case 17 -> rollVisionItem();
-            case 18 -> SystemItems.HERTA_HAMMER.isBound() ? new ItemStack(SystemItems.HERTA_HAMMER.get()) : new ItemStack(Items.NETHERITE_AXE);
-            case 19 -> SystemItems.QINGMING_SWORD.isBound() ? new ItemStack(SystemItems.QINGMING_SWORD.get()) : new ItemStack(Items.DIAMOND_SWORD);
-            case 20 -> SystemItems.STAFF_OF_HOMA.isBound() ? new ItemStack(SystemItems.STAFF_OF_HOMA.get()) : new ItemStack(Items.NETHERITE_SWORD);
-            case 21 -> SystemItems.MISTSPLITTER_REFORGED.isBound() ? new ItemStack(SystemItems.MISTSPLITTER_REFORGED.get()) : new ItemStack(Items.DIAMOND_SWORD);
-            case 22 -> SystemItems.DOMAIN_OF_SANCTION.isBound() ? new ItemStack(SystemItems.DOMAIN_OF_SANCTION.get()) : new ItemStack(Items.DIAMOND_SWORD);
-            case 23 -> SystemItems.LIGHT_CONE_PASSING_SHORE.isBound() ? new ItemStack(SystemItems.LIGHT_CONE_PASSING_SHORE.get()) : new ItemStack(Items.NETHERITE_SWORD);
-            case 24 -> SystemItems.LIGHT_CONE_PATIENCE.isBound() ? new ItemStack(SystemItems.LIGHT_CONE_PATIENCE.get()) : new ItemStack(Items.TOTEM_OF_UNDYING);
-            case 25 -> SystemItems.LIGHT_CONE_DREAMS_REST.isBound() ? new ItemStack(SystemItems.LIGHT_CONE_DREAMS_REST.get()) : new ItemStack(Items.NETHERITE_SWORD);
-            case 26 -> SystemItems.LIGHT_CONE_BEFORE_DAWN.isBound() ? new ItemStack(SystemItems.LIGHT_CONE_BEFORE_DAWN.get()) : new ItemStack(Items.DIAMOND_SWORD);
-            default -> SystemItems.WOLFS_GRAVESTONE.isBound() ? new ItemStack(SystemItems.WOLFS_GRAVESTONE.get()) : new ItemStack(Items.NETHERITE_AXE);
+            case 15 -> CompanionContractItem.createContract(CompanionProfile.GANYU);
+            case 16 -> CompanionContractItem.createContract(CompanionProfile.NEUVILLETTE);
+            case 17 -> CompanionContractItem.createContract(CompanionProfile.DILUC);
+            case 18 -> CompanionContractItem.createContract(CompanionProfile.JEAN);
+            case 19 -> CompanionContractItem.createContract(CompanionProfile.XIAO);
+            case 20 -> CompanionContractItem.createContract(CompanionProfile.JINGLIU);
+            case 21 -> CompanionContractItem.createContract(CompanionProfile.DAN_HENG_IL);
+            case 22 -> CompanionContractItem.createContract(CompanionProfile.AVENTURINE);
+            case 23 -> CompanionContractItem.createContract(CompanionProfile.JING_YUAN);
+            case 24 -> CompanionContractItem.createContract(CompanionProfile.ELLEN_JOE);
+            case 25 -> CompanionContractItem.createContract(CompanionProfile.HOSHIMI_MIYABI);
+            case 26 -> CompanionContractItem.createContract(CompanionProfile.JANE_DOE);
+            case 27 -> CompanionContractItem.createContract(CompanionProfile.CAESAR_KING);
+            case 28 -> CompanionContractItem.createContract(CompanionProfile.BURNICE_WHITE);
+            case 29 -> CompanionContractItem.createContract(CompanionProfile.ZHU_YUAN);
+            case 30 -> CompanionContractItem.createContract(CompanionProfile.JIYAN);
+            case 31 -> CompanionContractItem.createContract(CompanionProfile.JINSHI);
+            case 32 -> CompanionContractItem.createContract(CompanionProfile.SHOREKEEPER);
+            case 33 -> CompanionContractItem.createContract(CompanionProfile.CAMELLYA);
+            case 34 -> CompanionContractItem.createContract(CompanionProfile.ROVER);
+            case 35 -> CompanionContractItem.createContract(CompanionProfile.KLEE);
+            case 36 -> CompanionContractItem.createContract(CompanionProfile.SIGEWINNE);
+            case 37 -> CompanionContractItem.createContract(CompanionProfile.QIQI);
+            case 38 -> CompanionContractItem.createContract(CompanionProfile.YELAN);
+            case 39 -> CompanionContractItem.createContract(CompanionProfile.NAVIA);
+            case 40 -> CompanionContractItem.createContract(CompanionProfile.CLORINDE);
+            case 41 -> CompanionContractItem.createContract(CompanionProfile.KINICH);
+            case 42 -> CompanionContractItem.createContract(CompanionProfile.XILONEN);
+            case 43 -> CompanionContractItem.createContract(CompanionProfile.MAVUIKA);
+            case 44 -> CompanionContractItem.createContract(CompanionProfile.SKIRK);
+            case 45 -> CompanionContractItem.createContract(CompanionProfile.BAILU);
+            case 46 -> CompanionContractItem.createContract(CompanionProfile.CLARA);
+            case 47 -> CompanionContractItem.createContract(CompanionProfile.HUOHUO);
+            case 48 -> CompanionContractItem.createContract(CompanionProfile.SPARKLE);
+            case 49 -> CompanionContractItem.createContract(CompanionProfile.BLACK_SWAN);
+            case 50 -> CompanionContractItem.createContract(CompanionProfile.TOPAZ);
+            case 51 -> CompanionContractItem.createContract(CompanionProfile.RUAN_MEI);
+            case 52 -> CompanionContractItem.createContract(CompanionProfile.SUNDAY);
+            case 53 -> CompanionContractItem.createContract(CompanionProfile.ENCORE);
+            case 54 -> CompanionContractItem.createContract(CompanionProfile.VERINA);
+            case 55 -> CompanionContractItem.createContract(CompanionProfile.JIANXIN);
+            case 56 -> CompanionContractItem.createContract(CompanionProfile.CALCHARO);
+            case 57 -> CompanionContractItem.createContract(CompanionProfile.KOLEDA_BELOBOG);
+            case 58 -> CompanionContractItem.createContract(CompanionProfile.GRACE_HOWARD);
+            case 59 -> SystemItems.LIGHT_CONE_MILKY_WAY.isBound() ? new ItemStack(SystemItems.LIGHT_CONE_MILKY_WAY.get()) : new ItemStack(Items.TOTEM_OF_UNDYING);
+            case 60 -> SystemItems.COMMAND_SPELL.isBound() ? new ItemStack(SystemItems.COMMAND_SPELL.get()) : new ItemStack(Items.NETHER_STAR);
+            case 61 -> rollVisionItem();
+            case 62 -> SystemItems.HERTA_HAMMER.isBound() ? new ItemStack(SystemItems.HERTA_HAMMER.get()) : new ItemStack(Items.NETHERITE_AXE);
+            case 63 -> SystemItems.QINGMING_SWORD.isBound() ? new ItemStack(SystemItems.QINGMING_SWORD.get()) : new ItemStack(Items.DIAMOND_SWORD);
+            case 64 -> SystemItems.STAFF_OF_HOMA.isBound() ? new ItemStack(SystemItems.STAFF_OF_HOMA.get()) : new ItemStack(Items.NETHERITE_SWORD);
+            case 65 -> SystemItems.MISTSPLITTER_REFORGED.isBound() ? new ItemStack(SystemItems.MISTSPLITTER_REFORGED.get()) : new ItemStack(Items.DIAMOND_SWORD);
+            case 66 -> SystemItems.DOMAIN_OF_SANCTION.isBound() ? new ItemStack(SystemItems.DOMAIN_OF_SANCTION.get()) : new ItemStack(Items.DIAMOND_SWORD);
+            case 67 -> SystemItems.LIGHT_CONE_PASSING_SHORE.isBound() ? new ItemStack(SystemItems.LIGHT_CONE_PASSING_SHORE.get()) : new ItemStack(Items.NETHERITE_SWORD);
+            case 68 -> SystemItems.LIGHT_CONE_PATIENCE.isBound() ? new ItemStack(SystemItems.LIGHT_CONE_PATIENCE.get()) : new ItemStack(Items.TOTEM_OF_UNDYING);
+            case 69 -> SystemItems.LIGHT_CONE_DREAMS_REST.isBound() ? new ItemStack(SystemItems.LIGHT_CONE_DREAMS_REST.get()) : new ItemStack(Items.NETHERITE_SWORD);
+            default -> SystemItems.LIGHT_CONE_BEFORE_DAWN.isBound() ? new ItemStack(SystemItems.LIGHT_CONE_BEFORE_DAWN.get()) : new ItemStack(Items.DIAMOND_SWORD);
         };
     }
 
     public static ItemStack rollStandard5Star() {
-        int pick = RNG.nextInt(12);
+        int pick = RNG.nextInt(20);
         return switch (pick) {
             case 0 -> SystemItems.ASRAHAN_HOLY_SWORD.isBound() ? new ItemStack(SystemItems.ASRAHAN_HOLY_SWORD.get()) : new ItemStack(Items.NETHERITE_SWORD);
             case 1 -> SystemItems.DAWNS_BALLAD.isBound() ? new ItemStack(SystemItems.DAWNS_BALLAD.get()) : new ItemStack(Items.DIAMOND_SWORD);
@@ -664,8 +1025,16 @@ public final class GachaManager {
             case 6 -> SystemItems.HEAVEN_SHAKING_SWORD.isBound() ? new ItemStack(SystemItems.HEAVEN_SHAKING_SWORD.get()) : new ItemStack(Items.DIAMOND_SWORD);
             case 7 -> SystemItems.UNBREAKABLE_FAITH.isBound() ? new ItemStack(SystemItems.UNBREAKABLE_FAITH.get()) : new ItemStack(Items.SHIELD);
             case 8 -> SystemItems.HERTA_HAMMER.isBound() ? new ItemStack(SystemItems.HERTA_HAMMER.get()) : new ItemStack(Items.NETHERITE_AXE);
-            case 9 -> CompanionContractItem.createContract(CompanionProfile.ZHONGLI);
-            case 10 -> CompanionContractItem.createContract(CompanionProfile.RAIDEN_SHOGUN);
+            case 9 -> CompanionContractItem.createContract(CompanionProfile.DILUC);
+            case 10 -> CompanionContractItem.createContract(CompanionProfile.JEAN);
+            case 11 -> CompanionContractItem.createContract(CompanionProfile.QIQI);
+            case 12 -> CompanionContractItem.createContract(CompanionProfile.BAILU);
+            case 13 -> CompanionContractItem.createContract(CompanionProfile.CLARA);
+            case 14 -> CompanionContractItem.createContract(CompanionProfile.VERINA);
+            case 15 -> CompanionContractItem.createContract(CompanionProfile.JIANXIN);
+            case 16 -> CompanionContractItem.createContract(CompanionProfile.CALCHARO);
+            case 17 -> CompanionContractItem.createContract(CompanionProfile.KOLEDA_BELOBOG);
+            case 18 -> CompanionContractItem.createContract(CompanionProfile.GRACE_HOWARD);
             default -> SystemItems.TAILLESS.isBound() ? new ItemStack(SystemItems.TAILLESS.get()) : new ItemStack(Items.NETHERITE_SWORD);
         };
     }
@@ -683,11 +1052,9 @@ public final class GachaManager {
         };
     }
 
-    // EL POOL 4★ CONTIENE PERSONAJES 4★, ARMAS Y RELIQUIAS 4★
     public static ItemStack roll4StarReward(int banner, long dayTime) {
-        if (banner == 0 || banner == 1 || (banner >= 4 && banner <= 9)) {
+        if (banner == 0 || banner == 1 || banner == BANNER_PROMO_2 || (banner >= 4 && banner <= 10)) {
             PromotionalBanner.BannerPhase phase = PromotionalBanner.getActivePhase(dayTime);
-            // 50% de probabilidad de rate-up 4★
             if (RNG.nextBoolean()) {
                 if (RNG.nextBoolean() && !phase.rateUp4StarCharacters().isEmpty()) {
                     CompanionProfile char4 = phase.rateUp4StarCharacters().get(RNG.nextInt(phase.rateUp4StarCharacters().size()));
@@ -698,10 +1065,19 @@ public final class GachaManager {
             }
         }
 
-        // 50% de probabilidad de Personaje 4★, 50% de Armas y Reliquias 4★
         if (RNG.nextBoolean()) {
             CompanionProfile[] chars4 = new CompanionProfile[]{
                     CompanionProfile.MARCH_7TH,
+                    CompanionProfile.DAN_HENG,
+                    CompanionProfile.HERTA,
+                    CompanionProfile.SERVAL,
+                    CompanionProfile.NATASHA,
+                    CompanionProfile.ASTA,
+                    CompanionProfile.TINGYUN,
+                    CompanionProfile.QINGQUE,
+                    CompanionProfile.GALLAGHER,
+                    CompanionProfile.XUEYI,
+                    CompanionProfile.LYNX,
                     CompanionProfile.NOELLE,
                     CompanionProfile.CHA_HAEIN,
                     CompanionProfile.BENNETT,
@@ -709,7 +1085,22 @@ public final class GachaManager {
                     CompanionProfile.TANJIRO,
                     CompanionProfile.MEGUMI,
                     CompanionProfile.YUJI_ITADORI,
-                    CompanionProfile.ARCHER
+                    CompanionProfile.ARCHER,
+                    CompanionProfile.NICOLE_DEMARA,
+                    CompanionProfile.MINT,
+                    CompanionProfile.YAOYAO,
+                    CompanionProfile.SAYU,
+                    CompanionProfile.DIONA,
+                    CompanionProfile.SANHUA,
+                    CompanionProfile.DANJIN,
+                    CompanionProfile.CHIXIA,
+                    CompanionProfile.BAIZHI,
+                    CompanionProfile.PIPER_WHEEL,
+                    CompanionProfile.LUCY,
+                    CompanionProfile.CORIN_WICKES,
+                    CompanionProfile.SOUKAKU,
+                    CompanionProfile.ANBY_DEMARA,
+                    CompanionProfile.BILLY_KID
             };
             return CompanionContractItem.createContract(chars4[RNG.nextInt(chars4.length)]);
         }
@@ -759,7 +1150,9 @@ public final class GachaManager {
             if (holder != null && holder.isBound()) {
                 return new ItemStack((net.minecraft.world.item.Item) holder.get());
             }
-        } catch (Exception ignored) {}
+        } catch (Exception e) {
+            AwakeningSystemMod.LOGGER.debug("Failed to reflect artifact item for field {}: {}", fieldName, e.getMessage());
+        }
         return new ItemStack(Items.EMERALD);
     }
 
@@ -809,7 +1202,6 @@ public final class GachaManager {
                     data.setClaimedFirstTopUp(pack);
                 }
                 data.addGenesisCrystals(crystals);
-                data.addStellarJade(crystals);
                 if (isFirstBonus) {
                     player.displayClientMessage(Component.translatable("awakening_system.gacha.topup.success_double", String.format(java.util.Locale.US, "%,d", crystals), String.format(java.util.Locale.US, "%,d", crystals)), false);
                 } else {
@@ -858,6 +1250,104 @@ public final class GachaManager {
                 player.displayClientMessage(Component.translatable("awakening_system.gacha.topup.insufficient_coins", String.format(java.util.Locale.US, "%,d", cost)), true);
                 player.playNotifySound(SoundEvents.VILLAGER_NO, SoundSource.PLAYERS, 0.9F, 1.0F);
             }
+        } else if (action == 4) {
+            int[] caratAmounts = {150, 1500, 4500, 15000};
+            int[] coinCosts = {10000, 75000, 200000, 500000};
+            if (pack < 0 || pack >= caratAmounts.length) return;
+            int cost = coinCosts[pack];
+            int carats = caratAmounts[pack];
+            if (data.spendCoins(cost)) {
+                data.addCarats(carats);
+                player.displayClientMessage(Component.translatable("awakening_system.gacha.buy_carats_coins", String.format(java.util.Locale.US, "%,d", carats), String.format(java.util.Locale.US, "%,d", cost)), true);
+                player.playNotifySound(SoundEvents.PLAYER_LEVELUP, SoundSource.PLAYERS, 1.0F, 1.2F);
+                AwakeningSystemMod.sync(player);
+            } else {
+                player.displayClientMessage(Component.translatable("awakening_system.gacha.topup.insufficient_coins", String.format(java.util.Locale.US, "%,d", cost)), true);
+                player.playNotifySound(SoundEvents.VILLAGER_NO, SoundSource.PLAYERS, 0.9F, 1.0F);
+            }
+        } else if (action == 5) {
+            int[] caratAmounts = {150, 1500, 5000, 12000, 25000};
+            double[] usdCosts = {0.99, 4.99, 14.99, 29.99, 49.99};
+            if (pack < 0 || pack >= caratAmounts.length) return;
+            double cost = usdCosts[pack];
+            int carats = caratAmounts[pack];
+            if (data.spendUsdBalance(cost)) {
+                data.addCarats(carats);
+                player.displayClientMessage(Component.translatable("awakening_system.gacha.buy_carats_usd", String.format(java.util.Locale.US, "%,d", carats), String.format(java.util.Locale.US, "%.2f", cost)), true);
+                player.playNotifySound(SoundEvents.UI_TOAST_CHALLENGE_COMPLETE, SoundSource.PLAYERS, 1.0F, 1.2F);
+                AwakeningSystemMod.sync(player);
+            } else {
+                player.displayClientMessage(Component.translatable("awakening_system.gacha.topup.insufficient_usd", String.format(java.util.Locale.US, "%.2f", cost)), true);
+                player.playNotifySound(SoundEvents.VILLAGER_NO, SoundSource.PLAYERS, 0.9F, 1.0F);
+            }
+        } else if (action == 6) {
+            int crystals = data.genesisCrystals();
+            if (crystals <= 0) {
+                player.displayClientMessage(Component.translatable("awakening_system.gacha.convert.no_crystals"), true);
+                player.playNotifySound(SoundEvents.VILLAGER_NO, SoundSource.PLAYERS, 0.9F, 1.0F);
+                return;
+            }
+            int toConvert = (pack > 0 && pack <= crystals) ? pack : crystals;
+            data.spendGenesisCrystals(toConvert);
+            data.addCarats(toConvert);
+            player.displayClientMessage(Component.translatable("awakening_system.gacha.convert_carats", toConvert, toConvert), true);
+            player.playNotifySound(SoundEvents.EXPERIENCE_ORB_PICKUP, SoundSource.PLAYERS, 1.0F, 1.3F);
+            AwakeningSystemMod.sync(player);
+        } else if (action == 7) {
+            int[] jadeAmounts = {60, 330, 1090, 2240, 3880, 8080, 300};
+            if (pack < 0 || pack >= usdPrices.length) return;
+            double costUsd = usdPrices[pack];
+            if (!data.spendUsdBalance(costUsd)) {
+                player.displayClientMessage(Component.translatable("awakening_system.gacha.topup.insufficient_usd", String.format(java.util.Locale.US, "%.2f", costUsd)), true);
+                player.playNotifySound(SoundEvents.VILLAGER_NO, SoundSource.PLAYERS, 0.9F, 1.0F);
+                return;
+            }
+
+            if (pack == 6) {
+                int bonusJade = data.isWelkinEnhanced() ? 450 : 300;
+                data.addStellarJade(bonusJade);
+                data.addWelkinDays(30);
+                player.displayClientMessage(Component.translatable("awakening_system.gacha.welkin_activated", bonusJade), false);
+            } else {
+                int baseJade = jadeAmounts[pack];
+                boolean isFirstBonus = !data.hasClaimedFirstJadeTopUp(pack);
+                int jade = isFirstBonus ? (baseJade * 2) : baseJade;
+                if (isFirstBonus) {
+                    data.setClaimedFirstJadeTopUp(pack);
+                }
+                data.addStellarJade(jade);
+                player.displayClientMessage(Component.translatable(isFirstBonus ? "awakening_system.gacha.topup.success_2x" : "awakening_system.gacha.topup.success", String.format(java.util.Locale.US, "%,d", jade)), false);
+            }
+            player.playNotifySound(SoundEvents.UI_TOAST_CHALLENGE_COMPLETE, SoundSource.PLAYERS, 1.0F, 1.2F);
+            AwakeningSystemMod.sync(player);
+        } else if (action == 8) {
+            int[] jadeAmounts = {160, 1600, 4800, 16000};
+            int[] coinCosts = {10000, 75000, 200000, 500000};
+            if (pack < 0 || pack >= jadeAmounts.length) return;
+            int cost = coinCosts[pack];
+            int jade = jadeAmounts[pack];
+            if (data.spendCoins(cost)) {
+                data.addStellarJade(jade);
+                player.displayClientMessage(Component.translatable("awakening_system.gacha.topup.buy_success", String.format(java.util.Locale.US, "%,d", jade), String.format(java.util.Locale.US, "%,d", cost)), true);
+                player.playNotifySound(SoundEvents.PLAYER_LEVELUP, SoundSource.PLAYERS, 1.0F, 1.2F);
+                AwakeningSystemMod.sync(player);
+            } else {
+                player.displayClientMessage(Component.translatable("awakening_system.gacha.topup.insufficient_coins", String.format(java.util.Locale.US, "%,d", cost)), true);
+                player.playNotifySound(SoundEvents.VILLAGER_NO, SoundSource.PLAYERS, 0.9F, 1.0F);
+            }
+        } else if (action == 9) {
+            int crystals = data.genesisCrystals();
+            if (crystals <= 0) {
+                player.displayClientMessage(Component.translatable("awakening_system.gacha.convert.no_crystals"), true);
+                player.playNotifySound(SoundEvents.VILLAGER_NO, SoundSource.PLAYERS, 0.9F, 1.0F);
+                return;
+            }
+            int toConvert = (pack > 0 && pack <= crystals) ? pack : crystals;
+            data.spendGenesisCrystals(toConvert);
+            data.addStellarJade(toConvert);
+            player.displayClientMessage(Component.translatable("awakening_system.gacha.convert.success", toConvert, toConvert), true);
+            player.playNotifySound(SoundEvents.EXPERIENCE_ORB_PICKUP, SoundSource.PLAYERS, 1.0F, 1.3F);
+            AwakeningSystemMod.sync(player);
         }
     }
 
@@ -889,7 +1379,6 @@ public final class GachaManager {
             data.setWelkinQuestStep(1);
             data.setWelkinQuestProgress(0);
 
-            // Entregar la Guía Sagrada Trilunar
             ItemStack guide = new ItemStack(SystemItems.TRILUNAR_GUIDE.get());
             if (!player.getInventory().add(guide)) {
                 player.drop(guide, false);
@@ -919,10 +1408,9 @@ public final class GachaManager {
         data.setWelkinEnhanced(true);
         data.setWelkinQuestStep(4);
         data.setWelkinQuestProgress(0);
-        data.addGenesisCrystals(450); // Cristales Génesis de Ascensión
-        data.addPrimogems(300); // Bonificación de ascensión
+        data.addGenesisCrystals(450);
+        data.addPrimogems(300);
 
-        // Entregar el Contrato de Invocación 5★ de Columbina
         ItemStack contract = com.soybe.awakeningsystem.item.CompanionContractItem.createContract(com.soybe.awakeningsystem.entity.CompanionProfile.COLUMBINA);
         if (!player.getInventory().add(contract)) {
             player.drop(contract, false);

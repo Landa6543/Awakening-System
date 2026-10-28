@@ -26,7 +26,7 @@ public class AncientCelestialDragonBossModel<T extends AncientCelestialDragonBos
     public static final ModelLayerLocation LAYER_LOCATION =
             new ModelLayerLocation(ResourceLocation.fromNamespaceAndPath(AwakeningSystemMod.MOD_ID, "ancient_celestial_dragon_boss"), "main");
 
-    public static final int CHAIN_JOINTS_COUNT = 63; // neck2 (1) + body (48) + tail (13) + tuft (1) = 63 + neck1 = 64 vértebras
+    public static final int CHAIN_JOINTS_COUNT = 63;
 
     private final ModelPart root;
     private final ModelPart neck1;
@@ -57,11 +57,9 @@ public class AncientCelestialDragonBossModel<T extends AncientCelestialDragonBos
         ModelPart current = this.neck1;
         this.chainJoints = new ModelPart[CHAIN_JOINTS_COUNT];
 
-        // 1. neck2
         current = current.getChild("neck2");
         this.chainJoints[0] = current;
 
-        // 2..49: body1 a body48 (colosal cuerpo robusto de 48 vértebras)
         ModelPart bFront = null;
         ModelPart bBack = null;
         for (int b = 1; b <= 48; b++) {
@@ -71,13 +69,11 @@ public class AncientCelestialDragonBossModel<T extends AncientCelestialDragonBos
             if (b == 36) bBack = current;
         }
 
-        // 50..62: tail1 a tail13
         for (int t = 1; t <= 13; t++) {
             current = current.getChild("tail" + t);
             this.chainJoints[48 + t] = current;
         }
 
-        // 63: tailTuft
         this.tailTuft = current.getChild("tail_tuft");
         this.chainJoints[62] = this.tailTuft;
 
@@ -91,14 +87,12 @@ public class AncientCelestialDragonBossModel<T extends AncientCelestialDragonBos
         MeshDefinition mesh = new MeshDefinition();
         PartDefinition root = mesh.getRoot();
 
-        // 1. neck1 (profundidad 10 calibrada exactamente a la textura: z = -4 a +6)
         PartDefinition neck1 = root.addOrReplaceChild("neck1", CubeListBuilder.create()
                 .texOffs(0, 25).addBox(-4.0F, -4.0F, -4.0F, 8.0F, 8.0F, 10.0F, new CubeDeformation(0.0F))
                 .texOffs(38, 25).addBox(-1.0F, -8.0F, -4.0F, 2.0F, 4.0F, 10.0F, new CubeDeformation(0.0F))
                 .texOffs(64, 25).addBox(-3.0F, 3.8F, -4.0F, 6.0F, 1.0F, 10.0F, new CubeDeformation(0.0F)),
                 PartPose.offset(0.0F, 8.0F, -14.0F));
 
-        // Head imponente con cejas 3D arqueadas
         PartDefinition head = neck1.addOrReplaceChild("head", CubeListBuilder.create()
                 .texOffs(0, 0).addBox(-4.0F, -4.0F, -8.0F, 8.0F, 7.0F, 9.0F, new CubeDeformation(0.0F))
                 .texOffs(35, 0).addBox(-3.0F, -1.0F, -16.0F, 6.0F, 4.0F, 8.0F, new CubeDeformation(0.0F))
@@ -107,7 +101,6 @@ public class AncientCelestialDragonBossModel<T extends AncientCelestialDragonBos
                 .texOffs(64, 0).addBox(3.8F, -2.8F, -8.0F, 0.4F, 1.0F, 4.5F, new CubeDeformation(0.0F)),
                 PartPose.offset(0.0F, 0.0F, -3.0F));
 
-        // Cuernos ramificados de ciervo imperial en café noble (Stag Antlers hacia atrás y arriba)
         head.addOrReplaceChild("horn_left", CubeListBuilder.create()
                 .texOffs(64, 10).addBox(-1.0F, -10.0F, -1.0F, 2.0F, 10.0F, 2.0F, new CubeDeformation(0.0F))
                 .texOffs(73, 10).addBox(-0.5F, -15.0F, -0.5F, 1.0F, 5.0F, 1.0F, new CubeDeformation(0.0F))
@@ -126,7 +119,6 @@ public class AncientCelestialDragonBossModel<T extends AncientCelestialDragonBos
                 .texOffs(35, 13).addBox(-2.5F, 0.0F, -8.0F, 5.0F, 2.0F, 8.0F, new CubeDeformation(0.0F)),
                 PartPose.offset(0.0F, 3.0F, -8.0F));
 
-        // Bigotes de Qi Celestial estilizados (sin bloques toscos en cruz)
         PartDefinition wLeft = head.addOrReplaceChild("whisker_left", CubeListBuilder.create()
                 .texOffs(89, 0).addBox(-2.0F, -0.5F, -2.0F, 2.0F, 1.0F, 3.0F, new CubeDeformation(0.0F)),
                 PartPose.offset(-3.0F, 0.5F, -14.0F));
@@ -141,14 +133,12 @@ public class AncientCelestialDragonBossModel<T extends AncientCelestialDragonBos
                 .texOffs(90, 5).addBox(-0.5F, -0.5F, 0.0F, 1.0F, 1.0F, 14.0F, new CubeDeformation(0.0F)),
                 PartPose.offset(1.5F, 0.0F, 1.0F));
 
-        // 2. neck2 (offset 5.0F, z = -2 a +8 -> solapamiento permanente de 3 unidades con neck1)
         PartDefinition neck2 = neck1.addOrReplaceChild("neck2", CubeListBuilder.create()
                 .texOffs(0, 25).addBox(-4.0F, -4.0F, -2.0F, 8.0F, 8.0F, 10.0F, new CubeDeformation(0.0F))
                 .texOffs(38, 25).addBox(-1.0F, -8.0F, -2.0F, 2.0F, 4.0F, 10.0F, new CubeDeformation(0.0F))
                 .texOffs(64, 25).addBox(-3.0F, 3.8F, -2.0F, 6.0F, 1.0F, 10.0F, new CubeDeformation(0.0F)),
                 PartPose.offset(0.0F, 0.0F, 5.0F));
 
-        // 48 Segmentos de cuerpo colosales con solapamiento sin fisuras
         PartDefinition prev = neck2;
         for (int b = 1; b <= 48; b++) {
             PartDefinition body = prev.addOrReplaceChild("body" + b, CubeListBuilder.create()
@@ -163,7 +153,6 @@ public class AncientCelestialDragonBossModel<T extends AncientCelestialDragonBos
             prev = body;
         }
 
-        // 13 Segmentos de Cola cónica progresiva
         PartDefinition tail1 = prev.addOrReplaceChild("tail1", CubeListBuilder.create()
                 .texOffs(0, 58).addBox(-3.5F, -3.5F, -2.0F, 7.0F, 7.0F, 9.0F, new CubeDeformation(0.0F))
                 .texOffs(34, 58).addBox(-1.0F, -6.0F, -2.0F, 2.0F, 3.0F, 9.0F, new CubeDeformation(0.0F))
@@ -226,7 +215,6 @@ public class AncientCelestialDragonBossModel<T extends AncientCelestialDragonBos
                 .texOffs(24, 92).addBox(-1.0F, -1.0F, -1.5F, 2.0F, 2.0F, 5.0F, new CubeDeformation(0.0F)),
                 PartPose.offset(0.0F, 0.0F, 2.5F));
 
-        // Penacho de cola en llamas de Qi celestial tridimensional
         tail13.addOrReplaceChild("tail_tuft", CubeListBuilder.create()
                 .texOffs(44, 92).addBox(-0.5F, -4.0F, 0.0F, 1.0F, 8.0F, 12.0F, new CubeDeformation(0.0F))
                 .texOffs(72, 92).addBox(-3.0F, -0.5F, 2.0F, 6.0F, 1.0F, 8.0F, new CubeDeformation(0.0F))
@@ -267,23 +255,21 @@ public class AncientCelestialDragonBossModel<T extends AncientCelestialDragonBos
         float partialTick = ageInTicks - (float) entity.tickCount;
         if (partialTick < 0.0F) partialTick += 1.0F;
 
-        // Si el dragón ha sido derribado / derrotado y descansa en el suelo
         if (entity.isFallen()) {
             float breath = Mth.sin(ageInTicks * 0.08F) * 0.04F;
-            this.neck1.zRot = 1.25F + breath; // Cuello y cabeza inclinados de lado sobre el suelo
+            this.neck1.zRot = 1.25F + breath;
             this.neck1.xRot = 0.15F;
             this.neck1.yRot = 0.30F;
             this.head.zRot = 0.20F;
             this.head.xRot = 0.10F;
             this.head.yRot = 0.20F;
-            this.jaw.xRot = 0.32F + breath * 2.0F; // Boca entreabierta con respiración fatigada
+            this.jaw.xRot = 0.32F + breath * 2.0F;
 
             this.whiskerLeft.yRot = 0.10F;
-            this.whiskerLeft.zRot = 0.65F; // Bigotes caídos al suelo
+            this.whiskerLeft.zRot = 0.65F;
             this.whiskerRight.yRot = 0.10F;
             this.whiskerRight.zRot = -0.65F;
 
-            // Segmentos colosales descansando en el suelo con sutil ondulación de respiración
             for (int i = 0; i < this.chainJoints.length; i++) {
                 ModelPart joint = this.chainJoints[i];
                 if (joint == null) continue;
@@ -293,7 +279,6 @@ public class AncientCelestialDragonBossModel<T extends AncientCelestialDragonBos
                 joint.zRot = (i < 8) ? (1.25F / (i + 1.2F)) : 0.0F;
             }
 
-            // Patas vencidas extendidas en el suelo
             this.legFrontLeft.xRot = 0.10F;
             this.legFrontLeft.zRot = -0.85F;
             this.legFrontRight.xRot = 0.10F;
@@ -305,32 +290,45 @@ public class AncientCelestialDragonBossModel<T extends AncientCelestialDragonBos
             return;
         }
 
-        // 1. Orientación de cabeza y cuello raíz (neck1)
+        double horizSpeedSq = entity.getDeltaMovement().horizontalDistanceSqr();
+        float speed = (float) Math.sqrt(horizSpeedSq);
+        float speedNorm = Mth.clamp(speed * 2.0F, 0.0F, 1.0F);
+
+        // Constant angular frequency: strictly monotonic base time eliminates phase-shearing jitter
+        float bossBaseTime = ageInTicks * 0.055F;
+        float bossWaveK = 0.18F; // Spatial wavelength: ~35 vertebrae per cycle
+
+        boolean isRoaringOrBreathing = entity.isRoaring() || entity.isBreathing();
+        float bossYawAmp = (0.032F + speedNorm * 0.018F) * (isRoaringOrBreathing ? 1.3F : 1.0F);
+        float bossPitchAmp = (0.012F + speedNorm * 0.008F) * (isRoaringOrBreathing ? 1.3F : 1.0F);
+
+        // Neck1 is root of chain: keep yRot strictly 0.0F
         float basePitch = entity.getSegmentPitch(0, partialTick) * ((float) Math.PI / 180.0F);
-        this.neck1.xRot = basePitch;
+        this.neck1.xRot = Mth.clamp(basePitch, -0.65F, 0.65F);
         this.neck1.yRot = 0.0F;
+        this.neck1.zRot = 0.0F;
 
-        this.head.xRot = 0.0F;
-        this.head.yRot = netHeadYaw * ((float) Math.PI / 180F) * 0.35F;
+        // Head aims naturally without jerking
+        float cleanHeadYaw = Mth.clamp(Mth.wrapDegrees(netHeadYaw), -50.0F, 50.0F) * ((float) Math.PI / 180.0F);
+        float cleanHeadPitch = Mth.clamp(headPitch, -35.0F, 35.0F) * ((float) Math.PI / 180.0F);
+        this.head.yRot = cleanHeadYaw * 0.40F;
+        this.head.xRot = cleanHeadPitch * 0.30F;
 
-        // 2. Mandíbula al rugir o lanzar aliento
-        if (entity.isRoaring() || entity.isBreathing()) {
+        if (isRoaringOrBreathing) {
             this.jaw.xRot = 0.65F;
         } else {
-            this.jaw.xRot = 0.04F + Mth.sin(ageInTicks * 0.1F) * 0.03F;
+            this.jaw.xRot = 0.04F + Mth.sin(ageInTicks * 0.10F) * 0.03F;
         }
 
-        // 3. Bigotes de seda celestial ondeando al viento
-        float wFlutter = Mth.sin(ageInTicks * 0.22F) * 0.14F;
+        float wFlutter = Mth.sin(ageInTicks * 0.10F) * (0.08F + speedNorm * 0.08F);
         this.whiskerLeft.yRot = -0.32F + wFlutter;
-        this.whiskerLeftTip.yRot = 0.18F + Mth.sin(ageInTicks * 0.22F - 0.6F) * 0.20F;
-        this.whiskerLeftTip.zRot = 0.12F + Mth.cos(ageInTicks * 0.18F - 0.6F) * 0.14F;
+        this.whiskerLeftTip.yRot = 0.18F + Mth.sin(ageInTicks * 0.14F - 0.6F) * 0.14F;
+        this.whiskerLeftTip.zRot = 0.12F + Mth.cos(ageInTicks * 0.11F - 0.6F) * 0.10F;
 
         this.whiskerRight.yRot = 0.32F - wFlutter;
-        this.whiskerRightTip.yRot = -0.18F - Mth.sin(ageInTicks * 0.22F - 0.6F) * 0.20F;
-        this.whiskerRightTip.zRot = -0.12F - Mth.cos(ageInTicks * 0.18F - 0.6F) * 0.14F;
+        this.whiskerRightTip.yRot = -0.18F - Mth.sin(ageInTicks * 0.14F - 0.6F) * 0.14F;
+        this.whiskerRightTip.zRot = -0.12F - Mth.cos(ageInTicks * 0.11F - 0.6F) * 0.10F;
 
-        // 4. Cinemática pura continua vértebra a vértebra (63 articulaciones)
         for (int i = 0; i < this.chainJoints.length; i++) {
             ModelPart joint = this.chainJoints[i];
             if (joint == null) continue;
@@ -338,23 +336,31 @@ public class AncientCelestialDragonBossModel<T extends AncientCelestialDragonBos
 
             float curYaw = entity.getSegmentYaw(segIndex, partialTick);
             float prevYaw = entity.getSegmentYaw(segIndex - 1, partialTick);
-            float bendYaw = Mth.wrapDegrees(curYaw - prevYaw) * ((float) Math.PI / 180.0F);
+            float rawDiffYaw = Mth.wrapDegrees(curYaw - prevYaw);
+            float bendYaw = Mth.clamp(rawDiffYaw, -12.0F, 12.0F) * ((float) Math.PI / 180.0F);
 
             float curPitch = entity.getSegmentPitch(segIndex, partialTick);
             float prevPitch = entity.getSegmentPitch(segIndex - 1, partialTick);
-            float bendPitch = (curPitch - prevPitch) * ((float) Math.PI / 180.0F);
+            float rawDiffPitch = curPitch - prevPitch;
+            float bendPitch = Mth.clamp(rawDiffPitch, -8.0F, 8.0F) * ((float) Math.PI / 180.0F);
 
-            joint.yRot = bendYaw;
-            joint.xRot = bendPitch;
-            joint.zRot = -bendYaw * 0.06F;
+            float segOffset = (float) i * bossWaveK;
+            float easeIn = Math.min(1.0F, (i + 1) * 0.08F);
+            float waveYaw = Mth.sin(bossBaseTime - segOffset) * (bossYawAmp * easeIn);
+            float wavePitch = Mth.cos(bossBaseTime - segOffset) * (bossPitchAmp * easeIn);
+
+            joint.yRot = bendYaw + waveYaw;
+            joint.xRot = bendPitch + wavePitch;
+            joint.zRot = -bendYaw * 0.08F + waveYaw * 0.06F;
         }
 
-        // 5. Patas remando con gracia celestial en el aire
-        float legCycle = ageInTicks * 0.14F;
-        this.legFrontLeft.xRot = 0.35F + Mth.cos(legCycle) * 0.18F;
-        this.legFrontRight.xRot = 0.35F - Mth.cos(legCycle) * 0.18F;
-        this.legBackLeft.xRot = 0.45F + Mth.sin(legCycle) * 0.18F;
-        this.legBackRight.xRot = 0.45F - Mth.sin(legCycle) * 0.18F;
+        float legCycle = ageInTicks * 0.055F;
+        float legSwing = Mth.cos(legCycle) * 0.12F * (0.35F + speedNorm * 0.65F);
+        float legBase = 0.38F;
+        this.legFrontLeft.xRot = legBase + legSwing;
+        this.legFrontRight.xRot = legBase - legSwing;
+        this.legBackLeft.xRot = (legBase + 0.10F) - legSwing;
+        this.legBackRight.xRot = (legBase + 0.10F) + legSwing;
     }
 
     @Override

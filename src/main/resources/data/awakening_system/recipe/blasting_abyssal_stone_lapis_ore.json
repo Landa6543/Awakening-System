@@ -1,0 +1,12 @@
+{
+    "cookingtime":  100,
+    "experience":  0.2,
+    "ingredient":  {
+                       "item":  "awakening_system:abyssal_stone_lapis_ore"
+                   },
+    "type":  "minecraft:blasting",
+    "category":  "misc",
+    "result":  {
+                   "id":  "minecraft:lapis_lazuli"
+               }
+}

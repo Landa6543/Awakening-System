@@ -54,7 +54,6 @@ public class GoddessAltarBlock extends HorizontalDirectionalBlock {
 
     private static final VoxelShape SHAPE = Block.box(1.0D, 0.0D, 1.0D, 15.0D, 15.0D, 15.0D);
 
-    // Registro de juicios celestiales activos por posición de altar
     public static final Map<BlockPos, TrialState> ACTIVE_TRIALS = new ConcurrentHashMap<>();
 
     public static class TrialState {
@@ -67,7 +66,7 @@ public class GoddessAltarBlock extends HorizontalDirectionalBlock {
             this.playerId = playerId;
             this.altarPos = altarPos;
             this.remainingEnemies = enemies;
-            this.timeoutTicks = 20 * 90; // 90 segundos para completar
+            this.timeoutTicks = 20 * 90;
         }
     }
 
@@ -110,21 +109,18 @@ public class GoddessAltarBlock extends HorizontalDirectionalBlock {
         ServerLevel serverLevel = (ServerLevel) level;
         SystemData data = SystemEvents.data(sp);
 
-        // 1. OFRENDA DE ESTRELLA DEL NETHER (Bendición Suprema de la Diosa)
         if (stack.is(Items.NETHER_STAR)) {
             if (!sp.getAbilities().instabuild) stack.shrink(1);
             applySupremeBlessing(serverLevel, pos, sp, data);
             return ItemInteractionResult.SUCCESS;
         }
 
-        // 2. OFRENDA DE DIAMANTE (Surge de Maná y Celeridad Sagrada)
         if (stack.is(Items.DIAMOND)) {
             if (!sp.getAbilities().instabuild) stack.shrink(1);
             applyManaSurgeBlessing(serverLevel, pos, sp, data);
             return ItemInteractionResult.SUCCESS;
         }
 
-        // 3. OFRENDA DE ESMERALDA U ORO (Fortuna y Gracia Divina)
         if (stack.is(Items.EMERALD) || stack.is(Items.GOLD_INGOT) || stack.is(Items.AMETHYST_SHARD)) {
             boolean isEmerald = stack.is(Items.EMERALD);
             if (!sp.getAbilities().instabuild) stack.shrink(1);
@@ -132,7 +128,6 @@ public class GoddessAltarBlock extends HorizontalDirectionalBlock {
             return ItemInteractionResult.SUCCESS;
         }
 
-        // 4. OFRENDA DE MONEDAS DEL SISTEMA (Awakening Coins x100)
         if (SystemItems.AWAKENING_COIN.isBound() && stack.is(SystemItems.AWAKENING_COIN.get())) {
             if (stack.getCount() >= 64 || data.coins() >= 100) {
                 if (stack.getCount() >= 64 && !sp.getAbilities().instabuild) {
@@ -140,7 +135,6 @@ public class GoddessAltarBlock extends HorizontalDirectionalBlock {
                 } else if (data.coins() >= 100) {
                     data.addCoins(-100);
                 }
-                // Bendición aleatoria de la Diosa
                 int roll = serverLevel.random.nextInt(3);
                 if (roll == 0) {
                     applyManaSurgeBlessing(serverLevel, pos, sp, data);
@@ -156,7 +150,6 @@ public class GoddessAltarBlock extends HorizontalDirectionalBlock {
             }
         }
 
-        // 5. JUICIO CELESTIAL (Ofrenda de Esencia de Monstruo)
         if (isMonsterTrophy(stack)) {
             if (ACTIVE_TRIALS.containsKey(pos)) {
                 sp.displayClientMessage(Component.translatable("awakening_system.goddess_altar.trial_active").withStyle(ChatFormatting.RED), true);
@@ -169,7 +162,6 @@ public class GoddessAltarBlock extends HorizontalDirectionalBlock {
             return ItemInteractionResult.SUCCESS;
         }
 
-        // 6. MANO VACÍA O ÍTEM NO SAGRADO: Instrucciones del Santuario
         sp.displayClientMessage(Component.translatable("awakening_system.goddess_altar.hint").withStyle(ChatFormatting.AQUA), true);
         serverLevel.playSound(null, pos, SoundEvents.AMETHYST_BLOCK_CHIME, SoundSource.BLOCKS, 0.8F, 1.3F);
         return ItemInteractionResult.SUCCESS;
@@ -185,21 +177,16 @@ public class GoddessAltarBlock extends HorizontalDirectionalBlock {
                 || stack.is(Items.MAGMA_CREAM);
     }
 
-    // =========================================================================
-    // BENDICIONES DE LA DIOSA
-    // =========================================================================
-
     private static void applySupremeBlessing(ServerLevel level, BlockPos pos, ServerPlayer sp, SystemData data) {
         data.restoreEnergy(data.maxEnergy());
         data.addCoins(1000);
         sp.heal(40.0F);
 
-        // Efectos divinos por 10 minutos (12000 ticks)
-        sp.addEffect(new MobEffectInstance(MobEffects.ABSORPTION, 12000, 3)); // 8 corazones dorados
-        sp.addEffect(new MobEffectInstance(MobEffects.DAMAGE_RESISTANCE, 12000, 1)); // Resistencia II
-        sp.addEffect(new MobEffectInstance(MobEffects.REGENERATION, 6000, 1)); // Regeneración II (5 min)
+        sp.addEffect(new MobEffectInstance(MobEffects.ABSORPTION, 12000, 3));
+        sp.addEffect(new MobEffectInstance(MobEffects.DAMAGE_RESISTANCE, 12000, 1));
+        sp.addEffect(new MobEffectInstance(MobEffects.REGENERATION, 6000, 1));
         sp.addEffect(new MobEffectInstance(MobEffects.FIRE_RESISTANCE, 12000, 0));
-        sp.addEffect(new MobEffectInstance(MobEffects.DIG_SPEED, 12000, 1)); // Haste II
+        sp.addEffect(new MobEffectInstance(MobEffects.DIG_SPEED, 12000, 1));
 
         triggerSacredEffects(level, pos, sp);
         sp.sendSystemMessage(Component.translatable("awakening_system.goddess_altar.blessing_supreme").withStyle(ChatFormatting.GOLD, ChatFormatting.BOLD));
@@ -210,10 +197,9 @@ public class GoddessAltarBlock extends HorizontalDirectionalBlock {
         data.restoreEnergy(data.maxEnergy());
         sp.heal(20.0F);
 
-        // 10 minutos de Prisa II y Celeridad II
         sp.addEffect(new MobEffectInstance(MobEffects.DIG_SPEED, 12000, 1));
         sp.addEffect(new MobEffectInstance(MobEffects.MOVEMENT_SPEED, 12000, 1));
-        sp.addEffect(new MobEffectInstance(MobEffects.REGENERATION, 3600, 0)); // Regeneración I (3 min)
+        sp.addEffect(new MobEffectInstance(MobEffects.REGENERATION, 3600, 0));
 
         triggerSacredEffects(level, pos, sp);
         sp.sendSystemMessage(Component.translatable("awakening_system.goddess_altar.blessing_mana").withStyle(ChatFormatting.AQUA, ChatFormatting.BOLD));
@@ -225,8 +211,8 @@ public class GoddessAltarBlock extends HorizontalDirectionalBlock {
         int coins = isEmerald ? 450 : 300;
         data.addCoins(coins);
 
-        sp.addEffect(new MobEffectInstance(MobEffects.LUCK, 12000, 2)); // Suerte III (10 min)
-        sp.addEffect(new MobEffectInstance(MobEffects.HERO_OF_THE_VILLAGE, 6000, 1)); // Héroe II (5 min)
+        sp.addEffect(new MobEffectInstance(MobEffects.LUCK, 12000, 2));
+        sp.addEffect(new MobEffectInstance(MobEffects.HERO_OF_THE_VILLAGE, 6000, 1));
 
         triggerSacredEffects(level, pos, sp);
         sp.sendSystemMessage(Component.translatable("awakening_system.goddess_altar.blessing_fortune", coins).withStyle(ChatFormatting.GREEN, ChatFormatting.BOLD));
@@ -237,8 +223,8 @@ public class GoddessAltarBlock extends HorizontalDirectionalBlock {
         data.restoreEnergy(40);
         sp.heal(15.0F);
 
-        sp.addEffect(new MobEffectInstance(MobEffects.ABSORPTION, 6000, 1)); // 4 corazones dorados (5 min)
-        sp.addEffect(new MobEffectInstance(MobEffects.DAMAGE_RESISTANCE, 6000, 0)); // Resistencia I (5 min)
+        sp.addEffect(new MobEffectInstance(MobEffects.ABSORPTION, 6000, 1));
+        sp.addEffect(new MobEffectInstance(MobEffects.DAMAGE_RESISTANCE, 6000, 0));
 
         triggerSacredEffects(level, pos, sp);
         sp.sendSystemMessage(Component.translatable("awakening_system.goddess_altar.blessing_aegis").withStyle(ChatFormatting.YELLOW, ChatFormatting.BOLD));
@@ -258,10 +244,6 @@ public class GoddessAltarBlock extends HorizontalDirectionalBlock {
         level.playSound(null, pos, SoundEvents.PLAYER_LEVELUP, SoundSource.BLOCKS, 1.0F, 1.6F);
     }
 
-    // =========================================================================
-    // JUICIO CELESTIAL (TRIAL DE PURIFICACIÓN)
-    // =========================================================================
-
     private static void startCelestialTrial(ServerLevel level, BlockPos pos, ServerPlayer sp) {
         int enemyCount = 4;
         ACTIVE_TRIALS.put(pos, new TrialState(sp.getUUID(), pos, enemyCount));
@@ -274,7 +256,6 @@ public class GoddessAltarBlock extends HorizontalDirectionalBlock {
         sp.sendSystemMessage(Component.translatable("awakening_system.goddess_altar.trial_started").withStyle(ChatFormatting.LIGHT_PURPLE, ChatFormatting.BOLD));
         sp.displayClientMessage(Component.translatable("awakening_system.goddess_altar.trial_started_toast"), true);
 
-        // Spawnear 4 Guardianes de Prueba en los puntos cardinales del santuario
         int[][] spawnOffsets = {{4, 0}, {-4, 0}, {0, 4}, {0, -4}};
         for (int[] off : spawnOffsets) {
             BlockPos spawnPos = pos.offset(off[0], 1, off[1]);
@@ -319,12 +300,10 @@ public class GoddessAltarBlock extends HorizontalDirectionalBlock {
         player.sendSystemMessage(Component.translatable("awakening_system.goddess_altar.trial_cleared").withStyle(ChatFormatting.GOLD, ChatFormatting.BOLD));
         player.displayClientMessage(Component.translatable("awakening_system.goddess_altar.trial_cleared_toast"), true);
 
-        // Bonificación de monedas y experiencia al jugador
         SystemData data = SystemEvents.data(player);
         data.addCoins(750);
         data.addExperience(1500);
 
-        // Recompensas en el pedestal (Cofre Bendito)
         BlockPos chestPos = altarPos.relative(level.getBlockState(altarPos).getValue(FACING));
         if (level.isEmptyBlock(chestPos) || level.getBlockState(chestPos).canBeReplaced()) {
             level.setBlock(chestPos, Blocks.CHEST.defaultBlockState(), 2);

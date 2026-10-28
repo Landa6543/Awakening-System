@@ -1,0 +1,107 @@
+{
+  "parent": "minecraft:block/block",
+  "textures": {
+    "particle": "minecraft:block/gold_block",
+    "base": "minecraft:block/gold_block",
+    "shaft": "minecraft:block/smooth_stone",
+    "cushion": "minecraft:block/red_wool",
+    "cushion_side": "minecraft:block/red_concrete"
+  },
+  "elements": [
+    {
+      "name": "base",
+      "from": [3, 0, 3],
+      "to": [13, 1.5, 13],
+      "faces": {
+        "north": { "texture": "#base", "uv": [3, 14, 13, 16] },
+        "east": { "texture": "#base", "uv": [3, 14, 13, 16] },
+        "south": { "texture": "#base", "uv": [3, 14, 13, 16] },
+        "west": { "texture": "#base", "uv": [3, 14, 13, 16] },
+        "up": { "texture": "#base", "uv": [3, 3, 13, 13] },
+        "down": { "texture": "#base", "uv": [3, 3, 13, 13] }
+      }
+    },
+    {
+      "name": "shaft",
+      "from": [7, 1.5, 7],
+      "to": [9, 10, 9],
+      "faces": {
+        "north": { "texture": "#shaft", "uv": [7, 2, 9, 10] },
+        "east": { "texture": "#shaft", "uv": [7, 2, 9, 10] },
+        "south": { "texture": "#shaft", "uv": [7, 2, 9, 10] },
+        "west": { "texture": "#shaft", "uv": [7, 2, 9, 10] }
+      }
+    },
+    {
+      "name": "footrest",
+      "from": [4.5, 4, 4.5],
+      "to": [11.5, 5, 11.5],
+      "faces": {
+        "north": { "texture": "#base", "uv": [4, 4, 12, 5] },
+        "east": { "texture": "#base", "uv": [4, 4, 12, 5] },
+        "south": { "texture": "#base", "uv": [4, 4, 12, 5] },
+        "west": { "texture": "#base", "uv": [4, 4, 12, 5] },
+        "up": { "texture": "#base", "uv": [4, 4, 12, 12] },
+        "down": { "texture": "#base", "uv": [4, 4, 12, 12] }
+      }
+    },
+    {
+      "name": "seat",
+      "from": [2.5, 10, 2.5],
+      "to": [13.5, 13.5, 13.5],
+      "faces": {
+        "north": { "texture": "#cushion_side", "uv": [2, 10, 14, 14] },
+        "east": { "texture": "#cushion_side", "uv": [2, 10, 14, 14] },
+        "south": { "texture": "#cushion_side", "uv": [2, 10, 14, 14] },
+        "west": { "texture": "#cushion_side", "uv": [2, 10, 14, 14] },
+        "up": { "texture": "#cushion", "uv": [2, 2, 14, 14] },
+        "down": { "texture": "#cushion_side", "uv": [2, 2, 14, 14] }
+      }
+    },
+    {
+      "name": "backrest",
+      "from": [3.5, 13.5, 11],
+      "to": [12.5, 19, 13],
+      "faces": {
+        "north": { "texture": "#cushion_side", "uv": [3, 0, 13, 6] },
+        "east": { "texture": "#cushion_side", "uv": [0, 0, 2, 6] },
+        "south": { "texture": "#cushion", "uv": [3, 0, 13, 6] },
+        "west": { "texture": "#cushion_side", "uv": [0, 0, 2, 6] },
+        "up": { "texture": "#cushion", "uv": [3, 11, 13, 13] },
+        "down": { "texture": "#cushion_side", "uv": [3, 11, 13, 13] }
+      }
+    }
+  ],
+  "display": {
+    "gui": {
+      "rotation": [30, 225, 0],
+      "translation": [0, 0, 0],
+      "scale": [0.625, 0.625, 0.625]
+    },
+    "ground": {
+      "rotation": [0, 0, 0],
+      "translation": [0, 3, 0],
+      "scale": [0.25, 0.25, 0.25]
+    },
+    "fixed": {
+      "rotation": [0, 0, 0],
+      "translation": [0, 0, 0],
+      "scale": [0.5, 0.5, 0.5]
+    },
+    "thirdperson_righthand": {
+      "rotation": [75, 45, 0],
+      "translation": [0, 2.5, 0],
+      "scale": [0.375, 0.375, 0.375]
+    },
+    "firstperson_righthand": {
+      "rotation": [0, 45, 0],
+      "translation": [0, 0, 0],
+      "scale": [0.4, 0.4, 0.4]
+    },
+    "firstperson_lefthand": {
+      "rotation": [0, 225, 0],
+      "translation": [0, 0, 0],
+      "scale": [0.4, 0.4, 0.4]
+    }
+  }
+}

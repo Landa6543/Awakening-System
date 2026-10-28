@@ -27,6 +27,8 @@ import java.util.concurrent.ConcurrentHashMap;
 public final class GuildEventHandler {
 
     public static final Set<UUID> GUILD_CHAT_MODE_PLAYERS = ConcurrentHashMap.newKeySet();
+    private record PlayerChunkLoc(net.minecraft.resources.ResourceLocation dim, long chunkPos) {}
+    private static final java.util.Map<UUID, PlayerChunkLoc> LAST_PLAYER_CHUNK = new ConcurrentHashMap<>();
 
     public static boolean toggleGuildChat(ServerPlayer player) {
         if (GUILD_CHAT_MODE_PLAYERS.contains(player.getUUID())) {
@@ -50,7 +52,6 @@ public final class GuildEventHandler {
         boolean isToggled = GUILD_CHAT_MODE_PLAYERS.contains(player.getUUID());
 
         if (hasGuildPrefix || isToggled) {
-            // Si el modo permanente está activo y el jugador quiere enviar un mensaje global rápido con '!'
             if (isToggled && raw.startsWith("!") && !raw.startsWith("!g ")) {
                 return;
             }
@@ -58,7 +59,7 @@ public final class GuildEventHandler {
             Guild guild = GuildSavedData.get(player.server).getGuildByPlayer(player.getUUID());
             if (guild == null) {
                 GUILD_CHAT_MODE_PLAYERS.remove(player.getUUID());
-                player.sendSystemMessage(Component.literal("§cNo perteneces a ningún gremio."));
+                player.sendSystemMessage(Component.translatable("guild.msg.not_in_guild"));
                 event.setCanceled(true);
                 return;
             }
@@ -79,32 +80,36 @@ public final class GuildEventHandler {
 
     @SubscribeEvent
     public static void onCombatDamage(LivingDamageEvent.Pre event) {
-        // 1. Reducción de daño para miembros con bendición de Fortaleza Colectiva
-        if (event.getEntity() instanceof ServerPlayer victim && victim.server != null) {
-            Guild guild = GuildSavedData.get(victim.server).getGuildByPlayer(victim.getUUID());
-            if (guild != null && guild.hasPerk(GuildPerk.COLLECTIVE_FORTITUDE)) {
-                event.setNewDamage(event.getNewDamage() * 0.92F); // -8% daño recibido
+        if (event.getEntity() instanceof ServerPlayer victim && event.getSource().getEntity() instanceof ServerPlayer attacker && attacker.server != null) {
+            Guild vGuild = GuildSavedData.get(victim.server).getGuildByPlayer(victim.getUUID());
+            Guild aGuild = GuildSavedData.get(attacker.server).getGuildByPlayer(attacker.getUUID());
+            if (vGuild != null && aGuild != null && (vGuild.getId().equals(aGuild.getId()) || vGuild.isAlliedWith(aGuild.getId()))) {
+                event.setNewDamage(0.0F);
+                return;
             }
         }
 
-        // 2. Aumento de daño para miembros atacantes con Poder del Gremio o Resonancia
+        if (event.getEntity() instanceof ServerPlayer victim && victim.server != null) {
+            Guild guild = GuildSavedData.get(victim.server).getGuildByPlayer(victim.getUUID());
+            if (guild != null && guild.hasPerk(GuildPerk.COLLECTIVE_FORTITUDE)) {
+                event.setNewDamage(event.getNewDamage() * 0.92F);
+            }
+        }
+
         if (event.getSource().getEntity() instanceof ServerPlayer attacker && attacker.server != null) {
             Guild guild = GuildSavedData.get(attacker.server).getGuildByPlayer(attacker.getUUID());
             if (guild != null) {
                 float multiplier = 1.0F;
 
                 if (guild.hasPerk(GuildPerk.GUILD_MIGHT)) {
-                    multiplier += 0.10F; // +10% daño
+                    multiplier += 0.10F;
                 }
 
                 if (guild.hasPerk(GuildPerk.DUNGEON_RESONANCE)) {
                     LivingEntity target = event.getEntity();
-                    boolean isBoss = target instanceof EnderDragon || target instanceof WitherBoss
-                            || target.getMaxHealth() >= 80.0F
-                            || target.getTags().contains("boss")
-                            || target.getTags().contains("dungeon_boss");
+                    boolean isBoss = com.soybe.awakeningsystem.config.BossCompatibilityManager.isBoss(target);
                     if (isBoss) {
-                        multiplier += 0.15F; // +15% contra jefes
+                        multiplier += 0.15F;
                     }
                 }
 
@@ -121,8 +126,7 @@ public final class GuildEventHandler {
             Guild guild = GuildSavedData.get(player.server).getGuildByPlayer(player.getUUID());
             if (guild != null && guild.hasPerk(GuildPerk.BOND_OF_HUNTERS)) {
                 int original = event.getDroppedExperience();
-                event.setDroppedExperience((int) Math.round(original * 1.15)); // +15% EXP
-                // Otorgar también EXP al gremio
+                event.setDroppedExperience((int) Math.round(original * 1.15));
                 guild.addExp(Math.max(1, original / 2));
             }
         }
@@ -134,8 +138,6 @@ public final class GuildEventHandler {
             Guild guild = GuildSavedData.get(player.server).getGuildByPlayer(player.getUUID());
             if (guild != null && guild.hasPerk(GuildPerk.COMMON_TREASURY)) {
                 LivingEntity entity = event.getEntity();
-                // 35% de probabilidad de drop extra al cazar:
-                // MORAS únicamente si se encuentra en Teyvat; MONEDAS DE DESPERTAR en cualquier otra dimensión
                 if (player.getRandom().nextFloat() < 0.35F) {
                     if (entity.level().dimension().equals(com.soybe.awakeningsystem.TeyvatWorldManager.TEYVAT_WORLD)) {
                         if (SystemItems.MORA != null && SystemItems.MORA.isBound()) {
@@ -158,27 +160,77 @@ public final class GuildEventHandler {
     }
 
     @SubscribeEvent
+    public static void onPlayerLoggedIn(net.neoforged.neoforge.event.entity.player.PlayerEvent.PlayerLoggedInEvent event) {
+        if (event.getEntity() instanceof ServerPlayer player && player.server != null) {
+            com.soybe.awakeningsystem.tower.GreatTowerWorldManager.enforcePlayerBoundary(player);
+            GuildSavedData.get(player.server).syncAllClaimsToPlayer(player);
+        }
+    }
+
+    @SubscribeEvent
+    public static void onPlayerLoggedOut(net.neoforged.neoforge.event.entity.player.PlayerEvent.PlayerLoggedOutEvent event) {
+        LAST_PLAYER_CHUNK.remove(event.getEntity().getUUID());
+    }
+
+    @SubscribeEvent
     public static void onPlayerTick(PlayerTickEvent.Post event) {
-        if (event.getEntity() instanceof ServerPlayer player && player.server != null && player.tickCount % 40 == 0) {
-            Guild guild = GuildSavedData.get(player.server).getGuildByPlayer(player.getUUID());
-            if (guild != null && guild.hasPerk(GuildPerk.REGENERATION_AURA)) {
-                // Regenerar vida sutilmente
-                if (player.getHealth() < player.getMaxHealth() && player.getFoodData().getFoodLevel() > 6) {
-                    player.heal(0.5F);
+        if (event.getEntity() instanceof ServerPlayer player && player.server != null) {
+            com.soybe.awakeningsystem.tower.GreatTowerWorldManager.enforcePlayerBoundary(player);
+            if (player.tickCount % 5 == 0) {
+                net.minecraft.resources.ResourceLocation dim = player.level().dimension().location();
+                long cPos = player.chunkPosition().toLong();
+                PlayerChunkLoc prev = LAST_PLAYER_CHUNK.put(player.getUUID(), new PlayerChunkLoc(dim, cPos));
+                if (prev != null && (prev.chunkPos() != cPos || !prev.dim().equals(dim))) {
+                    checkTerritoryTransition(player, prev.dim().toString(), net.minecraft.world.level.ChunkPos.getX(prev.chunkPos()), net.minecraft.world.level.ChunkPos.getZ(prev.chunkPos()),
+                            dim.toString(), player.chunkPosition().x, player.chunkPosition().z);
                 }
-                // Regenerar maná en SystemData
-                SystemData data = SystemEvents.data(player);
-                if (data.mana() < data.maxMana()) {
-                    data.setMana(Math.min(data.maxMana(), data.mana() + 5));
-                    AwakeningSystemMod.sync(player);
+            }
+
+            if (player.tickCount % 40 == 0) {
+                Guild guild = GuildSavedData.get(player.server).getGuildByPlayer(player.getUUID());
+                if (guild != null && guild.hasPerk(GuildPerk.REGENERATION_AURA)) {
+                    if (player.getHealth() < player.getMaxHealth() && player.getFoodData().getFoodLevel() > 6) {
+                        player.heal(0.5F);
+                    }
+                    SystemData data = SystemEvents.data(player);
+                    if (data.mana() < data.maxMana()) {
+                        data.setMana(Math.min(data.maxMana(), data.mana() + 5));
+                        AwakeningSystemMod.sync(player);
+                    }
                 }
             }
         }
     }
 
-    // ==========================================
-    // ✦ PROTECCIÓN DE TERRITORIO (ANTI-GRIEFING)
-    // ==========================================
+    private static void checkTerritoryTransition(ServerPlayer player, String prevDim, int prevX, int prevZ, String currDim, int currX, int currZ) {
+        try {
+            GuildSavedData data = GuildSavedData.get(player.server);
+            Guild prevGuild = data.getGuildByChunk(prevDim, prevX, prevZ);
+            Guild currGuild = data.getGuildByChunk(currDim, currX, currZ);
+
+            String prevId = prevGuild != null ? prevGuild.getId() : "";
+            String currId = currGuild != null ? currGuild.getId() : "";
+
+            if (prevId.equals(currId)) {
+                return;
+            }
+
+            if (currGuild != null) {
+                if (currGuild.isMember(player.getUUID())) {
+                    player.sendSystemMessage(Component.translatable("guild.territory.enter_own", currGuild.getName(), currGuild.getTag()), true);
+                    player.playNotifySound(net.minecraft.sounds.SoundEvents.EXPERIENCE_ORB_PICKUP, net.minecraft.sounds.SoundSource.PLAYERS, 0.6F, 1.2F);
+                } else {
+                    player.sendSystemMessage(Component.translatable("guild.territory.enter_other", currGuild.getName(), currGuild.getTag(), currGuild.getLevel()), true);
+                    player.playNotifySound(net.minecraft.sounds.SoundEvents.NOTE_BLOCK_BASS.value(), net.minecraft.sounds.SoundSource.PLAYERS, 0.8F, 0.8F);
+                }
+            } else if (prevGuild != null) {
+                player.sendSystemMessage(Component.translatable("guild.territory.wilderness"), true);
+                player.playNotifySound(net.minecraft.sounds.SoundEvents.UI_BUTTON_CLICK.value(), net.minecraft.sounds.SoundSource.PLAYERS, 0.4F, 1.0F);
+            }
+        } catch (Exception e) {
+            AwakeningSystemMod.LOGGER.debug("Error updating chunk guild message for player: {}", e.getMessage(), e);
+        }
+    }
 
     @SubscribeEvent
     public static void onBlockBreak(net.neoforged.neoforge.event.level.BlockEvent.BreakEvent event) {
@@ -190,7 +242,7 @@ public final class GuildEventHandler {
             Guild owner = GuildSavedData.get(player.server).getGuildByChunk(dim, cx, cz);
             if (owner != null && !owner.isMember(player.getUUID())) {
                 event.setCanceled(true);
-                player.sendSystemMessage(Component.literal("§c🛡️ [Territorio Protegido] Este terreno pertenece al gremio " + owner.getName() + " [" + owner.getTag() + "]."), true);
+                player.sendSystemMessage(Component.translatable("guild.territory.protected_break", owner.getName(), owner.getTag()), true);
             }
         }
     }
@@ -205,7 +257,7 @@ public final class GuildEventHandler {
             Guild owner = GuildSavedData.get(player.server).getGuildByChunk(dim, cx, cz);
             if (owner != null && !owner.isMember(player.getUUID())) {
                 event.setCanceled(true);
-                player.sendSystemMessage(Component.literal("§c🛡️ [Territorio Protegido] No puedes construir en el territorio de " + owner.getName() + " [" + owner.getTag() + "]."), true);
+                player.sendSystemMessage(Component.translatable("guild.territory.protected_place", owner.getName(), owner.getTag()), true);
             }
         }
     }
@@ -220,7 +272,6 @@ public final class GuildEventHandler {
             Guild owner = GuildSavedData.get(player.server).getGuildByChunk(dim, cx, cz);
             if (owner != null && !owner.isMember(player.getUUID())) {
                 net.minecraft.world.level.block.state.BlockState state = event.getLevel().getBlockState(event.getPos());
-                // Prevenir interacción con cofres, barriles, puertas, trampillas, tolvas, yunques, botones y palancas
                 boolean isProtected = state.getBlock() instanceof net.minecraft.world.level.block.EntityBlock
                         || state.getBlock() instanceof net.minecraft.world.level.block.DoorBlock
                         || state.getBlock() instanceof net.minecraft.world.level.block.TrapDoorBlock
@@ -228,7 +279,7 @@ public final class GuildEventHandler {
                         || state.getBlock() instanceof net.minecraft.world.level.block.LeverBlock;
                 if (isProtected) {
                     event.setCanceled(true);
-                    player.sendSystemMessage(Component.literal("§c🛡️ [Territorio Protegido] Este mecanismo/contenedor pertenece a " + owner.getName() + " [" + owner.getTag() + "]."), true);
+                    player.sendSystemMessage(Component.translatable("guild.territory.protected_interact", owner.getName(), owner.getTag()), true);
                 }
             }
         }
@@ -239,7 +290,6 @@ public final class GuildEventHandler {
         if (event.getLevel().getServer() != null) {
             String dim = event.getLevel().dimension().location().toString();
             var data = GuildSavedData.get(event.getLevel().getServer());
-            // Proteger todos los bloques en chunks reclamados contra destrucción por explosiones (Creepers, TNT, etc.)
             event.getAffectedBlocks().removeIf(pos -> {
                 int cx = pos.getX() >> 4;
                 int cz = pos.getZ() >> 4;
@@ -254,34 +304,40 @@ public final class GuildEventHandler {
             Guild guild = GuildSavedData.get(player.server).getGuildByPlayer(player.getUUID());
             if (guild != null) {
                 LivingEntity victim = event.getEntity();
-                boolean isBoss = victim instanceof EnderDragon || victim instanceof WitherBoss
-                        || victim.getMaxHealth() >= 80.0F
-                        || victim.getTags().contains("boss")
-                        || victim.getTags().contains("dungeon_boss");
+                boolean isBoss = com.soybe.awakeningsystem.config.BossCompatibilityManager.isBoss(victim);
                 if (isBoss) {
                     guild.addExp(300);
                     guild.progressHunt("boss", 1, player.server);
                     GuildMember m = guild.getMember(player.getUUID());
                     if (m != null) m.addContribution(150);
                     GuildSavedData.get(player.server).setDirty();
-                    player.sendSystemMessage(Component.literal("§6⚔️ ¡Tu gremio ha recibido §e+300 EXP §6por derrotar un Jefe!"), true);
+                    player.displayClientMessage(Component.translatable("guild.awakening_system.boss_exp_reward"), true);
                 }
 
-                String entityId = net.minecraft.core.registries.BuiltInRegistries.ENTITY_TYPE.getKey(victim.getType()).getPath().toLowerCase();
-                boolean isAbyss = entityId.contains("void") || entityId.contains("abyss") || entityId.contains("shadow")
-                        || entityId.contains("hilichurl") || entityId.contains("specter") || entityId.contains("cultist")
-                        || entityId.contains("wither") || victim.level().dimension().location().getPath().contains("end");
+                boolean isTowerOrInstance = victim.level().dimension().location().getPath().contains("ranker_tower")
+                        || victim.level().dimension().location().getPath().contains("pagoda_realm")
+                        || victim.getPersistentData().getBoolean("TowerMinion")
+                        || victim.getPersistentData().getBoolean("TowerChampion")
+                        || victim.getPersistentData().getBoolean("DungeonMinion")
+                        || victim.getPersistentData().getBoolean("PagodaTrialMob");
 
-                if (isAbyss) {
-                    guild.progressHunt("abyss", 1, player.server);
-                }
+                if (!isTowerOrInstance) {
+                    String entityId = net.minecraft.core.registries.BuiltInRegistries.ENTITY_TYPE.getKey(victim.getType()).getPath().toLowerCase();
+                    boolean isAbyss = entityId.contains("void") || entityId.contains("abyss") || entityId.contains("shadow")
+                            || entityId.contains("hilichurl") || entityId.contains("specter") || entityId.contains("cultist")
+                            || entityId.contains("wither") || victim.level().dimension().location().getPath().contains("end");
 
-                boolean isElite = victim.getPersistentData().contains("MobTier")
-                        || victim.getMaxHealth() >= 50.0F
-                        || victim.getPersistentData().getBoolean("IsMiniBoss");
+                    if (isAbyss) {
+                        guild.progressHunt("abyss", 1, player.server);
+                    }
 
-                if (isElite) {
-                    guild.progressHunt("elite", 1, player.server);
+                    boolean isElite = victim.getPersistentData().contains("MobTier")
+                            || victim.getPersistentData().getBoolean("IsMiniBoss")
+                            || victim.getTags().contains("elite");
+
+                    if (isElite) {
+                        guild.progressHunt("elite", 1, player.server);
+                    }
                 }
             }
         }

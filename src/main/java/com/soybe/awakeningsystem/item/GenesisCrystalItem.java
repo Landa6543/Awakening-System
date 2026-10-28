@@ -41,7 +41,7 @@ public class GenesisCrystalItem extends Item {
                 sl.sendParticles(ParticleTypes.END_ROD, sp.getX(), sp.getY() + 1.0D, sp.getZ(), 20, 0.4D, 0.5D, 0.4D, 0.05D);
             }
             sp.playNotifySound(SoundEvents.AMETHYST_BLOCK_RESONATE, SoundSource.PLAYERS, 1.2F, 1.4F);
-            sp.displayClientMessage(Component.literal("§b§l✦ [CRISTAL GÉNESIS] §fCanjeados por §d+" + totalPrimos + " Protogemas §f(Total: §6" + data.primogems() + "§f)"), true);
+            sp.displayClientMessage(Component.translatable("item.awakening_system.genesis_crystal.redeem_msg", totalPrimos, data.primogems()), true);
             return InteractionResultHolder.consume(stack);
         }
         return InteractionResultHolder.sidedSuccess(stack, level.isClientSide());
@@ -49,9 +49,9 @@ public class GenesisCrystalItem extends Item {
 
     @Override
     public void appendHoverText(ItemStack stack, TooltipContext context, List<Component> tooltip, TooltipFlag flag) {
-        tooltip.add(Component.literal("§b⭐⭐⭐⭐⭐ [Energía Primordial del Cosmos]").withStyle(ChatFormatting.AQUA));
-        tooltip.add(Component.literal("§7Cristal de energía pura formado en el origen del firmamento.").withStyle(ChatFormatting.GRAY));
-        tooltip.add(Component.literal("§b▸ Clic derecho: §fCanjear por §d+300 Protogemas").withStyle(ChatFormatting.LIGHT_PURPLE));
-        tooltip.add(Component.literal("§b▸ Shift + Clic derecho: §fCanjear todo el stack").withStyle(ChatFormatting.DARK_AQUA));
+        tooltip.add(Component.translatable("item.awakening_system.genesis_crystal.badge").withStyle(ChatFormatting.AQUA));
+        tooltip.add(Component.translatable("item.awakening_system.genesis_crystal.desc").withStyle(ChatFormatting.GRAY));
+        tooltip.add(Component.translatable("item.awakening_system.genesis_crystal.use1").withStyle(ChatFormatting.LIGHT_PURPLE));
+        tooltip.add(Component.translatable("item.awakening_system.genesis_crystal.use2").withStyle(ChatFormatting.DARK_AQUA));
     }
 }

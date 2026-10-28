@@ -12,6 +12,7 @@ public class JadeArmoredBeastRenderer extends MobRenderer<JadeArmoredBeastEntity
 
     public JadeArmoredBeastRenderer(EntityRendererProvider.Context context) {
         super(context, new JadeArmoredBeastModel(context.bakeLayer(JadeArmoredBeastModel.LAYER_LOCATION)), 0.65F);
+        this.addLayer(new JadeArmoredBeastGlowLayer(this));
     }
 
     @Override

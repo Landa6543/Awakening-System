@@ -53,7 +53,6 @@ public class AbyssBubbleEntity extends ThrowableProjectile {
             this.level().addParticle(ParticleTypes.SPLASH, x + (random.nextDouble() - 0.5) * 0.4, y + (random.nextDouble() - 0.5) * 0.4, z + (random.nextDouble() - 0.5) * 0.4, 0, 0.02, 0);
             this.level().addParticle(ParticleTypes.BUBBLE_POP, x, y, z, 0, 0.01, 0);
         } else {
-            // Persecución lenta y flotante hacia el objetivo
             if (target != null && target.isAlive()) {
                 Vec3 targetPos = target.getEyePosition();
                 Vec3 dir = targetPos.subtract(this.position()).normalize();
@@ -75,7 +74,6 @@ public class AbyssBubbleEntity extends ThrowableProjectile {
 
             victim.hurt(this.damageSources().mobAttack((LivingEntity) this.getOwner()), 6.0F);
 
-            // Efecto aprisionador de burbuja Hydro: Inmovilizado y suspendido
             victim.addEffect(new MobEffectInstance(MobEffects.MOVEMENT_SLOWDOWN, 70, 6, false, false, true));
             victim.addEffect(new MobEffectInstance(MobEffects.LEVITATION, 50, 0, false, false, false));
             victim.setDeltaMovement(0.0D, 0.05D, 0.0D);

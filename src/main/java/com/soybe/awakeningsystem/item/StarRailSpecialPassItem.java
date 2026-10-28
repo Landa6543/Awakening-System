@@ -30,11 +30,12 @@ public class StarRailSpecialPassItem extends Item {
         if (!level.isClientSide() && player instanceof ServerPlayer sp) {
             SystemData data = SystemEvents.data(sp);
             int count = player.isShiftKeyDown() ? stack.getCount() : 1;
-            data.addIntertwinedFates(count);
+            int jadeToAdd = count * 160;
+            data.addStellarJade(jadeToAdd);
             stack.shrink(count);
             AwakeningSystemMod.sync(sp);
             sp.playNotifySound(SoundEvents.AMETHYST_BLOCK_RESONATE, SoundSource.PLAYERS, 1.0F, 1.6F);
-            sp.displayClientMessage(Component.literal("§d§l✦ [PASE ESPECIAL DE LOS RAÍLES] §fHas depositado §d+" + count + " Pase(s) §f(Total: §e" + data.intertwinedFates() + "§f)"), true);
+            sp.displayClientMessage(Component.translatable("item.awakening_system.star_rail_special_pass.deposit_msg", jadeToAdd, count, count, data.stellarJade()), true);
             return InteractionResultHolder.consume(stack);
         }
         return InteractionResultHolder.sidedSuccess(stack, level.isClientSide());
@@ -42,10 +43,11 @@ public class StarRailSpecialPassItem extends Item {
 
     @Override
     public void appendHoverText(ItemStack stack, TooltipContext context, List<Component> tooltip, TooltipFlag flag) {
-        tooltip.add(Component.literal("§d⭐⭐⭐⭐⭐ [Boleto de Salto Hiperespacial]").withStyle(ChatFormatting.LIGHT_PURPLE));
-        tooltip.add(Component.literal("§7Boleto especial que permite abordar el Expreso Astral hacia mundos desconocidos.").withStyle(ChatFormatting.GRAY));
-        tooltip.add(Component.literal("§7Equivalente a un Deseo Entrelazado en el Sistema Gacha.").withStyle(ChatFormatting.DARK_GRAY));
-        tooltip.add(Component.literal("§e▸ Clic derecho: §fDepositar en el monedero de Deseos").withStyle(ChatFormatting.GOLD));
-        tooltip.add(Component.literal("§e▸ Shift + Clic derecho: §fDepositar todo el stack").withStyle(ChatFormatting.GOLD));
+        tooltip.add(Component.translatable("item.awakening_system.star_rail_special_pass.badge").withStyle(ChatFormatting.LIGHT_PURPLE));
+        tooltip.add(Component.translatable("item.awakening_system.star_rail_special_pass.desc").withStyle(ChatFormatting.GRAY));
+        tooltip.add(Component.translatable("item.awakening_system.star_rail_special_pass.rate1").withStyle(ChatFormatting.AQUA));
+        tooltip.add(Component.translatable("item.awakening_system.star_rail_special_pass.rate2").withStyle(ChatFormatting.GOLD));
+        tooltip.add(Component.translatable("item.awakening_system.star_rail_special_pass.use1").withStyle(ChatFormatting.YELLOW));
+        tooltip.add(Component.translatable("item.awakening_system.star_rail_special_pass.use2").withStyle(ChatFormatting.YELLOW));
     }
 }

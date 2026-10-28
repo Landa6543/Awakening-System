@@ -64,7 +64,7 @@ public class TrilunarAltarBlock extends HorizontalDirectionalBlock {
     public static class TrialSession {
         public final UUID playerId;
         public final BlockPos altarPos;
-        public final String trialType; // "aria" o "canon"
+        public final String trialType;
         public int remainingEnemies;
         public int timeoutTicks;
 
@@ -73,7 +73,7 @@ public class TrilunarAltarBlock extends HorizontalDirectionalBlock {
             this.altarPos = altarPos;
             this.trialType = trialType;
             this.remainingEnemies = enemies;
-            this.timeoutTicks = 20 * 120; // 2 minutos
+            this.timeoutTicks = 20 * 120;
         }
     }
 
@@ -106,12 +106,11 @@ public class TrilunarAltarBlock extends HorizontalDirectionalBlock {
     protected ItemInteractionResult useItemOn(ItemStack stack, BlockState state, Level level, BlockPos pos,
                                               Player player, InteractionHand hand, BlockHitResult hit) {
         if (!level.isClientSide() && player instanceof ServerPlayer sp) {
-            // Ofrenda armónica de Protogema para Sonnet (Luna Creciente)
             if (SystemItems.PRIMOGEM != null && SystemItems.PRIMOGEM.isBound() && stack.is(SystemItems.PRIMOGEM.value())) {
                 boolean hasSonnet = sp.getInventory().contains(new ItemStack(SystemItems.LUNAR_AUTHORITY_SONNET.get()));
                 SystemData data = SystemEvents.data(sp);
                 if (data.isWelkinEnhanced() || hasSonnet) {
-                    sp.displayClientMessage(Component.literal("§d[Prueba de Sonnet] §fLa melodía de la Luna Creciente ya resuena plenamente en ti."), true);
+                    sp.displayClientMessage(Component.translatable("altar.awakening_system.sonnet_already_resonating"), true);
                     return ItemInteractionResult.SUCCESS;
                 }
 
@@ -130,8 +129,8 @@ public class TrilunarAltarBlock extends HorizontalDirectionalBlock {
                 sl.playSound(null, pos, SoundEvents.AMETHYST_BLOCK_CHIME, SoundSource.BLOCKS, 1.8F, 1.4F);
                 sl.playSound(null, pos, SoundEvents.NOTE_BLOCK_CHIME.value(), SoundSource.BLOCKS, 1.5F, 1.2F);
 
-                sp.sendSystemMessage(Component.literal("§d§l[COLUMBINA] §f\"Sonnet, hermana de la melodía creciente... siente la resonancia estelar. ¡La Autoridad Lunar de Sonnet ha regresado!\""));
-                sp.displayClientMessage(Component.literal("§d✦ ¡Has obtenido la Autoridad Lunar de Sonnet (Luna Creciente)!"), true);
+                sp.sendSystemMessage(Component.translatable("altar.awakening_system.columbina_sonnet_dialogue"));
+                sp.displayClientMessage(Component.translatable("altar.awakening_system.sonnet_authority_received"), true);
                 return ItemInteractionResult.SUCCESS;
             }
         }
@@ -150,31 +149,25 @@ public class TrilunarAltarBlock extends HorizontalDirectionalBlock {
     private void handleAltarInteraction(ServerLevel level, BlockPos pos, ServerPlayer player) {
         SystemData data = SystemEvents.data(player);
 
-        // Si ya está completada la ascensión
         if (data.isWelkinEnhanced()) {
             player.addEffect(new MobEffectInstance(MobEffects.REGENERATION, 200, 1, false, false, true));
             player.addEffect(new MobEffectInstance(MobEffects.MOVEMENT_SPEED, 300, 0, false, false, true));
             player.playNotifySound(SoundEvents.AMETHYST_BLOCK_CHIME, SoundSource.BLOCKS, 1.2F, 1.2F);
-            player.displayClientMessage(Component.literal("§d§l[COLUMBINA] §f\"La luz eterna de las Tres Lunas te bendice, devoto compañero.\""), false);
+            player.displayClientMessage(Component.translatable("altar.awakening_system.columbina_blessing"), false);
             return;
         }
 
-        // Comprobar posesión de las Tres Autoridades
         boolean hasAria = player.getInventory().contains(new ItemStack(SystemItems.LUNAR_AUTHORITY_ARIA.get()));
         boolean hasSonnet = player.getInventory().contains(new ItemStack(SystemItems.LUNAR_AUTHORITY_SONNET.get()));
         boolean hasCanon = player.getInventory().contains(new ItemStack(SystemItems.LUNAR_AUTHORITY_CANON.get()));
 
-        // --- RITO DEL DESPERTAR TRILUNAR (Las 3 autoridades presentes) ---
         if (hasAria && hasSonnet && hasCanon) {
-            // Consumir 1 de cada una
             consumeAuthority(player, SystemItems.LUNAR_AUTHORITY_ARIA.get());
             consumeAuthority(player, SystemItems.LUNAR_AUTHORITY_SONNET.get());
             consumeAuthority(player, SystemItems.LUNAR_AUTHORITY_CANON.get());
 
-            // Gran Despertar Cósmico
             GachaManager.completeColumbinaAscension(player);
 
-            // Efectos majestuosos en el altar
             double px = pos.getX() + 0.5D;
             double py = pos.getY() + 1.2D;
             double pz = pos.getZ() + 0.5D;
@@ -185,43 +178,38 @@ public class TrilunarAltarBlock extends HorizontalDirectionalBlock {
             level.playSound(null, pos, SoundEvents.UI_TOAST_CHALLENGE_COMPLETE, SoundSource.BLOCKS, 1.8F, 1.0F);
 
             player.sendSystemMessage(Component.literal("§d§m=================================================="));
-            player.sendSystemMessage(Component.literal("§d§l✦ [EL DESPERTAR DE LA DIOSA TRILUNAR] ✦"));
-            player.sendSystemMessage(Component.literal("§d§l[COLUMBINA] §f\"¡Las tres autoridades han vuelto a converger en mi espíritu! El poder de Aria, Sonnet y Canon fluye nuevamente en mí... ¡He renacido como la Diosa Trilunar!\""));
-            player.sendSystemMessage(Component.literal("§6§l✦ RECOMPENSAS SAGRADAS OBTENIDAS:"));
-            player.sendSystemMessage(Component.literal(" §e✔ Bendición Trilunar de Columbina: §d+135 Protogemas diarias (+50% Permanente)"));
-            player.sendSystemMessage(Component.literal(" §b✔ +450 Cristales Génesis §fy §d+300 Protogemas directas"));
-            player.sendSystemMessage(Component.literal(" §5✔ Contrato de Invocación 5★: Columbina (Diosa Trilunar de Teyvat)"));
-            player.sendSystemMessage(Component.literal(" §6✔ Título Honorífico: §eElegido de la Diosa Trilunar"));
+            player.sendSystemMessage(Component.translatable("altar.awakening_system.awakening_title"));
+            player.sendSystemMessage(Component.translatable("altar.awakening_system.awakening_columbina_dialogue"));
+            player.sendSystemMessage(Component.translatable("altar.awakening_system.rewards_title"));
+            player.sendSystemMessage(Component.translatable("altar.awakening_system.reward_blessing"));
+            player.sendSystemMessage(Component.translatable("altar.awakening_system.reward_crystals"));
+            player.sendSystemMessage(Component.translatable("altar.awakening_system.reward_contract"));
+            player.sendSystemMessage(Component.translatable("altar.awakening_system.reward_title"));
             player.sendSystemMessage(Component.literal("§d§m=================================================="));
             return;
         }
 
-        // Si la misión no estaba iniciada, iniciarla automáticamente
         if (data.welkinQuestStep() == 0) {
             GachaManager.handleStartWelkinQuest(player);
         }
 
-        // --- GESTIÓN DE PRUEBAS ---
         TrialSession active = ACTIVE_TRIALS.get(pos);
         if (active != null) {
-            player.displayClientMessage(Component.literal("§e✦ Prueba de " + active.trialType.toUpperCase() + " en curso. Enemigos restantes: §c" + active.remainingEnemies), true);
+            player.displayClientMessage(Component.translatable("altar.awakening_system.trial_in_progress", active.trialType.toUpperCase(), active.remainingEnemies), true);
             return;
         }
 
-        // Iniciar Prueba 1: Aria (Luna Llena) si falta
         if (!hasAria) {
             startAriaTrial(level, pos, player);
             return;
         }
 
-        // Prueba 2: Sonnet (Luna Creciente) si falta
         if (!hasSonnet) {
-            player.sendSystemMessage(Component.literal("§d[Prueba de Sonnet - Luna Creciente] §fSostén 1 Protogema en tu mano y haz clic derecho en el Altar para armonizar el Canto Lunar."));
-            player.displayClientMessage(Component.literal("§d✦ Ofrece 1 Protogema en el altar para resonar con Sonnet."), true);
+            player.sendSystemMessage(Component.translatable("altar.awakening_system.sonnet_trial_hint"));
+            player.displayClientMessage(Component.translatable("altar.awakening_system.offer_primogem"), true);
             return;
         }
 
-        // Iniciar Prueba 3: Canon (Luna Nueva) si falta
         if (!hasCanon) {
             startCanonTrial(level, pos, player);
             return;
@@ -241,7 +229,6 @@ public class TrilunarAltarBlock extends HorizontalDirectionalBlock {
 
         long posLong = pos.asLong();
 
-        // Invocar 6 Sombras Astrales de Aria
         for (int i = 0; i < count; i++) {
             double angle = (2 * Math.PI * i) / count;
             double spawnX = px + Math.cos(angle) * 5.0D;
@@ -250,7 +237,7 @@ public class TrilunarAltarBlock extends HorizontalDirectionalBlock {
             var mob = ModEntities.LUNAR_SHADOW.get().create(level);
             if (mob != null) {
                 mob.moveTo(spawnX, py, spawnZ, (float) (angle * 180 / Math.PI), 0.0F);
-                mob.setCustomName(Component.literal("§b✦ Sombra Astral de Aria").withStyle(ChatFormatting.BOLD));
+                mob.setCustomName(Component.translatable("altar.awakening_system.aria_shadow_name").withStyle(ChatFormatting.BOLD));
                 mob.setCustomNameVisible(true);
                 mob.addTag("trilunar_trial_target");
                 mob.addTag("trilunar_aria");
@@ -259,8 +246,8 @@ public class TrilunarAltarBlock extends HorizontalDirectionalBlock {
             }
         }
 
-        player.sendSystemMessage(Component.literal("§b§l[COLUMBINA] §f\"¡Aria, hermana de la Luna Llena! Las sombras astrales han despertado en el santuario. ¡Purifícalas para recuperar la primera Autoridad!\""));
-        player.displayClientMessage(Component.literal("§b✦ [Prueba de Aria] ¡Purifica a las 6 Sombras Astrales!"), true);
+        player.sendSystemMessage(Component.translatable("altar.awakening_system.aria_dialogue"));
+        player.displayClientMessage(Component.translatable("altar.awakening_system.aria_trial_start"), true);
     }
 
     private void startCanonTrial(ServerLevel level, BlockPos pos, ServerPlayer player) {
@@ -275,11 +262,10 @@ public class TrilunarAltarBlock extends HorizontalDirectionalBlock {
 
         long posLong = pos.asLong();
 
-        // Invocar al Guardián del Silencio Lunar (Canon)
         var boss = ModEntities.LUNAR_GUARDIAN.get().create(level);
         if (boss != null) {
             boss.moveTo(px, py + 0.5D, pz - 4.0D, 0.0F, 0.0F);
-            boss.setCustomName(Component.literal("§5§l✦ Guardián del Silencio Lunar (Canon)").withStyle(ChatFormatting.DARK_PURPLE, ChatFormatting.BOLD));
+            boss.setCustomName(Component.translatable("altar.awakening_system.canon_boss_name").withStyle(ChatFormatting.DARK_PURPLE, ChatFormatting.BOLD));
             boss.setCustomNameVisible(true);
             boss.addTag("trilunar_trial_target");
             boss.addTag("trilunar_canon");
@@ -287,8 +273,8 @@ public class TrilunarAltarBlock extends HorizontalDirectionalBlock {
             level.addFreshEntity(boss);
         }
 
-        player.sendSystemMessage(Component.literal("§5§l[COLUMBINA] §f\"Canon, hermana del Silencio y la Luna Nueva... Su guardián cósmico ha descendido para juzgar nuestra determinación. ¡A la batalla!\""));
-        player.displayClientMessage(Component.literal("§5✦ [Prueba de Canon] ¡Derrota al Guardián del Silencio Lunar!"), true);
+        player.sendSystemMessage(Component.translatable("altar.awakening_system.canon_dialogue"));
+        player.displayClientMessage(Component.translatable("altar.awakening_system.canon_trial_start"), true);
     }
 
     public static void checkTrialProgress(ServerLevel level, BlockPos altarPos, ServerPlayer killer, String trialType) {
@@ -307,18 +293,18 @@ public class TrilunarAltarBlock extends HorizontalDirectionalBlock {
                 Containers.dropItemStack(level, px, py + 0.5D, pz, authority);
                 level.sendParticles(ParticleTypes.END_ROD, px, py, pz, 60, 1.0D, 1.0D, 1.0D, 0.1D);
                 level.playSound(null, altarPos, SoundEvents.UI_TOAST_CHALLENGE_COMPLETE, SoundSource.BLOCKS, 1.5F, 1.2F);
-                killer.sendSystemMessage(Component.literal("§b§l[COLUMBINA] §f\"¡Las sombras han sido disipadas! La luz de la Luna Llena de Aria vuelve a brillar con pureza.\""));
-                killer.displayClientMessage(Component.literal("§b✦ ¡Prueba de Aria completada! Recoge la Autoridad Lunar de Aria."), true);
+                killer.sendSystemMessage(Component.translatable("altar.awakening_system.aria_complete_dialogue"));
+                killer.displayClientMessage(Component.translatable("altar.awakening_system.aria_trial_complete"), true);
             } else if ("canon".equals(trialType)) {
                 ItemStack authority = new ItemStack(SystemItems.LUNAR_AUTHORITY_CANON.get());
                 Containers.dropItemStack(level, px, py + 0.5D, pz, authority);
                 level.sendParticles(ParticleTypes.SOUL_FIRE_FLAME, px, py, pz, 60, 1.0D, 1.0D, 1.0D, 0.08D);
                 level.playSound(null, altarPos, SoundEvents.UI_TOAST_CHALLENGE_COMPLETE, SoundSource.BLOCKS, 1.5F, 1.0F);
-                killer.sendSystemMessage(Component.literal("§5§l[COLUMBINA] §f\"El Guardián del Silencio ha inclinado su cabeza. ¡La Autoridad Lunar de Canon ha sido recuperada!\""));
-                killer.displayClientMessage(Component.literal("§5✦ ¡Prueba de Canon completada! Recoge la Autoridad Lunar de Canon."), true);
+                killer.sendSystemMessage(Component.translatable("altar.awakening_system.canon_complete_dialogue"));
+                killer.displayClientMessage(Component.translatable("altar.awakening_system.canon_trial_complete"), true);
             }
         } else {
-            killer.displayClientMessage(Component.literal("§e✦ Enemigos restantes: §c" + session.remainingEnemies), true);
+            killer.displayClientMessage(Component.translatable("altar.awakening_system.enemies_remaining", session.remainingEnemies), true);
         }
     }
 

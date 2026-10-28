@@ -31,14 +31,14 @@ import java.util.List;
 public class TeyvatDelusionItem extends Item {
 
     public enum DelusionElement {
-        PYRO("Pyro", "Fuego Infernal", 0xFFD32F2F, ChatFormatting.DARK_RED),
-        HYDRO("Hydro", "Marea Abisal", 0xFF1976D2, ChatFormatting.BLUE),
-        CRYO("Cryo", "Glaciación Severa", 0xFF00ACC1, ChatFormatting.DARK_AQUA),
-        ELECTRO("Electro", "Juicio del Rayo", 0xFF7B1FA2, ChatFormatting.DARK_PURPLE),
-        ANEMO("Anemo", "Vórtice Cortante", 0xFF388E3C, ChatFormatting.DARK_GREEN),
-        GEO("Geo", "Ruptura de Basalto", 0xFFFFA000, ChatFormatting.GOLD),
-        DENDRO("Dendro", "Putrefacción Tóxica", 0xFF689F38, ChatFormatting.GREEN),
-        BLANK("Corrupto", "Poder Inestable", 0xFF424242, ChatFormatting.DARK_GRAY);
+        PYRO("Pyro", "Infernal Flame", 0xFFD32F2F, ChatFormatting.DARK_RED),
+        HYDRO("Hydro", "Abyssal Tide", 0xFF1976D2, ChatFormatting.BLUE),
+        CRYO("Cryo", "Severe Frost", 0xFF00ACC1, ChatFormatting.DARK_AQUA),
+        ELECTRO("Electro", "Lightning Judgment", 0xFF7B1FA2, ChatFormatting.DARK_PURPLE),
+        ANEMO("Anemo", "Cutting Vortex", 0xFF388E3C, ChatFormatting.DARK_GREEN),
+        GEO("Geo", "Basalt Rupture", 0xFFFFA000, ChatFormatting.GOLD),
+        DENDRO("Dendro", "Toxic Rot", 0xFF689F38, ChatFormatting.GREEN),
+        BLANK("Corrupt", "Unstable Power", 0xFF424242, ChatFormatting.DARK_GRAY);
 
         public final String id;
         public final String title;
@@ -86,7 +86,6 @@ public class TeyvatDelusionItem extends Item {
             AABB area = new AABB(pos.x - 8, pos.y - 4, pos.z - 8, pos.x + 8, pos.y + 6, pos.z + 8);
             List<LivingEntity> enemies = sl.getEntitiesOfClass(LivingEntity.class, area, e -> e != sp && e.isAlive());
 
-            // Coste de vitalidad por usar el Engaño de los Fatui
             sp.hurt(sp.damageSources().magic(), 4.0F);
             sp.addEffect(new MobEffectInstance(MobEffects.WITHER, 80, 0, false, false, true));
             sp.addEffect(new MobEffectInstance(MobEffects.DAMAGE_BOOST, 200, 2, false, true));
@@ -140,7 +139,6 @@ public class TeyvatDelusionItem extends Item {
                     sl.playSound(null, pos.x, pos.y, pos.z, SoundEvents.WARDEN_SONIC_BOOM, SoundSource.PLAYERS, 1.2F, 1.6F);
                     for (LivingEntity e : enemies) {
                         e.hurt(sl.damageSources().indirectMagic(sp, sp), 18.0F);
-                        // Succionar hacia el epicentro
                         Vec3 dir = pos.subtract(e.position()).normalize().scale(1.2);
                         e.setDeltaMovement(dir.x, 0.5, dir.z);
                         e.hurtMarked = true;
@@ -169,9 +167,9 @@ public class TeyvatDelusionItem extends Item {
                 }
             }
 
-            sp.displayClientMessage(Component.literal("§4[Engaño Fatui] §c¡Poder liberado! La fuerza elemental corroe tu vitalidad...")
+            sp.displayClientMessage(Component.translatable("item.awakening_system.teyvat_delusion.unleashed")
                     .withStyle(ChatFormatting.RED), true);
-            player.getCooldowns().addCooldown(this, 160); // 8s de enfriamiento
+            player.getCooldowns().addCooldown(this, 160);
         }
 
         return InteractionResultHolder.sidedSuccess(stack, level.isClientSide());
@@ -179,12 +177,12 @@ public class TeyvatDelusionItem extends Item {
 
     @Override
     public void appendHoverText(ItemStack stack, TooltipContext context, List<Component> tooltip, TooltipFlag flag) {
-        tooltip.add(Component.literal("§7Elemento Fatui: " + element.format + element.title));
+        tooltip.add(Component.translatable("item.awakening_system.teyvat_delusion.element").append(Component.literal(element.format + element.title)));
         if (element != DelusionElement.BLANK) {
-            tooltip.add(Component.literal("§c[Click Derecho] §7Desata una explosión elemental destructiva."));
-            tooltip.add(Component.literal("§4⚠ Advertencia: §7El poder inestable de los Fatui te causará corrosión y daño mágico al activarse."));
+            tooltip.add(Component.translatable("item.awakening_system.teyvat_delusion.active"));
+            tooltip.add(Component.translatable("item.awakening_system.teyvat_delusion.warn"));
         } else {
-            tooltip.add(Component.literal("§8Engaño apagado. Combínalo con Fragmentos de Engaño para forjar un artefacto elemental."));
+            tooltip.add(Component.translatable("item.awakening_system.teyvat_delusion.blank"));
         }
     }
 }

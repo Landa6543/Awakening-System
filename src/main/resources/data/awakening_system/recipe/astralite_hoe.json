@@ -1,0 +1,26 @@
+{
+  "type": "minecraft:crafting_shaped",
+  "category": "equipment",
+  "key": {
+    "X": {
+      "item": "awakening_system:astralite_ingot"
+    },
+    "#": [
+      {
+        "item": "awakening_system:netherite_stick"
+      },
+      {
+        "item": "minecraft:stick"
+      }
+    ]
+  },
+  "pattern": [
+    "XX ",
+    " # ",
+    " # "
+  ],
+  "result": {
+    "count": 1,
+    "id": "awakening_system:astralite_hoe"
+  }
+}

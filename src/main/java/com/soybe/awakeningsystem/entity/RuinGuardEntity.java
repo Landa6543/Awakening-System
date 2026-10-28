@@ -132,11 +132,9 @@ public class RuinGuardEntity extends Monster {
 
     @Override
     public boolean hurt(DamageSource source, float amount) {
-        // Mecánica de punto débil del núcleo ocular: impacto de flecha/proyectil en la cabeza
         if (source.getDirectEntity() instanceof Projectile && !isStunned()) {
             Vec3 hitPos = source.getSourcePosition();
             if (hitPos != null && hitPos.y > this.getY() + this.getEyeHeight() * 0.75D) {
-                // Golpe directo en el ojo!
                 if (!this.level().isClientSide && this.level() instanceof ServerLevel sl) {
                     sl.playSound(null, this.getX(), this.getY(), this.getZ(),
                             SoundEvents.ITEM_BREAK, SoundSource.HOSTILE, 2.0F, 0.6F);
@@ -148,10 +146,10 @@ public class RuinGuardEntity extends Monster {
                     setStunned(true);
                     setSpinning(false);
                     setFiringMissiles(false);
-                    this.stunTimer = 120; // 6 segundos aturdido
+                    this.stunTimer = 120;
 
                     if (source.getEntity() instanceof Player player) {
-                        player.displayClientMessage(Component.literal("§6§l¡PUNTO DÉBIL IMPACTADO! §eEl Guardián de las Ruinas ha quedado desactivado."), true);
+                        player.displayClientMessage(Component.translatable("boss.awakening_system.ruin_guard.weakpoint"), true);
                     }
                 }
                 return super.hurt(source, amount * 2.2F);
@@ -180,7 +178,6 @@ public class RuinGuardEntity extends Monster {
     protected void dropCustomDeathLoot(ServerLevel level, DamageSource damageSource, boolean recentlyHit) {
         super.dropCustomDeathLoot(level, damageSource, recentlyHit);
 
-        // Drops de materiales de Khaenri'ah con física nativa
         if (SystemItems.CHAOS_DEVICE.isBound()) {
             this.spawnAtLocation(new ItemStack(SystemItems.CHAOS_DEVICE.get(), 2 + this.random.nextInt(3)));
         }
@@ -203,7 +200,6 @@ public class RuinGuardEntity extends Monster {
                     1, 0, 0, 0, 0);
 
             boolean isTeyvat = sl.dimension().equals(com.soybe.awakeningsystem.TeyvatWorldManager.TEYVAT_WORLD);
-            // Recompensa a los jugadores cercanos
             for (Player p : sl.getPlayers(pl -> pl.distanceToSqr(this) < 900.0D)) {
                 if (p instanceof ServerPlayer sp) {
                     var data = SystemEvents.data(sp);
@@ -213,7 +209,7 @@ public class RuinGuardEntity extends Monster {
                         data.addMora(moraGain);
                         data.addPrimogems(primoGain);
                         com.soybe.awakeningsystem.AwakeningSystemMod.sync(sp);
-                        sp.displayClientMessage(Component.literal("§6§l✦ ¡GUARDIÁN DE LAS RUINAS DESTRUIDO! §e+" + moraGain + " Mora, §b+" + primoGain + " Protogemas§e."), false);
+                        sp.displayClientMessage(Component.translatable("boss.awakening_system.ruin_guard.defeated", moraGain, primoGain), false);
                     } else {
                         if (SystemItems.AWAKENING_COIN.isBound()) {
                             sp.addItem(new ItemStack(SystemItems.AWAKENING_COIN.get(), 4));
@@ -224,7 +220,6 @@ public class RuinGuardEntity extends Monster {
         }
     }
 
-    // === IA 1: ATAQUE GIRATORIO DE TORBELLINO (WHIRLWIND SPIN) ===
     static class RuinGuardSpinGoal extends Goal {
         private final RuinGuardEntity guard;
         private int spinTicks = 0;
@@ -244,7 +239,7 @@ public class RuinGuardEntity extends Monster {
         @Override
         public void start() {
             this.guard.setSpinning(true);
-            this.spinTicks = 100; // 5 segundos de giro
+            this.spinTicks = 100;
             this.guard.spinCooldown = 280;
             this.guard.level().playSound(null, this.guard.getX(), this.guard.getY(), this.guard.getZ(),
                     SoundEvents.MINECART_RIDING, SoundSource.HOSTILE, 1.8F, 0.5F);
@@ -258,7 +253,6 @@ public class RuinGuardEntity extends Monster {
                 this.guard.getNavigation().moveTo(target, 1.35D);
             }
 
-            // Daño radial de torbellino cada 10 ticks a enemigos cercanos
             if (this.spinTicks % 10 == 0 && this.guard.level() instanceof ServerLevel sl) {
                 sl.playSound(null, this.guard.getX(), this.guard.getY(), this.guard.getZ(),
                         SoundEvents.PLAYER_ATTACK_SWEEP, SoundSource.HOSTILE, 1.4F, 0.7F);
@@ -284,7 +278,6 @@ public class RuinGuardEntity extends Monster {
         }
     }
 
-    // === IA 2: SALVA DE MISILES AUTOGUIADOS (HOMING MISSILES) ===
     static class RuinGuardMissilesGoal extends Goal {
         private final RuinGuardEntity guard;
         private int warmUp = 0;
@@ -304,7 +297,7 @@ public class RuinGuardEntity extends Monster {
         @Override
         public void start() {
             this.guard.setFiringMissiles(true);
-            this.warmUp = 25; // Pequeño aviso de carga
+            this.warmUp = 25;
             this.guard.missileCooldown = 260;
             this.guard.getNavigation().stop();
             this.guard.level().playSound(null, this.guard.getX(), this.guard.getY(), this.guard.getZ(),
@@ -319,7 +312,6 @@ public class RuinGuardEntity extends Monster {
             }
             this.warmUp--;
             if (this.warmUp == 0 && target != null && !this.guard.level().isClientSide) {
-                // Disparo de 6 misiles en abanico curvo hacia el cielo
                 for (int i = 0; i < 6; i++) {
                     RuinMissileEntity missile = new RuinMissileEntity(this.guard.level(), this.guard, target);
                     double ox = (this.guard.getRandom().nextDouble() - 0.5D) * 1.5D;

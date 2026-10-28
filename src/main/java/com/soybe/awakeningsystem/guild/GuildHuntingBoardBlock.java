@@ -56,12 +56,11 @@ public class GuildHuntingBoardBlock extends HorizontalDirectionalBlock {
             GuildSavedData data = GuildSavedData.get(sp.server);
             Guild guild = data.getGuildByPlayer(sp.getUUID());
             if (guild == null) {
-                sp.sendSystemMessage(Component.literal("§c[Gremio] Debes ser miembro de un gremio para consultar las misiones de cacería. Usa §e/guild create §co únete a uno."));
+                sp.sendSystemMessage(Component.translatable("guild.msg.hunting_board_requires_guild"));
                 level.playSound(null, pos, SoundEvents.VILLAGER_NO, SoundSource.BLOCKS, 0.8F, 1.0F);
                 return InteractionResult.SUCCESS;
             }
 
-            // Abrir pantalla de gremio directamente en la pestaña de Cacerías (pestaña 3)
             data.syncToPlayerWithTab(sp, 3);
             level.playSound(null, pos, SoundEvents.BOOK_PAGE_TURN, SoundSource.BLOCKS, 1.0F, 1.0F);
         }

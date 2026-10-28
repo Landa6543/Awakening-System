@@ -51,7 +51,7 @@ public class WildfireEntity extends Monster {
             SynchedEntityData.defineId(WildfireEntity.class, EntityDataSerializers.BOOLEAN);
 
     private final ServerBossEvent bossEvent =
-            new ServerBossEvent(Component.literal("§6§l✦ Wildfire (Jefe Ardiente)"),
+            new ServerBossEvent(Component.translatable("entity.awakening_system.wildfire.boss_name"),
                     BossEvent.BossBarColor.RED, BossEvent.BossBarOverlay.NOTCHED_10);
 
     private float shieldDamageAccumulator = 0.0F;
@@ -118,16 +118,16 @@ public class WildfireEntity extends Monster {
     public void setMiniBoss(boolean mini) {
         this.entityData.set(IS_MINI_BOSS, mini);
         if (mini) {
-            this.bossEvent.setName(Component.literal("§e§l✦ [Mini-Jefe] Wildfire Infernal"));
+            this.bossEvent.setName(Component.translatable("entity.awakening_system.wildfire.miniboss_name"));
             this.bossEvent.setColor(BossEvent.BossBarColor.YELLOW);
             this.bossEvent.setOverlay(BossEvent.BossBarOverlay.PROGRESS);
-            this.setCustomName(Component.literal("§e§l✦ [Mini-Jefe] Wildfire Infernal"));
+            this.setCustomName(Component.translatable("entity.awakening_system.wildfire.miniboss_name"));
             this.setCustomNameVisible(true);
         } else {
-            this.bossEvent.setName(Component.literal("§6§l✦ Wildfire (Jefe Ardiente)"));
+            this.bossEvent.setName(Component.translatable("entity.awakening_system.wildfire.boss_name"));
             this.bossEvent.setColor(BossEvent.BossBarColor.RED);
             this.bossEvent.setOverlay(BossEvent.BossBarOverlay.NOTCHED_10);
-            this.setCustomName(Component.literal("§6§l✦ Wildfire (Jefe Ardiente)"));
+            this.setCustomName(Component.translatable("entity.awakening_system.wildfire.boss_name"));
         }
     }
 
@@ -148,7 +148,6 @@ public class WildfireEntity extends Monster {
 
         int shields = getActiveShields();
         if (shields > 0 && !source.is(net.minecraft.tags.DamageTypeTags.BYPASSES_INVULNERABILITY)) {
-            // Escudos absorben el 70% del daño
             float reduced = amount * 0.30F;
             shieldDamageAccumulator += amount;
 
@@ -163,7 +162,7 @@ public class WildfireEntity extends Monster {
                 }
 
                 if (remaining == 0) {
-                    shieldRegenCooldown = 300; // 15 segundos vulnerable
+                    shieldRegenCooldown = 300;
                 }
             }
             return super.hurt(source, reduced);
@@ -176,13 +175,11 @@ public class WildfireEntity extends Monster {
     public void aiStep() {
         super.aiStep();
 
-        // Flotación en el aire como Blaze
         if (!this.onGround() && this.getDeltaMovement().y < 0.0D) {
             this.setDeltaMovement(this.getDeltaMovement().multiply(1.0D, 0.6D, 1.0D));
         }
 
         if (this.level().isClientSide()) {
-            // Partículas de llamas orbitando
             if (this.random.nextInt(3) == 0) {
                 double px = this.getX() + (this.random.nextDouble() - 0.5D) * 1.4D;
                 double py = this.getY() + 0.5D + this.random.nextDouble() * 1.5D;
@@ -190,7 +187,6 @@ public class WildfireEntity extends Monster {
                 this.level().addParticle(ParticleTypes.FLAME, px, py, pz, 0.0D, 0.03D, 0.0D);
             }
         } else {
-            // Regeneración de escudos
             if (getActiveShields() < 4) {
                 if (shieldRegenCooldown > 0) {
                     shieldRegenCooldown--;
@@ -202,7 +198,6 @@ public class WildfireEntity extends Monster {
                 }
             }
 
-            // Invocación de esbirros Blaze a mitad de vida
             if (!summonedBlazes && this.getHealth() < this.getMaxHealth() * 0.5F) {
                 summonedBlazes = true;
                 this.level().playSound(null, this.blockPosition(), ModSounds.WILDFIRE_SUMMON_BLAZE.get(), SoundSource.HOSTILE, 1.8F, 1.0F);
@@ -253,7 +248,6 @@ public class WildfireEntity extends Monster {
     protected void dropCustomDeathLoot(ServerLevel level, DamageSource damageSource, boolean recentlyHit) {
         super.dropCustomDeathLoot(level, damageSource, recentlyHit);
 
-        // Soltar Corona de Fuego Salvaje o Fragmentos
         if (SystemItems.WILDFIRE_CROWN != null && SystemItems.WILDFIRE_CROWN.isBound()) {
             if (this.random.nextFloat() < 0.65F) {
                 this.spawnAtLocation(new ItemStack(SystemItems.WILDFIRE_CROWN.get()));
@@ -262,7 +256,6 @@ public class WildfireEntity extends Monster {
             }
         }
 
-        // Drops de Nether
         this.spawnAtLocation(new ItemStack(Items.BLAZE_ROD, 3 + this.random.nextInt(4)));
         this.spawnAtLocation(new ItemStack(Items.MAGMA_CREAM, 2 + this.random.nextInt(3)));
         if (this.random.nextFloat() < 0.50F) {
@@ -292,7 +285,6 @@ public class WildfireEntity extends Monster {
         this.summonedBlazes = tag.getBoolean("SummonedBlazes");
     }
 
-    // === IA 1: ONDA DE CHOQUE ÍGNEA (SHOCKWAVE) ===
     static class ShockwaveAttackGoal extends Goal {
         private final WildfireEntity wildfire;
         private int channelTicks = 0;
@@ -311,7 +303,7 @@ public class WildfireEntity extends Monster {
                 cooldown--;
                 return false;
             }
-            return wildfire.distanceToSqr(target) <= 36.0D; // dentro de 6 bloques
+            return wildfire.distanceToSqr(target) <= 36.0D;
         }
 
         @Override
@@ -327,7 +319,6 @@ public class WildfireEntity extends Monster {
             wildfire.entityData.set(SHOCKWAVE_TICKS, 20 - channelTicks);
 
             if (wildfire.level() instanceof ServerLevel sl) {
-                // Partículas concéntricas cargando
                 double px = wildfire.getX();
                 double py = wildfire.getY() + 0.2D;
                 double pz = wildfire.getZ();
@@ -335,7 +326,6 @@ public class WildfireEntity extends Monster {
             }
 
             if (channelTicks <= 0) {
-                // ¡EXPLOSIÓN DE ONDA DE CHOQUE!
                 if (wildfire.level() instanceof ServerLevel sl) {
                     double px = wildfire.getX();
                     double py = wildfire.getY() + 0.5D;
@@ -359,7 +349,7 @@ public class WildfireEntity extends Monster {
                         victim.hurtMarked = true;
                     }
                 }
-                cooldown = 140; // 7 segundos de recarga
+                cooldown = 140;
             }
         }
 
@@ -375,7 +365,6 @@ public class WildfireEntity extends Monster {
         }
     }
 
-    // === IA 2: RÁFAGA DE BOLAS DE FUEGO ===
     static class FireballBarrageGoal extends Goal {
         private final WildfireEntity wildfire;
         private int attackStep = 0;
@@ -408,7 +397,6 @@ public class WildfireEntity extends Monster {
             double distSq = wildfire.distanceToSqr(target);
 
             if (distSq < 16.0D) {
-                // Retroceder un poco para mantener distancia
                 Vec3 away = wildfire.position().subtract(target.position()).normalize().scale(0.15D);
                 wildfire.setDeltaMovement(wildfire.getDeltaMovement().add(away.x, 0.05D, away.z));
             }

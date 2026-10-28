@@ -147,7 +147,6 @@ public class FlyingSwordEntity extends Entity {
 
     @Override
     protected void playStepSound(net.minecraft.core.BlockPos pos, net.minecraft.world.level.block.state.BlockState state) {
-        // Silenciado: la espada voladora no genera sonidos de paso ni choques de madera al rozar bloques
     }
 
     @Override

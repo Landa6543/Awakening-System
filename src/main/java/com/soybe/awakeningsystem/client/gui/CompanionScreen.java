@@ -38,19 +38,21 @@ public class CompanionScreen extends Screen {
     private float health;
     private float maxHealth;
     private boolean guarding;
+    private int ascensionRank;
     private final NonNullList<ItemStack> artifacts = NonNullList.withSize(5, ItemStack.EMPTY);
 
     private static final int W = 360;
     private static final int H = 230;
 
     public CompanionScreen(int entityId, CompoundTag data) {
-        super(Component.literal("Gestión de Compañero"));
+        super(Component.translatable("gui.awakening_system.companion.title"));
         this.entityId = entityId;
         this.profileId = data.getString("ProfileId");
         this.name = data.getString("Name");
         this.level = data.getInt("Level");
         this.stars = data.getInt("Stars");
         this.element = data.getString("Element");
+        this.ascensionRank = data.contains("AscensionRank") ? data.getInt("AscensionRank") : 0;
         this.health = data.getFloat("Health");
         this.maxHealth = data.getFloat("MaxHealth");
         this.guarding = data.getBoolean("Guarding");
@@ -71,31 +73,85 @@ public class CompanionScreen extends Screen {
     }
 
     @Override
+    protected void init() {
+        super.init();
+        com.soybe.awakeningsystem.entity.CompanionProfile prof = com.soybe.awakeningsystem.entity.CompanionProfile.getById(profileId);
+        if (prof != null) {
+            AwakeningSystemClient.playUiSound(prof.getAmbientSound(), 1.0F, 1.0F);
+        }
+    }
+
+    @Override
     public boolean isPauseScreen() {
         return false;
+    }
+
+    public float getGuiScale() {
+        float scaleX = (float) this.width / (W + 20.0F);
+        float scaleY = (float) this.height / (H + 20.0F);
+        float scale = Math.min(scaleX, scaleY);
+        return Math.min(1.0F, Math.max(0.35F, scale));
+    }
+
+    public double transformMouseX(double mouseX) {
+        float scale = getGuiScale();
+        if (scale >= 1.0F) return mouseX;
+        double cx = this.width / 2.0;
+        return (mouseX - cx) / scale + cx;
+    }
+
+    public double transformMouseY(double mouseY) {
+        float scale = getGuiScale();
+        if (scale >= 1.0F) return mouseY;
+        double cy = this.height / 2.0;
+        return (mouseY - cy) / scale + cy;
+    }
+
+    @Override
+    public boolean mouseReleased(double mouseX, double mouseY, int button) {
+        return super.mouseReleased(transformMouseX(mouseX), transformMouseY(mouseY), button);
+    }
+
+    @Override
+    public boolean mouseDragged(double mouseX, double mouseY, int button, double dragX, double dragY) {
+        return super.mouseDragged(transformMouseX(mouseX), transformMouseY(mouseY), button, dragX, dragY);
+    }
+
+    @Override
+    public void renderBackground(GuiGraphics g, int mouseX, int mouseY, float partialTick) {
+        g.fill(0, 0, this.width, this.height, 0x60000000);
     }
 
     @Override
     public void render(GuiGraphics g, int mouseX, int mouseY, float partialTick) {
         this.renderBackground(g, mouseX, mouseY, partialTick);
 
+        float scale = getGuiScale();
+        int mX = (int) Math.round(transformMouseX(mouseX));
+        int mY = (int) Math.round(transformMouseY(mouseY));
+
+        g.pose().pushPose();
+        if (scale < 1.0F) {
+            float cxF = this.width / 2.0F;
+            float cyF = this.height / 2.0F;
+            g.pose().translate(cxF, cyF, 0.0F);
+            g.pose().scale(scale, scale, 1.0F);
+            g.pose().translate(-cxF, -cyF, 0.0F);
+        }
+
         int left = (this.width - W) / 2;
         int top = (this.height - H) / 2;
 
-        // Fondo y marcos elegantes
         g.fill(left, top, left + W, top + H, 0xF00D0F14);
         g.renderOutline(left, top, W, H, 0xFF35445A);
-        g.renderOutline(left + 1, top + 1, W - 2, H - 2, 0xFFD4AF37); // Borde dorado
+        g.renderOutline(left + 1, top + 1, W - 2, H - 2, 0xFFD4AF37);
 
-        // Encabezado
         String starsStr = "★".repeat(Math.max(1, stars));
         String title = "§6" + starsStr + " §f" + name + " §8| §e" + element;
         g.drawString(font, title, left + 14, top + 12, 0xFFFFFF);
 
-        // Subtítulo
-        g.drawString(font, "§7Nivel: §e" + level + "§7/90 §8• §7Estado: " + (guarding ? "§6Guardia" : "§aSiguiendo"), left + 14, top + 26, 0xAAAAAA);
+        g.drawString(font, Component.translatable("gui.awakening_system.companion.level_status", level, (guarding ? Component.translatable("gui.awakening_system.companion.status_guarding").getString() : Component.translatable("gui.awakening_system.companion.status_following").getString())).getString(), left + 14, top + 26, 0xAAAAAA);
 
-        // 1. RENDER 3D DEL COMPAÑERO (Panel Izquierdo)
         int modelBoxX = left + 14;
         int modelBoxY = top + 42;
         int modelBoxW = 90;
@@ -104,6 +160,13 @@ public class CompanionScreen extends Screen {
         g.renderOutline(modelBoxX, modelBoxY, modelBoxW, modelBoxH, 0xFF2A374A);
 
         Entity entity = (minecraft != null && minecraft.level != null) ? minecraft.level.getEntity(entityId) : null;
+        if (entity instanceof CompanionEntity comp) {
+            this.level = comp.getCompanionLevel();
+            this.ascensionRank = comp.getAscensionRank();
+            this.guarding = comp.isGuarding();
+            this.health = comp.getHealth();
+            this.maxHealth = comp.getMaxHealth();
+        }
         if (entity instanceof LivingEntity living) {
             InventoryScreen.renderEntityInInventoryFollowsMouse(
                     g,
@@ -113,57 +176,59 @@ public class CompanionScreen extends Screen {
                     modelBoxY + modelBoxH,
                     42,
                     0.0625F,
-                    (float) mouseX,
-                    (float) mouseY,
+                    (float) mX,
+                    (float) mY,
                     living
             );
         }
 
-        // Barra de Vida debajo del modelo
         int hpY = modelBoxY + modelBoxH + 6;
         g.fill(modelBoxX, hpY, modelBoxX + modelBoxW, hpY + 8, 0xFF222222);
         float hpRatio = maxHealth > 0 ? Math.min(1.0F, Math.max(0.0F, health / maxHealth)) : 1.0F;
         g.fill(modelBoxX, hpY, modelBoxX + (int) (modelBoxW * hpRatio), hpY + 8, 0xFF2ECC71);
         g.drawString(font, "§fHP: " + (int) health + "/" + (int) maxHealth, modelBoxX + 4, hpY + 1, 0xFFFFFF);
 
-        // 2. BOTONES DE ACCIÓN (Centro)
         int btnX = left + 114;
         int btnW = 105;
 
-        // Botón Subir Nivel
-        int btnY1 = top + 42;
-        boolean hoverBtn1 = mouseX >= btnX && mouseX < btnX + btnW && mouseY >= btnY1 && mouseY < btnY1 + 22;
-        g.fill(btnX, btnY1, btnX + btnW, btnY1 + 22, hoverBtn1 ? 0xFF283A52 : 0xFF1B2433);
-        g.renderOutline(btnX, btnY1, btnW, 22, hoverBtn1 ? 0xFFFFD700 : 0xFF3D4F66);
-        g.drawCenteredString(font, "§6✦ Subir Nivel", btnX + btnW / 2, btnY1 + 7, 0xFFFFFF);
+        int rankCap = com.soybe.awakeningsystem.entity.CompanionAscensionManager.getRankMaxLevel(ascensionRank);
+        boolean atRankCap = level >= rankCap;
 
-        // Botón Guardia
+        int btnY1 = top + 42;
+        boolean hoverBtn1 = mX >= btnX && mX < btnX + btnW && mY >= btnY1 && mY < btnY1 + 22;
+        g.fill(btnX, btnY1, btnX + btnW, btnY1 + 22, atRankCap ? 0xFF2A1C1C : (hoverBtn1 ? 0xFF283A52 : 0xFF1B2433));
+        g.renderOutline(btnX, btnY1, btnW, 22, atRankCap ? 0xFFE74C3C : (hoverBtn1 ? 0xFFFFD700 : 0xFF3D4F66));
+        g.drawCenteredString(font, atRankCap ? Component.translatable("gui.awakening_system.companion.rank_limit_btn", rankCap).getString() : Component.translatable("gui.awakening_system.companion.level_up_btn").getString(), btnX + btnW / 2, btnY1 + 7, 0xFFFFFF);
+
         int btnY2 = top + 70;
-        boolean hoverBtn2 = mouseX >= btnX && mouseX < btnX + btnW && mouseY >= btnY2 && mouseY < btnY2 + 22;
+        boolean hoverBtn2 = mX >= btnX && mX < btnX + btnW && mY >= btnY2 && mY < btnY2 + 22;
         g.fill(btnX, btnY2, btnX + btnW, btnY2 + 22, hoverBtn2 ? 0xFF283A52 : 0xFF1B2433);
         g.renderOutline(btnX, btnY2, btnW, 22, hoverBtn2 ? 0xFFFFD700 : 0xFF3D4F66);
-        g.drawCenteredString(font, guarding ? "§e✦ Seguir Amo" : "§6✦ Modo Guardia", btnX + btnW / 2, btnY2 + 7, 0xFFFFFF);
+        g.drawCenteredString(font, guarding ? Component.translatable("gui.awakening_system.companion.action_follow").getString() : Component.translatable("gui.awakening_system.companion.action_guard").getString(), btnX + btnW / 2, btnY2 + 7, 0xFFFFFF);
 
-        // Botón Guardar en Contrato
         int btnY3 = top + 98;
-        boolean hoverBtn3 = mouseX >= btnX && mouseX < btnX + btnW && mouseY >= btnY3 && mouseY < btnY3 + 22;
+        boolean hoverBtn3 = mX >= btnX && mX < btnX + btnW && mY >= btnY3 && mY < btnY3 + 22;
         g.fill(btnX, btnY3, btnX + btnW, btnY3 + 22, hoverBtn3 ? 0xFF3B1E22 : 0xFF2A1518);
         g.renderOutline(btnX, btnY3, btnW, 22, hoverBtn3 ? 0xFFFF6B6B : 0xFF5C2B30);
-        g.drawCenteredString(font, "§c✦ Guardar Contrato", btnX + btnW / 2, btnY3 + 7, 0xFFFFFF);
+        g.drawCenteredString(font, Component.translatable("gui.awakening_system.companion.action_recall").getString(), btnX + btnW / 2, btnY3 + 7, 0xFFFFFF);
 
-        // Atributos del compañero en el centro
         int statBoxY = top + 126;
-        g.drawString(font, "§e✦ Atributos:", btnX, statBoxY, 0xFFFFFF);
-        g.drawString(font, "§7Ataque Base: §f" + String.format("%.1f", (18.0F + (level - 1) * 1.5F)), btnX + 4, statBoxY + 12, 0xCCCCCC);
-        g.drawString(font, "§7Defensa: §f" + String.format("%.1f", (18.0F + (level - 1) * 1.0F)), btnX + 4, statBoxY + 23, 0xCCCCCC);
-        g.drawString(font, "§7Daño Habilidad: §b" + (int)(20 + level * 2) + " DMG", btnX + 4, statBoxY + 34, 0xCCCCCC);
+        g.drawString(font, Component.translatable("gui.awakening_system.companion.attributes_header").getString(), btnX, statBoxY, 0xFFFFFF);
+        g.drawString(font, Component.translatable("gui.awakening_system.companion.attr_base_atk", String.format("%.1f", (18.0F + (level - 1) * 1.5F))).getString(), btnX + 4, statBoxY + 12, 0xCCCCCC);
+        g.drawString(font, Component.translatable("gui.awakening_system.companion.attr_defense", String.format("%.1f", (18.0F + (level - 1) * 1.0F))).getString(), btnX + 4, statBoxY + 23, 0xCCCCCC);
+        g.drawString(font, Component.translatable("gui.awakening_system.companion.attr_skill_dmg", (int)(20 + level * 2)).getString(), btnX + 4, statBoxY + 34, 0xCCCCCC);
 
-        // 3. RANURAS DE ARTEFACTOS (Panel Derecho)
         int artX = left + 230;
         int artY = top + 42;
-        g.drawString(font, "§6§l✦ ARTEFACTOS (5)", artX, top + 28, 0xFFFFFF);
+        g.drawString(font, Component.translatable("gui.awakening_system.companion.artifacts_header").getString(), artX, top + 28, 0xFFFFFF);
 
-        String[] slotIcons = {"🌸 Flor", "🪶 Pluma", "⏳ Reloj", "🏆 Cáliz", "👑 Tiara"};
+        String[] slotIcons = {
+                Component.translatable("gui.awakening_system.companion.slot_flower").getString(),
+                Component.translatable("gui.awakening_system.companion.slot_plume").getString(),
+                Component.translatable("gui.awakening_system.companion.slot_sands").getString(),
+                Component.translatable("gui.awakening_system.companion.slot_goblet").getString(),
+                Component.translatable("gui.awakening_system.companion.slot_circlet").getString()
+        };
         for (int i = 0; i < 5; i++) {
             int sy = artY + i * 24;
             boolean hoverSlot = mouseX >= artX && mouseX < artX + 116 && mouseY >= sy && mouseY < sy + 22;
@@ -196,10 +261,9 @@ public class CompanionScreen extends Screen {
             }
         }
 
-        // 4. BONOS DE CONJUNTO ACTIVOS
         Map<ArtifactSet, Integer> sets = getActiveSetPieces();
         int bonusY = top + 168;
-        g.drawString(font, "§e✦ Bonos Activos:", artX, bonusY, 0xFFFFFF);
+        g.drawString(font, Component.translatable("gui.awakening_system.companion.active_bonuses").getString(), artX, bonusY, 0xFFFFFF);
         int setLine = 0;
         for (Map.Entry<ArtifactSet, Integer> entry : sets.entrySet()) {
             if (entry.getValue() >= 2) {
@@ -214,14 +278,13 @@ public class CompanionScreen extends Screen {
             }
         }
         if (setLine == 0) {
-            g.drawString(font, "§8Sin bonos de 2P/4P activos", artX + 4, bonusY + 11, 0x666666);
+            g.drawString(font, Component.translatable("gui.awakening_system.companion.no_set_bonuses").getString(), artX + 4, bonusY + 11, 0x666666);
         }
 
-        // 5. MINI INVENTARIO INFERIOR (Para arrastrar o equipar artefactos)
         int invY = top + 192;
         g.fill(left + 14, invY, left + 220, invY + 28, 0x600E121A);
         g.renderOutline(left + 14, invY, 206, 28, 0xFF2A374A);
-        g.drawString(font, "§7Tus artefactos: (Haz clic para equipar)", left + 18, invY + 2, 0xAAAAAA);
+        g.drawString(font, Component.translatable("gui.awakening_system.companion.inventory_hint").getString(), left + 18, invY + 2, 0xAAAAAA);
 
         if (minecraft != null && minecraft.player != null) {
             int slotRendered = 0;
@@ -238,47 +301,60 @@ public class CompanionScreen extends Screen {
             }
         }
 
-        // TOOLTIPS AL PASAR EL RATÓN
         for (int i = 0; i < 5; i++) {
             int sy = artY + i * 24;
-            if (mouseX >= artX && mouseX < artX + 116 && mouseY >= sy && mouseY < sy + 22) {
+            if (mX >= artX && mX < artX + 116 && mY >= sy && mY < sy + 22) {
                 ItemStack stack = artifacts.get(i);
                 if (!stack.isEmpty()) {
                     int artBtnX = artX + 86;
                     int btnY = sy + 3;
-                    boolean onUpgradeBtn = mouseX >= artBtnX && mouseX < artBtnX + 27 && mouseY >= btnY && mouseY < btnY + 16;
+                    boolean onUpgradeBtn = mX >= artBtnX && mX < artBtnX + 27 && mY >= btnY && mY < btnY + 16;
                     int artLvl = GenshinArtifactItem.getLevel(stack);
                     if (onUpgradeBtn) {
                         List<Component> upTip = new java.util.ArrayList<>();
-                        upTip.add(Component.literal("§6§lMejorar Artefacto (+1)"));
+                        upTip.add(Component.translatable("gui.awakening_system.companion.upgrade_art_title"));
                         if (artLvl < 20) {
                             int cost = (artLvl + 1) * 350;
-                            upTip.add(Component.literal("§7Nivel actual: §a+" + artLvl + " §8➔ §e+" + (artLvl + 1) + " §8/ +20"));
-                            upTip.add(Component.literal("§7Coste: §6" + cost + " Monedas §7o §b1x Mineral"));
-                            upTip.add(Component.literal("§e✦ Clic Izquierdo en [▲+1] o Clic Derecho en la ranura."));
+                            upTip.add(Component.translatable("gui.awakening_system.companion.upgrade_art_level", artLvl, (artLvl + 1)));
+                            upTip.add(Component.translatable("gui.awakening_system.companion.upgrade_art_cost", cost));
+                            upTip.add(Component.translatable("gui.awakening_system.companion.upgrade_art_hint"));
                         } else {
-                            upTip.add(Component.literal("§a✔ Nivel Máximo (+20) alcanzado."));
+                            upTip.add(Component.translatable("gui.awakening_system.companion.upgrade_art_max"));
                         }
-                        g.renderComponentTooltip(font, upTip, mouseX, mouseY);
+                        g.renderComponentTooltip(font, upTip, mX, mY);
                     } else {
                         List<Component> tooltip = new java.util.ArrayList<>(Screen.getTooltipFromItem(this.minecraft, stack));
                         tooltip.add(Component.literal(""));
-                        tooltip.add(Component.literal("§8▪ §aClic Derecho: §7Mejorar (+1)"));
-                        tooltip.add(Component.literal("§8▪ §cClic Izquierdo: §7Desequipar"));
-                        g.renderComponentTooltip(font, tooltip, mouseX, mouseY);
+                        tooltip.add(Component.translatable("gui.awakening_system.companion.art_right_click"));
+                        tooltip.add(Component.translatable("gui.awakening_system.companion.art_left_click"));
+                        g.renderComponentTooltip(font, tooltip, mX, mY);
                     }
                 }
             }
         }
 
         if (hoverBtn1) {
-            int costMora = level * 2500;
-            g.renderComponentTooltip(font, java.util.List.of(
-                    Component.literal("§6✦ Ascender Compañero"),
-                    Component.literal("§7Coste: §6" + String.format("%,d", costMora) + " Mora §7+ §b1x Ingenio del Héroe"),
-                    Component.literal("§aAumenta salud, ataque y daño de habilidades.")
-            ), mouseX, mouseY);
+            boolean creative = minecraft != null && minecraft.player != null && minecraft.player.isCreative();
+            int costMora = level * 1500;
+            java.util.List<Component> tooltip = new java.util.ArrayList<>();
+            tooltip.add(Component.translatable("gui.awakening_system.companion.level_up_title"));
+            if (level >= rankCap) {
+                tooltip.add(Component.translatable("gui.awakening_system.companion.rank_cap_reached", rankCap));
+                tooltip.add(Component.translatable("gui.awakening_system.companion.ascend_hint_1"));
+                tooltip.add(Component.translatable("gui.awakening_system.companion.ascend_hint_2"));
+            } else if (level >= 90) {
+                tooltip.add(Component.translatable("gui.awakening_system.companion.level_max"));
+            } else if (creative) {
+                tooltip.add(Component.translatable("gui.awakening_system.companion.creative_instant"));
+            } else {
+                tooltip.add(Component.translatable("gui.awakening_system.companion.level_cost_book", String.format("%,d", costMora)));
+                tooltip.add(Component.translatable("gui.awakening_system.companion.level_cost_alt", String.format("%,d", costMora * 2)));
+            }
+            tooltip.add(Component.translatable("gui.awakening_system.companion.level_stat_bonus"));
+            g.renderComponentTooltip(font, tooltip, mX, mY);
         }
+
+        g.pose().popPose();
     }
 
     private Map<ArtifactSet, Integer> getActiveSetPieces() {
@@ -293,37 +369,35 @@ public class CompanionScreen extends Screen {
 
     @Override
     public boolean mouseClicked(double mouseX, double mouseY, int button) {
+        mouseX = transformMouseX(mouseX);
+        mouseY = transformMouseY(mouseY);
+
         int left = (this.width - W) / 2;
         int top = (this.height - H) / 2;
 
         int btnX = left + 114;
         int btnW = 105;
 
-        // Botón Subir Nivel
         if (mouseX >= btnX && mouseX < btnX + btnW && mouseY >= top + 42 && mouseY < top + 64) {
             PacketDistributor.sendToServer(new CompanionActionPayload(entityId, 0));
-            AwakeningSystemClient.playUiSound(ModSounds.SYSTEM_CLICK.value(), 1.0F, 1.0F);
-            this.level = Math.min(90, level + 1);
+            AwakeningSystemClient.playButtonClick();
             return true;
         }
 
-        // Botón Guardia
         if (mouseX >= btnX && mouseX < btnX + btnW && mouseY >= top + 70 && mouseY < top + 92) {
             PacketDistributor.sendToServer(new CompanionActionPayload(entityId, 1));
-            AwakeningSystemClient.playUiSound(ModSounds.SYSTEM_CLICK.value(), 1.0F, 1.0F);
+            AwakeningSystemClient.playButtonClick();
             this.guarding = !this.guarding;
             return true;
         }
 
-        // Botón Guardar en Contrato
         if (mouseX >= btnX && mouseX < btnX + btnW && mouseY >= top + 98 && mouseY < top + 120) {
             PacketDistributor.sendToServer(new CompanionActionPayload(entityId, 2));
-            AwakeningSystemClient.playUiSound(ModSounds.SYSTEM_CLICK.value(), 1.0F, 1.0F);
+            AwakeningSystemClient.playButtonClick();
             this.onClose();
             return true;
         }
 
-        // Clic en ranura de artefacto equipada -> mejorar o desequipar
         int artX = left + 230;
         int artY = top + 42;
         for (int i = 0; i < 5; i++) {
@@ -335,13 +409,14 @@ public class CompanionScreen extends Screen {
                     boolean onUpgradeBtn = mouseX >= artBtnX && mouseX < artBtnX + 27 && mouseY >= btnY && mouseY < btnY + 16;
                     if (button == 1 || onUpgradeBtn) {
                         PacketDistributor.sendToServer(new com.soybe.awakeningsystem.network.UpgradeArtifactPayload(true, entityId, i));
+                        AwakeningSystemClient.playButtonClick();
                         AwakeningSystemClient.playUiSound(SoundEvents.ANVIL_USE, 1.0F, 1.2F);
                         int cur = GenshinArtifactItem.getLevel(artifacts.get(i));
                         if (cur < 20) GenshinArtifactItem.setLevel(artifacts.get(i), cur + 1);
                         return true;
                     } else if (button == 0) {
                         PacketDistributor.sendToServer(new EquipArtifactPayload(true, entityId, i, -1));
-                        AwakeningSystemClient.playUiSound(ModSounds.SYSTEM_CLICK.value(), 1.0F, 1.2F);
+                        AwakeningSystemClient.playButtonClick();
                         artifacts.set(i, ItemStack.EMPTY);
                         return true;
                     }
@@ -349,7 +424,6 @@ public class CompanionScreen extends Screen {
             }
         }
 
-        // Clic en artefacto del inventario -> equipar en la ranura correspondiente
         int invY = top + 192;
         if (minecraft != null && minecraft.player != null) {
             int slotRendered = 0;
@@ -361,7 +435,7 @@ public class CompanionScreen extends Screen {
                     if (mouseX >= ix && mouseX < ix + 18 && mouseY >= iy && mouseY < iy + 18) {
                         int targetSlot = art.getArtifactType().getSlotIndex();
                         PacketDistributor.sendToServer(new EquipArtifactPayload(true, entityId, targetSlot, i));
-                        AwakeningSystemClient.playUiSound(ModSounds.SYSTEM_CLICK.value(), 1.1F, 1.0F);
+                        AwakeningSystemClient.playButtonClick();
                         artifacts.set(targetSlot, invStack.copy());
                         return true;
                     }

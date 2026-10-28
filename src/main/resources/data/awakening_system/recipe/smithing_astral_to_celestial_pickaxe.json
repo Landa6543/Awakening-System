@@ -1,0 +1,7 @@
+{
+  "type": "minecraft:smithing_transform",
+  "template": { "item": "awakening_system:celestial_upgrade_smithing_template" },
+  "base": { "item": "awakening_system:astral_pickaxe" },
+  "addition": { "item": "awakening_system:celestial_ingot" },
+  "result": { "id": "awakening_system:celestial_pickaxe" }
+}

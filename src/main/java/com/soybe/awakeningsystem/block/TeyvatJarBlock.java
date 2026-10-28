@@ -51,7 +51,6 @@ public class TeyvatJarBlock extends Block {
         if (!state.is(newState.getBlock()) && !level.isClientSide() && level instanceof ServerLevel sl) {
             RandomSource rand = sl.getRandom();
 
-            // Partículas de rotura de vasija
             sl.sendParticles(new BlockParticleOption(ParticleTypes.BLOCK, state), pos.getX() + 0.5D, pos.getY() + 0.4D, pos.getZ() + 0.5D, 30, 0.3D, 0.3D, 0.3D, 0.15D);
             sl.playSound(null, pos, SoundEvents.DECORATED_POT_SHATTER, SoundSource.BLOCKS, 1.2F, 1.0F);
 
@@ -78,10 +77,8 @@ public class TeyvatJarBlock extends Block {
                 sl.playSound(null, pos, SoundEvents.AMETHYST_BLOCK_CHIME, SoundSource.PLAYERS, 1.2F, 1.8F);
             }
 
-            // Efecto Gran Lotería Galáctica
             if (!lottoStack.isEmpty() && nearbyPlayer != null) {
                 if (rand.nextFloat() < 0.75F) {
-                    // ¡Premio Mayor!
                     popResource(sl, pos, new ItemStack(SystemItems.COSMIC_FRAGMENT.get(), 6 + rand.nextInt(10)));
                     popResource(sl, pos, new ItemStack(SystemItems.PRIMOGEM.get(), 2 + rand.nextInt(3)));
                     if (rand.nextFloat() < 0.15F && SystemItems.INTERTWINED_FATE.isBound()) {
@@ -89,44 +86,37 @@ public class TeyvatJarBlock extends Block {
                     }
                     sl.sendParticles(ParticleTypes.FIREWORK, pos.getX() + 0.5, pos.getY() + 1.0, pos.getZ() + 0.5, 30, 0.5, 0.5, 0.5, 0.15);
                     sl.playSound(null, pos, SoundEvents.UI_TOAST_CHALLENGE_COMPLETE, SoundSource.PLAYERS, 1.0F, 1.5F);
-                    nearbyPlayer.sendSystemMessage(net.minecraft.network.chat.Component.literal("§b§l[GRAN LOTERÍA GALÁCTICA] §e¡PREMIO MAYOR! La vasija desata una cascada de tesoros estelares."));
+                    nearbyPlayer.sendSystemMessage(net.minecraft.network.chat.Component.translatable("block.awakening_system.teyvat_jar.lotto_win"));
                 } else {
-                    // ¡Lotería Rota!
                     lottoStack.shrink(1);
                     nearbyPlayer.setHealth(1.0F);
                     sl.sendParticles(ParticleTypes.CRIT, nearbyPlayer.getX(), nearbyPlayer.getY() + 1.0, nearbyPlayer.getZ(), 40, 0.5, 0.5, 0.5, 0.2);
                     sl.playSound(null, nearbyPlayer.blockPosition(), SoundEvents.GLASS_BREAK, SoundSource.PLAYERS, 1.4F, 0.5F);
                     sl.playSound(null, nearbyPlayer.blockPosition(), SoundEvents.ITEM_BREAK, SoundSource.PLAYERS, 1.2F, 0.8F);
-                    nearbyPlayer.sendSystemMessage(net.minecraft.network.chat.Component.literal("§c§l[LOTERÍA ROTA] §4¡El artefacto se ha hecho añicos! Pierdes casi toda tu salud."));
+                    nearbyPlayer.sendSystemMessage(net.minecraft.network.chat.Component.translatable("block.awakening_system.teyvat_jar.lotto_broken"));
                 }
             }
 
-            // 1. Mora (60% probabilidad)
             if (rand.nextFloat() < 0.60F && SystemItems.MORA_POUCH.isBound()) {
                 popResource(sl, pos, new ItemStack(SystemItems.MORA_POUCH.get(), (1 + rand.nextInt(2)) * multiplier));
             }
 
-            // 2. Condensado de Slime (40% probabilidad)
             if (rand.nextFloat() < 0.40F && SystemItems.SLIME_CONDENSATE.isBound()) {
                 popResource(sl, pos, new ItemStack(SystemItems.SLIME_CONDENSATE.get(), (1 + rand.nextInt(3)) * multiplier));
             }
 
-            // 3. Máscara Dañada (35% probabilidad)
             if (rand.nextFloat() < 0.35F && SystemItems.DAMAGED_MASK.isBound()) {
                 popResource(sl, pos, new ItemStack(SystemItems.DAMAGED_MASK.get(), (1 + rand.nextInt(2)) * multiplier));
             }
 
-            // 4. Fragmentos Cósmicos (30% probabilidad)
             if (rand.nextFloat() < 0.30F && SystemItems.COSMIC_FRAGMENT.isBound()) {
                 popResource(sl, pos, new ItemStack(SystemItems.COSMIC_FRAGMENT.get(), (3 + rand.nextInt(8)) * multiplier));
             }
 
-            // 5. Protogemas (15% probabilidad)
             if (rand.nextFloat() < 0.15F && SystemItems.PRIMOGEM.isBound()) {
                 popResource(sl, pos, new ItemStack(SystemItems.PRIMOGEM.get(), (1 + rand.nextInt(3)) * multiplier));
             }
 
-            // 6. Núcleo de Cristal (8% probabilidad)
             if (rand.nextFloat() < 0.08F && SystemItems.CRYSTAL_CORE.isBound()) {
                 popResource(sl, pos, new ItemStack(SystemItems.CRYSTAL_CORE.get(), 1 * multiplier));
             }

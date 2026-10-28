@@ -85,31 +85,27 @@ public class SpiritFoxEntity extends TamableAnimal {
             return canInteract ? InteractionResult.CONSUME : InteractionResult.PASS;
         }
 
-        // 1. Proceso de Domesticación
         if (!this.isTame() && isFood(itemstack)) {
             if (!player.getAbilities().instabuild) {
                 itemstack.shrink(1);
             }
 
-            // El Qingseng Milenario tiene 100% de éxito de domesticación instantánea; las bayas un 40%
             boolean instantSuccess = itemstack.is(SystemItems.THOUSAND_YEAR_GINSENG.get());
             if (instantSuccess || this.random.nextInt(3) == 0) {
                 this.tame(player);
                 this.navigation.stop();
                 this.setTarget(null);
                 this.setOrderedToSit(true);
-                this.level().broadcastEntityEvent(this, (byte) 7); // Corazones
+                this.level().broadcastEntityEvent(this, (byte) 7);
                 this.playSound(SoundEvents.AMETHYST_BLOCK_CHIME, 1.0F, 1.4F);
             } else {
-                this.level().broadcastEntityEvent(this, (byte) 6); // Humo
+                this.level().broadcastEntityEvent(this, (byte) 6);
                 this.playSound(SoundEvents.FOX_SNIFF, 1.0F, 1.0F);
             }
             return InteractionResult.SUCCESS;
         }
 
-        // 2. Si ya está domesticado y pertenece al jugador
         if (this.isTame() && this.isOwnedBy(player)) {
-            // Curar con comida espiritual
             if (isFood(itemstack) && this.getHealth() < this.getMaxHealth()) {
                 if (!player.getAbilities().instabuild) {
                     itemstack.shrink(1);
@@ -120,7 +116,6 @@ public class SpiritFoxEntity extends TamableAnimal {
                 return InteractionResult.SUCCESS;
             }
 
-            // Alternar estado de Sentado / En guardia con la mano vacía o agachado
             if (itemstack.isEmpty() || player.isShiftKeyDown()) {
                 boolean willSit = !this.isOrderedToSit();
                 this.setOrderedToSit(willSit);
@@ -139,17 +134,14 @@ public class SpiritFoxEntity extends TamableAnimal {
     public void tick() {
         super.tick();
 
-        // 1. Efecto de Aura de Concentración de Qi para el maestro (Servidor)
         if (!this.level().isClientSide && this.isTame() && this.getOwner() instanceof Player owner) {
             if (this.distanceToSqr(owner) <= 64.0D) {
-                // Cada 20 ticks (1 segundo) transfiere esencia de Qi
                 if (this.tickCount % 20 == 0) {
                     SystemData data = SystemEvents.data(owner);
                     if (data != null && data.dantianRealm() > 0 && data.cultivationQi() < data.maxCultivationQi()) {
                         int bonusQi = Math.max(1, (int) (data.cultivationSubLevel() * 1.5));
                         data.addCultivationQi(bonusQi);
                         if (this.level() instanceof ServerLevel sl) {
-                            // Un sutil destello de fuego fatuo espiritual celestial propio
                             sl.sendParticles(com.soybe.awakeningsystem.particle.ModParticles.SPIRIT_FOXFIRE.get(),
                                     this.getX(), this.getY() + 0.5D, this.getZ(), 1, 0.1D, 0.1D, 0.1D, 0.01D);
                         }
@@ -158,9 +150,8 @@ public class SpiritFoxEntity extends TamableAnimal {
             }
         }
 
-        // 2. Rastreo innato de Qingseng Milenario silvestre
         if (!this.level().isClientSide && --this.sniffCooldown <= 0) {
-            this.sniffCooldown = 120 + this.random.nextInt(80); // Cada 6-10 segundos
+            this.sniffCooldown = 120 + this.random.nextInt(80);
             findNearestWildGinseng();
             if (this.trackedGinsengPos != null) {
                 this.playSound(SoundEvents.FOX_SNIFF, 0.8F, 1.3F);
@@ -171,8 +162,6 @@ public class SpiritFoxEntity extends TamableAnimal {
             }
         }
 
-        // 3. Sutiles chispas místicas de fuego espiritual propio en las puntas de las colas (Cliente)
-        // Reducido a una frecuencia suave y no invasiva (promedio 1 chispa cada 25 ticks)
         if (this.level().isClientSide && this.random.nextInt(25) == 0) {
             double angle = this.random.nextFloat() * Math.PI * 2.0;
             double dist = 0.25D + this.random.nextDouble() * 0.35D;

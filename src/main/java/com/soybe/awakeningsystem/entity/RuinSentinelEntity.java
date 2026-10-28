@@ -33,10 +33,10 @@ import net.minecraft.world.phys.Vec3;
 public class RuinSentinelEntity extends Monster {
 
     public enum SentinelType {
-        CRUISER("Centinela de las Ruinas: Patrullero", 75.0D, 14.0D, 0.28D),
-        DEFENDER("Centinela de las Ruinas: Defensor", 95.0D, 12.0D, 0.22D),
-        DESTROYER("Centinela de las Ruinas: Destructor", 85.0D, 16.0D, 0.26D),
-        SCOUT("Centinela de las Ruinas: Explorador", 70.0D, 14.0D, 0.30D);
+        CRUISER("Ruin Sentinel: Cruiser", 75.0D, 14.0D, 0.28D),
+        DEFENDER("Ruin Sentinel: Defender", 95.0D, 12.0D, 0.22D),
+        DESTROYER("Ruin Sentinel: Destroyer", 85.0D, 16.0D, 0.26D),
+        SCOUT("Ruin Sentinel: Scout", 70.0D, 14.0D, 0.30D);
 
         public final String title;
         public final double maxHp;
@@ -132,7 +132,6 @@ public class RuinSentinelEntity extends Monster {
         SentinelType type = getSentinelType();
         switch (type) {
             case CRUISER -> {
-                // Ráfaga a distancia de energía ruina
                 sl.playSound(null, this.blockPosition(), SoundEvents.DISPENSER_LAUNCH, SoundSource.HOSTILE, 1.5F, 1.4F);
                 Vec3 dir = target.position().subtract(this.position()).normalize();
                 for (double d = 1.0D; d <= 12.0D; d += 0.8D) {
@@ -144,12 +143,10 @@ public class RuinSentinelEntity extends Monster {
                 }
             }
             case DEFENDER -> {
-                // Embestida con escudo
                 sl.playSound(null, this.blockPosition(), SoundEvents.SHIELD_BLOCK, SoundSource.HOSTILE, 1.6F, 0.8F);
                 sl.sendParticles(ParticleTypes.FLASH, this.getX(), this.getY() + 0.8D, this.getZ(), 1, 0, 0, 0, 0);
             }
             case DESTROYER -> {
-                // Taladro sísmico de suelo
                 sl.playSound(null, target.blockPosition(), SoundEvents.STONE_BREAK, SoundSource.HOSTILE, 1.8F, 0.9F);
                 sl.sendParticles(ParticleTypes.CAMPFIRE_COSY_SMOKE, target.getX(), target.getY(), target.getZ(), 15, 0.5D, 0.2D, 0.5D, 0.05D);
                 if (this.distanceToSqr(target) <= 64.0D) {
@@ -158,7 +155,6 @@ public class RuinSentinelEntity extends Monster {
                 }
             }
             case SCOUT -> {
-                // Onda de choque estática
                 sl.playSound(null, this.blockPosition(), SoundEvents.LIGHTNING_BOLT_THUNDER, SoundSource.HOSTILE, 1.2F, 1.8F);
                 sl.sendParticles(ParticleTypes.ELECTRIC_SPARK, this.getX(), this.getY() + 0.8D, this.getZ(), 20, 1.0D, 0.5D, 1.0D, 0.1D);
                 if (this.distanceToSqr(target) <= 49.0D) {
@@ -171,7 +167,6 @@ public class RuinSentinelEntity extends Monster {
     @Override
     public boolean hurt(DamageSource source, float amount) {
         if (getSentinelType() == SentinelType.DEFENDER) {
-            // Defensor bloquea gran parte del daño frontal
             amount *= 0.55F;
         }
         return super.hurt(source, amount);

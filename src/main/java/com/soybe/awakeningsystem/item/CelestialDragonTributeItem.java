@@ -22,7 +22,7 @@ public class CelestialDragonTributeItem extends Item {
 
     @Override
     public boolean isFoil(ItemStack stack) {
-        return true; // Brillo encantado de reliquia sagrada
+        return true;
     }
 
     @Override

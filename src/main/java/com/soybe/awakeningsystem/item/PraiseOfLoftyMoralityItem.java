@@ -37,7 +37,7 @@ public class PraiseOfLoftyMoralityItem extends Item {
                 sl.sendParticles(ParticleTypes.HAPPY_VILLAGER, sp.getX(), sp.getY() + 1.0D, sp.getZ(), 25, 0.4D, 0.6D, 0.4D, 0.1D);
             }
             sp.playNotifySound(SoundEvents.PLAYER_LEVELUP, SoundSource.PLAYERS, 1.0F, 1.5F);
-            sp.displayClientMessage(Component.literal("§e§l✦ [ELOGIO A LA ALTA MORAL] §f¡El cosmos bendice tus virtuosas acciones! (+Suerte II y Regeneración II)"), true);
+            sp.displayClientMessage(Component.translatable("item.awakening_system.praise_of_lofty_morality.use_message"), true);
             return InteractionResultHolder.consume(stack);
         }
         return InteractionResultHolder.sidedSuccess(stack, level.isClientSide());
@@ -45,8 +45,8 @@ public class PraiseOfLoftyMoralityItem extends Item {
 
     @Override
     public void appendHoverText(ItemStack stack, TooltipContext context, List<Component> tooltip, TooltipFlag flag) {
-        tooltip.add(Component.literal("§e⭐⭐⭐⭐ [Prueba de Virtud y Decoro]").withStyle(ChatFormatting.YELLOW));
-        tooltip.add(Component.literal("§7Un brillante distintivo otorgado a quienes realizan actos de bondad desinteresada en Belobog.").withStyle(ChatFormatting.GRAY));
-        tooltip.add(Component.literal("§a▸ Clic derecho: §fConsumir para recibir la bendición de la Suerte y la Salud").withStyle(ChatFormatting.GREEN));
+        tooltip.add(Component.translatable("item.awakening_system.praise_of_lofty_morality.badge").withStyle(ChatFormatting.YELLOW));
+        tooltip.add(Component.translatable("item.awakening_system.praise_of_lofty_morality.desc").withStyle(ChatFormatting.GRAY));
+        tooltip.add(Component.translatable("item.awakening_system.praise_of_lofty_morality.use").withStyle(ChatFormatting.GREEN));
     }
 }

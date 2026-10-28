@@ -470,7 +470,6 @@ public class MitachurlModel extends HierarchicalModel<MitachurlEntity> {
         PartDefinition bone4_rotatetors_CABEZA_headrotate_cube_r118 = bone4_rotatetors_CABEZA_headrotate.addOrReplaceChild("cube_r118", CubeListBuilder.create()
                 .texOffs(0, 95).addBox(-0.3848F, -8.8795F, -4.7469F, 7.0F, 11.0F, 4.0F, new CubeDeformation(0.0F)),
                 PartPose.offsetAndRotation(-0.3447F, 5.6553F, 4.4472F, 0.2720F, -0.0401F, 0.1429F));
-        // Brazo izquierdo con muro de escudos (Shieldwall)
         PartDefinition rotatetors_BRAZO_LEFT = bone4_rotatetors.addOrReplaceChild("BRAZO_LEFT", CubeListBuilder.create(),
                 PartPose.offsetAndRotation(-6.7999F, -2.8628F, -0.0904F, -0.1960F, 0.2917F, -0.2506F));
         PartDefinition rotatetors_BRAZO_LEFT_cube_r29 = rotatetors_BRAZO_LEFT.addOrReplaceChild("cube_r29", CubeListBuilder.create()
@@ -541,7 +540,6 @@ public class MitachurlModel extends HierarchicalModel<MitachurlEntity> {
                 .texOffs(16, 130).addBox(-1.0F, 21.7058F, -0.9908F, 2.0F, 8.0F, 2.0F, new CubeDeformation(0.0F)),
                 PartPose.offsetAndRotation(-0.3105F, -24.0331F, -6.8812F, 0.3272F, 0.0F, 0.0F));
 
-        // Escudo Colosal de Mitachurl (Shieldwall)
         PartDefinition bone4_shield = bone4.addOrReplaceChild("shield", CubeListBuilder.create()
                 .texOffs(48, 7).addBox(-4.2426F, -22.1213F, -1.5000F, 3.0F, 20.0F, 3.0F, new CubeDeformation(0.0F))
                 .texOffs(38, 30).addBox(1.5074F, -39.1213F, -4.5000F, 2.0F, 50.0F, 10.0F, new CubeDeformation(0.0F))
@@ -604,11 +602,9 @@ public class MitachurlModel extends HierarchicalModel<MitachurlEntity> {
                           float ageInTicks, float netHeadYaw, float headPitch) {
         this.root().getAllParts().forEach(ModelPart::resetPose);
 
-        // Movimiento de cabeza
         this.cabeza.yRot = netHeadYaw * (Mth.PI / 180F);
         this.cabeza.xRot = headPitch * (Mth.PI / 180F);
 
-        // Caminata pesada de Mitachurl
         this.rightLeg.xRot = -0.2618F + Mth.cos(limbSwing) * 0.8F * limbSwingAmount;
         this.leftLeg.xRot = 0.6972F - Mth.cos(limbSwing) * 0.8F * limbSwingAmount;
 
@@ -619,13 +615,10 @@ public class MitachurlModel extends HierarchicalModel<MitachurlEntity> {
         this.shield.visible = !isAxe;
 
         if (isAxe) {
-            // Postura de Gran Hacha Ardiente
             if (entity.getTarget() != null) {
-                // Preparando hachazo
                 this.fireaxe.xRot = -0.0216F + Mth.sin(ageInTicks * 0.25F) * 0.2F;
             }
         } else {
-            // Postura de defensa con Muro de Escudos
             if (entity.isCharging()) {
                 this.bone4.xRot = 0.3F;
             }

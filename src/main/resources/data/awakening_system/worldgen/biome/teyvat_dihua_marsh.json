@@ -43,7 +43,9 @@
         "weight": 10,
         "minCount": 2,
         "maxCount": 5
-      },
+      }
+    ],
+    "water_ambient": [
       {
         "type": "minecraft:tropical_fish",
         "weight": 8,
@@ -61,9 +63,9 @@
     [],
     [
       "awakening_system:teyvat_hilichurl_camp",
+      "awakening_system:teyvat_regional_structure",
       "awakening_system:teyvat_shrine_of_depths",
-      "awakening_system:teyvat_teleport_waypoint",
-      "awakening_system:teyvat_regional_structure"
+      "awakening_system:teyvat_teleport_waypoint"
     ],
     [],
     [
@@ -73,9 +75,9 @@
     [],
     [
       "minecraft:patch_tall_grass",
-      "awakening_system:teyvat_cuihua_tree",
       "minecraft:patch_sugar_cane",
-      "minecraft:seagrass_swamp"
+      "minecraft:seagrass_swamp",
+      "awakening_system:teyvat_cuihua_tree"
     ],
     []
   ]

@@ -33,8 +33,8 @@ public class StellarJadeItem extends Item {
         if (!level.isClientSide() && player instanceof ServerPlayer sp) {
             SystemData data = SystemEvents.data(sp);
             int count = player.isShiftKeyDown() ? stack.getCount() : 1;
-            int totalPrimos = count * 160;
-            data.addPrimogems(totalPrimos);
+            int totalJade = count * 160;
+            data.addStellarJade(totalJade);
             stack.shrink(count);
             AwakeningSystemMod.sync(sp);
 
@@ -42,7 +42,7 @@ public class StellarJadeItem extends Item {
                 sl.sendParticles(ParticleTypes.ENCHANTED_HIT, sp.getX(), sp.getY() + 1.0D, sp.getZ(), 20, 0.3D, 0.5D, 0.3D, 0.05D);
             }
             sp.playNotifySound(SoundEvents.PLAYER_LEVELUP, SoundSource.PLAYERS, 0.8F, 1.6F);
-            sp.displayClientMessage(Component.literal("§b§l✦ [JADE ESTELAR] §fHas depositado §b+" + totalPrimos + " Fondos Estelares §f(Total: §6" + data.primogems() + "§f)"), true);
+            sp.displayClientMessage(Component.translatable("item.awakening_system.stellar_jade.deposit_msg", totalJade, data.stellarJade()), true);
             return InteractionResultHolder.consume(stack);
         }
         return InteractionResultHolder.sidedSuccess(stack, level.isClientSide());
@@ -50,9 +50,10 @@ public class StellarJadeItem extends Item {
 
     @Override
     public void appendHoverText(ItemStack stack, TooltipContext context, List<Component> tooltip, TooltipFlag flag) {
-        tooltip.add(Component.literal("§b⭐⭐⭐⭐ [Moneda Interestelar de los Raíles]").withStyle(ChatFormatting.AQUA));
-        tooltip.add(Component.literal("§7Polvo estelar coagulado que centellea en la inmensidad del cosmos.").withStyle(ChatFormatting.GRAY));
-        tooltip.add(Component.literal("§b▸ Clic derecho: §fDepositar §e160 Jades §fal monedero").withStyle(ChatFormatting.GOLD));
-        tooltip.add(Component.literal("§b▸ Shift + Clic derecho: §fDepositar todo el stack").withStyle(ChatFormatting.GOLD));
+        tooltip.add(Component.translatable("item.awakening_system.stellar_jade.badge").withStyle(ChatFormatting.AQUA));
+        tooltip.add(Component.translatable("item.awakening_system.stellar_jade.desc").withStyle(ChatFormatting.GRAY));
+        tooltip.add(Component.translatable("item.awakening_system.stellar_jade.use1").withStyle(ChatFormatting.AQUA));
+        tooltip.add(Component.translatable("item.awakening_system.stellar_jade.use2").withStyle(ChatFormatting.AQUA));
+        tooltip.add(Component.translatable("item.awakening_system.stellar_jade.hint").withStyle(ChatFormatting.GOLD));
     }
 }

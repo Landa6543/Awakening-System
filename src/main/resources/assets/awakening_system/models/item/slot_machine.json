@@ -1,3 +1,6 @@
 {
-  "parent": "awakening_system:block/slot_machine"
+  "parent": "minecraft:item/generated",
+  "textures": {
+    "layer0": "awakening_system:item/slot_machine"
+  }
 }

@@ -99,7 +99,6 @@ public class YggdrasilTreantBossEntity extends Monster {
         super.aiStep();
 
         if (this.level().isClientSide) {
-            // Partículas ambientales de esporas de Yggdrasil y musgo brillante
             if (this.random.nextFloat() < 0.35F) {
                 this.level().addParticle(ParticleTypes.GLOW,
                         this.getX() + (this.random.nextDouble() - 0.5D) * 1.8D,
@@ -121,13 +120,11 @@ public class YggdrasilTreantBossEntity extends Monster {
 
         LivingEntity target = this.getTarget();
         if (target != null && target.isAlive()) {
-            // 1. Habilidad: Prisión de Raíces Vivientes (Root Entangle)
             if (--rootEntangleCooldown <= 0) {
                 triggerRootEntangle(target);
                 rootEntangleCooldown = 120 + this.random.nextInt(40);
             }
 
-            // 2. Habilidad: Onda Sísmica de Clorofila
             if (--seismicShockwaveCooldown <= 0) {
                 if (this.distanceToSqr(target) <= 10.0D * 10.0D) {
                     triggerSeismicShockwave();
@@ -135,7 +132,6 @@ public class YggdrasilTreantBossEntity extends Monster {
                 }
             }
 
-            // 3. Habilidad: Savia Regenerativa de Yggdrasil (solo si salud < 55%)
             if (this.getHealth() < this.getMaxHealth() * 0.55F) {
                 if (--sapHealingCooldown <= 0) {
                     triggerSapHealing();
@@ -152,7 +148,6 @@ public class YggdrasilTreantBossEntity extends Monster {
         sl.playSound(null, targetPos, SoundEvents.ROOTED_DIRT_PLACE, SoundSource.HOSTILE, 1.6F, 0.8F);
         sl.playSound(null, targetPos, SoundEvents.GRASS_PLACE, SoundSource.HOSTILE, 1.4F, 0.6F);
 
-        // Brote de partículas de raíces y musgo en los pies de la víctima
         for (int i = 0; i < 35; i++) {
             double ox = (this.random.nextDouble() - 0.5D) * 1.4D;
             double oz = (this.random.nextDouble() - 0.5D) * 1.4D;
@@ -160,7 +155,6 @@ public class YggdrasilTreantBossEntity extends Monster {
             sl.sendParticles(ParticleTypes.GLOW, target.getX() + ox, target.getY() + 0.3D, target.getZ() + oz, 1, 0, 0.1D, 0, 0.02D);
         }
 
-        // Aplicar parálisis por raíces y daño de espinas
         target.addEffect(new MobEffectInstance(MobEffects.MOVEMENT_SLOWDOWN, 60, 4, false, true));
         target.hurt(this.damageSources().mobAttack(this), 8.0F);
 
@@ -178,7 +172,6 @@ public class YggdrasilTreantBossEntity extends Monster {
         sl.playSound(null, this.getX(), this.getY(), this.getZ(), SoundEvents.ZOMBIE_BREAK_WOODEN_DOOR, SoundSource.HOSTILE, 1.8F, 0.6F);
         sl.playSound(null, this.getX(), this.getY(), this.getZ(), SoundEvents.GENERIC_EXPLODE.value(), SoundSource.HOSTILE, 1.2F, 0.8F);
 
-        // Onda expansiva circular de partículas de musgo y polvo
         for (int deg = 0; deg < 360; deg += 12) {
             double rad = Math.toRadians(deg);
             for (double dist = 1.5D; dist <= 7.0D; dist += 1.5D) {
@@ -234,7 +227,6 @@ public class YggdrasilTreantBossEntity extends Monster {
             sl.sendParticles(ParticleTypes.TOTEM_OF_UNDYING, this.getX(), this.getY() + 1.8D, this.getZ(), 90, 1.8D, 1.8D, 1.8D, 0.2D);
             sl.playSound(null, this.getX(), this.getY(), this.getZ(), SoundEvents.UI_TOAST_CHALLENGE_COMPLETE, SoundSource.PLAYERS, 1.6F, 0.9F);
 
-            // Recompensas legendarias: Semilla del Corazón de Yggdrasil y Llave del Treant para el Cofre Encadenado
             if (SystemItems.YGGDRASIL_HEART_SEED.isBound()) {
                 sl.addFreshEntity(new ItemEntity(sl, this.getX(), this.getY() + 0.5D, this.getZ(), new ItemStack(SystemItems.YGGDRASIL_HEART_SEED.get())));
             }
@@ -242,7 +234,6 @@ public class YggdrasilTreantBossEntity extends Monster {
                 sl.addFreshEntity(new ItemEntity(sl, this.getX() + 0.3D, this.getY() + 0.5D, this.getZ() + 0.3D, new ItemStack(SystemItems.YGGDRASIL_TREANT_KEY.get())));
             }
 
-            // Si el asesino fue un jugador, otorgar monedas, activar conquista y título
             if (damageSource.getEntity() instanceof ServerPlayer player) {
                 var data = SystemEvents.data(player);
                 data.setConqueredYggdrasilLabyrinth(true);

@@ -3,6 +3,21 @@ package com.soybe.awakeningsystem;
 import com.soybe.awakeningsystem.entity.AncientCelestialDragonBossEntity;
 import com.soybe.awakeningsystem.entity.ModEntities;
 import com.soybe.awakeningsystem.world.SeriesStructureBuilder;
+import net.minecraft.core.Vec3i;
+import net.minecraft.nbt.CompoundTag;
+import net.minecraft.nbt.NbtAccounter;
+import net.minecraft.nbt.NbtIo;
+import net.minecraft.tags.BlockTags;
+import net.minecraft.world.level.block.Mirror;
+import net.minecraft.world.level.block.Rotation;
+import net.minecraft.world.level.block.entity.StructureBlockEntity;
+import net.minecraft.world.level.block.state.BlockState;
+import net.minecraft.world.level.block.state.properties.StructureMode;
+import net.minecraft.world.level.levelgen.structure.templatesystem.StructurePlaceSettings;
+import net.minecraft.world.level.levelgen.structure.templatesystem.StructureTemplate;
+import net.minecraft.world.level.levelgen.structure.templatesystem.StructureTemplateManager;
+import java.io.InputStream;
+import java.util.Optional;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
 import net.minecraft.core.particles.ParticleTypes;
@@ -50,7 +65,7 @@ public final class PagodaTrialManager {
     private PagodaTrialManager() {}
 
     public static final int MAX_STAGES = 9;
-    public static final int ARENA_RADIUS = 20; // 41x41 interior arena ("bigger on the inside")
+    public static final int ARENA_RADIUS = 20;
     public static final int ARENA_HEIGHT = 14;
 
     public static final ResourceKey<Level> PAGODA_REALM = ResourceKey.create(
@@ -110,6 +125,7 @@ public final class PagodaTrialManager {
 
     public static boolean isPlayerOutOfBounds(PagodaSession session, ServerPlayer player) {
         if (session == null || player == null || session.stageOrigin == null) return false;
+        if (player.isCreative() || player.isSpectator()) return false;
         double dx = player.getX() - (session.stageOrigin.getX() + 0.5D);
         double dz = player.getZ() - (session.stageOrigin.getZ() + 0.5D);
         double distSq = dx * dx + dz * dz;
@@ -203,7 +219,7 @@ public final class PagodaTrialManager {
 
         buildStage(trialLevel, session, startStage);
 
-        BlockPos spawnPos = session.stageOrigin.offset(0, 1, -14);
+        BlockPos spawnPos = session.stageOrigin.offset(0, 1, -12);
         player.teleportTo(trialLevel, spawnPos.getX() + 0.5D, spawnPos.getY(), spawnPos.getZ() + 0.5D, 0.0F, 0.0F);
 
         AwakeningSystemMod.notify(player,
@@ -234,7 +250,7 @@ public final class PagodaTrialManager {
 
         buildStage(trialLevel, session, targetStage);
 
-        BlockPos spawnPos = session.stageOrigin.offset(0, 1, -14);
+        BlockPos spawnPos = session.stageOrigin.offset(0, 1, -12);
         player.teleportTo(trialLevel, spawnPos.getX() + 0.5D, spawnPos.getY(), spawnPos.getZ() + 0.5D, 0.0F, 0.0F);
 
         AwakeningSystemMod.notify(player,
@@ -257,46 +273,88 @@ public final class PagodaTrialManager {
         }
     }
 
-    public static void buildStage(ServerLevel level, PagodaSession session, int stage) {
-        clearExistingEnemies(level, session);
+    public static StructureTemplate getArenaTemplate(ServerLevel level, int stage) {
+        StructureTemplateManager stm = level.getStructureManager();
+        ResourceLocation[] candidates = {
+                ResourceLocation.fromNamespaceAndPath("awakening_system", "pagoda_arena_stage_" + stage),
+                ResourceLocation.fromNamespaceAndPath("awakening_system", "pagoda_arena")
+        };
 
-        session.stage = stage;
-        session.stageCleared = false;
-        session.ascensionTriggered = false;
-        session.progressionDoorPos = null;
-        session.stageTicks = 0;
+        for (ResourceLocation loc : candidates) {
+            Optional<StructureTemplate> opt = stm.get(loc);
+            if (opt.isPresent()) {
+                return opt.get();
+            }
+        }
 
-        int offsetZ = (stage - 1) * 200;
-        BlockPos origin = session.baseOrigin.offset(0, 0, offsetZ);
-        session.stageOrigin = origin;
+        String[] resourceNames = {
+                "pagoda_arena_stage_" + stage,
+                "pagoda_arena"
+        };
+        for (String name : resourceNames) {
+            String[] paths = {
+                    "/data/awakening_system/structures/" + name + ".nbt",
+                    "/data/awakening_system/structure/" + name + ".nbt"
+            };
+            for (String p : paths) {
+                try (InputStream in = PagodaTrialManager.class.getResourceAsStream(p)) {
+                    if (in != null) {
+                        CompoundTag tag = NbtIo.readCompressed(in, NbtAccounter.unlimitedHeap());
+                        StructureTemplate template = new StructureTemplate();
+                        template.load(level.holderLookup(Registries.BLOCK), tag);
+                        return template;
+                    }
+                } catch (Exception ignored) {
+                }
+            }
+        }
+        return null;
+    }
 
+    public static boolean loadCustomArena(ServerLevel level, BlockPos origin, int stage) {
+        try {
+            StructureTemplate template = getArenaTemplate(level, stage);
+            if (template == null) return false;
+
+            Vec3i size = template.getSize();
+            BlockPos placePos = origin.offset(-size.getX() / 2, -1, -size.getZ() / 2);
+
+            StructurePlaceSettings settings = new StructurePlaceSettings()
+                    .setIgnoreEntities(false)
+                    .setKnownShape(true)
+                    .setMirror(Mirror.NONE)
+                    .setRotation(Rotation.NONE);
+
+            template.placeInWorld(level, placePos, placePos, settings, level.getRandom(), 2 | 16);
+            return true;
+        } catch (Exception e) {
+            AwakeningSystemMod.LOGGER.error("Error loading custom pagoda arena template: {}", e.getMessage());
+            return false;
+        }
+    }
+
+    public static void buildProceduralArena(ServerLevel level, BlockPos origin, int stage) {
         int radius = (stage == 9) ? 28 : ARENA_RADIUS;
         int height = (stage == 9) ? 26 : ARENA_HEIGHT;
 
-        // 1. Limpieza y Construcción de la Gran Cámara Oriental
         for (int dx = -radius; dx <= radius; dx++) {
             for (int dz = -radius; dz <= radius; dz++) {
                 double dist = Math.sqrt(dx * dx + dz * dz);
                 if (dist <= radius) {
                     BlockPos p = origin.offset(dx, 0, dz);
 
-                    // Base indestructible de bedrock
                     level.setBlockAndUpdate(p.below(), Blocks.BEDROCK.defaultBlockState());
 
-                    // Suelo temático según la Tribulación
                     var floorBlock = getFloorBlockForStage(stage, dist, radius);
                     level.setBlockAndUpdate(p, floorBlock.defaultBlockState());
 
-                    // Despejar interior de la cámara
                     for (int h = 1; h <= height; h++) {
                         level.setBlockAndUpdate(p.above(h), Blocks.AIR.defaultBlockState());
                     }
 
-                    // Muros perimetrales octogonales de la Pagoda
                     if (dist >= radius - 1 && dist <= radius) {
                         var wallBlock = getWallBlockForStage(stage, dx, dz);
                         for (int h = 1; h <= height; h++) {
-                            // Ventanas de celosía oriental a media altura
                             if (h >= 4 && h <= 7 && (Math.abs(dx) % 3 == 0 || Math.abs(dz) % 3 == 0)) {
                                 level.setBlockAndUpdate(p.above(h), Blocks.WHITE_STAINED_GLASS_PANE.defaultBlockState());
                             } else {
@@ -305,14 +363,12 @@ public final class PagodaTrialManager {
                         }
                     }
 
-                    // Techo abovedado oriental con faroles colgantes
                     var ceilingBlock = getCeilingBlockForStage(stage);
                     level.setBlockAndUpdate(p.above(height + 1), ceilingBlock.defaultBlockState());
                 }
             }
         }
 
-        // 2. Grandes Columnas Imperiales Orientales (en etapa 9 se colocan al borde para no obstruir al Dragón)
         if (stage != 9) {
             int[][] pillarCoords = {
                     {0, 13}, {0, -13}, {13, 0}, {-13, 0},
@@ -339,7 +395,6 @@ public final class PagodaTrialManager {
             }
         }
 
-        // 3. Círculo de Meditación / Altar Rúnico Central
         for (int dx = -3; dx <= 3; dx++) {
             for (int dz = -3; dz <= 3; dz++) {
                 double d = Math.sqrt(dx * dx + dz * dz);
@@ -350,24 +405,89 @@ public final class PagodaTrialManager {
             }
         }
 
-        // 4. Puerta de Retorno Segura (A espaldas del spawn del jugador)
         BlockPos returnPos = origin.offset(0, 1, -16);
-        session.returnDoorPos = returnPos;
         buildReturnArch(level, returnPos);
 
-        // 5. Faroles de techo suspendidos e iluminación
         level.setBlockAndUpdate(origin.offset(0, height, 0), Blocks.SEA_LANTERN.defaultBlockState());
         level.setBlockAndUpdate(origin.offset(6, height, 6), Blocks.SOUL_LANTERN.defaultBlockState());
         level.setBlockAndUpdate(origin.offset(-6, height, 6), Blocks.SOUL_LANTERN.defaultBlockState());
         level.setBlockAndUpdate(origin.offset(6, height, -6), Blocks.SOUL_LANTERN.defaultBlockState());
         level.setBlockAndUpdate(origin.offset(-6, height, -6), Blocks.SOUL_LANTERN.defaultBlockState());
+    }
 
-        // 6. Spawneo de Enemigos y Configuración del BossBar
+    private static void ensureReturnDoor(ServerLevel level, BlockPos returnPos) {
+        BlockState state = level.getBlockState(returnPos);
+        if (!state.is(BlockTags.DOORS)) {
+            buildReturnArch(level, returnPos);
+        }
+    }
+
+    public static void generateArenaInWorld(ServerLevel level, BlockPos origin, int stage, boolean placeStructureBlock) {
+        int radius = (stage == 9) ? 28 : ARENA_RADIUS;
+        int height = (stage == 9) ? 26 : ARENA_HEIGHT;
+
+        for (int dx = -radius - 1; dx <= radius + 1; dx++) {
+            for (int dz = -radius - 1; dz <= radius + 1; dz++) {
+                for (int h = 0; h <= height + 2; h++) {
+                    BlockPos p = origin.offset(dx, h, dz);
+                    if (!level.getBlockState(p).isAir()) {
+                        level.setBlock(p, Blocks.AIR.defaultBlockState(), 2);
+                    }
+                }
+            }
+        }
+
+        boolean loadedCustom = loadCustomArena(level, origin, stage);
+        if (!loadedCustom) {
+            buildProceduralArena(level, origin, stage);
+        }
+
+        BlockPos returnPos = origin.offset(0, 1, -16);
+        ensureReturnDoor(level, returnPos);
+
+        if (placeStructureBlock) {
+            BlockPos sbPos = origin.offset(0, 1, -radius - 2);
+            level.setBlockAndUpdate(sbPos.below(), Blocks.POLISHED_BLACKSTONE_BRICKS.defaultBlockState());
+            level.setBlockAndUpdate(sbPos, Blocks.STRUCTURE_BLOCK.defaultBlockState());
+
+            if (level.getBlockEntity(sbPos) instanceof StructureBlockEntity sb) {
+                sb.setMode(StructureMode.SAVE);
+                sb.setStructureName("awakening_system:pagoda_arena_stage_" + stage);
+                sb.setStructurePos(new BlockPos(-radius, -2, 2));
+                sb.setStructureSize(new Vec3i(radius * 2 + 1, height + 3, radius * 2 + 1));
+                sb.setShowBoundingBox(true);
+                sb.setIgnoreEntities(true);
+                sb.setChanged();
+            }
+        }
+    }
+
+    public static void buildStage(ServerLevel level, PagodaSession session, int stage) {
+        clearExistingEnemies(level, session);
+
+        session.stage = stage;
+        session.stageCleared = false;
+        session.ascensionTriggered = false;
+        session.progressionDoorPos = null;
+        session.stageTicks = 0;
+
+        int offsetZ = (stage - 1) * 200;
+        BlockPos origin = session.baseOrigin.offset(0, 0, offsetZ);
+        session.stageOrigin = origin;
+
+        boolean loadedCustom = loadCustomArena(level, origin, stage);
+        if (!loadedCustom) {
+            buildProceduralArena(level, origin, stage);
+        }
+
+        BlockPos returnPos = origin.offset(0, 1, -16);
+        session.returnDoorPos = returnPos;
+        ensureReturnDoor(level, returnPos);
+
         spawnStageEnemies(level, session, stage, origin);
     }
 
     private static void buildReturnArch(ServerLevel level, BlockPos pos) {
-        // Marco de retorno a Murim
         level.setBlockAndUpdate(pos.below(), Blocks.POLISHED_BLACKSTONE_BRICKS.defaultBlockState());
         level.setBlockAndUpdate(pos.west(), Blocks.POLISHED_DEEPSLATE_WALL.defaultBlockState());
         level.setBlockAndUpdate(pos.west().above(), Blocks.POLISHED_DEEPSLATE_WALL.defaultBlockState());
@@ -375,7 +495,6 @@ public final class PagodaTrialManager {
         level.setBlockAndUpdate(pos.east().above(), Blocks.POLISHED_DEEPSLATE_WALL.defaultBlockState());
         level.setBlockAndUpdate(pos.above(2), Blocks.CHISELED_DEEPSLATE.defaultBlockState());
 
-        // Puerta de madera para regresar
         level.setBlockAndUpdate(pos, Blocks.DARK_OAK_DOOR.defaultBlockState()
                 .setValue(DoorBlock.HALF, DoubleBlockHalf.LOWER)
                 .setValue(DoorBlock.FACING, Direction.NORTH));
@@ -466,61 +585,51 @@ public final class PagodaTrialManager {
             session.bossEvent.addPlayer(player);
         }
 
-        // Spawneo temático según la etapa
         switch (stage) {
             case 1 -> {
-                // Tribulación del Viento: 3 Vientos Cortantes + 1 Maestro del Filo de Viento
                 spawnMinion(level, session, EntityType.BREEZE, origin.offset(-5, 1, 5), "awakening_system.pagoda.mob.wind_spirit", 70, 8.0, 10.0);
                 spawnMinion(level, session, EntityType.BREEZE, origin.offset(5, 1, 5), "awakening_system.pagoda.mob.wind_spirit", 70, 8.0, 10.0);
                 spawnMinion(level, session, EntityType.BREEZE, origin.offset(0, 1, 8), "awakening_system.pagoda.mob.wind_spirit", 70, 8.0, 10.0);
                 spawnBoss(level, session, EntityType.WITHER_SKELETON, origin.offset(0, 1, 4), "awakening_system.pagoda.mob.wind_master", 160, 12.0, 16.0, Items.DIAMOND_SWORD);
             }
             case 2 -> {
-                // Tribulación del Fuego: 3 Espíritus de Fuego + Venerable de la Llama Carmesí
                 spawnMinion(level, session, EntityType.BLAZE, origin.offset(-6, 1, 4), "awakening_system.pagoda.mob.flame_spirit", 85, 9.0, 10.0);
                 spawnMinion(level, session, EntityType.BLAZE, origin.offset(6, 1, 4), "awakening_system.pagoda.mob.flame_spirit", 85, 9.0, 10.0);
                 spawnMinion(level, session, EntityType.BLAZE, origin.offset(0, 1, 7), "awakening_system.pagoda.mob.flame_spirit", 85, 9.0, 10.0);
                 spawnBoss(level, session, EntityType.BLAZE, origin.offset(0, 1, 3), "awakening_system.pagoda.mob.flame_venerable", 200, 14.0, 18.0, null);
             }
             case 3 -> {
-                // Tribulación de la Escarcha: 3 Asesinos de Hielo + Soberano Glacial del Norte
                 spawnMinion(level, session, ModEntities.FROST_ELF_ASSASSIN.get(), origin.offset(-5, 1, 5), "awakening_system.pagoda.mob.frost_assassin", 95, 10.0, 12.0);
                 spawnMinion(level, session, ModEntities.FROST_ELF_ASSASSIN.get(), origin.offset(5, 1, 5), "awakening_system.pagoda.mob.frost_assassin", 95, 10.0, 12.0);
                 spawnMinion(level, session, EntityType.STRAY, origin.offset(0, 1, 8), "awakening_system.pagoda.mob.frost_archer", 90, 9.0, 10.0);
                 spawnBoss(level, session, ModEntities.FROST_ELF_ASSASSIN.get(), origin.offset(0, 1, 3), "awakening_system.pagoda.mob.frost_sovereign", 240, 15.0, 20.0, Items.NETHERITE_SWORD);
             }
             case 4 -> {
-                // Tribulación de la Tierra y el Hierro: 2 Guardianes de Piedra + Patriarca Vajra
                 spawnMinion(level, session, EntityType.IRON_GOLEM, origin.offset(-6, 1, 4), "awakening_system.pagoda.mob.earth_guardian", 150, 12.0, 15.0);
                 spawnMinion(level, session, EntityType.IRON_GOLEM, origin.offset(6, 1, 4), "awakening_system.pagoda.mob.earth_guardian", 150, 12.0, 15.0);
                 spawnBoss(level, session, EntityType.IRON_GOLEM, origin.offset(0, 1, 4), "awakening_system.pagoda.mob.earth_patriarch", 320, 18.0, 24.0, null);
             }
             case 5 -> {
-                // Tribulación del Trueno Celestial: 2 Tigres del Trueno + Señor del Rayo Celestial
                 spawnMinion(level, session, ModEntities.WHITE_THUNDER_TIGER.get(), origin.offset(-5, 1, 5), "awakening_system.pagoda.mob.thunder_tiger", 160, 14.0, 16.0);
                 spawnMinion(level, session, ModEntities.WHITE_THUNDER_TIGER.get(), origin.offset(5, 1, 5), "awakening_system.pagoda.mob.thunder_tiger", 160, 14.0, 16.0);
                 spawnBoss(level, session, EntityType.WITHER_SKELETON, origin.offset(0, 1, 4), "awakening_system.pagoda.mob.thunder_lord", 350, 20.0, 24.0, Items.NETHERITE_AXE);
             }
             case 6 -> {
-                // Tribulación del Veneno y el Inframundo: 2 Nigromantes Abisales + Monarca Asura del Veneno
                 spawnMinion(level, session, ModEntities.ABYSSAL_NECROMANCER.get(), origin.offset(-6, 1, 5), "awakening_system.pagoda.mob.poison_necromancer", 170, 15.0, 18.0);
                 spawnMinion(level, session, ModEntities.ABYSSAL_NECROMANCER.get(), origin.offset(6, 1, 5), "awakening_system.pagoda.mob.poison_necromancer", 170, 15.0, 18.0);
                 spawnBoss(level, session, EntityType.WITHER_SKELETON, origin.offset(0, 1, 4), "awakening_system.pagoda.mob.asura_monarch", 400, 22.0, 26.0, Items.NETHERITE_SWORD);
             }
             case 7 -> {
-                // Tribulación del Demonio Interno: 3 Sombras Espejo + Espejismo del Demonio Interno
                 spawnMinion(level, session, ModEntities.SHADOW_INFANTRY.get(), origin.offset(-5, 1, 4), "awakening_system.pagoda.mob.inner_shadow", 180, 16.0, 20.0);
                 spawnMinion(level, session, ModEntities.SHADOW_INFANTRY.get(), origin.offset(5, 1, 4), "awakening_system.pagoda.mob.inner_shadow", 180, 16.0, 20.0);
                 spawnMinion(level, session, ModEntities.SHADOW_INFANTRY.get(), origin.offset(0, 1, 7), "awakening_system.pagoda.mob.inner_shadow", 180, 16.0, 20.0);
                 spawnBoss(level, session, ModEntities.SHADOW_INFANTRY.get(), origin.offset(0, 1, 3), "awakening_system.pagoda.mob.heart_demon", 450, 24.0, 28.0, Items.NETHERITE_SWORD);
             }
             case 8 -> {
-                // Tribulación del Yin-Yang: Guardianes Gemelos del Sol y de la Luna
                 spawnBoss(level, session, EntityType.WITHER_SKELETON, origin.offset(-4, 1, 5), "awakening_system.pagoda.mob.yin_guardian", 380, 22.0, 26.0, Items.DIAMOND_SWORD);
                 spawnBoss(level, session, EntityType.IRON_GOLEM, origin.offset(4, 1, 5), "awakening_system.pagoda.mob.yang_guardian", 420, 22.0, 26.0, null);
             }
             case 9 -> {
-                // Cúspide de las Nueve Tribulaciones: Dragón Celestial Supremo Ancestral
                 spawnBoss(level, session, ModEntities.ANCIENT_CELESTIAL_DRAGON.get(), origin.offset(0, 5, 0), "awakening_system.pagoda.mob.celestial_dragon_apex", 1200, 32.0, 30.0, null);
             }
         }
@@ -595,7 +704,7 @@ public final class PagodaTrialManager {
     public static void configurePagodaMobAI(Mob mob, PagodaSession session) {
         if (mob == null) return;
         if (mob instanceof AncientCelestialDragonBossEntity) {
-            return; // Preservar IA de combate aéreo y ataque con garras/rayos del dragón
+            return;
         }
         mob.targetSelector.getAvailableGoals().removeIf(wrappedGoal -> wrappedGoal.getGoal() instanceof TargetGoal);
         mob.targetSelector.addGoal(1, new NearestAttackableTargetGoal<>(
@@ -626,14 +735,12 @@ public final class PagodaTrialManager {
                             ServerLevel level = player.serverLevel();
                             session.stageCleared = true;
 
-                            // Actualizar bossbar
                             if (session.bossEvent != null) {
                                 session.bossEvent.setName(Component.translatable("awakening_system.pagoda.bossbar_cleared"));
                                 session.bossEvent.setColor(BossEvent.BossBarColor.GREEN);
                                 session.bossEvent.setProgress(0.0F);
                             }
 
-                            // ¡MANIFESTAR LA PUERTA DE LA NADA!
                             manifestProgressionDoor(level, session, player);
                         }
                     }
@@ -647,12 +754,10 @@ public final class PagodaTrialManager {
         BlockPos doorPos = session.stageOrigin.offset(0, 1, 8);
         session.progressionDoorPos = doorPos;
 
-        // Base ornamental para la puerta
         level.setBlockAndUpdate(doorPos.below(), Blocks.GILDED_BLACKSTONE.defaultBlockState());
         level.setBlockAndUpdate(doorPos.below().north(), Blocks.POLISHED_BLACKSTONE.defaultBlockState());
         level.setBlockAndUpdate(doorPos.below().south(), Blocks.POLISHED_BLACKSTONE.defaultBlockState());
 
-        // Colocar la puerta de Minecraft de la nada (independiente)
         var doorBlock = session.stage == MAX_STAGES ? Blocks.WARPED_DOOR : Blocks.CRIMSON_DOOR;
         level.setBlockAndUpdate(doorPos, doorBlock.defaultBlockState()
                 .setValue(DoorBlock.HALF, DoubleBlockHalf.LOWER)
@@ -663,13 +768,11 @@ public final class PagodaTrialManager {
                 .setValue(DoorBlock.FACING, Direction.NORTH)
                 .setValue(DoorBlock.OPEN, false));
 
-        // Postes luminosos a ambos lados de la puerta
         level.setBlockAndUpdate(doorPos.west(), Blocks.DARK_OAK_FENCE.defaultBlockState());
         level.setBlockAndUpdate(doorPos.west().above(), Blocks.SOUL_LANTERN.defaultBlockState());
         level.setBlockAndUpdate(doorPos.east(), Blocks.DARK_OAK_FENCE.defaultBlockState());
         level.setBlockAndUpdate(doorPos.east().above(), Blocks.SOUL_LANTERN.defaultBlockState());
 
-        // Efectos místicos masivos de aparición de la puerta
         double px = doorPos.getX() + 0.5D;
         double py = doorPos.getY() + 1.0D;
         double pz = doorPos.getZ() + 0.5D;
@@ -682,7 +785,6 @@ public final class PagodaTrialManager {
         level.playSound(null, doorPos, SoundEvents.END_PORTAL_SPAWN, SoundSource.BLOCKS, 1.3F, 1.2F);
         level.playSound(null, doorPos, SoundEvents.BEACON_ACTIVATE, SoundSource.BLOCKS, 1.4F, 1.4F);
 
-        // Notificación al jugador
         if (session.stage < MAX_STAGES) {
             AwakeningSystemMod.notify(player,
                     "awakening_system.pagoda.stage_cleared_title",
@@ -700,13 +802,11 @@ public final class PagodaTrialManager {
         PagodaSession session = SESSIONS.get(player.getUUID());
         if (session == null) return;
 
-        // 1. Interacción con la Puerta de Retorno
         if (session.returnDoorPos != null && (clickedPos.equals(session.returnDoorPos) || clickedPos.equals(session.returnDoorPos.above()))) {
             exitTrial(player.getServer(), player.getUUID());
             return;
         }
 
-        // 2. Interacción con la Puerta Progresiva de la Tribulación
         if (session.stageCleared && session.progressionDoorPos != null &&
                 (clickedPos.equals(session.progressionDoorPos) || clickedPos.equals(session.progressionDoorPos.above()))) {
             advanceToNextStageOrAscend(player, session);
@@ -716,7 +816,6 @@ public final class PagodaTrialManager {
     public static void advanceToNextStageOrAscend(ServerPlayer player, PagodaSession session) {
         ServerLevel level = player.serverLevel();
 
-        // Efectos de cruzar el portal
         level.sendParticles(ParticleTypes.FLASH, player.getX(), player.getY() + 1.0D, player.getZ(), 2, 0, 0, 0, 0);
         player.playNotifySound(SoundEvents.WOODEN_DOOR_OPEN, SoundSource.BLOCKS, 1.2F, 1.0F);
         player.playNotifySound(ModSounds.GATE_TRAVEL.value(), SoundSource.PLAYERS, 0.8F, 0.85F);
@@ -724,7 +823,6 @@ public final class PagodaTrialManager {
         if (session.stage < MAX_STAGES) {
             int nextStage = session.stage + 1;
 
-            // Recompensa de cultivo por cada piso superado de la Pagoda
             if (SystemItems.SOUL_TRANSFORMATION_PILL.isBound()) {
                 ItemStack stagePill = new ItemStack(SystemItems.SOUL_TRANSFORMATION_PILL.get(), 2);
                 if (!player.addItem(stagePill)) {
@@ -738,7 +836,7 @@ public final class PagodaTrialManager {
             data.setSavedPagodaStage(nextStage);
             AwakeningSystemMod.sync(player);
 
-            BlockPos nextSpawn = session.stageOrigin.offset(0, 1, -14);
+            BlockPos nextSpawn = session.stageOrigin.offset(0, 1, -12);
             player.teleportTo(level, nextSpawn.getX() + 0.5D, nextSpawn.getY(), nextSpawn.getZ() + 0.5D, 0.0F, 0.0F);
 
             AwakeningSystemMod.notify(player,
@@ -755,25 +853,22 @@ public final class PagodaTrialManager {
         session.ascensionTriggered = true;
         MinecraftServer server = player.getServer();
 
-        // Datos del jugador
         SystemData data = SystemEvents.data(player);
         data.setConqueredNineTribulationsPagoda(true);
         data.setSavedPagodaStage(MAX_STAGES);
-        data.addCoins(500000); // 500,000 Monedas del Sistema por la Conquista Suprema
-        data.addCultivationQi(5000); // Bonificación masiva de Qi
+        data.addCoins(500000);
+        data.addCultivationQi(5000);
         data.setEquippedTitle("nine_tribulations_ascendant");
         AwakeningSystemMod.sync(player);
 
-        // Recompensa divina: Pergamino Celestial de las Nueve Tribulaciones
         ItemStack rewardScroll = SeriesStructureBuilder.makeRelic(Items.PAPER, 1,
-                "§6§l✦ Pergamino de Ascensión de las Nueve Tribulaciones ✦",
-                "Cúspide de la Pagoda de Murim",
-                "Has conquistado las 9 tribulaciones celestiales. Tu Dantian ha trascendido las ataduras mortales.");
+                "§6§l✦ Nine Tribulations Ascension Scroll ✦",
+                "Murim Pagoda Pinnacle",
+                "You have conquered the 9 celestial tribulations. Your Dantian has transcended mortal bounds.");
         if (!player.addItem(rewardScroll)) {
             player.level().addFreshEntity(new ItemEntity(player.level(), player.getX(), player.getY() + 0.5D, player.getZ(), rewardScroll));
         }
 
-        // Recompensa de cultivo REAL: 16 Píldoras de Transformación del Alma
         if (SystemItems.SOUL_TRANSFORMATION_PILL.isBound()) {
             ItemStack pills = new ItemStack(SystemItems.SOUL_TRANSFORMATION_PILL.get(), 16);
             if (!player.addItem(pills)) {
@@ -781,7 +876,6 @@ public final class PagodaTrialManager {
             }
         }
 
-        // 16 Escamas del Dragón Inmortal
         if (SystemItems.IMMORTAL_DRAGON_SCALE.isBound()) {
             ItemStack scales = new ItemStack(SystemItems.IMMORTAL_DRAGON_SCALE.get(), 16);
             if (!player.addItem(scales)) {
@@ -789,7 +883,6 @@ public final class PagodaTrialManager {
             }
         }
 
-        // 4 Perlas del Dragón Celestial
         if (SystemItems.CELESTIAL_DRAGON_PEARL.isBound()) {
             ItemStack pearls = new ItemStack(SystemItems.CELESTIAL_DRAGON_PEARL.get(), 4);
             if (!player.addItem(pearls)) {
@@ -797,14 +890,12 @@ public final class PagodaTrialManager {
             }
         }
 
-        // Notificación triunfal épica
         AwakeningSystemMod.notify(player,
                 "awakening_system.pagoda.apex_cleared_title",
                 "awakening_system.pagoda.apex_cleared_desc",
                 0xFFFFD700);
         player.playNotifySound(SoundEvents.UI_TOAST_CHALLENGE_COMPLETE, SoundSource.PLAYERS, 1.6F, 0.9F);
 
-        // Retornar a la Pagoda en Murim
         exitTrial(server, player.getUUID());
     }
 
@@ -824,6 +915,7 @@ public final class PagodaTrialManager {
                 if (returnLevel == null) returnLevel = server.overworld();
             }
 
+            player.getPersistentData().putLong("pagoda_exit_cooldown", returnLevel.getGameTime() + 100L);
             player.teleportTo(returnLevel, session.returnPos.x, session.returnPos.y, session.returnPos.z, session.returnYaw, session.returnPitch);
             player.playNotifySound(ModSounds.GATE_TRAVEL.value(), SoundSource.PLAYERS, 0.8F, 0.85F);
             player.displayClientMessage(Component.translatable("awakening_system.pagoda.returned_safely"), true);
@@ -847,12 +939,11 @@ public final class PagodaTrialManager {
     public static void tick(MinecraftServer server) {
         if (server == null) return;
 
-        // Failsafe Watchdog: Rescatar periódicamente a jugadores varados en PAGODA_REALM sin sesión
         if (server.getTickCount() % 20 == 0) {
             ServerLevel pagodaLevel = server.getLevel(PAGODA_REALM);
             if (pagodaLevel != null) {
                 for (ServerPlayer sp : new java.util.ArrayList<>(pagodaLevel.players())) {
-                    if (!sp.isSpectator() && !isInTrial(sp.getUUID())) {
+                    if (!sp.isSpectator() && !sp.isCreative() && !isInTrial(sp.getUUID())) {
                         exitTrial(server, sp.getUUID());
                     }
                 }
@@ -876,39 +967,42 @@ public final class PagodaTrialManager {
             ServerLevel level = player.serverLevel();
             session.stageTicks++;
 
-            // Failsafe Watchdog: Reubicar al jugador si terminó fuera de los límites o en el vacío/bloques
             if (isPlayerOutOfBounds(session, player)) {
                 rescuePlayerToBounds(session, player);
             }
 
-            // Reenfocar IA de enemigos vivos
             if (gameTime % 20 == 0 && !session.enemyUUIDs.isEmpty()) {
-                for (UUID enemyId : session.enemyUUIDs) {
-                    var entity = level.getEntity(enemyId);
-                    if (entity instanceof Mob mob && mob.isAlive()) {
-                        if (mob.getTarget() == null || !mob.getTarget().equals(player)) {
-                            mob.setTarget(player);
+                session.enemyUUIDs.removeIf(uuid -> {
+                    var entity = level.getEntity(uuid);
+                    return entity == null || !entity.isAlive();
+                });
+                if (session.enemyUUIDs.isEmpty() && !session.stageCleared) {
+                    onEntityKilled(UUID.randomUUID());
+                } else {
+                    for (UUID enemyId : session.enemyUUIDs) {
+                        var entity = level.getEntity(enemyId);
+                        if (entity instanceof Mob mob && mob.isAlive()) {
+                            if (mob.getTarget() == null || !mob.getTarget().equals(player)) {
+                                mob.setTarget(player);
+                            }
                         }
                     }
                 }
             }
 
-            // Partículas alrededor de la puerta de retorno
             if (session.returnDoorPos != null && gameTime % 12 == 0) {
                 BlockPos p = session.returnDoorPos;
                 level.sendParticles(ParticleTypes.PORTAL, p.getX() + 0.5D, p.getY() + 1.0D, p.getZ() + 0.5D, 4, 0.3D, 0.5D, 0.3D, 0.02D);
             }
 
-            // Proximidad a la puerta de retorno (caminar hacia ella)
-            if (session.stageTicks > 40 && session.returnDoorPos != null) {
-                double distSq = player.distanceToSqr(session.returnDoorPos.getX() + 0.5D, session.returnDoorPos.getY() + 0.5D, session.returnDoorPos.getZ() + 0.5D);
-                if (distSq <= 2.2D) {
+            if (!player.isCreative() && !player.isSpectator() && session.stageTicks > 40 && session.returnDoorPos != null) {
+                BlockPos pPos = player.blockPosition();
+                if (pPos.equals(session.returnDoorPos) || pPos.equals(session.returnDoorPos.above())) {
                     exitTrial(server, playerId);
                     continue;
                 }
             }
 
-            // Partículas alrededor de la puerta progresiva manifiesta
             if (session.stageCleared && session.progressionDoorPos != null) {
                 if (gameTime % 10 == 0) {
                     BlockPos p = session.progressionDoorPos;
@@ -916,12 +1010,15 @@ public final class PagodaTrialManager {
                     level.sendParticles(ParticleTypes.SOUL_FIRE_FLAME, p.getX() + 0.5D, p.getY() + 0.8D, p.getZ() + 0.5D, 3, 0.3D, 0.4D, 0.3D, 0.01D);
                 }
 
-                // Proximidad a la puerta de progresión: cruzar el umbral
                 double distSq = player.distanceToSqr(session.progressionDoorPos.getX() + 0.5D, session.progressionDoorPos.getY() + 0.5D, session.progressionDoorPos.getZ() + 0.5D);
                 if (distSq <= 2.2D) {
                     advanceToNextStageOrAscend(player, session);
                 }
             }
         }
+    }
+
+    public static void clearAll() {
+        SESSIONS.clear();
     }
 }

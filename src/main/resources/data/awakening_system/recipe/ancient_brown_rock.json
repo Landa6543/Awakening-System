@@ -1,0 +1,18 @@
+{
+  "type": "minecraft:crafting_shaped",
+  "category": "building",
+  "pattern": [
+    "SCS",
+    "CMC",
+    "SCS"
+  ],
+  "key": {
+    "S": { "item": "minecraft:cobbled_deepslate" },
+    "C": { "item": "minecraft:clay_ball" },
+    "M": { "item": "minecraft:mud" }
+  },
+  "result": {
+    "count": 8,
+    "id": "awakening_system:ancient_brown_rock"
+  }
+}

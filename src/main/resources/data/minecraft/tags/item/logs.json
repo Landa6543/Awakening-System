@@ -7,6 +7,11 @@
     "awakening_system:mana_wood_log",
     "awakening_system:eldoria_log",
     "awakening_system:spirit_plum_log",
-    "awakening_system:celestial_pine_log"
+    "awakening_system:celestial_pine_log",
+    "awakening_system:aralia_wood",
+    "awakening_system:yumemiru_wood",
+    "awakening_system:otogi_wood",
+    "awakening_system:bamboo_segment",
+    "awakening_system:maple_wood"
   ]
 }

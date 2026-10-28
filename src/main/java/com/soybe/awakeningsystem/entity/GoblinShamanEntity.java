@@ -76,19 +76,16 @@ public class GoblinShamanEntity extends Monster implements RangedAttackMob {
             if (target != null && target.isAlive()) {
                 double distSq = this.distanceToSqr(target);
 
-                // 1. Cántico de Frenesí Tribal
                 if (chantCooldown <= 0) {
                     performTribalChant();
                     chantCooldown = 180;
                 }
 
-                // 2. Ataque a distancia con Orbes de Fuego de Maná
                 if (shootCooldown <= 0 && distSq >= 9.0D && distSq <= 576.0D && this.hasLineOfSight(target)) {
                     performRangedAttack(target, 1.0F);
                     shootCooldown = 40 + this.random.nextInt(20);
                 }
 
-                // Si el objetivo está demasiado cerca, alejarse un poco
                 if (distSq < 16.0D) {
                     this.getNavigation().moveTo(this.getX() - (target.getX() - this.getX()), this.getY(), this.getZ() - (target.getZ() - this.getZ()), 1.1D);
                 } else if (distSq > 100.0D) {

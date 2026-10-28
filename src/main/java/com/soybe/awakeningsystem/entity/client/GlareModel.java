@@ -87,11 +87,9 @@ public class GlareModel extends HierarchicalModel<GlareEntity> {
     public void setupAnim(GlareEntity entity, float limbSwing, float limbSwingAmount, float ageInTicks, float netHeadYaw, float headPitch) {
         this.root().getAllParts().forEach(ModelPart::resetPose);
 
-        // Flotación suave y orgánica
         float bob = Mth.sin(ageInTicks * 0.12F) * 1.5F;
         this.body.y = 1.0F + bob;
 
-        // Balanceo físico de las capas de follaje
         float movementForce = Mth.sin(limbSwing * 0.1F) * limbSwingAmount * 0.75F;
         float absMovement = Math.abs(movementForce);
 
@@ -113,7 +111,6 @@ public class GlareModel extends HierarchicalModel<GlareEntity> {
             }
         }
 
-        // Orientación de la mirada
         this.head.yRot += netHeadYaw * ((float) Math.PI / 180F) * 0.5F;
         this.head.xRot += headPitch * ((float) Math.PI / 180F) * 0.5F;
     }

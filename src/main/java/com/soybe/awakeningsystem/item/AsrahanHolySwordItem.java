@@ -49,13 +49,12 @@ public class AsrahanHolySwordItem extends SwordItem implements AwakeningWeaponIt
                 return InteractionResultHolder.fail(stack);
             }
 
-            sp.getPersistentData().putLong("asrahan_holy_cd", gameTime + 280L); // 14s cooldown
+            sp.getPersistentData().putLong("asrahan_holy_cd", gameTime + 280L);
             sp.getCooldowns().addCooldown(this, 280);
 
             if (level instanceof ServerLevel sl) {
                 Vec3 look = sp.getLookAngle();
 
-                // 1. Sello arcano de aguas sagradas en el suelo
                 net.neoforged.neoforge.network.PacketDistributor.sendToPlayersNear(
                         sl, null, sp.getX(), sp.getY(), sp.getZ(), 64.0D,
                         new com.soybe.awakeningsystem.SpawnMagicCirclePayload(
@@ -73,7 +72,6 @@ public class AsrahanHolySwordItem extends SwordItem implements AwakeningWeaponIt
 
                 float dmg = (float) (28.0D * WeaponLevelManager.getDamageMultiplier(stack));
 
-                // 2. Maremoto Cortante Sagrado (SlashWaveEntity de Marea Bendita)
                 SlashWaveEntity tidalWave = new SlashWaveEntity(sl, sp, SlashWaveEntity.TYPE_CRYSTAL_AQUA, dmg, 4.4F, 1.6F, 0.0F, 26, 10);
                 tidalWave.setDeltaMovement(look.scale(2.2D));
                 sl.addFreshEntity(tidalWave);
@@ -86,7 +84,7 @@ public class AsrahanHolySwordItem extends SwordItem implements AwakeningWeaponIt
             sp.addEffect(new MobEffectInstance(MobEffects.REGENERATION, 100, 1, false, true));
             sp.addEffect(new MobEffectInstance(MobEffects.DAMAGE_RESISTANCE, 160, 1, false, true));
 
-            sp.displayClientMessage(Component.literal("§b§l✦ [MAREMOTO SAGRADO] §f¡Marea purificadora de Asrahan desatada con bendición acuática!"), true);
+            sp.displayClientMessage(Component.translatable("item.awakening_system.asrahan.unleashed"), true);
             return InteractionResultHolder.consume(stack);
         }
         return InteractionResultHolder.sidedSuccess(stack, level.isClientSide());

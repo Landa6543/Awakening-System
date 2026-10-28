@@ -14,18 +14,38 @@ public record SyncRiftsPayload(List<RiftEntry> rifts) implements CustomPacketPay
     public static final Type<SyncRiftsPayload> TYPE = new Type<>(
             ResourceLocation.fromNamespaceAndPath(AwakeningSystemMod.MOD_ID, "sync_rifts"));
 
-    public record RiftEntry(BlockPos pos, String rank, boolean isRedGate, int type, float yaw) {
-        public RiftEntry(BlockPos pos, String rank, boolean isRedGate, int type) {
-            this(pos, rank, isRedGate, type, 0.0F);
+    public record RiftEntry(BlockPos pos, String rank, boolean isRedGate, int type, float yaw, int beamTicks, int remainingTicks) {
+        public RiftEntry(BlockPos pos, String rank, boolean isRedGate, int type, float yaw, int beamTicks) {
+            this(pos, rank, isRedGate, type, yaw, beamTicks, -1);
         }
 
-        public static final StreamCodec<FriendlyByteBuf, RiftEntry> STREAM_CODEC = StreamCodec.composite(
-                BlockPos.STREAM_CODEC, RiftEntry::pos,
-                ByteBufCodecs.STRING_UTF8, RiftEntry::rank,
-                ByteBufCodecs.BOOL, RiftEntry::isRedGate,
-                ByteBufCodecs.VAR_INT, RiftEntry::type,
-                ByteBufCodecs.FLOAT, RiftEntry::yaw,
-                RiftEntry::new
+        public RiftEntry(BlockPos pos, String rank, boolean isRedGate, int type, float yaw) {
+            this(pos, rank, isRedGate, type, yaw, 0, -1);
+        }
+
+        public RiftEntry(BlockPos pos, String rank, boolean isRedGate, int type) {
+            this(pos, rank, isRedGate, type, 0.0F, 0, -1);
+        }
+
+        public static final StreamCodec<FriendlyByteBuf, RiftEntry> STREAM_CODEC = StreamCodec.of(
+                (buf, val) -> {
+                    BlockPos.STREAM_CODEC.encode(buf, val.pos);
+                    ByteBufCodecs.STRING_UTF8.encode(buf, val.rank);
+                    ByteBufCodecs.BOOL.encode(buf, val.isRedGate);
+                    ByteBufCodecs.VAR_INT.encode(buf, val.type);
+                    ByteBufCodecs.FLOAT.encode(buf, val.yaw);
+                    ByteBufCodecs.VAR_INT.encode(buf, val.beamTicks);
+                    ByteBufCodecs.VAR_INT.encode(buf, val.remainingTicks);
+                },
+                buf -> new RiftEntry(
+                        BlockPos.STREAM_CODEC.decode(buf),
+                        ByteBufCodecs.STRING_UTF8.decode(buf),
+                        ByteBufCodecs.BOOL.decode(buf),
+                        ByteBufCodecs.VAR_INT.decode(buf),
+                        ByteBufCodecs.FLOAT.decode(buf),
+                        ByteBufCodecs.VAR_INT.decode(buf),
+                        ByteBufCodecs.VAR_INT.decode(buf)
+                )
         );
     }
 

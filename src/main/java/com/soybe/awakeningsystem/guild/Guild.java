@@ -20,8 +20,8 @@ public class Guild {
     private long coinVault = 0;
     private final Set<String> unlockedPerks = new HashSet<>();
     private final Set<String> claimedChunks = new HashSet<>();
+    private final Set<String> alliedGuilds = new HashSet<>();
 
-    // Misiones de cacería cooperativas (Tablón de Cacerías)
     private int huntAbyssProgress = 0;
     private int huntAbyssGoal = 50;
     private int huntBossProgress = 0;
@@ -31,7 +31,6 @@ public class Guild {
     private int huntChestsProgress = 0;
     private int huntChestsGoal = 5;
 
-    // Sede del gremio
     private boolean hasHq = false;
     private String hqDimension = "minecraft:overworld";
     private double hqX = 0, hqY = 64, hqZ = 0;
@@ -41,7 +40,7 @@ public class Guild {
         this.id = id;
         this.name = name;
         this.tag = tag.toUpperCase(Locale.ROOT);
-        this.motto = "Gremio de Cazadores";
+        this.motto = "Hunters Guild";
         this.leaderUuid = leaderUuid;
     }
 
@@ -61,6 +60,10 @@ public class Guild {
     public long getCoinVault() { return coinVault; }
     public Set<String> getUnlockedPerks() { return unlockedPerks; }
     public Set<String> getClaimedChunks() { return claimedChunks; }
+    public Set<String> getAlliedGuilds() { return Collections.unmodifiableSet(alliedGuilds); }
+    public boolean isAlliedWith(String guildId) { return guildId != null && alliedGuilds.contains(guildId); }
+    public void addAlly(String guildId) { if (guildId != null && !guildId.equals(this.id)) alliedGuilds.add(guildId); }
+    public void removeAlly(String guildId) { alliedGuilds.remove(guildId); }
 
     public int getMaxClaims() {
         return (level + 1) * (level + 1);
@@ -118,7 +121,7 @@ public class Guild {
 
     public void depositMora(long amount) {
         this.moraVault += amount;
-        addExp(amount / 500L); // Rebalanceado: 500 Moras = 1 EXP (evita romper el nivel con dinero)
+        addExp(amount / 500L);
     }
 
     public boolean withdrawMora(long amount) {
@@ -131,7 +134,7 @@ public class Guild {
 
     public void depositCoins(long amount) {
         this.coinVault += amount;
-        addExp(amount / 5L); // Rebalanceado: 5 Monedas = 1 EXP
+        addExp(amount / 5L);
     }
 
     public boolean withdrawCoins(long amount) {
@@ -141,10 +144,6 @@ public class Guild {
         }
         return false;
     }
-
-    // ==========================================
-    // ⚔️ TABLÓN DE CACERÍAS (HUNTING BOUNTIES)
-    // ==========================================
 
     public int getHuntAbyssProgress() { return huntAbyssProgress; }
     public int getHuntAbyssGoal() { return huntAbyssGoal; }
@@ -173,7 +172,7 @@ public class Guild {
                     expReward = 1500;
                     moraReward = 25000;
                     coinReward = 250;
-                    questName = "Purga del Abismo y Sombras";
+                    questName = "Abyss & Shadow Purge";
                 }
             }
             case "boss" -> {
@@ -185,7 +184,7 @@ public class Guild {
                     expReward = 2500;
                     moraReward = 50000;
                     coinReward = 500;
-                    questName = "Cacería de Jefes Mayores";
+                    questName = "Major Boss Hunt";
                 }
             }
             case "elite" -> {
@@ -197,7 +196,7 @@ public class Guild {
                     expReward = 1000;
                     moraReward = 15000;
                     coinReward = 150;
-                    questName = "Exterminio de Monstruos de Élite";
+                    questName = "Elite Monster Extermination";
                 }
             }
             case "chest" -> {
@@ -209,7 +208,7 @@ public class Guild {
                     expReward = 2000;
                     moraReward = 30000;
                     coinReward = 300;
-                    questName = "Conquista de Mazmorras y Cofres";
+                    questName = "Dungeons & Chests Conquest";
                 }
             }
         }
@@ -219,8 +218,7 @@ public class Guild {
             this.moraVault += moraReward;
             this.coinVault += coinReward;
             GuildSavedData.get(server).setDirty();
-            GuildSavedData.get(server).broadcastToGuild(this, server,
-                    net.minecraft.network.chat.Component.literal("§6⚔ §l¡MISIÓN DE CACERÍA COMPLETADA! §e[" + questName + "] §fRecompensa: §b+" + expReward + " EXP Gremio§f, §e+" + moraReward + " Moras§f, §d+" + coinReward + " Monedas §6a la Bóveda."));
+            GuildSavedData.get(server).broadcastToGuild(this, server, net.minecraft.network.chat.Component.translatable("guild.msg.hunt_completed", questName, expReward, moraReward, coinReward));
             GuildSavedData.get(server).syncAllGuildMembers(this, server);
         } else {
             GuildSavedData.get(server).setDirty();
@@ -276,28 +274,24 @@ public class Guild {
         tag.putLong("MoraVault", moraVault);
         tag.putLong("CoinVault", coinVault);
 
-        // Miembros
         ListTag memberList = new ListTag();
         for (GuildMember m : members.values()) {
             memberList.add(m.save());
         }
         tag.put("Members", memberList);
 
-        // Perks desbloqueados
         ListTag perkList = new ListTag();
         for (String p : unlockedPerks) {
             perkList.add(StringTag.valueOf(p));
         }
         tag.put("Perks", perkList);
 
-        // Chunks reclamados
         ListTag chunkList = new ListTag();
         for (String c : claimedChunks) {
             chunkList.add(StringTag.valueOf(c));
         }
         tag.put("ClaimedChunks", chunkList);
 
-        // Sede
         tag.putBoolean("HasHq", hasHq);
         if (hasHq) {
             tag.putString("HqDim", hqDimension);
@@ -308,7 +302,6 @@ public class Guild {
             tag.putFloat("HqPitch", hqPitch);
         }
 
-        // Misiones de cacería
         tag.putInt("HuntAbyssProg", huntAbyssProgress);
         tag.putInt("HuntAbyssGoal", huntAbyssGoal);
         tag.putInt("HuntBossProg", huntBossProgress);
@@ -317,6 +310,12 @@ public class Guild {
         tag.putInt("HuntEliteGoal", huntEliteGoal);
         tag.putInt("HuntChestsProg", huntChestsProgress);
         tag.putInt("HuntChestsGoal", huntChestsGoal);
+
+        ListTag aList = new ListTag();
+        for (String allyId : alliedGuilds) {
+            aList.add(StringTag.valueOf(allyId));
+        }
+        tag.put("AlliedGuilds", aList);
 
         return tag;
     }
@@ -362,6 +361,13 @@ public class Guild {
             ListTag cList = tag.getList("ClaimedChunks", Tag.TAG_STRING);
             for (int i = 0; i < cList.size(); i++) {
                 guild.claimedChunks.add(cList.getString(i));
+            }
+        }
+
+        if (tag.contains("AlliedGuilds", Tag.TAG_LIST)) {
+            ListTag aList = tag.getList("AlliedGuilds", Tag.TAG_STRING);
+            for (int i = 0; i < aList.size(); i++) {
+                guild.alliedGuilds.add(aList.getString(i));
             }
         }
 

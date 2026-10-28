@@ -43,10 +43,9 @@ public class WhiteTigerPillItem extends Item {
                 sp.playNotifySound(SoundEvents.PLAYER_LEVELUP, SoundSource.PLAYERS, 1.0F, 1.4F);
                 sp.displayClientMessage(Component.translatable("awakening_system.cultivation.sublevel_success", data.cultivationSubLevel(), SystemEvents.getDantianRealmComponent(realm)), true);
             } else {
-                sp.displayClientMessage(Component.literal("§b✦ Has refinado la §fPíldora del Tigre Blanco del Trueno §b(+7,500 Qi)."), true);
+                sp.displayClientMessage(Component.translatable("item.awakening_system.white_tiger_pill.refined"), true);
             }
 
-            // Furia del Tigre Blanco
             sp.addEffect(new MobEffectInstance(MobEffects.DAMAGE_BOOST, 3600, 2));
             sp.addEffect(new MobEffectInstance(MobEffects.MOVEMENT_SPEED, 3600, 1));
             sp.addEffect(new MobEffectInstance(MobEffects.DAMAGE_RESISTANCE, 3600, 1));
@@ -71,12 +70,12 @@ public class WhiteTigerPillItem extends Item {
 
     @Override
     public void appendHoverText(ItemStack stack, TooltipContext context, List<Component> tooltipComponents, TooltipFlag tooltipFlag) {
-        tooltipComponents.add(Component.literal("§b✦ Píldora Marcial del Tigre Blanco (Byakko)").withStyle(ChatFormatting.AQUA, ChatFormatting.BOLD));
-        tooltipComponents.add(Component.literal("§7\"Infundida con la energía de relámpago y ferocidad de la Bestia Divina Occidental.\""));
-        tooltipComponents.add(Component.literal(""));
-        tooltipComponents.add(Component.literal("§e✦ Efectos de Refinamiento:").withStyle(ChatFormatting.YELLOW));
-        tooltipComponents.add(Component.literal("  §a✔ +7,500 Puntos de Qi de Cultivo Inmediato"));
-        tooltipComponents.add(Component.literal("  §b✔ Furia de Rayo: Fuerza III, Velocidad II y Resistencia II por 3 min"));
+        tooltipComponents.add(Component.translatable("item.awakening_system.white_tiger_pill.title").withStyle(ChatFormatting.AQUA, ChatFormatting.BOLD));
+        tooltipComponents.add(Component.translatable("item.awakening_system.white_tiger_pill.quote"));
+        tooltipComponents.add(Component.empty());
+        tooltipComponents.add(Component.translatable("item.awakening_system.white_tiger_pill.effects_header").withStyle(ChatFormatting.YELLOW));
+        tooltipComponents.add(Component.translatable("item.awakening_system.white_tiger_pill.effect1"));
+        tooltipComponents.add(Component.translatable("item.awakening_system.white_tiger_pill.effect2"));
         super.appendHoverText(stack, context, tooltipComponents, tooltipFlag);
     }
 }

@@ -54,14 +54,14 @@
     [],
     [
       "minecraft:flower_flower_forest",
-      "minecraft:patch_grass_taiga",
       "minecraft:lush_caves_vegetation",
-      "minecraft:spore_blossom",
+      "minecraft:patch_grass_taiga",
       "minecraft:trees_cherry",
+      "minecraft:spore_blossom",
       "minecraft:patch_sugar_cane",
+      "minecraft:patch_berry_bush",
       "awakening_system:patch_wild_ginseng",
-      "awakening_system:super_giant_plum",
-      "minecraft:patch_berry_bush"
+      "awakening_system:super_giant_plum"
     ],
     []
   ]

@@ -51,7 +51,7 @@ public class PyroRegisvineEntity extends Monster {
             SynchedEntityData.defineId(PyroRegisvineEntity.class, EntityDataSerializers.INT);
 
     private final ServerBossEvent bossEvent = (ServerBossEvent) new ServerBossEvent(
-            Component.literal("§c§lRegisvid Pirotécnica §7- §4Flor Llameante Titánica"),
+            Component.translatable("boss.awakening_system.pyro_regisvine.boss_bar"),
             BossEvent.BossBarColor.RED,
             BossEvent.BossBarOverlay.NOTCHED_10
     ).setDarkenScreen(false);
@@ -121,7 +121,6 @@ public class PyroRegisvineEntity extends Monster {
     public void tick() {
         super.tick();
 
-        // Anclado al terreno
         Vec3 curMotion = this.getDeltaMovement();
         this.setDeltaMovement(0.0D, curMotion.y < 0 ? curMotion.y : 0.0D, 0.0D);
 
@@ -133,7 +132,6 @@ public class PyroRegisvineEntity extends Monster {
             if (this.spinCooldown > 0) this.spinCooldown--;
             if (this.barrageCooldown > 0) this.barrageCooldown--;
 
-            // Partículas ambientales de cenizas ardientes y fuego
             if (this.random.nextFloat() < 0.35F && this.level() instanceof ServerLevel sl) {
                 sl.sendParticles(ParticleTypes.FLAME,
                         this.getX() + (this.random.nextDouble() - 0.5D) * 3.5D,
@@ -272,7 +270,6 @@ public class PyroRegisvineEntity extends Monster {
         sl.playSound(null, this.getX(), this.getY(), this.getZ(),
                 SoundEvents.BLAZE_SHOOT, SoundSource.HOSTILE, 2.0F, 1.0F);
 
-        // Disparo de 3 proyectiles de fuego ígneo
         for (int i = -1; i <= 1; i++) {
             Vec3 dir = target.position().subtract(this.getX(), this.getY() + 4.0D, this.getZ()).normalize();
             double spread = i * 0.15D;
@@ -297,7 +294,6 @@ public class PyroRegisvineEntity extends Monster {
     @Override
     public boolean hurt(DamageSource source, float amount) {
         if (!this.level().isClientSide && !isStunned()) {
-            // Escudo de corola vulnerable a daño de agua/Hydro
             boolean isWater = source.is(net.minecraft.tags.DamageTypeTags.WITCH_RESISTANT_TO)
                     || (source.getEntity() instanceof Player p && (p.isInWaterRainOrBubble() || p.getMainHandItem().is(net.minecraft.world.item.Items.WATER_BUCKET)));
             float shieldDmg = isWater ? amount * 3.5F : amount;
@@ -321,7 +317,7 @@ public class PyroRegisvineEntity extends Monster {
                             50, 1.5, 1.5, 1.5, 0.2);
 
                     for (Player p : sl.getPlayers(pl -> pl.distanceToSqr(this) < 900.0D)) {
-                        p.displayClientMessage(Component.literal("§c§l✦ ¡COROLA PYRO DESTRUIDA! §fLa Regisvid Pirotécnica yace noqueada."), true);
+                        p.displayClientMessage(Component.translatable("boss.awakening_system.pyro_regisvine.corolla_broken"), true);
                     }
                 }
             }
@@ -388,13 +384,13 @@ public class PyroRegisvineEntity extends Monster {
                         data.addMora(moraGain);
                         data.addPrimogems(primoGain);
                         com.soybe.awakeningsystem.AwakeningSystemMod.sync(sp);
-                        sp.displayClientMessage(Component.literal("§c§l✦ ¡REGISVID PIROTÉCNICA DERROTADA! §e+" + moraGain + " Mora, §b+" + primoGain + " Protogemas§e."), false);
+                        sp.displayClientMessage(Component.translatable("boss.awakening_system.pyro_regisvine.defeated_teyvat", moraGain, primoGain), false);
                     } else {
                         int coinGain = 20 + sl.random.nextInt(15);
                         if (SystemItems.AWAKENING_COIN.isBound()) {
                             sp.addItem(new ItemStack(SystemItems.AWAKENING_COIN.get(), coinGain));
                         }
-                        sp.displayClientMessage(Component.literal("§c§l✦ ¡REGISVID PIROTÉCNICA DERROTADA! §6+" + coinGain + " Monedas de Despertar§e."), false);
+                        sp.displayClientMessage(Component.translatable("boss.awakening_system.pyro_regisvine.defeated_vanilla", coinGain), false);
                     }
                 }
             }

@@ -41,19 +41,17 @@ public class LockedTreasureChestRenderer implements BlockEntityRenderer<LockedTr
                 ? blockEntity.getBlockState().getValue(LockedTreasureChestBlock.FACING)
                 : Direction.NORTH;
 
-        poseStack.translate(0.5D, 0.0D, 0.5D);
-        poseStack.mulPose(Axis.YP.rotationDegrees(-facing.toYRot()));
+        poseStack.translate(0.5D, 0.002D, 0.5D);
+        poseStack.mulPose(Axis.YP.rotationDegrees(180.0F - facing.toYRot()));
 
         net.minecraft.client.Minecraft mc = net.minecraft.client.Minecraft.getInstance();
         boolean isUnlockedForMe = (mc.player != null && blockEntity.isUnlockedFor(mc.player.getUUID()));
         boolean isLocked = !isUnlockedForMe;
 
-        // Control suave de apertura de la tapa (solo si no está con candado)
         float openness = blockEntity.getOpenness(partialTick);
         if (isLocked) {
             openness = 0.0F;
         }
-        // Pivota hacia arriba y hacia atrás sobre el eje X hasta 90 grados
         this.model.lid.xRot = (openness * ((float) Math.PI / 2.0F));
 
         ResourceLocation texture = TEXTURE_OVERWORLD;
@@ -78,13 +76,17 @@ public class LockedTreasureChestRenderer implements BlockEntityRenderer<LockedTr
             }
         }
 
+        // When locked: HIDE the latch completely to eliminate Z-fighting and double-lock clipping!
+        // When unlocked: SHOW latch and HIDE padlock
+        this.model.latch.visible = !isLocked;
+        this.model.padlock.visible = isLocked;
+        this.model.chains.visible = isLocked;
+
         VertexConsumer consumer = bufferSource.getBuffer(RenderType.entityCutout(texture));
 
-        // Base y tapa abisagrada
         this.model.bottom.render(poseStack, consumer, packedLight, packedOverlay, 0xFFFFFFFF);
         this.model.lid.render(poseStack, consumer, packedLight, packedOverlay, 0xFFFFFFFF);
 
-        // Si está cerrado con candado, renderizar cadenas 3D y el gran candado de oro con grillete
         if (isLocked) {
             this.model.chains.render(poseStack, consumer, packedLight, packedOverlay, 0xFFFFFFFF);
             this.model.padlock.render(poseStack, consumer, packedLight, packedOverlay, 0xFFFFFFFF);

@@ -474,13 +474,11 @@ public class RaidenShogunModel extends EntityModel<RaidenBossEntity> implements 
         this.head.yRot = netHeadYaw * ((float)Math.PI / 180F);
         this.head.xRot = headPitch * ((float)Math.PI / 180F);
 
-        // Animación de caminata humana elegante
         this.armRight.xRot = Mth.cos(limbSwing * 0.6662F + (float)Math.PI) * 1.4F * limbSwingAmount * 0.5F;
         this.armLeft.xRot = Mth.cos(limbSwing * 0.6662F) * 1.4F * limbSwingAmount * 0.5F;
         this.legRight.xRot = Mth.cos(limbSwing * 0.6662F) * 1.4F * limbSwingAmount;
         this.legLeft.xRot = Mth.cos(limbSwing * 0.6662F + (float)Math.PI) * 1.4F * limbSwingAmount;
 
-        // Postura de ataque o corte con katana
         if (entity.isAttacking()) {
             this.armRight.xRot = -1.2F + Mth.sin(ageInTicks * 0.3F) * 0.4F;
             this.armRight.yRot = -0.3F;

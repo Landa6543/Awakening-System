@@ -5,7 +5,10 @@
   "compatibilityLevel": "JAVA_21",
   "refmap": "awakening_system.refmap.json",
   "client": [
-    "PlayerModelMixin"
+    "PlayerModelMixin",
+    "ConfirmExperimentalFeaturesScreenMixin",
+    "WorldOpenFlowsMixin",
+    "AceMinecraftClientMixin"
   ],
   "injectors": {
     "defaultRequire": 1

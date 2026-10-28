@@ -35,7 +35,7 @@ public class TeyvatStoolBlock extends Block {
     private static final VoxelShape SEAT_SHAPE = Block.box(3.0D, 0.0D, 3.0D, 13.0D, 9.0D, 13.0D);
 
     public TeyvatStoolBlock(BlockBehaviour.Properties properties) {
-        super(properties);
+        super(properties.noOcclusion());
     }
 
     @Override
@@ -63,7 +63,7 @@ public class TeyvatStoolBlock extends Block {
             AABB searchBox = new AABB(pos);
             List<TavernSeatEntity> existing = sl.getEntitiesOfClass(TavernSeatEntity.class, searchBox);
             if (!existing.isEmpty()) {
-                sp.displayClientMessage(Component.literal("§7Este taburete ya está ocupado."), true);
+                sp.displayClientMessage(Component.translatable("block.awakening_system.teyvat_stool.occupied"), true);
                 return ItemInteractionResult.FAIL;
             }
 

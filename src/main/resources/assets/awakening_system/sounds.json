@@ -1,4 +1,60 @@
 {
+  "arise_voice": {
+    "category": "voice",
+    "subtitle": "subtitles.awakening_system.arise_voice",
+    "sounds": [
+      "awakening_system:arise_voice"
+    ]
+  },
+  "dart_announcer_gameon": {
+    "category": "voice",
+    "subtitle": "subtitles.awakening_system.dart_announcer_gameon",
+    "sounds": [
+      "awakening_system:casino/darts/dart_announcer_gameon"
+    ]
+  },
+  "dart_announcer_180": {
+    "category": "voice",
+    "subtitle": "subtitles.awakening_system.dart_announcer_180",
+    "sounds": [
+      "awakening_system:casino/darts/dart_announcer_180"
+    ]
+  },
+  "dart_announcer_bullseye": {
+    "category": "voice",
+    "subtitle": "subtitles.awakening_system.dart_announcer_bullseye",
+    "sounds": [
+      "awakening_system:casino/darts/dart_announcer_bullseye"
+    ]
+  },
+  "dart_announcer_triple": {
+    "category": "voice",
+    "subtitle": "subtitles.awakening_system.dart_announcer_triple",
+    "sounds": [
+      "awakening_system:casino/darts/dart_announcer_triple"
+    ]
+  },
+  "uma_start_cheer": {
+    "category": "voice",
+    "subtitle": "subtitles.awakening_system.uma_start_cheer",
+    "sounds": [
+      "awakening_system:uma/uma_start_cheer"
+    ]
+  },
+  "uma_skill_burst": {
+    "category": "voice",
+    "subtitle": "subtitles.awakening_system.uma_skill_burst",
+    "sounds": [
+      "awakening_system:uma/uma_skill_burst"
+    ]
+  },
+  "uma_victory_cheer": {
+    "category": "voice",
+    "subtitle": "subtitles.awakening_system.uma_victory_cheer",
+    "sounds": [
+      "awakening_system:uma/uma_victory_cheer"
+    ]
+  },
   "npc_interact": {
     "category": "voice",
     "subtitle": "subtitles.awakening_system.npc_interact",
@@ -1290,6 +1346,16 @@
       "awakening_system:companion/companion_bennett_hurt"
     ]
   },
+  "casino_ambient": {
+    "category": "ambient",
+    "subtitle": "subtitles.awakening_system.casino_ambient",
+    "sounds": [
+      {
+        "name": "awakening_system:casino_ambient",
+        "stream": true
+      }
+    ]
+  },
   "casino_insert_coin": {
     "category": "block",
     "subtitle": "subtitles.awakening_system.casino_insert_coin",
@@ -1685,28 +1751,28 @@
     ]
   },
   "companion_beru_summon": {
-    "category": "voice",
+    "category": "hostile",
     "subtitle": "subtitles.awakening_system.companion_beru_summon",
     "sounds": [
       "awakening_system:companion/companion_beru_summon"
     ]
   },
   "companion_beru_skill": {
-    "category": "voice",
+    "category": "hostile",
     "subtitle": "subtitles.awakening_system.companion_beru_skill",
     "sounds": [
       "awakening_system:companion/companion_beru_skill"
     ]
   },
   "companion_beru_ambient": {
-    "category": "voice",
+    "category": "hostile",
     "subtitle": "subtitles.awakening_system.companion_beru_ambient",
     "sounds": [
       "awakening_system:companion/companion_beru_ambient"
     ]
   },
   "companion_beru_hurt": {
-    "category": "voice",
+    "category": "hostile",
     "subtitle": "subtitles.awakening_system.companion_beru_hurt",
     "sounds": [
       "awakening_system:companion/companion_beru_hurt"
@@ -1964,6 +2030,426 @@
       "awakening_system:companion/companion_nezuko_hurt"
     ]
   },
+  "companion_ganyu_summon": {
+    "category": "voice",
+    "subtitle": "subtitles.awakening_system.companion_ganyu_summon",
+    "sounds": [
+      "awakening_system:companion/companion_ganyu_summon"
+    ]
+  },
+  "companion_ganyu_skill": {
+    "category": "voice",
+    "subtitle": "subtitles.awakening_system.companion_ganyu_skill",
+    "sounds": [
+      "awakening_system:companion/companion_ganyu_skill"
+    ]
+  },
+  "companion_ganyu_ambient": {
+    "category": "voice",
+    "subtitle": "subtitles.awakening_system.companion_ganyu_ambient",
+    "sounds": [
+      "awakening_system:companion/companion_ganyu_ambient"
+    ]
+  },
+  "companion_ganyu_hurt": {
+    "category": "voice",
+    "subtitle": "subtitles.awakening_system.companion_ganyu_hurt",
+    "sounds": [
+      "awakening_system:companion/companion_ganyu_hurt"
+    ]
+  },
+  "companion_neuvillette_summon": {
+    "category": "voice",
+    "subtitle": "subtitles.awakening_system.companion_neuvillette_summon",
+    "sounds": [
+      "awakening_system:companion/companion_neuvillette_summon"
+    ]
+  },
+  "companion_neuvillette_skill": {
+    "category": "voice",
+    "subtitle": "subtitles.awakening_system.companion_neuvillette_skill",
+    "sounds": [
+      "awakening_system:companion/companion_neuvillette_skill"
+    ]
+  },
+  "companion_neuvillette_ambient": {
+    "category": "voice",
+    "subtitle": "subtitles.awakening_system.companion_neuvillette_ambient",
+    "sounds": [
+      "awakening_system:companion/companion_neuvillette_ambient"
+    ]
+  },
+  "companion_neuvillette_hurt": {
+    "category": "voice",
+    "subtitle": "subtitles.awakening_system.companion_neuvillette_hurt",
+    "sounds": [
+      "awakening_system:companion/companion_neuvillette_hurt"
+    ]
+  },
+  "companion_march_7th_summon": {
+    "category": "voice",
+    "subtitle": "subtitles.awakening_system.companion_march_7th_summon",
+    "sounds": [
+      "awakening_system:companion/companion_march_7th_summon"
+    ]
+  },
+  "companion_march_7th_skill": {
+    "category": "voice",
+    "subtitle": "subtitles.awakening_system.companion_march_7th_skill",
+    "sounds": [
+      "awakening_system:companion/companion_march_7th_skill"
+    ]
+  },
+  "companion_march_7th_ambient": {
+    "category": "voice",
+    "subtitle": "subtitles.awakening_system.companion_march_7th_ambient",
+    "sounds": [
+      "awakening_system:companion/companion_march_7th_ambient"
+    ]
+  },
+  "companion_march_7th_hurt": {
+    "category": "voice",
+    "subtitle": "subtitles.awakening_system.companion_march_7th_hurt",
+    "sounds": [
+      "awakening_system:companion/companion_march_7th_hurt"
+    ]
+  },
+  "companion_dan_heng_il_summon": {
+    "category": "voice",
+    "subtitle": "subtitles.awakening_system.companion_dan_heng_il_summon",
+    "sounds": [
+      "awakening_system:companion/companion_dan_heng_il_summon"
+    ]
+  },
+  "companion_dan_heng_il_skill": {
+    "category": "voice",
+    "subtitle": "subtitles.awakening_system.companion_dan_heng_il_skill",
+    "sounds": [
+      "awakening_system:companion/companion_dan_heng_il_skill"
+    ]
+  },
+  "companion_dan_heng_il_ambient": {
+    "category": "voice",
+    "subtitle": "subtitles.awakening_system.companion_dan_heng_il_ambient",
+    "sounds": [
+      "awakening_system:companion/companion_dan_heng_il_ambient"
+    ]
+  },
+  "companion_dan_heng_il_hurt": {
+    "category": "voice",
+    "subtitle": "subtitles.awakening_system.companion_dan_heng_il_hurt",
+    "sounds": [
+      "awakening_system:companion/companion_dan_heng_il_hurt"
+    ]
+  },
+  "companion_feixiao_summon": {
+    "category": "voice",
+    "subtitle": "subtitles.awakening_system.companion_feixiao_summon",
+    "sounds": [
+      "awakening_system:companion/companion_feixiao_summon"
+    ]
+  },
+  "companion_feixiao_skill": {
+    "category": "voice",
+    "subtitle": "subtitles.awakening_system.companion_feixiao_skill",
+    "sounds": [
+      "awakening_system:companion/companion_feixiao_skill"
+    ]
+  },
+  "companion_feixiao_ambient": {
+    "category": "voice",
+    "subtitle": "subtitles.awakening_system.companion_feixiao_ambient",
+    "sounds": [
+      "awakening_system:companion/companion_feixiao_ambient"
+    ]
+  },
+  "companion_feixiao_hurt": {
+    "category": "voice",
+    "subtitle": "subtitles.awakening_system.companion_feixiao_hurt",
+    "sounds": [
+      "awakening_system:companion/companion_feixiao_hurt"
+    ]
+  },
+  "companion_aventurine_summon": {
+    "category": "voice",
+    "subtitle": "subtitles.awakening_system.companion_aventurine_summon",
+    "sounds": [
+      "awakening_system:companion/companion_aventurine_summon"
+    ]
+  },
+  "companion_aventurine_skill": {
+    "category": "voice",
+    "subtitle": "subtitles.awakening_system.companion_aventurine_skill",
+    "sounds": [
+      "awakening_system:companion/companion_aventurine_skill"
+    ]
+  },
+  "companion_aventurine_ambient": {
+    "category": "voice",
+    "subtitle": "subtitles.awakening_system.companion_aventurine_ambient",
+    "sounds": [
+      "awakening_system:companion/companion_aventurine_ambient"
+    ]
+  },
+  "companion_aventurine_hurt": {
+    "category": "voice",
+    "subtitle": "subtitles.awakening_system.companion_aventurine_hurt",
+    "sounds": [
+      "awakening_system:companion/companion_aventurine_hurt"
+    ]
+  },
+  "companion_robin_summon": {
+    "category": "voice",
+    "subtitle": "subtitles.awakening_system.companion_robin_summon",
+    "sounds": [
+      "awakening_system:companion/companion_robin_summon"
+    ]
+  },
+  "companion_robin_skill": {
+    "category": "voice",
+    "subtitle": "subtitles.awakening_system.companion_robin_skill",
+    "sounds": [
+      "awakening_system:companion/companion_robin_skill"
+    ]
+  },
+  "companion_robin_ambient": {
+    "category": "voice",
+    "subtitle": "subtitles.awakening_system.companion_robin_ambient",
+    "sounds": [
+      "awakening_system:companion/companion_robin_ambient"
+    ]
+  },
+  "companion_robin_hurt": {
+    "category": "voice",
+    "subtitle": "subtitles.awakening_system.companion_robin_hurt",
+    "sounds": [
+      "awakening_system:companion/companion_robin_hurt"
+    ]
+  },
+  "companion_jing_yuan_summon": {
+    "category": "voice",
+    "subtitle": "subtitles.awakening_system.companion_jing_yuan_summon",
+    "sounds": [
+      "awakening_system:companion/companion_jing_yuan_summon"
+    ]
+  },
+  "companion_jing_yuan_skill": {
+    "category": "voice",
+    "subtitle": "subtitles.awakening_system.companion_jing_yuan_skill",
+    "sounds": [
+      "awakening_system:companion/companion_jing_yuan_skill"
+    ]
+  },
+  "companion_jing_yuan_ambient": {
+    "category": "voice",
+    "subtitle": "subtitles.awakening_system.companion_jing_yuan_ambient",
+    "sounds": [
+      "awakening_system:companion/companion_jing_yuan_ambient"
+    ]
+  },
+  "companion_jing_yuan_hurt": {
+    "category": "voice",
+    "subtitle": "subtitles.awakening_system.companion_jing_yuan_hurt",
+    "sounds": [
+      "awakening_system:companion/companion_jing_yuan_hurt"
+    ]
+  },
+  "companion_jingliu_summon": {
+    "category": "voice",
+    "subtitle": "subtitles.awakening_system.companion_jingliu_summon",
+    "sounds": [
+      "awakening_system:companion/companion_jingliu_summon"
+    ]
+  },
+  "companion_jingliu_skill": {
+    "category": "voice",
+    "subtitle": "subtitles.awakening_system.companion_jingliu_skill",
+    "sounds": [
+      "awakening_system:companion/companion_jingliu_skill"
+    ]
+  },
+  "companion_jingliu_ambient": {
+    "category": "voice",
+    "subtitle": "subtitles.awakening_system.companion_jingliu_ambient",
+    "sounds": [
+      "awakening_system:companion/companion_jingliu_ambient"
+    ]
+  },
+  "companion_jingliu_hurt": {
+    "category": "voice",
+    "subtitle": "subtitles.awakening_system.companion_jingliu_hurt",
+    "sounds": [
+      "awakening_system:companion/companion_jingliu_hurt"
+    ]
+  },
+  "companion_hoshimi_miyabi_summon": {
+    "category": "voice",
+    "subtitle": "subtitles.awakening_system.companion_hoshimi_miyabi_summon",
+    "sounds": [
+      "awakening_system:companion/companion_hoshimi_miyabi_summon"
+    ]
+  },
+  "companion_hoshimi_miyabi_skill": {
+    "category": "voice",
+    "subtitle": "subtitles.awakening_system.companion_hoshimi_miyabi_skill",
+    "sounds": [
+      "awakening_system:companion/companion_hoshimi_miyabi_skill"
+    ]
+  },
+  "companion_hoshimi_miyabi_ambient": {
+    "category": "voice",
+    "subtitle": "subtitles.awakening_system.companion_hoshimi_miyabi_ambient",
+    "sounds": [
+      "awakening_system:companion/companion_hoshimi_miyabi_ambient"
+    ]
+  },
+  "companion_hoshimi_miyabi_hurt": {
+    "category": "voice",
+    "subtitle": "subtitles.awakening_system.companion_hoshimi_miyabi_hurt",
+    "sounds": [
+      "awakening_system:companion/companion_hoshimi_miyabi_hurt"
+    ]
+  },
+  "companion_jane_doe_summon": {
+    "category": "voice",
+    "subtitle": "subtitles.awakening_system.companion_jane_doe_summon",
+    "sounds": [
+      "awakening_system:companion/companion_jane_doe_summon"
+    ]
+  },
+  "companion_jane_doe_skill": {
+    "category": "voice",
+    "subtitle": "subtitles.awakening_system.companion_jane_doe_skill",
+    "sounds": [
+      "awakening_system:companion/companion_jane_doe_skill"
+    ]
+  },
+  "companion_jane_doe_ambient": {
+    "category": "voice",
+    "subtitle": "subtitles.awakening_system.companion_jane_doe_ambient",
+    "sounds": [
+      "awakening_system:companion/companion_jane_doe_ambient"
+    ]
+  },
+  "companion_jane_doe_hurt": {
+    "category": "voice",
+    "subtitle": "subtitles.awakening_system.companion_jane_doe_hurt",
+    "sounds": [
+      "awakening_system:companion/companion_jane_doe_hurt"
+    ]
+  },
+  "companion_caesar_king_summon": {
+    "category": "voice",
+    "subtitle": "subtitles.awakening_system.companion_caesar_king_summon",
+    "sounds": [
+      "awakening_system:companion/companion_caesar_king_summon"
+    ]
+  },
+  "companion_caesar_king_skill": {
+    "category": "voice",
+    "subtitle": "subtitles.awakening_system.companion_caesar_king_skill",
+    "sounds": [
+      "awakening_system:companion/companion_caesar_king_skill"
+    ]
+  },
+  "companion_caesar_king_ambient": {
+    "category": "voice",
+    "subtitle": "subtitles.awakening_system.companion_caesar_king_ambient",
+    "sounds": [
+      "awakening_system:companion/companion_caesar_king_ambient"
+    ]
+  },
+  "companion_caesar_king_hurt": {
+    "category": "voice",
+    "subtitle": "subtitles.awakening_system.companion_caesar_king_hurt",
+    "sounds": [
+      "awakening_system:companion/companion_caesar_king_hurt"
+    ]
+  },
+  "companion_burnice_white_summon": {
+    "category": "voice",
+    "subtitle": "subtitles.awakening_system.companion_burnice_white_summon",
+    "sounds": [
+      "awakening_system:companion/companion_burnice_white_summon"
+    ]
+  },
+  "companion_burnice_white_skill": {
+    "category": "voice",
+    "subtitle": "subtitles.awakening_system.companion_burnice_white_skill",
+    "sounds": [
+      "awakening_system:companion/companion_burnice_white_skill"
+    ]
+  },
+  "companion_burnice_white_ambient": {
+    "category": "voice",
+    "subtitle": "subtitles.awakening_system.companion_burnice_white_ambient",
+    "sounds": [
+      "awakening_system:companion/companion_burnice_white_ambient"
+    ]
+  },
+  "companion_burnice_white_hurt": {
+    "category": "voice",
+    "subtitle": "subtitles.awakening_system.companion_burnice_white_hurt",
+    "sounds": [
+      "awakening_system:companion/companion_burnice_white_hurt"
+    ]
+  },
+  "companion_nicole_demara_summon": {
+    "category": "voice",
+    "subtitle": "subtitles.awakening_system.companion_nicole_demara_summon",
+    "sounds": [
+      "awakening_system:companion/companion_nicole_demara_summon"
+    ]
+  },
+  "companion_nicole_demara_skill": {
+    "category": "voice",
+    "subtitle": "subtitles.awakening_system.companion_nicole_demara_skill",
+    "sounds": [
+      "awakening_system:companion/companion_nicole_demara_skill"
+    ]
+  },
+  "companion_nicole_demara_ambient": {
+    "category": "voice",
+    "subtitle": "subtitles.awakening_system.companion_nicole_demara_ambient",
+    "sounds": [
+      "awakening_system:companion/companion_nicole_demara_ambient"
+    ]
+  },
+  "companion_nicole_demara_hurt": {
+    "category": "voice",
+    "subtitle": "subtitles.awakening_system.companion_nicole_demara_hurt",
+    "sounds": [
+      "awakening_system:companion/companion_nicole_demara_hurt"
+    ]
+  },
+  "companion_zhu_yuan_summon": {
+    "category": "voice",
+    "subtitle": "subtitles.awakening_system.companion_zhu_yuan_summon",
+    "sounds": [
+      "awakening_system:companion/companion_zhu_yuan_summon"
+    ]
+  },
+  "companion_zhu_yuan_skill": {
+    "category": "voice",
+    "subtitle": "subtitles.awakening_system.companion_zhu_yuan_skill",
+    "sounds": [
+      "awakening_system:companion/companion_zhu_yuan_skill"
+    ]
+  },
+  "companion_zhu_yuan_ambient": {
+    "category": "voice",
+    "subtitle": "subtitles.awakening_system.companion_zhu_yuan_ambient",
+    "sounds": [
+      "awakening_system:companion/companion_zhu_yuan_ambient"
+    ]
+  },
+  "companion_zhu_yuan_hurt": {
+    "category": "voice",
+    "subtitle": "subtitles.awakening_system.companion_zhu_yuan_hurt",
+    "sounds": [
+      "awakening_system:companion/companion_zhu_yuan_hurt"
+    ]
+  },
   "genshin_levelup": {
     "category": "player",
     "sounds": [
@@ -2132,6 +2618,753 @@
       "awakening_system:plushie_squish1",
       "awakening_system:plushie_squish2",
       "awakening_system:plushie_squish3"
+    ]
+  },
+  "companion_jiyan_summon": {
+    "category": "voice",
+    "subtitle": "subtitles.awakening_system.companion_jiyan_summon",
+    "sounds": [
+      "awakening_system:companion/companion_jiyan_summon"
+    ]
+  },
+  "companion_jiyan_skill": {
+    "category": "voice",
+    "subtitle": "subtitles.awakening_system.companion_jiyan_skill",
+    "sounds": [
+      "awakening_system:companion/companion_jiyan_skill"
+    ]
+  },
+  "companion_jiyan_ambient": {
+    "category": "voice",
+    "subtitle": "subtitles.awakening_system.companion_jiyan_ambient",
+    "sounds": [
+      "awakening_system:companion/companion_jiyan_ambient"
+    ]
+  },
+  "companion_jiyan_hurt": {
+    "category": "voice",
+    "subtitle": "subtitles.awakening_system.companion_jiyan_hurt",
+    "sounds": [
+      "awakening_system:companion/companion_jiyan_hurt"
+    ]
+  },
+  "companion_yinlin_summon": {
+    "category": "voice",
+    "subtitle": "subtitles.awakening_system.companion_yinlin_summon",
+    "sounds": [
+      "awakening_system:companion/companion_yinlin_summon"
+    ]
+  },
+  "companion_yinlin_skill": {
+    "category": "voice",
+    "subtitle": "subtitles.awakening_system.companion_yinlin_skill",
+    "sounds": [
+      "awakening_system:companion/companion_yinlin_skill"
+    ]
+  },
+  "companion_yinlin_ambient": {
+    "category": "voice",
+    "subtitle": "subtitles.awakening_system.companion_yinlin_ambient",
+    "sounds": [
+      "awakening_system:companion/companion_yinlin_ambient"
+    ]
+  },
+  "companion_yinlin_hurt": {
+    "category": "voice",
+    "subtitle": "subtitles.awakening_system.companion_yinlin_hurt",
+    "sounds": [
+      "awakening_system:companion/companion_yinlin_hurt"
+    ]
+  },
+  "companion_changli_summon": {
+    "category": "voice",
+    "subtitle": "subtitles.awakening_system.companion_changli_summon",
+    "sounds": [
+      "awakening_system:companion/companion_changli_summon"
+    ]
+  },
+  "companion_changli_skill": {
+    "category": "voice",
+    "subtitle": "subtitles.awakening_system.companion_changli_skill",
+    "sounds": [
+      "awakening_system:companion/companion_changli_skill"
+    ]
+  },
+  "companion_changli_ambient": {
+    "category": "voice",
+    "subtitle": "subtitles.awakening_system.companion_changli_ambient",
+    "sounds": [
+      "awakening_system:companion/companion_changli_ambient"
+    ]
+  },
+  "companion_changli_hurt": {
+    "category": "voice",
+    "subtitle": "subtitles.awakening_system.companion_changli_hurt",
+    "sounds": [
+      "awakening_system:companion/companion_changli_hurt"
+    ]
+  },
+  "companion_jinshi_summon": {
+    "category": "voice",
+    "subtitle": "subtitles.awakening_system.companion_jinshi_summon",
+    "sounds": [
+      "awakening_system:companion/companion_jinshi_summon"
+    ]
+  },
+  "companion_jinshi_skill": {
+    "category": "voice",
+    "subtitle": "subtitles.awakening_system.companion_jinshi_skill",
+    "sounds": [
+      "awakening_system:companion/companion_jinshi_skill"
+    ]
+  },
+  "companion_jinshi_ambient": {
+    "category": "voice",
+    "subtitle": "subtitles.awakening_system.companion_jinshi_ambient",
+    "sounds": [
+      "awakening_system:companion/companion_jinshi_ambient"
+    ]
+  },
+  "companion_jinshi_hurt": {
+    "category": "voice",
+    "subtitle": "subtitles.awakening_system.companion_jinshi_hurt",
+    "sounds": [
+      "awakening_system:companion/companion_jinshi_hurt"
+    ]
+  },
+  "companion_shorekeeper_summon": {
+    "category": "voice",
+    "subtitle": "subtitles.awakening_system.companion_shorekeeper_summon",
+    "sounds": [
+      "awakening_system:companion/companion_shorekeeper_summon"
+    ]
+  },
+  "companion_shorekeeper_skill": {
+    "category": "voice",
+    "subtitle": "subtitles.awakening_system.companion_shorekeeper_skill",
+    "sounds": [
+      "awakening_system:companion/companion_shorekeeper_skill"
+    ]
+  },
+  "companion_shorekeeper_ambient": {
+    "category": "voice",
+    "subtitle": "subtitles.awakening_system.companion_shorekeeper_ambient",
+    "sounds": [
+      "awakening_system:companion/companion_shorekeeper_ambient"
+    ]
+  },
+  "companion_shorekeeper_hurt": {
+    "category": "voice",
+    "subtitle": "subtitles.awakening_system.companion_shorekeeper_hurt",
+    "sounds": [
+      "awakening_system:companion/companion_shorekeeper_hurt"
+    ]
+  },
+  "companion_camellya_summon": {
+    "category": "voice",
+    "subtitle": "subtitles.awakening_system.companion_camellya_summon",
+    "sounds": [
+      "awakening_system:companion/companion_camellya_summon"
+    ]
+  },
+  "companion_camellya_skill": {
+    "category": "voice",
+    "subtitle": "subtitles.awakening_system.companion_camellya_skill",
+    "sounds": [
+      "awakening_system:companion/companion_camellya_skill"
+    ]
+  },
+  "companion_camellya_ambient": {
+    "category": "voice",
+    "subtitle": "subtitles.awakening_system.companion_camellya_ambient",
+    "sounds": [
+      "awakening_system:companion/companion_camellya_ambient"
+    ]
+  },
+  "companion_camellya_hurt": {
+    "category": "voice",
+    "subtitle": "subtitles.awakening_system.companion_camellya_hurt",
+    "sounds": [
+      "awakening_system:companion/companion_camellya_hurt"
+    ]
+  },
+  "companion_rover_summon": {
+    "category": "voice",
+    "subtitle": "subtitles.awakening_system.companion_rover_summon",
+    "sounds": [
+      "awakening_system:companion/companion_rover_summon"
+    ]
+  },
+  "companion_rover_skill": {
+    "category": "voice",
+    "subtitle": "subtitles.awakening_system.companion_rover_skill",
+    "sounds": [
+      "awakening_system:companion/companion_rover_skill"
+    ]
+  },
+  "companion_rover_ambient": {
+    "category": "voice",
+    "subtitle": "subtitles.awakening_system.companion_rover_ambient",
+    "sounds": [
+      "awakening_system:companion/companion_rover_ambient"
+    ]
+  },
+  "companion_rover_hurt": {
+    "category": "voice",
+    "subtitle": "subtitles.awakening_system.companion_rover_hurt",
+    "sounds": [
+      "awakening_system:companion/companion_rover_hurt"
+    ]
+  },
+  "companion_clorinde_summon": {
+    "category": "voice",
+    "subtitle": "subtitles.awakening_system.companion_clorinde_summon",
+    "sounds": [
+      "awakening_system:companion/companion_clorinde_summon"
+    ]
+  },
+  "companion_clorinde_skill": {
+    "category": "voice",
+    "subtitle": "subtitles.awakening_system.companion_clorinde_skill",
+    "sounds": [
+      "awakening_system:companion/companion_clorinde_skill"
+    ]
+  },
+  "companion_clorinde_ambient": {
+    "category": "voice",
+    "subtitle": "subtitles.awakening_system.companion_clorinde_ambient",
+    "sounds": [
+      "awakening_system:companion/companion_clorinde_ambient"
+    ]
+  },
+  "companion_clorinde_hurt": {
+    "category": "voice",
+    "subtitle": "subtitles.awakening_system.companion_clorinde_hurt",
+    "sounds": [
+      "awakening_system:companion/companion_clorinde_hurt"
+    ]
+  },
+  "companion_skirk_summon": {
+    "category": "voice",
+    "subtitle": "subtitles.awakening_system.companion_skirk_summon",
+    "sounds": [
+      "awakening_system:companion/companion_skirk_summon"
+    ]
+  },
+  "companion_skirk_skill": {
+    "category": "voice",
+    "subtitle": "subtitles.awakening_system.companion_skirk_skill",
+    "sounds": [
+      "awakening_system:companion/companion_skirk_skill"
+    ]
+  },
+  "companion_skirk_ambient": {
+    "category": "voice",
+    "subtitle": "subtitles.awakening_system.companion_skirk_ambient",
+    "sounds": [
+      "awakening_system:companion/companion_skirk_ambient"
+    ]
+  },
+  "companion_skirk_hurt": {
+    "category": "voice",
+    "subtitle": "subtitles.awakening_system.companion_skirk_hurt",
+    "sounds": [
+      "awakening_system:companion/companion_skirk_hurt"
+    ]
+  },
+  "companion_xilonen_summon": {
+    "category": "voice",
+    "subtitle": "subtitles.awakening_system.companion_xilonen_summon",
+    "sounds": [
+      "awakening_system:companion/companion_xilonen_summon"
+    ]
+  },
+  "companion_xilonen_skill": {
+    "category": "voice",
+    "subtitle": "subtitles.awakening_system.companion_xilonen_skill",
+    "sounds": [
+      "awakening_system:companion/companion_xilonen_skill"
+    ]
+  },
+  "companion_xilonen_ambient": {
+    "category": "voice",
+    "subtitle": "subtitles.awakening_system.companion_xilonen_ambient",
+    "sounds": [
+      "awakening_system:companion/companion_xilonen_ambient"
+    ]
+  },
+  "companion_xilonen_hurt": {
+    "category": "voice",
+    "subtitle": "subtitles.awakening_system.companion_xilonen_hurt",
+    "sounds": [
+      "awakening_system:companion/companion_xilonen_hurt"
+    ]
+  },
+  "companion_mavuika_summon": {
+    "category": "voice",
+    "subtitle": "subtitles.awakening_system.companion_mavuika_summon",
+    "sounds": [
+      "awakening_system:companion/companion_mavuika_summon"
+    ]
+  },
+  "companion_mavuika_skill": {
+    "category": "voice",
+    "subtitle": "subtitles.awakening_system.companion_mavuika_skill",
+    "sounds": [
+      "awakening_system:companion/companion_mavuika_skill"
+    ]
+  },
+  "companion_mavuika_ambient": {
+    "category": "voice",
+    "subtitle": "subtitles.awakening_system.companion_mavuika_ambient",
+    "sounds": [
+      "awakening_system:companion/companion_mavuika_ambient"
+    ]
+  },
+  "companion_mavuika_hurt": {
+    "category": "voice",
+    "subtitle": "subtitles.awakening_system.companion_mavuika_hurt",
+    "sounds": [
+      "awakening_system:companion/companion_mavuika_hurt"
+    ]
+  },
+  "companion_kinich_summon": {
+    "category": "voice",
+    "subtitle": "subtitles.awakening_system.companion_kinich_summon",
+    "sounds": [
+      "awakening_system:companion/companion_kinich_summon"
+    ]
+  },
+  "companion_kinich_skill": {
+    "category": "voice",
+    "subtitle": "subtitles.awakening_system.companion_kinich_skill",
+    "sounds": [
+      "awakening_system:companion/companion_kinich_skill"
+    ]
+  },
+  "companion_kinich_ambient": {
+    "category": "voice",
+    "subtitle": "subtitles.awakening_system.companion_kinich_ambient",
+    "sounds": [
+      "awakening_system:companion/companion_kinich_ambient"
+    ]
+  },
+  "companion_kinich_hurt": {
+    "category": "voice",
+    "subtitle": "subtitles.awakening_system.companion_kinich_hurt",
+    "sounds": [
+      "awakening_system:companion/companion_kinich_hurt"
+    ]
+  },
+  "companion_columbina_summon": {
+    "category": "voice",
+    "subtitle": "subtitles.awakening_system.companion_columbina_summon",
+    "sounds": [
+      "awakening_system:companion/companion_columbina_summon"
+    ]
+  },
+  "companion_columbina_skill": {
+    "category": "voice",
+    "subtitle": "subtitles.awakening_system.companion_columbina_skill",
+    "sounds": [
+      "awakening_system:companion/companion_columbina_skill"
+    ]
+  },
+  "companion_columbina_ambient": {
+    "category": "voice",
+    "subtitle": "subtitles.awakening_system.companion_columbina_ambient",
+    "sounds": [
+      "awakening_system:companion/companion_columbina_ambient"
+    ]
+  },
+  "companion_columbina_hurt": {
+    "category": "voice",
+    "subtitle": "subtitles.awakening_system.companion_columbina_hurt",
+    "sounds": [
+      "awakening_system:companion/companion_columbina_hurt"
+    ]
+  },
+  "companion_grace_howard_summon": {
+    "category": "voice",
+    "subtitle": "subtitles.awakening_system.companion_grace_howard_summon",
+    "sounds": [
+      "awakening_system:companion/companion_grace_howard_summon"
+    ]
+  },
+  "companion_grace_howard_skill": {
+    "category": "voice",
+    "subtitle": "subtitles.awakening_system.companion_grace_howard_skill",
+    "sounds": [
+      "awakening_system:companion/companion_grace_howard_skill"
+    ]
+  },
+  "companion_grace_howard_ambient": {
+    "category": "voice",
+    "subtitle": "subtitles.awakening_system.companion_grace_howard_ambient",
+    "sounds": [
+      "awakening_system:companion/companion_grace_howard_ambient"
+    ]
+  },
+  "companion_grace_howard_hurt": {
+    "category": "voice",
+    "subtitle": "subtitles.awakening_system.companion_grace_howard_hurt",
+    "sounds": [
+      "awakening_system:companion/companion_grace_howard_hurt"
+    ]
+  },
+  "companion_billy_kid_summon": {
+    "category": "voice",
+    "subtitle": "subtitles.awakening_system.companion_billy_kid_summon",
+    "sounds": [
+      "awakening_system:companion/companion_billy_kid_summon"
+    ]
+  },
+  "companion_billy_kid_skill": {
+    "category": "voice",
+    "subtitle": "subtitles.awakening_system.companion_billy_kid_skill",
+    "sounds": [
+      "awakening_system:companion/companion_billy_kid_skill"
+    ]
+  },
+  "companion_billy_kid_ambient": {
+    "category": "voice",
+    "subtitle": "subtitles.awakening_system.companion_billy_kid_ambient",
+    "sounds": [
+      "awakening_system:companion/companion_billy_kid_ambient"
+    ]
+  },
+  "companion_billy_kid_hurt": {
+    "category": "voice",
+    "subtitle": "subtitles.awakening_system.companion_billy_kid_hurt",
+    "sounds": [
+      "awakening_system:companion/companion_billy_kid_hurt"
+    ]
+  },
+  "companion_anby_demara_summon": {
+    "category": "voice",
+    "subtitle": "subtitles.awakening_system.companion_anby_demara_summon",
+    "sounds": [
+      "awakening_system:companion/companion_anby_demara_summon"
+    ]
+  },
+  "companion_anby_demara_skill": {
+    "category": "voice",
+    "subtitle": "subtitles.awakening_system.companion_anby_demara_skill",
+    "sounds": [
+      "awakening_system:companion/companion_anby_demara_skill"
+    ]
+  },
+  "companion_anby_demara_ambient": {
+    "category": "voice",
+    "subtitle": "subtitles.awakening_system.companion_anby_demara_ambient",
+    "sounds": [
+      "awakening_system:companion/companion_anby_demara_ambient"
+    ]
+  },
+  "companion_anby_demara_hurt": {
+    "category": "voice",
+    "subtitle": "subtitles.awakening_system.companion_anby_demara_hurt",
+    "sounds": [
+      "awakening_system:companion/companion_anby_demara_hurt"
+    ]
+  },
+  "companion_koleda_summon": {
+    "category": "voice",
+    "subtitle": "subtitles.awakening_system.companion_koleda_summon",
+    "sounds": [
+      "awakening_system:companion/companion_koleda_summon"
+    ]
+  },
+  "companion_koleda_skill": {
+    "category": "voice",
+    "subtitle": "subtitles.awakening_system.companion_koleda_skill",
+    "sounds": [
+      "awakening_system:companion/companion_koleda_skill"
+    ]
+  },
+  "companion_koleda_ambient": {
+    "category": "voice",
+    "subtitle": "subtitles.awakening_system.companion_koleda_ambient",
+    "sounds": [
+      "awakening_system:companion/companion_koleda_ambient"
+    ]
+  },
+  "companion_koleda_hurt": {
+    "category": "voice",
+    "subtitle": "subtitles.awakening_system.companion_koleda_hurt",
+    "sounds": [
+      "awakening_system:companion/companion_koleda_hurt"
+    ]
+  },
+  "companion_lucy_summon": {
+    "category": "voice",
+    "subtitle": "subtitles.awakening_system.companion_lucy_summon",
+    "sounds": [
+      "awakening_system:companion/companion_lucy_summon"
+    ]
+  },
+  "companion_lucy_skill": {
+    "category": "voice",
+    "subtitle": "subtitles.awakening_system.companion_lucy_skill",
+    "sounds": [
+      "awakening_system:companion/companion_lucy_skill"
+    ]
+  },
+  "companion_lucy_ambient": {
+    "category": "voice",
+    "subtitle": "subtitles.awakening_system.companion_lucy_ambient",
+    "sounds": [
+      "awakening_system:companion/companion_lucy_ambient"
+    ]
+  },
+  "companion_lucy_hurt": {
+    "category": "voice",
+    "subtitle": "subtitles.awakening_system.companion_lucy_hurt",
+    "sounds": [
+      "awakening_system:companion/companion_lucy_hurt"
+    ]
+  },
+  "companion_piper_wheel_summon": {
+    "category": "voice",
+    "subtitle": "subtitles.awakening_system.companion_piper_wheel_summon",
+    "sounds": [
+      "awakening_system:companion/companion_piper_wheel_summon"
+    ]
+  },
+  "companion_piper_wheel_skill": {
+    "category": "voice",
+    "subtitle": "subtitles.awakening_system.companion_piper_wheel_skill",
+    "sounds": [
+      "awakening_system:companion/companion_piper_wheel_skill"
+    ]
+  },
+  "companion_piper_wheel_ambient": {
+    "category": "voice",
+    "subtitle": "subtitles.awakening_system.companion_piper_wheel_ambient",
+    "sounds": [
+      "awakening_system:companion/companion_piper_wheel_ambient"
+    ]
+  },
+  "companion_piper_wheel_hurt": {
+    "category": "voice",
+    "subtitle": "subtitles.awakening_system.companion_piper_wheel_hurt",
+    "sounds": [
+      "awakening_system:companion/companion_piper_wheel_hurt"
+    ]
+  },
+  "companion_corin_wickes_summon": {
+    "category": "voice",
+    "subtitle": "subtitles.awakening_system.companion_corin_wickes_summon",
+    "sounds": [
+      "awakening_system:companion/companion_corin_wickes_summon"
+    ]
+  },
+  "companion_corin_wickes_skill": {
+    "category": "voice",
+    "subtitle": "subtitles.awakening_system.companion_corin_wickes_skill",
+    "sounds": [
+      "awakening_system:companion/companion_corin_wickes_skill"
+    ]
+  },
+  "companion_corin_wickes_ambient": {
+    "category": "voice",
+    "subtitle": "subtitles.awakening_system.companion_corin_wickes_ambient",
+    "sounds": [
+      "awakening_system:companion/companion_corin_wickes_ambient"
+    ]
+  },
+  "companion_corin_wickes_hurt": {
+    "category": "voice",
+    "subtitle": "subtitles.awakening_system.companion_corin_wickes_hurt",
+    "sounds": [
+      "awakening_system:companion/companion_corin_wickes_hurt"
+    ]
+  },
+  "companion_soukaku_summon": {
+    "category": "voice",
+    "subtitle": "subtitles.awakening_system.companion_soukaku_summon",
+    "sounds": [
+      "awakening_system:companion/companion_soukaku_summon"
+    ]
+  },
+  "companion_soukaku_skill": {
+    "category": "voice",
+    "subtitle": "subtitles.awakening_system.companion_soukaku_skill",
+    "sounds": [
+      "awakening_system:companion/companion_soukaku_skill"
+    ]
+  },
+  "companion_soukaku_ambient": {
+    "category": "voice",
+    "subtitle": "subtitles.awakening_system.companion_soukaku_ambient",
+    "sounds": [
+      "awakening_system:companion/companion_soukaku_ambient"
+    ]
+  },
+  "companion_soukaku_hurt": {
+    "category": "voice",
+    "subtitle": "subtitles.awakening_system.companion_soukaku_hurt",
+    "sounds": [
+      "awakening_system:companion/companion_soukaku_hurt"
+    ]
+  },
+  "mother_spider_ambient": {
+    "category": "hostile",
+    "subtitle": "subtitles.awakening_system.mother_spider_ambient",
+    "sounds": [
+      "awakening_system:mother_spider_ambient"
+    ]
+  },
+  "mother_spider_boss_ambient": {
+    "category": "hostile",
+    "subtitle": "subtitles.awakening_system.mother_spider_boss_ambient",
+    "sounds": [
+      "awakening_system:mother_spider_boss_ambient"
+    ]
+  },
+  "mother_spider_attack": {
+    "category": "hostile",
+    "subtitle": "subtitles.awakening_system.mother_spider_attack",
+    "sounds": [
+      "awakening_system:mother_spider_attack"
+    ]
+  },
+  "mother_spider_shoot_web": {
+    "category": "hostile",
+    "subtitle": "subtitles.awakening_system.mother_spider_shoot_web",
+    "sounds": [
+      "awakening_system:mother_spider_shoot_web"
+    ]
+  },
+  "mother_spider_hurt": {
+    "category": "hostile",
+    "subtitle": "subtitles.awakening_system.mother_spider_hurt",
+    "sounds": [
+      "awakening_system:mother_spider_hurt"
+    ]
+  },
+  "mother_spider_death": {
+    "category": "hostile",
+    "subtitle": "subtitles.awakening_system.mother_spider_death",
+    "sounds": [
+      "awakening_system:mother_spider_death"
+    ]
+  },
+  "limbo_ophanim_ambient": {
+    "category": "hostile",
+    "subtitle": "subtitles.awakening_system.limbo_ophanim_ambient",
+    "sounds": [
+      {
+        "name": "awakening_system:limbo_ophanim_ambient",
+        "attenuation_distance": 64
+      }
+    ]
+  },
+  "limbo_ophanim_hurt": {
+    "category": "hostile",
+    "subtitle": "subtitles.awakening_system.limbo_ophanim_hurt",
+    "sounds": [
+      {
+        "name": "awakening_system:limbo_ophanim_hurt",
+        "attenuation_distance": 64
+      }
+    ]
+  },
+  "limbo_ophanim_death": {
+    "category": "hostile",
+    "subtitle": "subtitles.awakening_system.limbo_ophanim_death",
+    "sounds": [
+      {
+        "name": "awakening_system:limbo_ophanim_death",
+        "attenuation_distance": 64
+      }
+    ]
+  },
+  "limbo_ophanim_charge": {
+    "category": "hostile",
+    "subtitle": "subtitles.awakening_system.limbo_ophanim_charge",
+    "sounds": [
+      {
+        "name": "awakening_system:limbo_ophanim_charge",
+        "attenuation_distance": 64
+      }
+    ]
+  },
+  "limbo_ophanim_shoot": {
+    "category": "hostile",
+    "subtitle": "subtitles.awakening_system.limbo_ophanim_shoot",
+    "sounds": [
+      {
+        "name": "awakening_system:limbo_ophanim_shoot",
+        "attenuation_distance": 64
+      }
+    ]
+  },
+  "limbo_entity_ambient": {
+    "category": "hostile",
+    "subtitle": "subtitles.awakening_system.limbo_entity_ambient",
+    "sounds": [
+      {
+        "name": "awakening_system:limbo/limbo_entity_idle",
+        "attenuation_distance": 64
+      }
+    ]
+  },
+  "limbo_entity_following": {
+    "category": "hostile",
+    "subtitle": "subtitles.awakening_system.limbo_entity_following",
+    "sounds": [
+      {
+        "name": "awakening_system:limbo/limbo_entity_following",
+        "attenuation_distance": 64
+      }
+    ]
+  },
+  "spider_head_ambient": {
+    "category": "hostile",
+    "subtitle": "subtitles.awakening_system.spider_head_ambient",
+    "sounds": [
+      {
+        "name": "awakening_system:limbo/spider_head_idle",
+        "attenuation_distance": 64
+      }
+    ]
+  },
+  "spider_head_following": {
+    "category": "hostile",
+    "subtitle": "subtitles.awakening_system.spider_head_following",
+    "sounds": [
+      {
+        "name": "awakening_system:limbo/spider_head_following",
+        "attenuation_distance": 64
+      }
+    ]
+  },
+  "stilt_walker_ambient": {
+    "category": "hostile",
+    "subtitle": "subtitles.awakening_system.stilt_walker_ambient",
+    "sounds": [
+      {
+        "name": "awakening_system:limbo/stilt_walker_idle",
+        "attenuation_distance": 64
+      }
+    ]
+  },
+  "stilt_walker_following": {
+    "category": "hostile",
+    "subtitle": "subtitles.awakening_system.stilt_walker_following",
+    "sounds": [
+      {
+        "name": "awakening_system:limbo/stilt_walker_following",
+        "attenuation_distance": 64
+      }
+    ]
+  },
+  "limbo_awakening": {
+    "category": "player",
+    "subtitle": "subtitles.awakening_system.limbo_awakening",
+    "sounds": [
+      "awakening_system:limbo/limbo_awakening"
     ]
   }
 }

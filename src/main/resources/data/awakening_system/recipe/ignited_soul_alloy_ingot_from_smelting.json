@@ -1,0 +1,12 @@
+{
+  "type": "minecraft:smelting",
+  "category": "misc",
+  "cookingtime": 200,
+  "experience": 3.0,
+  "ingredient": {
+    "item": "awakening_system:soul_alloy_ingot"
+  },
+  "result": {
+    "id": "awakening_system:ignited_soul_alloy_ingot"
+  }
+}

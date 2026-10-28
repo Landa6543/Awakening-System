@@ -73,7 +73,6 @@ public class JadeArmoredBeastEntity extends Monster {
                 if (chargeDuration <= 0) {
                     isCharging = false;
                 } else {
-                    // Partículas de jade mientras rueda/embiste
                     if (this.level() instanceof net.minecraft.server.level.ServerLevel sl) {
                         sl.sendParticles(ParticleTypes.HAPPY_VILLAGER, this.getX(), this.getY() + 0.5D, this.getZ(),
                                 4, 0.4D, 0.2D, 0.4D, 0.05D);
@@ -84,7 +83,6 @@ public class JadeArmoredBeastEntity extends Monster {
             LivingEntity target = this.getTarget();
             if (target != null && target.isAlive() && !isCharging && chargeCooldown <= 0) {
                 double distSq = this.distanceToSqr(target);
-                // Embestida rodante entre 6 y 16 bloques
                 if (distSq >= 36.0D && distSq <= 256.0D && this.onGround() && this.hasLineOfSight(target)) {
                     isCharging = true;
                     chargeDuration = 25;
@@ -105,7 +103,7 @@ public class JadeArmoredBeastEntity extends Monster {
         if (hurt && target instanceof LivingEntity living) {
             if (isCharging) {
                 living.knockback(1.2D, Math.sin(Math.toRadians(this.getYRot())), -Math.cos(Math.toRadians(this.getYRot())));
-                living.hurt(this.damageSources().mobAttack(this), 6.0F); // Daño de impacto extra
+                living.hurt(this.damageSources().mobAttack(this), 6.0F);
                 this.playSound(SoundEvents.ANVIL_LAND, 0.8F, 1.4F);
             } else {
                 this.playSound(SoundEvents.AMETHYST_BLOCK_BREAK, 1.0F, 0.8F);

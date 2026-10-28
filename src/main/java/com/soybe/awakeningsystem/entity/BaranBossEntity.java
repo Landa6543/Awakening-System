@@ -36,11 +36,24 @@ import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.level.ServerLevelAccessor;
 import net.minecraft.world.phys.Vec3;
+import software.bernie.geckolib.animatable.GeoEntity;
+import software.bernie.geckolib.animatable.instance.AnimatableInstanceCache;
+import software.bernie.geckolib.animation.AnimatableManager;
+import software.bernie.geckolib.animation.AnimationController;
+import software.bernie.geckolib.animation.PlayState;
+import software.bernie.geckolib.animation.RawAnimation;
+import software.bernie.geckolib.util.GeckoLibUtil;
 
 import javax.annotation.Nullable;
 import java.util.List;
 
-public class BaranBossEntity extends Monster {
+public class BaranBossEntity extends Monster implements GeoEntity {
+    private final AnimatableInstanceCache geoCache = GeckoLibUtil.createInstanceCache(this);
+    private static final RawAnimation IDLE_ANIM = RawAnimation.begin().thenLoop("idle");
+    private static final RawAnimation WALK_ANIM = RawAnimation.begin().thenLoop("walk");
+    private static final RawAnimation ATTACK_ANIM = RawAnimation.begin().thenPlay("attack1");
+    private static final RawAnimation AGRO_ANIM = RawAnimation.begin().thenPlay("agro");
+
     private final ServerBossEvent bossEvent = (ServerBossEvent) new ServerBossEvent(
             Component.translatable("awakening_system.boss.baran.name"),
             BossEvent.BossBarColor.BLUE,
@@ -75,13 +88,13 @@ public class BaranBossEntity extends Monster {
 
     public static AttributeSupplier.Builder createAttributes() {
         return Monster.createMonsterAttributes()
-                .add(Attributes.MAX_HEALTH, 3800.0D)
-                .add(Attributes.MOVEMENT_SPEED, 0.30D)
-                .add(Attributes.ATTACK_DAMAGE, 26.0D)
-                .add(Attributes.ARMOR, 22.0D)
-                .add(Attributes.ARMOR_TOUGHNESS, 12.0D)
-                .add(Attributes.KNOCKBACK_RESISTANCE, 0.9D)
-                .add(Attributes.FOLLOW_RANGE, 45.0D);
+                .add(Attributes.MAX_HEALTH, 45000.0D)
+                .add(Attributes.MOVEMENT_SPEED, 0.32D)
+                .add(Attributes.ATTACK_DAMAGE, 48.0D)
+                .add(Attributes.ARMOR, 30.0D)
+                .add(Attributes.ARMOR_TOUGHNESS, 20.0D)
+                .add(Attributes.KNOCKBACK_RESISTANCE, 1.0D)
+                .add(Attributes.FOLLOW_RANGE, 48.0D);
     }
 
     @Override
@@ -130,14 +143,12 @@ public class BaranBossEntity extends Monster {
         super.aiStep();
 
         if (this.level().isClientSide) {
-            // Constant electric spark aura around Baran
-            double px = this.getX() + (this.random.nextDouble() - 0.5D) * 1.0D;
-            double py = this.getY() + this.random.nextDouble() * 2.0D;
-            double pz = this.getZ() + (this.random.nextDouble() - 0.5D) * 1.0D;
-            this.level().addParticle(ParticleTypes.ELECTRIC_SPARK, px, py, pz, 0, 0.05D, 0);
-
-            if (isShadowSoldier()) {
-                this.level().addParticle(ParticleTypes.SOUL_FIRE_FLAME, px, py, pz, 0, 0.02D, 0);
+            // Partículas corporales sutiles de aura eléctrica demoníaca
+            if (this.random.nextFloat() < 0.25F) {
+                double px = this.getX() + (this.random.nextDouble() - 0.5D) * 1.2D;
+                double py = this.getY() + this.random.nextDouble() * 2.2D;
+                double pz = this.getZ() + (this.random.nextDouble() - 0.5D) * 1.2D;
+                this.level().addParticle(ParticleTypes.ELECTRIC_SPARK, px, py, pz, 0, 0.04D, 0);
             }
         }
 
@@ -147,7 +158,6 @@ public class BaranBossEntity extends Monster {
                 double distSq = this.distanceToSqr(target);
                 boolean enraged = this.getHealth() < this.getMaxHealth() * 0.5F;
 
-                // 1. White Lightning Barrage
                 if (lightningCooldown > 0) lightningCooldown--;
                 if (lightningCooldown <= 0 && distSq <= 400.0D) {
                     lightningCooldown = enraged ? 70 : 110;
@@ -167,7 +177,6 @@ public class BaranBossEntity extends Monster {
                     target.hurt(this.damageSources().lightningBolt(), enraged ? 16.0F : 12.0F);
                 }
 
-                // 2. Thunder Dash (Instant lightning dash toward target)
                 if (dashCooldown > 0) dashCooldown--;
                 if (dashCooldown <= 0 && distSq >= 25.0D && distSq <= 196.0D) {
                     dashCooldown = enraged ? 60 : 90;
@@ -182,7 +191,6 @@ public class BaranBossEntity extends Monster {
                     target.addEffect(new MobEffectInstance(MobEffects.GLOWING, 60, 0));
                 }
 
-                // 3. Storm Shockwave (360 electric burst)
                 if (stormCooldown > 0) stormCooldown--;
                 if (stormCooldown <= 0 && distSq <= 36.0D) {
                     stormCooldown = enraged ? 100 : 150;
@@ -207,7 +215,6 @@ public class BaranBossEntity extends Monster {
         super.die(damageSource);
 
         if (this.level() instanceof ServerLevel sl && !isShadowSoldier()) {
-            // Drops
             if (SystemItems.DEMON_MONARCH_RING != null && SystemItems.DEMON_MONARCH_RING.isBound()) {
                 sl.addFreshEntity(new ItemEntity(sl, this.getX(), this.getY() + 0.5D, this.getZ(),
                         new ItemStack(SystemItems.DEMON_MONARCH_RING.get())));
@@ -221,13 +228,12 @@ public class BaranBossEntity extends Monster {
                         SystemItems.coin(65)));
             }
 
-            // Spawn Shadow Extraction Soul (Exclusivo para Monarca de las Sombras)
             Player killer = (damageSource.getEntity() instanceof Player p) ? p : null;
             if (killer != null) {
                 com.soybe.awakeningsystem.SystemData kData = killer.getData(AwakeningSystemMod.PLAYER_SYSTEM);
                 if (kData != null && ((kData.hasHunterClass() && "shadow_monarch".equals(kData.hunterClass())) || kData.skills().containsKey("unique_absolute_extraction"))) {
                     ShadowSoulEntity soul = new ShadowSoulEntity(sl, this.getX(), this.getY(), this.getZ(), this, killer.getUUID());
-                    soul.setMobName(Component.translatable("entity.awakening_system.baran_boss").getString());
+                    soul.setMobNameComponent(Component.translatable("entity.awakening_system.baran_boss"));
                     sl.addFreshEntity(soul);
                 }
             }
@@ -236,5 +242,28 @@ public class BaranBossEntity extends Monster {
                 AwakeningSystemMod.notify(sp, "awakening_system.notification.baran_defeated.title", "awakening_system.notification.baran_defeated.desc", 0xFF5599FF);
             }
         }
+    }
+
+    @Override
+    public void registerControllers(AnimatableManager.ControllerRegistrar controllers) {
+        controllers.add(new AnimationController<>(this, "movement", 5, state -> {
+            if (state.isMoving()) {
+                return state.setAndContinue(WALK_ANIM);
+            }
+            return state.setAndContinue(IDLE_ANIM);
+        }));
+        controllers.add(new AnimationController<>(this, "attack", 5, state -> {
+            if (this.dashCooldown > 55 || this.stormCooldown > 120) {
+                return state.setAndContinue(ATTACK_ANIM);
+            } else if (this.lightningCooldown > 80) {
+                return state.setAndContinue(AGRO_ANIM);
+            }
+            return PlayState.STOP;
+        }));
+    }
+
+    @Override
+    public AnimatableInstanceCache getAnimatableInstanceCache() {
+        return this.geoCache;
     }
 }

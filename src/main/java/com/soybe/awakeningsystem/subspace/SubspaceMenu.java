@@ -14,36 +14,31 @@ import net.minecraft.world.item.ItemStack;
 public class SubspaceMenu extends AbstractContainerMenu {
     public static final int CONTAINER_ROWS = 6;
     public static final int CONTAINER_COLS = 9;
-    public static final int SUBSPACE_SLOTS = CONTAINER_ROWS * CONTAINER_COLS; // 54 por página
+    public static final int SUBSPACE_SLOTS = CONTAINER_ROWS * CONTAINER_COLS;
 
     private final Container container;
     private final ContainerData data;
 
-    // Constructor en el cliente
     public SubspaceMenu(int containerId, Inventory playerInventory) {
         this(containerId, playerInventory, new SimpleContainer(SUBSPACE_SLOTS), new SimpleContainerData(4));
     }
 
-    // Constructor de compatibilidad
     public SubspaceMenu(int containerId, Inventory playerInventory, Container container) {
         this(containerId, playerInventory, container, new SimpleContainerData(4));
     }
 
-    // Constructor principal en el servidor
     public SubspaceMenu(int containerId, Inventory playerInventory, Container container, ContainerData data) {
         super(ModMenus.SUBSPACE_MENU.get(), containerId);
         this.container = container;
         this.data = data;
         container.startOpen(playerInventory.player);
 
-        // 1. Ranuras del Subespacio Dimensional (54 casillas dinámicas por página)
         for (int r = 0; r < CONTAINER_ROWS; ++r) {
             for (int c = 0; c < CONTAINER_COLS; ++c) {
                 this.addSlot(new SubspaceSlot(this, container, c + r * CONTAINER_COLS, 8 + c * 18, 18 + r * 18));
             }
         }
 
-        // 2. Inventario principal del jugador (27 casillas: 3 filas x 9 columnas)
         int playerInvY = 140;
         for (int r = 0; r < 3; ++r) {
             for (int c = 0; c < 9; ++c) {
@@ -51,7 +46,6 @@ public class SubspaceMenu extends AbstractContainerMenu {
             }
         }
 
-        // 3. Barra de acceso rápido (Hotbar: 9 casillas)
         for (int c = 0; c < 9; ++c) {
             this.addSlot(new Slot(playerInventory, c, 8 + c * 18, playerInvY + 58));
         }
@@ -99,12 +93,10 @@ public class SubspaceMenu extends AbstractContainerMenu {
             itemstack = itemstack1.copy();
 
             if (index < SUBSPACE_SLOTS) {
-                // Del Subespacio al inventario del jugador
                 if (!this.moveItemStackTo(itemstack1, SUBSPACE_SLOTS, this.slots.size(), true)) {
                     return ItemStack.EMPTY;
                 }
             } else {
-                // Del inventario del jugador al Subespacio (solo casillas desbloqueadas de la página actual)
                 int maxUnlockedInPage = Math.min(SUBSPACE_SLOTS, Math.max(0, getUnlockedSlots() - getCurrentPage() * 54));
                 if (maxUnlockedInPage <= 0 || !this.moveItemStackTo(itemstack1, 0, maxUnlockedInPage, false)) {
                     return ItemStack.EMPTY;

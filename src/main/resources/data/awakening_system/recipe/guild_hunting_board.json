@@ -3,22 +3,25 @@
   "category": "misc",
   "pattern": [
     "PPP",
-    "WSW",
-    " W "
+    "PBP",
+    "#S#"
   ],
   "key": {
     "P": {
-      "item": "minecraft:paper"
+      "item": "minecraft:spruce_planks"
     },
-    "W": {
-      "item": "minecraft:oak_planks"
+    "B": {
+      "item": "minecraft:bow"
+    },
+    "#": {
+      "item": "minecraft:spruce_fence"
     },
     "S": {
       "item": "minecraft:iron_sword"
     }
   },
   "result": {
-    "id": "awakening_system:guild_hunting_board",
-    "count": 1
+    "count": 1,
+    "id": "awakening_system:guild_hunting_board"
   }
 }

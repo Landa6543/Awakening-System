@@ -30,7 +30,7 @@ public final class TrackPlacementHelper {
 
         int dist = Math.abs(endPos.getX() - startPos.getX()) + Math.abs(endPos.getZ() - startPos.getZ());
         if (dist > 48) {
-            player.displayClientMessage(Component.literal("§c⚠ [Tendido Create] La distancia máxima es de 48 bloques."), true);
+            player.displayClientMessage(Component.translatable("awakening_system.track_placement.max_distance"), true);
             level.playSound(null, startPos, SoundEvents.DISPENSER_FAIL, SoundSource.BLOCKS, 1.0F, 0.8F);
             return;
         }
@@ -43,7 +43,7 @@ public final class TrackPlacementHelper {
         int available = player.isCreative() ? required : countItemsInInventory(player, trackBlock);
 
         if (available < required) {
-            player.displayClientMessage(Component.literal(String.format("§c[Tendido Create] ⚠ Necesitas §e%d §cvías pero solo tienes §e%d §cen inventario.", required, available)), true);
+            player.displayClientMessage(Component.translatable("awakening_system.track_placement.missing_tracks", required, available), true);
             level.playSound(null, startPos, SoundEvents.DISPENSER_FAIL, SoundSource.BLOCKS, 1.0F, 0.8F);
             return;
         }
@@ -53,7 +53,6 @@ public final class TrackPlacementHelper {
         for (BlockPos current : path) {
             BlockState targetState = level.getBlockState(current);
             if (targetState.isAir() || targetState.canBeReplaced() || targetState.getBlock() instanceof SubwayRailTrackBlock) {
-                // Colocar la vía con flag 3 para actualizar conexiones y curvas automáticamente
                 level.setBlock(current, trackBlock.defaultBlockState(), 3);
                 placedCount++;
                 if (!player.isCreative()) {
@@ -66,7 +65,7 @@ public final class TrackPlacementHelper {
             level.playSound(null, endPos, SoundEvents.ANVIL_USE, SoundSource.BLOCKS, 0.7F, 1.3F);
             level.playSound(null, endPos, SoundEvents.STONE_PLACE, SoundSource.BLOCKS, 1.0F, 0.9F);
             level.sendParticles(ParticleTypes.HAPPY_VILLAGER, endPos.getX() + 0.5D, endPos.getY() + 0.6D, endPos.getZ() + 0.5D, 18, 0.8D, 0.3D, 0.8D, 0.05D);
-            player.displayClientMessage(Component.literal(String.format("§6✦ [Trazado Create] §a¡Tendido completado! §e%d §fvías colocadas con éxito.", placedCount)), false);
+            player.displayClientMessage(Component.translatable("awakening_system.track_placement.success", placedCount), false);
         }
     }
 
@@ -98,7 +97,6 @@ public final class TrackPlacementHelper {
             return path;
         }
 
-        // Tramo con curva en L (90 grados)
         if (Math.abs(dz) >= Math.abs(dx)) {
             int stepZ = dz > 0 ? 1 : -1;
             int stepX = dx > 0 ? 1 : -1;

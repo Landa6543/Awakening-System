@@ -36,7 +36,6 @@ public class AbyssMageElectroEntity extends AbstractAbyssMageEntity {
         if (this.level().isClientSide) return;
 
         if (this.random.nextFloat() < 0.60F) {
-            // Descarga de rayo arcana
             if (this.level() instanceof ServerLevel sl) {
                 sl.playSound(null, target.getX(), target.getY(), target.getZ(),
                         SoundEvents.LIGHTNING_BOLT_THUNDER, SoundSource.HOSTILE, 0.7F, 1.8F);
@@ -44,7 +43,6 @@ public class AbyssMageElectroEntity extends AbstractAbyssMageEntity {
                 target.hurt(this.damageSources().mobAttack(this), 7.0F);
             }
         } else {
-            // Anillo de orbes electrificados alrededor del objetivo
             if (this.level() instanceof ServerLevel sl) {
                 sl.playSound(null, target.getX(), target.getY(), target.getZ(),
                         SoundEvents.TRIDENT_THUNDER.value(), SoundSource.HOSTILE, 1.4F, 1.4F);

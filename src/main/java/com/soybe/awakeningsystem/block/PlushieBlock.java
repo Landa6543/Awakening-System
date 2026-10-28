@@ -33,7 +33,7 @@ public class PlushieBlock extends BaseEntityBlock {
     protected static final VoxelShape SHAPE = Block.box(3.0D, 0.0D, 3.0D, 13.0D, 13.0D, 13.0D);
 
     public PlushieBlock(BlockBehaviour.Properties properties) {
-        super(properties);
+        super(properties.noOcclusion());
         this.registerDefaultState(this.stateDefinition.any().setValue(FACING, Direction.NORTH));
     }
 

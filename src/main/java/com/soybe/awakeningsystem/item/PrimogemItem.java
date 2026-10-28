@@ -35,7 +35,7 @@ public class PrimogemItem extends Item {
             stack.shrink(count);
             AwakeningSystemMod.sync(sp);
             sp.playNotifySound(SoundEvents.PLAYER_LEVELUP, SoundSource.PLAYERS, 0.8F, 1.8F);
-            sp.displayClientMessage(Component.literal("§d§l✦ [PROTOGEMAS] §fHas depositado §d+" + totalPrimos + " Protogemas §f(Total: §6" + data.primogems() + "§f)"), true);
+            sp.displayClientMessage(Component.translatable("item.awakening_system.primogem.deposit_msg", totalPrimos, data.primogems()), true);
             return InteractionResultHolder.consume(stack);
         }
         return InteractionResultHolder.sidedSuccess(stack, level.isClientSide());
@@ -43,9 +43,9 @@ public class PrimogemItem extends Item {
 
     @Override
     public void appendHoverText(ItemStack stack, TooltipContext context, List<Component> tooltip, TooltipFlag flag) {
-        tooltip.add(Component.literal("§7Divisa primordial traída de estrellas lejanas.").withStyle(ChatFormatting.GRAY));
-        tooltip.add(Component.literal("§7Se utiliza en el §eSistema de Deseos (Gacha) §7para invocar armas y poderes.").withStyle(ChatFormatting.DARK_GRAY));
-        tooltip.add(Component.literal("§e▸ Clic derecho: §fDepositar §d160 Protogemas §fal monedero").withStyle(ChatFormatting.GOLD));
-        tooltip.add(Component.literal("§e▸ Shift + Clic derecho: §fDepositar todo el stack").withStyle(ChatFormatting.GOLD));
+        tooltip.add(Component.translatable("item.awakening_system.primogem.desc1").withStyle(ChatFormatting.GRAY));
+        tooltip.add(Component.translatable("item.awakening_system.primogem.desc2").withStyle(ChatFormatting.DARK_GRAY));
+        tooltip.add(Component.translatable("item.awakening_system.primogem.use1").withStyle(ChatFormatting.GOLD));
+        tooltip.add(Component.translatable("item.awakening_system.primogem.use2").withStyle(ChatFormatting.GOLD));
     }
 }

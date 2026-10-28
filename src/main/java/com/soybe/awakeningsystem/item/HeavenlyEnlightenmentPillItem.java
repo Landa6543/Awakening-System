@@ -35,11 +35,10 @@ public class HeavenlyEnlightenmentPillItem extends Item {
             SystemData data = SystemEvents.data(sp);
             data.addCultivationQi(4500);
 
-            // Abre o purifica un meridiano bloqueado si existe alguno pendiente
             for (int i = 0; i < 8; i++) {
                 if (!data.isMeridianOpen(i)) {
                     data.openMeridian(i);
-                    sp.displayClientMessage(Component.literal("§d✦ ¡La Iluminación Celestial abrió suavemente el Meridiano " + (i + 1) + " sin retroceso!"), false);
+                    sp.displayClientMessage(Component.translatable("item.awakening_system.heavenly_enlightenment_pill.meridian_opened", (i + 1)), false);
                     break;
                 }
             }
@@ -52,10 +51,10 @@ public class HeavenlyEnlightenmentPillItem extends Item {
                 sp.playNotifySound(SoundEvents.PLAYER_LEVELUP, SoundSource.PLAYERS, 1.0F, 1.4F);
                 sp.displayClientMessage(Component.translatable("awakening_system.cultivation.sublevel_success", data.cultivationSubLevel(), SystemEvents.getDantianRealmComponent(realm)), true);
             } else {
-                sp.displayClientMessage(Component.literal("§d✦ Has refinado la §5Píldora de la Iluminación Celestial §d(+4,500 Qi)."), true);
+                sp.displayClientMessage(Component.translatable("item.awakening_system.heavenly_enlightenment_pill.refined"), true);
             }
 
-            sp.addEffect(new MobEffectInstance(MobEffects.DIG_SPEED, 6000, 1)); // Celeridad / Haste
+            sp.addEffect(new MobEffectInstance(MobEffects.DIG_SPEED, 6000, 1));
             sp.addEffect(new MobEffectInstance(MobEffects.NIGHT_VISION, 6000, 0));
 
             ServerLevel sl = sp.serverLevel();
@@ -78,13 +77,13 @@ public class HeavenlyEnlightenmentPillItem extends Item {
 
     @Override
     public void appendHoverText(ItemStack stack, TooltipContext context, List<Component> tooltipComponents, TooltipFlag tooltipFlag) {
-        tooltipComponents.add(Component.literal("§5✦ Píldora de la Iluminación Celestial").withStyle(ChatFormatting.DARK_PURPLE, ChatFormatting.BOLD));
-        tooltipComponents.add(Component.literal("§7\"Aclara la mente de impurezas mundanas y sincroniza el flujo del Dao.\""));
-        tooltipComponents.add(Component.literal(""));
-        tooltipComponents.add(Component.literal("§e✦ Efectos de Refinamiento:").withStyle(ChatFormatting.YELLOW));
-        tooltipComponents.add(Component.literal("  §a✔ +4,500 Puntos de Qi de Cultivo Inmediato"));
-        tooltipComponents.add(Component.literal("  §d✔ Desbloqueo Seguro: Abre 1 Meridiano sin riesgo de fracaso"));
-        tooltipComponents.add(Component.literal("  §b✔ Celeridad y Visión Nocturna por 5 minutos"));
+        tooltipComponents.add(Component.translatable("item.awakening_system.heavenly_enlightenment_pill.title").withStyle(ChatFormatting.DARK_PURPLE, ChatFormatting.BOLD));
+        tooltipComponents.add(Component.translatable("item.awakening_system.heavenly_enlightenment_pill.quote"));
+        tooltipComponents.add(Component.empty());
+        tooltipComponents.add(Component.translatable("item.awakening_system.heavenly_enlightenment_pill.effects_header").withStyle(ChatFormatting.YELLOW));
+        tooltipComponents.add(Component.translatable("item.awakening_system.heavenly_enlightenment_pill.effect1"));
+        tooltipComponents.add(Component.translatable("item.awakening_system.heavenly_enlightenment_pill.effect2"));
+        tooltipComponents.add(Component.translatable("item.awakening_system.heavenly_enlightenment_pill.effect3"));
         super.appendHoverText(stack, context, tooltipComponents, tooltipFlag);
     }
 }

@@ -45,19 +45,15 @@ public final class MobScalingHandler {
         Entity entity = event.getEntity();
         if (!(entity instanceof Mob mob)) return;
 
-        // Validar si el escalado está activado
         if (!SystemConfig.MOB_SCALING_ENABLED.get()) return;
 
-        // El escalado por distancia desde (0, 0) SOLO aplica al Overworld estándar
         if (level.dimension() != Level.OVERWORLD) return;
 
-        // No escalar NPCs ni animales pacíficos (solo hostiles / enemigos / combatientes)
         if (mob instanceof Npc || mob instanceof Animal) return;
         if (!(mob instanceof Enemy) && mob.getTarget() == null && mob.getAttribute(Attributes.ATTACK_DAMAGE) == null) {
             return;
         }
 
-        // Excluir mobs de calabozos, torres de ranker, pagodas o con escalado propio
         if (mob.getTags().contains("dungeon_mob")
                 || mob.getTags().contains("rpg_scaled")
                 || mob.getTags().contains("tower_mob")
@@ -66,7 +62,6 @@ public final class MobScalingHandler {
             return;
         }
 
-        // Excluir jefes si está configurado (Ender Dragon, Wither o entidades con vida base de jefe >= 250)
         if (SystemConfig.MOB_SCALING_EXCLUDE_BOSSES.get()) {
             if (mob instanceof EnderDragon || mob instanceof WitherBoss || mob.getMaxHealth() >= 250.0f) {
                 return;
@@ -74,9 +69,8 @@ public final class MobScalingHandler {
         }
 
         CompoundTag persistent = mob.getPersistentData();
-        if (persistent.contains(SCALED_TAG)) return; // Ya fue escalado
+        if (persistent.contains(SCALED_TAG)) return;
 
-        // Calcular distancia desde (0, 0)
         double dist = Math.sqrt(mob.getX() * mob.getX() + mob.getZ() * mob.getZ());
         int blocksPerTier = Math.max(50, SystemConfig.MOB_SCALING_BLOCKS_PER_TIER.get());
         int tier = (int) (dist / blocksPerTier);
@@ -84,9 +78,8 @@ public final class MobScalingHandler {
         tier = Math.min(tier, maxTier);
 
         persistent.putInt(SCALED_TAG, tier);
-        if (tier <= 0) return; // Zona inicial cerca del spawn
+        if (tier <= 0) return;
 
-        // 1. Modificador de Vida Máxima
         double healthBonusPerTier = SystemConfig.MOB_SCALING_HEALTH_PER_TIER.get();
         if (healthBonusPerTier > 0) {
             AttributeInstance hpAttr = mob.getAttribute(Attributes.MAX_HEALTH);
@@ -101,7 +94,6 @@ public final class MobScalingHandler {
             }
         }
 
-        // 2. Modificador de Daño de Ataque
         double damageBonusPerTier = SystemConfig.MOB_SCALING_DAMAGE_PER_TIER.get();
         if (damageBonusPerTier > 0) {
             AttributeInstance dmgAttr = mob.getAttribute(Attributes.ATTACK_DAMAGE);
@@ -115,7 +107,6 @@ public final class MobScalingHandler {
             }
         }
 
-        // 3. Modificador de Armadura
         double armorBonusPerTier = SystemConfig.MOB_SCALING_ARMOR_PER_TIER.get();
         if (armorBonusPerTier > 0) {
             AttributeInstance armorAttr = mob.getAttribute(Attributes.ARMOR);
@@ -129,7 +120,6 @@ public final class MobScalingHandler {
             }
         }
 
-        // 4. Pequeña bonificación sutil de velocidad (+1% por tier, tope 25%)
         AttributeInstance speedAttr = mob.getAttribute(Attributes.MOVEMENT_SPEED);
         if (speedAttr != null) {
             speedAttr.removeModifier(SPEED_MOD_ID);
@@ -143,7 +133,6 @@ public final class MobScalingHandler {
             }
         }
 
-        // 5. Etiqueta visual informativa en el mob
         if (SystemConfig.MOB_SCALING_SHOW_NAME_TAG.get() && (!mob.hasCustomName() || mob.getCustomName().getString().contains("[Nv."))) {
             ChatFormatting color;
             String rankLetter;
@@ -170,7 +159,7 @@ public final class MobScalingHandler {
             Component nameTag = Component.literal(color + "[" + rankLetter + " - Nv. " + tier + "] ")
                     .append(Component.translatable(mob.getType().getDescriptionId()).withStyle(ChatFormatting.WHITE));
             mob.setCustomName(nameTag);
-            mob.setCustomNameVisible(false); // Solo visible al pasar la mira
+            mob.setCustomNameVisible(false);
         }
     }
 
@@ -198,9 +187,7 @@ public final class MobScalingHandler {
         CompoundTag persistent = entity.getPersistentData();
         if (persistent.contains(SCALED_TAG)) {
             int tier = persistent.getInt(SCALED_TAG);
-            // En el Overworld NO se dropea Mora (la Mora es exclusiva de la dimensión de Teyvat)
             if (tier >= 10) {
-                // A partir de Tier 10 en el Overworld, probabilidad de Awakening Coins
                 float coinChance = Math.min(0.35f, 0.08f + (tier * 0.01f));
                 if (entity.getRandom().nextFloat() < coinChance && SystemItems.AWAKENING_COIN != null && SystemItems.AWAKENING_COIN.isBound()) {
                     ItemStack coin = new ItemStack(SystemItems.AWAKENING_COIN.get(), 1 + entity.getRandom().nextInt(Math.max(1, tier / 15)));

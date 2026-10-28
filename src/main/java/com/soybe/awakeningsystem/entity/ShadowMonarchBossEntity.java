@@ -114,12 +114,11 @@ public class ShadowMonarchBossEntity extends Monster {
     public boolean doHurtTarget(Entity target) {
         boolean hurt = super.doHurtTarget(target);
         if (hurt) {
-            this.level().broadcastEntityEvent(this, (byte) 7); // Slash animation
+            this.level().broadcastEntityEvent(this, (byte) 7);
             if (target instanceof LivingEntity living) {
                 living.addEffect(new MobEffectInstance(MobEffects.WITHER, 100, 1));
             }
 
-            // Dark sweep aoe
             var aabb = target.getBoundingBox().inflate(3.0D);
             var nearby = this.level().getEntitiesOfClass(LivingEntity.class, aabb,
                     e -> e != this && !e.getTags().contains("shadow_soldier") && !e.getType().equals(this.getType()));
@@ -152,7 +151,6 @@ public class ShadowMonarchBossEntity extends Monster {
             if (pullAnimationTimeout > 0) pullAnimationTimeout--;
             this.hoverAnimationState.startIfStopped(this.tickCount);
 
-            // Aura de partículas de monarca
             if (this.random.nextInt(2) == 0) {
                 this.level().addParticle(ParticleTypes.DRAGON_BREATH,
                         this.getRandomX(0.7D), this.getY() + this.random.nextDouble() * 2.2D, this.getRandomZ(0.7D),
@@ -164,7 +162,6 @@ public class ShadowMonarchBossEntity extends Monster {
                         0, 0.04D, 0);
             }
 
-            // Anillo visual del Dominio de la Muerte
             if (domainTicks > 0) {
                 domainTicks--;
                 for (int deg = 0; deg < 360; deg += 36) {
@@ -176,7 +173,6 @@ public class ShadowMonarchBossEntity extends Monster {
                 }
             }
         } else {
-            // Manejo de Dominio de la Muerte (regeneración y daño continuo a invasores)
             if (domainTicks > 0) {
                 domainTicks--;
                 if (domainTicks % 10 == 0) {
@@ -195,7 +191,6 @@ public class ShadowMonarchBossEntity extends Monster {
                 }
             }
 
-            // Fase de Enrage por debajo del 50% de vida
             if (!enraged && this.getHealth() <= this.getMaxHealth() * 0.5F) {
                 enraged = true;
                 this.addEffect(new MobEffectInstance(MobEffects.DAMAGE_RESISTANCE, 99999, 1));
@@ -217,11 +212,10 @@ public class ShadowMonarchBossEntity extends Monster {
             if (target != null) {
                 double distSq = this.distanceToSqr(target);
 
-                // Habilidad Mágica 1: Dominio de la Muerte (Shadow Domain Necrótico)
                 if (domainCooldown <= 0 && distSq < 144.0D) {
                     domainCooldown = enraged ? 240 : 360;
-                    domainTicks = 160; // 8 segundos activo
-                    this.level().broadcastEntityEvent(this, (byte) 8); // Cast anim
+                    domainTicks = 160;
+                    this.level().broadcastEntityEvent(this, (byte) 8);
                     this.playSound(SoundEvents.WITHER_SPAWN, 1.2F, 1.2F);
                     broadcastBossMessage("awakening_system.boss.shadow_monarch.domain_taunt");
                     if (this.level() instanceof net.minecraft.server.level.ServerLevel sl) {
@@ -235,10 +229,9 @@ public class ShadowMonarchBossEntity extends Monster {
                     }
                 }
 
-                // Habilidad Mágica 2: Autoridad del Gobernante (Void Pull / Telequinesis)
                 if (pullCooldown <= 0 && distSq >= 16.0D && distSq <= 289.0D) {
                     pullCooldown = enraged ? 140 : 200;
-                    this.level().broadcastEntityEvent(this, (byte) 10); // Pull animation
+                    this.level().broadcastEntityEvent(this, (byte) 10);
                     this.playSound(SoundEvents.WARDEN_SONIC_CHARGE, 1.4F, 1.1F);
                     if (this.level() instanceof net.minecraft.server.level.ServerLevel sl) {
                         Vec3 pullDir = this.position().subtract(target.position()).normalize();
@@ -251,10 +244,9 @@ public class ShadowMonarchBossEntity extends Monster {
                     }
                 }
 
-                // Habilidad Mágica 3: Lluvia de Lanzas de Sombra (Spear Rain)
                 if (spearRainCooldown <= 0 && distSq <= 324.0D) {
                     spearRainCooldown = enraged ? 100 : 150;
-                    this.level().broadcastEntityEvent(this, (byte) 8); // Cast anim
+                    this.level().broadcastEntityEvent(this, (byte) 8);
                     this.playSound(SoundEvents.TRIDENT_THUNDER.value(), 1.3F, 0.8F);
                     if (this.level() instanceof net.minecraft.server.level.ServerLevel sl) {
                         double tx = target.getX();
@@ -275,7 +267,6 @@ public class ShadowMonarchBossEntity extends Monster {
                     }
                 }
 
-                // Shadow Blink detrás del jugador
                 if (teleportCooldown > 0) teleportCooldown--;
                 if (teleportCooldown <= 0 && distSq > 64.0D) {
                     teleportCooldown = 140;
@@ -291,11 +282,10 @@ public class ShadowMonarchBossEntity extends Monster {
                     }
                 }
 
-                // Invocación de Soldados de Sombra
                 if (summonCooldown > 0) summonCooldown--;
                 if (summonCooldown <= 0 && this.level() instanceof net.minecraft.server.level.ServerLevel sl) {
                     summonCooldown = enraged ? 200 : 320;
-                    this.level().broadcastEntityEvent(this, (byte) 8); // Cast animation
+                    this.level().broadcastEntityEvent(this, (byte) 8);
                     this.playSound(SoundEvents.EVOKER_CAST_SPELL, 1.2F, 0.8F);
                     for (int i = 0; i < (enraged ? 3 : 2); i++) {
                         double ox = this.getX() + (this.random.nextDouble() - 0.5D) * 4.0D;

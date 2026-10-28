@@ -1,0 +1,16 @@
+{
+  "type": "minecraft:crafting_shaped",
+  "category": "building",
+  "pattern": [
+    "###"
+  ],
+  "key": {
+    "#": {
+      "item": "awakening_system:spirit_plum_planks"
+    }
+  },
+  "result": {
+    "count": 6,
+    "id": "awakening_system:spirit_plum_slab"
+  }
+}

@@ -32,16 +32,14 @@ public class TeyvatShrineOfDepthsFeature extends Feature<NoneFeatureConfiguratio
         BlockState below = level.getBlockState(origin.below());
         if (!below.isSolid() || below.liquid() || below.is(BlockTags.LEAVES)) return false;
 
-        // 2. No generar pegado al spawn ni a las capitales
-        if (Math.abs(origin.getX()) < 160 && Math.abs(origin.getZ()) < 160) return false;
-        if (Math.abs(origin.getX() - TeyvatRegionalBuilder.MONDSTADT_POS.getX()) < 180 && Math.abs(origin.getZ() - TeyvatRegionalBuilder.MONDSTADT_POS.getZ()) < 180) return false;
-        if (Math.abs(origin.getX() - TeyvatRegionalBuilder.LIYUE_POS.getX()) < 180 && Math.abs(origin.getZ() - TeyvatRegionalBuilder.LIYUE_POS.getZ()) < 180) return false;
+        if (!TeyvatWorldGenManager.isAreaClearOfBossesAndStructures(level, origin, 200.0D)) {
+            return false;
+        }
 
-        // 3. Control estricto de distancia canónica (320m mínimo entre santuarios)
         try {
             if (level.getLevel().getServer() != null) {
                 var data = TeyvatWorldGenManager.TeyvatFeaturesData.get(level.getLevel().getServer());
-                if (!TeyvatWorldGenManager.isFarFromList(origin, data.shrinesOfDepths, 320.0D)) {
+                if (!TeyvatWorldGenManager.isFarFromList2D(origin, data.shrinesOfDepths, 320.0D)) {
                     return false;
                 }
             }

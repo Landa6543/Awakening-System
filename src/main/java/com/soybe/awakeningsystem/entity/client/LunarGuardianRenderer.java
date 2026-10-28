@@ -18,7 +18,6 @@ public class LunarGuardianRenderer extends MobRenderer<LunarGuardianEntity, Luna
 
     @Override
     protected void scale(LunarGuardianEntity entity, PoseStack poseStack, float partialTickTime) {
-        // Escala imponente de jefe (1.45x)
         poseStack.scale(1.45F, 1.45F, 1.45F);
     }
 

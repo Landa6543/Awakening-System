@@ -34,7 +34,6 @@ public class LeyLineMonolithRenderer extends EntityRenderer<LeyLineMonolithEntit
         float ageInTicks = (float) entity.tickCount + partialTicks;
         this.model.setupAnim(entity, 0.0F, 0.0F, ageInTicks, 0.0F, 0.0F);
 
-        // Renderizado nítido sin culling para apreciar los anillos orbitales
         VertexConsumer vertexConsumer = buffer.getBuffer(RenderType.entityCutoutNoCull(this.getTextureLocation(entity)));
         this.model.renderToBuffer(poseStack, vertexConsumer, packedLight, OverlayTexture.NO_OVERLAY);
 

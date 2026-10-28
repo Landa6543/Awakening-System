@@ -1,0 +1,12 @@
+{
+  "parent": "minecraft:block/cube",
+  "textures": {
+    "particle": "awakening_system:block/soul_alloy_block_side",
+    "down": "awakening_system:block/soul_alloy_block_bottom",
+    "up": "awakening_system:block/soul_alloy_block_top",
+    "north": "awakening_system:block/soul_alloy_block_side",
+    "east": "awakening_system:block/soul_alloy_block_side",
+    "south": "awakening_system:block/soul_alloy_block_side",
+    "west": "awakening_system:block/soul_alloy_block_side"
+  }
+}

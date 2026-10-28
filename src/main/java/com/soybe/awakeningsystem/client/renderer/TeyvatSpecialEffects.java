@@ -16,7 +16,6 @@ public class TeyvatSpecialEffects extends DimensionSpecialEffects {
 
     @Override
     public Vec3 getBrightnessDependentFogColor(Vec3 fogColor, float brightness) {
-        // Tonalidad atmosférica limpia y vibrante con suave realce celeste
         return fogColor.multiply((brightness * 0.94F + 0.08F), (brightness * 0.94F + 0.08F), (brightness * 0.91F + 0.12F));
     }
 
@@ -33,7 +32,7 @@ public class TeyvatSpecialEffects extends DimensionSpecialEffects {
             float f2 = 1.0F - (1.0F - Mth.sin(f1 * (float)Math.PI)) * 0.99F;
             f2 *= f2;
             float[] colors = new float[4];
-            colors[0] = f1 * 0.35F + 0.65F; // Tonos melocotón y oro de Genshin Impact
+            colors[0] = f1 * 0.35F + 0.65F;
             colors[1] = f1 * f1 * 0.7F + 0.25F;
             colors[2] = f1 * f1 * 0.15F + 0.25F;
             colors[3] = f2;

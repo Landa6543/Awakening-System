@@ -1,0 +1,49 @@
+{
+  "parent": "minecraft:block/thin_block",
+  "textures": {
+    "particle": "minecraft:block/stone",
+    "stone": "minecraft:block/stone",
+    "cobble": "minecraft:block/cobblestone"
+  },
+  "elements": [
+    {
+      "name": "rock_large",
+      "from": [2, 0, 2],
+      "to": [9, 3, 9],
+      "faces": {
+        "north": {"uv": [2, 13, 9, 16], "texture": "#stone"},
+        "east": {"uv": [2, 13, 9, 16], "texture": "#stone"},
+        "south": {"uv": [2, 13, 9, 16], "texture": "#stone"},
+        "west": {"uv": [2, 13, 9, 16], "texture": "#stone"},
+        "up": {"uv": [2, 2, 9, 9], "texture": "#stone"},
+        "down": {"uv": [2, 2, 9, 9], "texture": "#stone"}
+      }
+    },
+    {
+      "name": "rock_medium",
+      "from": [9, 0, 5],
+      "to": [14, 2.5, 11],
+      "faces": {
+        "north": {"uv": [9, 13.5, 14, 16], "texture": "#cobble"},
+        "east": {"uv": [9, 13.5, 14, 16], "texture": "#cobble"},
+        "south": {"uv": [9, 13.5, 14, 16], "texture": "#cobble"},
+        "west": {"uv": [9, 13.5, 14, 16], "texture": "#cobble"},
+        "up": {"uv": [9, 5, 14, 11], "texture": "#cobble"},
+        "down": {"uv": [9, 5, 14, 11], "texture": "#cobble"}
+      }
+    },
+    {
+      "name": "rock_small",
+      "from": [4, 0, 10],
+      "to": [8, 1.8, 14],
+      "faces": {
+        "north": {"uv": [4, 14.2, 8, 16], "texture": "#stone"},
+        "east": {"uv": [4, 14.2, 8, 16], "texture": "#stone"},
+        "south": {"uv": [4, 14.2, 8, 16], "texture": "#stone"},
+        "west": {"uv": [4, 14.2, 8, 16], "texture": "#stone"},
+        "up": {"uv": [4, 10, 8, 14], "texture": "#stone"},
+        "down": {"uv": [4, 10, 8, 14], "texture": "#stone"}
+      }
+    }
+  ]
+}

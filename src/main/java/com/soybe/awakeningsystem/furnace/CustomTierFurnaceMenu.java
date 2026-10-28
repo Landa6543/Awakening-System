@@ -36,7 +36,6 @@ public class CustomTierFurnaceMenu extends AbstractContainerMenu {
     protected final Level level;
     private final FurnaceTier tier;
 
-    // Client-side constructor
     public CustomTierFurnaceMenu(int containerId, Inventory playerInventory) {
         this(containerId, playerInventory, new SimpleContainer(SLOT_COUNT), new SimpleContainerData(DATA_COUNT), FurnaceTier.MITHRIL);
     }
@@ -44,10 +43,14 @@ public class CustomTierFurnaceMenu extends AbstractContainerMenu {
     public CustomTierFurnaceMenu(int containerId, Inventory playerInventory, Container container, ContainerData data, FurnaceTier tier) {
         super(switch (tier) {
             case ABYSSAL -> ModMenus.ABYSSAL_FURNACE_MENU.get();
+            case SOUL_ALLOY -> ModMenus.SOUL_ALLOY_FURNACE_MENU.get();
+            case ASTRALITE -> ModMenus.ASTRALITE_FURNACE_MENU.get();
             case MITHRIL -> ModMenus.MITHRIL_FURNACE_MENU.get();
             case ADAMANTITE -> ModMenus.ADAMANTITE_FURNACE_MENU.get();
             case SPIRIT_JADE -> ModMenus.SPIRIT_JADE_FURNACE_MENU.get();
             case ASTRAL -> ModMenus.ASTRAL_FURNACE_MENU.get();
+            case CELESTIAL -> ModMenus.CELESTIAL_FURNACE_MENU.get();
+            case PRIMORDIAL -> ModMenus.PRIMORDIAL_FURNACE_MENU.get();
         }, containerId);
 
         checkContainerSize(container, SLOT_COUNT);
@@ -58,24 +61,20 @@ public class CustomTierFurnaceMenu extends AbstractContainerMenu {
         this.level = playerInventory.player.level();
         this.tier = tier;
 
-        // 1. Ranuras principales de fundicion (activas en vista de horno)
         this.addSlot(new ConditionalSlot(container, INGREDIENT_SLOT, 56, 17, () -> !isAugmentGuiOpen()));
         this.addSlot(new ConditionalFuelSlot(this, container, FUEL_SLOT, 56, 53, () -> !isAugmentGuiOpen()));
         this.addSlot(new ConditionalResultSlot(playerInventory.player, container, RESULT_SLOT, 116, 35, () -> !isAugmentGuiOpen()));
 
-        // 2. Ranuras de mejoras / augments (activas en vista de mejoras)
         this.addSlot(new AugmentSlot(container, AUGMENT_RED_SLOT, 26, 35, 0, this::isAugmentGuiOpen));
         this.addSlot(new AugmentSlot(container, AUGMENT_GREEN_SLOT, 80, 35, 1, this::isAugmentGuiOpen));
         this.addSlot(new AugmentSlot(container, AUGMENT_BLUE_SLOT, 134, 35, 2, this::isAugmentGuiOpen));
 
-        // 3. Inventario del jugador (3x9)
         for (int i = 0; i < 3; i++) {
             for (int j = 0; j < 9; j++) {
                 this.addSlot(new Slot(playerInventory, j + i * 9 + 9, 8 + j * 18, 84 + i * 18));
             }
         }
 
-        // 4. Hotbar del jugador (1x9)
         for (int k = 0; k < 9; k++) {
             this.addSlot(new Slot(playerInventory, k, 8 + k * 18, 142));
         }
@@ -129,12 +128,10 @@ public class CustomTierFurnaceMenu extends AbstractContainerMenu {
                 }
                 slot.onQuickCraft(stackInSlot, itemstack);
             } else if (index < INV_SLOT_START) {
-                // Sacar del horno / mejoras hacia el inventario
                 if (!this.moveItemStackTo(stackInSlot, INV_SLOT_START, USE_ROW_SLOT_END, false)) {
                     return ItemStack.EMPTY;
                 }
             } else {
-                // Mover desde el inventario hacia el horno o mejoras
                 if (isAugmentGuiOpen()) {
                     if (isRedAugment(stackInSlot)) {
                         if (!this.moveItemStackTo(stackInSlot, AUGMENT_RED_SLOT, AUGMENT_RED_SLOT + 1, false)) {
@@ -241,7 +238,9 @@ public class CustomTierFurnaceMenu extends AbstractContainerMenu {
             try {
                 Class<?> clazz = Class.forName("ironfurnaces.items.augments.ItemAugmentRed");
                 if (clazz.isInstance(stack.getItem())) return true;
-            } catch (Throwable ignored) {}
+            } catch (Throwable t) {
+                AwakeningSystemMod.LOGGER.debug("Ironfurnaces red augment reflection check failed: {}", t.getMessage());
+            }
         }
         return false;
     }
@@ -260,7 +259,9 @@ public class CustomTierFurnaceMenu extends AbstractContainerMenu {
             try {
                 Class<?> clazz = Class.forName("ironfurnaces.items.augments.ItemAugmentGreen");
                 if (clazz.isInstance(stack.getItem())) return true;
-            } catch (Throwable ignored) {}
+            } catch (Throwable t) {
+                AwakeningSystemMod.LOGGER.debug("Ironfurnaces green augment reflection check failed: {}", t.getMessage());
+            }
         }
         return false;
     }
@@ -279,7 +280,9 @@ public class CustomTierFurnaceMenu extends AbstractContainerMenu {
             try {
                 Class<?> clazz = Class.forName("ironfurnaces.items.augments.ItemAugmentBlue");
                 if (clazz.isInstance(stack.getItem())) return true;
-            } catch (Throwable ignored) {}
+            } catch (Throwable t) {
+                AwakeningSystemMod.LOGGER.debug("Ironfurnaces blue augment reflection check failed: {}", t.getMessage());
+            }
         }
         return false;
     }
@@ -339,7 +342,7 @@ public class CustomTierFurnaceMenu extends AbstractContainerMenu {
     }
 
     public static class AugmentSlot extends Slot {
-        private final int augmentColor; // 0 = Red, 1 = Green, 2 = Blue
+        private final int augmentColor;
         private final BooleanSupplier activeSupplier;
 
         public AugmentSlot(Container container, int slot, int x, int y, int augmentColor, BooleanSupplier activeSupplier) {

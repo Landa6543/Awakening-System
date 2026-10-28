@@ -28,7 +28,7 @@ public final class ConstellationChannelScreen extends Screen {
             "SATISFIED", "ENCOURAGING", "PROUD", "FASCINATED", "AMUSED", "RELIEVED", "MYTHIC", "SILENT"
     };
     private static final String[] COMMENT_LABELS = {
-            "Satisfecho", "Alentador", "Orgulloso", "Fascinado", "Divertido", "Aliviado", "Mítico", "Silencioso"
+            "Satisfied", "Encouraging", "Proud", "Fascinated", "Amused", "Relieved", "Mythic", "Silent"
     };
 
     public ConstellationChannelScreen() {
@@ -102,7 +102,6 @@ public final class ConstellationChannelScreen extends Screen {
 
     @Override
     public void render(GuiGraphics g, int mouseX, int mouseY, float partialTick) {
-        // Fondo translúcido cósmico
         g.fillGradient(0, 0, this.width, this.height, 0xA5050B16, 0xD50A1426);
 
         float scale = getGuiScale();
@@ -121,14 +120,11 @@ public final class ConstellationChannelScreen extends Screen {
         int left = (this.width - PANEL_W) / 2;
         int top = (this.height - PANEL_H) / 2;
 
-
-        // Marco Principal Cibernético / Estelar
         g.fill(left - 2, top - 2, left + PANEL_W + 2, top + PANEL_H + 2, 0xFF2A5F7A);
         g.fill(left, top, left + PANEL_W, top + PANEL_H, 0xF0081420);
         g.fill(left, top, left + PANEL_W, top + 26, 0xFF102636);
         g.fill(left, top + 25, left + PANEL_W, top + 27, 0xFFFFD700);
 
-        // Cabecera de la Constelación
         SystemData myData = Minecraft.getInstance().player != null ?
                 Minecraft.getInstance().player.getData(AwakeningSystemMod.PLAYER_SYSTEM) : null;
         String rawMod = (myData != null && !myData.constellationModifier().isEmpty())
@@ -157,7 +153,6 @@ public final class ConstellationChannelScreen extends Screen {
         int listW = 136;
         int listH = PANEL_H - 36;
 
-        // ================= COLUMNA 1: ENCARNACIONES EN VIVO =================
         g.fill(listX, listY, listX + listW, listY + listH, 0xFF060E16);
         g.fill(listX, listY, listX + listW, listY + 16, 0xFF0E202E);
         g.drawString(font, Component.translatable("awakening_system.screen.constellation.incarnations").getString(), listX + 6, listY + 4, 0xFF70E8FF, false);
@@ -189,17 +184,14 @@ public final class ConstellationChannelScreen extends Screen {
             drawTruncatedString(g, "§a" + getTranslatedActivity(inc.activity()), listX + 5, rowY + 22, maxTextW, 0xFF50FA7B);
         }
 
-        // ================= COLUMNA 2: PANTALLA DE TRANSMISIÓN EN DIRECTO =================
         int screenX = listX + listW + 6;
         int screenY = listY;
         int screenW = 160;
         int screenH = listH;
 
-        // Bisel y monitor CRT
         g.fill(screenX, screenY, screenX + screenW, screenY + screenH, 0xFF152A38);
         g.fill(screenX + 1, screenY + 1, screenX + screenW - 1, screenY + screenH - 1, 0xFF040A10);
 
-        // Cabecera del monitor
         g.fill(screenX + 2, screenY + 2, screenX + screenW - 2, screenY + 16, 0xDD0C1925);
         boolean liveBlink = (System.currentTimeMillis() / 600) % 2 == 0;
         g.drawString(font, (liveBlink ? "§c● " : "§4● ") + Component.translatable("awakening_system.screen.constellation.live", selectedIndex + 1).getString(), screenX + 6, screenY + 4, 0xFFFFFFFF, false);
@@ -207,25 +199,21 @@ public final class ConstellationChannelScreen extends Screen {
         if (!incarnations.isEmpty() && selectedIndex >= 0 && selectedIndex < incarnations.size()) {
             SyncStarStreamPayload.IncarnationEntry target = incarnations.get(selectedIndex);
 
-            // Viewport holográfico 3D con scanlines
             int viewX1 = screenX + 4;
             int viewY1 = screenY + 18;
             int viewX2 = screenX + screenW - 4;
             int viewY2 = screenY + 128;
             g.fill(viewX1, viewY1, viewX2, viewY2, 0xFF060F18);
 
-            // Rejilla de scanlines sutiles
             for (int sy = viewY1 + 4; sy < viewY2; sy += 8) {
                 g.fill(viewX1, sy, viewX2, sy + 1, 0x1200FFFF);
             }
 
-            // Pedestal de energía
             int centerX = (viewX1 + viewX2) / 2;
             int feetY = viewY2 - 6;
             g.fill(centerX - 24, feetY, centerX + 24, feetY + 4, 0x50276A82);
             g.fill(centerX - 20, feetY + 1, centerX + 20, feetY + 3, 0x8070E8FF);
 
-            // Renderizado 3D de la entidad
             LivingEntity renderEntity = getRenderEntity(target);
             if (renderEntity != null) {
                 InventoryScreen.renderEntityInInventoryFollowsMouse(
@@ -234,7 +222,6 @@ public final class ConstellationChannelScreen extends Screen {
                 );
             }
 
-            // Datos de telemetría de la encarnación
             int telY = screenY + 132;
             int maxTelW = screenW - 12;
             drawTruncatedString(g, "§f§l" + target.name(), screenX + 6, telY, maxTelW, 0xFFFFFFFF);
@@ -244,7 +231,6 @@ public final class ConstellationChannelScreen extends Screen {
             drawTruncatedString(g, Component.translatable("awakening_system.screen.constellation.dim", target.dimension()).getString(), screenX + 6, telY, maxTelW, 0xFF8AAAB8);
             telY += 10;
 
-            // Barra de vida
             int hpBarW = screenW - 16;
             int hpBarY = telY;
             int hpBarH = 8;
@@ -255,7 +241,6 @@ public final class ConstellationChannelScreen extends Screen {
             String hpStr = target.hp() + "/" + target.maxHp() + " HP";
             g.drawCenteredString(font, hpStr, screenX + screenW / 2, hpBarY, 0xFFFFFFFF);
 
-            // Botón: SINTONIZAR VISIÓN EN VIVO / PROYECCIÓN ASTRAL
             int specBtnX = screenX + 6;
             int specBtnY = screenY + screenH - 22;
             int specBtnW = screenW - 12;
@@ -266,7 +251,6 @@ public final class ConstellationChannelScreen extends Screen {
             g.fill(specBtnX + 1, specBtnY + 1, specBtnX + specBtnW - 1, specBtnY + specBtnH - 1, specHov ? 0xDD2A1448 : 0xDD170B28);
             g.drawCenteredString(font, Component.translatable("awakening_system.screen.constellation.tune_vision").getString(), specBtnX + specBtnW / 2, specBtnY + 5, 0xFFFFFFFF);
 
-            // ================= COLUMNA 3: DONACIONES Y COMENTARIOS =================
             int detX = screenX + screenW + 6;
             int detY = listY;
             int detW = PANEL_W - (listW + screenW + 20);
@@ -274,7 +258,6 @@ public final class ConstellationChannelScreen extends Screen {
             g.fill(detX, detY, detX + detW, detY + listH, 0xFF060E16);
             g.fill(detX + 1, detY + 1, detX + detW - 1, detY + listH - 1, 0xFF081420);
 
-            // Selector de Cantidad a Donar
             g.drawString(font, Component.translatable("awakening_system.screen.constellation.coins_to_donate").getString(), detX + 6, detY + 4, 0xFFFFD866, false);
 
             int amtBtnW = (detW - 16) / 3;
@@ -297,7 +280,6 @@ public final class ConstellationChannelScreen extends Screen {
                 g.drawCenteredString(font, label, amX + amtBtnW / 2, amY + 3, isCurAmt ? 0xFFFFD700 : 0xFFFFFFFF);
             }
 
-            // Selector de Comentario Predeterminado
             g.drawString(font, Component.translatable("awakening_system.screen.constellation.cosmic_reaction").getString(), detX + 6, detY + 52, 0xFF70E8FF, false);
 
             int commentBtnW = (detW - 14) / 2;
@@ -319,7 +301,6 @@ public final class ConstellationChannelScreen extends Screen {
                 g.drawCenteredString(font, cLabel, cx + commentBtnW / 2, cy + 3, isCurC ? 0xFFFFD700 : 0xFFDDECF2);
             }
 
-            // Vista previa del comentario en vivo
             int previewY = detY + 132;
             int previewH = 36;
             int previewW = detW - 10;
@@ -336,7 +317,6 @@ public final class ConstellationChannelScreen extends Screen {
             }
             g.disableScissor();
 
-            // BOTÓN PRINCIPAL: PATROCINAR / ENVIAR MONEDAS
             int sendX = detX + 5;
             int sendY = detY + 174;
             int sendW = detW - 10;
@@ -377,7 +357,6 @@ public final class ConstellationChannelScreen extends Screen {
             int rowH = 34;
             int visibleRows = (listH - 18) / rowH;
 
-            // 1. Clic en lista de Encarnaciones (Columna 1)
             for (int i = 0; i < visibleRows && (i + scrollOffset) < incarnations.size(); i++) {
                 int rowY = listY + 18 + i * rowH;
                 if (mouseX >= listX + 2 && mouseX <= listX + listW - 2 && mouseY >= rowY && mouseY < rowY + rowH - 2) {
@@ -397,7 +376,6 @@ public final class ConstellationChannelScreen extends Screen {
             if (!incarnations.isEmpty() && selectedIndex >= 0 && selectedIndex < incarnations.size()) {
                 SyncStarStreamPayload.IncarnationEntry target = incarnations.get(selectedIndex);
 
-                // 2. Clic en Sintonizar Visión / Proyección Astral (Columna 2)
                 int specBtnX = screenX + 6;
                 int specBtnY = screenY + screenH - 22;
                 int specBtnW = screenW - 12;
@@ -411,12 +389,10 @@ public final class ConstellationChannelScreen extends Screen {
                     return true;
                 }
 
-                // 3. Columna 3: Donaciones y Comentarios
                 int detX = screenX + screenW + 6;
                 int detY = listY;
                 int detW = PANEL_W - (listW + screenW + 20);
 
-                // Botones de monto
                 int amtBtnW = (detW - 16) / 3;
                 int amtBtnH = 14;
                 int amountsY0 = detY + 16;
@@ -437,7 +413,6 @@ public final class ConstellationChannelScreen extends Screen {
                     }
                 }
 
-                // Botones de comentarios
                 int commentBtnW = (detW - 14) / 2;
                 int commentBtnH = 13;
                 int commentsStartY = detY + 65;
@@ -457,7 +432,6 @@ public final class ConstellationChannelScreen extends Screen {
                     }
                 }
 
-                // Botón de Enviar Donación
                 int sendX = detX + 5;
                 int sendY = detY + 174;
                 int sendW = detW - 10;
@@ -500,14 +474,14 @@ public final class ConstellationChannelScreen extends Screen {
     private String getTranslatedActivity(String rawActivity) {
         if (rawActivity == null) return "";
         return switch (rawActivity) {
-            case "En Calabozo", "In Dungeon" -> Component.translatable("awakening_system.constellation.activity.dungeon").getString();
-            case "¡Herido Crítico!", "Critically Wounded!" -> Component.translatable("awakening_system.constellation.activity.critical").getString();
-            case "¡Modo Trance!", "Trance Mode!" -> Component.translatable("awakening_system.constellation.activity.trance").getString();
-            case "Cacería Nocturna", "Night Hunting" -> Component.translatable("awakening_system.constellation.activity.night").getString();
-            case "Explorando", "Exploring" -> Component.translatable("awakening_system.constellation.activity.exploring").getString();
-            case "En Combate Naval", "Naval Combat" -> Component.translatable("awakening_system.constellation.activity.naval").getString();
-            case "Canalizando Hebras", "Channeling Threads" -> Component.translatable("awakening_system.constellation.activity.threads").getString();
-            case "Protegiendo Territorio", "Guarding Territory" -> Component.translatable("awakening_system.constellation.activity.shadow").getString();
+            case "In Dungeon" -> Component.translatable("awakening_system.constellation.activity.dungeon").getString();
+            case "Critically Wounded!" -> Component.translatable("awakening_system.constellation.activity.critical").getString();
+            case "Trance Mode!" -> Component.translatable("awakening_system.constellation.activity.trance").getString();
+            case "Night Hunting" -> Component.translatable("awakening_system.constellation.activity.night").getString();
+            case "Exploring" -> Component.translatable("awakening_system.constellation.activity.exploring").getString();
+            case "Naval Combat" -> Component.translatable("awakening_system.constellation.activity.naval").getString();
+            case "Channeling Threads" -> Component.translatable("awakening_system.constellation.activity.threads").getString();
+            case "Guarding Territory" -> Component.translatable("awakening_system.constellation.activity.shadow").getString();
             default -> rawActivity;
         };
     }

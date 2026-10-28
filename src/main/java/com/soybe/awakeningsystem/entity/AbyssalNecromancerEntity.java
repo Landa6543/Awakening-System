@@ -78,7 +78,7 @@ public class AbyssalNecromancerEntity extends Monster {
     public boolean doHurtTarget(net.minecraft.world.entity.Entity target) {
         boolean hurt = super.doHurtTarget(target);
         if (hurt && target instanceof LivingEntity living) {
-            this.level().broadcastEntityEvent(this, (byte) 11); // staff swing
+            this.level().broadcastEntityEvent(this, (byte) 11);
             living.addEffect(new MobEffectInstance(MobEffects.WITHER, 80, 1));
             this.playSound(SoundEvents.EVOKER_CAST_SPELL, 1.1F, 0.7F);
         }
@@ -94,7 +94,6 @@ public class AbyssalNecromancerEntity extends Monster {
             if (staffSwingAnimationTimeout > 0) staffSwingAnimationTimeout--;
             if (summonAnimationTimeout > 0) summonAnimationTimeout--;
 
-            // Partículas necróticas continuas en el báculo
             if (this.random.nextInt(3) == 0) {
                 this.level().addParticle(ParticleTypes.SOUL_FIRE_FLAME,
                         this.getX() + 0.4D, this.getY() + 1.8D, this.getZ() + 0.4D,
@@ -108,7 +107,6 @@ public class AbyssalNecromancerEntity extends Monster {
             if (soulOrbCooldown > 0) soulOrbCooldown--;
             if (curseCooldown > 0) curseCooldown--;
 
-            // Proceso ritual de invocación con golpe al suelo
             if (activeSummonTicks > 0) {
                 activeSummonTicks--;
                 this.setDeltaMovement(0, this.getDeltaMovement().y, 0);
@@ -116,7 +114,6 @@ public class AbyssalNecromancerEntity extends Monster {
                     this.getLookControl().setLookAt(pendingSummonTarget, 30.0F, 30.0F);
                 }
 
-                // En el tick 12 restante: ¡El báculo azota contra el suelo e invoca a los no-muertos!
                 if (activeSummonTicks == 12 && this.level() instanceof net.minecraft.server.level.ServerLevel sl) {
                     Vec3 look = this.getLookAngle();
                     double groundX = this.getX() + look.x * 1.5D;
@@ -155,10 +152,9 @@ public class AbyssalNecromancerEntity extends Monster {
             if (target != null && target.isAlive()) {
                 double distSq = this.distanceToSqr(target);
 
-                // Hechizo 1: Ráfaga de Almas Necróticas
                 if (soulOrbCooldown <= 0 && distSq < 400.0D && activeSummonTicks <= 0) {
                     soulOrbCooldown = 80;
-                    this.level().broadcastEntityEvent(this, (byte) 8); // Cast
+                    this.level().broadcastEntityEvent(this, (byte) 8);
                     this.playSound(SoundEvents.WITHER_SHOOT, 1.2F, 1.2F);
                     if (this.level() instanceof net.minecraft.server.level.ServerLevel sl) {
                         Vec3 dir = target.position().subtract(this.position()).normalize();
@@ -177,10 +173,9 @@ public class AbyssalNecromancerEntity extends Monster {
                     }
                 }
 
-                // Hechizo 2: Maldición Abisal en Área
                 if (curseCooldown <= 0 && distSq < 100.0D && activeSummonTicks <= 0) {
                     curseCooldown = 160;
-                    this.level().broadcastEntityEvent(this, (byte) 8); // Cast
+                    this.level().broadcastEntityEvent(this, (byte) 8);
                     this.playSound(SoundEvents.EVOKER_PREPARE_ATTACK, 1.2F, 0.6F);
                     if (this.level() instanceof net.minecraft.server.level.ServerLevel sl) {
                         sl.sendParticles(ParticleTypes.WITCH, target.getX(), target.getY() + 1.0D, target.getZ(),
@@ -192,12 +187,11 @@ public class AbyssalNecromancerEntity extends Monster {
                     }
                 }
 
-                // Hechizo 3: Invocación Ritual con Golpe de Báculo al Suelo
                 if (summonCooldown <= 0 && activeSummonTicks <= 0 && this.level() instanceof net.minecraft.server.level.ServerLevel sl) {
                     summonCooldown = 280;
                     activeSummonTicks = 35;
                     pendingSummonTarget = target;
-                    this.level().broadcastEntityEvent(this, (byte) 12); // byte 12 = summon ground slam
+                    this.level().broadcastEntityEvent(this, (byte) 12);
                     this.playSound(SoundEvents.EVOKER_PREPARE_SUMMON, 1.4F, 0.7F);
                 }
             }

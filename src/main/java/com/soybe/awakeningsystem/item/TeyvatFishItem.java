@@ -17,14 +17,14 @@ import java.util.List;
 public class TeyvatFishItem extends Item {
 
     public enum FishVariety {
-        MEDAKA("Medaka", "Pez común y vivaz de Teyvat", Rarity.COMMON, 2, 0.3F, ChatFormatting.GRAY),
-        AIZEN_MEDAKA("Medaka Aizen", "Pez azul que habita los lagos de Mondstadt", Rarity.UNCOMMON, 3, 0.4F, ChatFormatting.AQUA),
-        SWEET_FLOWER_MEDAKA("Medaka Flor Dulce", "Pez dulce de tonos dorados", Rarity.UNCOMMON, 3, 0.4F, ChatFormatting.GOLD),
-        GLAZE_MEDAKA("Medaka Esmaltado", "Especie pura de aguas cristalinas de Liyue", Rarity.UNCOMMON, 4, 0.5F, ChatFormatting.YELLOW),
-        CRYSTALFISH("Pez Cristalino", "Cuerpo translúcido casi invisible en el agua", Rarity.RARE, 4, 0.6F, ChatFormatting.WHITE),
-        VENOMSPINE_FISH("Pez Espina Venenosa", "Aletas puntiagudas cargadas de veneno", Rarity.RARE, 2, 0.2F, ChatFormatting.DARK_PURPLE),
-        ABIDING_ANGELFISH("Pez Ángel Sagrado", "Raro pez dorado venerado por los Adeptos", Rarity.EPIC, 6, 0.8F, ChatFormatting.GOLD),
-        RAIMEI_ANGELFISH("Pez Ángel Raimei", "Pez electrizante que nada en aguas tormentosas de Inazuma", Rarity.EPIC, 6, 0.8F, ChatFormatting.LIGHT_PURPLE);
+        MEDAKA("Medaka", "A lively common fish of Teyvat", Rarity.COMMON, 2, 0.3F, ChatFormatting.GRAY),
+        AIZEN_MEDAKA("Aizen Medaka", "Blue fish native to the lakes of Mondstadt", Rarity.UNCOMMON, 3, 0.4F, ChatFormatting.AQUA),
+        SWEET_FLOWER_MEDAKA("Sweet-Flower Medaka", "Sweet golden-hued fish", Rarity.UNCOMMON, 3, 0.4F, ChatFormatting.GOLD),
+        GLAZE_MEDAKA("Glaze Medaka", "Pure species from the crystalline waters of Liyue", Rarity.UNCOMMON, 4, 0.5F, ChatFormatting.YELLOW),
+        CRYSTALFISH("Crystalfish", "Translucent body almost invisible underwater", Rarity.RARE, 4, 0.6F, ChatFormatting.WHITE),
+        VENOMSPINE_FISH("Venomspine Fish", "Pointed fins laden with potent venom", Rarity.RARE, 2, 0.2F, ChatFormatting.DARK_PURPLE),
+        ABIDING_ANGELFISH("Abiding Angelfish", "Rare golden fish revered by the Adepti", Rarity.EPIC, 6, 0.8F, ChatFormatting.GOLD),
+        RAIMEI_ANGELFISH("Raimei Angelfish", "An electrifying fish that swims in stormy Inazuma waters", Rarity.EPIC, 6, 0.8F, ChatFormatting.LIGHT_PURPLE);
 
         public final String name;
         public final String description;
@@ -62,8 +62,8 @@ public class TeyvatFishItem extends Item {
 
     @Override
     public void appendHoverText(ItemStack stack, TooltipContext context, List<Component> tooltip, TooltipFlag flag) {
-        tooltip.add(Component.literal("§7Variedad: " + variety.format + variety.name));
-        tooltip.add(Component.literal("§8" + variety.description));
-        tooltip.add(Component.literal("§ePesca de Teyvat: §7Utilizado en el Gremio de Pescadores para canjes y recetas culinarias."));
+        tooltip.add(Component.translatable("item.awakening_system.teyvat_fish.variety").append(Component.translatableWithFallback("item.awakening_system.teyvat_fish." + variety.name().toLowerCase() + ".name", variety.name).withStyle(variety.format)));
+        tooltip.add(Component.translatableWithFallback("item.awakening_system.teyvat_fish." + variety.name().toLowerCase() + ".desc", "§8" + variety.description));
+        tooltip.add(Component.translatable("item.awakening_system.teyvat_fish.hint"));
     }
 }

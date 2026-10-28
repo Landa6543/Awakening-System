@@ -1,11 +1,11 @@
 package com.soybe.awakeningsystem.guild;
 
 public enum GuildRole {
-    LEADER("§6[Líder]", 5, true, true, true, true, true, true, true),
-    OFFICER("§b[Oficial]", 4, true, true, false, false, true, true, true),
-    VETERAN("§a[Veterano]", 3, true, false, false, false, true, false, false),
-    MEMBER("§7[Miembro]", 2, false, false, false, false, true, false, false),
-    RECRUIT("§8[Recluta]", 1, false, false, false, false, true, false, false);
+    LEADER("§6[Leader]", 5, true, true, true, true, true, true, true),
+    OFFICER("§b[Officer]", 4, true, true, false, false, true, true, true),
+    VETERAN("§a[Veteran]", 3, true, false, false, false, true, false, false),
+    MEMBER("§7[Member]", 2, false, false, false, false, true, false, false),
+    RECRUIT("§8[Recruit]", 1, false, false, false, false, true, false, false);
 
     private final String label;
     private final int level;

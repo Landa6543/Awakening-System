@@ -21,7 +21,6 @@ public abstract class HypostasisRenderer<T extends HypostasisBaseBossEntity> ext
 
     @Override
     protected void scale(T entity, PoseStack poseStack, float partialTickTime) {
-        // Escala imponente de jefe de mundo (1.75x)
         poseStack.scale(1.75F, 1.75F, 1.75F);
         super.scale(entity, poseStack, partialTickTime);
     }

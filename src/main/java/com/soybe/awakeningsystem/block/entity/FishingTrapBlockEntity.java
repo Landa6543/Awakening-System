@@ -33,16 +33,14 @@ import org.jetbrains.annotations.Nullable;
 
 public class FishingTrapBlockEntity extends BlockEntity implements WorldlyContainer, MenuProvider {
     public static final int CONTAINER_SIZE = 9;
-    public static final int FISH_INTERVAL_TICKS = 100; // 5 segundos por pez automáticamente
+    public static final int FISH_INTERVAL_TICKS = 100;
 
-    // Slots 0..3: salida de peces capturados
-    // Slots 4..8: cebos introducidos
     private NonNullList<ItemStack> items = NonNullList.withSize(CONTAINER_SIZE, ItemStack.EMPTY);
 
     private boolean active = true;
     private boolean redstonePowered = false;
     private int progress = 0;
-    private int status = 0; // 0 = sin agua, 1 = sin cebo, 2 = pescando activamente, 3 = salidas llenas, 4 = desactivada, 5 = señal redstone
+    private int status = 0;
 
     private static final int[] SLOTS_FOR_DOWN = new int[]{0, 1, 2, 3};
     private static final int[] SLOTS_FOR_UP = new int[]{4, 5, 6, 7, 8};
@@ -182,7 +180,7 @@ public class FishingTrapBlockEntity extends BlockEntity implements WorldlyContai
 
     @Override
     public Component getDisplayName() {
-        return Component.literal("Trampa de Pesca Automática de Teyvat");
+        return Component.translatable("container.awakening_system.fishing_trap");
     }
 
     @Nullable
@@ -221,10 +219,9 @@ public class FishingTrapBlockEntity extends BlockEntity implements WorldlyContai
     public boolean triggerActivate(@Nullable Player player) {
         if (level == null || level.isClientSide()) return false;
 
-        // Verificar agua cerca o directamente encima
         if (!isWaterNearby()) {
             if (player != null) {
-                player.displayClientMessage(Component.literal("§c[Trampa de Pesca] Sólo funciona sumergida o con agua directamente encima/adyacente."), true);
+                player.displayClientMessage(Component.translatable("block.awakening_system.fishing_trap.requires_water"), true);
                 if (player instanceof ServerPlayer sp) {
                     sp.playNotifySound(SoundEvents.VILLAGER_NO, SoundSource.BLOCKS, 1.0F, 1.0F);
                 }
@@ -232,11 +229,10 @@ public class FishingTrapBlockEntity extends BlockEntity implements WorldlyContai
             return false;
         }
 
-        // Buscar cebo
         int baitSlot = getFirstBaitSlot();
         if (baitSlot == -1) {
             if (player != null) {
-                player.displayClientMessage(Component.literal("§c[Trampa de Pesca] No hay cebos válidos en las ranuras superiores."), true);
+                player.displayClientMessage(Component.translatable("block.awakening_system.fishing_trap.no_bait"), true);
                 if (player instanceof ServerPlayer sp) {
                     sp.playNotifySound(SoundEvents.VILLAGER_NO, SoundSource.BLOCKS, 1.0F, 1.0F);
                 }
@@ -244,16 +240,13 @@ public class FishingTrapBlockEntity extends BlockEntity implements WorldlyContai
             return false;
         }
 
-        // Consumir 1 cebo
         ItemStack baitStack = items.get(baitSlot);
         ItemStack baitType = baitStack.copy();
         baitStack.shrink(1);
         setChanged();
 
-        // Calcular captura según el cebo usado
         ItemStack catchItem = rollFishCatch(baitType, level.random.nextFloat());
 
-        // Insertar en slots 0..3
         boolean inserted = false;
         for (int i = 0; i < 4; i++) {
             ItemStack out = items.get(i);
@@ -279,7 +272,6 @@ public class FishingTrapBlockEntity extends BlockEntity implements WorldlyContai
         }
 
         if (!inserted) {
-            // Si las ranuras de salida están llenas, botar en el agua
             net.minecraft.world.entity.item.ItemEntity entity = new net.minecraft.world.entity.item.ItemEntity(
                     level, waterPos.getX() + 0.5D, waterPos.getY() + 0.2D, waterPos.getZ() + 0.5D, catchItem
             );
@@ -288,7 +280,6 @@ public class FishingTrapBlockEntity extends BlockEntity implements WorldlyContai
 
         setChanged();
 
-        // Efectos en el agua
         if (level instanceof ServerLevel sl) {
             sl.sendParticles(ParticleTypes.SPLASH, waterPos.getX() + 0.5D, waterPos.getY() + 0.5D, waterPos.getZ() + 0.5D, 25, 0.3D, 0.3D, 0.3D, 0.15D);
             sl.sendParticles(ParticleTypes.BUBBLE, waterPos.getX() + 0.5D, waterPos.getY() + 0.2D, waterPos.getZ() + 0.5D, 15, 0.2D, 0.2D, 0.2D, 0.1D);
@@ -296,7 +287,7 @@ public class FishingTrapBlockEntity extends BlockEntity implements WorldlyContai
         }
 
         if (player != null) {
-            player.displayClientMessage(Component.literal("§b✦ ¡La trampa ha capturado un §e" + catchItem.getHoverName().getString() + "§b!"), true);
+            player.displayClientMessage(Component.translatable("block.awakening_system.fishing_trap.catch_success", catchItem.getHoverName()), true);
             int caught = player.getPersistentData().getInt("total_fish_caught");
             player.getPersistentData().putInt("total_fish_caught", caught + 1);
 
@@ -315,34 +306,28 @@ public class FishingTrapBlockEntity extends BlockEntity implements WorldlyContai
 
     private ItemStack rollFishCatch(ItemStack bait, float roll) {
         if (bait.is(SystemItems.FRUIT_PASTE_BAIT.get())) {
-            // Cebo de Fruta: Especialista en Medakas
             if (roll < 0.10F) return new ItemStack(SystemItems.GLAZE_MEDAKA.get());
             if (roll < 0.30F) return new ItemStack(SystemItems.SWEET_FLOWER_MEDAKA.get());
             if (roll < 0.55F) return new ItemStack(SystemItems.AIZEN_MEDAKA.get());
             return new ItemStack(SystemItems.MEDAKA.get());
         } else if (bait.is(SystemItems.REDROT_BAIT.get())) {
-            // Cebo de Podredumbre Roja: Peces de carne y río
             if (roll < 0.25F) return new ItemStack(SystemItems.VENOMSPINE_FISH.get());
             if (roll < 0.60F) return new ItemStack(Items.SALMON);
             return new ItemStack(Items.COD);
         } else if (bait.is(SystemItems.FALSE_WORM_BAIT.get())) {
-            // Cebo de Lombriz Falsa: Peces dorados y de cristal
             if (roll < 0.15F) return new ItemStack(SystemItems.RAIMEI_ANGELFISH.get());
             if (roll < 0.45F) return new ItemStack(SystemItems.ABIDING_ANGELFISH.get());
             return new ItemStack(SystemItems.CRYSTALFISH.get());
         } else if (bait.is(SystemItems.FAKE_FLY_BAIT.get())) {
-            // Cebo de Mosca Falsa: Peces de agua salada y globo
             if (roll < 0.35F) return new ItemStack(Items.PUFFERFISH);
             if (roll < 0.70F) return new ItemStack(Items.TROPICAL_FISH);
             return new ItemStack(SystemItems.CRYSTALFISH.get());
         } else if (bait.is(SystemItems.GLAZE_MEDAKA.get()) || bait.is(SystemItems.GLOWGRASS_BAIT.get()) || bait.is(SystemItems.SUGARDEW_BAIT.get())) {
-            // Cebos especiales de Fontaine / Sumeru
             if (roll < 0.25F) return new ItemStack(SystemItems.RAIMEI_ANGELFISH.get());
             if (roll < 0.60F) return new ItemStack(SystemItems.ABIDING_ANGELFISH.get());
             return new ItemStack(SystemItems.GLAZE_MEDAKA.get());
         }
 
-        // Fallback genérico
         return new ItemStack(Items.COD);
     }
 
@@ -354,12 +339,12 @@ public class FishingTrapBlockEntity extends BlockEntity implements WorldlyContai
             if (this.active) {
                 level.playSound(null, worldPosition, SoundEvents.UI_BUTTON_CLICK.value(), SoundSource.BLOCKS, 0.8F, 1.2F);
                 if (player != null) {
-                    player.displayClientMessage(Component.literal("§a[Trampa de Pesca] Pesca automática ACTIVADA."), true);
+                    player.displayClientMessage(Component.translatable("block.awakening_system.fishing_trap.enabled"), true);
                 }
             } else {
                 level.playSound(null, worldPosition, SoundEvents.UI_BUTTON_CLICK.value(), SoundSource.BLOCKS, 0.8F, 0.8F);
                 if (player != null) {
-                    player.displayClientMessage(Component.literal("§c[Trampa de Pesca] Pesca automática DESACTIVADA."), true);
+                    player.displayClientMessage(Component.translatable("block.awakening_system.fishing_trap.disabled"), true);
                 }
             }
         }
@@ -374,31 +359,30 @@ public class FishingTrapBlockEntity extends BlockEntity implements WorldlyContai
         be.redstonePowered = redstone;
 
         if (!be.active) {
-            be.status = 4; // Desactivada manualmente
+            be.status = 4;
             be.progress = 0;
             return;
         }
 
         if (redstone) {
-            be.status = 5; // Pausada por señal de Redstone
+            be.status = 5;
             be.progress = 0;
             return;
         }
 
         if (!be.isWaterNearby()) {
-            be.status = 0; // Sin agua
+            be.status = 0;
             be.progress = 0;
             return;
         }
 
         int baitSlot = be.getFirstBaitSlot();
         if (baitSlot == -1) {
-            be.status = 1; // Sin cebo
+            be.status = 1;
             be.progress = 0;
             return;
         }
 
-        // Verificar si las salidas tienen espacio
         boolean hasRoom = false;
         for (int i = 0; i < 4; i++) {
             ItemStack out = be.items.get(i);
@@ -409,15 +393,13 @@ public class FishingTrapBlockEntity extends BlockEntity implements WorldlyContai
         }
 
         if (!hasRoom) {
-            be.status = 3; // Salidas llenas
+            be.status = 3;
             return;
         }
 
-        // Está pescando de forma continua y automática
         be.status = 2;
         be.progress++;
 
-        // Pequeñas burbujas periódicas cada 20 ticks (1 seg) en el agua para ambientar
         if (be.progress % 20 == 0 && level instanceof ServerLevel sl) {
             BlockPos waterPos = pos.above();
             if (!be.hasWaterDirectlyAbove()) {
@@ -431,7 +413,6 @@ public class FishingTrapBlockEntity extends BlockEntity implements WorldlyContai
             sl.sendParticles(ParticleTypes.BUBBLE, waterPos.getX() + 0.5D, waterPos.getY() + 0.2D, waterPos.getZ() + 0.5D, 3, 0.15D, 0.1D, 0.15D, 0.05D);
         }
 
-        // Al completar el ciclo automático de 5 segundos, pesca el pez automáticamente
         if (be.progress >= FISH_INTERVAL_TICKS) {
             be.progress = 0;
             be.triggerActivate(null);

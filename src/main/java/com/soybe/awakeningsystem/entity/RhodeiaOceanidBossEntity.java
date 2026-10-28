@@ -49,7 +49,7 @@ public class RhodeiaOceanidBossEntity extends Monster {
             SynchedEntityData.defineId(RhodeiaOceanidBossEntity.class, EntityDataSerializers.BOOLEAN);
 
     private final ServerBossEvent bossEvent = (ServerBossEvent) new ServerBossEvent(
-            Component.literal("§9§lRhodeia de Liyue §7- §bOceánida de las Aguas Claras"),
+            Component.translatable("boss.awakening_system.rhodeia.boss_bar"),
             BossEvent.BossBarColor.BLUE,
             BossEvent.BossBarOverlay.NOTCHED_10
     ).setDarkenScreen(false);
@@ -61,7 +61,7 @@ public class RhodeiaOceanidBossEntity extends Monster {
     public RhodeiaOceanidBossEntity(EntityType<? extends Monster> entityType, Level level) {
         super(entityType, level);
         this.moveControl = new FlyingMoveControl(this, 10, true);
-        this.setCustomName(Component.literal("§9§lRhodeia"));
+        this.setCustomName(Component.translatable("boss.awakening_system.rhodeia.name"));
         this.setCustomNameVisible(true);
         this.setPersistenceRequired();
         this.setNoGravity(true);
@@ -112,14 +112,12 @@ public class RhodeiaOceanidBossEntity extends Monster {
         if (!this.level().isClientSide) {
             this.bossEvent.setProgress(this.getHealth() / this.getMaxHealth());
 
-            // Limpieza de mímicos derrotados
             this.activeMimics.removeIf(m -> !m.isAlive() || m.isRemoved());
             boolean hasMimics = !this.activeMimics.isEmpty();
             this.entityData.set(DATA_SHIELDED, hasMimics);
 
             LivingEntity target = this.getTarget();
             if (target != null && target.isAlive()) {
-                // Si no hay mímicos activos, invocar una nueva oleada
                 if (activeMimics.isEmpty()) {
                     if (summonCooldown > 0) {
                         summonCooldown--;
@@ -136,7 +134,6 @@ public class RhodeiaOceanidBossEntity extends Monster {
                 }
             }
         } else {
-            // Partículas client-side de gotas y ondas de agua pura
             if (this.random.nextFloat() < 0.35F) {
                 this.level().addParticle(ParticleTypes.FALLING_WATER,
                         this.getX() + (this.random.nextDouble() - 0.5D) * 1.5D,
@@ -153,7 +150,7 @@ public class RhodeiaOceanidBossEntity extends Monster {
         sl.playSound(null, this.blockPosition(), SoundEvents.GENERIC_SPLASH, SoundSource.HOSTILE, 2.0F, 0.8F);
 
         for (ServerPlayer player : sl.getPlayers(p -> p.distanceToSqr(this) < 1600.0D)) {
-            player.displayClientMessage(Component.literal("§9§l✦ [RHODEIA] §f\"¡El poder del agua consiste en adoptar cualquier forma!\""), true);
+            player.displayClientMessage(Component.translatable("boss.awakening_system.rhodeia.quote"), true);
         }
 
         for (int i = 0; i < 3; i++) {
@@ -178,7 +175,6 @@ public class RhodeiaOceanidBossEntity extends Monster {
 
         sl.playSound(null, this.blockPosition(), SoundEvents.PLAYER_SPLASH_HIGH_SPEED, SoundSource.HOSTILE, 2.0F, 1.2F);
 
-        // Bomba de Torbellino de Agua ("Submerge!")
         Vec3 targetPos = target.position();
         sl.sendParticles(ParticleTypes.SPLASH, targetPos.x, targetPos.y + 0.2D, targetPos.z, 50, 1.5D, 0.5D, 1.5D, 0.15D);
 
@@ -195,7 +191,7 @@ public class RhodeiaOceanidBossEntity extends Monster {
     @Override
     public boolean hurt(DamageSource source, float amount) {
         if (isShielded()) {
-            amount *= 0.15F; // 85% de reducción mientras haya mímicos con vida
+            amount *= 0.15F;
         }
         return super.hurt(source, amount);
     }
@@ -214,12 +210,12 @@ public class RhodeiaOceanidBossEntity extends Monster {
                     data.addMora(60000);
                     data.addPrimogems(35);
                     com.soybe.awakeningsystem.AwakeningSystemMod.sync(sp);
-                    sp.displayClientMessage(Component.literal("§9§l✦ ¡RHODEIA DERROTADA! §eHas ganado §6+60,000 Mora §ey §b+35 Protogemas§e."), false);
+                    sp.displayClientMessage(Component.translatable("boss.awakening_system.rhodeia.defeated_teyvat"), false);
                 } else {
                     if (SystemItems.AWAKENING_COIN.isBound()) {
                         sp.addItem(new ItemStack(SystemItems.AWAKENING_COIN.get(), 24));
                     }
-                    sp.displayClientMessage(Component.literal("§9§l✦ ¡RHODEIA DERROTADA! §6+24 Monedas de Despertar§e."), false);
+                    sp.displayClientMessage(Component.translatable("boss.awakening_system.rhodeia.defeated_vanilla"), false);
                 }
             }
 

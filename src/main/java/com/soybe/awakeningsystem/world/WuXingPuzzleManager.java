@@ -23,7 +23,6 @@ public final class WuXingPuzzleManager {
         ServerLevel level = player.serverLevel();
         BlockPos grottoCenter = findGrottoCenter(level, pedestalPos);
 
-        // 1. Si la Gran Compuerta del Sanctum ya está abierta, el puzle ya ha sido resuelto
         BlockPos gateTestPos = new BlockPos(grottoCenter.getX(), grottoCenter.getY() + 2, grottoCenter.getZ() + 13);
         if (level.getBlockState(gateTestPos).isAir()) {
             player.displayClientMessage(Component.translatable("awakening_system.wuxing.already_open"), true);
@@ -31,7 +30,6 @@ public final class WuXingPuzzleManager {
             return;
         }
 
-        // 2. Comprobar si este pedestal ya está activado
         BlockState currentState = level.getBlockState(pedestalPos);
         if (currentState.hasProperty(FiveElementsPedestalBlock.ACTIVE) && currentState.getValue(FiveElementsPedestalBlock.ACTIVE)) {
             player.displayClientMessage(Component.translatable("awakening_system.wuxing.already_active", element.getDisplayName()), true);
@@ -39,7 +37,6 @@ public final class WuXingPuzzleManager {
             return;
         }
 
-        // 3. Obtener todos los pedestales en la sala para sincronizar estados de forma infalible
         List<BlockPos> roomPedestals = findPedestalsInRoom(level, grottoCenter);
         int activeCount = 0;
         for (BlockPos p : roomPedestals) {
@@ -49,14 +46,10 @@ public final class WuXingPuzzleManager {
             }
         }
 
-        // 4. Comprobar si el elemento interactuado corresponde al siguiente paso del Ciclo Generador:
-        // Madera(0) -> Fuego(1) -> Tierra(2) -> Metal(3) -> Agua(4)
         if (element.getIndex() == activeCount) {
-            // ¡Elemento correcto!
             int newActive = activeCount + 1;
             level.setBlock(pedestalPos, currentState.setValue(FiveElementsPedestalBlock.ACTIVE, true), 3);
 
-            // Efectos visuales y sonoros armónicos
             level.sendParticles(element.getParticle(),
                     pedestalPos.getX() + 0.5D, pedestalPos.getY() + 1.2D, pedestalPos.getZ() + 0.5D,
                     35, 0.3D, 0.3D, 0.3D, 0.05D);
@@ -69,7 +62,6 @@ public final class WuXingPuzzleManager {
 
             player.displayClientMessage(Component.translatable("awakening_system.wuxing.element_activated", element.getDisplayName(), newActive), true);
 
-            // Si se han activado los 5 elementos en el orden sagrado:
             if (newActive >= 5) {
                 openSanctumGate(level, grottoCenter);
 
@@ -90,8 +82,6 @@ public final class WuXingPuzzleManager {
                 player.displayClientMessage(Component.translatable("awakening_system.wuxing.gate_open"), false);
             }
         } else {
-            // ¡Disonancia Elemental!
-            // Apagar todos los pedestales previamente encendidos
             for (BlockPos p : roomPedestals) {
                 BlockState st = level.getBlockState(p);
                 if (st.hasProperty(FiveElementsPedestalBlock.ACTIVE) && st.getValue(FiveElementsPedestalBlock.ACTIVE)) {
@@ -100,7 +90,6 @@ public final class WuXingPuzzleManager {
                 }
             }
 
-            // Descarga de Qi sobre el jugador
             player.hurt(level.damageSources().magic(), 6.0F);
             player.push(0.0D, 0.4D, -0.6D);
 
@@ -143,7 +132,6 @@ public final class WuXingPuzzleManager {
     }
 
     public static BlockPos findGrottoCenter(ServerLevel level, BlockPos pos) {
-        // 1. Buscar la linterna marina del Taiji central (cx, cy, cz) en un radio de 10 bloques
         for (int dx = -10; dx <= 10; dx++) {
             for (int dz = -10; dz <= 10; dz++) {
                 for (int dy = -2; dy <= 2; dy++) {
@@ -155,7 +143,6 @@ public final class WuXingPuzzleManager {
             }
         }
 
-        // 2. Buscar en datos guardados de estructuras del servidor
         if (level.getServer() != null) {
             var sData = SeriesStructureWorldGen.SeriesStructureData.get(level.getServer());
             for (var entry : sData.getAll().entrySet()) {
@@ -167,7 +154,6 @@ public final class WuXingPuzzleManager {
             }
         }
 
-        // 3. Fallback: Agrupar por la posición del pedestal más al noroeste para que todos compartan el mismo centro
         BlockPos minPos = pos;
         for (int dx = -12; dx <= 12; dx++) {
             for (int dz = -12; dz <= 12; dz++) {
@@ -189,7 +175,6 @@ public final class WuXingPuzzleManager {
         int cy = center.getY();
         int cz = center.getZ();
 
-        // Compuerta de la cámara interior en Z = cz + 13 (ancho 5, alto 4)
         for (int dx = -2; dx <= 2; dx++) {
             for (int dy = 1; dy <= 4; dy++) {
                 for (int dz = 12; dz <= 14; dz++) {

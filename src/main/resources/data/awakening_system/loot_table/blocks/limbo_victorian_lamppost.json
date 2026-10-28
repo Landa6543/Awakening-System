@@ -1,0 +1,27 @@
+{
+  "type": "minecraft:block",
+  "pools": [
+    {
+      "bonus_rolls": 0.0,
+      "conditions": [
+        {
+          "condition": "minecraft:survives_explosion"
+        },
+        {
+          "block": "awakening_system:limbo_victorian_lamppost",
+          "condition": "minecraft:block_state_property",
+          "properties": {
+            "section": "0"
+          }
+        }
+      ],
+      "entries": [
+        {
+          "type": "minecraft:item",
+          "name": "awakening_system:limbo_victorian_lamppost"
+        }
+      ],
+      "rolls": 1.0
+    }
+  ]
+}

@@ -1,0 +1,9 @@
+{
+  "parent": "minecraft:block/orientable_with_bottom",
+  "textures": {
+    "bottom": "awakening_system:block/astralite_furnace_top",
+    "top": "awakening_system:block/astralite_furnace_top",
+    "side": "awakening_system:block/astralite_furnace_side",
+    "front": "awakening_system:block/astralite_furnace_front"
+  }
+}

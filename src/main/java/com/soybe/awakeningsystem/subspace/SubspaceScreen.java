@@ -22,6 +22,7 @@ public class SubspaceScreen extends AbstractContainerScreen<SubspaceMenu> {
     private SubspaceHoloButton upgradeButton;
     private SubspaceHoloButton prevPageBtn;
     private SubspaceHoloButton nextPageBtn;
+    private SubspaceHoloButton updateStructureBtn;
 
     public SubspaceScreen(SubspaceMenu menu, Inventory playerInventory, Component title) {
         super(menu, playerInventory, title);
@@ -38,12 +39,13 @@ public class SubspaceScreen extends AbstractContainerScreen<SubspaceMenu> {
 
         boolean inSubspace = this.minecraft != null && this.minecraft.level != null &&
                 this.minecraft.level.dimension().location().getPath().equals("subspace_realm");
+        boolean inLimbo = this.minecraft != null && this.minecraft.level != null &&
+                this.minecraft.level.dimension().location().getPath().equals("limbo");
 
         int btnY = this.topPos + 224;
         int btnW = 78;
         int btnH = 18;
 
-        // Botones de paginación
         this.prevPageBtn = new SubspaceHoloButton(
                 this.leftPos + 6, this.topPos + 4, 15, 12,
                 Component.literal("◀"), Component.literal("§f§l◀"),
@@ -78,11 +80,11 @@ public class SubspaceScreen extends AbstractContainerScreen<SubspaceMenu> {
         this.nextPageBtn.visible = false;
         this.addRenderableWidget(this.nextPageBtn);
 
-        // Botón Entrar / Salir del Reino Interior (Holográfico Cyan / Carmesí)
+        Component travelLabel = inSubspace ? Component.translatable("awakening_system.subspace.button.exit") : Component.translatable("awakening_system.subspace.button.enter");
         this.travelButton = new SubspaceHoloButton(
                 this.leftPos + 8, btnY, btnW, btnH,
-                Component.literal(inSubspace ? "§c🚪 Salir" : "§b🌌 Entrar"),
-                Component.literal(inSubspace ? "§f§l🚪 Salir" : "§f§l🌌 Entrar"),
+                travelLabel,
+                travelLabel,
                 inSubspace ? HoloTheme.RED : HoloTheme.CYAN,
                 btn -> {
                     net.neoforged.neoforge.network.PacketDistributor.sendToServer(
@@ -91,13 +93,25 @@ public class SubspaceScreen extends AbstractContainerScreen<SubspaceMenu> {
                     this.onClose();
                 }
         );
+        this.travelButton.active = true;
         this.addRenderableWidget(this.travelButton);
 
-        // Botón Mejorar Territorio (Holográfico Dorado)
+        var player = net.minecraft.client.Minecraft.getInstance().player;
+        int curSubLvl = 1;
+        if (player != null) {
+            curSubLvl = com.soybe.awakeningsystem.SystemEvents.data(player).subspaceLevel();
+        }
+        Component upgLabel = (curSubLvl >= 3)
+                ? Component.translatable("awakening_system.subspace.button.max_tier")
+                : Component.translatable("awakening_system.subspace.button.upgrade", curSubLvl + 1);
+        Component upgHover = (curSubLvl >= 3)
+                ? Component.translatable("awakening_system.subspace.button.max_tier_hover")
+                : Component.translatable("awakening_system.subspace.button.upgrade_hover");
+
         this.upgradeButton = new SubspaceHoloButton(
                 this.leftPos + 90, btnY, btnW, btnH,
-                Component.literal("§6⭐ Mejorar"),
-                Component.literal("§e§l⭐ Mejorar"),
+                upgLabel,
+                upgLabel,
                 HoloTheme.GOLD,
                 btn -> {
                     net.neoforged.neoforge.network.PacketDistributor.sendToServer(
@@ -105,6 +119,7 @@ public class SubspaceScreen extends AbstractContainerScreen<SubspaceMenu> {
                     );
                 }
         );
+        this.upgradeButton.active = curSubLvl < 3;
         this.addRenderableWidget(this.upgradeButton);
     }
 
@@ -122,17 +137,16 @@ public class SubspaceScreen extends AbstractContainerScreen<SubspaceMenu> {
         super.render(graphics, mouseX, mouseY, partialTick);
         this.renderTooltip(graphics, mouseX, mouseY);
 
-        // Tooltip del botón Mejorar
-        if (this.upgradeButton != null && this.upgradeButton.isHoveredOrFocused()) {
+        if (this.upgradeButton != null && this.upgradeButton.isHovered()) {
             var player = net.minecraft.client.Minecraft.getInstance().player;
             int lvl = 1;
             if (player != null) {
                 lvl = com.soybe.awakeningsystem.SystemEvents.data(player).subspaceLevel();
             }
             List<Component> tip = new ArrayList<>();
-            tip.add(Component.literal("§6§lMejorar Reino Subespacial"));
-            tip.add(Component.literal("§7Nivel actual: §eNivel " + lvl + " / 5"));
-            if (lvl < 5) {
+            tip.add(Component.translatable("awakening_system.subspace.tooltip.upgrade_title"));
+            tip.add(Component.literal("§7Nivel Actual: §b" + lvl + " / 3 (Próximamente 4 y 5)"));
+            if (lvl < 3) {
                 int next = lvl + 1;
                 int cost = switch (next) {
                     case 2 -> 2500;
@@ -140,60 +154,78 @@ public class SubspaceScreen extends AbstractContainerScreen<SubspaceMenu> {
                     case 4 -> 20000;
                     default -> 50000;
                 };
-                tip.add(Component.literal("§7Siguiente nivel: §aNivel " + next));
-                tip.add(Component.literal("§7Coste: §6" + cost + " Monedas §7o §b1x Mineral"));
-                tip.add(Component.literal("§e✦ Expande el territorio para colocar más cofres y altares."));
+                tip.add(Component.translatable("awakening_system.subspace.tooltip.next_level", next));
+                tip.add(Component.translatable("awakening_system.subspace.tooltip.cost", cost));
+                tip.add(Component.translatable("awakening_system.subspace.tooltip.upgrade_desc"));
             } else {
-                tip.add(Component.literal("§a✔ Nivel Máximo Alcanzado (Pequeño Mundo)."));
+                tip.add(Component.translatable("awakening_system.subspace.tooltip.max_level"));
             }
             graphics.renderComponentTooltip(this.font, tip, mouseX, mouseY);
         }
 
-        // Tooltip del botón Entrar/Salir
-        if (this.travelButton != null && this.travelButton.isHoveredOrFocused()) {
+        if (this.updateStructureBtn != null && this.updateStructureBtn.isHovered()) {
+            List<Component> tip = new ArrayList<>();
+            tip.add(Component.literal("§6§lActualizar Diseño de Parcela"));
+            tip.add(Component.literal("§7Regenera tu parcela con el nuevo"));
+            tip.add(Component.literal("§7diseño arquitectónico de tu nivel."));
+            tip.add(Component.literal("§c¡ADVERTENCIA! §fRetira tus cofres"));
+            tip.add(Component.literal("§fe ítems antes de proceder."));
+            tip.add(Component.literal("§e(Clic para ver advertencia en el chat)"));
+            graphics.renderComponentTooltip(this.font, tip, mouseX, mouseY);
+        }
+
+        if (this.travelButton != null && this.travelButton.isHovered()) {
             boolean inSubspace = this.minecraft != null && this.minecraft.level != null &&
                     this.minecraft.level.dimension().location().getPath().equals("subspace_realm");
             List<Component> tip = new ArrayList<>();
             if (inSubspace) {
-                tip.add(Component.literal("§c§lSalir del Subespacio"));
-                tip.add(Component.literal("§7Regresa a tu ubicación original en el mundo exterior."));
+                tip.add(Component.translatable("awakening_system.subspace.tooltip.exit_title"));
+                tip.add(Component.translatable("awakening_system.subspace.tooltip.exit_desc"));
             } else {
-                tip.add(Component.literal("§b§lViajar al Reino Interior"));
-                tip.add(Component.literal("§7Entra en persona a tu dimensión de bolsillo."));
-                tip.add(Component.literal("§7Allí puedes colocar cofres, hornos y construir"));
-                tip.add(Component.literal("§7tu almacén infinito como en los manhuas."));
+                tip.add(Component.translatable("awakening_system.subspace.tooltip.enter_title"));
+                tip.add(Component.translatable("awakening_system.subspace.tooltip.enter_desc1"));
+                tip.add(Component.translatable("awakening_system.subspace.tooltip.enter_desc2"));
+                tip.add(Component.translatable("awakening_system.subspace.tooltip.enter_desc3"));
             }
             graphics.renderComponentTooltip(this.font, tip, mouseX, mouseY);
         }
 
-        // Tooltip para ranuras bloqueadas
         for (Slot slot : this.menu.slots) {
             if (slot instanceof SubspaceMenu.SubspaceSlot subSlot && !subSlot.isSlotUnlocked()) {
                 int sx = this.leftPos + slot.x;
                 int sy = this.topPos + slot.y;
                 if (mouseX >= sx && mouseX < sx + 18 && mouseY >= sy && mouseY < sy + 18) {
                     List<Component> tip = new ArrayList<>();
-                    tip.add(Component.literal("§c§l🔒 Ranura Bloqueada"));
-                    tip.add(Component.literal("§7Esta ranura requiere más espacio físico en tu Reino."));
-                    tip.add(Component.literal("§e✦ Coloca más cofres en tu §bReino Subespacial"));
-                    tip.add(Component.literal("§7  para desbloquear más ranuras (§a+27 ranuras por cofre§7)."));
+                    tip.add(Component.translatable("awakening_system.subspace.tooltip.slot_locked_title"));
+                    tip.add(Component.translatable("awakening_system.subspace.tooltip.slot_locked_desc1"));
+                    tip.add(Component.translatable("awakening_system.subspace.tooltip.slot_locked_desc2"));
+                    tip.add(Component.translatable("awakening_system.subspace.tooltip.slot_locked_desc3"));
                     graphics.renderComponentTooltip(this.font, tip, mouseX, mouseY);
                     break;
                 }
             }
         }
 
-        // Tooltip del contador de capacidad
-        int capAreaX = this.leftPos + this.imageWidth - 65;
+        var player = net.minecraft.client.Minecraft.getInstance().player;
+        int countTooltip = 0;
+        if (player != null) {
+            var items = com.soybe.awakeningsystem.SystemEvents.data(player).getSubspaceItems();
+            for (var stack : items) {
+                if (!stack.isEmpty()) countTooltip++;
+            }
+        }
+        int unlockedTooltip = this.menu.getUnlockedSlots();
+        int capWTooltip = this.font.width(countTooltip + " / " + unlockedTooltip);
+        int capAreaX = this.leftPos + this.imageWidth - 8 - capWTooltip - 2;
         int capAreaY = this.topPos + this.inventoryLabelY - 2;
         if (mouseX >= capAreaX && mouseX <= this.leftPos + this.imageWidth - 6 && mouseY >= capAreaY && mouseY <= capAreaY + 12) {
             int unlocked = this.menu.getUnlockedSlots();
             int chests = this.menu.getChestCount();
             List<Component> tip = new ArrayList<>();
-            tip.add(Component.literal("§b§lCapacidad Dimensional"));
-            tip.add(Component.literal("§7Ranuras disponibles: §e" + unlocked));
-            tip.add(Component.literal("§7Cofres en tu Reino: §6" + chests + " §7(" + (chests / 2) + " Dobles)"));
-            tip.add(Component.literal("§7✦ Cada cofre colocado en tu dimensión expande tu Subespacio (+27 ranuras c/u)."));
+            tip.add(Component.translatable("awakening_system.subspace.tooltip.cap_title"));
+            tip.add(Component.translatable("awakening_system.subspace.tooltip.cap_available", unlocked));
+            tip.add(Component.translatable("awakening_system.subspace.tooltip.cap_chests", chests, chests / 2));
+            tip.add(Component.translatable("awakening_system.subspace.tooltip.cap_desc"));
             graphics.renderComponentTooltip(this.font, tip, mouseX, mouseY);
         }
     }
@@ -205,15 +237,12 @@ public class SubspaceScreen extends AbstractContainerScreen<SubspaceMenu> {
         int w = this.imageWidth;
         int h = this.imageHeight;
 
-        // 1. Fondo cósmico del Sistema con borde holográfico
         g.fill(x - 2, y - 2, x + w + 2, y + h + 2, 0x4017354B);
         g.fill(x - 1, y - 1, x + w + 1, y + h + 1, EDGE_BORDER);
         g.fill(x, y, x + w, y + h, PANEL_BG);
 
-        // 2. Línea de acento superior estilo HUD
         g.fill(x, y, x + w, y + 2, CYAN);
 
-        // 3. Esquinas holográficas del Sistema
         g.fill(x, y, x + 8, y + 2, CYAN);
         g.fill(x, y, x + 2, y + 8, CYAN);
         g.fill(x + w - 8, y, x + w, y + 2, CYAN);
@@ -223,19 +252,17 @@ public class SubspaceScreen extends AbstractContainerScreen<SubspaceMenu> {
         g.fill(x + w - 8, y + h - 2, x + w, y + h, CYAN);
         g.fill(x + w - 2, y + h - 8, x + w, y + h, CYAN);
 
-        // 4. Cabecera del título
         g.fill(x + 6, y + 4, x + w - 6, y + 15, 0x990D2235);
         g.renderOutline(x + 6, y + 4, w - 12, 12, 0x662D7691);
 
-        // 5. Casillas iluminadas para cada slot del menú (con detección de bloqueo)
         for (Slot slot : this.menu.slots) {
             int sx = x + slot.x - 1;
             int sy = y + slot.y - 1;
 
             if (slot instanceof SubspaceMenu.SubspaceSlot subSlot) {
                 boolean unlocked = subSlot.isSlotUnlocked();
-                int slotBg = unlocked ? SLOT_BG : 0x772A0808; // tinte carmesí oscuro si está bloqueada
-                int slotBorder = unlocked ? SLOT_BORDER : 0x55FF4444; // borde rojizo sutil
+                int slotBg = unlocked ? SLOT_BG : 0x772A0808;
+                int slotBorder = unlocked ? SLOT_BORDER : 0x55FF4444;
 
                 g.fill(sx, sy, sx + 18, sy + 18, slotBg);
                 g.renderOutline(sx, sy, 18, 18, slotBorder);
@@ -249,10 +276,8 @@ public class SubspaceScreen extends AbstractContainerScreen<SubspaceMenu> {
             }
         }
 
-        // 6. Separador entre el Subespacio y el Inventario
         g.fill(x + 8, y + 127, x + w - 8, y + 128, 0x4470E8FF);
 
-        // 7. Separador superior del panel de control/botones
         g.fill(x + 8, y + 220, x + w - 8, y + 221, 0x3370E8FF);
     }
 
@@ -264,18 +289,13 @@ public class SubspaceScreen extends AbstractContainerScreen<SubspaceMenu> {
             lvl = com.soybe.awakeningsystem.SystemEvents.data(player).subspaceLevel();
         }
 
-        // Título centrado con estilo del Sistema, página y nivel actual
         int totalPages = this.menu.getTotalPages();
         int curPage = this.menu.getCurrentPage() + 1;
-        String title = (totalPages > 1)
-                ? "✦ SUBESPACIO (" + curPage + "/" + totalPages + ") ✦"
-                : "✦ SUBESPACIO DEL SISTEMA (NVL " + lvl + ") ✦";
+        Component title = (totalPages > 1)
+                ? Component.translatable("awakening_system.subspace.title_paged", curPage, totalPages)
+                : Component.translatable("awakening_system.subspace.title_level", lvl);
         g.drawCenteredString(this.font, title, this.imageWidth / 2, 6, CYAN);
 
-        // Etiqueta del inventario
-        g.drawString(this.font, "Inventario del Cazador", 8, this.inventoryLabelY, MUTED, false);
-
-        // Contador de capacidad en tiempo real basado en ranuras desbloqueadas
         int count = 0;
         if (player != null) {
             var items = com.soybe.awakeningsystem.SystemEvents.data(player).getSubspaceItems();
@@ -293,6 +313,13 @@ public class SubspaceScreen extends AbstractContainerScreen<SubspaceMenu> {
         String capText = count + " / " + unlocked;
         int capW = this.font.width(capText);
         int capColor = (count >= unlocked) ? 0xFFFF5555 : (count >= unlocked * 0.85 ? 0xFFFFAA00 : 0xFF88D8B0);
+
+        Component invLabel = Component.translatable("awakening_system.subspace.hunter_inventory");
+        int maxInvW = this.imageWidth - 16 - capW - 4;
+        if (this.font.width(invLabel) > maxInvW) {
+            invLabel = Component.translatable("container.inventory");
+        }
+        g.drawString(this.font, invLabel, 8, this.inventoryLabelY, MUTED, false);
         g.drawString(this.font, capText, this.imageWidth - 8 - capW, this.inventoryLabelY, capColor, false);
     }
 
@@ -368,29 +395,23 @@ public class SubspaceScreen extends AbstractContainerScreen<SubspaceMenu> {
             int corner = hovered ? theme.hoverCorner : theme.baseCorner;
             int highlight = hovered ? theme.hoverHighlight : theme.baseHighlight;
 
-            // Halo sutil en hover
             if (hovered) {
                 graphics.renderOutline(bx - 1, by - 1, bw + 2, bh + 2, theme.glowColor);
             }
 
-            // Fondo del botón
             graphics.fill(bx, by, bx + bw, by + bh, bg);
 
-            // Borde holográfico
             graphics.renderOutline(bx, by, bw, bh, border);
 
-            // Línea de brillo interna superior
             graphics.fill(bx + 1, by + 1, bx + bw - 1, by + 2, highlight);
 
-            // Esquinas resaltadas (estilo Solo Leveling System)
             graphics.fill(bx, by, bx + 2, by + 2, corner);
             graphics.fill(bx + bw - 2, by, bx + bw, by + 2, corner);
             graphics.fill(bx, by + bh - 2, bx + 2, by + bh, corner);
             graphics.fill(bx + bw - 2, by + bh - 2, bx + bw, by + bh, corner);
 
-            // Texto centrado
-            Component text = hovered ? this.hoverLabel : this.normalLabel;
-            graphics.drawCenteredString(mc.font, text, bx + bw / 2, by + (bh - 8) / 2, 0xFFFFFF);
+            Component text = this.normalLabel;
+            graphics.drawCenteredString(mc.font, text, bx + bw / 2, by + (bh - 8) / 2, hovered ? 0xFFFFFFFF : 0xFFCCCCCC);
         }
     }
 }

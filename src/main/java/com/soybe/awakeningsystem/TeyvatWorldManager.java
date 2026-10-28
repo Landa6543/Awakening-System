@@ -41,19 +41,18 @@ public final class TeyvatWorldManager {
     public static final BlockPos MUSK_REEF_ISLAND_POS = new BlockPos(160, 64, 160);
     public static final Direction ABYSS_FACING = Direction.SOUTH;
 
-    // Coordenadas canónicas de estructuras emblemáticas y jefes de Teyvat
-    public static final BlockPos GOLDEN_HOUSE_POS = new BlockPos(500, 75, 500);       // Casa Dorada (Childe / Tartaglia)
-    public static final BlockPos TENSHUKAKU_POS = new BlockPos(500, 75, -500);        // Tenshukaku (Raiden Shogun)
-    public static final BlockPos WOLFLORD_POS = new BlockPos(-500, 80, 500);          // Enkanomiya (Rey Acechador Dorado)
-    public static final BlockPos AZHDAHA_POS = new BlockPos(700, 28, 700);             // Dominio Subterráneo Azhdaha
-    public static final BlockPos WINDRISE_POS = new BlockPos(90, 68, -140);           // Roble Sagrado de Windrise
-    public static final BlockPos JADE_CHAMBER_POS = new BlockPos(200, 140, 400);      // Cámara de Jade Flotante
-    public static final BlockPos WINERY_POS = new BlockPos(-300, 72, -300);            // Viñedo del Amanecer
-    public static final BlockPos ALCOR_POS = new BlockPos(400, 64, -200);              // El Alcor (Beidou)
-    public static final BlockPos WITCH_ISLAND_POS = new BlockPos(-600, 65, 300);       // Isla de la Bruja
-    public static final BlockPos TREEHOUSES_POS = new BlockPos(300, 75, 600);          // Aldea de Casas en el Árbol
+    public static final BlockPos GOLDEN_HOUSE_POS = new BlockPos(500, 75, 500);
+    public static final BlockPos TENSHUKAKU_POS = new BlockPos(500, 75, -500);
+    public static final BlockPos WOLFLORD_POS = new BlockPos(-500, 80, 500);
+    public static final BlockPos AZHDAHA_POS = new BlockPos(700, 28, 700);
+    public static final BlockPos WINDRISE_POS = new BlockPos(90, 68, -140);
+    public static final BlockPos JADE_CHAMBER_POS = new BlockPos(200, 140, 400);
+    public static final BlockPos WINERY_POS = new BlockPos(-300, 72, -300);
+    public static final BlockPos ALCOR_POS = new BlockPos(400, 64, -200);
+    public static final BlockPos WITCH_ISLAND_POS = new BlockPos(-600, 65, 300);
+    public static final BlockPos TREEHOUSES_POS = new BlockPos(300, 75, 600);
+    public static final BlockPos CASINO_POS = new BlockPos(220, 68, -220);
 
-    // Hipóstasis elementales y Regisvid
     public static final BlockPos ANEMO_HYPOSTASIS_POS = new BlockPos(-400, 72, -400);
     public static final BlockPos ELECTRO_HYPOSTASIS_POS = new BlockPos(-400, 72, 400);
     public static final BlockPos GEO_HYPOSTASIS_POS = new BlockPos(400, 72, 800);
@@ -66,7 +65,11 @@ public final class TeyvatWorldManager {
 
     public static class TeyvatAbyssSavedData extends SavedData {
         public static final String DATA_NAME = "awakening_teyvat_abyss_data";
-        private boolean active = true; // Por defecto ACTIVO como en Genshin Impact
+        private boolean active = true;
+        private boolean muskReefBuilt = false;
+        private boolean racetrackBuilt = false;
+        private boolean racetrackTerrainCleaned = false;
+        private boolean casinoBuilt = false;
 
         public static TeyvatAbyssSavedData get(MinecraftServer server) {
             return server.overworld().getDataStorage().computeIfAbsent(
@@ -78,6 +81,10 @@ public final class TeyvatWorldManager {
         public static TeyvatAbyssSavedData load(CompoundTag tag, HolderLookup.Provider registries) {
             TeyvatAbyssSavedData data = new TeyvatAbyssSavedData();
             data.active = tag.contains("AbyssActive") ? tag.getBoolean("AbyssActive") : true;
+            data.muskReefBuilt = tag.getBoolean("MuskReefBuilt");
+            data.racetrackBuilt = tag.getBoolean("RacetrackBuilt");
+            data.racetrackTerrainCleaned = tag.getBoolean("RacetrackTerrainCleaned");
+            data.casinoBuilt = tag.getBoolean("CasinoBuilt");
             memoryAbyssActive = data.active;
 
             if (tag.contains("Portals", net.minecraft.nbt.Tag.TAG_LIST)) {
@@ -91,7 +98,9 @@ public final class TeyvatWorldManager {
                         if (facing == null) facing = Direction.SOUTH;
                         boolean pActive = pTag.contains("Active") ? pTag.getBoolean("Active") : data.active;
                         registerAbyssPortalInternal(dim, pos, facing, pActive);
-                    } catch (Exception ignored) {}
+                    } catch (Exception e) {
+                        AwakeningSystemMod.LOGGER.debug("Error deserializing abyss portal entry from NBT: ", e);
+                    }
                 }
             }
             registerAbyssPortalInternal(TEYVAT_WORLD, MUSK_REEF_ISLAND_POS, ABYSS_FACING, data.active);
@@ -101,6 +110,10 @@ public final class TeyvatWorldManager {
         @Override
         public CompoundTag save(CompoundTag tag, HolderLookup.Provider registries) {
             tag.putBoolean("AbyssActive", active);
+            tag.putBoolean("MuskReefBuilt", muskReefBuilt);
+            tag.putBoolean("RacetrackBuilt", racetrackBuilt);
+            tag.putBoolean("RacetrackTerrainCleaned", racetrackTerrainCleaned);
+            tag.putBoolean("CasinoBuilt", casinoBuilt);
             net.minecraft.nbt.ListTag list = new net.minecraft.nbt.ListTag();
             for (AbyssPortalEntry p : REGISTERED_PORTALS) {
                 CompoundTag pTag = new CompoundTag();
@@ -125,6 +138,42 @@ public final class TeyvatWorldManager {
             memoryAbyssActive = val;
             setDirty();
         }
+
+        public boolean isMuskReefBuilt() {
+            return muskReefBuilt;
+        }
+
+        public void setMuskReefBuilt(boolean val) {
+            this.muskReefBuilt = val;
+            setDirty();
+        }
+
+        public boolean isRacetrackBuilt() {
+            return racetrackBuilt;
+        }
+
+        public void setRacetrackBuilt(boolean val) {
+            this.racetrackBuilt = val;
+            setDirty();
+        }
+
+        public boolean isRacetrackTerrainCleaned() {
+            return racetrackTerrainCleaned;
+        }
+
+        public void setRacetrackTerrainCleaned(boolean val) {
+            this.racetrackTerrainCleaned = val;
+            setDirty();
+        }
+
+        public boolean isCasinoBuilt() {
+            return casinoBuilt;
+        }
+
+        public void setCasinoBuilt(boolean val) {
+            this.casinoBuilt = val;
+            setDirty();
+        }
     }
 
     public static boolean isAbyssActive() {
@@ -132,7 +181,9 @@ public final class TeyvatWorldManager {
         if (server != null) {
             try {
                 return TeyvatAbyssSavedData.get(server).isActive();
-            } catch (Exception ignored) {}
+            } catch (Exception e) {
+                AwakeningSystemMod.LOGGER.debug("Error checking TeyvatAbyssSavedData active state: ", e);
+            }
         }
         return memoryAbyssActive;
     }
@@ -165,7 +216,9 @@ public final class TeyvatWorldManager {
         if (server != null) {
             try {
                 TeyvatAbyssSavedData.get(server).setDirty();
-            } catch (Exception ignored) {}
+            } catch (Exception e) {
+                AwakeningSystemMod.LOGGER.debug("Error setting dirty flag on TeyvatAbyssSavedData: ", e);
+            }
         }
     }
 
@@ -208,9 +261,10 @@ public final class TeyvatWorldManager {
         if (server != null) {
             try {
                 TeyvatAbyssSavedData.get(server).setActive(active);
-            } catch (Exception ignored) {}
+            } catch (Exception e) {
+                AwakeningSystemMod.LOGGER.debug("Failed to persist Abyss portal state: {}", e.getMessage(), e);
+            }
 
-            // Sincronizar vórtice visual en clientes
             for (ServerPlayer player : server.getPlayerList().getPlayers()) {
                 DungeonManager.syncRiftsToPlayer(player);
             }
@@ -218,7 +272,6 @@ public final class TeyvatWorldManager {
     }
 
     public static BlockPos getAbyssPortalCenter() {
-        // El centro geométrico de la apertura circular 'O' está 7 bloques arriba de la base del portal
         return MUSK_REEF_ISLAND_POS.above(7);
     }
 
@@ -227,12 +280,44 @@ public final class TeyvatWorldManager {
     }
 
     public static BlockPos getSafeTeyvatSpawn(ServerLevel level) {
-        BlockPos center = new BlockPos(0, 70, 0);
-        BlockPos top = level.getHeightmapPos(Heightmap.Types.MOTION_BLOCKING_NO_LEAVES, center);
-        if (top.getY() > level.getMinBuildHeight() && top.getY() < level.getMaxBuildHeight()) {
-            return top.above();
+        BlockPos bestPos = null;
+        int bestScore = -999999;
+
+        for (int r = 0; r <= 48; r += 8) {
+            for (int dx = -r; dx <= r; dx += (r == 0 ? 1 : (r == 48 ? 8 : r * 2))) {
+                for (int dz = -r; dz <= r; dz += (r == 0 ? 1 : 8)) {
+                    int x = dx;
+                    int z = dz;
+                    int y = level.getHeight(Heightmap.Types.WORLD_SURFACE, x, z);
+                    if (y <= level.getMinBuildHeight() + 5 || y >= level.getMaxBuildHeight() - 10) continue;
+
+                    BlockPos pos = new BlockPos(x, y, z);
+                    net.minecraft.world.level.block.state.BlockState ground = level.getBlockState(pos.below());
+                    if (ground.liquid() || !ground.isSolid()) continue;
+
+                    String biomeName = level.getBiome(pos).unwrapKey().map(k -> k.location().getPath()).orElse("");
+                    int score = 0;
+                    if (level.canSeeSky(pos)) score += 500;
+                    if (!biomeName.contains("cave") && !biomeName.contains("abyss")) score += 300;
+                    if (biomeName.contains("windrise") || biomeName.contains("plains")) score += 200;
+                    if (y >= 64 && y <= 95) score += 100;
+                    score -= (Math.abs(x) + Math.abs(z));
+
+                    if (score > bestScore) {
+                        bestScore = score;
+                        bestPos = pos;
+                    }
+                }
+            }
         }
-        return new BlockPos(0, 72, 0);
+
+        if (bestPos != null) {
+            return bestPos;
+        }
+
+        int defY = level.getHeight(Heightmap.Types.WORLD_SURFACE, 0, 0);
+        if (defY < 64) defY = 68;
+        return new BlockPos(0, defY, 0);
     }
 
     public static void teleportToTeyvat(ServerPlayer player) {
@@ -251,7 +336,7 @@ public final class TeyvatWorldManager {
             TowerManager.exitTowerToDimension(player, teyvatLevel, spawnPos);
         }
 
-        player.teleportTo(teyvatLevel, spawnPos.getX() + 0.5D, (double) spawnPos.getY(), spawnPos.getZ() + 0.5D, 0.0F, 0.0F);
+        player.teleportTo(teyvatLevel, spawnPos.getX() + 0.5D, (double) spawnPos.getY(), spawnPos.getZ() + 2.0D, 0.0F, 0.0F);
 
         teyvatLevel.sendParticles(ParticleTypes.END_ROD, spawnPos.getX() + 0.5D, spawnPos.getY() + 1.5D, spawnPos.getZ() + 0.5D, 50, 1.0D, 1.0D, 1.0D, 0.08D);
         teyvatLevel.sendParticles(ParticleTypes.HAPPY_VILLAGER, spawnPos.getX() + 0.5D, spawnPos.getY() + 1.5D, spawnPos.getZ() + 0.5D, 40, 1.5D, 1.0D, 1.5D, 0.2D);
@@ -260,7 +345,6 @@ public final class TeyvatWorldManager {
         player.playNotifySound(SoundEvents.BEACON_ACTIVATE, SoundSource.PLAYERS, 1.0F, 1.3F);
         player.playNotifySound(ModSounds.GATE_TRAVEL.value(), SoundSource.PLAYERS, 0.8F, 1.0F);
 
-        // Activar el protocolo de Actualización 4.0 del Sistema solo la primera vez (5 minutos = 6000 ticks)
         SystemData data = SystemEvents.data(player);
         if (!data.system40Updated() && !data.isSystem40Updating()) {
             data.setSystem40Updating(true);
@@ -280,7 +364,7 @@ public final class TeyvatWorldManager {
 
             player.displayClientMessage(Component.translatable("awakening_system.hud.system40_update_protocol_started"), true);
         } else {
-            player.displayClientMessage(Component.literal("§b§l✦ [DIMENSIÓN DE TEYVAT] §f¡Bienvenido a las tierras naturales de Teyvat!"), true);
+            player.displayClientMessage(Component.translatable("awakening_system.teyvat.welcome"), true);
         }
     }
 
@@ -293,6 +377,10 @@ public final class TeyvatWorldManager {
         data.setMurimUnlocked(true);
         data.setSystem40Updated(true);
         data.setTeyvatUnlocked(true);
+        if (data.gachaEpochTick() == 0L) {
+            data.setGachaEpochTick(player.serverLevel().getDayTime());
+            data.setLastClaimedMaintenanceVersion(1);
+        }
         data.addCoins(250000);
         data.addExperience(50000);
         data.addPrimogems(1600);
@@ -336,7 +424,6 @@ public final class TeyvatWorldManager {
 
         ensureTeyvatCityAndStructures(teyvatLevel);
 
-        // Posición frente a los escalones de la plaza de la Espiral del Abismo
         BlockPos target = MUSK_REEF_ISLAND_POS.offset(0, 3, -6);
 
         if (TowerManager.isInTower(player.getUUID())) {
@@ -348,14 +435,14 @@ public final class TeyvatWorldManager {
         teyvatLevel.sendParticles(ParticleTypes.END_ROD, target.getX() + 0.5D, target.getY() + 1.0D, target.getZ() + 0.5D, 40, 1.0D, 1.0D, 1.0D, 0.05D);
         player.playNotifySound(SoundEvents.BEACON_ACTIVATE, SoundSource.PLAYERS, 1.0F, 1.2F);
 
-        player.displayClientMessage(Component.literal("§b§l✦ [ESPIRAL DEL ABISMO] §fHas llegado al solitario Arrecife de Musk."), true);
+        player.displayClientMessage(Component.translatable("awakening_system.teyvat.musk_reef"), true);
     }
 
     public static void ensureTeyvatCityAndStructures(ServerLevel level) {
         TeyvatAbyssPortalBuilder.ensureAbyssPortalInTeyvat(level);
         com.soybe.awakeningsystem.world.TeyvatRegionalBuilder.ensureTeyvatArrivalPlaza(level);
-        // Limpiar cualquier residuo de plataformas o cajas procedurales antiguas
         com.soybe.awakeningsystem.world.TeyvatRegionalBuilder.cleanupProceduralCitadelAndPlaza(level);
+        com.soybe.awakeningsystem.world.TeyvatRacetrackBuilder.buildRacetrackIfAbsent(level);
     }
 
     public static void forceRebuildStructures(ServerLevel level) {
@@ -376,21 +463,17 @@ public final class TeyvatWorldManager {
             if (!portal.dimension.equals(dim)) continue;
 
             double px = player.getX() - (portal.centerPos.getX() + 0.5D);
-            double py = player.getY() - portal.basePos.getY(); // Altura sobre el suelo base
+            double py = player.getY() - portal.basePos.getY();
             double pz = player.getZ() - (portal.centerPos.getZ() + 0.5D);
 
-            // Distancia perpendicular a través del plano del portal
             double distFacing = Math.abs(px * portal.facing.getStepX() + pz * portal.facing.getStepZ());
 
-            // Distancia lateral a lo ancho del vano
             Direction rightDir = portal.facing.getClockWise();
             double distLateral = Math.abs(px * rightDir.getStepX() + pz * rightDir.getStepZ());
 
-            // Rango de paso: ancho apertura circular (distLateral <= 4.0), grosor (distFacing <= 2.5), altura (py 0.5 a 12.5)
             boolean insidePortal = (distFacing <= 2.5D && distLateral <= 4.0D && py >= 0.5D && py <= 12.5D);
 
             if (insidePortal) {
-                // Si estaba bloqueado, activarlo automáticamente
                 if (!portal.active) {
                     portal.active = true;
                     setAbyssActive(player.getServer(), true);
@@ -413,13 +496,10 @@ public final class TeyvatWorldManager {
      * Ciclo de actualización del servidor para partículas, ciclo día/noche e interacción con el portal.
      */
     public static void tick(MinecraftServer server) {
-        // Actualizar sesiones activas de la Espiral del Abismo
         com.soybe.awakeningsystem.abyss.SpiralAbyssManager.tick(server);
 
-        // Actualizar generación de estructuras y características interactivas de Teyvat (Estatuas, Waypoints, Updrafts)
         com.soybe.awakeningsystem.world.TeyvatWorldGenManager.tick(server);
 
-        // Sincronizar ciclo día/noche natural y descanso en cama en Teyvat
         ServerLevel teyvatLevel = server.getLevel(TEYVAT_WORLD);
         if (teyvatLevel != null) {
             ServerLevel overworld = server.overworld();
@@ -427,7 +507,6 @@ public final class TeyvatWorldManager {
                 boolean anySleepingInTeyvat = teyvatLevel.players().stream().anyMatch(net.minecraft.world.entity.player.Player::isSleeping);
                 boolean anySleepingInOw = overworld.players().stream().anyMatch(net.minecraft.world.entity.player.Player::isSleeping);
 
-                // Solo sincronizar el tiempo del overworld a Teyvat si nadie está durmiendo
                 if (!anySleepingInTeyvat && !anySleepingInOw) {
                     long owDayTime = overworld.getDayTime();
                     long teyvatDayTime = teyvatLevel.getDayTime();
@@ -436,16 +515,21 @@ public final class TeyvatWorldManager {
                     }
                 }
             }
+
+            com.soybe.awakeningsystem.world.TeyvatRacetrackBuilder.buildRacetrackIfAbsent(teyvatLevel);
+            com.soybe.awakeningsystem.uma.TeyvatRacetrackManager.get(teyvatLevel);
+        }
+
+        for (com.soybe.awakeningsystem.uma.TeyvatRacetrackManager manager : com.soybe.awakeningsystem.uma.TeyvatRacetrackManager.getAllInstances()) {
+            manager.tick();
         }
 
         for (AbyssPortalEntry portal : REGISTERED_PORTALS) {
             ServerLevel lvl = server.getLevel(portal.dimension);
             if (lvl == null) continue;
 
-            // 1. Partículas ambientales del portal
             TeyvatAbyssPortalBuilder.tickParticles(lvl, portal.centerPos, portal.facing, portal.active);
 
-            // 2. Comprobar colisión de jugadores en el nivel del portal
             for (ServerPlayer player : lvl.players()) {
                 checkPlayerAbyssPortal(player);
             }
@@ -472,7 +556,6 @@ public final class TeyvatWorldManager {
             if (updated != null) targetPos = updated;
         }
 
-        // Corrección de mundos existentes si Golden House se había guardado con el Y del sótano (<= 77)
         if (structureKey.equals("golden_house")) {
             if (targetPos.getY() <= 77) {
                 targetPos = targetPos.offset(0, 7, 4);
@@ -482,7 +565,6 @@ public final class TeyvatWorldManager {
                 tData.setDirty();
             }
 
-            // Rescatar a Tartaglia si quedó atrapado en el sótano bajo los cristales
             final BlockPos rescueTarget = targetPos;
             List<com.soybe.awakeningsystem.entity.ChildeBossEntity> stuckChildes = teyvatLevel.getEntitiesOfClass(
                     com.soybe.awakeningsystem.entity.ChildeBossEntity.class,
@@ -506,7 +588,7 @@ public final class TeyvatWorldManager {
 
         teyvatLevel.sendParticles(ParticleTypes.END_ROD, px, py + 1.0D, pz, 40, 1.0D, 1.0D, 1.0D, 0.05D);
         player.playNotifySound(SoundEvents.BEACON_ACTIVATE, SoundSource.PLAYERS, 1.0F, 1.2F);
-        player.displayClientMessage(Component.literal("§b§l✦ [TEYVAT] §fHas llegado a §e" + displayName + "§f."), true);
+        player.displayClientMessage(Component.translatable("awakening_system.teyvat.arrived_at", displayName), true);
     }
 
     public static void teleportToNation(ServerPlayer player, BlockPos capitalPos, String nationName) {
@@ -525,79 +607,89 @@ public final class TeyvatWorldManager {
 
         teyvatLevel.sendParticles(ParticleTypes.END_ROD, target.getX() + 0.5D, target.getY() + 1.0D, target.getZ() + 0.5D, 35, 0.8D, 1.0D, 0.8D, 0.05D);
         player.playNotifySound(SoundEvents.BEACON_ACTIVATE, SoundSource.PLAYERS, 1.0F, 1.2F);
-        player.displayClientMessage(Component.literal("§b§l✦ [TEYVAT] §fHas llegado a §e" + nationName + "§f."), true);
+        player.displayClientMessage(Component.translatable("awakening_system.teyvat.arrived_at", nationName), true);
     }
 
     public static void teleportToGoldenHouse(ServerPlayer player) {
-        teleportToNamedStructure(player, "golden_house", GOLDEN_HOUSE_POS, "La Casa Dorada (Jefe Tartaglia / Childe)", new Vec3(0, 0, -10), 0.0F);
+        teleportToNamedStructure(player, "golden_house", GOLDEN_HOUSE_POS, "The Golden House (Tartaglia / Childe Boss)", new Vec3(0, 0, -10), 0.0F);
     }
 
     public static void teleportToTenshukaku(ServerPlayer player) {
-        teleportToNamedStructure(player, "tenshukaku", TENSHUKAKU_POS, "Palacio Tenshukaku (Jefe Raiden Shogun)", new Vec3(0, 1, -10), 0.0F);
+        teleportToNamedStructure(player, "tenshukaku", TENSHUKAKU_POS, "Tenshukaku Palace (Raiden Shogun Boss)", new Vec3(0, 1, -10), 0.0F);
     }
 
     public static void teleportToWolflord(ServerPlayer player) {
-        teleportToNamedStructure(player, "wolflord", WOLFLORD_POS, "Dominio del Rey Acechador Dorado (Enkanomiya)", new Vec3(0, 1, -15), 0.0F);
+        teleportToNamedStructure(player, "wolflord", WOLFLORD_POS, "Golden Wolflord Domain (Enkanomiya)", new Vec3(0, 1, -15), 0.0F);
     }
 
     public static void teleportToAzhdaha(ServerPlayer player) {
-        teleportToNamedStructure(player, "azhdaha", AZHDAHA_POS, "Dominio Subterráneo del Dragón Azhdaha", new Vec3(0, 1, -15), 0.0F);
+        teleportToNamedStructure(player, "azhdaha", AZHDAHA_POS, "Azhdaha's Underground Domain", new Vec3(0, 1, -15), 0.0F);
     }
 
     public static void teleportToWindrise(ServerPlayer player) {
-        teleportToNamedStructure(player, "windrise", WINDRISE_POS, "Gran Roble Sagrado de Windrise", new Vec3(0, 1, -8), 0.0F);
+        teleportToNamedStructure(player, "windrise", WINDRISE_POS, "Sacred Windrise Great Tree", new Vec3(0, 1, -8), 0.0F);
     }
 
     public static void teleportToJadeChamber(ServerPlayer player) {
-        teleportToNamedStructure(player, "jade_chamber", JADE_CHAMBER_POS, "Cámara de Jade Flotante", new Vec3(0, 2, 0), 0.0F);
+        teleportToNamedStructure(player, "jade_chamber", JADE_CHAMBER_POS, "Floating Jade Chamber", new Vec3(0, 2, 0), 0.0F);
     }
 
     public static void teleportToWinery(ServerPlayer player) {
-        teleportToNamedStructure(player, "dawn_winery", WINERY_POS, "Viñedo del Amanecer (Dawn Winery)", new Vec3(0, 1, 0), 0.0F);
+        teleportToNamedStructure(player, "dawn_winery", WINERY_POS, "Dawn Winery", new Vec3(0, 1, 0), 0.0F);
     }
 
     public static void teleportToAlcor(ServerPlayer player) {
-        teleportToNamedStructure(player, "beidou_ship", ALCOR_POS, "El Alcor (Navío de Beidou)", new Vec3(0, 2, 0), 0.0F);
+        teleportToNamedStructure(player, "beidou_ship", ALCOR_POS, "The Alcor (Beidou's Ship)", new Vec3(0, 2, 0), 0.0F);
     }
 
     public static void teleportToWitchIsland(ServerPlayer player) {
-        teleportToNamedStructure(player, "witch_island", WITCH_ISLAND_POS, "Isla de la Bruja", new Vec3(0, 1, 0), 0.0F);
+        teleportToNamedStructure(player, "witch_island", WITCH_ISLAND_POS, "Witch's Island", new Vec3(0, 1, 0), 0.0F);
     }
 
     public static void teleportToTreehouses(ServerPlayer player) {
-        teleportToNamedStructure(player, "teyvat_treehouses", TREEHOUSES_POS, "Aldea Arbórea de Teyvat", new Vec3(0, 1, 0), 0.0F);
+        teleportToNamedStructure(player, "teyvat_treehouses", TREEHOUSES_POS, "Teyvat Treehouse Village", new Vec3(0, 1, 0), 0.0F);
     }
 
     public static void teleportToHypostasis(ServerPlayer player, String element) {
         switch (element.toLowerCase(java.util.Locale.ROOT)) {
-            case "anemo" -> teleportToNamedStructure(player, "anemo_hypostasis", ANEMO_HYPOSTASIS_POS, "Hipóstasis Anemo (Beth)", new Vec3(0, 1, -10), 0.0F);
-            case "electro" -> teleportToNamedStructure(player, "electro_hypostasis", ELECTRO_HYPOSTASIS_POS, "Hipóstasis Electro (Aleph)", new Vec3(0, 1, -10), 0.0F);
-            case "geo" -> teleportToNamedStructure(player, "geo_hypostasis", GEO_HYPOSTASIS_POS, "Hipóstasis Geo (Gimel)", new Vec3(0, 1, -10), 0.0F);
-            case "cryo" -> teleportToNamedStructure(player, "cryo_hypostasis", CRYO_HYPOSTASIS_POS, "Hipóstasis Cryo (Daleth)", new Vec3(0, 1, -10), 0.0F);
-            case "pyro" -> teleportToNamedStructure(player, "pyro_hypostasis", PYRO_HYPOSTASIS_POS, "Hipóstasis Pyro (Ayin)", new Vec3(0, 1, -10), 0.0F);
-            case "hydro" -> teleportToNamedStructure(player, "hydro_hypostasis", HYDRO_HYPOSTASIS_POS, "Hipóstasis Hydro (He)", new Vec3(0, 1, -8), 0.0F);
-            case "regisvine", "cryo_regisvine" -> teleportToNamedStructure(player, "cryo_regisvine", CRYO_REGISVINE_POS, "Regisvid Cryo", new Vec3(0, 1, -10), 0.0F);
-            default -> teleportToNamedStructure(player, "anemo_hypostasis", ANEMO_HYPOSTASIS_POS, "Hipóstasis Anemo", new Vec3(0, 1, -10), 0.0F);
+            case "anemo" -> teleportToNamedStructure(player, "anemo_hypostasis", ANEMO_HYPOSTASIS_POS, "Anemo Hypostasis (Beth)", new Vec3(0, 1, -10), 0.0F);
+            case "electro" -> teleportToNamedStructure(player, "electro_hypostasis", ELECTRO_HYPOSTASIS_POS, "Electro Hypostasis (Aleph)", new Vec3(0, 1, -10), 0.0F);
+            case "geo" -> teleportToNamedStructure(player, "geo_hypostasis", GEO_HYPOSTASIS_POS, "Geo Hypostasis (Gimel)", new Vec3(0, 1, -10), 0.0F);
+            case "cryo" -> teleportToNamedStructure(player, "cryo_hypostasis", CRYO_HYPOSTASIS_POS, "Cryo Hypostasis (Daleth)", new Vec3(0, 1, -10), 0.0F);
+            case "pyro" -> teleportToNamedStructure(player, "pyro_hypostasis", PYRO_HYPOSTASIS_POS, "Pyro Hypostasis (Ayin)", new Vec3(0, 1, -10), 0.0F);
+            case "hydro" -> teleportToNamedStructure(player, "hydro_hypostasis", HYDRO_HYPOSTASIS_POS, "Hydro Hypostasis (He)", new Vec3(0, 1, -8), 0.0F);
+            case "regisvine", "cryo_regisvine" -> teleportToNamedStructure(player, "cryo_regisvine", CRYO_REGISVINE_POS, "Cryo Regisvine", new Vec3(0, 1, -10), 0.0F);
+            default -> teleportToNamedStructure(player, "anemo_hypostasis", ANEMO_HYPOSTASIS_POS, "Anemo Hypostasis", new Vec3(0, 1, -10), 0.0F);
         }
     }
 
     public static void teleportToMondstadt(ServerPlayer player) {
-        teleportToNation(player, com.soybe.awakeningsystem.world.TeyvatRegionalBuilder.MONDSTADT_POS, "Mondstadt (Ciudadela de Favonius)");
+        teleportToNation(player, com.soybe.awakeningsystem.world.TeyvatRegionalBuilder.MONDSTADT_POS, "Mondstadt (Favonius Citadel)");
     }
     public static void teleportToLiyue(ServerPlayer player) {
-        teleportToGoldenHouse(player);
+        teleportToNation(player, com.soybe.awakeningsystem.world.TeyvatRegionalBuilder.LIYUE_POS, "Liyue (Yujing Terrace)");
     }
     public static void teleportToInazuma(ServerPlayer player) {
-        teleportToTenshukaku(player);
+        teleportToNation(player, com.soybe.awakeningsystem.world.TeyvatRegionalBuilder.INAZUMA_POS, "Inazuma (Tenshukaku)");
     }
     public static void teleportToSumeru(ServerPlayer player) {
-        teleportToNation(player, com.soybe.awakeningsystem.world.TeyvatRegionalBuilder.SUMERU_POS, "Sumeru (La Gran Academiya)");
+        teleportToNation(player, com.soybe.awakeningsystem.world.TeyvatRegionalBuilder.SUMERU_POS, "Sumeru (The Great Akademiya)");
     }
     public static void teleportToFontaine(ServerPlayer player) {
         teleportToNation(player, com.soybe.awakeningsystem.world.TeyvatRegionalBuilder.FONTAINE_POS, "Fontaine (Palais Mermonia)");
     }
+    public static void teleportToCasino(ServerPlayer player) {
+        var server = player.getServer();
+        if (server == null) return;
+        ServerLevel teyvat = server.getLevel(TEYVAT_WORLD);
+        if (teyvat == null) return;
+
+        BlockPos casinoOrigin = com.soybe.awakeningsystem.world.TeyvatCasinoBuilder.getOrFindCasinoPos(teyvat);
+        ensureTeyvatCityAndStructures(teyvat);
+        BlockPos waypointPos = new BlockPos(casinoOrigin.getX() + 30, casinoOrigin.getY() + 1, casinoOrigin.getZ());
+        teleportToNamedStructure(player, "casino", waypointPos, "The Grand Royal Casino of Teyvat", new Vec3(2, 0, 0), 90.0F);
+    }
     public static void ensureMondstadtOnServerStart(MinecraftServer server) {
-        // Auto-aprovisionamiento de regiones externas desactivado
     }
 
     public static void checkPlayerAnemoUpdraft(ServerPlayer player) {}
