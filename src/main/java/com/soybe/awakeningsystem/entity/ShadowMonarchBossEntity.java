@@ -334,13 +334,15 @@ public class ShadowMonarchBossEntity extends Monster {
     @Override
     public void die(DamageSource damageSource) {
         super.die(damageSource);
-        if (this.getVariant() == 1) {
-            broadcastBossMessage("awakening_system.boss.ashborn.defeat_quote");
-        } else {
-            broadcastBossMessage("awakening_system.boss.antares.defeat_quote");
-        }
-        if (damageSource.getEntity() instanceof net.minecraft.server.level.ServerPlayer player) {
-            com.soybe.awakeningsystem.ConstellationAscension.checkMonarchBossDefeat(player, this.getVariant());
+        if (!this.getPersistentData().getBoolean("TowerMob")) {
+            if (this.getVariant() == 1) {
+                broadcastBossMessage("awakening_system.boss.ashborn.defeat_quote");
+            } else {
+                broadcastBossMessage("awakening_system.boss.antares.defeat_quote");
+            }
+            if (damageSource.getEntity() instanceof net.minecraft.server.level.ServerPlayer player) {
+                com.soybe.awakeningsystem.ConstellationAscension.checkMonarchBossDefeat(player, this.getVariant());
+            }
         }
         if (this.level() instanceof net.minecraft.server.level.ServerLevel sl) {
             sl.sendParticles(ParticleTypes.SOUL, this.getX(), this.getY() + 1.2D, this.getZ(), 60, 0.8D, 1.0D, 0.8D, 0.1D);

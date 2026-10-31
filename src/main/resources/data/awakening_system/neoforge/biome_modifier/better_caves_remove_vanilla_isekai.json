@@ -1,0 +1,8 @@
+{
+  "type": "neoforge:remove_carvers",
+  "biomes": "#awakening_system:is_isekai",
+  "carvers": [
+    "minecraft:cave",
+    "minecraft:cave_extra_underground"
+  ]
+}

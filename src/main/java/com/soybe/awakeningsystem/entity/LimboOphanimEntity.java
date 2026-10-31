@@ -61,6 +61,7 @@ public class LimboOphanimEntity extends Monster implements GeoEntity {
         this.moveControl = new OphanimMoveControl(this);
         this.setNoGravity(true);
         this.xpReward = 85;
+        this.addTag("no_shadow_extraction");
     }
 
     public static AttributeSupplier.Builder createAttributes() {

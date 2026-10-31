@@ -59,6 +59,13 @@
     "awakening_system:mana_crystal_cluster_b",
     "awakening_system:mana_crystal_cluster_a",
     "awakening_system:mana_crystal_cluster_s",
+    "awakening_system:mana_crystal_cluster_ex",
+    "awakening_system:budding_mana_crystal",
+    "awakening_system:budding_abyssal_amethyst",
+    "awakening_system:small_abyssal_bud",
+    "awakening_system:medium_abyssal_bud",
+    "awakening_system:large_abyssal_bud",
+    "awakening_system:abyssal_resonant_cluster",
     "awakening_system:soul_alloy_ore",
     "awakening_system:soul_alloy_block"
   ]

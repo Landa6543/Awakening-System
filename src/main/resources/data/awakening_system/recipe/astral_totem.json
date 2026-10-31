@@ -1,0 +1,24 @@
+{
+    "key":  {
+                "T":  {
+                          "tag":  "awakening_system:world_totems"
+                      },
+                "S":  {
+                          "item":  "awakening_system:primogem_ore"
+                      },
+                "A":  {
+                          "item":  "awakening_system:astral_ingot"
+                      }
+            },
+    "category":  "equipment",
+    "pattern":  [
+                    "ASA",
+                    "STS",
+                    "ASA"
+                ],
+    "result":  {
+                   "count":  1,
+                   "id":  "awakening_system:astral_totem"
+               },
+    "type":  "minecraft:crafting_shaped"
+}

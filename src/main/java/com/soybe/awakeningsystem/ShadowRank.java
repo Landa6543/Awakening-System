@@ -92,6 +92,22 @@ public enum ShadowRank {
 
     public static ShadowRank determineInitialRank(Mob mob) {
         if (mob == null) return SOLDIER;
+
+        if (com.soybe.awakeningsystem.compat.ApotheosisCompatHandler.isLoaded()) {
+            com.soybe.awakeningsystem.compat.ApotheosisCompatHandler.ApothRarity apothRarity = com.soybe.awakeningsystem.compat.ApotheosisCompatHandler.getMobRarity(mob);
+            if (apothRarity == com.soybe.awakeningsystem.compat.ApotheosisCompatHandler.ApothRarity.ANCIENT) {
+                return GRAND_MARSHAL;
+            } else if (apothRarity == com.soybe.awakeningsystem.compat.ApotheosisCompatHandler.ApothRarity.MYTHIC) {
+                return COMMANDER;
+            } else if (apothRarity == com.soybe.awakeningsystem.compat.ApotheosisCompatHandler.ApothRarity.EPIC) {
+                return ELITE_KNIGHT;
+            } else if (apothRarity == com.soybe.awakeningsystem.compat.ApotheosisCompatHandler.ApothRarity.RARE) {
+                return KNIGHT;
+            } else if (apothRarity == com.soybe.awakeningsystem.compat.ApotheosisCompatHandler.ApothRarity.UNCOMMON) {
+                return ELITE;
+            }
+        }
+
         String typeId = BuiltInRegistries.ENTITY_TYPE.getKey(mob.getType()).toString().toLowerCase(Locale.ROOT);
         String customName = mob.getCustomName() != null ? mob.getCustomName().getString().toLowerCase(Locale.ROOT) : "";
 

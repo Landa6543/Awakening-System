@@ -7,6 +7,7 @@ import net.minecraft.world.entity.LivingEntity;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.item.ArmorItem;
 import net.minecraft.world.item.ArmorMaterial;
+import net.minecraft.world.item.Item;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.TooltipFlag;
 import software.bernie.geckolib.animatable.GeoItem;
@@ -62,6 +63,22 @@ public class ManhwaArmorItem extends ArmorItem implements GeoItem {
 
     public SetType getSetType() {
         return setType;
+    }
+
+    @Override
+    public <T extends LivingEntity> int damageItem(ItemStack stack, int amount, T entity, Consumer<Item> onBroken) {
+        // High-level RPG mobs deal hundreds or thousands of damage per strike.
+        // In vanilla, damage / 4 would instantly disintegrate armor durability in 2-3 hits.
+        // We cap the durability wear to at most 1 point per attack,
+        // and give high tiers natural deflection resistance:
+        if (setType == SetType.PRIMORDIAL) {
+            if (entity != null && entity.getRandom().nextFloat() < 0.75F) return 0;
+        } else if (setType == SetType.CELESTIAL || setType == SetType.ASTRAL || setType == SetType.ASTRALITE) {
+            if (entity != null && entity.getRandom().nextFloat() < 0.50F) return 0;
+        } else if (setType == SetType.SPIRIT_JADE || setType == SetType.ADAMANTITE) {
+            if (entity != null && entity.getRandom().nextFloat() < 0.30F) return 0;
+        }
+        return Math.min(amount, 1);
     }
 
     @Override

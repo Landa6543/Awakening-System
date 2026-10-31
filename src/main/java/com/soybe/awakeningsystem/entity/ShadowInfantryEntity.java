@@ -75,6 +75,14 @@ public class ShadowInfantryEntity extends Monster {
     }
 
     @Override
+    public net.minecraft.network.chat.Component getTypeName() {
+        if (!this.isFriendlyShadow()) {
+            return net.minecraft.network.chat.Component.translatable("entity.awakening_system.shadow_infantry.hostile");
+        }
+        return super.getTypeName();
+    }
+
+    @Override
     public void addAdditionalSaveData(CompoundTag compound) {
         super.addAdditionalSaveData(compound);
         compound.putInt("Variant", this.getVariant());

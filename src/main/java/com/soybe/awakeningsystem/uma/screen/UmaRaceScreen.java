@@ -1,5 +1,6 @@
 package com.soybe.awakeningsystem.uma.screen;
 
+import com.soybe.awakeningsystem.client.gui.ModernGuiHelper;
 import com.soybe.awakeningsystem.uma.UmaProfile;
 import com.soybe.awakeningsystem.uma.network.OpenUmaRacePayload;
 import com.soybe.awakeningsystem.uma.network.UmaRaceActionC2SPayload;
@@ -221,12 +222,8 @@ public class UmaRaceScreen extends Screen {
         int left = (this.width - GUI_WIDTH) / 2;
         int top = (this.height - GUI_HEIGHT) / 2;
 
-        graphics.fillGradient(left, top, left + GUI_WIDTH, top + GUI_HEIGHT, 0xF810131E, 0xFC0A0C14);
-
-        graphics.renderOutline(left, top, GUI_WIDTH, GUI_HEIGHT, 0xFFD4AF37);
-        graphics.renderOutline(left + 1, top + 1, GUI_WIDTH - 2, GUI_HEIGHT - 2, 0x55D4AF37);
-
-        drawCornerDecorations(graphics, left, top, GUI_WIDTH, GUI_HEIGHT);
+        ModernGuiHelper.drawModernWindow(graphics, left, top, GUI_WIDTH, GUI_HEIGHT, ModernGuiHelper.GuiTheme.TEYVAT);
+        ModernGuiHelper.drawModernHeader(graphics, left + 4, top + 4, GUI_WIDTH - 8, 22, null, 0, ModernGuiHelper.GuiTheme.TEYVAT, font);
 
         graphics.fillGradient(left + 2, top + 2, left + GUI_WIDTH - 2, top + 34, 0xEE1A2238, 0xBB10131E);
         graphics.renderOutline(left + 2, top + 2, GUI_WIDTH - 4, 32, 0x44D4AF37);

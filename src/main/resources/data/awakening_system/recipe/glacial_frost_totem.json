@@ -1,0 +1,24 @@
+{
+    "key":  {
+                "T":  {
+                          "tag":  "awakening_system:world_totems"
+                      },
+                "F":  {
+                          "item":  "minecraft:packed_ice"
+                      },
+                "I":  {
+                          "item":  "minecraft:blue_ice"
+                      }
+            },
+    "category":  "equipment",
+    "pattern":  [
+                    "IFI",
+                    "FTF",
+                    "IFI"
+                ],
+    "result":  {
+                   "count":  1,
+                   "id":  "awakening_system:glacial_frost_totem"
+               },
+    "type":  "minecraft:crafting_shaped"
+}

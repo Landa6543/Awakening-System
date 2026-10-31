@@ -1,0 +1,21 @@
+{
+  "type": "minecraft:crafting_shaped",
+  "category": "misc",
+  "pattern": [
+    "###",
+    "#X#",
+    "###"
+  ],
+  "key": {
+    "#": {
+      "item": "awakening_system:astral_ingot"
+    },
+    "X": {
+      "item": "minecraft:apple"
+    }
+  },
+  "result": {
+    "count": 1,
+    "id": "awakening_system:astral_apple"
+  }
+}

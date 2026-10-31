@@ -1,5 +1,6 @@
 package com.soybe.awakeningsystem;
 
+import com.soybe.awakeningsystem.client.gui.ModernGuiHelper;
 import net.minecraft.ChatFormatting;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.GuiGraphics;
@@ -36,6 +37,15 @@ public final class SystemScreen extends Screen {
     private static final ResourceLocation STAT_ICON_PER = ResourceLocation.fromNamespaceAndPath(AwakeningSystemMod.MOD_ID, "textures/gui/stat_icons/stat_perception.png");
     private static final ResourceLocation STAT_ICON_INT = ResourceLocation.fromNamespaceAndPath(AwakeningSystemMod.MOD_ID, "textures/gui/stat_icons/stat_intelligence.png");
     private static final ResourceLocation STAT_ICON_WIL = ResourceLocation.fromNamespaceAndPath(AwakeningSystemMod.MOD_ID, "textures/gui/stat_icons/stat_willpower.png");
+
+    private static final ResourceLocation WINDOW_FRAME = ResourceLocation.fromNamespaceAndPath(AwakeningSystemMod.MOD_ID, "textures/gui/system_window_frame.png");
+    private static final ResourceLocation WINDOW_FRAME_ISEKAI = ResourceLocation.fromNamespaceAndPath(AwakeningSystemMod.MOD_ID, "textures/gui/system_window_frame_isekai.png");
+    private static final ResourceLocation WINDOW_FRAME_MURIM = ResourceLocation.fromNamespaceAndPath(AwakeningSystemMod.MOD_ID, "textures/gui/system_window_frame_murim.png");
+    private static final ResourceLocation WINDOW_FRAME_TEYVAT = ResourceLocation.fromNamespaceAndPath(AwakeningSystemMod.MOD_ID, "textures/gui/system_window_frame_teyvat.png");
+    private static final ResourceLocation SUMMONING_CIRCLE = ResourceLocation.fromNamespaceAndPath(AwakeningSystemMod.MOD_ID, "textures/gui/summoning_circle.png");
+    private static final ResourceLocation GAUGE_HP_FRAME = ResourceLocation.fromNamespaceAndPath(AwakeningSystemMod.MOD_ID, "textures/gui/gauge_hp_frame.png");
+    private static final ResourceLocation GAUGE_MP_FRAME = ResourceLocation.fromNamespaceAndPath(AwakeningSystemMod.MOD_ID, "textures/gui/gauge_mp_frame.png");
+    private static final ResourceLocation GAUGE_EXP_FRAME = ResourceLocation.fromNamespaceAndPath(AwakeningSystemMod.MOD_ID, "textures/gui/gauge_exp_frame.png");
 
     private List<Component> pendingStatTooltip = null;
 
@@ -333,13 +343,21 @@ public final class SystemScreen extends Screen {
         int left = getGuiLeft();
         int top = getGuiTop();
 
+        // [✕] Close button at top-right
         if (mouseX >= left + W - 34 && mouseX < left + W - 18 && mouseY >= top + 16 && mouseY < top + 32) {
+            this.onClose();
+            return true;
+        }
+
+        // [⚙] Settings button
+        if (mouseX >= left + W - 52 && mouseX < left + W - 36 && mouseY >= top + 16 && mouseY < top + 32) {
             com.soybe.awakeningsystem.client.gui.GuiConfigScreen.open(this);
             AwakeningSystemClient.playUiSound(ModSounds.SYSTEM_CLICK.value(), 1.0F, 1.2F);
             return true;
         }
 
-        if (mouseX >= left + W - 52 && mouseX < left + W - 36 && mouseY >= top + 16 && mouseY < top + 32) {
+        // [⟲] Reset window position/scale
+        if (mouseX >= left + W - 70 && mouseX < left + W - 54 && mouseY >= top + 16 && mouseY < top + 32) {
             com.soybe.awakeningsystem.client.gui.GuiConfig.systemGuiOffsetX = 0;
             com.soybe.awakeningsystem.client.gui.GuiConfig.systemGuiOffsetY = 0;
             com.soybe.awakeningsystem.client.gui.GuiConfig.systemGuiScale = 1.0F;
@@ -349,13 +367,16 @@ public final class SystemScreen extends Screen {
             return true;
         }
 
-        if (mouseX >= left + W - 70 && mouseX < left + W - 54 && mouseY >= top + 16 && mouseY < top + 32) {
+        // [⚔] Guild button
+        if (mouseX >= left + W - 88 && mouseX < left + W - 72 && mouseY >= top + 16 && mouseY < top + 32) {
             AwakeningSystemClient.playUiSound(ModSounds.SYSTEM_CLICK.value(), 1.0F, 1.2F);
             AwakeningSystemClient.requestOpenGuild();
             return true;
         }
 
-        if (mouseX >= left + W - 88 && mouseX < left + W - 72 && mouseY >= top + 16 && mouseY < top + 32) {
+        // [🥕] Uma button (unlocked exclusively in Teyvat / World 4)
+        boolean showUma = isSys40() || (data() != null && data().teyvatUnlocked());
+        if (showUma && mouseX >= left + W - 106 && mouseX < left + W - 90 && mouseY >= top + 16 && mouseY < top + 32) {
             AwakeningSystemClient.playUiSound(ModSounds.SYSTEM_CLICK.value(), 1.0F, 1.2F);
             this.onClose();
             net.neoforged.neoforge.network.PacketDistributor.sendToServer(
@@ -373,7 +394,7 @@ public final class SystemScreen extends Screen {
         }
 
         if (com.soybe.awakeningsystem.client.gui.GuiConfig.freeMoveEnabled
-                && mouseX >= left + 14 && mouseX < left + W - 92 && mouseY >= top + 12 && mouseY < top + 44) {
+                && mouseX >= left + 14 && mouseX < left + W - 112 && mouseY >= top + 12 && mouseY < top + 44) {
             isDraggingWindow = true;
             dragStartMouseX = rawX;
             dragStartMouseY = rawY;
@@ -383,22 +404,24 @@ public final class SystemScreen extends Screen {
         }
 
         if (com.soybe.awakeningsystem.client.gui.GuiConfig.showDimensionSideTabs) {
-            int tx = left - 32;
+            int dockX = left + 8;
+            int tabW = 28;
+            int tabH = 26;
+            int tabSpacing = 30;
+            int tx = dockX - tabW;
             List<DimTab> sideTabs = getActiveSideTabs();
+            boolean isBlockedRealm = minecraft != null && minecraft.level != null &&
+                    (com.soybe.awakeningsystem.penalty.PenaltyZoneManager.isPenaltyDimension(minecraft.level) ||
+                     com.soybe.awakeningsystem.limbo.LimboWorldManager.isLimboDimension(minecraft.level));
+
             for (int i = 0; i < sideTabs.size(); i++) {
-                int tabY = top + 55 + i * 33;
-                if (mouseX >= tx && mouseX < tx + 30 && mouseY >= tabY && mouseY < tabY + 28) {
+                int tabY = top + 52 + i * tabSpacing;
+                if (mouseX >= tx && mouseX <= dockX && mouseY >= tabY && mouseY < tabY + tabH) {
                     DimTab t = sideTabs.get(i);
-                    if ("subspace".equals(t.id)) {
-                        this.onClose();
-                        AwakeningSystemClient.playUiSound(ModSounds.SYSTEM_CLICK.value(), 1.0F, 1.2F);
-                        net.neoforged.neoforge.network.PacketDistributor.sendToServer(new OpenSubspaceC2SPayload());
-                        return true;
-                    }
-                    if (minecraft != null && minecraft.level != null && minecraft.level.dimension().equals(com.soybe.awakeningsystem.limbo.LimboWorldManager.LIMBO_LEVEL)) {
-                        AwakeningSystemClient.playUiSound(net.minecraft.sounds.SoundEvents.NOTE_BLOCK_BASS.value(), 0.9F, 0.5F);
+                    if (isBlockedRealm && !"subspace".equals(t.id)) {
+                        AwakeningSystemClient.playUiSound(net.minecraft.sounds.SoundEvents.NOTE_BLOCK_BASS.value(), 0.8F, 0.7F);
                         if (minecraft.player != null) {
-                            minecraft.player.displayClientMessage(Component.translatable("awakening_system.limbo.locked_portal_alert"), true);
+                            minecraft.player.displayClientMessage(Component.translatable("awakening_system.screen.dim.sealed_desc"), true);
                         }
                         return true;
                     }
@@ -689,35 +712,79 @@ public final class SystemScreen extends Screen {
 
         if (tab == 2) {
             SystemData d = data();
-            if (d.isScenarioComplete() && mouseX >= left + 28 + W - 56 - 108 && mouseX < left + 28 + W - 56 - 6 && mouseY >= top + 129 && mouseY < top + 147) {
-                AwakeningSystemClient.claimScenario();
+            int cardX = left + 28;
+            int cardW = W - 56;
+            int cardY = top + 98;
+            int trainBtnW = 46;
+            int trainBtnH = 12;
+            int dailyBarW = 96;
+
+            int c1X = cardX + 10;
+            int c2X = cardX + cardW - 10 - (dailyBarW + 6 + trainBtnW);
+
+            // Workout Button 0: Flexiones (Push-ups)
+            int b0X = c1X + dailyBarW + 6;
+            int b0Y = cardY + 23;
+            if (mouseX >= b0X && mouseX < b0X + trainBtnW && mouseY >= b0Y && mouseY < b0Y + trainBtnH) {
+                AwakeningSystemClient.startWorkout(0);
+                this.onClose();
                 return true;
             }
 
-            List<Component> missions = activeMissions(d);
-            if (missions.size() > 4) {
-                int trackTop = top + 156;
-                int trackBottom = top + 256;
-                if (mouseX >= left + W - 26 && mouseX <= left + W - 8 && mouseY >= trackTop && mouseY <= trackBottom) {
-                    int maxScroll = missions.size() - 4;
-                    int thumbHeight = Math.max(14, (trackBottom - trackTop) * 4 / missions.size());
-                    int thumbRange = Math.max(1, trackBottom - trackTop - thumbHeight);
-                    int currentThumbY = trackTop + (int) Math.round((double) thumbRange * missionScroll / maxScroll);
+            // Workout Button 1: Abdominales (Sit-ups)
+            int b1X = c1X + dailyBarW + 6;
+            int b1Y = cardY + 47;
+            if (mouseX >= b1X && mouseX < b1X + trainBtnW && mouseY >= b1Y && mouseY < b1Y + trainBtnH) {
+                AwakeningSystemClient.startWorkout(1);
+                this.onClose();
+                return true;
+            }
 
-                    if (mouseY < currentThumbY) {
-                        missionScroll = Math.max(0, missionScroll - 1);
-                    } else if (mouseY > currentThumbY + thumbHeight) {
-                        missionScroll = Math.min(maxScroll, missionScroll + 1);
-                    } else {
-                        float progress = (float)(mouseY - trackTop - thumbHeight / 2.0) / (float)thumbRange;
-                        missionScroll = Math.round(Math.max(0.0F, Math.min(1.0F, progress)) * maxScroll);
+            // Workout Button 2: Sentadillas (Squats)
+            int b2X = c2X + dailyBarW + 6;
+            int b2Y = cardY + 23;
+            if (mouseX >= b2X && mouseX < b2X + trainBtnW && mouseY >= b2Y && mouseY < b2Y + trainBtnH) {
+                AwakeningSystemClient.startWorkout(2);
+                this.onClose();
+                return true;
+            }
+
+            // Workout Button 3: Carrera (Running info / reminder)
+            int b3X = c2X + dailyBarW + 6;
+            int b3Y = cardY + 47;
+            if (mouseX >= b3X && mouseX < b3X + trainBtnW && mouseY >= b3Y && mouseY < b3Y + trainBtnH) {
+                if (d.dailyRunning() < 1000) {
+                    if (this.minecraft != null && this.minecraft.player != null) {
+                        this.minecraft.player.displayClientMessage(
+                            Component.literal("§6§l[MISIÓN DIARIA] §e¡Camina o corre a pie por el mundo para acumular los 1000 metros (1 km)! (" + d.dailyRunning() + " / 1000 m)"),
+                            false
+                        );
                     }
-                    isDraggingScrollbar = true;
-                    draggingScrollbarTab = 2;
-                    AwakeningSystemClient.playUiSound(ModSounds.SYSTEM_CLICK.value(), 1.0F, 1.2F);
+                    this.onClose();
                     return true;
                 }
             }
+
+            // Daily Quest Claim Button
+            if (d.isDailyQuestComplete() && !d.isDailyClaimed()) {
+                int btnX = cardX + cardW - 132;
+                int btnY = cardY + 68;
+                if (mouseX >= btnX && mouseX < btnX + 126 && mouseY >= btnY && mouseY < btnY + 14) {
+                    AwakeningSystemClient.claimDailyMission();
+                    return true;
+                }
+            }
+
+            // Scenario Claim Button
+            if (d.isScenarioComplete()) {
+                int btnX = cardX + cardW - 108;
+                int btnY = top + 188 + 25;
+                if (mouseX >= btnX && mouseX < btnX + 102 && mouseY >= btnY && mouseY < btnY + 16) {
+                    AwakeningSystemClient.claimScenario();
+                    return true;
+                }
+            }
+            return true;
         }
 
         if (tab == 3) {
@@ -874,46 +941,49 @@ public final class SystemScreen extends Screen {
             Component p2pComp = Component.translatable("awakening_system.screen.shop.mode.p2p");
             Component gachaComp = Component.translatable("awakening_system.screen.shop.mode.wishes");
 
-            int buyW = Math.max(34, font.width(buyComp) + 8);
-            int sellW = Math.max(34, font.width(sellComp) + 8);
-            int rouW = Math.max(38, font.width(rouComp) + 8);
-            int bankW = Math.max(34, font.width(bankComp) + 8);
-            int p2pW = Math.max(40, font.width(p2pComp) + 8);
-            int gachaW = Math.max(42, font.width(gachaComp) + 8);
+            int subTabY = top + 78;
+            int dividerY = top + 97;
 
-            int curBtnX = left + 32;
-            int buyX = curBtnX; curBtnX += buyW + 3;
-            int sellX = curBtnX; curBtnX += sellW + 3;
-            int rouX = curBtnX; curBtnX += rouW + 3;
-            int bankX = curBtnX; curBtnX += bankW + 3;
-            int p2pX = curBtnX; curBtnX += p2pW + 3;
+            int buyW = Math.max(36, font.width(buyComp) + 10);
+            int sellW = Math.max(36, font.width(sellComp) + 10);
+            int rouW = Math.max(40, font.width(rouComp) + 10);
+            int bankW = Math.max(36, font.width(bankComp) + 10);
+            int p2pW = Math.max(42, font.width(p2pComp) + 10);
+            int gachaW = Math.max(44, font.width(gachaComp) + 10);
+
+            int curBtnX = left + 26;
+            int buyX = curBtnX; curBtnX += buyW + 4;
+            int sellX = curBtnX; curBtnX += sellW + 4;
+            int rouX = curBtnX; curBtnX += rouW + 4;
+            int bankX = curBtnX; curBtnX += bankW + 4;
+            int p2pX = curBtnX; curBtnX += p2pW + 4;
             int gachaX = curBtnX;
 
-            if (mouseX >= buyX && mouseX < buyX + buyW && mouseY >= top + 80 && mouseY < top + 96) {
+            if (mouseX >= buyX && mouseX < buyX + buyW && mouseY >= subTabY && mouseY <= dividerY) {
                 shopMode = 0;
                 AwakeningSystemClient.playUiSound(ModSounds.SYSTEM_CLICK.value(), 1.0F, 1.0F);
                 updateSearchBoxVisibility();
                 return true;
             }
-            if (mouseX >= sellX && mouseX < sellX + sellW && mouseY >= top + 80 && mouseY < top + 96) {
+            if (mouseX >= sellX && mouseX < sellX + sellW && mouseY >= subTabY && mouseY <= dividerY) {
                 shopMode = 1;
                 AwakeningSystemClient.playUiSound(ModSounds.SYSTEM_CLICK.value(), 1.0F, 1.0F);
                 updateSearchBoxVisibility();
                 return true;
             }
-            if (mouseX >= rouX && mouseX < rouX + rouW && mouseY >= top + 80 && mouseY < top + 96) {
+            if (mouseX >= rouX && mouseX < rouX + rouW && mouseY >= subTabY && mouseY <= dividerY) {
                 shopMode = 2;
                 AwakeningSystemClient.playUiSound(ModSounds.SYSTEM_CLICK.value(), 1.0F, 1.0F);
                 updateSearchBoxVisibility();
                 return true;
             }
-            if (mouseX >= bankX && mouseX < bankX + bankW && mouseY >= top + 80 && mouseY < top + 96) {
+            if (mouseX >= bankX && mouseX < bankX + bankW && mouseY >= subTabY && mouseY <= dividerY) {
                 shopMode = 3;
                 AwakeningSystemClient.playUiSound(ModSounds.SYSTEM_CLICK.value(), 1.0F, 1.0F);
                 updateSearchBoxVisibility();
                 return true;
             }
-            if (mouseX >= p2pX && mouseX < p2pX + p2pW && mouseY >= top + 80 && mouseY < top + 96) {
+            if (mouseX >= p2pX && mouseX < p2pX + p2pW && mouseY >= subTabY && mouseY <= dividerY) {
                 shopMode = 4;
                 p2pScroll = 0;
                 p2pPublishDialogOpen = false;
@@ -926,7 +996,7 @@ public final class SystemScreen extends Screen {
                 updateSearchBoxVisibility();
                 return true;
             }
-            if (isSys40() && mouseX >= gachaX && mouseX < gachaX + gachaW && mouseY >= top + 80 && mouseY < top + 96) {
+            if (isSys40() && mouseX >= gachaX && mouseX < gachaX + gachaW && mouseY >= subTabY && mouseY <= dividerY) {
                 AwakeningSystemClient.playUiSound(ModSounds.SYSTEM_CLICK.value(), 1.0F, 1.0F);
                 SystemData d = data();
                 if (d.gachaEpochTick() > 0L) {
@@ -1108,6 +1178,7 @@ public final class SystemScreen extends Screen {
                         }
 
                         AwakeningSystemClient.buyShopItem(entry.id());
+                        AwakeningSystemClient.playUiSound(ModSounds.SYSTEM_COINS.value(), 1.0F, 1.0F);
                         return true;
                     }
                 }
@@ -1121,6 +1192,7 @@ public final class SystemScreen extends Screen {
                     if (mouseX >= catX && mouseX < catX + btnW && mouseY >= catY && mouseY < catY + 16) {
                         sellCategory = SELL_CATEGORIES[c];
                         sellScroll = 0;
+                        AwakeningSystemClient.playUiSound(ModSounds.SYSTEM_CLICK.value(), 1.0F, 1.0F);
                         return true;
                     }
                     catX += btnW + 3;
@@ -1136,10 +1208,12 @@ public final class SystemScreen extends Screen {
 
                     if (mouseX >= left + 285 && mouseX < left + 335 && mouseY >= entryY + 5 && mouseY < entryY + 23) {
                         AwakeningSystemClient.sellShopItem(entry.id(), false);
+                        AwakeningSystemClient.playUiSound(ModSounds.SYSTEM_COINS.value(), 1.0F, 1.0F);
                         return true;
                     }
                     if (mouseX >= left + 341 && mouseX < left + 401 && mouseY >= entryY + 5 && mouseY < entryY + 23) {
                         AwakeningSystemClient.sellShopItem(entry.id(), true);
+                        AwakeningSystemClient.playUiSound(ModSounds.SYSTEM_COINS.value(), 1.0F, 1.0F);
                         return true;
                     }
                 }
@@ -1253,12 +1327,12 @@ public final class SystemScreen extends Screen {
                     }
 
                     // Action buttons
-                    int btnW = 86;
+                    int btnW = 82;
                     int btnH = 20;
                     int btnY = panelY + 120;
                     int btn1X = rightX;
-                    int btn2X = rightX + btnW + 6;
-                    int btn2W = 60;
+                    int btn2W = 82;
+                    int btn2X = rightX + btnW + 10;
 
                     // Confirm
                     if (mouseX >= btn1X && mouseX < btn1X + btnW && mouseY >= btnY && mouseY < btnY + btnH) {
@@ -1869,76 +1943,72 @@ public final class SystemScreen extends Screen {
         int topBarCol = sys40 ? 0xFF4EE2EC : (sys30 ? 0xFFC0392B : (sys20 ? 0xFF9D4EDD : CYAN));
         int sectionCol = sys40 ? 0xFF132238 : (sys30 ? 0xFF142420 : (sys20 ? 0xFF241438 : SECTION));
 
-        // Double soft outer holographic aura
-        g.fill(left - 4, top - 4, left + W + 4, top + H + 4, sys40 ? 0x184EE2EC : (sys30 ? 0x1800FF88 : (sys20 ? 0x189D4EDD : 0x1800E5FF)));
-        g.fill(left - 3, top - 3, left + W + 3, top + H + 3, sys40 ? 0x304EE2EC : (sys30 ? 0x3000FF88 : (sys20 ? 0x309D4EDD : 0x3000E5FF)));
-        g.fill(left - 2, top - 2, left + W + 2, top + H + 2, edgeCol);
+        // Pestañas laterales de dimensiones y bóveda (se renderizan como zócalo bajo el marco para unión perfecta 0-gap)
+        if (com.soybe.awakeningsystem.client.gui.GuiConfig.showDimensionSideTabs) {
+            renderDimensionSideTabs(g, left, top, mX, mY);
+        }
 
-        // Modern frosted glass vertical gradient
-        int panelBottomCol = sys40 ? 0xF6050C16 : (sys30 ? 0xF6040F0D : (sys20 ? 0xF60D0518 : 0xF6040810));
-        g.fillGradient(left, top, left + W, top + H, panelCol, panelBottomCol);
+        // Under-frame frosted glass backplate for perfect opacity & contrast
+        int glassTop = sys40 ? 0x780E1928 : (sys30 ? 0x780A1D16 : (sys20 ? 0x781A0A2C : 0x780A1828));
+        int glassBot = sys40 ? 0x88060D16 : (sys30 ? 0x88040E0B : (sys20 ? 0x880B0418 : 0x88050C16));
+        g.fillGradient(left + 8, top + 8, left + W - 8, top + H - 8, glassTop, glassBot);
 
-        // Glowing illuminated top bar with specular shine
-        g.fill(left, top, left + W, top + 3, topBarCol);
-        g.fill(left + 1, top + 1, left + W - 1, top + 2, 0x60FFFFFF);
-
-        // Stylized cybernetic corner L-brackets
-        g.fill(left, top, left + 12, top + 2, accentCol);
-        g.fill(left, top, left + 2, top + 12, accentCol);
-        g.fill(left + W - 12, top, left + W, top + 2, accentCol);
-        g.fill(left + W - 2, top, left + W, top + 12, accentCol);
-        g.fill(left, top + H - 2, left + 12, top + H, accentCol);
-        g.fill(left, top + H - 12, left + 2, top + H, accentCol);
-        g.fill(left + W - 12, top + H - 2, left + W, top + H, accentCol);
-        g.fill(left + W - 2, top + H - 12, left + W, top + H, accentCol);
-
-        // Header section with glass gradient and left accent stripe
-        g.fillGradient(left + 14, top + 12, left + W - 14, top + 44, sectionCol, 0xE808101C);
-        g.fill(left + 14, top + 12, left + 16, top + 44, accentCol);
-        g.fill(left + 14, top + 43, left + W - 14, top + 44, (sys30 || sys20) ? 0xFFFFD700 : 0x80276A82);
+        // Master Manhwa System Window Frame (translucent frosted cobalt glass, glowing cyan neon borders)
+        ResourceLocation activeFrame = WINDOW_FRAME;
+        com.mojang.blaze3d.systems.RenderSystem.enableBlend();
+        com.mojang.blaze3d.systems.RenderSystem.defaultBlendFunc();
+        g.blit(activeFrame, left, top, W, H, 0.0F, 0.0F, 880, 620, 880, 620);
         Component titleComp = sys40 ? Component.translatable("awakening_system.screen.teyvat_v4.title").withStyle(ChatFormatting.BOLD) :
                 (sys30 ? Component.translatable("awakening_system.screen.murim_v3.title").withStyle(ChatFormatting.BOLD) :
                 (sys20 ? Component.translatable("awakening_system.screen.title_20").withStyle(ChatFormatting.BOLD) : Component.translatable("awakening_system.screen.title").withStyle(ChatFormatting.BOLD)));
+        titleComp = com.soybe.awakeningsystem.client.gui.ModernGuiHelper.manhwa(titleComp);
         g.drawString(font, titleComp, left + 24, top + 21, accentCol);
 
+        boolean showUma = sys40 || (data != null && data.teyvatUnlocked());
         Component bearerStatus = sys40 ? Component.translatable("awakening_system.screen.teyvat_v4.status") :
                 (sys30 ? Component.translatable("awakening_system.screen.murim_v3.status") :
                 (sys20 ? Component.translatable("awakening_system.screen.isekai_v2.status") : Component.translatable("awakening_system.screen.bearer_status")));
-        int rightX = left + W - 96 - font.width(bearerStatus);
+        bearerStatus = com.soybe.awakeningsystem.client.gui.ModernGuiHelper.manhwa(bearerStatus);
+        int rightX = left + W - (showUma ? 116 : 98) - font.width(bearerStatus);
         if (left + 24 + font.width(titleComp) + 8 < rightX) {
             g.drawString(font, bearerStatus, rightX, top + 21, (sys30 || sys20) ? 0xFFFFD700 : MUTED);
         }
 
-        int btnSetX = left + W - 34;
+        int btnCloseX = left + W - 34;
+        int btnCloseY = top + 16;
+        boolean closeHov = mX >= btnCloseX && mX < btnCloseX + 16 && mY >= btnCloseY && mY < btnCloseY + 16;
+        g.fill(btnCloseX, btnCloseY, btnCloseX + 16, btnCloseY + 16, closeHov ? 0xDD7A1515 : 0x55122030);
+        g.renderOutline(btnCloseX, btnCloseY, 16, 16, closeHov ? 0xFFFF5555 : 0x7700E5FF);
+        g.drawCenteredString(font, "✕", btnCloseX + 8, btnCloseY + 4, closeHov ? 0xFFFFFFFF : 0xFF70E8FF);
+
+        int btnSetX = left + W - 52;
         int btnSetY = top + 16;
         boolean setHov = mX >= btnSetX && mX < btnSetX + 16 && mY >= btnSetY && mY < btnSetY + 16;
-        g.fill(btnSetX, btnSetY, btnSetX + 16, btnSetY + 16, setHov ? 0xDD2A4560 : 0x88122030);
-        g.renderOutline(btnSetX, btnSetY, 16, 16, setHov ? 0xFFFFFFFF : 0xFF4EE2EC);
+        g.fill(btnSetX, btnSetY, btnSetX + 16, btnSetY + 16, setHov ? 0xDD2A4560 : 0x55122030);
+        g.renderOutline(btnSetX, btnSetY, 16, 16, setHov ? 0xFFFFFFFF : 0x7700E5FF);
         g.drawCenteredString(font, "⚙", btnSetX + 8, btnSetY + 4, setHov ? 0xFFFFFFFF : 0xFFDFB76C);
 
-        int btnResetX = left + W - 52;
+        int btnResetX = left + W - 70;
         int btnResetY = top + 16;
         boolean resetHov = mX >= btnResetX && mX < btnResetX + 16 && mY >= btnResetY && mY < btnResetY + 16;
-        g.fill(btnResetX, btnResetY, btnResetX + 16, btnResetY + 16, resetHov ? 0xDD2A4560 : 0x88122030);
-        g.renderOutline(btnResetX, btnResetY, 16, 16, resetHov ? 0xFFFFFFFF : 0xFF4EE2EC);
+        g.fill(btnResetX, btnResetY, btnResetX + 16, btnResetY + 16, resetHov ? 0xDD2A4560 : 0x55122030);
+        g.renderOutline(btnResetX, btnResetY, 16, 16, resetHov ? 0xFFFFFFFF : 0x7700E5FF);
         g.drawCenteredString(font, "⟲", btnResetX + 8, btnResetY + 4, resetHov ? 0xFFFFFFFF : 0xFF70E8FF);
 
-        int btnGuildX = left + W - 70;
+        int btnGuildX = left + W - 88;
         int btnGuildY = top + 16;
         boolean guildHov = mX >= btnGuildX && mX < btnGuildX + 16 && mY >= btnGuildY && mY < btnGuildY + 16;
-        g.fill(btnGuildX, btnGuildY, btnGuildX + 16, btnGuildY + 16, guildHov ? 0xDD2A4560 : 0x88122030);
-        g.renderOutline(btnGuildX, btnGuildY, 16, 16, guildHov ? 0xFFFFFFFF : 0xFF4EE2EC);
+        g.fill(btnGuildX, btnGuildY, btnGuildX + 16, btnGuildY + 16, guildHov ? 0xDD2A4560 : 0x55122030);
+        g.renderOutline(btnGuildX, btnGuildY, 16, 16, guildHov ? 0xFFFFFFFF : 0x7700E5FF);
         g.drawCenteredString(font, "⚔", btnGuildX + 8, btnGuildY + 4, guildHov ? 0xFFFFFFFF : 0xFF70E8FF);
 
-        int btnUmaX = left + W - 88;
+        int btnUmaX = left + W - 106;
         int btnUmaY = top + 16;
-        boolean umaHov = mX >= btnUmaX && mX < btnUmaX + 16 && mY >= btnUmaY && mY < btnUmaY + 16;
-        g.fill(btnUmaX, btnUmaY, btnUmaX + 16, btnUmaY + 16, umaHov ? 0xDD2A4560 : 0x88122030);
-        g.renderOutline(btnUmaX, btnUmaY, 16, 16, umaHov ? 0xFFFFFFFF : 0xFF4EE2EC);
-        g.drawCenteredString(font, "🥕", btnUmaX + 8, btnUmaY + 4, umaHov ? 0xFFFFFFFF : 0xFFFFAA00);
-
-        if (com.soybe.awakeningsystem.client.gui.GuiConfig.showDimensionSideTabs) {
-            renderDimensionSideTabs(g, left, top, mX, mY);
+        boolean umaHov = showUma && mX >= btnUmaX && mX < btnUmaX + 16 && mY >= btnUmaY && mY < btnUmaY + 16;
+        if (showUma) {
+            g.fill(btnUmaX, btnUmaY, btnUmaX + 16, btnUmaY + 16, umaHov ? 0xDD2A4560 : 0x55122030);
+            g.renderOutline(btnUmaX, btnUmaY, 16, 16, umaHov ? 0xFFFFFFFF : 0x7700E5FF);
+            g.drawCenteredString(font, "🥕", btnUmaX + 8, btnUmaY + 4, umaHov ? 0xFFFFFFFF : 0xFFFFAA00);
         }
 
         List<Integer> activeTabs = getActiveTabs();
@@ -1958,15 +2028,14 @@ public final class SystemScreen extends Screen {
         if (tab == 6) renderRanking(g, left, top, data, mX, mY);
         if (tab == 7) renderArtifacts(g, left, top, data, mX, mY);
 
-        g.drawString(font, Component.translatable("awakening_system.screen.close_hint"), left + W - 145, top + H - 16, sys30 ? 0xFF88C999 : (sys20 ? 0xFFD1B3E0 : MUTED));
-
         boolean gripHov = mX >= left + W - 18 && mX <= left + W && mY >= top + H - 18 && mY <= top + H;
-        int gripCol = gripHov ? 0xFFFFFFFF : accentCol;
-        g.fill(left + W - 12, top + H - 4, left + W - 4, top + H - 2, gripCol);
-        g.fill(left + W - 8, top + H - 8, left + W - 4, top + H - 6, gripCol);
-        g.fill(left + W - 4, top + H - 12, left + W - 2, top + H - 10, gripCol);
 
-        if (guildHov) {
+        if (closeHov) {
+            List<Component> tip = new ArrayList<>();
+            tip.add(Component.translatable("awakening_system.screen.header.close.title").withStyle(ChatFormatting.RED, ChatFormatting.BOLD));
+            tip.add(Component.translatable("awakening_system.screen.header.close.desc"));
+            g.renderComponentTooltip(font, tip, mX, mY);
+        } else if (guildHov) {
             List<Component> tip = new ArrayList<>();
             tip.add(Component.translatable("awakening_system.screen.header.guild.title").withStyle(ChatFormatting.BOLD));
             tip.add(Component.translatable("awakening_system.screen.header.guild.desc"));
@@ -2376,6 +2445,8 @@ public final class SystemScreen extends Screen {
     private static final net.minecraft.resources.ResourceLocation TAB_TEYVAT_TEX =
             net.minecraft.resources.ResourceLocation.fromNamespaceAndPath(AwakeningSystemMod.MOD_ID, "textures/gui/tab_teyvat.png");
 
+    private static final ItemStack SUBSPACE_TAB_ICON = new ItemStack(net.minecraft.world.item.Items.ENDER_CHEST);
+
     private static class DimTab {
         final String id;
         final net.minecraft.resources.ResourceLocation texture;
@@ -2392,12 +2463,14 @@ public final class SystemScreen extends Screen {
 
     private List<DimTab> getActiveSideTabs() {
         List<DimTab> list = new ArrayList<>();
-        boolean notInOverworld = minecraft != null && minecraft.level != null && !minecraft.level.dimension().equals(net.minecraft.world.level.Level.OVERWORLD);
+        boolean notInOverworld = minecraft != null && minecraft.level != null &&
+                !minecraft.level.dimension().equals(net.minecraft.world.level.Level.OVERWORLD);
         boolean sys40 = isSys40();
         boolean sys30 = isSys30();
         boolean sys20 = isSys20() || sys30 || sys40;
 
-        if (sys20 || notInOverworld) {
+        // Pestaña de portal de la Tierra / Overworld: siempre activa para volver cuando estás en otra dimensión, o si tienes Sys2.0+
+        if (notInOverworld || sys20) {
             list.add(new DimTab("overworld", TAB_OVERWORLD_TEX,
                     Component.translatable("awakening_system.screen.dim.earth.title"),
                     Component.translatable("awakening_system.screen.dim.earth.desc")));
@@ -2417,14 +2490,7 @@ public final class SystemScreen extends Screen {
                         Component.translatable("awakening_system.screen.dim.teyvat.desc")));
             }
         }
-        boolean inLimbo = minecraft != null && minecraft.level != null && minecraft.level.dimension().equals(com.soybe.awakeningsystem.limbo.LimboWorldManager.LIMBO_LEVEL);
-        boolean visitedLimbo = data() != null && data().visitedDimensions().contains(com.soybe.awakeningsystem.limbo.LimboWorldManager.LIMBO_LEVEL.location().toString());
-        // Limbo is a purgatory dimension and cannot be traveled to voluntarily from the dimensions menu
-        if (inLimbo) {
-            list.add(new DimTab("limbo", null,
-                    Component.translatable("awakening_system.screen.dim.limbo.title"),
-                    Component.translatable("awakening_system.screen.dim.limbo.desc")));
-        }
+        // Subespacio Dimensional (Bóveda Personal del Cazador)
         list.add(new DimTab("subspace", null,
                 Component.translatable("awakening_system.screen.dim.subspace.title"),
                 Component.translatable("awakening_system.screen.dim.subspace.desc")));
@@ -2443,91 +2509,118 @@ public final class SystemScreen extends Screen {
             else if (key.equals(com.soybe.awakeningsystem.subspace.SubspaceManager.SUBSPACE_REALM)) currentDim = "subspace";
         }
 
-        int tx = left - 32;
+        int dockX = left + 8;
+        int tabW = 28;
+        int tabH = 26;
+        int tabSpacing = 30;
+        int tx = dockX - tabW;
         List<DimTab> sideTabs = getActiveSideTabs();
+        boolean isBlockedRealm = minecraft != null && minecraft.level != null &&
+                (com.soybe.awakeningsystem.penalty.PenaltyZoneManager.isPenaltyDimension(minecraft.level) ||
+                 com.soybe.awakeningsystem.limbo.LimboWorldManager.isLimboDimension(minecraft.level));
+
         for (int i = 0; i < sideTabs.size(); i++) {
             DimTab t = sideTabs.get(i);
-            int tabY = top + 55 + i * 33;
-            boolean hov = mouseX >= tx && mouseX < tx + 30 && mouseY >= tabY && mouseY < tabY + 28;
+            int tabY = top + 52 + i * tabSpacing;
+            boolean hov = mouseX >= tx && mouseX <= dockX && mouseY >= tabY && mouseY < tabY + tabH;
             boolean act = t.id.equals(currentDim);
+            boolean isSealed = isBlockedRealm && !"subspace".equals(t.id);
 
+            // 1. Manhwa High-Tech Translucent Glass Palette
+            int bg = act ? 0xF00A1A2A : (hov ? (isSealed ? 0xDD2A0D15 : 0xDD0D2235) : (isSealed ? 0xBB1D060A : 0xBB06101D));
+            int border = act ? 0xFF00E5FF : (isSealed ? (hov ? 0xFFFF4444 : 0xAAFF3333) : (hov ? 0xAA70E8FF : 0x5500E5FF));
+
+            // 2. Soft outer cyber glow on hover or active
+            if (hov || act) {
+                g.fill(tx - 2, tabY - 1, dockX + 2, tabY + tabH + 1, act ? 0x3000E5FF : (isSealed ? 0x25FF0000 : 0x2070E8FF));
+            }
+
+            // 3. Tab Body with Chamfered Left Corners (Manhwa RPG tech style)
+            g.fill(tx + 2, tabY, dockX + 4, tabY + tabH, bg);
+            g.fill(tx, tabY + 2, tx + 2, tabY + tabH - 2, bg);
+
+            // 4. Glowing Outlines
+            g.fill(tx + 2, tabY, dockX + 4, tabY + 1, border);
+            g.fill(tx + 2, tabY + tabH - 1, dockX + 4, tabY + tabH, border);
+            g.fill(tx, tabY + 2, tx + 1, tabY + tabH - 2, border);
+            // Angled chamfer bevel pixels
+            g.fill(tx + 1, tabY + 1, tx + 2, tabY + 2, border);
+            g.fill(tx + 1, tabY + tabH - 2, tx + 2, tabY + tabH - 1, border);
+
+            // 5. Active indicator neon pip
+            if (act) {
+                g.fill(tx + 1, tabY + 7, tx + 3, tabY + tabH - 7, 0xFF00FFFF);
+            } else if (hov) {
+                g.fill(tx + 1, tabY + 9, tx + 2, tabY + tabH - 9, isSealed ? 0xFFFF4444 : 0xFF70E8FF);
+            }
+
+            // 6. Centered Icon with subtle icon aura
             if ("subspace".equals(t.id)) {
-                int bg = act ? 0xEE1E4578 : (hov ? 0xEE1A365D : 0xCC0F1E36);
-                int border = act ? 0xFF70E8FF : (hov ? 0xFF90CAF9 : 0xFF2B6CB0);
-                g.fill(tx, tabY, tx + 30, tabY + 28, bg);
-                drawBorder(g, tx, tabY, 30, 28, border);
-                if (act) g.fill(tx + 28, tabY, tx + 30, tabY + 28, 0xFF70E8FF);
-                g.drawCenteredString(font, Component.literal("§9⬡"), tx + 15, tabY + 5, 0xFF63B3ED);
-                g.drawCenteredString(font, Component.literal("§f✦"), tx + 15, tabY + 13, 0xFFEBF8FF);
-                if ("limbo".equals(currentDim)) {
-                    g.drawString(font, Component.literal("§c🔒"), tx + 2, tabY + 2, 0xFFFF5555);
+                if (hov || act) {
+                    g.fill(tx + 5, tabY + 4, tx + 25, tabY + 22, 0x2500E5FF);
                 }
-            } else if ("limbo".equals(t.id)) {
-                int bg = act ? 0xEE1E222A : (hov ? 0xDD2A2F3A : 0xCC14171E);
-                int border = act ? 0xFFE0E0E0 : (hov ? 0xFFB0BEC5 : 0xFF546E7A);
-                g.fill(tx, tabY, tx + 30, tabY + 28, bg);
-                drawBorder(g, tx, tabY, 30, 28, border);
-                if (act) g.fill(tx + 28, tabY, tx + 30, tabY + 28, 0xFFE0E0E0);
-                g.drawCenteredString(font, Component.literal("§7👁"), tx + 15, tabY + 5, 0xFFB0BEC5);
-                g.drawCenteredString(font, Component.literal("§f∞"), tx + 15, tabY + 14, 0xFFFFFFFF);
-            } else {
-                int bg;
-                int border;
-                switch (t.id) {
-                    case "overworld" -> {
-                        bg = act ? 0xEE143249 : (hov ? 0xDD1B4357 : 0xCC0D2030);
-                        border = act ? 0xFF70E8FF : (hov ? 0xFF5DADE2 : 0xFF276A82);
-                    }
-                    case "isekai" -> {
-                        bg = act ? 0xEE3A1259 : (hov ? 0xDD4F1B78 : 0xCC200B32);
-                        border = act ? 0xFFFFD700 : (hov ? 0xFFBD93F9 : 0xFF9D4EDD);
-                    }
-                    case "murim" -> {
-                        bg = act ? 0xEE1C382E : (hov ? 0xDD244A3C : 0xCC0E1F1A);
-                        border = act ? 0xFFFFD700 : (hov ? 0xFF50FA7B : 0xFFD4AF37);
-                    }
-                    case "teyvat" -> {
-                        bg = act ? 0xEE142436 : (hov ? 0xDD1F354D : 0xCC0D1824);
-                        border = act ? 0xFFFFD700 : (hov ? 0xFF58C4DC : 0xFF2A7590);
-                    }
-                    default -> {
-                        bg = 0xCC0D2030;
-                        border = 0xFF276A82;
-                    }
+                g.renderItem(SUBSPACE_TAB_ICON, tx + 7, tabY + 5);
+            } else if (t.texture != null) {
+                if (hov || act) {
+                    g.fill(tx + 5, tabY + 4, tx + 25, tabY + 22, act ? 0x3000E5FF : (isSealed ? 0x25FF0000 : 0x2000E5FF));
                 }
-                g.fill(tx, tabY, tx + 30, tabY + 28, bg);
-                drawBorder(g, tx, tabY, 30, 28, border);
-                if (act) {
-                    g.fill(tx + 28, tabY, tx + 30, tabY + 28, 0xFFFFD700);
-                }
-                if (t.texture != null) {
-                    g.blit(t.texture, tx + 5, tabY + 4, 20, 20, 0.0F, 0.0F, 32, 32, 32, 32);
-                }
-                if ("limbo".equals(currentDim) && !act) {
-                    g.drawString(font, Component.literal("§c🔒"), tx + 2, tabY + 2, 0xFFFF5555);
-                }
+                g.blit(t.texture, tx + 6, tabY + 4, 18, 18, 0.0F, 0.0F, 32, 32, 32, 32);
             }
         }
     }
 
     private void renderDimensionSideTabTooltips(GuiGraphics g, int left, int top, int mouseX, int mouseY) {
-        int tx = left - 32;
+        int dockX = left + 8;
+        int tabW = 28;
+        int tabH = 26;
+        int tabSpacing = 30;
+        int tx = dockX - tabW;
         List<DimTab> sideTabs = getActiveSideTabs();
+        boolean isBlockedRealm = minecraft != null && minecraft.level != null &&
+                (com.soybe.awakeningsystem.penalty.PenaltyZoneManager.isPenaltyDimension(minecraft.level) ||
+                 com.soybe.awakeningsystem.limbo.LimboWorldManager.isLimboDimension(minecraft.level));
+
         for (int i = 0; i < sideTabs.size(); i++) {
             DimTab t = sideTabs.get(i);
-            int tabY = top + 55 + i * 33;
-            if (mouseX >= tx && mouseX < tx + 30 && mouseY >= tabY && mouseY < tabY + 28) {
+            int tabY = top + 52 + i * tabSpacing;
+            if (mouseX >= tx && mouseX <= dockX && mouseY >= tabY && mouseY < tabY + tabH) {
                 List<net.minecraft.util.FormattedCharSequence> tip = new ArrayList<>();
-                tip.addAll(font.split(t.title, 200));
-                Component desc = t.desc;
-                if (desc != null && desc.getString().contains("\\n")) {
-                    desc = Component.literal(desc.getString().replace("\\n", "\n"));
-                }
-                if (desc != null) {
-                    tip.addAll(font.split(desc, 200));
-                }
-                if (minecraft != null && minecraft.level != null && minecraft.level.dimension().equals(com.soybe.awakeningsystem.limbo.LimboWorldManager.LIMBO_LEVEL) && !t.id.equals("limbo")) {
-                    tip.addAll(font.split(Component.translatable("awakening_system.limbo.tab_locked_tooltip"), 200));
+                if ("subspace".equals(t.id)) {
+                    tip.add(Component.translatable("awakening_system.screen.dim.subspace.vault_title").getVisualOrderText());
+                    tip.add(Component.translatable("awakening_system.screen.dim.subspace.vault_desc").getVisualOrderText());
+                    tip.add(Component.translatable("awakening_system.screen.dim.subspace.click_open").getVisualOrderText());
+                } else if ("overworld".equals(t.id)) {
+                    boolean notInOverworld = minecraft != null && minecraft.level != null &&
+                            !minecraft.level.dimension().equals(net.minecraft.world.level.Level.OVERWORLD);
+                    if (notInOverworld) {
+                        tip.add(Component.translatable("awakening_system.screen.dim.overworld.return_title").getVisualOrderText());
+                        tip.add(Component.translatable("awakening_system.screen.dim.overworld.return_desc").getVisualOrderText());
+                        if (isBlockedRealm) {
+                            tip.add(Component.translatable("awakening_system.screen.dim.sealed_title").getVisualOrderText());
+                            tip.add(Component.translatable("awakening_system.screen.dim.sealed_desc").getVisualOrderText());
+                        } else {
+                            tip.add(Component.translatable("awakening_system.screen.dim.overworld.click_return").getVisualOrderText());
+                        }
+                    } else {
+                        tip.add(Component.translatable("awakening_system.screen.dim.overworld.current_title").getVisualOrderText());
+                        tip.add(Component.translatable("awakening_system.screen.dim.overworld.current_desc").getVisualOrderText());
+                        tip.add(Component.translatable("awakening_system.screen.dim.overworld.already_here").getVisualOrderText());
+                    }
+                } else {
+                    tip.addAll(font.split(t.title, 200));
+                    if (t.desc != null) {
+                        Component desc = t.desc;
+                        if (desc.getString().contains("\\n")) {
+                            desc = Component.literal(desc.getString().replace("\\n", "\n"));
+                        }
+                        tip.addAll(font.split(desc, 200));
+                    }
+                    if (isBlockedRealm) {
+                        tip.add(Component.translatable("awakening_system.screen.dim.sealed_title").getVisualOrderText());
+                        tip.add(Component.translatable("awakening_system.screen.dim.sealed_desc").getVisualOrderText());
+                    } else {
+                        tip.add(Component.translatable("awakening_system.screen.dim.click_travel").getVisualOrderText());
+                    }
                 }
                 g.renderTooltip(font, tip, mouseX, mouseY);
                 break;
@@ -2569,14 +2662,15 @@ public final class SystemScreen extends Screen {
             int x = left + 16 + slot * tabWidth;
             boolean selected = tab == i;
             boolean hovered = mouseX >= x && mouseX < x + tabWidth && mouseY >= top + 51 && mouseY < top + 71;
-            int bg = selected ? (sys40 ? 0xFF142C44 : (sys30 ? 0xFF1C382E : (sys20 ? 0xFF3A1259 : 0xFF1B4357))) :
-                    (hovered ? (sys40 ? 0x60142C44 : (sys30 ? 0x601C382E : (sys20 ? 0x603A1259 : 0x6017354B))) :
-                    (sys40 ? 0xFF0A1522 : (sys30 ? 0xFF0A1815 : (sys20 ? 0xFF160926 : 0xFF0D1E2C))));
+            int bg = selected ? (sys40 ? 0x90142C44 : (sys30 ? 0x901C382E : (sys20 ? 0x903A1259 : 0x881B4357))) :
+                    (hovered ? (sys40 ? 0x55142C44 : (sys30 ? 0x551C382E : (sys20 ? 0x553A1259 : 0x4817354B))) :
+                    (sys40 ? 0x250A1522 : (sys30 ? 0x250A1815 : (sys20 ? 0x25160926 : 0x200D1E2C))));
             g.fill(x, top + 51, x + tabWidth, top + 71, bg);
+            int borderCol = sys40 ? 0xFFFFD700 : ((sys30 || sys20) ? 0xFFFFD700 : CYAN);
             if (selected) {
-                int borderCol = sys40 ? 0xFFFFD700 : ((sys30 || sys20) ? 0xFFFFD700 : CYAN);
                 g.fill(x, top + 51, x + tabWidth, top + 53, borderCol);
                 g.fill(x, top + 69, x + tabWidth, top + 71, borderCol);
+                g.renderOutline(x, top + 51, tabWidth, 20, (borderCol & 0x00FFFFFF) | 0x88000000);
             } else if (hovered) {
                 g.fill(x, top + 69, x + tabWidth, top + 71, sys40 ? 0x804EE2EC : (sys30 ? 0x8050FA7B : (sys20 ? 0x809D4EDD : 0x802D7691)));
             }
@@ -2637,20 +2731,30 @@ public final class SystemScreen extends Screen {
             int maxHp = (int) player.getMaxHealth();
             int curHp = (int) Math.min(maxHp, player.getHealth());
             int hpBarW = 125;
-            g.fill(left + 24, top + 112, left + 24 + hpBarW, top + 123, 0xFF1A0A0D);
-            int hpFill = (int) (hpBarW * Math.max(0.0F, Math.min(1.0F, (float) curHp / maxHp)));
-            if (hpFill > 0) g.fill(left + 24, top + 112, left + 24 + hpFill, top + 123, 0xFFE74C3C);
+            com.mojang.blaze3d.systems.RenderSystem.enableBlend();
+            com.mojang.blaze3d.systems.RenderSystem.defaultBlendFunc();
+            g.blit(GAUGE_HP_FRAME, left + 24, top + 112, hpBarW, 11, 0.0F, 0.0F, 250, 22, 250, 22);
+            int hpFill = (int) ((hpBarW - 2) * Math.max(0.0F, Math.min(1.0F, (float) curHp / maxHp)));
+            if (hpFill > 0) {
+                g.fillGradient(left + 25, top + 113, left + 25 + hpFill, top + 122, 0xFFE74C3C, 0xFFC0392B);
+                g.fill(left + 25, top + 113, left + 25 + hpFill, top + 115, 0x60FFFFFF);
+            }
             String hpStr = curHp + "/" + maxHp + " HP";
             g.drawCenteredString(font, Component.literal(hpStr), left + 24 + hpBarW / 2, top + 113, 0xFFFFFFFF);
 
             int maxMp = d.maxMana();
             int curMp = d.mana();
             int mpBarW = 175;
-            int mpBg = sys40 ? 0xFF081829 : (sys20 ? 0xFF1B0C2E : 0xFF081822);
-            int mpFillCol = sys40 ? 0xFF4EE2EC : (sys20 ? 0xFFB388FF : 0xFF39B9D5);
-            g.fill(left + 220, top + 112, left + 220 + mpBarW, top + 123, mpBg);
-            int mpFill = (int) (mpBarW * Math.max(0.0F, Math.min(1.0F, (float) curMp / Math.max(1, maxMp))));
-            if (mpFill > 0) g.fill(left + 220, top + 112, left + 220 + mpFill, top + 123, mpFillCol);
+            int mpFillCol1 = sys40 ? 0xFF4EE2EC : (sys20 ? 0xFFB388FF : 0xFF00E5FF);
+            int mpFillCol2 = sys40 ? 0xFF1B828C : (sys20 ? 0xFF7B2CBF : 0xFF0077B6);
+            com.mojang.blaze3d.systems.RenderSystem.enableBlend();
+            com.mojang.blaze3d.systems.RenderSystem.defaultBlendFunc();
+            g.blit(GAUGE_MP_FRAME, left + 220, top + 112, mpBarW, 11, 0.0F, 0.0F, 350, 22, 350, 22);
+            int mpFill = (int) ((mpBarW - 2) * Math.max(0.0F, Math.min(1.0F, (float) curMp / Math.max(1, maxMp))));
+            if (mpFill > 0) {
+                g.fillGradient(left + 221, top + 113, left + 221 + mpFill, top + 122, mpFillCol1, mpFillCol2);
+                g.fill(left + 221, top + 113, left + 221 + mpFill, top + 115, 0x60FFFFFF);
+            }
             String mpStr = curMp + "/" + maxMp + " " + (sys40 ? "CE" : (sys30 ? "QI" : "MP")) + " (+" + d.manaRegenRate() + "/tick)";
             g.drawCenteredString(font, Component.literal(mpStr), left + 220 + mpBarW / 2, top + 113, 0xFFFFFFFF);
         }
@@ -2661,11 +2765,15 @@ public final class SystemScreen extends Screen {
         String expStr = "EXP " + expCurrent + " / " + expNeeded + " (" + pct + "%)";
         g.drawString(font, Component.literal(expStr), left + 24, top + 127, sys40 ? 0xFFFFE082 : ((sys30 || sys20) ? 0xFFFFD700 : 0xFF8BE9FD));
 
-        g.fill(left + 20, top + 138, left + W - 20, top + 145, sys40 ? 0xFF081829 : (sys30 ? 0xFF0A1F18 : (sys20 ? 0xFF1B0C2E : 0xFF0C1925)));
-        int bar = (int) ((W - 40) * Math.min(1.0D, (double) expCurrent / expNeeded));
+        com.mojang.blaze3d.systems.RenderSystem.enableBlend();
+        com.mojang.blaze3d.systems.RenderSystem.defaultBlendFunc();
+        g.blit(GAUGE_EXP_FRAME, left + 20, top + 138, W - 40, 7, 0.0F, 0.0F, 800, 14, 800, 14);
+        int bar = (int) ((W - 42) * Math.min(1.0D, (double) expCurrent / expNeeded));
         if (bar > 0) {
-            g.fill(left + 20, top + 138, left + 20 + bar, top + 145, sys40 ? 0xFF166070 : (sys30 ? 0xFF1B7A4E : (sys20 ? 0xFF8A2BE2 : 0xFF276A82)));
-            g.fill(left + 20, top + 138, left + 20 + bar, top + 140, sys40 ? 0xFFFFD700 : ((sys30 || sys20) ? 0xFFFFD700 : 0xFF70E8FF));
+            int expCol1 = sys40 ? 0xFFFFD700 : ((sys30 || sys20) ? 0xFFFFD700 : 0xFF00E5FF);
+            int expCol2 = sys40 ? 0xFFDFB76C : ((sys30 || sys20) ? 0xFFC0392B : 0xFF0077B6);
+            g.fillGradient(left + 21, top + 139, left + 21 + bar, top + 144, expCol1, expCol2);
+            g.fill(left + 21, top + 139, left + 21 + bar, top + 141, 0x60FFFFFF);
         }
 
         boolean canSpend = d.attributePoints() > 0;
@@ -2730,9 +2838,8 @@ public final class SystemScreen extends Screen {
             int btnX = left + 20;
             int btnW = 96;
             constHovered = mouseX >= btnX && mouseX < btnX + btnW && mouseY >= btnY && mouseY < btnY + btnH;
-            g.fill(btnX - 1, btnY - 1, btnX + btnW + 1, btnY + btnH + 1, constHovered ? 0xFFFFD866 : 0xFF8A38B8);
-            g.fill(btnX, btnY, btnX + btnW, btnY + btnH, constHovered ? 0xDD2A1448 : 0xDD170B28);
-            drawBorder(g, btnX, btnY, btnW, btnH, constHovered ? 0xFFFFD700 : 0xFF8A38B8);
+            g.fill(btnX, btnY, btnX + btnW, btnY + btnH, constHovered ? 0x882A1448 : 0x40170B28);
+            g.renderOutline(btnX, btnY, btnW, btnH, constHovered ? 0xFFFFD700 : 0x778A38B8);
 
             enableScissorScaled(g, btnX + 1, btnY + 1, btnX + btnW - 1, btnY + btnH - 1);
             g.drawCenteredString(font, Component.translatable("awakening_system.screen.btn.channel").withStyle(ChatFormatting.GOLD, ChatFormatting.BOLD), btnX + btnW / 2, btnY + 4, 0xFFFFD700);
@@ -2742,9 +2849,8 @@ public final class SystemScreen extends Screen {
             int fabX = left + 121;
             int fabW = 96;
             fableHovered = mouseX >= fabX && mouseX < fabX + fabW && mouseY >= btnY && mouseY < btnY + btnH;
-            g.fill(fabX - 1, btnY - 1, fabX + fabW + 1, btnY + btnH + 1, fableHovered ? 0xFFFFD866 : 0xFF00838F);
-            g.fill(fabX, btnY, fabX + fabW, btnY + btnH, fableHovered ? 0xDD0C2836 : 0xDD071822);
-            drawBorder(g, fabX, btnY, fabW, btnH, fableHovered ? 0xFFFFD700 : 0xFF00E5FF);
+            g.fill(fabX, btnY, fabX + fabW, btnY + btnH, fableHovered ? 0x880C2836 : 0x40071822);
+            g.renderOutline(fabX, btnY, fabW, btnH, fableHovered ? 0xFFFFD700 : 0x7700E5FF);
 
             enableScissorScaled(g, fabX + 1, btnY + 1, fabX + fabW - 1, btnY + btnH - 1);
             g.drawCenteredString(font, Component.translatable("awakening_system.screen.btn.fables").withStyle(ChatFormatting.GOLD, ChatFormatting.BOLD), fabX + fabW / 2, btnY + 4, 0xFFFFD700);
@@ -2754,9 +2860,8 @@ public final class SystemScreen extends Screen {
             int cultX = left + 222;
             int cultW = 96;
             cultHovered = mouseX >= cultX && mouseX < cultX + cultW && mouseY >= btnY && mouseY < btnY + btnH;
-            g.fill(cultX - 1, btnY - 1, cultX + cultW + 1, btnY + btnH + 1, cultHovered ? 0xFF50FA7B : 0xFF1E6E45);
-            g.fill(cultX, btnY, cultX + cultW, btnY + btnH, cultHovered ? 0xDD123E28 : 0xDD0A2317);
-            drawBorder(g, cultX, btnY, cultW, btnH, cultHovered ? 0xFF50FA7B : 0xFF1E6E45);
+            g.fill(cultX, btnY, cultX + cultW, btnY + btnH, cultHovered ? 0x88123E28 : 0x400A2317);
+            g.renderOutline(cultX, btnY, cultW, btnH, cultHovered ? 0xFF50FA7B : 0x771E6E45);
 
             Component realmName = Component.translatable("awakening_system.cultivation.realm." + d.dantianRealm());
             enableScissorScaled(g, cultX + 1, btnY + 1, cultX + cultW - 1, btnY + btnH - 1);
@@ -2771,9 +2876,8 @@ public final class SystemScreen extends Screen {
             int guildX = left + 323;
             int guildW = 97;
             boolean guildHovered = mouseX >= guildX && mouseX < guildX + guildW && mouseY >= btnY && mouseY < btnY + btnH;
-            g.fill(guildX - 1, btnY - 1, guildX + guildW + 1, btnY + btnH + 1, guildHovered ? 0xFF70E8FF : 0xFF1E456E);
-            g.fill(guildX, btnY, guildX + guildW, btnY + btnH, guildHovered ? 0xDD10283E : 0xDD0A1828);
-            drawBorder(g, guildX, btnY, guildW, btnH, guildHovered ? 0xFF00E5FF : 0xFF4EE2EC);
+            g.fill(guildX, btnY, guildX + guildW, btnY + btnH, guildHovered ? 0x8810283E : 0x400A1828);
+            g.renderOutline(guildX, btnY, guildW, btnH, guildHovered ? 0xFF00E5FF : 0x774EE2EC);
 
             enableScissorScaled(g, guildX + 1, btnY + 1, guildX + guildW - 1, btnY + btnH - 1);
             g.drawCenteredString(font, Component.translatable("awakening_system.screen.btn.guild").withStyle(ChatFormatting.AQUA, ChatFormatting.BOLD), guildX + guildW / 2, btnY + 4, 0xFF00E5FF);
@@ -2786,9 +2890,8 @@ public final class SystemScreen extends Screen {
             int fabX = left + 20;
             int fabW = 128;
             fableHovered = mouseX >= fabX && mouseX < fabX + fabW && mouseY >= btnY && mouseY < btnY + btnH;
-            g.fill(fabX - 1, btnY - 1, fabX + fabW + 1, btnY + btnH + 1, fableHovered ? 0xFFFFD866 : 0xFF00838F);
-            g.fill(fabX, btnY, fabX + fabW, btnY + btnH, fableHovered ? 0xDD0C2836 : 0xDD071822);
-            drawBorder(g, fabX, btnY, fabW, btnH, fableHovered ? 0xFFFFD700 : 0xFF00E5FF);
+            g.fill(fabX, btnY, fabX + fabW, btnY + btnH, fableHovered ? 0x880C2836 : 0x40071822);
+            g.renderOutline(fabX, btnY, fabW, btnH, fableHovered ? 0xFFFFD700 : 0x7700E5FF);
 
             enableScissorScaled(g, fabX + 1, btnY + 1, fabX + fabW - 1, btnY + btnH - 1);
             g.drawCenteredString(font, Component.translatable("awakening_system.screen.btn.fables").withStyle(ChatFormatting.GOLD, ChatFormatting.BOLD), fabX + fabW / 2, btnY + 4, 0xFFFFD700);
@@ -2798,9 +2901,8 @@ public final class SystemScreen extends Screen {
             int cultX = left + 154;
             int cultW = 128;
             cultHovered = mouseX >= cultX && mouseX < cultX + cultW && mouseY >= btnY && mouseY < btnY + btnH;
-            g.fill(cultX - 1, btnY - 1, cultX + cultW + 1, btnY + btnH + 1, cultHovered ? 0xFF50FA7B : 0xFF1E6E45);
-            g.fill(cultX, btnY, cultX + cultW, btnY + btnH, cultHovered ? 0xDD123E28 : 0xDD0A2317);
-            drawBorder(g, cultX, btnY, cultW, btnH, cultHovered ? 0xFF50FA7B : 0xFF1E6E45);
+            g.fill(cultX, btnY, cultX + cultW, btnY + btnH, cultHovered ? 0x88123E28 : 0x400A2317);
+            g.renderOutline(cultX, btnY, cultW, btnH, cultHovered ? 0xFF50FA7B : 0x771E6E45);
 
             Component realmName = Component.translatable("awakening_system.cultivation.realm." + d.dantianRealm());
             enableScissorScaled(g, cultX + 1, btnY + 1, cultX + cultW - 1, btnY + btnH - 1);
@@ -2815,9 +2917,8 @@ public final class SystemScreen extends Screen {
             int guildX = left + 288;
             int guildW = 132;
             boolean guildHovered = mouseX >= guildX && mouseX < guildX + guildW && mouseY >= btnY && mouseY < btnY + btnH;
-            g.fill(guildX - 1, btnY - 1, guildX + guildW + 1, btnY + btnH + 1, guildHovered ? 0xFF70E8FF : 0xFF1E456E);
-            g.fill(guildX, btnY, guildX + guildW, btnY + btnH, guildHovered ? 0xDD10283E : 0xDD0A1828);
-            drawBorder(g, guildX, btnY, guildW, btnH, guildHovered ? 0xFF00E5FF : 0xFF4EE2EC);
+            g.fill(guildX, btnY, guildX + guildW, btnY + btnH, guildHovered ? 0x8810283E : 0x400A1828);
+            g.renderOutline(guildX, btnY, guildW, btnH, guildHovered ? 0xFF00E5FF : 0x774EE2EC);
 
             enableScissorScaled(g, guildX + 1, btnY + 1, guildX + guildW - 1, btnY + btnH - 1);
             g.drawCenteredString(font, Component.translatable("awakening_system.screen.btn.guild").withStyle(ChatFormatting.AQUA, ChatFormatting.BOLD), guildX + guildW / 2, btnY + 4, 0xFF00E5FF);
@@ -2908,8 +3009,15 @@ public final class SystemScreen extends Screen {
         int centerX = (boxX1 + boxX2) / 2;
         int feetY = boxY2 - 8;
 
-        g.fill(centerX - 36, feetY, centerX + 36, feetY + 5, sys30 ? 0x60163E2A : (sys20 ? 0x609D4EDD : 0x60276A82));
-        g.fill(centerX - 30, feetY + 1, centerX + 30, feetY + 4, (sys30 || sys20) ? 0x80FFD700 : 0x8070E8FF);
+        // Glowing runic summoning circle pedestal under player
+        com.mojang.blaze3d.systems.RenderSystem.enableBlend();
+        com.mojang.blaze3d.systems.RenderSystem.defaultBlendFunc();
+        var circlePose = g.pose();
+        circlePose.pushPose();
+        circlePose.translate(centerX, feetY + 1, 0);
+        circlePose.scale(1.0F, 0.28F, 1.0F);
+        g.blit(SUMMONING_CIRCLE, -42, -42, 84, 84, 0.0F, 0.0F, 256, 256, 256, 256);
+        circlePose.popPose();
 
         if (com.soybe.awakeningsystem.client.gui.GuiConfig.showPlayer3DModel) {
             InventoryScreen.renderEntityInInventoryFollowsMouse(
@@ -3014,17 +3122,6 @@ public final class SystemScreen extends Screen {
         list.add(Component.translatable("awakening_system.screen.missions.weekly." + weeklyType,
                 d.weeklyProgress(week), d.weeklyTarget(week)));
 
-        if (!d.dailyComplete(day)) {
-            String dailyType = switch (d.dailyType(day)) {
-                case 1 -> "combat";
-                case 2 -> "crafting";
-                case 3 -> "mobility";
-                case 4 -> "depth";
-                default -> "mining";
-            };
-            list.add(Component.translatable("awakening_system.screen.missions.daily." + dailyType,
-                    d.dailyProgress(day), d.dailyTarget(day)));
-        }
         if (!d.emergencyComplete()) {
             list.add(Component.translatable("awakening_system.screen.missions.emergency", d.emergencySurvival(), 3));
         }
@@ -3617,12 +3714,126 @@ public final class SystemScreen extends Screen {
         }
 
         int cardX = left + 28;
-        int cardY = top + 104;
+        int cardY = top + 98;
         int cardW = W - 56;
-        int cardH = 46;
+        int cardH = 84;
+
+        // 1. SOLO LEVELING DAILY QUEST CARD
         g.fill(cardX, cardY, cardX + cardW, cardY + cardH, sys30 ? 0x500E261E : (sys20 ? 0x50160926 : 0x500C1925));
         g.fill(cardX, cardY, cardX + cardW, cardY + 1, (sys30 || sys20) ? 0x80FFD700 : 0x8070E8FF);
         g.fill(cardX, cardY + cardH - 1, cardX + cardW, cardY + cardH, sys30 ? 0x40163E2A : (sys20 ? 0x409D4EDD : 0x402D7691));
+
+        Component dailyTitle = Component.translatable("awakening_system.screen.missions.solo_daily.title").withStyle(ChatFormatting.BOLD);
+        drawClipped(g, dailyTitle, cardX + 6, cardY + 4, (sys30 || sys20) ? 0xFFFFD700 : 0xFF70E8FF, cardW - 120);
+
+        Component dailyStatusComp;
+        int dailyStatusCol;
+        if (d.isDailyClaimed()) {
+            dailyStatusComp = Component.translatable("awakening_system.screen.missions.solo_daily.claimed_tag");
+            dailyStatusCol = 0xFF50FA7B;
+        } else if (d.isDailyQuestComplete()) {
+            dailyStatusComp = Component.translatable("awakening_system.screen.missions.solo_daily.ready_tag");
+            dailyStatusCol = 0xFFFFD700;
+        } else {
+            dailyStatusComp = Component.translatable("awakening_system.screen.missions.solo_daily.in_progress");
+            dailyStatusCol = MUTED;
+        }
+        g.drawString(font, dailyStatusComp, cardX + cardW - 6 - font.width(dailyStatusComp), cardY + 4, dailyStatusCol);
+
+        // 4 Solo Leveling Physical Exercises (2x2 grid with generous center gap)
+        int trainBtnW = 46;
+        int trainBtnH = 12;
+        int dailyBarW = 96;
+        int colTotalW = dailyBarW + 6 + trainBtnW;
+
+        int c1X = cardX + 10;
+        int c2X = cardX + cardW - 10 - colTotalW;
+
+        // Exercise 1: Flexiones (Push-ups) - Column 1 Row 1
+        drawClipped(g, Component.translatable("awakening_system.screen.missions.solo_daily.pushups", d.dailyPushUps(), 100), c1X, cardY + 16, 0xFFE0E0E0, colTotalW);
+        g.fill(c1X, cardY + 27, c1X + dailyBarW, cardY + 32, 0xFF0B141D);
+        int fill1 = (int) (dailyBarW * Math.min(1.0F, (float) d.dailyPushUps() / 100.0F));
+        if (fill1 > 0) g.fill(c1X, cardY + 27, c1X + fill1, cardY + 32, 0xFF50FA7B);
+
+        int b0X = c1X + dailyBarW + 6;
+        int b0Y = cardY + 23;
+        boolean h0 = mouseX >= b0X && mouseX < b0X + trainBtnW && mouseY >= b0Y && mouseY < b0Y + trainBtnH;
+        g.fill(b0X, b0Y, b0X + trainBtnW, b0Y + trainBtnH, h0 ? 0xFF1E88E5 : 0xFF0D47A1);
+        g.renderOutline(b0X, b0Y, trainBtnW, trainBtnH, h0 ? 0xFFFFFFFF : 0xFF42A5F5);
+        Component btnTrain0 = d.dailyPushUps() >= 100 ? Component.literal("§a✔ 100") :
+                (h0 ? Component.translatable("awakening_system.screen.missions.train_hover") : Component.translatable("awakening_system.screen.missions.train_btn"));
+        drawAutoScaledCentered(g, btnTrain0, b0X + trainBtnW / 2, b0Y + 2, 0xFFFFFFFF, trainBtnW - 4);
+
+        // Exercise 2: Abdominales (Sit-ups) - Column 1 Row 2
+        drawClipped(g, Component.translatable("awakening_system.screen.missions.solo_daily.situps", d.dailySitUps(), 100), c1X, cardY + 40, 0xFFE0E0E0, colTotalW);
+        g.fill(c1X, cardY + 51, c1X + dailyBarW, cardY + 56, 0xFF0B141D);
+        int fill2 = (int) (dailyBarW * Math.min(1.0F, (float) d.dailySitUps() / 100.0F));
+        if (fill2 > 0) g.fill(c1X, cardY + 51, c1X + fill2, cardY + 56, 0xFF50FA7B);
+
+        int b1X = c1X + dailyBarW + 6;
+        int b1Y = cardY + 47;
+        boolean h1 = mouseX >= b1X && mouseX < b1X + trainBtnW && mouseY >= b1Y && mouseY < b1Y + trainBtnH;
+        g.fill(b1X, b1Y, b1X + trainBtnW, b1Y + trainBtnH, h1 ? 0xFF1E88E5 : 0xFF0D47A1);
+        g.renderOutline(b1X, b1Y, trainBtnW, trainBtnH, h1 ? 0xFFFFFFFF : 0xFF42A5F5);
+        Component btnTrain1 = d.dailySitUps() >= 100 ? Component.literal("§a✔ 100") :
+                (h1 ? Component.translatable("awakening_system.screen.missions.train_hover") : Component.translatable("awakening_system.screen.missions.train_btn"));
+        drawAutoScaledCentered(g, btnTrain1, b1X + trainBtnW / 2, b1Y + 2, 0xFFFFFFFF, trainBtnW - 4);
+
+        // Exercise 3: Sentadillas (Squats) - Column 2 Row 1
+        drawClipped(g, Component.translatable("awakening_system.screen.missions.solo_daily.squats", d.dailySquats(), 100), c2X, cardY + 16, 0xFFE0E0E0, colTotalW);
+        g.fill(c2X, cardY + 27, c2X + dailyBarW, cardY + 32, 0xFF0B141D);
+        int fill3 = (int) (dailyBarW * Math.min(1.0F, (float) d.dailySquats() / 100.0F));
+        if (fill3 > 0) g.fill(c2X, cardY + 27, c2X + fill3, cardY + 32, 0xFF50FA7B);
+
+        int b2X = c2X + dailyBarW + 6;
+        int b2Y = cardY + 23;
+        boolean h2 = mouseX >= b2X && mouseX < b2X + trainBtnW && mouseY >= b2Y && mouseY < b2Y + trainBtnH;
+        g.fill(b2X, b2Y, b2X + trainBtnW, b2Y + trainBtnH, h2 ? 0xFF1E88E5 : 0xFF0D47A1);
+        g.renderOutline(b2X, b2Y, trainBtnW, trainBtnH, h2 ? 0xFFFFFFFF : 0xFF42A5F5);
+        Component btnTrain2 = d.dailySquats() >= 100 ? Component.literal("§a✔ 100") :
+                (h2 ? Component.translatable("awakening_system.screen.missions.train_hover") : Component.translatable("awakening_system.screen.missions.train_btn"));
+        drawAutoScaledCentered(g, btnTrain2, b2X + trainBtnW / 2, b2Y + 2, 0xFFFFFFFF, trainBtnW - 4);
+
+        // Exercise 4: Carrera (Running) - Column 2 Row 2 (scaled nicely to match Squats)
+        drawClipped(g, Component.translatable("awakening_system.screen.missions.solo_daily.running", d.dailyRunning(), 1000), c2X, cardY + 40, 0xFFE0E0E0, colTotalW);
+        g.fill(c2X, cardY + 51, c2X + dailyBarW, cardY + 56, 0xFF0B141D);
+        int fill4 = (int) (dailyBarW * Math.min(1.0F, (float) d.dailyRunning() / 1000.0F));
+        if (fill4 > 0) g.fill(c2X, cardY + 51, c2X + fill4, cardY + 56, 0xFF50FA7B);
+
+        int b3X = c2X + dailyBarW + 6;
+        int b3Y = cardY + 47;
+        boolean h3 = mouseX >= b3X && mouseX < b3X + trainBtnW && mouseY >= b3Y && mouseY < b3Y + trainBtnH;
+        g.fill(b3X, b3Y, b3X + trainBtnW, b3Y + trainBtnH, h3 ? 0xFF1E88E5 : (d.dailyRunning() >= 1000 ? 0x401B7A4E : 0x400B141D));
+        g.renderOutline(b3X, b3Y, trainBtnW, trainBtnH, h3 ? 0xFFFFFFFF : (d.dailyRunning() >= 1000 ? 0xFF50FA7B : 0x50336688));
+        Component runStatus = d.dailyRunning() >= 1000 ? Component.literal("§a✔ 1km") :
+                (h3 ? Component.literal("§bA pie") : Component.literal("§71000m"));
+        drawAutoScaledCentered(g, runStatus, b3X + trainBtnW / 2, b3Y + 2, d.dailyRunning() >= 1000 ? 0xFF50FA7B : (h3 ? 0xFFFFFFFF : 0xFF8AAAB8), trainBtnW - 4);
+
+        // Warning & Rewards summary
+        drawClipped(g, Component.translatable("awakening_system.screen.missions.solo_daily.warning"), cardX + 8, cardY + 62, 0xFFFFAA00, cardW - 146);
+        drawClipped(g, Component.translatable("awakening_system.screen.missions.solo_daily.rewards_hint"), cardX + 8, cardY + 74, 0xFFFFD866, cardW - 146);
+
+        if (d.isDailyQuestComplete() && !d.isDailyClaimed()) {
+            int btnX = cardX + cardW - 132;
+            int btnY = cardY + 68;
+            int btnW = 126;
+            int btnH = 14;
+            boolean hovered = mouseX >= btnX && mouseX < btnX + btnW && mouseY >= btnY && mouseY < btnY + btnH;
+            g.fill(btnX, btnY, btnX + btnW, btnY + btnH, hovered ? 0xFF50FA7B : 0xFF1B7A4E);
+            g.renderOutline(btnX, btnY, btnW, btnH, hovered ? 0xFFFFFFFF : 0xFF70FF9A);
+            drawAutoScaledCentered(g, Component.translatable("awakening_system.screen.missions.solo_daily.claim_btn").withStyle(ChatFormatting.BOLD),
+                    btnX + btnW / 2, btnY + 3, hovered ? 0xFF10202D : 0xFFFFFFFF, btnW - 6);
+        } else if (d.isDailyClaimed()) {
+            int claimTagX = cardX + cardW - 132;
+            drawAutoScaledCentered(g, Component.translatable("awakening_system.screen.missions.solo_daily.claimed"), claimTagX + 63, cardY + 70, 0xFF50FA7B, 126);
+        }
+
+        // 2. ACTIVE SCENARIO CARD
+        int scenY = top + 188;
+        int scenH = 68;
+        g.fill(cardX, scenY, cardX + cardW, scenY + scenH, sys30 ? 0x500E261E : (sys20 ? 0x50160926 : 0x500C1925));
+        g.fill(cardX, scenY, cardX + cardW, scenY + 1, (sys30 || sys20) ? 0x80FFD700 : 0x8070E8FF);
+        g.fill(cardX, scenY + scenH - 1, cardX + cardW, scenY + scenH, sys30 ? 0x40163E2A : (sys20 ? 0x409D4EDD : 0x402D7691));
 
         String scenId = d.activeScenario();
         if (!net.minecraft.client.resources.language.I18n.exists("awakening_system.scenario." + scenId + ".name")) {
@@ -3631,11 +3842,11 @@ public final class SystemScreen extends Screen {
         Component scenName = Component.translatable("awakening_system.scenario." + scenId + ".name");
         Component scenDesc = Component.translatable("awakening_system.scenario." + scenId + ".desc");
 
-        drawClipped(g, Component.translatable("awakening_system.screen.missions.scenario_header", scenName), cardX + 6, cardY + 4, 0xFFFFD866, cardW - 12);
-        drawClipped(g, scenDesc, cardX + 6, cardY + 16, sys30 ? 0xFF88C999 : (sys20 ? 0xFFD1B3E0 : MUTED), cardW - 12);
+        drawClipped(g, Component.translatable("awakening_system.screen.missions.scenario_header", scenName), cardX + 6, scenY + 4, 0xFFFFD866, cardW - 12);
+        drawClipped(g, scenDesc, cardX + 6, scenY + 16, sys30 ? 0xFF88C999 : (sys20 ? 0xFFD1B3E0 : MUTED), cardW - 12);
 
         int barX = cardX + 6;
-        int barY = cardY + 28;
+        int barY = scenY + 28;
         int barW = cardW - 120;
         int barH = 10;
         float progressRatio = Math.max(0.0F, Math.min(1.0F, (float) d.scenarioProgress() / d.scenarioTarget()));
@@ -3651,41 +3862,14 @@ public final class SystemScreen extends Screen {
 
         if (d.isScenarioComplete()) {
             int btnX = cardX + cardW - 108;
-            int btnY = cardY + 25;
+            int btnY = scenY + 25;
             int btnW = 102;
             int btnH = 16;
             boolean hovered = mouseX >= btnX && mouseX < btnX + btnW && mouseY >= btnY && mouseY < btnY + btnH;
             g.fill(btnX, btnY, btnX + btnW, btnY + btnH, hovered ? 0xFF50FA7B : (sys30 ? 0xFF1B7A4E : (sys20 ? 0xFF8A2BE2 : 0xFF276A82)));
             g.drawCenteredString(font, Component.translatable("awakening_system.screen.missions.claim_btn"), btnX + btnW / 2, btnY + 4, hovered ? 0xFF10202D : 0xFFFFFFFF);
         } else {
-            drawClipped(g, Component.translatable("awakening_system.screen.missions.reward_summary"), cardX + cardW - 108, cardY + 29, 0xFFFFD866, 102);
-        }
-
-        List<Component> missions = activeMissions(d);
-
-        enableScissorScaled(g, left + 28, top + 154, left + W - 28, top + 260);
-        int line = top + 156 - missionScroll * 26;
-        for (int i = 0; i < missions.size(); i++) {
-            if (line >= top + 146 && line < top + 258) {
-                boolean hovered = mouseX >= left + 30 && mouseX < left + W - 30 && mouseY >= line && mouseY < line + 24;
-                if (hovered) g.fill(left + 30, line, left + W - 30, line + 24, sys30 ? 0x30163E2A : (sys20 ? 0x303A1259 : 0x301C465D));
-                drawClipped(g, missions.get(i), left + 34, line + 4, i == 0 ? ((sys30 || sys20) ? 0xFFFFD700 : 0xFF8BE9FD) : (sys30 ? 0xFF88C999 : (sys20 ? 0xFFD1B3E0 : MUTED)), W - 76);
-            }
-            line += 26;
-        }
-        g.disableScissor();
-
-        if (missions.size() > 4) {
-            int trackTop = top + 156;
-            int trackBottom = top + 256;
-            int thumbHeight = Math.max(14, (trackBottom - trackTop) * 4 / missions.size());
-            int thumbRange = trackBottom - trackTop - thumbHeight;
-            int thumbY = trackTop + thumbRange * missionScroll / (missions.size() - 4);
-            boolean scrollHover = mouseX >= left + W - 26 && mouseX <= left + W - 8 && mouseY >= trackTop && mouseY <= trackBottom;
-            int thumbCol = (sys30 || sys20) ? ((scrollHover || (isDraggingScrollbar && draggingScrollbarTab == 2)) ? 0xFFFFF176 : 0xFFFFD700)
-                    : ((scrollHover || (isDraggingScrollbar && draggingScrollbarTab == 2)) ? 0xFFA0F5FF : CYAN);
-            g.fill(left + W - 18, trackTop, left + W - 15, trackBottom, sys30 ? 0xFF0A1815 : (sys20 ? 0xFF160926 : 0xFF0C1925));
-            g.fill(left + W - 18, thumbY, left + W - 15, thumbY + thumbHeight, thumbCol);
+            drawClipped(g, Component.translatable("awakening_system.screen.missions.reward_summary"), cardX + cardW - 108, scenY + 29, 0xFFFFD866, 102);
         }
     }
 
@@ -3784,10 +3968,23 @@ public final class SystemScreen extends Screen {
     }
 
     private void renderShop(GuiGraphics g, int left, int top, SystemData d, int mouseX, int mouseY) {
-        section(g, left + 20, top + 78, W - 40, 186, Component.empty());
+        section(g, left + 20, top + 76, W - 40, 188, Component.empty());
 
-        boolean sys30 = isSys30();
-        boolean sys20 = isSys20() || sys30;
+        boolean sys40 = isSys40();
+        boolean sys30 = isSys30() && !sys40;
+        boolean sys20 = (isSys20() || isSys30()) && !sys40;
+
+        int subTabY = top + 78;
+        int subTabH = 18;
+        int dividerY = top + 97;
+
+        // Sub-tabs header plate gradient
+        int secHeader = sys40 ? 0xE0102438 : (sys30 ? 0xE0122E22 : (sys20 ? 0xE028103F : 0xE00F2538));
+        g.fillGradient(left + 21, subTabY - 1, left + W - 21, dividerY, secHeader, 0x400A1522);
+
+        // Crisp horizontal divider line separating sub-tabs from content
+        int dividerCol = sys40 ? 0x80DFB76C : (sys30 ? 0x8000FF88 : (sys20 ? 0x809D4EDD : 0x8000E5FF));
+        g.fill(left + 21, dividerY, left + W - 21, dividerY + 1, dividerCol);
 
         Component buyComp = Component.translatable("awakening_system.screen.shop.mode.buy");
         Component sellComp = Component.translatable("awakening_system.screen.shop.mode.sell");
@@ -3796,60 +3993,93 @@ public final class SystemScreen extends Screen {
         Component p2pComp = Component.translatable("awakening_system.screen.shop.mode.p2p");
         Component gachaComp = Component.translatable("awakening_system.screen.shop.mode.wishes");
 
-        int buyW = Math.max(34, font.width(buyComp) + 8);
-        int sellW = Math.max(34, font.width(sellComp) + 8);
-        int rouW = Math.max(38, font.width(rouComp) + 8);
-        int bankW = Math.max(34, font.width(bankComp) + 8);
-        int p2pW = Math.max(40, font.width(p2pComp) + 8);
-        int gachaW = Math.max(42, font.width(gachaComp) + 8);
+        int buyW = Math.max(36, font.width(buyComp) + 10);
+        int sellW = Math.max(36, font.width(sellComp) + 10);
+        int rouW = Math.max(40, font.width(rouComp) + 10);
+        int bankW = Math.max(36, font.width(bankComp) + 10);
+        int p2pW = Math.max(42, font.width(p2pComp) + 10);
+        int gachaW = Math.max(44, font.width(gachaComp) + 10);
 
-        int curBtnX = left + 32;
-        int buyX = curBtnX; curBtnX += buyW + 3;
-        int sellX = curBtnX; curBtnX += sellW + 3;
-        int rouX = curBtnX; curBtnX += rouW + 3;
-        int bankX = curBtnX; curBtnX += bankW + 3;
-        int p2pX = curBtnX; curBtnX += p2pW + 3;
+        int curBtnX = left + 26;
+        int buyX = curBtnX; curBtnX += buyW + 4;
+        int sellX = curBtnX; curBtnX += sellW + 4;
+        int rouX = curBtnX; curBtnX += rouW + 4;
+        int bankX = curBtnX; curBtnX += bankW + 4;
+        int p2pX = curBtnX; curBtnX += p2pW + 4;
         int gachaX = curBtnX;
 
-        boolean buyHovered = mouseX >= buyX && mouseX < buyX + buyW && mouseY >= top + 80 && mouseY < top + 96;
-        boolean sellHovered = mouseX >= sellX && mouseX < sellX + sellW && mouseY >= top + 80 && mouseY < top + 96;
-        boolean rouletteHovered = mouseX >= rouX && mouseX < rouX + rouW && mouseY >= top + 80 && mouseY < top + 96;
-        boolean bankHovered = mouseX >= bankX && mouseX < bankX + bankW && mouseY >= top + 80 && mouseY < top + 96;
-        boolean p2pHovered = mouseX >= p2pX && mouseX < p2pX + p2pW && mouseY >= top + 80 && mouseY < top + 96;
-        boolean gachaHovered = mouseX >= gachaX && mouseX < gachaX + gachaW && mouseY >= top + 80 && mouseY < top + 96;
+        boolean buyHovered = mouseX >= buyX && mouseX < buyX + buyW && mouseY >= subTabY && mouseY <= dividerY;
+        boolean sellHovered = mouseX >= sellX && mouseX < sellX + sellW && mouseY >= subTabY && mouseY <= dividerY;
+        boolean rouletteHovered = mouseX >= rouX && mouseX < rouX + rouW && mouseY >= subTabY && mouseY <= dividerY;
+        boolean bankHovered = mouseX >= bankX && mouseX < bankX + bankW && mouseY >= subTabY && mouseY <= dividerY;
+        boolean p2pHovered = mouseX >= p2pX && mouseX < p2pX + p2pW && mouseY >= subTabY && mouseY <= dividerY;
+        boolean gachaHovered = mouseX >= gachaX && mouseX < gachaX + gachaW && mouseY >= subTabY && mouseY <= dividerY;
 
-        int buyBg = shopMode == 0 ? (sys30 ? 0xFF1C382E : (sys20 ? 0xFF3A1259 : 0xFF1B4357)) : (buyHovered ? (sys30 ? 0x601C382E : (sys20 ? 0x603A1259 : 0x6017354B)) : (sys30 ? 0xFF0A1815 : (sys20 ? 0xFF160926 : 0xFF400C1C)));
-        g.fill(buyX, top + 80, buyX + buyW, top + 96, buyBg);
-        drawBorder(g, buyX, top + 80, buyW, 16, shopMode == 0 ? ((sys30 || sys20) ? 0xFFFFD700 : CYAN) : (sys30 ? 0x40D4AF37 : (sys20 ? 0x409D4EDD : 0x402D7691)));
-        g.drawCenteredString(font, buyComp, buyX + buyW / 2, top + 84,
-                shopMode == 0 ? ((sys30 || sys20) ? 0xFFFFD700 : 0xFFFFFFFF) : (buyHovered ? (sys30 ? 0xFF50FA7B : (sys20 ? 0xFFF2D6 : 0xFFDDECF2)) : (sys30 ? 0xFF88C999 : (sys20 ? 0xFFD1B3E0 : MUTED))));
+        // BUY tab
+        int buyBg = shopMode == 0 ? (sys40 ? 0xDD143E5C : (sys30 ? 0xDD1C382E : (sys20 ? 0xDD3A1259 : 0xDD1B4357))) : (buyHovered ? (sys40 ? 0x60143E5C : (sys30 ? 0x601C382E : (sys20 ? 0x603A1259 : 0x6017354B))) : (sys40 ? 0x800A1522 : (sys30 ? 0x800A1815 : (sys20 ? 0x80160926 : 0x800C1925))));
+        g.fill(buyX, subTabY, buyX + buyW, dividerY, buyBg);
+        if (shopMode == 0) {
+            int selCol = sys40 ? 0xFFFFD700 : ((sys30 || sys20) ? 0xFFFFD700 : CYAN);
+            g.fill(buyX, subTabY, buyX + buyW, subTabY + 2, selCol);
+            drawBorder(g, buyX, subTabY, buyW, subTabH, selCol);
+        } else {
+            drawBorder(g, buyX, subTabY, buyW, subTabH, buyHovered ? (sys40 ? 0x80DFB76C : (sys30 ? 0x8000FF88 : (sys20 ? 0x809D4EDD : 0x8000E5FF))) : 0x302D7691);
+        }
+        g.drawCenteredString(font, buyComp, buyX + buyW / 2, subTabY + 5,
+                shopMode == 0 ? (sys40 ? 0xFFFFE082 : ((sys30 || sys20) ? 0xFFFFD700 : 0xFFFFFFFF)) : (buyHovered ? 0xFFFFFFFF : MUTED));
 
-        g.fill(sellX, top + 80, sellX + sellW, top + 96, shopMode == 1 ? 0xFF1D5A40 : (sellHovered ? (sys30 ? 0x601C382E : (sys20 ? 0x603A1259 : 0x6017354B)) : (sys30 ? 0xFF0A1815 : (sys20 ? 0xFF160926 : 0xFF400C1C))));
-        drawBorder(g, sellX, top + 80, sellW, 16, shopMode == 1 ? 0xFF50FA7B : (sys30 ? 0x40D4AF37 : (sys20 ? 0x409D4EDD : 0x402D7691)));
-        g.drawCenteredString(font, sellComp, sellX + sellW / 2, top + 84,
-                shopMode == 1 ? 0xFFFFFFFF : (sellHovered ? (sys30 ? 0xFF50FA7B : (sys20 ? 0xFFF2D6 : 0xFFDDECF2)) : (sys30 ? 0xFF88C999 : (sys20 ? 0xFFD1B3E0 : MUTED))));
+        // SELL tab
+        int sellBg = shopMode == 1 ? 0xDD1D5A40 : (sellHovered ? 0x601D5A40 : (sys40 ? 0x800A1522 : (sys30 ? 0x800A1815 : (sys20 ? 0x80160926 : 0x800C1925))));
+        g.fill(sellX, subTabY, sellX + sellW, dividerY, sellBg);
+        if (shopMode == 1) {
+            g.fill(sellX, subTabY, sellX + sellW, subTabY + 2, 0xFF50FA7B);
+            drawBorder(g, sellX, subTabY, sellW, subTabH, 0xFF50FA7B);
+        } else {
+            drawBorder(g, sellX, subTabY, sellW, subTabH, sellHovered ? 0x8050FA7B : 0x302D7691);
+        }
+        g.drawCenteredString(font, sellComp, sellX + sellW / 2, subTabY + 5,
+                shopMode == 1 ? 0xFFFFFFFF : (sellHovered ? 0xFF50FA7B : MUTED));
 
-        g.fill(rouX, top + 80, rouX + rouW, top + 96, shopMode == 2 ? 0xFF5D4017 : (rouletteHovered ? 0x605D4017 : (sys30 ? 0xFF0A1815 : (sys20 ? 0xFF160926 : 0xFF400C1C))));
-        drawBorder(g, rouX, top + 80, rouW, 16, shopMode == 2 ? 0xFFFFD866 : (sys30 ? 0x40D4AF37 : (sys20 ? 0x409D4EDD : 0x402D7691)));
-        g.drawCenteredString(font, rouComp, rouX + rouW / 2, top + 84,
-                shopMode == 2 ? 0xFFFFD866 : (rouletteHovered ? 0xFFFFE899 : (sys30 ? 0xFF88C999 : (sys20 ? 0xFFD1B3E0 : MUTED))));
+        // ROULETTE tab
+        int rouBg = shopMode == 2 ? 0xDD5D4017 : (rouletteHovered ? 0x605D4017 : (sys40 ? 0x800A1522 : (sys30 ? 0x800A1815 : (sys20 ? 0x80160926 : 0x800C1925))));
+        g.fill(rouX, subTabY, rouX + rouW, dividerY, rouBg);
+        if (shopMode == 2) {
+            g.fill(rouX, subTabY, rouX + rouW, subTabY + 2, 0xFFFFD866);
+            drawBorder(g, rouX, subTabY, rouW, subTabH, 0xFFFFD866);
+        } else {
+            drawBorder(g, rouX, subTabY, rouW, subTabH, rouletteHovered ? 0x80FFD866 : 0x302D7691);
+        }
+        g.drawCenteredString(font, rouComp, rouX + rouW / 2, subTabY + 5,
+                shopMode == 2 ? 0xFFFFD866 : (rouletteHovered ? 0xFFFFE899 : MUTED));
 
-        g.fill(bankX, top + 80, bankX + bankW, top + 96, shopMode == 3 ? 0xFF352B5A : (bankHovered ? 0x60352B5A : (sys30 ? 0xFF0A1815 : (sys20 ? 0xFF160926 : 0xFF400C1C))));
-        drawBorder(g, bankX, top + 80, bankW, 16, shopMode == 3 ? 0xFFBD93F9 : (sys30 ? 0x40D4AF37 : (sys20 ? 0x409D4EDD : 0x402D7691)));
-        g.drawCenteredString(font, bankComp, bankX + bankW / 2, top + 84,
-                shopMode == 3 ? 0xFFBD93F9 : (bankHovered ? 0xFFE0D0FF : (sys30 ? 0xFF88C999 : (sys20 ? 0xFFD1B3E0 : MUTED))));
+        // BANK tab
+        int bankBg = shopMode == 3 ? 0xDD352B5A : (bankHovered ? 0x60352B5A : (sys40 ? 0x800A1522 : (sys30 ? 0x800A1815 : (sys20 ? 0x80160926 : 0x800C1925))));
+        g.fill(bankX, subTabY, bankX + bankW, dividerY, bankBg);
+        if (shopMode == 3) {
+            g.fill(bankX, subTabY, bankX + bankW, subTabY + 2, 0xFFBD93F9);
+            drawBorder(g, bankX, subTabY, bankW, subTabH, 0xFFBD93F9);
+        } else {
+            drawBorder(g, bankX, subTabY, bankW, subTabH, bankHovered ? 0x80BD93F9 : 0x302D7691);
+        }
+        g.drawCenteredString(font, bankComp, bankX + bankW / 2, subTabY + 5,
+                shopMode == 3 ? 0xFFBD93F9 : (bankHovered ? 0xFFE0D0FF : MUTED));
 
-        g.fill(p2pX, top + 80, p2pX + p2pW, top + 96, shopMode == 4 ? 0xFF1D4A5A : (p2pHovered ? 0x601D4A5A : (sys30 ? 0xFF0A1815 : (sys20 ? 0xFF160926 : 0xFF400C1C))));
-        drawBorder(g, p2pX, top + 80, p2pW, 16, shopMode == 4 ? CYAN : (sys30 ? 0x40D4AF37 : (sys20 ? 0x409D4EDD : 0x402D7691)));
-        g.drawCenteredString(font, p2pComp, p2pX + p2pW / 2, top + 84,
-                shopMode == 4 ? CYAN : (p2pHovered ? 0xFFFFFFFF : (sys30 ? 0xFF88C999 : (sys20 ? 0xFFD1B3E0 : MUTED))));
-
-        boolean sys40 = isSys40();
+        // P2P tab
+        int p2pBg = shopMode == 4 ? 0xDD1D4A5A : (p2pHovered ? 0x601D4A5A : (sys40 ? 0x800A1522 : (sys30 ? 0x800A1815 : (sys20 ? 0x80160926 : 0x800C1925))));
+        g.fill(p2pX, subTabY, p2pX + p2pW, dividerY, p2pBg);
+        if (shopMode == 4) {
+            g.fill(p2pX, subTabY, p2pX + p2pW, subTabY + 2, CYAN);
+            drawBorder(g, p2pX, subTabY, p2pW, subTabH, CYAN);
+        } else {
+            drawBorder(g, p2pX, subTabY, p2pW, subTabH, p2pHovered ? 0x8000E5FF : 0x302D7691);
+        }
+        g.drawCenteredString(font, p2pComp, p2pX + p2pW / 2, subTabY + 5,
+                shopMode == 4 ? CYAN : (p2pHovered ? 0xFFFFFFFF : MUTED));
 
         if (sys40) {
-            g.fill(gachaX, top + 80, gachaX + gachaW, top + 96, gachaHovered ? 0xFF5D4017 : 0xFF3D2A0F);
-            drawBorder(g, gachaX, top + 80, gachaW, 16, gachaHovered ? 0xFFFFFFFF : 0xFFFFD700);
-            g.drawCenteredString(font, gachaComp, gachaX + gachaW / 2, top + 84, gachaHovered ? 0xFFFFFFFF : 0xFFFFD700);
+            g.fill(gachaX, subTabY, gachaX + gachaW, dividerY, gachaHovered ? 0xFF5D4017 : 0xFF3D2A0F);
+            drawBorder(g, gachaX, subTabY, gachaW, subTabH, gachaHovered ? 0xFFFFFFFF : 0xFFFFD700);
+            g.drawCenteredString(font, gachaComp, gachaX + gachaW / 2, subTabY + 5, gachaHovered ? 0xFFFFFFFF : 0xFFFFD700);
         }
 
         Component balance = Component.translatable("awakening_system.screen.shop.balance_short", d.coins());
@@ -3860,12 +4090,12 @@ public final class SystemScreen extends Screen {
 
         ItemStack coinIcon = SystemItems.coin(1);
         g.pose().pushPose();
-        g.pose().translate(balX - 14, top + 82, 0);
+        g.pose().translate(balX - 14, subTabY + 3, 0);
         g.pose().scale(0.7F, 0.7F, 1.0F);
         g.renderItem(coinIcon, 0, 0);
         g.pose().popPose();
 
-        drawClipped(g, balance, balX, top + 84, 0xFFFFD866, (left + W - 22) - balX);
+        drawClipped(g, balance, balX, subTabY + 5, 0xFFFFD866, (left + W - 22) - balX);
 
         if (shopMode == 0) {
             renderBuyShop(g, left, top, d, mouseX, mouseY);
@@ -4119,7 +4349,16 @@ public final class SystemScreen extends Screen {
             g.drawString(font, price, priceX, entryY + 9, priceColor);
 
             int titleMaxW = Math.max(60, coinIconX - (left + 58) - 4);
-            Component itemTitle = !stack.isEmpty() ? stack.getHoverName() : Component.translatable(entry.nameKey());
+            Component itemTitle;
+            if (entry.nameKey() != null && !entry.nameKey().isEmpty() && entry.nameKey().startsWith("awakening_system.")) {
+                itemTitle = Component.translatable(entry.nameKey());
+            } else if (!stack.isEmpty()) {
+                itemTitle = stack.getHoverName();
+            } else if (entry.nameKey() != null && !entry.nameKey().isEmpty()) {
+                itemTitle = Component.translatable(entry.nameKey());
+            } else {
+                itemTitle = Component.literal(entry.id());
+            }
             drawClipped(g, itemTitle, left + 58, entryY + 3, hovered ? ((sys30 || sys20) ? 0xFFFFD700 : CYAN) : nameColor, titleMaxW);
             
             if (unlocked) {
@@ -4127,19 +4366,24 @@ public final class SystemScreen extends Screen {
             } else {
                 boolean levelLocked = entry.minLevel() > 0 && d.level() < entry.minLevel();
                 boolean dimLocked = !entry.requiredDimension().isEmpty() && !d.hasVisitedDimension(entry.requiredDimension());
+                boolean tierLocked = (entry.requiredSystemTier() == 2 && !isSys20())
+                        || (entry.requiredSystemTier() == 3 && !isSys30())
+                        || (entry.requiredSystemTier() >= 4 && !isSys40());
                 Component lockMsg;
-                if (levelLocked && dimLocked) {
+                if (tierLocked) {
+                    if (entry.requiredSystemTier() == 2) {
+                        lockMsg = Component.translatable("awakening_system.screen.shop.lock.sys20");
+                    } else if (entry.requiredSystemTier() == 3) {
+                        lockMsg = Component.translatable("awakening_system.screen.shop.lock.sys30");
+                    } else {
+                        lockMsg = Component.translatable("awakening_system.screen.shop.lock.sys40");
+                    }
+                } else if (levelLocked && dimLocked) {
                     lockMsg = Component.translatable("awakening_system.screen.shop.lock.dual", entry.minLevel(), getDimShortName(entry.requiredDimension()));
                 } else if (levelLocked) {
                     lockMsg = Component.translatable("awakening_system.screen.shop.lock.level", entry.minLevel());
                 } else if (dimLocked) {
                     lockMsg = getDimLockComponent(entry.requiredDimension());
-                } else if (entry.requiredSystemTier() == 2) {
-                    lockMsg = Component.translatable("awakening_system.screen.shop.lock.sys20");
-                } else if (entry.requiredSystemTier() == 3) {
-                    lockMsg = Component.translatable("awakening_system.screen.shop.lock.sys30");
-                } else if (entry.requiredSystemTier() >= 4) {
-                    lockMsg = Component.translatable("awakening_system.screen.shop.lock.sys40");
                 } else {
                     lockMsg = Component.translatable("awakening_system.screen.shop.lock.locked");
                 }
@@ -4161,8 +4405,22 @@ public final class SystemScreen extends Screen {
                 if (btnHovered || (hovered && mouseX >= left + 58)) {
                     boolean levelLocked = entry.minLevel() > 0 && d.level() < entry.minLevel();
                     boolean dimLocked = !entry.requiredDimension().isEmpty() && !d.hasVisitedDimension(entry.requiredDimension());
+                    boolean tierLocked = (entry.requiredSystemTier() == 2 && !isSys20())
+                            || (entry.requiredSystemTier() == 3 && !isSys30())
+                            || (entry.requiredSystemTier() >= 4 && !isSys40());
                     List<Component> list = new ArrayList<>();
                     list.add(Component.translatable("awakening_system.shop.locked_title").copy().withStyle(net.minecraft.ChatFormatting.RED, net.minecraft.ChatFormatting.BOLD));
+
+                    if (entry.requiredSystemTier() >= 2) {
+                        String tierStr = entry.requiredSystemTier() >= 4 ? "4.0" : (entry.requiredSystemTier() == 3 ? "3.0" : "2.0");
+                        if (tierLocked) {
+                            list.add(Component.literal("✗ ").withStyle(net.minecraft.ChatFormatting.RED)
+                                    .append(Component.translatable("awakening_system.shop.locked_tier", tierStr).copy().withStyle(net.minecraft.ChatFormatting.RED)));
+                        } else {
+                            list.add(Component.literal("✔ ").withStyle(net.minecraft.ChatFormatting.GREEN)
+                                    .append(Component.translatable("awakening_system.shop.locked_tier", tierStr).copy().withStyle(net.minecraft.ChatFormatting.GREEN)));
+                        }
+                    }
 
                     if (entry.minLevel() > 0) {
                         net.minecraft.ChatFormatting cf = levelLocked ? net.minecraft.ChatFormatting.RED : net.minecraft.ChatFormatting.GREEN;
@@ -4175,16 +4433,6 @@ public final class SystemScreen extends Screen {
                         String mark = dimLocked ? "✗ " : "✔ ";
                         list.add(Component.literal(mark).withStyle(cf)
                                 .append(Component.translatable("awakening_system.shop.locked_dim", getDimDisplayName(entry.requiredDimension())).copy().withStyle(cf)));
-                    }
-                    if (entry.requiredSystemTier() >= 4) {
-                        list.add(Component.translatable("awakening_system.shop.locked_tier", "4.0"));
-                        list.add(Component.translatable("awakening_system.shop.locked_tier_4_req"));
-                    } else if (entry.requiredSystemTier() >= 2 && !levelLocked && !dimLocked) {
-                        Component dimName = entry.requiredSystemTier() == 2 ?
-                                Component.translatable("awakening_system.screen.dim.isekai.title") :
-                                Component.translatable("awakening_system.screen.dim.murim.title");
-                        list.add(Component.translatable("awakening_system.shop.locked_tier", (entry.requiredSystemTier() == 2 ? "2.0" : "3.0")));
-                        list.add(Component.translatable("awakening_system.shop.locked_dim", dimName));
                     }
                     lockedTooltip = list;
                 }
@@ -4290,7 +4538,16 @@ public final class SystemScreen extends Screen {
             g.drawString(font, priceComp, priceX, entryY + 9, 0xFFFFD866);
 
             int titleMaxW = Math.max(50, coinIconX - (left + 58) - 4);
-            Component itemTitle = !stack.isEmpty() ? stack.getHoverName() : Component.translatable(entry.nameKey());
+            Component itemTitle;
+            if (entry.nameKey() != null && !entry.nameKey().isEmpty() && entry.nameKey().startsWith("awakening_system.")) {
+                itemTitle = Component.translatable(entry.nameKey());
+            } else if (!stack.isEmpty()) {
+                itemTitle = stack.getHoverName();
+            } else if (entry.nameKey() != null && !entry.nameKey().isEmpty()) {
+                itemTitle = Component.translatable(entry.nameKey());
+            } else {
+                itemTitle = Component.literal(entry.id());
+            }
             drawClipped(g, itemTitle, left + 58, entryY + 3, hovered ? ((sys30 || sys20) ? 0xFFFFD700 : CYAN) : 0xFFFFFFFF, titleMaxW);
 
             boolean vHovered = mouseX >= vBtnX && mouseX < vBtnX + vBtnW && mouseY >= entryY + 5 && mouseY < entryY + 23;
@@ -4534,8 +4791,7 @@ public final class SystemScreen extends Screen {
         int panelW = 380;
         int panelH = 168;
 
-        g.fill(panelX, panelY, panelX + panelW, panelY + panelH, 0xF50A141D);
-        drawBorder(g, panelX, panelY, panelW, panelH, (sys30 || sys20) ? 0xFFFFD700 : CYAN);
+        ModernGuiHelper.drawModernPopup(g, panelX, panelY, panelW, panelH, ModernGuiHelper.getTheme(d));
 
         Component title = Component.translatable("awakening_system.p2p.publish_dialog.title").withStyle(ChatFormatting.BOLD);
         g.drawCenteredString(font, title, panelX + panelW / 2, panelY + 7, (sys30 || sys20) ? 0xFFFFD700 : 0xFFFFFFFF);
@@ -4699,11 +4955,12 @@ public final class SystemScreen extends Screen {
             g.drawString(font, "⛁", sX + sW + 4, sY + 4, 0xFFFFD866);
         }
 
-        int btnW = 86;
+        int btnW = 82;
         int btnH = 20;
         int btnY = panelY + 120;
         int btn1X = rightX;
-        int btn2X = rightX + btnW + 6;
+        int btn2W = 82;
+        int btn2X = rightX + btnW + 10;
 
         long price = 0;
         if (p2pPriceBox != null) {
@@ -4716,11 +4973,10 @@ public final class SystemScreen extends Screen {
         drawBorder(g, btn1X, btnY, btnW, btnH, !canConfirm ? 0x80888888 : 0xFF50FA7B);
         g.drawCenteredString(font, Component.translatable("awakening_system.p2p.publish_dialog.confirm"), btn1X + btnW / 2, btnY + 6, !canConfirm ? 0xFF888888 : (confHov ? 0xFFFFFFFF : 0xFF50FA7B));
 
-        int btn2W = 60;
         boolean cancelHov = mouseX >= btn2X && mouseX < btn2X + btn2W && mouseY >= btnY && mouseY < btnY + btnH;
         g.fill(btn2X, btnY, btn2X + btn2W, btnY + btnH, cancelHov ? 0xFF352B5A : 0x50102536);
         drawBorder(g, btn2X, btnY, btn2W, btnH, cancelHov ? 0xFFBD93F9 : 0x802D7691);
-        g.drawCenteredString(font, Component.translatable("awakening_system.p2p.publish_dialog.cancel"), btn2X + btnW / 2, btnY + 6, cancelHov ? 0xFFFFFFFF : 0xFFDDECF2);
+        g.drawCenteredString(font, Component.translatable("awakening_system.p2p.publish_dialog.cancel"), btn2X + btn2W / 2, btnY + 6, cancelHov ? 0xFFFFFFFF : 0xFFDDECF2);
 
         if (hoveredTooltipStack != null && !hoveredTooltipStack.isEmpty()) {
             g.renderTooltip(font, hoveredTooltipStack, mouseX, mouseY);
@@ -4885,19 +5141,24 @@ public final class SystemScreen extends Screen {
     }
 
     private List<ShopDefinitions.Entry> availableShopEntries() {
-        List<ShopDefinitions.Entry> list = ShopDefinitions.availableEntries(shopCategory);
-        if (shopSearchBox == null) return list;
-        String query = shopSearchBox.getValue().trim().toLowerCase(java.util.Locale.ROOT);
-        if (query.isEmpty()) return list;
-        return list.stream().filter(entry -> {
-            if (entry.id().toLowerCase(java.util.Locale.ROOT).contains(query)) return true;
-            if (entry.itemId().toLowerCase(java.util.Locale.ROOT).contains(query)) return true;
-            String trans = Component.translatable(entry.nameKey()).getString().toLowerCase(java.util.Locale.ROOT);
-            if (trans.contains(query)) return true;
-            ItemStack stack = ShopDefinitions.createStack(entry);
-            if (!stack.isEmpty() && stack.getHoverName().getString().toLowerCase(java.util.Locale.ROOT).contains(query)) return true;
-            return false;
-        }).toList();
+        try {
+            List<ShopDefinitions.Entry> list = ShopDefinitions.availableEntries(shopCategory);
+            if (shopSearchBox == null) return list;
+            String query = shopSearchBox.getValue().trim().toLowerCase(java.util.Locale.ROOT);
+            if (query.isEmpty()) return list;
+            return list.stream().filter(entry -> {
+                if (entry.id().toLowerCase(java.util.Locale.ROOT).contains(query)) return true;
+                if (entry.itemId().toLowerCase(java.util.Locale.ROOT).contains(query)) return true;
+                String trans = Component.translatable(entry.nameKey()).getString().toLowerCase(java.util.Locale.ROOT);
+                if (trans.contains(query)) return true;
+                ItemStack stack = ShopDefinitions.createStack(entry);
+                if (!stack.isEmpty() && stack.getHoverName().getString().toLowerCase(java.util.Locale.ROOT).contains(query)) return true;
+                return false;
+            }).toList();
+        } catch (Throwable t) {
+            AwakeningSystemMod.LOGGER.error("Failed to load shop entries for category " + shopCategory, t);
+            return List.of();
+        }
     }
 
     private List<SellDefinitions.SellEntry> availableSellEntries() {
@@ -4930,37 +5191,40 @@ public final class SystemScreen extends Screen {
     }
 
     private void section(GuiGraphics g, int x, int y, int w, int h, Component title) {
-        boolean sys30 = isSys30();
-        boolean sys20 = isSys20() || sys30;
-        int bg = sys30 ? 0xB50E1F1A : (sys20 ? 0xB5170B28 : 0xB50C1C2B);
-        int secHeader = sys30 ? 0xFF142E24 : (sys20 ? 0xFF28103F : SECTION);
-        int edgeLine = sys30 ? 0xFFD4AF37 : (sys20 ? 0xFF9D4EDD : EDGE);
-        int titleCol = (sys30 || sys20) ? 0xFFFFD700 : CYAN;
+        boolean sys40 = isSys40();
+        boolean sys30 = isSys30() && !sys40;
+        boolean sys20 = (isSys20() || sys30) && !sys40;
+        int bg = sys40 ? 0x40081422 : (sys30 ? 0x400A1A14 : (sys20 ? 0x40160926 : 0x40091624));
+        int secHeader = sys40 ? 0x60102438 : (sys30 ? 0x60122E22 : (sys20 ? 0x6028103F : 0x600F2538));
+        int edgeLine = sys40 ? 0xFFDFB76C : (sys30 ? 0xFF00FF88 : (sys20 ? 0xFF9D4EDD : 0xFF00E5FF));
+        int titleCol = sys40 ? 0xFFFFE082 : ((sys30 || sys20) ? 0xFFFFD700 : 0xFF70E8FF);
+
+        // Translucent Glass background (~25% opacity)
         g.fill(x, y, x + w, y + h, bg);
-        g.fill(x, y, x + w, y + 20, secHeader);
-        g.fill(x, y + 19, x + w, y + 20, edgeLine);
-        drawClipped(g, title, x + 10, y + 6, titleCol, w - 20);
+
+        // Fine clean outline
+        g.renderOutline(x, y, w, h, (edgeLine & 0x00FFFFFF) | 0x38000000);
+        g.fill(x + 2, y, x + w - 2, y + 1, (edgeLine & 0x00FFFFFF) | 0x88000000);
+
+        boolean hasTitle = title != null && !title.getString().trim().isEmpty();
+        if (hasTitle) {
+            // Header plate gradient
+            g.fillGradient(x + 1, y + 1, x + w - 1, y + 18, secHeader, 0x150A1522);
+            // Header glowing accent line
+            g.fill(x + 1, y + 17, x + w - 1, y + 18, (edgeLine & 0x00FFFFFF) | 0x88000000);
+            // Left vertical indicator
+            g.fill(x + 1, y + 2, x + 3, y + 16, edgeLine);
+            drawClipped(g, title, x + 8, y + 5, titleCol, w - 16);
+        }
     }
 
     private void attribute(GuiGraphics g, int x, int y, String id, String name, int value, int plusX, int plusY, int mouseX, int mouseY, boolean canSpend) {
-        String sym = getStatSymbol(id);
-        String statColor = switch (id.toLowerCase(java.util.Locale.ROOT)) {
-            case "strength", "str" -> "§c";
-            case "vitality", "vit" -> "§a";
-            case "agility", "agi" -> "§b";
-            case "perception", "per" -> "§e";
-            case "intelligence", "int" -> "§d";
-            case "willpower", "wil" -> "§6";
-            default -> "§f";
-        };
-        var pose = g.pose();
-        pose.pushPose();
-        pose.translate(x + 1, plusY + 2, 0);
-        pose.scale(1.25F, 1.25F, 1.0F);
-        g.drawString(font, statColor + sym, 0, 0, 0xFFFFFFFF, true);
-        pose.popPose();
+        ResourceLocation icon = getStatIcon(id);
+        com.mojang.blaze3d.systems.RenderSystem.enableBlend();
+        com.mojang.blaze3d.systems.RenderSystem.defaultBlendFunc();
+        g.blit(icon, x, plusY + 1, 14, 14, 0.0F, 0.0F, 64, 64, 64, 64);
 
-        drawAutoScaled(g, Component.literal("§f" + name + " §e" + value), x + 14, plusY + 4, 0xFFFFFFFF, Math.max(28, plusX - (x + 14) - 2));
+        drawAutoScaled(g, Component.literal("§f" + name + " §e" + value), x + 16, plusY + 4, 0xFFFFFFFF, Math.max(28, plusX - (x + 16) - 2));
 
         if (mouseX >= x && mouseX < plusX && mouseY >= plusY && mouseY < plusY + 16) {
             String shortCode = id.length() >= 3 ? id.substring(0, 3).toLowerCase(java.util.Locale.ROOT) : id;

@@ -1,6 +1,8 @@
 package com.soybe.awakeningsystem;
 
 import com.soybe.awakeningsystem.block.BountyBoardBlock;
+import com.soybe.awakeningsystem.client.gui.ModernGuiHelper;
+import net.minecraft.ChatFormatting;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.gui.screens.Screen;
@@ -119,51 +121,51 @@ public final class BountyBoardScreen extends Screen {
         int left = (this.width - boardW) / 2;
         int top = (this.height - boardH) / 2;
 
-        g.fill(left - 6, top - 6, left + boardW + 6, top + boardH + 6, 0xFF1C1107);
-        g.fill(left - 4, top - 4, left + boardW + 4, top + boardH + 4, 0xFF35200D);
-        g.fill(left, top, left + boardW, top + boardH, 0xFF28180A);
+        ModernGuiHelper.drawModernWindow(g, left, top, boardW, boardH, ModernGuiHelper.GuiTheme.SOLO_LEVELING);
 
-        for (int y = top + 4; y < top + boardH - 4; y += 18) {
-            g.fill(left + 4, y, left + boardW - 4, y + 16, 0xFF3D2510);
-            g.fill(left + 4, y + 16, left + boardW - 4, y + 18, 0xFF221408);
-        }
+        int closeX = left + boardW - 24;
+        int closeY = top + 8;
+        boolean closeHov = mX >= closeX && mX < closeX + 16 && mY >= closeY && mY < closeY + 16;
+        g.fill(closeX, closeY, closeX + 16, closeY + 16, closeHov ? 0xDD7A1515 : 0x55122030);
+        g.renderOutline(closeX, closeY, 16, 16, closeHov ? 0xFFFF5555 : 0x7700E5FF);
+        g.drawCenteredString(this.font, "✕", closeX + 8, closeY + 4, closeHov ? 0xFFFFFFFF : 0xFF70E8FF);
 
-        g.fill(left + 12, top + 6, left + boardW - 12, top + 26, 0xFF523315);
-        g.fill(left + 14, top + 8, left + boardW - 14, top + 24, 0xFF65401C);
-        g.drawCenteredString(this.font, Component.translatable("awakening_system.bounty_board.title"), left + boardW / 2, top + 12, 0xFFFFD700);
+        g.drawCenteredString(this.font, Component.translatable("awakening_system.bounty_board.title").copy().withStyle(ChatFormatting.BOLD), left + boardW / 2, top + 10, 0xFFFFD700);
 
-        int refX = left + boardW - 88;
-        int refY = top + 27;
-        int refW = 76;
-        int refH = 13;
+        int refX = left + boardW - 96;
+        int refY = top + 26;
+        int refW = 68;
+        int refH = 14;
         boolean refHov = mX >= refX && mX <= refX + refW && mY >= refY && mY <= refY + refH;
-        g.fill(refX, refY, refX + refW, refY + refH, refHov ? 0xFF884411 : 0xFF442208);
-        g.fill(refX + 1, refY + 1, refX + refW - 1, refY + refH - 1, refHov ? 0xFFA05518 : 0xFF5A300E);
-        g.drawCenteredString(this.font, Component.translatable("awakening_system.bounty_board.btn_refresh"), refX + refW / 2, refY + 3, refHov ? 0xFFFFFFFF : 0xFFFFD700);
+        g.fill(refX, refY, refX + refW, refY + refH, refHov ? 0xDD2A4560 : 0x55122030);
+        g.renderOutline(refX, refY, refW, refH, refHov ? 0xFFFFFFFF : 0x7700E5FF);
+        g.drawCenteredString(this.font, Component.translatable("awakening_system.bounty_board.btn_refresh"), refX + refW / 2, refY + 3, refHov ? 0xFFFFFFFF : 0xFF70E8FF);
 
         int needed = payload.nextRankNeeded();
         int completed = payload.completedBounties();
         int remain = Math.max(0, needed - completed);
         Component rankStr = Component.translatable("awakening_system.bounty_board.rank_status", payload.guildRank(), completed, remain);
-        g.drawString(this.font, rankStr, left + 14, top + 30, 0xFFE0E0E0, false);
+        g.drawString(this.font, rankStr, left + 14, top + 29, 0xFFCCE3EC, false);
 
         int listX = left + 10;
         int listY = top + 44;
         int listW = 156;
         int listH = 180;
-        g.fill(listX - 2, listY - 2, listX + listW + 2, listY + listH + 2, 0xFF1E1308);
-        g.fill(listX, listY, listX + listW, listY + listH, 0xFF2F1D0D);
+        g.fill(listX, listY, listX + listW, listY + listH, 0x40081422);
+        g.renderOutline(listX, listY, listW, listH, 0x5500E5FF);
 
         int[] offers = payload.availableBounties();
         int totalOffers = (offers != null) ? offers.length : 0;
         int maxScroll = Math.max(0, totalOffers - 6);
 
         if (listScroll > 0) {
-            g.fill(listX + listW - 16, listY + 2, listX + listW - 2, listY + 12, 0xFF553311);
+            g.fill(listX + listW - 16, listY + 2, listX + listW - 2, listY + 12, 0xFF142436);
+            g.renderOutline(listX + listW - 16, listY + 2, 14, 10, 0xAA00E5FF);
             g.drawCenteredString(this.font, "▲", listX + listW - 9, listY + 3, 0xFFFFD700);
         }
         if (listScroll < maxScroll) {
-            g.fill(listX + listW - 16, listY + listH - 12, listX + listW - 2, listY + listH - 2, 0xFF553311);
+            g.fill(listX + listW - 16, listY + listH - 12, listX + listW - 2, listY + listH - 2, 0xFF142436);
+            g.renderOutline(listX + listW - 16, listY + listH - 12, 14, 10, 0xAA00E5FF);
             g.drawCenteredString(this.font, "▼", listX + listW - 9, listY + listH - 11, 0xFFFFD700);
         }
 
@@ -179,8 +181,10 @@ public final class BountyBoardScreen extends Screen {
             boolean isSelected = (slotIdx == selectedIndex);
             boolean isHovered = mX >= listX + 2 && mX <= listX + listW - 2 && mY >= itemY && mY <= itemY + 26;
 
-            int bgCol = isSelected ? 0xFFEEDBB7 : (isHovered ? 0xFF5D3D1E : 0xFF3D2510);
+            int bgCol = isSelected ? 0xDD183F57 : (isHovered ? 0x9912283A : 0x550A1624);
+            int borderCol = isSelected ? 0xFF00FFFF : (isHovered ? 0xFF70E8FF : 0x3500E5FF);
             g.fill(listX + 2, itemY, listX + listW - 2, itemY + 27, bgCol);
+            g.renderOutline(listX + 2, itemY, listW - 4, 27, borderCol);
 
             int rankColor = switch (item.rank) {
                 case "F" -> 0xFF888888;
@@ -193,24 +197,25 @@ public final class BountyBoardScreen extends Screen {
             };
             g.fill(listX + 2, itemY, listX + 6, itemY + 27, rankColor);
 
-            g.fill(listX + 8, itemY + 5, listX + 22, itemY + 22, rankColor);
-            g.drawCenteredString(this.font, item.rank, listX + 15, itemY + 9, 0xFFFFFFFF);
+            g.fill(listX + 8, itemY + 5, listX + 22, itemY + 22, (rankColor & 0x00FFFFFF) | 0x33000000);
+            g.renderOutline(listX + 8, itemY + 5, 14, 17, rankColor);
+            g.drawCenteredString(this.font, item.rank, listX + 15, itemY + 9, rankColor);
 
             String title = Component.translatable(item.nameKey).getString();
             int maxTitleW = listW - 32;
             if (this.font.width(title) > maxTitleW) {
                 title = this.font.plainSubstrByWidth(title, maxTitleW - 6) + "…";
             }
-            g.drawString(this.font, "§0" + title, listX + 26, itemY + 4, 0xFF2B1D0E, false);
+            g.drawString(this.font, title, listX + 26, itemY + 4, isSelected ? 0xFFFFFFFF : 0xFFD4E6F1, false);
 
             if (payload.hasActiveBounty() && payload.activeIndex() == globalIdx) {
                 if (payload.activeKilled() >= payload.activeNeeded()) {
-                    g.drawString(this.font, Component.translatable("awakening_system.bounty_board.ready"), listX + 26, itemY + 15, 0xFF008800, false);
+                    g.drawString(this.font, Component.translatable("awakening_system.bounty_board.ready"), listX + 26, itemY + 15, 0xFF50FA7B, false);
                 } else {
-                    g.drawString(this.font, "§c[" + payload.activeKilled() + "/" + payload.activeNeeded() + "] §4En curso", listX + 26, itemY + 15, 0xFF882200, false);
+                    g.drawString(this.font, "§c[" + payload.activeKilled() + "/" + payload.activeNeeded() + "] §eEn curso", listX + 26, itemY + 15, 0xFFFFD700, false);
                 }
             } else {
-                g.drawString(this.font, "§7" + item.coins + " ⛃ / " + item.medals + "🏅", listX + 26, itemY + 15, 0xFF555555, false);
+                g.drawString(this.font, "§e" + item.coins + " ⛃ §7| §d" + item.medals + "🏅", listX + 26, itemY + 15, 0xFF88C999, false);
             }
         }
 
@@ -219,29 +224,38 @@ public final class BountyBoardScreen extends Screen {
         int detW = 196;
         int detH = 180;
 
-        g.fill(detX - 2, detY - 2, detX + detW + 2, detY + detH + 2, 0xFF1E1308);
-        g.fill(detX, detY, detX + detW, detY + detH, 0xFFF7ECDA);
-        g.fill(detX + 4, detY + 4, detX + detW - 4, detY + detH - 4, 0xFFFAF3E6);
+        g.fill(detX, detY, detX + detW, detY + detH, 0x40081422);
+        g.renderOutline(detX, detY, detW, detH, 0x5500E5FF);
 
         if (offers != null && selectedIndex >= 0 && selectedIndex < offers.length) {
             int selGlobalIdx = offers[selectedIndex];
             if (selGlobalIdx >= 0 && selGlobalIdx < BountyBoardBlock.ALL_BOUNTIES.size()) {
                 BountyBoardBlock.BountyTemplate sel = BountyBoardBlock.ALL_BOUNTIES.get(selGlobalIdx);
+                int rCol = switch (sel.rank) {
+                    case "F" -> 0xFF888888;
+                    case "E" -> 0xFF55AA55;
+                    case "D" -> 0xFF33BB77;
+                    case "C" -> 0xFF2299DD;
+                    case "B" -> 0xFFDDAA11;
+                    case "A" -> 0xFFEE5522;
+                    default  -> 0xFFAA22CC;
+                };
 
-                g.fill(detX + 6, detY + 6, detX + detW - 6, detY + 22, 0xFF8B2500);
-                g.drawCenteredString(this.font, Component.translatable("awakening_system.bounty_board.contract_rank", sel.rank), detX + detW / 2, detY + 10, 0xFFFFFFFF);
+                g.fill(detX + 6, detY + 6, detX + detW - 6, detY + 22, (rCol & 0x00FFFFFF) | 0x33000000);
+                g.renderOutline(detX + 6, detY + 6, detW - 12, 16, rCol);
+                g.drawCenteredString(this.font, Component.translatable("awakening_system.bounty_board.contract_rank", sel.rank).copy().withStyle(ChatFormatting.BOLD), detX + detW / 2, detY + 10, rCol);
 
                 String fullTitle = Component.translatable(sel.nameKey).getString();
-                List<FormattedCharSequence> titleLines = this.font.split(Component.literal("§4§l" + fullTitle), detW - 16);
+                List<FormattedCharSequence> titleLines = this.font.split(Component.literal("§f§l" + fullTitle), detW - 16);
                 int ty = detY + 25;
                 for (FormattedCharSequence line : titleLines) {
                     int lw = this.font.width(line);
-                    g.drawString(this.font, line, detX + (detW - lw) / 2, ty, 0xFF880000, false);
+                    g.drawString(this.font, line, detX + (detW - lw) / 2, ty, 0xFFFFFFFF, false);
                     ty += 10;
                 }
 
                 int objY = Math.max(ty + 3, detY + 46);
-                g.drawString(this.font, Component.translatable("awakening_system.bounty_board.objective_header"), detX + 10, objY, 0xFF444444, false);
+                g.drawString(this.font, Component.translatable("awakening_system.bounty_board.objective_header"), detX + 10, objY, 0xFF00E5FF, false);
 
                 Component targetDesc = switch (sel.targetType) {
                     case "collect_flower" -> Component.translatable("awakening_system.bounty_target.collect_flower", sel.count);
@@ -312,19 +326,19 @@ public final class BountyBoardScreen extends Screen {
                     default -> Component.translatable("awakening_system.bounty_target.default", sel.count);
                 };
 
-                List<FormattedCharSequence> targetLines = this.font.split(Component.literal("§0§l").append(targetDesc), detW - 20);
+                List<FormattedCharSequence> targetLines = this.font.split(Component.literal("§f").append(targetDesc), detW - 20);
                 int toY = objY + 10;
                 for (FormattedCharSequence line : targetLines) {
-                    g.drawString(this.font, line, detX + 10, toY, 0xFF000000, false);
+                    g.drawString(this.font, line, detX + 10, toY, 0xFFFFFFFF, false);
                     toY += 10;
                 }
 
                 int rewY = toY + 3;
                 int rewH = 32;
-                g.fill(detX + 8, rewY, detX + detW - 8, rewY + rewH, 0xFFEEDBB7);
-                g.fill(detX + 8, rewY, detX + 11, rewY + rewH, 0xFFC29B58);
-                g.drawString(this.font, Component.translatable("awakening_system.bounty_board.rewards_header"), detX + 14, rewY + 4, 0xFF8B5A00, false);
-                g.drawString(this.font, Component.literal("§0• §6+" + sel.coins + " M   §2+" + sel.exp + " EXP   §5+" + sel.medals + " 🏅"), detX + 14, rewY + 16, 0xFF000000, false);
+                g.fill(detX + 8, rewY, detX + detW - 8, rewY + rewH, 0x600C1F30);
+                g.fill(detX + 8, rewY, detX + 11, rewY + rewH, 0xFF00E5FF);
+                g.drawString(this.font, Component.translatable("awakening_system.bounty_board.rewards_header"), detX + 14, rewY + 4, 0xFFFFD700, false);
+                g.drawString(this.font, Component.literal("§f• §6+" + sel.coins + " M   §a+" + sel.exp + " EXP   §d+" + sel.medals + " 🏅"), detX + 14, rewY + 16, 0xFFFFFFFF, false);
 
                 boolean isActiveContract = (payload.hasActiveBounty() && payload.activeIndex() == selGlobalIdx);
                 int progY = rewY + rewH + 4;
@@ -334,16 +348,16 @@ public final class BountyBoardScreen extends Screen {
                     Component progText = sel.targetType.startsWith("collect_")
                             ? Component.translatable("awakening_system.bounty_board.delivered", k, n)
                             : Component.translatable("awakening_system.bounty_board.progress", k, n);
-                    g.drawString(this.font, Component.literal("§8").append(progText), detX + 12, progY, 0xFF000000, false);
-                    g.fill(detX + 12, progY + 9, detX + detW - 12, progY + 14, 0xFFCCCCCC);
+                    g.drawString(this.font, Component.literal("§b").append(progText), detX + 12, progY, 0xFF70E8FF, false);
+                    g.fill(detX + 12, progY + 9, detX + detW - 12, progY + 14, 0xFF0B141D);
                     int fillW = n > 0 ? Math.min(detW - 24, (detW - 24) * k / n) : 0;
-                    g.fill(detX + 12, progY + 9, detX + 12 + fillW, progY + 14, k >= n ? 0xFF44AA44 : 0xFFE5A823);
+                    g.fill(detX + 12, progY + 9, detX + 12 + fillW, progY + 14, k >= n ? 0xFF50FA7B : 0xFF00E5FF);
                 }
 
                 if (sel.targetType.startsWith("collect_")) {
                     int hintY = isActiveContract ? progY + 17 : progY + 2;
                     if (hintY + 8 < detY + detH - 22) {
-                        g.drawString(this.font, Component.translatable("awakening_system.bounty_board.delivery_hint"), detX + 10, hintY, 0xFF555555, false);
+                        g.drawString(this.font, Component.translatable("awakening_system.bounty_board.delivery_hint"), detX + 10, hintY, 0xFF888888, false);
                     }
                 }
 
@@ -357,18 +371,22 @@ public final class BountyBoardScreen extends Screen {
 
                 if (canClaim) {
                     boolean hov = mX >= btnX && mX <= btnX + btnW && mY >= btnY && mY <= btnY + btnH;
-                    g.fill(btnX, btnY, btnX + btnW, btnY + btnH, hov ? 0xFF2ECC71 : 0xFF27AE60);
-                    g.drawCenteredString(this.font, Component.translatable("awakening_system.bounty_board.btn_claim"), btnX + btnW / 2, btnY + 5, 0xFFFFFFFF);
+                    g.fill(btnX, btnY, btnX + btnW, btnY + btnH, hov ? 0xFF50FA7B : 0xFF2ECC71);
+                    g.renderOutline(btnX, btnY, btnW, btnH, 0xFFFFFFFF);
+                    g.drawCenteredString(this.font, Component.translatable("awakening_system.bounty_board.btn_claim").copy().withStyle(ChatFormatting.BOLD), btnX + btnW / 2, btnY + 5, 0xFF10202D);
                 } else if (isActiveContract) {
-                    g.fill(btnX, btnY, btnX + btnW, btnY + btnH, 0xFFD4AC0D);
-                    g.drawCenteredString(this.font, Component.translatable("awakening_system.bounty_board.btn_in_progress"), btnX + btnW / 2, btnY + 5, 0xFFFFFFFF);
+                    g.fill(btnX, btnY, btnX + btnW, btnY + btnH, 0x882A3A4D);
+                    g.renderOutline(btnX, btnY, btnW, btnH, 0xFFFFD700);
+                    g.drawCenteredString(this.font, Component.translatable("awakening_system.bounty_board.btn_in_progress"), btnX + btnW / 2, btnY + 5, 0xFFFFD700);
                 } else if (canAccept) {
                     boolean hov = mX >= btnX && mX <= btnX + btnW && mY >= btnY && mY <= btnY + btnH;
-                    g.fill(btnX, btnY, btnX + btnW, btnY + btnH, hov ? 0xFF3498DB : 0xFF2980B9);
-                    g.drawCenteredString(this.font, Component.translatable("awakening_system.bounty_board.btn_accept"), btnX + btnW / 2, btnY + 5, 0xFFFFFFFF);
+                    g.fill(btnX, btnY, btnX + btnW, btnY + btnH, hov ? 0xFF00B4D8 : 0xFF0077B6);
+                    g.renderOutline(btnX, btnY, btnW, btnH, hov ? 0xFFFFFFFF : 0xFF00E5FF);
+                    g.drawCenteredString(this.font, Component.translatable("awakening_system.bounty_board.btn_accept").copy().withStyle(ChatFormatting.BOLD), btnX + btnW / 2, btnY + 5, 0xFFFFFFFF);
                 } else {
-                    g.fill(btnX, btnY, btnX + btnW, btnY + btnH, 0xFF7F8C8D);
-                    g.drawCenteredString(this.font, Component.translatable("awakening_system.bounty_board.btn_busy"), btnX + btnW / 2, btnY + 5, 0xFFDDDDDD);
+                    g.fill(btnX, btnY, btnX + btnW, btnY + btnH, 0x44102030);
+                    g.renderOutline(btnX, btnY, btnW, btnH, 0x442D7691);
+                    g.drawCenteredString(this.font, Component.translatable("awakening_system.bounty_board.btn_busy"), btnX + btnW / 2, btnY + 5, 0xFF888888);
                 }
             }
         }
@@ -387,10 +405,17 @@ public final class BountyBoardScreen extends Screen {
         int left = (this.width - boardW) / 2;
         int top = (this.height - boardH) / 2;
 
-        int refX = left + boardW - 88;
-        int refY = top + 27;
-        int refW = 76;
-        int refH = 13;
+        int closeX = left + boardW - 24;
+        int closeY = top + 8;
+        if (mouseX >= closeX && mouseX < closeX + 16 && mouseY >= closeY && mouseY < closeY + 16) {
+            onClose();
+            return true;
+        }
+
+        int refX = left + boardW - 96;
+        int refY = top + 26;
+        int refW = 68;
+        int refH = 14;
         if (mouseX >= refX && mouseX <= refX + refW && mouseY >= refY && mouseY <= refY + refH) {
             PacketDistributor.sendToServer(new SelectBountyPayload(-1, false, true));
             if (minecraft != null && minecraft.player != null) {

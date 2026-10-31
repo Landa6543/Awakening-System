@@ -3366,5 +3366,25 @@
     "sounds": [
       "awakening_system:limbo/limbo_awakening"
     ]
+  },
+  "sandworm_roar": {
+    "category": "hostile",
+    "subtitle": "subtitles.awakening_system.sandworm_roar",
+    "sounds": [
+      {
+        "name": "awakening_system:entity/sandworm_roar",
+        "attenuation_distance": 96
+      }
+    ]
+  },
+  "sandworm_boom": {
+    "category": "hostile",
+    "subtitle": "subtitles.awakening_system.sandworm_boom",
+    "sounds": [
+      {
+        "name": "awakening_system:entity/sandworm_boom",
+        "attenuation_distance": 80
+      }
+    ]
   }
 }

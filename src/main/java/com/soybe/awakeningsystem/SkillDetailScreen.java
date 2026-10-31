@@ -1,16 +1,20 @@
 package com.soybe.awakeningsystem;
 
+import com.soybe.awakeningsystem.client.gui.ModernGuiHelper;
 import net.minecraft.ChatFormatting;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.gui.screens.Screen;
 import net.minecraft.network.chat.Component;
 
+import net.minecraft.client.resources.sounds.SimpleSoundInstance;
+import net.minecraft.sounds.SoundEvents;
+
 import java.util.List;
 
 public final class SkillDetailScreen extends Screen {
-    private static final int W = 390;
-    private static final int H = 260;
+    private static final int W = 440;
+    private static final int H = 310;
     private static final int CYAN = 0xFF70E8FF;
     private static final int GOLD = 0xFFFFD866;
     private static final int MUTED = 0xFF9BB7C7;
@@ -84,18 +88,26 @@ public final class SkillDetailScreen extends Screen {
         int left = (width - W) / 2;
         int top = (height - H) / 2;
 
+        int btnCloseX = left + W - 34;
+        int btnCloseY = top + 16;
+        if (button == 0 && mouseX >= btnCloseX && mouseX <= btnCloseX + 16 && mouseY >= btnCloseY && mouseY <= btnCloseY + 16) {
+            Minecraft.getInstance().getSoundManager().play(SimpleSoundInstance.forUI(SoundEvents.UI_BUTTON_CLICK, 1.0F));
+            onClose();
+            return true;
+        }
+
         if (button == 0 && SkillDefinitions.isActive(skillId)) {
             int btnW = 120;
             int btnH = 20;
             int eqX = left + (W / 2) - btnW - 6;
-            int eqY = top + 84;
+            int eqY = top + 72;
             if (mouseX >= eqX && mouseX <= eqX + btnW && mouseY >= eqY && mouseY <= eqY + btnH) {
                 AwakeningSystemClient.equipSkill(skillId);
                 return true;
             }
 
             int actX = left + (W / 2) + 6;
-            int actY = top + 84;
+            int actY = top + 72;
             if (mouseX >= actX && mouseX <= actX + btnW && mouseY >= actY && mouseY <= actY + btnH) {
                 AwakeningSystemClient.activateSkill(skillId);
                 return true;
@@ -139,16 +151,18 @@ public final class SkillDetailScreen extends Screen {
         List<net.minecraft.util.FormattedCharSequence> description = font.split(definition.description(), contentWidth);
         List<net.minecraft.util.FormattedCharSequence> effect = font.split(definition.effect(), contentWidth);
 
-        graphics.fill(0, 0, width, height, sys30 ? 0x600B1513 : (isSys20 ? 0x60140B22 : 0x40101A2A));
-        graphics.fill(left - 3, top - 3, left + W + 3, top + H + 3, sys30 ? 0x80D4AF37 : (isSys20 ? 0x809D4EDD : 0x802D7691));
-        graphics.fill(left - 1, top - 1, left + W + 1, top + H + 1, (sys30 || isSys20) ? 0xFFFFD700 : CYAN);
-        graphics.fill(left, top, left + W, top + H, sys30 ? 0xF00B1513 : (isSys20 ? 0xF0140B22 : 0xF0132537));
-        graphics.fill(left, top, left + W, top + 3, (sys30 || isSys20) ? 0xFFFFD700 : CYAN);
+        ModernGuiHelper.GuiTheme theme = ModernGuiHelper.getTheme(currentData);
+        ModernGuiHelper.drawModernWindow(graphics, left, top, W, H, theme);
 
-        graphics.fill(left + 14, top + 14, left + W - 14, top + 76, sys30 ? 0xFF142420 : (isSys20 ? 0xFF28103F : 0xFF17354B));
-        graphics.fill(left + 14, top + 74, left + W - 14, top + 76, GOLD);
+        // Sleek Manhwa close button [✕] matching SystemScreen
+        int btnCloseX = left + W - 34;
+        int btnCloseY = top + 16;
+        boolean closeHov = mX >= btnCloseX && mX < btnCloseX + 16 && mY >= btnCloseY && mY < btnCloseY + 16;
+        graphics.fill(btnCloseX, btnCloseY, btnCloseX + 16, btnCloseY + 16, closeHov ? 0xDD7A1515 : 0x55122030);
+        graphics.renderOutline(btnCloseX, btnCloseY, 16, 16, closeHov ? 0xFFFF5555 : 0x7700E5FF);
+        graphics.drawCenteredString(font, "✕", btnCloseX + 8, btnCloseY + 4, closeHov ? 0xFFFFFFFF : 0xFF70E8FF);
 
-        graphics.drawCenteredString(font, definition.name().copy().withStyle(ChatFormatting.BOLD), width / 2, top + 22, GOLD);
+        graphics.drawCenteredString(font, ModernGuiHelper.manhwa(definition.name().copy().withStyle(ChatFormatting.BOLD)), width / 2, top + 18, GOLD);
 
         boolean isActive = SkillDefinitions.isActive(skillId);
         Component typeTag = (isActive
@@ -158,9 +172,9 @@ public final class SkillDetailScreen extends Screen {
         Component levelComp = Component.translatable("awakening_system.skill.level_separator", skillLevel).withStyle(ChatFormatting.WHITE);
         Component rarityComp = Component.translatable("awakening_system.rarity." + definition.rarity().id());
         Component subHeader = typeTag.copy().append(levelComp).append(rarityComp);
-        graphics.drawCenteredString(font, subHeader, width / 2, top + 38, isActive ? ((sys30 || isSys20) ? 0xFFFFD700 : CYAN) : 0xFF50FA7B);
+        graphics.drawCenteredString(font, subHeader, width / 2, top + 34, isActive ? ((sys30 || isSys20) ? 0xFFFFD700 : CYAN) : 0xFF50FA7B);
 
-        graphics.drawCenteredString(font, Component.translatable("awakening_system.skill.mastery", progress, progressRequired), width / 2, top + 54, sys30 ? 0xFF88C999 : (isSys20 ? 0xFFD1B3E0 : MUTED));
+        graphics.drawCenteredString(font, Component.translatable("awakening_system.skill.mastery", progress, progressRequired), width / 2, top + 48, sys30 ? 0xFF88C999 : (isSys20 ? 0xFFD1B3E0 : MUTED));
 
         if (isActive) {
             int btnW = 120;
@@ -168,40 +182,40 @@ public final class SkillDetailScreen extends Screen {
 
             boolean isEquipped = skillId.equals(currentData.equippedSkill());
             int eqX = left + (W / 2) - btnW - 6;
-            int eqY = top + 84;
+            int eqY = top + 72;
             boolean eqHovered = mX >= eqX && mX <= eqX + btnW && mY >= eqY && mY <= eqY + btnH;
 
-            graphics.fill(eqX, eqY, eqX + btnW, eqY + btnH, isEquipped ? 0xFF163E2A : (eqHovered ? (sys30 ? 0xFF2ECC71 : (isSys20 ? 0xFF9D4EDD : 0xFF70E8FF)) : (sys30 ? 0xFF163E2A : (isSys20 ? 0xFF3A1259 : 0xFF276A82))));
-            drawBorder(graphics, eqX, eqY, btnW, btnH, isEquipped ? 0xFF50FA7B : (eqHovered ? 0xFFFFFFFF : ((sys30 || isSys20) ? 0xFFFFD700 : 0xFF50B4D8)));
+            graphics.fill(eqX, eqY, eqX + btnW, eqY + btnH, isEquipped ? 0xDD1B5E38 : (eqHovered ? 0xDD1B4E68 : 0x880C2434));
+            graphics.renderOutline(eqX, eqY, btnW, btnH, isEquipped ? 0xFF50FA7B : (eqHovered ? 0xFFFFFFFF : 0x8800E5FF));
             Component eqText = isEquipped
                     ? Component.translatable("awakening_system.skill.equipped_v")
                     : Component.translatable("awakening_system.skill.equip_v");
-            graphics.drawCenteredString(font, eqText, eqX + btnW / 2, eqY + 6, isEquipped ? 0xFF50FA7B : (eqHovered ? 0xFF10202D : (sys30 ? 0xFFFFD700 : 0xFFFFFFFF)));
+            graphics.drawCenteredString(font, eqText, eqX + btnW / 2, eqY + 6, isEquipped ? 0xFF50FA7B : (eqHovered ? 0xFFFFFFFF : 0xFFCCE3EC));
 
             long curGameTime = Minecraft.getInstance().level == null ? 0L : Minecraft.getInstance().level.getGameTime();
             int activeCd = currentData.activeCooldownSeconds(skillId, curGameTime);
             boolean canActivate = activeCd <= 0 && currentData.energy() >= SystemData.ACTIVE_SKILL_COST;
             int actX = left + (W / 2) + 6;
-            int actY = top + 84;
+            int actY = top + 72;
             boolean actHovered = mX >= actX && mX <= actX + btnW && mY >= actY && mY <= actY + btnH;
 
-            graphics.fill(actX, actY, actX + btnW, actY + btnH, activeCd > 0 ? (sys30 ? 0xFF0E261E : (isSys20 ? 0xFF28103F : 0xFF1C3243)) : (actHovered && canActivate ? 0xFF50FA7B : (canActivate ? (sys30 ? 0xFF163E2A : (isSys20 ? 0xFF5B1B7D : 0xFF1D5A40)) : (sys30 ? 0xFF0E261E : (isSys20 ? 0xFF28103F : 0xFF1C3243)))));
-            drawBorder(graphics, actX, actY, btnW, btnH, activeCd > 0 ? (sys30 ? 0x40D4AF37 : (isSys20 ? 0x409D4EDD : 0x402D7691)) : (canActivate ? ((sys30 || isSys20) ? 0xFFFFD700 : 0xFF50FA7B) : (sys30 ? 0x40D4AF37 : (isSys20 ? 0x409D4EDD : 0x402D7691))));
+            graphics.fill(actX, actY, actX + btnW, actY + btnH, activeCd > 0 ? 0x6616222D : (actHovered && canActivate ? 0xDD1E6B48 : (canActivate ? 0x880E3825 : 0x55111E26)));
+            graphics.renderOutline(actX, actY, btnW, btnH, activeCd > 0 ? 0x442A4255 : (canActivate ? (actHovered ? 0xFFFFFFFF : 0xFF50FA7B) : 0x442A4255));
             Component actText = activeCd > 0
                     ? Component.translatable("awakening_system.skill.cooldown", activeCd)
                     : (canActivate ? Component.translatable("awakening_system.skill.activate") : Component.translatable("awakening_system.skill.no_energy"));
-            graphics.drawCenteredString(font, actText, actX + btnW / 2, actY + 6, activeCd > 0 ? (sys30 ? 0xFF88C999 : (isSys20 ? 0xFFD1B3E0 : MUTED)) : (actHovered && canActivate ? 0xFF10202D : (canActivate ? ((sys30 || isSys20) ? 0xFFFFD700 : 0xFF50FA7B) : (sys30 ? 0xFF88C999 : (isSys20 ? 0xFFD1B3E0 : MUTED)))));
+            graphics.drawCenteredString(font, actText, actX + btnW / 2, actY + 6, activeCd > 0 ? MUTED : (actHovered && canActivate ? 0xFFFFFFFF : (canActivate ? 0xFF50FA7B : 0xFF888888)));
         } else {
             int passW = 230;
             int passH = 20;
             int passX = left + (W - passW) / 2;
-            int passY = top + 84;
-            graphics.fill(passX, passY, passX + passW, passY + passH, sys30 ? 0xFF142420 : (isSys20 ? 0xFF2D1244 : 0xFF0F2B1D));
-            drawBorder(graphics, passX, passY, passW, passH, (sys30 || isSys20) ? 0xFFFFD700 : 0xFF50FA7B);
-            graphics.drawCenteredString(font, Component.translatable("awakening_system.skill.passive_blessing"), passX + passW / 2, passY + 6, (sys30 || isSys20) ? 0xFFFFD700 : 0xFF50FA7B);
+            int passY = top + 72;
+            graphics.fill(passX, passY, passX + passW, passY + passH, 0x880F2B1D);
+            graphics.renderOutline(passX, passY, passW, passH, 0xFF50FA7B);
+            graphics.drawCenteredString(font, Component.translatable("awakening_system.skill.passive_blessing"), passX + passW / 2, passY + 6, 0xFF50FA7B);
         }
 
-        int y = top + 112;
+        int y = top + 102;
         y = drawTextBlock(graphics, Component.translatable("awakening_system.skill.description"), description, contentX, y, sys30 ? 0xFFE0F2E9 : (isSys20 ? 0xFFEDE2FF : 0xFFE9F2F6), sys30 || isSys20);
         y += 8;
         drawTextBlock(graphics, Component.translatable("awakening_system.skill.effect"), effect, contentX, y, GOLD, sys30 || isSys20);

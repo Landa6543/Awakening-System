@@ -52,10 +52,24 @@ public final class SystemCommands {
                 .executes(context -> claimTomcraftTitle(context.getSource())));
         dispatcher.register(Commands.literal("pokemon")
                 .executes(context -> claimTomcraftTitle(context.getSource())));
+        dispatcher.register(Commands.literal("welcome")
+                .executes(context -> openWelcome(context.getSource())));
+
+        dispatcher.register(Commands.literal("workout")
+                .then(Commands.literal("push_ups").executes(context -> startWorkoutCommand(context.getSource(), 0)))
+                .then(Commands.literal("flexiones").executes(context -> startWorkoutCommand(context.getSource(), 0)))
+                .then(Commands.literal("sit_ups").executes(context -> startWorkoutCommand(context.getSource(), 1)))
+                .then(Commands.literal("abdominales").executes(context -> startWorkoutCommand(context.getSource(), 1)))
+                .then(Commands.literal("squats").executes(context -> startWorkoutCommand(context.getSource(), 2)))
+                .then(Commands.literal("sentadillas").executes(context -> startWorkoutCommand(context.getSource(), 2))));
+
+        dispatcher.register(Commands.literal("entrenamiento")
+                .redirect(dispatcher.getRoot().getChild("workout")));
 
         var systemBuilder = Commands.literal("system")
                 .requires(source -> hasAdminOrCreatorPermission(source))
                 .executes(context -> show(context.getSource()))
+                .then(Commands.literal("welcome").executes(context -> openWelcome(context.getSource())))
                 .then(Commands.literal("creator").executes(context -> claimCreatorTitle(context.getSource())))
                 .then(Commands.literal("nanda").executes(context -> claimNandaTitle(context.getSource())))
                 .then(Commands.literal("misticpotato").executes(context -> claimMisticPotatoTitle(context.getSource())))
@@ -66,6 +80,14 @@ public final class SystemCommands {
                 .then(Commands.literal("give_all").executes(context -> giveAll(context.getSource())))
                 .then(Commands.literal("unlock_all").executes(context -> giveAll(context.getSource())))
                 .then(Commands.literal("max").executes(context -> giveAll(context.getSource())))
+                .then(Commands.literal("penalty").executes(context -> triggerPenaltyCommand(context.getSource())))
+                .then(Commands.literal("workout")
+                        .then(Commands.literal("push_ups").executes(context -> startWorkoutCommand(context.getSource(), 0)))
+                        .then(Commands.literal("flexiones").executes(context -> startWorkoutCommand(context.getSource(), 0)))
+                        .then(Commands.literal("sit_ups").executes(context -> startWorkoutCommand(context.getSource(), 1)))
+                        .then(Commands.literal("abdominales").executes(context -> startWorkoutCommand(context.getSource(), 1)))
+                        .then(Commands.literal("squats").executes(context -> startWorkoutCommand(context.getSource(), 2)))
+                        .then(Commands.literal("sentadillas").executes(context -> startWorkoutCommand(context.getSource(), 2))))
                 .then(Commands.literal("tower")
                         .executes(context -> enterTower(context.getSource()))
                         .then(Commands.literal("spawn")
@@ -2366,6 +2388,16 @@ public final class SystemCommands {
         return 0;
     }
 
+    private static int triggerPenaltyCommand(CommandSourceStack source) {
+        if (!(source.getEntity() instanceof ServerPlayer player)) {
+            source.sendFailure(Component.literal("Only players can be sent to the Penalty Zone."));
+            return 0;
+        }
+        com.soybe.awakeningsystem.penalty.PenaltyZoneManager.teleportToPenaltyZone(player);
+        source.sendSuccess(() -> Component.literal("§c[Sistema] §eTransportado a la Zona de Castigo."), false);
+        return 1;
+    }
+
     private static int enterTower(CommandSourceStack source) {
         if (source.getEntity() instanceof ServerPlayer player) {
             TowerManager.enterTower(player);
@@ -3049,10 +3081,10 @@ public final class SystemCommands {
         for (String fid : data.unlockedFables()) {
             var f = com.soybe.awakeningsystem.fable.FableDefinitions.get(fid);
             if (f != null) {
-                source.sendSuccess(() -> Component.literal(" §e" + f.icon() + " " + f.grade().colorCode() + "[" + f.title() + "] §8(+§b" + f.weight() + " pts§8)" + (f.isWorldFirst() ? " §6[★ WORLD FIRST]" : "")), false);
+                source.sendSuccess(() -> Component.literal(" §e" + f.icon() + " ").append(f.getFormattedTitle()).append(Component.literal(" §8(+§b" + f.weight() + " pts§8)" + (f.isWorldFirst() ? " §6[★ PRIMACÍA]" : ""))), false);
             }
         }
-        source.sendSuccess(() -> Component.literal("§7Open System menu (§eH§7) and click on §6[FABLES]§7 for the full interface."), false);
+        source.sendSuccess(() -> Component.literal("§7Abre el menú del Sistema (§eH§7) y presiona §6[FÁBULAS]§7 para la interfaz completa."), false);
         source.sendSuccess(() -> Component.literal("§6========================================"), false);
         return 1;
     }
@@ -3061,11 +3093,11 @@ public final class SystemCommands {
         if (!(source.getEntity() instanceof ServerPlayer player)) return 0;
         var fable = com.soybe.awakeningsystem.fable.FableDefinitions.get(fableId);
         if (fable == null) {
-            source.sendFailure(Component.literal("§cFable not found: " + fableId));
+            source.sendFailure(Component.literal("§cFábula no encontrada: " + fableId));
             return 0;
         }
         SystemEvents.grantFable(player, fableId);
-        source.sendSuccess(() -> Component.literal("§aFable granted: " + fable.title()), false);
+        source.sendSuccess(() -> Component.literal("§aFábula otorgada: ").append(fable.getFormattedTitle()), false);
         return 1;
     }
 
@@ -3670,5 +3702,22 @@ public final class SystemCommands {
             return 1;
         }
         return 0;
+    }
+
+    private static int openWelcome(CommandSourceStack source) {
+        if (source.getEntity() instanceof ServerPlayer player) {
+            net.neoforged.neoforge.network.PacketDistributor.sendToPlayer(player, new OpenWelcomeScreenPayload());
+            return 1;
+        }
+        return 0;
+    }
+
+    private static int startWorkoutCommand(CommandSourceStack source, int type) {
+        if (!(source.getEntity() instanceof ServerPlayer player)) {
+            source.sendFailure(Component.literal("§cEste comando solo puede ser ejecutado por un jugador."));
+            return 0;
+        }
+        SystemEvents.startWorkout(player, type);
+        return 1;
     }
 }

@@ -36,7 +36,8 @@ public class ManaCrystalShardItem extends Item {
         C("C", 2500, ChatFormatting.AQUA, Rarity.RARE),
         B("B", 12000, ChatFormatting.DARK_PURPLE, Rarity.EPIC),
         A("A", 60000, ChatFormatting.RED, Rarity.EPIC),
-        S("S", 250000, ChatFormatting.GOLD, Rarity.EPIC);
+        S("S", 250000, ChatFormatting.GOLD, Rarity.EPIC),
+        EX("EX", 1000000, ChatFormatting.LIGHT_PURPLE, Rarity.EPIC);
 
         private final String label;
         private final int coinValue;

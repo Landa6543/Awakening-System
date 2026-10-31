@@ -4,16 +4,21 @@ import com.soybe.awakeningsystem.AwakeningSystemMod;
 import com.soybe.awakeningsystem.SystemItems;
 import net.minecraft.core.particles.ParticleTypes;
 import net.minecraft.network.chat.Component;
+import net.minecraft.network.syncher.EntityDataAccessor;
+import net.minecraft.network.syncher.EntityDataSerializers;
+import net.minecraft.network.syncher.SynchedEntityData;
 import net.minecraft.server.level.ServerBossEvent;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.sounds.SoundEvents;
 import net.minecraft.sounds.SoundSource;
 import net.minecraft.world.BossEvent;
+import net.minecraft.world.InteractionHand;
 import net.minecraft.world.damagesource.DamageSource;
 import net.minecraft.world.effect.MobEffectInstance;
 import net.minecraft.world.effect.MobEffects;
 import net.minecraft.world.DifficultyInstance;
+import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.EquipmentSlot;
 import net.minecraft.world.entity.MobSpawnType;
 import net.minecraft.world.entity.SpawnGroupData;
@@ -48,6 +53,9 @@ import javax.annotation.Nullable;
 import java.util.List;
 
 public class BaranBossEntity extends Monster implements GeoEntity {
+    private static final EntityDataAccessor<Byte> DATA_ATTACK_STATE =
+            SynchedEntityData.defineId(BaranBossEntity.class, EntityDataSerializers.BYTE);
+
     private final AnimatableInstanceCache geoCache = GeckoLibUtil.createInstanceCache(this);
     private static final RawAnimation IDLE_ANIM = RawAnimation.begin().thenLoop("idle");
     private static final RawAnimation WALK_ANIM = RawAnimation.begin().thenLoop("walk");
@@ -63,6 +71,35 @@ public class BaranBossEntity extends Monster implements GeoEntity {
     private int lightningCooldown = 100;
     private int dashCooldown = 80;
     private int stormCooldown = 160;
+    private int attackAnimationTicks = 0;
+
+    @Override
+    protected void defineSynchedData(SynchedEntityData.Builder builder) {
+        super.defineSynchedData(builder);
+        builder.define(DATA_ATTACK_STATE, (byte) 0);
+    }
+
+    public void setAttackState(byte state, int durationTicks) {
+        this.entityData.set(DATA_ATTACK_STATE, state);
+        this.attackAnimationTicks = durationTicks;
+    }
+
+    @Override
+    public boolean doHurtTarget(Entity target) {
+        boolean hurt = super.doHurtTarget(target);
+        if (hurt && target instanceof LivingEntity) {
+            setAttackState((byte) 1, 8);
+        }
+        return hurt;
+    }
+
+    @Override
+    public void swing(InteractionHand hand, boolean updateSelf) {
+        super.swing(hand, updateSelf);
+        if (!this.level().isClientSide() && this.entityData.get(DATA_ATTACK_STATE) == 0) {
+            setAttackState((byte) 1, 8);
+        }
+    }
 
     public BaranBossEntity(EntityType<? extends Monster> entityType, Level level) {
         super(entityType, level);
@@ -153,14 +190,25 @@ public class BaranBossEntity extends Monster implements GeoEntity {
         }
 
         if (this.level() instanceof ServerLevel sl) {
+            if (attackAnimationTicks > 0) {
+                attackAnimationTicks--;
+                if (attackAnimationTicks <= 0) {
+                    this.entityData.set(DATA_ATTACK_STATE, (byte) 0);
+                }
+            }
+
             LivingEntity target = this.getTarget();
+            if (lightningCooldown > 0) lightningCooldown--;
+            if (dashCooldown > 0) dashCooldown--;
+            if (stormCooldown > 0) stormCooldown--;
+
             if (target != null && target.isAlive()) {
                 double distSq = this.distanceToSqr(target);
                 boolean enraged = this.getHealth() < this.getMaxHealth() * 0.5F;
 
-                if (lightningCooldown > 0) lightningCooldown--;
                 if (lightningCooldown <= 0 && distSq <= 400.0D) {
                     lightningCooldown = enraged ? 70 : 110;
+                    setAttackState((byte) 2, 16);
                     sl.playSound(null, target.getX(), target.getY(), target.getZ(), SoundEvents.LIGHTNING_BOLT_THUNDER, SoundSource.HOSTILE, 1.5F, 1.2F);
 
                     int count = enraged ? 4 : 2;
@@ -177,9 +225,9 @@ public class BaranBossEntity extends Monster implements GeoEntity {
                     target.hurt(this.damageSources().lightningBolt(), enraged ? 16.0F : 12.0F);
                 }
 
-                if (dashCooldown > 0) dashCooldown--;
                 if (dashCooldown <= 0 && distSq >= 25.0D && distSq <= 196.0D) {
                     dashCooldown = enraged ? 60 : 90;
+                    setAttackState((byte) 1, 14);
                     Vec3 dir = target.position().subtract(this.position()).normalize();
                     this.setDeltaMovement(dir.x * 1.8D, 0.3D, dir.z * 1.8D);
                     this.hasImpulse = true;
@@ -191,9 +239,9 @@ public class BaranBossEntity extends Monster implements GeoEntity {
                     target.addEffect(new MobEffectInstance(MobEffects.GLOWING, 60, 0));
                 }
 
-                if (stormCooldown > 0) stormCooldown--;
                 if (stormCooldown <= 0 && distSq <= 36.0D) {
                     stormCooldown = enraged ? 100 : 150;
+                    setAttackState((byte) 1, 16);
                     sl.playSound(null, this.getX(), this.getY(), this.getZ(), SoundEvents.GENERIC_EXPLODE.value(), SoundSource.HOSTILE, 1.2F, 1.3F);
 
                     List<LivingEntity> nearby = sl.getEntitiesOfClass(LivingEntity.class, this.getBoundingBox().inflate(5.0D),
@@ -246,16 +294,17 @@ public class BaranBossEntity extends Monster implements GeoEntity {
 
     @Override
     public void registerControllers(AnimatableManager.ControllerRegistrar controllers) {
-        controllers.add(new AnimationController<>(this, "movement", 5, state -> {
+        controllers.add(new AnimationController<>(this, "movement", 4, state -> {
             if (state.isMoving()) {
                 return state.setAndContinue(WALK_ANIM);
             }
             return state.setAndContinue(IDLE_ANIM);
         }));
-        controllers.add(new AnimationController<>(this, "attack", 5, state -> {
-            if (this.dashCooldown > 55 || this.stormCooldown > 120) {
+        controllers.add(new AnimationController<>(this, "attack", 2, state -> {
+            byte attack = this.entityData.get(DATA_ATTACK_STATE);
+            if (attack == 1) {
                 return state.setAndContinue(ATTACK_ANIM);
-            } else if (this.lightningCooldown > 80) {
+            } else if (attack == 2) {
                 return state.setAndContinue(AGRO_ANIM);
             }
             return PlayState.STOP;

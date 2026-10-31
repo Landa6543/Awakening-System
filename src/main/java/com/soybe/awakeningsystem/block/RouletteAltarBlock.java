@@ -90,6 +90,21 @@ public class RouletteAltarBlock extends BaseEntityBlock {
         return Block.box(0.0D, 0.0D, 0.0D, 16.0D, 16.0D, 16.0D);
     }
 
+    @Override
+    public boolean propagatesSkylightDown(BlockState state, net.minecraft.world.level.BlockGetter reader, BlockPos pos) {
+        return true;
+    }
+
+    @Override
+    public float getShadeBrightness(BlockState state, net.minecraft.world.level.BlockGetter level, BlockPos pos) {
+        return 1.0F;
+    }
+
+    @Override
+    public net.minecraft.world.phys.shapes.VoxelShape getVisualShape(BlockState state, net.minecraft.world.level.BlockGetter level, BlockPos pos, net.minecraft.world.phys.shapes.CollisionContext context) {
+        return net.minecraft.world.phys.shapes.Shapes.empty();
+    }
+
     @Nullable
     @Override
     public BlockEntity newBlockEntity(BlockPos pos, BlockState state) {

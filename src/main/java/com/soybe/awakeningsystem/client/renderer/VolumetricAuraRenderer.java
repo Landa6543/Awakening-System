@@ -109,6 +109,8 @@ public final class VolumetricAuraRenderer {
             } else if (inCombatTrance || inSkillBurst) {
                 renderAwakenedSkillAura(poseStack, bufferSource, dx, dy, dz, time);
             }
+
+            AbyssalPotionVfxRenderer.renderPotionAuras(poseStack, bufferSource, player, dx, dy, dz, time);
         }
     }
 
@@ -427,7 +429,7 @@ public final class VolumetricAuraRenderer {
     /**
      * Renderiza el disco de choque horizontal en el suelo.
      */
-    private static void renderGroundDisc(PoseStack poseStack, VertexConsumer builder,
+    public static void renderGroundDisc(PoseStack poseStack, VertexConsumer builder,
                                         float radius, int r, int g, int b, int a) {
         Matrix4f matrix = poseStack.last().pose();
         float y = 0.02F;

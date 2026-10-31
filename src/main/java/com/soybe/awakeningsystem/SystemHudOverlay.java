@@ -72,6 +72,10 @@ public final class SystemHudOverlay {
             renderSystemUpdatingBanner(mc, graphics, data, width);
         }
 
+        if (mc.player != null && mc.player.getVehicle() instanceof com.soybe.awakeningsystem.entity.WorkoutEntity workout) {
+            renderWorkoutDashboard(mc, graphics, workout, width, height, isSys40, isSys30, isSys20);
+        }
+
         if (com.soybe.awakeningsystem.client.gui.GuiConfig.showHudStatusCard) {
             switch (com.soybe.awakeningsystem.client.gui.GuiConfig.healthDisplayMode) {
                 case CARD -> renderHunterStatusCard(mc, graphics, data, width, height, isSys40, isSys30, isSys20, hasCultivation);
@@ -243,13 +247,13 @@ public final class SystemHudOverlay {
         }
 
         int maxContentW = Math.max(headerRequiredW, Math.max(hpRequiredW, Math.max(mpRequiredW, Math.max(qiRequiredW, foodRequiredW))));
-        int cardW = Math.max(168, maxContentW);
+        int cardW = Math.max(178, maxContentW + 10);
         int maxScreenW = (int) (screenW / scale) - 16;
-        if (maxScreenW > 168) {
+        if (maxScreenW > 178) {
             cardW = Math.min(cardW, maxScreenW);
         }
 
-        int cardH = 72;
+        int cardH = 76;
         if (hasCultivation) cardH += 16;
         if (showFood) cardH += 16;
 
@@ -285,78 +289,57 @@ public final class SystemHudOverlay {
         graphics.pose().pushPose();
         graphics.pose().scale(scale, scale, 1.0F);
 
-        // Modern Glassmorphism & Cybernetic Arcane Framing
-        int borderColor = isSys40 ? 0xD0DFB76C : (isSys30 ? 0xC000FF88 : (isSys20 ? 0xC09D4EDD : 0xC000E5FF));
-        int glowColor = isSys40 ? 0x404EE2EC : (isSys30 ? 0x3000FF88 : (isSys20 ? 0x309D4EDD : 0x3000E5FF));
-        int bgTop = isSys40 ? 0xEE0B1828 : (isSys30 ? 0xEE081A16 : (isSys20 ? 0xEE180C2A : 0xEE091422));
-        int bgBottom = isSys40 ? 0xF6050C16 : (isSys30 ? 0xF6040F0D : (isSys20 ? 0xF60D0518 : 0xF6040810));
+        // Deep Obsidian Dark Backing safely inset inside cyan frame (100% inside borders, zero outer spill)
+        int insetX = 6;
+        int insetY = 5;
+        graphics.fillGradient(cardX + insetX, cardY + insetY, cardX + cardW - insetX, cardY + cardH - insetY, 0xF0050B14, 0xF602050A);
 
-        // Double soft outer aura
-        graphics.fill(cardX - 2, cardY - 2, cardX + cardW + 2, cardY + cardH + 2, (glowColor & 0x00FFFFFF) | 0x12000000);
-        graphics.fill(cardX - 1, cardY - 1, cardX + cardW + 1, cardY + cardH + 1, (glowColor & 0x00FFFFFF) | 0x2A000000);
+        // Authentic Manhwa System Frame
+        com.mojang.blaze3d.systems.RenderSystem.enableBlend();
+        com.mojang.blaze3d.systems.RenderSystem.defaultBlendFunc();
+        com.soybe.awakeningsystem.client.gui.ModernGuiHelper.GuiTheme hudTheme = isSys40 ? com.soybe.awakeningsystem.client.gui.ModernGuiHelper.GuiTheme.TEYVAT
+                : (isSys30 ? com.soybe.awakeningsystem.client.gui.ModernGuiHelper.GuiTheme.MURIM
+                : (isSys20 ? com.soybe.awakeningsystem.client.gui.ModernGuiHelper.GuiTheme.ISEKAI : com.soybe.awakeningsystem.client.gui.ModernGuiHelper.GuiTheme.SOLO_LEVELING));
+        graphics.blit(com.soybe.awakeningsystem.client.gui.ModernGuiHelper.getFrameForTheme(hudTheme), cardX, cardY, cardW, cardH, 0.0F, 0.0F, 880, 620, 880, 620);
 
-        // High-tech border frame
-        graphics.fill(cardX, cardY, cardX + cardW, cardY + cardH, borderColor);
-
-        // Frosted glass vertical gradient
-        graphics.fillGradient(cardX + 1, cardY + 1, cardX + cardW - 1, cardY + cardH - 1, bgTop, bgBottom);
-
-        // Subtle top glass specular shine
-        graphics.fill(cardX + 2, cardY + 1, cardX + cardW - 2, cardY + 2, 0x40FFFFFF);
-
-        // Left glowing rank accent stripe
-        graphics.fill(cardX + 1, cardY + 1, cardX + 3, cardY + cardH - 1, rankColor);
-
-        // Stylized cybernetic corner L-brackets
-        int cornerCol = isSys40 ? 0xFFFFD700 : (isSys30 ? 0xFF00FF88 : (isSys20 ? 0xFFE0AAFF : 0xFF70E8FF));
-        graphics.fill(cardX, cardY, cardX + 5, cardY + 1, cornerCol);
-        graphics.fill(cardX, cardY, cardX + 1, cardY + 5, cornerCol);
-        graphics.fill(cardX + cardW - 5, cardY, cardX + cardW, cardY + 1, cornerCol);
-        graphics.fill(cardX + cardW - 1, cardY, cardX + cardW, cardY + 5, cornerCol);
-        graphics.fill(cardX, cardY + cardH - 1, cardX + 5, cardY + cardH, cornerCol);
-        graphics.fill(cardX, cardY + cardH - 5, cardX + 1, cardY + cardH, cornerCol);
-        graphics.fill(cardX + cardW - 5, cardY + cardH - 1, cardX + cardW, cardY + cardH, cornerCol);
-        graphics.fill(cardX + cardW - 1, cardY + cardH - 5, cardX + cardW, cardY + cardH, cornerCol);
-
-        int curY = cardY + 5;
+        int curY = cardY + 8;
 
         // Rank pill badge
-        int badgeX = cardX + 6;
+        int badgeX = cardX + 10;
         int badgeW = rankTagW + 6;
-        graphics.fill(badgeX, curY - 1, badgeX + badgeW, curY + 10, 0xEE0D1520);
-        graphics.renderOutline(badgeX, curY - 1, badgeW, 11, (rankColor & 0x00FFFFFF) | 0xDD000000);
+        graphics.fill(badgeX, curY - 1, badgeX + badgeW, curY + 10, 0x550D1520);
+        graphics.renderOutline(badgeX, curY - 1, badgeW, 11, (rankColor & 0x00FFFFFF) | 0x88000000);
         graphics.drawString(mc.font, rankTag, badgeX + 3, curY + 1, rankColor, false);
 
         // Level & Name
         int headX = badgeX + badgeW + 5;
         String lvlStr = "\u00A76" + lvlPrefix + " " + data.level() + " ";
         graphics.drawString(mc.font, lvlStr, headX, curY + 1, 0xFFFFD700, false);
-        graphics.drawString(mc.font, player.getScoreboardName(), headX + mc.font.width(lvlStr), curY + 1, 0xFFFFFFFF, false);
-
-        // Top-right Armor Badge (if armor > 0)
-        int armor = player.getArmorValue();
-        if (armor > 0) {
-            String armorHeader = "§b🛡 " + armor;
-            graphics.drawString(mc.font, armorHeader, cardX + cardW - 7 - mc.font.width(armorHeader), curY + 1, 0xFF00E5FF, false);
+        int nameStartX = headX + mc.font.width(lvlStr);
+        int availableNameW = (cardX + cardW - 10) - nameStartX;
+        String playerName = player.getScoreboardName();
+        if (availableNameW > 20 && mc.font.width(playerName) > availableNameW) {
+            playerName = mc.font.substrByWidth(net.minecraft.network.chat.FormattedText.of(playerName), availableNameW - mc.font.width("...")).getString() + "...";
         }
+        graphics.drawString(mc.font, playerName, nameStartX, curY + 1, 0xFFFFFFFF, false);
         curY += 13;
 
         // Elegant separator line
-        graphics.fill(cardX + 6, curY, cardX + cardW - 6, curY + 1, isSys40 ? 0x60DFB76C : (isSys30 ? 0x5000FF88 : (isSys20 ? 0x509D4EDD : 0x5000E5FF)));
+        graphics.fill(cardX + 10, curY, cardX + cardW - 10, curY + 1, isSys40 ? 0x60DFB76C : (isSys30 ? 0x5000FF88 : (isSys20 ? 0x509D4EDD : 0x5000E5FF)));
         curY += 4;
 
         // HP Label & Numbers
-        graphics.drawString(mc.font, "\u00A7c\u2764 HP", cardX + 7, curY, 0xFFFF4D4D, false);
-        graphics.drawString(mc.font, hpNumStr, cardX + cardW - 7 - mc.font.width(hpNumStr), curY, 0xFFF0F0F0, false);
+        graphics.drawString(mc.font, "\u00A7c\u2764 HP", cardX + 10, curY, 0xFFFF4D4D, false);
+        graphics.drawString(mc.font, hpNumStr, cardX + cardW - 10 - mc.font.width(hpNumStr), curY, 0xFFF0F0F0, false);
         curY += 9;
 
-        int barX = cardX + 7;
-        int barW = cardW - 14;
+        int barX = cardX + 10;
+        int barW = cardW - 20;
         int hpBarH = 5;
 
         // HP Dark track
-        graphics.fill(barX - 1, curY - 1, barX + barW + 1, curY + hpBarH + 1, 0xFF350E14);
-        graphics.fill(barX, curY, barX + barW, curY + hpBarH, 0xE0150406);
+        graphics.fill(barX - 1, curY - 1, barX + barW + 1, curY + hpBarH + 1, 0xAA350E14);
+        graphics.fill(barX, curY, barX + barW, curY + hpBarH, 0x55150406);
 
         // Lag damage trail
         float lagRatio = Math.max(0.0F, Math.min(1.0F, damageLagHealth / maxHp));
@@ -384,13 +367,13 @@ public final class SystemHudOverlay {
         curY += 8;
 
         // MP Label & Numbers
-        graphics.drawString(mc.font, "\u00A7b\u2726 MP", cardX + 7, curY, 0xFF00E5FF, false);
-        graphics.drawString(mc.font, mpNumStr, cardX + cardW - 7 - mc.font.width(mpNumStr), curY, 0xFFB0E0E6, false);
+        graphics.drawString(mc.font, "\u00A7b\u2726 MP", cardX + 10, curY, 0xFF00E5FF, false);
+        graphics.drawString(mc.font, mpNumStr, cardX + cardW - 10 - mc.font.width(mpNumStr), curY, 0xFFB0E0E6, false);
         curY += 9;
 
         int mpBarH = 5;
-        graphics.fill(barX - 1, curY - 1, barX + barW + 1, curY + mpBarH + 1, 0xFF0B2538);
-        graphics.fill(barX, curY, barX + barW, curY + mpBarH, 0xE005111B);
+        graphics.fill(barX - 1, curY - 1, barX + barW + 1, curY + mpBarH + 1, 0xAA0B2538);
+        graphics.fill(barX, curY, barX + barW, curY + mpBarH, 0x5505111B);
 
         float lagMpRatio = Math.max(0.0F, Math.min(1.0F, damageLagMp / maxMp));
         int lagMpW = (int) (barW * lagMpRatio);
@@ -413,13 +396,13 @@ public final class SystemHudOverlay {
         if (hasCultivation) {
             int curQi = data.cultivationQi();
             int maxQi = Math.max(1, data.maxCultivationQi());
-            graphics.drawString(mc.font, "\u00A7e\u262F QI", cardX + 7, curY, 0xFFFFD700, false);
-            graphics.drawString(mc.font, qiNumStr, cardX + cardW - 7 - mc.font.width(qiNumStr), curY, 0xFFFFF0A0, false);
+            graphics.drawString(mc.font, "\u00A7e\u262F QI", cardX + 10, curY, 0xFFFFD700, false);
+            graphics.drawString(mc.font, qiNumStr, cardX + cardW - 10 - mc.font.width(qiNumStr), curY, 0xFFFFF0A0, false);
             curY += 9;
 
             int qiBarH = 5;
-            graphics.fill(barX - 1, curY - 1, barX + barW + 1, curY + qiBarH + 1, 0xFF382A0B);
-            graphics.fill(barX, curY, barX + barW, curY + qiBarH, 0xE0181205);
+            graphics.fill(barX - 1, curY - 1, barX + barW + 1, curY + qiBarH + 1, 0xAA382A0B);
+            graphics.fill(barX, curY, barX + barW, curY + qiBarH, 0x55181205);
 
             float lagQiRatio = Math.max(0.0F, Math.min(1.0F, damageLagQi / maxQi));
             int lagQiW = (int) (barW * lagQiRatio);
@@ -446,13 +429,13 @@ public final class SystemHudOverlay {
             int foodLabelCol = isStarving ? 0xFFFF4444 : 0xFFFF9800;
             String foodLabel = Component.translatable("awakening_system.hud.food").getString();
 
-            graphics.drawString(mc.font, "\u00A76\u25C6 " + foodLabel, cardX + 7, curY, foodLabelCol, false);
-            graphics.drawString(mc.font, foodNumStr, cardX + cardW - 7 - mc.font.width(foodNumStr), curY, 0xFFFFE082, false);
+            graphics.drawString(mc.font, "\u00A76\u25C6 " + foodLabel, cardX + 10, curY, foodLabelCol, false);
+            graphics.drawString(mc.font, foodNumStr, cardX + cardW - 10 - mc.font.width(foodNumStr), curY, 0xFFFFE082, false);
             curY += 9;
 
             int foodBarH = 5;
-            graphics.fill(barX - 1, curY - 1, barX + barW + 1, curY + foodBarH + 1, 0xFF351F0A);
-            graphics.fill(barX, curY, barX + barW, curY + foodBarH, 0xE01A0E04);
+            graphics.fill(barX - 1, curY - 1, barX + barW + 1, curY + foodBarH + 1, 0xAA351F0A);
+            graphics.fill(barX, curY, barX + barW, curY + foodBarH, 0x551A0E04);
 
             float foodRatio = Math.max(0.0F, Math.min(1.0F, foodLvl / 20.0F));
             int curFoodW = (int) (barW * foodRatio);
@@ -482,22 +465,23 @@ public final class SystemHudOverlay {
         }
 
         // Modern Glass Pill Footer: Defense | Attack | Gold/Primos
+        int armor = player.getArmorValue();
         int attack = (int) player.getAttributeValue(net.minecraft.world.entity.ai.attributes.Attributes.ATTACK_DAMAGE);
         int coins = data.coins();
         String coinStr = coins >= 1000000 ? String.format(java.util.Locale.US, "%.1fM", coins / 1000000.0) :
                 (coins >= 1000 ? String.format(java.util.Locale.US, "%.1fK", coins / 1000.0) : String.valueOf(coins));
 
         int footerH = 11;
-        graphics.fill(cardX + 6, curY, cardX + cardW - 6, curY + footerH, 0xD0081018);
-        graphics.renderOutline(cardX + 6, curY, cardW - 12, footerH, 0x50276A82);
+        graphics.fill(cardX + 6, curY, cardX + cardW - 6, curY + footerH, 0x45081018);
+        graphics.renderOutline(cardX + 6, curY, cardW - 12, footerH, 0x40276A82);
 
         int colW = (cardW - 14) / 3;
-        graphics.drawString(mc.font, "§b🛡 " + armor, cardX + 9, curY + 2, 0xFFFFFFFF, false);
-        graphics.drawString(mc.font, "§c⚔ " + attack, cardX + 9 + colW, curY + 2, 0xFFFFFFFF, false);
+        graphics.drawString(mc.font, "§bDEF §f" + armor, cardX + 9, curY + 2, 0xFFFFFFFF, false);
+        graphics.drawString(mc.font, "§cATK §f" + attack, cardX + 9 + colW, curY + 2, 0xFFFFFFFF, false);
         if (isSys40 && data.primogems() > 0) {
-            graphics.drawString(mc.font, "§b✦ " + data.primogems(), cardX + 9 + colW * 2, curY + 2, 0xFFFFFFFF, false);
+            graphics.drawString(mc.font, "§b✦ §f" + data.primogems(), cardX + 9 + colW * 2, curY + 2, 0xFFFFFFFF, false);
         } else {
-            graphics.drawString(mc.font, "§e🪙 " + coinStr, cardX + 9 + colW * 2, curY + 2, 0xFFFFFFFF, false);
+            graphics.drawString(mc.font, "§6✦ §e" + coinStr, cardX + 9 + colW * 2, curY + 2, 0xFFFFFFFF, false);
         }
 
         graphics.pose().popPose();
@@ -683,6 +667,10 @@ public final class SystemHudOverlay {
             int bannerOffset = (data.isAnySystemUpdating() ? 32 : 0) + (com.soybe.awakeningsystem.client.map.HunterMinimapRenderer.isDangerAlertActive() ? 18 : 0);
             int dokkaebiBottom = Math.max(12, bossBottom + bannerOffset + 8) + 28;
             y = Math.max(y, dokkaebiBottom + 6);
+        }
+
+        if (SystemNotificationOverlay.isAnnouncementActive()) {
+            y = Math.max(y, SystemNotificationOverlay.getAnnouncementBottom() + 6);
         }
 
         int notifBottom = AwakeningSystemClient.getNotificationHeight();
@@ -1171,5 +1159,48 @@ public final class SystemHudOverlay {
 
         graphics.pose().popPose();
     }
-}
 
+    private static void renderWorkoutDashboard(Minecraft mc, GuiGraphics graphics, com.soybe.awakeningsystem.entity.WorkoutEntity workout, int width, int height, boolean isSys40, boolean isSys30, boolean isSys20) {
+        var font = mc.font;
+        int cardW = 210;
+        int cardH = 46;
+        int cardX = (width - cardW) / 2;
+        int cardY = 16;
+
+        int bgCol = isSys40 ? 0xDD0A1520 : (isSys30 ? 0xDD0E261E : (isSys20 ? 0xDD160926 : 0xDD0C1925));
+        int borderCol = (isSys30 || isSys20) ? 0xFFFFAA00 : 0xFF70E8FF;
+        graphics.fill(cardX, cardY, cardX + cardW, cardY + cardH, bgCol);
+        graphics.renderOutline(cardX, cardY, cardW, cardH, borderCol);
+
+        Component title = Component.translatable("awakening_system.workout.hud.title");
+        graphics.drawCenteredString(font, title, cardX + cardW / 2, cardY + 5, borderCol);
+
+        int type = workout.getExerciseType();
+        Component name = switch (type) {
+            case 0 -> Component.translatable("awakening_system.workout.pushups");
+            case 1 -> Component.translatable("awakening_system.workout.situps");
+            case 2 -> Component.translatable("awakening_system.workout.squats");
+            default -> Component.translatable("awakening_system.workout.exercise");
+        };
+        int reps = workout.getRepetitions();
+        int target = workout.getTargetReps();
+        Component countComp = Component.translatable("awakening_system.workout.hud.progress", name, reps, target);
+        graphics.drawCenteredString(font, countComp, cardX + cardW / 2, cardY + 17, 0xFFFFFFFF);
+
+        int barX = cardX + 12;
+        int barY = cardY + 28;
+        int barW = cardW - 24;
+        int barH = 5;
+        graphics.fill(barX, barY, barX + barW, barY + barH, 0xFF080D12);
+        int fillW = (int) (barW * Math.min(1.0F, (float) reps / (float) Math.max(1, target)));
+        int barFillCol = workout.isComplete() ? 0xFFFFD700 : 0xFF50FA7B;
+        if (fillW > 0) {
+            graphics.fill(barX, barY, barX + fillW, barY + barH, barFillCol);
+        }
+
+        Component hint = workout.isComplete() ?
+                Component.translatable("awakening_system.workout.hud.complete") :
+                Component.translatable("awakening_system.workout.hud.rest_hint");
+        graphics.drawCenteredString(font, hint, cardX + cardW / 2, cardY + 36, 0xFFAAAAAA);
+    }
+}

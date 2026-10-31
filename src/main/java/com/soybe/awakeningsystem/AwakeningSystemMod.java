@@ -20,7 +20,21 @@ import com.soybe.awakeningsystem.block.SystemBlocks;
 @Mod(AwakeningSystemMod.MOD_ID)
 public final class AwakeningSystemMod {
     public static final String MOD_ID = "awakening_system";
+    public static final String MOD_VERSION = "0.3.4";
     public static final Logger LOGGER = LogUtils.getLogger();
+
+    public static String getModVersion() {
+        try {
+            var container = net.neoforged.fml.ModList.get().getModContainerById(MOD_ID).orElse(null);
+            if (container != null && container.getModInfo() != null && container.getModInfo().getVersion() != null) {
+                String ver = container.getModInfo().getVersion().toString();
+                if (ver != null && !ver.isEmpty() && !"${file.jarVersion}".equals(ver)) {
+                    return ver;
+                }
+            }
+        } catch (Exception ignored) {}
+        return MOD_VERSION;
+    }
     private static final DeferredRegister<AttachmentType<?>> ATTACHMENTS =
             DeferredRegister.create(NeoForgeRegistries.ATTACHMENT_TYPES, MOD_ID);
     public static final DeferredRegister<net.minecraft.world.item.Item> ITEMS =
@@ -81,6 +95,7 @@ public final class AwakeningSystemMod {
         ModSounds.SOUND_EVENTS.register(modBus);
         com.soybe.awakeningsystem.particle.ModParticles.PARTICLE_TYPES.register(modBus);
         com.soybe.awakeningsystem.effect.ModMobEffects.MOB_EFFECTS.register(modBus);
+        com.soybe.awakeningsystem.potion.ModPotions.POTIONS.register(modBus);
         ModCreativeTabs.CREATIVE_MODE_TABS.register(modBus);
         modBus.addListener(SystemItems::addCreativeTabs);
         modBus.addListener(this::commonSetup);
@@ -92,6 +107,7 @@ public final class AwakeningSystemMod {
             modContainer.registerConfig(net.neoforged.fml.config.ModConfig.Type.SERVER, SystemConfig.SPEC);
             modContainer.registerConfig(net.neoforged.fml.config.ModConfig.Type.CLIENT, SystemClientConfig.SPEC);
         }
+
         modBus.addListener((net.neoforged.fml.event.config.ModConfigEvent.Loading e) -> {
             if (e.getConfig().getSpec() == SystemClientConfig.SPEC) {
                 SystemClientConfig.syncToGuiConfig();
@@ -131,6 +147,7 @@ public final class AwakeningSystemMod {
         }
         NeoForge.EVENT_BUS.register(SystemEvents.class);
         NeoForge.EVENT_BUS.addListener(SystemCommands::register);
+        NeoForge.EVENT_BUS.addListener(com.soybe.awakeningsystem.potion.ModPotions::onRegisterBrewingRecipes);
     }
 
     private void commonSetup(final net.neoforged.fml.event.lifecycle.FMLCommonSetupEvent event) {
@@ -425,6 +442,21 @@ public final class AwakeningSystemMod {
                         AwakeningSystemMod.sync(player);
                     }
                 }));
+        registrar.playToServer(ClaimDailyMissionPayload.TYPE, ClaimDailyMissionPayload.STREAM_CODEC,
+                (payload, context) -> context.enqueueWork(() -> {
+                    if (context.player() instanceof net.minecraft.server.level.ServerPlayer player
+                            && SystemEvents.claimDailyMission(player)) {
+                        AwakeningSystemMod.sync(player);
+                    }
+                }));
+        registrar.playToServer(StartWorkoutPayload.TYPE, StartWorkoutPayload.STREAM_CODEC,
+                (payload, context) -> context.enqueueWork(() -> {
+                    if (context.player() instanceof net.minecraft.server.level.ServerPlayer player) {
+                        SystemEvents.startWorkout(player, payload.exerciseType());
+                    }
+                }));
+        registrar.playToClient(OpenWelcomeScreenPayload.TYPE, OpenWelcomeScreenPayload.STREAM_CODEC,
+                (payload, context) -> context.enqueueWork(AwakeningSystemClient::openWelcomeScreen));
         registrar.playToServer(SelectDungeonPayload.TYPE, SelectDungeonPayload.STREAM_CODEC,
                 (payload, context) -> context.enqueueWork(() -> {
                     if (context.player() instanceof net.minecraft.server.level.ServerPlayer player) {
@@ -773,6 +805,8 @@ public final class AwakeningSystemMod {
                 (payload, context) -> context.enqueueWork(() -> AwakeningSystemClient.openBlackMarketScreen(payload)));
         registrar.playToClient(com.soybe.awakeningsystem.network.SystemAnnouncementPayload.TYPE, com.soybe.awakeningsystem.network.SystemAnnouncementPayload.STREAM_CODEC,
                 (payload, context) -> context.enqueueWork(() -> AwakeningSystemClient.showAnnouncement(payload)));
+        registrar.playToClient(com.soybe.awakeningsystem.network.TotemActivationPayload.TYPE, com.soybe.awakeningsystem.network.TotemActivationPayload.STREAM_CODEC,
+                (payload, context) -> context.enqueueWork(() -> AwakeningSystemClient.showTotemActivation(payload)));
         registrar.playToServer(com.soybe.awakeningsystem.blackmarket.network.BlackMarketActionC2SPayload.TYPE, com.soybe.awakeningsystem.blackmarket.network.BlackMarketActionC2SPayload.STREAM_CODEC,
                 (payload, context) -> context.enqueueWork(() -> {
                     if (context.player() instanceof net.minecraft.server.level.ServerPlayer player) {
@@ -798,6 +832,8 @@ public final class AwakeningSystemMod {
                             com.soybe.awakeningsystem.subspace.SubspaceManager.requestUpdateStructure(player);
                         } else if ("update_structure_confirm".equalsIgnoreCase(payload.action())) {
                             com.soybe.awakeningsystem.subspace.SubspaceManager.regenerateSubspaceStructure(player);
+                        } else if ("compact".equalsIgnoreCase(payload.action()) || "sort".equalsIgnoreCase(payload.action())) {
+                            com.soybe.awakeningsystem.subspace.SubspaceManager.compactSubspace(player);
                         } else if (payload.action().startsWith("page:")) {
                             try {
                                 int page = Integer.parseInt(payload.action().substring(5));
@@ -1467,6 +1503,23 @@ public final class AwakeningSystemMod {
             }
             case "OPEN" -> data.openGuildScreenForPlayer(player);
             case "SYNC" -> data.syncToPlayer(player);
+            case "TPA" -> {
+                net.minecraft.server.level.ServerPlayer target = null;
+                try {
+                    java.util.UUID targetUuid = java.util.UUID.fromString(payload.target());
+                    target = player.server.getPlayerList().getPlayer(targetUuid);
+                } catch (IllegalArgumentException e) {
+                    target = player.server.getPlayerList().getPlayerByName(payload.target());
+                }
+                if (target != null) {
+                    data.requestTpa(player, target);
+                } else {
+                    player.sendSystemMessage(net.minecraft.network.chat.Component.translatable("gui.awakening_system.guild.player_offline"));
+                }
+            }
+            case "TPA_ACCEPT" -> data.acceptTpa(player, payload.target().isBlank() ? null : payload.target());
+            case "TPA_DENY" -> data.declineTpa(player, payload.target().isBlank() ? null : payload.target());
+            case "TPA_CANCEL" -> data.cancelTpa(player);
         }
     }
 }

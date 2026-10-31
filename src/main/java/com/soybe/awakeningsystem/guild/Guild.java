@@ -236,7 +236,8 @@ public class Guild {
     public boolean unlockPerk(GuildPerk perk) {
         if (perk == null || hasPerk(perk)) return false;
         if (this.level < perk.getRequiredGuildLevel()) return false;
-        if (!withdrawMora(perk.getCostMora())) return false;
+        long cost = perk.getCostCoins();
+        if (!withdrawCoins(cost) && !withdrawMora(cost)) return false;
         unlockedPerks.add(perk.getId());
         return true;
     }

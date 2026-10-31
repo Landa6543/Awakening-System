@@ -1,0 +1,24 @@
+{
+    "key":  {
+                "W":  {
+                          "item":  "awakening_system:refined_white_iron_ingot"
+                      },
+                "T":  {
+                          "tag":  "awakening_system:world_totems"
+                      },
+                "A":  {
+                          "item":  "awakening_system:adamantite_ingot"
+                      }
+            },
+    "category":  "equipment",
+    "pattern":  [
+                    "AWA",
+                    "WTW",
+                    "AWA"
+                ],
+    "result":  {
+                   "count":  1,
+                   "id":  "awakening_system:adamantite_totem"
+               },
+    "type":  "minecraft:crafting_shaped"
+}

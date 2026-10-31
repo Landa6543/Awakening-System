@@ -15,9 +15,11 @@ import net.minecraft.sounds.SoundEvents;
 import net.minecraft.sounds.SoundSource;
 import net.minecraft.world.BossEvent;
 import net.minecraft.world.DifficultyInstance;
+import net.minecraft.world.InteractionHand;
 import net.minecraft.world.damagesource.DamageSource;
 import net.minecraft.world.effect.MobEffectInstance;
 import net.minecraft.world.effect.MobEffects;
+import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.EntityType;
 import net.minecraft.world.entity.EquipmentSlot;
 import net.minecraft.world.entity.LivingEntity;
@@ -53,12 +55,17 @@ import java.util.List;
 public class IgrisBossEntity extends Monster implements GeoEntity {
     private static final EntityDataAccessor<Boolean> DATA_IS_SHADOW =
             SynchedEntityData.defineId(IgrisBossEntity.class, EntityDataSerializers.BOOLEAN);
+    private static final EntityDataAccessor<Byte> DATA_ATTACK_STATE =
+            SynchedEntityData.defineId(IgrisBossEntity.class, EntityDataSerializers.BYTE);
 
     private final AnimatableInstanceCache geoCache = GeckoLibUtil.createInstanceCache(this);
     private static final RawAnimation IDLE_ANIM = RawAnimation.begin().thenLoop("idle");
     private static final RawAnimation WALK_ANIM = RawAnimation.begin().thenLoop("walk");
-    private static final RawAnimation ATTACK_ANIM = RawAnimation.begin().thenPlay("attack1");
+    private static final RawAnimation ATTACK1_ANIM = RawAnimation.begin().thenPlay("attack1");
+    private static final RawAnimation ATTACK2_ANIM = RawAnimation.begin().thenPlay("attack2");
+    private static final RawAnimation ATTACK3_ANIM = RawAnimation.begin().thenPlay("attack3");
     private static final RawAnimation SPIN_ANIM = RawAnimation.begin().thenPlay("spin");
+    private static final RawAnimation SPLIT_ANIM = RawAnimation.begin().thenPlay("split");
 
     private final ServerBossEvent bossEvent = (ServerBossEvent) new ServerBossEvent(
             Component.translatable("awakening_system.boss.igris.name"),
@@ -66,17 +73,22 @@ public class IgrisBossEntity extends Monster implements GeoEntity {
             BossEvent.BossBarOverlay.NOTCHED_10
     ).setDarkenScreen(false);
 
-    private int thrustCooldown = 60;
-    private int whirlwindCooldown = 120;
-    private int guardCooldown = 180;
+    private int thrustCooldown = 40;
+    private int whirlwindCooldown = 80;
+    private int guardCooldown = 140;
     private int guardTicks = 0;
     private boolean isGuarding = false;
+    private int attackAnimationTicks = 0;
+    private int comboCounter = 0;
 
     public IgrisBossEntity(EntityType<? extends Monster> entityType, Level level) {
         super(entityType, level);
         this.xpReward = 250;
         this.setCustomName(Component.translatable("awakening_system.boss.igris.name"));
         this.setCustomNameVisible(true);
+        if (SystemItems.GIGANTIC_GREATSWORD != null && SystemItems.GIGANTIC_GREATSWORD.isBound()) {
+            this.setItemSlot(EquipmentSlot.MAINHAND, new ItemStack(SystemItems.GIGANTIC_GREATSWORD.get()));
+        }
     }
 
     public static AttributeSupplier.Builder createAttributes() {
@@ -109,9 +121,9 @@ public class IgrisBossEntity extends Monster implements GeoEntity {
         this.goalSelector.addGoal(7, new RandomLookAroundGoal(this));
 
         this.targetSelector.addGoal(1, new HurtByTargetGoal(this));
-        this.targetSelector.addGoal(2, new NearestAttackableTargetGoal<>(this, Player.class, true,
+        this.targetSelector.addGoal(2, new NearestAttackableTargetGoal<>(this, Player.class, false,
                 target -> target != null && !this.isShadowSoldier()));
-        this.targetSelector.addGoal(3, new NearestAttackableTargetGoal<>(this, Monster.class, 10, true, false,
+        this.targetSelector.addGoal(3, new NearestAttackableTargetGoal<>(this, Monster.class, 10, false, false,
                 target -> this.isShadowSoldier() && target != null && !target.getTags().contains("shadow_soldier")));
     }
 
@@ -119,6 +131,7 @@ public class IgrisBossEntity extends Monster implements GeoEntity {
     protected void defineSynchedData(SynchedEntityData.Builder builder) {
         super.defineSynchedData(builder);
         builder.define(DATA_IS_SHADOW, false);
+        builder.define(DATA_ATTACK_STATE, (byte) 0);
     }
 
     public boolean isShadowSoldier() {
@@ -135,6 +148,11 @@ public class IgrisBossEntity extends Monster implements GeoEntity {
         } else {
             this.removeTag("shadow_soldier");
         }
+    }
+
+    public void setAttackState(byte state, int durationTicks) {
+        this.entityData.set(DATA_ATTACK_STATE, state);
+        this.attackAnimationTicks = durationTicks;
     }
 
     @Override
@@ -178,6 +196,37 @@ public class IgrisBossEntity extends Monster implements GeoEntity {
     }
 
     @Override
+    public boolean doHurtTarget(Entity target) {
+        boolean hurt = super.doHurtTarget(target);
+        if (hurt && target instanceof LivingEntity living) {
+            byte slash = (byte) (1 + (comboCounter % 3));
+            comboCounter++;
+            setAttackState(slash, 8);
+
+            this.level().playSound(null, this.getX(), this.getY(), this.getZ(),
+                    SoundEvents.PLAYER_ATTACK_SWEEP, SoundSource.HOSTILE, 1.4F, 0.85F + this.random.nextFloat() * 0.3F);
+
+            if (this.level() instanceof ServerLevel sl) {
+                sl.sendParticles(ParticleTypes.SWEEP_ATTACK, living.getX(), living.getY() + living.getBbHeight() * 0.5D, living.getZ(), 1, 0.1D, 0.1D, 0.1D, 0.0D);
+                sl.sendParticles(ParticleTypes.CRIT, living.getX(), living.getY() + living.getBbHeight() * 0.5D, living.getZ(), 8, 0.25D, 0.25D, 0.25D, 0.05D);
+            }
+        }
+        return hurt;
+    }
+
+    @Override
+    public void swing(InteractionHand hand, boolean updateSelf) {
+        super.swing(hand, updateSelf);
+        if (!this.level().isClientSide()) {
+            if (this.entityData.get(DATA_ATTACK_STATE) == 0) {
+                byte slash = (byte) (1 + (comboCounter % 3));
+                comboCounter++;
+                setAttackState(slash, 8);
+            }
+        }
+    }
+
+    @Override
     public void aiStep() {
         super.aiStep();
 
@@ -192,51 +241,73 @@ public class IgrisBossEntity extends Monster implements GeoEntity {
         }
 
         if (this.level() instanceof ServerLevel sl) {
+            if (attackAnimationTicks > 0) {
+                attackAnimationTicks--;
+                if (attackAnimationTicks <= 0) {
+                    this.entityData.set(DATA_ATTACK_STATE, (byte) 0);
+                }
+            }
+
             LivingEntity target = this.getTarget();
+            if (target == null || !target.isAlive()) {
+                if (!this.isShadowSoldier()) {
+                    Player nearest = sl.getNearestPlayer(this, 48.0D);
+                    if (nearest != null && nearest.isAlive() && !nearest.isCreative() && !nearest.isSpectator()) {
+                        this.setTarget(nearest);
+                        target = nearest;
+                    }
+                }
+            }
             if (guardTicks > 0) {
                 guardTicks--;
                 if (guardTicks == 0) isGuarding = false;
                 sl.sendParticles(ParticleTypes.ENCHANTED_HIT, this.getX(), this.getY() + 1.2D, this.getZ(), 5, 0.4D, 0.4D, 0.4D, 0.05D);
             }
 
+            if (thrustCooldown > 0) thrustCooldown--;
+            if (whirlwindCooldown > 0) whirlwindCooldown--;
+            if (guardCooldown > 0) guardCooldown--;
+
             if (target != null && target.isAlive()) {
                 double distSq = this.distanceToSqr(target);
                 boolean enraged = this.getHealth() < this.getMaxHealth() * 0.5F;
 
-                if (thrustCooldown > 0) thrustCooldown--;
-                if (thrustCooldown <= 0 && distSq >= 16.0D && distSq <= 144.0D) {
-                    thrustCooldown = enraged ? 50 : 80;
+                // 1. Dash Thrust / Split Strike
+                if (thrustCooldown <= 0 && distSq >= 9.0D && distSq <= 225.0D) {
+                    thrustCooldown = enraged ? 40 : 65;
+                    setAttackState((byte) 5, 16); // "split" animation
+
                     Vec3 dir = target.position().subtract(this.position()).normalize();
-                    this.setDeltaMovement(dir.x * 1.6D, 0.25D, dir.z * 1.6D);
+                    this.setDeltaMovement(dir.x * 1.6D, 0.32D, dir.z * 1.6D);
                     this.hasImpulse = true;
 
-                    sl.playSound(null, this.getX(), this.getY(), this.getZ(), SoundEvents.PLAYER_ATTACK_SWEEP, SoundSource.HOSTILE, 1.5F, 0.6F);
-                    sl.playSound(null, this.getX(), this.getY(), this.getZ(), SoundEvents.WARDEN_SONIC_BOOM, SoundSource.HOSTILE, 0.6F, 1.8F);
+                    sl.playSound(null, this.getX(), this.getY(), this.getZ(), SoundEvents.PLAYER_ATTACK_SWEEP, SoundSource.HOSTILE, 1.6F, 0.6F);
+                    sl.playSound(null, this.getX(), this.getY(), this.getZ(), SoundEvents.WARDEN_SONIC_BOOM, SoundSource.HOSTILE, 0.7F, 1.7F);
                     sl.sendParticles(ParticleTypes.SONIC_BOOM, this.getX(), this.getY() + 1.0D, this.getZ(), 1, 0, 0, 0, 0);
 
-                    target.hurt(this.damageSources().mobAttack(this), enraged ? 20.0F : 16.0F);
-                    target.addEffect(new MobEffectInstance(MobEffects.MOVEMENT_SLOWDOWN, 40, 1));
+                    target.hurt(this.damageSources().mobAttack(this), enraged ? 26.0F : 20.0F);
+                    target.addEffect(new MobEffectInstance(MobEffects.MOVEMENT_SLOWDOWN, 50, 1));
                 }
+                // 2. Whirlwind Spin
+                else if (whirlwindCooldown <= 0 && distSq <= 25.0D) {
+                    whirlwindCooldown = enraged ? 70 : 110;
+                    setAttackState((byte) 4, 26); // "spin" animation
 
-                if (whirlwindCooldown > 0) whirlwindCooldown--;
-                if (whirlwindCooldown <= 0 && distSq <= 25.0D) {
-                    whirlwindCooldown = enraged ? 80 : 120;
                     sl.playSound(null, this.getX(), this.getY(), this.getZ(), SoundEvents.PLAYER_ATTACK_CRIT, SoundSource.HOSTILE, 1.8F, 0.5F);
 
                     List<LivingEntity> nearby = sl.getEntitiesOfClass(LivingEntity.class, this.getBoundingBox().inflate(3.5D),
                             e -> e != this && (!isShadowSoldier() || (!e.getTags().contains("shadow_soldier") && !(e instanceof Player))));
                     for (LivingEntity victim : nearby) {
-                        victim.hurt(this.damageSources().mobAttack(this), enraged ? 18.0F : 14.0F);
-                        Vec3 push = victim.position().subtract(this.position()).normalize().scale(1.2D);
-                        victim.setDeltaMovement(push.x, 0.4D, push.z);
+                        victim.hurt(this.damageSources().mobAttack(this), enraged ? 22.0F : 16.0F);
+                        Vec3 push = victim.position().subtract(this.position()).normalize().scale(1.3D);
+                        victim.setDeltaMovement(push.x, 0.45D, push.z);
                     }
                     sl.sendParticles(ParticleTypes.SWEEP_ATTACK, this.getX(), this.getY() + 1.0D, this.getZ(), 8, 1.0D, 0.2D, 1.0D, 0.05D);
                     sl.sendParticles(ParticleTypes.CRIT, this.getX(), this.getY() + 1.0D, this.getZ(), 30, 1.2D, 0.5D, 1.2D, 0.1D);
                 }
-
-                if (guardCooldown > 0) guardCooldown--;
-                if (guardCooldown <= 0 && this.getHealth() < this.getMaxHealth() * 0.7F && this.random.nextFloat() < 0.3F) {
-                    guardCooldown = 200;
+                // 3. Defensive Guard
+                else if (guardCooldown <= 0 && this.getHealth() < this.getMaxHealth() * 0.7F && this.random.nextFloat() < 0.25F) {
+                    guardCooldown = 180;
                     guardTicks = 60;
                     isGuarding = true;
                     this.addEffect(new MobEffectInstance(MobEffects.DAMAGE_RESISTANCE, 60, 2));
@@ -290,19 +361,29 @@ public class IgrisBossEntity extends Monster implements GeoEntity {
 
     @Override
     public void registerControllers(AnimatableManager.ControllerRegistrar controllers) {
-        controllers.add(new AnimationController<>(this, "movement", 5, state -> {
+        controllers.add(new AnimationController<>(this, "movement", 4, state -> {
             if (state.isMoving()) {
                 return state.setAndContinue(WALK_ANIM);
             }
             return state.setAndContinue(IDLE_ANIM);
         }));
-        controllers.add(new AnimationController<>(this, "attack", 5, state -> {
-            if (this.whirlwindCooldown > 100) {
-                return state.setAndContinue(SPIN_ANIM);
-            } else if (this.thrustCooldown > 45) {
-                return state.setAndContinue(ATTACK_ANIM);
+
+        controllers.add(new AnimationController<>(this, "attack", 2, state -> {
+            byte attack = this.entityData.get(DATA_ATTACK_STATE);
+            switch (attack) {
+                case 1:
+                    return state.setAndContinue(ATTACK1_ANIM);
+                case 2:
+                    return state.setAndContinue(ATTACK2_ANIM);
+                case 3:
+                    return state.setAndContinue(ATTACK3_ANIM);
+                case 4:
+                    return state.setAndContinue(SPIN_ANIM);
+                case 5:
+                    return state.setAndContinue(SPLIT_ANIM);
+                default:
+                    return PlayState.STOP;
             }
-            return PlayState.STOP;
         }));
     }
 

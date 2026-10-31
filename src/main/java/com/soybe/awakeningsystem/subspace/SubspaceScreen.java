@@ -1,28 +1,40 @@
 package com.soybe.awakeningsystem.subspace;
 
+import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.gui.components.Button;
+import net.minecraft.client.gui.components.EditBox;
 import net.minecraft.client.gui.screens.inventory.AbstractContainerScreen;
+import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.network.chat.Component;
 import net.minecraft.world.entity.player.Inventory;
 import net.minecraft.world.inventory.Slot;
+import net.minecraft.world.item.ItemStack;
 
 import java.util.ArrayList;
 import java.util.List;
 
 public class SubspaceScreen extends AbstractContainerScreen<SubspaceMenu> {
-    private static final int CYAN = 0xFF70E8FF;
-    private static final int MUTED = 0xFF9BB7C7;
-    private static final int PANEL_BG = 0xF2091424;
-    private static final int EDGE_BORDER = 0xFF1B4357;
-    private static final int SLOT_BG = 0x66000000;
-    private static final int SLOT_BORDER = 0x3370E8FF;
+    // Paleta de Estilo Solo Leveling / System UI
+    private static final int CYAN_PRIMARY = 0xFF00E5FF;
+    private static final int CYAN_BRIGHT = 0xFF70F0FF;
+    private static final int CYAN_GLOW = 0x6600E5FF;
+    private static final int PANEL_BG = 0xF4050E18;
+    private static final int EDGE_BORDER = 0xFF00E5FF;
+    private static final int MUTED = 0xFF7E9DAF;
+    private static final int SLOT_BG = 0x77061422;
+    private static final int SLOT_BORDER = 0x4400E5FF;
+    private static final int SLOT_MATCH_BG = 0x4400E5FF;
+    private static final int SLOT_MATCH_BORDER = 0xFF00FFFF;
+    private static final int SLOT_DIM = 0xB002060C;
 
     private SubspaceHoloButton travelButton;
     private SubspaceHoloButton upgradeButton;
     private SubspaceHoloButton prevPageBtn;
     private SubspaceHoloButton nextPageBtn;
+    private SubspaceHoloButton compactBtn;
     private SubspaceHoloButton updateStructureBtn;
+    private EditBox searchBox;
 
     public SubspaceScreen(SubspaceMenu menu, Inventory playerInventory, Component title) {
         super(menu, playerInventory, title);
@@ -39,15 +51,14 @@ public class SubspaceScreen extends AbstractContainerScreen<SubspaceMenu> {
 
         boolean inSubspace = this.minecraft != null && this.minecraft.level != null &&
                 this.minecraft.level.dimension().location().getPath().equals("subspace_realm");
-        boolean inLimbo = this.minecraft != null && this.minecraft.level != null &&
-                this.minecraft.level.dimension().location().getPath().equals("limbo");
 
         int btnY = this.topPos + 224;
         int btnW = 78;
         int btnH = 18;
 
+        // Botón Página Anterior
         this.prevPageBtn = new SubspaceHoloButton(
-                this.leftPos + 6, this.topPos + 4, 15, 12,
+                this.leftPos + 6, this.topPos + 3, 14, 12,
                 Component.literal("◀"), Component.literal("§f§l◀"),
                 HoloTheme.CYAN,
                 btn -> {
@@ -63,8 +74,9 @@ public class SubspaceScreen extends AbstractContainerScreen<SubspaceMenu> {
         this.prevPageBtn.visible = false;
         this.addRenderableWidget(this.prevPageBtn);
 
+        // Botón Página Siguiente
         this.nextPageBtn = new SubspaceHoloButton(
-                this.leftPos + this.imageWidth - 21, this.topPos + 4, 15, 12,
+                this.leftPos + 21, this.topPos + 3, 14, 12,
                 Component.literal("▶"), Component.literal("§f§l▶"),
                 HoloTheme.CYAN,
                 btn -> {
@@ -79,6 +91,29 @@ public class SubspaceScreen extends AbstractContainerScreen<SubspaceMenu> {
         );
         this.nextPageBtn.visible = false;
         this.addRenderableWidget(this.nextPageBtn);
+
+        // Botón Compactar y Unificar Stacks (⚡)
+        this.compactBtn = new SubspaceHoloButton(
+                this.leftPos + 37, this.topPos + 3, 16, 12,
+                Component.literal("§b⚡"), Component.literal("§f§l⚡"),
+                HoloTheme.CYAN,
+                btn -> {
+                    net.neoforged.neoforge.network.PacketDistributor.sendToServer(
+                            new com.soybe.awakeningsystem.network.SubspaceActionPayload("compact")
+                    );
+                }
+        );
+        this.addRenderableWidget(this.compactBtn);
+
+        // Buscador / Filtro Integrado de Ítems
+        int searchX = this.leftPos + 56;
+        int searchW = this.imageWidth - 62;
+        this.searchBox = new EditBox(this.font, searchX + 2, this.topPos + 3, searchW - 4, 12, Component.translatable("awakening_system.subspace.search_hint"));
+        this.searchBox.setHint(Component.translatable("awakening_system.subspace.search_hint"));
+        this.searchBox.setBordered(false);
+        this.searchBox.setTextColor(0xFF00E5FF);
+        this.searchBox.setMaxLength(30);
+        this.addRenderableWidget(this.searchBox);
 
         Component travelLabel = inSubspace ? Component.translatable("awakening_system.subspace.button.exit") : Component.translatable("awakening_system.subspace.button.enter");
         this.travelButton = new SubspaceHoloButton(
@@ -96,7 +131,7 @@ public class SubspaceScreen extends AbstractContainerScreen<SubspaceMenu> {
         this.travelButton.active = true;
         this.addRenderableWidget(this.travelButton);
 
-        var player = net.minecraft.client.Minecraft.getInstance().player;
+        var player = Minecraft.getInstance().player;
         int curSubLvl = 1;
         if (player != null) {
             curSubLvl = com.soybe.awakeningsystem.SystemEvents.data(player).subspaceLevel();
@@ -124,6 +159,41 @@ public class SubspaceScreen extends AbstractContainerScreen<SubspaceMenu> {
     }
 
     @Override
+    public boolean keyPressed(int keyCode, int scanCode, int modifiers) {
+        if (this.searchBox != null && this.searchBox.isFocused()) {
+            if (keyCode == 256) { // Escape: desfocalizar el buscador
+                this.searchBox.setFocused(false);
+                return true;
+            }
+            if (this.searchBox.keyPressed(keyCode, scanCode, modifiers)) {
+                return true;
+            }
+        }
+        return super.keyPressed(keyCode, scanCode, modifiers);
+    }
+
+    @Override
+    public boolean charTyped(char codePoint, int modifiers) {
+        if (this.searchBox != null && this.searchBox.isFocused()) {
+            if (this.searchBox.charTyped(codePoint, modifiers)) {
+                return true;
+            }
+        }
+        return super.charTyped(codePoint, modifiers);
+    }
+
+    private boolean matchesFilter(ItemStack stack, String query) {
+        if (query == null || query.isEmpty()) return true;
+        if (stack.isEmpty()) return false;
+
+        String name = stack.getHoverName().getString().toLowerCase();
+        if (name.contains(query)) return true;
+
+        String id = BuiltInRegistries.ITEM.getKey(stack.getItem()).getPath().toLowerCase();
+        return id.contains(query);
+    }
+
+    @Override
     public void render(GuiGraphics graphics, int mouseX, int mouseY, float partialTick) {
         if (this.prevPageBtn != null && this.nextPageBtn != null) {
             boolean multi = this.menu.getTotalPages() > 1;
@@ -135,17 +205,47 @@ public class SubspaceScreen extends AbstractContainerScreen<SubspaceMenu> {
 
         this.renderBackground(graphics, mouseX, mouseY, partialTick);
         super.render(graphics, mouseX, mouseY, partialTick);
+
+        // Tooltip del botón de compactación
+        if (this.compactBtn != null && this.compactBtn.isHovered()) {
+            List<Component> tip = new ArrayList<>();
+            tip.add(Component.translatable("awakening_system.subspace.tooltip.compact_title"));
+            tip.add(Component.translatable("awakening_system.subspace.tooltip.compact_desc1"));
+            tip.add(Component.translatable("awakening_system.subspace.tooltip.compact_desc2"));
+            graphics.renderComponentTooltip(this.font, tip, mouseX, mouseY);
+        }
+
+        // Renderizado de resaltado o atenuación de slots según el buscador
+        String query = this.searchBox != null ? this.searchBox.getValue().trim().toLowerCase() : "";
+        if (!query.isEmpty()) {
+            int x = this.leftPos;
+            int y = this.topPos;
+            for (Slot slot : this.menu.slots) {
+                if (slot.hasItem()) {
+                    int sx = x + slot.x - 1;
+                    int sy = y + slot.y - 1;
+                    boolean match = matchesFilter(slot.getItem(), query);
+                    if (match) {
+                        graphics.fill(sx, sy, sx + 18, sy + 18, SLOT_MATCH_BG);
+                        graphics.renderOutline(sx, sy, 18, 18, SLOT_MATCH_BORDER);
+                    } else {
+                        graphics.fill(sx, sy, sx + 18, sy + 18, SLOT_DIM);
+                    }
+                }
+            }
+        }
+
         this.renderTooltip(graphics, mouseX, mouseY);
 
         if (this.upgradeButton != null && this.upgradeButton.isHovered()) {
-            var player = net.minecraft.client.Minecraft.getInstance().player;
+            var player = Minecraft.getInstance().player;
             int lvl = 1;
             if (player != null) {
                 lvl = com.soybe.awakeningsystem.SystemEvents.data(player).subspaceLevel();
             }
             List<Component> tip = new ArrayList<>();
             tip.add(Component.translatable("awakening_system.subspace.tooltip.upgrade_title"));
-            tip.add(Component.literal("§7Nivel Actual: §b" + lvl + " / 3 (Próximamente 4 y 5)"));
+            tip.add(Component.translatable("awakening_system.subspace.tooltip.current_level", lvl, 3));
             if (lvl < 3) {
                 int next = lvl + 1;
                 int cost = switch (next) {
@@ -160,17 +260,6 @@ public class SubspaceScreen extends AbstractContainerScreen<SubspaceMenu> {
             } else {
                 tip.add(Component.translatable("awakening_system.subspace.tooltip.max_level"));
             }
-            graphics.renderComponentTooltip(this.font, tip, mouseX, mouseY);
-        }
-
-        if (this.updateStructureBtn != null && this.updateStructureBtn.isHovered()) {
-            List<Component> tip = new ArrayList<>();
-            tip.add(Component.literal("§6§lActualizar Diseño de Parcela"));
-            tip.add(Component.literal("§7Regenera tu parcela con el nuevo"));
-            tip.add(Component.literal("§7diseño arquitectónico de tu nivel."));
-            tip.add(Component.literal("§c¡ADVERTENCIA! §fRetira tus cofres"));
-            tip.add(Component.literal("§fe ítems antes de proceder."));
-            tip.add(Component.literal("§e(Clic para ver advertencia en el chat)"));
             graphics.renderComponentTooltip(this.font, tip, mouseX, mouseY);
         }
 
@@ -206,12 +295,14 @@ public class SubspaceScreen extends AbstractContainerScreen<SubspaceMenu> {
             }
         }
 
-        var player = net.minecraft.client.Minecraft.getInstance().player;
+        var player = Minecraft.getInstance().player;
         int countTooltip = 0;
         if (player != null) {
-            var items = com.soybe.awakeningsystem.SystemEvents.data(player).getSubspaceItems();
-            for (var stack : items) {
-                if (!stack.isEmpty()) countTooltip++;
+            var data = com.soybe.awakeningsystem.SystemEvents.data(player);
+            if (data != null && data.getSubspaceItems() != null) {
+                for (var stack : data.getSubspaceItems()) {
+                    if (stack != null && !stack.isEmpty()) countTooltip++;
+                }
             }
         }
         int unlockedTooltip = this.menu.getUnlockedSlots();
@@ -237,24 +328,37 @@ public class SubspaceScreen extends AbstractContainerScreen<SubspaceMenu> {
         int w = this.imageWidth;
         int h = this.imageHeight;
 
-        g.fill(x - 2, y - 2, x + w + 2, y + h + 2, 0x4017354B);
-        g.fill(x - 1, y - 1, x + w + 1, y + h + 1, EDGE_BORDER);
+        // 1. Resplandor exterior de alta tecnología
+        g.fill(x - 3, y - 3, x + w + 3, y + h + 3, 0x1E00E5FF);
+        g.fill(x - 2, y - 2, x + w + 2, y + h + 2, 0x3300E5FF);
+
+        // 2. Contorno principal Neon Cyan (Idéntico a System Screen)
+        g.renderOutline(x - 1, y - 1, w + 2, h + 2, EDGE_BORDER);
         g.fill(x, y, x + w, y + h, PANEL_BG);
 
-        g.fill(x, y, x + w, y + 2, CYAN);
+        // 3. Cantoneras angulares sci-fi (L-brackets estilo Solo Leveling)
+        int cornerLen = 8;
+        int cCol = CYAN_PRIMARY;
+        // Superior Izquierda
+        g.fill(x - 1, y - 1, x + cornerLen, y + 1, cCol);
+        g.fill(x - 1, y - 1, x + 1, y + cornerLen, cCol);
+        // Superior Derecha
+        g.fill(x + w - cornerLen, y - 1, x + w + 1, y + 1, cCol);
+        g.fill(x + w - 1, y - 1, x + w + 1, y + cornerLen, cCol);
+        // Inferior Izquierda
+        g.fill(x - 1, y + h - 1, x + cornerLen, y + h + 1, cCol);
+        g.fill(x - 1, y + h - cornerLen, x + 1, y + h + 1, cCol);
+        // Inferior Derecha
+        g.fill(x + w - cornerLen, y + h - 1, x + w + 1, y + h + 1, cCol);
+        g.fill(x + w - 1, y + h - cornerLen, x + w + 1, y + h + 1, cCol);
 
-        g.fill(x, y, x + 8, y + 2, CYAN);
-        g.fill(x, y, x + 2, y + 8, CYAN);
-        g.fill(x + w - 8, y, x + w, y + 2, CYAN);
-        g.fill(x + w - 2, y, x + w, y + 8, CYAN);
-        g.fill(x, y + h - 2, x + 8, y + h, CYAN);
-        g.fill(x, y + h - 8, x + 2, y + h, CYAN);
-        g.fill(x + w - 8, y + h - 2, x + w, y + h, CYAN);
-        g.fill(x + w - 2, y + h - 8, x + w, y + h, CYAN);
+        // 4. Barra Superior del Buscador
+        int searchBoxX = this.leftPos + 56;
+        int searchBoxW = this.imageWidth - 62;
+        g.fill(searchBoxX, y + 3, searchBoxX + searchBoxW, y + 15, 0xDD040E1A);
+        g.renderOutline(searchBoxX, y + 3, searchBoxW, 12, (this.searchBox != null && this.searchBox.isFocused()) ? 0xFF00FFFF : 0x6600E5FF);
 
-        g.fill(x + 6, y + 4, x + w - 6, y + 15, 0x990D2235);
-        g.renderOutline(x + 6, y + 4, w - 12, 12, 0x662D7691);
-
+        // 5. Renderizado de Ranuras (Slots)
         for (Slot slot : this.menu.slots) {
             int sx = x + slot.x - 1;
             int sy = y + slot.y - 1;
@@ -262,7 +366,7 @@ public class SubspaceScreen extends AbstractContainerScreen<SubspaceMenu> {
             if (slot instanceof SubspaceMenu.SubspaceSlot subSlot) {
                 boolean unlocked = subSlot.isSlotUnlocked();
                 int slotBg = unlocked ? SLOT_BG : 0x772A0808;
-                int slotBorder = unlocked ? SLOT_BORDER : 0x55FF4444;
+                int slotBorder = unlocked ? SLOT_BORDER : 0x66FF4444;
 
                 g.fill(sx, sy, sx + 18, sy + 18, slotBg);
                 g.renderOutline(sx, sy, 18, 18, slotBorder);
@@ -271,36 +375,33 @@ public class SubspaceScreen extends AbstractContainerScreen<SubspaceMenu> {
                     g.drawCenteredString(this.font, "§c🔒", sx + 9, sy + 5, 0xFFFFFFFF);
                 }
             } else {
-                g.fill(sx, sy, sx + 18, sy + 18, 0x44000000);
-                g.renderOutline(sx, sy, 18, 18, 0x229BB7C7);
+                g.fill(sx, sy, sx + 18, sy + 18, 0x55040E1A);
+                g.renderOutline(sx, sy, 18, 18, 0x2200E5FF);
             }
         }
 
-        g.fill(x + 8, y + 127, x + w - 8, y + 128, 0x4470E8FF);
+        // 6. Separadores horizontales Cyan Neón
+        g.fill(x + 8, y + 127, x + w - 8, y + 128, CYAN_PRIMARY);
+        g.fill(x + 16, y + 126, x + w - 16, y + 129, 0x3300E5FF);
 
-        g.fill(x + 8, y + 220, x + w - 8, y + 221, 0x3370E8FF);
+        g.fill(x + 8, y + 220, x + w - 8, y + 221, CYAN_PRIMARY);
     }
 
     @Override
     protected void renderLabels(GuiGraphics g, int mouseX, int mouseY) {
-        var player = net.minecraft.client.Minecraft.getInstance().player;
+        var player = Minecraft.getInstance().player;
         int lvl = 1;
         if (player != null) {
             lvl = com.soybe.awakeningsystem.SystemEvents.data(player).subspaceLevel();
         }
 
-        int totalPages = this.menu.getTotalPages();
-        int curPage = this.menu.getCurrentPage() + 1;
-        Component title = (totalPages > 1)
-                ? Component.translatable("awakening_system.subspace.title_paged", curPage, totalPages)
-                : Component.translatable("awakening_system.subspace.title_level", lvl);
-        g.drawCenteredString(this.font, title, this.imageWidth / 2, 6, CYAN);
-
         int count = 0;
         if (player != null) {
-            var items = com.soybe.awakeningsystem.SystemEvents.data(player).getSubspaceItems();
-            for (var stack : items) {
-                if (!stack.isEmpty()) count++;
+            var data = com.soybe.awakeningsystem.SystemEvents.data(player);
+            if (data != null && data.getSubspaceItems() != null) {
+                for (var stack : data.getSubspaceItems()) {
+                    if (stack != null && !stack.isEmpty()) count++;
+                }
             }
         } else {
             for (int i = 0; i < SubspaceMenu.SUBSPACE_SLOTS; i++) {
@@ -312,38 +413,52 @@ public class SubspaceScreen extends AbstractContainerScreen<SubspaceMenu> {
         int unlocked = this.menu.getUnlockedSlots();
         String capText = count + " / " + unlocked;
         int capW = this.font.width(capText);
-        int capColor = (count >= unlocked) ? 0xFFFF5555 : (count >= unlocked * 0.85 ? 0xFFFFAA00 : 0xFF88D8B0);
+        int capColor = (count >= unlocked) ? 0xFFFF5555 : (count >= unlocked * 0.85 ? 0xFFFFAA00 : 0xFF00E5FF);
 
-        Component invLabel = Component.translatable("awakening_system.subspace.hunter_inventory");
-        int maxInvW = this.imageWidth - 16 - capW - 4;
-        if (this.font.width(invLabel) > maxInvW) {
-            invLabel = Component.translatable("container.inventory");
+        // Indicador de Paginación o Filtro
+        String query = this.searchBox != null ? this.searchBox.getValue().trim().toLowerCase() : "";
+        if (!query.isEmpty()) {
+            int matchCount = 0;
+            for (Slot slot : this.menu.slots) {
+                if (slot instanceof SubspaceMenu.SubspaceSlot && slot.hasItem() && matchesFilter(slot.getItem(), query)) {
+                    matchCount++;
+                }
+            }
+            String matchStr = (matchCount > 0) ? "§b⚡ " + matchCount + " coinc." : "§c✖ 0 coinc.";
+            g.drawString(this.font, matchStr, 8, this.inventoryLabelY, 0xFFFFFFFF, false);
+        } else {
+            Component invLabel = Component.translatable("awakening_system.subspace.hunter_inventory");
+            int maxInvW = this.imageWidth - 16 - capW - 4;
+            if (this.font.width(invLabel) > maxInvW) {
+                invLabel = Component.translatable("container.inventory");
+            }
+            g.drawString(this.font, invLabel, 8, this.inventoryLabelY, MUTED, false);
         }
-        g.drawString(this.font, invLabel, 8, this.inventoryLabelY, MUTED, false);
+
         g.drawString(this.font, capText, this.imageWidth - 8 - capW, this.inventoryLabelY, capColor, false);
     }
 
     public enum HoloTheme {
         CYAN(
-                0xDD0A1828, 0xEE0E2E4A,
-                0xFF1B4E68, 0xFF70E8FF,
-                0xFF70E8FF, 0xFFFFFFFF,
-                0x3370E8FF, 0x8870E8FF,
-                0x4470E8FF
+                0xEE05121E, 0xFF082238,
+                0xFF00E5FF, 0xFF00FFFF,
+                0xFFFFFFFF, 0xFFFFFFFF,
+                0x4400E5FF, 0x8800E5FF,
+                0x6600E5FF
         ),
         RED(
-                0xDD281016, 0xEE471822,
-                0xFF6A2430, 0xFFFF6B81,
-                0xFFFF5555, 0xFFFFFFFF,
-                0x33FF6B81, 0x88FF6B81,
-                0x44FF6B81
+                0xEE240A10, 0xFF3C0E1A,
+                0xFFFF3355, 0xFFFF5577,
+                0xFFFFFFFF, 0xFFFFFFFF,
+                0x44FF3355, 0x88FF3355,
+                0x66FF3355
         ),
         GOLD(
-                0xDD221605, 0xEE3D2908,
-                0xFF6E4F10, 0xFFFFD700,
-                0xFFFFD700, 0xFFFFFFFF,
-                0x44FFD700, 0x99FFD700,
-                0x44FFD700
+                0xEE221605, 0xFF3D2908,
+                0xFFFFD700, 0xFFFFE844,
+                0xFFFFFFFF, 0xFFFFFFFF,
+                0x44FFD700, 0x88FFD700,
+                0x66FFD700
         );
 
         final int baseBg, hoverBg;
@@ -382,7 +497,7 @@ public class SubspaceScreen extends AbstractContainerScreen<SubspaceMenu> {
 
         @Override
         public void renderWidget(GuiGraphics graphics, int mouseX, int mouseY, float partialTick) {
-            net.minecraft.client.Minecraft mc = net.minecraft.client.Minecraft.getInstance();
+            Minecraft mc = Minecraft.getInstance();
             boolean hovered = this.isHoveredOrFocused();
 
             int bx = this.getX();
@@ -400,18 +515,18 @@ public class SubspaceScreen extends AbstractContainerScreen<SubspaceMenu> {
             }
 
             graphics.fill(bx, by, bx + bw, by + bh, bg);
-
             graphics.renderOutline(bx, by, bw, bh, border);
-
             graphics.fill(bx + 1, by + 1, bx + bw - 1, by + 2, highlight);
 
+            // Esquinas iluminadas
             graphics.fill(bx, by, bx + 2, by + 2, corner);
             graphics.fill(bx + bw - 2, by, bx + bw, by + 2, corner);
             graphics.fill(bx, by + bh - 2, bx + 2, by + bh, corner);
             graphics.fill(bx + bw - 2, by + bh - 2, bx + bw, by + bh, corner);
 
-            Component text = this.normalLabel;
-            graphics.drawCenteredString(mc.font, text, bx + bw / 2, by + (bh - 8) / 2, hovered ? 0xFFFFFFFF : 0xFFCCCCCC);
+            Component text = hovered ? this.hoverLabel : this.normalLabel;
+            int textColor = hovered ? 0xFFFFFFFF : 0xFF00E5FF;
+            graphics.drawCenteredString(mc.font, text, bx + bw / 2, by + (bh - 8) / 2, textColor);
         }
     }
 }

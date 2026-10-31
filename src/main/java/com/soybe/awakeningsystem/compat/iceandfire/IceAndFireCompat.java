@@ -44,25 +44,53 @@ public final class IceAndFireCompat {
 
         String typeKey = BuiltInRegistries.ENTITY_TYPE.getKey(entity.getType()).toString().toLowerCase(Locale.ROOT);
         if (typeKey.contains("celestial_dragon")) return false;
+        if (typeKey.contains("ophanim") || typeKey.contains("limbo_ophanim")) return false;
 
-        // Soporte nativo para Ice and Fire: CE
-        if (typeKey.startsWith("iceandfire:")) {
-            // No permitir pixies domesticadas por el jugador
-            if (typeKey.contains("pixie") && entity.getPersistentData().getBoolean("Tamed")) {
+        // No permitir NPCs aldeanos o comerciantes
+        if (typeKey.contains("villager") || typeKey.contains("wandering_trader")) {
+            return false;
+        }
+
+        // Si es una criatura de otro mod (namespace distinto de 'minecraft' y 'awakening_system')
+        if (!typeKey.startsWith("minecraft:") && !typeKey.startsWith("awakening_system:")) {
+            // No permitir mascotas domesticadas de otros jugadores
+            if (entity instanceof TamableAnimal tamable && tamable.isTame() && tamable.getOwnerUUID() != null) {
                 return false;
             }
+            if (entity.getPersistentData().getBoolean("Tamed") && entity.getPersistentData().hasUUID("Owner")) {
+                return false;
+            }
+
+            // Excluir insectos o criaturas diminutas ambientales inocuas
+            if (typeKey.contains("fly") || typeKey.contains("cockroach") || typeKey.contains("hummingbird")
+                    || typeKey.contains("tadpole") || (typeKey.contains("worm") && !typeKey.contains("void_worm"))) {
+                return false;
+            }
+
+            // Cualquier criatura/mob de mod con vida >= 10.0F o daño de ataque o Enemy o Boss es extraíble
+            if (entity.getMaxHealth() >= 10.0F) return true;
+            if (entity.getAttribute(net.minecraft.world.entity.ai.attributes.Attributes.ATTACK_DAMAGE) != null) return true;
+            if (entity instanceof Enemy || BossCompatibilityManager.isBoss(entity)) return true;
             return true;
         }
 
-        // Mods de jefes y criaturas míticas
-        if (typeKey.startsWith("cataclysm:") || typeKey.startsWith("mowziesmobs:")
-                || typeKey.startsWith("mocreatures:") || typeKey.startsWith("twilightforest:")) {
-            return true;
+        // Criaturas Vanilla: Excluir animales de granja / ambientales pacíficos
+        if (typeKey.startsWith("minecraft:")) {
+            if (typeKey.equals("minecraft:cow") || typeKey.equals("minecraft:sheep") || typeKey.equals("minecraft:pig")
+                    || typeKey.equals("minecraft:chicken") || typeKey.equals("minecraft:bat") || typeKey.equals("minecraft:rabbit")
+                    || typeKey.equals("minecraft:cod") || typeKey.equals("minecraft:salmon") || typeKey.equals("minecraft:pufferfish")
+                    || typeKey.equals("minecraft:tropical_fish") || typeKey.equals("minecraft:squid") || typeKey.equals("minecraft:glow_squid")
+                    || typeKey.equals("minecraft:tadpole") || typeKey.equals("minecraft:frog") || typeKey.equals("minecraft:allay")
+                    || typeKey.equals("minecraft:axolotl") || typeKey.equals("minecraft:cat") || typeKey.equals("minecraft:ocelot")
+                    || typeKey.equals("minecraft:parrot") || typeKey.equals("minecraft:turtle") || typeKey.equals("minecraft:armadillo")
+                    || typeKey.equals("minecraft:sniffer")) {
+                return false;
+            }
         }
 
         if (entity instanceof Enemy) return true;
         if (BossCompatibilityManager.isBoss(entity)) return true;
-        if (entity.getMaxHealth() >= 50.0F) return true;
+        if (entity.getMaxHealth() >= 40.0F) return true;
 
         // Si tiene objetivo agresivo activo
         if (entity instanceof Mob mob && mob.getTarget() != null) {
@@ -82,20 +110,22 @@ public final class IceAndFireCompat {
         if (entity.getTags().contains("shadow_soldier")) return false;
         if (entity.getTags().contains("shadow_extracted")) return false;
         if (entity.getTags().contains("no_shadow_extraction")) return false;
+        if (entity.getTags().contains("shadow_soul_dropped")) return false;
 
         String typeKey = BuiltInRegistries.ENTITY_TYPE.getKey(entity.getType()).toString().toLowerCase(Locale.ROOT);
         if (typeKey.contains("celestial_dragon")) return false;
+        if (typeKey.contains("ophanim") || typeKey.contains("limbo_ophanim")) return false;
 
-        // 1. Detección por NBT de Ice and Fire (ModelDead, DeadProg, DeathTime)
+        // 1. Detección por NBT de Ice and Fire (ModelDead, DeadProg)
         CompoundTag persistent = entity.getPersistentData();
-        if (persistent.getBoolean("ModelDead") || persistent.getInt("DeadProg") > 0 || persistent.getInt("DeathTime") > 0 || persistent.getBoolean("Dead")) {
+        if (persistent.getBoolean("ModelDead") || persistent.getInt("DeadProg") > 0) {
             return true;
         }
 
         CompoundTag fullNbt = new CompoundTag();
         try {
             entity.saveWithoutId(fullNbt);
-            if (fullNbt.getBoolean("ModelDead") || fullNbt.getInt("DeadProg") > 0 || fullNbt.getInt("DeathTime") > 0 || fullNbt.getBoolean("Dead")) {
+            if (fullNbt.getBoolean("ModelDead") || fullNbt.getInt("DeadProg") > 0) {
                 return true;
             }
         } catch (Throwable ignored) {}
@@ -107,23 +137,14 @@ public final class IceAndFireCompat {
             if (Boolean.TRUE.equals(res)) return true;
         } catch (Throwable ignored) {}
 
-        // 3. Detección de estado vital en LivingEntity (muerto, en animación de muerte, o vida <= 0)
-        if (entity instanceof LivingEntity living) {
-            if (living.isDeadOrDying() || living.getHealth() <= 0.0F || living.deathTime > 0) {
-                return true;
-            }
-            if (!living.isAlive() && !living.isRemoved()) {
-                return true;
-            }
-            // Caso especial para Withers y jefes en animación de colapso
-            if ((typeKey.contains("wither") || typeKey.contains("dragon")) && (living.getHealth() <= 1.0F || living.isDeadOrDying())) {
-                return true;
-            }
-        }
-
-        // 4. Detección por nombre de clase de entidades cadáver (mods de cadáveres/esqueletos)
+        // 3. Detección por nombre de clase de entidades cadáver persistente (mods de cadáveres/esqueletos)
         String simpleName = entity.getClass().getSimpleName().toLowerCase(Locale.ROOT);
         if (simpleName.contains("corpse") || simpleName.contains("deadbody") || simpleName.contains("dragoncorpse")) {
+            return true;
+        }
+
+        // 4. Cadáveres con tags explícitos
+        if (entity.getTags().contains("persistent_corpse") || entity.getTags().contains("dragon_corpse")) {
             return true;
         }
 

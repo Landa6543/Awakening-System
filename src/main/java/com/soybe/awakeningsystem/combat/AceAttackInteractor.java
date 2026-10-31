@@ -43,9 +43,19 @@ public class AceAttackInteractor {
      * @return true if the vanilla attack should be cancelled.
      */
     public boolean onDoAttack() {
+        if (isExternalCombatModPresent()) {
+            return false;
+        }
+
         Minecraft mc = Minecraft.getInstance();
         LocalPlayer player = mc.player;
         if (player == null || !player.isAlive()) {
+            return false;
+        }
+
+        // If holding a bow or ranged weapon, do not perform melee combo attack
+        ItemStack weapon = player.getMainHandItem();
+        if (weapon.getItem() instanceof net.minecraft.world.item.BowItem || weapon.getItem() instanceof net.minecraft.world.item.CrossbowItem) {
             return false;
         }
 
@@ -79,6 +89,9 @@ public class AceAttackInteractor {
      * @return true if block breaking should be cancelled.
      */
     public boolean onHandleBlockBreaking() {
+        if (isExternalCombatModPresent()) {
+            return false;
+        }
         // In COMBAT mode, completely prevent accidental block destruction
         if (state.isCombatMode()) {
             return true;

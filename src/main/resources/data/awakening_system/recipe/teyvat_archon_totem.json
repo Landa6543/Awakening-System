@@ -1,0 +1,39 @@
+{
+    "key":  {
+                "L":  {
+                          "item":  "awakening_system:varunada_lazurite_chunk"
+                      },
+                "E":  {
+                          "item":  "awakening_system:vajrada_amethyst_chunk"
+                      },
+                "G":  {
+                          "item":  "awakening_system:prithiva_topaz_chunk"
+                      },
+                "P":  {
+                          "item":  "awakening_system:nagadus_emerald_chunk"
+                      },
+                "T":  {
+                          "tag":  "awakening_system:world_totems"
+                      },
+                "S":  {
+                          "item":  "awakening_system:shivada_jade_chunk"
+                      },
+                "A":  {
+                          "item":  "awakening_system:agnidus_agate_chunk"
+                      },
+                "V":  {
+                          "item":  "awakening_system:vayuda_turquoise_chunk"
+                      }
+            },
+    "category":  "equipment",
+    "pattern":  [
+                    "AVS",
+                    "GTG",
+                    "LEP"
+                ],
+    "result":  {
+                   "count":  1,
+                   "id":  "awakening_system:teyvat_archon_totem"
+               },
+    "type":  "minecraft:crafting_shaped"
+}

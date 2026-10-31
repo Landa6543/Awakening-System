@@ -1,0 +1,24 @@
+{
+    "key":  {
+                "C":  {
+                          "item":  "awakening_system:celestial_ingot"
+                      },
+                "L":  {
+                          "item":  "minecraft:nether_star"
+                      },
+                "T":  {
+                          "tag":  "awakening_system:world_totems"
+                      }
+            },
+    "category":  "equipment",
+    "pattern":  [
+                    "CLC",
+                    "LTL",
+                    "CLC"
+                ],
+    "result":  {
+                   "count":  1,
+                   "id":  "awakening_system:celestial_totem"
+               },
+    "type":  "minecraft:crafting_shaped"
+}

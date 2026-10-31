@@ -184,7 +184,16 @@ public final class WeaponLevelManager {
         int currentExp = getExp(stack);
         int kills = getTotalKills(stack);
 
-        currentExp += amount;
+        int effectiveAmount = amount;
+        if (com.soybe.awakeningsystem.compat.ApotheosisCompatHandler.isLoaded()) {
+            com.soybe.awakeningsystem.compat.ApotheosisCompatHandler.ApothRarity ar = com.soybe.awakeningsystem.compat.ApotheosisCompatHandler.getRarity(stack);
+            if (ar != com.soybe.awakeningsystem.compat.ApotheosisCompatHandler.ApothRarity.NONE) {
+                double mult = 1.0 + (ar.tier() * 0.20);
+                effectiveAmount = Math.max(1, (int) Math.round(amount * mult));
+            }
+        }
+
+        currentExp += effectiveAmount;
         boolean leveledUp = false;
         int initialLevel = currentLevel;
 
@@ -300,6 +309,13 @@ public final class WeaponLevelManager {
 
         tooltip.add(Component.empty());
         tooltip.add(Component.translatable("awakening_system.weapon_level.header").withStyle(ChatFormatting.GOLD));
+
+        if (com.soybe.awakeningsystem.compat.ApotheosisCompatHandler.isLoaded()) {
+            com.soybe.awakeningsystem.compat.ApotheosisCompatHandler.ApothRarity ar = com.soybe.awakeningsystem.compat.ApotheosisCompatHandler.getRarity(stack);
+            if (ar != com.soybe.awakeningsystem.compat.ApotheosisCompatHandler.ApothRarity.NONE) {
+                tooltip.add(Component.translatable("awakening_system.weapon_level.apoth_rarity", ar.getDisplayName()).withStyle(ChatFormatting.LIGHT_PURPLE));
+            }
+        }
 
         if (lvl >= MAX_WEAPON_LEVEL) {
             tooltip.add(Component.translatable("awakening_system.weapon_level.max").withStyle(ChatFormatting.YELLOW));

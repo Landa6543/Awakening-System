@@ -7,15 +7,9 @@
     "#M#"
   ],
   "key": {
-    "#": {
-      "item": "awakening_system:abyssal_ingot"
-    },
-    "M": {
-      "item": "minecraft:smooth_stone"
-    },
-    "N": {
-      "item": "minecraft:copper_ingot"
-    }
+    "#": { "item": "awakening_system:abyssal_ingot" },
+    "M": { "item": "awakening_system:refined_white_iron_ingot" },
+    "N": { "item": "minecraft:netherite_ingot" }
   },
   "result": {
     "count": 1,

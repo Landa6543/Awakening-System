@@ -251,6 +251,10 @@ public class CustomTierFurnaceBlock extends BaseEntityBlock {
         }
 
         switch (this.tier) {
+            case ABYSSAL -> {
+                level.addParticle(ParticleTypes.SOUL_FIRE_FLAME, x + dx, y + dy + 0.2D, z + dz, 0.0D, 0.01D, 0.0D);
+                level.addParticle(ParticleTypes.SPLASH, x + dx, y + dy + 0.25D, z + dz, 0.0D, 0.02D, 0.0D);
+            }
             case SOUL_ALLOY -> {
                 level.addParticle(ParticleTypes.SOUL_FIRE_FLAME, x + dx, y + dy + 0.2D, z + dz, 0.0D, 0.01D, 0.0D);
                 level.addParticle(ParticleTypes.SCULK_SOUL, x + dx, y + dy + 0.1D, z + dz, 0.0D, 0.02D, 0.0D);

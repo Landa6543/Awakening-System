@@ -142,9 +142,8 @@ public class CompanionScreen extends Screen {
         int left = (this.width - W) / 2;
         int top = (this.height - H) / 2;
 
-        g.fill(left, top, left + W, top + H, 0xF00D0F14);
-        g.renderOutline(left, top, W, H, 0xFF35445A);
-        g.renderOutline(left + 1, top + 1, W - 2, H - 2, 0xFFD4AF37);
+        ModernGuiHelper.drawModernWindow(g, left, top, W, H, ModernGuiHelper.GuiTheme.SOLO_LEVELING);
+        ModernGuiHelper.drawModernHeader(g, left + 4, top + 4, W - 8, 22, null, 0, ModernGuiHelper.GuiTheme.SOLO_LEVELING, font);
 
         String starsStr = "★".repeat(Math.max(1, stars));
         String title = "§6" + starsStr + " §f" + name + " §8| §e" + element;

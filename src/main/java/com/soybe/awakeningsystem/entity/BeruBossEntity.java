@@ -5,6 +5,9 @@ import com.soybe.awakeningsystem.SystemItems;
 import com.soybe.awakeningsystem.ModSounds;
 import net.minecraft.core.particles.ParticleTypes;
 import net.minecraft.network.chat.Component;
+import net.minecraft.network.syncher.EntityDataAccessor;
+import net.minecraft.network.syncher.EntityDataSerializers;
+import net.minecraft.network.syncher.SynchedEntityData;
 import net.minecraft.server.level.ServerBossEvent;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.server.level.ServerPlayer;
@@ -12,9 +15,11 @@ import net.minecraft.sounds.SoundEvent;
 import net.minecraft.sounds.SoundEvents;
 import net.minecraft.sounds.SoundSource;
 import net.minecraft.world.BossEvent;
+import net.minecraft.world.InteractionHand;
 import net.minecraft.world.damagesource.DamageSource;
 import net.minecraft.world.effect.MobEffectInstance;
 import net.minecraft.world.effect.MobEffects;
+import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.EntityType;
 import net.minecraft.world.entity.LivingEntity;
 import net.minecraft.world.entity.ai.attributes.AttributeSupplier;
@@ -46,6 +51,9 @@ import java.util.List;
  * Criatura ágil con vuelo instantáneo, cuchillas quitinosas y chirrido ensordecedor.
  */
 public class BeruBossEntity extends Monster implements GeoEntity {
+    private static final EntityDataAccessor<Byte> DATA_ATTACK_STATE =
+            SynchedEntityData.defineId(BeruBossEntity.class, EntityDataSerializers.BYTE);
+
     private final AnimatableInstanceCache geoCache = GeckoLibUtil.createInstanceCache(this);
 
     private static final RawAnimation IDLE_ANIM = RawAnimation.begin().thenLoop("idle");
@@ -65,6 +73,35 @@ public class BeruBossEntity extends Monster implements GeoEntity {
     private int screamCooldown = 140;
     private int aerialDiveCooldown = 180;
     private boolean isDiving = false;
+    private int attackAnimationTicks = 0;
+
+    @Override
+    protected void defineSynchedData(SynchedEntityData.Builder builder) {
+        super.defineSynchedData(builder);
+        builder.define(DATA_ATTACK_STATE, (byte) 0);
+    }
+
+    public void setAttackState(byte state, int durationTicks) {
+        this.entityData.set(DATA_ATTACK_STATE, state);
+        this.attackAnimationTicks = durationTicks;
+    }
+
+    @Override
+    public boolean doHurtTarget(Entity target) {
+        boolean hurt = super.doHurtTarget(target);
+        if (hurt && target instanceof LivingEntity) {
+            setAttackState((byte) 1, 8);
+        }
+        return hurt;
+    }
+
+    @Override
+    public void swing(InteractionHand hand, boolean updateSelf) {
+        super.swing(hand, updateSelf);
+        if (!this.level().isClientSide() && this.entityData.get(DATA_ATTACK_STATE) == 0) {
+            setAttackState((byte) 1, 8);
+        }
+    }
 
     public BeruBossEntity(EntityType<? extends Monster> entityType, Level level) {
         super(entityType, level);
@@ -141,15 +178,26 @@ public class BeruBossEntity extends Monster implements GeoEntity {
         }
 
         if (this.level() instanceof ServerLevel sl) {
+            if (attackAnimationTicks > 0) {
+                attackAnimationTicks--;
+                if (attackAnimationTicks <= 0) {
+                    this.entityData.set(DATA_ATTACK_STATE, (byte) 0);
+                }
+            }
+
             LivingEntity target = this.getTarget();
+            if (rushCooldown > 0) rushCooldown--;
+            if (screamCooldown > 0) screamCooldown--;
+            if (aerialDiveCooldown > 0) aerialDiveCooldown--;
+
             if (target != null && target.isAlive()) {
                 double distSq = this.distanceToSqr(target);
                 boolean enraged = this.getHealth() < this.getMaxHealth() * 0.5F;
 
                 // 1. Chillido Desgarrador de Rey Hormiga
-                if (screamCooldown > 0) screamCooldown--;
                 if (screamCooldown <= 0 && distSq <= 100.0D) {
                     screamCooldown = enraged ? 100 : 160;
+                    setAttackState((byte) 2, 20);
                     sl.playSound(null, this.getX(), this.getY(), this.getZ(),
                             ModSounds.COMPANION_BERU_SKILL.get(), SoundSource.HOSTILE, 1.8F, 1.0F);
                     sl.sendParticles(ParticleTypes.SONIC_BOOM, this.getX(), this.getY() + 1.6D, this.getZ(), 1, 0, 0, 0, 0);
@@ -164,9 +212,9 @@ public class BeruBossEntity extends Monster implements GeoEntity {
                 }
 
                 // 2. Embestida supersónica (Sonic Rush)
-                if (rushCooldown > 0) rushCooldown--;
                 if (rushCooldown <= 0 && distSq >= 16.0D && distSq <= 225.0D) {
                     rushCooldown = enraged ? 60 : 90;
+                    setAttackState((byte) 1, 15);
                     Vec3 dir = target.position().subtract(this.position()).normalize();
                     this.setDeltaMovement(dir.x * 2.2D, 0.35D, dir.z * 2.2D);
                     this.hasImpulse = true;
@@ -179,9 +227,9 @@ public class BeruBossEntity extends Monster implements GeoEntity {
                 }
 
                 // 3. Salto y picado aéreo
-                if (aerialDiveCooldown > 0) aerialDiveCooldown--;
                 if (aerialDiveCooldown <= 0 && distSq <= 144.0D) {
                     aerialDiveCooldown = 200;
+                    setAttackState((byte) 1, 20);
                     this.setDeltaMovement(0.0D, 1.6D, 0.0D);
                     this.hasImpulse = true;
                     isDiving = true;
@@ -242,11 +290,11 @@ public class BeruBossEntity extends Monster implements GeoEntity {
             return state.setAndContinue(IDLE_ANIM);
         }));
 
-        controllers.add(new AnimationController<>(this, "attack", 5, state -> {
-            if (this.rushCooldown > 70) {
+        controllers.add(new AnimationController<>(this, "attack", 2, state -> {
+            byte attack = this.entityData.get(DATA_ATTACK_STATE);
+            if (attack == 1) {
                 return state.setAndContinue(ATTACK_ANIM);
-            }
-            if (this.screamCooldown > 120) {
+            } else if (attack == 2) {
                 return state.setAndContinue(SWING_ANIM);
             }
             return PlayState.STOP;

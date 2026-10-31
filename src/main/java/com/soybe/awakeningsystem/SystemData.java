@@ -122,9 +122,18 @@ public final class SystemData implements INBTSerializable<CompoundTag> {
     private int weeklyProgress;
     private boolean weeklyComplete;
     private boolean awakeningComplete;
+    public static final int DAILY_PUSH_UPS_TARGET = 100;
+    public static final int DAILY_SIT_UPS_TARGET = 100;
+    public static final int DAILY_SQUATS_TARGET = 100;
+    public static final int DAILY_RUNNING_TARGET = 1000;
+
     private long dailyDay = -1;
     private int dailyType;
     private int dailyProgress;
+    private int dailyPushUps;
+    private int dailySitUps;
+    private int dailySquats;
+    private int dailyRunning;
     private boolean dailyComplete;
     private boolean dailyFailed;
     private long dailyPenaltyUntil;
@@ -161,6 +170,8 @@ public final class SystemData implements INBTSerializable<CompoundTag> {
     private long ironWillCooldownUntil;
     private String equippedSkill = "";
     private String activeVision = "NONE";
+    private String welcomeSeenVersion = "";
+    private transient boolean pendingWelcomePacket = false;
     private final java.util.Set<String> disabledSkills = new java.util.HashSet<>();
     private final java.util.List<CompoundTag> storedShadowArmy = new java.util.ArrayList<>();
 
@@ -812,8 +823,8 @@ public final class SystemData implements INBTSerializable<CompoundTag> {
         experience += amount;
         boolean leveled = false;
         while (experience >= experienceToNextLevel()) {
-            if (level >= 1000) {
-                level = 1000;
+            if (level >= 2000) {
+                level = 2000;
                 experience = 0;
                 break;
             }
@@ -1007,7 +1018,7 @@ public final class SystemData implements INBTSerializable<CompoundTag> {
 
     public static final int MAX_PRESTIGE = 100;
 
-    public boolean canPrestige() { return level >= 1000 && prestige < MAX_PRESTIGE; }
+    public boolean canPrestige() { return level >= 2000 && prestige < MAX_PRESTIGE; }
 
     public boolean prestige() {
         if (!canPrestige()) return false;
@@ -1076,19 +1087,103 @@ public final class SystemData implements INBTSerializable<CompoundTag> {
     public int awakeningCombat() { return awakeningCombat; }
     public boolean awakeningComplete() { return awakeningComplete; }
 
-    public boolean recordDailyProgress(long day, int type, int amount) {
+    public int dailyPushUps() { return dailyPushUps; }
+    public int dailySitUps() { return dailySitUps; }
+    public int dailySquats() { return dailySquats; }
+    public int dailyRunning() { return dailyRunning; }
+
+    public void ensureDailyDay(long day) {
         if (dailyDay != day) {
-            if (dailyDay >= 0 && !dailyComplete && !dailyFailed && dailyProgress > 0) dailyFailed = true;
+            if (dailyDay >= 0 && !dailyComplete && !dailyFailed && (dailyPushUps > 0 || dailySitUps > 0 || dailySquats > 0 || dailyRunning > 0)) {
+                dailyFailed = true;
+            }
             dailyDay = day;
-            dailyType = (int) Math.floorMod(day, 5);
-            dailyProgress = 0;
+            dailyPushUps = 0;
+            dailySitUps = 0;
+            dailySquats = 0;
+            dailyRunning = 0;
             dailyComplete = false;
             dailyFailed = false;
         }
-        if (level() >= 40 || dailyComplete || dailyFailed || dailyType != type) return false;
-        int before = dailyProgress;
-        dailyProgress = Math.min(dailyTarget(), dailyProgress + Math.max(1, amount));
-        return before != dailyProgress;
+    }
+
+    public boolean isDailyQuestComplete() {
+        return dailyPushUps >= DAILY_PUSH_UPS_TARGET
+                && dailySitUps >= DAILY_SIT_UPS_TARGET
+                && dailySquats >= DAILY_SQUATS_TARGET
+                && dailyRunning >= DAILY_RUNNING_TARGET;
+    }
+
+    public boolean isDailyClaimed() { return dailyComplete; }
+
+    public boolean recordPushUps(long day, int amount) {
+        ensureDailyDay(day);
+        if (dailyComplete && isDailyQuestComplete()) return false;
+        int before = dailyPushUps;
+        dailyPushUps = Math.min(DAILY_PUSH_UPS_TARGET, dailyPushUps + amount);
+        return before != dailyPushUps;
+    }
+
+    public boolean recordSitUps(long day, int amount) {
+        ensureDailyDay(day);
+        if (dailyComplete && isDailyQuestComplete()) return false;
+        int before = dailySitUps;
+        dailySitUps = Math.min(DAILY_SIT_UPS_TARGET, dailySitUps + amount);
+        return before != dailySitUps;
+    }
+
+    public boolean recordSquats(long day, int amount) {
+        ensureDailyDay(day);
+        if (dailyComplete && isDailyQuestComplete()) return false;
+        int before = dailySquats;
+        dailySquats = Math.min(DAILY_SQUATS_TARGET, dailySquats + amount);
+        return before != dailySquats;
+    }
+
+    public boolean recordRunning(long day, int amount) {
+        ensureDailyDay(day);
+        if (dailyComplete && isDailyQuestComplete()) return false;
+        int before = dailyRunning;
+        dailyRunning = Math.min(DAILY_RUNNING_TARGET, dailyRunning + amount);
+        return before != dailyRunning;
+    }
+
+    public boolean claimDailyReward(net.minecraft.server.level.ServerPlayer player) {
+        if (dailyComplete || !isDailyQuestComplete()) return false;
+        dailyComplete = true;
+        missionsCompleted++;
+
+        // 1. Full State Recovery (HP, Food, Saturation, Mana, Stamina)
+        player.setHealth(player.getMaxHealth());
+        player.getFoodData().setFoodLevel(20);
+        player.getFoodData().setSaturation(20.0F);
+        restoreMana(maxMana());
+        player.removeAllEffects();
+
+        // 2. Stat Points
+        this.attributePoints += 3;
+
+        // 3. System Rewards: Exp & Coins
+        addExperience(1000 + level * 50);
+        addCoins(1000 + level * 25);
+
+        // 4. Mystery Blessed Loot Box & Dungeon Portal Key
+        ItemStack box = new ItemStack(SystemItems.LOCKED_TREASURE_CHEST.get());
+        if (!player.getInventory().add(box)) {
+            player.drop(box, false);
+        }
+        if (SystemItems.DUNGEON_KEY.isBound()) {
+            ItemStack dungeonKey = new ItemStack(SystemItems.DUNGEON_KEY.get());
+            if (!player.getInventory().add(dungeonKey)) {
+                player.drop(dungeonKey, false);
+            }
+        }
+
+        return true;
+    }
+
+    public boolean recordDailyProgress(long day, int type, int amount) {
+        return false;
     }
 
     public int dailyType(long day) { return dailyDay == day ? dailyType : (int) Math.floorMod(day, 5); }
@@ -1103,22 +1198,24 @@ public final class SystemData implements INBTSerializable<CompoundTag> {
             default -> 32;
         };
     }
+    public long dailyDay() { return dailyDay; }
     public boolean dailyFailed(long day) { return dailyDay == day && dailyFailed; }
     public int dailyPenaltySeconds(long gameTime) { return (int) Math.max(0, (dailyPenaltyUntil - gameTime + 19) / 20); }
     public boolean dailyPenaltyActive(long gameTime) { return dailyPenaltySeconds(gameTime) > 0; }
 
     public boolean completeDaily(long gameTime) {
-        if (level() >= 40 || dailyComplete || dailyFailed || dailyProgress < dailyTarget()) return false;
-        dailyComplete = true;
-        addExperience(50 + dailyType * 10);
-        addCoins(12 + dailyType * 4);
-        return true;
+        return false;
     }
 
     public void failDaily(long gameTime) {
-        if (level() >= 40 || dailyComplete || dailyFailed) return;
+        if (dailyComplete || dailyFailed) return;
         dailyFailed = true;
         dailyPenaltyUntil = Math.max(dailyPenaltyUntil, gameTime + 12000L);
+    }
+
+    public void clearDailyPenalty(long gameTime) {
+        dailyFailed = false;
+        dailyPenaltyUntil = 0L;
     }
 
     public int dailyMining(long day) { return dailyType(day) == 0 ? dailyProgress(day) : 0; }
@@ -1187,56 +1284,89 @@ public final class SystemData implements INBTSerializable<CompoundTag> {
         return milestone;
     }
 
+    public static final int[] RANK_MILESTONES = {
+        10, 20, 40, 60, 80, 100, 140, 180, 220, 260,
+        300, 340, 380, 420, 460, 500, 540, 580, 620, 660,
+        700, 740, 800, 860, 920, 980, 1040, 1100, 1160, 1220,
+        1280, 1340, 1400, 1460, 1520, 1600, 1680, 1760, 1840, 1920, 2000
+    };
+
+    public int rankPhase() {
+        int currentRankMilestone = 0;
+        int nextRankMilestone = 2000;
+        for (int m : RANK_MILESTONES) {
+            if (level >= m) {
+                currentRankMilestone = m;
+            } else {
+                nextRankMilestone = m;
+                break;
+            }
+        }
+        if (level >= 2000) return 3;
+        int span = Math.max(1, nextRankMilestone - currentRankMilestone);
+        float progress = (float) (level - currentRankMilestone) / span;
+        if (progress < 0.34F) return 1;
+        if (progress < 0.67F) return 2;
+        return 3;
+    }
+
+    public String rankPhaseName() {
+        return switch (rankPhase()) {
+            case 1 -> "Fase Inicial";
+            case 2 -> "Fase Media";
+            default -> "Fase Pico";
+        };
+    }
+
     private int nextClaimableRankMilestone() {
-        int[] milestones = {5, 10, 20, 30, 40, 50, 70, 90, 110, 130, 150, 170, 190, 210, 230, 250, 270, 290, 310, 330, 350, 370, 400, 430, 460, 490, 520, 550, 580, 610, 640, 670, 700, 730, 760, 800, 840, 880, 920, 960, 1000};
-        for (int milestone : milestones) {
+        for (int milestone : RANK_MILESTONES) {
             if (level >= milestone && milestone > highestRankReward) return milestone;
         }
         return 0;
     }
 
     public static String rankForLevel(int level) {
-        if (level >= 1000) return "ABSOLUTE_GOD";
-        if (level >= 960) return "LIMITLESS";
-        if (level >= 920) return "SINGULARITY";
-        if (level >= 880) return "ASTRAL_DEITY";
-        if (level >= 840) return "TIMELESS_MONARCH";
-        if (level >= 800) return "CHAOS_SOVEREIGN";
-        if (level >= 760) return "ABSOLUTE_CREATOR";
-        if (level >= 730) return "SUPREME_CREATOR";
-        if (level >= 700) return "ABSOLUTE";
-        if (level >= 670) return "ABSOLUTE_BEING";
-        if (level >= 640) return "OMNIPOTENT";
-        if (level >= 610) return "INFINITE";
-        if (level >= 580) return "PRIMORDIAL";
-        if (level >= 550) return "OMNIVERSAL";
-        if (level >= 520) return "MULTIVERSAL";
-        if (level >= 490) return "COSMIC";
-        if (level >= 460) return "ANCESTRAL";
-        if (level >= 430) return "DEITY";
-        if (level >= 400) return "GOD";
-        if (level >= 370) return "DEMIGOD";
-        if (level >= 350) return "SUPREME_BEING";
-        if (level >= 330) return "RULER";
-        if (level >= 310) return "MONARCH";
-        if (level >= 290) return "TRANSCENDENTAL";
-        if (level >= 270) return "TRANSCENDENT";
-        if (level >= 250) return "GR";
-        if (level >= 230) return "MR";
-        if (level >= 210) return "SLR";
-        if (level >= 190) return "LR";
-        if (level >= 170) return "UR+";
-        if (level >= 150) return "UR";
-        if (level >= 130) return "NATIONAL";
-        if (level >= 110) return "SSS";
-        if (level >= 90) return "SS";
-        if (level >= 70) return "EX";
-        if (level >= 50) return "S";
-        if (level >= 40) return "A";
-        if (level >= 30) return "B";
-        if (level >= 20) return "C";
-        if (level >= 10) return "D";
-        if (level >= 5) return "E";
+        if (level >= 2000) return "ABSOLUTE_GOD";
+        if (level >= 1920) return "LIMITLESS";
+        if (level >= 1840) return "SINGULARITY";
+        if (level >= 1760) return "ASTRAL_DEITY";
+        if (level >= 1680) return "TIMELESS_MONARCH";
+        if (level >= 1600) return "CHAOS_SOVEREIGN";
+        if (level >= 1520) return "ABSOLUTE_CREATOR";
+        if (level >= 1460) return "SUPREME_CREATOR";
+        if (level >= 1400) return "ABSOLUTE";
+        if (level >= 1340) return "ABSOLUTE_BEING";
+        if (level >= 1280) return "OMNIPOTENT";
+        if (level >= 1220) return "INFINITE";
+        if (level >= 1160) return "PRIMORDIAL";
+        if (level >= 1100) return "OMNIVERSAL";
+        if (level >= 1040) return "MULTIVERSAL";
+        if (level >= 980) return "COSMIC";
+        if (level >= 920) return "ANCESTRAL";
+        if (level >= 860) return "DEITY";
+        if (level >= 800) return "GOD";
+        if (level >= 740) return "DEMIGOD";
+        if (level >= 700) return "SUPREME_BEING";
+        if (level >= 660) return "RULER";
+        if (level >= 620) return "MONARCH";
+        if (level >= 580) return "TRANSCENDENTAL";
+        if (level >= 540) return "TRANSCENDENT";
+        if (level >= 500) return "GR";
+        if (level >= 460) return "MR";
+        if (level >= 420) return "SLR";
+        if (level >= 380) return "LR";
+        if (level >= 340) return "UR+";
+        if (level >= 300) return "UR";
+        if (level >= 260) return "NATIONAL";
+        if (level >= 220) return "SSS";
+        if (level >= 180) return "SS";
+        if (level >= 140) return "EX";
+        if (level >= 100) return "S";
+        if (level >= 80) return "A";
+        if (level >= 60) return "B";
+        if (level >= 40) return "C";
+        if (level >= 20) return "D";
+        if (level >= 10) return "E";
         return "F";
     }
 
@@ -1299,7 +1429,7 @@ public final class SystemData implements INBTSerializable<CompoundTag> {
     }
 
     public void grantAll() {
-        level = 1000;
+        level = 2000;
         experience = 0;
         awakeningComplete = true;
         awakeningMining = 16;
@@ -1310,7 +1440,7 @@ public final class SystemData implements INBTSerializable<CompoundTag> {
         evolutionMissionComplete = true;
         secretMissionComplete = true;
         classMissionComplete = true;
-        highestRankReward = 1000;
+        highestRankReward = 2000;
         attributePoints = Math.max(attributePoints, 5000);
         strength = Math.max(strength, 100);
         vitality = Math.max(vitality, 100);
@@ -1404,47 +1534,9 @@ public final class SystemData implements INBTSerializable<CompoundTag> {
     }
 
     public int nextRankLevel() {
-        if (level < 5) return 5;
-        if (level < 10) return 10;
-        if (level < 20) return 20;
-        if (level < 30) return 30;
-        if (level < 40) return 40;
-        if (level < 50) return 50;
-        if (level < 70) return 70;
-        if (level < 90) return 90;
-        if (level < 110) return 110;
-        if (level < 130) return 130;
-        if (level < 150) return 150;
-        if (level < 170) return 170;
-        if (level < 190) return 190;
-        if (level < 210) return 210;
-        if (level < 230) return 230;
-        if (level < 250) return 250;
-        if (level < 270) return 270;
-        if (level < 290) return 290;
-        if (level < 310) return 310;
-        if (level < 330) return 330;
-        if (level < 350) return 350;
-        if (level < 370) return 370;
-        if (level < 390) return 390;
-        if (level < 410) return 410;
-        if (level < 430) return 430;
-        if (level < 450) return 450;
-        if (level < 470) return 470;
-        if (level < 490) return 490;
-        if (level < 510) return 510;
-        if (level < 540) return 540;
-        if (level < 570) return 570;
-        if (level < 600) return 600;
-        if (level < 630) return 630;
-        if (level < 660) return 660;
-        if (level < 700) return 700;
-        if (level < 750) return 750;
-        if (level < 800) return 800;
-        if (level < 850) return 850;
-        if (level < 900) return 900;
-        if (level < 950) return 950;
-        if (level < 1000) return 1000;
+        for (int m : RANK_MILESTONES) {
+            if (level < m) return m;
+        }
         return 0;
     }
 
@@ -2283,6 +2375,22 @@ public final class SystemData implements INBTSerializable<CompoundTag> {
         return hasChosenInitialVision;
     }
 
+    public String welcomeSeenVersion() {
+        return welcomeSeenVersion != null ? welcomeSeenVersion : "";
+    }
+
+    public void setWelcomeSeenVersion(String version) {
+        this.welcomeSeenVersion = version != null ? version : "";
+    }
+
+    public boolean isPendingWelcomePacket() {
+        return pendingWelcomePacket;
+    }
+
+    public void setPendingWelcomePacket(boolean pending) {
+        this.pendingWelcomePacket = pending;
+    }
+
     public void setChosenInitialVision(boolean chosen) {
         this.hasChosenInitialVision = chosen;
     }
@@ -2353,6 +2461,10 @@ public final class SystemData implements INBTSerializable<CompoundTag> {
         tag.putLong("daily_day", dailyDay);
         tag.putInt("daily_type", dailyType);
         tag.putInt("daily_progress", dailyProgress);
+        tag.putInt("daily_pushups", dailyPushUps);
+        tag.putInt("daily_situps", dailySitUps);
+        tag.putInt("daily_squats", dailySquats);
+        tag.putInt("daily_running", dailyRunning);
         tag.putBoolean("daily_complete", dailyComplete);
         tag.putBoolean("daily_failed", dailyFailed);
         tag.putLong("daily_penalty_until", dailyPenaltyUntil);
@@ -2503,9 +2615,13 @@ public final class SystemData implements INBTSerializable<CompoundTag> {
         for (int i = 0; i < subspaceItems.size(); ++i) {
             ItemStack itemstack = subspaceItems.get(i);
             if (!itemstack.isEmpty()) {
-                CompoundTag itemTag = new CompoundTag();
-                itemTag.putInt("Slot", i);
-                subspaceList.add(itemstack.save(registries, itemTag));
+                try {
+                    CompoundTag itemTag = new CompoundTag();
+                    itemTag.putInt("Slot", i);
+                    subspaceList.add(itemstack.save(registries, itemTag));
+                } catch (Exception e) {
+                    AwakeningSystemMod.LOGGER.error("Failed to serialize subspace item at slot " + i, e);
+                }
             }
         }
         subspaceTag.put("Items", subspaceList);
@@ -2525,7 +2641,11 @@ public final class SystemData implements INBTSerializable<CompoundTag> {
         tag.put("artifact_inventory", artifactTag);
 
         if (equippedLightCone != null && !equippedLightCone.isEmpty()) {
-            tag.put("equipped_light_cone", equippedLightCone.save(registries));
+            try {
+                tag.put("equipped_light_cone", equippedLightCone.save(registries));
+            } catch (Exception e) {
+                AwakeningSystemMod.LOGGER.error("Failed to serialize equipped light cone", e);
+            }
         }
 
         CompoundTag activeRunesTag = new CompoundTag();
@@ -2539,6 +2659,7 @@ public final class SystemData implements INBTSerializable<CompoundTag> {
         tag.putLong("active_rune_cd_1", activeRuneCooldownUntil[1]);
 
         tag.putString("active_vision", activeVision != null ? activeVision : "NONE");
+        tag.putString("welcome_seen_version", welcomeSeenVersion != null ? welcomeSeenVersion : "");
         tag.putBoolean("has_chosen_initial_vision", hasChosenInitialVision);
         tag.putLong("vision_cooldown_until", visionResonanceCooldownUntil);
 
@@ -2615,6 +2736,10 @@ public final class SystemData implements INBTSerializable<CompoundTag> {
         dailyDay = tag.getLong("daily_day");
         dailyType = Math.max(0, Math.min(4, tag.getInt("daily_type")));
         dailyProgress = Math.max(0, tag.getInt("daily_progress"));
+        dailyPushUps = Math.max(0, tag.getInt("daily_pushups"));
+        dailySitUps = Math.max(0, tag.getInt("daily_situps"));
+        dailySquats = Math.max(0, tag.getInt("daily_squats"));
+        dailyRunning = Math.max(0, tag.getInt("daily_running"));
         dailyComplete = tag.getBoolean("daily_complete");
         dailyFailed = tag.getBoolean("daily_failed");
         dailyPenaltyUntil = Math.max(0L, tag.getLong("daily_penalty_until"));
@@ -2837,6 +2962,11 @@ public final class SystemData implements INBTSerializable<CompoundTag> {
             this.activeVision = tag.getString("active_vision");
         } else {
             this.activeVision = "NONE";
+        }
+        if (tag.contains("welcome_seen_version")) {
+            this.welcomeSeenVersion = tag.getString("welcome_seen_version");
+        } else {
+            this.welcomeSeenVersion = "";
         }
         this.hasChosenInitialVision = tag.getBoolean("has_chosen_initial_vision");
         this.visionResonanceCooldownUntil = tag.getLong("vision_cooldown_until");

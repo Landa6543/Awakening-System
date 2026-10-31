@@ -1,0 +1,12 @@
+{
+  "regexes": [
+    ".*_bow",
+    ".*aqua_simulacra.*",
+    ".*thundering_pulse.*",
+    ".*skyward_harp.*",
+    ".*polar_star.*",
+    ".*hunter_path.*",
+    ".*hamayumi.*",
+    ".*end_of_the_line.*"
+  ]
+}

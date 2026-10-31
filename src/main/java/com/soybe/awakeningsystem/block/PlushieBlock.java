@@ -9,6 +9,8 @@ import net.minecraft.sounds.SoundEvents;
 import net.minecraft.sounds.SoundSource;
 import net.minecraft.world.InteractionResult;
 import net.minecraft.world.entity.player.Player;
+import net.minecraft.world.item.ItemStack;
+import java.util.List;
 import net.minecraft.world.item.context.BlockPlaceContext;
 import net.minecraft.world.level.BlockGetter;
 import net.minecraft.world.level.Level;
@@ -87,6 +89,11 @@ public class PlushieBlock extends BaseEntityBlock {
             return InteractionResult.sidedSuccess(level.isClientSide());
         }
         return super.useWithoutItem(state, level, pos, player, hitResult);
+    }
+
+    @Override
+    protected List<ItemStack> getDrops(BlockState state, net.minecraft.world.level.storage.loot.LootParams.Builder params) {
+        return java.util.Collections.singletonList(new ItemStack(this));
     }
 
     @Override

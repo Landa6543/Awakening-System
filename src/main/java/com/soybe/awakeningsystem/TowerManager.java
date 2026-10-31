@@ -29,8 +29,10 @@ import net.minecraft.world.entity.monster.ElderGuardian;
 import net.minecraft.world.entity.monster.Ravager;
 import net.minecraft.world.entity.monster.WitherSkeleton;
 import net.minecraft.world.entity.player.Player;
-import com.soybe.awakeningsystem.entity.ModEntities;
-import com.soybe.awakeningsystem.entity.SculkGolemEntity;
+import com.soybe.awakeningsystem.SystemData;
+import com.soybe.awakeningsystem.SystemEvents;
+import com.soybe.awakeningsystem.SystemItems;
+import com.soybe.awakeningsystem.entity.*;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.Items;
 import net.minecraft.world.level.Level;
@@ -71,6 +73,8 @@ public final class TowerManager {
         public boolean elevatorSpawned = false;
         public boolean isekaiPortalSpawned = false;
         public boolean isekaiTriggered = false;
+        public boolean returnPortalActive = false;
+        public long lastPortalWarningTick = 0L;
         public int returnCountdown = -1;
         public int floorTicks = 0;
 
@@ -144,6 +148,11 @@ public final class TowerManager {
 
     public static void enterTowerAtFloor(ServerPlayer player, int startFloor) {
         player.getPersistentData().putBoolean("tower_has_entered", true);
+        if (com.soybe.awakeningsystem.penalty.PenaltyZoneManager.isInPenaltyZone(player) ||
+            com.soybe.awakeningsystem.limbo.LimboWorldManager.isLimboDimension(player.level())) {
+            player.displayClientMessage(Component.translatable("awakening_system.screen.dim.sealed_desc"), true);
+            return;
+        }
         if (isInTower(player.getUUID())) {
             warpFloor(player, startFloor);
             return;
@@ -252,6 +261,8 @@ public final class TowerManager {
         session.isekaiPortalSpawned = false;
         session.isekaiTriggered = false;
         session.returnCountdown = -1;
+        session.returnPortalActive = false;
+        session.lastPortalWarningTick = 0L;
         session.floorTicks = 0;
 
         int f = floor - 1;
@@ -316,7 +327,7 @@ public final class TowerManager {
 
         BlockPos returnPos = origin.offset(0, 1, -13);
         session.returnPortalPos = returnPos;
-        buildPortalFrame(level, returnPos, Blocks.CRYING_OBSIDIAN, Blocks.OBSIDIAN);
+        buildPortalFrame(level, returnPos, Blocks.OBSIDIAN, Blocks.POLISHED_BLACKSTONE);
 
         session.elevatorPos = origin.offset(0, 1, 13);
 
@@ -499,41 +510,37 @@ public final class TowerManager {
                     BossEvent.BossBarOverlay.NOTCHED_20
             );
 
-            Ravager boss = EntityType.RAVAGER.create(level);
-            if (boss != null) {
-                boss.setPos(origin.getX() + 0.5D, origin.getY() + 1.0D, origin.getZ() + 0.5D);
-                boss.setCustomName(Component.translatable("awakening_system.tower.grand_administrator"));
-                boss.setCustomNameVisible(true);
-                applyAttributes(boss, championHp, championDmg, championArmor);
-                boss.addEffect(new MobEffectInstance(MobEffects.MOVEMENT_SPEED, 72000, 1, false, false));
-                boss.addEffect(new MobEffectInstance(MobEffects.GLOWING, 72000, 0, false, false));
-                boss.getPersistentData().putBoolean("TowerFinalBoss", true);
-                boss.getPersistentData().putBoolean("TowerChampion", true);
-                boss.getPersistentData().putBoolean("TowerMob", true);
-                boss.getPersistentData().putInt("TowerFloor", 100);
-                boss.getPersistentData().putInt("rpg_mob_level", 150);
-                configureTowerMobAI(boss, session, player);
-                level.addFreshEntity(boss);
-                session.enemyUUIDs.add(boss.getUUID());
-            }
+            ShadowMonarchBossEntity boss = new ShadowMonarchBossEntity(ModEntities.SHADOW_MONARCH_BOSS.get(), level);
+            boss.setVariant(1);
+            boss.setPos(origin.getX() + 0.5D, origin.getY() + 1.0D, origin.getZ() + 0.5D);
+            boss.setCustomName(Component.translatable("awakening_system.tower.grand_administrator"));
+            boss.setCustomNameVisible(true);
+            applyAttributes(boss, championHp, championDmg, championArmor);
+            boss.addEffect(new MobEffectInstance(MobEffects.MOVEMENT_SPEED, 72000, 1, false, false));
+            boss.addEffect(new MobEffectInstance(MobEffects.GLOWING, 72000, 0, false, false));
+            boss.getPersistentData().putBoolean("TowerFinalBoss", true);
+            boss.getPersistentData().putBoolean("TowerChampion", true);
+            boss.getPersistentData().putBoolean("TowerMob", true);
+            boss.getPersistentData().putInt("TowerFloor", 100);
+            boss.getPersistentData().putInt("rpg_mob_level", 150);
+            configureTowerMobAI(boss, session, player);
+            level.addFreshEntity(boss);
+            session.enemyUUIDs.add(boss.getUUID());
 
             for (int i = 0; i < 4; i++) {
                 double ang = Math.toRadians(i * 90);
-                WitherSkeleton guard = EntityType.WITHER_SKELETON.create(level);
-                if (guard != null) {
-                    guard.setPos(origin.getX() + Math.cos(ang) * 8.0D, origin.getY() + 1.0D, origin.getZ() + Math.sin(ang) * 8.0D);
-                    guard.setCustomName(Component.translatable("awakening_system.tower.divine_guardian"));
-                    guard.setItemSlot(EquipmentSlot.MAINHAND, new ItemStack(Items.NETHERITE_SWORD));
-                    guard.setItemSlot(EquipmentSlot.CHEST, new ItemStack(Items.NETHERITE_CHESTPLATE));
-                    applyAttributes(guard, 1200.0D, 24.0D, 20.0D);
-                    guard.getPersistentData().putBoolean("TowerMinion", true);
-                    guard.getPersistentData().putBoolean("TowerMob", true);
-                    guard.getPersistentData().putInt("TowerFloor", 100);
-                    guard.getPersistentData().putInt("rpg_mob_level", 130);
-                    configureTowerMobAI(guard, session, player);
-                    level.addFreshEntity(guard);
-                    session.enemyUUIDs.add(guard.getUUID());
-                }
+                RuinSentinelEntity guard = new RuinSentinelEntity(ModEntities.RUIN_SENTINEL.get(), level);
+                guard.setPos(origin.getX() + Math.cos(ang) * 8.0D, origin.getY() + 1.0D, origin.getZ() + Math.sin(ang) * 8.0D);
+                guard.setCustomName(Component.translatable("awakening_system.tower.divine_guardian"));
+                guard.setCustomNameVisible(true);
+                applyAttributes(guard, 1200.0D, 24.0D, 20.0D);
+                guard.getPersistentData().putBoolean("TowerMinion", true);
+                guard.getPersistentData().putBoolean("TowerMob", true);
+                guard.getPersistentData().putInt("TowerFloor", 100);
+                guard.getPersistentData().putInt("rpg_mob_level", 130);
+                configureTowerMobAI(guard, session, player);
+                level.addFreshEntity(guard);
+                session.enemyUUIDs.add(guard.getUUID());
             }
         } else {
             BossEvent.BossBarColor barColor = switch (tier) {
@@ -595,91 +602,57 @@ public final class TowerManager {
                 yield g;
             }
             case 2 -> {
-                Blaze b = EntityType.BLAZE.create(level);
-                if (b != null) b.setCustomName(Component.translatable("awakening_system.tower.mob.evankhell_judge"));
-                yield b;
+                ThunderhelmLawachurlEntity t = new ThunderhelmLawachurlEntity(ModEntities.THUNDERHELM_LAWACHURL.get(), level);
+                t.setCustomName(Component.translatable("awakening_system.tower.mob.evankhell_judge"));
+                yield t;
             }
             case 3 -> {
-                ElderGuardian eg = EntityType.ELDER_GUARDIAN.create(level);
-                if (eg != null) eg.setCustomName(Component.translatable("awakening_system.tower.mob.shinsoo_eye"));
-                yield eg;
+                BathysmalVishapEntity v = new BathysmalVishapEntity(ModEntities.BATHYSMAL_VISHAP.get(), level);
+                v.setCustomName(Component.translatable("awakening_system.tower.mob.shinsoo_eye"));
+                yield v;
             }
             case 4 -> {
-                SculkGolemEntity g = new SculkGolemEntity(ModEntities.SCULK_GOLEM.get(), level);
-                g.setStatue(false);
-                g.setCustomName(Component.translatable("awakening_system.tower.mob.crown_champion"));
-                yield g;
+                RuinGraderEntity rg = new RuinGraderEntity(ModEntities.RUIN_GRADER.get(), level);
+                rg.setCustomName(Component.translatable("awakening_system.tower.mob.crown_champion"));
+                yield rg;
             }
             case 5 -> {
-                var maulerType = net.minecraft.core.registries.BuiltInRegistries.ENTITY_TYPE.getOptional(
-                        net.minecraft.resources.ResourceLocation.fromNamespaceAndPath("friendsandfoes", "mauler")).orElse(null);
-                if (maulerType != null) {
-                    var m = maulerType.create(level);
-                    if (m instanceof Mob mob) {
-                        mob.setCustomName(Component.translatable("awakening_system.tower.mob.alpha_mauler"));
-                        yield mob;
-                    }
-                }
-                WitherSkeleton ws = EntityType.WITHER_SKELETON.create(level);
-                if (ws != null) {
-                    ws.setCustomName(Component.translatable("awakening_system.tower.mob.name_hunter"));
-                    ws.setItemSlot(EquipmentSlot.MAINHAND, new ItemStack(Items.DIAMOND_SWORD));
-                }
-                yield ws;
+                FrostarmLawachurlEntity f = new FrostarmLawachurlEntity(ModEntities.FROSTARM_LAWACHURL.get(), level);
+                f.setCustomName(Component.translatable("awakening_system.tower.mob.name_hunter"));
+                yield f;
             }
             case 6 -> {
-                var iceologerType = net.minecraft.core.registries.BuiltInRegistries.ENTITY_TYPE.getOptional(
-                        net.minecraft.resources.ResourceLocation.fromNamespaceAndPath("friendsandfoes", "iceologer")).orElse(null);
-                if (iceologerType != null) {
-                    var ice = iceologerType.create(level);
-                    if (ice instanceof Mob mob) {
-                        mob.setCustomName(Component.translatable("awakening_system.tower.mob.archmage_iceologer"));
-                        yield mob;
-                    }
-                }
-                Ravager r = EntityType.RAVAGER.create(level);
-                if (r != null) r.setCustomName(Component.translatable("awakening_system.tower.mob.train_express_beast"));
-                yield r;
+                RuinDrakeEntity rd = new RuinDrakeEntity(ModEntities.RUIN_DRAKE.get(), level);
+                rd.setCustomName(Component.translatable("awakening_system.tower.mob.train_express_beast"));
+                yield rd;
             }
             case 7 -> {
-                var illusionerType = net.minecraft.core.registries.BuiltInRegistries.ENTITY_TYPE.getOptional(
-                        net.minecraft.resources.ResourceLocation.fromNamespaceAndPath("friendsandfoes", "illusioner")).orElse(null);
-                if (illusionerType != null) {
-                    var ill = illusionerType.create(level);
-                    if (ill instanceof Mob mob) {
-                        mob.setCustomName(Component.translatable("awakening_system.tower.mob.shadow_illusioner"));
-                        yield mob;
-                    }
-                }
-                WitherSkeleton ws = EntityType.WITHER_SKELETON.create(level);
-                if (ws != null) {
-                    ws.setCustomName(Component.translatable("awakening_system.tower.mob.floor_death_warden"));
-                    ws.setItemSlot(EquipmentSlot.MAINHAND, new ItemStack(Items.NETHERITE_SWORD));
-                }
-                yield ws;
+                AbyssalNecromancerEntity nec = new AbyssalNecromancerEntity(ModEntities.ABYSSAL_NECROMANCER.get(), level);
+                nec.setCustomName(Component.translatable("awakening_system.tower.mob.floor_death_warden"));
+                yield nec;
             }
             case 8 -> {
-                var wildfireType = net.minecraft.core.registries.BuiltInRegistries.ENTITY_TYPE.getOptional(
-                        net.minecraft.resources.ResourceLocation.fromNamespaceAndPath("friendsandfoes", "wildfire")).orElse(null);
-                if (wildfireType != null) {
-                    var wf = wildfireType.create(level);
-                    if (wf instanceof Mob mob) {
-                        mob.setCustomName(Component.translatable("awakening_system.tower.mob.wildfire_monarch"));
-                        yield mob;
-                    }
+                if (floor <= 75) {
+                    GeovishapEntity gv = new GeovishapEntity(ModEntities.GEOVISHAP.get(), level);
+                    gv.setCustomName(Component.translatable("awakening_system.tower.mob.wildfire_monarch"));
+                    yield gv;
+                } else {
+                    BathysmalVishapEntity bv = new BathysmalVishapEntity(ModEntities.BATHYSMAL_VISHAP.get(), level);
+                    bv.setCustomName(Component.translatable("awakening_system.tower.mob.wildfire_monarch"));
+                    yield bv;
                 }
-                Blaze b = EntityType.BLAZE.create(level);
-                if (b != null) {
-                    b.setCustomName(Component.translatable("awakening_system.tower.mob.wildfire_monarch"));
-                    b.addEffect(new MobEffectInstance(MobEffects.FIRE_RESISTANCE, 72000, 0, false, false));
-                    b.addEffect(new MobEffectInstance(MobEffects.DAMAGE_RESISTANCE, 72000, 1, false, false));
-                }
-                yield b;
+            }
+            case 9 -> {
+                ShadowMonarchBossEntity sm = new ShadowMonarchBossEntity(ModEntities.SHADOW_MONARCH_BOSS.get(), level);
+                sm.setVariant(0);
+                sm.setCustomName(Component.translatable("awakening_system.tower.mob.high_ranker_avatar"));
+                yield sm;
             }
             default -> {
-                Ravager r = EntityType.RAVAGER.create(level);
-                if (r != null) r.setCustomName(Component.translatable("awakening_system.tower.mob.high_ranker_avatar"));
-                yield r;
+                ShadowMonarchBossEntity sm = new ShadowMonarchBossEntity(ModEntities.SHADOW_MONARCH_BOSS.get(), level);
+                sm.setVariant(1);
+                sm.setCustomName(Component.translatable("awakening_system.tower.mob.high_ranker_avatar"));
+                yield sm;
             }
         };
 
@@ -702,69 +675,54 @@ public final class TowerManager {
 
     private static void spawnTierMinion(ServerLevel level, TowerSession session, double x, double y, double z, int tier, int floor, double hp, double dmg, double armor) {
         Mob minion = switch (tier) {
-            case 1, 2 -> {
-                WitherSkeleton ws = EntityType.WITHER_SKELETON.create(level);
-                if (ws != null) {
-                    ws.setItemSlot(EquipmentSlot.MAINHAND, new ItemStack(tier == 1 ? Items.IRON_SWORD : Items.DIAMOND_AXE));
-                    ws.setCustomName(Component.translatable("awakening_system.tower.mob.tower_regular"));
-                }
-                yield ws;
+            case 1 -> {
+                ShadowInfantryEntity si = new ShadowInfantryEntity(ModEntities.SHADOW_INFANTRY.get(), level);
+                si.setVariant(ShadowInfantryEntity.VARIANT_RED);
+                si.setCustomName(Component.translatable("awakening_system.tower.mob.tower_regular"));
+                yield si;
             }
-            case 3 -> {
-                SculkGolemEntity g = new SculkGolemEntity(ModEntities.SCULK_GOLEM.get(), level);
-                g.setStatue(false);
-                g.setCustomName(Component.translatable("awakening_system.tower.mob.shinsoo_construct"));
-                yield g;
-            }
-            case 4, 5 -> {
-                var maulerType = net.minecraft.core.registries.BuiltInRegistries.ENTITY_TYPE.getOptional(
-                        net.minecraft.resources.ResourceLocation.fromNamespaceAndPath("friendsandfoes", "mauler")).orElse(null);
-                if (maulerType != null && tier == 4) {
-                    var m = maulerType.create(level);
-                    if (m instanceof Mob mob) {
-                        mob.setCustomName(Component.translatable("awakening_system.tower.mob.minion_mauler"));
-                        yield mob;
-                    }
-                }
-                WitherSkeleton ws = EntityType.WITHER_SKELETON.create(level);
-                if (ws != null) {
-                    ws.setItemSlot(EquipmentSlot.MAINHAND, new ItemStack(Items.DIAMOND_SWORD));
-                    ws.setItemSlot(EquipmentSlot.CHEST, new ItemStack(Items.DIAMOND_CHESTPLATE));
-                    ws.setCustomName(Component.translatable("awakening_system.tower.mob.tower_ranker_aspirant"));
-                }
-                yield ws;
-            }
-            case 6, 7 -> {
-                var iceologerType = net.minecraft.core.registries.BuiltInRegistries.ENTITY_TYPE.getOptional(
-                        net.minecraft.resources.ResourceLocation.fromNamespaceAndPath("friendsandfoes", "iceologer")).orElse(null);
-                if (iceologerType != null && tier == 6) {
-                    var ice = iceologerType.create(level);
-                    if (ice instanceof Mob mob) {
-                        mob.setCustomName(Component.translatable("awakening_system.tower.mob.minion_iceologer"));
-                        yield mob;
-                    }
-                }
+            case 2 -> {
                 Blaze b = EntityType.BLAZE.create(level);
                 if (b != null) b.setCustomName(Component.translatable("awakening_system.tower.mob.hell_flame_guard"));
                 yield b;
             }
+            case 3 -> {
+                SpecterEntity sp = new SpecterEntity(ModEntities.SPECTER.get(), level);
+                sp.setCustomName(Component.translatable("awakening_system.tower.mob.shinsoo_construct"));
+                yield sp;
+            }
+            case 4 -> {
+                RuinSentinelEntity rs = new RuinSentinelEntity(ModEntities.RUIN_SENTINEL.get(), level);
+                rs.setCustomName(Component.translatable("awakening_system.tower.mob.minion_mauler"));
+                yield rs;
+            }
+            case 5 -> {
+                AntSoldierEntity ant = new AntSoldierEntity(ModEntities.ANT_SOLDIER.get(), level);
+                ant.setCustomName(Component.translatable("awakening_system.tower.mob.tower_ranker_aspirant"));
+                yield ant;
+            }
+            case 6 -> {
+                FrostElfAssassinEntity elf = new FrostElfAssassinEntity(ModEntities.FROST_ELF_ASSASSIN.get(), level);
+                elf.setCustomName(Component.translatable("awakening_system.tower.mob.minion_iceologer"));
+                yield elf;
+            }
+            case 7 -> {
+                AbyssalOrcEntity orc = new AbyssalOrcEntity(ModEntities.ABYSSAL_ORC.get(), level);
+                orc.setCustomName(Component.translatable("awakening_system.tower.mob.high_ranker_guard"));
+                yield orc;
+            }
+            case 8 -> {
+                SpecterEntity sp = new SpecterEntity(ModEntities.SPECTER.get(), level);
+                sp.setCustomName(Component.translatable("awakening_system.tower.mob.minion_illusioner"));
+                yield sp;
+            }
             default -> {
-                var illusionerType = net.minecraft.core.registries.BuiltInRegistries.ENTITY_TYPE.getOptional(
-                        net.minecraft.resources.ResourceLocation.fromNamespaceAndPath("friendsandfoes", "illusioner")).orElse(null);
-                if (illusionerType != null && tier == 8) {
-                    var ill = illusionerType.create(level);
-                    if (ill instanceof Mob mob) {
-                        mob.setCustomName(Component.translatable("awakening_system.tower.mob.minion_illusioner"));
-                        yield mob;
-                    }
-                }
-                WitherSkeleton ws = EntityType.WITHER_SKELETON.create(level);
-                if (ws != null) {
-                    ws.setItemSlot(EquipmentSlot.MAINHAND, new ItemStack(Items.NETHERITE_SWORD));
-                    ws.setItemSlot(EquipmentSlot.CHEST, new ItemStack(Items.NETHERITE_CHESTPLATE));
-                    ws.setCustomName(Component.translatable("awakening_system.tower.mob.high_ranker_guard"));
-                }
-                yield ws;
+                ShadowInfantryEntity si = new ShadowInfantryEntity(ModEntities.SHADOW_INFANTRY.get(), level);
+                si.setVariant(ShadowInfantryEntity.VARIANT_RED);
+                si.setItemSlot(EquipmentSlot.MAINHAND, new ItemStack(Items.NETHERITE_SWORD));
+                si.setItemSlot(EquipmentSlot.CHEST, new ItemStack(Items.NETHERITE_CHESTPLATE));
+                si.setCustomName(Component.translatable("awakening_system.tower.mob.high_ranker_guard"));
+                yield si;
             }
         };
 
@@ -873,28 +831,125 @@ public final class TowerManager {
                     if (server != null) {
                         ServerPlayer player = server.getPlayerList().getPlayer(session.playerId);
                         if (player != null) {
-                            ServerLevel level = player.serverLevel();
-                            if (session.floor < MAX_FLOORS) {
-                                session.elevatorSpawned = true;
-                                buildElevator(level, session);
-
-                                SystemData data = SystemEvents.data(player);
-                                data.setSavedTowerFloor(session.floor + 1);
-                                AwakeningSystemMod.sync(player);
-
-                                AwakeningSystemMod.notify(player,
-                                        "awakening_system.tower.floor_conquered_title",
-                                        "awakening_system.tower.floor_conquered_desc",
-                                        0xFF50FA7B, session.floor);
-                                player.playNotifySound(SoundEvents.UI_TOAST_CHALLENGE_COMPLETE, SoundSource.PLAYERS, 1.2F, 1.0F);
-                            } else {
-                                spawnIsekaiPortal(level, session);
-                            }
+                            finishFloor(server, player.serverLevel(), session, player);
                         }
                     }
                 }
                 break;
             }
+        }
+    }
+
+    public static void finishFloor(MinecraftServer server, ServerLevel level, TowerSession session, ServerPlayer player) {
+        if (session == null || player == null || level == null) return;
+        if (session.elevatorSpawned || session.isekaiPortalSpawned) return;
+
+        giveFloorConquestRewards(player, session, session.floor);
+
+        // Activar el portal de retorno únicamente al terminar el nivel
+        session.returnPortalActive = true;
+        activateReturnPortal(level, session);
+
+        if (session.floor < MAX_FLOORS) {
+            session.elevatorSpawned = true;
+            buildElevator(level, session);
+
+            SystemData data = SystemEvents.data(player);
+            data.setSavedTowerFloor(session.floor + 1);
+            AwakeningSystemMod.sync(player);
+
+            AwakeningSystemMod.notify(player,
+                    "awakening_system.tower.floor_conquered_title",
+                    "awakening_system.tower.floor_conquered_desc",
+                    0xFF50FA7B, session.floor);
+            player.playNotifySound(SoundEvents.UI_TOAST_CHALLENGE_COMPLETE, SoundSource.PLAYERS, 1.2F, 1.0F);
+        } else {
+            spawnIsekaiPortal(level, session);
+        }
+
+        player.displayClientMessage(Component.translatable("awakening_system.tower.return_portal_activated"), true);
+    }
+
+    private static void activateReturnPortal(ServerLevel level, TowerSession session) {
+        if (session.returnPortalPos == null) return;
+        BlockPos p = session.returnPortalPos;
+        buildPortalFrame(level, p, Blocks.CRYING_OBSIDIAN, Blocks.OBSIDIAN);
+        level.sendParticles(ParticleTypes.PORTAL, p.getX() + 0.5D, p.getY() + 1.2D, p.getZ() + 0.5D, 60, 0.5D, 1.0D, 0.5D, 0.2D);
+        level.sendParticles(ParticleTypes.FLASH, p.getX() + 0.5D, p.getY() + 1.5D, p.getZ() + 0.5D, 3, 0, 0, 0, 0);
+        level.sendParticles(ParticleTypes.END_ROD, p.getX() + 0.5D, p.getY() + 1.2D, p.getZ() + 0.5D, 20, 0.4D, 0.8D, 0.4D, 0.05D);
+        level.playSound(null, p, SoundEvents.END_PORTAL_SPAWN, SoundSource.BLOCKS, 1.4F, 1.2F);
+    }
+
+    private static void giveFloorConquestRewards(ServerPlayer player, TowerSession session, int floor) {
+        if (player == null) return;
+        SystemData data = SystemEvents.data(player);
+
+        // Recompensas básicas continuas por piso
+        int coinsAwarded = 500 + floor * 150;
+        int expAwarded = 250 + floor * 80;
+        data.addCoins(coinsAwarded);
+        SystemEvents.awardExperience(player, data, expAwarded);
+
+        // Hitos Decadales (Pisos 10, 20, 30, 40, 50, 60, 70, 80, 90, 100)
+        int highestClaimed = player.getPersistentData().getInt("tower_highest_reward_claimed");
+        if (floor > highestClaimed && floor % 10 == 0) {
+            player.getPersistentData().putInt("tower_highest_reward_claimed", floor);
+            List<ItemStack> rewards = new ArrayList<>();
+
+            switch (floor) {
+                case 10 -> {
+                    rewards.add(new ItemStack(SystemItems.REFINED_WHITE_IRON_INGOT.get(), 2));
+                    rewards.add(new ItemStack(SystemItems.MANA_CRYSTAL_SHARD_C.get(), 4));
+                }
+                case 20 -> {
+                    rewards.add(new ItemStack(SystemItems.ABYSSAL_INGOT.get(), 4));
+                    rewards.add(new ItemStack(SystemItems.MANA_CRYSTAL_SHARD_B.get(), 4));
+                }
+                case 30 -> {
+                    rewards.add(new ItemStack(SystemItems.SOUL_ALLOY_INGOT.get(), 4));
+                    rewards.add(new ItemStack(SystemItems.MANA_CRYSTAL_SHARD_A.get(), 6));
+                }
+                case 40 -> {
+                    rewards.add(new ItemStack(SystemItems.ASTRALITE_INGOT.get(), 4));
+                    rewards.add(new ItemStack(SystemItems.MANA_CRYSTAL_SHARD_S.get(), 4));
+                }
+                case 50 -> {
+                    rewards.add(new ItemStack(SystemItems.MITHRIL_INGOT.get(), 6));
+                    rewards.add(new ItemStack(SystemItems.MANA_CRYSTAL_SHARD_S.get(), 4));
+                }
+                case 60 -> {
+                    rewards.add(new ItemStack(SystemItems.ADAMANTITE_INGOT.get(), 6));
+                    rewards.add(new ItemStack(SystemItems.MANA_CRYSTAL_SHARD_S.get(), 6));
+                }
+                case 70 -> {
+                    rewards.add(new ItemStack(SystemItems.SPIRIT_JADE.get(), 6));
+                    rewards.add(new ItemStack(SystemItems.MANA_CRYSTAL_SHARD_EX.get(), 2));
+                }
+                case 80 -> {
+                    rewards.add(new ItemStack(SystemItems.ASTRAL_INGOT.get(), 6));
+                    rewards.add(new ItemStack(SystemItems.MANA_CRYSTAL_SHARD_EX.get(), 4));
+                }
+                case 90 -> {
+                    rewards.add(new ItemStack(SystemItems.CELESTIAL_INGOT.get(), 6));
+                    rewards.add(new ItemStack(SystemItems.MANA_CRYSTAL_SHARD_EX.get(), 6));
+                }
+                case 100 -> {
+                    rewards.add(new ItemStack(SystemItems.PRIMORDIAL_INGOT.get(), 6));
+                    rewards.add(new ItemStack(SystemItems.MANA_CRYSTAL_SHARD_EX.get(), 10));
+                    rewards.add(new ItemStack(SystemItems.GENESIS_CRYSTAL.get(), 5));
+                }
+            }
+
+            for (ItemStack stack : rewards) {
+                if (!player.getInventory().add(stack)) {
+                    player.drop(stack, false);
+                }
+            }
+
+            AwakeningSystemMod.notify(player,
+                    "awakening_system.tower.milestone_reward_title",
+                    "awakening_system.tower.milestone_reward_desc",
+                    0xFFFFD700, floor);
         }
     }
 
@@ -1049,11 +1104,19 @@ public final class TowerManager {
 
             if (gameTime % 20 == 0) {
                 if (!session.enemyUUIDs.isEmpty()) {
-                    for (UUID enemyId : session.enemyUUIDs) {
+                    session.enemyUUIDs.removeIf(enemyId -> {
                         var entity = level.getEntity(enemyId);
-                        if (entity instanceof Mob mob && mob.isAlive()) {
-                            if (mob.getTarget() == null || !mob.getTarget().equals(player)) {
-                                mob.setTarget(player);
+                        return entity == null || !entity.isAlive();
+                    });
+                    if (session.enemyUUIDs.isEmpty()) {
+                        finishFloor(server, level, session, player);
+                    } else {
+                        for (UUID enemyId : session.enemyUUIDs) {
+                            var entity = level.getEntity(enemyId);
+                            if (entity instanceof Mob mob && mob.isAlive()) {
+                                if (mob.getTarget() == null || !mob.getTarget().equals(player)) {
+                                    mob.setTarget(player);
+                                }
                             }
                         }
                     }
@@ -1081,16 +1144,31 @@ public final class TowerManager {
                         2, 0.1D, 0.1D, 0.1D, 0.01D);
             }
 
-            if (session.returnPortalPos != null && gameTime % 10 == 0) {
-                BlockPos p = session.returnPortalPos;
-                level.sendParticles(ParticleTypes.PORTAL, p.getX() + 0.5D, p.getY() + 1.2D, p.getZ() + 0.5D, 8, 0.4D, 0.6D, 0.4D, 0.05D);
+            if (session.returnPortalPos != null) {
+                if (session.returnPortalActive) {
+                    if (gameTime % 10 == 0) {
+                        BlockPos p = session.returnPortalPos;
+                        level.sendParticles(ParticleTypes.PORTAL, p.getX() + 0.5D, p.getY() + 1.2D, p.getZ() + 0.5D, 8, 0.4D, 0.6D, 0.4D, 0.05D);
+                    }
+                } else {
+                    if (gameTime % 25 == 0) {
+                        BlockPos p = session.returnPortalPos;
+                        level.sendParticles(ParticleTypes.SMOKE, p.getX() + 0.5D, p.getY() + 1.2D, p.getZ() + 0.5D, 2, 0.2D, 0.3D, 0.2D, 0.01D);
+                    }
+                }
             }
 
             if (session.floorTicks > 40 && session.returnPortalPos != null) {
                 double distSq = player.distanceToSqr(session.returnPortalPos.getX() + 0.5D, session.returnPortalPos.getY() + 0.5D, session.returnPortalPos.getZ() + 0.5D);
                 if (distSq <= 3.5D) {
-                    exitTower(server, playerId);
-                    continue;
+                    if (session.returnPortalActive) {
+                        exitTower(server, playerId);
+                        continue;
+                    } else if (gameTime - session.lastPortalWarningTick > 40) {
+                        session.lastPortalWarningTick = gameTime;
+                        player.displayClientMessage(Component.translatable("awakening_system.tower.return_portal_inactive"), true);
+                        player.playNotifySound(SoundEvents.FIRE_EXTINGUISH, SoundSource.PLAYERS, 0.6F, 1.4F);
+                    }
                 }
             }
 

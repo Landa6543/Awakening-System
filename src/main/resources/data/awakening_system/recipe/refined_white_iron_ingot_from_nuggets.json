@@ -1,0 +1,18 @@
+{
+    "key":  {
+                "#":  {
+                          "item":  "awakening_system:white_iron_nugget"
+                      }
+            },
+    "category":  "misc",
+    "pattern":  [
+                    "###",
+                    "###",
+                    "###"
+                ],
+    "result":  {
+                   "count":  1,
+                   "id":  "awakening_system:refined_white_iron_ingot"
+               },
+    "type":  "minecraft:crafting_shaped"
+}

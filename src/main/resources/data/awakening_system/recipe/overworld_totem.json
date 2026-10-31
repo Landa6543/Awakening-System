@@ -1,0 +1,24 @@
+{
+    "key":  {
+                "G":  {
+                          "item":  "minecraft:gold_block"
+                      },
+                "T":  {
+                          "item":  "minecraft:totem_of_undying"
+                      },
+                "I":  {
+                          "item":  "awakening_system:refined_white_iron_ingot"
+                      }
+            },
+    "category":  "equipment",
+    "pattern":  [
+                    " I ",
+                    "ITI",
+                    " G "
+                ],
+    "result":  {
+                   "count":  1,
+                   "id":  "awakening_system:overworld_totem"
+               },
+    "type":  "minecraft:crafting_shaped"
+}

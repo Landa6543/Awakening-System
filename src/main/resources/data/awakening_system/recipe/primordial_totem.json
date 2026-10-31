@@ -1,0 +1,24 @@
+{
+    "key":  {
+                "E":  {
+                          "item":  "minecraft:heart_of_the_sea"
+                      },
+                "T":  {
+                          "tag":  "awakening_system:world_totems"
+                      },
+                "P":  {
+                          "item":  "awakening_system:primordial_ingot"
+                      }
+            },
+    "category":  "equipment",
+    "pattern":  [
+                    "PEP",
+                    "ETE",
+                    "PEP"
+                ],
+    "result":  {
+                   "count":  1,
+                   "id":  "awakening_system:primordial_totem"
+               },
+    "type":  "minecraft:crafting_shaped"
+}

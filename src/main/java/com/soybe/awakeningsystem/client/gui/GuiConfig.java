@@ -63,6 +63,7 @@ public final class GuiConfig {
     public static boolean showDimensionSideTabs = true;
     public static boolean uiSoundsEnabled = true;
     public static boolean freeMoveEnabled = true;
+    public static boolean useSystemFont = true;
     public static final boolean enableBackgroundBlur = false;
 
     // Tabs of System Window (/system)
@@ -180,6 +181,7 @@ public final class GuiConfig {
         public boolean showDimensionSideTabs = true;
         public boolean uiSoundsEnabled = true;
         public boolean freeMoveEnabled = true;
+        public boolean useSystemFont = true;
 
         public boolean showTabStatus = true;
         public boolean showTabSkills = true;
@@ -261,6 +263,7 @@ public final class GuiConfig {
                         showDimensionSideTabs = data.showDimensionSideTabs;
                         uiSoundsEnabled = data.uiSoundsEnabled;
                         freeMoveEnabled = data.freeMoveEnabled;
+                        useSystemFont = data.useSystemFont;
 
                         showTabStatus = data.showTabStatus;
                         showTabSkills = data.showTabSkills;
@@ -372,6 +375,7 @@ public final class GuiConfig {
             data.showDimensionSideTabs = showDimensionSideTabs;
             data.uiSoundsEnabled = uiSoundsEnabled;
             data.freeMoveEnabled = freeMoveEnabled;
+            data.useSystemFont = useSystemFont;
 
             data.showTabStatus = showTabStatus;
             data.showTabSkills = showTabSkills;

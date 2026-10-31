@@ -40,12 +40,12 @@ public class AbyssalOrcEntity extends Monster {
 
     public static AttributeSupplier.Builder createAttributes() {
         return Monster.createMonsterAttributes()
-                .add(Attributes.MAX_HEALTH, 220.0D)
-                .add(Attributes.MOVEMENT_SPEED, 0.28D)
-                .add(Attributes.ATTACK_DAMAGE, 18.0D)
-                .add(Attributes.ARMOR, 10.0D)
-                .add(Attributes.KNOCKBACK_RESISTANCE, 0.85D)
-                .add(Attributes.FOLLOW_RANGE, 36.0D);
+                .add(Attributes.MAX_HEALTH, 140.0D)
+                .add(Attributes.MOVEMENT_SPEED, 0.27D)
+                .add(Attributes.ATTACK_DAMAGE, 13.0D)
+                .add(Attributes.ARMOR, 8.0D)
+                .add(Attributes.KNOCKBACK_RESISTANCE, 0.7D)
+                .add(Attributes.FOLLOW_RANGE, 32.0D);
     }
 
     @Override
@@ -87,6 +87,7 @@ public class AbyssalOrcEntity extends Monster {
 
             if (this.level() instanceof net.minecraft.server.level.ServerLevel sl) {
                 Vec3 dir = target.position().subtract(this.position()).normalize();
+                java.util.Set<LivingEntity> hitVictims = new java.util.HashSet<>();
                 for (double step = 1.5D; step <= 9.0D; step += 1.5D) {
                     double fx = this.getX() + dir.x * step;
                     double fy = this.getY();
@@ -97,11 +98,12 @@ public class AbyssalOrcEntity extends Monster {
 
                     var box = new net.minecraft.world.phys.AABB(fx - 1.2D, fy - 0.5D, fz - 1.2D, fx + 1.2D, fy + 2.0D, fz + 1.2D);
                     var victims = sl.getEntitiesOfClass(LivingEntity.class, box,
-                            e -> e != this && !e.getTags().contains("shadow_soldier") && !e.getType().equals(this.getType()));
+                            e -> e != this && !e.getTags().contains("shadow_soldier") && !e.getType().equals(this.getType()) && !hitVictims.contains(e));
                     for (var v : victims) {
-                        v.hurt(this.damageSources().magic(), 10.0F);
-                        v.setDeltaMovement(v.getDeltaMovement().x, 0.55D, v.getDeltaMovement().z);
-                        v.addEffect(new MobEffectInstance(MobEffects.MOVEMENT_SLOWDOWN, 70, 1));
+                        hitVictims.add(v);
+                        v.hurt(this.damageSources().magic(), 8.0F);
+                        v.setDeltaMovement(v.getDeltaMovement().x, 0.45D, v.getDeltaMovement().z);
+                        v.addEffect(new MobEffectInstance(MobEffects.MOVEMENT_SLOWDOWN, 60, 0));
                     }
                 }
             }

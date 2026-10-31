@@ -2903,7 +2903,7 @@ public final class GachaWishScreen extends Screen {
         int roofH = 34;
         graphics.fill(centerX - gateW / 2, gateY, centerX + gateW / 2, gateY + roofH, 0xFF1B5E20);
         graphics.renderOutline(centerX - gateW / 2, gateY, gateW, roofH, 0xFFFFD700);
-        graphics.drawCenteredString(this.font, "§6§l✦ ACADEMIA TRACEN • STARTING GATE #1 ✦", centerX, gateY + 6, 0xFFFFFF);
+        graphics.drawCenteredString(this.font, "§6§l✦ ESTABLO • PISTA DE SALIDA #1 ✦", centerX, gateY + 6, 0xFFFFFF);
         graphics.drawCenteredString(this.font, "§e★ PRETTY DERBY RECRUITMENT ★", centerX, gateY + 18, 0xFFFFD700);
 
         for (int l = 0; l < 9; l++) {

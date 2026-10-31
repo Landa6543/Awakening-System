@@ -1,11 +1,12 @@
 package com.soybe.awakeningsystem.fable;
 
+import com.soybe.awakeningsystem.client.gui.ModernGuiHelper;
 import com.soybe.awakeningsystem.AwakeningSystemMod;
 import com.soybe.awakeningsystem.SystemData;
-import net.minecraft.ChatFormatting;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.gui.screens.Screen;
+import net.minecraft.client.resources.sounds.SimpleSoundInstance;
 import net.minecraft.network.chat.Component;
 import net.minecraft.sounds.SoundEvents;
 import net.minecraft.util.FormattedCharSequence;
@@ -14,7 +15,14 @@ import org.lwjgl.glfw.GLFW;
 import java.util.ArrayList;
 import java.util.List;
 
+/**
+ * Manhwa / Solo Leveling Fables & Star Stream Chronicles Screen.
+ * Fully aligned to the official System Window Frame architecture with expansive proportions.
+ */
 public final class FablesScreen extends Screen {
+    private static final int PANEL_W = 600;
+    private static final int PANEL_H = 340;
+
     private final Screen parentScreen;
     private FableDefinitions.Grade selectedGradeFilter = null;
     private String selectedFableId = "first_netherite";
@@ -42,22 +50,23 @@ public final class FablesScreen extends Screen {
     @Override
     public void onClose() {
         if (minecraft != null) {
-            minecraft.setScreen(parentScreen);
+            minecraft.setScreen(parentScreen != null ? parentScreen : new com.soybe.awakeningsystem.SystemScreen(0));
         }
     }
 
     private void playClickSound() {
-        if (minecraft != null && minecraft.player != null) {
-            minecraft.player.playSound(SoundEvents.UI_BUTTON_CLICK.value(), 0.8F, 1.2F);
+        if (minecraft != null) {
+            minecraft.getSoundManager().play(SimpleSoundInstance.forUI(SoundEvents.UI_BUTTON_CLICK, 1.2F));
         }
     }
 
     @Override
     public void renderBackground(GuiGraphics graphics, int mouseX, int mouseY, float partialTick) {
+        // Clean - no dark murky screen-wide filter
     }
 
     public float getGuiScale() {
-        float scaleX = (float) this.width / 560.0F;
+        float scaleX = (float) this.width / 620.0F;
         float scaleY = (float) this.height / 360.0F;
         float scale = Math.min(scaleX, scaleY);
         return Math.min(1.0F, Math.max(0.35F, scale));
@@ -98,7 +107,7 @@ public final class FablesScreen extends Screen {
 
     @Override
     public void render(GuiGraphics graphics, int mouseX, int mouseY, float partialTick) {
-        graphics.fillGradient(0, 0, this.width, this.height, 0x95000000, 0xD5000000);
+        renderBackground(graphics, mouseX, mouseY, partialTick);
 
         float scale = getGuiScale();
         int mX = (int) Math.round(transformMouseX(mouseX));
@@ -113,59 +122,88 @@ public final class FablesScreen extends Screen {
             graphics.pose().translate(-cx, -cy, 0.0F);
         }
 
-        int panelW = 540;
-        int panelH = 340;
-        int left = (width - panelW) / 2;
-        int top = (height - panelH) / 2;
+        int left = (width - PANEL_W) / 2;
+        int top = (height - PANEL_H) / 2;
 
         SystemData data = Minecraft.getInstance().player == null ? null : Minecraft.getInstance().player.getData(AwakeningSystemMod.PLAYER_SYSTEM);
         int unlockedCount = data != null ? data.unlockedFables().size() : 0;
         int fableWeight = data != null ? data.fableWeight() : 0;
         boolean isConstellation = data != null && data.isConstellation();
 
-        graphics.fill(left - 2, top - 2, left + panelW + 2, top + panelH + 2, 0xC000838F);
-        graphics.fill(left, top, left + panelW, top + panelH, 0xF207131D);
+        ModernGuiHelper.GuiTheme theme = ModernGuiHelper.GuiTheme.SOLO_LEVELING;
+        ModernGuiHelper.drawModernWindow(graphics, left, top, PANEL_W, PANEL_H, theme);
 
-        int cornerColor = 0xFFFFD700;
-        graphics.fill(left, top, left + 10, top + 2, cornerColor);
-        graphics.fill(left, top, left + 2, top + 10, cornerColor);
-        graphics.fill(left + panelW - 10, top, left + panelW, top + 2, cornerColor);
-        graphics.fill(left + panelW - 2, top, left + panelW, top + 10, cornerColor);
-        graphics.fill(left, top + panelH - 2, left + 10, top + panelH, cornerColor);
-        graphics.fill(left, top + panelH - 10, left + 2, top + panelH, cornerColor);
-        graphics.fill(left + panelW - 10, top + panelH - 2, left + panelW, top + panelH, cornerColor);
-        graphics.fill(left + panelW - 2, top + panelH - 10, left + panelW, top + panelH, cornerColor);
+        // Header Title (Left) - Clear of the top-left filigree bracket
+        int headerX = left + 36;
+        int headerY = top + 18;
+        Component headerTitle = ModernGuiHelper.manhwa(Component.translatable("awakening_system.fables_screen.header"));
+        graphics.drawString(font, headerTitle, headerX, headerY, 0xFF00E5FF, false);
 
-        graphics.drawString(font, Component.translatable("awakening_system.fables_screen.header").withStyle(ChatFormatting.BOLD), left + 14, top + 10, 0xFFFFD700);
+        // Close button [✕] (Right) - seamlessly integrated without dark block
+        int closeX = left + PANEL_W - 32;
+        int closeY = top + 18;
+        int closeW = 16;
+        int closeH = 16;
+        boolean closeHover = mX >= closeX && mX < closeX + closeW && mY >= closeY && mY < closeY + closeH;
+        if (closeHover) {
+            graphics.fill(closeX, closeY, closeX + closeW, closeY + closeH, 0xDD7A1515);
+            graphics.renderOutline(closeX, closeY, closeW, closeH, 0xFFFF5555);
+        }
+        graphics.drawCenteredString(font, "✕", closeX + closeW / 2, closeY + 4, closeHover ? 0xFFFFFFFF : 0xFF70E8FF);
 
-        Component ascComp = isConstellation ? Component.translatable("awakening_system.fables_screen.constellation_ascended") :
-                (com.soybe.awakeningsystem.ConstellationAscension.isEligibleForAscension(data) ? Component.translatable("awakening_system.fables_screen.ready_for_ascension") : Component.translatable("awakening_system.fables_screen.req_ascension"));
-        Component subHeader = Component.translatable("awakening_system.fables_screen.stats", unlockedCount, fableWeight, ascComp);
-        graphics.drawString(font, subHeader, left + 14, top + 22, 0xFFCCE3EC);
+        // Narrative Stats Pill Capsule (Center-Right)
+        Component ascComp = isConstellation
+                ? Component.translatable("awakening_system.fables_screen.constellation_ascended")
+                : (com.soybe.awakeningsystem.ConstellationAscension.isEligibleForAscension(data)
+                        ? Component.translatable("awakening_system.fables_screen.ready_for_ascension")
+                        : Component.translatable("awakening_system.fables_screen.req_ascension"));
+        String statsText = Component.translatable("awakening_system.fables_screen.stats", unlockedCount, fableWeight, ascComp.getString()).getString();
+        int statW = font.width(statsText) + 14;
+        int statX = closeX - 12 - statW;
+        int headerEnd = headerX + font.width(headerTitle) + 8;
+        if (statX <= headerEnd) {
+            statsText = "§e" + unlockedCount + "/61 §8| §e" + fableWeight + " pts §8| " + ascComp.getString();
+            statW = font.width(statsText) + 12;
+            statX = closeX - 10 - statW;
+        }
 
-        int closeBtnW = 60;
-        int closeBtnH = 18;
-        int closeBtnX = left + panelW - closeBtnW - 10;
-        int closeBtnY = top + 8;
-        boolean closeHov = mX >= closeBtnX && mX < closeBtnX + closeBtnW && mY >= closeBtnY && mY < closeBtnY + closeBtnH;
-        graphics.fill(closeBtnX, closeBtnY, closeBtnX + closeBtnW, closeBtnY + closeBtnH, closeHov ? 0xFF882222 : 0xFF142430);
-        drawBorder(graphics, closeBtnX, closeBtnY, closeBtnW, closeBtnH, closeHov ? 0xFFFF5555 : 0xFF2D7691);
-        graphics.drawCenteredString(font, Component.translatable("awakening_system.fables_screen.close"), closeBtnX + closeBtnW / 2, closeBtnY + 5, closeHov ? 0xFFFFFFFF : 0xFFCCE3EC);
+        if (statX > headerEnd) {
+            boolean statHov = mX >= statX && mX < statX + statW && mY >= top + 15 && mY < top + 31;
+            graphics.fill(statX, top + 15, statX + statW, top + 31, statHov ? 0x3000E5FF : 0x1500E5FF);
+            graphics.renderOutline(statX, top + 15, statW, 16, statHov ? 0xFF00E5FF : 0x4000E5FF);
+            graphics.drawString(font, statsText, statX + 6, top + 19, 0xFFCCE3EC, false);
 
+            if (statHov) {
+                List<Component> tip = List.of(
+                        Component.translatable("awakening_system.fables_screen.tooltip.status_title"),
+                        Component.translatable("awakening_system.fables_screen.tooltip.fables_engraved", unlockedCount),
+                        Component.translatable("awakening_system.fables_screen.tooltip.fable_weight", fableWeight),
+                        isConstellation
+                                ? Component.translatable("awakening_system.fables_screen.constellation_ascended")
+                                : (com.soybe.awakeningsystem.ConstellationAscension.isEligibleForAscension(data)
+                                        ? Component.translatable("awakening_system.fables_screen.ready_for_ascension")
+                                        : Component.translatable("awakening_system.fables_screen.req_ascension"))
+                );
+                graphics.renderComponentTooltip(font, tip, mX, mY);
+            }
+        }
+
+        // Filter Bar (Tabs)
         int filterY = top + 36;
-        renderFilterBar(graphics, left + 12, filterY, panelW - 24, mX, mY);
+        renderFilterBar(graphics, left + 16, filterY, PANEL_W - 32, mX, mY);
 
-        int listX = left + 12;
+        // Two-Column Content Area (Generously expanded)
+        int listX = left + 16;
         int listY = top + 58;
-        int listW = panelW - 228;
-        int listH = panelH - 68;
+        int listW = 310;
+        int listH = PANEL_H - 70; // Adjusted for shifted header
         renderFableList(graphics, data, listX, listY, listW, listH, mX, mY);
 
-        int inspX = left + panelW - 210;
-        int inspY = top + 58;
-        int inspW = 198;
-        int inspH = panelH - 68;
-        renderFableDetail(graphics, data, inspX, inspY, inspW, inspH);
+        int detX = listX + listW + 8; // left + 334
+        int detY = listY;
+        int detW = left + PANEL_W - 16 - detX; // 250px width
+        int detH = listH;
+        renderFableDetail(graphics, data, detX, detY, detW, detH);
 
         graphics.pose().popPose();
         super.render(graphics, mouseX, mouseY, partialTick);
@@ -180,29 +218,38 @@ public final class FablesScreen extends Screen {
                 Component.translatable("awakening_system.fables_screen.filter.myth"),
                 Component.translatable("awakening_system.fables_screen.filter.giant")
         };
-        FableDefinitions.Grade[] filterGrades = {null, FableDefinitions.Grade.HISTORICAL, FableDefinitions.Grade.LEGENDARY, FableDefinitions.Grade.SEMI_MYTH, FableDefinitions.Grade.MYTH, FableDefinitions.Grade.GIANT_STORY};
+        FableDefinitions.Grade[] filterGrades = {
+                null,
+                FableDefinitions.Grade.HISTORICAL,
+                FableDefinitions.Grade.LEGENDARY,
+                FableDefinitions.Grade.SEMI_MYTH,
+                FableDefinitions.Grade.MYTH,
+                FableDefinitions.Grade.GIANT_STORY
+        };
 
-        int btnW = (w - (filterLabels.length - 1) * 4) / filterLabels.length;
-        int btnH = 16;
+        int spacing = 4;
+        int btnW = (w - (filterLabels.length - 1) * spacing) / filterLabels.length;
+        int btnH = 18;
 
         for (int i = 0; i < filterLabels.length; i++) {
-            int bx = x + i * (btnW + 4);
+            int bx = x + i * (btnW + spacing);
             boolean selected = (selectedGradeFilter == filterGrades[i]);
             boolean hov = mouseX >= bx && mouseX < bx + btnW && mouseY >= y && mouseY < y + btnH;
 
-            int bg = selected ? 0xFF1E4258 : (hov ? 0xFF142E3D : 0xFF0D1C26);
-            int border = selected ? 0xFFFFD700 : (hov ? 0xFF00E5FF : 0xFF223E4F);
-            g.fill(bx, y, bx + btnW, y + btnH, bg);
-            drawBorder(g, bx, y, btnW, btnH, border);
+            int bg = selected ? 0x4000E5FF : (hov ? 0x2200E5FF : 0x1000E5FF);
+            int border = selected ? 0xFF00E5FF : (hov ? 0x8800E5FF : 0x3000E5FF);
 
-            int textColor = selected ? 0xFFFFD700 : (hov ? 0xFFFFFFFF : 0xFF88AABB);
-            var fl = filterLabels[i].copy();
-            int tw = font.width(fl.copy().withStyle(ChatFormatting.BOLD));
-            if (tw <= btnW - 4) {
-                g.drawCenteredString(font, fl.withStyle(ChatFormatting.BOLD), bx + btnW / 2, y + 4, textColor);
-            } else {
-                g.drawCenteredString(font, fl, bx + btnW / 2, y + 4, textColor);
+            g.fill(bx, y, bx + btnW, y + btnH, bg);
+            g.renderOutline(bx, y, btnW, btnH, border);
+
+            if (selected) {
+                // Top neon accent line
+                g.fill(bx + 1, y, bx + btnW - 1, y + 1, 0xFF70E8FF);
             }
+
+            int textColor = selected ? 0xFF00E5FF : (hov ? 0xFFFFFFFF : 0xFF8AAAB8);
+            Component label = ModernGuiHelper.manhwa(filterLabels[i]);
+            g.drawCenteredString(font, label, bx + btnW / 2, y + 5, textColor);
         }
     }
 
@@ -217,151 +264,212 @@ public final class FablesScreen extends Screen {
     }
 
     private void renderFableList(GuiGraphics g, SystemData data, int x, int y, int w, int h, int mouseX, int mouseY) {
-        g.fill(x, y, x + w, y + h, 0xFF050E14);
-        drawBorder(g, x, y, w, h, 0xFF153344);
+        g.fill(x, y, x + w, y + h, 0x0A00E5FF);
+        g.renderOutline(x, y, w, h, 0x4400E5FF);
 
         List<FableDefinitions.Fable> fables = getFilteredFables();
-        int itemH = 34;
-        int maxVisible = h / itemH;
-        int maxScroll = Math.max(0, fables.size() - maxVisible);
+        if (fables.isEmpty()) {
+            g.drawCenteredString(font, Component.translatable("awakening_system.fables_screen.no_fables").getString(), x + w / 2, y + h / 2 - 4, 0xFF8AAAB8);
+            return;
+        }
+
+        int itemH = 42;
+        int spacing = 4;
+        int visibleRows = (h - 6) / (itemH + spacing);
+        int maxScroll = Math.max(0, fables.size() - visibleRows);
         scrollOffset = Math.max(0, Math.min(maxScroll, scrollOffset));
 
-        enableScissorScaled(g, x + 1, y + 1, x + w - 1, y + h - 1);
+        enableScissorScaled(g, x + 2, y + 2, x + w - 2, y + h - 2);
 
-        for (int i = 0; i < fables.size(); i++) {
-            int iy = y + 2 + (i - scrollOffset) * itemH;
-            if (iy < y - itemH || iy > y + h) continue;
+        for (int i = 0; i < visibleRows && (i + scrollOffset) < fables.size(); i++) {
+            int idx = i + scrollOffset;
+            FableDefinitions.Fable fable = fables.get(idx);
+            int iy = y + 3 + i * (itemH + spacing);
+            int cardX = x + 4;
+            int cardW = w - 8;
 
-            FableDefinitions.Fable fable = fables.get(i);
             boolean isUnlocked = data != null && data.unlockedFables().contains(fable.id());
             boolean isSelected = fable.id().equals(selectedFableId);
-            boolean hov = mouseX >= x + 2 && mouseX < x + w - 2 && mouseY >= iy && mouseY < iy + itemH - 2;
+            boolean hov = mouseX >= cardX && mouseX < cardX + cardW && mouseY >= iy && mouseY < iy + itemH;
 
-            int bg = isSelected ? 0xFF1A384A : (isUnlocked ? (hov ? 0xFF162B38 : 0xFF0B1B24) : (hov ? 0xFF16191D : 0xFF0C0E10));
-            int border = isSelected ? 0xFFFFFFFF : (isUnlocked ? 0xFFFFD700 : (hov ? 0xFF00E5FF : 0xFF243B4A));
+            int bg = isSelected ? 0x4000E5FF : (hov ? 0x2200E5FF : (isUnlocked ? 0x0C00E5FF : 0x0600E5FF));
+            int border = isSelected ? 0xFF00E5FF : (hov ? 0x8800E5FF : (isUnlocked ? 0x3500E5FF : 0x2000E5FF));
 
-            g.fill(x + 2, iy, x + w - 2, iy + itemH - 2, bg);
-            drawBorder(g, x + 2, iy, w - 4, itemH - 2, border);
+            g.fill(cardX, iy, cardX + cardW, iy + itemH, bg);
+            g.renderOutline(cardX, iy, cardW, itemH, border);
 
-            int iconBoxW = 24;
-            int iconBg = isUnlocked ? 0xFF241C06 : 0xFF121416;
-            g.fill(x + 4, iy + 2, x + 4 + iconBoxW, iy + itemH - 4, iconBg);
-            drawBorder(g, x + 4, iy + 2, iconBoxW, itemH - 6, isUnlocked ? 0xFFFFD700 : 0xFF354450);
-            g.drawCenteredString(font, Component.literal(fable.icon()), x + 4 + iconBoxW / 2, iy + 9, isUnlocked ? 0xFFFFD700 : 0xFF778899);
+            if (isSelected) {
+                // Left cyan neon indicator bar
+                g.fill(cardX, iy, cardX + 3, iy + itemH, 0xFF00E5FF);
+            }
 
-            int titleX = x + 34;
-            int titleCol = isUnlocked ? fable.grade().hexColor() : 0xFF888888;
-            g.drawString(font, fable.getTitleComponent().copy().withStyle(ChatFormatting.BOLD), titleX, iy + 4, titleCol);
+            // Icon Badge
+            int iconBoxW = 26;
+            int iconBoxH = 30;
+            int iconX = cardX + 5;
+            int iconY = iy + 6;
+            int iconBg = isUnlocked ? 0x25FFD700 : 0x1500E5FF;
+            int iconBorder = isUnlocked ? 0x88FFD700 : 0x3000E5FF;
+            g.fill(iconX, iconY, iconX + iconBoxW, iconY + iconBoxH, iconBg);
+            g.renderOutline(iconX, iconY, iconBoxW, iconBoxH, iconBorder);
+            g.drawCenteredString(font, fable.icon(), iconX + iconBoxW / 2, iconY + 10, isUnlocked ? 0xFFFFD700 : 0xFF607080);
 
-            Component statusComp = isUnlocked ? Component.translatable("awakening_system.fables_screen.unlocked") : Component.translatable("awakening_system.fables_screen.locked");
+            // Title & Information
+            int titleX = cardX + 36;
+            int titleCol = isUnlocked ? fable.grade().hexColor() : 0xFFFFFFFF;
+            Component titleComp = ModernGuiHelper.manhwa(fable.getTitleComponent());
+            drawTruncatedString(g, (isUnlocked ? "§l" : "") + titleComp.getString(), titleX, iy + 8, cardW - 44, titleCol);
+
+            Component statusComp = isUnlocked
+                    ? Component.translatable("awakening_system.fables_screen.unlocked")
+                    : Component.translatable("awakening_system.fables_screen.locked");
             Component weightComp = Component.translatable("awakening_system.fables_screen.weight", fable.weight());
-            Component firstComp = fable.isWorldFirst() ? Component.translatable("awakening_system.fables_screen.world_first_badge") : Component.empty();
-            Component itemSub = statusComp.copy().append(Component.literal(" ")).append(weightComp).append(firstComp);
-            g.drawString(font, itemSub, titleX, iy + 17, 0xFFCCE3EC);
+            String firstStr = fable.isWorldFirst() ? Component.translatable("awakening_system.fables_screen.world_first_badge").getString() : "";
+            drawTruncatedString(g, statusComp.getString() + " " + weightComp.getString() + firstStr, titleX, iy + 24, cardW - 44, isUnlocked ? 0xFFFFFFFF : 0xFF8AAAB8);
         }
 
         g.disableScissor();
 
-        if (fables.size() > maxVisible) {
-            int sbX = x + w - 5;
-            int sbH = h - 4;
-            int thumbH = Math.max(16, (int) ((float) maxVisible / fables.size() * sbH));
-            int thumbY = y + 2 + (int) ((float) scrollOffset / maxScroll * (sbH - thumbH));
-            g.fill(sbX, y + 2, sbX + 3, y + h - 2, 0xFF0D1C26);
-            g.fill(sbX, thumbY, sbX + 3, thumbY + thumbH, 0xFF00E5FF);
+        // Sleek Scrollbar
+        if (fables.size() > visibleRows) {
+            int sbX = x + w - 4;
+            int sbH = h - 6;
+            int thumbH = Math.max(14, (int) ((float) visibleRows / fables.size() * sbH));
+            int thumbY = y + 3 + (int) ((float) scrollOffset / maxScroll * (sbH - thumbH));
+            g.fill(sbX, y + 3, sbX + 2, y + 3 + sbH, 0x2500E5FF);
+            g.fill(sbX, thumbY, sbX + 2, thumbY + thumbH, 0xCC00E5FF);
         }
     }
 
     private void renderFableDetail(GuiGraphics g, SystemData data, int x, int y, int w, int h) {
-        g.fill(x, y, x + w, y + h, 0xF5060E16);
-        drawBorder(g, x, y, w, h, 0xFF1D3B4E);
-        g.fill(x, y, x + w, y + 2, 0xFFFFD700);
+        g.fill(x, y, x + w, y + h, 0x0A00E5FF);
+        g.renderOutline(x, y, w, h, 0x4400E5FF);
 
         FableDefinitions.Fable fable = FableDefinitions.get(selectedFableId);
         if (fable == null) {
-            g.drawCenteredString(font, Component.translatable("awakening_system.fables_screen.empty_title").withStyle(ChatFormatting.GOLD, ChatFormatting.BOLD), x + w / 2, y + 8, 0xFFFFD700);
-            g.drawCenteredString(font, Component.translatable("awakening_system.fables_screen.empty_desc1"), x + w / 2, y + h / 2 - 8, 0xFF888888);
-            g.drawCenteredString(font, Component.translatable("awakening_system.fables_screen.empty_desc2"), x + w / 2, y + h / 2 + 4, 0xFF555555);
+            g.drawCenteredString(font, Component.translatable("awakening_system.fables_screen.empty_title").getString(), x + w / 2, y + 16, 0xFFFFD700);
+            g.drawCenteredString(font, Component.translatable("awakening_system.fables_screen.empty_desc1").getString(), x + w / 2, y + h / 2 - 8, 0xFF888888);
+            g.drawCenteredString(font, Component.translatable("awakening_system.fables_screen.empty_desc2").getString(), x + w / 2, y + h / 2 + 4, 0xFF555555);
             return;
         }
 
+        // Top accent line matching fable grade
+        g.fill(x + 1, y + 1, x + w - 1, y + 3, fable.grade().hexColor());
+
         boolean isUnlocked = data != null && data.unlockedFables().contains(fable.id());
-        int innerW = w - 16;
+        int innerW = w - 18;
         int curY = y + 8;
 
-        Component gradeBadge = Component.translatable("awakening_system.fables_screen.grade_badge", fable.grade().getDisplayName()).withStyle(ChatFormatting.BOLD);
-        g.drawString(font, gradeBadge, x + 8, curY, fable.grade().hexColor());
-        curY += 12;
+        // Grade Badge
+        Component gradeBadge = ModernGuiHelper.manhwa(Component.translatable("awakening_system.fables_screen.grade_badge", fable.grade().getDisplayName().getString().toUpperCase()));
+        g.drawString(font, gradeBadge, x + 8, curY, fable.grade().hexColor(), false);
+        curY += 14;
 
-        List<FormattedCharSequence> titleLines = font.split(fable.getTitleComponent().copy().withStyle(ChatFormatting.BOLD), innerW);
+        // Prominent Fable Title (Bold with colored grade accent)
+        String titleStr = "§f§l" + fable.getTitleComponent().getString();
+        List<FormattedCharSequence> titleLines = font.split(Component.literal(titleStr), innerW);
         for (FormattedCharSequence tl : titleLines) {
-            g.drawString(font, tl, x + 8, curY, 0xFFFFFFFF);
-            curY += 10;
+            g.drawString(font, tl, x + 8, curY, 0xFFFFFFFF, false);
+            curY += 12;
         }
         curY += 3;
 
-        g.drawString(font, Component.translatable("awakening_system.fables_screen.weight_detail", fable.weight()), x + 8, curY, 0xFFFFD700);
+        // Narrative Weight
+        Component weightDetail = Component.translatable("awakening_system.fables_screen.weight_detail", fable.weight());
+        g.drawString(font, weightDetail.getString(), x + 8, curY, 0xFFFFD700, false);
+        curY += 14;
+
+        // World First Pill
+        if (fable.isWorldFirst()) {
+            g.fill(x + 6, curY, x + w - 6, curY + 24, 0x20FFD700);
+            g.renderOutline(x + 6, curY, w - 12, 24, 0x88FFD700);
+            Component wfTitle = Component.translatable("awakening_system.fables_screen.world_first_title");
+            Component wfDesc = Component.translatable("awakening_system.fables_screen.world_first_desc");
+            g.drawString(font, wfTitle.getString(), x + 10, curY + 4, 0xFFFFD700, false);
+            g.drawString(font, wfDesc.getString(), x + 10, curY + 14, 0xFFCCE3EC, false);
+            curY += 28;
+        }
+
+        // Divider
+        g.fill(x + 8, curY, x + w - 8, curY + 1, 0x3000E5FF);
+        curY += 7;
+
+        // Story Header
+        Component recHead = Component.translatable("awakening_system.fables_screen.recorded_story");
+        g.drawString(font, recHead.getString(), x + 8, curY, 0xFF70E8FF, false);
         curY += 12;
 
-        if (fable.isWorldFirst()) {
-            g.fill(x + 6, curY, x + w - 6, curY + 22, 0x802B1E05);
-            drawBorder(g, x + 6, curY, w - 12, 22, 0xFFFFD700);
-            g.drawString(font, Component.translatable("awakening_system.fables_screen.world_first_title"), x + 10, curY + 3, 0xFFFFD700);
-            g.drawString(font, Component.translatable("awakening_system.fables_screen.world_first_desc"), x + 10, curY + 12, 0xFFDDEEFF);
-            curY += 26;
-        }
-
-        g.fill(x + 8, curY, x + w - 8, curY + 1, 0xFF1D3B4E);
-        curY += 6;
-
-        g.drawString(font, Component.translatable("awakening_system.fables_screen.recorded_story"), x + 8, curY, 0xFF70E8FF);
-        curY += 10;
-
+        // Description lines
+        int stateBoxY = y + h - 26;
+        int resH = 44;
+        int resY = stateBoxY - resH - 6;
+        int maxLines = Math.max(1, (resY - 4 - curY) / 10);
         List<FormattedCharSequence> descLines = font.split(fable.getDescriptionComponent(), innerW);
-        for (int i = 0; i < Math.min(6, descLines.size()); i++) {
-            g.drawString(font, descLines.get(i), x + 8, curY, 0xFFCCE3EC);
+        for (int i = 0; i < Math.min(maxLines, descLines.size()); i++) {
+            g.drawString(font, descLines.get(i), x + 8, curY, 0xFFEAF5FA, false);
             curY += 10;
         }
-        curY += 4;
 
-        int stateBoxY = y + h - 26;
-        int stateBg = isUnlocked ? 0xFF162D1D : 0xFF241414;
-        int stateBorder = isUnlocked ? 0xFF50FA7B : 0xFF663333;
-        g.fill(x + 8, stateBoxY, x + w - 8, stateBoxY + 20, stateBg);
-        drawBorder(g, x + 8, stateBoxY, w - 16, 20, stateBorder);
+        // Narrative & Soul Resonance Card (Fills empty void with rich cosmic lore)
+        g.fill(x + 6, resY, x + w - 6, resY + resH, 0x1800E5FF);
+        g.renderOutline(x + 6, resY, w - 12, resH, (fable.grade().hexColor() & 0x00FFFFFF) | 0x88000000);
+        Component resTitle = Component.translatable("awakening_system.fables_screen.resonance");
+        Component resAuth = Component.translatable("awakening_system.fables_screen.cosmic_authority", fable.weight());
+        g.drawString(font, resTitle.getString(), x + 10, resY + 5, 0xFFFFD700, false);
+        g.drawString(font, resAuth.getString(), x + 10, resY + 16, 0xFF70E8FF, false);
+        String soulNote = isUnlocked
+                ? Component.translatable("awakening_system.fables_screen.soul_engraved").getString()
+                : Component.translatable("awakening_system.fables_screen.soul_locked").getString();
+        g.drawString(font, soulNote, x + 10, resY + 28, isUnlocked ? 0xFF50FA7B : 0xFF9AB2BF, false);
 
-        Component stateLabel = isUnlocked ? Component.translatable("awakening_system.fables_screen.soul_engraved") : Component.translatable("awakening_system.fables_screen.unwritten");
-        int stateCol = isUnlocked ? 0xFF50FA7B : 0xFFFF7666;
-        g.drawCenteredString(font, stateLabel.copy().withStyle(ChatFormatting.BOLD), x + w / 2, stateBoxY + 6, stateCol);
+        // Bottom Status Capsule
+        int stateBg = isUnlocked ? 0x3050FA7B : 0x20FFAA00;
+        int stateBorder = isUnlocked ? 0xFF50FA7B : 0xFFFFAA00;
+        g.fill(x + 8, stateBoxY, x + w - 8, stateBoxY + 22, stateBg);
+        g.renderOutline(x + 8, stateBoxY, w - 16, 22, stateBorder);
+
+        Component stateLabel = isUnlocked
+                ? Component.translatable("awakening_system.fables_screen.soul_engraved")
+                : Component.translatable("awakening_system.fables_screen.unwritten");
+        int stateCol = isUnlocked ? 0xFF50FA7B : 0xFFFFD866;
+        g.drawCenteredString(font, ModernGuiHelper.manhwa(stateLabel), x + w / 2, stateBoxY + 7, stateCol);
     }
 
     @Override
     public boolean mouseClicked(double mouseX, double mouseY, int button) {
         mouseX = transformMouseX(mouseX);
         mouseY = transformMouseY(mouseY);
-        int panelW = 540;
-        int panelH = 340;
-        int left = (width - panelW) / 2;
-        int top = (height - panelH) / 2;
+        int left = (width - PANEL_W) / 2;
+        int top = (height - PANEL_H) / 2;
 
-        int closeBtnW = 60;
-        int closeBtnH = 18;
-        int closeBtnX = left + panelW - closeBtnW - 10;
-        int closeBtnY = top + 8;
-        if (mouseX >= closeBtnX && mouseX < closeBtnX + closeBtnW && mouseY >= closeBtnY && mouseY < closeBtnY + closeBtnH) {
+        // Close button [✕]
+        int closeX = left + PANEL_W - 32;
+        int closeY = top + 14;
+        int closeW = 16;
+        int closeH = 16;
+        if (mouseX >= closeX && mouseX < closeX + closeW && mouseY >= closeY && mouseY < closeY + closeH) {
             playClickSound();
             onClose();
             return true;
         }
 
-        int filterY = top + 36;
-        int filterW = panelW - 24;
-        FableDefinitions.Grade[] filterGrades = {null, FableDefinitions.Grade.HISTORICAL, FableDefinitions.Grade.LEGENDARY, FableDefinitions.Grade.SEMI_MYTH, FableDefinitions.Grade.MYTH, FableDefinitions.Grade.GIANT_STORY};
-        int btnW = (filterW - (filterGrades.length - 1) * 4) / filterGrades.length;
+        // Filter Bar Tabs
+        int filterY = top + 34;
+        int filterW = PANEL_W - 32;
+        FableDefinitions.Grade[] filterGrades = {
+                null,
+                FableDefinitions.Grade.HISTORICAL,
+                FableDefinitions.Grade.LEGENDARY,
+                FableDefinitions.Grade.SEMI_MYTH,
+                FableDefinitions.Grade.MYTH,
+                FableDefinitions.Grade.GIANT_STORY
+        };
+        int spacing = 4;
+        int btnW = (filterW - (filterGrades.length - 1) * spacing) / filterGrades.length;
 
         for (int i = 0; i < filterGrades.length; i++) {
-            int bx = left + 12 + i * (btnW + 4);
-            if (mouseX >= bx && mouseX < bx + btnW && mouseY >= filterY && mouseY < filterY + 16) {
+            int bx = left + 16 + i * (btnW + spacing);
+            if (mouseX >= bx && mouseX < bx + btnW && mouseY >= filterY && mouseY < filterY + 18) {
                 playClickSound();
                 selectedGradeFilter = filterGrades[i];
                 scrollOffset = 0;
@@ -369,19 +477,23 @@ public final class FablesScreen extends Screen {
             }
         }
 
-        int listX = left + 12;
-        int listY = top + 58;
-        int listW = panelW - 228;
-        int listH = panelH - 68;
+        // Fable List click
+        int listX = left + 16;
+        int listY = top + 56;
+        int listW = 310;
+        int listH = PANEL_H - 68;
 
         if (mouseX >= listX && mouseX < listX + listW && mouseY >= listY && mouseY < listY + listH) {
             List<FableDefinitions.Fable> fables = getFilteredFables();
-            int itemH = 34;
-            for (int i = 0; i < fables.size(); i++) {
-                int iy = listY + 2 + (i - scrollOffset) * itemH;
-                if (mouseY >= iy && mouseY < iy + itemH - 2) {
+            int itemH = 42;
+            int itemSpacing = 4;
+            int visibleRows = (listH - 6) / (itemH + itemSpacing);
+
+            for (int i = 0; i < visibleRows && (i + scrollOffset) < fables.size(); i++) {
+                int iy = listY + 3 + i * (itemH + itemSpacing);
+                if (mouseY >= iy && mouseY < iy + itemH) {
                     playClickSound();
-                    selectedFableId = fables.get(i).id();
+                    selectedFableId = fables.get(i + scrollOffset).id();
                     return true;
                 }
             }
@@ -394,19 +506,19 @@ public final class FablesScreen extends Screen {
     public boolean mouseScrolled(double mouseX, double mouseY, double scrollX, double scrollY) {
         mouseX = transformMouseX(mouseX);
         mouseY = transformMouseY(mouseY);
-        int panelW = 540;
-        int panelH = 340;
-        int left = (width - panelW) / 2;
-        int top = (height - panelH) / 2;
-        int listX = left + 12;
-        int listY = top + 58;
-        int listW = panelW - 228;
-        int listH = panelH - 68;
+        int left = (width - PANEL_W) / 2;
+        int top = (height - PANEL_H) / 2;
+        int listX = left + 16;
+        int listY = top + 56;
+        int listW = 310;
+        int listH = PANEL_H - 68;
 
         if (mouseX >= listX && mouseX < listX + listW && mouseY >= listY && mouseY < listY + listH) {
             List<FableDefinitions.Fable> fables = getFilteredFables();
-            int maxVisible = listH / 34;
-            int maxScroll = Math.max(0, fables.size() - maxVisible);
+            int itemH = 42;
+            int spacing = 4;
+            int visibleRows = (listH - 6) / (itemH + spacing);
+            int maxScroll = Math.max(0, fables.size() - visibleRows);
             if (scrollY < 0) {
                 scrollOffset = Math.min(maxScroll, scrollOffset + 1);
             } else if (scrollY > 0) {
@@ -418,10 +530,12 @@ public final class FablesScreen extends Screen {
         return super.mouseScrolled(mouseX, mouseY, scrollX, scrollY);
     }
 
-    private void drawBorder(GuiGraphics g, int x, int y, int w, int h, int color) {
-        g.fill(x, y, x + w, y + 1, color);
-        g.fill(x, y + h - 1, x + w, y + h, color);
-        g.fill(x, y + 1, x + 1, y + h - 1, color);
-        g.fill(x + w - 1, y + 1, x + w, y + h - 1, color);
+    private void drawTruncatedString(GuiGraphics g, String text, int x, int y, int maxW, int color) {
+        if (font.width(text) <= maxW) {
+            g.drawString(font, text, x, y, color, false);
+        } else {
+            String trimmed = font.plainSubstrByWidth(text, Math.max(10, maxW - font.width("..."))) + "...";
+            g.drawString(font, trimmed, x, y, color, false);
+        }
     }
 }

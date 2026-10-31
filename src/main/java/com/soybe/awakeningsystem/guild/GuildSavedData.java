@@ -34,11 +34,13 @@ public class GuildSavedData extends SavedData {
     public static final String DATA_NAME = "awakening_guild_data";
 
     public record PendingInvite(String guildId, UUID inviterUuid, long expiresAt) {}
+    public record PendingTpa(UUID requesterUuid, String requesterName, UUID targetUuid, long expiresAt) {}
 
     private final Map<String, Guild> guildsById = new HashMap<>();
     private final Map<String, String> guildNameToId = new HashMap<>();
     private final Map<UUID, String> playerToGuildId = new HashMap<>();
     private final Map<UUID, PendingInvite> pendingInvites = new ConcurrentHashMap<>();
+    private final Map<UUID, PendingTpa> pendingTpaByTarget = new ConcurrentHashMap<>();
 
     public GuildSavedData() {}
 
@@ -662,18 +664,69 @@ public class GuildSavedData extends SavedData {
             return false;
         }
 
-        if (guild.getMoraVault() < perk.getCostMora()) {
-            leader.sendSystemMessage(Component.translatable("guild.msg.perk_mora_needed", perk.getCostMora()));
+        long cost = perk.getCostCoins();
+        SystemData leaderData = leader.getData(AwakeningSystemMod.PLAYER_SYSTEM);
+        long vaultCoins = guild.getCoinVault();
+        long playerCoins = leaderData != null ? leaderData.coins() : 0;
+        long totalCoins = vaultCoins + playerCoins;
+
+        long vaultMora = guild.getMoraVault();
+        long playerMora = leaderData != null ? leaderData.mora() : 0;
+        long totalMora = vaultMora + playerMora;
+
+        boolean paid = false;
+
+        // 1. Pay with Guild Vault Monedas del Sistema
+        if (vaultCoins >= cost) {
+            guild.withdrawCoins(cost);
+            paid = true;
+        } else if (totalCoins >= cost && leaderData != null) {
+            // Combine vault coins + leader personal coins
+            long remainder = cost - vaultCoins;
+            if (vaultCoins > 0) {
+                guild.withdrawCoins(vaultCoins);
+            }
+            leaderData.spendCoins((int) remainder);
+            AwakeningSystemMod.sync(leader);
+            GuildMember member = guild.getMember(leader.getUUID());
+            if (member != null) {
+                member.addContribution((int) (remainder * 10));
+            }
+            paid = true;
+        } else if (vaultMora >= cost) {
+            // Fallback: Guild Vault Mora
+            guild.withdrawMora(cost);
+            paid = true;
+        } else if (totalMora >= cost && leaderData != null) {
+            // Fallback: Combine vault mora + leader personal mora
+            long remainder = cost - vaultMora;
+            if (vaultMora > 0) {
+                guild.withdrawMora(vaultMora);
+            }
+            leaderData.spendMora((int) remainder);
+            AwakeningSystemMod.sync(leader);
+            GuildMember member = guild.getMember(leader.getUUID());
+            if (member != null) {
+                member.addContribution((int) remainder);
+            }
+            paid = true;
+        }
+
+        if (!paid) {
+            leader.sendSystemMessage(Component.translatable("guild.msg.perk_coins_needed", String.format(Locale.US, "%,d", cost)));
+            leader.level().playSound(null, leader.getX(), leader.getY(), leader.getZ(),
+                    SoundEvents.VILLAGER_NO, SoundSource.PLAYERS, 0.8F, 1.0F);
             return false;
         }
 
-        if (guild.unlockPerk(perk)) {
-            setDirty();
-            broadcastToGuild(guild, leader.server, Component.translatable("guild.msg.perk_unlocked_broadcast", perk.getTitle(), perk.getDescription()));
-            syncAllGuildMembers(guild, leader.server);
-            return true;
-        }
-        return false;
+        guild.getUnlockedPerks().add(perk.getId());
+        setDirty();
+        broadcastToGuild(guild, leader.server, Component.translatable("guild.msg.perk_unlocked_broadcast", perk.getTitleComponent(), perk.getDescriptionComponent()));
+        syncAllGuildMembers(guild, leader.server);
+
+        leader.level().playSound(null, leader.getX(), leader.getY(), leader.getZ(),
+                SoundEvents.PLAYER_LEVELUP, SoundSource.PLAYERS, 1.0F, 1.2F);
+        return true;
     }
 
     public boolean setGuildHq(ServerPlayer leader) {
@@ -719,6 +772,158 @@ public class GuildSavedData extends SavedData {
                 SoundEvents.ENDERMAN_TELEPORT, SoundSource.PLAYERS, 1.0F, 1.0F);
         player.sendSystemMessage(Component.translatable("guild.msg.teleport_hq_success"));
         return true;
+    }
+
+    public boolean requestTpa(ServerPlayer requester, ServerPlayer target) {
+        if (requester == null || target == null) return false;
+        if (requester.getUUID().equals(target.getUUID())) {
+            requester.sendSystemMessage(Component.translatable("guild.msg.tpa_self"));
+            return false;
+        }
+
+        Guild reqGuild = getGuildByPlayer(requester.getUUID());
+        if (reqGuild == null) {
+            requester.sendSystemMessage(Component.translatable("guild.msg.tpa_not_in_guild"));
+            return false;
+        }
+
+        Guild tgtGuild = getGuildByPlayer(target.getUUID());
+        if (tgtGuild == null) {
+            requester.sendSystemMessage(Component.translatable("guild.msg.tpa_target_not_in_guild"));
+            return false;
+        }
+
+        boolean isSameGuild = reqGuild.getId().equals(tgtGuild.getId());
+        boolean isAllied = reqGuild.isAlliedWith(tgtGuild.getId()) && tgtGuild.isAlliedWith(reqGuild.getId());
+
+        if (!isSameGuild && !isAllied) {
+            requester.sendSystemMessage(Component.translatable("guild.msg.tpa_not_allied"));
+            return false;
+        }
+
+        PendingTpa existing = pendingTpaByTarget.get(target.getUUID());
+        if (existing != null && existing.requesterUuid().equals(requester.getUUID()) && System.currentTimeMillis() < existing.expiresAt()) {
+            requester.sendSystemMessage(Component.translatable("guild.msg.tpa_already_pending"));
+            return false;
+        }
+
+        long expiresAt = System.currentTimeMillis() + 60000L;
+        pendingTpaByTarget.put(target.getUUID(), new PendingTpa(requester.getUUID(), requester.getScoreboardName(), target.getUUID(), expiresAt));
+
+        requester.sendSystemMessage(Component.translatable("guild.msg.tpa_sent", target.getScoreboardName()));
+
+        Component tpaMsg = Component.translatable("guild.msg.tpa_received", requester.getScoreboardName()).append("\n")
+                .append(Component.translatable("guild.msg.tpa_btn_accept").withStyle(style -> style
+                        .withColor(ChatFormatting.GREEN)
+                        .withBold(true)
+                        .withClickEvent(new ClickEvent(ClickEvent.Action.RUN_COMMAND, "/guild tpaccept " + requester.getScoreboardName()))
+                        .withHoverEvent(new HoverEvent(HoverEvent.Action.SHOW_TEXT, Component.translatable("guild.msg.tpa_hover_accept")))))
+                .append(Component.literal("   "))
+                .append(Component.translatable("guild.msg.tpa_btn_decline").withStyle(style -> style
+                        .withColor(ChatFormatting.RED)
+                        .withBold(true)
+                        .withClickEvent(new ClickEvent(ClickEvent.Action.RUN_COMMAND, "/guild tpadeny " + requester.getScoreboardName()))
+                        .withHoverEvent(new HoverEvent(HoverEvent.Action.SHOW_TEXT, Component.translatable("guild.msg.tpa_hover_decline")))))
+                .append(Component.literal("   "))
+                .append(Component.translatable("guild.msg.tpa_expires"));
+
+        target.sendSystemMessage(tpaMsg);
+        target.level().playSound(null, target.getX(), target.getY(), target.getZ(),
+                SoundEvents.EXPERIENCE_ORB_PICKUP, SoundSource.PLAYERS, 1.0F, 1.2F);
+        return true;
+    }
+
+    public boolean acceptTpa(ServerPlayer target) {
+        return acceptTpa(target, null);
+    }
+
+    public boolean acceptTpa(ServerPlayer target, String requesterFilter) {
+        if (target == null) return false;
+        PendingTpa request = pendingTpaByTarget.get(target.getUUID());
+        if (request == null || System.currentTimeMillis() > request.expiresAt()) {
+            pendingTpaByTarget.remove(target.getUUID());
+            target.sendSystemMessage(Component.translatable("guild.msg.tpa_no_pending"));
+            return false;
+        }
+
+        if (requesterFilter != null && !requesterFilter.isBlank() && !request.requesterName().equalsIgnoreCase(requesterFilter)) {
+            target.sendSystemMessage(Component.translatable("guild.msg.tpa_mismatch"));
+            return false;
+        }
+
+        pendingTpaByTarget.remove(target.getUUID());
+        ServerPlayer requester = target.server.getPlayerList().getPlayer(request.requesterUuid());
+        if (requester == null || requester.isRemoved()) {
+            target.sendSystemMessage(Component.translatable("guild.msg.tpa_requester_offline"));
+            return false;
+        }
+
+        Guild reqGuild = getGuildByPlayer(requester.getUUID());
+        Guild tgtGuild = getGuildByPlayer(target.getUUID());
+        if (reqGuild == null || tgtGuild == null || (!reqGuild.getId().equals(tgtGuild.getId()) && !reqGuild.isAlliedWith(tgtGuild.getId()))) {
+            target.sendSystemMessage(Component.translatable("guild.msg.tpa_alliance_invalid"));
+            requester.sendSystemMessage(Component.translatable("guild.msg.tpa_alliance_invalid"));
+            return false;
+        }
+
+        ServerLevel targetLevel = target.serverLevel();
+        requester.teleportTo(targetLevel, target.getX(), target.getY(), target.getZ(), target.getYRot(), target.getXRot());
+
+        targetLevel.playSound(null, requester.getX(), requester.getY(), requester.getZ(),
+                SoundEvents.ENDERMAN_TELEPORT, SoundSource.PLAYERS, 1.0F, 1.0F);
+        targetLevel.playSound(null, target.getX(), target.getY(), target.getZ(),
+                SoundEvents.ENDERMAN_TELEPORT, SoundSource.PLAYERS, 1.0F, 1.0F);
+
+        requester.sendSystemMessage(Component.translatable("guild.msg.tpa_success_requester", target.getScoreboardName()));
+        target.sendSystemMessage(Component.translatable("guild.msg.tpa_success_target", requester.getScoreboardName()));
+        return true;
+    }
+
+    public boolean declineTpa(ServerPlayer target) {
+        return declineTpa(target, null);
+    }
+
+    public boolean declineTpa(ServerPlayer target, String requesterFilter) {
+        if (target == null) return false;
+        PendingTpa request = pendingTpaByTarget.get(target.getUUID());
+        if (request == null || System.currentTimeMillis() > request.expiresAt()) {
+            pendingTpaByTarget.remove(target.getUUID());
+            target.sendSystemMessage(Component.translatable("guild.msg.tpa_no_pending"));
+            return false;
+        }
+
+        if (requesterFilter != null && !requesterFilter.isBlank() && !request.requesterName().equalsIgnoreCase(requesterFilter)) {
+            target.sendSystemMessage(Component.translatable("guild.msg.tpa_mismatch"));
+            return false;
+        }
+
+        pendingTpaByTarget.remove(target.getUUID());
+        target.sendSystemMessage(Component.translatable("guild.msg.tpa_declined_target", request.requesterName()));
+
+        ServerPlayer requester = target.server.getPlayerList().getPlayer(request.requesterUuid());
+        if (requester != null && !requester.isRemoved()) {
+            requester.sendSystemMessage(Component.translatable("guild.msg.tpa_declined_requester", target.getScoreboardName()));
+        }
+        return true;
+    }
+
+    public boolean cancelTpa(ServerPlayer requester) {
+        if (requester == null) return false;
+        boolean found = false;
+        for (Map.Entry<UUID, PendingTpa> entry : pendingTpaByTarget.entrySet()) {
+            if (entry.getValue().requesterUuid().equals(requester.getUUID())) {
+                pendingTpaByTarget.remove(entry.getKey());
+                found = true;
+                break;
+            }
+        }
+        if (found) {
+            requester.sendSystemMessage(Component.translatable("guild.msg.tpa_cancelled"));
+            return true;
+        } else {
+            requester.sendSystemMessage(Component.translatable("guild.msg.tpa_no_active_sent"));
+            return false;
+        }
     }
 
     public void sendGuildChat(ServerPlayer player, String message) {

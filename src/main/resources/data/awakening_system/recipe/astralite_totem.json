@@ -1,0 +1,24 @@
+{
+    "key":  {
+                "C":  {
+                          "item":  "minecraft:amethyst_shard"
+                      },
+                "T":  {
+                          "tag":  "awakening_system:world_totems"
+                      },
+                "A":  {
+                          "item":  "awakening_system:astralite_ingot"
+                      }
+            },
+    "category":  "equipment",
+    "pattern":  [
+                    "ACA",
+                    "CTC",
+                    "ACA"
+                ],
+    "result":  {
+                   "count":  1,
+                   "id":  "awakening_system:astralite_totem"
+               },
+    "type":  "minecraft:crafting_shaped"
+}

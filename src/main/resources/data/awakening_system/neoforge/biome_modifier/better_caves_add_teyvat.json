@@ -1,0 +1,9 @@
+{
+  "type": "neoforge:add_carvers",
+  "biomes": "#awakening_system:is_teyvat",
+  "carvers": [
+    "bettercaves:better_cave",
+    "bettercaves:surface_cave"
+  ],
+  "step": "air"
+}

@@ -1,5 +1,6 @@
 package com.soybe.awakeningsystem;
 
+import com.soybe.awakeningsystem.client.gui.ModernGuiHelper;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.gui.screens.Screen;
@@ -30,6 +31,13 @@ public final class GuildReceptionScreen extends Screen {
     @Override
     public boolean isPauseScreen() {
         return false;
+    }
+
+    @Override
+    public void onClose() {
+        if (this.minecraft != null) {
+            this.minecraft.setScreen(new SystemScreen());
+        }
     }
 
     @Override
@@ -84,25 +92,19 @@ public final class GuildReceptionScreen extends Screen {
         int left = (this.width - guiW) / 2;
         int top = (this.height - guiH) / 2;
 
-        g.fill(left - 5, top - 5, left + guiW + 5, top + guiH + 5, 0xFF1C1107);
-        g.fill(left - 3, top - 3, left + guiW + 3, top + guiH + 3, 0xFF3D2510);
-        g.fill(left, top, left + guiW, top + guiH, 0xFF2A180B);
+        ModernGuiHelper.drawModernWindow(g, left, top, guiW, guiH, ModernGuiHelper.GuiTheme.SOLO_LEVELING);
 
-        g.fill(left + 6, top + 6, left + guiW - 6, top + guiH - 6, 0xFFFAF3E6);
-        g.fill(left + 8, top + 8, left + guiW - 8, top + guiH - 8, 0xFFF5EBD7);
-
-        g.fill(left + 12, top + 12, left + guiW - 12, top + 34, 0xFF8B2500);
-        drawScaledCenteredString(g, Component.translatable("awakening_system.reception.title"), left + guiW / 2, top + 16, guiW - 36, 0xFFFFD700);
-        drawScaledCenteredString(g, Component.translatable("awakening_system.reception.subtitle"), left + guiW / 2, top + 25, guiW - 36, 0xFFE0E0E0);
+        drawScaledCenteredString(g, Component.translatable("awakening_system.reception.title").copy().withStyle(net.minecraft.ChatFormatting.BOLD), left + guiW / 2, top + 10, guiW - 48, 0xFF70E8FF);
+        drawScaledCenteredString(g, Component.translatable("awakening_system.reception.subtitle"), left + guiW / 2, top + 22, guiW - 48, 0xFFFFD700);
 
         int cardX = left + 16;
-        int cardY = top + 42;
+        int cardY = top + 38;
         int cardW = guiW - 32;
-        int cardH = 82;
+        int cardH = 86;
 
-        g.fill(cardX, cardY, cardX + cardW, cardY + cardH, 0xFFEEDBB7);
-        g.fill(cardX, cardY, cardX + 4, cardY + cardH, 0xFFC29B58);
-        g.fill(cardX + cardW - 4, cardY, cardX + cardW, cardY + cardH, 0xFFC29B58);
+        g.fill(cardX, cardY, cardX + cardW, cardY + cardH, 0x400A1626);
+        g.renderOutline(cardX, cardY, cardW, cardH, 0x5500E5FF);
+        g.fill(cardX + 2, cardY, cardX + cardW - 2, cardY + 1, 0x8800E5FF);
 
         int sealColor = switch (payload.guildRank()) {
             case "F" -> 0xFF888888;
@@ -113,24 +115,26 @@ public final class GuildReceptionScreen extends Screen {
             case "A" -> 0xFFEE5522;
             default  -> 0xFFAA22CC;
         };
-        g.fill(cardX + 10, cardY + 10, cardX + 42, cardY + 42, sealColor);
-        g.drawCenteredString(this.font, "§l" + payload.guildRank(), cardX + 26, cardY + 22, 0xFFFFFFFF);
+        g.fill(cardX + 10, cardY + 10, cardX + 42, cardY + 42, (sealColor & 0x00FFFFFF) | 0x33000000);
+        g.renderOutline(cardX + 10, cardY + 10, 32, 32, sealColor);
+        g.drawCenteredString(this.font, "§l" + payload.guildRank(), cardX + 26, cardY + 22, sealColor);
 
-        g.drawString(this.font, Component.translatable("awakening_system.reception.record"), cardX + 48, cardY + 10, 0xFF880000, false);
-        g.drawString(this.font, Component.translatable("awakening_system.reception.current_rank", payload.guildRank()), cardX + 48, cardY + 22, 0xFF000000, false);
-        g.drawString(this.font, Component.translatable("awakening_system.reception.completed", payload.completedBounties()), cardX + 48, cardY + 34, 0xFF000000, false);
+        g.drawString(this.font, Component.translatable("awakening_system.reception.record"), cardX + 48, cardY + 10, 0xFFFFD866, false);
+        g.drawString(this.font, Component.translatable("awakening_system.reception.current_rank", payload.guildRank()), cardX + 48, cardY + 22, 0xFFFFFFFF, false);
+        g.drawString(this.font, Component.translatable("awakening_system.reception.completed", payload.completedBounties()), cardX + 48, cardY + 34, 0xFFB0E0E6, false);
 
         if (!payload.guildRank().equals("S")) {
             int need = payload.nextRankNeeded();
             int comp = payload.completedBounties();
             int remain = Math.max(0, need - comp);
-            drawScaledString(g, Component.translatable("awakening_system.reception.progress", payload.nextRankName(), comp, need, remain), cardX + 12, cardY + 50, cardW - 24, 0xFF333333, false);
+            drawScaledString(g, Component.translatable("awakening_system.reception.progress", payload.nextRankName(), comp, need, remain), cardX + 12, cardY + 52, cardW - 24, 0xFFE0E0E0, false);
 
-            g.fill(cardX + 12, cardY + 62, cardX + cardW - 12, cardY + 72, 0xFFCCCCCC);
+            g.fill(cardX + 12, cardY + 66, cardX + cardW - 12, cardY + 74, 0xFF081420);
+            g.renderOutline(cardX + 12, cardY + 66, cardW - 24, 8, 0x402D7691);
             int fillW = need > 0 ? Math.min(cardW - 24, (cardW - 24) * comp / need) : cardW - 24;
-            g.fill(cardX + 12, cardY + 62, cardX + 12 + fillW, cardY + 72, comp >= need ? 0xFF2ECC71 : 0xFFE5A823);
+            g.fill(cardX + 12, cardY + 66, cardX + 12 + fillW, cardY + 74, comp >= need ? 0xFF2ECC71 : 0xFF00E5FF);
         } else {
-            drawScaledCenteredString(g, Component.translatable("awakening_system.reception.rank_s_max"), cardX + cardW / 2, cardY + 58, cardW - 24, 0xFF886600);
+            drawScaledCenteredString(g, Component.translatable("awakening_system.reception.rank_s_max"), cardX + cardW / 2, cardY + 58, cardW - 24, 0xFFFFD700);
         }
 
         int btn1X = left + 16;
@@ -141,14 +145,16 @@ public final class GuildReceptionScreen extends Screen {
 
         if (payload.canPromote()) {
             boolean hov = mX >= btn1X && mX <= btn1X + btn1W && mY >= btn1Y && mY <= btn1Y + btn1H;
-            g.fill(btn1X, btn1Y, btn1X + btn1W, btn1Y + btn1H, hov ? 0xFF2ECC71 : 0xFF27AE60);
-            drawScaledCenteredString(g, Component.translatable("awakening_system.reception.btn_promote"), btn1X + btn1W / 2, btn1Y + 7, maxBtn1W, 0xFFFFFFFF);
+            g.fill(btn1X, btn1Y, btn1X + btn1W, btn1Y + btn1H, hov ? 0xDD2ECC71 : 0xAA1E7E34);
+            g.renderOutline(btn1X, btn1Y, btn1W, btn1H, hov ? 0xFFFFFFFF : 0xFF50FA7B);
+            drawScaledCenteredString(g, Component.translatable("awakening_system.reception.btn_promote").copy().withStyle(net.minecraft.ChatFormatting.BOLD), btn1X + btn1W / 2, btn1Y + 7, maxBtn1W, 0xFFFFFFFF);
         } else {
-            g.fill(btn1X, btn1Y, btn1X + btn1W, btn1Y + btn1H, 0xFF9E9E9E);
+            g.fill(btn1X, btn1Y, btn1X + btn1W, btn1Y + btn1H, 0x30102536);
+            g.renderOutline(btn1X, btn1Y, btn1W, btn1H, 0x402D7691);
             Component label = payload.guildRank().equals("S")
                     ? Component.translatable("awakening_system.reception.btn_max_rank")
                     : Component.translatable("awakening_system.reception.btn_locked");
-            drawScaledCenteredString(g, label, btn1X + btn1W / 2, btn1Y + 7, maxBtn1W, 0xFF333333);
+            drawScaledCenteredString(g, label, btn1X + btn1W / 2, btn1Y + 7, maxBtn1W, 0xFF888888);
         }
 
         int btn2X = left + 16;
@@ -159,18 +165,21 @@ public final class GuildReceptionScreen extends Screen {
 
         if (payload.canClaimBlessing()) {
             boolean hov = mX >= btn2X && mX <= btn2X + btn2W && mY >= btn2Y && mY <= btn2Y + btn2H;
-            g.fill(btn2X, btn2Y, btn2X + btn2W, btn2Y + btn2H, hov ? 0xFF3498DB : 0xFF2980B9);
-            drawScaledCenteredString(g, Component.translatable("awakening_system.reception.btn_blessing"), btn2X + btn2W / 2, btn2Y + 6, maxBtn2W, 0xFFFFFFFF);
+            g.fill(btn2X, btn2Y, btn2X + btn2W, btn2Y + btn2H, hov ? 0xDD2277AA : 0xAA144466);
+            g.renderOutline(btn2X, btn2Y, btn2W, btn2H, hov ? 0xFFFFFFFF : 0xFF00E5FF);
+            drawScaledCenteredString(g, Component.translatable("awakening_system.reception.btn_blessing").copy().withStyle(net.minecraft.ChatFormatting.BOLD), btn2X + btn2W / 2, btn2Y + 6, maxBtn2W, 0xFFFFFFFF);
         } else {
-            g.fill(btn2X, btn2Y, btn2X + btn2W, btn2Y + btn2H, 0xFFBDC3C7);
-            drawScaledCenteredString(g, Component.translatable("awakening_system.reception.btn_claimed"), btn2X + btn2W / 2, btn2Y + 6, maxBtn2W, 0xFF555555);
+            g.fill(btn2X, btn2Y, btn2X + btn2W, btn2Y + btn2H, 0x30102536);
+            g.renderOutline(btn2X, btn2Y, btn2W, btn2H, 0x302D7691);
+            drawScaledCenteredString(g, Component.translatable("awakening_system.reception.btn_claimed"), btn2X + btn2W / 2, btn2Y + 6, maxBtn2W, 0xFF666666);
         }
 
-        int closeX = left + guiW - 20;
-        int closeY = top + 14;
-        boolean hovClose = mX >= closeX && mX <= closeX + 12 && mY >= closeY && mY <= closeY + 12;
-        g.fill(closeX, closeY, closeX + 12, closeY + 12, hovClose ? 0xFFE74C3C : 0xFFC0392B);
-        g.drawCenteredString(this.font, "§f✕", closeX + 6, closeY + 2, 0xFFFFFFFF);
+        int closeX = left + guiW - 22;
+        int closeY = top + 10;
+        boolean hovClose = mX >= closeX && mX <= closeX + 14 && mY >= closeY && mY <= closeY + 14;
+        g.fill(closeX, closeY, closeX + 14, closeY + 14, hovClose ? 0x88FF4444 : 0x33000000);
+        g.renderOutline(closeX, closeY, 14, 14, hovClose ? 0xFFFF6666 : 0x5500E5FF);
+        g.drawCenteredString(this.font, "✕", closeX + 7, closeY + 3, hovClose ? 0xFFFFFFFF : 0xFF70E8FF);
 
         g.pose().popPose();
     }

@@ -1,0 +1,24 @@
+{
+    "key":  {
+                "T":  {
+                          "tag":  "awakening_system:world_totems"
+                      },
+                "R":  {
+                          "item":  "awakening_system:abyssal_resonant_crystal"
+                      },
+                "A":  {
+                          "item":  "awakening_system:abyssal_ingot"
+                      }
+            },
+    "category":  "equipment",
+    "pattern":  [
+                    "ARA",
+                    "RTR",
+                    "ARA"
+                ],
+    "result":  {
+                   "count":  1,
+                   "id":  "awakening_system:abyssal_resonant_totem"
+               },
+    "type":  "minecraft:crafting_shaped"
+}

@@ -36,6 +36,7 @@ public enum GuildPerk {
     }
     public String getIcon() { return icon; }
     public int getRequiredGuildLevel() { return requiredGuildLevel; }
+    public int getCostCoins() { return costMora; }
     public int getCostMora() { return costMora; }
 
     public static GuildPerk fromId(String id) {

@@ -6,12 +6,15 @@ import com.mojang.math.Axis;
 import com.soybe.awakeningsystem.AwakeningSystemMod;
 import com.soybe.awakeningsystem.block.RouletteAltarBlock;
 import com.soybe.awakeningsystem.block.entity.RouletteAltarBlockEntity;
-import net.minecraft.core.Direction;
+import net.minecraft.client.renderer.LevelRenderer;
+import net.minecraft.client.renderer.LightTexture;
 import net.minecraft.client.renderer.MultiBufferSource;
 import net.minecraft.client.renderer.RenderType;
 import net.minecraft.client.renderer.blockentity.BlockEntityRenderer;
 import net.minecraft.client.renderer.blockentity.BlockEntityRendererProvider;
 import net.minecraft.client.renderer.entity.ItemRenderer;
+import net.minecraft.core.BlockPos;
+import net.minecraft.core.Direction;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.util.Mth;
 import net.minecraft.world.item.ItemDisplayContext;
@@ -40,9 +43,24 @@ public class RouletteAltarRenderer implements BlockEntityRenderer<RouletteAltarB
         poseStack.translate(0.5D, 0.0D, 0.5D);
         poseStack.mulPose(Axis.YP.rotationDegrees(-facing.toYRot()));
 
+        // Calcular luz ambiental y superior para evitar que la oclusión del bloque o shaders lo oscurezcan
+        int light = packedLight;
+        if (blockEntity.getLevel() != null) {
+            BlockPos pos = blockEntity.getBlockPos();
+            int lightPos = LevelRenderer.getLightColor(blockEntity.getLevel(), pos);
+            int lightAbove = LevelRenderer.getLightColor(blockEntity.getLevel(), pos.above());
+            int lightAbove2 = LevelRenderer.getLightColor(blockEntity.getLevel(), pos.above(2));
+            light = Math.max(light, Math.max(lightPos, Math.max(lightAbove, lightAbove2)));
+        }
+
+        // El altar es una máquina arcade luminiscente (luz de bloque mín 12, luz de cielo mín 10)
+        int blockLight = Math.max(LightTexture.block(light), 12);
+        int skyLight = Math.max(LightTexture.sky(light), 10);
+        int effectiveLight = LightTexture.pack(blockLight, skyLight);
+
         VertexConsumer vertexConsumer = bufferSource.getBuffer(RenderType.entityCutoutNoCull(TEXTURE));
 
-        model.stand.render(poseStack, vertexConsumer, packedLight, packedOverlay, 0xFFFFFFFF);
+        model.stand.render(poseStack, vertexConsumer, effectiveLight, packedOverlay, 0xFFFFFFFF);
 
         float wheelAngle = Mth.lerp(partialTick, blockEntity.getPrevWheelAngle(), blockEntity.getWheelAngle());
         float needleAngle = 0.0F;
@@ -56,36 +74,37 @@ public class RouletteAltarRenderer implements BlockEntityRenderer<RouletteAltarB
             }
         }
         model.pointer.zRot = (float) Math.toRadians(needleAngle);
-        model.pointer.render(poseStack, vertexConsumer, packedLight, packedOverlay, 0xFFFFFFFF);
+        model.pointer.render(poseStack, vertexConsumer, effectiveLight, packedOverlay, 0xFFFFFFFF);
 
         poseStack.pushPose();
         poseStack.translate(0.0D, 1.25D, 0.05D);
         poseStack.mulPose(Axis.ZP.rotationDegrees(-wheelAngle));
 
-        model.wheel.render(poseStack, vertexConsumer, packedLight, packedOverlay, 0xFFFFFFFF);
+        model.wheel.render(poseStack, vertexConsumer, effectiveLight, packedOverlay, 0xFFFFFFFF);
 
         float r = 1.0F;
-        var matrix = poseStack.last().pose();
+        var pose = poseStack.last();
+        var matrix = pose.pose();
 
         float zFront = 0.02F;
         vertexConsumer.addVertex(matrix, -r, -r, zFront).setColor(255, 255, 255, 255).setUv(0.5F, 1.0F)
-                .setOverlay(packedOverlay).setLight(packedLight).setNormal(0, 0, 1);
+                .setOverlay(packedOverlay).setLight(effectiveLight).setNormal(pose, 0.0F, 0.0F, 1.0F);
         vertexConsumer.addVertex(matrix, r, -r, zFront).setColor(255, 255, 255, 255).setUv(1.0F, 1.0F)
-                .setOverlay(packedOverlay).setLight(packedLight).setNormal(0, 0, 1);
+                .setOverlay(packedOverlay).setLight(effectiveLight).setNormal(pose, 0.0F, 0.0F, 1.0F);
         vertexConsumer.addVertex(matrix, r, r, zFront).setColor(255, 255, 255, 255).setUv(1.0F, 0.5F)
-                .setOverlay(packedOverlay).setLight(packedLight).setNormal(0, 0, 1);
+                .setOverlay(packedOverlay).setLight(effectiveLight).setNormal(pose, 0.0F, 0.0F, 1.0F);
         vertexConsumer.addVertex(matrix, -r, r, zFront).setColor(255, 255, 255, 255).setUv(0.5F, 0.5F)
-                .setOverlay(packedOverlay).setLight(packedLight).setNormal(0, 0, 1);
+                .setOverlay(packedOverlay).setLight(effectiveLight).setNormal(pose, 0.0F, 0.0F, 1.0F);
 
         float zBack = -0.02F;
         vertexConsumer.addVertex(matrix, -r, r, zBack).setColor(255, 255, 255, 255).setUv(0.5F, 0.0F)
-                .setOverlay(packedOverlay).setLight(packedLight).setNormal(0, 0, -1);
+                .setOverlay(packedOverlay).setLight(effectiveLight).setNormal(pose, 0.0F, 0.0F, -1.0F);
         vertexConsumer.addVertex(matrix, r, r, zBack).setColor(255, 255, 255, 255).setUv(1.0F, 0.0F)
-                .setOverlay(packedOverlay).setLight(packedLight).setNormal(0, 0, -1);
+                .setOverlay(packedOverlay).setLight(effectiveLight).setNormal(pose, 0.0F, 0.0F, -1.0F);
         vertexConsumer.addVertex(matrix, r, -r, zBack).setColor(255, 255, 255, 255).setUv(1.0F, 0.5F)
-                .setOverlay(packedOverlay).setLight(packedLight).setNormal(0, 0, -1);
+                .setOverlay(packedOverlay).setLight(effectiveLight).setNormal(pose, 0.0F, 0.0F, -1.0F);
         vertexConsumer.addVertex(matrix, -r, -r, zBack).setColor(255, 255, 255, 255).setUv(0.5F, 0.5F)
-                .setOverlay(packedOverlay).setLight(packedLight).setNormal(0, 0, -1);
+                .setOverlay(packedOverlay).setLight(effectiveLight).setNormal(pose, 0.0F, 0.0F, -1.0F);
 
         for (int i = 0; i < 8; i++) {
             ItemStack stack = blockEntity.getSlotItem(i);
@@ -103,7 +122,7 @@ public class RouletteAltarRenderer implements BlockEntityRenderer<RouletteAltarB
             poseStack.mulPose(Axis.ZP.rotationDegrees(-slotAngle));
             poseStack.scale(0.42F, 0.42F, 0.42F);
 
-            itemRenderer.renderStatic(stack, ItemDisplayContext.FIXED, packedLight, packedOverlay, poseStack, bufferSource, blockEntity.getLevel(), 0);
+            itemRenderer.renderStatic(stack, ItemDisplayContext.FIXED, effectiveLight, packedOverlay, poseStack, bufferSource, blockEntity.getLevel(), 0);
             poseStack.popPose();
         }
 
@@ -118,7 +137,7 @@ public class RouletteAltarRenderer implements BlockEntityRenderer<RouletteAltarB
             poseStack.mulPose(Axis.YP.rotationDegrees(winProgress * 540.0F));
             poseStack.scale(0.70F, 0.70F, 0.70F);
 
-            itemRenderer.renderStatic(blockEntity.getWinningItem(), ItemDisplayContext.FIXED, packedLight, packedOverlay, poseStack, bufferSource, blockEntity.getLevel(), 0);
+            itemRenderer.renderStatic(blockEntity.getWinningItem(), ItemDisplayContext.FIXED, effectiveLight, packedOverlay, poseStack, bufferSource, blockEntity.getLevel(), 0);
             poseStack.popPose();
         }
 

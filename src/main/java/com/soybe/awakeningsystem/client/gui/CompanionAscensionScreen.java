@@ -180,11 +180,8 @@ public class CompanionAscensionScreen extends Screen {
         int left = (this.width - W) / 2;
         int top = (this.height - H) / 2;
 
-        g.fill(left, top, left + W, top + H, 0xF50D1117);
-        g.renderOutline(left, top, W, H, 0xFF2A3950);
-        g.renderOutline(left + 1, top + 1, W - 2, H - 2, 0xFFE5B842);
-
-        g.fill(left + 2, top + 2, left + W - 2, top + 24, 0x90161F2E);
+        ModernGuiHelper.drawModernWindow(g, left, top, W, H, ModernGuiHelper.GuiTheme.TEYVAT);
+        ModernGuiHelper.drawModernHeader(g, left + 4, top + 4, W - 8, 22, null, 0, ModernGuiHelper.GuiTheme.TEYVAT, font);
         g.drawString(font, Component.translatable("awakening_system.screen.companion_ascension.header"), left + 10, top + 8, 0xFFFFFF);
         Component moraComp = Component.translatable("awakening_system.screen.companion_ascension.mora_info", String.format("%,d", playerMora), playerLevel);
         g.drawString(font, moraComp, left + W - font.width(moraComp) - 10, top + 8, 0xFFFFFF);

@@ -121,6 +121,59 @@ public final class RpgLevelZoneManager {
         return 80 + Math.min(25, (int)((dist - 3500.0) / 3000.0 * 20.0));
     }
 
+    public static int getDimensionMinLevel(Level level) {
+        if (level.dimension() == Level.NETHER) {
+            return 50;
+        }
+        if (level.dimension() == Level.END) {
+            return 75;
+        }
+        if (level.dimension().equals(IsekaiWorldManager.ISEKAI_WORLD)) {
+            return 40;
+        }
+        if (level.dimension().equals(MurimWorldManager.MURIM_WORLD)) {
+            return 35;
+        }
+        if (level.dimension().equals(TeyvatWorldManager.TEYVAT_WORLD)) {
+            return 25;
+        }
+        return 1;
+    }
+
+    /**
+     * Techo de nivel dinámico que varía orgánicamente con el nivel del usuario.
+     * En el Overworld considera la distancia del spawn. En otras dimensiones escala con el nivel del jugador.
+     */
+    public static int getMaxWildLevelForPlayer(Level level, int playerLevel, BlockPos pos) {
+        int safePlayerLvl = Math.max(1, playerLevel);
+        if (level.dimension() == Level.OVERWORLD) {
+            BlockPos spawnPos = level.getSharedSpawnPos();
+            double distFromSpawn = Math.sqrt(pos.distSqr(new Vec3i(spawnPos.getX(), pos.getY(), spawnPos.getZ())));
+            double distanceFactor = Math.min(0.40D, distFromSpawn / 5000.0D);
+            return Math.max(20, (int) Math.round(safePlayerLvl * (1.0D + distanceFactor + 0.05D)) + 4);
+        }
+        if (level.dimension() == Level.NETHER) {
+            return Math.max(55, safePlayerLvl + 5);
+        }
+        if (level.dimension() == Level.END) {
+            return Math.max(80, safePlayerLvl + 5);
+        }
+        if (level.dimension().equals(IsekaiWorldManager.ISEKAI_WORLD)) {
+            return Math.max(45, safePlayerLvl + 4);
+        }
+        if (level.dimension().equals(MurimWorldManager.MURIM_WORLD)) {
+            return Math.max(40, safePlayerLvl + 4);
+        }
+        if (level.dimension().equals(TeyvatWorldManager.TEYVAT_WORLD)) {
+            return Math.max(30, safePlayerLvl + 4);
+        }
+        return safePlayerLvl + 5;
+    }
+
+    public static int getMaxWildLevelForDimension(Level level) {
+        return 120;
+    }
+
     public static String getZoneName(int level) {
         if (level < 20) {
             return "\u00a7aNovice Plains (Lv. 1-20)";
@@ -158,32 +211,40 @@ public final class RpgLevelZoneManager {
             return;
         }
         mob.addTag("rpg_scaled");
+
         List<ServerPlayer> nearbyPlayers = level.getEntitiesOfClass(ServerPlayer.class, mob.getBoundingBox().inflate(96.0), p -> p.isAlive() && !p.isSpectator());
-        net.minecraft.core.BlockPos spawnPos = level.getSharedSpawnPos();
-        double distFromSpawn = Math.sqrt(mob.distanceToSqr(spawnPos.getX(), mob.getY(), spawnPos.getZ()));
-        double distanceFactor = Math.min(0.40D, distFromSpawn / 5000.0D);
 
         if (!nearbyPlayers.isEmpty()) {
             int maxPlayerLvl = 1;
             for (ServerPlayer sp : nearbyPlayers) {
                 int pLvl = Math.max(1, SystemEvents.data((Player)sp).level());
-                if (pLvl <= maxPlayerLvl) continue;
-                maxPlayerLvl = pLvl;
+                if (pLvl > maxPlayerLvl) {
+                    maxPlayerLvl = pLvl;
+                }
             }
-            int baseScaled = (int) Math.round(maxPlayerLvl * (1.0D + distanceFactor));
-            int variance = RNG.nextInt(5) - 2;
-            mobLevel = Math.max(1, baseScaled + variance);
-            if (level.dimension() == Level.NETHER) {
-                mobLevel = Math.max(mobLevel, 35 + RNG.nextInt(15));
-            } else if (level.dimension() == Level.END) {
-                mobLevel = Math.max(mobLevel, 70 + RNG.nextInt(20));
-            } else if (level.dimension().equals(MurimWorldManager.MURIM_WORLD)) {
-                mobLevel = Math.max(mobLevel, 45 + RNG.nextInt(20));
-            } else if (level.dimension().equals(IsekaiWorldManager.ISEKAI_WORLD)) {
-                mobLevel = Math.max(mobLevel, 55 + RNG.nextInt(20));
+
+            int maxCap = getMaxWildLevelForPlayer(level, maxPlayerLvl, mob.blockPosition());
+            int variance = RNG.nextInt(5) - 2; // Variación orgánica de ±2 niveles
+
+            if (level.dimension() == Level.OVERWORLD) {
+                // Solo en el Overworld: se mantiene el escalado de distancia respecto al spawn
+                BlockPos spawnPos = level.getSharedSpawnPos();
+                double distFromSpawn = Math.sqrt(mob.distanceToSqr(spawnPos.getX(), mob.getY(), spawnPos.getZ()));
+                double distanceFactor = Math.min(0.40D, distFromSpawn / 5000.0D);
+                int baseScaled = (int) Math.round(maxPlayerLvl * (1.0D + distanceFactor));
+                int targetLevel = Math.max(1, baseScaled + variance);
+                int zoneBase = RpgLevelZoneManager.getZoneLevel((Level)level, mob.blockPosition());
+                mobLevel = Math.min(maxCap, Math.max(zoneBase, targetLevel));
+            } else {
+                // Nether, End, Isekai, Murim, Teyvat y demás dimensiones:
+                // Sin inflación artificial por distancia; escalado directo al jugador y piso de la dimensión
+                int dimFloor = getDimensionMinLevel(level);
+                int targetLevel = Math.max(dimFloor, maxPlayerLvl + variance);
+                mobLevel = Math.min(maxCap, targetLevel);
             }
         } else {
-            mobLevel = RpgLevelZoneManager.getZoneLevel((Level)level, mob.blockPosition());
+            int zoneBase = RpgLevelZoneManager.getZoneLevel((Level)level, mob.blockPosition());
+            mobLevel = Math.min(getMaxWildLevelForDimension(level), zoneBase);
         }
         RpgLevelZoneManager.applyMobLevelAttributes(mob, mobLevel, false);
     }
@@ -216,7 +277,17 @@ public final class RpgLevelZoneManager {
         double baseDmg = mob.getPersistentData().getDouble("rpg_orig_dmg");
         String originalName = mob.getPersistentData().getString("rpg_orig_name");
         mob.getPersistentData().putInt("rpg_mob_level", mobLevel);
-        double hpMultiplier = 1.0 + (double)mobLevel * 0.14 + (double)Math.max(0, mobLevel - 20) * 0.08 + (double)Math.max(0, mobLevel - 50) * 0.06;
+
+        double hpMultiplier;
+        if (mobLevel <= 20) {
+            hpMultiplier = 1.0 + (double)mobLevel * 0.08;
+        } else if (mobLevel <= 60) {
+            hpMultiplier = 2.6 + (double)(mobLevel - 20) * 0.06;
+        } else if (mobLevel <= 100) {
+            hpMultiplier = 5.0 + (double)(mobLevel - 60) * 0.04;
+        } else {
+            hpMultiplier = 6.6 + (double)(mobLevel - 100) * 0.025;
+        }
         double newHp = baseHp * hpMultiplier;
         AttributeInstance maxHpAttr = mob.getAttribute(Attributes.MAX_HEALTH);
         if (maxHpAttr != null) {
@@ -230,8 +301,19 @@ public final class RpgLevelZoneManager {
             }
         }
         if ((attackAttr = mob.getAttribute(Attributes.ATTACK_DAMAGE)) != null && baseDmg > 0.0) {
-            double dmgMultiplier = 1.0 + (double)mobLevel * 0.05;
-            attackAttr.setBaseValue(baseDmg * dmgMultiplier + (double)mobLevel * 0.35);
+            double dmgMultiplier;
+            if (mobLevel <= 20) {
+                dmgMultiplier = 1.0 + (double)mobLevel * 0.015;
+            } else if (mobLevel <= 60) {
+                dmgMultiplier = 1.30 + (double)(mobLevel - 20) * 0.010;
+            } else if (mobLevel <= 100) {
+                dmgMultiplier = 1.70 + (double)(mobLevel - 60) * 0.006;
+            } else {
+                dmgMultiplier = 1.94 + (double)(mobLevel - 100) * 0.003;
+            }
+            double flatDmg = Math.min(18.0, (double)mobLevel * 0.12);
+            double finalDmg = Math.min(65.0, baseDmg * dmgMultiplier + flatDmg);
+            attackAttr.setBaseValue(finalDmg);
         }
         if ((armorAttr = mob.getAttribute(Attributes.ARMOR)) != null) {
             double armor = Math.min(26.0, (double)mobLevel * 0.3);
@@ -281,14 +363,29 @@ public final class RpgLevelZoneManager {
             return;
         }
         int playerLevel = Math.max(1, SystemEvents.data((Player)player).level());
-        net.minecraft.core.BlockPos spawnPos = mob.level().getSharedSpawnPos();
-        double distFromSpawn = Math.sqrt(mob.distanceToSqr(spawnPos.getX(), mob.getY(), spawnPos.getZ()));
-        double distanceFactor = Math.min(0.40D, distFromSpawn / 5000.0D);
-        int targetLevel = Math.max(1, (int) Math.round(playerLevel * (1.0D + distanceFactor)));
+        int maxCap = getMaxWildLevelForPlayer(mob.level(), playerLevel, mob.blockPosition());
+        int targetLevel;
+
+        if (mob.level().dimension() == Level.OVERWORLD) {
+            // Overworld: mantiene el escalado de distancia respecto al spawn
+            BlockPos spawnPos = mob.level().getSharedSpawnPos();
+            double distFromSpawn = Math.sqrt(mob.distanceToSqr(spawnPos.getX(), mob.getY(), spawnPos.getZ()));
+            double distanceFactor = Math.min(0.40D, distFromSpawn / 5000.0D);
+            int baseScaled = (int) Math.round(playerLevel * (1.0D + distanceFactor));
+            int zoneBase = RpgLevelZoneManager.getZoneLevel(mob.level(), mob.blockPosition());
+            targetLevel = Math.min(maxCap, Math.max(zoneBase, baseScaled));
+        } else {
+            // Nether, End, Isekai, Murim, Teyvat: escalado directo al jugador y piso de la dimensión
+            int dimFloor = getDimensionMinLevel(mob.level());
+            targetLevel = Math.min(maxCap, Math.max(dimFloor, playerLevel));
+        }
 
         int currentMobLevel = mob.getPersistentData().getInt("rpg_mob_level");
-        if (currentMobLevel < targetLevel) {
-            int newLevel = targetLevel + RNG.nextInt(3);
+        // Reajusta si el mob supera el cap dinámico del usuario (ej. orcos/bestias previos de nivel 200/300),
+        // o si no tenía nivel RPG (<= 0), o si está notablemente desfasado respecto al target (> 6 niveles):
+        if (currentMobLevel > maxCap || currentMobLevel <= 0 || Math.abs(currentMobLevel - targetLevel) > 6) {
+            int variance = RNG.nextInt(5) - 2;
+            int newLevel = Math.min(maxCap, Math.max(1, targetLevel + variance));
             RpgLevelZoneManager.applyMobLevelAttributes(mob, newLevel, true);
         }
     }

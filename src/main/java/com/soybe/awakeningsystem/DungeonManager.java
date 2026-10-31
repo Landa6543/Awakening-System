@@ -10,9 +10,13 @@ import com.soybe.awakeningsystem.entity.AntSoldierEntity;
 import com.soybe.awakeningsystem.entity.BaranBossEntity;
 import com.soybe.awakeningsystem.entity.BeruBossEntity;
 import com.soybe.awakeningsystem.entity.FrostElfAssassinEntity;
+import com.soybe.awakeningsystem.entity.FrostarmLawachurlEntity;
 import com.soybe.awakeningsystem.entity.IgrisBossEntity;
 import com.soybe.awakeningsystem.entity.ModEntities;
+import com.soybe.awakeningsystem.entity.MotherSpiderBossEntity;
+import com.soybe.awakeningsystem.entity.SculkGolemEntity;
 import com.soybe.awakeningsystem.entity.ShadowInfantryEntity;
+import com.soybe.awakeningsystem.entity.StonehideLawachurlEntity;
 import com.soybe.awakeningsystem.guild.Guild;
 import com.soybe.awakeningsystem.guild.GuildSavedData;
 import com.soybe.awakeningsystem.limbo.LimboWorldManager;
@@ -45,6 +49,7 @@ import net.minecraft.network.chat.HoverEvent;
 import net.minecraft.network.chat.MutableComponent;
 import net.minecraft.network.chat.ClickEvent.Action;
 import net.minecraft.network.protocol.common.custom.CustomPacketPayload;
+import net.minecraft.network.protocol.game.ClientboundBlockUpdatePacket;
 import net.minecraft.resources.ResourceKey;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.server.MinecraftServer;
@@ -957,17 +962,26 @@ public final class DungeonManager {
                   String theme = b != null && !b.isEmpty() ? b.toLowerCase(Locale.ROOT) : "";
                   if (theme.isEmpty() || "random".equals(theme)) {
                      if (isRedGate) {
-                        int rollTheme = player.getRandom().nextInt(3);
-                        theme = rollTheme == 0 ? "baran" : (rollTheme == 1 ? "beru" : "igris");
+                        int rollTheme = player.getRandom().nextInt(4);
+                        theme = rollTheme == 0 ? "baran" : (rollTheme == 1 ? "beru" : (rollTheme == 2 ? "igris" : "frost"));
                      } else if (tier >= 10) {
-                        int rollTheme = player.getRandom().nextInt(3);
-                        theme = rollTheme == 0 ? "baran" : (rollTheme == 1 ? "beru" : "igris");
+                        int rollTheme = player.getRandom().nextInt(4);
+                        theme = rollTheme == 0 ? "baran" : (rollTheme == 1 ? "beru" : (rollTheme == 2 ? "igris" : "ancient_ruins"));
                      } else if (tier >= 7) {
-                        theme = player.getRandom().nextBoolean() ? "beru" : "igris";
+                        int rollTheme = player.getRandom().nextInt(5);
+                        theme = rollTheme == 0 ? "beru" : (rollTheme == 1 ? "igris" : (rollTheme == 2 ? "ogre" : (rollTheme == 3 ? "frost" : "ancient_ruins")));
                      } else {
-                        theme = "crypt";
+                        int rollTheme = player.getRandom().nextInt(5);
+                        theme = switch(rollTheme) {
+                           case 0 -> "crypt";
+                           case 1 -> "ogre";
+                           case 2 -> "ancient_ruins";
+                           case 3 -> "spider";
+                           default -> "cavern";
+                        };
                      }
                   }
+                  session.biome = theme;
 
                   buildContinuousDungeon(dungeonLevel, session, center, r, theme);
                   BlockPos spawnPos = session.portalRoomPos != null ? session.portalRoomPos : center.offset(0, 0, -8);
@@ -1605,18 +1619,22 @@ public final class DungeonManager {
       }
    }
 
+   public static final ResourceKey<LootTable> DUNGEON_CHEST_LOW = ResourceKey.create(Registries.LOOT_TABLE, ResourceLocation.fromNamespaceAndPath("awakening_system", "chests/dungeon_tier_low"));
+   public static final ResourceKey<LootTable> DUNGEON_CHEST_MID = ResourceKey.create(Registries.LOOT_TABLE, ResourceLocation.fromNamespaceAndPath("awakening_system", "chests/dungeon_tier_mid"));
+   public static final ResourceKey<LootTable> DUNGEON_CHEST_HIGH = ResourceKey.create(Registries.LOOT_TABLE, ResourceLocation.fromNamespaceAndPath("awakening_system", "chests/dungeon_tier_high"));
+   public static final ResourceKey<LootTable> DUNGEON_CHEST_NETHER = ResourceKey.create(Registries.LOOT_TABLE, ResourceLocation.fromNamespaceAndPath("awakening_system", "chests/dungeon_tier_nether"));
+
    public static ResourceKey<LootTable> getDungeonLootTable(String rank, String theme) {
       int tier = getRankTier(rank);
-      if (!"baran".equalsIgnoreCase(theme) && !"nether".equalsIgnoreCase(theme)) {
-         if (tier >= 10) {
-            return BuiltInLootTables.END_CITY_TREASURE;
-         } else if (tier >= 7) {
-            return BuiltInLootTables.ANCIENT_CITY;
-         } else {
-            return tier >= 4 ? BuiltInLootTables.STRONGHOLD_CORRIDOR : BuiltInLootTables.SIMPLE_DUNGEON;
-         }
+      if ("baran".equalsIgnoreCase(theme) || "nether".equalsIgnoreCase(theme) || "magma_forge".equalsIgnoreCase(theme)) {
+         return DUNGEON_CHEST_NETHER;
+      }
+      if (tier >= 7) {
+         return DUNGEON_CHEST_HIGH;
+      } else if (tier >= 4) {
+         return DUNGEON_CHEST_MID;
       } else {
-         return tier >= 7 ? BuiltInLootTables.BASTION_TREASURE : BuiltInLootTables.NETHER_BRIDGE;
+         return DUNGEON_CHEST_LOW;
       }
    }
 
@@ -1674,16 +1692,11 @@ public final class DungeonManager {
             }
          }
 
-         BlockPos c1 = center.offset(-1, 1, 0);
-         BlockPos c2 = center.offset(1, 1, 0);
-         BlockPos c3 = center.offset(0, 1, 1);
-
-         for (BlockPos cp : new BlockPos[]{c1, c2, c3}) {
-            level.setBlock(cp, (BlockState)Blocks.CHEST.defaultBlockState().setValue(ChestBlock.FACING, Direction.SOUTH), 3);
-            session.arenaBlocks.add(cp);
-            if (level.getBlockEntity(cp) instanceof ChestBlockEntity chest) {
-               chest.setLootTable(getDungeonLootTable(rank, theme), level.random.nextLong());
-            }
+         BlockPos cp = center.offset(0, 1, 1);
+         level.setBlock(cp, (BlockState)Blocks.CHEST.defaultBlockState().setValue(ChestBlock.FACING, Direction.SOUTH), 3);
+         session.arenaBlocks.add(cp);
+         if (level.getBlockEntity(cp) instanceof ChestBlockEntity chest) {
+            chest.setLootTable(getDungeonLootTable(rank, theme), level.random.nextLong());
          }
 
          BlockPos altar = center.offset(0, 1, -1);
@@ -1934,11 +1947,27 @@ public final class DungeonManager {
    public static void spawnEliteGuardian(ServerLevel level, com.soybe.awakeningsystem.DungeonManager.DungeonSession session, BlockPos pos) {
       if (level != null && session != null && pos != null) {
          int tier = getRankTier(session.rank);
-         double hp = 100.0 + tier * 40.0;
-         double dmg = 6.0 + tier * 2.5;
-         Monster g = new ShadowInfantryEntity(ModEntities.SHADOW_INFANTRY.get(), level);
-         g.setCustomName(Component.translatable("awakening_system.dungeon.boss.guardian_sanctum"));
-         g.setItemSlot(EquipmentSlot.MAINHAND, new ItemStack(Items.DIAMOND_SWORD));
+         double hp = 120.0 + tier * 45.0;
+         double dmg = 7.0 + tier * 2.8;
+         String theme = session.biome != null ? session.biome.toLowerCase(Locale.ROOT) : "crypt";
+         Monster g;
+         if ("ogre".equalsIgnoreCase(theme) || "cavern".equalsIgnoreCase(theme)) {
+            StonehideLawachurlEntity ogre = new StonehideLawachurlEntity(ModEntities.STONEHIDE_LAWACHURL.get(), level);
+            ogre.setCustomName(Component.translatable("awakening_system.dungeon.boss.chamber_ogre"));
+            g = ogre;
+         } else if ("ancient_ruins".equalsIgnoreCase(theme)) {
+            SculkGolemEntity golem = new SculkGolemEntity(ModEntities.SCULK_GOLEM.get(), level);
+            golem.setCustomName(Component.translatable("awakening_system.dungeon.boss.chamber_golem"));
+            g = golem;
+         } else if ("frost".equalsIgnoreCase(theme)) {
+            FrostarmLawachurlEntity frost = new FrostarmLawachurlEntity(ModEntities.FROSTARM_LAWACHURL.get(), level);
+            frost.setCustomName(Component.translatable("awakening_system.dungeon.boss.frost_ogre"));
+            g = frost;
+         } else {
+            g = new ShadowInfantryEntity(ModEntities.SHADOW_INFANTRY.get(), level);
+            g.setCustomName(Component.translatable("awakening_system.dungeon.boss.guardian_sanctum"));
+            g.setItemSlot(EquipmentSlot.MAINHAND, new ItemStack(tier >= 7 ? Items.NETHERITE_SWORD : Items.DIAMOND_SWORD));
+         }
          g.setCustomNameVisible(true);
          g.setPersistenceRequired();
          g.addTag("dungeon_mob");
@@ -3075,14 +3104,36 @@ public final class DungeonManager {
    ) {
       if (center != null) {
          boolean isBaran = "baran".equalsIgnoreCase(theme) || "nether".equalsIgnoreCase(theme);
-         BlockState veinBlock = isBaran ? Blocks.MAGMA_BLOCK.defaultBlockState() : Blocks.CRYING_OBSIDIAN.defaultBlockState();
+         BlockState floorBlock = isBaran ? Blocks.POLISHED_BLACKSTONE_BRICKS.defaultBlockState() : Blocks.POLISHED_DEEPSLATE.defaultBlockState();
+         BlockState borderBlock = isBaran ? Blocks.CRYING_OBSIDIAN.defaultBlockState() : Blocks.REINFORCED_DEEPSLATE.defaultBlockState();
+         BlockState pillarBlock = isBaran ? Blocks.CHISELED_POLISHED_BLACKSTONE.defaultBlockState() : Blocks.CHISELED_DEEPSLATE.defaultBlockState();
+         BlockState lanternBlock = isBaran ? Blocks.SOUL_LANTERN.defaultBlockState() : Blocks.LANTERN.defaultBlockState();
 
-         for (int i = 0; i < 8; i++) {
-            int vx = (i % 2 == 0 ? 6 : -6) + i / 2;
-            int vz = i % 3 == 0 ? 7 : -7;
-            BlockPos vp = center.offset(vx, -1, vz);
-            level.setBlock(vp, veinBlock, 2);
-            session.arenaBlocks.add(vp);
+         for (int dx = -3; dx <= 3; dx++) {
+            for (int dz = -3; dz <= 3; dz++) {
+               BlockPos fp = center.offset(dx, 0, dz);
+               boolean isBorder = Math.abs(dx) == 3 || Math.abs(dz) == 3;
+               level.setBlock(fp, isBorder ? borderBlock : floorBlock, 3);
+               session.arenaBlocks.add(fp);
+               for (int dy = 1; dy <= 5; dy++) {
+                  BlockPos airP = center.offset(dx, dy, dz);
+                  if (!level.getBlockState(airP).isAir()) {
+                     level.setBlock(airP, Blocks.AIR.defaultBlockState(), 2);
+                  }
+               }
+            }
+         }
+
+         BlockPos[] corners = new BlockPos[]{
+            center.offset(-3, 1, -3), center.offset(3, 1, -3),
+            center.offset(-3, 1, 3), center.offset(3, 1, 3)
+         };
+         for (BlockPos cp : corners) {
+            level.setBlock(cp, pillarBlock, 3);
+            session.arenaBlocks.add(cp);
+            BlockPos lp = cp.above();
+            level.setBlock(lp, lanternBlock, 3);
+            session.arenaBlocks.add(lp);
          }
       }
    }
@@ -3098,9 +3149,15 @@ public final class DungeonManager {
          int cz = barrierPos.getZ();
 
          for (BlockPos p : barrierBlocks) {
-            level.setBlock(p, Blocks.AIR.defaultBlockState(), 2);
+            level.setBlock(p, Blocks.AIR.defaultBlockState(), 3);
             level.sendParticles(ParticleTypes.FLASH, p.getX() + 0.5, p.getY() + 0.5, p.getZ() + 0.5, 1, 0.1, 0.1, 0.1, 0.0);
             level.sendParticles(ParticleTypes.TOTEM_OF_UNDYING, p.getX() + 0.5, p.getY() + 0.5, p.getZ() + 0.5, 4, 0.2, 0.2, 0.2, 0.05);
+            ClientboundBlockUpdatePacket packet = new ClientboundBlockUpdatePacket(p, Blocks.AIR.defaultBlockState());
+            if (session != null && level.getServer() != null) {
+               for (ServerPlayer player : session.getAllPlayers(level.getServer())) {
+                  if (player != null) player.connection.send(packet);
+               }
+            }
          }
 
          barrierBlocks.clear();
@@ -3109,8 +3166,14 @@ public final class DungeonManager {
             for (int dy = -3; dy <= 10; dy++) {
                for (int dz = -7; dz <= 7; dz++) {
                   BlockPos bp = new BlockPos(cx + dx, cy + dy, cz + dz);
-                  if (level.getBlockState(bp).is(Blocks.BARRIER)) {
-                     level.setBlock(bp, Blocks.AIR.defaultBlockState(), 2);
+                  if (level.getBlockState(bp).is(Blocks.BARRIER) || level.getBlockState(bp).is(Blocks.IRON_BARS)) {
+                     level.setBlock(bp, Blocks.AIR.defaultBlockState(), 3);
+                     ClientboundBlockUpdatePacket packet = new ClientboundBlockUpdatePacket(bp, Blocks.AIR.defaultBlockState());
+                     if (session != null && level.getServer() != null) {
+                        for (ServerPlayer player : session.getAllPlayers(level.getServer())) {
+                           if (player != null) player.connection.send(packet);
+                        }
+                     }
                   }
                }
             }
@@ -3125,9 +3188,15 @@ public final class DungeonManager {
       int cy = session.arenaCenter.getY();
 
       for (BlockPos p : barrierBlocks) {
-         level.setBlock(p, Blocks.AIR.defaultBlockState(), 2);
+         level.setBlock(p, Blocks.AIR.defaultBlockState(), 3);
          level.sendParticles(ParticleTypes.FLASH, p.getX() + 0.5, p.getY() + 0.5, p.getZ() + 0.5, 1, 0.1, 0.1, 0.1, 0.0);
          level.sendParticles(ParticleTypes.TOTEM_OF_UNDYING, p.getX() + 0.5, p.getY() + 0.5, p.getZ() + 0.5, 4, 0.2, 0.2, 0.2, 0.05);
+         ClientboundBlockUpdatePacket packet = new ClientboundBlockUpdatePacket(p, Blocks.AIR.defaultBlockState());
+         if (session != null && level.getServer() != null) {
+            for (ServerPlayer player : session.getAllPlayers(level.getServer())) {
+               if (player != null) player.connection.send(packet);
+            }
+         }
       }
 
       barrierBlocks.clear();
@@ -3136,11 +3205,62 @@ public final class DungeonManager {
          for (int dy = 0; dy <= 8; dy++) {
             for (int dz = barrierZ - 3; dz <= barrierZ + 3; dz++) {
                BlockPos bp = new BlockPos(cx + dx, cy + dy, dz);
-               if (level.getBlockState(bp).is(Blocks.BARRIER)) {
-                  level.setBlock(bp, Blocks.AIR.defaultBlockState(), 2);
+               if (level.getBlockState(bp).is(Blocks.BARRIER) || level.getBlockState(bp).is(Blocks.IRON_BARS)) {
+                  level.setBlock(bp, Blocks.AIR.defaultBlockState(), 3);
+                  ClientboundBlockUpdatePacket packet = new ClientboundBlockUpdatePacket(bp, Blocks.AIR.defaultBlockState());
+                  if (session != null && level.getServer() != null) {
+                     for (ServerPlayer player : session.getAllPlayers(level.getServer())) {
+                        if (player != null) player.connection.send(packet);
+                     }
+                  }
                }
             }
          }
+      }
+   }
+
+   public static void dissolveBossBarriers(ServerLevel level, com.soybe.awakeningsystem.DungeonManager.DungeonSession session, BlockPos triggeredPos) {
+      if (level == null || session == null) return;
+      session.bossBarrierOpen = true;
+
+      for (BlockPos b : session.barrierBossBlocks) {
+         level.setBlock(b, Blocks.AIR.defaultBlockState(), 3);
+         level.sendParticles(ParticleTypes.FLASH, b.getX() + 0.5, b.getY() + 0.5, b.getZ() + 0.5, 1, 0.1, 0.1, 0.1, 0.0);
+         level.sendParticles(ParticleTypes.TOTEM_OF_UNDYING, b.getX() + 0.5, b.getY() + 0.5, b.getZ() + 0.5, 3, 0.2, 0.2, 0.2, 0.05);
+         ClientboundBlockUpdatePacket packet = new ClientboundBlockUpdatePacket(b, Blocks.AIR.defaultBlockState());
+         if (level.getServer() != null) {
+            for (ServerPlayer player : session.getAllPlayers(level.getServer())) {
+               if (player != null) player.connection.send(packet);
+            }
+         }
+      }
+      session.barrierBossBlocks.clear();
+
+      BlockPos[] gates = new BlockPos[]{session.barrierBossPos1, session.barrierBossPos2, session.barrierBossPos3, triggeredPos};
+      for (BlockPos gate : gates) {
+         if (gate != null) {
+            for (int dx = -7; dx <= 7; dx++) {
+               for (int dy = -3; dy <= 10; dy++) {
+                  for (int dz = -7; dz <= 7; dz++) {
+                     BlockPos bp = gate.offset(dx, dy, dz);
+                     BlockState st = level.getBlockState(bp);
+                     if (st.is(Blocks.IRON_BARS) || st.is(Blocks.BARRIER)) {
+                        level.setBlock(bp, Blocks.AIR.defaultBlockState(), 3);
+                        ClientboundBlockUpdatePacket packet = new ClientboundBlockUpdatePacket(bp, Blocks.AIR.defaultBlockState());
+                        if (level.getServer() != null) {
+                           for (ServerPlayer player : session.getAllPlayers(level.getServer())) {
+                              if (player != null) player.connection.send(packet);
+                           }
+                        }
+                     }
+                  }
+               }
+            }
+         }
+      }
+
+      if (triggeredPos != null) {
+         spawnBarrierDoorAmbush(level, session, triggeredPos);
       }
    }
 
@@ -3462,24 +3582,20 @@ public final class DungeonManager {
          int bType = bossIndex % 3;
          Monster boss;
          if (bType == 0) {
-            BaranBossEntity b = new BaranBossEntity(ModEntities.BARAN_BOSS.get(), level);
-            b.setCustomName(Component.translatable("awakening_system.dungeon.boss.major_baran"));
-            b.setCustomNameVisible(true);
-            buffMob(b, hp, dmg, armor, kb);
-            boss = b;
+            StonehideLawachurlEntity lawachurl = new StonehideLawachurlEntity(ModEntities.STONEHIDE_LAWACHURL.get(), level);
+            lawachurl.setCustomName(Component.translatable("awakening_system.dungeon.boss.chamber_ogre"));
+            boss = lawachurl;
          } else if (bType == 1) {
-            IgrisBossEntity igris = new IgrisBossEntity(ModEntities.IGRIS_BOSS.get(), level);
-            igris.setCustomName(Component.translatable("awakening_system.dungeon.boss.major_igris"));
-            igris.setCustomNameVisible(true);
-            buffMob(igris, hp, dmg, armor, kb);
-            boss = igris;
+            SculkGolemEntity golem = new SculkGolemEntity(ModEntities.SCULK_GOLEM.get(), level);
+            golem.setCustomName(Component.translatable("awakening_system.dungeon.boss.chamber_golem"));
+            boss = golem;
          } else {
-            BeruBossEntity beru = new BeruBossEntity(ModEntities.BERU_BOSS.get(), level);
-            beru.setCustomName(Component.translatable("awakening_system.dungeon.boss.major_beru"));
-            beru.setCustomNameVisible(true);
-            buffMob(beru, hp, dmg, armor, kb);
-            boss = beru;
+            FrostarmLawachurlEntity frostLawachurl = new FrostarmLawachurlEntity(ModEntities.FROSTARM_LAWACHURL.get(), level);
+            frostLawachurl.setCustomName(Component.translatable("awakening_system.dungeon.boss.frost_ogre"));
+            boss = frostLawachurl;
          }
+         boss.setCustomNameVisible(true);
+         buffMob(boss, hp, dmg, armor, kb);
 
          double sy = findSafeFloorY(level, spawnP.getX() + 0.5, spawnP.getY(), spawnP.getZ() + 0.5);
          boss.moveTo(spawnP.getX() + 0.5, sy, spawnP.getZ() + 0.5, level.random.nextFloat() * 360.0F, 0.0F);
@@ -3503,53 +3619,88 @@ public final class DungeonManager {
          ? Component.translatable("awakening_system.dungeon.mob.anomaly_prefix", new Object[]{session.rank})
          : Component.translatable("awakening_system.dungeon.mob.boss_prefix", new Object[]{session.rank});
       Monster boss;
+
       if ("baran".equalsIgnoreCase(theme) || "nether".equalsIgnoreCase(theme) || "magma_forge".equalsIgnoreCase(theme)) {
-         BaranBossEntity b = new BaranBossEntity(ModEntities.BARAN_BOSS.get(), level);
-         b.setCustomName(prefix.copy().append(Component.translatable("awakening_system.dungeon.boss.baran_flames")));
-         b.setCustomNameVisible(true);
-         buffMob(b, hp, dmg, bossArmor, bossKb);
-         boss = b;
-      } else if ("igris".equalsIgnoreCase(theme) || "crypt".equalsIgnoreCase(theme) || "castle".equalsIgnoreCase(theme)) {
-         IgrisBossEntity igris = new IgrisBossEntity(ModEntities.IGRIS_BOSS.get(), level);
-         igris.setCustomName(prefix.copy().append(Component.translatable("awakening_system.dungeon.boss.igris_commander")));
-         igris.setCustomNameVisible(true);
-         buffMob(igris, hp, dmg, bossArmor, bossKb);
-         boss = igris;
-      } else if (!"beru".equalsIgnoreCase(theme)
-         && !"jeju".equalsIgnoreCase(theme)
-         && !"ant".equalsIgnoreCase(theme)
-         && !"insect".equalsIgnoreCase(theme)
-         && !"hive".equalsIgnoreCase(theme)) {
-         int roll = level.random.nextInt(3);
-         if (roll == 0) {
+         if (level.random.nextFloat() < 0.70F) {
             BaranBossEntity b = new BaranBossEntity(ModEntities.BARAN_BOSS.get(), level);
             b.setCustomName(prefix.copy().append(Component.translatable("awakening_system.dungeon.boss.baran_flames")));
-            b.setCustomNameVisible(true);
-            buffMob(b, hp, dmg, bossArmor, bossKb);
             boss = b;
-         } else if (roll == 1) {
-            IgrisBossEntity igris = new IgrisBossEntity(ModEntities.IGRIS_BOSS.get(), level);
-            igris.setCustomName(prefix.copy().append(Component.translatable("awakening_system.dungeon.boss.igris_commander")));
-            igris.setCustomNameVisible(true);
-            buffMob(igris, hp, dmg, bossArmor, bossKb);
-            boss = igris;
          } else {
-            BeruBossEntity beru = new BeruBossEntity(ModEntities.BERU_BOSS.get(), level);
-            beru.setCustomName(prefix.copy().append(Component.translatable("awakening_system.dungeon.boss.beru_predator")));
-            beru.setCustomNameVisible(true);
-            buffMob(beru, hp, dmg, bossArmor, bossKb);
-            boss = beru;
+            StonehideLawachurlEntity lawachurl = new StonehideLawachurlEntity(ModEntities.STONEHIDE_LAWACHURL.get(), level);
+            lawachurl.setCustomName(prefix.copy().append(Component.translatable("awakening_system.dungeon.boss.lava_ogre")));
+            boss = lawachurl;
          }
-      } else {
+      } else if ("beru".equalsIgnoreCase(theme) || "jeju".equalsIgnoreCase(theme) || "ant".equalsIgnoreCase(theme) || "insect".equalsIgnoreCase(theme) || "hive".equalsIgnoreCase(theme)) {
          BeruBossEntity beru = new BeruBossEntity(ModEntities.BERU_BOSS.get(), level);
          beru.setCustomName(prefix.copy().append(Component.translatable("awakening_system.dungeon.boss.beru_predator")));
-         beru.setCustomNameVisible(true);
-         buffMob(beru, hp, dmg, bossArmor, bossKb);
          boss = beru;
+      } else if ("spider".equalsIgnoreCase(theme) || "web".equalsIgnoreCase(theme) || "arachnid".equalsIgnoreCase(theme)) {
+         MotherSpiderBossEntity spider = new MotherSpiderBossEntity(ModEntities.MOTHER_SPIDER_BOSS.get(), level);
+         spider.setCustomName(prefix.copy().append(Component.translatable("awakening_system.dungeon.boss.mother_spider")));
+         boss = spider;
+      } else if ("frost".equalsIgnoreCase(theme) || "ice".equalsIgnoreCase(theme) || "glacier".equalsIgnoreCase(theme) || "snow".equalsIgnoreCase(theme)) {
+         FrostarmLawachurlEntity frostLawachurl = new FrostarmLawachurlEntity(ModEntities.FROSTARM_LAWACHURL.get(), level);
+         frostLawachurl.setCustomName(prefix.copy().append(Component.translatable("awakening_system.dungeon.boss.frost_ogre")));
+         boss = frostLawachurl;
+      } else if ("ogre".equalsIgnoreCase(theme) || "orc".equalsIgnoreCase(theme) || "mountain".equalsIgnoreCase(theme) || "cavern".equalsIgnoreCase(theme)) {
+         if (level.random.nextBoolean()) {
+            StonehideLawachurlEntity lawachurl = new StonehideLawachurlEntity(ModEntities.STONEHIDE_LAWACHURL.get(), level);
+            lawachurl.setCustomName(prefix.copy().append(Component.translatable("awakening_system.dungeon.boss.ogre_warlord")));
+            boss = lawachurl;
+         } else {
+            AbyssalOrcEntity orc = new AbyssalOrcEntity(ModEntities.ABYSSAL_ORC.get(), level);
+            orc.setCustomName(prefix.copy().append(Component.translatable("awakening_system.dungeon.boss.abyssal_orc_warlord")));
+            orc.setItemSlot(EquipmentSlot.MAINHAND, new ItemStack(Items.NETHERITE_AXE));
+            boss = orc;
+         }
+      } else if ("ancient_ruins".equalsIgnoreCase(theme) || "ruins".equalsIgnoreCase(theme) || "sculk".equalsIgnoreCase(theme) || "deep_dark".equalsIgnoreCase(theme)) {
+         SculkGolemEntity golem = new SculkGolemEntity(ModEntities.SCULK_GOLEM.get(), level);
+         golem.setCustomName(prefix.copy().append(Component.translatable("awakening_system.dungeon.boss.ancient_golem")));
+         boss = golem;
+      } else {
+         int roll = level.random.nextInt(100);
+         if (roll < 40) {
+            IgrisBossEntity igris = new IgrisBossEntity(ModEntities.IGRIS_BOSS.get(), level);
+            igris.setCustomName(prefix.copy().append(Component.translatable("awakening_system.dungeon.boss.igris_commander")));
+            boss = igris;
+         } else if (roll < 65) {
+            StonehideLawachurlEntity lawachurl = new StonehideLawachurlEntity(ModEntities.STONEHIDE_LAWACHURL.get(), level);
+            lawachurl.setCustomName(prefix.copy().append(Component.translatable("awakening_system.dungeon.boss.ogre_warlord")));
+            boss = lawachurl;
+         } else if (roll < 85) {
+            SculkGolemEntity golem = new SculkGolemEntity(ModEntities.SCULK_GOLEM.get(), level);
+            golem.setCustomName(prefix.copy().append(Component.translatable("awakening_system.dungeon.boss.ancient_golem")));
+            boss = golem;
+         } else {
+            AbyssalOrcEntity orc = new AbyssalOrcEntity(ModEntities.ABYSSAL_ORC.get(), level);
+            orc.setCustomName(prefix.copy().append(Component.translatable("awakening_system.dungeon.boss.abyssal_orc_warlord")));
+            orc.setItemSlot(EquipmentSlot.MAINHAND, new ItemStack(Items.NETHERITE_AXE));
+            boss = orc;
+         }
       }
 
+      boss.setCustomNameVisible(true);
+      buffMob(boss, hp, dmg, bossArmor, bossKb);
       applyDungeonMobMetadata(boss, session.rank, 5, true);
-      boss.moveTo(pos.getX() + 0.5, pos.getY(), pos.getZ() + 0.5, 180.0F, 0.0F);
+
+      double safeY = findSafeFloorY(level, pos.getX() + 0.5, pos.getY(), pos.getZ() + 0.5);
+      boss.moveTo(pos.getX() + 0.5, safeY, pos.getZ() + 0.5, 180.0F, 0.0F);
+
+      int bx = (int)Math.floor(pos.getX() + 0.5);
+      int by = (int)Math.floor(safeY);
+      int bz = (int)Math.floor(pos.getZ() + 0.5);
+      for (int cdx = -2; cdx <= 2; cdx++) {
+         for (int cdz = -2; cdz <= 2; cdz++) {
+            for (int cdy = 0; cdy <= 4; cdy++) {
+               BlockPos clearP = new BlockPos(bx + cdx, by + cdy, bz + cdz);
+               BlockState cState = level.getBlockState(clearP);
+               if (!cState.isAir() && !cState.is(Blocks.BEDROCK)) {
+                  level.setBlock(clearP, Blocks.AIR.defaultBlockState(), 2);
+               }
+            }
+         }
+      }
+
       boss.setPersistenceRequired();
       boss.setCanPickUpLoot(false);
       level.addFreshEntity(boss);
@@ -4941,11 +5092,7 @@ public final class DungeonManager {
                }
 
                if (session.bossBarrierOpen && !session.barrierBossBlocks.isEmpty()) {
-                  for (BlockPos b : session.barrierBossBlocks) {
-                     level.setBlock(b, Blocks.AIR.defaultBlockState(), 2);
-                  }
-
-                  session.barrierBossBlocks.clear();
+                  dissolveBossBarriers(level, session, null);
                }
 
                if (!session.bossBarrierOpen && !session.barrierBossBlocks.isEmpty()) {
@@ -4982,18 +5129,7 @@ public final class DungeonManager {
                                  }
 
                                  if (hasKey) {
-                                    session.bossBarrierOpen = true;
-
-                                    for (BlockPos b : session.barrierBossBlocks) {
-                                       level.setBlock(b, Blocks.AIR.defaultBlockState(), 2);
-                                       level.sendParticles(ParticleTypes.FLASH, b.getX() + 0.5, b.getY() + 0.5, b.getZ() + 0.5, 1, 0.1, 0.1, 0.1, 0.0);
-                                       level.sendParticles(
-                                          ParticleTypes.TOTEM_OF_UNDYING, b.getX() + 0.5, b.getY() + 0.5, b.getZ() + 0.5, 3, 0.2, 0.2, 0.2, 0.05
-                                       );
-                                    }
-
-                                    session.barrierBossBlocks.clear();
-                                    spawnBarrierDoorAmbush(level, session, bPos);
+                                    dissolveBossBarriers(level, session, bPos);
 
                                     for (ServerPlayer ally : session.getAllPlayers(server)) {
                                        if (ally != null) {
@@ -6374,19 +6510,8 @@ public final class DungeonManager {
 
       public void openBossBarrierDirectly(ServerLevel level) {
          if (this.bossBarrierOpen) return;
-         this.bossBarrierOpen = true;
-
-         for (BlockPos b : this.barrierBossBlocks) {
-            level.setBlock(b, Blocks.AIR.defaultBlockState(), 2);
-            level.sendParticles(ParticleTypes.FLASH, b.getX() + 0.5, b.getY() + 0.5, b.getZ() + 0.5, 1, 0.1, 0.1, 0.1, 0.0);
-            level.sendParticles(ParticleTypes.TOTEM_OF_UNDYING, b.getX() + 0.5, b.getY() + 0.5, b.getZ() + 0.5, 3, 0.2, 0.2, 0.2, 0.05);
-         }
-         this.barrierBossBlocks.clear();
-
          BlockPos ambushPos = this.barrierBossPos1 != null ? this.barrierBossPos1 : (this.barrierBossPos2 != null ? this.barrierBossPos2 : this.barrierBossPos3);
-         if (ambushPos != null) {
-            spawnBarrierDoorAmbush(level, this, ambushPos);
-         }
+         dissolveBossBarriers(level, this, ambushPos);
 
          if (level.getServer() != null) {
             for (ServerPlayer ally : this.getAllPlayers(level.getServer())) {
@@ -6422,7 +6547,7 @@ public final class DungeonManager {
       public final List<ItemStack> finalRewardStacks = new ArrayList<>();
       public boolean awaitingGambleDecision = false;
       public boolean isGamblingReward = false;
-      public final String biome;
+      public String biome;
       public final boolean isRedGate;
       public BlockPos exitPortalPos = null;
       public long lastExitWarningTick = 0L;

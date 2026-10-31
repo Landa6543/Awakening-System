@@ -15,6 +15,33 @@ public final class ModEntities {
     public static final DeferredRegister<EntityType<?>> ENTITY_TYPES =
             DeferredRegister.create(Registries.ENTITY_TYPE, AwakeningSystemMod.MOD_ID);
 
+    public static final Supplier<EntityType<GiantSandwormEntity>> GIANT_SANDWORM =
+            ENTITY_TYPES.register("giant_sandworm", () ->
+                    EntityType.Builder.<GiantSandwormEntity>of(GiantSandwormEntity::new, MobCategory.MONSTER)
+                            .sized(3.0F, 3.0F)
+                            .clientTrackingRange(128)
+                            .updateInterval(1)
+                            .fireImmune()
+                            .build("giant_sandworm"));
+
+    public static final Supplier<EntityType<GiantSandwormHeadPart>> GIANT_SANDWORM_HEAD =
+            ENTITY_TYPES.register("giant_sandworm_head", () ->
+                    EntityType.Builder.<GiantSandwormHeadPart>of(GiantSandwormHeadPart::new, MobCategory.MISC)
+                            .sized(3.5F, 3.5F)
+                            .clientTrackingRange(128)
+                            .updateInterval(1)
+                            .fireImmune()
+                            .build("giant_sandworm_head"));
+
+    public static final Supplier<EntityType<GiantSandwormBodyPart>> GIANT_SANDWORM_BODY =
+            ENTITY_TYPES.register("giant_sandworm_body", () ->
+                    EntityType.Builder.<GiantSandwormBodyPart>of(GiantSandwormBodyPart::new, MobCategory.MISC)
+                            .sized(3.0F, 3.0F)
+                            .clientTrackingRange(128)
+                            .updateInterval(1)
+                            .fireImmune()
+                            .build("giant_sandworm_body"));
+
     public static final Supplier<EntityType<SculkGolemEntity>> SCULK_GOLEM =
             ENTITY_TYPES.register("sculk_golem", () ->
                     EntityType.Builder.<SculkGolemEntity>of(SculkGolemEntity::new, MobCategory.MONSTER)
@@ -409,6 +436,13 @@ public final class ModEntities {
                             .sized(0.5F, 0.2F)
                             .noSave()
                             .build("meditation_seat"));
+
+    public static final Supplier<EntityType<WorkoutEntity>> WORKOUT =
+            ENTITY_TYPES.register("workout", () ->
+                    EntityType.Builder.<WorkoutEntity>of(WorkoutEntity::new, MobCategory.MISC)
+                            .sized(0.8F, 0.8F)
+                            .noSave()
+                            .build("workout"));
 
     public static final Supplier<EntityType<TavernSeatEntity>> TAVERN_SEAT =
             ENTITY_TYPES.register("tavern_seat", () ->
@@ -1146,6 +1180,7 @@ public final class ModEntities {
                             .build("dart"));
 
     public static void registerAttributes(EntityAttributeCreationEvent event) {
+        event.put(GIANT_SANDWORM.get(), GiantSandwormEntity.createAttributes().build());
         event.put(LIMBO_OPHANIM.get(), LimboOphanimEntity.createAttributes().build());
         event.put(STILT_WALKER.get(), StiltWalkerEntity.createAttributes().build());
         event.put(SPIDER_HEAD.get(), SpiderHeadEntity.createAttributes().build());

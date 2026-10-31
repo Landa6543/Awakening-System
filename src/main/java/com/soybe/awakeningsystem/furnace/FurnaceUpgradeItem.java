@@ -123,7 +123,7 @@ public class FurnaceUpgradeItem extends Item {
         String path = id.getPath();
 
         return switch (this.targetTier) {
-            case ABYSSAL -> path.contains("diamond_furnace") || path.contains("blast_furnace") || path.equals("furnace");
+            case ABYSSAL -> path.contains("netherite_furnace") || path.contains("diamond_furnace") || path.contains("blast_furnace") || path.equals("furnace");
             case SOUL_ALLOY -> block == SystemBlocks.ABYSSAL_FURNACE.get() || path.contains("netherite_furnace") || path.contains("diamond_furnace") || path.contains("blast_furnace");
             case ASTRALITE -> block == SystemBlocks.SOUL_ALLOY_FURNACE.get();
             case MITHRIL -> block == SystemBlocks.ASTRALITE_FURNACE.get() || block == SystemBlocks.SOUL_ALLOY_FURNACE.get() || path.contains("netherite_furnace") || path.contains("astral_furnace") || path.contains("blast_furnace") || path.equals("furnace");

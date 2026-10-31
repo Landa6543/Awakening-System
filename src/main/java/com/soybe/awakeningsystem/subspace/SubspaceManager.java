@@ -444,10 +444,69 @@ public final class SubspaceManager {
         }
     }
 
+    public static void compactSubspace(ServerPlayer player) {
+        if (player == null) return;
+        SystemData data = SystemEvents.data(player);
+        if (data == null) return;
+
+        net.minecraft.core.NonNullList<ItemStack> items = data.getSubspaceItems();
+        int unlocked = Math.max(54, data.subspaceUnlockedSlots());
+        data.ensureSubspaceCapacity(unlocked);
+
+        // 1. Unificar todos los stacks incompletos idénticos entre todos los cofres/páginas
+        for (int i = 0; i < unlocked; i++) {
+            ItemStack a = items.get(i);
+            if (a.isEmpty() || a.getCount() >= a.getMaxStackSize()) continue;
+
+            for (int j = i + 1; j < unlocked; j++) {
+                ItemStack b = items.get(j);
+                if (b.isEmpty()) continue;
+
+                if (ItemStack.isSameItemSameComponents(a, b)) {
+                    int space = a.getMaxStackSize() - a.getCount();
+                    int move = Math.min(space, b.getCount());
+                    a.grow(move);
+                    b.shrink(move);
+                    if (b.isEmpty()) {
+                        items.set(j, ItemStack.EMPTY);
+                    }
+                    if (a.getCount() >= a.getMaxStackSize()) break;
+                }
+            }
+        }
+
+        // 2. Compactar huecos vacíos hacia el frente para máxima organización
+        java.util.List<ItemStack> packed = new java.util.ArrayList<>();
+        for (int i = 0; i < unlocked; i++) {
+            ItemStack s = items.get(i);
+            if (!s.isEmpty()) {
+                packed.add(s);
+            }
+        }
+        for (int i = 0; i < unlocked; i++) {
+            items.set(i, i < packed.size() ? packed.get(i) : ItemStack.EMPTY);
+        }
+
+        if (player.containerMenu instanceof SubspaceMenu sm) {
+            sm.broadcastChanges();
+        }
+        com.soybe.awakeningsystem.AwakeningSystemMod.sync(player);
+
+        player.playNotifySound(SoundEvents.ENDER_CHEST_OPEN, SoundSource.PLAYERS, 0.8F, 1.6F);
+        player.playNotifySound(SoundEvents.EXPERIENCE_ORB_PICKUP, SoundSource.PLAYERS, 0.6F, 1.4F);
+    }
+
     public static void enterSubspace(ServerPlayer player) {
 
         if (player.serverLevel().dimension().equals(SUBSPACE_REALM)) {
             player.displayClientMessage(Component.translatable("awakening_system.subspace.msg.already_inside"), true);
+            return;
+        }
+
+        if (com.soybe.awakeningsystem.penalty.PenaltyZoneManager.isInPenaltyZone(player) ||
+            com.soybe.awakeningsystem.limbo.LimboWorldManager.isLimboDimension(player.level())) {
+            player.displayClientMessage(Component.translatable("awakening_system.screen.dim.sealed_desc"), true);
+            player.playNotifySound(net.minecraft.sounds.SoundEvents.NOTE_BLOCK_BASS.value(), net.minecraft.sounds.SoundSource.PLAYERS, 0.8F, 0.7F);
             return;
         }
 

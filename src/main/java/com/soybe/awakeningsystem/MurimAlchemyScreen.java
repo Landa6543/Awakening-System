@@ -181,7 +181,7 @@ public class MurimAlchemyScreen extends Screen {
 
     @Override
     public void renderBackground(GuiGraphics graphics, int mouseX, int mouseY, float partialTick) {
-        graphics.fill(0, 0, width, height, 0x55060D15);
+        // Clean - no dark murky screen-wide filter
     }
 
     @Override

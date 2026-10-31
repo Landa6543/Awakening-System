@@ -41,11 +41,11 @@ public class BeastmanWarriorEntity extends Monster {
 
     public static AttributeSupplier.Builder createAttributes() {
         return Monster.createMonsterAttributes()
-                .add(Attributes.MAX_HEALTH, 130.0D)
-                .add(Attributes.MOVEMENT_SPEED, 0.32D)
-                .add(Attributes.ATTACK_DAMAGE, 15.0D)
-                .add(Attributes.ARMOR, 8.0D)
-                .add(Attributes.KNOCKBACK_RESISTANCE, 0.5D)
+                .add(Attributes.MAX_HEALTH, 95.0D)
+                .add(Attributes.MOVEMENT_SPEED, 0.30D)
+                .add(Attributes.ATTACK_DAMAGE, 11.0D)
+                .add(Attributes.ARMOR, 6.0D)
+                .add(Attributes.KNOCKBACK_RESISTANCE, 0.4D)
                 .add(Attributes.FOLLOW_RANGE, 32.0D);
     }
 
@@ -91,9 +91,9 @@ public class BeastmanWarriorEntity extends Monster {
     private void performWarRoar() {
         this.playSound(com.soybe.awakeningsystem.ModSounds.BEASTMAN_ATTACK.get(), 1.5F, 0.9F);
         this.playSound(SoundEvents.RAVAGER_ROAR, 1.0F, 1.1F);
-        this.addEffect(new MobEffectInstance(MobEffects.DAMAGE_BOOST, 160, 1));
-        this.addEffect(new MobEffectInstance(MobEffects.DAMAGE_RESISTANCE, 160, 0));
-        this.addEffect(new MobEffectInstance(MobEffects.MOVEMENT_SPEED, 160, 0));
+        this.addEffect(new MobEffectInstance(MobEffects.DAMAGE_BOOST, 140, 0));
+        this.addEffect(new MobEffectInstance(MobEffects.DAMAGE_RESISTANCE, 140, 0));
+        this.addEffect(new MobEffectInstance(MobEffects.MOVEMENT_SPEED, 140, 0));
 
         if (this.level() instanceof net.minecraft.server.level.ServerLevel sl) {
             sl.sendParticles(ParticleTypes.ANGRY_VILLAGER, this.getX(), this.getY() + 1.8D, this.getZ(),

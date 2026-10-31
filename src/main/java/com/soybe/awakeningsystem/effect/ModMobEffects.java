@@ -39,6 +39,12 @@ public class ModMobEffects {
             () -> new TeyvatElementalEffect(MobEffectCategory.NEUTRAL, 0x2979FF));
     public static final DeferredHolder<MobEffect, MobEffect> MANA_SATURATION = MOB_EFFECTS.register("mana_saturation",
             () -> new ManaSaturationEffect(MobEffectCategory.HARMFUL, 0x00D4FF));
+    public static final DeferredHolder<MobEffect, MobEffect> ABYSSAL_ECHO = MOB_EFFECTS.register("abyssal_echo",
+            () -> new AbyssalEchoEffect(MobEffectCategory.BENEFICIAL, 0x00E5FF));
+    public static final DeferredHolder<MobEffect, MobEffect> GRAVITATIONAL_DENSITY = MOB_EFFECTS.register("gravitational_density",
+            () -> new GravitationalDensityEffect(MobEffectCategory.BENEFICIAL, 0x311B92));
+    public static final DeferredHolder<MobEffect, MobEffect> ABYSSAL_RESONANCE = MOB_EFFECTS.register("abyssal_resonance",
+            () -> new AbyssalResonanceEffect(MobEffectCategory.BENEFICIAL, 0x8E24AA));
 
     public static class TeyvatElementalEffect extends MobEffect {
         public TeyvatElementalEffect(MobEffectCategory category, int color) {

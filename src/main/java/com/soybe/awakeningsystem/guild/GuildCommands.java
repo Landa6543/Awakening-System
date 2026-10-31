@@ -47,6 +47,78 @@ public final class GuildCommands {
                                     GuildSavedData.get(inviter.server).invitePlayer(inviter, target);
                                     return 1;
                                 })))
+                .then(Commands.literal("tpa")
+                        .then(Commands.argument("player", EntityArgument.player())
+                                .executes(ctx -> {
+                                    ServerPlayer player = ctx.getSource().getPlayerOrException();
+                                    ServerPlayer target = EntityArgument.getPlayer(ctx, "player");
+                                    GuildSavedData.get(player.server).requestTpa(player, target);
+                                    return 1;
+                                }))
+                        .then(Commands.literal("accept")
+                                .executes(ctx -> {
+                                    ServerPlayer player = ctx.getSource().getPlayerOrException();
+                                    GuildSavedData.get(player.server).acceptTpa(player);
+                                    return 1;
+                                })
+                                .then(Commands.argument("player", StringArgumentType.word())
+                                        .executes(ctx -> {
+                                            ServerPlayer player = ctx.getSource().getPlayerOrException();
+                                            String target = StringArgumentType.getString(ctx, "player");
+                                            GuildSavedData.get(player.server).acceptTpa(player, target);
+                                            return 1;
+                                        })))
+                        .then(Commands.literal("deny")
+                                .executes(ctx -> {
+                                    ServerPlayer player = ctx.getSource().getPlayerOrException();
+                                    GuildSavedData.get(player.server).declineTpa(player);
+                                    return 1;
+                                })
+                                .then(Commands.argument("player", StringArgumentType.word())
+                                        .executes(ctx -> {
+                                            ServerPlayer player = ctx.getSource().getPlayerOrException();
+                                            String target = StringArgumentType.getString(ctx, "player");
+                                            GuildSavedData.get(player.server).declineTpa(player, target);
+                                            return 1;
+                                        })))
+                        .then(Commands.literal("cancel")
+                                .executes(ctx -> {
+                                    ServerPlayer player = ctx.getSource().getPlayerOrException();
+                                    GuildSavedData.get(player.server).cancelTpa(player);
+                                    return 1;
+                                })))
+                .then(Commands.literal("tpaccept")
+                        .executes(ctx -> {
+                            ServerPlayer player = ctx.getSource().getPlayerOrException();
+                            GuildSavedData.get(player.server).acceptTpa(player);
+                            return 1;
+                        })
+                        .then(Commands.argument("player", StringArgumentType.word())
+                                .executes(ctx -> {
+                                    ServerPlayer player = ctx.getSource().getPlayerOrException();
+                                    String target = StringArgumentType.getString(ctx, "player");
+                                    GuildSavedData.get(player.server).acceptTpa(player, target);
+                                    return 1;
+                                })))
+                .then(Commands.literal("tpadeny")
+                        .executes(ctx -> {
+                            ServerPlayer player = ctx.getSource().getPlayerOrException();
+                            GuildSavedData.get(player.server).declineTpa(player);
+                            return 1;
+                        })
+                        .then(Commands.argument("player", StringArgumentType.word())
+                                .executes(ctx -> {
+                                    ServerPlayer player = ctx.getSource().getPlayerOrException();
+                                    String target = StringArgumentType.getString(ctx, "player");
+                                    GuildSavedData.get(player.server).declineTpa(player, target);
+                                    return 1;
+                                })))
+                .then(Commands.literal("tpcancel")
+                        .executes(ctx -> {
+                            ServerPlayer player = ctx.getSource().getPlayerOrException();
+                            GuildSavedData.get(player.server).cancelTpa(player);
+                            return 1;
+                        }))
                 .then(Commands.literal("accept")
                         .executes(ctx -> {
                             ServerPlayer player = ctx.getSource().getPlayerOrException();
@@ -294,6 +366,10 @@ public final class GuildCommands {
                 .redirect(dispatcher.getRoot().getChild("guild"));
         dispatcher.register(clanRoot);
 
+        var gremioRoot = Commands.literal("gremio")
+                .redirect(dispatcher.getRoot().getChild("guild"));
+        dispatcher.register(gremioRoot);
+
         var gcCmd = Commands.literal("gc")
                 .executes(ctx -> {
                     ServerPlayer player = ctx.getSource().getPlayerOrException();
@@ -368,6 +444,44 @@ public final class GuildCommands {
                             return 1;
                         }));
         dispatcher.register(clanChatCmd);
+
+        var tpacceptCmd = Commands.literal("tpaccept")
+                .executes(ctx -> {
+                    ServerPlayer player = ctx.getSource().getPlayerOrException();
+                    GuildSavedData.get(player.server).acceptTpa(player);
+                    return 1;
+                })
+                .then(Commands.argument("player", StringArgumentType.word())
+                        .executes(ctx -> {
+                            ServerPlayer player = ctx.getSource().getPlayerOrException();
+                            String target = StringArgumentType.getString(ctx, "player");
+                            GuildSavedData.get(player.server).acceptTpa(player, target);
+                            return 1;
+                        }));
+        dispatcher.register(tpacceptCmd);
+
+        var tpadenyCmd = Commands.literal("tpadeny")
+                .executes(ctx -> {
+                    ServerPlayer player = ctx.getSource().getPlayerOrException();
+                    GuildSavedData.get(player.server).declineTpa(player);
+                    return 1;
+                })
+                .then(Commands.argument("player", StringArgumentType.word())
+                        .executes(ctx -> {
+                            ServerPlayer player = ctx.getSource().getPlayerOrException();
+                            String target = StringArgumentType.getString(ctx, "player");
+                            GuildSavedData.get(player.server).declineTpa(player, target);
+                            return 1;
+                        }));
+        dispatcher.register(tpadenyCmd);
+
+        var tpcancelCmd = Commands.literal("tpcancel")
+                .executes(ctx -> {
+                    ServerPlayer player = ctx.getSource().getPlayerOrException();
+                    GuildSavedData.get(player.server).cancelTpa(player);
+                    return 1;
+                });
+        dispatcher.register(tpcancelCmd);
     }
 
     private static void printGuildInfo(ServerPlayer player, Guild g) {

@@ -1,0 +1,8 @@
+{
+  "type": "neoforge:add_features",
+  "biomes": "#minecraft:is_overworld",
+  "features": [
+    "awakening_system:geode_abyssal_amethyst"
+  ],
+  "step": "underground_decoration"
+}

@@ -1,0 +1,24 @@
+{
+    "key":  {
+                "L":  {
+                          "item":  "minecraft:lapis_block"
+                      },
+                "T":  {
+                          "tag":  "awakening_system:world_totems"
+                      },
+                "M":  {
+                          "item":  "awakening_system:mithril_ingot"
+                      }
+            },
+    "category":  "equipment",
+    "pattern":  [
+                    "MLM",
+                    "LTL",
+                    "MLM"
+                ],
+    "result":  {
+                   "count":  1,
+                   "id":  "awakening_system:mithril_totem"
+               },
+    "type":  "minecraft:crafting_shaped"
+}

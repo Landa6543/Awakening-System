@@ -112,13 +112,8 @@ public class StatueOfTheSevenScreen extends Screen {
         int left = (width - GUI_WIDTH) / 2;
         int top = (height - GUI_HEIGHT) / 2;
 
-        // Fondo y marcos dorados celestiales
-        g.fill(left - 2, top - 2, left + GUI_WIDTH + 2, top + GUI_HEIGHT + 2, 0xFFDFB76C);
-        g.fill(left, top, left + GUI_WIDTH, top + GUI_HEIGHT, 0xF508111A);
-
-        // Barra de Título
-        g.fill(left, top, left + GUI_WIDTH, top + 26, 0xFF0D1D2B);
-        g.fill(left, top + 25, left + GUI_WIDTH, top + 26, 0xFFDFB76C);
+        ModernGuiHelper.drawModernWindow(g, left, top, GUI_WIDTH, GUI_HEIGHT, ModernGuiHelper.GuiTheme.TEYVAT);
+        ModernGuiHelper.drawModernHeader(g, left + 4, top + 3, GUI_WIDTH - 8, 23, null, 0, ModernGuiHelper.GuiTheme.TEYVAT, font);
 
         int accentCol = 0xFF4EE2EC;
         g.fill(left, top, left + 8, top + 2, accentCol);

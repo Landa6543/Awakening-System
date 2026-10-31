@@ -191,6 +191,8 @@ public final class SellDefinitions {
             new SellEntry("sell_mana_crystal_cluster_a", "awakening_system:mana_crystal_cluster_a", 100000, 1, "block.awakening_system.mana_crystal_cluster_a", "ores"),
             new SellEntry("sell_mana_crystal_shard_s", "awakening_system:mana_crystal_shard_s", 60000, 1, "item.awakening_system.mana_crystal_shard_s", "ores"),
             new SellEntry("sell_mana_crystal_cluster_s", "awakening_system:mana_crystal_cluster_s", 250000, 1, "block.awakening_system.mana_crystal_cluster_s", "ores"),
+            new SellEntry("sell_mana_crystal_shard_ex", "awakening_system:mana_crystal_shard_ex", 1000000, 1, "item.awakening_system.mana_crystal_shard_ex", "ores"),
+            new SellEntry("sell_mana_crystal_cluster_ex", "awakening_system:mana_crystal_cluster_ex", 4000000, 1, "block.awakening_system.mana_crystal_cluster_ex", "ores"),
 
             new SellEntry("sell_white_iron_chunk", "awakening_system:white_iron_chunk", 3, 1, "item.awakening_system.white_iron_chunk", "ores"),
             new SellEntry("sell_crystal_chunk", "awakening_system:crystal_chunk", 6, 1, "item.awakening_system.crystal_chunk", "ores"),
@@ -382,8 +384,6 @@ public final class SellDefinitions {
             new SellEntry("sell_sea_lantern", "minecraft:sea_lantern", 8, 1, "block.minecraft.sea_lantern", "blocks"),
             new SellEntry("sell_glowstone", "minecraft:glowstone", 4, 1, "block.minecraft.glowstone", "blocks"),
             new SellEntry("sell_shroomlight", "minecraft:shroomlight", 4, 1, "block.minecraft.shroomlight", "blocks"),
-            new SellEntry("sell_feather", "minecraft:feather", 1, 2, "awakening_system.sell.item.feather", "blocks"),
-            new SellEntry("sell_leather", "minecraft:leather", 2, 1, "awakening_system.sell.item.leather", "blocks"),
             new SellEntry("sell_fd_rich_soil", "farmersdelight:rich_soil", 2, 1, "awakening_system.sell.item.fd_rich_soil", "blocks", "farmersdelight"),
             new SellEntry("sell_create_cogwheel", "create:cogwheel", 3, 1, "block.create.cogwheel", "blocks", "create"),
             new SellEntry("sell_create_large_cogwheel", "create:large_cogwheel", 6, 1, "block.create.large_cogwheel", "blocks", "create")
@@ -435,7 +435,27 @@ public final class SellDefinitions {
     public static ItemStack createStack(SellEntry entry) {
         if (entry == null) return ItemStack.EMPTY;
         ResourceLocation id = ResourceLocation.parse(entry.itemId());
-        if (!BuiltInRegistries.ITEM.containsKey(id)) return ItemStack.EMPTY;
-        return new ItemStack(BuiltInRegistries.ITEM.get(id), entry.amount());
+        if (BuiltInRegistries.ITEM.containsKey(id)) {
+            return new ItemStack(BuiltInRegistries.ITEM.get(id), entry.amount());
+        }
+        if ("apotheosis".equals(id.getNamespace()) || "apothic_enchanting".equals(id.getNamespace()) || "apothic_attributes".equals(id.getNamespace())) {
+            String path = id.getPath();
+            for (String ns : new String[]{"apothic_enchanting", "apothic_attributes", "apotheosis", "apothic_spawners"}) {
+                ResourceLocation alt = ResourceLocation.fromNamespaceAndPath(ns, path);
+                if (BuiltInRegistries.ITEM.containsKey(alt)) {
+                    return new ItemStack(BuiltInRegistries.ITEM.get(alt), entry.amount());
+                }
+            }
+        }
+        if ("pamhc2foodextended".equals(id.getNamespace()) || "pamhc2foodcore".equals(id.getNamespace())) {
+            String path = id.getPath();
+            for (String ns : new String[]{"pamhc2foodcore", "pamhc2foodextended"}) {
+                ResourceLocation alt = ResourceLocation.fromNamespaceAndPath(ns, path);
+                if (BuiltInRegistries.ITEM.containsKey(alt)) {
+                    return new ItemStack(BuiltInRegistries.ITEM.get(alt), entry.amount());
+                }
+            }
+        }
+        return ItemStack.EMPTY;
     }
 }

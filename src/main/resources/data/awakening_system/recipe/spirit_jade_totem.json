@@ -1,0 +1,24 @@
+{
+    "key":  {
+                "T":  {
+                          "tag":  "awakening_system:world_totems"
+                      },
+                "J":  {
+                          "item":  "awakening_system:spirit_jade_ingot"
+                      },
+                "P":  {
+                          "item":  "awakening_system:marrow_cleansing_pill"
+                      }
+            },
+    "category":  "equipment",
+    "pattern":  [
+                    "JPJ",
+                    "PTP",
+                    "JPJ"
+                ],
+    "result":  {
+                   "count":  1,
+                   "id":  "awakening_system:spirit_jade_totem"
+               },
+    "type":  "minecraft:crafting_shaped"
+}

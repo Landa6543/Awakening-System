@@ -22,7 +22,7 @@ public final class TerraBlenderCompat {
         try {
             Regions.register(new AwakeningOverworldRegion(
                     ResourceLocation.fromNamespaceAndPath(AwakeningSystemMod.MOD_ID, "overworld_region"),
-                    10
+                    3
             ));
             AwakeningSystemMod.LOGGER.info("Awakening System: TerraBlender Overworld region registered successfully!");
         } catch (Throwable t) {
@@ -46,6 +46,33 @@ public final class TerraBlenderCompat {
     public static net.minecraft.world.level.levelgen.SurfaceRules.RuleSource makeSurfaceRules() {
         ResourceKey<Biome> astralDripstone = ResourceKey.create(Registries.BIOME,
                 ResourceLocation.fromNamespaceAndPath(AwakeningSystemMod.MOD_ID, "overworld_astral_dripstone_chasm"));
+        ResourceKey<Biome> penaltyDesert = ResourceKey.create(Registries.BIOME,
+                ResourceLocation.fromNamespaceAndPath(AwakeningSystemMod.MOD_ID, "penalty_desert"));
+        ResourceKey<Biome> penaltyDunes = ResourceKey.create(Registries.BIOME,
+                ResourceLocation.fromNamespaceAndPath(AwakeningSystemMod.MOD_ID, "penalty_dunes"));
+        ResourceKey<Biome> penaltyCanyon = ResourceKey.create(Registries.BIOME,
+                ResourceLocation.fromNamespaceAndPath(AwakeningSystemMod.MOD_ID, "penalty_canyon"));
+
+        net.minecraft.world.level.levelgen.SurfaceRules.RuleSource sand = net.minecraft.world.level.levelgen.SurfaceRules.state(
+                net.minecraft.world.level.block.Blocks.SAND.defaultBlockState());
+        net.minecraft.world.level.levelgen.SurfaceRules.RuleSource sandstone = net.minecraft.world.level.levelgen.SurfaceRules.state(
+                net.minecraft.world.level.block.Blocks.SANDSTONE.defaultBlockState());
+        net.minecraft.world.level.levelgen.SurfaceRules.RuleSource redSand = net.minecraft.world.level.levelgen.SurfaceRules.state(
+                net.minecraft.world.level.block.Blocks.RED_SAND.defaultBlockState());
+        net.minecraft.world.level.levelgen.SurfaceRules.RuleSource redSandstone = net.minecraft.world.level.levelgen.SurfaceRules.state(
+                net.minecraft.world.level.block.Blocks.RED_SANDSTONE.defaultBlockState());
+
+        net.minecraft.world.level.levelgen.SurfaceRules.RuleSource yellowDesert = net.minecraft.world.level.levelgen.SurfaceRules.sequence(
+                net.minecraft.world.level.levelgen.SurfaceRules.ifTrue(net.minecraft.world.level.levelgen.SurfaceRules.ON_FLOOR, sand),
+                net.minecraft.world.level.levelgen.SurfaceRules.ifTrue(net.minecraft.world.level.levelgen.SurfaceRules.UNDER_FLOOR, sandstone),
+                net.minecraft.world.level.levelgen.SurfaceRules.ifTrue(net.minecraft.world.level.levelgen.SurfaceRules.DEEP_UNDER_FLOOR, sandstone)
+        );
+
+        net.minecraft.world.level.levelgen.SurfaceRules.RuleSource canyonDesert = net.minecraft.world.level.levelgen.SurfaceRules.sequence(
+                net.minecraft.world.level.levelgen.SurfaceRules.ifTrue(net.minecraft.world.level.levelgen.SurfaceRules.ON_FLOOR, redSand),
+                net.minecraft.world.level.levelgen.SurfaceRules.ifTrue(net.minecraft.world.level.levelgen.SurfaceRules.UNDER_FLOOR, redSandstone),
+                net.minecraft.world.level.levelgen.SurfaceRules.ifTrue(net.minecraft.world.level.levelgen.SurfaceRules.DEEP_UNDER_FLOOR, redSandstone)
+        );
 
         net.minecraft.world.level.levelgen.SurfaceRules.RuleSource abyssalStone = net.minecraft.world.level.levelgen.SurfaceRules.state(
                 com.soybe.awakeningsystem.block.SystemBlocks.ABYSSAL_STONE.get().defaultBlockState());
@@ -72,9 +99,27 @@ public final class TerraBlenderCompat {
                 abyssalStone
         );
 
-        return net.minecraft.world.level.levelgen.SurfaceRules.ifTrue(
-                net.minecraft.world.level.levelgen.SurfaceRules.isBiome(astralDripstone),
-                caveRules
+        // Retorna reglas de desierto para la zona de castigo y reglas abisales para el chasm
+        return net.minecraft.world.level.levelgen.SurfaceRules.sequence(
+                net.minecraft.world.level.levelgen.SurfaceRules.ifTrue(
+                        net.minecraft.world.level.levelgen.SurfaceRules.isBiome(penaltyCanyon),
+                        canyonDesert
+                ),
+                net.minecraft.world.level.levelgen.SurfaceRules.ifTrue(
+                        net.minecraft.world.level.levelgen.SurfaceRules.isBiome(penaltyDesert, penaltyDunes),
+                        yellowDesert
+                ),
+                net.minecraft.world.level.levelgen.SurfaceRules.ifTrue(
+                        net.minecraft.world.level.levelgen.SurfaceRules.isBiome(astralDripstone),
+                        net.minecraft.world.level.levelgen.SurfaceRules.ifTrue(
+                                net.minecraft.world.level.levelgen.SurfaceRules.not(
+                                        net.minecraft.world.level.levelgen.SurfaceRules.yBlockCheck(
+                                                net.minecraft.world.level.levelgen.VerticalAnchor.absolute(-10), 0
+                                        )
+                                ),
+                                caveRules
+                        )
+                )
         );
     }
 
@@ -101,8 +146,8 @@ public final class TerraBlenderCompat {
                 builder.replaceBiome(Biomes.DARK_FOREST, spiritGrove);
                 builder.replaceBiome(Biomes.OLD_GROWTH_BIRCH_FOREST, spiritGrove);
 
+                // Solo reemplazar dripstone caves de forma equilibrada, no lush caves
                 builder.replaceBiome(Biomes.DRIPSTONE_CAVES, astralDripstone);
-                builder.replaceBiome(Biomes.LUSH_CAVES, astralDripstone);
             });
         }
     }

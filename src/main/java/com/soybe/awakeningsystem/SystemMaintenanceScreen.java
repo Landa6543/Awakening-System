@@ -1,5 +1,6 @@
 package com.soybe.awakeningsystem;
 
+import com.soybe.awakeningsystem.client.gui.ModernGuiHelper;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.gui.components.Button;
@@ -198,18 +199,9 @@ public class SystemMaintenanceScreen extends Screen {
         int textCol = is40 ? 0xFFE2F1FF : (is30 ? 0xFFD8FBE4 : 0xFFEDE4F8);
         int alertCol = 0xFFFF8080;
 
-        graphics.fill(boxX - 2, boxY - 2, boxX + boxW + 2, boxY + boxH + 2, outerBorder);
-        graphics.fill(boxX - 1, boxY - 1, boxX + boxW + 1, boxY + boxH + 1, innerBorder);
-        graphics.fill(boxX, boxY, boxX + boxW, boxY + boxH, bg);
-
-        graphics.fill(boxX, boxY, boxX + 12, boxY + 2, cornerAccent);
-        graphics.fill(boxX, boxY, boxX + 2, boxY + 12, cornerAccent);
-        graphics.fill(boxX + boxW - 12, boxY, boxX + boxW, boxY + 2, cornerAccent);
-        graphics.fill(boxX + boxW - 2, boxY, boxX + boxW, boxY + 12, cornerAccent);
-        graphics.fill(boxX, boxY + boxH - 2, boxX + 12, boxY + boxH, cornerAccent);
-        graphics.fill(boxX, boxY + boxH - 12, boxX + 2, boxY + boxH, cornerAccent);
-        graphics.fill(boxX + boxW - 12, boxY + boxH - 2, boxX + boxW, boxY + boxH, cornerAccent);
-        graphics.fill(boxX + boxW - 2, boxY + boxH - 12, boxX + boxW, boxY + boxH, cornerAccent);
+        ModernGuiHelper.GuiTheme theme = is40 ? ModernGuiHelper.GuiTheme.TEYVAT : (is30 ? ModernGuiHelper.GuiTheme.MURIM : ModernGuiHelper.GuiTheme.ISEKAI);
+        ModernGuiHelper.drawModernWindow(graphics, boxX, boxY, boxW, boxH, theme);
+        ModernGuiHelper.drawModernHeader(graphics, boxX + 6, boxY + 4, boxW - 12, 34, null, 0, theme, font);
 
         graphics.drawCenteredString(this.font, title, this.width / 2, boxY + 12, titleCol);
         graphics.drawCenteredString(this.font, subtitle, this.width / 2, boxY + 26, subCol);

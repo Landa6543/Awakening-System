@@ -2,17 +2,14 @@
   "type": "minecraft:crafting_shaped",
   "category": "misc",
   "pattern": [
-    "###",
-    "#F#",
-    "###"
+    "AWA",
+    "WFW",
+    "AWA"
   ],
   "key": {
-    "#": {
-      "item": "awakening_system:abyssal_ingot"
-    },
-    "F": {
-      "item": "minecraft:blast_furnace"
-    }
+    "A": { "item": "awakening_system:abyssal_ingot" },
+    "W": { "item": "awakening_system:refined_white_iron_ingot" },
+    "F": { "item": "minecraft:blast_furnace" }
   },
   "result": {
     "count": 1,

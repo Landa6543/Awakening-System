@@ -1,0 +1,21 @@
+{
+  "type": "minecraft:crafting_shaped",
+  "category": "misc",
+  "pattern": [
+    "###",
+    "#X#",
+    "###"
+  ],
+  "key": {
+    "#": {
+      "item": "awakening_system:spirit_jade_block"
+    },
+    "X": {
+      "item": "awakening_system:spirit_jade_apple"
+    }
+  },
+  "result": {
+    "count": 1,
+    "id": "awakening_system:enchanted_spirit_jade_apple"
+  }
+}

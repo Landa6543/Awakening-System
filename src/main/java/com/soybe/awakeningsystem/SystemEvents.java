@@ -267,6 +267,72 @@ public final class SystemEvents {
       return (SystemData)player.getData(AwakeningSystemMod.PLAYER_SYSTEM);
    }
 
+   public static void checkAndTriggerWelcomeScreen(ServerPlayer player, SystemData data, boolean isBrandNewPlayer) {
+      if (player == null || data == null) return;
+      String currentVersion = AwakeningSystemMod.getModVersion();
+
+      if (isBrandNewPlayer) {
+         // Brand new player in a newly created world: ALWAYS show welcome screen!
+         data.setWelcomeSeenVersion(currentVersion);
+         data.setPendingWelcomePacket(true);
+         return;
+      }
+
+      // Existing player in a world already created with the mod:
+      String seenVersion = data.welcomeSeenVersion();
+      if (seenVersion.isEmpty()) {
+         // Existing world created in 0.3.3 or earlier before this tracking was added.
+         // As requested: "pero solo cuando saquemos la 0.3.4 cuando lo implementemos"
+         // If current version is at least 0.3.4, trigger it once!
+         // If still in 0.3.3, record 0.3.3 so it does NOT show now, but WILL show when updated to 0.3.4.
+         if (isVersionAtLeast(currentVersion, "0.3.4")) {
+            data.setWelcomeSeenVersion(currentVersion);
+            data.setPendingWelcomePacket(true);
+         } else {
+            data.setWelcomeSeenVersion(currentVersion);
+         }
+         return;
+      }
+
+      // Player has a previously recorded seen version:
+      // Check if updating to 0.3.4 or higher AND current version is newer than seen version!
+      if (isVersionAtLeast(currentVersion, "0.3.4") && isVersionNewer(currentVersion, seenVersion)) {
+         data.setWelcomeSeenVersion(currentVersion);
+         data.setPendingWelcomePacket(true);
+      }
+   }
+
+   public static boolean isVersionNewer(String current, String oldVer) {
+      if (oldVer == null || oldVer.isEmpty()) return true;
+      return compareSemver(current, oldVer) > 0;
+   }
+
+   public static boolean isVersionAtLeast(String current, String target) {
+      return compareSemver(current, target) >= 0;
+   }
+
+   public static int compareSemver(String v1, String v2) {
+      if (v1 == null) v1 = "0.0.0";
+      if (v2 == null) v2 = "0.0.0";
+      String[] parts1 = v1.split("[.\\-_]");
+      String[] parts2 = v2.split("[.\\-_]");
+      int length = Math.max(parts1.length, parts2.length);
+      for (int i = 0; i < length; i++) {
+         int num1 = 0;
+         int num2 = 0;
+         if (i < parts1.length) {
+            try { num1 = Integer.parseInt(parts1[i].replaceAll("\\D+", "")); } catch (Exception ignored) {}
+         }
+         if (i < parts2.length) {
+            try { num2 = Integer.parseInt(parts2[i].replaceAll("\\D+", "")); } catch (Exception ignored) {}
+         }
+         if (num1 != num2) {
+            return Integer.compare(num1, num2);
+         }
+      }
+      return 0;
+   }
+
    @SubscribeEvent
    public static void onLogin(PlayerLoggedInEvent event) {
       if (event.getEntity() instanceof ServerPlayer player) {
@@ -282,9 +348,20 @@ public final class SystemEvents {
             ensurePaimonInTeyvat(player);
          }
 
+         CompoundTag persistedTag = player.getPersistentData().getCompound("PlayerPersisted");
+         boolean isBrandNewPlayer = !player.getPersistentData().getBoolean("awakening_attached")
+            && !persistedTag.getBoolean("awakening_attached")
+            && !persistedTag.getBoolean("awakening_received_guide")
+            && !data(player).hasReceivedHunterGuide();
+
          player.getPersistentData().putBoolean("awakening_attached", true);
+         persistedTag.putBoolean("awakening_attached", true);
+         player.getPersistentData().put("PlayerPersisted", persistedTag);
+
          refreshPlayer(player);
          SystemData data = data(player);
+
+         checkAndTriggerWelcomeScreen(player, data, isBrandNewPlayer);
          if (TitleDefinitions.isCreator(player)) {
             boolean wasCreator = data.isCreator();
             data.setCreator(true);
@@ -458,7 +535,7 @@ public final class SystemEvents {
             }
 
             AwakeningPlayerRegistryData registryData = player.getServer() != null ? AwakeningPlayerRegistryData.get(player.getServer()) : null;
-            CompoundTag persistedTag = player.getPersistentData().getCompound("PlayerPersisted");
+            persistedTag = player.getPersistentData().getCompound("PlayerPersisted");
             boolean alreadyReceived = data.hasReceivedHunterGuide()
                || player.getPersistentData().getBoolean("awakening_received_guide")
                || persistedTag.getBoolean("awakening_received_guide")
@@ -498,7 +575,7 @@ public final class SystemEvents {
                }
             }
 
-            CompoundTag persistedTag = player.getPersistentData().getCompound("PlayerPersisted");
+            persistedTag = player.getPersistentData().getCompound("PlayerPersisted");
             boolean alreadyReceivedBestiary = player.getPersistentData().getBoolean("awakening_received_bestiary")
                || persistedTag.getBoolean("awakening_received_bestiary");
             if (bestiaryCount <= 0 && !alreadyReceivedBestiary) {
@@ -800,7 +877,7 @@ public final class SystemEvents {
                            case MYTH -> "✦ ANCESTRAL MYTHIC FABLE UNLOCKED! ✦";
                            default -> "✦ SEMI-MYTHIC FABLE OBTAINED! ✦";
                         };
-                        String bannerDesc = pName + " acquired: " + fable.grade().colorCode() + "[" + fable.title() + "]";
+                        String bannerDesc = pName + " acquired: " + fable.grade().colorCode() + "[awakening_system.fable." + fable.id() + ".title]";
                         PacketDistributor.sendToAllPlayers(
                            new SystemAnnouncementPayload(bannerTitle, bannerDesc, fable.grade().hexColor()), new CustomPacketPayload[0]
                         );
@@ -814,7 +891,7 @@ public final class SystemEvents {
                               "awakening_system.notification.fable_world_first.title",
                               "awakening_system.notification.fable_world_first.desc",
                               fable.grade().hexColor(),
-                              new Object[]{pName, fable.grade().colorCode() + "[" + fable.title() + "]"}
+                              new Object[]{pName, fable.grade().colorCode() + "[awakening_system.fable." + fable.id() + ".title]"}
                            );
                         } else if (p.getUUID().equals(player.getUUID())) {
                            AwakeningSystemMod.notify(
@@ -822,7 +899,7 @@ public final class SystemEvents {
                               "awakening_system.notification.fable_acquired.title",
                               "awakening_system.notification.fable_acquired.desc",
                               fable.grade().hexColor(),
-                              new Object[]{fable.grade().colorCode() + "[" + fable.title(), effectiveWeight}
+                              new Object[]{fable.grade().colorCode() + "awakening_system.fable." + fable.id() + ".title", effectiveWeight}
                            );
                         }
                      }
@@ -912,6 +989,7 @@ public final class SystemEvents {
          PagodaTrialManager.tick(server);
          PhysicalRouletteManager.tick(server);
          TeyvatWorldManager.tick(server);
+         com.soybe.awakeningsystem.penalty.PenaltyZoneManager.serverTick(server);
          tickShadowSoldiers(server);
 
          for (ServerLevel sl : server.getAllLevels()) {
@@ -929,6 +1007,9 @@ public final class SystemEvents {
    @SubscribeEvent
    public static void onDimensionChange(PlayerChangedDimensionEvent event) {
       if (event.getEntity() instanceof ServerPlayer player) {
+         if (event.getFrom().equals(com.soybe.awakeningsystem.penalty.PenaltyZoneManager.PENALTY_ZONE)) {
+            com.soybe.awakeningsystem.penalty.PenaltyZoneManager.onPlayerLeftPenaltyZone(player);
+         }
          data(player).addVisitedDimension(event.getTo().location().toString());
          if (event.getTo().equals(TeyvatWorldManager.TEYVAT_WORLD)) {
             SystemData pData = data(player);
@@ -1714,6 +1795,12 @@ public final class SystemEvents {
    @SubscribeEvent
    public static void onLivingDeath(LivingDeathEvent event) {
       if (event.getEntity() instanceof ServerPlayer sp) {
+         if (com.soybe.awakeningsystem.penalty.PenaltyZoneManager.isInPenaltyZone(sp)) {
+            event.setCanceled(true);
+            com.soybe.awakeningsystem.penalty.PenaltyZoneManager.failPenaltyZone(sp);
+            return;
+         }
+
          if (LimboWorldManager.isLimboDimension(sp.level())) {
             event.setCanceled(true);
             sp.setHealth(sp.getMaxHealth());
@@ -2192,6 +2279,7 @@ public final class SystemEvents {
             && !event.getEntity().getTags().contains("shadow_soldier")
             && !(event.getEntity() instanceof CelestialDragonEntity)
             && !(event.getEntity() instanceof AncientCelestialDragonBossEntity)
+            && !(event.getEntity() instanceof LimboOphanimEntity)
             && !event.getEntity().getTags().contains("no_shadow_extraction")
             && !PagodaTrialManager.isTrialEnemy(event.getEntity().getUUID())
             && player.level() instanceof ServerLevel slx) {
@@ -2590,7 +2678,6 @@ public final class SystemEvents {
                      || entity.getCustomName().getString().contains("[JEFE DE CÁMARA]")
                );
          if (isSubjefe) {
-            entity.spawnAtLocation(new ItemStack((ItemLike)SystemItems.DUNGEON_KEY.get(), 1));
             if (session != null) {
                session.minibossesDefeated++;
                if (session.minibossesDefeated >= 2 && !session.bossBarrierOpen) {
@@ -2603,20 +2690,8 @@ public final class SystemEvents {
                      }
                   }
                }
-            }
-         } else if (session != null && session.dungeonKeysDropped < 2) {
-            float dropChance = session.dungeonKeysDropped == 0 ? 0.05F : 0.01F;
-            if (rand.nextFloat() < dropChance) {
-               session.dungeonKeysDropped++;
-               entity.spawnAtLocation(new ItemStack((ItemLike)SystemItems.OVERWORLD_DUNGEON_KEY.get(), 1));
-               if (level.getServer() != null) {
-                  for (ServerPlayer spx : session.getAllPlayers(level.getServer())) {
-                     if (spx != null) {
-                        spx.playNotifySound((SoundEvent)SoundEvents.NOTE_BLOCK_CHIME.value(), SoundSource.PLAYERS, 1.2F, 1.4F);
-                        spx.displayClientMessage(Component.translatable("awakening_system.dungeon.key_dropped"), true);
-                     }
-                  }
-               }
+            } else {
+               entity.spawnAtLocation(new ItemStack((ItemLike)SystemItems.DUNGEON_KEY.get(), 1));
             }
          }
       }
@@ -2834,8 +2909,16 @@ public final class SystemEvents {
             int mobLvl = attackerMob.getPersistentData().getInt("rpg_mob_level");
             int pLvl = Math.max(1, data(victimPlayer).level());
             if (mobLvl > pLvl && mobLvl > 0) {
-               float ratio = Math.max(0.2F, (float)pLvl / mobLvl);
-               event.setNewDamage(event.getNewDamage() * ratio);
+               float penalty = Math.min(1.4F, 1.0F + (float)(mobLvl - pLvl) * 0.005F);
+               event.setNewDamage(event.getNewDamage() * penalty);
+            }
+
+            // Prevención de one-shots por mobs estándar (daño máximo por impacto no letal)
+            float maxHp = victimPlayer.getMaxHealth();
+            boolean isBoss = WorldBossScalingManager.isWorldBoss(attackerMob) || BossCompatibilityManager.isBoss(attackerMob);
+            float maxAllowedHit = isBoss ? maxHp * 0.70F : maxHp * 0.45F;
+            if (event.getNewDamage() > maxAllowedHit && maxHp >= 20.0F) {
+               event.setNewDamage(maxAllowedHit);
             }
          } else if (event.getEntity() instanceof Mob shadowVictim && shadowVictim.getTags().contains("shadow_soldier") && event.getSource().getEntity() instanceof Mob enemyAttacker) {
             int shadowLvl = shadowVictim.getPersistentData().getInt("rpg_mob_level");
@@ -4014,7 +4097,7 @@ public final class SystemEvents {
             event.setCanceled(true);
             player.displayClientMessage(Component.translatable("awakening_system.casino.bucket_prohibited"), true);
          } else if (SystemItems.DUNGEON_KEY != null && SystemItems.DUNGEON_KEY.isBound() && var5.is((Item)SystemItems.DUNGEON_KEY.value())) {
-          if (LimboWorldManager.isLimboDimension(player.level())) {
+          if (LimboWorldManager.isLimboDimension(player.level()) || com.soybe.awakeningsystem.penalty.PenaltyZoneManager.isInPenaltyZone(player)) {
                player.displayClientMessage(Component.translatable("awakening_system.limbo.dungeon_blocked"), true);
                event.setCanceled(true);
             } else {
@@ -4031,7 +4114,7 @@ public final class SystemEvents {
          } else if (SystemItems.RANKER_TOWER_TICKET != null
             && SystemItems.RANKER_TOWER_TICKET.isBound()
             && var5.is((Item)SystemItems.RANKER_TOWER_TICKET.value())) {
-          if (LimboWorldManager.isLimboDimension(player.level())) {
+          if (LimboWorldManager.isLimboDimension(player.level()) || com.soybe.awakeningsystem.penalty.PenaltyZoneManager.isInPenaltyZone(player)) {
                player.displayClientMessage(Component.translatable("awakening_system.limbo.escape_blocked"), true);
                event.setCanceled(true);
             } else {
@@ -4072,7 +4155,7 @@ public final class SystemEvents {
    }
 
    public static void handleSelectDungeon(ServerPlayer player, String rank, String biome) {
-      if (LimboWorldManager.isLimboDimension(player.level())) {
+      if (LimboWorldManager.isLimboDimension(player.level()) || com.soybe.awakeningsystem.penalty.PenaltyZoneManager.isInPenaltyZone(player)) {
          player.displayClientMessage(Component.translatable("awakening_system.limbo.dungeon_blocked"), true);
       } else if (DungeonManager.isInDungeon(player.getUUID())) {
          player.displayClientMessage(Component.translatable("awakening_system.action.already_in_dungeon"), true);
@@ -4218,6 +4301,24 @@ public final class SystemEvents {
 
             SystemData spData = data(sp);
             long gameTime = sp.level().getGameTime();
+
+            // Proteccion Anti-One-Shot (Tenacidad / Grit):
+            // Si el jugador estaba con buena salud (>= 75% HP) y recibe un impacto letal que lo mataria de golpe,
+            // sobrevive con 1 de vida y recibe invulnerabilidad breve para poder reaccionar.
+            if (!event.getSource().is(DamageTypeTags.BYPASSES_INVULNERABILITY)) {
+               float currentHp = sp.getHealth();
+               float maxHp = sp.getMaxHealth();
+               if (currentHp >= maxHp * 0.75F && event.getAmount() >= currentHp) {
+                  event.setAmount(Math.max(1.0F, currentHp - 1.0F));
+                  sp.addEffect(new MobEffectInstance(MobEffects.DAMAGE_RESISTANCE, 40, 2, false, false, true));
+                  sp.level().playSound(null, sp.getX(), sp.getY(), sp.getZ(), SoundEvents.SHIELD_BREAK, SoundSource.PLAYERS, 1.2F, 0.9F);
+                  sp.level().playSound(null, sp.getX(), sp.getY(), sp.getZ(), SoundEvents.ITEM_BREAK, SoundSource.PLAYERS, 1.0F, 1.2F);
+                  if (sp.level() instanceof ServerLevel sl) {
+                     sl.sendParticles(ParticleTypes.FLASH, sp.getX(), sp.getY() + 1.0, sp.getZ(), 2, 0.0, 0.0, 0.0, 0.0);
+                  }
+                  sp.displayClientMessage(Component.translatable("awakening_system.combat.grit_saved"), true);
+               }
+            }
             long bellUntil = sp.getPersistentData().getLong("spirit_jade_bell_active_until");
             if (gameTime < bellUntil) {
                event.setCanceled(true);
@@ -4575,6 +4676,101 @@ public final class SystemEvents {
       }
    }
 
+   private static void tickDailyRunning(ServerPlayer player, SystemData data) {
+      if (player == null || data == null || !player.isAlive() || player.isSpectator()) {
+         return;
+      }
+      long currentDay = player.server != null && player.server.overworld() != null
+         ? player.server.overworld().getDayTime() / 24000L
+         : player.level().getDayTime() / 24000L;
+      data.ensureDailyDay(currentDay);
+
+      // Si la carrera ya fue completada (>= 1000m) o la misión diaria ya fue reclamada, no gastar CPU
+      if (data.dailyRunning() >= SystemData.DAILY_RUNNING_TARGET || data.isDailyClaimed()) {
+         return;
+      }
+
+      CompoundTag nbt = player.getPersistentData();
+      String currentDim = player.level().dimension().location().toString();
+
+      if (!nbt.contains("daily_run_last_x") || !currentDim.equals(nbt.getString("daily_run_last_dim"))) {
+         nbt.putDouble("daily_run_last_x", player.getX());
+         nbt.putDouble("daily_run_last_y", player.getY());
+         nbt.putDouble("daily_run_last_z", player.getZ());
+         nbt.putString("daily_run_last_dim", currentDim);
+         return;
+      }
+
+      double prevX = nbt.getDouble("daily_run_last_x");
+      double prevY = nbt.getDouble("daily_run_last_y");
+      double prevZ = nbt.getDouble("daily_run_last_z");
+
+      double dx = player.getX() - prevX;
+      double dy = player.getY() - prevY;
+      double dz = player.getZ() - prevZ;
+
+      // Actualizar siempre las coordenadas previas
+      nbt.putDouble("daily_run_last_x", player.getX());
+      nbt.putDouble("daily_run_last_y", player.getY());
+      nbt.putDouble("daily_run_last_z", player.getZ());
+
+      // No cuenta si monta un vehículo/entidad (caballos, barcos, workout, etc.) ni si vuela (elytra o creativo)
+      if (player.getVehicle() != null || player.isPassenger() || player.getAbilities().flying || player.isFallFlying()) {
+         return;
+      }
+
+      double horizontalDist = Math.sqrt(dx * dx + dz * dz);
+      // Filtro anti-teleport y microjitter (umbral de 0.001 para capturar cualquier paso y máx 8.0 bloques/tick)
+      if (horizontalDist >= 0.001 && horizontalDist <= 8.0) {
+         double accum = nbt.getDouble("daily_run_accum") + horizontalDist;
+         if (accum >= 1.0) {
+            int meters = (int) accum;
+            accum -= meters;
+            nbt.putDouble("daily_run_accum", accum);
+
+            int before = data.dailyRunning();
+            boolean changed = data.recordRunning(currentDay, meters);
+            int now = data.dailyRunning();
+
+            if (changed) {
+               data.recordStatistic("distance_moved", meters);
+               // Sincronizar periódicamente cada 2 metros o al completar para respuesta inmediata en UI
+               if (now >= SystemData.DAILY_RUNNING_TARGET || now / 2 != before / 2) {
+                  AwakeningSystemMod.sync(player);
+               }
+
+               // Notificación ligera en Action Bar cada 50 metros
+               if (now < SystemData.DAILY_RUNNING_TARGET && (now / 50 != before / 50)) {
+                  player.displayClientMessage(
+                     Component.literal("§b[SISTEMA] Carrera: §e" + now + " §7/ §a" + SystemData.DAILY_RUNNING_TARGET + " m"),
+                     true
+                  );
+               }
+
+               // Si acaba de completar los 1000m
+               if (now >= SystemData.DAILY_RUNNING_TARGET && before < SystemData.DAILY_RUNNING_TARGET) {
+                  AwakeningSystemMod.sync(player);
+                  player.level().playSound(null, player.getX(), player.getY(), player.getZ(),
+                     SoundEvents.UI_TOAST_CHALLENGE_COMPLETE, SoundSource.PLAYERS, 1.0F, 1.0F
+                  );
+                  player.displayClientMessage(
+                     Component.literal("§6§l[MISIÓN DIARIA] §a¡Has completado los 1000m de carrera diaria!"),
+                     false
+                  );
+                  if (data.isDailyQuestComplete()) {
+                     player.displayClientMessage(
+                        Component.translatable("awakening_system.workout.chat.all_complete"),
+                        false
+                     );
+                  }
+               }
+            }
+         } else {
+            nbt.putDouble("daily_run_accum", accum);
+         }
+      }
+   }
+
    @SubscribeEvent
    public static void onPlayerTick(net.neoforged.neoforge.event.tick.PlayerTickEvent.Post event) {
       if (event.getEntity() instanceof ServerPlayer player) {
@@ -4583,8 +4779,17 @@ public final class SystemEvents {
             GreatTowerWorldManager.enforcePlayerBoundary(player);
          }
 
+         SystemData tickData = data(player);
+         if (tickData != null && tickData.isPendingWelcomePacket() && player.tickCount >= 5) {
+            tickData.setPendingWelcomePacket(false);
+            PacketDistributor.sendToPlayer(player, new OpenWelcomeScreenPayload());
+         }
+
+         if (tickData != null) {
+            tickDailyRunning(player, tickData);
+         }
+
          if (player.tickCount % 40 == 0) {
-            SystemData tickData = data(player);
             if (tickData != null) {
                if (player.getArmorValue() >= 15) {
                   grantFable(player, "iron_will");
@@ -6065,12 +6270,15 @@ public final class SystemEvents {
                         player.containerMenu.broadcastChanges();
                         data.recordPurchase(entry.cost());
                         checkAchievements(player, data);
+                        String boughtItemName = (entry.nameKey() != null && entry.nameKey().startsWith("awakening_system."))
+                                ? entry.nameKey()
+                                : (!stack.isEmpty() ? stack.getHoverName().getString() : entry.nameKey());
                         AwakeningSystemMod.notify(
                            player,
                            "awakening_system.notification.shop.title",
                            "awakening_system.notification.shop.message",
                            -9377537,
-                           new Object[]{entry.nameKey()}
+                           new Object[]{boughtItemName}
                         );
                         AwakeningSystemMod.sync(player);
                         return true;
@@ -9106,7 +9314,10 @@ public final class SystemEvents {
 
                            int currentAttempt = soul.getExtractionAttempts() + 1;
                            String entityId = soul.getMobEntityTypeId().toLowerCase();
-                           if (!entityId.contains("celestial_dragon")) {
+                           if (entityId.contains("ophanim") || entityId.contains("limbo_ophanim")) {
+                              player.displayClientMessage(Component.translatable("awakening_system.shadow.cannot_extract_celestial_angel"), true);
+                              soul.discard();
+                           } else if (!entityId.contains("celestial_dragon")) {
                               int mobTier = 3;
                               if (entityId.contains("boss")
                                  || entityId.contains("dragon")
@@ -11385,6 +11596,8 @@ public final class SystemEvents {
       if (master.level() instanceof ServerLevel sl) {
          if (soul.getMobEntityTypeId().toLowerCase().contains("celestial_dragon")) {
             master.displayClientMessage(Component.translatable("awakening_system.shadow.cannot_extract_celestial_dragon"), true);
+         } else if (soul.getMobEntityTypeId().toLowerCase().contains("ophanim") || soul.getMobEntityTypeId().toLowerCase().contains("limbo_ophanim")) {
+            master.displayClientMessage(Component.translatable("awakening_system.shadow.cannot_extract_celestial_angel"), true);
          } else {
             EntityType<?> type = (EntityType<?>)BuiltInRegistries.ENTITY_TYPE.get(ResourceLocation.tryParse(soul.getMobEntityTypeId()));
             if (type == null) {
@@ -11452,6 +11665,8 @@ public final class SystemEvents {
          String typeStr = tag.getString("MobEntityTypeId");
          if (typeStr.toLowerCase().contains("celestial_dragon")) {
             master.displayClientMessage(Component.translatable("awakening_system.shadow.cannot_extract_celestial_dragon"), true);
+         } else if (typeStr.toLowerCase().contains("ophanim") || typeStr.toLowerCase().contains("limbo_ophanim")) {
+            master.displayClientMessage(Component.translatable("awakening_system.shadow.cannot_extract_celestial_angel"), true);
          } else {
             EntityType<?> type = (EntityType<?>)BuiltInRegistries.ENTITY_TYPE.get(ResourceLocation.tryParse(typeStr));
             if (type == null) {
@@ -12081,6 +12296,59 @@ public final class SystemEvents {
          AwakeningSystemMod.sync(player);
          return true;
       }
+   }
+
+   public static boolean claimDailyMission(ServerPlayer player) {
+      if (player == null) return false;
+      SystemData data = data(player);
+      if (data == null) return false;
+      boolean claimed = data.claimDailyReward(player);
+      if (claimed) {
+         player.playNotifySound((SoundEvent)ModSounds.SYSTEM_QUEST_COMPLETE.value(), SoundSource.PLAYERS, 1.0F, 1.0F);
+         AwakeningSystemMod.notify(
+            player,
+            "awakening_system.notification.daily_complete.title",
+            "awakening_system.notification.daily_complete.message",
+            -11470213,
+            new Object[0]
+         );
+         AwakeningSystemMod.sync(player);
+         return true;
+      }
+      return false;
+   }
+
+   public static void startWorkout(ServerPlayer player, int exerciseType) {
+      if (player == null || player.level().isClientSide) return;
+      if (player.getVehicle() != null) {
+         player.stopRiding();
+         return;
+      }
+      com.soybe.awakeningsystem.entity.WorkoutEntity workout = new com.soybe.awakeningsystem.entity.WorkoutEntity(
+         com.soybe.awakeningsystem.entity.ModEntities.WORKOUT.get(), player.level()
+      );
+      workout.setPos(player.getX(), player.getY(), player.getZ());
+      workout.setYRot(player.getYRot());
+      workout.setXRot(player.getXRot());
+      workout.setExerciseType(exerciseType);
+      workout.setOwnerUUID(player.getUUID());
+
+      SystemData data = data(player);
+      long day = player.server != null && player.server.overworld() != null
+         ? player.server.overworld().getDayTime() / 24000L
+         : player.level().getDayTime() / 24000L;
+      data.ensureDailyDay(day);
+      int currentReps = switch (exerciseType) {
+         case com.soybe.awakeningsystem.entity.WorkoutEntity.TYPE_PUSH_UPS -> data.dailyPushUps();
+         case com.soybe.awakeningsystem.entity.WorkoutEntity.TYPE_SIT_UPS -> data.dailySitUps();
+         case com.soybe.awakeningsystem.entity.WorkoutEntity.TYPE_SQUATS -> data.dailySquats();
+         default -> 0;
+      };
+      workout.setRepetitions(currentReps);
+      workout.setTargetReps(100);
+
+      player.level().addFreshEntity(workout);
+      player.startRiding(workout, true);
    }
 
    public static boolean selectHunterClass(ServerPlayer player, String hunterClass) {
@@ -13268,6 +13536,12 @@ public final class SystemEvents {
 
    public static void handleDimensionTravel(ServerPlayer player, String dimension) {
       if (player != null && player.getServer() != null) {
+         if (com.soybe.awakeningsystem.penalty.PenaltyZoneManager.isInPenaltyZone(player) ||
+             com.soybe.awakeningsystem.limbo.LimboWorldManager.isLimboDimension(player.level())) {
+            player.displayClientMessage(Component.translatable("awakening_system.screen.dim.sealed_desc"), true);
+            player.playNotifySound((SoundEvent)SoundEvents.NOTE_BLOCK_BASS.value(), SoundSource.PLAYERS, 0.8F, 0.7F);
+            return;
+         }
          SystemData data = data(player);
          MinecraftServer server = player.getServer();
          boolean isDevOrOp = player.hasPermissions(2) || player.isCreative();

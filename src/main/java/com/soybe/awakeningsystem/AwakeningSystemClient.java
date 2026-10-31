@@ -140,6 +140,8 @@ public final class AwakeningSystemClient {
     private static String notificationMessage;
     private static int notificationColor;
     private static int notificationTicks;
+    private static boolean wasWorkingOut = false;
+    private static net.minecraft.client.CameraType previousCameraType = null;
 
     public record ShadowEmergenceData(long startTimeMs, long durationMs, double x, double y, double z, float height) {}
     public static final java.util.Set<Integer> SHADOW_SOLDIER_IDS = java.util.concurrent.ConcurrentHashMap.newKeySet();
@@ -318,6 +320,26 @@ public final class AwakeningSystemClient {
         }
     }
 
+    private static boolean pendingWelcomeScreen = false;
+    private static int pendingWelcomeDelay = 0;
+
+    public static void openWelcomeScreen() {
+        Minecraft mc = Minecraft.getInstance();
+        if (mc != null && mc.player != null && mc.level != null && mc.screen == null) {
+            mc.setScreen(new SystemWelcomeScreen());
+        } else {
+            pendingWelcomeScreen = true;
+            pendingWelcomeDelay = 15;
+        }
+    }
+
+    public static void claimDailyMission() {
+        PacketDistributor.sendToServer(new ClaimDailyMissionPayload());
+    }
+    public static void startWorkout(int exerciseType) {
+        PacketDistributor.sendToServer(new StartWorkoutPayload(exerciseType));
+    }
+
     public static com.soybe.awakeningsystem.guild.Guild cachedClientGuild = null;
     public static net.minecraft.nbt.CompoundTag cachedClientClaims = new net.minecraft.nbt.CompoundTag();
 
@@ -401,6 +423,9 @@ public final class AwakeningSystemClient {
     }
 
     public static void registerEntityRenderers(net.neoforged.neoforge.client.event.EntityRenderersEvent.RegisterRenderers event) {
+        event.registerEntityRenderer(com.soybe.awakeningsystem.entity.ModEntities.GIANT_SANDWORM.get(), net.minecraft.client.renderer.entity.NoopRenderer::new);
+        event.registerEntityRenderer(com.soybe.awakeningsystem.entity.ModEntities.GIANT_SANDWORM_HEAD.get(), com.soybe.awakeningsystem.entity.client.GiantSandwormHeadRenderer::new);
+        event.registerEntityRenderer(com.soybe.awakeningsystem.entity.ModEntities.GIANT_SANDWORM_BODY.get(), com.soybe.awakeningsystem.entity.client.GiantSandwormBodyRenderer::new);
         event.registerEntityRenderer(com.soybe.awakeningsystem.entity.ModEntities.DART.get(), com.soybe.awakeningsystem.casino.darts.client.DartRenderer::new);
         event.registerEntityRenderer(com.soybe.awakeningsystem.entity.ModEntities.SHADOW_INFANTRY.get(), com.soybe.awakeningsystem.entity.client.ShadowInfantryRenderer::new);
         event.registerEntityRenderer(com.soybe.awakeningsystem.entity.ModEntities.ABYSSAL_ORC.get(), com.soybe.awakeningsystem.entity.client.AbyssalOrcRenderer::new);
@@ -409,6 +434,7 @@ public final class AwakeningSystemClient {
         event.registerEntityRenderer(com.soybe.awakeningsystem.entity.ModEntities.FROST_ELF_ASSASSIN.get(), com.soybe.awakeningsystem.entity.client.FrostElfAssassinRenderer::new);
         event.registerEntityRenderer(com.soybe.awakeningsystem.entity.ModEntities.SHADOW_SOUL.get(), com.soybe.awakeningsystem.entity.client.ShadowSoulRenderer::new);
         event.registerEntityRenderer(com.soybe.awakeningsystem.entity.ModEntities.MEDITATION_SEAT.get(), net.minecraft.client.renderer.entity.NoopRenderer::new);
+        event.registerEntityRenderer(com.soybe.awakeningsystem.entity.ModEntities.WORKOUT.get(), com.soybe.awakeningsystem.entity.client.WorkoutEntityRenderer::new);
         event.registerEntityRenderer(com.soybe.awakeningsystem.entity.ModEntities.TAVERN_SEAT.get(), net.minecraft.client.renderer.entity.NoopRenderer::new);
         event.registerEntityRenderer(com.soybe.awakeningsystem.entity.ModEntities.FLYING_SWORD.get(), com.soybe.awakeningsystem.entity.client.FlyingSwordRenderer::new);
         event.registerEntityRenderer(com.soybe.awakeningsystem.entity.ModEntities.SUBWAY_PILOT_SEAT.get(), net.minecraft.client.renderer.entity.NoopRenderer::new);
@@ -564,6 +590,8 @@ public final class AwakeningSystemClient {
     }
 
     public static void registerLayerDefinitions(net.neoforged.neoforge.client.event.EntityRenderersEvent.RegisterLayerDefinitions event) {
+        event.registerLayerDefinition(com.soybe.awakeningsystem.entity.client.GiantSandwormModelLayers.HEAD, com.soybe.awakeningsystem.entity.client.GiantSandwormHeadModel::createBodyLayer);
+        event.registerLayerDefinition(com.soybe.awakeningsystem.entity.client.GiantSandwormModelLayers.BODY, com.soybe.awakeningsystem.entity.client.GiantSandwormBodyModel::createBodyLayer);
         event.registerLayerDefinition(com.soybe.awakeningsystem.client.model.CustomPlushieModel.LAYER_LOCATION, com.soybe.awakeningsystem.client.model.CustomPlushieModel::createBodyLayer);
         event.registerLayerDefinition(com.soybe.awakeningsystem.entity.client.UmaModel.LAYER_LOCATION, com.soybe.awakeningsystem.entity.client.UmaModel::createBodyLayer);
         event.registerLayerDefinition(com.soybe.awakeningsystem.client.renderer.SlotMachineLeverModel.LAYER_LOCATION, com.soybe.awakeningsystem.client.renderer.SlotMachineLeverModel::createBodyLayer);
@@ -677,6 +705,10 @@ public final class AwakeningSystemClient {
     public static void registerParticleProviders(net.neoforged.neoforge.client.event.RegisterParticleProvidersEvent event) {
         event.registerSpriteSet(com.soybe.awakeningsystem.particle.ModParticles.SPIRIT_FOXFIRE.get(),
                 com.soybe.awakeningsystem.particle.client.SpiritFoxfireParticle.Provider::new);
+        event.registerSpriteSet(com.soybe.awakeningsystem.particle.ModParticles.MANA_AURA.get(),
+                com.soybe.awakeningsystem.particle.client.ManaAuraParticle.Provider::new);
+        event.registerSpriteSet(com.soybe.awakeningsystem.particle.ModParticles.SHADOW_AURA.get(),
+                com.soybe.awakeningsystem.particle.client.ShadowAuraParticle.Provider::new);
     }
 
     public static void onClientSetup(net.neoforged.fml.event.lifecycle.FMLClientSetupEvent event) {
@@ -854,6 +886,17 @@ public final class AwakeningSystemClient {
         if (coinNotificationTicks > 0) coinNotificationTicks--;
         SystemNotificationOverlay.tick();
 
+        if (pendingWelcomeScreen && minecraft.player != null && minecraft.level != null) {
+            if (minecraft.screen == null) {
+                if (--pendingWelcomeDelay <= 0) {
+                    pendingWelcomeScreen = false;
+                    minecraft.setScreen(new SystemWelcomeScreen());
+                }
+            } else if (!(minecraft.screen instanceof SystemWelcomeScreen)) {
+                pendingWelcomeDelay = 15;
+            }
+        }
+
         if (minecraft.level != null && minecraft.player != null) {
             net.minecraft.resources.ResourceLocation currentDim = minecraft.level.dimension().location();
             if (currentDim.getPath().equals("limbo")) {
@@ -878,9 +921,26 @@ public final class AwakeningSystemClient {
             SystemData clientData = minecraft.player.getData(AwakeningSystemMod.PLAYER_SYSTEM);
             clientData.tickCombat();
             com.soybe.awakeningsystem.client.renderer.SwordAuraRenderer.tickParticles(minecraft);
+            com.soybe.awakeningsystem.client.renderer.PlayerRankAuraRenderer.tickParticles(minecraft);
+            com.soybe.awakeningsystem.client.renderer.AbyssalPotionVfxRenderer.tickClientParticles(minecraft);
 
             if (minecraft.player.tickCount % 20 == 0) {
                 com.soybe.awakeningsystem.compat.XaeroGuildMapIntegration.tick();
+            }
+            if (minecraft.player.getVehicle() instanceof com.soybe.awakeningsystem.entity.WorkoutEntity) {
+                if (!wasWorkingOut) {
+                    wasWorkingOut = true;
+                    previousCameraType = minecraft.options.getCameraType();
+                    if (previousCameraType.isFirstPerson()) {
+                        minecraft.options.setCameraType(net.minecraft.client.CameraType.THIRD_PERSON_BACK);
+                    }
+                }
+            } else if (wasWorkingOut) {
+                wasWorkingOut = false;
+                if (previousCameraType != null) {
+                    minecraft.options.setCameraType(previousCameraType);
+                    previousCameraType = null;
+                }
             }
 
             if (minecraft.player.getVehicle() instanceof com.soybe.awakeningsystem.entity.CelestialDragonEntity dragon) {
@@ -1411,10 +1471,34 @@ public final class AwakeningSystemClient {
             }
             return net.minecraft.network.chat.Component.translatable(mainKey, subArgs);
         }
-        if (text.startsWith("awakening_system.") || text.startsWith("block.awakening_system.")
-                || text.startsWith("item.awakening_system.") || text.startsWith("entity.awakening_system.")
-                || (text.contains(".") && !text.contains(" ") && !text.matches("^[0-9.]+$"))) {
-            return net.minecraft.network.chat.Component.translatable(text);
+
+        String formattingPrefix = "";
+        String cleanText = text;
+        if (cleanText.startsWith("§")) {
+            int idx = 0;
+            while (idx + 1 < cleanText.length() && cleanText.charAt(idx) == '§') {
+                idx += 2;
+            }
+            formattingPrefix = cleanText.substring(0, idx);
+            cleanText = cleanText.substring(idx);
+        }
+
+        String prefix = formattingPrefix;
+        String suffix = "";
+        if (cleanText.startsWith("[") && cleanText.endsWith("]")) {
+            prefix = formattingPrefix + "[";
+            suffix = "]";
+            cleanText = cleanText.substring(1, cleanText.length() - 1);
+        }
+
+        if (cleanText.startsWith("awakening_system.") || cleanText.startsWith("block.awakening_system.")
+                || cleanText.startsWith("item.awakening_system.") || cleanText.startsWith("entity.awakening_system.")
+                || (cleanText.contains(".") && !cleanText.contains(" ") && !cleanText.matches("^[0-9.]+$"))) {
+            net.minecraft.network.chat.Component trans = net.minecraft.network.chat.Component.translatable(cleanText);
+            if (!prefix.isEmpty() || !suffix.isEmpty()) {
+                return net.minecraft.network.chat.Component.literal(prefix).append(trans).append(net.minecraft.network.chat.Component.literal(suffix));
+            }
+            return trans;
         }
         return text;
     }
@@ -1638,18 +1722,25 @@ public final class AwakeningSystemClient {
             graphics.pose().translate(left, top, 0);
             graphics.pose().scale(scale, scale, 1.0F);
 
-            int borderCol = (sys20 || sys30) ? 0xFFFFD700 : 0x276A82;
-            int bgCol = (sys20 || sys30) ? 0x0D111A : 0x10202D;
+            int borderCol = (sys20 || sys30) ? 0xFFFFD700 : 0x00E5FF;
+            int bgCol = (sys20 || sys30) ? 0x0D111A : 0x0A1826;
             int barCol = (sys20 || sys30) ? 0xFFFFD700 : 0xFF00E5FF;
-            graphics.fill(-1, -1, boxWidth + 1, boxHeight + 1, (alpha << 24) | borderCol);
-            graphics.fill(0, 0, boxWidth, boxHeight, (Math.min(alpha, 225) << 24) | bgCol);
-            graphics.fill(0, 0, boxWidth, 2, (alpha << 24) | barCol);
 
-            int cornerCol = (alpha << 24) | ((sys20 || sys30) ? 0xFFFFE066 : 0xFF00E5FF);
+            // Translucent manhwa crystal card
+            int cardAlpha = Math.min(alpha, 115);
+            graphics.fill(0, 0, boxWidth, boxHeight, (cardAlpha << 24) | bgCol);
+            graphics.renderOutline(0, 0, boxWidth, boxHeight, (alpha << 24) | borderCol);
+            graphics.fill(0, 0, boxWidth, 1, (alpha << 24) | barCol);
+
+            int cornerCol = (alpha << 24) | ((sys20 || sys30) ? 0xFFFFE066 : 0xFF70E8FF);
             graphics.fill(0, 0, 3, 1, cornerCol);
             graphics.fill(0, 0, 1, 3, cornerCol);
             graphics.fill(boxWidth - 3, 0, boxWidth, 1, cornerCol);
             graphics.fill(boxWidth - 1, 0, boxWidth, 3, cornerCol);
+            graphics.fill(0, boxHeight - 1, 3, boxHeight, cornerCol);
+            graphics.fill(0, boxHeight - 3, 1, boxHeight, cornerCol);
+            graphics.fill(boxWidth - 3, boxHeight - 1, boxWidth, boxHeight, cornerCol);
+            graphics.fill(boxWidth - 1, boxHeight - 3, boxWidth, boxHeight, cornerCol);
 
             int titleC = (sys20 || sys30) ? 0xFFFFD700 : 0xFF70E8FF;
             graphics.drawString(font, notificationTitleComp, 8, 6, (alpha << 24) | titleC, false);
@@ -1676,13 +1767,13 @@ public final class AwakeningSystemClient {
 
         graphics.pose().pushPose();
         if (Math.abs(sysScale - 1.0F) > 0.01F) {
-            graphics.pose().translate(left + boxWidth / 2.0F, top + boxHeight / 2.0F, 0);
+            graphics.pose().translate(left + boxWidth / 2.0F, top, 0);
             graphics.pose().scale(sysScale, sysScale, 1.0F);
-            graphics.pose().translate(-(left + boxWidth / 2.0F), -(top + boxHeight / 2.0F), 0);
+            graphics.pose().translate(-(left + boxWidth / 2.0F), -top, 0);
         }
 
-        int borderCol = sys30 ? 0xD4AF37 : (sys20 ? 0xFFD700 : 0x276A82);
-        int bgCol = sys30 ? 0x0A1815 : (sys20 ? 0x140B22 : 0x10202D);
+        int borderCol = sys30 ? 0x50FA7B : (sys20 ? 0xFFD700 : 0x00E5FF);
+        int bgCol = sys30 ? 0x0A1815 : (sys20 ? 0x140B22 : 0x0A1826);
         int topBarCol;
         int titleCol;
         if (sys30) {
@@ -1705,21 +1796,21 @@ public final class AwakeningSystemClient {
             }
         }
 
-        graphics.fill(left - 1, top - 1, left + boxWidth + 1, top + boxHeight + 1, (alpha << 24) | borderCol);
-        graphics.fill(left, top, left + boxWidth, top + boxHeight, (Math.min(alpha, 220) << 24) | bgCol);
-        graphics.fill(left, top, left + boxWidth, top + 2, (alpha << 24) | topBarCol);
+        // Translucent manhwa crystal card
+        int notifAlpha = Math.min(alpha, 120);
+        graphics.fill(left, top, left + boxWidth, top + boxHeight, (notifAlpha << 24) | bgCol);
+        graphics.renderOutline(left, top, boxWidth, boxHeight, (alpha << 24) | borderCol);
+        graphics.fill(left, top, left + boxWidth, top + 1, (alpha << 24) | topBarCol);
 
-        if (sys30 || sys20) {
-            int cornerPips = (alpha << 24) | (sys30 ? 0xFF50FA7B : 0xFFFFD700);
-            graphics.fill(left - 1, top - 1, left + 5, top + 1, cornerPips);
-            graphics.fill(left - 1, top - 1, left + 1, top + 5, cornerPips);
-            graphics.fill(left + boxWidth - 5, top - 1, left + boxWidth + 1, top + 1, cornerPips);
-            graphics.fill(left + boxWidth - 1, top - 1, left + boxWidth + 1, top + 5, cornerPips);
-            graphics.fill(left - 1, top + boxHeight - 5, left + 1, top + boxHeight + 1, cornerPips);
-            graphics.fill(left - 1, top + boxHeight - 1, left + 5, top + boxHeight + 1, cornerPips);
-            graphics.fill(left + boxWidth - 1, top + boxHeight - 5, left + boxWidth + 1, top + boxHeight + 1, cornerPips);
-            graphics.fill(left + boxWidth - 5, top + boxHeight - 1, left + boxWidth + 1, top + boxHeight + 1, cornerPips);
-        }
+        int cornerPips = (alpha << 24) | (sys30 ? 0xFF50FA7B : (sys20 ? 0xFFFFD700 : 0xFF70E8FF));
+        graphics.fill(left, top, left + 4, top + 1, cornerPips);
+        graphics.fill(left, top, left + 1, top + 4, cornerPips);
+        graphics.fill(left + boxWidth - 4, top, left + boxWidth, top + 1, cornerPips);
+        graphics.fill(left + boxWidth - 1, top, left + boxWidth, top + 4, cornerPips);
+        graphics.fill(left, top + boxHeight - 1, left + 4, top + boxHeight, cornerPips);
+        graphics.fill(left, top + boxHeight - 4, left + 1, top + boxHeight, cornerPips);
+        graphics.fill(left + boxWidth - 4, top + boxHeight - 1, left + boxWidth, top + boxHeight, cornerPips);
+        graphics.fill(left + boxWidth - 1, top + boxHeight - 4, left + boxWidth, top + boxHeight, cornerPips);
 
         graphics.drawCenteredString(font, notificationTitleComp, width / 2, top + 8,
                 (alpha << 24) | titleCol);
@@ -1745,18 +1836,27 @@ public final class AwakeningSystemClient {
         int bossBottom = SystemHudOverlay.getBossBarOffset(mc);
         int top = bossBottom > 0 ? (bossBottom + 8) : 18;
 
+        if (com.soybe.awakeningsystem.client.map.HunterMinimapRenderer.isDangerAlertActive()) {
+            int dangerBottom = com.soybe.awakeningsystem.client.map.HunterMinimapRenderer.getDangerAlertBottom(mc);
+            top = Math.max(top, dangerBottom + 8);
+        }
+
         SystemData data = mc.player != null ? SystemEvents.data(mc.player) : null;
         if (data != null) {
             if (data.isAnySystemUpdating()) {
                 int bannerY = bossBottom > 0 ? (bossBottom + 4) : 8;
-                top = Math.max(top, bannerY + 22);
+                top = Math.max(top, bannerY + 16 + 8);
             }
 
             if (data.isDokkaebiScenarioActive()) {
-                int bannerOffset = data.isAnySystemUpdating() ? 32 : 0;
+                int bannerOffset = (data.isAnySystemUpdating() ? 32 : 0)
+                        + (com.soybe.awakeningsystem.client.map.HunterMinimapRenderer.isDangerAlertActive() ? 18 : 0);
                 int dokkaebiBottom = Math.max(12, bossBottom + bannerOffset + 8) + 28;
                 top = Math.max(top, dokkaebiBottom + 8);
             }
+        }
+        if (SystemNotificationOverlay.isAnnouncementActive()) {
+            top = Math.max(top, SystemNotificationOverlay.getAnnouncementBottom() + 10);
         }
         return top;
     }
@@ -1771,7 +1871,9 @@ public final class AwakeningSystemClient {
         int boxWidth = Math.min(Math.max(250, maxTextW), width - 32);
         var lines = font.split(notificationMessageComp != null ? notificationMessageComp : net.minecraft.network.chat.Component.empty(), boxWidth - 16);
         int top = calculateNotificationTop();
-        return top + 32 + lines.size() * 12;
+        float sysScale = Math.max(0.4F, Math.min(1.5F, com.soybe.awakeningsystem.client.gui.GuiConfig.systemNotificationScale));
+        int boxHeight = 32 + lines.size() * 12;
+        return top + (int) (boxHeight * sysScale);
     }
 
     public static void onChestReward(ChestRewardPayload payload) {
@@ -1845,12 +1947,16 @@ public final class AwakeningSystemClient {
     }
 
     public static void openConstellationChannelScreen() {
+        openConstellationChannelScreen(Minecraft.getInstance().screen);
+    }
+
+    public static void openConstellationChannelScreen(net.minecraft.client.gui.screens.Screen lastScreen) {
         Minecraft mc = Minecraft.getInstance();
         if (mc.player != null) {
             SystemData d = mc.player.getData(AwakeningSystemMod.PLAYER_SYSTEM);
             if (!d.isConstellation()) return;
         }
-        Minecraft.getInstance().setScreen(new ConstellationChannelScreen());
+        Minecraft.getInstance().setScreen(new ConstellationChannelScreen(lastScreen));
     }
 
     public static void syncStarStream(java.util.List<SyncStarStreamPayload.IncarnationEntry> entries) {
@@ -2119,6 +2225,14 @@ public final class AwakeningSystemClient {
         SystemNotificationOverlay.showAnnouncement(payload.title(), payload.message(), payload.rarityColor());
     }
 
+    public static void showTotemActivation(com.soybe.awakeningsystem.network.TotemActivationPayload payload) {
+        Minecraft mc = Minecraft.getInstance();
+        if (mc.player != null && payload.totemStack() != null && !payload.totemStack().isEmpty()) {
+            mc.gameRenderer.displayItemActivation(payload.totemStack());
+            mc.particleEngine.createTrackingEmitter(mc.player, net.minecraft.core.particles.ParticleTypes.TOTEM_OF_UNDYING, 30);
+        }
+    }
+
     public static void handlePoolTableState(com.soybe.awakeningsystem.casino.pool.network.PoolTableStateS2CPayload payload) {
         if (Minecraft.getInstance().level != null && Minecraft.getInstance().level.getBlockEntity(payload.tablePos()) instanceof com.soybe.awakeningsystem.casino.pool.PoolTableBlockEntity be) {
             be.applyStatePayload(payload);
@@ -2155,7 +2269,6 @@ public final class AwakeningSystemClient {
             SHADOW_SOLDIER_IDS.add(id);
             return true;
         }
-        NON_SHADOW_ENTITY_IDS.add(id);
         return false;
     }
 
@@ -2251,8 +2364,12 @@ public final class AwakeningSystemClient {
     }
 
     public static void onRenderNameTag(net.neoforged.neoforge.client.event.RenderNameTagEvent event) {
+        Minecraft mc = Minecraft.getInstance();
+        if (mc.screen != null) {
+            event.setCanRender(net.neoforged.neoforge.common.util.TriState.FALSE);
+            return;
+        }
         if (event.getEntity() instanceof net.minecraft.world.entity.Mob mob) {
-            Minecraft mc = Minecraft.getInstance();
             if (mc.player == null) return;
             if (mob.isInvisibleTo(mc.player)) return;
 
@@ -2295,7 +2412,6 @@ public final class AwakeningSystemClient {
         }
 
         if (event.getEntity() instanceof net.minecraft.world.entity.player.Player player) {
-            Minecraft mc = Minecraft.getInstance();
             if (mc.player == null) {
                 return;
             }
@@ -2465,6 +2581,10 @@ public final class AwakeningSystemClient {
     }
 
     public static void onRenderPlayerPre(net.neoforged.neoforge.client.event.RenderPlayerEvent.Pre event) {
+        if (event.getEntity().getVehicle() instanceof com.soybe.awakeningsystem.entity.WorkoutEntity) {
+            event.setCanceled(true);
+            return;
+        }
         if (event.getEntity().getVehicle() instanceof com.soybe.awakeningsystem.entity.FlyingSwordEntity) {
             var model = event.getRenderer().getModel();
             model.riding = false;
@@ -3276,8 +3396,36 @@ public final class AwakeningSystemClient {
     }
 
     public static void onItemTooltip(net.neoforged.neoforge.event.entity.player.ItemTooltipEvent event) {
-        if (event.getItemStack() != null && com.soybe.awakeningsystem.item.WeaponLevelManager.isLevelableWeapon(event.getItemStack())) {
-            com.soybe.awakeningsystem.item.WeaponLevelManager.appendWeaponLevelTooltip(event.getItemStack(), event.getToolTip());
+        if (event.getItemStack() != null) {
+            // Corrección dinámica en tooltip para armas con prefijos malformados como "6[LEGENDARY]"
+            if (!event.getToolTip().isEmpty()) {
+                Component first = event.getToolTip().get(0);
+                String raw = first.getString();
+                if (raw != null && raw.matches("^[0-9a-fk-or§]?\\[(COMMON|RARE|EPIC|LEGENDARY|MYTHIC)\\].*")) {
+                    char code = '6';
+                    int startIdx = 0;
+                    if (raw.startsWith("§") && raw.length() > 1) {
+                        code = raw.charAt(1);
+                        startIdx = 2;
+                    } else if (raw.length() > 1 && raw.charAt(1) == '[') {
+                        code = raw.charAt(0);
+                        startIdx = 1;
+                    }
+                    ChatFormatting fmt = ChatFormatting.getByCode(code);
+                    if (fmt == null) fmt = ChatFormatting.GOLD;
+                    int endBracket = raw.indexOf(']');
+                    if (endBracket != -1) {
+                        String bracketPart = raw.substring(startIdx, endBracket + 1);
+                        String rest = raw.substring(endBracket + 1);
+                        event.getToolTip().set(0, Component.literal(bracketPart).withStyle(fmt, ChatFormatting.BOLD)
+                                .append(Component.literal(rest).withStyle(ChatFormatting.WHITE)));
+                    }
+                }
+            }
+
+            if (com.soybe.awakeningsystem.item.WeaponLevelManager.isLevelableWeapon(event.getItemStack())) {
+                com.soybe.awakeningsystem.item.WeaponLevelManager.appendWeaponLevelTooltip(event.getItemStack(), event.getToolTip());
+            }
         }
     }
 

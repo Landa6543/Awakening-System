@@ -1,0 +1,13 @@
+{
+    "cookingtime":  200,
+    "experience":  1,
+    "ingredient":  {
+                       "item":  "awakening_system:white_iron_ore"
+                   },
+    "type":  "minecraft:smelting",
+    "category":  "misc",
+    "result":  {
+                   "count":  1,
+                   "id":  "awakening_system:refined_white_iron_ingot"
+               }
+}

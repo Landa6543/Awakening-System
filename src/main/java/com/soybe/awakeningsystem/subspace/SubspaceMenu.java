@@ -97,8 +97,11 @@ public class SubspaceMenu extends AbstractContainerMenu {
                     return ItemStack.EMPTY;
                 }
             } else {
-                int maxUnlockedInPage = Math.min(SUBSPACE_SLOTS, Math.max(0, getUnlockedSlots() - getCurrentPage() * 54));
-                if (maxUnlockedInPage <= 0 || !this.moveItemStackTo(itemstack1, 0, maxUnlockedInPage, false)) {
+                int totalUnlocked = getUnlockedSlots();
+                int curPage = getCurrentPage();
+                int maxInCurrentPage = Math.min(SUBSPACE_SLOTS, Math.max(0, totalUnlocked - curPage * 54));
+
+                if (maxInCurrentPage <= 0 || !this.moveItemStackTo(itemstack1, 0, maxInCurrentPage, false)) {
                     return ItemStack.EMPTY;
                 }
             }
@@ -153,13 +156,13 @@ public class SubspaceMenu extends AbstractContainerMenu {
         @Override
         public ItemStack getItem() {
             int idx = getGlobalIndex();
-            return (idx < this.container.getContainerSize()) ? this.container.getItem(idx) : ItemStack.EMPTY;
+            return (idx >= 0 && idx < this.container.getContainerSize()) ? this.container.getItem(idx) : ItemStack.EMPTY;
         }
 
         @Override
         public void set(ItemStack stack) {
             int idx = getGlobalIndex();
-            if (idx < this.container.getContainerSize()) {
+            if (idx >= 0 && idx < this.container.getContainerSize()) {
                 this.container.setItem(idx, stack);
                 this.setChanged();
             }
@@ -171,9 +174,14 @@ public class SubspaceMenu extends AbstractContainerMenu {
         }
 
         @Override
+        public void setByPlayer(ItemStack newStack, ItemStack oldStack) {
+            set(newStack);
+        }
+
+        @Override
         public ItemStack remove(int amount) {
             int idx = getGlobalIndex();
-            return (idx < this.container.getContainerSize()) ? this.container.removeItem(idx, amount) : ItemStack.EMPTY;
+            return (idx >= 0 && idx < this.container.getContainerSize()) ? this.container.removeItem(idx, amount) : ItemStack.EMPTY;
         }
 
         @Override

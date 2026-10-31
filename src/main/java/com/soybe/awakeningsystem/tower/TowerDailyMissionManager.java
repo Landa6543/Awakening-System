@@ -589,13 +589,13 @@ public final class TowerDailyMissionManager {
             matches = true;
         } else if ("kill_crown_champion".equals(tType) && (mobCustomName.contains("Corona") || mobCustomName.contains("Crown") || mobCustomName.contains("Champion") || mobCustomName.contains("Campeón"))) {
             matches = true;
-        } else if ("kill_alpha_mauler".equals(tType) && (mobCustomName.contains("Mauler") || mobCustomName.contains("Alfa") || mobCustomName.contains("Name Hunter") || mobCustomName.contains("Cazador de Nombres"))) {
+        } else if ("kill_alpha_mauler".equals(tType) && (mobCustomName.contains("Mauler") || mobCustomName.contains("Alfa") || mobCustomName.contains("Name Hunter") || mobCustomName.contains("Cazador de Nombres") || mobCustomName.contains("Mutilador"))) {
             matches = true;
-        } else if ("kill_iceologer".equals(tType) && (mobCustomName.contains("Iceologer") || mobCustomName.contains("Expreso") || mobCustomName.contains("Train") || mobCustomName.contains("Hielo"))) {
+        } else if ("kill_iceologer".equals(tType) && (mobCustomName.contains("Iceologer") || mobCustomName.contains("Expreso") || mobCustomName.contains("Train") || mobCustomName.contains("Hielo") || mobCustomName.contains("Escarcha") || mobCustomName.contains("Elfo"))) {
             matches = true;
-        } else if ("kill_death_warden".equals(tType) && (mobCustomName.contains("Muerte") || mobCustomName.contains("Death") || mobCustomName.contains("Warden") || mobCustomName.contains("Illusioner"))) {
+        } else if ("kill_death_warden".equals(tType) && (mobCustomName.contains("Muerte") || mobCustomName.contains("Death") || mobCustomName.contains("Warden") || mobCustomName.contains("Illusioner") || mobCustomName.contains("Ilusionista"))) {
             matches = true;
-        } else if ("kill_wildfire_monarch".equals(tType) && (mobCustomName.contains("Fuego Salvaje") || mobCustomName.contains("Wildfire") || mobCustomName.contains("Monarch") || mobCustomName.contains("Monarca"))) {
+        } else if ("kill_wildfire_monarch".equals(tType) && (mobCustomName.contains("Fuego Salvaje") || mobCustomName.contains("Wildfire") || mobCustomName.contains("Monarch") || mobCustomName.contains("Monarca") || mobCustomName.contains("Fuego Infernal"))) {
             matches = true;
         } else if ("kill_high_ranker".equals(tType) && (mobCustomName.contains("Ranker") || mobCustomName.contains("Avatar") || mobCustomName.contains("Alto"))) {
             matches = true;

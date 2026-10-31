@@ -141,10 +141,30 @@ public class ShadowSoulEntity extends Entity {
             nbt.putInt("DeathTime", 0);
             nbt.putBoolean("NoAI", false);
             nbt.remove("DeathTime");
+            nbt.remove("Health");
+            nbt.remove("HurtTime");
+            nbt.remove("HurtByTimestamp");
+            nbt.putBoolean("Dead", false);
+            nbt.putBoolean("IsDead", false);
+            nbt.putBoolean("Dying", false);
+            nbt.remove("DeathTicks");
+            nbt.remove("DeathAnimation");
+            nbt.remove("AngryAt");
+            nbt.remove("AngerTime");
+            nbt.remove("Brain");
+            nbt.putBoolean("Tamed", true);
+            if (ownerUUID != null) {
+                nbt.putUUID("Owner", ownerUUID);
+                nbt.putUUID("OwnerUUID", ownerUUID);
+            }
             this.savedEntityNbt = nbt;
         } catch (Throwable ignored) {}
 
         Component originalComp = defeated.getCustomName() != null ? defeated.getCustomName().copy() : defeated.getType().getDescription().copy();
+        String rawStr = originalComp.getString().replaceAll("§[0-9a-fk-or]", "").replaceAll("\\[Lv\\.\\s*\\d+\\]", "").replaceAll("\\[.*?\\]", "").trim();
+        if (!rawStr.isEmpty()) {
+            originalComp = Component.literal(rawStr);
+        }
         this.setMobNameComponent(originalComp);
 
         for (EquipmentSlot slot : EquipmentSlot.values()) {

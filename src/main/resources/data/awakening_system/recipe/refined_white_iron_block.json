@@ -1,0 +1,18 @@
+{
+    "key":  {
+                "#":  {
+                          "item":  "awakening_system:refined_white_iron_ingot"
+                      }
+            },
+    "category":  "building",
+    "pattern":  [
+                    "###",
+                    "###",
+                    "###"
+                ],
+    "result":  {
+                   "count":  1,
+                   "id":  "awakening_system:refined_white_iron_block"
+               },
+    "type":  "minecraft:crafting_shaped"
+}

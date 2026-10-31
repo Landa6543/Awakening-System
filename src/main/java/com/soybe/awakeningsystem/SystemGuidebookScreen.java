@@ -1,5 +1,6 @@
 package com.soybe.awakeningsystem;
 
+import com.soybe.awakeningsystem.client.gui.ModernGuiHelper;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.gui.screens.Screen;
@@ -94,12 +95,8 @@ public class SystemGuidebookScreen extends Screen {
         int left = (this.width - panelW) / 2;
         int top = (this.height - panelH) / 2;
 
-        g.fill(left - 2, top - 2, left + panelW + 2, top + panelH + 2, 0xFF1D556C);
-        g.fill(left - 1, top - 1, left + panelW + 1, top + panelH + 1, 0xFF39B9D5);
-        g.fill(left, top, left + panelW, top + panelH, 0xFA0B161F);
-
-        g.fill(left, top, left + panelW, top + 24, 0xFF122430);
-        g.fill(left, top + 23, left + panelW, top + 24, 0xFF39B9D5);
+        ModernGuiHelper.drawModernWindow(g, left, top, panelW, panelH, ModernGuiHelper.GuiTheme.SOLO_LEVELING);
+        ModernGuiHelper.drawModernHeader(g, left + 4, top + 3, panelW - 8, 21, null, 0, ModernGuiHelper.GuiTheme.SOLO_LEVELING, font);
 
         int cornerLen = 10;
         g.fill(left, top, left + cornerLen, top + 2, 0xFF70E8FF);

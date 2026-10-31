@@ -1,5 +1,6 @@
 package com.soybe.awakeningsystem;
 
+import com.soybe.awakeningsystem.client.gui.ModernGuiHelper;
 import net.minecraft.ChatFormatting;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.GuiGraphics;
@@ -234,24 +235,21 @@ public final class ClassSelectionScreen extends Screen {
         boolean sys20 = cData != null && (cData.systemUpdated() || cData.isSystemUpdating()) && !sys30;
         boolean alreadyChosen = cData != null && cData.hasHunterClass();
 
-        graphics.fill(left - 2, top - 2, left + panelW + 2, top + panelH + 2, sys30 ? 0xC0163E2A : (sys20 ? 0xC03A1259 : 0xC010202D));
-        graphics.fill(left, top, left + panelW, top + panelH, sys30 ? 0xF00B1513 : (sys20 ? 0xF0140B22 : 0xF008121A));
+        ModernGuiHelper.GuiTheme theme = ModernGuiHelper.getTheme(cData);
+        ModernGuiHelper.drawModernWindow(graphics, left, top, panelW, panelH, theme);
 
-        int cornerColor = (sys30 || sys20) ? 0xFFFFD700 : 0xFF70E8FF;
-        graphics.fill(left, top, left + 8, top + 2, cornerColor);
-        graphics.fill(left, top, left + 2, top + 8, cornerColor);
-        graphics.fill(left + panelW - 8, top, left + panelW, top + 2, cornerColor);
-        graphics.fill(left + panelW - 2, top, left + panelW, top + 8, cornerColor);
-        graphics.fill(left, top + panelH - 2, left + 8, top + panelH, cornerColor);
-        graphics.fill(left, top + panelH - 8, left + 2, top + panelH, cornerColor);
-        graphics.fill(left + panelW - 8, top + panelH - 2, left + panelW, top + panelH, cornerColor);
-        graphics.fill(left + panelW - 2, top + panelH - 8, left + panelW, top + panelH, cornerColor);
+        int closeX = left + panelW - 34;
+        int closeY = top + 16;
+        boolean closeHover = mX >= closeX && mX < closeX + 16 && mY >= closeY && mY < closeY + 16;
+        graphics.fill(closeX, closeY, closeX + 16, closeY + 16, closeHover ? 0xDD7A1515 : 0x55122030);
+        graphics.renderOutline(closeX, closeY, 16, 16, closeHover ? 0xFFFF5555 : 0x7700E5FF);
+        graphics.drawCenteredString(font, "✕", closeX + 8, closeY + 4, closeHover ? 0xFFFFFFFF : 0xFF70E8FF);
 
-        graphics.drawCenteredString(font, Component.translatable("awakening_system.screen.class_select.header"), left + panelW / 2, top + 6, 0xFFFFD700);
+        graphics.drawCenteredString(font, Component.translatable("awakening_system.screen.class_select.header").copy().withStyle(ChatFormatting.BOLD), left + panelW / 2, top + 20, 0xFFFFD700);
 
         int catTabW = (panelW - 30) / 4;
         String[] catLabels = {"⚔ Guerreros", "🧙 Arcano", "🥋 Murim", "✦ Todas"};
-        int catY = top + 18;
+        int catY = top + 36;
         int catH = 16;
 
         for (int c = 0; c < 4; c++) {
@@ -270,7 +268,7 @@ public final class ClassSelectionScreen extends Screen {
         List<ClassOption> visible = getVisibleClasses();
         boolean isAllMode = (currentCategory == 3);
 
-        int cardStartY = top + 38;
+        int cardStartY = top + 56;
         if (!isAllMode) {
             int cardW = (panelW - 30 - 3 * 6) / 4;
             int cardH = 34;
@@ -284,12 +282,12 @@ public final class ClassSelectionScreen extends Screen {
                 boolean hovered = mX >= cx && mX < cx + cardW && mY >= cy && mY < cy + cardH;
                 boolean selected = (i == selectedIndex);
 
-                int borderCol = selected ? opt.color() : (hovered ? 0xFFFFFFFF : 0xFF23556B);
-                graphics.fill(cx - 1, cy - 1, cx + cardW + 1, cy + cardH + 1, borderCol);
-                graphics.fill(cx, cy, cx + cardW, cy + cardH, selected ? 0xEE162B3D : 0xDD09151F);
+                int borderCol = selected ? opt.color() : (hovered ? 0xFFFFFFFF : 0x6023556B);
+                graphics.fill(cx, cy, cx + cardW, cy + cardH, selected ? 0x551A3D54 : (hovered ? 0x35162B3D : 0x2009151F));
+                graphics.renderOutline(cx, cy, cardW, cardH, borderCol);
 
                 if (selected) {
-                    graphics.fill(cx, cy, cx + cardW, cy + 2, opt.color());
+                    graphics.fill(cx + 1, cy + 1, cx + cardW - 1, cy + 3, opt.color());
                 }
 
                 graphics.enableScissor(cx + 1, cy + 1, cx + cardW - 1, cy + cardH - 1);
@@ -321,12 +319,12 @@ public final class ClassSelectionScreen extends Screen {
                 boolean hovered = mX >= cx && mX < cx + cardW && mY >= cy && mY < cy + cardH;
                 boolean selected = (i == selectedIndex);
 
-                int borderCol = selected ? opt.color() : (hovered ? 0xFFFFFFFF : 0xFF23556B);
-                graphics.fill(cx - 1, cy - 1, cx + cardW + 1, cy + cardH + 1, borderCol);
-                graphics.fill(cx, cy, cx + cardW, cy + cardH, selected ? 0xEE162B3D : 0xDD09151F);
+                int borderCol = selected ? opt.color() : (hovered ? 0xFFFFFFFF : 0x6023556B);
+                graphics.fill(cx, cy, cx + cardW, cy + cardH, selected ? 0x551A3D54 : (hovered ? 0x35162B3D : 0x2009151F));
+                graphics.renderOutline(cx, cy, cardW, cardH, borderCol);
 
                 if (selected) {
-                    graphics.fill(cx, cy, cx + cardW, cy + 2, opt.color());
+                    graphics.fill(cx + 1, cy + 1, cx + cardW - 1, cy + 3, opt.color());
                 }
 
                 graphics.enableScissor(cx + 1, cy + 1, cx + cardW - 1, cy + cardH - 1);
@@ -339,9 +337,9 @@ public final class ClassSelectionScreen extends Screen {
 
         ClassOption sel = getSelectedClass();
         int chamberX = left + 15;
-        int chamberY = isAllMode ? (top + 100) : (top + 78);
+        int chamberY = isAllMode ? (top + 116) : (top + 94);
         int chamberW = panelW - 30;
-        int chamberH = isAllMode ? 144 : 166;
+        int chamberH = isAllMode ? 134 : 156;
 
         graphics.fill(chamberX - 1, chamberY - 1, chamberX + chamberW + 1, chamberY + chamberH + 1, sel.color());
         graphics.fill(chamberX, chamberY, chamberX + chamberW, chamberY + chamberH, 0xF508121B);
@@ -431,17 +429,7 @@ public final class ClassSelectionScreen extends Screen {
             int modalX = (width - modalW) / 2;
             int modalY = (height - modalH) / 2;
 
-            graphics.fill(modalX - 2, modalY - 2, modalX + modalW + 2, modalY + modalH + 2, 0xFFFF3333);
-            graphics.fill(modalX, modalY, modalX + modalW, modalY + modalH, 0xFF0E1318);
-
-            graphics.fill(modalX, modalY, modalX + 8, modalY + 2, 0xFFFFD700);
-            graphics.fill(modalX, modalY, modalX + 2, modalY + 8, 0xFFFFD700);
-            graphics.fill(modalX + modalW - 8, modalY, modalX + modalW, modalY + 2, 0xFFFFD700);
-            graphics.fill(modalX + modalW - 2, modalY, modalX + modalW, modalY + 8, 0xFFFFD700);
-            graphics.fill(modalX, modalY + modalH - 2, modalX + 8, modalY + modalH, 0xFFFFD700);
-            graphics.fill(modalX, modalY + modalH - 8, modalX + 2, modalY + modalH, 0xFFFFD700);
-            graphics.fill(modalX + modalW - 8, modalY + modalH - 2, modalX + modalW, modalY + modalH, 0xFFFFD700);
-            graphics.fill(modalX + modalW - 2, modalY + modalH - 8, modalX + modalW, modalY + modalH, 0xFFFFD700);
+            ModernGuiHelper.drawModernPopup(graphics, modalX, modalY, modalW, modalH, ModernGuiHelper.GuiTheme.SOLO_LEVELING);
 
             graphics.drawCenteredString(font, Component.translatable("awakening_system.screen.class_select.confirm_title").copy().withStyle(ChatFormatting.BOLD), modalX + modalW / 2, modalY + 9, 0xFFFF5555);
 
@@ -516,8 +504,16 @@ public final class ClassSelectionScreen extends Screen {
             int left = (width - panelW) / 2;
             int top = (height - panelH) / 2;
 
+            int closeX = left + panelW - 34;
+            int closeY = top + 16;
+            if (mouseX >= closeX && mouseX < closeX + 16 && mouseY >= closeY && mouseY < closeY + 16) {
+                playClickSound();
+                onClose();
+                return true;
+            }
+
             int catTabW = (panelW - 30) / 4;
-            int catY = top + 18;
+            int catY = top + 36;
             int catH = 16;
             for (int c = 0; c < 4; c++) {
                 int cx = left + 15 + c * catTabW;
@@ -533,7 +529,7 @@ public final class ClassSelectionScreen extends Screen {
 
             List<ClassOption> visible = getVisibleClasses();
             boolean isAllMode = (currentCategory == 3);
-            int cardStartY = top + 38;
+            int cardStartY = top + 56;
 
             if (!isAllMode) {
                 int cardW = (panelW - 30 - 3 * 6) / 4;

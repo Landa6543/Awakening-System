@@ -1,7 +1,10 @@
 package com.soybe.awakeningsystem.guild;
 
+import com.soybe.awakeningsystem.AwakeningSystemMod;
+import com.soybe.awakeningsystem.client.gui.ModernGuiHelper;
 import com.soybe.awakeningsystem.AwakeningSystemClient;
 import com.soybe.awakeningsystem.ModSounds;
+import com.soybe.awakeningsystem.SystemScreen;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.gui.components.EditBox;
@@ -18,8 +21,8 @@ import org.lwjgl.glfw.GLFW;
 import java.util.*;
 
 public class GuildScreen extends Screen {
-    private static final int GUI_WIDTH = 380;
-    private static final int GUI_HEIGHT = 260;
+    private static final int GUI_WIDTH = 520;
+    private static final int GUI_HEIGHT = 295;
 
     private CompoundTag rawData;
     private boolean inGuild;
@@ -119,27 +122,39 @@ public class GuildScreen extends Screen {
         int top = (height - GUI_HEIGHT) / 2;
 
         if (!inGuild) {
-            this.createNameBox = new EditBox(font, left + 40, top + 100, 180, 18, Component.translatable("awakening_system.guild.name_field"));
+            this.createNameBox = new EditBox(font, left + 44, top + 105, 192, 14, Component.translatable("awakening_system.guild.name_field"));
             this.createNameBox.setHint(Component.translatable("awakening_system.guild.name_hint"));
             this.createNameBox.setMaxLength(16);
+            this.createNameBox.setBordered(false);
+            this.createNameBox.setTextColor(0xFFFFFFFF);
             addRenderableWidget(createNameBox);
 
-            this.createTagBox = new EditBox(font, left + 230, top + 100, 100, 18, Component.translatable("awakening_system.guild.tag_field"));
+            this.createTagBox = new EditBox(font, left + 264, top + 105, 112, 14, Component.translatable("awakening_system.guild.tag_field"));
             this.createTagBox.setHint(Component.translatable("awakening_system.guild.tag_hint"));
             this.createTagBox.setMaxLength(4);
+            this.createTagBox.setBordered(false);
+            this.createTagBox.setTextColor(0xFFFFFFFF);
             addRenderableWidget(createTagBox);
         } else {
-            this.inviteBox = new EditBox(font, left + 20, top + GUI_HEIGHT - 38, 140, 16, Component.translatable("awakening_system.guild.invite_field"));
+            this.inviteBox = new EditBox(font, left + 20, top + GUI_HEIGHT - 35, 156, 12, Component.translatable("awakening_system.guild.invite_field"));
             this.inviteBox.setHint(Component.translatable("awakening_system.guild.invite_hint"));
             this.inviteBox.setMaxLength(16);
+            this.inviteBox.setBordered(false);
+            this.inviteBox.setTextColor(0xFFFFFFFF);
             this.inviteBox.visible = (currentTab == 0);
             this.inviteBox.active = (currentTab == 0);
             addRenderableWidget(inviteBox);
 
-            this.portalFeeBox = new EditBox(font, left + (GUI_WIDTH - 180) / 2, top + (GUI_HEIGHT - 126) / 2 + 44, 180, 18, Component.translatable("awakening_system.guild.fee_field"));
+            int mw = 240;
+            int mh = 130;
+            int mx = left + (GUI_WIDTH - mw) / 2;
+            int my = top + (GUI_HEIGHT - mh) / 2;
+            this.portalFeeBox = new EditBox(font, mx + 20, my + 41, mw - 40, 12, Component.translatable("awakening_system.guild.fee_field"));
             this.portalFeeBox.setHint(Component.translatable("awakening_system.guild.fee_hint"));
             this.portalFeeBox.setMaxLength(10);
             this.portalFeeBox.setFilter(s -> s.matches("\\d*"));
+            this.portalFeeBox.setBordered(false);
+            this.portalFeeBox.setTextColor(0xFFFFFFFF);
             this.portalFeeBox.visible = false;
             this.portalFeeBox.active = false;
             addRenderableWidget(portalFeeBox);
@@ -147,8 +162,8 @@ public class GuildScreen extends Screen {
     }
 
     public float getGuiScale() {
-        float scaleX = (float) this.width / 400.0F;
-        float scaleY = (float) this.height / 280.0F;
+        float scaleX = (float) this.width / 540.0F;
+        float scaleY = (float) this.height / 315.0F;
         float scale = Math.min(scaleX, scaleY);
         return Math.min(1.0F, Math.max(0.35F, scale));
     }
@@ -179,7 +194,7 @@ public class GuildScreen extends Screen {
 
     @Override
     public void renderBackground(GuiGraphics graphics, int mouseX, int mouseY, float partialTick) {
-        graphics.fill(0, 0, width, height, 0x55060D15);
+        // Clean - no dark murky screen-wide filter
     }
 
     @Override
@@ -202,14 +217,19 @@ public class GuildScreen extends Screen {
         int left = (width - GUI_WIDTH) / 2;
         int top = (height - GUI_HEIGHT) / 2;
 
-        g.fill(left - 2, top - 2, left + GUI_WIDTH + 2, top + GUI_HEIGHT + 2, 0xFFDFB76C);
-        g.fill(left, top, left + GUI_WIDTH, top + GUI_HEIGHT, 0xF208111A);
-        g.fill(left, top, left + GUI_WIDTH, top + 26, 0xFF141F2B);
-        g.fill(left, top + 25, left + GUI_WIDTH, top + 26, 0xFFDFB76C);
+        ModernGuiHelper.drawModernWindow(g, left, top, GUI_WIDTH, GUI_HEIGHT, ModernGuiHelper.GuiTheme.SOLO_LEVELING);
 
-        boolean closeHover = mX >= left + GUI_WIDTH - 22 && mX < left + GUI_WIDTH - 6 && mY >= top + 6 && mY < top + 20;
-        g.fill(left + GUI_WIDTH - 22, top + 6, left + GUI_WIDTH - 6, top + 20, closeHover ? 0xDDFF4444 : 0x66222222);
-        g.drawCenteredString(font, "✕", left + GUI_WIDTH - 14, top + 8, closeHover ? 0xFFFFFFFF : 0xFFAAAAAA);
+        // Close button [✕] (Right) - seamlessly integrated without dark block
+        int closeX = left + GUI_WIDTH - 32;
+        int closeY = top + 18;
+        int closeW = 16;
+        int closeH = 16;
+        boolean closeHover = mX >= closeX && mX < closeX + closeW && mY >= closeY && mY < closeY + closeH;
+        if (closeHover) {
+            g.fill(closeX, closeY, closeX + closeW, closeY + closeH, 0xDD7A1515);
+            g.renderOutline(closeX, closeY, closeW, closeH, 0xFFFF5555);
+        }
+        g.drawCenteredString(font, "✕", closeX + closeW / 2, closeY + 4, closeHover ? 0xFFFFFFFF : 0xFF70E8FF);
 
         if (!inGuild || guild == null) {
             renderCreateGuildView(g, left, top, mX, mY);
@@ -227,49 +247,72 @@ public class GuildScreen extends Screen {
     }
 
     private void renderCreateGuildView(GuiGraphics g, int left, int top, int mouseX, int mouseY) {
-        g.drawString(font, Component.translatable("awakening_system.guild.screen.header_found"), left + 14, top + 9, 0xFFFFFFFF);
+        g.drawString(font, Component.translatable("awakening_system.guild.screen.header_found"), left + 36, top + 18, 0xFF00E5FF);
 
-        g.drawCenteredString(font, Component.translatable("awakening_system.guild.screen.form_title"), left + GUI_WIDTH / 2, top + 40, 0xFFFFD700);
-        g.drawCenteredString(font, Component.translatable("awakening_system.guild.screen.form_desc1"), left + GUI_WIDTH / 2, top + 53, 0xFFAAAAAA);
-        g.drawCenteredString(font, Component.translatable("awakening_system.guild.screen.form_desc2"), left + GUI_WIDTH / 2, top + 64, 0xFFAAAAAA);
+        g.drawCenteredString(font, Component.translatable("awakening_system.guild.screen.form_title"), left + GUI_WIDTH / 2, top + 42, 0xFFFFD700);
+        g.drawCenteredString(font, Component.translatable("awakening_system.guild.screen.form_desc1"), left + GUI_WIDTH / 2, top + 56, 0xFFAAAAAA);
+        g.drawCenteredString(font, Component.translatable("awakening_system.guild.screen.form_desc2"), left + GUI_WIDTH / 2, top + 68, 0xFFAAAAAA);
 
         g.drawString(font, Component.translatable("awakening_system.guild.screen.name_label"), left + 40, top + 88, 0xFFFFFFFF);
-        g.drawString(font, Component.translatable("awakening_system.guild.screen.tag_label"), left + 230, top + 88, 0xFFFFFFFF);
+        int nX = left + 40;
+        int nY = top + 102;
+        int nW = 200;
+        int nH = 18;
+        boolean nFoc = this.createNameBox != null && this.createNameBox.isFocused();
+        g.fill(nX, nY, nX + nW, nY + nH, 0x1400E5FF);
+        g.renderOutline(nX, nY, nW, nH, nFoc ? 0xFF00E5FF : 0x4400E5FF);
 
-        int reqY = top + 135;
-        g.fill(left + 40, reqY, left + GUI_WIDTH - 40, reqY + 50, 0x880E1C28);
-        g.renderOutline(left + 40, reqY, GUI_WIDTH - 80, 50, 0xFF2A4255);
+        g.drawString(font, Component.translatable("awakening_system.guild.screen.tag_label"), left + 260, top + 88, 0xFFFFFFFF);
+        int tX = left + 260;
+        int tY = top + 102;
+        int tW = 120;
+        int tH = 18;
+        boolean tFoc = this.createTagBox != null && this.createTagBox.isFocused();
+        g.fill(tX, tY, tX + tW, tY + tH, 0x1400E5FF);
+        g.renderOutline(tX, tY, tW, tH, tFoc ? 0xFF00E5FF : 0x4400E5FF);
+
+        int reqY = top + 138;
+        g.fill(left + 40, reqY, left + GUI_WIDTH - 40, reqY + 54, 0x1400E5FF);
+        g.renderOutline(left + 40, reqY, GUI_WIDTH - 80, 54, 0x4400E5FF);
 
         g.drawString(font, Component.translatable("awakening_system.guild.screen.req_title"), left + 48, reqY + 8, 0xFFFFD700);
         g.drawString(font, Component.translatable("awakening_system.guild.screen.req_cost"), left + 48, reqY + 22, 0xFFFFFFFF);
-        g.drawString(font, Component.translatable("awakening_system.guild.screen.req_leader"), left + 48, reqY + 34, 0xFFCCCCCC);
+        g.drawString(font, Component.translatable("awakening_system.guild.screen.req_leader"), left + 48, reqY + 36, 0xFFCCCCCC);
 
-        int btnW = 160;
-        int btnH = 22;
+        int btnW = 180;
+        int btnH = 24;
         int btnX = left + (GUI_WIDTH - btnW) / 2;
-        int btnY = top + 200;
+        int btnY = top + 215;
 
         boolean btnHov = mouseX >= btnX && mouseX < btnX + btnW && mouseY >= btnY && mouseY < btnY + btnH;
         g.fill(btnX, btnY, btnX + btnW, btnY + btnH, btnHov ? 0xDD28864E : 0xAA1A5D3E);
         g.renderOutline(btnX, btnY, btnW, btnH, btnHov ? 0xFF50FA7B : 0xFF28864E);
-        g.drawCenteredString(font, Component.translatable("awakening_system.guild.screen.btn_found"), btnX + btnW / 2, btnY + 7, btnHov ? 0xFFFFFFFF : 0xFF50FA7B);
+        g.drawCenteredString(font, Component.translatable("awakening_system.guild.screen.btn_found"), btnX + btnW / 2, btnY + 8, btnHov ? 0xFFFFFFFF : 0xFF50FA7B);
     }
 
     private void renderGuildView(GuiGraphics g, int left, int top, int mouseX, int mouseY) {
         Component titleComp = Component.literal("§6⚔ [" + guild.getTag() + "] §f" + guild.getName() + " ")
                 .append(Component.translatable("awakening_system.guild.level_tag", guild.getLevel()));
-        g.drawString(font, titleComp, left + 14, top + 9, 0xFFFFFFFF);
+        g.drawString(font, titleComp, left + 36, top + 18, 0xFFFFFFFF);
 
         long exp = guild.getExp();
         long expNeeded = guild.getExpForNextLevel();
-        float ratio = Math.max(0.0F, Math.min(1.0F, (float) exp / expNeeded));
-        int barW = 120;
-        int barH = 8;
-        int barX = left + GUI_WIDTH - 150;
-        int barY = top + 10;
-        g.fill(barX, barY, barX + barW, barY + barH, 0xFF0D1721);
-        g.fill(barX, barY, barX + (int) (barW * ratio), barY + barH, 0xFF00E5FF);
-        g.renderOutline(barX, barY, barW, barH, 0xFF4EE2EC);
+        float ratio = Math.max(0.0F, Math.min(1.0F, (float) exp / Math.max(1L, expNeeded)));
+        int barW = 110;
+        int barH = 7;
+        int barX = left + GUI_WIDTH - 40 - 14 - barW;
+        int barY = top + 19;
+        g.fill(barX, barY, barX + barW, barY + barH, 0x2000E5FF);
+        g.renderOutline(barX, barY, barW, barH, 0x4400E5FF);
+        int fillW = (int) (barW * ratio);
+        if (fillW > 0) {
+            g.fillGradient(barX, barY, barX + fillW, barY + barH, 0xFF00E5FF, 0xFF70E8FF);
+        }
+
+        String expStr = "§b" + String.format(Locale.US, "%,d", exp) + " / " + String.format(Locale.US, "%,d", expNeeded) + " EXP";
+        int expW = font.width(expStr);
+        int expX = barX - 10 - expW;
+        g.drawString(font, expStr, expX, top + 18, 0xFF70E8FF, false);
 
         int tabW = (GUI_WIDTH - 28) / 6;
         Component[] tabs = {
@@ -282,12 +325,17 @@ public class GuildScreen extends Screen {
         };
         for (int i = 0; i < 6; i++) {
             int tX = left + 14 + i * tabW;
-            int tY = top + 32;
+            int tY = top + 33;
             int tH = 18;
+            boolean isSelected = currentTab == i;
             boolean hov = mouseX >= tX && mouseX < tX + tabW && mouseY >= tY && mouseY < tY + tH;
-            g.fill(tX, tY, tX + tabW, tY + tH, currentTab == i ? 0xCC2B3D4D : (hov ? 0x881E2B38 : 0x550F1822));
-            g.renderOutline(tX, tY, tabW, tH, currentTab == i ? 0xFFDFB76C : 0xFF2A4255);
-            g.drawCenteredString(font, tabs[i], tX + tabW / 2, tY + 5, currentTab == i ? 0xFFFFD700 : 0xFFAAAAAA);
+            int bgCol = isSelected ? 0x4000E5FF : (hov ? 0x2200E5FF : 0x1000E5FF);
+            int borderCol = isSelected ? 0xFF00E5FF : (hov ? 0x8800E5FF : 0x3000E5FF);
+            int textCol = isSelected ? 0xFF00E5FF : (hov ? 0xFFE0E0E0 : 0xFF8AA8B8);
+            g.fill(tX, tY, tX + tabW - 1, tY + tH, bgCol);
+            g.renderOutline(tX, tY, tabW - 1, tH, borderCol);
+            if (isSelected) g.fill(tX + 1, tY, tX + tabW - 2, tY + 1, 0xFF70E8FF);
+            drawScaledCenteredString(g, tabs[i].getString(), tX + (tabW - 1) / 2, tY + 5, tabW - 6, textCol);
         }
 
         if (this.inviteBox != null) {
@@ -296,7 +344,7 @@ public class GuildScreen extends Screen {
             this.inviteBox.active = showInvite;
         }
 
-        int contentY = top + 56;
+        int contentY = top + 55;
         switch (currentTab) {
             case 0 -> renderMembersTab(g, left, contentY, mouseX, mouseY);
             case 1 -> renderPerksTab(g, left, contentY, mouseX, mouseY);
@@ -313,97 +361,152 @@ public class GuildScreen extends Screen {
         GuildRole myRole = guild.getMemberRole(myUuid);
         boolean isLeader = guild.getLeaderUuid().equals(myUuid);
 
-        g.drawString(font, "§8●", left + 22, top + 2, 0x888888);
-        g.drawString(font, Component.translatable("awakening_system.guild.members.rank"), left + 38, top + 2, 0x888888);
-        g.drawString(font, Component.translatable("awakening_system.guild.members.name"), left + 110, top + 2, 0x888888);
-        g.drawString(font, Component.translatable("awakening_system.guild.members.donated"), left + 220, top + 2, 0x888888);
+        int listX = left + 14;
+        int listY = top;
+        int listW = GUI_WIDTH - 28;
+        int listH = 175;
+
+        // Enclosed dashboard table card
+        g.fill(listX, listY, listX + listW, listY + listH, 0x0A00E5FF);
+        g.renderOutline(listX, listY, listW, listH, 0x4400E5FF);
+
+        // Header bar
+        int hdrY = listY + 2;
+        int hdrH = 16;
+        g.fill(listX + 1, hdrY, listX + listW - 1, hdrY + hdrH, 0x3000E5FF);
+        g.fill(listX + 1, hdrY + hdrH, listX + listW - 1, hdrY + hdrH + 1, 0x6000E5FF);
+
+        int colDotX = listX + 8;
+        int colRankX = listX + 24;
+        int colNameX = listX + 106;
+        int colDonatedX = listX + 286;
+        int colActionsX = listX + 381;
+
+        g.drawString(font, "●", colDotX, hdrY + 4, 0xFF70E8FF);
+        g.drawString(font, Component.translatable("awakening_system.guild.members.rank"), colRankX, hdrY + 4, 0xFF70E8FF);
+        g.drawString(font, Component.translatable("awakening_system.guild.members.name"), colNameX, hdrY + 4, 0xFF70E8FF);
+        g.drawString(font, Component.translatable("awakening_system.guild.members.donated"), colDonatedX, hdrY + 4, 0xFF70E8FF);
         if (isLeader) {
-            g.drawString(font, Component.translatable("awakening_system.guild.members.actions"), left + 285, top + 2, 0x888888);
+            g.drawString(font, Component.translatable("awakening_system.guild.members.actions"), colActionsX, hdrY + 4, 0xFF70E8FF);
         }
 
-        g.fill(left + 16, top + 13, left + GUI_WIDTH - 16, top + 14, 0x334EE2EC);
-
         List<GuildMember> membersList = new ArrayList<>(guild.getMembers().values());
-        int listH = 140;
-        int rowH = 18;
-        int maxVisible = listH / rowH;
+        int rowsStartY = hdrY + hdrH + 2;
+        int rowH = 19;
+        int maxVisible = (listH - 24) / rowH;
 
         for (int i = 0; i < maxVisible; i++) {
             int idx = i + memberScrollOffset;
             if (idx >= membersList.size()) break;
             GuildMember m = membersList.get(idx);
 
-            int rY = top + 18 + i * rowH;
-            boolean rHov = mouseX >= left + 16 && mouseX < left + GUI_WIDTH - 16 && mouseY >= rY && mouseY < rY + rowH - 2;
-            if (rHov) {
-                g.fill(left + 16, rY, left + GUI_WIDTH - 16, rY + rowH - 2, 0x224EE2EC);
-            }
+            int rY = rowsStartY + i * rowH;
+            boolean rHov = mouseX >= listX + 2 && mouseX < listX + listW - 2 && mouseY >= rY && mouseY < rY + rowH - 1;
+            int rowBg = rHov ? 0x4000E5FF : ((i % 2 == 0) ? 0x1400E5FF : 0x0800E5FF);
+            g.fill(listX + 2, rY, listX + listW - 2, rY + rowH - 1, rowBg);
 
             boolean isOnline = mc.getConnection() != null && mc.getConnection().getPlayerInfo(m.getUuid()) != null;
-            g.drawString(font, isOnline ? "§a●" : "§7○", left + 22, rY + 3, isOnline ? 0xFF50FA7B : 0xFF777777);
+            g.drawString(font, isOnline ? "§a●" : "§7○", colDotX, rY + 5, isOnline ? 0xFF50FA7B : 0xFF777777);
 
-            g.drawString(font, m.getRole().getLabel(), left + 38, rY + 3, 0xFFFFFFFF);
+            g.drawString(font, m.getRole().getLabel(), colRankX, rY + 5, 0xFFFFFFFF);
 
             String nameStr = m.getName();
             if (m.getUuid().equals(myUuid)) nameStr += " " + Component.translatable("awakening_system.guild.you").getString();
-            g.drawString(font, nameStr, left + 110, rY + 3, 0xFFFFFFFF);
+            drawScaledString(g, nameStr, colNameX, rY + 5, 170, 0xFFFFFFFF);
 
-            g.drawString(font, "§e" + m.getContributedMora() + " 🪙", left + 220, rY + 3, 0xFFFFD700);
+            g.drawString(font, "§e" + String.format(Locale.US, "%,d", m.getContributedMora()) + " ✦ Mora", colDonatedX, rY + 5, 0xFFFFD700);
 
             if (isLeader && !m.getUuid().equals(myUuid)) {
-                boolean hovUp = mouseX >= left + 285 && mouseX < left + 301 && mouseY >= rY && mouseY < rY + 14;
-                g.fill(left + 285, rY, left + 301, rY + 14, hovUp ? 0xDD28864E : 0x881A5D3E);
-                g.drawCenteredString(font, "▲", left + 293, rY + 2, 0xFF50FA7B);
+                int btnUpX = colActionsX;
+                boolean hovUp = mouseX >= btnUpX && mouseX < btnUpX + 16 && mouseY >= rY + 2 && mouseY < rY + 16;
+                g.fill(btnUpX, rY + 2, btnUpX + 16, rY + 16, hovUp ? 0xDD28864E : 0x881A5D3E);
+                g.drawCenteredString(font, "▲", btnUpX + 8, rY + 4, 0xFF50FA7B);
 
-                boolean hovDown = mouseX >= left + 305 && mouseX < left + 321 && mouseY >= rY && mouseY < rY + 14;
-                g.fill(left + 305, rY, left + 321, rY + 14, hovDown ? 0xDDAA6622 : 0x88663311);
-                g.drawCenteredString(font, "▼", left + 313, rY + 2, 0xFFFFBB44);
+                int btnDownX = colActionsX + 20;
+                boolean hovDown = mouseX >= btnDownX && mouseX < btnDownX + 16 && mouseY >= rY + 2 && mouseY < rY + 16;
+                g.fill(btnDownX, rY + 2, btnDownX + 16, rY + 16, hovDown ? 0xDDAA6622 : 0x88663311);
+                g.drawCenteredString(font, "▼", btnDownX + 8, rY + 4, 0xFFFFBB44);
 
-                boolean hovKick = mouseX >= left + 325 && mouseX < left + 341 && mouseY >= rY && mouseY < rY + 14;
-                g.fill(left + 325, rY, left + 341, rY + 14, hovKick ? 0xDD992222 : 0x88551111);
-                g.drawCenteredString(font, "✕", left + 333, rY + 2, 0xFFFF6666);
+                int btnKickX = colActionsX + 40;
+                boolean hovKick = mouseX >= btnKickX && mouseX < btnKickX + 16 && mouseY >= rY + 2 && mouseY < rY + 16;
+                g.fill(btnKickX, rY + 2, btnKickX + 16, rY + 16, hovKick ? 0xDD992222 : 0x88551111);
+                g.drawCenteredString(font, "✕", btnKickX + 8, rY + 4, 0xFFFF6666);
+            }
+
+            if (!m.getUuid().equals(myUuid) && isOnline) {
+                int tpaX = colActionsX + 65;
+                boolean hovTpa = mouseX >= tpaX && mouseX < tpaX + 18 && mouseY >= rY + 2 && mouseY < rY + 16;
+                g.fill(tpaX, rY + 2, tpaX + 18, rY + 16, hovTpa ? 0xDD1E6BB8 : 0x88114068);
+                g.renderOutline(tpaX, rY + 2, 18, 14, hovTpa ? 0xFF4EE2EC : 0xFF2A5270);
+                g.drawCenteredString(font, "⚡", tpaX + 9, rY + 4, hovTpa ? 0xFFFFFFFF : 0xFF4EE2EC);
+                if (hovTpa) {
+                    g.renderTooltip(font, Component.translatable("awakening_system.guild.tpa_btn_tooltip", m.getName()), mouseX, mouseY);
+                }
             }
         }
 
-        int btmY = top + GUI_HEIGHT - 38 - 56;
+        int screenTop = top - 55;
+        int btmY = screenTop + GUI_HEIGHT - 38;
         if (myRole != null && myRole.canInvite()) {
-            int invBtnX = left + 165;
-            int invBtnW = 75;
-            int invBtnH = 16;
+            int boxX = left + 16;
+            int boxY = btmY;
+            int boxW = 164;
+            int boxH = 18;
+            boolean boxFoc = this.inviteBox != null && this.inviteBox.isFocused();
+            g.fill(boxX, boxY, boxX + boxW, boxY + boxH, 0x0A00E5FF);
+            g.renderOutline(boxX, boxY, boxW, boxH, boxFoc ? 0xFF00E5FF : 0x4400E5FF);
+
+            int invBtnX = left + 186;
+            int invBtnW = 74;
+            int invBtnH = 18;
             boolean invHov = mouseX >= invBtnX && mouseX < invBtnX + invBtnW && mouseY >= btmY && mouseY < btmY + invBtnH;
-            g.fill(invBtnX, btmY, invBtnX + invBtnW, btmY + invBtnH, invHov ? 0xDD225577 : 0x88113344);
-            g.renderOutline(invBtnX, btmY, invBtnW, invBtnH, invHov ? 0xFF00E5FF : 0xFF2A4255);
-            g.drawCenteredString(font, Component.translatable("awakening_system.guild.btn_invite"), invBtnX + invBtnW / 2, btmY + 4, 0xFF70E8FF);
+            g.fill(invBtnX, btmY, invBtnX + invBtnW, btmY + invBtnH, invHov ? 0x4000E5FF : 0x1800E5FF);
+            g.renderOutline(invBtnX, btmY, invBtnW, invBtnH, invHov ? 0xFF00E5FF : 0x5500E5FF);
+            g.drawCenteredString(font, Component.translatable("awakening_system.guild.btn_invite"), invBtnX + invBtnW / 2, btmY + 5, 0xFF70E8FF);
         }
 
-        int leaveBtnX = left + GUI_WIDTH - 110;
-        int leaveBtnW = 94;
-        int leaveBtnH = 16;
+        int leaveBtnX = left + GUI_WIDTH - 120;
+        int leaveBtnW = 104;
+        int leaveBtnH = 18;
         boolean leaveHov = mouseX >= leaveBtnX && mouseX < leaveBtnX + leaveBtnW && mouseY >= btmY && mouseY < btmY + leaveBtnH;
-        g.fill(leaveBtnX, btmY, leaveBtnX + leaveBtnW, btmY + leaveBtnH, leaveHov ? 0xAA6E2020 : 0x663B1111);
-        g.renderOutline(leaveBtnX, btmY, leaveBtnW, leaveBtnH, leaveHov ? 0xFFFF6666 : 0xFF882222);
-        g.drawCenteredString(font, isLeader ? Component.translatable("awakening_system.guild.btn_disband") : Component.translatable("awakening_system.guild.btn_leave"), leaveBtnX + leaveBtnW / 2, btmY + 4, 0xFFFF8888);
+        g.fill(leaveBtnX, btmY, leaveBtnX + leaveBtnW, btmY + leaveBtnH, leaveHov ? 0xDD7A1515 : 0x2500E5FF);
+        g.renderOutline(leaveBtnX, btmY, leaveBtnW, leaveBtnH, leaveHov ? 0xFFFF5555 : 0x88AA2222);
+        g.drawCenteredString(font, isLeader ? Component.translatable("awakening_system.guild.btn_disband") : Component.translatable("awakening_system.guild.btn_leave"), leaveBtnX + leaveBtnW / 2, btmY + 5, 0xFFFF8888);
     }
 
     private void renderPerksTab(GuiGraphics g, int left, int top, int mouseX, int mouseY) {
         Minecraft mc = Minecraft.getInstance();
         UUID myUuid = mc.player != null ? mc.player.getUUID() : UUID.randomUUID();
         boolean isLeader = guild.getLeaderUuid().equals(myUuid);
+        GuildRole myRole = guild.getMemberRole(myUuid);
+        boolean canManage = isLeader || (myRole != null && myRole.canManagePerks());
+
+        int playerCoins = (mc.player != null && mc.player.hasData(AwakeningSystemMod.PLAYER_SYSTEM))
+                ? mc.player.getData(AwakeningSystemMod.PLAYER_SYSTEM).coins() : 0;
+        long vaultCoins = guild.getCoinVault();
+        long totalCoins = vaultCoins + playerCoins;
+
+        int playerMora = (mc.player != null && mc.player.hasData(AwakeningSystemMod.PLAYER_SYSTEM))
+                ? mc.player.getData(AwakeningSystemMod.PLAYER_SYSTEM).mora() : 0;
+        long vaultMora = guild.getMoraVault();
+        long totalMora = vaultMora + playerMora;
 
         GuildPerk[] perks = GuildPerk.values();
         int cardW = GUI_WIDTH - 32;
-        int cardH = 24;
+        int cardH = 26;
 
         for (int i = 0; i < perks.length; i++) {
             GuildPerk p = perks[i];
             int pY = top + i * (cardH + 4);
-            if (pY + cardH > top + 190) break;
+            if (pY + cardH > top + 230) break;
 
             boolean unlocked = guild.hasPerk(p);
-            boolean canUnlock = isLeader && !unlocked && guild.getLevel() >= p.getRequiredGuildLevel() && guild.getMoraVault() >= p.getCostMora();
+            int cost = p.getCostCoins();
+            boolean hasFunds = totalCoins >= cost || totalMora >= cost;
+            boolean canUnlock = canManage && !unlocked && guild.getLevel() >= p.getRequiredGuildLevel() && hasFunds;
 
-            int borderCol = unlocked ? 0xFF50FA7B : (canUnlock ? 0xFFFFD700 : 0xFF3D566E);
-            int bgCol = unlocked ? 0x401A5D3E : 0x30101C28;
+            int borderCol = unlocked ? 0xFF50FA7B : (canUnlock ? 0xFFFFD700 : 0x3500E5FF);
+            int bgCol = unlocked ? 0x401A5D3E : 0x1400E5FF;
 
             g.fill(left + 16, pY, left + 16 + cardW, pY + cardH, bgCol);
             g.renderOutline(left + 16, pY, cardW, cardH, borderCol);
@@ -411,25 +514,61 @@ public class GuildScreen extends Screen {
             Component perkTitle = Component.literal(p.getIcon() + " §f").append(p.getTitleComponent());
             g.drawString(font, perkTitle, left + 22, pY + 4, unlocked ? 0xFF50FA7B : 0xFFFFFFFF);
             Component perkDesc = Component.literal("§7").append(p.getDescriptionComponent());
-            g.drawString(font, perkDesc, left + 22, pY + 14, 0xFFAAAAAA);
+            g.drawString(font, perkDesc, left + 22, pY + 15, 0xFFAAAAAA);
 
             if (unlocked) {
-                g.drawString(font, Component.translatable("awakening_system.guild.perk.active"), left + cardW - 55, pY + 8, 0xFF50FA7B);
+                g.drawString(font, Component.translatable("awakening_system.guild.perk.active"), left + 16 + cardW - 65, pY + 9, 0xFF50FA7B);
             } else {
                 if (guild.getLevel() < p.getRequiredGuildLevel()) {
-                    g.drawString(font, Component.translatable("awakening_system.guild.perk.req_level", p.getRequiredGuildLevel()), left + cardW - 65, pY + 8, 0xFFFF6666);
-                } else if (isLeader) {
-                    int btnX = left + cardW - 75;
-                    int btnW = 85;
-                    int btnH = 16;
-                    boolean bHov = mouseX >= btnX && mouseX < btnX + btnW && mouseY >= pY + 4 && mouseY < pY + 4 + btnH;
-                    g.fill(btnX, pY + 4, btnX + btnW, pY + 4 + btnH, bHov ? 0xDD6E5515 : 0xAA453308);
-                    g.renderOutline(btnX, pY + 4, btnW, btnH, 0xFFFFD700);
-                    g.drawCenteredString(font, "🪙 " + p.getCostMora(), btnX + btnW / 2, pY + 8, 0xFFFFD700);
+                    g.drawString(font, Component.translatable("awakening_system.guild.perk.req_level", p.getRequiredGuildLevel()), left + 16 + cardW - 75, pY + 9, 0xFFFF6666);
+                } else if (canManage) {
+                    int btnW = 92;
+                    int btnH = 18;
+                    int btnX = left + 16 + cardW - btnW - 8;
+                    int btnY = pY + 4;
+                    boolean bHov = mouseX >= btnX && mouseX < btnX + btnW && mouseY >= btnY && mouseY < btnY + btnH;
+                    int bg = hasFunds ? (bHov ? 0xDD6E5515 : 0xAA453308) : (bHov ? 0xDD443333 : 0x882A1A1A);
+                    int border = hasFunds ? (bHov ? 0xFFFFF275 : 0xFFFFD700) : (bHov ? 0xFFAA5555 : 0xFF774444);
+                    int textCol = hasFunds ? 0xFFFFD700 : 0xFFEE8888;
+
+                    g.fill(btnX, btnY, btnX + btnW, btnY + btnH, bg);
+                    g.renderOutline(btnX, btnY, btnW, btnH, border);
+                    String costStr = "🪙 " + String.format(Locale.US, "%,d", cost);
+                    drawScaledCenteredString(g, costStr, btnX + btnW / 2, btnY + 5, btnW - 4, textCol);
+
+                    if (bHov) {
+                        List<Component> tooltip = new ArrayList<>();
+                        tooltip.add(Component.translatable("awakening_system.guild.perk.cost_info", costStr));
+                        tooltip.add(Component.translatable("awakening_system.guild.perk.tooltip_balance",
+                                String.format(Locale.US, "%,d", vaultCoins),
+                                String.format(Locale.US, "%,d", playerCoins)));
+                        if (hasFunds) {
+                            tooltip.add(Component.translatable("awakening_system.guild.perk.tooltip_click_to_buy"));
+                        } else {
+                            tooltip.add(Component.translatable("awakening_system.guild.perk.tooltip_insufficient"));
+                        }
+                        g.renderComponentTooltip(font, tooltip, mouseX, mouseY);
+                    }
                 } else {
-                    g.drawString(font, "§e" + p.getCostMora() + " 🪙", left + cardW - 55, pY + 8, 0xFFFFD700);
+                    String costLabel = "§e" + String.format(Locale.US, "%,d", cost) + " 🪙";
+                    g.drawString(font, costLabel, left + 16 + cardW - font.width(costLabel) - 10, pY + 9, 0xFFFFD700);
                 }
             }
+        }
+    }
+
+    private void drawScaledString(GuiGraphics g, String text, int x, int y, int maxWidth, int color) {
+        int strW = font.width(text);
+        if (strW <= maxWidth) {
+            g.drawString(font, text, x, y, color);
+        } else {
+            float scale = (float) maxWidth / (float) strW;
+            var pose = g.pose();
+            pose.pushPose();
+            pose.translate(x, y + (font.lineHeight * (1.0f - scale)) / 2.0f, 0);
+            pose.scale(scale, scale, 1.0f);
+            g.drawString(font, text, 0, 0, color);
+            pose.popPose();
         }
     }
 
@@ -456,19 +595,20 @@ public class GuildScreen extends Screen {
         boolean canWithdraw = myRole != null && myRole.canWithdraw();
         boolean canClaim = myRole != null && myRole.canClaimTerritory();
 
-        g.fill(left + 16, top, left + GUI_WIDTH - 16, top + 88, 0x4010202E);
-        g.renderOutline(left + 16, top, GUI_WIDTH - 32, 88, 0xFFDFB76C);
+        int cardW = GUI_WIDTH - 32;
+        g.fill(left + 16, top, left + 16 + cardW, top + 88, 0x1400E5FF);
+        g.renderOutline(left + 16, top, cardW, 88, 0xFFDFB76C);
 
         g.drawString(font, Component.translatable("awakening_system.guild.treasury.vault_title"), left + 24, top + 6, 0xFFFFD700);
         g.drawString(font, Component.translatable("awakening_system.guild.treasury.balances", String.format("%,d", guild.getMoraVault()), String.format("%,d", guild.getCoinVault())), left + 24, top + 18, 0xFFFFFFFF);
 
-        int btnW = 23;
-        int btnH = 15;
-        int gap = 2;
-        int depStartX = left + 68;
-        int withStartX = depStartX + 5 * (btnW + gap) + 4;
-        int allW = 38;
-        int allX = withStartX + 5 * (btnW + gap) + 2;
+        int btnW = 30;
+        int btnH = 16;
+        int gap = 3;
+        int depStartX = left + 75;
+        int withStartX = depStartX + 5 * (btnW + gap) + 12;
+        int allW = 46;
+        int allX = withStartX + 5 * (btnW + gap) + 6;
 
         // --- ROW 1: MORA ---
         g.drawString(font, Component.translatable("awakening_system.guild.treasury.mora_label"), left + 22, top + 34, 0xFFFFD700);
@@ -479,7 +619,7 @@ public class GuildScreen extends Screen {
             boolean bHov = mouseX >= bX && mouseX < bX + btnW && mouseY >= bY && mouseY < bY + btnH;
             g.fill(bX, bY, bX + btnW, bY + btnH, bHov ? 0xDD28864E : 0x881A5D3E);
             g.renderOutline(bX, bY, btnW, btnH, bHov ? 0xFF50FA7B : 0xFF28864E);
-            drawScaledCenteredString(g, depMoraLabels[i], bX + btnW / 2, bY + 3, btnW - 2, 0xFF50FA7B);
+            drawScaledCenteredString(g, depMoraLabels[i], bX + btnW / 2, bY + 4, btnW - 2, 0xFF50FA7B);
         }
 
         if (canWithdraw) {
@@ -490,7 +630,7 @@ public class GuildScreen extends Screen {
                 boolean bHov = mouseX >= bX && mouseX < bX + btnW && mouseY >= bY && mouseY < bY + btnH;
                 g.fill(bX, bY, bX + btnW, bY + btnH, bHov ? 0xDD8B2B2B : 0x885A1A1A);
                 g.renderOutline(bX, bY, btnW, btnH, bHov ? 0xFFFFB86C : 0xFF8B2B2B);
-                drawScaledCenteredString(g, withMoraLabels[i], bX + btnW / 2, bY + 3, btnW - 2, 0xFFFFB86C);
+                drawScaledCenteredString(g, withMoraLabels[i], bX + btnW / 2, bY + 4, btnW - 2, 0xFFFFB86C);
             }
 
             int allY = top + 31;
@@ -498,7 +638,7 @@ public class GuildScreen extends Screen {
             boolean hasMora = guild.getMoraVault() > 0;
             g.fill(allX, allY, allX + allW, allY + btnH, hasMora ? (allHov ? 0xDD992222 : 0x88661111) : 0x55333333);
             g.renderOutline(allX, allY, allW, btnH, hasMora ? (allHov ? 0xFFFF5555 : 0xFFAA2222) : 0xFF555555);
-            drawScaledCenteredString(g, "§l" + Component.translatable("awakening_system.guild.treasury.btn_withdraw_all").getString(), allX + allW / 2, allY + 3, allW - 2, hasMora ? (allHov ? 0xFFFFFFFF : 0xFFFFD700) : 0xFF777777);
+            drawScaledCenteredString(g, "§l" + Component.translatable("awakening_system.guild.treasury.btn_withdraw_all").getString(), allX + allW / 2, allY + 4, allW - 2, hasMora ? (allHov ? 0xFFFFFFFF : 0xFFFFD700) : 0xFF777777);
             if (allHov) {
                 if (hasMora) {
                     g.renderTooltip(font, Component.translatable("awakening_system.guild.treasury.tooltip_withdraw_all", String.format("%,d", guild.getMoraVault())), mouseX, mouseY);
@@ -507,14 +647,14 @@ public class GuildScreen extends Screen {
                 }
             }
         } else {
-            int reqW = (left + GUI_WIDTH - 18) - withStartX;
-            int reqH = 15;
+            int reqW = (left + 16 + cardW - 8) - withStartX;
+            int reqH = 16;
             int rX = withStartX;
             int rY = top + 31;
             boolean rHov = mouseX >= rX && mouseX < rX + reqW && mouseY >= rY && mouseY < rY + reqH;
             g.fill(rX, rY, rX + reqW, rY + reqH, rHov ? 0xDD7A5A1A : 0x884A3510);
             g.renderOutline(rX, rY, reqW, reqH, rHov ? 0xFFFFD700 : 0xFF7A5A1A);
-            g.drawCenteredString(font, Component.translatable("awakening_system.guild.treasury.btn_request_withdraw"), rX + reqW / 2, rY + 3, rHov ? 0xFFFFFFFF : 0xFFFFD700);
+            g.drawCenteredString(font, Component.translatable("awakening_system.guild.treasury.btn_request_withdraw"), rX + reqW / 2, rY + 4, rHov ? 0xFFFFFFFF : 0xFFFFD700);
         }
 
         // --- ROW 2: MONEDAS (SYSTEM MONEY) ---
@@ -526,7 +666,7 @@ public class GuildScreen extends Screen {
             boolean bHov = mouseX >= bX && mouseX < bX + btnW && mouseY >= bY && mouseY < bY + btnH;
             g.fill(bX, bY, bX + btnW, bY + btnH, bHov ? 0xDD1B5E7D : 0x88123B4E);
             g.renderOutline(bX, bY, btnW, btnH, bHov ? 0xFF00E5FF : 0xFF1B5E7D);
-            drawScaledCenteredString(g, depCoinLabels[i], bX + btnW / 2, bY + 3, btnW - 2, 0xFF00E5FF);
+            drawScaledCenteredString(g, depCoinLabels[i], bX + btnW / 2, bY + 4, btnW - 2, 0xFF00E5FF);
         }
 
         if (canWithdraw) {
@@ -537,7 +677,7 @@ public class GuildScreen extends Screen {
                 boolean bHov = mouseX >= bX && mouseX < bX + btnW && mouseY >= bY && mouseY < bY + btnH;
                 g.fill(bX, bY, bX + btnW, bY + btnH, bHov ? 0xDD7A2855 : 0x884D1A36);
                 g.renderOutline(bX, bY, btnW, btnH, bHov ? 0xFFFF79C6 : 0xFF7A2855);
-                drawScaledCenteredString(g, withCoinLabels[i], bX + btnW / 2, bY + 3, btnW - 2, 0xFFFF79C6);
+                drawScaledCenteredString(g, withCoinLabels[i], bX + btnW / 2, bY + 4, btnW - 2, 0xFFFF79C6);
             }
 
             int allY = top + 53;
@@ -545,7 +685,7 @@ public class GuildScreen extends Screen {
             boolean hasCoins = guild.getCoinVault() > 0;
             g.fill(allX, allY, allX + allW, allY + btnH, hasCoins ? (allHov ? 0xDD7A2855 : 0x884D1A36) : 0x55333333);
             g.renderOutline(allX, allY, allW, btnH, hasCoins ? (allHov ? 0xFFFF79C6 : 0xFFBD93F9) : 0xFF555555);
-            drawScaledCenteredString(g, "§l" + Component.translatable("awakening_system.guild.treasury.btn_withdraw_all").getString(), allX + allW / 2, allY + 3, allW - 2, hasCoins ? (allHov ? 0xFFFFFFFF : 0xFF00E5FF) : 0xFF777777);
+            drawScaledCenteredString(g, "§l" + Component.translatable("awakening_system.guild.treasury.btn_withdraw_all").getString(), allX + allW / 2, allY + 4, allW - 2, hasCoins ? (allHov ? 0xFFFFFFFF : 0xFF00E5FF) : 0xFF777777);
             if (allHov) {
                 if (hasCoins) {
                     g.renderTooltip(font, Component.translatable("awakening_system.guild.treasury.tooltip_withdraw_all", String.format("%,d", guild.getCoinVault())), mouseX, mouseY);
@@ -554,20 +694,20 @@ public class GuildScreen extends Screen {
                 }
             }
         } else {
-            int reqW = (left + GUI_WIDTH - 18) - withStartX;
-            int reqH = 15;
+            int reqW = (left + 16 + cardW - 8) - withStartX;
+            int reqH = 16;
             int rX = withStartX;
             int rY = top + 53;
             boolean rHov = mouseX >= rX && mouseX < rX + reqW && mouseY >= rY && mouseY < rY + reqH;
             g.fill(rX, rY, rX + reqW, rY + reqH, rHov ? 0xDD1B5E7D : 0x88123B4E);
             g.renderOutline(rX, rY, reqW, reqH, rHov ? 0xFF00E5FF : 0xFF1B5E7D);
-            g.drawCenteredString(font, Component.translatable("awakening_system.guild.treasury.btn_request_withdraw"), rX + reqW / 2, rY + 3, rHov ? 0xFFFFFFFF : 0xFF00E5FF);
+            g.drawCenteredString(font, Component.translatable("awakening_system.guild.treasury.btn_request_withdraw"), rX + reqW / 2, rY + 4, rHov ? 0xFFFFFFFF : 0xFF00E5FF);
         }
 
         int hqY = top + 94;
-        int hqH = 90;
-        g.fill(left + 16, hqY, left + GUI_WIDTH - 16, hqY + hqH, 0x4010202E);
-        g.renderOutline(left + 16, hqY, GUI_WIDTH - 32, hqH, 0xFF4EE2EC);
+        int hqH = 92;
+        g.fill(left + 16, hqY, left + 16 + cardW, hqY + hqH, 0x1400E5FF);
+        g.renderOutline(left + 16, hqY, cardW, hqH, 0xFF4EE2EC);
 
         g.drawString(font, Component.translatable("awakening_system.guild.treasury.hq_title"), left + 24, hqY + 6, 0xFF00E5FF);
         if (guild.hasHq()) {
@@ -578,46 +718,46 @@ public class GuildScreen extends Screen {
 
         g.drawString(font, Component.translatable("awakening_system.guild.treasury.chunks_status", guild.getClaimedChunks().size(), guild.getMaxClaims(), guild.getLevel()), left + 24, hqY + 34, 0xFF50FA7B);
 
-        int actionY = hqY + 54;
-        int actBtnH = 18;
-        int curX = left + 22;
+        int actionY = hqY + 56;
+        int actBtnH = 20;
+        int curX = left + 24;
 
-        int warpBtnW = 58;
+        int warpBtnW = 70;
         boolean warpHov = mouseX >= curX && mouseX < curX + warpBtnW && mouseY >= actionY && mouseY < actionY + actBtnH;
         g.fill(curX, actionY, curX + warpBtnW, actionY + actBtnH, warpHov ? 0xDD225577 : 0x88113344);
         g.renderOutline(curX, actionY, warpBtnW, actBtnH, warpHov ? 0xFF00E5FF : 0xFF2A4255);
-        g.drawCenteredString(font, Component.translatable("awakening_system.guild.treasury.btn_warp"), curX + warpBtnW / 2, actionY + 5, 0xFF70E8FF);
-        curX += warpBtnW + 4;
+        g.drawCenteredString(font, Component.translatable("awakening_system.guild.treasury.btn_warp"), curX + warpBtnW / 2, actionY + 6, 0xFF70E8FF);
+        curX += warpBtnW + 6;
 
         if (isLeader) {
-            int setHqW = 72;
+            int setHqW = 82;
             boolean setHov = mouseX >= curX && mouseX < curX + setHqW && mouseY >= actionY && mouseY < actionY + actBtnH;
             g.fill(curX, actionY, curX + setHqW, actionY + actBtnH, setHov ? 0xDD6E5515 : 0x88453308);
             g.renderOutline(curX, actionY, setHqW, actBtnH, setHov ? 0xFFFFD700 : 0xFF886622);
-            g.drawCenteredString(font, Component.translatable("awakening_system.guild.treasury.btn_set_hq"), curX + setHqW / 2, actionY + 5, 0xFFFFD700);
-            curX += setHqW + 4;
+            g.drawCenteredString(font, Component.translatable("awakening_system.guild.treasury.btn_set_hq"), curX + setHqW / 2, actionY + 6, 0xFFFFD700);
+            curX += setHqW + 6;
         }
 
-        int mapBtnW = 58;
+        int mapBtnW = 75;
         boolean mapHov = mouseX >= curX && mouseX < curX + mapBtnW && mouseY >= actionY && mouseY < actionY + actBtnH;
         g.fill(curX, actionY, curX + mapBtnW, actionY + actBtnH, mapHov ? 0xDD5A3A8E : 0x8838235A);
         g.renderOutline(curX, actionY, mapBtnW, actBtnH, mapHov ? 0xFFBD93F9 : 0xFF5A3A8E);
-        g.drawCenteredString(font, Component.translatable("awakening_system.guild.treasury.btn_chunk_map"), curX + mapBtnW / 2, actionY + 5, 0xFFFFD700);
-        curX += mapBtnW + 4;
+        g.drawCenteredString(font, Component.translatable("awakening_system.guild.treasury.btn_chunk_map"), curX + mapBtnW / 2, actionY + 6, 0xFFFFD700);
+        curX += mapBtnW + 6;
 
         if (canClaim) {
-            int claimBtnW = 66;
+            int claimBtnW = 75;
             boolean claimHov = mouseX >= curX && mouseX < curX + claimBtnW && mouseY >= actionY && mouseY < actionY + actBtnH;
             g.fill(curX, actionY, curX + claimBtnW, actionY + actBtnH, claimHov ? 0xDD28864E : 0x881A5D3E);
             g.renderOutline(curX, actionY, claimBtnW, actBtnH, claimHov ? 0xFF50FA7B : 0xFF28864E);
-            g.drawCenteredString(font, Component.translatable("awakening_system.guild.treasury.btn_claim"), curX + claimBtnW / 2, actionY + 5, 0xFF50FA7B);
-            curX += claimBtnW + 4;
+            g.drawCenteredString(font, Component.translatable("awakening_system.guild.treasury.btn_claim"), curX + claimBtnW / 2, actionY + 6, 0xFF50FA7B);
+            curX += claimBtnW + 6;
 
-            int unclaimBtnW = 66;
+            int unclaimBtnW = 75;
             boolean unclaimHov = mouseX >= curX && mouseX < curX + unclaimBtnW && mouseY >= actionY && mouseY < actionY + actBtnH;
             g.fill(curX, actionY, curX + unclaimBtnW, actionY + actBtnH, unclaimHov ? 0xDD8B2B2B : 0x885A1A1A);
             g.renderOutline(curX, actionY, unclaimBtnW, actBtnH, unclaimHov ? 0xFFFF5555 : 0xFF8B2B2B);
-            g.drawCenteredString(font, Component.translatable("awakening_system.guild.treasury.btn_unclaim"), curX + unclaimBtnW / 2, actionY + 5, 0xFFFF6666);
+            g.drawCenteredString(font, Component.translatable("awakening_system.guild.treasury.btn_unclaim"), curX + unclaimBtnW / 2, actionY + 6, 0xFFFF6666);
         }
     }
 
@@ -631,8 +771,8 @@ public class GuildScreen extends Screen {
         g.drawString(font, Component.translatable("awakening_system.guild.hunts.desc"), left + 18, top + 13, 0xFFAAAAAA);
 
         int cardW = GUI_WIDTH - 32;
-        int cardH = 28;
-        int startY = top + 26;
+        int cardH = 30;
+        int startY = top + 24;
 
         Component[] questTitles = {
                 Component.translatable("awakening_system.guild.hunts.quest1.title"),
@@ -659,46 +799,46 @@ public class GuildScreen extends Screen {
                 guild.getHuntChestsGoal()
         };
         String[] questRewards = {
-                "+1,500 EXP | +25k 🪙 | +250 ⭐",
-                "+2,500 EXP | +50k 🪙 | +500 ⭐",
-                "+1,000 EXP | +15k 🪙 | +150 ⭐",
-                "+2,000 EXP | +30k 🪙 | +300 ⭐"
+                "+1,500 EXP | +25k ✦ Mora | +250 ⭐",
+                "+2,500 EXP | +50k ✦ Mora | +500 ⭐",
+                "+1,000 EXP | +15k ✦ Mora | +150 ⭐",
+                "+2,000 EXP | +30k ✦ Mora | +300 ⭐"
         };
         int[] barColors = {0xFF50FA7B, 0xFFFFD700, 0xFFFF79C6, 0xFF00E5FF};
 
         for (int i = 0; i < 4; i++) {
             int qY = startY + i * (cardH + 4);
             boolean cardHov = mouseX >= left + 16 && mouseX < left + 16 + cardW && mouseY >= qY && mouseY < qY + cardH;
-            g.fill(left + 16, qY, left + 16 + cardW, qY + cardH, cardHov ? 0x60162A3C : 0x4010202E);
+            g.fill(left + 16, qY, left + 16 + cardW, qY + cardH, cardHov ? 0x3000E5FF : 0x1400E5FF);
             g.renderOutline(left + 16, qY, cardW, cardH, cardHov ? 0xFF4EE2EC : 0xFF2A4255);
 
             g.drawString(font, questTitles[i], left + 22, qY + 4, 0xFFFFFFFF);
-            g.drawString(font, "§a" + questRewards[i], left + 22, qY + 16, 0xFF50FA7B);
+            g.drawString(font, "§a" + questRewards[i], left + 22, qY + 17, 0xFF50FA7B);
 
             int prog = questProgs[i];
             int goal = questGoals[i];
             float ratio = Math.min(1.0F, (float) prog / Math.max(1, goal));
-            int bW = 80;
-            int bH = 10;
-            int bX = left + cardW - bW - 8;
+            int bW = 100;
+            int bH = 12;
+            int bX = left + 16 + cardW - bW - 10;
             int bY = qY + 9;
-            g.fill(bX, bY, bX + bW, bY + bH, 0xFF0D1721);
+            g.fill(bX, bY, bX + bW, bY + bH, 0x2000E5FF);
             g.fill(bX, bY, bX + (int) (bW * ratio), bY + bH, barColors[i]);
             g.renderOutline(bX, bY, bW, bH, 0xFF4EE2EC);
-            g.drawCenteredString(font, prog + " / " + goal, bX + bW / 2, bY + 1, 0xFFFFFFFF);
+            g.drawCenteredString(font, prog + " / " + goal, bX + bW / 2, bY + 2, 0xFFFFFFFF);
 
             if (cardHov && mouseX < bX) {
                 g.renderTooltip(font, Component.translatable("awakening_system.guild.hunts.target_prefix").append(questTargets[i]), mouseX, mouseY);
             }
         }
 
-        int botY = startY + 4 * (cardH + 4) + 4;
+        int botY = startY + 4 * (cardH + 4) + 6;
         int botH = 34;
-        g.fill(left + 16, botY, left + 16 + cardW, botY + botH, 0x30101C28);
+        g.fill(left + 16, botY, left + 16 + cardW, botY + botH, 0x1400E5FF);
         g.renderOutline(left + 16, botY, cardW, botH, 0xFFDFB76C);
 
-        int buyBtnW = 126;
-        int buyBtnX = left + 16 + cardW - buyBtnW - 8;
+        int buyBtnW = 135;
+        int buyBtnX = left + 16 + cardW - buyBtnW - 10;
         int maxTextW = buyBtnX - (left + 22) - 8;
 
         List<FormattedCharSequence> boardLines = font.split(Component.translatable("awakening_system.guild.hunts.physical_board"), maxTextW);
@@ -717,7 +857,7 @@ public class GuildScreen extends Screen {
         } else {
             Component offComp = Component.translatable("awakening_system.guild.hunts.officers_only");
             int offW = font.width(offComp);
-            g.drawString(font, offComp, left + 16 + cardW - offW - 12, botY + (botH - 9) / 2, 0xFFAAAAAA);
+            g.drawString(font, offComp, left + 16 + cardW - offW - 14, botY + (botH - 9) / 2, 0xFFAAAAAA);
         }
     }
 
@@ -733,7 +873,7 @@ public class GuildScreen extends Screen {
         int nearX = left + 16;
         int nearY = top;
 
-        g.fill(nearX, nearY, nearX + nearCardW, nearY + nearCardH, 0x880E1C28);
+        g.fill(nearX, nearY, nearX + nearCardW, nearY + nearCardH, 0x1800E5FF);
         g.renderOutline(nearX, nearY, nearCardW, nearCardH, nearbyPortalTag != null ? 0xFFDFB76C : 0xFF2A4255);
 
         if (nearbyPortalTag != null) {
@@ -771,7 +911,7 @@ public class GuildScreen extends Screen {
 
                 if (canManage) {
                     int btnH = 18;
-                    int relW = 58;
+                    int relW = 60;
                     int relX = nearX + nearCardW - relW - 8;
                     int relY = nearY + 20;
                     boolean relHov = mouseX >= relX && mouseX < relX + relW && mouseY >= relY && mouseY < relY + btnH;
@@ -779,8 +919,8 @@ public class GuildScreen extends Screen {
                     g.renderOutline(relX, relY, relW, btnH, relHov ? 0xFFFF5555 : 0xFF8B2B2B);
                     g.drawCenteredString(font, Component.translatable("awakening_system.guild.portals.btn_release"), relX + relW / 2, relY + 5, relHov ? 0xFFFFFFFF : 0xFFFF6666);
 
-                    int feeW = 58;
-                    int feeX = relX - 4 - feeW;
+                    int feeW = 60;
+                    int feeX = relX - 6 - feeW;
                     boolean feeHov = mouseX >= feeX && mouseX < feeX + feeW && mouseY >= relY && mouseY < relY + btnH;
                     g.fill(feeX, relY, feeX + feeW, relY + btnH, feeHov ? 0xDD1F4E68 : 0xAA143242);
                     g.renderOutline(feeX, relY, feeW, btnH, feeHov ? 0xFF4EE2EC : 0xFF2A556B);
@@ -789,7 +929,7 @@ public class GuildScreen extends Screen {
             } else {
                 String ownerName = nearbyPortalTag.getString("ownerName");
                 String ownerTag = nearbyPortalTag.getString("ownerTag");
-                String curr = feeInCoins ? "🪙" : "Mora";
+                String curr = feeInCoins ? "✦ Coin" : "✦ Mora";
                 g.drawString(font, Component.translatable("awakening_system.guild.portals.claimed"), nearX + nearCardW - 70, nearY + 6, 0xFFFF5555);
                 g.drawString(font, Component.translatable("awakening_system.guild.portals.owner", ownerTag, ownerName), nearX + 8, nearY + 20, 0xFFFF7777);
                 g.drawString(font, Component.translatable("awakening_system.guild.portals.rent_fee", String.format("%,d", fee), curr), nearX + 8, nearY + 32, 0xFFAAAAAA);
@@ -810,7 +950,7 @@ public class GuildScreen extends Screen {
         int cardsY = listStartY + 14;
         if (count == 0) {
             int emptyH = 50;
-            g.fill(left + 16, cardsY, left + GUI_WIDTH - 16, cardsY + emptyH, 0x4010202E);
+            g.fill(left + 16, cardsY, left + GUI_WIDTH - 16, cardsY + emptyH, 0x1400E5FF);
             g.renderOutline(left + 16, cardsY, GUI_WIDTH - 32, emptyH, 0xFF2A4255);
             g.drawCenteredString(font, Component.translatable("awakening_system.guild.portals.empty_list1"), left + GUI_WIDTH / 2, cardsY + 14, 0xFFAAAAAA);
             g.drawCenteredString(font, Component.translatable("awakening_system.guild.portals.empty_list2"), left + GUI_WIDTH / 2, cardsY + 28, 0xFF666666);
@@ -834,7 +974,7 @@ public class GuildScreen extends Screen {
             int cY = cardsY + i * (cardH + 4);
             boolean cardHov = mouseX >= left + 16 && mouseX < left + 16 + cardW && mouseY >= cY && mouseY < cY + cardH;
 
-            g.fill(left + 16, cY, left + 16 + cardW, cY + cardH, cardHov ? 0x60162A3C : 0x4010202E);
+            g.fill(left + 16, cY, left + 16 + cardW, cY + cardH, cardHov ? 0x3000E5FF : 0x1400E5FF);
             g.renderOutline(left + 16, cY, cardW, cardH, 0xFF2A4255);
 
             String st = cooling ? Component.translatable("awakening_system.guild.portals.regenerating").getString() : Component.translatable("awakening_system.guild.portals.active").getString();
@@ -844,33 +984,33 @@ public class GuildScreen extends Screen {
             g.drawString(font, Component.translatable("awakening_system.guild.portals.item_fee", currLabel), left + 22, cY + 19, 0xFFDDDDDD);
 
             if (canManage) {
-                int btnH = 17;
+                int btnH = 18;
                 int rightX = left + 16 + cardW - 8;
 
                 // 1. Botón Liberar
-                int unclaimW = 46;
+                int unclaimW = 54;
                 int unclaimX = rightX - unclaimW;
                 boolean uncHov = mouseX >= unclaimX && mouseX < unclaimX + unclaimW && mouseY >= cY + 9 && mouseY < cY + 9 + btnH;
                 g.fill(unclaimX, cY + 9, unclaimX + unclaimW, cY + 9 + btnH, uncHov ? 0xDD8B2B2B : 0x885A1A1A);
                 g.renderOutline(unclaimX, cY + 9, unclaimW, btnH, uncHov ? 0xFFFF5555 : 0xFF8B2B2B);
-                g.drawCenteredString(font, Component.translatable("awakening_system.guild.portals.btn_release"), unclaimX + unclaimW / 2, cY + 13, uncHov ? 0xFFFFFFFF : 0xFFFF7777);
+                g.drawCenteredString(font, Component.translatable("awakening_system.guild.portals.btn_release"), unclaimX + unclaimW / 2, cY + 14, uncHov ? 0xFFFFFFFF : 0xFFFF7777);
 
                 // 2. Botón Fijar Tarifa Personalizada
-                int feeBtnW = 54;
-                int feeBtnX = unclaimX - 4 - feeBtnW;
+                int feeBtnW = 60;
+                int feeBtnX = unclaimX - 6 - feeBtnW;
                 boolean feeHov = mouseX >= feeBtnX && mouseX < feeBtnX + feeBtnW && mouseY >= cY + 9 && mouseY < cY + 9 + btnH;
                 g.fill(feeBtnX, cY + 9, feeBtnX + feeBtnW, cY + 9 + btnH, feeHov ? 0xCC1F4E68 : 0x88143242);
                 g.renderOutline(feeBtnX, cY + 9, feeBtnW, btnH, feeHov ? 0xFF4EE2EC : 0xFF2A556B);
-                g.drawCenteredString(font, Component.translatable("awakening_system.guild.portals.btn_fee"), feeBtnX + feeBtnW / 2, cY + 13, feeHov ? 0xFFFFFFFF : 0xFF4EE2EC);
+                g.drawCenteredString(font, Component.translatable("awakening_system.guild.portals.btn_fee"), feeBtnX + feeBtnW / 2, cY + 14, feeHov ? 0xFFFFFFFF : 0xFF4EE2EC);
 
-                // 3. Botón Moneda (🪙 Coin / Mora)
-                int currBtnW = 48;
-                int currBtnX = feeBtnX - 4 - currBtnW;
+                // 3. Botón Moneda (✦ Coin / Mora)
+                int currBtnW = 56;
+                int currBtnX = feeBtnX - 6 - currBtnW;
                 boolean currHov = mouseX >= currBtnX && mouseX < currBtnX + currBtnW && mouseY >= cY + 9 && mouseY < cY + 9 + btnH;
                 g.fill(currBtnX, cY + 9, currBtnX + currBtnW, cY + 9 + btnH, currHov ? 0xCC6A4E1A : 0x884D3712);
                 g.renderOutline(currBtnX, cY + 9, currBtnW, btnH, currHov ? 0xFFFFD700 : 0xFFDFB76C);
-                String btnText = feeInCoins ? "🪙 Coin" : "🪙 Mora";
-                g.drawCenteredString(font, btnText, currBtnX + currBtnW / 2, cY + 13, currHov ? 0xFFFFD700 : 0xFFE0E0E0);
+                String btnText = feeInCoins ? "✦ Coin" : "✦ Mora";
+                g.drawCenteredString(font, btnText, currBtnX + currBtnW / 2, cY + 14, currHov ? 0xFFFFD700 : 0xFFE0E0E0);
             }
         }
     }
@@ -885,14 +1025,14 @@ public class GuildScreen extends Screen {
 
         int cardW = GUI_WIDTH - 32;
         int cardH = 30;
-        int startY = top + 26;
+        int startY = top + 24;
 
         if (allGuildsTag == null || allGuildsTag.isEmpty()) {
             g.drawCenteredString(font, Component.translatable("awakening_system.guild.alliances.empty"), left + GUI_WIDTH / 2, startY + 40, 0xFFAAAAAA);
             return;
         }
 
-        int maxVisible = 5;
+        int maxVisible = 6;
         int total = allGuildsTag.size();
         for (int i = 0; i < Math.min(maxVisible, total); i++) {
             int idx = i + allianceScrollOffset;
@@ -910,7 +1050,7 @@ public class GuildScreen extends Screen {
             boolean cardHov = mouseX >= left + 16 && mouseX < left + 16 + cardW && mouseY >= cY && mouseY < cY + cardH;
 
             int outlineCol = isSelf ? 0xFFDFB76C : (isAlly ? 0xFF50FA7B : 0xFF2A4255);
-            g.fill(left + 16, cY, left + 16 + cardW, cY + cardH, cardHov ? 0x60162A3C : 0x4010202E);
+            g.fill(left + 16, cY, left + 16 + cardW, cY + cardH, cardHov ? 0x3000E5FF : 0x1400E5FF);
             g.renderOutline(left + 16, cY, cardW, cardH, outlineCol);
 
             g.drawString(font, Component.translatable("awakening_system.guild.alliances.guild_info", gCode, gName, gLevel, gMembers), left + 22, cY + 4, 0xFFFFFFFF);
@@ -918,29 +1058,29 @@ public class GuildScreen extends Screen {
             g.drawString(font, leaderStr, left + 22, cY + 16, 0xFFAAAAAA);
 
             if (isSelf) {
-                g.drawString(font, Component.translatable("awakening_system.guild.alliances.your_guild"), left + cardW - 68, cY + 11, 0xFFFFD700);
+                g.drawString(font, Component.translatable("awakening_system.guild.alliances.your_guild"), left + 16 + cardW - 75, cY + 11, 0xFFFFD700);
             } else {
-                int btnW = 54;
-                int btnH = 16;
-                int btnX = left + cardW - btnW - 6;
-                int btnY = cY + 7;
+                int btnW = 64;
+                int btnH = 18;
+                int btnX = left + 16 + cardW - btnW - 8;
+                int btnY = cY + 6;
 
                 if (isLeader) {
                     boolean btnHov = mouseX >= btnX && mouseX < btnX + btnW && mouseY >= btnY && mouseY < btnY + btnH;
                     if (isAlly) {
                         g.fill(btnX, btnY, btnX + btnW, btnY + btnH, btnHov ? 0xDD8B2B2B : 0x885A1A1A);
                         g.renderOutline(btnX, btnY, btnW, btnH, btnHov ? 0xFFFF5555 : 0xFF8B2B2B);
-                        g.drawCenteredString(font, Component.translatable("awakening_system.guild.alliances.btn_break"), btnX + btnW / 2, btnY + 4, 0xFFFF6666);
+                        g.drawCenteredString(font, Component.translatable("awakening_system.guild.alliances.btn_break"), btnX + btnW / 2, btnY + 5, 0xFFFF6666);
                     } else {
                         g.fill(btnX, btnY, btnX + btnW, btnY + btnH, btnHov ? 0xDD28864E : 0x881A5D3E);
                         g.renderOutline(btnX, btnY, btnW, btnH, btnHov ? 0xFF50FA7B : 0xFF28864E);
-                        g.drawCenteredString(font, Component.translatable("awakening_system.guild.alliances.btn_pact"), btnX + btnW / 2, btnY + 4, 0xFF50FA7B);
+                        g.drawCenteredString(font, Component.translatable("awakening_system.guild.alliances.btn_pact"), btnX + btnW / 2, btnY + 5, 0xFF50FA7B);
                     }
                 } else {
                     if (isAlly) {
-                        g.drawString(font, Component.translatable("awakening_system.guild.alliances.ally"), left + cardW - 48, cY + 11, 0xFF50FA7B);
+                        g.drawString(font, Component.translatable("awakening_system.guild.alliances.ally"), left + 16 + cardW - 55, cY + 11, 0xFF50FA7B);
                     } else {
-                        g.drawString(font, Component.translatable("awakening_system.guild.alliances.neutral"), left + cardW - 50, cY + 11, 0xFF888888);
+                        g.drawString(font, Component.translatable("awakening_system.guild.alliances.neutral"), left + 16 + cardW - 55, cY + 11, 0xFF888888);
                     }
                 }
             }
@@ -956,8 +1096,8 @@ public class GuildScreen extends Screen {
             int top = (height - GUI_HEIGHT) / 2;
 
             if (editingPortalFeeModal) {
-                int mw = 220;
-                int mh = 126;
+                int mw = 240;
+                int mh = 130;
                 int mx = left + (GUI_WIDTH - mw) / 2;
                 int my = top + (GUI_HEIGHT - mh) / 2;
 
@@ -967,8 +1107,8 @@ public class GuildScreen extends Screen {
 
                 // Preset Pills
                 String[] presets = {"0", "10000", "100000", "500000", "1000000"};
-                int pillW = 34;
-                int pillH = 14;
+                int pillW = 38;
+                int pillH = 16;
                 for (int p = 0; p < 5; p++) {
                     int px = mx + 16 + p * (pillW + 4);
                     int py = my + 66;
@@ -982,20 +1122,20 @@ public class GuildScreen extends Screen {
                 }
 
                 // Botón Confirmar
-                int confW = 90;
+                int confW = 95;
                 int confH = 20;
                 int confX = mx + 16;
-                int confY = my + 88;
+                int confY = my + 94;
                 if (mouseX >= confX && mouseX < confX + confW && mouseY >= confY && mouseY < confY + confH) {
                     confirmPortalFee();
                     return true;
                 }
 
                 // Botón Cancelar
-                int cancW = 82;
+                int cancW = 90;
                 int cancH = 20;
                 int cancX = mx + mw - 16 - cancW;
-                int cancY = my + 88;
+                int cancY = my + 94;
                 if (mouseX >= cancX && mouseX < cancX + cancW && mouseY >= cancY && mouseY < cancY + cancH) {
                     closePortalFeeModal();
                     return true;
@@ -1008,16 +1148,21 @@ public class GuildScreen extends Screen {
                 return true;
             }
 
-            if (mouseX >= left + GUI_WIDTH - 22 && mouseX < left + GUI_WIDTH - 6 && mouseY >= top + 6 && mouseY < top + 20) {
+            // Close button [✕]
+            int closeX = left + GUI_WIDTH - 32;
+            int closeY = top + 14;
+            int closeW = 16;
+            int closeH = 16;
+            if (mouseX >= closeX && mouseX < closeX + closeW && mouseY >= closeY && mouseY < closeY + closeH) {
                 onClose();
                 return true;
             }
 
             if (!inGuild || guild == null) {
-                int btnW = 160;
-                int btnH = 22;
+                int btnW = 180;
+                int btnH = 24;
                 int btnX = left + (GUI_WIDTH - btnW) / 2;
-                int btnY = top + 200;
+                int btnY = top + 215;
                 if (mouseX >= btnX && mouseX < btnX + btnW && mouseY >= btnY && mouseY < btnY + btnH) {
                     if (createNameBox != null && createTagBox != null) {
                         String name = createNameBox.getValue().trim();
@@ -1034,7 +1179,7 @@ public class GuildScreen extends Screen {
                 int tabW = (GUI_WIDTH - 28) / 6;
                 for (int i = 0; i < 6; i++) {
                     int tX = left + 14 + i * tabW;
-                    int tY = top + 32;
+                    int tY = top + 33;
                     int tH = 18;
                     if (mouseX >= tX && mouseX < tX + tabW && mouseY >= tY && mouseY < tY + tH) {
                         currentTab = i;
@@ -1049,43 +1194,53 @@ public class GuildScreen extends Screen {
                     }
                 }
 
-                int contentY = top + 56;
+                int contentY = top + 55;
                 Minecraft mc = Minecraft.getInstance();
                 UUID myUuid = mc.player != null ? mc.player.getUUID() : UUID.randomUUID();
                 boolean isLeader = guild.getLeaderUuid().equals(myUuid);
 
                 if (currentTab == 0) {
                     List<GuildMember> membersList = new ArrayList<>(guild.getMembers().values());
-                    int rowH = 18;
-                    for (int i = 0; i < Math.min(7, membersList.size()); i++) {
+                    int rowH = 19;
+                    for (int i = 0; i < Math.min(9, membersList.size()); i++) {
                         int idx = i + memberScrollOffset;
                         if (idx >= membersList.size()) break;
                         GuildMember m = membersList.get(idx);
-                        int rY = contentY + 18 + i * rowH;
+                        int rY = contentY + 20 + i * rowH;
 
                         if (isLeader && !m.getUuid().equals(myUuid)) {
-                            if (mouseX >= left + 285 && mouseX < left + 301 && mouseY >= rY && mouseY < rY + 14) {
+                            if (mouseX >= left + 395 && mouseX < left + 411 && mouseY >= rY + 2 && mouseY < rY + 16) {
                                 PacketDistributor.sendToServer(new GuildActionPayload("PROMOTE", m.getUuid().toString(), 0));
                                 AwakeningSystemClient.playUiSound(SoundEvents.PLAYER_LEVELUP, 0.8F, 1.5F);
                                 return true;
                             }
-                            if (mouseX >= left + 305 && mouseX < left + 321 && mouseY >= rY && mouseY < rY + 14) {
+                            if (mouseX >= left + 415 && mouseX < left + 431 && mouseY >= rY + 2 && mouseY < rY + 16) {
                                 PacketDistributor.sendToServer(new GuildActionPayload("DEMOTE", m.getUuid().toString(), 0));
                                 AwakeningSystemClient.playUiSound(ModSounds.SYSTEM_CLICK.value(), 1.0F, 0.8F);
                                 return true;
                             }
-                            if (mouseX >= left + 325 && mouseX < left + 341 && mouseY >= rY && mouseY < rY + 14) {
+                            if (mouseX >= left + 435 && mouseX < left + 451 && mouseY >= rY + 2 && mouseY < rY + 16) {
                                 PacketDistributor.sendToServer(new GuildActionPayload("KICK", m.getUuid().toString(), 0));
                                 AwakeningSystemClient.playUiSound(SoundEvents.ANVIL_DESTROY, 0.7F, 1.2F);
                                 return true;
                             }
                         }
+
+                        if (!m.getUuid().equals(myUuid)) {
+                            boolean isOnline = mc.getConnection() != null && mc.getConnection().getPlayerInfo(m.getUuid()) != null;
+                            int tpaX = left + 460;
+                            if (isOnline && mouseX >= tpaX && mouseX < tpaX + 18 && mouseY >= rY + 2 && mouseY < rY + 16) {
+                                PacketDistributor.sendToServer(new GuildActionPayload("TPA", m.getName(), 0));
+                                AwakeningSystemClient.playUiSound(SoundEvents.ENDERMAN_TELEPORT, 1.0F, 1.2F);
+                                return true;
+                            }
+                        }
                     }
 
-                    int btmY = contentY + GUI_HEIGHT - 38 - 56;
-                    int invBtnX = left + 165;
-                    int invBtnW = 75;
-                    int invBtnH = 16;
+                    int btmY = top + GUI_HEIGHT - 38;
+                    int invBtnX = left + 186;
+                    int invBtnW = 74;
+                    int invBtnH = 18;
                     if (mouseX >= invBtnX && mouseX < invBtnX + invBtnW && mouseY >= btmY && mouseY < btmY + invBtnH) {
                         if (inviteBox != null && !inviteBox.getValue().trim().isEmpty()) {
                             PacketDistributor.sendToServer(new GuildActionPayload("INVITE", inviteBox.getValue().trim(), 0));
@@ -1095,9 +1250,9 @@ public class GuildScreen extends Screen {
                         }
                     }
 
-                    int leaveBtnX = left + GUI_WIDTH - 110;
-                    int leaveBtnW = 94;
-                    int leaveBtnH = 16;
+                    int leaveBtnX = left + GUI_WIDTH - 120;
+                    int leaveBtnW = 104;
+                    int leaveBtnH = 18;
                     if (mouseX >= leaveBtnX && mouseX < leaveBtnX + leaveBtnW && mouseY >= btmY && mouseY < btmY + leaveBtnH) {
                         if (isLeader) {
                             PacketDistributor.sendToServer(new GuildActionPayload("DISBAND", "", 0));
@@ -1109,18 +1264,21 @@ public class GuildScreen extends Screen {
                         return true;
                     }
                 } else if (currentTab == 1) {
+                    GuildRole roleForPerks = guild.getMemberRole(myUuid);
+                    boolean canManagePerks = isLeader || (roleForPerks != null && roleForPerks.canManagePerks());
                     GuildPerk[] perks = GuildPerk.values();
                     int cardW = GUI_WIDTH - 32;
-                    int cardH = 24;
+                    int cardH = 26;
 
                     for (int i = 0; i < perks.length; i++) {
                         GuildPerk p = perks[i];
                         int pY = contentY + i * (cardH + 4);
-                        if (isLeader && !guild.hasPerk(p) && guild.getLevel() >= p.getRequiredGuildLevel() && guild.getMoraVault() >= p.getCostMora()) {
-                            int btnX = left + cardW - 75;
-                            int btnW = 85;
-                            int btnH = 16;
-                            if (mouseX >= btnX && mouseX < btnX + btnW && mouseY >= pY + 4 && mouseY < pY + 4 + btnH) {
+                        if (canManagePerks && !guild.hasPerk(p) && guild.getLevel() >= p.getRequiredGuildLevel()) {
+                            int btnW = 92;
+                            int btnH = 18;
+                            int btnX = left + 16 + cardW - btnW - 8;
+                            int btnY = pY + 4;
+                            if (mouseX >= btnX && mouseX < btnX + btnW && mouseY >= btnY && mouseY < btnY + btnH) {
                                 PacketDistributor.sendToServer(new GuildActionPayload("PERK", p.getId(), 0));
                                 AwakeningSystemClient.playUiSound(SoundEvents.PLAYER_LEVELUP, 1.0F, 1.2F);
                                 return true;
@@ -1128,13 +1286,13 @@ public class GuildScreen extends Screen {
                         }
                     }
                 } else if (currentTab == 2) {
-                    int btnW = 23;
-                    int btnH = 15;
-                    int gap = 2;
-                    int depStartX = left + 68;
-                    int withStartX = depStartX + 5 * (btnW + gap) + 4;
-                    int allW = 38;
-                    int allX = withStartX + 5 * (btnW + gap) + 2;
+                    int btnW = 30;
+                    int btnH = 16;
+                    int gap = 3;
+                    int depStartX = left + 75;
+                    int withStartX = depStartX + 5 * (btnW + gap) + 12;
+                    int allW = 46;
+                    int allX = withStartX + 5 * (btnW + gap) + 6;
 
                     int[] depMora = {1000, 10000, 50000, 250000, 1000000};
                     int[] depCoins = {50, 250, 1000, 10000, 50000};
@@ -1171,7 +1329,7 @@ public class GuildScreen extends Screen {
                             }
                         }
 
-                        // Sacar Todo Mora (TODO)
+                        // Sacar Todo Mora
                         if (mouseX >= allX && mouseX < allX + allW && mouseY >= contentY + 31 && mouseY < contentY + 31 + btnH) {
                             if (guild.getMoraVault() > 0) {
                                 PacketDistributor.sendToServer(new GuildActionPayload("WITHDRAW_ALL_MORA", "", 0));
@@ -1190,7 +1348,7 @@ public class GuildScreen extends Screen {
                             }
                         }
 
-                        // Sacar Todo Coins (TODO)
+                        // Sacar Todo Coins
                         if (mouseX >= allX && mouseX < allX + allW && mouseY >= contentY + 53 && mouseY < contentY + 53 + btnH) {
                             if (guild.getCoinVault() > 0) {
                                 PacketDistributor.sendToServer(new GuildActionPayload("WITHDRAW_ALL_COINS", "", 0));
@@ -1215,47 +1373,47 @@ public class GuildScreen extends Screen {
                     }
 
                     int hqY = contentY + 94;
-                    int actionY = hqY + 54;
-                    int actBtnH = 18;
-                    int curX = left + 22;
+                    int actionY = hqY + 56;
+                    int actBtnH = 20;
+                    int curX = left + 24;
 
-                    int warpBtnW = 58;
+                    int warpBtnW = 70;
                     if (mouseX >= curX && mouseX < curX + warpBtnW && mouseY >= actionY && mouseY < actionY + actBtnH) {
                         PacketDistributor.sendToServer(new GuildActionPayload("HOME", "", 0));
                         AwakeningSystemClient.playUiSound(SoundEvents.ENDERMAN_TELEPORT, 1.0F, 1.0F);
                         onClose();
                         return true;
                     }
-                    curX += warpBtnW + 4;
+                    curX += warpBtnW + 6;
 
                     if (isLeader) {
-                        int setHqW = 72;
+                        int setHqW = 82;
                         if (mouseX >= curX && mouseX < curX + setHqW && mouseY >= actionY && mouseY < actionY + actBtnH) {
                             PacketDistributor.sendToServer(new GuildActionPayload("SET_HOME", "", 0));
                             AwakeningSystemClient.playUiSound(SoundEvents.UI_TOAST_CHALLENGE_COMPLETE, 1.0F, 1.2F);
                             return true;
                         }
-                        curX += setHqW + 4;
+                        curX += setHqW + 6;
                     }
 
-                    int mapBtnW = 58;
+                    int mapBtnW = 75;
                     if (mouseX >= curX && mouseX < curX + mapBtnW && mouseY >= actionY && mouseY < actionY + actBtnH) {
                         Minecraft.getInstance().setScreen(new GuildChunkMapScreen(this.guild, this.allClaimsTag, this));
                         AwakeningSystemClient.playUiSound(ModSounds.SYSTEM_CLICK.value(), 1.0F, 1.0F);
                         return true;
                     }
-                    curX += mapBtnW + 4;
+                    curX += mapBtnW + 6;
 
                     if (myRole != null && myRole.canClaimTerritory()) {
-                        int claimBtnW = 66;
+                        int claimBtnW = 75;
                         if (mouseX >= curX && mouseX < curX + claimBtnW && mouseY >= actionY && mouseY < actionY + actBtnH) {
                             PacketDistributor.sendToServer(new GuildActionPayload("CLAIM_CHUNK", "", 0));
                             AwakeningSystemClient.playUiSound(SoundEvents.PLAYER_LEVELUP, 1.0F, 1.2F);
                             return true;
                         }
-                        curX += claimBtnW + 4;
+                        curX += claimBtnW + 6;
 
-                        int unclaimBtnW = 66;
+                        int unclaimBtnW = 75;
                         if (mouseX >= curX && mouseX < curX + unclaimBtnW && mouseY >= actionY && mouseY < actionY + actBtnH) {
                             PacketDistributor.sendToServer(new GuildActionPayload("UNCLAIM_CHUNK", "", 0));
                             AwakeningSystemClient.playUiSound(SoundEvents.ARMOR_EQUIP_GENERIC.value(), 1.0F, 1.0F);
@@ -1473,8 +1631,8 @@ public class GuildScreen extends Screen {
         // Fondo oscurecido para concentrar atención
         g.fillGradient(0, 0, width, height, 0xCC000000, 0xDD0A1018);
 
-        int mw = 220;
-        int mh = 126;
+        int mw = 240;
+        int mh = 130;
         int mx = left + (GUI_WIDTH - mw) / 2;
         int my = top + (GUI_HEIGHT - mh) / 2;
 
@@ -1488,9 +1646,17 @@ public class GuildScreen extends Screen {
 
         // Input Box
         if (portalFeeBox != null) {
-            portalFeeBox.setX(mx + 14);
-            portalFeeBox.setY(my + 36);
-            portalFeeBox.setWidth(mw - 28);
+            int feeBoxX = mx + 16;
+            int feeBoxY = my + 38;
+            int feeBoxW = mw - 32;
+            int feeBoxH = 18;
+            boolean feeFoc = portalFeeBox.isFocused();
+            g.fill(feeBoxX, feeBoxY, feeBoxX + feeBoxW, feeBoxY + feeBoxH, 0x1400E5FF);
+            g.renderOutline(feeBoxX, feeBoxY, feeBoxW, feeBoxH, feeFoc ? 0xFF00E5FF : 0x4400E5FF);
+
+            portalFeeBox.setX(feeBoxX + 4);
+            portalFeeBox.setY(feeBoxY + 3);
+            portalFeeBox.setWidth(feeBoxW - 8);
             portalFeeBox.render(g, mouseX, mouseY, 0);
         }
 
@@ -1503,36 +1669,43 @@ public class GuildScreen extends Screen {
                 Component.literal("500k"),
                 Component.literal("1M")
         };
-        int pillW = 34;
-        int pillH = 14;
+        int pillW = 38;
+        int pillH = 16;
         for (int p = 0; p < 5; p++) {
-            int px = mx + 14 + p * (pillW + 5);
-            int py = my + 64;
+            int px = mx + 16 + p * (pillW + 4);
+            int py = my + 66;
             boolean pHov = mouseX >= px && mouseX < px + pillW && mouseY >= py && mouseY < py + pillH;
             g.fill(px, py, px + pillW, py + pillH, pHov ? 0xCC2A4255 : 0x88162A3C);
             g.renderOutline(px, py, pillW, pillH, pHov ? 0xFF4EE2EC : 0xFF2A556B);
-            g.drawCenteredString(font, labels[p], px + pillW / 2, py + 3, pHov ? 0xFFFFFFFF : 0xFFAAAAAA);
+            g.drawCenteredString(font, labels[p], px + pillW / 2, py + 4, pHov ? 0xFFFFFFFF : 0xFFAAAAAA);
         }
 
         // Botón Confirmar
-        int confW = 90;
+        int confW = 95;
         int confH = 20;
-        int confX = mx + 14;
-        int confY = my + 88;
+        int confX = mx + 16;
+        int confY = my + 94;
         boolean confHov = mouseX >= confX && mouseX < confX + confW && mouseY >= confY && mouseY < confY + confH;
         g.fill(confX, confY, confX + confW, confY + confH, confHov ? 0xDD28864E : 0xAA1A5D3E);
         g.renderOutline(confX, confY, confW, confH, confHov ? 0xFF50FA7B : 0xFF28864E);
         g.drawCenteredString(font, Component.translatable("awakening_system.guild.portals.btn_confirm"), confX + confW / 2, confY + 6, confHov ? 0xFFFFFFFF : 0xFF50FA7B);
 
         // Botón Cancelar
-        int cancW = 84;
+        int cancW = 90;
         int cancH = 20;
-        int cancX = mx + mw - 14 - cancW;
-        int cancY = my + 88;
+        int cancX = mx + mw - 16 - cancW;
+        int cancY = my + 94;
         boolean cancHov = mouseX >= cancX && mouseX < cancX + cancW && mouseY >= cancY && mouseY < cancY + cancH;
         g.fill(cancX, cancY, cancX + cancW, cancY + cancH, cancHov ? 0xDD8B2B2B : 0xAA5A1A1A);
         g.renderOutline(cancX, cancY, cancW, cancH, cancHov ? 0xFFFF5555 : 0xFF8B2B2B);
         g.drawCenteredString(font, Component.translatable("awakening_system.guild.portals.btn_cancel"), cancX + cancW / 2, cancY + 6, cancHov ? 0xFFFFFFFF : 0xFFFF6666);
+    }
+
+    @Override
+    public void onClose() {
+        if (this.minecraft != null) {
+            this.minecraft.setScreen(new SystemScreen());
+        }
     }
 
     @Override

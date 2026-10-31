@@ -39,6 +39,7 @@ import net.minecraft.world.phys.BlockHitResult;
 import net.minecraft.world.phys.HitResult;
 import net.minecraft.world.phys.shapes.CollisionContext;
 import net.minecraft.world.phys.shapes.VoxelShape;
+import java.util.List;
 import org.jetbrains.annotations.Nullable;
 
 public class CustomPlayerPlushieBlock extends BaseEntityBlock {
@@ -187,6 +188,21 @@ public class CustomPlayerPlushieBlock extends BaseEntityBlock {
             }
         }
         return stack;
+    }
+
+    @Override
+    protected List<ItemStack> getDrops(BlockState state, net.minecraft.world.level.storage.loot.LootParams.Builder params) {
+        ItemStack stack = new ItemStack(this);
+        BlockEntity be = params.getOptionalParameter(net.minecraft.world.level.storage.loot.parameters.LootContextParams.BLOCK_ENTITY);
+        if (be instanceof CustomPlayerPlushieBlockEntity plushie) {
+            if (plushie.getOwnerProfile() != null) {
+                stack.set(DataComponents.PROFILE, plushie.getOwnerProfile());
+            }
+            if (plushie.getCustomName() != null) {
+                stack.set(DataComponents.CUSTOM_NAME, plushie.getCustomName());
+            }
+        }
+        return java.util.Collections.singletonList(stack);
     }
 
     @Override

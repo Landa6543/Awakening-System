@@ -1,5 +1,6 @@
 package com.soybe.awakeningsystem;
 
+import com.soybe.awakeningsystem.client.gui.ModernGuiHelper;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.gui.screens.Screen;
@@ -117,9 +118,9 @@ public final class SponsorSelectionScreen extends Screen {
         int left = (width - boxW) / 2;
         int top = (height - boxH) / 2;
 
-        g.fill(left - 1, top - 1, left + boxW + 1, top + boxH + 1, 0xFF276A82);
-        g.fill(left, top, left + boxW, top + boxH, 0xFA0B1622);
-        g.fill(left, top, left + boxW, top + 2, 0xFFFFD866);
+        ModernGuiHelper.GuiTheme theme = ModernGuiHelper.GuiTheme.ISEKAI;
+        ModernGuiHelper.drawModernWindow(g, left, top, boxW, boxH, theme);
+        ModernGuiHelper.drawModernHeader(g, left + 8, top + 4, boxW - 16, 28, null, 0, theme, font);
 
         Component headerComp = Component.translatable("awakening_system.screen.sponsor.header");
         Component subtitleComp = Component.translatable("awakening_system.screen.sponsor.subtitle");

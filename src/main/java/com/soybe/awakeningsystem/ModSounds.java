@@ -1497,6 +1497,13 @@ public final class ModSounds {
             SOUND_EVENTS.register("limbo_awakening",
                     () -> SoundEvent.createVariableRangeEvent(ResourceLocation.fromNamespaceAndPath(AwakeningSystemMod.MOD_ID, "limbo_awakening")));
 
+    public static final DeferredHolder<SoundEvent, SoundEvent> SANDWORM_ROAR =
+            SOUND_EVENTS.register("sandworm_roar",
+                    () -> SoundEvent.createVariableRangeEvent(ResourceLocation.fromNamespaceAndPath(AwakeningSystemMod.MOD_ID, "sandworm_roar")));
+    public static final DeferredHolder<SoundEvent, SoundEvent> SANDWORM_BOOM =
+            SOUND_EVENTS.register("sandworm_boom",
+                    () -> SoundEvent.createVariableRangeEvent(ResourceLocation.fromNamespaceAndPath(AwakeningSystemMod.MOD_ID, "sandworm_boom")));
+
     private ModSounds() {}
 }
 

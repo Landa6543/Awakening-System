@@ -385,14 +385,77 @@ public final class SystemBlocks {
             )
     );
 
-    public static final DeferredHolder<Block, Block> ABYSSAL_RESONANT_CRYSTAL = BLOCKS.register(
-            "abyssal_resonant_crystal", () -> new Block(
+    public static final DeferredHolder<Block, AbyssalResonantCrystalBlock> ABYSSAL_RESONANT_CRYSTAL = BLOCKS.register(
+            "abyssal_resonant_crystal", () -> new AbyssalResonantCrystalBlock(
                     BlockBehaviour.Properties.of()
                             .mapColor(MapColor.COLOR_PURPLE)
                             .strength(2.5F, 5.0F)
                             .sound(SoundType.AMETHYST)
                             .lightLevel(s -> 12)
                             .requiresCorrectToolForDrops()
+            )
+    );
+
+    public static final DeferredHolder<Block, BuddingAbyssalAmethystBlock> BUDDING_ABYSSAL_AMETHYST = BLOCKS.register(
+            "budding_abyssal_amethyst", () -> new BuddingAbyssalAmethystBlock(
+                    BlockBehaviour.Properties.of()
+                            .mapColor(MapColor.COLOR_PURPLE)
+                            .randomTicks()
+                            .strength(1.5F)
+                            .sound(SoundType.AMETHYST)
+                            .pushReaction(net.minecraft.world.level.material.PushReaction.BLOCK)
+            )
+    );
+
+    public static final DeferredHolder<Block, AbyssalClusterBlock> SMALL_ABYSSAL_BUD = BLOCKS.register(
+            "small_abyssal_bud", () -> new AbyssalClusterBlock(
+                    AbyssalClusterBlock.Stage.SMALL,
+                    BlockBehaviour.Properties.of()
+                            .mapColor(MapColor.COLOR_PURPLE)
+                            .noOcclusion()
+                            .strength(1.5F)
+                            .sound(SoundType.AMETHYST_CLUSTER)
+                            .lightLevel(s -> 3)
+                            .pushReaction(net.minecraft.world.level.material.PushReaction.DESTROY)
+            )
+    );
+
+    public static final DeferredHolder<Block, AbyssalClusterBlock> MEDIUM_ABYSSAL_BUD = BLOCKS.register(
+            "medium_abyssal_bud", () -> new AbyssalClusterBlock(
+                    AbyssalClusterBlock.Stage.MEDIUM,
+                    BlockBehaviour.Properties.of()
+                            .mapColor(MapColor.COLOR_PURPLE)
+                            .noOcclusion()
+                            .strength(1.5F)
+                            .sound(SoundType.AMETHYST_CLUSTER)
+                            .lightLevel(s -> 6)
+                            .pushReaction(net.minecraft.world.level.material.PushReaction.DESTROY)
+            )
+    );
+
+    public static final DeferredHolder<Block, AbyssalClusterBlock> LARGE_ABYSSAL_BUD = BLOCKS.register(
+            "large_abyssal_bud", () -> new AbyssalClusterBlock(
+                    AbyssalClusterBlock.Stage.LARGE,
+                    BlockBehaviour.Properties.of()
+                            .mapColor(MapColor.COLOR_PURPLE)
+                            .noOcclusion()
+                            .strength(1.5F)
+                            .sound(SoundType.AMETHYST_CLUSTER)
+                            .lightLevel(s -> 9)
+                            .pushReaction(net.minecraft.world.level.material.PushReaction.DESTROY)
+            )
+    );
+
+    public static final DeferredHolder<Block, AbyssalClusterBlock> ABYSSAL_RESONANT_CLUSTER = BLOCKS.register(
+            "abyssal_resonant_cluster", () -> new AbyssalClusterBlock(
+                    AbyssalClusterBlock.Stage.CLUSTER,
+                    BlockBehaviour.Properties.of()
+                            .mapColor(MapColor.COLOR_PURPLE)
+                            .noOcclusion()
+                            .strength(1.5F)
+                            .sound(SoundType.AMETHYST_CLUSTER)
+                            .lightLevel(s -> 12)
+                            .pushReaction(net.minecraft.world.level.material.PushReaction.DESTROY)
             )
     );
 
@@ -769,6 +832,16 @@ public final class SystemBlocks {
                             .mapColor(MapColor.STONE)
                             .strength(3.0F, 3.0F)
                             .sound(SoundType.STONE)
+                            .requiresCorrectToolForDrops()
+            )
+    );
+
+    public static final DeferredHolder<Block, Block> REFINED_WHITE_IRON_BLOCK = BLOCKS.register(
+            "refined_white_iron_block", () -> new Block(
+                    BlockBehaviour.Properties.of()
+                            .mapColor(MapColor.SNOW)
+                            .strength(5.0F, 6.0F)
+                            .sound(SoundType.METAL)
                             .requiresCorrectToolForDrops()
             )
     );
@@ -2175,6 +2248,24 @@ public final class SystemBlocks {
                     .lightLevel(s -> 15)
                     .noOcclusion()
                     .requiresCorrectToolForDrops()));
+
+    public static final DeferredHolder<Block, TeyvatCrystalBlock> MANA_CRYSTAL_CLUSTER_EX = BLOCKS.register("mana_crystal_cluster_ex",
+            () -> new TeyvatCrystalBlock(BlockBehaviour.Properties.of()
+                    .mapColor(MapColor.COLOR_MAGENTA)
+                    .strength(10.0F, 30.0F)
+                    .sound(SoundType.AMETHYST_CLUSTER)
+                    .lightLevel(s -> 15)
+                    .noOcclusion()
+                    .requiresCorrectToolForDrops()));
+
+    public static final DeferredHolder<Block, BuddingManaCrystalBlock> BUDDING_MANA_CRYSTAL = BLOCKS.register("budding_mana_crystal",
+            () -> new BuddingManaCrystalBlock(BlockBehaviour.Properties.of()
+                    .mapColor(MapColor.COLOR_CYAN)
+                    .randomTicks()
+                    .strength(4.0F, 12.0F)
+                    .sound(SoundType.AMETHYST)
+                    .lightLevel(s -> 10)
+                    .pushReaction(net.minecraft.world.level.material.PushReaction.BLOCK)));
 
     public static final DeferredHolder<Block, Block> VOID_BLACK_PATH = BLOCKS.register("void_black_path",
             () -> new Block(BlockBehaviour.Properties.of()

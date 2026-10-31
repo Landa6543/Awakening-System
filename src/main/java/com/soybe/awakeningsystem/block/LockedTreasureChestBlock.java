@@ -402,11 +402,11 @@ public class LockedTreasureChestBlock extends BaseEntityBlock implements SimpleW
             if (rand.nextFloat() < 0.25F) rolledLoot.add(new ItemStack(Items.MAGMA_CREAM, 2 + rand.nextInt(4)));
             if (rand.nextFloat() < 0.20F) rolledLoot.add(new ItemStack(Items.WITHER_SKELETON_SKULL, 1));
             if (rand.nextFloat() < 0.15F) rolledLoot.add(new ItemStack(Items.ANCIENT_DEBRIS, 1 + rand.nextInt(2)));
-            if (rand.nextFloat() < 0.12F) rolledLoot.add(new ItemStack(Items.NETHERITE_UPGRADE_SMITHING_TEMPLATE, 1));
+            if (rand.nextFloat() < 0.20F) rolledLoot.add(new ItemStack(Items.NETHERITE_SCRAP, 1 + rand.nextInt(2)));
             rolledLoot.add(new ItemStack(SystemItems.AWAKENING_COIN.get(), 15 + rand.nextInt(25)));
         } else if (dim.contains("end")) {
             if (rand.nextFloat() < 0.70F) rolledLoot.add(new ItemStack(SystemItems.END_VOID_KEY.get(), 1));
-            if (rand.nextFloat() < 0.35F) rolledLoot.add(new ItemStack(Items.NETHERITE_UPGRADE_SMITHING_TEMPLATE, 1));
+            if (rand.nextFloat() < 0.35F) rolledLoot.add(new ItemStack(Items.DIAMOND, 2 + rand.nextInt(3)));
             rolledLoot.add(new ItemStack(Items.ENDER_PEARL, 6 + rand.nextInt(10)));
             rolledLoot.add(new ItemStack(Items.CHORUS_FRUIT, 8 + rand.nextInt(12)));
             if (rand.nextFloat() < 0.50F) rolledLoot.add(new ItemStack(Items.SHULKER_SHELL, 1 + rand.nextInt(3)));
@@ -418,10 +418,7 @@ public class LockedTreasureChestBlock extends BaseEntityBlock implements SimpleW
         } else if (dim.contains("teyvat")) {
             if (rand.nextFloat() < 0.70F) rolledLoot.add(new ItemStack(SystemItems.TEYVAT_SHRINE_KEY.get(), 1));
             boolean isPrimordial = rand.nextFloat() < 0.40F;
-            if (rand.nextFloat() < 0.50F) {
-                rolledLoot.add(new ItemStack(isPrimordial ? SystemItems.PRIMORDIAL_UPGRADE_SMITHING_TEMPLATE.get() : SystemItems.CELESTIAL_UPGRADE_SMITHING_TEMPLATE.get(), 1));
-            }
-            rolledLoot.add(new ItemStack(isPrimordial ? SystemItems.PRIMORDIAL_INGOT.get() : SystemItems.CELESTIAL_INGOT.get(), 1 + rand.nextInt(3)));
+            rolledLoot.add(new ItemStack(isPrimordial ? SystemItems.PRIMORDIAL_INGOT.get() : SystemItems.CELESTIAL_INGOT.get(), 2 + rand.nextInt(4)));
             rolledLoot.add(new ItemStack(SystemItems.MORA_BUNDLE.get(), 1 + rand.nextInt(3)));
             rolledLoot.add(new ItemStack(SystemItems.PRIMOGEM.get(), 6 + rand.nextInt(15)));
             rolledLoot.add(new ItemStack(SystemItems.HEROS_WIT.get(), 2 + rand.nextInt(4)));
@@ -433,10 +430,7 @@ public class LockedTreasureChestBlock extends BaseEntityBlock implements SimpleW
         } else if (dim.contains("isekai")) {
             if (rand.nextFloat() < 0.70F) rolledLoot.add(new ItemStack(SystemItems.ISEKAI_MANA_KEY.get(), 1));
             boolean isAstral = rand.nextFloat() < 0.35F;
-            if (rand.nextFloat() < 0.50F) {
-                rolledLoot.add(new ItemStack(isAstral ? SystemItems.ASTRAL_UPGRADE_SMITHING_TEMPLATE.get() : SystemItems.MITHRIL_UPGRADE_SMITHING_TEMPLATE.get(), 1));
-            }
-            rolledLoot.add(new ItemStack(isAstral ? SystemItems.ASTRAL_INGOT.get() : SystemItems.MITHRIL_INGOT.get(), 1 + rand.nextInt(3)));
+            rolledLoot.add(new ItemStack(isAstral ? SystemItems.ASTRAL_INGOT.get() : SystemItems.MITHRIL_INGOT.get(), 2 + rand.nextInt(4)));
             rolledLoot.add(new ItemStack(SystemItems.CHAOS_MANA_CORE.get(), 1 + rand.nextInt(2)));
             rolledLoot.add(new ItemStack(SystemItems.MANA_FRUIT.get(), 3 + rand.nextInt(5)));
             if (rand.nextFloat() < 0.45F) rolledLoot.add(new ItemStack(SystemItems.MANA_CRYSTAL_SHARD_C.get(), 2 + rand.nextInt(3)));
@@ -447,10 +441,7 @@ public class LockedTreasureChestBlock extends BaseEntityBlock implements SimpleW
         } else if (dim.contains("murim")) {
             if (rand.nextFloat() < 0.70F) rolledLoot.add(new ItemStack(SystemItems.MURIM_DAO_KEY.get(), 1));
             boolean isJade = rand.nextFloat() < 0.50F;
-            if (rand.nextFloat() < 0.50F) {
-                rolledLoot.add(new ItemStack(isJade ? SystemItems.SPIRIT_JADE_UPGRADE_SMITHING_TEMPLATE.get() : SystemItems.ADAMANTITE_UPGRADE_SMITHING_TEMPLATE.get(), 1));
-            }
-            rolledLoot.add(new ItemStack(isJade ? SystemItems.SPIRIT_JADE.get() : SystemItems.ADAMANTITE_INGOT.get(), 1 + rand.nextInt(3)));
+            rolledLoot.add(new ItemStack(isJade ? SystemItems.SPIRIT_JADE.get() : SystemItems.ADAMANTITE_INGOT.get(), 2 + rand.nextInt(4)));
             rolledLoot.add(new ItemStack(SystemItems.WILD_GINSENG.get(), 2 + rand.nextInt(3)));
             rolledLoot.add(new ItemStack(SystemItems.FOUNDATION_BUILDING_PILL.get(), 2 + rand.nextInt(4)));
             if (rand.nextFloat() < 0.20F) rolledLoot.add(new ItemStack(SystemItems.THOUSAND_YEAR_GINSENG.get(), 1));
@@ -465,7 +456,7 @@ public class LockedTreasureChestBlock extends BaseEntityBlock implements SimpleW
                 // RANK S: Calamity / Monarch tier - ONLY tier that gives Abyssal & Soulforge metals!
                 rolledLoot.add(new ItemStack(SystemItems.ABYSSAL_INGOT.get(), 1 + rand.nextInt(3)));
                 rolledLoot.add(new ItemStack(SystemItems.SOUL_ALLOY_INGOT.get(), 1 + rand.nextInt(2)));
-                if (rand.nextFloat() < 0.50F) rolledLoot.add(new ItemStack(SystemItems.ABYSSAL_UPGRADE_SMITHING_TEMPLATE.get(), 1));
+                if (rand.nextFloat() < 0.40F) rolledLoot.add(new ItemStack(Items.NETHERITE_SCRAP, 1 + rand.nextInt(2)));
                 rolledLoot.add(new ItemStack(Items.DIAMOND, 4 + rand.nextInt(6)));
                 rolledLoot.add(new ItemStack(Items.EMERALD, 8 + rand.nextInt(10)));
                 rolledLoot.add(new ItemStack(Items.GOLD_INGOT, 8 + rand.nextInt(12)));

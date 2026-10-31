@@ -97,8 +97,14 @@ public final class RpgAffixManager {
         stack.set(DataComponents.CUSTOM_DATA, CustomData.of(tag));
 
         String original = stack.getHoverName().getString();
-        String newName = rarity.format + "[" + rarity.displayName.toUpperCase() + "] " + pre.title + " " + original + " " + suf.title;
-        stack.set(DataComponents.CUSTOM_NAME, Component.literal(newName));
+        // Limpiar cualquier prefijo previo malformado como "6[LEGENDARY] " o "§6[LEGENDARY] "
+        original = original.replaceAll("^[0-9a-fk-or§]?\\[.*?\\]\\s*", "").trim();
+
+        String affixTitle = (pre != Prefix.NONE ? pre.title + " " : "") + original + (suf != Suffix.NONE ? " " + suf.title : "");
+        Component nameComponent = Component.literal("[" + rarity.displayName.toUpperCase() + "] ")
+                .withStyle(rarity.format, ChatFormatting.BOLD)
+                .append(Component.literal(affixTitle).withStyle(ChatFormatting.WHITE));
+        stack.set(DataComponents.CUSTOM_NAME, nameComponent);
     }
 
     public static boolean hasAffixes(ItemStack stack) {

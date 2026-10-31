@@ -1,9 +1,11 @@
 package com.soybe.awakeningsystem;
 
+import com.soybe.awakeningsystem.client.gui.ModernGuiHelper;
 import net.minecraft.ChatFormatting;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.gui.screens.Screen;
+import net.minecraft.client.resources.sounds.SimpleSoundInstance;
 import net.minecraft.network.chat.Component;
 import net.minecraft.sounds.SoundEvents;
 import net.minecraft.util.FormattedCharSequence;
@@ -11,8 +13,16 @@ import org.lwjgl.glfw.GLFW;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Locale;
 
+/**
+ * Manhwa / Solo Leveling Murim Cultivation Screen (Dantian & Meridianos).
+ * Perfectly aligned with the official System Window Frame architecture.
+ */
 public final class CultivationScreen extends Screen {
+    private static final int PANEL_W = 520;
+    private static final int PANEL_H = 295;
+
     private final Screen parentScreen;
     private int scrollOffset = 0;
     private int rollTicks = 0;
@@ -66,51 +76,45 @@ public final class CultivationScreen extends Screen {
             new MeridianInfo(11, 420)
     );
 
-    // Spaced-out acupoints across the enlarged Minecraft player mannequin (relative to body center xc and top y0)
+    // Spaced-out acupoints across the spiritual mannequin (relative to center xc and top y0)
     private static final List<NodePos> NODES = List.of(
-            new NodePos(0, -28, 46),  // 1. Pulmón (Brazo izquierdo superior)
-            new NodePos(1, -28, 65),  // 2. Intestino Grueso (Brazo izquierdo medio)
-            new NodePos(2, 11, 48),   // 3. Estómago (Pecho derecho)
-            new NodePos(3, -12, 68),  // 4. Bazo (Costillas inferiores izquierdas)
-            new NodePos(4, -11, 48),  // 5. Corazón (Pecho izquierdo)
-            new NodePos(5, -28, 82),  // 6. Intestino Delgado (Mano izquierda)
-            new NodePos(6, -9, 114),  // 7. Vejiga (Rodilla izquierda)
-            new NodePos(7, -11, 80),  // 8. Riñón (Flanco inferior izquierdo)
-            new NodePos(8, 0, 44),    // 9. Pericardio (Pecho central superior)
-            new NodePos(9, 28, 46),   // 10. Triple Calentador (Brazo derecho)
-            new NodePos(10, 11, 18),  // 11. Vesícula Biliar (Sien derecha)
-            new NodePos(11, 12, 68)   // 12. Hígado (Costillas inferiores derechas)
+            new NodePos(0, -28, 44),  // 1. Pulmón (Brazo izquierdo superior)
+            new NodePos(1, -28, 62),  // 2. Intestino Grueso (Brazo izquierdo medio)
+            new NodePos(2, 11, 46),   // 3. Estómago (Pecho derecho)
+            new NodePos(3, -12, 66),  // 4. Bazo (Costillas inferiores izquierdas)
+            new NodePos(4, -11, 46),  // 5. Corazón (Pecho izquierdo)
+            new NodePos(5, -28, 78),  // 6. Intestino Delgado (Mano izquierda)
+            new NodePos(6, -9, 108),  // 7. Vejiga (Pierna izquierda)
+            new NodePos(7, -11, 78),  // 8. Riñón (Flanco inferior izquierdo)
+            new NodePos(8, 0, 42),    // 9. Pericardio (Pecho central superior)
+            new NodePos(9, 28, 44),   // 10. Triple Calentador (Brazo derecho)
+            new NodePos(10, 11, 16),  // 11. Vesícula Biliar (Sien derecha)
+            new NodePos(11, 12, 66)   // 12. Hígado (Costillas inferiores derechas)
     );
 
-    // Energetic circuit lines connecting the meridian network across the Minecraft body
+    // Energetic circuit lines connecting the meridian network
     private static final List<CircuitLine> CIRCUIT_LINES = List.of(
-            // Head circuit (Third eye to temple and throat)
-            new CircuitLine(10, 10, 0, 14, 11, 18),
-            new CircuitLine(10, 8, 0, 14, 0, 34),
-            new CircuitLine(8, 8, 0, 34, 0, 44),
-            // Upper torso / chest circuit
-            new CircuitLine(8, 4, 0, 44, -11, 48),
-            new CircuitLine(8, 2, 0, 44, 11, 48),
-            new CircuitLine(4, 0, -11, 48, -28, 46),
-            new CircuitLine(2, 9, 11, 48, 28, 46),
-            new CircuitLine(8, 8, 0, 44, 0, 58), // Pericardio to Middle Dantian
-            // Left arm circuit
-            new CircuitLine(0, 1, -28, 46, -28, 65),
-            new CircuitLine(1, 5, -28, 65, -28, 82),
-            // Right arm circuit
-            new CircuitLine(9, 9, 28, 46, 28, 65),
-            new CircuitLine(9, 9, 28, 65, 28, 82),
-            // Core & Lower Dantian circuit
-            new CircuitLine(8, 3, 0, 58, -12, 68),
-            new CircuitLine(8, 11, 0, 58, 12, 68),
-            new CircuitLine(3, 7, -12, 68, -11, 80),
-            new CircuitLine(11, 7, 12, 68, 0, 80),
-            new CircuitLine(7, 7, -11, 80, 0, 80), // Riñón to Lower Dantian
-            // Legs circuit
-            new CircuitLine(7, 6, 0, 80, -9, 114),
-            new CircuitLine(6, 6, -9, 114, -9, 138),
-            new CircuitLine(7, 11, 0, 80, 9, 114),
-            new CircuitLine(11, 7, 9, 114, 9, 138)
+            new CircuitLine(10, 10, 0, 14, 11, 16),
+            new CircuitLine(10, 8, 0, 14, 0, 32),
+            new CircuitLine(8, 8, 0, 32, 0, 42),
+            new CircuitLine(8, 4, 0, 42, -11, 46),
+            new CircuitLine(8, 2, 0, 42, 11, 46),
+            new CircuitLine(4, 0, -11, 46, -28, 44),
+            new CircuitLine(2, 9, 11, 46, 28, 44),
+            new CircuitLine(8, 8, 0, 42, 0, 56), // Pericardio to Middle Dantian
+            new CircuitLine(0, 1, -28, 44, -28, 62),
+            new CircuitLine(1, 5, -28, 62, -28, 78),
+            new CircuitLine(9, 9, 28, 44, 28, 62),
+            new CircuitLine(9, 9, 28, 62, 28, 78),
+            new CircuitLine(8, 3, 0, 56, -12, 66),
+            new CircuitLine(8, 11, 0, 56, 12, 66),
+            new CircuitLine(3, 7, -12, 66, -11, 78),
+            new CircuitLine(11, 7, 12, 66, 0, 78),
+            new CircuitLine(7, 7, -11, 78, 0, 78), // Riñón to Lower Dantian
+            new CircuitLine(7, 6, 0, 78, -9, 108),
+            new CircuitLine(6, 6, -9, 108, -9, 130),
+            new CircuitLine(7, 11, 0, 78, 9, 108),
+            new CircuitLine(11, 7, 9, 108, 9, 130)
     );
 
     private static final List<DaoSkillInfo> DAO_SKILLS = List.of(
@@ -136,11 +140,12 @@ public final class CultivationScreen extends Screen {
 
     @Override
     public void renderBackground(GuiGraphics graphics, int mouseX, int mouseY, float partialTick) {
+        // Clean - no dark murky screen-wide filter
     }
 
     @Override
     public boolean keyPressed(int keyCode, int scanCode, int modifiers) {
-        if (keyCode == GLFW.GLFW_KEY_ESCAPE) {
+        if (keyCode == GLFW.GLFW_KEY_ESCAPE || keyCode == GLFW.GLFW_KEY_E) {
             onClose();
             return true;
         }
@@ -149,19 +154,19 @@ public final class CultivationScreen extends Screen {
             SystemData data = minecraft.player.getData(AwakeningSystemMod.PLAYER_SYSTEM);
             if (keyCode == GLFW.GLFW_KEY_LEFT) {
                 selectedMeridian = (selectedMeridian + 11) % 12;
-                minecraft.getSoundManager().play(net.minecraft.client.resources.sounds.SimpleSoundInstance.forUI(SoundEvents.UI_BUTTON_CLICK, 1.2F));
+                minecraft.getSoundManager().play(SimpleSoundInstance.forUI(SoundEvents.UI_BUTTON_CLICK, 1.2F));
                 return true;
             } else if (keyCode == GLFW.GLFW_KEY_RIGHT) {
                 selectedMeridian = (selectedMeridian + 1) % 12;
-                minecraft.getSoundManager().play(net.minecraft.client.resources.sounds.SimpleSoundInstance.forUI(SoundEvents.UI_BUTTON_CLICK, 1.2F));
+                minecraft.getSoundManager().play(SimpleSoundInstance.forUI(SoundEvents.UI_BUTTON_CLICK, 1.2F));
                 return true;
             } else if (keyCode == GLFW.GLFW_KEY_UP) {
                 selectedMeridian = (selectedMeridian + 10) % 12;
-                minecraft.getSoundManager().play(net.minecraft.client.resources.sounds.SimpleSoundInstance.forUI(SoundEvents.UI_BUTTON_CLICK, 1.2F));
+                minecraft.getSoundManager().play(SimpleSoundInstance.forUI(SoundEvents.UI_BUTTON_CLICK, 1.2F));
                 return true;
             } else if (keyCode == GLFW.GLFW_KEY_DOWN) {
                 selectedMeridian = (selectedMeridian + 2) % 12;
-                minecraft.getSoundManager().play(net.minecraft.client.resources.sounds.SimpleSoundInstance.forUI(SoundEvents.UI_BUTTON_CLICK, 1.2F));
+                minecraft.getSoundManager().play(SimpleSoundInstance.forUI(SoundEvents.UI_BUTTON_CLICK, 1.2F));
                 return true;
             } else if (keyCode == GLFW.GLFW_KEY_ENTER || keyCode == GLFW.GLFW_KEY_SPACE) {
                 if (!data.isMeridianOpen(selectedMeridian)) {
@@ -169,7 +174,7 @@ public final class CultivationScreen extends Screen {
                     if (data.cultivationQi() >= cost) {
                         unlockEffectTicks = 20;
                         lastUnlockedMeridian = selectedMeridian;
-                        minecraft.getSoundManager().play(net.minecraft.client.resources.sounds.SimpleSoundInstance.forUI(SoundEvents.PLAYER_LEVELUP, 1.2F));
+                        minecraft.getSoundManager().play(SimpleSoundInstance.forUI(SoundEvents.PLAYER_LEVELUP, 1.2F));
                         AwakeningSystemClient.performCultivationAction("open_meridian", selectedMeridian);
                         return true;
                     }
@@ -183,7 +188,7 @@ public final class CultivationScreen extends Screen {
     @Override
     public void onClose() {
         if (minecraft != null) {
-            minecraft.setScreen(parentScreen);
+            minecraft.setScreen(parentScreen != null ? parentScreen : new SystemScreen(0));
         }
     }
 
@@ -197,7 +202,7 @@ public final class CultivationScreen extends Screen {
         if (rollTicks > 0) {
             rollTicks--;
             if (rollTicks % 4 == 0 && minecraft != null && rollTicks > 0) {
-                minecraft.getSoundManager().play(net.minecraft.client.resources.sounds.SimpleSoundInstance.forUI(SoundEvents.UI_BUTTON_CLICK, 1.4F));
+                minecraft.getSoundManager().play(SimpleSoundInstance.forUI(SoundEvents.UI_BUTTON_CLICK, 1.4F));
             }
             if (rollTicks == 0) {
                 AwakeningSystemClient.performCultivationAction("awaken_physique", 0);
@@ -206,8 +211,8 @@ public final class CultivationScreen extends Screen {
     }
 
     public float getGuiScale() {
-        float scaleX = (float) this.width / 465.0F;
-        float scaleY = (float) this.height / 270.0F;
+        float scaleX = (float) this.width / 540.0F;
+        float scaleY = (float) this.height / 315.0F;
         float scale = Math.min(scaleX, scaleY);
         return Math.min(1.0F, Math.max(0.35F, scale));
     }
@@ -250,54 +255,56 @@ public final class CultivationScreen extends Screen {
         if (button == 0 && minecraft != null && minecraft.player != null) {
             SystemData data = minecraft.player.getData(AwakeningSystemMod.PLAYER_SYSTEM);
 
-            int panelW = 460;
-            int panelH = 260;
-            int left = (width - panelW) / 2;
-            int top = (height - panelH) / 2;
+            int left = (width - PANEL_W) / 2;
+            int top = (height - PANEL_H) / 2;
 
-            int backW = 55;
-            int backH = 18;
-            int backX = left + panelW - backW - 12;
-            int backY = top + 7;
-            if (mouseX >= backX && mouseX <= backX + backW && mouseY >= backY && mouseY <= backY + backH) {
-                minecraft.getSoundManager().play(net.minecraft.client.resources.sounds.SimpleSoundInstance.forUI(SoundEvents.UI_BUTTON_CLICK, 1.0F));
+            // Close button [✕]
+            int closeX = left + PANEL_W - 32;
+            int closeY = top + 14;
+            int closeW = 16;
+            int closeH = 16;
+            if (mouseX >= closeX && mouseX < closeX + closeW && mouseY >= closeY && mouseY < closeY + closeH) {
+                minecraft.getSoundManager().play(SimpleSoundInstance.forUI(SoundEvents.UI_BUTTON_CLICK, 0.9F));
                 onClose();
                 return true;
             }
 
-            int medW = 95;
-            int medH = 18;
-            int medX = backX - medW - 8;
-            int medY = top + 7;
+            // Meditation pill button
+            int medW = 86;
+            int medH = 16;
+            int medX = closeX - 10 - medW;
+            int medY = top + 14;
             if (mouseX >= medX && mouseX <= medX + medW && mouseY >= medY && mouseY <= medY + medH) {
-                minecraft.getSoundManager().play(net.minecraft.client.resources.sounds.SimpleSoundInstance.forUI(SoundEvents.UI_BUTTON_CLICK, 1.0F));
+                minecraft.getSoundManager().play(SimpleSoundInstance.forUI(SoundEvents.UI_BUTTON_CLICK, 1.0F));
                 AwakeningSystemClient.performCultivationAction("toggle_meditation", 0);
                 return true;
             }
 
-            int cardTop = top + 28;
+            int cardTop = top + 31;
 
-            int phyW = 115;
+            // Physique Button
+            int phyW = 120;
             int phyH = 16;
-            int phyX = left + panelW - phyW - 14;
-            int phyY = cardTop + 5;
+            int phyX = left + PANEL_W - 12 - phyW - 8;
+            int phyY = cardTop + 4;
             boolean isUnawakened = data.murimPhysique() == null || data.murimPhysique().isEmpty();
             if (mouseX >= phyX && mouseX <= phyX + phyW && mouseY >= phyY && mouseY <= phyY + phyH) {
                 if (isUnawakened && rollTicks <= 0) {
-                    minecraft.getSoundManager().play(net.minecraft.client.resources.sounds.SimpleSoundInstance.forUI(SoundEvents.ENCHANTMENT_TABLE_USE, 1.2F));
+                    minecraft.getSoundManager().play(SimpleSoundInstance.forUI(SoundEvents.ENCHANTMENT_TABLE_USE, 1.2F));
                     rollTicks = 24;
                 } else if (!isUnawakened) {
-                    minecraft.getSoundManager().play(net.minecraft.client.resources.sounds.SimpleSoundInstance.forUI(SoundEvents.NOTE_BLOCK_BASS.value(), 0.8F));
+                    minecraft.getSoundManager().play(SimpleSoundInstance.forUI(SoundEvents.NOTE_BLOCK_BASS.value(), 0.8F));
                 }
                 return true;
             }
 
-            int btnAdvW = 115;
-            int btnAdvH = 18;
-            int btnAdvX = left + panelW - btnAdvW - 14;
-            int btnAdvY = cardTop + 24;
-            if (mouseX >= btnAdvX && mouseX <= btnAdvX + btnAdvW && mouseY >= btnAdvY && mouseY <= btnAdvY + btnAdvH) {
-                minecraft.getSoundManager().play(net.minecraft.client.resources.sounds.SimpleSoundInstance.forUI(SoundEvents.UI_BUTTON_CLICK, 1.2F));
+            // Advancement / Breakthrough Button
+            int advW = 120;
+            int advH = 16;
+            int advX = phyX;
+            int advY = cardTop + 24;
+            if (mouseX >= advX && mouseX <= advX + advW && mouseY >= advY && mouseY <= advY + advH) {
+                minecraft.getSoundManager().play(SimpleSoundInstance.forUI(SoundEvents.UI_BUTTON_CLICK, 1.2F));
                 if (data.cultivationSubLevel() < 9) {
                     AwakeningSystemClient.performCultivationAction("breakthrough_sublevel", 0);
                 } else {
@@ -306,41 +313,63 @@ public final class CultivationScreen extends Screen {
                 return true;
             }
 
-            int tabY = top + 77;
-            if (mouseY >= tabY && mouseY < tabY + 16) {
-                if (mouseX >= left + 12 && mouseX < left + 145) {
+            // Navigation Tabs
+            int tabY = top + 78;
+            int tab0W = 160;
+            int tab1W = 145;
+            if (mouseY >= tabY && mouseY < tabY + 18) {
+                if (mouseX >= left + 12 && mouseX < left + 12 + tab0W) {
                     activeTab = 0;
-                    minecraft.getSoundManager().play(net.minecraft.client.resources.sounds.SimpleSoundInstance.forUI(SoundEvents.UI_BUTTON_CLICK, 1.0F));
+                    minecraft.getSoundManager().play(SimpleSoundInstance.forUI(SoundEvents.UI_BUTTON_CLICK, 1.0F));
                     return true;
                 }
-                if (mouseX >= left + 148 && mouseX < left + 285) {
+                if (mouseX >= left + 12 + tab0W + 4 && mouseX < left + 12 + tab0W + 4 + tab1W) {
                     activeTab = 1;
                     scrollOffset = 0;
-                    minecraft.getSoundManager().play(net.minecraft.client.resources.sounds.SimpleSoundInstance.forUI(SoundEvents.UI_BUTTON_CLICK, 1.0F));
+                    minecraft.getSoundManager().play(SimpleSoundInstance.forUI(SoundEvents.UI_BUTTON_CLICK, 1.0F));
                     return true;
                 }
             }
 
             if (activeTab == 0) {
-                int xc = left + panelW / 2;
-                float breathe = (float) Math.sin(animTick * 0.08F) * 0.8F;
-                int y0 = top + 102 + Math.round(breathe);
+                int colLeftX = left + 12;
+                int colLeftY = top + 100;
 
-                // 1. Direct clicks on the central Minecraft body acupoint nodes
+                // 1. Selector Pills in left column
+                int pillStartX = colLeftX + 6;
+                int pillStartY = colLeftY + 57;
+                for (int i = 0; i < 12; i++) {
+                    int col = i % 2;
+                    int row = i / 2;
+                    int pillX = pillStartX + col * 64;
+                    int pillY = pillStartY + row * 16;
+                    if (mouseX >= pillX && mouseX <= pillX + 62 && mouseY >= pillY && mouseY <= pillY + 15) {
+                        selectedMeridian = i;
+                        minecraft.getSoundManager().play(SimpleSoundInstance.forUI(SoundEvents.UI_BUTTON_CLICK, 1.2F));
+                        return true;
+                    }
+                }
+
+                // 2. Direct clicks on acupoint nodes in middle mannequin
+                int midX = colLeftX + 140 + 8;
+                int xc = midX + 90;
+                float breathe = (float) Math.sin(animTick * 0.08F) * 0.8F;
+                int y0 = top + 104 + Math.round(breathe);
+
                 for (NodePos node : NODES) {
                     int nx = xc + node.relX();
                     int ny = y0 + node.relY();
                     if (Math.abs(mouseX - nx) <= 7 && Math.abs(mouseY - ny) <= 7) {
-                        minecraft.getSoundManager().play(net.minecraft.client.resources.sounds.SimpleSoundInstance.forUI(SoundEvents.UI_BUTTON_CLICK, 1.3F));
+                        minecraft.getSoundManager().play(SimpleSoundInstance.forUI(SoundEvents.UI_BUTTON_CLICK, 1.3F));
                         if (selectedMeridian == node.id() && !data.isMeridianOpen(node.id())) {
                             int cost = (node.id() + 1) * 35;
                             if (data.cultivationQi() >= cost) {
                                 unlockEffectTicks = 20;
                                 lastUnlockedMeridian = node.id();
-                                minecraft.getSoundManager().play(net.minecraft.client.resources.sounds.SimpleSoundInstance.forUI(SoundEvents.PLAYER_LEVELUP, 1.2F));
+                                minecraft.getSoundManager().play(SimpleSoundInstance.forUI(SoundEvents.PLAYER_LEVELUP, 1.2F));
                                 AwakeningSystemClient.performCultivationAction("open_meridian", node.id());
                             } else {
-                                minecraft.getSoundManager().play(net.minecraft.client.resources.sounds.SimpleSoundInstance.forUI(SoundEvents.NOTE_BLOCK_BASS.value(), 0.8F));
+                                minecraft.getSoundManager().play(SimpleSoundInstance.forUI(SoundEvents.NOTE_BLOCK_BASS.value(), 0.8F));
                             }
                         } else {
                             selectedMeridian = node.id();
@@ -349,26 +378,16 @@ public final class CultivationScreen extends Screen {
                     }
                 }
 
-                // 2. Clicks on the 12 quick selector pills in the left column
-                int leftPillX = left + 18;
-                int leftPillY = top + 158;
-                for (int i = 0; i < 12; i++) {
-                    int col = i % 2;
-                    int row = i / 2;
-                    int pillX = leftPillX + col * 64;
-                    int pillY = leftPillY + row * 15;
-                    if (mouseX >= pillX && mouseX <= pillX + 60 && mouseY >= pillY && mouseY <= pillY + 13) {
-                        selectedMeridian = i;
-                        minecraft.getSoundManager().play(net.minecraft.client.resources.sounds.SimpleSoundInstance.forUI(SoundEvents.UI_BUTTON_CLICK, 1.2F));
-                        return true;
-                    }
-                }
+                // 3. Unlock button in right column
+                int colRightX = midX + 180 + 8;
+                int colRightW = left + PANEL_W - 12 - colRightX;
+                int colRightY = top + 100;
+                int colRightH = 186;
 
-                // 3. Click on the unlock button in the right inspection card
-                int btnX = left + 318;
-                int btnY = top + 224;
-                int btnW = 122;
-                int btnH = 20;
+                int btnW = colRightW - 16;
+                int btnH = 22;
+                int btnX = colRightX + 8;
+                int btnY = colRightY + colRightH - btnH - 6;
                 if (mouseX >= btnX && mouseX <= btnX + btnW && mouseY >= btnY && mouseY <= btnY + btnH) {
                     boolean isOpen = data.isMeridianOpen(selectedMeridian);
                     if (!isOpen) {
@@ -376,40 +395,40 @@ public final class CultivationScreen extends Screen {
                         if (data.cultivationQi() >= cost) {
                             unlockEffectTicks = 20;
                             lastUnlockedMeridian = selectedMeridian;
-                            minecraft.getSoundManager().play(net.minecraft.client.resources.sounds.SimpleSoundInstance.forUI(SoundEvents.PLAYER_LEVELUP, 1.2F));
+                            minecraft.getSoundManager().play(SimpleSoundInstance.forUI(SoundEvents.PLAYER_LEVELUP, 1.2F));
                             AwakeningSystemClient.performCultivationAction("open_meridian", selectedMeridian);
                         } else {
-                            minecraft.getSoundManager().play(net.minecraft.client.resources.sounds.SimpleSoundInstance.forUI(SoundEvents.NOTE_BLOCK_BASS.value(), 0.8F));
+                            minecraft.getSoundManager().play(SimpleSoundInstance.forUI(SoundEvents.NOTE_BLOCK_BASS.value(), 0.8F));
                         }
                         return true;
                     }
                 }
             } else {
-                int listY = top + 96;
+                int listY = top + 100;
                 int visibleCount = 3;
                 int realm = data.dantianRealm();
                 for (int i = 0; i < visibleCount; i++) {
                     int index = scrollOffset + i;
                     if (index >= DAO_SKILLS.size()) break;
                     DaoSkillInfo s = DAO_SKILLS.get(index);
-                    int itemY = listY + i * 40;
+                    int itemY = listY + i * 44;
                     boolean isUnlocked = realm >= s.reqRealm();
 
                     if (isUnlocked) {
                         int btnW1 = 70;
                         int btnH = 18;
-                        int btnX1 = left + panelW - btnW1 - 65;
-                        int btnY = itemY + 11;
+                        int btnX1 = left + PANEL_W - btnW1 - 65;
+                        int btnY = itemY + 12;
                         if (mouseX >= btnX1 && mouseX <= btnX1 + btnW1 && mouseY >= btnY && mouseY <= btnY + btnH) {
-                            minecraft.getSoundManager().play(net.minecraft.client.resources.sounds.SimpleSoundInstance.forUI(SoundEvents.UI_BUTTON_CLICK, 1.2F));
+                            minecraft.getSoundManager().play(SimpleSoundInstance.forUI(SoundEvents.UI_BUTTON_CLICK, 1.2F));
                             AwakeningSystemClient.performCultivationAction("select_dao_skill", s.id());
                             return true;
                         }
 
                         int btnW2 = 50;
-                        int btnX2 = left + panelW - btnW2 - 12;
+                        int btnX2 = left + PANEL_W - btnW2 - 14;
                         if (mouseX >= btnX2 && mouseX <= btnX2 + btnW2 && mouseY >= btnY && mouseY <= btnY + btnH) {
-                            minecraft.getSoundManager().play(net.minecraft.client.resources.sounds.SimpleSoundInstance.forUI(SoundEvents.UI_BUTTON_CLICK, 1.0F));
+                            minecraft.getSoundManager().play(SimpleSoundInstance.forUI(SoundEvents.UI_BUTTON_CLICK, 1.0F));
                             AwakeningSystemClient.performCultivationAction("use_dao_skill", s.id());
                             return true;
                         }
@@ -422,7 +441,7 @@ public final class CultivationScreen extends Screen {
 
     @Override
     public void render(GuiGraphics graphics, int mouseX, int mouseY, float partialTick) {
-        graphics.fillGradient(0, 0, this.width, this.height, 0x90000000, 0xB0000000);
+        renderBackground(graphics, mouseX, mouseY, partialTick);
 
         if (minecraft == null || minecraft.player == null) return;
         SystemData data = minecraft.player.getData(AwakeningSystemMod.PLAYER_SYSTEM);
@@ -440,72 +459,80 @@ public final class CultivationScreen extends Screen {
             graphics.pose().translate(-cx, -cy, 0.0F);
         }
 
-        int panelW = 460;
-        int panelH = 260;
-        int left = (width - panelW) / 2;
-        int top = (height - panelH) / 2;
+        int left = (width - PANEL_W) / 2;
+        int top = (height - PANEL_H) / 2;
 
-        graphics.fill(left - 2, top - 2, left + panelW + 2, top + panelH + 2, 0xFF8A6D3B);
-        graphics.fill(left - 1, top - 1, left + panelW + 1, top + panelH + 1, 0xFF1C2228);
-        graphics.fill(left, top, left + panelW, top + panelH, 0xFA0B1015);
+        ModernGuiHelper.GuiTheme theme = ModernGuiHelper.GuiTheme.SOLO_LEVELING;
+        ModernGuiHelper.drawModernWindow(graphics, left, top, PANEL_W, PANEL_H, theme);
 
-        Component headerTitleComp = Component.literal("§6☯ §f" + title.getString() + " §6☯");
-        graphics.drawString(font, headerTitleComp, left + 14, top + 11, 0xFFFFFFFF);
+        // Header Title (Left, cleared from corner and central filigree)
+        Component headerTitleComp = ModernGuiHelper.manhwa(Component.translatable("awakening_system.screen.cultivation.header"));
+        graphics.drawString(font, headerTitleComp, left + 36, top + 15, 0xFF00E5FF, false);
 
-        int backW = 55;
-        int backH = 18;
-        int backX = left + panelW - backW - 12;
-        int backY = top + 7;
-        boolean hoverBack = mX >= backX && mX <= backX + backW && mY >= backY && mY <= backY + backH;
-        graphics.fill(backX, backY, backX + backW, backY + backH, hoverBack ? 0xFFC0392B : 0xFF922B21);
-        drawBorder(graphics, backX, backY, backW, backH, hoverBack ? 0xFFFFFFFF : 0xFFE74C3C);
-        graphics.drawCenteredString(font, Component.translatable("awakening_system.screen.back"), backX + backW / 2, backY + 5, 0xFFFFFFFF);
+        // Close Button [✕] (Right) - seamlessly integrated without dark block
+        int closeX = left + PANEL_W - 32;
+        int closeY = top + 14;
+        int closeW = 16;
+        int closeH = 16;
+        boolean closeHover = mX >= closeX && mX < closeX + closeW && mY >= closeY && mY < closeY + closeH;
+        if (closeHover) {
+            graphics.fill(closeX, closeY, closeX + closeW, closeY + closeH, 0xDD7A1515);
+            graphics.renderOutline(closeX, closeY, closeW, closeH, 0xFFFF5555);
+        }
+        graphics.drawCenteredString(font, "✕", closeX + closeW / 2, closeY + 4, closeHover ? 0xFFFFFFFF : 0xFF70E8FF);
 
-        int medW = 95;
-        int medH = 18;
-        int medX = backX - medW - 8;
-        int medY = top + 7;
+        // Meditation Pill Button
+        int medW = 86;
+        int medH = 16;
+        int medX = closeX - 10 - medW;
+        int medY = top + 14;
         boolean hoverMed = mX >= medX && mX <= medX + medW && mY >= medY && mY <= medY + medH;
         boolean isMeditating = minecraft.player.getVehicle() instanceof com.soybe.awakeningsystem.entity.MeditationSeatEntity;
-        int medBg = isMeditating ? (hoverMed ? 0xFF1E8449 : 0xFF196F3D) : (hoverMed ? 0xFF2874A6 : 0xFF1B4F72);
-        int medBorder = isMeditating ? 0xFF58D68D : 0xFF5DADE2;
+        int medBg = isMeditating ? (hoverMed ? 0x601E8449 : 0x40196F3D) : (hoverMed ? 0x3500E5FF : 0x1800E5FF);
+        int medBorder = isMeditating ? 0xFF50FA7B : (hoverMed ? 0xFF00E5FF : 0x5500E5FF);
         graphics.fill(medX, medY, medX + medW, medY + medH, medBg);
-        drawBorder(graphics, medX, medY, medW, medH, medBorder);
-        Component medText = isMeditating ? Component.translatable("awakening_system.screen.cultivation.stop_meditation") : Component.translatable("awakening_system.screen.cultivation.start_meditation");
-        graphics.drawCenteredString(font, medText, medX + medW / 2, medY + 5, 0xFFFFFFFF);
+        graphics.renderOutline(medX, medY, medW, medH, medBorder);
+        Component medText = isMeditating
+                ? Component.literal("§a☯ ").append(Component.translatable("awakening_system.screen.cultivation.meditating"))
+                : Component.literal("§b☯ ").append(Component.translatable("awakening_system.screen.cultivation.start_meditation_short"));
+        graphics.drawCenteredString(font, ModernGuiHelper.manhwa(medText), medX + medW / 2, medY + 4, isMeditating ? 0xFF50FA7B : 0xFF70E8FF);
 
-        graphics.fill(left + 12, top + 26, left + panelW - 12, top + 27, 0xFF4A3B2C);
-
-        int cardTop = top + 28;
-        int cardH = 46;
-        graphics.fill(left + 12, cardTop, left + panelW - 12, cardTop + cardH, 0xD0121920);
-        drawBorder(graphics, left + 12, cardTop, panelW - 24, cardH, 0xFF3E4C59);
+        // Dantian & Realm Status Card
+        int cardTop = top + 31;
+        int cardW = PANEL_W - 24; // 496px
+        int cardH = 44;
+        graphics.fill(left + 12, cardTop, left + 12 + cardW, cardTop + cardH, 0x0A00E5FF);
+        graphics.renderOutline(left + 12, cardTop, cardW, cardH, 0x5500E5FF);
 
         int realm = data.dantianRealm();
         int subLevel = data.cultivationSubLevel();
-        Component realmComp = Component.translatable("awakening_system.screen.cultivation.realm_label", SystemEvents.getDantianRealmComponent(realm));
-        graphics.drawString(font, realmComp, left + 18, cardTop + 5, 0xFFFFFFFF);
+        Component realmComp = Component.translatable("awakening_system.screen.cultivation.realm_sublevel", SystemEvents.getDantianRealmComponent(realm), subLevel, 9);
+        graphics.drawString(font, ModernGuiHelper.manhwa(realmComp), left + 18, cardTop + 5, 0xFFFFFFFF, false);
 
         float qiDensity = SystemEvents.getZoneQiDensity(minecraft.player);
-        Component infoComp = Component.translatable("awakening_system.screen.cultivation.sublevel_density", subLevel, String.format(java.util.Locale.US, "%.1fx", qiDensity));
-        graphics.drawString(font, infoComp, left + 18, cardTop + 18, 0xFF95A5A6);
+        Component infoComp = Component.translatable("awakening_system.screen.cultivation.qi_density_info", String.format(Locale.US, "%.1fx", qiDensity), data.cultivationQi(), data.maxCultivationQi());
+        graphics.drawString(font, ModernGuiHelper.manhwa(infoComp), left + 18, cardTop + 17, 0xFFCCE3EC, false);
 
+        // Qi gauge
         int qi = data.cultivationQi();
         int maxQi = data.maxCultivationQi();
         float qiRatio = Math.max(0.0F, Math.min(1.0F, (float) qi / Math.max(1, maxQi)));
-        int barW = 130;
-        int barH = 5;
+        int barW = 200;
+        int barH = 7;
         int barX = left + 18;
-        int barY = cardTop + 33;
-        graphics.fill(barX, barY, barX + barW, barY + barH, 0xFF1C2833);
-        graphics.fill(barX, barY, barX + (int) (barW * qiRatio), barY + barH, 0xFF50E4FF);
-        Component qiComp = Component.literal("§b" + qi + "§7/§e" + maxQi + " Qi");
-        graphics.drawString(font, qiComp, barX + barW + 6, cardTop + 31, 0xFF50E4FF);
+        int barY = cardTop + 30;
+        graphics.fill(barX, barY, barX + barW, barY + barH, 0x2000E5FF);
+        graphics.renderOutline(barX, barY, barW, barH, 0x4000E5FF);
+        int fillW = (int) (barW * qiRatio);
+        if (fillW > 0) {
+            graphics.fillGradient(barX, barY, barX + fillW, barY + barH, 0xFF00E5FF, 0xFF70E8FF);
+        }
 
-        int phyW = 115;
+        // Action Buttons on Card (Physique & Breakthrough)
+        int phyW = 120;
         int phyH = 16;
-        int phyX = left + panelW - phyW - 14;
-        int phyY = cardTop + 5;
+        int phyX = left + PANEL_W - 12 - phyW - 8;
+        int phyY = cardTop + 4;
         boolean hoverPhy = mX >= phyX && mX <= phyX + phyW && mY >= phyY && mY <= phyY + phyH;
         String curPhys = data.murimPhysique();
         boolean isUnawakened = curPhys == null || curPhys.isEmpty();
@@ -517,27 +544,28 @@ public final class CultivationScreen extends Screen {
             String[] rollNames = {"pure_yang", "nine_yin", "innate_sword", "celestial_dragon", "heavenly_demon", "primordial_chaos"};
             String rolling = rollNames[(rollTicks / 4) % rollNames.length];
             phyBtnText = Component.literal("§e⚡ ").append(Component.translatable("awakening_system.physique." + rolling + ".short"));
-            phyBg = 0xFF7D3C98;
+            phyBg = 0x807D3C98;
             phyBorder = 0xFFFFD700;
         } else if (isUnawakened) {
-            phyBtnText = Component.translatable("awakening_system.screen.cultivation.awaken_btn");
-            phyBg = hoverPhy ? 0xFFD4AC0D : 0xFFB7950B;
-            phyBorder = hoverPhy ? 0xFFFFFFFF : 0xFFFFD700;
+            phyBtnText = Component.literal("§6⚡ ").append(Component.translatable("awakening_system.screen.cultivation.awaken_physique"));
+            phyBg = hoverPhy ? 0x80FFB800 : 0x50FFB800;
+            phyBorder = hoverPhy ? 0xFFFFF088 : 0xFFFFD700;
         } else {
             Component phyShort = Component.translatable("awakening_system.physique." + curPhys + ".short");
             phyBtnText = Component.literal("§d☯ ").append(phyShort);
-            phyBg = hoverPhy ? 0xFF5B2C6F : 0xFF4A235A;
-            phyBorder = hoverPhy ? 0xFFFFD700 : 0xFF8E44AD;
+            phyBg = hoverPhy ? 0x705B2C6F : 0x504A235A;
+            phyBorder = hoverPhy ? 0xFFFFD700 : 0xAA9B51E0;
         }
         graphics.fill(phyX, phyY, phyX + phyW, phyY + phyH, phyBg);
-        drawBorder(graphics, phyX, phyY, phyW, phyH, phyBorder);
-        graphics.drawCenteredString(font, phyBtnText, phyX + phyW / 2, phyY + 4, 0xFFFFFFFF);
+        graphics.renderOutline(phyX, phyY, phyW, phyH, phyBorder);
+        graphics.drawCenteredString(font, ModernGuiHelper.manhwa(phyBtnText), phyX + phyW / 2, phyY + 4, 0xFFFFFFFF);
 
-        int btnAdvW = 115;
-        int btnAdvH = 18;
-        int btnAdvX = left + panelW - btnAdvW - 14;
-        int btnAdvY = cardTop + 24;
-        boolean hoverAdv = mX >= btnAdvX && mX <= btnAdvX + btnAdvW && mY >= btnAdvY && mY <= btnAdvY + btnAdvH;
+        // Breakthrough button
+        int advW = 120;
+        int advH = 16;
+        int advX = phyX;
+        int advY = cardTop + 24;
+        boolean hoverAdv = mX >= advX && mX <= advX + advW && mY >= advY && mY <= advY + advH;
 
         Component advComp;
         int advColor;
@@ -545,59 +573,72 @@ public final class CultivationScreen extends Screen {
         int advTextColor;
         if (subLevel < 9) {
             boolean canAdvanceSub = qi >= maxQi;
-            advColor = canAdvanceSub ? (hoverAdv ? 0xFF2980B9 : 0xFF1F618D) : 0xFF34495E;
-            advBorderCol = canAdvanceSub ? (hoverAdv ? 0xFFFFFFFF : 0xFF50E4FF) : 0xFF4A5568;
-            advTextColor = canAdvanceSub ? 0xFFFFFFFF : 0xFFAAAAAA;
-            advComp = Component.translatable("awakening_system.screen.cultivation.breakthrough_sublevel", subLevel + 1);
+            advColor = canAdvanceSub ? (hoverAdv ? 0x80124860 : 0x50124860) : 0x1800E5FF;
+            advBorderCol = canAdvanceSub ? (hoverAdv ? 0xFFFFF088 : 0xFF00E5FF) : 0x3500E5FF;
+            advTextColor = canAdvanceSub ? 0xFF70E8FF : 0xFF8AAAB8;
+            advComp = Component.translatable("awakening_system.screen.cultivation.breakthrough_sublevel", (subLevel + 1));
         } else if (realm < 9) {
             int reqMeridians = Math.min(12, (realm + 1) * 2);
             int reqQi = (realm + 1) * 150;
             boolean canBreakthrough = data.getOpenedMeridiansCount() >= reqMeridians && qi >= reqQi;
-            advColor = canBreakthrough ? (hoverAdv ? 0xFFD4AC0D : 0xFFB7950B) : 0xFF4A4020;
-            advBorderCol = canBreakthrough ? (hoverAdv ? 0xFFFFFFFF : 0xFFFFD700) : 0xFF665520;
+            advColor = canBreakthrough ? (hoverAdv ? 0x90996800 : 0x70805500) : 0x20FFD700;
+            advBorderCol = canBreakthrough ? (hoverAdv ? 0xFFFFF088 : 0xFFFFD700) : 0x40665520;
             advTextColor = canBreakthrough ? 0xFFFFD700 : 0xFF888888;
-            advComp = Component.translatable("awakening_system.screen.cultivation.breakthrough");
+            advComp = Component.literal("⚡ ").append(Component.translatable("awakening_system.screen.cultivation.breakthrough"));
         } else {
-            advColor = 0xFF2C3E50;
-            advBorderCol = 0xFF4A5568;
+            advColor = 0x1500E5FF;
+            advBorderCol = 0x3500E5FF;
             advTextColor = 0xFF7F8C8D;
             advComp = Component.translatable("awakening_system.screen.cultivation.max_realm");
         }
-        graphics.fill(btnAdvX, btnAdvY, btnAdvX + btnAdvW, btnAdvY + btnAdvH, advColor);
-        drawBorder(graphics, btnAdvX, btnAdvY, btnAdvW, btnAdvH, advBorderCol);
-        graphics.drawCenteredString(font, advComp, btnAdvX + btnAdvW / 2, btnAdvY + 5, advTextColor);
+        graphics.fill(advX, advY, advX + advW, advY + advH, advColor);
+        graphics.renderOutline(advX, advY, advW, advH, advBorderCol);
+        graphics.drawCenteredString(font, ModernGuiHelper.manhwa(advComp), advX + advW / 2, advY + 4, advTextColor);
 
-        int tabY = top + 77;
-        int tab0W = 130;
-        int tab1W = 135;
+        // Navigation Tabs Bar
+        int tabY = top + 78;
+        int tab0W = 160;
+        int tab1W = 145;
 
-        boolean hoverTab0 = mX >= left + 12 && mX < left + 12 + tab0W && mY >= tabY && mY < tabY + 16;
-        boolean hoverTab1 = mX >= left + 148 && mX < left + 148 + tab1W && mY >= tabY && mY < tabY + 16;
+        boolean hoverTab0 = mX >= left + 12 && mX < left + 12 + tab0W && mY >= tabY && mY < tabY + 18;
+        boolean hoverTab1 = mX >= left + 12 + tab0W + 4 && mX < left + 12 + tab0W + 4 + tab1W && mY >= tabY && mY < tabY + 18;
 
-        graphics.fill(left + 12, tabY, left + 12 + tab0W, tabY + 16, activeTab == 0 ? 0xFF1F618D : (hoverTab0 ? 0xFF2C3E50 : 0xFF17202A));
-        drawBorder(graphics, left + 12, tabY, tab0W, 16, activeTab == 0 ? 0xFF50E4FF : 0xFF3E4C59);
-        graphics.drawCenteredString(font, Component.translatable("awakening_system.screen.cultivation.tab_meridians"), left + 12 + tab0W / 2, tabY + 4, activeTab == 0 ? 0xFFFFFFFF : 0xFFAAAAAA);
+        // Tab 0
+        int t0Bg = activeTab == 0 ? 0x4000E5FF : (hoverTab0 ? 0x2200E5FF : 0x1000E5FF);
+        int t0Border = activeTab == 0 ? 0xFF00E5FF : (hoverTab0 ? 0x8800E5FF : 0x3000E5FF);
+        graphics.fill(left + 12, tabY, left + 12 + tab0W, tabY + 18, t0Bg);
+        graphics.renderOutline(left + 12, tabY, tab0W, 18, t0Border);
+        if (activeTab == 0) graphics.fill(left + 13, tabY, left + 12 + tab0W - 1, tabY + 1, 0xFF70E8FF);
+        graphics.drawCenteredString(font, ModernGuiHelper.manhwa(Component.translatable("awakening_system.screen.cultivation.tab_meridians")), left + 12 + tab0W / 2, tabY + 5, activeTab == 0 ? 0xFF00E5FF : 0xFF8AAAB8);
 
-        graphics.fill(left + 148, tabY, left + 148 + tab1W, tabY + 16, activeTab == 1 ? 0xFFB7950B : (hoverTab1 ? 0xFF4A4020 : 0xFF17202A));
-        drawBorder(graphics, left + 148, tabY, tab1W, 16, activeTab == 1 ? 0xFFFFD700 : 0xFF3E4C59);
-        graphics.drawCenteredString(font, Component.translatable("awakening_system.screen.cultivation.tab_dao"), left + 148 + tab1W / 2, tabY + 4, activeTab == 1 ? 0xFFFFFFFF : 0xFFAAAAAA);
+        // Tab 1
+        int t1X = left + 12 + tab0W + 4;
+        int t1Bg = activeTab == 1 ? 0x4000E5FF : (hoverTab1 ? 0x2200E5FF : 0x1000E5FF);
+        int t1Border = activeTab == 1 ? 0xFF00E5FF : (hoverTab1 ? 0x8800E5FF : 0x3000E5FF);
+        graphics.fill(t1X, tabY, t1X + tab1W, tabY + 18, t1Bg);
+        graphics.renderOutline(t1X, tabY, tab1W, 18, t1Border);
+        if (activeTab == 1) graphics.fill(t1X + 1, tabY, t1X + tab1W - 1, tabY + 1, 0xFF70E8FF);
+        graphics.drawCenteredString(font, ModernGuiHelper.manhwa(Component.translatable("awakening_system.screen.cultivation.tab_dao")), t1X + tab1W / 2, tabY + 5, activeTab == 1 ? 0xFF00E5FF : 0xFF8AAAB8);
 
+        // Tribulation / Shield Hint on tab right
         if (data.isUnderTribulation()) {
             int strikesDone = data.getTribulationTotalStrikes() - data.getTribulationStrikesRemaining() + 1;
             Component tribComp = Component.translatable("awakening_system.screen.cultivation.tribulation_active", strikesDone, data.getTribulationTotalStrikes());
-            graphics.drawString(font, tribComp, left + 290, tabY + 4, 0xFFFF5555);
+            graphics.drawString(font, tribComp, left + 330, tabY + 5, 0xFFFF5555, false);
         } else if (data.tribulationShieldTicks() > 0) {
             int sec = data.tribulationShieldTicks() / 20;
             Component shieldComp = Component.translatable("awakening_system.screen.cultivation.dao_shield", sec);
-            graphics.drawString(font, shieldComp, left + 305, tabY + 4, 0xFF55FF88);
+            graphics.drawString(font, shieldComp, left + 345, tabY + 5, 0xFF50FA7B, false);
         }
 
+        // Content Rendering
         if (activeTab == 0) {
-            renderMeridianMannequinTab(graphics, left, top, panelW, panelH, data, mX, mY);
+            renderMeridianMannequinTab(graphics, left, top, data, mX, mY);
         } else {
-            renderDaoSkillsTab(graphics, left, top, panelW, panelH, data, realm, mX, mY);
+            renderDaoSkillsTab(graphics, left, top, data, realm, mX, mY);
         }
 
+        // Physique Tooltip
         if (hoverPhy && rollTicks <= 0) {
             List<Component> tooltip = new ArrayList<>();
             if (isUnawakened) {
@@ -629,152 +670,159 @@ public final class CultivationScreen extends Screen {
         super.render(graphics, mouseX, mouseY, partialTick);
     }
 
-    private void renderMeridianMannequinTab(GuiGraphics g, int left, int top, int panelW, int panelH, SystemData data, int mX, int mY) {
+    private void renderMeridianMannequinTab(GuiGraphics g, int left, int top, SystemData data, int mX, int mY) {
         int openedCount = data.getOpenedMeridiansCount();
 
-        // 1. LEFT COLUMN: Network Status & Quick Selector Pills
+        // 1. LEFT COLUMN: Circulation Network & Quick Selectors
         int colLeftX = left + 12;
-        int colLeftY = top + 96;
-        int colLeftW = 138;
-        int colLeftH = panelH - 104;
+        int colLeftY = top + 100;
+        int colLeftW = 140;
+        int colLeftH = 186;
 
-        g.fill(colLeftX, colLeftY, colLeftX + colLeftW, colLeftY + colLeftH, 0xC8101720);
-        drawBorder(g, colLeftX, colLeftY, colLeftW, colLeftH, 0xFF2A3E50);
+        g.fill(colLeftX, colLeftY, colLeftX + colLeftW, colLeftY + colLeftH, 0x0A00E5FF);
+        g.renderOutline(colLeftX, colLeftY, colLeftW, colLeftH, 0x4400E5FF);
 
-        // Header: Line 1 - Qi Circulation Title
-        Component circTitle = Component.literal("§6☯ ").append(Component.translatable("awakening_system.screen.cultivation.circulation_title"));
-        g.drawString(font, circTitle, colLeftX + 8, colLeftY + 6, 0xFFFFFFFF);
+        // Header Title
+        g.drawString(font, ModernGuiHelper.manhwa(Component.literal("✦ ").append(Component.translatable("awakening_system.screen.cultivation.circulation_title"))), colLeftX + 8, colLeftY + 6, 0xFF00E5FF, false);
+        g.drawString(font, Component.translatable("awakening_system.screen.cultivation.meridians_count_label", openedCount, 12), colLeftX + 8, colLeftY + 18, 0xFFCCE3EC, false);
 
-        // Header: Line 2 - Meridian count (0/12 Meridians)
-        Component countComp = Component.translatable("awakening_system.screen.cultivation.meridian_count", openedCount);
-        g.drawString(font, countComp, colLeftX + 8, colLeftY + 17, 0xFF50E4FF);
-
-        // Progress bar
+        // Mini gauge
         int barW = colLeftW - 16;
         int barH = 4;
         int barX = colLeftX + 8;
-        int barY = colLeftY + 28;
-        g.fill(barX, barY, barX + barW, barY + barH, 0xFF1C2833);
+        int barY = colLeftY + 29;
+        g.fill(barX, barY, barX + barW, barY + barH, 0x2000E5FF);
+        g.renderOutline(barX, barY, barW, barH, 0x3500E5FF);
         int fillW = (int) (barW * (openedCount / 12.0F));
-        int barCol = (openedCount == 12) ? 0xFFFFD700 : 0xFF50E4FF;
-        g.fill(barX, barY, barX + fillW, barY + barH, barCol);
+        int barCol = (openedCount == 12) ? 0xFFFFD700 : 0xFF00E5FF;
+        if (fillW > 0) g.fill(barX, barY, barX + fillW, barY + barH, barCol);
 
         // Active Circulation Badge
         int badgeY = colLeftY + 36;
         if (openedCount == 12) {
-            g.drawString(font, Component.literal("§6★ ").append(Component.translatable("awakening_system.screen.cultivation.circulation_grand")), colLeftX + 8, badgeY, 0xFFFFD700);
-            g.drawString(font, Component.translatable("awakening_system.screen.cultivation.circulation_grand_bonus"), colLeftX + 8, badgeY + 10, 0xFF50FA7B);
+            g.drawString(font, Component.literal("§6★ ").append(Component.translatable("awakening_system.screen.cultivation.circulation_grand")), colLeftX + 8, badgeY, 0xFFFFD700, false);
+            g.drawString(font, Component.literal("§a").append(Component.translatable("awakening_system.screen.cultivation.circulation_grand_bonus")), colLeftX + 8, badgeY + 9, 0xFF50FA7B, false);
         } else if (openedCount >= 6) {
-            g.drawString(font, Component.literal("§b✦ ").append(Component.translatable("awakening_system.screen.cultivation.circulation_minor")), colLeftX + 8, badgeY, 0xFF50E4FF);
-            g.drawString(font, Component.translatable("awakening_system.screen.cultivation.circulation_minor_bonus"), colLeftX + 8, badgeY + 10, 0xFF50FA7B);
+            g.drawString(font, Component.literal("§b✦ ").append(Component.translatable("awakening_system.screen.cultivation.circulation_minor")), colLeftX + 8, badgeY, 0xFF50E4FF, false);
+            g.drawString(font, Component.literal("§a").append(Component.translatable("awakening_system.screen.cultivation.circulation_minor_bonus")), colLeftX + 8, badgeY + 9, 0xFF50FA7B, false);
         } else {
-            g.drawString(font, Component.literal("§7○ ").append(Component.translatable("awakening_system.screen.cultivation.circulation_none")), colLeftX + 8, badgeY, 0xFF888888);
-            g.drawString(font, Component.translatable("awakening_system.screen.cultivation.circulation_none_desc"), colLeftX + 8, badgeY + 10, 0xFF666666);
+            g.drawString(font, Component.literal("§7○ ").append(Component.translatable("awakening_system.screen.cultivation.circulation_none")), colLeftX + 8, badgeY, 0xFF8AAAB8, false);
+            g.drawString(font, Component.literal("§8").append(Component.translatable("awakening_system.screen.cultivation.circulation_none_desc")), colLeftX + 8, badgeY + 9, 0xFF607080, false);
         }
 
         // Separator
-        g.fill(colLeftX + 8, colLeftY + 58, colLeftX + colLeftW - 8, colLeftY + 59, 0xFF243342);
+        g.fill(colLeftX + 8, colLeftY + 54, colLeftX + colLeftW - 8, colLeftY + 55, 0x3000E5FF);
 
         // 12 Quick Selector Pills (2 columns x 6 rows)
         int pillStartX = colLeftX + 6;
-        int pillStartY = colLeftY + 62;
+        int pillStartY = colLeftY + 57;
         for (int i = 0; i < 12; i++) {
             int col = i % 2;
             int row = i / 2;
             int pillX = pillStartX + col * 64;
-            int pillY = pillStartY + row * 15;
-            int pillW = 60;
-            int pillH = 13;
+            int pillY = pillStartY + row * 16;
+            int pillW = 62;
+            int pillH = 15;
 
             boolean isOpen = data.isMeridianOpen(i);
             boolean isSel = (selectedMeridian == i);
             boolean isHov = mX >= pillX && mX <= pillX + pillW && mY >= pillY && mY <= pillY + pillH;
 
-            int bg = isSel ? 0xFF245070 : (isHov ? 0xFF1C3246 : (isOpen ? 0xFF14241C : 0xFF131A22));
-            int border = isSel ? 0xFFFFD700 : (isHov ? 0xFF50E4FF : (isOpen ? 0xFF2ECC71 : 0xFF243342));
+            int bg = isSel ? 0x5000E5FF : (isHov ? 0x3000E5FF : (isOpen ? 0x2050FA7B : 0x1000E5FF));
+            int border = isSel ? 0xFF00E5FF : (isHov ? 0xAA00E5FF : (isOpen ? 0xFF50FA7B : 0x2800E5FF));
             g.fill(pillX, pillY, pillX + pillW, pillY + pillH, bg);
-            drawBorder(g, pillX, pillY, pillW, pillH, border);
+            g.renderOutline(pillX, pillY, pillW, pillH, border);
 
             String icon = isOpen ? "§a✓" : "§8" + (i + 1);
             Component shortName = MERIDIANS.get(i).shortName();
             Component pillComp = Component.literal(icon + " §f").append(shortName);
-            g.drawString(font, pillComp, pillX + 3, pillY + 3, isSel ? 0xFFFFD700 : 0xFFCCCCCC);
+            g.drawString(font, pillComp, pillX + 3, pillY + 4, isSel ? 0xFF00E5FF : 0xFFCCE3EC, false);
         }
 
-        // 2. CENTER AREA: Minecraft Character Spiritual Mannequin
-        int xc = left + panelW / 2;
-        int y0 = top + 102;
+        // 2. CENTER AREA: Spiritual Character Mannequin
+        int midX = colLeftX + colLeftW + 8; // left + 160
+        int midW = 180;
+        int midH = 186;
+        g.fill(midX, colLeftY, midX + midW, colLeftY + midH, 0x1400E5FF);
+        g.renderOutline(midX, colLeftY, midW, midH, 0x4400E5FF);
+
+        int xc = midX + midW / 2;
+        int y0 = top + 104;
         renderMinecraftMannequin(g, xc, y0, data, animTick, mX, mY);
 
         // 3. RIGHT COLUMN: Selected Meridian Inspection & Action Card
-        int colRightX = left + panelW - 150;
-        int colRightY = top + 96;
-        int colRightW = 138;
-        int colRightH = panelH - 104;
+        int colRightX = midX + midW + 8; // left + 348
+        int colRightY = colLeftY;
+        int colRightW = left + PANEL_W - 12 - colRightX; // 160px
+        int colRightH = 186;
 
-        g.fill(colRightX, colRightY, colRightX + colRightW, colRightY + colRightH, 0xC8101720);
-        drawBorder(g, colRightX, colRightY, colRightW, colRightH, 0xFF2A3E50);
+        g.fill(colRightX, colRightY, colRightX + colRightW, colRightY + colRightH, 0x1400E5FF);
+        g.renderOutline(colRightX, colRightY, colRightW, colRightH, 0x4400E5FF);
 
         MeridianInfo m = MERIDIANS.get(selectedMeridian);
         boolean isSelectedOpen = data.isMeridianOpen(selectedMeridian);
         int cost = (selectedMeridian + 1) * 35;
         boolean canAfford = data.cultivationQi() >= cost;
 
+        // Top accent line
+        g.fill(colRightX + 1, colRightY + 1, colRightX + colRightW - 1, colRightY + 3, isSelectedOpen ? 0xFF50FA7B : 0xFF00E5FF);
+
         // Title: [#X] Meridian Name
-        Component selTitle = Component.literal("§6[#" + (selectedMeridian + 1) + "] ").append(m.name());
-        g.drawString(font, selTitle, colRightX + 8, colRightY + 6, 0xFFFFFFFF);
+        Component selTitle = ModernGuiHelper.manhwa("§6[#" + (selectedMeridian + 1) + "] " + m.name().getString());
+        g.drawString(font, selTitle, colRightX + 8, colRightY + 6, 0xFFFFFFFF, false);
 
         // Organ channel
-        g.drawString(font, Component.literal("§b").append(m.organ()), colRightX + 8, colRightY + 18, 0xFF50E4FF);
+        g.drawString(font, Component.literal("§b").append(m.organ()), colRightX + 8, colRightY + 18, 0xFF50E4FF, false);
 
         // Status badge
-        Component statusComp = isSelectedOpen ? Component.translatable("awakening_system.screen.cultivation.meridian_status_open") : Component.translatable("awakening_system.screen.cultivation.meridian_status_locked");
-        int statusCol = isSelectedOpen ? 0xFF50FA7B : 0xFFFF5555;
-        g.drawString(font, statusComp, colRightX + 8, colRightY + 30, statusCol);
+        Component statusComp = isSelectedOpen
+                ? Component.translatable("awakening_system.screen.cultivation.unlocked_badge")
+                : Component.translatable("awakening_system.screen.cultivation.locked_badge");
+        g.drawString(font, statusComp, colRightX + 8, colRightY + 30, isSelectedOpen ? 0xFF50FA7B : 0xFFFF5555, false);
 
         // Separator
-        g.fill(colRightX + 8, colRightY + 42, colRightX + colRightW - 8, colRightY + 43, 0xFF243342);
+        g.fill(colRightX + 8, colRightY + 42, colRightX + colRightW - 8, colRightY + 43, 0x3000E5FF);
 
         // Permanent Effect label & description lines
-        g.drawString(font, Component.translatable("awakening_system.screen.cultivation.meridian_permanent_effect"), colRightX + 8, colRightY + 47, 0xFFFFD700);
+        g.drawString(font, Component.literal("✦ ").append(Component.translatable("awakening_system.screen.cultivation.meridian_permanent_effect")), colRightX + 8, colRightY + 47, 0xFFFFD700, false);
         List<FormattedCharSequence> effectLines = font.split(m.effect(), colRightW - 16);
         int effY = colRightY + 59;
         for (int i = 0; i < Math.min(3, effectLines.size()); i++) {
-            g.drawString(font, effectLines.get(i), colRightX + 8, effY + (i * 10), 0xFFAAAAAA);
+            g.drawString(font, effectLines.get(i), colRightX + 8, effY + (i * 10), 0xFFCCE3EC, false);
         }
 
         // Cost & Player Qi Info
-        int costY = colRightY + 98;
+        int costY = colRightY + 100;
         Component costComp = Component.translatable("awakening_system.screen.cultivation.meridian_cost", cost);
-        g.drawString(font, costComp, colRightX + 8, costY, isSelectedOpen ? 0xFF888888 : (canAfford ? 0xFF50FA7B : 0xFFFF7777));
+        g.drawString(font, costComp, colRightX + 8, costY, isSelectedOpen ? 0xFF8AAAB8 : (canAfford ? 0xFF50FA7B : 0xFFFF7777), false);
 
         Component yourQiComp = Component.translatable("awakening_system.screen.cultivation.meridian_your_qi", data.cultivationQi());
-        g.drawString(font, yourQiComp, colRightX + 8, costY + 11, 0xFF50E4FF);
+        g.drawString(font, yourQiComp, colRightX + 8, costY + 11, 0xFF50E4FF, false);
 
-        // Tactile Action Button
+        // Action Button
         int btnW = colRightW - 16;
-        int btnH = 20;
+        int btnH = 22;
         int btnX = colRightX + 8;
-        int btnY = colRightY + colRightH - btnH - 8;
+        int btnY = colRightY + colRightH - btnH - 6;
         boolean hoverBtn = mX >= btnX && mX <= btnX + btnW && mY >= btnY && mY <= btnY + btnH;
 
         if (isSelectedOpen) {
-            g.fill(btnX, btnY, btnX + btnW, btnY + btnH, 0xFF145A32);
-            drawBorder(g, btnX, btnY, btnW, btnH, 0xFF27AE60);
-            Component openedText = Component.literal("§a✓ ").append(Component.translatable("awakening_system.screen.cultivation.opened"));
-            g.drawCenteredString(font, openedText, btnX + btnW / 2, btnY + 6, 0xFFFFFFFF);
+            g.fill(btnX, btnY, btnX + btnW, btnY + btnH, 0x60103E22);
+            g.renderOutline(btnX, btnY, btnW, btnH, 0xFF50FA7B);
+            Component openedText = Component.literal("§a✔ ").append(Component.translatable("awakening_system.screen.cultivation.opened"));
+            g.drawCenteredString(font, ModernGuiHelper.manhwa(openedText), btnX + btnW / 2, btnY + 7, 0xFF50FA7B);
         } else if (canAfford) {
-            int bBg = hoverBtn ? 0xFF2980B9 : 0xFF1F618D;
-            int bBorder = hoverBtn ? 0xFFFFFFFF : 0xFF50E4FF;
+            int bBg = hoverBtn ? 0x991E5B7A : 0x7015435B;
+            int bBorder = hoverBtn ? 0xFFFFF088 : 0xFF00E5FF;
             g.fill(btnX, btnY, btnX + btnW, btnY + btnH, bBg);
-            drawBorder(g, btnX, btnY, btnW, btnH, bBorder);
+            g.renderOutline(btnX, btnY, btnW, btnH, bBorder);
             Component unlockText = Component.translatable("awakening_system.screen.cultivation.meridian_unlock_btn", cost);
-            g.drawCenteredString(font, unlockText, btnX + btnW / 2, btnY + 6, 0xFFFFFFFF);
+            g.drawCenteredString(font, ModernGuiHelper.manhwa(unlockText), btnX + btnW / 2, btnY + 7, hoverBtn ? 0xFFFFF088 : 0xFF00E5FF);
         } else {
-            g.fill(btnX, btnY, btnX + btnW, btnY + btnH, 0xFF2C3E50);
-            drawBorder(g, btnX, btnY, btnW, btnH, 0xFF3E4C59);
+            g.fill(btnX, btnY, btnX + btnW, btnY + btnH, 0x1400E5FF);
+            g.renderOutline(btnX, btnY, btnW, btnH, 0x3000E5FF);
             Component lockedText = Component.translatable("awakening_system.screen.cultivation.meridian_not_enough", cost);
-            g.drawCenteredString(font, lockedText, btnX + btnW / 2, btnY + 6, 0xFF888888);
+            g.drawCenteredString(font, ModernGuiHelper.manhwa(lockedText), btnX + btnW / 2, btnY + 7, 0xFF888888);
         }
     }
 
@@ -786,13 +834,14 @@ public final class CultivationScreen extends Screen {
         boolean isGrand = (openedCount == 12);
         boolean isMinor = (openedCount >= 6);
 
-        int bodyBorderCol = isGrand ? 0xFFFFD700 : (isMinor ? 0xFF50E4FF : 0xFF2A6F97);
-        int bodyFillCol = 0xD80A1118;
+        // Luminous ethereal silhouette styling
+        int bodyFillCol = 0x550B2538;
+        int bodyBorderCol = isGrand ? 0xCCFFD700 : (isMinor ? 0x9900E5FF : 0x7000E5FF);
 
-        // 1. Spiritual Cultivation Array / Background aura
-        drawSpiritualArray(g, xc, curY0 + 64, animTick, openedCount);
+        // 1. Spiritual Cultivation Array Background
+        drawSpiritualArray(g, xc, curY0 + 60, animTick, openedCount);
 
-        // 2. Active circuit pathways (rendered beneath the body outline and nodes)
+        // 2. Active circuit pathways
         for (CircuitLine line : CIRCUIT_LINES) {
             boolean flowA = line.nodeA() < 0 || data.isMeridianOpen(line.nodeA());
             boolean flowB = line.nodeB() < 0 || data.isMeridianOpen(line.nodeB());
@@ -800,58 +849,54 @@ public final class CultivationScreen extends Screen {
             drawEnergyLine(g, xc + line.relX1(), curY0 + line.relY1(), xc + line.relX2(), curY0 + line.relY2(), isFlowing, animTick);
         }
 
-        // 3. Minecraft Character Geometry (Proportioned Steve mannequin: Head 32x32, Torso 36x50, Arms 16x50, Legs 17x54)
-        // Head (32 x 32)
-        int headX = xc - 16;
+        // 3. Spiritual Player Mannequin
+        // Head (30 x 30)
+        int headX = xc - 15;
         int headY = curY0;
-        g.fill(headX, headY, headX + 32, headY + 32, bodyFillCol);
-        drawBorder(g, headX, headY, 32, 32, bodyBorderCol);
-        // Ethereal eyes
-        g.fill(headX + 6, headY + 18, headX + 12, headY + 20, 0x6050E4FF);
-        g.fill(headX + 20, headY + 18, headX + 26, headY + 20, 0x6050E4FF);
+        g.fill(headX, headY, headX + 30, headY + 30, bodyFillCol);
+        g.renderOutline(headX, headY, 30, 30, bodyBorderCol);
+        // Ethereal spiritual eyes
+        g.fill(headX + 5, headY + 16, headX + 11, headY + 18, 0xCC00E5FF);
+        g.fill(headX + 19, headY + 16, headX + 25, headY + 18, 0xCC00E5FF);
 
-        // Torso (36 x 50)
-        int torsoX = xc - 18;
-        int torsoY = curY0 + 34;
-        g.fill(torsoX, torsoY, torsoX + 36, torsoY + 50, bodyFillCol);
-        drawBorder(g, torsoX, torsoY, 36, 50, bodyBorderCol);
-        // Central meridian spinal line
-        g.fill(xc, torsoY + 2, xc + 1, torsoY + 48, 0x3050E4FF);
+        // Torso (34 x 48)
+        int torsoX = xc - 17;
+        int torsoY = curY0 + 32;
+        g.fill(torsoX, torsoY, torsoX + 34, torsoY + 48, bodyFillCol);
+        g.renderOutline(torsoX, torsoY, 34, 48, bodyBorderCol);
+        // Spiritual spinal cord
+        g.fill(xc, torsoY + 2, xc + 1, torsoY + 46, 0x6000E5FF);
 
-        // Left Arm (16 x 50)
-        int lArmX = xc - 36;
-        int lArmY = curY0 + 34;
-        g.fill(lArmX, lArmY, lArmX + 16, lArmY + 50, bodyFillCol);
-        drawBorder(g, lArmX, lArmY, 16, 50, bodyBorderCol);
-        g.fill(lArmX + 8, lArmY + 2, lArmX + 9, lArmY + 48, 0x2550E4FF);
+        // Left Arm (14 x 48)
+        int lArmX = xc - 33;
+        int lArmY = curY0 + 32;
+        g.fill(lArmX, lArmY, lArmX + 14, lArmY + 48, bodyFillCol);
+        g.renderOutline(lArmX, lArmY, 14, 48, bodyBorderCol);
 
-        // Right Arm (16 x 50)
-        int rArmX = xc + 20;
-        int rArmY = curY0 + 34;
-        g.fill(rArmX, rArmY, rArmX + 16, rArmY + 50, bodyFillCol);
-        drawBorder(g, rArmX, rArmY, 16, 50, bodyBorderCol);
-        g.fill(rArmX + 7, rArmY + 2, rArmX + 8, rArmY + 48, 0x2550E4FF);
+        // Right Arm (14 x 48)
+        int rArmX = xc + 19;
+        int rArmY = curY0 + 32;
+        g.fill(rArmX, rArmY, rArmX + 14, rArmY + 48, bodyFillCol);
+        g.renderOutline(rArmX, rArmY, 14, 48, bodyBorderCol);
 
-        // Left Leg (17 x 54)
-        int lLegX = xc - 18;
-        int lLegY = curY0 + 86;
-        g.fill(lLegX, lLegY, lLegX + 17, lLegY + 54, bodyFillCol);
-        drawBorder(g, lLegX, lLegY, 17, 54, bodyBorderCol);
-        g.fill(lLegX + 8, lLegY + 2, lLegX + 9, lLegY + 52, 0x2550E4FF);
+        // Left Leg (15 x 52)
+        int lLegX = xc - 16;
+        int lLegY = curY0 + 82;
+        g.fill(lLegX, lLegY, lLegX + 15, lLegY + 52, bodyFillCol);
+        g.renderOutline(lLegX, lLegY, 15, 52, bodyBorderCol);
 
-        // Right Leg (17 x 54)
+        // Right Leg (15 x 52)
         int rLegX = xc + 1;
-        int rLegY = curY0 + 86;
-        g.fill(rLegX, rLegY, rLegX + 17, rLegY + 54, bodyFillCol);
-        drawBorder(g, rLegX, rLegY, 17, 54, bodyBorderCol);
-        g.fill(rLegX + 8, rLegY + 2, rLegX + 9, rLegY + 52, 0x2550E4FF);
+        int rLegY = curY0 + 82;
+        g.fill(rLegX, rLegY, rLegX + 15, rLegY + 52, bodyFillCol);
+        g.renderOutline(rLegX, rLegY, 15, 52, bodyBorderCol);
 
-        // 4. Draw The Three Dantians (Shang: Head, Zhong: Solar Plexus, Xia: Lower Abdomen)
+        // 4. Three Dantians (Shang: Upper, Zhong: Middle, Xia: Lower)
         drawDantian(g, xc, curY0 + 14, 0, animTick); // Shang Dantian (Purple)
-        drawDantian(g, xc, curY0 + 58, 1, animTick); // Zhong Dantian (Red)
-        drawDantian(g, xc, curY0 + 80, 2, animTick); // Xia Dantian (Cyan)
+        drawDantian(g, xc, curY0 + 56, 1, animTick); // Zhong Dantian (Crimson)
+        drawDantian(g, xc, curY0 + 78, 2, animTick); // Xia Dantian (Cyan)
 
-        // 5. Draw Acupoint Nodes
+        // 5. Acupoint Nodes
         hoveredMeridian = -1;
         for (NodePos node : NODES) {
             int nx = xc + node.relX();
@@ -877,17 +922,17 @@ public final class CultivationScreen extends Screen {
     }
 
     private void drawSpiritualArray(GuiGraphics g, int xc, int yc, float animTick, int openedCount) {
-        int auraCol = (openedCount == 12) ? 0x20FFD700 : ((openedCount >= 6) ? 0x1850E4FF : 0x102A6F97);
-        int ringCol = (openedCount == 12) ? 0x50FFD700 : ((openedCount >= 6) ? 0x3850E4FF : 0x242A6F97);
+        int auraCol = (openedCount == 12) ? 0x25FFD700 : ((openedCount >= 6) ? 0x1E00E5FF : 0x1400E5FF);
+        int ringCol = (openedCount == 12) ? 0x60FFD700 : ((openedCount >= 6) ? 0x4000E5FF : 0x2800E5FF);
 
-        g.fillGradient(xc - 52, yc - 70, xc + 52, yc + 70, auraCol, 0x00051018);
+        g.fillGradient(xc - 50, yc - 65, xc + 50, yc + 65, auraCol, 0x00051018);
 
-        // Celestial compass axes
-        g.fill(xc - 48, yc, xc + 48, yc + 1, ringCol);
-        g.fill(xc, yc - 68, xc + 1, yc + 68, ringCol);
+        // Celestial axis lines
+        g.fill(xc - 45, yc, xc + 45, yc + 1, ringCol);
+        g.fill(xc, yc - 60, xc + 1, yc + 60, ringCol);
 
         // Outer geometric array frame
-        drawBorder(g, xc - 48, yc - 68, 96, 136, ringCol);
+        g.renderOutline(xc - 45, yc - 60, 90, 120, ringCol);
     }
 
     private void drawEnergyLine(GuiGraphics g, int x1, int y1, int x2, int y2, boolean isFlowing, float animTick) {
@@ -896,7 +941,7 @@ public final class CultivationScreen extends Screen {
         int steps = Math.max(Math.abs(dx), Math.abs(dy));
         if (steps == 0) return;
 
-        int baseCol = isFlowing ? 0x9050E4FF : 0x224A5A6A;
+        int baseCol = isFlowing ? 0xCC00E5FF : 0x2800E5FF;
         int sparkIdx = isFlowing ? ((int) (animTick * 1.5F) % steps) : -10;
 
         for (int i = 0; i <= steps; i += 2) {
@@ -905,7 +950,7 @@ public final class CultivationScreen extends Screen {
 
             int col = baseCol;
             if (isFlowing && Math.abs(i - sparkIdx) <= 2) {
-                col = 0xFFFFFFFF; // Traveling Qi pulse particle
+                col = 0xFFFFFFFF; // Traveling Qi spark
             }
             g.fill(px, py, px + 1, py + 1, col);
         }
@@ -919,51 +964,51 @@ public final class CultivationScreen extends Screen {
         if (isSelected || isHovered) {
             float pulse = (float) Math.sin(animTick * 0.25F) * 1.5F;
             int r = Math.round(5 + pulse);
-            g.fill(x - r, y - r, x + r + 1, y + r + 1, isSelected ? 0x60FFD700 : 0x5050E4FF);
-            drawBorder(g, x - r, y - r, (r * 2) + 1, (r * 2) + 1, isSelected ? 0xFFFFD700 : 0xFFFFFFFF);
+            g.fill(x - r, y - r, x + r + 1, y + r + 1, isSelected ? 0x7000E5FF : 0x4000E5FF);
+            g.renderOutline(x - r, y - r, (r * 2) + 1, (r * 2) + 1, isSelected ? 0xFFFFFFFF : 0xAA00E5FF);
         }
 
-        // Diamond / Gem acupoint node
+        // Diamond node
         int r = 3;
         int coreCol;
         int borderCol;
         if (isOpen) {
-            coreCol = 0xFF50E4FF;
-            borderCol = 0xFF00AAFF;
+            coreCol = 0xFF50FA7B;
+            borderCol = 0xFFFFFFFF;
         } else if (canAfford) {
-            coreCol = 0xFFE67E22;
-            borderCol = 0xFFF39C12;
+            coreCol = 0xFFFFD700;
+            borderCol = 0xFFFFF088;
         } else {
-            coreCol = 0xFF2C3E50;
-            borderCol = 0xFF1C2833;
+            coreCol = 0xFF2A3D4E;
+            borderCol = 0xFF456178;
         }
 
         g.fill(x - r, y - r, x + r + 1, y + r + 1, coreCol);
-        drawBorder(g, x - r, y - r, (r * 2) + 1, (r * 2) + 1, borderCol);
+        g.renderOutline(x - r, y - r, (r * 2) + 1, (r * 2) + 1, borderCol);
 
         if (isOpen) {
             g.fill(x, y, x + 1, y + 1, 0xFFFFFFFF);
         } else if (canAfford) {
-            g.fill(x, y, x + 1, y + 1, 0xFFFFD700);
+            g.fill(x, y, x + 1, y + 1, 0xFFFFFFFF);
         }
 
-        // Only draw the floating number badge when selected or hovered (avoids cluttering the body)
+        // Floating badge when selected or hovered
         if (isSelected || isHovered) {
             String badge = "#" + (id + 1);
-            int badgeW = font.width(badge) + 4;
+            int badgeW = font.width(badge) + 6;
             int badgeX = (x < xc) ? (x - badgeW - 3) : (x + 5);
             int badgeY = y - 5;
-            g.fill(badgeX, badgeY, badgeX + badgeW, badgeY + 10, 0xDC0B1218);
-            drawBorder(g, badgeX, badgeY, badgeW, 10, isSelected ? 0xFFFFD700 : 0xFF50E4FF);
-            g.drawString(font, badge, badgeX + 2, badgeY + 1, isSelected ? 0xFFFFD700 : 0xFF50E4FF, false);
+            g.fill(badgeX, badgeY, badgeX + badgeW, badgeY + 11, 0xD00A2030);
+            g.renderOutline(badgeX, badgeY, badgeW, 11, isSelected ? 0xFF00E5FF : 0x6600E5FF);
+            g.drawString(font, badge, badgeX + 3, badgeY + 2, isSelected ? 0xFF00E5FF : 0xFFCCE3EC, false);
         }
     }
 
     private void drawDantian(GuiGraphics g, int x, int y, int type, float animTick) {
         float pulse = (float) Math.sin(animTick * 0.15F + type) * 1.0F;
         int r = Math.round(3 + pulse);
-        int coreCol = (type == 0) ? 0xFFBB86FC : ((type == 1) ? 0xFFFF5555 : 0xFF50E4FF);
-        int haloCol = (type == 0) ? 0x40BB86FC : ((type == 1) ? 0x40FF5555 : 0x4050E4FF);
+        int coreCol = (type == 0) ? 0xFFBB86FC : ((type == 1) ? 0xFFFF4444 : 0xFF00E5FF);
+        int haloCol = (type == 0) ? 0x40BB86FC : ((type == 1) ? 0x40FF4444 : 0x4000E5FF);
 
         g.fill(x - r - 2, y - r - 2, x + r + 3, y + r + 3, haloCol);
         g.fill(x, y - r, x + 1, y + r + 1, coreCol);
@@ -973,82 +1018,79 @@ public final class CultivationScreen extends Screen {
 
     private void drawExpandingRing(GuiGraphics g, int cx, int cy, int radius, int color) {
         if (radius <= 0) return;
-        g.fill(cx - radius, cy - radius, cx + radius + 1, cy - radius + 1, color);
-        g.fill(cx - radius, cy + radius, cx + radius + 1, cy + radius + 1, color);
-        g.fill(cx - radius, cy - radius, cx - radius + 1, cy + radius + 1, color);
-        g.fill(cx + radius, cy - radius, cx + radius + 1, cy + radius + 1, color);
+        g.renderOutline(cx - radius, cy - radius, (radius * 2) + 1, (radius * 2) + 1, color);
     }
 
-    private void renderDaoSkillsTab(GuiGraphics graphics, int left, int top, int panelW, int panelH, SystemData data, int realm, int mX, int mY) {
-        int listY = top + 96;
+    private void renderDaoSkillsTab(GuiGraphics graphics, int left, int top, SystemData data, int realm, int mX, int mY) {
+        int listY = top + 92;
         int visibleCount = 3;
         for (int i = 0; i < visibleCount; i++) {
             int index = scrollOffset + i;
             if (index >= DAO_SKILLS.size()) break;
             DaoSkillInfo s = DAO_SKILLS.get(index);
-            int itemY = listY + i * 40;
+            int itemY = listY + i * 44;
             boolean isUnlocked = realm >= s.reqRealm();
             boolean isEquipped = data.selectedDaoSkill() == s.id();
 
-            int bgCol = isUnlocked ? (isEquipped ? 0x70302810 : 0x5015181C) : 0x40101014;
-            int borderCol = isUnlocked ? (isEquipped ? 0xFFFFD700 : 0xFF2980B9) : 0xFF444444;
-            graphics.fill(left + 10, itemY, left + panelW - 10, itemY + 37, bgCol);
-            graphics.fill(left + 10, itemY, left + 13, itemY + 37, borderCol);
+            int bgCol = isUnlocked ? (isEquipped ? 0x3500E5FF : 0x1400E5FF) : 0x0C00E5FF;
+            int borderCol = isUnlocked ? (isEquipped ? 0xFF00E5FF : 0x4400E5FF) : 0x2000E5FF;
+            graphics.fill(left + 12, itemY, left + PANEL_W - 12, itemY + 40, bgCol);
+            graphics.renderOutline(left + 12, itemY, PANEL_W - 24, 40, borderCol);
 
-            Component prefix = isEquipped ? Component.translatable("awakening_system.screen.cultivation.dao_equipped_prefix") : Component.literal(isUnlocked ? "§a[✓] " : "§c[🔒] ");
+            if (isEquipped) {
+                // Left cyan indicator bar
+                graphics.fill(left + 12, itemY, left + 15, itemY + 40, 0xFF00E5FF);
+            }
+
+            Component prefix = isEquipped
+                    ? Component.translatable("awakening_system.screen.cultivation.dao_equipped_prefix")
+                    : Component.literal(isUnlocked ? "§a[✓] " : "§c[🔒] ");
             Component titleComp = Component.empty().append(prefix).append(Component.literal("§f")).append(s.name()).append(Component.literal(" §8| §b" + s.qiCost() + " Qi §8| §e" + s.cooldownSec() + "s CD"));
-            graphics.drawString(font, titleComp, left + 18, itemY + 4, 0xFFFFFF);
+            graphics.drawString(font, ModernGuiHelper.manhwa(titleComp), left + 20, itemY + 5, 0xFFFFFFFF, false);
 
             Component descComp = isUnlocked ? s.desc() : Component.translatable("awakening_system.screen.cultivation.dao_req_realm", s.reqRealm(), SystemEvents.getDantianRealmComponent(s.reqRealm()));
             String descText = descComp.getString();
-            if (font.width(descText) > 270) {
-                descText = font.plainSubstrByWidth(descText, 260) + "...";
+            if (font.width(descText) > 280) {
+                descText = font.plainSubstrByWidth(descText, 270) + "...";
             }
-            graphics.drawString(font, descText, left + 18, itemY + 16, isUnlocked ? 0xFFAAAAAA : 0xFF884444);
+            graphics.drawString(font, descText, left + 20, itemY + 18, isUnlocked ? 0xFFCCE3EC : 0xFFFF7777, false);
 
             if (isUnlocked) {
                 int btnW1 = 70;
                 int btnH = 18;
-                int btnX1 = left + panelW - btnW1 - 65;
-                int btnY = itemY + 10;
+                int btnX1 = left + PANEL_W - btnW1 - 65;
+                int btnY = itemY + 11;
                 boolean hoverBtn1 = mX >= btnX1 && mX <= btnX1 + btnW1 && mY >= btnY && mY <= btnY + btnH;
-                int bCol1 = isEquipped ? 0xFF887010 : (hoverBtn1 ? 0xFFD4AC0D : 0xFF997A0A);
+                int bCol1 = isEquipped ? 0x80805500 : (hoverBtn1 ? 0x4000E5FF : 0x2000E5FF);
                 graphics.fill(btnX1, btnY, btnX1 + btnW1, btnY + btnH, bCol1);
-                drawBorder(graphics, btnX1, btnY, btnW1, btnH, isEquipped ? 0xFFFFD700 : (hoverBtn1 ? 0xFFFFFFFF : 0xFFE5C158));
+                graphics.renderOutline(btnX1, btnY, btnW1, btnH, isEquipped ? 0xFFFFD700 : (hoverBtn1 ? 0xFF00E5FF : 0x4000E5FF));
                 Component assignText = isEquipped ? Component.translatable("awakening_system.screen.cultivation.dao_assigned") : Component.translatable("awakening_system.screen.cultivation.dao_assign");
-                graphics.drawCenteredString(font, assignText, btnX1 + btnW1 / 2, btnY + 5, 0xFFFFFFFF);
+                graphics.drawCenteredString(font, ModernGuiHelper.manhwa(assignText), btnX1 + btnW1 / 2, btnY + 5, isEquipped ? 0xFFFFD700 : 0xFFCCE3EC);
 
                 int btnW2 = 50;
-                int btnX2 = left + panelW - btnW2 - 12;
+                int btnX2 = left + PANEL_W - btnW2 - 12;
                 boolean canAfford = data.cultivationQi() >= s.qiCost();
                 boolean hoverBtn2 = mX >= btnX2 && mX <= btnX2 + btnW2 && mY >= btnY && mY <= btnY + btnH;
-                int bCol2 = canAfford ? (hoverBtn2 ? 0xFF27AE60 : 0xFF1E8449) : 0xFF34495E;
+                int bCol2 = canAfford ? (hoverBtn2 ? 0x5000E5FF : 0x2500E5FF) : 0x1400E5FF;
                 graphics.fill(btnX2, btnY, btnX2 + btnW2, btnY + btnH, bCol2);
-                drawBorder(graphics, btnX2, btnY, btnW2, btnH, hoverBtn2 && canAfford ? 0xFFFFFFFF : 0xFF2ECC71);
-                graphics.drawCenteredString(font, Component.translatable("awakening_system.screen.cultivation.dao_use"), btnX2 + btnW2 / 2, btnY + 5, canAfford ? 0xFFFFFFFF : 0xFF888888);
+                graphics.renderOutline(btnX2, btnY, btnW2, btnH, canAfford ? (hoverBtn2 ? 0xFF00E5FF : 0x5000E5FF) : 0x2500E5FF);
+                graphics.drawCenteredString(font, ModernGuiHelper.manhwa(Component.translatable("awakening_system.screen.cultivation.dao_use")), btnX2 + btnW2 / 2, btnY + 5, canAfford ? 0xFF00E5FF : 0xFF888888);
             } else {
                 int tagW = 100;
-                int tagX = left + panelW - tagW - 14;
-                graphics.drawCenteredString(font, Component.translatable("awakening_system.screen.cultivation.dao_locked"), tagX + tagW / 2, itemY + 14, 0xFFFF7777);
+                int tagX = left + PANEL_W - tagW - 14;
+                graphics.drawCenteredString(font, Component.translatable("awakening_system.screen.cultivation.dao_locked").getString(), tagX + tagW / 2, itemY + 15, 0xFFFF7777);
             }
         }
 
-        int scrollBarH = 124;
+        int scrollBarH = 120;
         int scrollBarY = listY;
-        graphics.fill(left + panelW - 9, scrollBarY, left + panelW - 6, scrollBarY + scrollBarH, 0xFF1C2833);
+        graphics.fill(left + PANEL_W - 8, scrollBarY, left + PANEL_W - 6, scrollBarY + scrollBarH, 0x2500E5FF);
         int maxScroll = Math.max(1, DAO_SKILLS.size() - visibleCount);
         int thumbH = Math.max(20, scrollBarH / (DAO_SKILLS.size() - visibleCount + 1));
         int thumbY = scrollBarY + (int) ((float) scrollOffset / maxScroll * (scrollBarH - thumbH));
-        graphics.fill(left + panelW - 9, thumbY, left + panelW - 6, thumbY + thumbH, 0xFFFFD700);
+        graphics.fill(left + PANEL_W - 8, thumbY, left + PANEL_W - 6, thumbY + thumbH, 0xCC00E5FF);
 
-        graphics.fill(left + 10, top + panelH - 22, left + panelW - 10, top + panelH - 6, 0x8011161B);
-        graphics.drawCenteredString(font, Component.translatable("awakening_system.screen.cultivation.dao_help"), left + panelW / 2, top + panelH - 17, 0xFFFFE066);
-    }
-
-    private void drawBorder(GuiGraphics g, int x, int y, int w, int h, int color) {
-        g.fill(x, y, x + w, y + 1, color);
-        g.fill(x, y + h - 1, x + w, y + h, color);
-        g.fill(x, y + 1, x + 1, y + h - 1, color);
-        g.fill(x + w - 1, y + 1, x + w, y + h - 1, color);
+        // Guide hint at bottom
+        graphics.drawCenteredString(font, Component.translatable("awakening_system.screen.cultivation.dao_help").getString(), left + PANEL_W / 2, top + PANEL_H - 18, 0xFF8AAAB8);
     }
 }

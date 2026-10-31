@@ -138,12 +138,10 @@ This project is a passion-driven tribute inspired by the greatest works of moder
 *   👑 **Mod Creation & Development:**
     *   Designed, developed, and created by **LanderAlo**.
 *   🗺️ **Diorama Mod (Ray-Traced Minimap & World Map Engine):**
-    *   Original concept and engine created by **Dara Adedeji** (`SunkenInTime`). Original mod available on **[CurseForge (Diorama)](https://www.curseforge.com/minecraft/mc-mods/diorama)** and **[GitHub](https://github.com/SunkenInTime/minecraft-orthogonal-map)**. Licensed under the **[MIT License](LICENSE_DIORAMA.txt)**.
-*   🗿 **Community 3D Models & Assets:**
-    *   **Limbo Stalkers & Void Creatures (`@ziiwplay`):** Created by **`@ziiwplay`** under the **[CC BY 4.0 License](https://creativecommons.org/licenses/by/4.0/)**. Includes **Spider Head Monster**, **Tall Three Eyed Stalker**, and **One Eyed Stilt Walker**, roaming the purgatory mist of the Limbo Dimension.
-    *   **The Entity of Limbo (`@nori`):** Created by **`@nori`** under the **[CC BY 4.0 License](https://creativecommons.org/licenses/by/4.0/)**. The shadowy specter `THE_ENTITY` inhabiting the deep corridors of the Limbo Dimension.
-    *   **Skulk Golem Model (`@elma_taburlas`):** Created by **[@elma_taburlas](https://creativecommons.org/licenses/by/4.0/)** under the **[CC BY 4.0 License](https://creativecommons.org/licenses/by/4.0/)**. Used for the dormant statue and boss guardian in Dimension 10 (Deep Dark Floor).
-    *   *(See [CREDITS.md](CREDITS.md) for full licensing information, legal notices, and detailed asset breakdown).*
+    *   Original concept and engine created by **Dara Adedeji** (`SunkenInTime`). Licensed under the **[MIT License](https://github.com/Landa6543/Awakening-System/blob/main/LICENSE_DIORAMA.txt)**.
+*   🗿 **Community 3D Models & Blockbench Workshop:**
+    *   Entity models (Skulk Golem by `@elma_taburlas`, Limbo Stalkers by `@ziiwplay`, The Entity by `@nori`) and custom 3D weapon models (claymores, scythes, ranged weapons) are adapted from community creators under **[Creative Commons Attribution 4.0 (CC BY 4.0)](https://creativecommons.org/licenses/by/4.0/)**.
+    *   *(For the complete, comprehensive list of all model credits, artist handles, and licensing notices, please see our official repository **[CREDITS.md](https://github.com/Landa6543/Awakening-System/blob/main/CREDITS.md)**).*
 
 ***
 

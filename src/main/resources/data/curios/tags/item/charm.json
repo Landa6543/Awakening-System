@@ -1,0 +1,20 @@
+{
+    "replace":  false,
+    "values":  [
+                   "minecraft:totem_of_undying",
+                   "awakening_system:overworld_totem",
+                   "awakening_system:glacial_frost_totem",
+                   "awakening_system:murim_qi_totem",
+                   "awakening_system:teyvat_archon_totem",
+                   "awakening_system:abyssal_resonant_totem",
+                   "awakening_system:soulforge_totem",
+                   "awakening_system:astralite_totem",
+                   "awakening_system:mithril_totem",
+                   "awakening_system:adamantite_totem",
+                   "awakening_system:spirit_jade_totem",
+                   "awakening_system:astral_totem",
+                   "awakening_system:celestial_totem",
+                   "awakening_system:primordial_totem",
+                   "awakening_system:awakening_monarch_totem"
+               ]
+}

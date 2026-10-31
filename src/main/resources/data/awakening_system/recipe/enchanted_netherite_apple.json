@@ -1,0 +1,21 @@
+{
+  "type": "minecraft:crafting_shaped",
+  "category": "misc",
+  "pattern": [
+    "###",
+    "#X#",
+    "###"
+  ],
+  "key": {
+    "#": {
+      "item": "minecraft:netherite_block"
+    },
+    "X": {
+      "item": "awakening_system:netherite_apple"
+    }
+  },
+  "result": {
+    "count": 1,
+    "id": "awakening_system:enchanted_netherite_apple"
+  }
+}

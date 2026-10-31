@@ -89,7 +89,7 @@ public final class FishingStationScreen extends Screen {
 
     @Override
     public void renderBackground(GuiGraphics g, int mouseX, int mouseY, float partialTick) {
-        g.fill(0, 0, this.width, this.height, 0x55060D15);
+        // Clean - no dark murky screen-wide filter
     }
 
     @Override

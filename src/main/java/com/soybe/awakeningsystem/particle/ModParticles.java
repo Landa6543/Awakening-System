@@ -16,4 +16,10 @@ public final class ModParticles {
 
     public static final Supplier<SimpleParticleType> SPIRIT_FOXFIRE =
             PARTICLE_TYPES.register("spirit_foxfire", () -> new SimpleParticleType(false));
+
+    public static final Supplier<SimpleParticleType> MANA_AURA =
+            PARTICLE_TYPES.register("mana_aura", () -> new SimpleParticleType(false));
+
+    public static final Supplier<SimpleParticleType> SHADOW_AURA =
+            PARTICLE_TYPES.register("shadow_aura", () -> new SimpleParticleType(false));
 }

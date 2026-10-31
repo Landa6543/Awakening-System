@@ -80,7 +80,7 @@ public final class ConstellationChannelHandler {
                     18,
                     20,
                     "overworld",
-                    "En Combate Naval"
+                    "Naval Combat"
             ));
             entries.add(new SyncStarStreamPayload.IncarnationEntry(
                     UUID.fromString("00000000-0000-0000-0000-000000000002"),
@@ -90,7 +90,7 @@ public final class ConstellationChannelHandler {
                     20,
                     20,
                     "overworld",
-                    "Canalizando Hebras"
+                    "Channeling Threads"
             ));
             entries.add(new SyncStarStreamPayload.IncarnationEntry(
                     UUID.fromString("00000000-0000-0000-0000-000000000003"),
@@ -100,7 +100,7 @@ public final class ConstellationChannelHandler {
                     45,
                     50,
                     "the_nether",
-                    "Protegiendo Territorio"
+                    "Guarding Territory"
             ));
         }
 
@@ -242,7 +242,10 @@ public final class ConstellationChannelHandler {
 
     public static Component getCommentComponent(String key, String modifier, int coins) {
         String cleanKey = (key != null ? key.toLowerCase() : "satisfied");
-        return Component.translatable("awakening_system.constellation.comment_text." + cleanKey, modifier);
+        Object modArg = (modifier != null && modifier.startsWith("awakening_system."))
+                ? Component.translatable(modifier)
+                : (modifier != null ? modifier : "");
+        return Component.translatable("awakening_system.constellation.comment_text." + cleanKey, modArg);
     }
 
     public static String getCommentText(String key, String modifier, int coins) {

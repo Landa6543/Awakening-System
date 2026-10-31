@@ -5,6 +5,8 @@ import net.minecraft.network.chat.Component;
 import net.minecraft.world.item.CreativeModeTab;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.Items;
+import net.minecraft.world.item.alchemy.PotionContents;
+import com.soybe.awakeningsystem.potion.ModPotions;
 import net.neoforged.neoforge.registries.DeferredHolder;
 import net.neoforged.neoforge.registries.DeferredRegister;
 
@@ -208,6 +210,22 @@ public final class ModCreativeTabs {
                         for (var artHolder : SystemItems.EXPANDED_ARTIFACTS) {
                             accept(output, artHolder);
                         }
+
+                        // --- ÁRBOL DE TÓTEMS TRASCENDENTES POR MUNDO ---
+                        accept(output, SystemItems.OVERWORLD_TOTEM);
+                        accept(output, SystemItems.GLACIAL_FROST_TOTEM);
+                        accept(output, SystemItems.MURIM_QI_TOTEM);
+                        accept(output, SystemItems.TEYVAT_ARCHON_TOTEM);
+                        accept(output, SystemItems.ABYSSAL_RESONANT_TOTEM);
+                        accept(output, SystemItems.SOULFORGE_TOTEM);
+                        accept(output, SystemItems.ASTRALITE_TOTEM);
+                        accept(output, SystemItems.MITHRIL_TOTEM);
+                        accept(output, SystemItems.ADAMANTITE_TOTEM);
+                        accept(output, SystemItems.SPIRIT_JADE_TOTEM);
+                        accept(output, SystemItems.ASTRAL_TOTEM);
+                        accept(output, SystemItems.CELESTIAL_TOTEM);
+                        accept(output, SystemItems.PRIMORDIAL_TOTEM);
+                        accept(output, SystemItems.AWAKENING_MONARCH_TOTEM);
                     })
                     .build()
     );
@@ -256,8 +274,6 @@ public final class ModCreativeTabs {
                         accept(output, SystemItems.CONDENSED_RESIN);
                         accept(output, SystemItems.TRANSIENT_RESIN);
                         accept(output, SystemItems.VISIONS_MENU);
-                        accept(output, SystemItems.OLIVE_ELIXIR);
-                        accept(output, SystemItems.VIGOR_POTION);
                         accept(output, SystemItems.FABLE_SCROLL);
                         accept(output, SystemItems.CONSTELLATION_NECTAR);
                         accept(output, SystemItems.FABLE_STAR_FRAGMENT);
@@ -451,6 +467,12 @@ public final class ModCreativeTabs {
                         accept(output, SystemItems.ABYSSAL_GROWTH);
                         accept(output, SystemItems.ABYSSAL_TENDRILS);
                         accept(output, SystemItems.ABYSSAL_RESONANT_CRYSTAL);
+                        accept(output, SystemItems.ABYSSAL_RESONANT_SHARD);
+                        accept(output, SystemItems.BUDDING_ABYSSAL_AMETHYST);
+                        accept(output, SystemItems.SMALL_ABYSSAL_BUD);
+                        accept(output, SystemItems.MEDIUM_ABYSSAL_BUD);
+                        accept(output, SystemItems.LARGE_ABYSSAL_BUD);
+                        accept(output, SystemItems.ABYSSAL_RESONANT_CLUSTER);
                         accept(output, SystemItems.ABYSSAL_ORE);
                         accept(output, SystemItems.DEEPSLATE_ABYSSAL_ORE);
                         accept(output, SystemItems.ABYSSAL_STONE_ABYSSAL_ORE);
@@ -518,6 +540,9 @@ public final class ModCreativeTabs {
                         accept(output, SystemItems.DEEPSLATE_PRIMOGEM_ORE);
                         accept(output, SystemItems.WHITE_IRON_ORE);
                         accept(output, SystemItems.WHITE_IRON_CHUNK);
+                        accept(output, SystemItems.REFINED_WHITE_IRON_INGOT);
+                        accept(output, SystemItems.WHITE_IRON_NUGGET);
+                        accept(output, SystemItems.REFINED_WHITE_IRON_BLOCK);
                         accept(output, SystemItems.MORA_BLOCK);
 
                         accept(output, SystemItems.AGNIDUS_AGATE_ORE);
@@ -604,13 +629,6 @@ public final class ModCreativeTabs {
                         accept(output, SystemItems.PYRO_MONUMENT);
                         accept(output, SystemItems.CRYO_MONUMENT);
                         accept(output, SystemItems.BLANK_MONUMENT);
-
-                        accept(output, SystemItems.MITHRIL_UPGRADE_SMITHING_TEMPLATE);
-                        accept(output, SystemItems.ADAMANTITE_UPGRADE_SMITHING_TEMPLATE);
-                        accept(output, SystemItems.SPIRIT_JADE_UPGRADE_SMITHING_TEMPLATE);
-                        accept(output, SystemItems.ASTRAL_UPGRADE_SMITHING_TEMPLATE);
-                        accept(output, SystemItems.CELESTIAL_UPGRADE_SMITHING_TEMPLATE);
-                        accept(output, SystemItems.PRIMORDIAL_UPGRADE_SMITHING_TEMPLATE);
 
                         accept(output, SystemItems.UPGRADE_ABYSSAL_TO_SOUL_ALLOY);
                         accept(output, SystemItems.UPGRADE_SOUL_ALLOY_TO_ASTRALITE);
@@ -788,6 +806,8 @@ public final class ModCreativeTabs {
                         accept(output, SystemItems.MANA_CRYSTAL_SHARD_A);
                         accept(output, SystemItems.MANA_CRYSTAL_CLUSTER_S_ITEM);
                         accept(output, SystemItems.MANA_CRYSTAL_SHARD_S);
+                        accept(output, SystemItems.MANA_CRYSTAL_CLUSTER_EX_ITEM);
+                        accept(output, SystemItems.MANA_CRYSTAL_SHARD_EX);
                         accept(output, SystemItems.JACK_PUMPKIN);
                         accept(output, SystemItems.LIMBO_VICTORIAN_LAMPPOST);
                         accept(output, SystemItems.VOID_BLACK_PATH);
@@ -904,6 +924,10 @@ public final class ModCreativeTabs {
                         accept(output, SystemItems.HEAVENLY_ENLIGHTENMENT_PILL);
                         accept(output, SystemItems.FOUNDATION_BUILDING_PILL);
                         accept(output, SystemItems.PRIMORDIAL_REBIRTH_PILL);
+                        accept(output, SystemItems.MANA_POTION);
+                        accept(output, SystemItems.VIGOR_POTION);
+                        accept(output, SystemItems.OLIVE_ELIXIR);
+                        acceptAbyssalPotions(output);
                         accept(output, SystemItems.NINE_TRIBULATIONS_SCROLL);
                         accept(output, SystemItems.WU_XING_MANUAL);
                         accept(output, SystemItems.MURIM_ASCENSION_TALISMAN);
@@ -914,33 +938,6 @@ public final class ModCreativeTabs {
                         accept(output, SystemItems.OUTLANDER_POUCH);
                         accept(output, SystemItems.EMERGENCY_POUCH);
                         accept(output, SystemItems.OMNISCIENCE_POUCH);
-
-                        accept(output, SystemItems.THOUSAND_YEAR_GINSENG);
-                        accept(output, SystemItems.WILD_GINSENG);
-                        accept(output, SystemItems.SNOW_LOTUS);
-                        accept(output, SystemItems.MANDRAKE_ROOT);
-                        accept(output, SystemItems.YGGDRASIL_HEART_SEED);
-
-                        accept(output, SystemItems.MANA_BEEF);
-                        accept(output, SystemItems.COOKED_MANA_BEEF);
-                        accept(output, SystemItems.MANA_PORKCHOP);
-                        accept(output, SystemItems.COOKED_MANA_PORKCHOP);
-                        accept(output, SystemItems.MANA_MUTTON);
-                        accept(output, SystemItems.COOKED_MANA_MUTTON);
-                        accept(output, SystemItems.MANA_CHICKEN_MEAT);
-                        accept(output, SystemItems.COOKED_MANA_CHICKEN_MEAT);
-                        accept(output, SystemItems.MANA_MILK_BUCKET);
-                        accept(output, SystemItems.MANA_POTION);
-
-                        accept(output, SystemItems.ADEPTUS_TEMPTATION);
-                        accept(output, SystemItems.SWEET_MADAME);
-                        accept(output, SystemItems.ALMOND_TOFU);
-                        accept(output, SystemItems.SUNSETTIA);
-                        accept(output, SystemItems.GRILLED_TIGER_FISH);
-                        accept(output, SystemItems.CALLA_LILY_SEAFOOD_SOUP);
-                        accept(output, SystemItems.FRIED_RADISH_BALLS);
-                        accept(output, SystemItems.OMINOUS_DISH);
-                        accept(output, SystemItems.RADISH);
 
                         accept(output, SystemItems.MEDAKA);
                         accept(output, SystemItems.AIZEN_MEDAKA);
@@ -957,12 +954,6 @@ public final class ModCreativeTabs {
                         accept(output, SystemItems.FAKE_FLY_BAIT);
                         accept(output, SystemItems.GLOWGRASS_BAIT);
                         accept(output, SystemItems.SUGARDEW_BAIT);
-
-                        accept(output, SystemItems.SPIRIT_PLUM_FRUIT);
-                        accept(output, SystemItems.CELESTIAL_PINE_NUT);
-                        accept(output, SystemItems.IMMORTALITY_PEACH);
-                        accept(output, SystemItems.ELDORIA_FRUIT);
-                        accept(output, SystemItems.MANA_FRUIT);
 
                         accept(output, SystemItems.GOBLIN_EAR);
                         accept(output, SystemItems.BEASTMAN_FUR);
@@ -1107,6 +1098,79 @@ public final class ModCreativeTabs {
                     .build()
     );
 
+    public static final DeferredHolder<CreativeModeTab, CreativeModeTab> FOOD_TAB = CREATIVE_MODE_TABS.register("awakening_food", () ->
+            CreativeModeTab.builder()
+                    .title(Component.translatable("itemGroup.awakening_system.food"))
+                    .icon(() -> SystemItems.PRIMORDIAL_APPLE.isBound() ? new ItemStack(SystemItems.PRIMORDIAL_APPLE.get()) : new ItemStack(Items.GOLDEN_APPLE))
+                    .displayItems((parameters, output) -> {
+                        // Jerarquía de Manzanas Minerales y Sagradas
+                        output.accept(Items.APPLE);
+                        accept(output, SystemItems.COPPER_APPLE);
+                        accept(output, SystemItems.ENCHANTED_COPPER_APPLE);
+                        accept(output, SystemItems.IRON_APPLE);
+                        accept(output, SystemItems.ENCHANTED_IRON_APPLE);
+                        output.accept(Items.GOLDEN_APPLE);
+                        output.accept(Items.ENCHANTED_GOLDEN_APPLE);
+                        accept(output, SystemItems.DIAMOND_APPLE);
+                        accept(output, SystemItems.ENCHANTED_DIAMOND_APPLE);
+                        accept(output, SystemItems.ABYSSAL_APPLE);
+                        accept(output, SystemItems.ENCHANTED_ABYSSAL_APPLE);
+                        accept(output, SystemItems.NETHERITE_APPLE);
+                        accept(output, SystemItems.ENCHANTED_NETHERITE_APPLE);
+                        accept(output, SystemItems.SOUL_ALLOY_APPLE);
+                        accept(output, SystemItems.ENCHANTED_SOUL_ALLOY_APPLE);
+                        accept(output, SystemItems.ASTRALITE_APPLE);
+                        accept(output, SystemItems.ENCHANTED_ASTRALITE_APPLE);
+                        accept(output, SystemItems.MITHRIL_APPLE);
+                        accept(output, SystemItems.ENCHANTED_MITHRIL_APPLE);
+                        accept(output, SystemItems.ADAMANTITE_APPLE);
+                        accept(output, SystemItems.ENCHANTED_ADAMANTITE_APPLE);
+                        accept(output, SystemItems.SPIRIT_JADE_APPLE);
+                        accept(output, SystemItems.ENCHANTED_SPIRIT_JADE_APPLE);
+                        accept(output, SystemItems.ASTRAL_APPLE);
+                        accept(output, SystemItems.ENCHANTED_ASTRAL_APPLE);
+                        accept(output, SystemItems.CELESTIAL_APPLE);
+                        accept(output, SystemItems.ENCHANTED_CELESTIAL_APPLE);
+                        accept(output, SystemItems.PRIMORDIAL_APPLE);
+                        accept(output, SystemItems.ENCHANTED_PRIMORDIAL_APPLE);
+
+                        // Frutas Sagradas y Medicina Milenaria
+                        accept(output, SystemItems.THOUSAND_YEAR_GINSENG);
+                        accept(output, SystemItems.WILD_GINSENG);
+                        accept(output, SystemItems.SNOW_LOTUS);
+                        accept(output, SystemItems.MANDRAKE_ROOT);
+                        accept(output, SystemItems.YGGDRASIL_HEART_SEED);
+                        accept(output, SystemItems.SPIRIT_PLUM_FRUIT);
+                        accept(output, SystemItems.CELESTIAL_PINE_NUT);
+                        accept(output, SystemItems.IMMORTALITY_PEACH);
+                        accept(output, SystemItems.ELDORIA_FRUIT);
+                        accept(output, SystemItems.MANA_FRUIT);
+
+                        // Carnes de Maná y Lácteos
+                        accept(output, SystemItems.MANA_BEEF);
+                        accept(output, SystemItems.COOKED_MANA_BEEF);
+                        accept(output, SystemItems.MANA_PORKCHOP);
+                        accept(output, SystemItems.COOKED_MANA_PORKCHOP);
+                        accept(output, SystemItems.MANA_MUTTON);
+                        accept(output, SystemItems.COOKED_MANA_MUTTON);
+                        accept(output, SystemItems.MANA_CHICKEN_MEAT);
+                        accept(output, SystemItems.COOKED_MANA_CHICKEN_MEAT);
+                        accept(output, SystemItems.MANA_MILK_BUCKET);
+
+                        // Platos y Gastronomía de Teyvat
+                        accept(output, SystemItems.ADEPTUS_TEMPTATION);
+                        accept(output, SystemItems.SWEET_MADAME);
+                        accept(output, SystemItems.ALMOND_TOFU);
+                        accept(output, SystemItems.SUNSETTIA);
+                        accept(output, SystemItems.GRILLED_TIGER_FISH);
+                        accept(output, SystemItems.CALLA_LILY_SEAFOOD_SOUP);
+                        accept(output, SystemItems.FRIED_RADISH_BALLS);
+                        accept(output, SystemItems.OMINOUS_DISH);
+                        accept(output, SystemItems.RADISH);
+                    })
+                    .build()
+    );
+
     public static final DeferredHolder<CreativeModeTab, CreativeModeTab> PLUSHIES_TAB = CREATIVE_MODE_TABS.register("awakening_plushies", () ->
             CreativeModeTab.builder()
                     .title(Component.translatable("itemGroup.awakening_system.plushies"))
@@ -1123,6 +1187,30 @@ public final class ModCreativeTabs {
                     })
                     .build()
     );
+
+    private static void acceptAbyssalPotions(CreativeModeTab.Output output) {
+        if (ModPotions.ABYSSAL_ECHO.isBound()) {
+            output.accept(PotionContents.createItemStack(Items.POTION, ModPotions.ABYSSAL_ECHO));
+            output.accept(PotionContents.createItemStack(Items.SPLASH_POTION, ModPotions.ABYSSAL_ECHO));
+            output.accept(PotionContents.createItemStack(Items.LINGERING_POTION, ModPotions.ABYSSAL_ECHO));
+            output.accept(PotionContents.createItemStack(Items.POTION, ModPotions.LONG_ABYSSAL_ECHO));
+            output.accept(PotionContents.createItemStack(Items.POTION, ModPotions.STRONG_ABYSSAL_ECHO));
+        }
+        if (ModPotions.GRAVITATIONAL_DENSITY.isBound()) {
+            output.accept(PotionContents.createItemStack(Items.POTION, ModPotions.GRAVITATIONAL_DENSITY));
+            output.accept(PotionContents.createItemStack(Items.SPLASH_POTION, ModPotions.GRAVITATIONAL_DENSITY));
+            output.accept(PotionContents.createItemStack(Items.LINGERING_POTION, ModPotions.GRAVITATIONAL_DENSITY));
+            output.accept(PotionContents.createItemStack(Items.POTION, ModPotions.LONG_GRAVITATIONAL_DENSITY));
+            output.accept(PotionContents.createItemStack(Items.POTION, ModPotions.STRONG_GRAVITATIONAL_DENSITY));
+        }
+        if (ModPotions.ABYSSAL_RESONANCE.isBound()) {
+            output.accept(PotionContents.createItemStack(Items.POTION, ModPotions.ABYSSAL_RESONANCE));
+            output.accept(PotionContents.createItemStack(Items.SPLASH_POTION, ModPotions.ABYSSAL_RESONANCE));
+            output.accept(PotionContents.createItemStack(Items.LINGERING_POTION, ModPotions.ABYSSAL_RESONANCE));
+            output.accept(PotionContents.createItemStack(Items.POTION, ModPotions.LONG_ABYSSAL_RESONANCE));
+            output.accept(PotionContents.createItemStack(Items.POTION, ModPotions.STRONG_ABYSSAL_RESONANCE));
+        }
+    }
 
     private static void accept(CreativeModeTab.Output output, DeferredHolder<net.minecraft.world.item.Item, ? extends net.minecraft.world.item.Item> holder) {
         if (holder != null && holder.isBound()) {

@@ -46,17 +46,17 @@ public final class ShopDefinitions {
             new Entry("box_epic", "minecraft:ender_chest", 6500, 1, "awakening_system.shop.item.box_epic", "boxes", "", 1, "", 55),
             new Entry("box_legendary", "minecraft:shulker_box", 20000, 1, "awakening_system.shop.item.box_legendary", "boxes", "", 1, "", 75),
             new Entry("plushies_lootbox", "awakening_system:plushieslootbox", 5000, 1, "awakening_system.shop.item.plushieslootbox", "boxes"),
-            new Entry("roulette_token", "awakening_system:roulette_token", 3500, 1, "item.awakening_system.roulette_token", "boxes", 1, 20),
-            new Entry("dungeon_key", "awakening_system:dungeon_key", 450, 1, "awakening_system.shop.item.dungeon_key", "boxes"),
-            new Entry("overworld_dungeon_key", "awakening_system:overworld_dungeon_key", 500, 1, "item.awakening_system.overworld_dungeon_key", "boxes"),
-            new Entry("nether_flame_key", "awakening_system:nether_flame_key", 750, 1, "item.awakening_system.nether_flame_key", "boxes", "", 1, "minecraft:the_nether"),
-            new Entry("end_void_key", "awakening_system:end_void_key", 1200, 1, "item.awakening_system.end_void_key", "boxes", "", 2, "minecraft:the_end"),
-            new Entry("teyvat_shrine_key", "awakening_system:teyvat_shrine_key", 450, 1, "item.awakening_system.teyvat_shrine_key", "boxes", "", 3),
-            new Entry("isekai_mana_key", "awakening_system:isekai_mana_key", 400, 1, "item.awakening_system.isekai_mana_key", "boxes", "", 2),
-            new Entry("murim_dao_key", "awakening_system:murim_dao_key", 450, 1, "item.awakening_system.murim_dao_key", "boxes", "", 3),
-            new Entry("ranker_tower_ticket", "awakening_system:ranker_tower_ticket", 1500, 1, "item.awakening_system.ranker_tower_ticket", "boxes"),
-            new Entry("ranker_return_scroll", "awakening_system:ranker_return_scroll", 800, 1, "item.awakening_system.ranker_return_scroll", "boxes"),
-            new Entry("roulette_altar", "awakening_system:roulette_altar", 30000, 1, "block.awakening_system.roulette_altar", "equipment", 1, 25),
+            new Entry("roulette_token", "awakening_system:roulette_token", 10000, 1, "item.awakening_system.roulette_token", "boxes", 1, 20),
+            new Entry("dungeon_key", "awakening_system:dungeon_key", 4500, 1, "awakening_system.shop.item.dungeon_key", "boxes"),
+            new Entry("overworld_dungeon_key", "awakening_system:overworld_dungeon_key", 5500, 1, "item.awakening_system.overworld_dungeon_key", "boxes"),
+            new Entry("nether_flame_key", "awakening_system:nether_flame_key", 8500, 1, "item.awakening_system.nether_flame_key", "boxes", "", 1, "minecraft:the_nether"),
+            new Entry("end_void_key", "awakening_system:end_void_key", 15000, 1, "item.awakening_system.end_void_key", "boxes", "", 2, "minecraft:the_end"),
+            new Entry("teyvat_shrine_key", "awakening_system:teyvat_shrine_key", 4500, 1, "item.awakening_system.teyvat_shrine_key", "boxes", "", 4, "awakening_system:teyvat_world"),
+            new Entry("isekai_mana_key", "awakening_system:isekai_mana_key", 4000, 1, "item.awakening_system.isekai_mana_key", "boxes", "", 2, "awakening_system:isekai"),
+            new Entry("murim_dao_key", "awakening_system:murim_dao_key", 4500, 1, "item.awakening_system.murim_dao_key", "boxes", "", 3, "awakening_system:murim"),
+            new Entry("ranker_tower_ticket", "awakening_system:ranker_tower_ticket", 5000, 1, "item.awakening_system.ranker_tower_ticket", "boxes"),
+            new Entry("ranker_return_scroll", "awakening_system:ranker_return_scroll", 2500, 1, "item.awakening_system.ranker_return_scroll", "boxes"),
+            new Entry("roulette_altar", "awakening_system:roulette_altar", 85000, 1, "block.awakening_system.roulette_altar", "equipment", 1, 25),
             new Entry("death_king_clock", "awakening_system:death_king_clock", 2800, 1, "awakening_system.shop.item.death_king_clock", "equipment", 2, 30),
 
             // --- HORNOS POR DIMENSION (Mundo 1 a Mundo 4) ---
@@ -83,10 +83,10 @@ public final class ShopDefinitions {
 
             // --- BOLSAS DIMENSIONALES & RELIQUIAS ---
             new Entry("wanderer_pouch", "awakening_system:wanderer_pouch", 15000, 1, "item.awakening_system.wanderer_pouch", "relics", 1, 20),
-            new Entry("adventurer_pouch", "awakening_system:adventurer_pouch", 45000, 1, "item.awakening_system.adventurer_pouch", "relics", 2, 40),
-            new Entry("outlander_pouch", "awakening_system:outlander_pouch", 120000, 1, "item.awakening_system.outlander_pouch", "relics", 3, 70),
-            new Entry("emergency_pouch", "awakening_system:emergency_pouch", 350000, 1, "item.awakening_system.emergency_pouch", "relics", 4, 100),
-            new Entry("omniscience_pouch", "awakening_system:omniscience_pouch", 250000, 1, "item.awakening_system.omniscience_pouch", "relics", 3, 90),
+            new Entry("adventurer_pouch", "awakening_system:adventurer_pouch", 45000, 1, "item.awakening_system.adventurer_pouch", "relics", 2, "awakening_system:isekai", 40),
+            new Entry("outlander_pouch", "awakening_system:outlander_pouch", 120000, 1, "item.awakening_system.outlander_pouch", "relics", 3, "awakening_system:murim", 70),
+            new Entry("emergency_pouch", "awakening_system:emergency_pouch", 350000, 1, "item.awakening_system.emergency_pouch", "relics", 4, "awakening_system:teyvat_world", 100),
+            new Entry("omniscience_pouch", "awakening_system:omniscience_pouch", 250000, 1, "item.awakening_system.omniscience_pouch", "relics", 4, "awakening_system:teyvat_world", 90),
 
             new Entry("gift_card_5", "awakening_system:gift_card_5", 25000, 1, "item.awakening_system.gift_card_5", "boxes", 4),
             new Entry("gift_card_15", "awakening_system:gift_card_15", 75000, 1, "item.awakening_system.gift_card_15", "boxes", 4),
@@ -94,11 +94,11 @@ public final class ShopDefinitions {
             new Entry("gift_card_50", "awakening_system:gift_card_50", 250000, 1, "item.awakening_system.gift_card_50", "boxes", 4),
             new Entry("gift_card_100", "awakening_system:gift_card_100", 500000, 1, "item.awakening_system.gift_card_100", "boxes", 4),
 
-            new Entry("crystal_core", "awakening_system:crystal_core", 800, 1, "item.awakening_system.crystal_core", "relics", "", 3, "awakening_system:teyvat"),
-            new Entry("original_resin", "awakening_system:original_resin", 1800, 1, "awakening_system.shop.item.original_resin", "consumables", "", 3, "awakening_system:teyvat"),
-            new Entry("condensed_resin", "awakening_system:condensed_resin", 4500, 1, "awakening_system.shop.item.condensed_resin", "consumables", "", 3, "awakening_system:teyvat"),
-            new Entry("geosigil", "awakening_system:geosigil", 150, 1, "item.awakening_system.geosigil", "relics", 4),
-            new Entry("mora_pouch", "awakening_system:mora_pouch", 15000, 1, "item.awakening_system.mora_pouch", "boxes", "", 3, "awakening_system:teyvat"),
+            new Entry("crystal_core", "awakening_system:crystal_core", 800, 1, "item.awakening_system.crystal_core", "relics", "", 4, "awakening_system:teyvat_world"),
+            new Entry("original_resin", "awakening_system:original_resin", 1800, 1, "awakening_system.shop.item.original_resin", "consumables", "", 4, "awakening_system:teyvat_world"),
+            new Entry("condensed_resin", "awakening_system:condensed_resin", 4500, 1, "awakening_system.shop.item.condensed_resin", "consumables", "", 4, "awakening_system:teyvat_world"),
+            new Entry("geosigil", "awakening_system:geosigil", 150, 1, "item.awakening_system.geosigil", "relics", "", 4, "awakening_system:teyvat_world"),
+            new Entry("mora_pouch", "awakening_system:mora_pouch", 15000, 1, "item.awakening_system.mora_pouch", "boxes", "", 4, "awakening_system:teyvat_world"),
             new Entry("hunter_bestiary", "awakening_system:hunter_bestiary", 150, 1, "item.awakening_system.hunter_bestiary", "utility"),
 
             // --- ARMAS & PROGRESIÓN (CAPADAS POR NIVEL) ---
@@ -273,26 +273,40 @@ public final class ShopDefinitions {
             new Entry("cobblestone", "minecraft:cobblestone", 15, 32, "block.minecraft.cobblestone", "materials"),
             new Entry("stone", "minecraft:stone", 20, 32, "block.minecraft.stone", "materials"),
             new Entry("deepslate", "minecraft:deepslate", 25, 32, "block.minecraft.deepslate", "materials"),
-            new Entry("coal", "minecraft:coal", 40, 16, "item.minecraft.coal", "materials"),
-            new Entry("copper_ingot", "minecraft:copper_ingot", 50, 8, "item.minecraft.copper_ingot", "materials"),
-            new Entry("iron_ingot", "minecraft:iron_ingot", 80, 8, "item.minecraft.iron_ingot", "materials"),
-            new Entry("gold_ingot", "minecraft:gold_ingot", 120, 8, "item.minecraft.gold_ingot", "materials"),
-            new Entry("redstone", "minecraft:redstone", 60, 16, "item.minecraft.redstone", "materials"),
-            new Entry("lapis_lazuli", "minecraft:lapis_lazuli", 60, 16, "item.minecraft.lapis_lazuli", "materials"),
-            new Entry("diamond", "minecraft:diamond", 500, 2, "item.minecraft.diamond", "materials"),
-            new Entry("emerald", "minecraft:emerald", 200, 4, "item.minecraft.emerald", "materials"),
-            new Entry("amethyst_shard", "minecraft:amethyst_shard", 80, 8, "item.minecraft.amethyst_shard", "materials"),
-            new Entry("nether_quartz", "minecraft:quartz", 90, 16, "item.minecraft.quartz", "materials"),
-            new Entry("obsidian", "minecraft:obsidian", 160, 8, "block.minecraft.obsidian", "materials"),
             new Entry("crying_obsidian", "minecraft:crying_obsidian", 200, 4, "block.minecraft.crying_obsidian", "materials"),
-            new Entry("string", "minecraft:string", 30, 16, "item.minecraft.string", "materials"),
-            new Entry("leather", "minecraft:leather", 40, 8, "item.minecraft.leather", "materials"),
-            new Entry("blaze_rod", "minecraft:blaze_rod", 150, 4, "item.minecraft.blaze_rod", "materials"),
             new Entry("glowstone_dust", "minecraft:glowstone_dust", 80, 16, "item.minecraft.glowstone_dust", "materials"),
 
             // --- CONSUMIBLES & RELIQUIAS VANILLA ---
-            new Entry("golden_apple", "minecraft:golden_apple", 400, 1, "awakening_system.shop.item.golden_apple", "consumables"),
-            new Entry("enchanted_golden_apple", "minecraft:enchanted_golden_apple", 12000, 1, "awakening_system.shop.item.enchanted_golden_apple", "rare", 1, 40),
+            new Entry("golden_apple", "minecraft:golden_apple", 4000, 1, "awakening_system.shop.item.golden_apple", "consumables", 1, 20),
+            new Entry("enchanted_golden_apple", "minecraft:enchanted_golden_apple", 12000, 1, "awakening_system.shop.item.enchanted_golden_apple", "rare", 1, 20),
+
+            // --- JERARQUÍA DE MANZANAS MINERALES SAGRADAS ---
+            new Entry("copper_apple", "awakening_system:copper_apple", 1200, 1, "item.awakening_system.copper_apple", "consumables", 1, 5),
+            new Entry("enchanted_copper_apple", "awakening_system:enchanted_copper_apple", 3500, 1, "item.awakening_system.enchanted_copper_apple", "rare", 1, 5),
+            new Entry("iron_apple", "awakening_system:iron_apple", 2500, 1, "item.awakening_system.iron_apple", "consumables", 1, 12),
+            new Entry("enchanted_iron_apple", "awakening_system:enchanted_iron_apple", 6500, 1, "item.awakening_system.enchanted_iron_apple", "rare", 1, 12),
+            new Entry("diamond_apple", "awakening_system:diamond_apple", 8500, 1, "item.awakening_system.diamond_apple", "consumables", 1, 32),
+            new Entry("enchanted_diamond_apple", "awakening_system:enchanted_diamond_apple", 25000, 1, "item.awakening_system.enchanted_diamond_apple", "rare", 1, 32),
+            new Entry("abyssal_apple", "awakening_system:abyssal_apple", 16000, 1, "item.awakening_system.abyssal_apple", "consumables", 1, 45),
+            new Entry("enchanted_abyssal_apple", "awakening_system:enchanted_abyssal_apple", 48000, 1, "item.awakening_system.enchanted_abyssal_apple", "rare", 1, 45),
+            new Entry("netherite_apple", "awakening_system:netherite_apple", 28000, 1, "item.awakening_system.netherite_apple", "consumables", 1, 55),
+            new Entry("enchanted_netherite_apple", "awakening_system:enchanted_netherite_apple", 80000, 1, "item.awakening_system.enchanted_netherite_apple", "rare", 1, 55),
+            new Entry("soul_alloy_apple", "awakening_system:soul_alloy_apple", 42000, 1, "item.awakening_system.soul_alloy_apple", "consumables", 1, 68),
+            new Entry("enchanted_soul_alloy_apple", "awakening_system:enchanted_soul_alloy_apple", 125000, 1, "item.awakening_system.enchanted_soul_alloy_apple", "rare", 1, 68),
+            new Entry("astralite_apple", "awakening_system:astralite_apple", 65000, 1, "item.awakening_system.astralite_apple", "consumables", 1, 80),
+            new Entry("enchanted_astralite_apple", "awakening_system:enchanted_astralite_apple", 185000, 1, "item.awakening_system.enchanted_astralite_apple", "rare", 1, 80),
+            new Entry("mithril_apple", "awakening_system:mithril_apple", 95000, 1, "item.awakening_system.mithril_apple", "consumables", 1, 92),
+            new Entry("enchanted_mithril_apple", "awakening_system:enchanted_mithril_apple", 270000, 1, "item.awakening_system.enchanted_mithril_apple", "rare", 1, 92),
+            new Entry("adamantite_apple", "awakening_system:adamantite_apple", 140000, 1, "item.awakening_system.adamantite_apple", "consumables", 1, 105),
+            new Entry("enchanted_adamantite_apple", "awakening_system:enchanted_adamantite_apple", 390000, 1, "item.awakening_system.enchanted_adamantite_apple", "rare", 1, 105),
+            new Entry("spirit_jade_apple", "awakening_system:spirit_jade_apple", 200000, 1, "item.awakening_system.spirit_jade_apple", "consumables", 1, 118),
+            new Entry("enchanted_spirit_jade_apple", "awakening_system:enchanted_spirit_jade_apple", 580000, 1, "item.awakening_system.enchanted_spirit_jade_apple", "rare", 1, 118),
+            new Entry("astral_apple", "awakening_system:astral_apple", 280000, 1, "item.awakening_system.astral_apple", "consumables", 1, 128),
+            new Entry("enchanted_astral_apple", "awakening_system:enchanted_astral_apple", 780000, 1, "item.awakening_system.enchanted_astral_apple", "rare", 1, 128),
+            new Entry("celestial_apple", "awakening_system:celestial_apple", 380000, 1, "item.awakening_system.celestial_apple", "consumables", 1, 140),
+            new Entry("enchanted_celestial_apple", "awakening_system:enchanted_celestial_apple", 950000, 1, "item.awakening_system.enchanted_celestial_apple", "rare", 1, 140),
+            new Entry("primordial_apple", "awakening_system:primordial_apple", 550000, 1, "item.awakening_system.primordial_apple", "consumables", 1, 155),
+            new Entry("enchanted_primordial_apple", "awakening_system:enchanted_primordial_apple", 1600000, 1, "item.awakening_system.enchanted_primordial_apple", "rare", 1, 155),
             new Entry("totem_of_undying", "minecraft:totem_of_undying", 16000, 1, "awakening_system.shop.item.totem", "rare", 1, 45),
             new Entry("nether_star", "minecraft:nether_star", 9500, 1, "awakening_system.shop.item.nether_star", "rare", "", 1, "minecraft:the_nether", 60),
             new Entry("elytra", "minecraft:elytra", 45000, 1, "awakening_system.shop.item.elytra", "rare", "", 2, "minecraft:the_end", 70),
@@ -422,15 +436,6 @@ public final class ShopDefinitions {
             new Entry("emerald", "minecraft:emerald", 60, 2, "awakening_system.shop.item.emerald", "materials"),
             new Entry("amethyst_shard", "minecraft:amethyst_shard", 45, 4, "awakening_system.shop.item.amethyst_shard", "materials"),
 
-            // --- PLANTILLAS DE SMITHING POR DIMENSION ---
-            new Entry("abyssal_smithing_template", "awakening_system:abyssal_upgrade_smithing_template", 45000, 1, "item.awakening_system.abyssal_upgrade_smithing_template", "materials", 1, "minecraft:the_nether", 100),
-            new Entry("mithril_smithing_template", "awakening_system:mithril_upgrade_smithing_template", 75000, 1, "item.awakening_system.mithril_upgrade_smithing_template", "materials", 2, "awakening_system:isekai", 135),
-            new Entry("adamantite_smithing_template", "awakening_system:adamantite_upgrade_smithing_template", 110000, 1, "item.awakening_system.adamantite_upgrade_smithing_template", "materials", 2, "awakening_system:isekai", 175),
-            new Entry("spirit_jade_smithing_template", "awakening_system:spirit_jade_upgrade_smithing_template", 160000, 1, "item.awakening_system.spirit_jade_upgrade_smithing_template", "materials", 3, "awakening_system:murim", 215),
-            new Entry("astral_smithing_template", "awakening_system:astral_upgrade_smithing_template", 240000, 1, "item.awakening_system.astral_upgrade_smithing_template", "materials", 3, "awakening_system:murim", 255),
-            new Entry("celestial_smithing_template", "awakening_system:celestial_upgrade_smithing_template", 380000, 1, "item.awakening_system.celestial_upgrade_smithing_template", "materials", 4, "awakening_system:teyvat_world", 295),
-            new Entry("primordial_smithing_template", "awakening_system:primordial_upgrade_smithing_template", 650000, 1, "item.awakening_system.primordial_upgrade_smithing_template", "materials", 4, "awakening_system:teyvat_world", 340),
-
             // --- MODS EXTERNOS COMPATIBLES (PRECIOS REBALANCEADOS) ---
             new Entry("cataclysm_ignitium_ingot", "cataclysm:ignitium_ingot", 16000, 2, "awakening_system.shop.item.cataclysm_ignitium", "materials", "cataclysm", 1, "minecraft:the_nether", 85),
             new Entry("aether_ambrosium", "aether:ambrosium_shard", 150, 4, "awakening_system.shop.item.aether_ambrosium", "materials", "aether", 1, "aether:the_aether", 20),
@@ -458,24 +463,48 @@ public final class ShopDefinitions {
             new Entry("apoth_mythic_material", "apotheosis:mythic_material", 9500, 1, "item.apotheosis.mythic_material", "materials", "apotheosis", 4, 75),
             new Entry("apoth_godforged_pearl", "apotheosis:godforged_pearl", 25000, 1, "item.apotheosis.godforged_pearl", "rare", "apotheosis", 4, 80),
 
-            // --- PAM'S HARVESTCRAFT 2 - FOOD EXTENDED ---
+            // --- APOTHEOSIS / APOTHIC ENCHANTING (ESTANTERÍAS Y COMPONENTES DE MESA) ---
+            new Entry("apoth_hellshelf", "apotheosis:hellshelf", 18000, 1, "block.apotheosis.hellshelf", "utility", "apotheosis", 2, 40),
+            new Entry("apoth_infused_hellshelf", "apotheosis:infused_hellshelf", 32000, 1, "block.apotheosis.infused_hellshelf", "utility", "apotheosis", 3, 55),
+            new Entry("apoth_glowing_hellshelf", "apotheosis:glowing_hellshelf", 42000, 1, "block.apotheosis.glowing_hellshelf", "utility", "apotheosis", 3, 60),
+            new Entry("apoth_blazing_hellshelf", "apotheosis:blazing_hellshelf", 58000, 1, "block.apotheosis.blazing_hellshelf", "rare", "apotheosis", 3, 65),
+            new Entry("apoth_seashelf", "apotheosis:seashelf", 22000, 1, "block.apotheosis.seashelf", "utility", "apotheosis", 2, 45),
+            new Entry("apoth_infused_seashelf", "apotheosis:infused_seashelf", 38000, 1, "block.apotheosis.infused_seashelf", "utility", "apotheosis", 3, 55),
+            new Entry("apoth_crystal_seashelf", "apotheosis:crystal_seashelf", 48000, 1, "block.apotheosis.crystal_seashelf", "utility", "apotheosis", 3, 65),
+            new Entry("apoth_heart_seashelf", "apotheosis:heart_seashelf", 65000, 1, "block.apotheosis.heart_seashelf", "rare", "apotheosis", 4, 70),
+            new Entry("apoth_endshelf", "apotheosis:endshelf", 50000, 1, "block.apotheosis.endshelf", "utility", "apotheosis", 3, 75),
+            new Entry("apoth_pearl_endshelf", "apotheosis:pearl_endshelf", 72000, 1, "block.apotheosis.pearl_endshelf", "rare", "apotheosis", 4, 80),
+            new Entry("apoth_draconic_endshelf", "apotheosis:draconic_endshelf", 110000, 1, "block.apotheosis.draconic_endshelf", "rare", "apotheosis", 4, 85),
+            new Entry("apoth_echoing_sculkshelf", "apotheosis:echoing_sculkshelf", 85000, 1, "block.apotheosis.echoing_sculkshelf", "rare", "apotheosis", 4, 80),
+            new Entry("apoth_soul_touched_sculkshelf", "apotheosis:soul_touched_sculkshelf", 135000, 1, "block.apotheosis.soul_touched_sculkshelf", "rare", "apotheosis", 4, 90),
+            new Entry("apoth_sightshelf", "apotheosis:sightshelf", 35000, 1, "block.apotheosis.sightshelf", "utility", "apotheosis", 3, 50),
+            new Entry("apoth_sightshelf_t2", "apotheosis:sightshelf_t2", 70000, 1, "block.apotheosis.sightshelf_t2", "rare", "apotheosis", 4, 75),
+            new Entry("apoth_rectifier", "apotheosis:rectifier", 40000, 1, "block.apotheosis.rectifier", "utility", "apotheosis", 3, 50),
+            new Entry("apoth_rectifier_t2", "apotheosis:rectifier_t2", 75000, 1, "block.apotheosis.rectifier_t2", "rare", "apotheosis", 4, 70),
+            new Entry("apoth_rectifier_t3", "apotheosis:rectifier_t3", 140000, 1, "block.apotheosis.rectifier_t3", "rare", "apotheosis", 4, 90),
+            new Entry("apoth_library", "apotheosis:library", 95000, 1, "block.apotheosis.library", "rare", "apotheosis", 4, 65),
+            new Entry("apoth_filtering_shelf", "apotheosis:filtering_shelf", 45000, 1, "block.apotheosis.filtering_shelf", "utility", "apotheosis", 3, 60),
+            new Entry("apoth_infused_breath", "apotheosis:infused_breath", 28000, 1, "item.apotheosis.infused_breath", "materials", "apotheosis", 3, 70),
+            new Entry("apoth_warden_tendril", "apotheosis:warden_tendril", 65000, 1, "item.apotheosis.warden_tendril", "materials", "apotheosis", 4, 85),
+
+            // --- PAM'S HARVESTCRAFT 2 - FOOD EXTENDED & CORE ---
             new Entry("phc_pancakes", "pamhc2foodextended:pancakesitem", 35, 4, "item.pamhc2foodextended.pancakesitem", "consumables", "pamhc2foodextended", 1, 1),
             new Entry("phc_waffles", "pamhc2foodextended:wafflesitem", 35, 4, "item.pamhc2foodextended.wafflesitem", "consumables", "pamhc2foodextended", 1, 1),
             new Entry("phc_cinnamon_toast", "pamhc2foodextended:cinnamontoastitem", 25, 4, "item.pamhc2foodextended.cinnamontoastitem", "consumables", "pamhc2foodextended", 1, 1),
-            new Entry("phc_hot_chocolate", "pamhc2foodextended:hotchocolateitem", 30, 2, "item.pamhc2foodextended.hotchocolateitem", "consumables", "pamhc2foodextended", 1, 1),
+            new Entry("phc_hot_chocolate", "pamhc2foodcore:hotchocolateitem", 30, 2, "item.pamhc2foodcore.hotchocolateitem", "consumables", "pamhc2foodcore", 1, 1),
             new Entry("phc_cupcake", "pamhc2foodextended:chocolatecupcakeitem", 35, 4, "item.pamhc2foodextended.chocolatecupcakeitem", "consumables", "pamhc2foodextended", 1, 1),
             new Entry("phc_brownie", "pamhc2foodextended:brownieitem", 30, 4, "item.pamhc2foodextended.brownieitem", "consumables", "pamhc2foodextended", 1, 1),
-            new Entry("phc_cutting_board", "pamhc2foodcore:cuttingboarditem", 30, 1, "item.pamhc2foodcore.cuttingboarditem", "utility", "pamhc2foodextended", 1, 1),
+            new Entry("phc_cutting_board", "pamhc2foodcore:cuttingboarditem", 30, 1, "item.pamhc2foodcore.cuttingboarditem", "utility", "pamhc2foodcore", 1, 1),
             new Entry("phc_spaghetti", "pamhc2foodextended:spagettiandmeatballsitem", 55, 2, "item.pamhc2foodextended.spagettiandmeatballsitem", "consumables", "pamhc2foodextended", 1, 5),
-            new Entry("phc_cheesecake", "pamhc2foodextended:cheesecakeitem", 45, 2, "item.pamhc2foodextended.cheesecakeitem", "consumables", "pamhc2foodextended", 1, 5),
+            new Entry("phc_cheesecake", "pamhc2foodcore:cheesecakeitem", 45, 2, "item.pamhc2foodcore.cheesecakeitem", "consumables", "pamhc2foodcore", 1, 5),
             new Entry("phc_strawberry_smoothie", "pamhc2foodextended:strawberrysmoothieitem", 35, 2, "item.pamhc2foodextended.strawberrysmoothieitem", "consumables", "pamhc2foodextended", 1, 5),
-            new Entry("phc_pot", "pamhc2foodcore:potitem", 65, 1, "item.pamhc2foodcore.potitem", "utility", "pamhc2foodextended", 1, 5),
-            new Entry("phc_skillet", "pamhc2foodcore:skilletitem", 55, 1, "item.pamhc2foodcore.skilletitem", "utility", "pamhc2foodextended", 1, 5),
-            new Entry("phc_bakeware", "pamhc2foodcore:bakewareitem", 50, 1, "item.pamhc2foodcore.bakewareitem", "utility", "pamhc2foodextended", 1, 5),
+            new Entry("phc_pot", "pamhc2foodcore:potitem", 65, 1, "item.pamhc2foodcore.potitem", "utility", "pamhc2foodcore", 1, 5),
+            new Entry("phc_skillet", "pamhc2foodcore:skilletitem", 55, 1, "item.pamhc2foodcore.skilletitem", "utility", "pamhc2foodcore", 1, 5),
+            new Entry("phc_bakeware", "pamhc2foodcore:bakewareitem", 50, 1, "item.pamhc2foodcore.bakewareitem", "utility", "pamhc2foodcore", 1, 5),
             new Entry("phc_deluxe_cheeseburger", "pamhc2foodextended:deluxecheeseburgeritem", 65, 2, "item.pamhc2foodextended.deluxecheeseburgeritem", "consumables", "pamhc2foodextended", 1, 10),
             new Entry("phc_shepherds_pie", "pamhc2foodextended:shepherdspieitem", 60, 2, "item.pamhc2foodextended.shepherdspieitem", "consumables", "pamhc2foodextended", 1, 10),
-            new Entry("phc_epic_bacon", "pamhc2foodextended:epicbaconitem", 70, 2, "item.pamhc2foodextended.epicbaconitem", "consumables", "pamhc2foodextended", 1, 15),
-            new Entry("phc_meat_feast", "pamhc2foodextended:meatfeastitem", 80, 1, "item.pamhc2foodextended.meatfeastitem", "consumables", "pamhc2foodextended", 1, 15),
+            new Entry("phc_epic_bacon", "pamhc2foodcore:epicbaconitem", 70, 2, "item.pamhc2foodcore.epicbaconitem", "consumables", "pamhc2foodcore", 1, 15),
+            new Entry("phc_meat_feast", "pamhc2foodextended:meatfeastpizzaitem", 80, 1, "item.pamhc2foodextended.meatfeastpizzaitem", "consumables", "pamhc2foodextended", 1, 15),
             new Entry("phc_energy_drink", "pamhc2foodextended:energydrinkitem", 50, 2, "item.pamhc2foodextended.energydrinkitem", "consumables", "pamhc2foodextended", 1, 15),
             new Entry("phc_hearty_breakfast", "pamhc2foodextended:heartybreakfastitem", 85, 1, "item.pamhc2foodextended.heartybreakfastitem", "consumables", "pamhc2foodextended", 1, 20),
 
@@ -606,22 +635,24 @@ public final class ShopDefinitions {
         if (BuiltInRegistries.ITEM.containsKey(id)) {
             return new ItemStack(BuiltInRegistries.ITEM.get(id), entry.amount());
         }
-        // Fallback para modulaciones de Apotheosis (apothic_enchanting / apothic_attributes)
-        if ("apotheosis".equals(id.getNamespace())) {
-            ResourceLocation fallbackEnch = ResourceLocation.fromNamespaceAndPath("apothic_enchanting", id.getPath());
-            if (BuiltInRegistries.ITEM.containsKey(fallbackEnch)) {
-                return new ItemStack(BuiltInRegistries.ITEM.get(fallbackEnch), entry.amount());
-            }
-            ResourceLocation fallbackAttr = ResourceLocation.fromNamespaceAndPath("apothic_attributes", id.getPath());
-            if (BuiltInRegistries.ITEM.containsKey(fallbackAttr)) {
-                return new ItemStack(BuiltInRegistries.ITEM.get(fallbackAttr), entry.amount());
+        // Fallback para modulaciones de Apotheosis (apothic_enchanting / apothic_attributes / apotheosis / apothic_spawners)
+        if ("apotheosis".equals(id.getNamespace()) || "apothic_enchanting".equals(id.getNamespace()) || "apothic_attributes".equals(id.getNamespace())) {
+            String path = id.getPath();
+            for (String ns : new String[]{"apothic_enchanting", "apothic_attributes", "apotheosis", "apothic_spawners"}) {
+                ResourceLocation alt = ResourceLocation.fromNamespaceAndPath(ns, path);
+                if (BuiltInRegistries.ITEM.containsKey(alt)) {
+                    return new ItemStack(BuiltInRegistries.ITEM.get(alt), entry.amount());
+                }
             }
         }
         // Fallback para Pam's HarvestCraft 2 (pamhc2foodcore / pamhc2foodextended)
-        if ("pamhc2foodextended".equals(id.getNamespace())) {
-            ResourceLocation fallbackPam = ResourceLocation.fromNamespaceAndPath("pamhc2foodcore", id.getPath());
-            if (BuiltInRegistries.ITEM.containsKey(fallbackPam)) {
-                return new ItemStack(BuiltInRegistries.ITEM.get(fallbackPam), entry.amount());
+        if ("pamhc2foodextended".equals(id.getNamespace()) || "pamhc2foodcore".equals(id.getNamespace())) {
+            String path = id.getPath();
+            for (String ns : new String[]{"pamhc2foodcore", "pamhc2foodextended"}) {
+                ResourceLocation alt = ResourceLocation.fromNamespaceAndPath(ns, path);
+                if (BuiltInRegistries.ITEM.containsKey(alt)) {
+                    return new ItemStack(BuiltInRegistries.ITEM.get(alt), entry.amount());
+                }
             }
         }
         return ItemStack.EMPTY;
@@ -651,9 +682,12 @@ public final class ShopDefinitions {
 
         // 3. Bloqueo por Tier de Sistema
         if (entry.requiredSystemTier() <= 1) return true;
-        boolean has40 = data.system40Updated() || data.isSystem40Updating() || data.teyvatUnlocked();
-        boolean has30 = has40 || data.system30Updated() || data.isSystem30Updating() || data.murimUnlocked();
-        boolean has20 = has30 || data.systemUpdated() || data.isSystemUpdating() || data.isekaiUnlocked();
+        boolean has40 = data.system40Updated() || data.isSystem40Updating() || data.teyvatUnlocked()
+                || data.hasVisitedDimension("awakening_system:teyvat_world") || data.hasVisitedDimension("awakening_system:teyvat");
+        boolean has30 = has40 || data.system30Updated() || data.isSystem30Updating() || data.murimUnlocked()
+                || data.hasVisitedDimension("awakening_system:murim");
+        boolean has20 = has30 || data.systemUpdated() || data.isSystemUpdating() || data.isekaiUnlocked()
+                || data.hasVisitedDimension("awakening_system:isekai");
         if (entry.requiredSystemTier() == 2) {
             return has20;
         }
@@ -661,8 +695,7 @@ public final class ShopDefinitions {
             return has30;
         }
         if (entry.requiredSystemTier() >= 4) {
-            return has40 || data.hasVisitedDimension("awakening_system:teyvat_world") || data.hasVisitedDimension("awakening_system:teyvat")
-                    || data.conqueredRankerTower() || data.savedTowerFloor() >= 50 || data.dantianRealm() >= 3 || data.conqueredNineTribulationsPagoda();
+            return has40;
         }
         return true;
     }

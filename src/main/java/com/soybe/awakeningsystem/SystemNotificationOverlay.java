@@ -22,6 +22,20 @@ public final class SystemNotificationOverlay {
     private SystemNotificationOverlay() {}
 
     public static void showAnnouncement(String title, String message, int color) {
+        if (title != null && (title.startsWith("awakening_system.") || (title.contains(".") && !title.contains(" ")))) {
+            title = net.minecraft.network.chat.Component.translatable(title).getString();
+        }
+        if (message != null && message.contains("awakening_system.")) {
+            java.util.regex.Matcher m = java.util.regex.Pattern.compile("awakening_system\\.[a-zA-Z0-9_.]+").matcher(message);
+            StringBuffer sb = new StringBuffer();
+            while (m.find()) {
+                String k = m.group();
+                String translated = net.minecraft.network.chat.Component.translatable(k).getString();
+                m.appendReplacement(sb, java.util.regex.Matcher.quoteReplacement(translated));
+            }
+            m.appendTail(sb);
+            message = sb.toString();
+        }
         announcementTitle = title;
         announcementMessage = message;
         announcementColor = color;
@@ -37,6 +51,45 @@ public final class SystemNotificationOverlay {
         if (announcementTicks > 0) {
             announcementTicks--;
         }
+    }
+
+    public static boolean isAnnouncementActive() {
+        return announcementTicks > 0 && announcementTitle != null;
+    }
+
+    public static int getAnnouncementY() {
+        Minecraft mc = Minecraft.getInstance();
+        int bossBottom = SystemHudOverlay.getBossBarOffset(mc);
+        int y = bossBottom > 0 ? (bossBottom + 6) : 12;
+
+        if (com.soybe.awakeningsystem.client.map.HunterMinimapRenderer.isDangerAlertActive()) {
+            int dangerBottom = com.soybe.awakeningsystem.client.map.HunterMinimapRenderer.getDangerAlertBottom(mc);
+            y = Math.max(y, dangerBottom + 6);
+        }
+
+        SystemData data = mc.player != null ? SystemEvents.data(mc.player) : null;
+        if (data != null) {
+            if (data.isAnySystemUpdating()) {
+                int updatingBannerY = bossBottom > 0 ? (bossBottom + 4) : 8;
+                y = Math.max(y, updatingBannerY + 16 + 8);
+            }
+            if (data.isDokkaebiScenarioActive()) {
+                int bannerOffset = (data.isAnySystemUpdating() ? 32 : 0)
+                        + (com.soybe.awakeningsystem.client.map.HunterMinimapRenderer.isDangerAlertActive() ? 18 : 0);
+                int dokkaebiBottom = Math.max(12, bossBottom + bannerOffset + 8) + 28;
+                y = Math.max(y, dokkaebiBottom + 8);
+            }
+        }
+
+        return y;
+    }
+
+    public static int getAnnouncementBottom() {
+        if (!isAnnouncementActive()) return 0;
+        String rawMsg = announcementMessage != null ? announcementMessage.replace("\\n", "\n") : null;
+        String[] msgLines = rawMsg != null ? rawMsg.split("\n") : new String[0];
+        int bannerH = Math.max(30, 16 + msgLines.length * 12);
+        return getAnnouncementY() + bannerH;
     }
 
     @SubscribeEvent
@@ -204,22 +257,25 @@ public final class SystemNotificationOverlay {
         int bannerW = Math.max(340, Math.max(titleW, maxMsgW) + 40);
         int bannerH = Math.max(30, 16 + msgLines.length * 12);
         int bannerX = (width - bannerW) / 2;
-        int bannerY = 12;
+        int bannerY = getAnnouncementY();
 
-        int bgCol = (Math.min(aByte, 0xEE) << 24) | 0x0E0B1A;
+        int bgCol = (Math.min(aByte, 0x75) << 24) | 0x0A1422;
         int borderCol = (aByte << 24) | (announcementColor & 0x00FFFFFF);
 
+        // Translucent manhwa cyber banner
         graphics.fill(bannerX, bannerY, bannerX + bannerW, bannerY + bannerH, bgCol);
+        graphics.renderOutline(bannerX, bannerY, bannerW, bannerH, borderCol);
         graphics.fill(bannerX, bannerY, bannerX + bannerW, bannerY + 1, borderCol);
-        graphics.fill(bannerX, bannerY + bannerH - 1, bannerX + bannerW, bannerY + bannerH, borderCol);
-        graphics.fill(bannerX, bannerY, bannerX + 1, bannerY + bannerH, borderCol);
-        graphics.fill(bannerX + bannerW - 1, bannerY, bannerX + bannerW, bannerY + bannerH, borderCol);
 
         int cornerCol = (aByte << 24) | 0xFFFFFF;
-        graphics.fill(bannerX + 1, bannerY + 1, bannerX + 3, bannerY + 3, cornerCol);
-        graphics.fill(bannerX + bannerW - 3, bannerY + 1, bannerX + bannerW - 1, bannerY + 3, cornerCol);
-        graphics.fill(bannerX + 1, bannerY + bannerH - 3, bannerX + 3, bannerY + bannerH - 1, cornerCol);
-        graphics.fill(bannerX + bannerW - 3, bannerY + bannerH - 3, bannerX + bannerW - 1, bannerY + bannerH - 1, cornerCol);
+        graphics.fill(bannerX, bannerY, bannerX + 4, bannerY + 1, cornerCol);
+        graphics.fill(bannerX, bannerY, bannerX + 1, bannerY + 4, cornerCol);
+        graphics.fill(bannerX + bannerW - 4, bannerY, bannerX + bannerW, bannerY + 1, cornerCol);
+        graphics.fill(bannerX + bannerW - 1, bannerY, bannerX + bannerW, bannerY + 4, cornerCol);
+        graphics.fill(bannerX, bannerY + bannerH - 1, bannerX + 4, bannerY + bannerH, cornerCol);
+        graphics.fill(bannerX, bannerY + bannerH - 4, bannerX + 1, bannerY + bannerH, cornerCol);
+        graphics.fill(bannerX + bannerW - 4, bannerY + bannerH - 1, bannerX + bannerW, bannerY + bannerH, cornerCol);
+        graphics.fill(bannerX + bannerW - 1, bannerY + bannerH - 4, bannerX + bannerW, bannerY + bannerH, cornerCol);
 
         graphics.drawCenteredString(mc.font, announcementTitle, width / 2, bannerY + 4, borderCol);
         int textY = bannerY + 16;

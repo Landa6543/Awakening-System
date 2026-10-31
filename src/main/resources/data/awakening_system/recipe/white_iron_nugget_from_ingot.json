@@ -1,0 +1,13 @@
+{
+    "ingredients":  [
+                        {
+                            "item":  "awakening_system:refined_white_iron_ingot"
+                        }
+                    ],
+    "category":  "misc",
+    "result":  {
+                   "count":  9,
+                   "id":  "awakening_system:white_iron_nugget"
+               },
+    "type":  "minecraft:crafting_shapeless"
+}

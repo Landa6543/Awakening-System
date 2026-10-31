@@ -1,5 +1,6 @@
 package com.soybe.awakeningsystem;
 
+import com.soybe.awakeningsystem.client.gui.ModernGuiHelper;
 import net.minecraft.ChatFormatting;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.GuiGraphics;
@@ -148,20 +149,9 @@ public final class ClassSkillTreeScreen extends Screen {
         boolean sys30 = data.system30Updated();
         boolean sys20 = (data.systemUpdated() || data.isSystemUpdating()) && !sys30;
 
-        int borderCol = sys30 ? 0xC01B5E20 : (sys20 ? 0xC04A148C : 0xC000838F);
-        int bgCol = sys30 ? 0xF0081814 : (sys20 ? 0xF0120822 : 0xF007131D);
-        graphics.fill(left - 2, top - 2, left + panelW + 2, top + panelH + 2, borderCol);
-        graphics.fill(left, top, left + panelW, top + panelH, bgCol);
-
-        int cornerColor = (sys30 || sys20) ? 0xFFFFD700 : 0xFF00E5FF;
-        graphics.fill(left, top, left + 10, top + 2, cornerColor);
-        graphics.fill(left, top, left + 2, top + 10, cornerColor);
-        graphics.fill(left + panelW - 10, top, left + panelW, top + 2, cornerColor);
-        graphics.fill(left + panelW - 2, top, left + panelW, top + 10, cornerColor);
-        graphics.fill(left, top + panelH - 2, left + 10, top + panelH, cornerColor);
-        graphics.fill(left, top + panelH - 10, left + 2, top + panelH, cornerColor);
-        graphics.fill(left + panelW - 10, top + panelH - 2, left + panelW, top + panelH, cornerColor);
-        graphics.fill(left + panelW - 2, top + panelH - 10, left + panelW, top + panelH, cornerColor);
+        ModernGuiHelper.GuiTheme theme = ModernGuiHelper.getTheme(data);
+        ModernGuiHelper.drawModernWindow(graphics, left, top, panelW, panelH, theme);
+        ModernGuiHelper.drawModernHeader(graphics, left + 10, top + 6, panelW - 20, 24, null, 0, theme, font);
 
         Component className = Component.translatable("awakening_system.class." + data.hunterClass() + ".name");
         Component headerTitle = Component.translatable("awakening_system.skill_tree.header", className).withStyle(ChatFormatting.BOLD);
