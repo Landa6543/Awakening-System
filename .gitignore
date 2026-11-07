@@ -59,6 +59,7 @@ javap_*.txt
 /*.bbmodel
 /*.nbt
 /*.txt
+!/LICENSE_*.txt
 /*.java
 /*.json
 /*.py

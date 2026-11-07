@@ -4,7 +4,7 @@
 
 # ⚡ Awakening System (NeoForge 1.21.1)
 
-![Minecraft](https://img.shields.io/badge/Minecraft-1.21.1-brightgreen) ![NeoForge](https://img.shields.io/badge/Loader-NeoForge-orange) ![License](https://img.shields.io/badge/License-MIT-blue) ![Localization](https://img.shields.io/badge/Languages-11%20Supported%20(11%2C910%20Keys)-purple)
+![Minecraft](https://img.shields.io/badge/Minecraft-1.21.1-brightgreen) ![NeoForge](https://img.shields.io/badge/Loader-NeoForge-orange) ![License](https://img.shields.io/badge/License-MIT-blue) ![Localization](https://img.shields.io/badge/Languages-12%20Complete%20(14%2C267%20Keys)-purple)
 
 **Awakening System** is an omniscient RPG progression, cultivation, and dungeon crawler mod for **Minecraft 1.21.1 with NeoForge**. Inspired by Korean manhwa and fantasy masterpieces like _Solo Leveling_, _Omniscient Reader's Viewpoint_, _Genshin Impact_, _Uma Musume Pretty Derby_, and classic _Murim_ martial arts epics, it brings the thrill of Hunter awakenings, procedural dimensional gates, personal pocket dimensions, an authentic AAA Gacha wish system, casino minigames, celestial sponsors, and shadow armies directly into your survival world!
 
@@ -12,8 +12,8 @@
 
 ## ✨ Features
 
-*   👑 **The Omniscient System & 1,000-Level Progression:** An omnipresent System observes your actions in real time. Unlock 41 Hunter Ranks from **Rank E to Rank S, Monarch, Sovereign, and Creator**, scaling up to Level 1,000 with uncapped attribute allocation into **Strength, Agility, Vitality, Intelligence, Perception, and Dexterity**.
-*   📜 **Class Skill Trees & Combat Hotbar:** Choose your specialization (_Shadow Monarch, Shadow Assassin, Elemental Archmage, Void Warrior, Martial Cultivator_) and unleash fluid combos with dedicated combat hotbar keys (`V`, `R`, `G`, `B`, `X`, `Y`).
+*   👑 **The Omniscient System & 2,000-Level Progression:** An omnipresent System observes your actions in real time. Climb 42 Hunter Ranks from **Rank F through Rank S, Monarch, and Supreme Creator up to Absolute God**, scaling up to Level 2,000 with uncapped attribute allocation into **Strength, Vitality, Agility, Perception, Intelligence, and Willpower**.
+*   📜 **Class Skill Trees & Combat Hotbar:** Choose your specialization (_Shadow Monarch, Shadow Assassin, Elemental Archmage, Void Warrior, Martial Cultivator_) and unleash fluid combos with dedicated combat hotbar keys (`V`, `G`, `B`, `X`, `Y`).
 *   🖥️ **Dynamic RPG HUD & Status Screen:** Press **`K`** to open the holographic System GUI. Features custom health, mana, and Qi gauges with residual damage animations, combat indicators, and System alert banners.
 *   🌌 **The Fourth Dimension (Pocket Subspace):** Your private, instanced sanctuary realm (`awakening_system:pocket_subspace`). Instant bi-directional travel from the System Menu (`[K]`) or `/subspace enter` with exact coordinates preservation. Upgrade modular sanctums: Mana Wellspring, Shadow Garrison, Qi Cultivation Pavilion, Interdimensional Vault, and Relic Forges.
 *   🌠 **Full AAA Gacha & Wish System:** Complete production-grade gacha engine with animated shooting stars, 3D card reveals, and soundscapes! Features multiple event banners:
@@ -39,7 +39,7 @@
 *   ✨ **Constellations & The Star Stream:** Cosmic sponsors from the depths of the galaxy spectate your journey live, reacting with chat messages, coin bounties, and potent **Stigma** blessings.
 *   🐉 **Fully Articulated Celestial Dragon Mount:** Tame the magnificent 12-segment Eastern Celestial Dragon. Take to the skies with smooth 3D flight mechanics and scorch enemies with celestial dragon breath.
 *   👥 **Shadow Soldiers & Spiritual Familiars:** Extract shadows from defeated foes to fight as loyal soldiers alongside nine-tailed spirit foxes, white thunder tigers, cloud cranes, and Dokkaebis.
-*   🗡️ **Signature Weapons, Relics & Artifact Sets:** Wield iconic Genshin weapons (_Engulfing Lightning, Staff of Homa, Mistsplitter Reforged, Primordial Jade Cutter, Wolf's Gravestone, The Catch_), legendary manhwa relics (_Rasaka's Poison Fang, Baruka's Daggers, Kamish's Wrath, Unbroken Faith_), Fatui Delusions, and 5-piece Artifact sets with active 2-piece and 4-piece set bonuses.
+*   🗡️ **Signature Weapons, Relics & Artifact Sets:** Wield iconic Genshin weapons (_Engulfing Lightning, Staff of Homa, Mistsplitter Reforged, Primordial Jade Cutter, Wolf's Gravestone, The Catch_), legendary manhwa relics (_Kasaka's Venom Fang, Shadow Daggers, Kamish's Wrath, Unbreakable Faith_), Fatui Delusions, and 5-piece Artifact sets with active 2-piece and 4-piece set bonuses.
 
 ***
 
@@ -80,11 +80,16 @@
 | Key | Action | Description |
 |:---:|---|---|
 | **`K`** | **System Interface** | Opens the main Status, Skills, Quests, Classes, Subspace & Shop window |
-| **`O`** | **Gacha Wish Screen** | Opens the interactive Gacha Wish and Banner invocation screen |
-| **`H`** | **Guild Headquarters** | Opens the Hunter Guild overview and Territorial Chunk Claiming Map |
-| **`V`, `R`, `G`, `B`** | **Active Skills (1–4)** | Triggers assigned class combat abilities |
-| **`X`, `Y`** | **Ultimate Skills (5–6)** | Executes high-tier awakening and monarch abilities |
-| **`Z`** | **Armor / Relic Skill** | Activates special equipment and set bonus passives |
+| **`F4`** | **Gacha Wish Screen** | Opens the interactive Gacha Wish and Banner invocation screen |
+| **`L`** | **Guild Headquarters** | Opens the Hunter Guild overview and Territorial Chunk Claiming Map |
+| **`M`** | **World Map** | Opens the tactical world map |
+| **`V`, `G`, `B`, `X`** | **Active Skills** | Triggers assigned class combat abilities (skill slot 2 has no default key) |
+| **`Y`** | **Constellation Stigma** | Activates your Constellation Stigma |
+| **`Z`** | **Armor Skill** | Activates the ability of your full armor set |
+| **`~`** | **Weapon Skill** | Activates the skill of the weapon in your hand |
+| **`N`, `,`** | **Runes** | Activates your equipped active runes |
+| **`C`** | **Cultivate Qi** | Starts lotus meditation |
+| **`H`, `J`** | **Physique / Dao** | Uses your Martial Physique ability and your Dao technique |
 | **`Space` / `Ctrl`** | **Ascend / Descend** | Controls vertical flight while riding the Celestial Dragon |
 
 _(All keybindings can be fully customized in `Options > Controls > Key Binds`)._
@@ -99,16 +104,17 @@ To run **Awakening System**, ensure you have installed:
 *   **Mod Loader:** `NeoForge` (version `21.1.249` or newer recommended)
 *   **Java:** Java 21 LTS
 *   **Required Dependencies:**
-    *   _None!_ **Awakening System** is completely standalone with built-in lightweight rendering and zero mandatory third-party library bloat.
+    *   **[GeckoLib](https://www.curseforge.com/minecraft/mc-mods/geckolib)** `4.7.4` or newer
 
 ***
 
-## 🌐 Complete Localization (11 Languages)
+## 🌐 Localization (12 Complete Languages)
 
-**Awakening System** features 100% synchronized native translations across **11,910 verified keys**:
+**Awakening System** features native translations across **14,267 keys**:
 
 *   🇺🇸 **English (`en_us`)**
 *   🇷🇺 **Russian (`ru_ru`)**
+*   🇧🇷 **Portuguese - Brazil (`pt_br`)**
 *   🇪🇸 **Spanish (`es_es`)**
 *   🇲🇽 **Spanish - Mexico (`es_mx`)**
 *   🇦🇷 **Spanish - Argentina (`es_ar`)**
@@ -118,6 +124,8 @@ To run **Awakening System**, ensure you have installed:
 *   🇻🇪 **Spanish - Venezuela (`es_ve`)**
 *   🇪🇨 **Spanish - Ecuador (`es_ec`)**
 *   🇺🇾 **Spanish - Uruguay (`es_uy`)**
+
+French (`fr_fr`) and German (`de_de`) translations are in progress.
 
 ***
 
@@ -139,6 +147,8 @@ This project is a passion-driven tribute inspired by the greatest works of moder
     *   Designed, developed, and created by **LanderAlo**.
 *   🗺️ **Diorama Mod (Ray-Traced Minimap & World Map Engine):**
     *   Original concept and engine created by **Dara Adedeji** (`SunkenInTime`). Licensed under the **[MIT License](https://github.com/Landa6543/Awakening-System/blob/main/LICENSE_DIORAMA.txt)**.
+*   🕳️ **YUNG's Better Caves (Cave Generation):**
+    *   Original mod created by **YUNGNICKYOUNG**. Licensed under the **[LGPL-3.0 License](https://github.com/Landa6543/Awakening-System/blob/main/LICENSE_BETTER_CAVES.txt)**.
 *   🗿 **Community 3D Models & Blockbench Workshop:**
     *   Entity models (Skulk Golem by `@elma_taburlas`, Limbo Stalkers by `@ziiwplay`, The Entity by `@nori`) and custom 3D weapon models (claymores, scythes, ranged weapons) are adapted from community creators under **[Creative Commons Attribution 4.0 (CC BY 4.0)](https://creativecommons.org/licenses/by/4.0/)**.
     *   *(For the complete, comprehensive list of all model credits, artist handles, and licensing notices, please see our official repository **[CREDITS.md](https://github.com/Landa6543/Awakening-System/blob/main/CREDITS.md)**).*
