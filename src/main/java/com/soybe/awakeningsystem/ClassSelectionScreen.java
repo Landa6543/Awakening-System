@@ -18,6 +18,9 @@ public final class ClassSelectionScreen extends Screen {
     private int currentCategory = 0;
     private boolean showConfirmDialog = false;
 
+    /** Shared by drawing and click handling, so the button and its clickable area stay aligned. */
+    private static final int CONFIRM_BUTTON_OFFSET = 262;
+
     public record ClassOption(
             String id,
             String manhwa,
@@ -412,14 +415,10 @@ public final class ClassSelectionScreen extends Screen {
         }
 
         if (!showConfirmDialog) {
-            if (!alreadyChosen) {
-                graphics.drawCenteredString(font, Component.translatable("awakening_system.screen.class_select.warning_permanent"), left + panelW / 2, top + 256, 0xFFFF6666);
-            }
-
             int btnW = 240;
             int btnH = 20;
             int btnX = left + (panelW - btnW) / 2;
-            int btnY = top + 270;
+            int btnY = top + CONFIRM_BUTTON_OFFSET;
             boolean btnHovered = mX >= btnX && mX < btnX + btnW && mY >= btnY && mY < btnY + btnH;
 
             if (alreadyChosen) {
@@ -584,7 +583,7 @@ public final class ClassSelectionScreen extends Screen {
             int btnW = 240;
             int btnH = 20;
             int btnX = left + (panelW - btnW) / 2;
-            int btnY = top + 270;
+            int btnY = top + CONFIRM_BUTTON_OFFSET;
             if (mouseX >= btnX && mouseX < btnX + btnW && mouseY >= btnY && mouseY < btnY + btnH) {
                 openConfirmDialog();
                 return true;
