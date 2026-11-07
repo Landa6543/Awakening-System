@@ -90,7 +90,35 @@ public class HunterForgeBlockEntity extends BaseContainerBlockEntity implements 
         entity.updateTempering();
     }
 
+    public static final net.minecraft.tags.TagKey<net.minecraft.world.item.Item> CATALYSTS =
+            net.minecraft.tags.ItemTags.create(net.minecraft.resources.ResourceLocation.fromNamespaceAndPath("awakening_system", "forge_catalysts"));
+    public static final net.minecraft.tags.TagKey<net.minecraft.world.item.Item> GEMS =
+            net.minecraft.tags.ItemTags.create(net.minecraft.resources.ResourceLocation.fromNamespaceAndPath("awakening_system", "forge_gems"));
+    /** Tras un golpe la aguja se queda quieta este tiempo, mostrando dónde cayó. */
+    private static final int STRIKE_FREEZE_TICKS = 30;
+
+    /** Qué acepta cada ranura: lo usan las ranuras del menú y las tolvas. */
+    public static boolean isValidFor(int slot, ItemStack stack) {
+        return switch (slot) {
+            case SLOT_BASE -> HunterForgeQuality.isForgeable(stack);
+            case SLOT_CORE -> stack.getItem() instanceof MonsterCoreItem;
+            case SLOT_CATALYST -> stack.is(CATALYSTS);
+            case SLOT_GEM -> stack.is(GEMS);
+            default -> false;
+        };
+    }
+
+    @Override
+    public boolean canPlaceItem(int slot, ItemStack stack) {
+        return isValidFor(slot, stack);
+    }
+
     private void updateTempering() {
+        // isForging guarda los ticks que quedan de la pausa tras un golpe
+        if (isForging > 0) {
+            isForging--;
+            return;
+        }
         temperingPos += temperingDirection;
         if (temperingPos >= 100) {
             temperingPos = 100;
@@ -111,13 +139,23 @@ public class HunterForgeBlockEntity extends BaseContainerBlockEntity implements 
         if (base.isEmpty() || core.isEmpty() || catalyst.isEmpty() || gem.isEmpty()) {
             return false;
         }
-        return out.isEmpty();
+        if (!isValidFor(SLOT_BASE, base) || !isValidFor(SLOT_CORE, core) || !isValidFor(SLOT_CATALYST, catalyst) || !isValidFor(SLOT_GEM, gem)) {
+            return false;
+        }
+        return out.isEmpty() && isForging == 0;
     }
 
-    public boolean executeForge(Player player, int timingHit) {
+    public boolean executeForge(Player player, int ignoredClientPosition) {
         if (!canForge()) {
             return false;
         }
+        // La posición la decide el servidor: la que manda el cliente se podría falsear
+        int timingHit = this.temperingPos;
+        // Un núcleo de más rango ensancha las zonas buenas: de +0 (E) a +15 (S)
+        if (getItem(SLOT_CORE).getItem() instanceof MonsterCoreItem core) {
+            timingHit += (core.getCoreRank().getTier() - 1) * 3;
+        }
+        this.isForging = STRIKE_FREEZE_TICKS;
 
         int dexBonus = 0;
         if (player instanceof ServerPlayer sp) {

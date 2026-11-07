@@ -76,12 +76,68 @@ public enum HunterForgeQuality {
         }
     }
 
+    private static final net.minecraft.resources.ResourceLocation FORGE_DAMAGE_ID =
+            net.minecraft.resources.ResourceLocation.fromNamespaceAndPath("awakening_system", "hunter_forge_damage");
+    private static final net.minecraft.resources.ResourceLocation FORGE_ARMOR_ID =
+            net.minecraft.resources.ResourceLocation.fromNamespaceAndPath("awakening_system", "hunter_forge_armor");
+
+    /** Daño base del arma en mano, sin contar lo que ya añadió una forja anterior. */
+    private static double baseAttackDamage(net.minecraft.world.item.component.ItemAttributeModifiers mods) {
+        double total = 0;
+        for (var entry : mods.modifiers()) {
+            if (entry.attribute().value() == net.minecraft.world.entity.ai.attributes.Attributes.ATTACK_DAMAGE.value()
+                    && entry.modifier().operation() == net.minecraft.world.entity.ai.attributes.AttributeModifier.Operation.ADD_VALUE
+                    && !entry.modifier().id().equals(FORGE_DAMAGE_ID)) {
+                total += entry.modifier().amount();
+            }
+        }
+        return total;
+    }
+
+    /** Solo se pueden forjar armas (con daño de ataque) y piezas de armadura. */
+    public static boolean isForgeable(ItemStack stack) {
+        if (stack == null || stack.isEmpty() || stack.getMaxStackSize() > 1) return false;
+        if (stack.getItem() instanceof net.minecraft.world.item.ArmorItem) return true;
+        return baseAttackDamage(stack.getAttributeModifiers()) > 0;
+    }
+
+    /**
+     * Marca la calidad y aplica su bonificación real: más daño de ataque en las armas y más
+     * armadura en las piezas de armadura. Reforjar sustituye la bonificación anterior.
+     */
     public static void applyQuality(ItemStack stack, HunterForgeQuality quality) {
         if (stack == null || stack.isEmpty()) return;
         CustomData.update(DataComponents.CUSTOM_DATA, stack, tag -> {
             tag.putString(TAG_QUALITY, quality.name());
             tag.putLong(TAG_TIMESTAMP, System.currentTimeMillis());
         });
+
+        var current = stack.getAttributeModifiers();
+        java.util.List<net.minecraft.world.item.component.ItemAttributeModifiers.Entry> entries = new java.util.ArrayList<>();
+        for (var entry : current.modifiers()) {
+            var id = entry.modifier().id();
+            if (!id.equals(FORGE_DAMAGE_ID) && !id.equals(FORGE_ARMOR_ID)) entries.add(entry);
+        }
+
+        if (stack.getItem() instanceof net.minecraft.world.item.ArmorItem armor) {
+            entries.add(new net.minecraft.world.item.component.ItemAttributeModifiers.Entry(
+                    net.minecraft.world.entity.ai.attributes.Attributes.ARMOR,
+                    new net.minecraft.world.entity.ai.attributes.AttributeModifier(FORGE_ARMOR_ID, quality.armorBonus,
+                            net.minecraft.world.entity.ai.attributes.AttributeModifier.Operation.ADD_VALUE),
+                    net.minecraft.world.entity.EquipmentSlotGroup.bySlot(armor.getEquipmentSlot())));
+        } else {
+            double base = baseAttackDamage(current);
+            if (base > 0) {
+                double bonus = Math.round(base * (quality.damageMultiplier - 1.0F) * 10.0D) / 10.0D;
+                entries.add(new net.minecraft.world.item.component.ItemAttributeModifiers.Entry(
+                        net.minecraft.world.entity.ai.attributes.Attributes.ATTACK_DAMAGE,
+                        new net.minecraft.world.entity.ai.attributes.AttributeModifier(FORGE_DAMAGE_ID, Math.max(0.5D, bonus),
+                                net.minecraft.world.entity.ai.attributes.AttributeModifier.Operation.ADD_VALUE),
+                        net.minecraft.world.entity.EquipmentSlotGroup.MAINHAND));
+            }
+        }
+        stack.set(DataComponents.ATTRIBUTE_MODIFIERS,
+                new net.minecraft.world.item.component.ItemAttributeModifiers(entries, current.showInTooltip()));
     }
 
     public static HunterForgeQuality getQuality(ItemStack stack) {

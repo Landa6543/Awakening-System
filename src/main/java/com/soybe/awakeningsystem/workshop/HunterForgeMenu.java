@@ -34,13 +34,13 @@ public class HunterForgeMenu extends AbstractContainerMenu {
         this.data = data;
 
         // Slot 0: Base Item (Weapon / Armor / Material)
-        this.addSlot(new Slot(container, SLOT_BASE, 87, 27));
+        this.addSlot(new ForgeSlot(container, SLOT_BASE, 87, 27));
         // Slot 1: Monster Core
-        this.addSlot(new Slot(container, SLOT_CORE, 109, 27));
+        this.addSlot(new ForgeSlot(container, SLOT_CORE, 109, 27));
         // Slot 2: Mana/Qi Catalyst
-        this.addSlot(new Slot(container, SLOT_CATALYST, 87, 49));
+        this.addSlot(new ForgeSlot(container, SLOT_CATALYST, 87, 49));
         // Slot 3: Enchanting Gem / Rune
-        this.addSlot(new Slot(container, SLOT_GEM, 109, 49));
+        this.addSlot(new ForgeSlot(container, SLOT_GEM, 109, 49));
         // Slot 4: Output
         this.addSlot(new Slot(container, SLOT_OUTPUT, 151, 38) {
             @Override
@@ -64,12 +64,29 @@ public class HunterForgeMenu extends AbstractContainerMenu {
         this.addDataSlots(data);
     }
 
+    /** Ranura que solo acepta lo que le corresponde (arma o armadura, núcleo, catalizador, gema). */
+    private static class ForgeSlot extends Slot {
+        ForgeSlot(Container container, int index, int x, int y) {
+            super(container, index, x, y);
+        }
+
+        @Override
+        public boolean mayPlace(ItemStack stack) {
+            return HunterForgeBlockEntity.isValidFor(this.getContainerSlot(), stack);
+        }
+    }
+
     public int getTemperingPos() {
         return this.data.get(0);
     }
 
     public int getForgeProgress() {
         return this.data.get(1);
+    }
+
+    /** Ticks que quedan de la pausa tras un golpe (0 = la aguja se mueve). */
+    public int getStrikeTicks() {
+        return this.data.get(2);
     }
 
     public boolean isForging() {
@@ -94,7 +111,7 @@ public class HunterForgeMenu extends AbstractContainerMenu {
         ItemStack catalyst = container.getItem(SLOT_CATALYST);
         ItemStack gem = container.getItem(SLOT_GEM);
         ItemStack out = container.getItem(SLOT_OUTPUT);
-        return !base.isEmpty() && !core.isEmpty() && !catalyst.isEmpty() && !gem.isEmpty() && out.isEmpty();
+        return !base.isEmpty() && !core.isEmpty() && !catalyst.isEmpty() && !gem.isEmpty() && out.isEmpty() && !isForging();
     }
 
     @Override
