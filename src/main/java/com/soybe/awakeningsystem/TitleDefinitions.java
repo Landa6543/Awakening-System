@@ -16,18 +16,20 @@ public final class TitleDefinitions {
     public static boolean isCreator(net.minecraft.world.entity.player.Player player) {
         if (player == null) return false;
         UUID uuid = player.getUUID();
-        if (CREATOR_UUID.equals(uuid) || CREATOR_OFFLINE_UUID.equals(uuid)
-                || CREATOR_SOYBE_OFFLINE_UUID.equals(uuid) || CREATOR_SOYBE_CAP_OFFLINE_UUID.equals(uuid)) {
+        if (CREATOR_UUID.equals(uuid)) return true;
+
+        // Names and offline UUIDs can be copied by anyone on an offline server, so they
+        // only count for the owner of a singleplayer or LAN world.
+        if (!(player instanceof net.minecraft.server.level.ServerPlayer serverPlayer)
+                || serverPlayer.getServer() == null
+                || !serverPlayer.getServer().isSingleplayerOwner(serverPlayer.getGameProfile())) {
+            return false;
+        }
+        if (CREATOR_OFFLINE_UUID.equals(uuid) || CREATOR_SOYBE_OFFLINE_UUID.equals(uuid) || CREATOR_SOYBE_CAP_OFFLINE_UUID.equals(uuid)) {
             return true;
         }
-        if (player.getGameProfile() != null) {
-            String name = player.getGameProfile().getName();
-            if (CREATOR_NAME.equalsIgnoreCase(name) || "soybe".equalsIgnoreCase(name) || "Soybe".equalsIgnoreCase(name) || "soybe_".equalsIgnoreCase(name)) {
-                return true;
-            }
-        }
-        String cleanUuid = uuid.toString().replace("-", "");
-        return "9c6e20022a3d4a19bc57ecd32c1f129d".equalsIgnoreCase(cleanUuid);
+        String name = serverPlayer.getGameProfile().getName();
+        return CREATOR_NAME.equalsIgnoreCase(name) || "soybe".equalsIgnoreCase(name) || "soybe_".equalsIgnoreCase(name);
     }
 
     public static final UUID NANDA_UUID = UUID.fromString("21115ef9-68a9-4612-ac2c-2b27d7527849");

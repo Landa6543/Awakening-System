@@ -16,6 +16,7 @@ public record RouletteSpinC2SPayload(
         BlockPos pos,
         List<RouletteBetEntry> bets
 ) implements CustomPacketPayload {
+    private static final int MAX_BETS = 1024;
 
     public static final Type<RouletteSpinC2SPayload> TYPE =
             new Type<>(ResourceLocation.fromNamespaceAndPath(AwakeningSystemMod.MOD_ID, "roulette_spin_c2s"));
@@ -31,6 +32,9 @@ public record RouletteSpinC2SPayload(
             buf -> {
                 BlockPos pos = BlockPos.STREAM_CODEC.decode(buf);
                 int count = ByteBufCodecs.VAR_INT.decode(buf);
+                if (count < 0 || count > MAX_BETS) {
+                    throw new io.netty.handler.codec.DecoderException("Too many roulette bets: " + count);
+                }
                 List<RouletteBetEntry> bets = new ArrayList<>(count);
                 for (int i = 0; i < count; i++) {
                     bets.add(RouletteBetEntry.STREAM_CODEC.decode(buf));

@@ -74,10 +74,7 @@ public class CelestialWaypointBlock extends Block {
 
         if (inTeyvat) {
             ServerLevel overworld = player.getServer().overworld();
-            BlockPos targetPos = player.getRespawnPosition();
-            if (targetPos == null) {
-                targetPos = overworld.getSharedSpawnPos();
-            }
+            BlockPos targetPos = com.soybe.awakeningsystem.SystemEvents.overworldReturnPos(player, overworld);
 
             currentLevel.sendParticles(ParticleTypes.PORTAL, player.getX(), player.getY() + 1.0D, player.getZ(), 40, 0.5D, 1.0D, 0.5D, 0.1D);
             player.teleportTo(overworld, targetPos.getX() + 0.5D, targetPos.getY() + 1.0D, targetPos.getZ() + 0.5D, 0.0F, 0.0F);

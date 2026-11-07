@@ -20,7 +20,7 @@ import com.soybe.awakeningsystem.block.SystemBlocks;
 @Mod(AwakeningSystemMod.MOD_ID)
 public final class AwakeningSystemMod {
     public static final String MOD_ID = "awakening_system";
-    public static final String MOD_VERSION = "0.3.4";
+    public static final String MOD_VERSION = "0.3.5";
     public static final Logger LOGGER = LogUtils.getLogger();
 
     public static String getModVersion() {

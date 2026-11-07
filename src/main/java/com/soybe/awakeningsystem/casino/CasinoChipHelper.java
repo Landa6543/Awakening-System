@@ -164,6 +164,11 @@ public final class CasinoChipHelper {
             if (count > 0) {
                 addStackOrDrop(player, new ItemStack(SystemItems.CASINO_CHIP_BLACK.get(), count));
             }
+            // Amounts below one black chip are paid in legal chips instead of being lost.
+            long remainder = value - (long) count * blackVal;
+            if (remainder > 0) {
+                giveChips(player, remainder, false);
+            }
             return;
         }
 
@@ -187,7 +192,7 @@ public final class CasinoChipHelper {
         }
     }
 
-    private static void addStackOrDrop(Player player, ItemStack stack) {
+    public static void addStackOrDrop(Player player, ItemStack stack) {
         if (stack.isEmpty() || player == null) return;
         while (!stack.isEmpty()) {
             int toAdd = Math.min(stack.getCount(), stack.getMaxStackSize());

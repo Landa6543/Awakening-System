@@ -177,10 +177,7 @@ public final class LimboWorldManager {
         ServerLevel overworld = server.getLevel(Level.OVERWORLD);
         if (overworld == null) return;
 
-        BlockPos targetPos = player.getRespawnPosition();
-        if (targetPos == null) {
-            targetPos = overworld.getSharedSpawnPos();
-        }
+        BlockPos targetPos = com.soybe.awakeningsystem.SystemEvents.overworldReturnPos(player, overworld);
 
         player.fallDistance = 0.0F;
         player.clearFire();

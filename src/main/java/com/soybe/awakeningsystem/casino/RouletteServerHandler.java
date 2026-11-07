@@ -22,6 +22,8 @@ import java.util.HashMap;
 import java.util.Map;
 
 public final class RouletteServerHandler {
+    private static final long MAX_BET_AMOUNT = 10_000_000_000L;
+
     private RouletteServerHandler() {}
 
     public static void openTable(ServerPlayer player, BlockPos pos) {
@@ -65,39 +67,49 @@ public final class RouletteServerHandler {
             return;
         }
 
+        if (!(player.level().getBlockEntity(pos) instanceof com.soybe.awakeningsystem.block.entity.RouletteTableBlockEntity tableBe)) return;
+
         boolean isIllegal = player.level().getBlockState(pos).getBlock() instanceof com.soybe.awakeningsystem.block.IllegalRouletteTableBlock;
 
         SystemData data = SystemEvents.data(player);
         long requiredChipValue = 0L;
-        Map<CasinoChipItem.ChipTier, Integer> requiredChips = new HashMap<>();
+        Map<CasinoChipItem.ChipTier, Long> requiredChips = new HashMap<>();
 
         for (RouletteBetEntry bet : payload.bets()) {
+            // The amount comes from the client and decides the payout, so it must match what is charged.
+            if (bet.amount() <= 0L || bet.amount() > MAX_BET_AMOUNT) return;
             if (bet.chipTier() >= 0 && bet.chipTier() < CasinoChipItem.ChipTier.values().length) {
                 CasinoChipItem.ChipTier tier = CasinoChipItem.ChipTier.values()[bet.chipTier()];
                 if (!isIllegal && tier == CasinoChipItem.ChipTier.BLACK) {
                     player.displayClientMessage(Component.translatable("awakening_system.casino.illegal_chip_rejected"), true);
                     return;
                 }
-                requiredChips.put(tier, requiredChips.getOrDefault(tier, 0) + 1);
+                if (bet.amount() % tier.getMoraValue() != 0L) return;
+                requiredChips.merge(tier, bet.amount() / tier.getMoraValue(), Long::sum);
             } else {
                 requiredChipValue += bet.amount();
             }
         }
 
-        for (Map.Entry<CasinoChipItem.ChipTier, Integer> entry : requiredChips.entrySet()) {
+        long reservedValue = 0L;
+        for (Map.Entry<CasinoChipItem.ChipTier, Long> entry : requiredChips.entrySet()) {
             if (countChips(player, entry.getKey()) < entry.getValue()) {
                 player.displayClientMessage(Component.translatable("awakening_system.casino.roulette.insufficient_tier_chips", entry.getKey().getDisplayName()), true);
                 return;
             }
+            if (!isIllegal || entry.getKey() == CasinoChipItem.ChipTier.BLACK) {
+                reservedValue += entry.getValue() * entry.getKey().getMoraValue();
+            }
         }
 
-        if (requiredChipValue > 0 && !CasinoChipHelper.hasEnoughChips(player, requiredChipValue, isIllegal)) {
+        // Chips already reserved for tier bets cannot also pay for the value bets.
+        if (requiredChipValue > 0 && CasinoChipHelper.getTotalChipValue(player, isIllegal) - reservedValue < requiredChipValue) {
             player.displayClientMessage(Component.translatable("awakening_system.casino.insufficient_chips"), true);
             return;
         }
 
-        for (Map.Entry<CasinoChipItem.ChipTier, Integer> entry : requiredChips.entrySet()) {
-            consumeChips(player, entry.getKey(), entry.getValue());
+        for (Map.Entry<CasinoChipItem.ChipTier, Long> entry : requiredChips.entrySet()) {
+            consumeChips(player, entry.getKey(), entry.getValue().intValue());
         }
         if (requiredChipValue > 0) {
             CasinoChipHelper.consumeChipValue(player, requiredChipValue, isIllegal);
@@ -112,9 +124,7 @@ public final class RouletteServerHandler {
             player.displayClientMessage(Component.translatable("awakening_system.casino.roulette.vip_bonus", String.format(java.util.Locale.US, "%,d", vipBonus), String.format(java.util.Locale.US, "%,d", finalPayout)), true);
         }
 
-        if (player.level().getBlockEntity(payload.pos()) instanceof com.soybe.awakeningsystem.block.entity.RouletteTableBlockEntity tableBe) {
-            tableBe.startSpin(result.winningNumber(), player, finalPayout, result.totalBet());
-        }
+        tableBe.startSpin(result.winningNumber(), player, finalPayout, result.totalBet());
 
         if (finalPayout > 0) {
             CasinoChipHelper.giveChips(player, finalPayout, isIllegal);

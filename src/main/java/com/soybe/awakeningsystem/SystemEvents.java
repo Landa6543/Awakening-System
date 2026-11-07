@@ -5798,10 +5798,7 @@ public final class SystemEvents {
                if (srv != null) {
                   ServerLevel overworld = srv.getLevel(Level.OVERWORLD);
                   if (overworld != null) {
-                     BlockPos respawn = player.getRespawnPosition();
-                     if (respawn == null) {
-                        respawn = overworld.getSharedSpawnPos();
-                     }
+                     BlockPos respawn = overworldReturnPos(player, overworld);
 
                      player.teleportTo(overworld, respawn.getX() + 0.5, respawn.getY() + 1.0, respawn.getZ() + 0.5, player.getYRot(), 0.0F);
                      overworld.sendParticles(ParticleTypes.PORTAL, respawn.getX() + 0.5, respawn.getY() + 1.5, respawn.getZ() + 0.5, 60, 1.0, 1.0, 1.0, 0.1);
@@ -14026,6 +14023,12 @@ public final class SystemEvents {
       }
    }
 
+   /** The player's bed when it is in the Overworld; otherwise the world spawn, since a bed in another dimension has unrelated coordinates. */
+   public static BlockPos overworldReturnPos(ServerPlayer player, ServerLevel overworld) {
+      BlockPos respawn = player.getRespawnPosition();
+      return respawn != null && Level.OVERWORLD.equals(player.getRespawnDimension()) ? respawn : overworld.getSharedSpawnPos();
+   }
+
    public static void handleDimensionTravel(ServerPlayer player, String dimension) {
       if (player != null && player.getServer() != null) {
          if (com.soybe.awakeningsystem.penalty.PenaltyZoneManager.isInPenaltyZone(player) ||
@@ -14058,8 +14061,14 @@ public final class SystemEvents {
 
                MurimWorldManager.teleportToMurim(player);
             } else if ("teyvat".equalsIgnoreCase(dimension)) {
+               if (!isDevOrOp && !data.system40Updated() && !data.isSystem40Updating() && !data.teyvatUnlocked()) {
+                  player.displayClientMessage(Component.translatable("awakening_system.waypoint.requirements_not_met"), true);
+                  player.playNotifySound((SoundEvent)SoundEvents.NOTE_BLOCK_BASS.value(), SoundSource.PLAYERS, 0.8F, 0.8F);
+                  return;
+               }
+
                TeyvatWorldManager.teleportToTeyvat(player);
-            } else if ("limbo".equalsIgnoreCase(dimension)) {
+            } else if ("limbo".equalsIgnoreCase(dimension) && isDevOrOp) {
                LimboWorldManager.teleportToLimbo(player);
             }
          } else {
@@ -14073,10 +14082,7 @@ public final class SystemEvents {
                return;
             }
 
-            BlockPos targetPos = player.getRespawnPosition();
-            if (targetPos == null) {
-               targetPos = overworld.getSharedSpawnPos();
-            }
+            BlockPos targetPos = overworldReturnPos(player, overworld);
 
             player.teleportTo(overworld, targetPos.getX() + 0.5, targetPos.getY() + 1.0, targetPos.getZ() + 0.5, player.getYRot(), 0.0F);
             overworld.sendParticles(ParticleTypes.PORTAL, targetPos.getX() + 0.5, targetPos.getY() + 1.2, targetPos.getZ() + 0.5, 60, 1.0, 1.0, 1.0, 0.1);

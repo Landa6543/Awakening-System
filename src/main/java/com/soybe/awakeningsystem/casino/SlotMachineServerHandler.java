@@ -29,6 +29,8 @@ import java.util.ArrayList;
 import java.util.List;
 
 public class SlotMachineServerHandler {
+    /** Highest bet the slot machine screen offers. */
+    private static final int MAX_BET_PER_LINE = 20;
 
     public static void handleSpin(ServerPlayer player, SlotSpinC2SPayload payload) {
         BlockPos pos = payload.pos();
@@ -40,7 +42,7 @@ public class SlotMachineServerHandler {
 
         boolean isIllegal = player.level().getBlockState(pos).getBlock() instanceof SlotMachineBlock smb && smb.isIllegal();
 
-        int betChipsPerLine = Math.max(1, payload.betBase());
+        int betChipsPerLine = Math.min(MAX_BET_PER_LINE, Math.max(1, payload.betBase()));
         int linesMode = Math.min(3, Math.max(1, payload.linesMode()));
         int lineCount = SlotLines.getLineCount(linesMode);
         int totalBetChips = betChipsPerLine * lineCount;
@@ -84,18 +86,12 @@ public class SlotMachineServerHandler {
             if (totalChipsWon == 0) {
                 slotEntity.onCustomerLostBet(totalBetChips);
             } else {
-                ItemStack wonStack = new ItemStack(SystemItems.CASINO_CHIP_BLACK.get(), (int) totalChipsWon);
-                if (!player.getInventory().add(wonStack)) {
-                    player.drop(wonStack, false);
-                }
+                CasinoChipHelper.addStackOrDrop(player, new ItemStack(SystemItems.CASINO_CHIP_BLACK.get(), (int) totalChipsWon));
                 player.sendSystemMessage(Component.translatable("awakening_system.slot.won_black_chips", totalChipsWon), true);
             }
         } else {
             if (totalChipsWon > 0) {
-                ItemStack wonStack = new ItemStack(SystemItems.CASINO_CHIP_GOLD.get(), (int) totalChipsWon);
-                if (!player.getInventory().add(wonStack)) {
-                    player.drop(wonStack, false);
-                }
+                CasinoChipHelper.addStackOrDrop(player, new ItemStack(SystemItems.CASINO_CHIP_GOLD.get(), (int) totalChipsWon));
                 player.sendSystemMessage(Component.translatable("awakening_system.slot.won_gold_chips", totalChipsWon), true);
             }
         }

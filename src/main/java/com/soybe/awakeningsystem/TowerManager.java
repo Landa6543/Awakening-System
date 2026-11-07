@@ -181,7 +181,7 @@ public final class TowerManager {
 
         ResourceKey<Level> returnDim = player.level().dimension().equals(RANKER_TOWER) ? Level.OVERWORLD : player.level().dimension();
         Vec3 returnPos = player.level().dimension().equals(RANKER_TOWER) ?
-                (player.getRespawnPosition() != null ? new Vec3(player.getRespawnPosition().getX() + 0.5D, player.getRespawnPosition().getY() + 0.1D, player.getRespawnPosition().getZ() + 0.5D) : new Vec3(0.5D, 70.0D, 0.5D))
+                Vec3.atBottomCenterOf(SystemEvents.overworldReturnPos(player, player.getServer().overworld())).add(0.0D, 0.1D, 0.0D)
                 : player.position();
 
         TowerSession session = new TowerSession(
