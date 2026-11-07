@@ -537,6 +537,10 @@ public final class SystemCommands {
         dispatcher.register(Commands.literal("subspace")
                 .redirect(dispatcher.getRoot().getChild("subespacio")));
 
+        // The skill screen's upgrade button runs this, so it cannot sit behind the admin-only /system.
+        dispatcher.register(Commands.literal("sanctuary")
+                .then(Commands.literal("upgrade").executes(context -> upgradeSanctuaryCommand(context.getSource()))));
+
         dispatcher.register(Commands.literal("structure")
                 .requires(source -> hasAdminOrCreatorPermission(source))
                 .then(Commands.literal("tp")

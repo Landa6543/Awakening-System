@@ -131,7 +131,7 @@ public final class SkillDetailScreen extends Screen {
             if (sancLvl < 3 && currentData.coins() >= nextCost && mouseX >= left + 50 && mouseX <= left + W - 50 && mouseY >= upgY && mouseY <= upgY + 18) {
                 Minecraft.getInstance().getSoundManager().play(SimpleSoundInstance.forUI(SoundEvents.UI_BUTTON_CLICK, 1.0F));
                 if (minecraft != null && minecraft.player != null) {
-                    minecraft.player.connection.sendCommand("system sanctuary upgrade");
+                    minecraft.player.connection.sendCommand("sanctuary upgrade");
                 }
                 return true;
             }

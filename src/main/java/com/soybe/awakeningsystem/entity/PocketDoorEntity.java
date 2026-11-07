@@ -158,7 +158,8 @@ public class PocketDoorEntity extends Entity {
                             }
                         }
                         AABB cleanBox = new AABB(this.getX() - 8.0D, this.getY() - 4.0D, this.getZ() - 8.0D, this.getX() + 8.0D, this.getY() + 4.0D, this.getZ() + 8.0D);
-                        List<PocketDoorEntity> duplicates = this.level().getEntitiesOfClass(PocketDoorEntity.class, cleanBox, d -> !d.isSanctuarySide());
+                        List<PocketDoorEntity> duplicates = this.level().getEntitiesOfClass(PocketDoorEntity.class, cleanBox,
+                            d -> !d.isSanctuarySide() && java.util.Objects.equals(d.getOwnerUUID(), this.getOwnerUUID()));
                         for (PocketDoorEntity dup : duplicates) {
                             dup.discard();
                         }
