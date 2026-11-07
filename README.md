@@ -70,7 +70,7 @@
 
 ### 📦 Utilities & Quality of Life
 
-*   📖 **[JEI (Just Enough Items)](https://www.curseforge.com/minecraft/mc-mods/jei) / [REI](https://www.curseforge.com/minecraft/mc-mods/roughly-enough-items) / [EMI](https://www.curseforge.com/minecraft/mc-mods/emi):** Full recipe lookup support for all custom mod crafts, altars, and elixirs.
+*   📖 **[JEI (Just Enough Items)](https://www.curseforge.com/minecraft/mc-mods/jei) / [REI](https://www.curseforge.com/minecraft/mc-mods/roughly-enough-items) / [EMI](https://www.curseforge.com/minecraft/mc-mods/emi):** Works alongside them. Standard recipes (crafting table, furnace and smithing) can be looked up; special recipes such as altars and elixirs are not shown yet. If EMI is installed together with JEI, EMI replaces JEI's item list.
 *   💍 **[Curios API](https://www.curseforge.com/minecraft/mc-mods/curios):** Compatible with accessory, necklace, and ring slots for System relics and rings.
 
 ***
