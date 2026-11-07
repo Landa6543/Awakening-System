@@ -58,7 +58,12 @@ public class HunterForgeBlock extends BaseEntityBlock {
     private static final net.minecraft.world.phys.shapes.VoxelShape SHAPE = net.minecraft.world.phys.shapes.Shapes.or(
             Block.box(1, 0, 1, 15, 5, 15),
             Block.box(4, 5, 4, 12, 9, 12),
-            Block.box(1, 9, 1, 15, 13, 15));
+            Block.box(1, 9, 1, 15, 13, 15),
+            // obeliscos de las esquinas
+            Block.box(1.5, 5, 1.5, 3.5, 10, 3.5),
+            Block.box(12.5, 5, 1.5, 14.5, 10, 3.5),
+            Block.box(1.5, 5, 12.5, 3.5, 10, 14.5),
+            Block.box(12.5, 5, 12.5, 14.5, 10, 14.5));
 
     @Override
     protected net.minecraft.world.phys.shapes.VoxelShape getShape(BlockState state, net.minecraft.world.level.BlockGetter level,
