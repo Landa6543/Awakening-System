@@ -87,7 +87,7 @@ public final class MeteorSkyRenderer {
             RenderSystem.defaultBlendFunc();
             BufferBuilder smoke = Tesselator.getInstance().begin(VertexFormat.Mode.TRIANGLES, DefaultVertexFormat.POSITION_COLOR);
             drawSmoke(smoke, pose, age - duration);
-            BufferUploader.drawWithShader(smoke.buildOrThrow());
+            drawIfAny(smoke);
         }
 
         // Todo lo que brilla se suma a la luz del cielo
@@ -101,7 +101,7 @@ public final class MeteorSkyRenderer {
         } else {
             drawImpact(builder, pose, age - duration);
         }
-        BufferUploader.drawWithShader(builder.buildOrThrow());
+        drawIfAny(builder);
 
         RenderSystem.enableCull();
         RenderSystem.depthMask(true);
@@ -208,6 +208,12 @@ public final class MeteorSkyRenderer {
             float r = 0.16F + 0.4F * warm, g = 0.13F + 0.16F * warm, b = 0.14F + 0.04F * warm;
             drawGlow(builder, pose, center, radius, r, g, b, 0.6F * fadeIn * life);
         }
+    }
+
+    /** Un BufferBuilder sin vértices no se puede dibujar: el juego se cierra si se intenta. */
+    private static void drawIfAny(BufferBuilder builder) {
+        var mesh = builder.build();
+        if (mesh != null) BufferUploader.drawWithShader(mesh);
     }
 
     private static Vector3f horizontalSide(Vector3f point) {
