@@ -70,7 +70,8 @@ public final class MeteorSkyRenderer {
 
         float progress = Math.min(1.0F, age / duration);
         float fade = age <= duration ? 1.0F : 1.0F - (age - duration) / TAIL_FADE_TICKS;
-        Matrix4f pose = event.getPoseStack().last().pose();
+        // En AFTER_SKY la PoseStack llega vacía: sin la rotación de la cámara, la estrella seguiría la vista
+        Matrix4f pose = event.getModelViewMatrix();
 
         RenderSystem.enableBlend();
         RenderSystem.blendFunc(GlStateManager.SourceFactor.SRC_ALPHA, GlStateManager.DestFactor.ONE);
