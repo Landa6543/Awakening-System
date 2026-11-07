@@ -64,8 +64,7 @@ public class HunterForgeScreen extends AbstractContainerScreen<HunterForgeMenu> 
         ItemStack baseStack = this.menu.getSlot(HunterForgeMenu.SLOT_BASE).getItem();
         ItemStack shown = baseStack.isEmpty()
                 ? new ItemStack(com.soybe.awakeningsystem.block.SystemBlocks.HUNTER_FORGE_TABLE.get()) : baseStack;
-        // vacía, la forja de muestra baja un poco para dejar sitio al texto de ayuda
-        renderRotatingItem(g, shown, x + MOUTH_X + MOUTH_W / 2, y + MOUTH_Y + MOUTH_H / 2 + (baseStack.isEmpty() ? 9 : -2), !baseStack.isEmpty());
+        renderRotatingItem(g, shown, x + MOUTH_X + MOUTH_W / 2, y + MOUTH_Y + MOUTH_H / 2 - 2, !baseStack.isEmpty());
 
         int strike = this.menu.getStrikeTicks();
         if (strike > 0) {
@@ -78,17 +77,6 @@ public class HunterForgeScreen extends AbstractContainerScreen<HunterForgeMenu> 
             g.pose().translate(x + MOUTH_X + MOUTH_W / 2.0F, y + MOUTH_Y + 8, 300);
             g.pose().scale(1.4F, 1.4F, 1.0F);
             g.drawCenteredString(this.font, quality.getDisplayName(), 0, 0, 0xFF000000 | color);
-            g.pose().popPose();
-        } else if (baseStack.isEmpty()) {
-            // Sin objeto: explica para qué sirve la forja
-            g.pose().pushPose();
-            g.pose().translate(x + MOUTH_X + 3, y + MOUTH_Y + 3, 300);
-            g.pose().scale(0.6F, 0.6F, 1.0F);
-            int line = 0;
-            for (var text : this.font.split(Component.translatable("awakening_system.workshop.hint"), (int) ((MOUTH_W - 6) / 0.6F))) {
-                g.drawString(this.font, text, 0, line * 10, 0xFFE8EEFA, true);
-                line++;
-            }
             g.pose().popPose();
         }
 
