@@ -38,6 +38,9 @@ public final class PocketSanctuaryManager {
             ResourceLocation.fromNamespaceAndPath(AwakeningSystemMod.MOD_ID, "pocket_sanctuary")
     );
 
+    private static final int LAND_SEARCH_RADIUS = 2048;
+    private static final int LAND_SEARCH_STEP = 48;
+
     private PocketSanctuaryManager() {}
 
     public static ServerLevel getSanctuaryLevel(MinecraftServer server) {
@@ -59,6 +62,58 @@ public final class PocketSanctuaryManager {
     public static int getPlotOriginZ(Player player) {
         int plotIndex = Math.abs(player.getUUID().hashCode() % 10000);
         return (plotIndex / 100) * 1024;
+    }
+
+    /**
+     * Busca en espiral, sin generar chunks, un terreno seco y llano para la parcela.
+     * El santuario usa terreno con océanos, así que el origen de la parcela puede ser agua.
+     */
+    private static BlockPos findLandNear(ServerLevel level, int ox, int oz) {
+        int seaLevel = level.getSeaLevel();
+        BlockPos anyLand = null;
+        for (int r = 0; r <= LAND_SEARCH_RADIUS; r += LAND_SEARCH_STEP) {
+            for (int dx = -r; dx <= r; dx += LAND_SEARCH_STEP) {
+                for (int dz = -r; dz <= r; dz += LAND_SEARCH_STEP) {
+                    if (Math.max(Math.abs(dx), Math.abs(dz)) != r) continue;
+                    int x = ox + dx;
+                    int z = oz + dz;
+                    int height = terrainHeight(level, x, z);
+                    if (height <= seaLevel + 1) continue;
+                    if (anyLand == null) anyLand = new BlockPos(x, height, z);
+                    if (isDryAndFlatAround(level, x, z, height, seaLevel)) return new BlockPos(x, height, z);
+                }
+            }
+        }
+        return anyLand != null ? anyLand : new BlockPos(ox, seaLevel, oz);
+    }
+
+    private static boolean isDryAndFlatAround(ServerLevel level, int x, int z, int height, int seaLevel) {
+        for (int dx = -24; dx <= 24; dx += 24) {
+            for (int dz = -24; dz <= 24; dz += 24) {
+                int around = terrainHeight(level, x + dx, z + dz);
+                if (around <= seaLevel || Math.abs(around - height) > 8) return false;
+            }
+        }
+        return true;
+    }
+
+    /** Height of the solid ground, ignoring water, taken from the generator so no chunk is created. */
+    private static int terrainHeight(ServerLevel level, int x, int z) {
+        return level.getChunkSource().getGenerator().getBaseHeight(
+                x, z, Heightmap.Types.OCEAN_FLOOR_WG, level, level.getChunkSource().randomState());
+    }
+
+    private static boolean isPlotInWater(ServerLevel level, int x, int y, int z) {
+        level.getChunk(x >> 4, z >> 4);
+        return !level.getFluidState(new BlockPos(x, y - 1, z)).isEmpty();
+    }
+
+    private static BlockPos createPlot(ServerLevel level, ServerPlayer player, SystemData data) {
+        BlockPos land = findLandNear(level, getPlotOriginX(player), getPlotOriginZ(player));
+        BlockPos surface = findSafeSurfacePos(level, land.getX(), land.getZ());
+        data.setSanctuaryPlotPos(surface.getX(), surface.getY(), surface.getZ());
+        ensureSanctuaryPlot(level, player, surface.getX(), surface.getY(), surface.getZ());
+        return surface;
     }
 
     /**
@@ -198,19 +253,22 @@ public final class PocketSanctuaryManager {
         );
 
         int plotX, plotY, plotZ;
-        if (data.hasSanctuaryPlot()) {
+        boolean plotInWater = data.hasSanctuaryPlot()
+                && isPlotInWater(sanctuaryLevel, data.sanctuaryPlotX(), data.sanctuaryPlotY(), data.sanctuaryPlotZ());
+        if (data.hasSanctuaryPlot() && !plotInWater) {
             plotX = data.sanctuaryPlotX();
             plotY = data.sanctuaryPlotY();
             plotZ = data.sanctuaryPlotZ();
         } else {
-            int ox = getPlotOriginX(player);
-            int oz = getPlotOriginZ(player);
-            BlockPos surfacePos = findSafeSurfacePos(sanctuaryLevel, ox, oz);
+            if (plotInWater) {
+                // Parcelas antiguas creadas sobre el océano: se mudan a tierra firme
+                PocketDoorEntity oldDoor = getInteriorDoor(sanctuaryLevel, player, data.sanctuaryPlotX(), data.sanctuaryPlotY(), data.sanctuaryPlotZ());
+                if (oldDoor != null) oldDoor.discard();
+            }
+            BlockPos surfacePos = createPlot(sanctuaryLevel, player, data);
             plotX = surfacePos.getX();
             plotY = surfacePos.getY();
             plotZ = surfacePos.getZ();
-            data.setSanctuaryPlotPos(plotX, plotY, plotZ);
-            ensureSanctuaryPlot(sanctuaryLevel, player, plotX, plotY, plotZ);
             data.setSanctuaryBuiltLevel(Math.max(1, data.sanctuaryBuiltLevel()));
         }
 
@@ -398,6 +456,15 @@ public final class PocketSanctuaryManager {
      * Solo aparece la puerta física y nada más: sin plataformas de piedra, sin faroles artificiales.
      */
     public static void ensureSanctuaryPlot(ServerLevel level, ServerPlayer player, int ox, int oy, int oz) {
+        // Último recurso si no hubo tierra cerca: un islote de césped para no quedar en el agua
+        for (int dx = -3; dx <= 3; dx++) {
+            for (int dz = -4; dz <= 3; dz++) {
+                BlockPos ground = new BlockPos(ox + dx, oy - 1, oz + dz);
+                if (!level.getFluidState(ground).isEmpty()) {
+                    level.setBlock(ground, Blocks.GRASS_BLOCK.defaultBlockState(), 3);
+                }
+            }
+        }
         BlockPos doorGround = new BlockPos(ox, oy - 1, oz - 1);
         if (level.getBlockState(doorGround).isAir()) {
             level.setBlock(doorGround, Blocks.GRASS_BLOCK.defaultBlockState(), 3);
@@ -465,8 +532,9 @@ public final class PocketSanctuaryManager {
             default -> 256;
         };
 
-        int ox = getPlotOriginX(player);
-        int oz = getPlotOriginZ(player);
+        // El territorio se centra en la parcela real, que puede estar lejos del origen si había océano
+        int ox = data.hasSanctuaryPlot() ? data.sanctuaryPlotX() : getPlotOriginX(player);
+        int oz = data.hasSanctuaryPlot() ? data.sanctuaryPlotZ() : getPlotOriginZ(player);
 
         double dx = player.getX() - ox;
         double dz = player.getZ() - oz;
@@ -524,11 +592,7 @@ public final class PocketSanctuaryManager {
         if (server != null) {
             ServerLevel sanctuaryLevel = getSanctuaryLevel(server);
             if (!data.hasSanctuaryPlot()) {
-                int ox = getPlotOriginX(player);
-                int oz = getPlotOriginZ(player);
-                BlockPos surfacePos = findSafeSurfacePos(sanctuaryLevel, ox, oz);
-                data.setSanctuaryPlotPos(surfacePos.getX(), surfacePos.getY(), surfacePos.getZ());
-                ensureSanctuaryPlot(sanctuaryLevel, player, surfacePos.getX(), surfacePos.getY(), surfacePos.getZ());
+                createPlot(sanctuaryLevel, player, data);
             }
             data.setSanctuaryBuiltLevel(nextLvl);
         }
