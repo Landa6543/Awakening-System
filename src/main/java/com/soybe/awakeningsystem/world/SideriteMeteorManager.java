@@ -2,8 +2,11 @@ package com.soybe.awakeningsystem.world;
 
 import com.soybe.awakeningsystem.entity.FallingSideriteMeteorEntity;
 import net.minecraft.core.BlockPos;
+import net.minecraft.core.particles.DustColorTransitionOptions;
+import net.minecraft.core.particles.DustParticleOptions;
 import net.minecraft.core.particles.ParticleTypes;
 import net.minecraft.network.chat.Component;
+import net.minecraft.network.protocol.game.ClientboundStopSoundPacket;
 import net.minecraft.server.MinecraftServer;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.server.level.ServerPlayer;
@@ -14,7 +17,7 @@ import net.minecraft.world.level.Level;
 import net.minecraft.world.level.block.Blocks;
 import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.level.levelgen.Heightmap;
-import net.minecraft.world.phys.Vec3;
+import org.joml.Vector3f;
 
 import java.util.ArrayList;
 import java.util.Iterator;
@@ -42,12 +45,17 @@ public final class SideriteMeteorManager {
     private static final int CRATER_CLEARANCE = 10;
     private static final int MAX_TERRAIN_STEP = 6;
 
-    private static final int FALL_TICKS = 50;
+    private static final int FALL_TICKS = 90;
     // Dentro de la niebla de la distancia de renderizado más común, para que siempre se vea
-    private static final double STREAK_DISTANCE = 110.0D;
-    private static final double STREAK_DRIFT = 35.0D;
-    private static final double STREAK_START_HEIGHT = 115.0D;
-    private static final double STREAK_END_HEIGHT = 20.0D;
+    private static final double STREAK_DISTANCE = 120.0D;
+    private static final double STREAK_DRIFT = 90.0D;
+    private static final double STREAK_START_HEIGHT = 260.0D;
+    private static final double STREAK_END_HEIGHT = 12.0D;
+    private static final int STREAK_STEPS_PER_TICK = 6;
+
+    private static final DustParticleOptions FIREBALL = new DustParticleOptions(new Vector3f(1.0F, 0.72F, 0.28F), 4.0F);
+    private static final DustColorTransitionOptions TAIL = new DustColorTransitionOptions(
+            new Vector3f(0.45F, 0.9F, 1.0F), new Vector3f(0.35F, 0.15F, 0.75F), 3.0F);
 
     private static final List<FallingMeteor> FALLING = new ArrayList<>();
 
@@ -116,7 +124,8 @@ public final class SideriteMeteorManager {
         Component skyAnnouncement = Component.translatable("awakening_system.announcement.meteor_entry");
         for (ServerPlayer sp : sl.players()) {
             sp.sendSystemMessage(skyAnnouncement);
-            sp.playNotifySound(SoundEvents.FIREWORK_ROCKET_LAUNCH, SoundSource.WEATHER, 0.8F, 0.55F);
+            // Rugido de aire al cruzar la atmósfera; se corta en el momento del impacto
+            sp.playNotifySound(SoundEvents.ELYTRA_FLYING, SoundSource.WEATHER, 0.45F, 0.6F);
         }
 
         lastMeteorTime = sl.getGameTime();
@@ -140,6 +149,7 @@ public final class SideriteMeteorManager {
             if (meteor.age >= FALL_TICKS) {
                 FallingSideriteMeteorEntity.createImpact(meteor.level, meteor.target);
                 for (ServerPlayer player : meteor.level.players()) {
+                    player.connection.send(new ClientboundStopSoundPacket(SoundEvents.ELYTRA_FLYING.getLocation(), SoundSource.WEATHER));
                     player.playNotifySound(SoundEvents.LIGHTNING_BOLT_THUNDER, SoundSource.WEATHER, 0.6F, 0.5F);
                 }
                 iterator.remove();
@@ -160,17 +170,24 @@ public final class SideriteMeteorManager {
         double dirX = toX / length;
         double dirZ = toZ / length;
 
-        for (int step = 0; step < 4; step++) {
-            double progress = (meteor.age + step / 4.0D) / FALL_TICKS;
+        for (int step = 0; step < STREAK_STEPS_PER_TICK; step++) {
+            // Acelera al caer: arranca lento en lo alto y entra rápido hacia el horizonte
+            double progress = Math.pow((meteor.age + (double) step / STREAK_STEPS_PER_TICK) / FALL_TICKS, 1.5D);
             double drift = meteor.driftSign * STREAK_DRIFT * (1.0D - 2.0D * progress);
             double x = player.getX() + dirX * STREAK_DISTANCE - dirZ * drift;
             double z = player.getZ() + dirZ * STREAK_DISTANCE + dirX * drift;
             double y = player.getY() + STREAK_START_HEIGHT + (STREAK_END_HEIGHT - STREAK_START_HEIGHT) * progress;
 
-            meteor.level.sendParticles(player, ParticleTypes.END_ROD, true, x, y, z, 6, 0.35D, 0.35D, 0.35D, 0.01D);
-            meteor.level.sendParticles(player, ParticleTypes.FIREWORK, true, x, y, z, 2, 0.3D, 0.3D, 0.3D, 0.01D);
-            if (step == 0 && meteor.age % 3 == 0) {
+            meteor.level.sendParticles(player, FIREBALL, true, x, y, z, 2, 0.25D, 0.25D, 0.25D, 0.0D);
+            meteor.level.sendParticles(player, TAIL, true, x, y, z, 3, 0.7D, 0.7D, 0.7D, 0.0D);
+            meteor.level.sendParticles(player, ParticleTypes.END_ROD, true, x, y, z, 2, 0.4D, 0.4D, 0.4D, 0.01D);
+            if (step == 0) {
                 meteor.level.sendParticles(player, ParticleTypes.FLASH, true, x, y, z, 1, 0.0D, 0.0D, 0.0D, 0.0D);
+            }
+            if (meteor.age >= FALL_TICKS - 1) {
+                // Resplandor final detrás del horizonte: se ve el golpe, pero no el cráter
+                meteor.level.sendParticles(player, ParticleTypes.FLASH, true, x, y, z, 3, 3.0D, 2.0D, 3.0D, 0.0D);
+                meteor.level.sendParticles(player, FIREBALL, true, x, y, z, 30, 5.0D, 3.0D, 5.0D, 0.0D);
             }
         }
     }

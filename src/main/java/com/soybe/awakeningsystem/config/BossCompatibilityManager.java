@@ -226,7 +226,9 @@ public final class BossCompatibilityManager {
         if (entity instanceof com.soybe.awakeningsystem.entity.SeriesNpcEntity
                 || entity instanceof net.minecraft.world.entity.npc.Npc
                 || entity instanceof net.minecraft.world.entity.player.Player
-                || com.soybe.awakeningsystem.AwakeningSystemClient.isFriendlyOrGuildShadow(entity)) {
+                || entity.getTags().contains("shadow_soldier")
+                // Solo en el cliente: esa clase no existe en un servidor dedicado y lo haría caer
+                || (entity.level().isClientSide() && com.soybe.awakeningsystem.AwakeningSystemClient.isFriendlyOrGuildShadow(entity))) {
             return false;
         }
         init();

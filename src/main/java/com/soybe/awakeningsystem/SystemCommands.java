@@ -543,6 +543,14 @@ public final class SystemCommands {
 
         dispatcher.register(Commands.literal("structure")
                 .requires(source -> hasAdminOrCreatorPermission(source))
+                .then(Commands.literal("observatory").executes(context -> {
+                    CommandSourceStack source = context.getSource();
+                    com.soybe.awakeningsystem.world.AstralObservatoryBuilder.build(source.getLevel(),
+                            net.minecraft.core.BlockPos.containing(source.getPosition()),
+                            net.minecraft.core.Direction.fromYRot(source.getRotation().y));
+                    source.sendSuccess(() -> Component.translatableWithFallback("awakening_system.msg.observatory_built", "Astral Observatory built in front of you."), true);
+                    return 1;
+                }))
                 .then(Commands.literal("tp")
                         .then(Commands.argument("name", StringArgumentType.word())
                                 .suggests((ctx, builder) -> net.minecraft.commands.SharedSuggestionProvider.suggest(ALL_STRUCTURE_NAMES, builder))
