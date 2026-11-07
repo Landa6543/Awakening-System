@@ -54,6 +54,12 @@ public final class SideriteMeteorManager {
 
     private record SmokingCrater(ServerLevel level, BlockPos center, long startTime) {}
 
+    /** Estruendo que todavía viaja hacia un jugador: el sonido llega después del destello. */
+    private record PendingBoom(ServerPlayer player, long arrivalTime, float volume, boolean echo) {}
+    private static final List<PendingBoom> BOOMS = new ArrayList<>();
+    // El sonido recorre unos 17 bloques por tick (343 m/s); a 300 bloques llega casi un segundo tarde
+    private static final double SOUND_BLOCKS_PER_TICK = 17.0D;
+
     private SideriteMeteorManager() {}
 
     private static final class FallingMeteor {
@@ -71,6 +77,7 @@ public final class SideriteMeteorManager {
         if (server == null) return;
         tickFallingMeteors(server);
         tickSmokingCraters(server);
+        tickBooms(server);
 
         long gameTime = server.overworld().getGameTime();
         // El contador es estático: al cambiar a un mundo más nuevo no debe bloquear los meteoritos
@@ -122,8 +129,9 @@ public final class SideriteMeteorManager {
             // Cada jugador ve la estrella caer hacia la dirección real del impacto
             float bearing = (float) Math.toDegrees(Math.atan2(-(impactSite.getX() - sp.getX()), impactSite.getZ() - sp.getZ()));
             PacketDistributor.sendToPlayer(sp, new MeteorStreakPayload(bearing, driftSign, FALL_TICKS));
-            // Rugido de aire al cruzar la atmósfera; se corta en el momento del impacto
-            sp.playNotifySound(SoundEvents.ELYTRA_FLYING, SoundSource.WEATHER, 0.45F, 0.6F);
+            // Rugido grave de aire al cruzar la atmósfera, con un siseo de fuego; se corta al impactar
+            sp.playNotifySound(SoundEvents.ELYTRA_FLYING, SoundSource.WEATHER, 0.55F, 0.45F);
+            sp.playNotifySound(SoundEvents.FIRECHARGE_USE, SoundSource.WEATHER, 0.35F, 0.5F);
         }
 
         lastMeteorTime = sl.getGameTime();
@@ -144,12 +152,40 @@ public final class SideriteMeteorManager {
                 FallingSideriteMeteorEntity.createImpact(meteor.level, meteor.target);
                 MeteorImpactData.get(server).setLastImpact(meteor.level.dimension(), meteor.target);
                 SMOKING.add(new SmokingCrater(meteor.level, meteor.target, meteor.level.getGameTime()));
+                long now = meteor.level.getGameTime();
                 for (ServerPlayer player : meteor.level.players()) {
                     player.connection.send(new ClientboundStopSoundPacket(SoundEvents.ELYTRA_FLYING.getLocation(), SoundSource.WEATHER));
-                    player.playNotifySound(SoundEvents.LIGHTNING_BOLT_THUNDER, SoundSource.WEATHER, 0.6F, 0.5F);
+                    double distance = Math.sqrt(player.distanceToSqr(meteor.target.getCenter()));
+                    long delay = Math.min(60L, Math.round(distance / SOUND_BLOCKS_PER_TICK));
+                    float volume = (float) Math.max(0.45D, Math.min(1.0D, 1.25D - distance / 600.0D));
+                    BOOMS.add(new PendingBoom(player, now + delay, volume, false));
+                    // eco que rueda por el paisaje un poco después
+                    BOOMS.add(new PendingBoom(player, now + delay + 14, volume * 0.6F, true));
                 }
                 iterator.remove();
             }
+        }
+    }
+
+    private static void tickBooms(MinecraftServer server) {
+        Iterator<PendingBoom> iterator = BOOMS.iterator();
+        while (iterator.hasNext()) {
+            PendingBoom boom = iterator.next();
+            ServerPlayer player = boom.player();
+            if (player.hasDisconnected() || player.getServer() != server) {
+                iterator.remove();
+                continue;
+            }
+            if (player.level().getGameTime() < boom.arrivalTime()) continue;
+            if (boom.echo()) {
+                player.playNotifySound(SoundEvents.LIGHTNING_BOLT_THUNDER, SoundSource.WEATHER, boom.volume(), 0.42F);
+            } else {
+                // golpe seco, retumbo profundo y desgarro de fuego, todo a la vez
+                player.playNotifySound(SoundEvents.GENERIC_EXPLODE.value(), SoundSource.WEATHER, boom.volume(), 0.5F);
+                player.playNotifySound(SoundEvents.DRAGON_FIREBALL_EXPLODE, SoundSource.WEATHER, boom.volume() * 0.8F, 0.55F);
+                player.playNotifySound(SoundEvents.LIGHTNING_BOLT_THUNDER, SoundSource.WEATHER, boom.volume() * 0.7F, 0.6F);
+            }
+            iterator.remove();
         }
     }
 

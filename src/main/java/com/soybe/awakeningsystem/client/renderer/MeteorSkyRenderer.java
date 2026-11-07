@@ -27,9 +27,10 @@ public final class MeteorSkyRenderer {
 
     private static final float SKY_RADIUS = 80.0F;
     // Entra en diagonal: cruza buena parte del cielo de lado antes de llegar al horizonte
-    private static final float START_ELEVATION = 40.0F;
-    // Termina justo sobre el horizonte, donde estalla; si hay montañas delante, el paisaje lo tapa
-    private static final float END_ELEVATION = 1.5F;
+    private static final float START_ELEVATION = 28.0F;
+    // Termina justo bajo la línea del horizonte: el centro del estallido queda a ras de suelo y solo
+    // asoma la cúpula de fuego, como si estallara al tocar tierra a lo lejos
+    private static final float END_ELEVATION = -0.6F;
     private static final float AZIMUTH_SWEEP = 70.0F;
     private static final float TAIL_LENGTH = 0.34F;
     private static final float TAIL_FADE_TICKS = 10.0F;
@@ -96,8 +97,8 @@ public final class MeteorSkyRenderer {
         if (fade > 0.0F) drawTail(builder, pose, progress, fade);
         if (age <= duration) {
             Vector3f head = skyPoint(progress);
-            drawGlow(builder, pose, head, 4.5F, 1.0F, 0.55F, 0.2F, 0.30F);
-            drawGlow(builder, pose, head, 1.6F, 1.0F, 0.95F, 0.85F, 1.0F);
+            drawGlow(builder, pose, head, 3.0F, 1.0F, 0.55F, 0.2F, 0.30F);
+            drawGlow(builder, pose, head, 1.0F, 1.0F, 0.95F, 0.85F, 1.0F);
         } else {
             drawImpact(builder, pose, age - duration);
         }
@@ -132,8 +133,8 @@ public final class MeteorSkyRenderer {
             if (near.distanceSquared(far) < 1.0E-4F) continue;
 
             Vector3f side = new Vector3f(far).sub(near).cross(near).normalize();
-            Vector3f nearSide = new Vector3f(side).mul(0.75F * (1.0F - nearT));
-            Vector3f farSide = new Vector3f(side).mul(0.75F * (1.0F - farT));
+            Vector3f nearSide = new Vector3f(side).mul(0.45F * (1.0F - nearT));
+            Vector3f farSide = new Vector3f(side).mul(0.45F * (1.0F - farT));
             float nearAlpha = (1.0F - nearT) * (1.0F - nearT) * fade;
             float farAlpha = (1.0F - farT) * (1.0F - farT) * fade;
 
@@ -167,7 +168,7 @@ public final class MeteorSkyRenderer {
         float burst = easeOut(Math.min(1.0F, t / 4.0F));
         float flash = t < 2.0F ? 1.0F : Math.max(0.0F, 1.0F - (t - 2.0F) / 14.0F);
         if (flash > 0.0F) {
-            drawGlow(builder, pose, ground, 4.0F + 16.0F * burst, 1.0F, 0.97F, 0.9F, flash);
+            drawGlow(builder, pose, ground, 3.0F + 9.0F * burst, 1.0F, 0.97F, 0.9F, flash);
         }
 
         // Cúpula de fuego: media esfera que crece sobre el horizonte y se enfría de amarillo a rojo
@@ -175,19 +176,19 @@ public final class MeteorSkyRenderer {
         float domeLife = Math.max(0.0F, 1.0F - t / 60.0F);
         if (domeLife > 0.0F) {
             float heat = Math.min(1.0F, t / 50.0F);
-            drawHalfGlow(builder, pose, ground, side, up, 4.0F + 9.0F * domeGrow,
+            drawHalfGlow(builder, pose, ground, side, up, 3.0F + 6.0F * domeGrow,
                     1.0F, 0.75F - 0.4F * heat, 0.35F - 0.25F * heat, 0.85F * domeLife * domeLife);
         }
 
         // Onda de choque: una franja de luz que se abre a lo largo del horizonte
         float waveLife = Math.max(0.0F, 1.0F - t / 32.0F);
         if (waveLife > 0.0F) {
-            float width = 6.0F + 46.0F * easeOut(Math.min(1.0F, t / 32.0F));
-            drawHorizonBand(builder, pose, ground, side, width, 1.1F, new float[]{1.0F, 0.8F, 0.55F}, 0.7F * waveLife);
+            float width = 4.0F + 30.0F * easeOut(Math.min(1.0F, t / 32.0F));
+            drawHorizonBand(builder, pose, ground, side, width, 0.7F, new float[]{1.0F, 0.8F, 0.55F}, 0.7F * waveLife);
         }
 
         // Brasas: el resplandor rojizo del cráter, que dura hasta el final
-        drawHalfGlow(builder, pose, ground, side, up, 7.0F, 1.0F, 0.35F, 0.12F, 0.4F * life);
+        drawHalfGlow(builder, pose, ground, side, up, 5.0F, 1.0F, 0.35F, 0.12F, 0.4F * life);
     }
 
     /** Humo oscuro que sube despacio y se ensancha; abajo lo tiñe el fuego del cráter. */
@@ -198,13 +199,13 @@ public final class MeteorSkyRenderer {
         for (int i = 0; i < SMOKE_PUFFS; i++) {
             float puffAge = t - 6.0F - i * 7.0F;
             if (puffAge <= 0.0F) continue;
-            float rise = Math.min(18.0F, puffAge * 0.16F);
+            float rise = Math.min(11.0F, puffAge * 0.1F);
             float drift = (float) Math.sin(i * 1.7F) * (1.0F + puffAge * 0.03F);
-            Vector3f center = new Vector3f(ground).add(0.0F, 2.0F + rise, 0.0F).add(new Vector3f(side).mul(drift));
-            float radius = 3.5F + puffAge * 0.07F;
+            Vector3f center = new Vector3f(ground).add(0.0F, 1.2F + rise, 0.0F).add(new Vector3f(side).mul(drift));
+            float radius = 2.2F + puffAge * 0.045F;
             float fadeIn = Math.min(1.0F, puffAge / 8.0F);
             // Recién salido, el humo refleja el fuego; al subir se vuelve gris oscuro
-            float warm = Math.max(0.0F, 1.0F - rise / 8.0F);
+            float warm = Math.max(0.0F, 1.0F - rise / 5.0F);
             float r = 0.16F + 0.4F * warm, g = 0.13F + 0.16F * warm, b = 0.14F + 0.04F * warm;
             drawGlow(builder, pose, center, radius, r, g, b, 0.6F * fadeIn * life);
         }
