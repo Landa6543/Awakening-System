@@ -94,6 +94,7 @@ public final class ModCreativeTabs {
                             accept(output, SystemItems.XMAS_TREE_SWORD);
                         }
 
+                        accept(output, SystemItems.METEOR_SHARD);
                         accept(output, SystemItems.SIDERITE_SWORD);
                         accept(output, SystemItems.SIDERITE_HAMAXE);
                         accept(output, SystemItems.SIDERITE_PICKAXE);

@@ -543,6 +543,14 @@ public final class SystemCommands {
 
         dispatcher.register(Commands.literal("structure")
                 .requires(source -> hasAdminOrCreatorPermission(source))
+                .then(Commands.literal("arena").executes(context -> {
+                    CommandSourceStack source = context.getSource();
+                    com.soybe.awakeningsystem.world.FallenSovereignArenaBuilder.build(source.getLevel(),
+                            net.minecraft.core.BlockPos.containing(source.getPosition()),
+                            net.minecraft.core.Direction.fromYRot(source.getRotation().y));
+                    source.sendSuccess(() -> Component.translatableWithFallback("awakening_system.msg.arena_built", "Fallen Sovereign Arena built in front of you."), true);
+                    return 1;
+                }))
                 .then(Commands.literal("observatory").executes(context -> {
                     CommandSourceStack source = context.getSource();
                     com.soybe.awakeningsystem.world.AstralObservatoryBuilder.build(source.getLevel(),
