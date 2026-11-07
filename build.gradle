@@ -47,7 +47,7 @@ base {
 
 // Diorama (MIT) and Better Caves (LGPL) are bundled in the mod, so their licenses must ship with it.
 tasks.named('jar', Jar).configure {
-    from('LICENSE', 'LICENSE_DIORAMA.txt', 'LICENSE_BETTER_CAVES.txt') {
+    from(files('LICENSE', 'LICENSE_DIORAMA.txt', 'LICENSE_BETTER_CAVES.txt')) {
         into 'META-INF/licenses'
     }
 }
