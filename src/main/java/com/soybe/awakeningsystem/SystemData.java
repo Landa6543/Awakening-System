@@ -1497,6 +1497,11 @@ public final class SystemData implements INBTSerializable<CompoundTag> {
         return net.minecraft.network.chat.Component.translatable(rankTranslationKey(level));
     }
 
+    public static net.minecraft.network.chat.Component rankComponent(String rank) {
+        String raw = rank.toLowerCase(java.util.Locale.ROOT).replace("+", "_plus");
+        return net.minecraft.network.chat.Component.translatable("awakening_system.rank." + raw);
+    }
+
     public String rankTranslationKey() {
         String raw = evaluatedRank().toLowerCase(java.util.Locale.ROOT).replace("+", "_plus");
         return "awakening_system.rank." + raw;

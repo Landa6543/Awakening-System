@@ -2659,7 +2659,9 @@ public final class AwakeningSystemClient {
 
         String guildRank = (badge.guildRank() == null || badge.guildRank().isEmpty()) ? "F" : badge.guildRank();
 
-        Component rankComp = Component.translatable("awakening_system.nametag.rank_level", SystemData.rankComponent(badge.level()), badge.level());
+        // El rango lo da la evaluación, no el nivel: un nivel alto sin ascender sigue en su rango real
+        String hunterRank = (badge.rank() == null || badge.rank().isEmpty()) ? "F" : badge.rank();
+        Component rankComp = Component.translatable("awakening_system.nametag.rank_level", SystemData.rankComponent(hunterRank), badge.level());
         Component guildComp = Component.translatable("awakening_system.nametag.guild", guildRank);
 
         java.util.List<Component> lines = new java.util.ArrayList<>();
