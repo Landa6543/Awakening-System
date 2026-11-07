@@ -47,11 +47,11 @@ public final class ClassSelectionScreen extends Screen {
         }
 
         public Component getManhwa() {
-            return Component.translatable("awakening_system.class." + id + ".manhwa");
+            return Component.literal(manhwa);
         }
 
         public Component getShortManhwa() {
-            return Component.translatable("awakening_system.class." + id + ".short_manhwa");
+            return Component.literal(shortManhwa);
         }
 
         public Component getSignatureSkillName() {
@@ -366,8 +366,12 @@ public final class ClassSelectionScreen extends Screen {
         graphics.fill(chamberX + chamberW - 6, chamberY + chamberH - 2, chamberX + chamberW, chamberY + chamberH, sel.color());
         graphics.fill(chamberX + chamberW - 2, chamberY + chamberH - 6, chamberX + chamberW, chamberY + chamberH, sel.color());
 
-        graphics.drawString(font, Component.literal("✦ ").append(sel.getName()).append(" ✦").withStyle(s -> s.withBold(true).withColor(sel.color())), chamberX + 10, chamberY + 7, sel.color());
+        Component classTitle = Component.literal("✦ ").append(sel.getName()).append(" ✦").withStyle(s -> s.withBold(true).withColor(sel.color()));
+        graphics.drawString(font, classTitle, chamberX + 10, chamberY + 7, sel.color());
         Component manhwaTag = Component.translatable("awakening_system.screen.class_select.manhwa", sel.getManhwa());
+        if (font.width(classTitle) + font.width(manhwaTag) > chamberW - 28) {
+            manhwaTag = Component.translatable("awakening_system.screen.class_select.manhwa", sel.getShortManhwa());
+        }
         graphics.drawString(font, manhwaTag, chamberX + chamberW - 10 - font.width(manhwaTag), chamberY + 7, 0xFF70E8FF);
 
         Component roleComp = Component.translatable("awakening_system.screen.class_select.role_label", sel.getRoleTag().getString(), sel.getDescription().getString());
