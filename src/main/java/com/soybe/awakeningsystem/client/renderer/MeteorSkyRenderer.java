@@ -26,12 +26,14 @@ import org.joml.Vector3f;
 public final class MeteorSkyRenderer {
 
     private static final float SKY_RADIUS = 80.0F;
-    private static final float START_ELEVATION = 62.0F;
-    // Termina bajo el horizonte para que el final de la caída quede oculto tras el paisaje
-    private static final float END_ELEVATION = -4.0F;
-    private static final float AZIMUTH_SWEEP = 32.0F;
+    // Entra en diagonal: cruza buena parte del cielo de lado antes de llegar al horizonte
+    private static final float START_ELEVATION = 40.0F;
+    // Termina justo sobre el horizonte, donde estalla; si hay montañas delante, el paisaje lo tapa
+    private static final float END_ELEVATION = 1.5F;
+    private static final float AZIMUTH_SWEEP = 70.0F;
     private static final float TAIL_LENGTH = 0.34F;
     private static final float TAIL_FADE_TICKS = 14.0F;
+    private static final float IMPACT_TICKS = 70.0F;
     private static final int TAIL_SEGMENTS = 22;
     private static final int GLOW_SEGMENTS = 18;
 
@@ -63,13 +65,13 @@ public final class MeteorSkyRenderer {
         }
 
         float age = (mc.level.getGameTime() - startTick) + event.getPartialTick().getGameTimeDeltaPartialTick(true);
-        if (age < 0.0F || age > duration + TAIL_FADE_TICKS) {
+        if (age < 0.0F || age > duration + IMPACT_TICKS) {
             active = false;
             return;
         }
 
         float progress = Math.min(1.0F, age / duration);
-        float fade = age <= duration ? 1.0F : 1.0F - (age - duration) / TAIL_FADE_TICKS;
+        float fade = age <= duration ? 1.0F : Math.max(0.0F, 1.0F - (age - duration) / TAIL_FADE_TICKS);
         // En AFTER_SKY la PoseStack llega vacía: sin la rotación de la cámara, la estrella seguiría la vista
         Matrix4f pose = event.getModelViewMatrix();
 
@@ -81,11 +83,13 @@ public final class MeteorSkyRenderer {
         RenderSystem.setShader(GameRenderer::getPositionColorShader);
 
         BufferBuilder builder = Tesselator.getInstance().begin(VertexFormat.Mode.TRIANGLES, DefaultVertexFormat.POSITION_COLOR);
-        drawTail(builder, pose, progress, fade);
+        if (fade > 0.0F) drawTail(builder, pose, progress, fade);
         if (age <= duration) {
             Vector3f head = skyPoint(progress);
             drawGlow(builder, pose, head, 4.5F, 1.0F, 0.55F, 0.2F, 0.30F);
             drawGlow(builder, pose, head, 1.6F, 1.0F, 0.95F, 0.85F, 1.0F);
+        } else {
+            drawImpact(builder, pose, age - duration);
         }
         BufferUploader.drawWithShader(builder.buildOrThrow());
 
@@ -137,6 +141,58 @@ public final class MeteorSkyRenderer {
             vertex(builder, pose, b2, b, farAlpha);
             vertex(builder, pose, b1, b, farAlpha);
         }
+    }
+
+    /**
+     * Estallido en el horizonte: un destello blanco que se abre de golpe, un resplandor naranja que
+     * se apaga despacio y una columna de fuego y humo que sube desde el punto de impacto.
+     */
+    private static void drawImpact(BufferBuilder builder, Matrix4f pose, float t) {
+        Vector3f ground = skyPoint(1.0F);
+        float life = 1.0F - t / IMPACT_TICKS;
+
+        float burst = Math.min(1.0F, t / 4.0F);
+        float flashAlpha = t < 3.0F ? 1.0F : Math.max(0.0F, 1.0F - (t - 3.0F) / 18.0F);
+        drawGlow(builder, pose, ground, 16.0F + 10.0F * burst, 1.0F, 0.45F, 0.12F, 0.55F * life);
+        if (flashAlpha > 0.0F) {
+            drawGlow(builder, pose, ground, 3.0F + 13.0F * burst, 1.0F, 0.97F, 0.88F, flashAlpha);
+        }
+
+        // La columna crece rápido y luego se queda, perdiendo brillo
+        float height = 22.0F * (1.0F - (float) Math.pow(1.0F - Math.min(1.0F, t / 25.0F), 3.0D));
+        Vector3f up = new Vector3f(0.0F, 1.0F, 0.0F);
+        Vector3f side = new Vector3f(ground).cross(up).normalize();
+        int segments = 10;
+        for (int i = 0; i < segments; i++) {
+            float a = (float) i / segments;
+            float b = (float) (i + 1) / segments;
+            Vector3f lower = new Vector3f(ground).add(0.0F, height * a, 0.0F);
+            Vector3f upper = new Vector3f(ground).add(0.0F, height * b, 0.0F);
+            // Más ancha arriba, como el humo que se abre al subir
+            Vector3f lowerSide = new Vector3f(side).mul(2.0F + 3.0F * a);
+            Vector3f upperSide = new Vector3f(side).mul(2.0F + 3.0F * b);
+            float[] lowerColor = columnColor(a);
+            float[] upperColor = columnColor(b);
+            float lowerAlpha = 0.75F * life * (1.0F - a * 0.6F);
+            float upperAlpha = 0.75F * life * (1.0F - b * 0.6F);
+
+            vertex(builder, pose, new Vector3f(lower).add(lowerSide), lowerColor, lowerAlpha);
+            vertex(builder, pose, new Vector3f(lower).sub(lowerSide), lowerColor, lowerAlpha);
+            vertex(builder, pose, new Vector3f(upper).add(upperSide), upperColor, upperAlpha);
+            vertex(builder, pose, new Vector3f(lower).sub(lowerSide), lowerColor, lowerAlpha);
+            vertex(builder, pose, new Vector3f(upper).sub(upperSide), upperColor, upperAlpha);
+            vertex(builder, pose, new Vector3f(upper).add(upperSide), upperColor, upperAlpha);
+        }
+        // Bola de fuego en la cima de la columna
+        if (height > 1.0F) {
+            Vector3f top = new Vector3f(ground).add(0.0F, height, 0.0F);
+            drawGlow(builder, pose, top, 7.0F, 1.0F, 0.5F, 0.15F, 0.5F * life);
+        }
+    }
+
+    /** De naranja intenso en la base a rojo apagado arriba. */
+    private static float[] columnColor(float t) {
+        return new float[]{1.0F - 0.35F * t, 0.62F - 0.45F * t, 0.25F - 0.1F * t};
     }
 
     /** Del blanco caliente junto a la cabeza al azul y violeta de la cola. */

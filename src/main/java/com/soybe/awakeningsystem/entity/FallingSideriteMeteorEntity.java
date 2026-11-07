@@ -157,6 +157,26 @@ public class FallingSideriteMeteorEntity extends Entity {
                 sl.sendParticles(ParticleTypes.CAMPFIRE_COSY_SMOKE, impactPos.getX() + 0.5, impactPos.getY() + y, impactPos.getZ() + 0.5, 3, 0.3, 0.5, 0.3, 0.03);
             }
 
+            // 3b. Explosión forzada: las partículas normales solo se ven a 32 bloques y el meteorito cae
+            // a cientos, así que se envían forzadas a quien esté lo bastante cerca para verla en el horizonte
+            double cx = impactPos.getX() + 0.5D;
+            double cy = impactPos.getY() + 1.0D;
+            double cz = impactPos.getZ() + 0.5D;
+            for (ServerPlayer viewer : sl.players()) {
+                if (viewer.distanceToSqr(cx, cy, cz) > 640.0D * 640.0D) continue;
+                sl.sendParticles(viewer, ParticleTypes.EXPLOSION_EMITTER, true, cx, cy + 2.0D, cz, 6, 3.0D, 2.5D, 3.0D, 0.0D);
+                sl.sendParticles(viewer, ParticleTypes.FLASH, true, cx, cy + 3.0D, cz, 4, 1.0D, 1.0D, 1.0D, 0.0D);
+                sl.sendParticles(viewer, ParticleTypes.LAVA, true, cx, cy, cz, 60, 3.0D, 1.0D, 3.0D, 0.0D);
+                for (int i = 0; i < 24; i++) {
+                    double angle = Math.PI * 2.0D * i / 24.0D;
+                    // Con cantidad 0 los tres valores son la velocidad: chorros de fuego que salen en abanico
+                    sl.sendParticles(viewer, ParticleTypes.FLAME, true, cx, cy + 1.0D, cz, 0,
+                            Math.cos(angle) * 0.6D, 0.9D, Math.sin(angle) * 0.6D, 1.0D);
+                    sl.sendParticles(viewer, ParticleTypes.END_ROD, true, cx, cy + 1.0D, cz, 0,
+                            Math.cos(angle) * 0.25D, 1.4D, Math.sin(angle) * 0.25D, 1.0D);
+                }
+            }
+
             // 4. Excavación Cóncava y Formación Real del Cráter de Impacto de Siderita (Hole / Bowl)
             final double craterRadius = 6.5D;
             final int maxDepth = 4;
@@ -241,12 +261,24 @@ public class FallingSideriteMeteorEntity extends Entity {
                 }
             }
 
+            // 4b. Restos del meteorito en el fondo del cráter: esquirlas para la brújula y fragmentos
+            // de siderita pura, que solo se consiguen aquí. No desaparecen hasta que alguien los recoja.
+            BlockPos lootPos = impactPos.below(maxDepth - 1);
+            dropMeteorRemains(sl, lootPos, new ItemStack(SystemItems.METEOR_SHARD.get(), 3 + sl.random.nextInt(3)));
+            dropMeteorRemains(sl, lootPos, new ItemStack(SystemItems.SIDERITE_FRAGMENT.get(), 1 + sl.random.nextInt(2)));
+
             // 5. Anuncio del impacto, sin revelar dónde fue
             Component announcement = Component.translatable("awakening_system.announcement.meteor_impact");
             for (ServerPlayer player : sl.players()) {
                 player.sendSystemMessage(announcement);
             }
         }
+    }
+
+    private static void dropMeteorRemains(ServerLevel level, BlockPos pos, ItemStack stack) {
+        ItemEntity item = new ItemEntity(level, pos.getX() + 0.5D, pos.getY() + 0.2D, pos.getZ() + 0.5D, stack, 0.0D, 0.0D, 0.0D);
+        item.setUnlimitedLifetime();
+        level.addFreshEntity(item);
     }
 
     private static boolean canExcavate(ServerLevel level, BlockState state) {

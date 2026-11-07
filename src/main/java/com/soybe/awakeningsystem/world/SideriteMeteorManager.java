@@ -3,6 +3,7 @@ package com.soybe.awakeningsystem.world;
 import com.soybe.awakeningsystem.MeteorStreakPayload;
 import com.soybe.awakeningsystem.entity.FallingSideriteMeteorEntity;
 import net.minecraft.core.BlockPos;
+import net.minecraft.core.particles.ParticleTypes;
 import net.minecraft.network.chat.Component;
 import net.minecraft.network.protocol.game.ClientboundStopSoundPacket;
 import net.minecraft.server.MinecraftServer;
@@ -44,8 +45,14 @@ public final class SideriteMeteorManager {
     private static final int MAX_TERRAIN_STEP = 6;
 
     private static final int FALL_TICKS = 80;
+    // El cráter humea un minuto: una columna alta que sirve de pista para encontrarlo
+    private static final int SMOKE_TICKS = 1200;
+    private static final double SMOKE_VIEW_DISTANCE = 640.0D;
 
     private static final List<FallingMeteor> FALLING = new ArrayList<>();
+    private static final List<SmokingCrater> SMOKING = new ArrayList<>();
+
+    private record SmokingCrater(ServerLevel level, BlockPos center, long startTime) {}
 
     private SideriteMeteorManager() {}
 
@@ -63,6 +70,7 @@ public final class SideriteMeteorManager {
     public static void tick(MinecraftServer server) {
         if (server == null) return;
         tickFallingMeteors(server);
+        tickSmokingCraters(server);
 
         long gameTime = server.overworld().getGameTime();
         // El contador es estático: al cambiar a un mundo más nuevo no debe bloquear los meteoritos
@@ -134,11 +142,38 @@ public final class SideriteMeteorManager {
             meteor.age++;
             if (meteor.age >= FALL_TICKS) {
                 FallingSideriteMeteorEntity.createImpact(meteor.level, meteor.target);
+                MeteorImpactData.get(server).setLastImpact(meteor.level.dimension(), meteor.target);
+                SMOKING.add(new SmokingCrater(meteor.level, meteor.target, meteor.level.getGameTime()));
                 for (ServerPlayer player : meteor.level.players()) {
                     player.connection.send(new ClientboundStopSoundPacket(SoundEvents.ELYTRA_FLYING.getLocation(), SoundSource.WEATHER));
                     player.playNotifySound(SoundEvents.LIGHTNING_BOLT_THUNDER, SoundSource.WEATHER, 0.6F, 0.5F);
                 }
                 iterator.remove();
+            }
+        }
+    }
+
+    private static void tickSmokingCraters(MinecraftServer server) {
+        Iterator<SmokingCrater> iterator = SMOKING.iterator();
+        while (iterator.hasNext()) {
+            SmokingCrater crater = iterator.next();
+            long age = crater.level().getGameTime() - crater.startTime();
+            if (crater.level().getServer() != server || age < 0 || age > SMOKE_TICKS) {
+                iterator.remove();
+                continue;
+            }
+            if (age % 4 != 0) continue;
+
+            double x = crater.center().getX() + 0.5D;
+            double y = crater.center().getY() + 1.0D;
+            double z = crater.center().getZ() + 0.5D;
+            for (ServerPlayer player : crater.level().players()) {
+                if (player.distanceToSqr(x, y, z) > SMOKE_VIEW_DISTANCE * SMOKE_VIEW_DISTANCE) continue;
+                // Forzadas: se ven desde lejos, que es justo cuando hacen falta
+                crater.level().sendParticles(player, ParticleTypes.CAMPFIRE_SIGNAL_SMOKE, true, x, y, z, 2, 0.8D, 0.2D, 0.8D, 0.01D);
+                if (age < 200) {
+                    crater.level().sendParticles(player, ParticleTypes.LAVA, true, x, y, z, 2, 1.5D, 0.3D, 1.5D, 0.0D);
+                }
             }
         }
     }
