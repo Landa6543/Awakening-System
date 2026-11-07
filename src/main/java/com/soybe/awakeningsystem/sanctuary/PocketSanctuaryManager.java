@@ -125,13 +125,8 @@ public final class PocketSanctuaryManager {
         double spawnZ = player.getZ() + Math.cos(radians) * 1.8D;
         double spawnY = player.getY();
 
-        // Purgar rigurosamente cualquier puerta exterior previa de este jugador en un radio amplio
-        AABB searchBox = new AABB(spawnX - 32, spawnY - 16, spawnZ - 32, spawnX + 32, spawnY + 16, spawnZ + 32);
-        List<PocketDoorEntity> nearbyDoors = level.getEntitiesOfClass(PocketDoorEntity.class, searchBox,
-                d -> !d.isSanctuarySide() && player.getUUID().equals(d.getOwnerUUID()));
-        for (PocketDoorEntity old : nearbyDoors) {
-            old.discard();
-        }
+        // Cada jugador tiene una sola puerta exterior: invocar otra retira la anterior
+        removeExteriorDoors(player);
 
         PocketDoorEntity door = ModEntities.POCKET_DOOR.get().create(level);
         if (door != null) {
@@ -266,7 +261,13 @@ public final class PocketSanctuaryManager {
             d.discard();
         }
 
-        // Purgar cualquier puerta exterior residual en cualquier dimensión no santuario
+        removeExteriorDoors(player);
+    }
+
+    /** Removes the player's exterior doors from every loaded dimension. */
+    private static void removeExteriorDoors(ServerPlayer player) {
+        MinecraftServer server = player.getServer();
+        if (server == null) return;
         for (ServerLevel sLevel : server.getAllLevels()) {
             if (!isSanctuaryDimension(sLevel)) {
                 List<? extends PocketDoorEntity> residuals = sLevel.getEntities(
@@ -337,6 +338,9 @@ public final class PocketSanctuaryManager {
      * - Cruza la puerta abierta y reaparece frente a la puerta exterior en el Overworld.
      */
     public static void exitSanctuary(ServerPlayer player, PocketDoorEntity interiorDoor) {
+        // Without this, /sanctuary exit would work as a free teleport out of dungeons and Limbo.
+        if (!isSanctuaryDimension(player.level())) return;
+
         SystemData data = SystemEvents.data(player);
         ResourceLocation dimLoc = ResourceLocation.tryParse(data.sanctuaryReturnDim());
         MinecraftServer server = player.getServer();
@@ -357,8 +361,8 @@ public final class PocketSanctuaryManager {
         float rYaw = data.sanctuaryReturnYaw();
         float rPitch = data.sanctuaryReturnPitch();
 
-        // Seguridad ante alturas inválidas
-        if (ry <= -60 || ry >= 320) {
+        // Seguridad ante alturas inválidas (el suelo de un mundo plano está en Y=-60, y eso es válido)
+        if (ry < returnLevel.getMinBuildHeight() || ry >= returnLevel.getMaxBuildHeight()) {
             BlockPos spawn = returnLevel.getSharedSpawnPos();
             rx = spawn.getX() + 0.5D;
             ry = spawn.getY() + 1.0D;
@@ -372,6 +376,14 @@ public final class PocketSanctuaryManager {
         double rad = Math.toRadians(rYaw);
         double stepX = -Math.sin(rad) * 1.8D;
         double stepZ = Math.cos(rad) * 1.8D;
+
+        // Si frente a la puerta hay bloques, salir en la propia puerta para no asfixiarse
+        BlockPos feet = BlockPos.containing(rx + stepX, ry, rz + stepZ);
+        if (!returnLevel.getBlockState(feet).getCollisionShape(returnLevel, feet).isEmpty()
+                || !returnLevel.getBlockState(feet.above()).getCollisionShape(returnLevel, feet.above()).isEmpty()) {
+            stepX = 0.0D;
+            stepZ = 0.0D;
+        }
 
         player.teleportTo(returnLevel, rx + stepX, ry, rz + stepZ, rYaw, rPitch);
         player.fallDistance = 0.0F;

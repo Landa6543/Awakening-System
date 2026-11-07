@@ -14077,6 +14077,12 @@ public final class SystemEvents {
                return;
             }
 
+            // From the sanctuary, the Earth tab goes back to the door the player came through.
+            if (com.soybe.awakeningsystem.sanctuary.PocketSanctuaryManager.isSanctuaryDimension(player.level())) {
+               com.soybe.awakeningsystem.sanctuary.PocketSanctuaryManager.exitSanctuary(player, null);
+               return;
+            }
+
             ServerLevel overworld = server.getLevel(Level.OVERWORLD);
             if (overworld == null) {
                return;
