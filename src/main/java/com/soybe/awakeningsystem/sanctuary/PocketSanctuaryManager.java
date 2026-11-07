@@ -283,6 +283,7 @@ public final class PocketSanctuaryManager {
         player.teleportTo(sanctuaryLevel, plotX + 0.5D, plotY + 0.1D, plotZ + 0.5D, 0.0F, 0.0F);
         player.fallDistance = 0.0F;
         player.getPersistentData().putLong("pocket_door_cooldown", sanctuaryLevel.getGameTime() + 80);
+        sendTerritoryBorder(player, data);
 
         player.sendSystemMessage(Component.translatable("awakening_system.msg.santuario_personal_has_entrado_tu_dimension"));
         player.sendSystemMessage(Component.translatable("awakening_system.msg.cierra_la_puerta_desde_adentro_con"));
@@ -518,6 +519,26 @@ public final class PocketSanctuaryManager {
 
 
 
+    private static int territoryRadius(SystemData data) {
+        return switch (Math.max(1, data.sanctuaryLevel())) {
+            case 1 -> 64;
+            case 2 -> 128;
+            default -> 256;
+        };
+    }
+
+    /**
+     * Muestra el borde del mundo de Minecraft como límite del territorio, solo a este jugador.
+     * Al salir de la dimensión, el juego vuelve a enviar el borde real de la dimensión de destino.
+     */
+    private static void sendTerritoryBorder(ServerPlayer player, SystemData data) {
+        if (!data.hasSanctuaryPlot()) return;
+        net.minecraft.world.level.border.WorldBorder border = new net.minecraft.world.level.border.WorldBorder();
+        border.setCenter(data.sanctuaryPlotX() + 0.5D, data.sanctuaryPlotZ() + 0.5D);
+        border.setSize(territoryRadius(data) * 2.0D);
+        player.connection.send(new net.minecraft.network.protocol.game.ClientboundInitializeBorderPacket(border));
+    }
+
     /**
      * Fronteras y Domo Celeste (Roadmap Sección 29.2):
      * Delimita el espacio según el nivel del Santuario e impide caídas al vacío.
@@ -526,25 +547,24 @@ public final class PocketSanctuaryManager {
         if (!isSanctuaryDimension(player.level())) return;
         SystemData data = SystemEvents.data(player);
         int sancLvl = Math.max(1, data.sanctuaryLevel());
-        int radius = switch (sancLvl) {
-            case 1 -> 64;
-            case 2 -> 128;
-            default -> 256;
-        };
+        int radius = territoryRadius(data);
 
         // El territorio se centra en la parcela real, que puede estar lejos del origen si había océano
         int ox = data.hasSanctuaryPlot() ? data.sanctuaryPlotX() : getPlotOriginX(player);
         int oz = data.hasSanctuaryPlot() ? data.sanctuaryPlotZ() : getPlotOriginZ(player);
 
+        // Cada jugador ve su propio borde, que se reenvía por si reconecta dentro del santuario
+        if (player.tickCount % 100 == 0) {
+            sendTerritoryBorder(player, data);
+        }
+
         double dx = player.getX() - ox;
         double dz = player.getZ() - oz;
-        double distSq = dx * dx + dz * dz;
 
-        // Domo Celeste y Frontera Territorial
-        if (distSq > (double) (radius * radius)) {
-            double dist = Math.sqrt(distSq);
-            double targetX = ox + (dx / dist) * (radius - 1.5D);
-            double targetZ = oz + (dz / dist) * (radius - 1.5D);
+        // Respaldo en el servidor: el borde visible solo frena al jugador en su cliente
+        if (Math.abs(dx) > radius + 1.0D || Math.abs(dz) > radius + 1.0D) {
+            double targetX = ox + Math.max(-radius + 1.5D, Math.min(radius - 1.5D, dx));
+            double targetZ = oz + Math.max(-radius + 1.5D, Math.min(radius - 1.5D, dz));
             player.teleportTo(targetX, player.getY(), targetZ);
             player.setDeltaMovement(0.0, player.getDeltaMovement().y, 0.0);
             player.displayClientMessage(Component.translatable("awakening_system.msg.domo_celeste_has_alcanzado_la_frontera", String.valueOf(sancLvl)), true);
@@ -595,6 +615,9 @@ public final class PocketSanctuaryManager {
                 createPlot(sanctuaryLevel, player, data);
             }
             data.setSanctuaryBuiltLevel(nextLvl);
+        }
+        if (isSanctuaryDimension(player.level())) {
+            sendTerritoryBorder(player, data);
         }
 
         player.playNotifySound(SoundEvents.PLAYER_LEVELUP, SoundSource.PLAYERS, 1.0F, 1.0F);

@@ -130,7 +130,15 @@ public class FallingSideriteMeteorEntity extends Entity {
             if (target != null && target != BlockPos.ZERO) {
                 impactPos = target;
             }
+            createImpact(sl, impactPos);
+        }
 
+        this.discard();
+    }
+
+    /** Efectos, cráter y aviso del impacto. El aviso no da la ubicación: el jugador debe buscarlo. */
+    public static void createImpact(ServerLevel sl, BlockPos impactPos) {
+        {
             // 1. Sonidos resonantes de cataclismo estelar
             sl.playSound(null, impactPos.getX(), impactPos.getY(), impactPos.getZ(), SoundEvents.GENERIC_EXPLODE.value(), SoundSource.BLOCKS, 10.0F, 0.65F);
             sl.playSound(null, impactPos.getX(), impactPos.getY(), impactPos.getZ(), SoundEvents.LIGHTNING_BOLT_THUNDER, SoundSource.WEATHER, 5.0F, 0.80F);
@@ -169,7 +177,7 @@ public class FallingSideriteMeteorEntity extends Entity {
                         for (int y = floorY + 1; y <= impactPos.getY() + 8; y++) {
                             BlockPos airPos = new BlockPos(impactPos.getX() + dx, y, impactPos.getZ() + dz);
                             BlockState stateToClear = sl.getBlockState(airPos);
-                            if (canExcavate(stateToClear)) {
+                            if (canExcavate(sl, stateToClear)) {
                                 sl.setBlockAndUpdate(airPos, Blocks.AIR.defaultBlockState());
                             }
                         }
@@ -177,12 +185,12 @@ public class FallingSideriteMeteorEntity extends Entity {
                         // Formación del suelo y paredes del cráter con mezcla geológica fundida
                         BlockPos floorPos = new BlockPos(impactPos.getX() + dx, floorY, impactPos.getZ() + dz);
                         BlockState currentFloorState = sl.getBlockState(floorPos);
-                        if (canTransform(currentFloorState)) {
+                        if (canTransform(sl, currentFloorState)) {
                             if (dist <= 1.4D) {
                                 // Núcleo del impacto: Meteorito de Siderita puro encajado en el fondo
                                 sl.setBlockAndUpdate(floorPos, SystemBlocks.SIDERITE_BLOCK.get().defaultBlockState());
                                 BlockPos under = floorPos.below();
-                                if (canTransform(sl.getBlockState(under))) {
+                                if (canTransform(sl, sl.getBlockState(under))) {
                                     sl.setBlockAndUpdate(under, SystemBlocks.SIDERITE_ORE.get().defaultBlockState());
                                 }
                             } else if (dist <= 3.2D) {
@@ -233,26 +241,23 @@ public class FallingSideriteMeteorEntity extends Entity {
                 }
             }
 
-            // 5. Anuncio triunfal de impacto con coordenadas exactas del cráter
-            Component announcement = Component.translatable("awakening_system.announcement.meteor_impact",
-                    impactPos.getX(), impactPos.getY(), impactPos.getZ());
+            // 5. Anuncio del impacto, sin revelar dónde fue
+            Component announcement = Component.translatable("awakening_system.announcement.meteor_impact");
             for (ServerPlayer player : sl.players()) {
                 player.sendSystemMessage(announcement);
             }
         }
-
-        this.discard();
     }
 
-    private boolean canExcavate(BlockState state) {
+    private static boolean canExcavate(ServerLevel level, BlockState state) {
         if (state.isAir()) return false;
-        if (state.getDestroySpeed(this.level(), BlockPos.ZERO) < 0) return false; // Bedrock inmune
+        if (state.getDestroySpeed(level, BlockPos.ZERO) < 0) return false; // Bedrock inmune
         if (state.is(Blocks.CHEST) || state.is(Blocks.BARREL) || state.is(Blocks.NETHER_PORTAL) || state.is(Blocks.END_PORTAL)) return false;
         return true;
     }
 
-    private boolean canTransform(BlockState state) {
-        if (state.getDestroySpeed(this.level(), BlockPos.ZERO) < 0) return false;
+    private static boolean canTransform(ServerLevel level, BlockState state) {
+        if (state.getDestroySpeed(level, BlockPos.ZERO) < 0) return false;
         if (state.is(Blocks.CHEST) || state.is(Blocks.BARREL) || state.is(Blocks.NETHER_PORTAL) || state.is(Blocks.END_PORTAL)) return false;
         return true;
     }
