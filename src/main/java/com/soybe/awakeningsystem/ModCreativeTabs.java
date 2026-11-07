@@ -95,6 +95,7 @@ public final class ModCreativeTabs {
                         }
 
                         accept(output, SystemItems.METEOR_SHARD);
+                        accept(output, SystemItems.METEOR_COMPASS);
                         accept(output, SystemItems.SIDERITE_SWORD);
                         accept(output, SystemItems.SIDERITE_HAMAXE);
                         accept(output, SystemItems.SIDERITE_PICKAXE);

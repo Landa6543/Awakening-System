@@ -757,6 +757,15 @@ public final class AwakeningSystemClient {
             registerBowProperties(SystemItems.HAMAYUMI.get());
             registerBowProperties(SystemItems.END_OF_THE_LINE.get());
 
+            // La brújula de meteoritos gira como una de magnetita, hacia el destino que guarda
+            net.minecraft.client.renderer.item.ItemProperties.register(
+                    SystemItems.METEOR_COMPASS.get(),
+                    net.minecraft.resources.ResourceLocation.fromNamespaceAndPath(AwakeningSystemMod.MOD_ID, "angle"),
+                    new net.minecraft.client.renderer.item.CompassItemPropertyFunction((level, stack, entity) -> {
+                        var tracker = stack.get(net.minecraft.core.component.DataComponents.LODESTONE_TRACKER);
+                        return tracker != null ? tracker.target().orElse(null) : null;
+                    }));
+
             if (SystemItems.LA_DONCELLA.isBound()) {
                 net.minecraft.client.renderer.item.ItemProperties.register(
                         SystemItems.LA_DONCELLA.get(),

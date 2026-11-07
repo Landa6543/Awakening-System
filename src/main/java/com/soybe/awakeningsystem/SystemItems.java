@@ -1449,6 +1449,8 @@ public final class SystemItems {
             "siderite_fragment", () -> new Item(new Item.Properties().fireResistant().rarity(Rarity.EPIC)));
     public static final DeferredHolder<Item, Item> METEOR_SHARD = AwakeningSystemMod.ITEMS.register(
             "meteor_shard", () -> new Item(new Item.Properties().fireResistant().rarity(Rarity.RARE)));
+    public static final DeferredHolder<Item, Item> METEOR_COMPASS = AwakeningSystemMod.ITEMS.register(
+            "meteor_compass", () -> new com.soybe.awakeningsystem.item.MeteorCompassItem(new Item.Properties().stacksTo(1).fireResistant().rarity(Rarity.RARE)));
     public static final DeferredHolder<Item, Item> SIDERITE_INGOT = AwakeningSystemMod.ITEMS.register(
             "siderite_ingot", () -> new Item(new Item.Properties().fireResistant().rarity(Rarity.RARE)));
 
