@@ -10,8 +10,9 @@ import net.minecraft.world.level.block.Block;
 import java.util.function.Supplier;
 
 public enum CustomToolTiers implements Tier {
+    SIDERITE(1900, 9.0F, 3.8F, 15, BlockTags.INCORRECT_FOR_DIAMOND_TOOL, () -> Ingredient.of(SystemItems.SIDERITE_INGOT.get())),
     ABYSSAL(1800, 8.5F, 3.5F, 12, BlockTags.INCORRECT_FOR_DIAMOND_TOOL, () -> Ingredient.of(SystemItems.ABYSSAL_INGOT.get())),
-    SOUL_ALLOY(2200, 10.0F, 4.2F, 16, BlockTags.INCORRECT_FOR_NETHERITE_TOOL, () -> Ingredient.of(SystemItems.SOUL_ALLOY_INGOT.get())),
+    SOUL_ALLOY(2600, 11.0F, 5.2F, 18, BlockTags.INCORRECT_FOR_NETHERITE_TOOL, () -> Ingredient.of(SystemItems.SOUL_ALLOY_INGOT.get())),
     ASTRALITE(2450, 10.8F, 4.6F, 20, BlockTags.INCORRECT_FOR_NETHERITE_TOOL, () -> Ingredient.of(SystemItems.ASTRALITE_INGOT.get())),
     MITHRIL(2600, 11.5F, 5.0F, 22, BlockTags.INCORRECT_FOR_NETHERITE_TOOL, () -> Ingredient.of(SystemItems.MITHRIL_INGOT.get())),
     ADAMANTITE(3800, 14.0F, 7.0F, 18, BlockTags.INCORRECT_FOR_NETHERITE_TOOL, () -> Ingredient.of(SystemItems.ADAMANTITE_INGOT.get())),

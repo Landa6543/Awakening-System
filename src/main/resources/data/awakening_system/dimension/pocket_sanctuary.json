@@ -1,0 +1,36 @@
+{
+  "type": "awakening_system:pocket_sanctuary",
+  "generator": {
+    "type": "minecraft:noise",
+    "settings": "minecraft:overworld",
+    "biome_source": {
+      "type": "minecraft:multi_noise",
+      "biomes": [
+        {
+          "biome": "awakening_system:sanctuary_peaceful_meadow",
+          "parameters": {
+            "temperature": [-1.0, 0.3],
+            "humidity": [-1.0, 0.2],
+            "continentalness": [-1.2, 1.2],
+            "erosion": [-1.0, 1.0],
+            "weirdness": [-1.0, 1.0],
+            "depth": 0.0,
+            "offset": 0.0
+          }
+        },
+        {
+          "biome": "awakening_system:sanctuary_whispering_forest",
+          "parameters": {
+            "temperature": [-0.1, 1.0],
+            "humidity": [0.0, 1.0],
+            "continentalness": [-1.2, 1.2],
+            "erosion": [-1.0, 1.0],
+            "weirdness": [-1.0, 1.0],
+            "depth": 0.0,
+            "offset": 0.0
+          }
+        }
+      ]
+    }
+  }
+}

@@ -23,7 +23,6 @@ import net.minecraft.world.phys.AABB;
 import net.minecraft.world.phys.Vec3;
 import com.soybe.awakeningsystem.entity.SlashWaveEntity;
 import com.soybe.awakeningsystem.CameraShakePayload;
-import com.soybe.awakeningsystem.SpawnMagicCirclePayload;
 import net.neoforged.neoforge.network.PacketDistributor;
 
 import java.util.List;
@@ -58,17 +57,12 @@ public class TranscendentThornItem extends SwordItem implements AwakeningWeaponI
             if (level instanceof ServerLevel sl) {
                 Vec3 look = sp.getLookAngle();
 
-                PacketDistributor.sendToPlayersNear(
-                        sl, null, sp.getX(), sp.getY(), sp.getZ(), 64.0D,
-                        new SpawnMagicCirclePayload(
-                                sp.getId(), sp.getX(), sp.getY() + 0.05D, sp.getZ(),
-                                0.0F, 1.0F, 0.0F,
-                                5.0F, 50, 0xDC143C, 0, false
-                        )
-                );
-
+                sp.swing(hand, true);
+                sl.sendParticles(com.soybe.awakeningsystem.particle.ModParticles.STRIKE_CLEAVE.get(), sp.getX() + look.x * 1.5D, sp.getY() + 1.2D + look.y * 1.5D, sp.getZ() + look.z * 1.5D, 1, 0, 0, 0, 0);
                 sl.sendParticles(ParticleTypes.SONIC_BOOM, sp.getX(), sp.getY() + 1.2D, sp.getZ(), 1, 0, 0, 0, 0);
                 sl.sendParticles(ParticleTypes.FLAME, sp.getX(), sp.getY() + 1.0D, sp.getZ(), 80, 2.0D, 1.5D, 2.0D, 0.2D);
+                sl.sendParticles(ParticleTypes.LAVA, sp.getX() + look.x * 2.0D, sp.getY() + 1.0D, sp.getZ() + look.z * 2.0D, 15, 0.5D, 0.5D, 0.5D, 0.1D);
+                sl.playSound(null, sp.getX(), sp.getY(), sp.getZ(), com.soybe.awakeningsystem.ModSounds.CULTIVATOR_SLASH.get(), SoundSource.PLAYERS, 1.8F, 1.1F);
                 sl.playSound(null, sp.getX(), sp.getY(), sp.getZ(), SoundEvents.BEACON_ACTIVATE, SoundSource.PLAYERS, 1.5F, 1.2F);
                 sl.playSound(null, sp.getX(), sp.getY(), sp.getZ(), SoundEvents.WARDEN_SONIC_BOOM, SoundSource.PLAYERS, 1.3F, 1.4F);
 
@@ -76,6 +70,7 @@ public class TranscendentThornItem extends SwordItem implements AwakeningWeaponI
 
                 float dmg = (float) (32.0D * WeaponLevelManager.getDamageMultiplier(stack));
                 SlashWaveEntity thornSlash = new SlashWaveEntity(sl, sp, SlashWaveEntity.TYPE_CRIMSON_BLOOD, dmg, 4.8F, 1.6F, 0.0F, 28, 10);
+                thornSlash.setSlashStyle(SlashWaveEntity.STYLE_HEAVY_CLEAVE);
                 thornSlash.setDeltaMovement(look.scale(2.3D));
                 sl.addFreshEntity(thornSlash);
 
@@ -105,6 +100,10 @@ public class TranscendentThornItem extends SwordItem implements AwakeningWeaponI
     @Override
     public boolean hurtEnemy(ItemStack stack, LivingEntity target, LivingEntity attacker) {
         if (attacker.level() instanceof ServerLevel sl) {
+            sl.sendParticles(com.soybe.awakeningsystem.particle.ModParticles.STRIKE_CLEAVE.get(), target.getX(), target.getY() + 1.0D, target.getZ(), 1, 0, 0, 0, 0);
+            sl.playSound(null, target.getX(), target.getY(), target.getZ(), com.soybe.awakeningsystem.ModSounds.CULTIVATOR_SLASH.get(), SoundSource.PLAYERS, 1.3F, 1.1F);
+            CameraShakePayload.sendToNearby(sl, target.getX(), target.getY(), target.getZ(), 16.0D, 0.25F, 4);
+
             sl.sendParticles(ParticleTypes.FLAME, target.getX(), target.getY() + 1.0D, target.getZ(), 20, 0.4D, 0.6D, 0.4D, 0.05D);
             sl.sendParticles(ParticleTypes.ENCHANTED_HIT, target.getX(), target.getY() + 1.0D, target.getZ(), 20, 0.5D, 0.5D, 0.5D, 0.1D);
             sl.playSound(null, target.getX(), target.getY(), target.getZ(), SoundEvents.PLAYER_ATTACK_CRIT, SoundSource.PLAYERS, 1.0F, 1.2F);

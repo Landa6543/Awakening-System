@@ -75,7 +75,7 @@ public final class TowerMissionBoardScreen extends Screen {
     private int selectedSlot = -1; // -1 = Tablero general, 0..9 = Expediente abierto
 
     public TowerMissionBoardScreen(OpenTowerMissionBoardPayload payload) {
-        super(Component.literal("Tablón de Misiones de la Torre"));
+        super(Component.translatableWithFallback("awakening_system.screen.tower_mission_board.title", "Tablón de Misiones de la Torre"));
         this.payload = payload;
     }
 

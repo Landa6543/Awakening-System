@@ -33,6 +33,10 @@ public class AstralGuandaoItem extends SwordItem implements AwakeningWeaponItem 
     @Override
     public boolean hurtEnemy(ItemStack stack, LivingEntity target, LivingEntity attacker) {
         if (attacker.level() instanceof ServerLevel sl) {
+            sl.sendParticles(com.soybe.awakeningsystem.particle.ModParticles.STRIKE_SLASH.get(), target.getX(), target.getY() + 1.0D, target.getZ(), 1, 0, 0, 0, 0);
+            sl.playSound(null, target.getX(), target.getY(), target.getZ(), com.soybe.awakeningsystem.ModSounds.CULTIVATOR_SLASH.get(), SoundSource.PLAYERS, 1.4F, 1.0F);
+            com.soybe.awakeningsystem.CameraShakePayload.sendToNearby(sl, target.getX(), target.getY(), target.getZ(), 18.0D, 0.28F, 4);
+
             sl.sendParticles(ParticleTypes.SOUL_FIRE_FLAME, target.getX(), target.getY() + 1.0D, target.getZ(), 15, 0.4D, 0.4D, 0.4D, 0.05D);
             sl.sendParticles(ParticleTypes.DRAGON_BREATH, target.getX(), target.getY() + 1.0D, target.getZ(), 10, 0.3D, 0.3D, 0.3D, 0.05D);
             target.setRemainingFireTicks(60);
@@ -61,24 +65,23 @@ public class AstralGuandaoItem extends SwordItem implements AwakeningWeaponItem 
 
             Vec3 look = sp.getLookAngle();
 
-            net.neoforged.neoforge.network.PacketDistributor.sendToPlayersNear(
-                    (ServerLevel) level, null, sp.getX(), sp.getY(), sp.getZ(), 64.0D,
-                    new com.soybe.awakeningsystem.SpawnMagicCirclePayload(
-                            sp.getId(), sp.getX(), sp.getY(), sp.getZ(),
-                            (float) look.x, (float) look.y, (float) look.z,
-                            3.5F, 30, 0x9933FF, 3, false
-                    )
-            );
+            if (level instanceof ServerLevel sl) {
+                sl.playSound(null, sp.getX(), sp.getY(), sp.getZ(),
+                        com.soybe.awakeningsystem.ModSounds.CULTIVATOR_SLASH.get(), SoundSource.PLAYERS, 1.8F, 1.0F);
+                sl.playSound(null, sp.getX(), sp.getY(), sp.getZ(),
+                        SoundEvents.ENDER_DRAGON_GROWL, SoundSource.PLAYERS, 0.9F, 1.7F);
+                sl.sendParticles(com.soybe.awakeningsystem.particle.ModParticles.STRIKE_SLASH.get(), sp.getX() + look.x * 1.5D, sp.getY() + 1.2D + look.y * 1.5D, sp.getZ() + look.z * 1.5D, 1, 0, 0, 0, 0);
+            }
 
             float dmg = (float) (28.0D * WeaponLevelManager.getDamageMultiplier(stack));
-            SlashWaveEntity crescent = new SlashWaveEntity(level, sp, SlashWaveEntity.TYPE_COSMIC_AMETHYST, dmg, 4.8F, 1.8F, 0.0F, 26, 10);
-            crescent.setDeltaMovement(look.scale(2.2D));
+            SlashWaveEntity crescent = new SlashWaveEntity(level, sp, SlashWaveEntity.TYPE_COSMIC_AMETHYST, SlashWaveEntity.STYLE_INK_WUXIA, dmg, 5.4F, 1.8F, -18.0F, 26, 12);
+            crescent.setDeltaMovement(look.scale(2.25D));
             level.addFreshEntity(crescent);
 
-            com.soybe.awakeningsystem.CameraShakePayload.sendToNearby((ServerLevel) level, sp.getX(), sp.getY(), sp.getZ(), 28.0D, 0.60F, 9);
+            com.soybe.awakeningsystem.CameraShakePayload.sendToNearby((ServerLevel) level, sp.getX(), sp.getY(), sp.getZ(), 30.0D, 0.65F, 10);
 
             level.playSound(null, sp.getX(), sp.getY(), sp.getZ(),
-                    SoundEvents.PLAYER_ATTACK_SWEEP, SoundSource.PLAYERS, 1.5F, 0.7F);
+                    SoundEvents.PLAYER_ATTACK_SWEEP, SoundSource.PLAYERS, 1.8F, 0.7F);
             level.playSound(null, sp.getX(), sp.getY(), sp.getZ(),
                     SoundEvents.ENDER_DRAGON_GROWL, SoundSource.PLAYERS, 0.9F, 1.7F);
 

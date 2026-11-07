@@ -63,24 +63,21 @@ public class DawnsBalladItem extends SwordItem implements AwakeningWeaponItem {
             sp.hurtMarked = true;
 
             if (level instanceof ServerLevel sl) {
-                net.neoforged.neoforge.network.PacketDistributor.sendToPlayersNear(
-                        sl, null, origin.x, origin.y, origin.z, 64.0D,
-                        new com.soybe.awakeningsystem.SpawnMagicCirclePayload(
-                                sp.getId(), origin.x, origin.y, origin.z,
-                                (float) look.x, (float) look.y, (float) look.z,
-                                3.2F, 30, 0x9370DB, 0, false
-                        )
-                );
+                sp.swing(hand, true);
+                sl.sendParticles(com.soybe.awakeningsystem.particle.ModParticles.STRIKE_SLASH.get(), sp.getX() + look.x * 1.5D, sp.getY() + 1.2D + look.y * 1.5D, sp.getZ() + look.z * 1.5D, 1, 0, 0, 0, 0);
+                sl.sendParticles(ParticleTypes.PORTAL, origin.x, origin.y + 1.0D, origin.z, 30, 0.5D, 0.5D, 0.5D, 0.1D);
+                sl.sendParticles(ParticleTypes.REVERSE_PORTAL, sp.getX(), sp.getY() + 1.0D, sp.getZ(), 35, 0.6D, 0.6D, 0.6D, 0.1D);
 
                 sl.playSound(null, origin.x, origin.y, origin.z, SoundEvents.ENDERMAN_TELEPORT, SoundSource.PLAYERS, 1.2F, 1.4F);
+                sl.playSound(null, sp.getX(), sp.getY(), sp.getZ(), com.soybe.awakeningsystem.ModSounds.CULTIVATOR_SLASH.get(), SoundSource.PLAYERS, 1.8F, 1.3F);
                 sl.playSound(null, sp.getX(), sp.getY(), sp.getZ(), SoundEvents.AMETHYST_BLOCK_RESONATE, SoundSource.PLAYERS, 1.6F, 1.5F);
-                sl.playSound(null, sp.getX(), sp.getY(), sp.getZ(), SoundEvents.PLAYER_ATTACK_SWEEP, SoundSource.PLAYERS, 1.5F, 1.3F);
 
                 com.soybe.awakeningsystem.CameraShakePayload.sendToNearby(sl, sp.getX(), sp.getY(), sp.getZ(), 26.0D, 0.45F, 7);
 
                 float dmg = (float) (24.0D * WeaponLevelManager.getDamageMultiplier(stack));
 
                 SlashWaveEntity dawnWave = new SlashWaveEntity(sl, sp, SlashWaveEntity.TYPE_COSMIC_AMETHYST, dmg, 4.0F, 1.5F, -15.0F, 24, 8);
+                dawnWave.setSlashStyle(SlashWaveEntity.STYLE_CELESTIAL);
                 dawnWave.setDeltaMovement(look.scale(2.2D));
                 sl.addFreshEntity(dawnWave);
 
@@ -98,6 +95,10 @@ public class DawnsBalladItem extends SwordItem implements AwakeningWeaponItem {
     @Override
     public boolean hurtEnemy(ItemStack stack, LivingEntity target, LivingEntity attacker) {
         if (attacker.level() instanceof ServerLevel sl) {
+            sl.sendParticles(com.soybe.awakeningsystem.particle.ModParticles.STRIKE_SLASH.get(), target.getX(), target.getY() + 1.0D, target.getZ(), 1, 0, 0, 0, 0);
+            sl.playSound(null, target.getX(), target.getY(), target.getZ(), com.soybe.awakeningsystem.ModSounds.CULTIVATOR_SLASH.get(), SoundSource.PLAYERS, 1.3F, 1.3F);
+            com.soybe.awakeningsystem.CameraShakePayload.sendToNearby(sl, target.getX(), target.getY(), target.getZ(), 16.0D, 0.25F, 4);
+
             sl.sendParticles(ParticleTypes.SOUL_FIRE_FLAME, target.getX(), target.getY() + 1.0D, target.getZ(), 20, 0.4D, 0.5D, 0.4D, 0.05D);
             sl.sendParticles(ParticleTypes.GLOW, target.getX(), target.getY() + 1.0D, target.getZ(), 15, 0.3D, 0.3D, 0.3D, 0.05D);
             target.igniteForSeconds(3);

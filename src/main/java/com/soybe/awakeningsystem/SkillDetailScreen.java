@@ -121,6 +121,21 @@ public final class SkillDetailScreen extends Screen {
                 return true;
             }
         }
+
+        if (button == 0 && "pocket_dimension_doorway".equals(skillId)) {
+            SystemData currentData = Minecraft.getInstance().player == null ? new SystemData()
+                    : Minecraft.getInstance().player.getData(AwakeningSystemMod.PLAYER_SYSTEM);
+            int sancLvl = currentData.sanctuaryLevel();
+            int nextCost = sancLvl == 1 ? 5000 : (sancLvl == 2 ? 15000 : 0);
+            int upgY = top + H - 46;
+            if (sancLvl < 3 && currentData.coins() >= nextCost && mouseX >= left + 50 && mouseX <= left + W - 50 && mouseY >= upgY && mouseY <= upgY + 18) {
+                Minecraft.getInstance().getSoundManager().play(SimpleSoundInstance.forUI(SoundEvents.UI_BUTTON_CLICK, 1.0F));
+                if (minecraft != null && minecraft.player != null) {
+                    minecraft.player.connection.sendCommand("system sanctuary upgrade");
+                }
+                return true;
+            }
+        }
         return super.mouseClicked(mouseX, mouseY, button);
     }
 
@@ -162,6 +177,10 @@ public final class SkillDetailScreen extends Screen {
         graphics.renderOutline(btnCloseX, btnCloseY, 16, 16, closeHov ? 0xFFFF5555 : 0x7700E5FF);
         graphics.drawCenteredString(font, "✕", btnCloseX + 8, btnCloseY + 4, closeHov ? 0xFFFFFFFF : 0xFF70E8FF);
 
+        if ("pocket_dimension_doorway".equals(skillId)) {
+            graphics.blit(skillTexture(), left + 36, top + 15, 0, 0, 18, 18, 18, 18);
+        }
+
         graphics.drawCenteredString(font, ModernGuiHelper.manhwa(definition.name().copy().withStyle(ChatFormatting.BOLD)), width / 2, top + 18, GOLD);
 
         boolean isActive = SkillDefinitions.isActive(skillId);
@@ -171,7 +190,9 @@ public final class SkillDetailScreen extends Screen {
                 .copy().withStyle(isActive ? ((sys30 || isSys20) ? ChatFormatting.GOLD : ChatFormatting.AQUA) : ChatFormatting.GREEN);
         Component levelComp = Component.translatable("awakening_system.skill.level_separator", skillLevel).withStyle(ChatFormatting.WHITE);
         Component rarityComp = Component.translatable("awakening_system.rarity." + definition.rarity().id());
-        Component subHeader = typeTag.copy().append(levelComp).append(rarityComp);
+        SkillDefinitions.SkillArchetype arch = SkillDefinitions.getArchetype(skillId);
+        Component archComp = Component.literal("§e[" + arch.getSymbol() + " " + arch.getLabel() + "] §8• ");
+        Component subHeader = archComp.copy().append(typeTag).append(levelComp).append(rarityComp);
         graphics.drawCenteredString(font, subHeader, width / 2, top + 34, isActive ? ((sys30 || isSys20) ? 0xFFFFD700 : CYAN) : 0xFF50FA7B);
 
         graphics.drawCenteredString(font, Component.translatable("awakening_system.skill.mastery", progress, progressRequired), width / 2, top + 48, sys30 ? 0xFF88C999 : (isSys20 ? 0xFFD1B3E0 : MUTED));
@@ -243,6 +264,27 @@ public final class SkillDetailScreen extends Screen {
             }
         }
 
+        if ("pocket_dimension_doorway".equals(skillId)) {
+            int sancLvl = currentData.sanctuaryLevel();
+            int nextCost = sancLvl == 1 ? 5000 : (sancLvl == 2 ? 15000 : 0);
+            int upgY = top + H - 46;
+            boolean canUpg = sancLvl < 3 && currentData.coins() >= nextCost;
+            boolean upgHovered = mX >= left + 50 && mX <= left + W - 50 && mY >= upgY && mY <= upgY + 18;
+
+            Component upgText;
+            if (sancLvl >= 3) {
+                upgText = Component.literal("§a✔ Santuario Máximo (Nv. 3: Pabellón Celestial - Radio 58m)");
+            } else {
+                upgText = Component.literal(canUpg
+                        ? "§e★ Expandir Santuario a Nv. " + (sancLvl + 1) + " (§6" + nextCost + " Monedas§e)"
+                        : "§7Expandir a Nv. " + (sancLvl + 1) + " (Requiere §6" + nextCost + " Monedas§7, tienes: " + currentData.coins() + ")");
+            }
+
+            graphics.fill(left + 50, upgY, left + W - 50, upgY + 18, canUpg ? (upgHovered ? 0xDD2A6B48 : 0x8815402A) : 0x55111E26);
+            graphics.renderOutline(left + 50, upgY, W - 100, 18, canUpg ? (upgHovered ? 0xFFFFFFFF : 0xFF50FA7B) : 0x442A4255);
+            graphics.drawCenteredString(font, upgText, width / 2, upgY + 5, canUpg ? 0xFFFFFFFF : 0xFFAAAAAA);
+        }
+
         graphics.drawCenteredString(font, Component.translatable("awakening_system.skill.back"), width / 2, top + H - 18, sys30 ? 0xFF88C999 : (isSys20 ? 0xFFD1B3E0 : MUTED));
 
         graphics.pose().popPose();
@@ -256,6 +298,10 @@ public final class SkillDetailScreen extends Screen {
     }
 
     private net.minecraft.resources.ResourceLocation skillTexture() {
+        if ("pocket_dimension_doorway".equals(skillId)) {
+            return net.minecraft.resources.ResourceLocation.fromNamespaceAndPath(AwakeningSystemMod.MOD_ID,
+                    "textures/gui/skills/pocket_dimension_doorway.png");
+        }
         String base = skillId.endsWith("_evolution") ? skillId.substring(0, skillId.length() - 11) : skillId;
         return net.minecraft.resources.ResourceLocation.fromNamespaceAndPath(AwakeningSystemMod.MOD_ID,
                 "textures/skill_" + base + ".png");

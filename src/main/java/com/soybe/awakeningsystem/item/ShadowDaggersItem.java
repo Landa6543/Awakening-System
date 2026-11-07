@@ -84,7 +84,9 @@ public class ShadowDaggersItem extends SwordItem implements AwakeningWeaponItem 
 
                     sp.teleportTo(sl, destX, destY, destZ, target.getYRot(), target.getXRot());
 
+                    sl.sendParticles(com.soybe.awakeningsystem.particle.ModParticles.STRIKE_CLAW.get(), destX, destY + 1.0D, destZ, 1, 0, 0, 0, 0);
                     sl.sendParticles(ParticleTypes.SQUID_INK, destX, destY + 0.8D, destZ, 45, 0.5D, 0.6D, 0.5D, 0.05D);
+                    sl.playSound(null, destX, destY, destZ, com.soybe.awakeningsystem.ModSounds.DOMAIN_OF_SANCTION_SLASH.get(), SoundSource.PLAYERS, 1.8F, 1.4F);
                     sl.playSound(null, destX, destY, destZ, SoundEvents.PLAYER_ATTACK_CRIT, SoundSource.PLAYERS, 1.6F, 1.4F);
                     sl.playSound(null, destX, destY, destZ, SoundEvents.WARDEN_SONIC_BOOM, SoundSource.PLAYERS, 0.65F, 1.8F);
 
@@ -139,6 +141,10 @@ public class ShadowDaggersItem extends SwordItem implements AwakeningWeaponItem 
     @Override
     public boolean hurtEnemy(ItemStack stack, LivingEntity target, LivingEntity attacker) {
         if (attacker.level() instanceof ServerLevel sl) {
+            sl.sendParticles(com.soybe.awakeningsystem.particle.ModParticles.STRIKE_CLAW.get(), target.getX(), target.getY() + 1.0D, target.getZ(), 1, 0, 0, 0, 0);
+            sl.playSound(null, target.getX(), target.getY(), target.getZ(), com.soybe.awakeningsystem.ModSounds.DOMAIN_OF_SANCTION_SLASH.get(), SoundSource.PLAYERS, 1.3F, 1.3F);
+            com.soybe.awakeningsystem.CameraShakePayload.sendToNearby(sl, target.getX(), target.getY(), target.getZ(), 16.0D, 0.25F, 4);
+
             sl.sendParticles(ParticleTypes.SQUID_INK, target.getX(), target.getY() + 1.0D, target.getZ(), 18, 0.3D, 0.4D, 0.3D, 0.05D);
             sl.sendParticles(ParticleTypes.SOUL_FIRE_FLAME, target.getX(), target.getY() + 1.0D, target.getZ(), 8, 0.2D, 0.3D, 0.2D, 0.02D);
             sl.sendParticles(ParticleTypes.CRIT, target.getX(), target.getY() + 1.0D, target.getZ(), 12, 0.3D, 0.3D, 0.3D, 0.1D);

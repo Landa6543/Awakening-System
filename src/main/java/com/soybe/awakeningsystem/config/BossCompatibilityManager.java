@@ -180,6 +180,19 @@ public final class BossCompatibilityManager {
             addBoss(whitelist, "twilightforest:ur_ghast", 550, 450, "");
             addBoss(whitelist, "twilightforest:snow_queen", 500, 400, "");
             addBoss(whitelist, "irons_spellbooks:dead_king", 650, 500, "");
+
+            // Jefes del mod Armageddon
+            addBoss(whitelist, "armageddon:iron_colossus", 500, 400, "armageddon_colossus_breaker");
+            addBoss(whitelist, "armageddon:goblin_lord", 600, 450, "armageddon_goblin_subjugator");
+            addBoss(whitelist, "armageddon:arion", 750, 600, "armageddon_emerald_conqueror");
+            addBoss(whitelist, "armageddon:eldorath", 900, 750, "armageddon_nether_gatekeeper");
+            addBoss(whitelist, "armageddon:zoranth", 1100, 900, "armageddon_void_reaper");
+            addBoss(whitelist, "armageddon:elvenite_paladin", 1200, 1000, "armageddon_elven_slayer");
+            addBoss(whitelist, "armageddon:vaedric", 1350, 1150, "armageddon_doom_bringer_slayer");
+            addBoss(whitelist, "armageddon:bringer_of_doom", 1500, 1300, "armageddon_doom_bringer_slayer");
+            addBoss(whitelist, "armageddon:calamities", 1700, 1500, "armageddon_calamity_overlord");
+            addBoss(whitelist, "armageddon:zoranth_zenith", 2000, 1800, "armageddon_calamity_overlord");
+            addBoss(whitelist, "armageddon:nyxaris", 2000, 1800, "armageddon_calamity_overlord");
             root.add("boss_whitelist", whitelist);
 
             JsonArray kw = new JsonArray();
@@ -210,6 +223,12 @@ public final class BossCompatibilityManager {
      */
     public static boolean isBoss(LivingEntity entity) {
         if (entity == null) return false;
+        if (entity instanceof com.soybe.awakeningsystem.entity.SeriesNpcEntity
+                || entity instanceof net.minecraft.world.entity.npc.Npc
+                || entity instanceof net.minecraft.world.entity.player.Player
+                || com.soybe.awakeningsystem.AwakeningSystemClient.isFriendlyOrGuildShadow(entity)) {
+            return false;
+        }
         init();
 
         EntityType<?> type = entity.getType();
@@ -256,6 +275,11 @@ public final class BossCompatibilityManager {
             if (entity instanceof com.soybe.awakeningsystem.entity.MotherSpiderEntity ms && ms.isBoss()) {
                 return true;
             }
+        }
+
+        // 4b. Jefes y criaturas del mod Armageddon
+        if ("armageddon".equals(ns) || "armageddon_mod".equals(ns)) {
+            return true;
         }
 
         // 5. Deteccion heuristica para jefes de otros mods
@@ -314,6 +338,12 @@ public final class BossCompatibilityManager {
         // 3. Fabulas y logros
         if (entry != null && entry.fable() != null && !entry.fable().isEmpty()) {
             SystemEvents.grantFable(player, entry.fable());
+        }
+
+        // 3b. Integración cruzada con Armageddon
+        if (com.soybe.awakeningsystem.compat.ArmageddonCompatHandler.isLoaded()
+                || com.soybe.awakeningsystem.compat.ArmageddonCompatHandler.isArmageddonEntity(boss)) {
+            com.soybe.awakeningsystem.compat.ArmageddonCompatHandler.handleArmageddonBossDefeat(player, boss, data);
         }
 
         // 4. Caida especial: Esencia del Jefe / Nucleo de Mana / Ficha de Ruleta

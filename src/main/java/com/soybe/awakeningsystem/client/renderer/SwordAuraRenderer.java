@@ -33,10 +33,10 @@ public final class SwordAuraRenderer {
     public static boolean hasSwordAura(ItemStack stack) {
         if (stack == null || stack.isEmpty()) return false;
         Item item = stack.getItem();
+        if (item instanceof com.soybe.awakeningsystem.item.seasonal.XmasTreeSwordItem) return false;
         return item instanceof LaDoncellaSwordItem
                 || item instanceof CreatorClaymoreItem
-                || item instanceof PlumBlossomSwordItem
-                || item instanceof AwakeningWeaponItem;
+                || item instanceof PlumBlossomSwordItem;
     }
 
     public static AuraStyle getAuraStyle(ItemStack stack) {
@@ -75,29 +75,7 @@ public final class SwordAuraRenderer {
                     2
             );
         }
-        String name = item.getDescriptionId().toLowerCase();
-        if (name.contains("demon") || name.contains("shadow") || name.contains("dread")) {
-            return new AuraStyle(
-                    ParticleTypes.SMOKE,
-                    ParticleTypes.SOUL_FIRE_FLAME,
-                    0.03D,
-                    2
-            );
-        }
-        if (name.contains("radiant") || name.contains("holy") || name.contains("faith") || name.contains("asrahan")) {
-            return new AuraStyle(
-                    ParticleTypes.ELECTRIC_SPARK,
-                    ParticleTypes.WAX_OFF,
-                    0.02D,
-                    2
-            );
-        }
-        return new AuraStyle(
-                ParticleTypes.SOUL_FIRE_FLAME,
-                ParticleTypes.ENCHANTED_HIT,
-                0.02D,
-                1
-        );
+        return null;
     }
 
     /**

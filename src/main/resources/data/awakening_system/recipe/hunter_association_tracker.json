@@ -1,0 +1,21 @@
+{
+  "type": "minecraft:crafting_shaped",
+  "category": "misc",
+  "key": {
+    "C": {
+      "item": "minecraft:compass"
+    },
+    "P": {
+      "item": "minecraft:paper"
+    }
+  },
+  "pattern": [
+    " P ",
+    "PCP",
+    " P "
+  ],
+  "result": {
+    "count": 1,
+    "id": "awakening_system:hunter_association_tracker"
+  }
+}

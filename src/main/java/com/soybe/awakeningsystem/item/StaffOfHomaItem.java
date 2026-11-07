@@ -59,27 +59,28 @@ public class StaffOfHomaItem extends SwordItem implements AwakeningWeaponItem {
             if (level instanceof ServerLevel sl) {
                 Vec3 look = sp.getLookAngle();
 
-                net.neoforged.neoforge.network.PacketDistributor.sendToPlayersNear(
-                        sl, null, sp.getX(), sp.getY(), sp.getZ(), 64.0D,
-                        new com.soybe.awakeningsystem.SpawnMagicCirclePayload(
-                                sp.getId(), sp.getX(), sp.getY(), sp.getZ(),
-                                (float) look.x, (float) look.y, (float) look.z,
-                                3.8F, 40, 0xFF4500, 0, false
-                        )
-                );
+                sl.playSound(null, sp.getX(), sp.getY(), sp.getZ(), com.soybe.awakeningsystem.ModSounds.CULTIVATOR_SLASH.get(), SoundSource.PLAYERS, 1.8F, 1.2F);
+                sl.playSound(null, sp.getX(), sp.getY(), sp.getZ(), SoundEvents.FIRECHARGE_USE, SoundSource.PLAYERS, 1.6F, 1.1F);
+                sl.playSound(null, sp.getX(), sp.getY(), sp.getZ(), SoundEvents.BLAZE_SHOOT, SoundSource.PLAYERS, 1.5F, 0.9F);
 
-                sl.playSound(null, sp.getX(), sp.getY(), sp.getZ(), SoundEvents.FIRECHARGE_USE, SoundSource.PLAYERS, 1.5F, 1.1F);
-                sl.playSound(null, sp.getX(), sp.getY(), sp.getZ(), SoundEvents.BLAZE_SHOOT, SoundSource.PLAYERS, 1.4F, 0.9F);
-                sl.playSound(null, sp.getX(), sp.getY(), sp.getZ(), SoundEvents.GENERIC_EXPLODE.value(), SoundSource.PLAYERS, 1.0F, 1.5F);
+                sl.sendParticles(com.soybe.awakeningsystem.particle.ModParticles.STRIKE_SLASH.get(), sp.getX() + look.x * 1.5D, sp.getY() + 1.2D + look.y * 1.5D, sp.getZ() + look.z * 1.5D, 1, 0, 0, 0, 0);
+                sl.sendParticles(ParticleTypes.FLAME, sp.getX(), sp.getY() + 1.2D, sp.getZ(), 50, 1.4D, 0.8D, 1.4D, 0.12D);
+                sl.sendParticles(ParticleTypes.LAVA, sp.getX(), sp.getY() + 1.0D, sp.getZ(), 15, 1.0D, 0.5D, 1.0D, 0.05D);
 
-                com.soybe.awakeningsystem.CameraShakePayload.sendToNearby(sl, sp.getX(), sp.getY(), sp.getZ(), 28.0D, 0.60F, 10);
+                com.soybe.awakeningsystem.CameraShakePayload.sendToNearby(sl, sp.getX(), sp.getY(), sp.getZ(), 30.0D, 0.65F, 10);
 
                 float dmg = (float) (32.0D * WeaponLevelManager.getDamageMultiplier(stack));
 
-                SlashWaveEntity pyroSlash = new SlashWaveEntity(sl, sp, SlashWaveEntity.TYPE_PYRO_FLAME, dmg, 4.6F, 1.6F, 0.0F, 26, 10);
-                pyroSlash.setDeltaMovement(look.scale(2.3D));
+                SlashWaveEntity pyroSlash = new SlashWaveEntity(sl, sp, SlashWaveEntity.TYPE_PYRO_FLAME, SlashWaveEntity.STYLE_HEAVY_CLEAVE, dmg, 4.8F, 1.8F, 0.0F, 26, 12);
+                pyroSlash.setDeltaMovement(look.scale(2.35D));
                 sl.addFreshEntity(pyroSlash);
 
+                SlashWaveEntity pyroThrust = new SlashWaveEntity(sl, sp, SlashWaveEntity.TYPE_PYRO_FLAME, SlashWaveEntity.STYLE_THRUST, dmg * 0.9F, 1.8F, 3.8F, 0.0F, 20, 8);
+                pyroThrust.setDeltaMovement(look.scale(2.6D));
+                pyroThrust.setArmorPenetration(0.35F);
+                sl.addFreshEntity(pyroThrust);
+
+                sp.swing(hand, true);
                 WeaponLevelManager.addExp(stack, 35, sp);
             }
 
@@ -92,6 +93,12 @@ public class StaffOfHomaItem extends SwordItem implements AwakeningWeaponItem {
     @Override
     public boolean hurtEnemy(ItemStack stack, LivingEntity target, LivingEntity attacker) {
         if (attacker instanceof Player player) {
+            if (player.level() instanceof ServerLevel sl) {
+                sl.sendParticles(com.soybe.awakeningsystem.particle.ModParticles.STRIKE_SLASH.get(), target.getX(), target.getY() + 1.0D, target.getZ(), 1, 0, 0, 0, 0);
+                sl.playSound(null, target.getX(), target.getY(), target.getZ(), com.soybe.awakeningsystem.ModSounds.CULTIVATOR_SLASH.get(), SoundSource.PLAYERS, 1.3F, 1.25F);
+                com.soybe.awakeningsystem.CameraShakePayload.sendToNearby(sl, target.getX(), target.getY(), target.getZ(), 16.0D, 0.25F, 4);
+            }
+
             float hpRatio = player.getHealth() / player.getMaxHealth();
             if (hpRatio <= 0.50F) {
                 target.setRemainingFireTicks(120);

@@ -17,6 +17,15 @@ import com.soybe.awakeningsystem.entity.MotherSpiderBossEntity;
 import com.soybe.awakeningsystem.entity.SculkGolemEntity;
 import com.soybe.awakeningsystem.entity.ShadowInfantryEntity;
 import com.soybe.awakeningsystem.entity.StonehideLawachurlEntity;
+import com.soybe.awakeningsystem.entity.MotherSpiderEntity;
+import com.soybe.awakeningsystem.entity.SpiderHeadEntity;
+import com.soybe.awakeningsystem.entity.BeastmanWarriorEntity;
+import com.soybe.awakeningsystem.entity.GoblinWarriorEntity;
+import com.soybe.awakeningsystem.entity.GoblinShamanEntity;
+import com.soybe.awakeningsystem.entity.JiangshiEntity;
+import com.soybe.awakeningsystem.entity.DemonicCultivatorEntity;
+import net.minecraft.world.entity.monster.Spider;
+import net.minecraft.world.entity.monster.CaveSpider;
 import com.soybe.awakeningsystem.guild.Guild;
 import com.soybe.awakeningsystem.guild.GuildSavedData;
 import com.soybe.awakeningsystem.limbo.LimboWorldManager;
@@ -71,6 +80,7 @@ import net.minecraft.world.entity.EntityType;
 import net.minecraft.world.entity.EquipmentSlot;
 import net.minecraft.world.entity.LightningBolt;
 import net.minecraft.world.entity.LivingEntity;
+import net.minecraft.world.entity.Mob;
 import net.minecraft.world.entity.TamableAnimal;
 import net.minecraft.world.entity.ai.attributes.AttributeInstance;
 import net.minecraft.world.entity.ai.attributes.Attributes;
@@ -559,19 +569,19 @@ public final class DungeonManager {
       int tier = getRankTier(rank);
 
       return switch (tier) {
-         case 2 -> 8;
-         case 3 -> 15;
-         case 4 -> 25;
-         case 5 -> 40;
-         case 6 -> 55;
-         case 7 -> 70;
-         case 8 -> 80;
-         case 9 -> 90;
-         case 10 -> 100;
-         case 11 -> 120;
-         case 12 -> 135;
-         case 13 -> 150;
-         default -> 3;
+         case 2 -> 15;
+         case 3 -> 35;
+         case 4 -> 60;
+         case 5 -> 95;
+         case 6 -> 140;
+         case 7 -> 200;
+         case 8 -> 260;
+         case 9 -> 320;
+         case 10 -> 380;
+         case 11 -> 430;
+         case 12 -> 480;
+         case 13 -> 550;
+         default -> 5;
       };
    }
 
@@ -1238,174 +1248,121 @@ public final class DungeonManager {
    private static Monster createFloorMinion(ServerLevel level, String rank, int floor, int index) {
       if (floor == 2 && index == 0) {
          return createFloor2Elite(level, rank);
-      } else {
-         int tier = getRankTier(rank);
-         double hpMult = 1.0 + Math.max(0, tier - 3) * 0.35;
-         double dmgMult = 1.0 + Math.max(0, tier - 3) * 0.28;
-         if (tier >= 7) {
-            hpMult = 1.0 + (tier - 7) * 0.5;
-            dmgMult = 1.0 + (tier - 7) * 0.38;
-            if (floor == 1) {
-               if (index % 2 == 0) {
-                  ShadowInfantryEntity infantry = new ShadowInfantryEntity(ModEntities.SHADOW_INFANTRY.get(), level);
-                  infantry.setCustomName(
-                     Component.translatable(
-                        tier >= 12 ? "awakening_system.dungeon.mob.deicide_shadow_infantry" : "awakening_system.dungeon.mob.vanguard_shadow_infantry"
-                     )
-                  );
-                  buffMob(infantry, 220.0 * hpMult, 14.0 * dmgMult, Math.min(22.0, 10.0 + (tier - 7) * 1.5), 0.45);
-                  return infantry;
-               } else {
-                  ShadowInfantryEntity inf = new ShadowInfantryEntity(ModEntities.SHADOW_INFANTRY.get(), level);
-                  inf.setCustomName(
-                     Component.translatable(
-                        tier >= 12 ? "awakening_system.dungeon.mob.abyssal_blood_knight" : "awakening_system.dungeon.mob.vanguard_crimson_knight"
-                     )
-                  );
-                  inf.setItemSlot(EquipmentSlot.MAINHAND, new ItemStack(Items.DIAMOND_SWORD));
-                  buffMob(inf, 200.0 * hpMult, 13.0 * dmgMult, Math.min(20.0, 9.0 + (tier - 7) * 1.5), 0.35);
-                  return inf;
-               }
-            } else if (floor == 2) {
-               if (index % 2 == 0) {
-                  FrostElfAssassinEntity assassin = new FrostElfAssassinEntity(ModEntities.FROST_ELF_ASSASSIN.get(), level);
-                  assassin.setCustomName(
-                     Component.translatable(
-                        tier >= 12 ? "awakening_system.dungeon.mob.supreme_spectral_elf_assassin" : "awakening_system.dungeon.mob.frost_elf_assassin"
-                     )
-                  );
-                  buffMob(assassin, 240.0 * hpMult, 19.0 * dmgMult, Math.min(22.0, 12.0 + (tier - 7) * 1.5), 0.5);
-                  return assassin;
-               } else {
-                  ShadowInfantryEntity infantry = new ShadowInfantryEntity(ModEntities.SHADOW_INFANTRY.get(), level);
-                  infantry.setCustomName(
-                     Component.translatable(tier >= 12 ? "awakening_system.dungeon.mob.void_shadow_stalker" : "awakening_system.dungeon.mob.shadow_stalker")
-                  );
-                  buffMob(infantry, 230.0 * hpMult, 15.0 * dmgMult, Math.min(20.0, 10.0 + (tier - 7) * 1.5), 0.45);
-                  return infantry;
-               }
-            } else if (floor == 3) {
-               if (index % 2 == 0) {
-                  AbyssalNecromancerEntity necro = new AbyssalNecromancerEntity(ModEntities.ABYSSAL_NECROMANCER.get(), level);
-                  necro.setCustomName(
-                     Component.translatable(
-                        tier >= 12 ? "awakening_system.dungeon.mob.dark_celestial_necromancer" : "awakening_system.dungeon.mob.dark_abyssal_necromancer"
-                     )
-                  );
-                  buffMob(necro, 270.0 * hpMult, 16.0 * dmgMult, Math.min(22.0, 12.0 + (tier - 7) * 1.5), 0.5);
-                  return necro;
-               } else {
-                  AbyssalOrcEntity orc = new AbyssalOrcEntity(ModEntities.ABYSSAL_ORC.get(), level);
-                  orc.setCustomName(
-                     Component.translatable(
-                        tier >= 12 ? "awakening_system.dungeon.mob.deicide_orc_warrior" : "awakening_system.dungeon.mob.abyssal_orc_warrior"
-                     )
-                  );
-                  buffMob(orc, 350.0 * hpMult, 18.0 * dmgMult, Math.min(24.0, 14.0 + (tier - 7) * 1.5), 0.6);
-                  return orc;
-               }
-            } else if (index % 2 == 0) {
-               AntSoldierEntity ant = new AntSoldierEntity(ModEntities.ANT_SOLDIER.get(), level);
-               ant.setCustomName(
-                  Component.translatable(tier >= 12 ? "awakening_system.dungeon.mob.deicide_chimera_ant" : "awakening_system.dungeon.mob.black_swarm_ant")
-               );
-               buffMob(ant, 300.0 * hpMult, 19.0 * dmgMult, Math.min(25.0, 14.0 + (tier - 7) * 1.5), 0.55);
-               return ant;
+      }
+
+      int tier = getRankTier(rank);
+      double tierScale = Math.max(1.0, 1.0 + (tier - 1) * 0.45);
+      if (tier >= 7) {
+         tierScale = Math.max(tierScale, 3.7 + (tier - 7) * 1.25);
+      }
+      if (tier >= 12) {
+         tierScale = Math.max(tierScale, 10.0 + (tier - 12) * 3.5);
+      }
+
+      double floorMult = 1.0 + Math.max(0, floor - 1) * 0.12;
+      double totalHpMult = tierScale * floorMult;
+      double totalDmgMult = Math.max(1.0, Math.sqrt(tierScale) * (1.0 + Math.max(0, floor - 1) * 0.1));
+      double armor = Math.min(22.0, 1.5 + (tier - 1) * 1.6 + Math.max(0, floor - 1) * 0.8);
+      double kbRes = Math.min(0.75, 0.05 + (tier - 1) * 0.05);
+
+      int pick = Math.abs(index * 7 + floor * 13 + level.random.nextInt(100)) % 13;
+      Monster mob;
+
+      switch (pick) {
+         case 0 -> {
+            ShadowInfantryEntity inf = new ShadowInfantryEntity(ModEntities.SHADOW_INFANTRY.get(), level);
+            inf.setCustomName(Component.translatable(tier >= 12 ? "awakening_system.dungeon.mob.deicide_shadow_infantry" : (tier >= 6 ? "awakening_system.dungeon.mob.vanguard_shadow_infantry" : "awakening_system.dungeon.mob.shadow_soldier")));
+            if (tier >= 4) inf.setItemSlot(EquipmentSlot.MAINHAND, new ItemStack(tier >= 7 ? Items.DIAMOND_SWORD : Items.IRON_SWORD));
+            buffMob(inf, 40.0 * totalHpMult, 4.5 * totalDmgMult, armor, kbRes);
+            mob = inf;
+         }
+         case 1 -> {
+            AbyssalOrcEntity orc = new AbyssalOrcEntity(ModEntities.ABYSSAL_ORC.get(), level);
+            orc.setCustomName(Component.translatable(tier >= 12 ? "awakening_system.dungeon.mob.deicide_orc_warrior" : (tier >= 6 ? "awakening_system.dungeon.mob.abyssal_orc_warrior" : "awakening_system.dungeon.mob.abyssal_orc")));
+            if (tier >= 4) orc.setItemSlot(EquipmentSlot.MAINHAND, new ItemStack(tier >= 7 ? Items.DIAMOND_AXE : Items.IRON_AXE));
+            buffMob(orc, 65.0 * totalHpMult, 6.0 * totalDmgMult, armor + 2.0, kbRes + 0.15);
+            mob = orc;
+         }
+         case 2 -> {
+            FrostElfAssassinEntity elf = new FrostElfAssassinEntity(ModEntities.FROST_ELF_ASSASSIN.get(), level);
+            elf.setCustomName(Component.translatable(tier >= 12 ? "awakening_system.dungeon.mob.supreme_spectral_elf_assassin" : (tier >= 6 ? "awakening_system.dungeon.mob.frost_elf_assassin" : "awakening_system.dungeon.mob.frost_stalker")));
+            if (tier >= 4) elf.setItemSlot(EquipmentSlot.MAINHAND, new ItemStack(tier >= 7 ? Items.DIAMOND_SWORD : Items.IRON_SWORD));
+            buffMob(elf, 38.0 * totalHpMult, 6.5 * totalDmgMult, armor, kbRes);
+            mob = elf;
+         }
+         case 3 -> {
+            MotherSpiderEntity spider = new MotherSpiderEntity(ModEntities.MOTHER_SPIDER.get(), level);
+            spider.setCustomName(Component.translatable("awakening_system.dungeon.mob.mother_spider"));
+            buffMob(spider, 55.0 * totalHpMult, 5.5 * totalDmgMult, armor + 1.0, kbRes + 0.1);
+            mob = spider;
+         }
+         case 4 -> {
+            SpiderHeadEntity spHead = new SpiderHeadEntity(ModEntities.SPIDER_HEAD.get(), level);
+            spHead.setCustomName(Component.translatable("awakening_system.dungeon.mob.spider_head"));
+            buffMob(spHead, 32.0 * totalHpMult, 4.2 * totalDmgMult, armor * 0.8, kbRes);
+            mob = spHead;
+         }
+         case 5 -> {
+            AntSoldierEntity ant = new AntSoldierEntity(ModEntities.ANT_SOLDIER.get(), level);
+            ant.setCustomName(Component.translatable(tier >= 12 ? "awakening_system.dungeon.mob.deicide_chimera_ant" : (tier >= 6 ? "awakening_system.dungeon.mob.black_swarm_ant" : "awakening_system.dungeon.mob.jeju_chimera_ant")));
+            buffMob(ant, 52.0 * totalHpMult, 5.5 * totalDmgMult, armor + 2.5, kbRes + 0.1);
+            mob = ant;
+         }
+         case 6 -> {
+            BeastmanWarriorEntity beast = new BeastmanWarriorEntity(ModEntities.BEASTMAN_WARRIOR.get(), level);
+            beast.setCustomName(Component.translatable("awakening_system.dungeon.mob.beastman_ravager"));
+            if (tier >= 4) beast.setItemSlot(EquipmentSlot.MAINHAND, new ItemStack(tier >= 7 ? Items.IRON_AXE : Items.STONE_AXE));
+            buffMob(beast, 56.0 * totalHpMult, 5.8 * totalDmgMult, armor + 1.5, kbRes + 0.1);
+            mob = beast;
+         }
+         case 7 -> {
+            if (index % 2 == 0) {
+               GoblinWarriorEntity gob = new GoblinWarriorEntity(ModEntities.GOBLIN_WARRIOR.get(), level);
+               gob.setCustomName(Component.translatable("awakening_system.dungeon.mob.goblin_raider"));
+               if (tier >= 3) gob.setItemSlot(EquipmentSlot.MAINHAND, new ItemStack(tier >= 6 ? Items.IRON_SWORD : Items.STONE_SWORD));
+               buffMob(gob, 36.0 * totalHpMult, 4.8 * totalDmgMult, armor, kbRes);
+               mob = gob;
             } else {
-               AbyssalBeholderEntity beholder = new AbyssalBeholderEntity(ModEntities.ABYSSAL_BEHOLDER.get(), level);
-               beholder.setCustomName(
-                  Component.translatable(tier >= 12 ? "awakening_system.dungeon.mob.deicide_void_eye" : "awakening_system.dungeon.mob.primordial_abyssal_eye")
-               );
-               buffMob(beholder, 280.0 * hpMult, 18.0 * dmgMult, Math.min(23.0, 13.0 + (tier - 7) * 1.5), 0.7);
-               return beholder;
+               GoblinShamanEntity sham = new GoblinShamanEntity(ModEntities.GOBLIN_SHAMAN.get(), level);
+               sham.setCustomName(Component.translatable("awakening_system.dungeon.mob.goblin_witch_shaman"));
+               buffMob(sham, 34.0 * totalHpMult, 5.2 * totalDmgMult, armor * 0.8, kbRes);
+               mob = sham;
             }
-         } else if (tier == 6) {
-            if (floor == 1) {
-               ShadowInfantryEntity infantry = new ShadowInfantryEntity(ModEntities.SHADOW_INFANTRY.get(), level);
-               infantry.setCustomName(Component.translatable("awakening_system.dungeon.mob.vanguard_shadow_infantry"));
-               buffMob(infantry, 160.0, 12.0, 8.0, 0.35);
-               return infantry;
-            } else if (floor == 2) {
-               FrostElfAssassinEntity assassin = new FrostElfAssassinEntity(ModEntities.FROST_ELF_ASSASSIN.get(), level);
-               assassin.setCustomName(Component.translatable("awakening_system.dungeon.mob.glacial_assassin"));
-               buffMob(assassin, 190.0, 15.0, 10.0, 0.4);
-               return assassin;
-            } else if (floor == 3) {
-               AbyssalOrcEntity orc = new AbyssalOrcEntity(ModEntities.ABYSSAL_ORC.get(), level);
-               orc.setCustomName(Component.translatable("awakening_system.dungeon.mob.bloody_orc_brute"));
-               buffMob(orc, 250.0, 16.0, 12.0, 0.45);
-               return orc;
-            } else if (index % 2 == 0) {
-               AntSoldierEntity ant = new AntSoldierEntity(ModEntities.ANT_SOLDIER.get(), level);
-               ant.setCustomName(Component.translatable("awakening_system.dungeon.mob.jeju_chimera_ant"));
-               buffMob(ant, 220.0, 15.0, 11.0, 0.4);
-               return ant;
-            } else {
-               AbyssalBeholderEntity beholder = new AbyssalBeholderEntity(ModEntities.ABYSSAL_BEHOLDER.get(), level);
-               beholder.setCustomName(Component.translatable("awakening_system.dungeon.mob.abyssal_watcher_eye"));
-               buffMob(beholder, 200.0, 14.0, 10.0, 0.65);
-               return beholder;
-            }
-         } else if (tier == 5) {
-            if (floor == 1) {
-               ShadowInfantryEntity infantry = new ShadowInfantryEntity(ModEntities.SHADOW_INFANTRY.get(), level);
-               infantry.setCustomName(Component.translatable("awakening_system.dungeon.mob.shadow_soldier"));
-               buffMob(infantry, 130.0, 9.0, 6.0, 0.3);
-               return infantry;
-            } else if (floor == 2) {
-               FrostElfAssassinEntity assassin = new FrostElfAssassinEntity(ModEntities.FROST_ELF_ASSASSIN.get(), level);
-               assassin.setCustomName(Component.translatable("awakening_system.dungeon.mob.frost_stalker"));
-               buffMob(assassin, 140.0, 11.0, 7.0, 0.35);
-               return assassin;
-            } else if (floor == 3) {
-               AbyssalOrcEntity orc = new AbyssalOrcEntity(ModEntities.ABYSSAL_ORC.get(), level);
-               orc.setCustomName(Component.translatable("awakening_system.dungeon.mob.abyssal_orc"));
-               buffMob(orc, 160.0, 11.0, 8.0, 0.35);
-               return orc;
-            } else {
-               AbyssalNecromancerEntity necro = new AbyssalNecromancerEntity(ModEntities.ABYSSAL_NECROMANCER.get(), level);
-               necro.setCustomName(Component.translatable("awakening_system.dungeon.mob.abyssal_summoner"));
-               buffMob(necro, 170.0, 11.0, 8.0, 0.35);
-               return necro;
-            }
-         } else if (tier == 4) {
-            if (floor <= 2) {
-               ShadowInfantryEntity infantry = new ShadowInfantryEntity(ModEntities.SHADOW_INFANTRY.get(), level);
-               infantry.setCustomName(Component.translatable("awakening_system.dungeon.mob.lesser_shadow_infantry"));
-               buffMob(infantry, 90.0, 7.0, 5.0, 0.25);
-               return infantry;
-            } else {
-               FrostElfAssassinEntity assassin = new FrostElfAssassinEntity(ModEntities.FROST_ELF_ASSASSIN.get(), level);
-               assassin.setItemSlot(EquipmentSlot.MAINHAND, new ItemStack(Items.IRON_SWORD));
-               buffMob(assassin, 85.0, 7.5, 5.0, 0.25);
-               return assassin;
-            }
-         } else if (tier == 3) {
-            if (floor <= 2) {
-               ShadowInfantryEntity infantry = new ShadowInfantryEntity(ModEntities.SHADOW_INFANTRY.get(), level);
-               infantry.setCustomName(Component.translatable("awakening_system.dungeon.mob.shadow_wraith"));
-               buffMob(infantry, 60.0, 5.0, 3.0, 0.15);
-               return infantry;
-            } else {
-               ShadowInfantryEntity infantry = new ShadowInfantryEntity(ModEntities.SHADOW_INFANTRY.get(), level);
-               infantry.setCustomName(Component.translatable("awakening_system.dungeon.mob.shadow_soldier_glider"));
-               infantry.setItemSlot(EquipmentSlot.MAINHAND, new ItemStack(Items.IRON_SWORD));
-               buffMob(infantry, 55.0, 4.5, 2.5, 0.1);
-               return infantry;
-            }
-         } else if (floor <= 2) {
-            ShadowInfantryEntity infantry = new ShadowInfantryEntity(ModEntities.SHADOW_INFANTRY.get(), level);
-            infantry.setCustomName(Component.translatable("awakening_system.dungeon.mob.lesser_shadow"));
-            buffMob(infantry, 35.0, 3.0, 1.0, 0.0);
-            return infantry;
-         } else {
-            ShadowInfantryEntity infantry = new ShadowInfantryEntity(ModEntities.SHADOW_INFANTRY.get(), level);
-            infantry.setCustomName(Component.translatable("awakening_system.dungeon.mob.corrupt_minor_shadow"));
-            infantry.setItemSlot(EquipmentSlot.MAINHAND, new ItemStack(Items.STONE_SWORD));
-            buffMob(infantry, 32.0, 2.8, 0.5, 0.0);
-            return infantry;
+         }
+         case 8 -> {
+            JiangshiEntity jiang = new JiangshiEntity(ModEntities.JIANGSHI.get(), level);
+            jiang.setCustomName(Component.translatable("awakening_system.dungeon.mob.hopping_jiangshi"));
+            buffMob(jiang, 48.0 * totalHpMult, 5.0 * totalDmgMult, armor + 1.0, kbRes + 0.1);
+            mob = jiang;
+         }
+         case 9 -> {
+            DemonicCultivatorEntity cult = new DemonicCultivatorEntity(ModEntities.DEMONIC_CULTIVATOR.get(), level);
+            cult.setCustomName(Component.translatable("awakening_system.dungeon.mob.fallen_cultivator"));
+            if (tier >= 4) cult.setItemSlot(EquipmentSlot.MAINHAND, new ItemStack(tier >= 7 ? Items.DIAMOND_SWORD : Items.IRON_SWORD));
+            buffMob(cult, 45.0 * totalHpMult, 6.2 * totalDmgMult, armor + 0.5, kbRes);
+            mob = cult;
+         }
+         case 10 -> {
+            AbyssalNecromancerEntity necro = new AbyssalNecromancerEntity(ModEntities.ABYSSAL_NECROMANCER.get(), level);
+            necro.setCustomName(Component.translatable(tier >= 12 ? "awakening_system.dungeon.mob.dark_celestial_necromancer" : "awakening_system.dungeon.mob.abyssal_summoner"));
+            buffMob(necro, 46.0 * totalHpMult, 5.8 * totalDmgMult, armor, kbRes);
+            mob = necro;
+         }
+         case 11 -> {
+            AbyssalBeholderEntity beholder = new AbyssalBeholderEntity(ModEntities.ABYSSAL_BEHOLDER.get(), level);
+            beholder.setCustomName(Component.translatable(tier >= 12 ? "awakening_system.dungeon.mob.deicide_void_eye" : "awakening_system.dungeon.mob.primordial_abyssal_eye"));
+            buffMob(beholder, 50.0 * totalHpMult, 6.0 * totalDmgMult, armor + 1.0, kbRes + 0.25);
+            mob = beholder;
+         }
+         default -> {
+            Spider vSpider = new Spider(EntityType.SPIDER, level);
+            vSpider.setCustomName(Component.translatable("awakening_system.dungeon.mob.cave_lurker_spider"));
+            buffMob(vSpider, 35.0 * totalHpMult, 4.8 * totalDmgMult, armor, kbRes);
+            mob = vSpider;
          }
       }
+
+      return mob;
    }
 
    private static Monster createFloor2Elite(ServerLevel level, String rank) {
@@ -1498,6 +1455,12 @@ public final class DungeonManager {
       AttributeInstance kbAttr = mob.getAttribute(Attributes.KNOCKBACK_RESISTANCE);
       if (kbAttr != null) {
          kbAttr.setBaseValue(kbRes);
+      }
+
+      // Restrict follow range so mobs in adjacent rooms don't detect the player through corridors!
+      AttributeInstance followAttr = mob.getAttribute(Attributes.FOLLOW_RANGE);
+      if (followAttr != null) {
+         followAttr.setBaseValue(14.0D);
       }
 
       mob.addTag("dungeon_mob");
@@ -1766,7 +1729,7 @@ public final class DungeonManager {
             if (isBaran) {
                if (i % 2 == 0) {
                   AbyssalOrcEntity orc = new AbyssalOrcEntity(ModEntities.ABYSSAL_ORC.get(), level);
-                  orc.setCustomName(Component.literal("Â§cÂ§l[GUARDIA DE BARAN] Â§6Demonio Guerrero Ã\u008dgneo"));
+                  orc.setCustomName(Component.literal("§c§l[GUARDIA DE BARAN] §6Demonio Guerrero Ã\u008dgneo"));
                   orc.setItemSlot(EquipmentSlot.MAINHAND, new ItemStack(Items.NETHERITE_SWORD));
                   buffMob(orc, 180.0 * hpMult, 12.0 * dmgMult, 10.0, 0.4);
                   orc.addEffect(new MobEffectInstance(MobEffects.FIRE_RESISTANCE, 99999, 0));
@@ -1781,7 +1744,7 @@ public final class DungeonManager {
                }
             } else if (i % 2 == 0) {
                ShadowInfantryEntity inf = new ShadowInfantryEntity(ModEntities.SHADOW_INFANTRY.get(), level);
-               inf.setCustomName(Component.literal("Â§4Â§l[GUARDIA CARMESÃ\u008d] Â§cCaballero de Igris"));
+               inf.setCustomName(Component.literal("§4§l[GUARDIA CARMESÃ\u008d] §cCaballero de Igris"));
                inf.setItemSlot(EquipmentSlot.MAINHAND, new ItemStack(Items.DIAMOND_SWORD));
                buffMob(inf, 160.0 * hpMult, 12.0 * dmgMult, 9.0, 0.4);
                guard = inf;
@@ -2010,6 +1973,9 @@ public final class DungeonManager {
                mob.moveTo(pos.getX() + ox, sy, pos.getZ() + oz, level.random.nextFloat() * 360.0F, 0.0F);
                mob.setPersistenceRequired();
                mob.setCanPickUpLoot(false);
+               mob.getPersistentData().putInt("dungeon_home_x", pos.getX());
+               mob.getPersistentData().putInt("dungeon_home_y", pos.getY());
+               mob.getPersistentData().putInt("dungeon_home_z", pos.getZ());
                level.addFreshEntity(mob);
                session.enemyUUIDs.add(mob.getUUID());
             }
@@ -2021,91 +1987,41 @@ public final class DungeonManager {
       ServerLevel level, com.soybe.awakeningsystem.DungeonManager.DungeonSession session, BlockPos center, String rank, String theme
    ) {
       buildOuterBunkerEnvelope(level, session, center, theme);
-      carveOrganicDungeonRoom(level, session, session.roomP, 10, 10, 8, theme, 0, com.soybe.awakeningsystem.DungeonRoomType.PORTAL);
-      carveOrganicDungeonRoom(level, session, session.roomC1, 12, 12, 9, theme, 1, com.soybe.awakeningsystem.DungeonRoomType.NORMAL);
-      carveOrganicDungeonRoom(level, session, session.roomC2, 12, 12, 9, theme, 2, com.soybe.awakeningsystem.DungeonRoomType.NORMAL);
-      carveOrganicDungeonRoom(level, session, session.roomC3, 14, 14, 10, theme, 2, com.soybe.awakeningsystem.DungeonRoomType.NORMAL);
-      carveOrganicDungeonRoom(level, session, session.roomMB_Center, 16, 16, 12, theme, 3, com.soybe.awakeningsystem.DungeonRoomType.MINIBOSS);
-      carveOrganicDungeonRoom(level, session, session.roomC5, 12, 12, 9, theme, 3, com.soybe.awakeningsystem.DungeonRoomType.NORMAL);
-      carveOrganicDungeonRoom(level, session, session.roomL2_1, 12, 12, 9, theme, 1, com.soybe.awakeningsystem.DungeonRoomType.NORMAL);
-      carveOrganicDungeonRoom(level, session, session.roomL2_2, 12, 12, 9, theme, 2, com.soybe.awakeningsystem.DungeonRoomType.NORMAL);
-      carveOrganicDungeonRoom(level, session, session.roomB_Mid, 18, 18, 13, theme, 4, com.soybe.awakeningsystem.DungeonRoomType.BOSS_CANDIDATE);
-      carveOrganicDungeonRoom(level, session, session.roomL2_4, 14, 14, 10, theme, 3, com.soybe.awakeningsystem.DungeonRoomType.NORMAL);
-      carveOrganicDungeonRoom(level, session, session.roomB_Top, 18, 18, 13, theme, 4, com.soybe.awakeningsystem.DungeonRoomType.BOSS_CANDIDATE);
-      carveOrganicDungeonRoom(level, session, session.roomL2_6, 11, 11, 8, theme, 3, com.soybe.awakeningsystem.DungeonRoomType.NORMAL);
-      carveOrganicDungeonRoom(level, session, session.roomMB_Left, 16, 16, 12, theme, 2, com.soybe.awakeningsystem.DungeonRoomType.MINIBOSS);
-      carveOrganicDungeonRoom(level, session, session.roomL1_2, 12, 12, 9, theme, 2, com.soybe.awakeningsystem.DungeonRoomType.NORMAL);
-      carveOrganicDungeonRoom(level, session, session.roomL1_3, 12, 12, 9, theme, 2, com.soybe.awakeningsystem.DungeonRoomType.NORMAL);
-      carveOrganicDungeonRoom(level, session, session.roomL1_4, 13, 13, 10, theme, 3, com.soybe.awakeningsystem.DungeonRoomType.NORMAL);
-      carveOrganicDungeonRoom(level, session, session.roomL1_5, 12, 12, 9, theme, 3, com.soybe.awakeningsystem.DungeonRoomType.NORMAL);
-      carveOrganicDungeonRoom(level, session, session.roomR4_1, 12, 12, 9, theme, 1, com.soybe.awakeningsystem.DungeonRoomType.NORMAL);
-      carveOrganicDungeonRoom(level, session, session.roomR4_2, 12, 12, 9, theme, 2, com.soybe.awakeningsystem.DungeonRoomType.NORMAL);
-      carveOrganicDungeonRoom(level, session, session.roomR4_3, 12, 12, 9, theme, 2, com.soybe.awakeningsystem.DungeonRoomType.NORMAL);
-      carveOrganicDungeonRoom(level, session, session.roomR4_4, 13, 13, 10, theme, 3, com.soybe.awakeningsystem.DungeonRoomType.NORMAL);
-      carveOrganicDungeonRoom(level, session, session.roomR4_5, 12, 12, 9, theme, 3, com.soybe.awakeningsystem.DungeonRoomType.NORMAL);
-      carveOrganicDungeonRoom(level, session, session.roomB_Right, 18, 18, 13, theme, 4, com.soybe.awakeningsystem.DungeonRoomType.BOSS_CANDIDATE);
-      carveOrganicDungeonRoom(level, session, session.roomR5_2, 12, 12, 9, theme, 2, com.soybe.awakeningsystem.DungeonRoomType.NORMAL);
-      carveOrganicDungeonRoom(level, session, session.roomR5_3, 12, 12, 9, theme, 2, com.soybe.awakeningsystem.DungeonRoomType.NORMAL);
-      carveOrganicDungeonRoom(level, session, session.roomR5_4, 13, 13, 10, theme, 3, com.soybe.awakeningsystem.DungeonRoomType.NORMAL);
-      carveOrganicDungeonRoom(level, session, session.roomR5_5, 12, 12, 9, theme, 3, com.soybe.awakeningsystem.DungeonRoomType.NORMAL);
-      carveCaveCorridor(level, session, session.roomP, session.roomC1, theme);
-      carveCaveCorridor(level, session, session.roomC1, session.roomL2_1, theme);
-      carveCaveCorridor(level, session, session.roomC1, session.roomC2, theme);
-      carveCaveCorridor(level, session, session.roomC1, session.roomR4_1, theme);
-      carveCaveCorridor(level, session, session.roomL2_1, session.roomL2_2, theme);
-      carveCaveCorridor(level, session, session.roomL2_2, session.roomL1_2, theme);
-      carveCaveCorridor(level, session, session.roomL1_2, session.roomMB_Left, theme);
-      carveCaveCorridor(level, session, session.roomL2_2, session.roomL1_3, theme);
-      carveCaveCorridor(level, session, session.roomL1_3, session.roomL1_4, theme);
-      carveCaveCorridor(level, session, session.roomL1_4, session.roomL2_4, theme);
-      carveCaveCorridor(level, session, session.roomL2_4, session.roomB_Mid, theme);
-      carveCaveCorridor(level, session, session.roomC5, session.roomL2_6, theme);
-      carveCaveCorridor(level, session, session.roomL2_6, session.roomL1_5, theme);
-      carveCaveCorridor(level, session, session.roomL1_5, session.roomB_Top, theme);
-      carveCaveCorridor(level, session, session.roomMB_Center, session.roomC5, theme);
-      carveCaveCorridor(level, session, session.roomC2, session.roomR4_2, theme);
-      carveCaveCorridor(level, session, session.roomR4_1, session.roomR4_2, theme);
-      carveCaveCorridor(level, session, session.roomR4_2, session.roomR4_3, theme);
-      carveCaveCorridor(level, session, session.roomR4_3, session.roomC3, theme);
-      carveCaveCorridor(level, session, session.roomC3, session.roomMB_Center, theme);
-      carveCaveCorridor(level, session, session.roomMB_Center, session.roomR4_4, theme);
-      carveCaveCorridor(level, session, session.roomR4_4, session.roomR5_4, theme);
-      carveCaveCorridor(level, session, session.roomR5_4, session.roomR5_5, theme);
-      carveCaveCorridor(level, session, session.roomR5_5, session.roomR4_5, theme);
-      carveCaveCorridor(level, session, session.roomR5_3, session.roomR5_2, theme);
-      carveCaveCorridor(level, session, session.roomR5_2, session.roomB_Right, theme);
-      carveCaveCorridor(level, session, session.roomMB_Center, session.roomL2_4, theme);
-      carveCaveCorridor(level, session, session.roomC5, session.roomR4_5, theme);
-      placeCandidateBossBarrier(level, session, session.roomB_Mid, 1);
-      placeCandidateBossBarrier(level, session, session.roomB_Top, 2);
-      placeCandidateBossBarrier(level, session, session.roomB_Right, 3);
-      buildNaturalBossArena(level, session, session.thronePos, rank, theme);
+
+      if (session.activeRooms != null && !session.activeRooms.isEmpty()) {
+         for (com.soybe.awakeningsystem.DungeonManager.DungeonSession.ProceduralRoom room : session.activeRooms) {
+            carveOrganicDungeonRoom(level, session, room.pos, room.rx, room.rz, room.height, theme, room.stage, room.type);
+         }
+      }
+
+      if (session.activeCorridors != null && !session.activeCorridors.isEmpty()) {
+         for (com.soybe.awakeningsystem.DungeonManager.DungeonSession.ProceduralCorridor corridor : session.activeCorridors) {
+            carveCaveCorridor(level, session, corridor.from, corridor.to, theme);
+         }
+      }
+
+      if (session.thronePos != null) {
+         placeCandidateBossBarrier(level, session, session.thronePos, 1);
+         buildNaturalBossArena(level, session, session.thronePos, rank, theme);
+         spawnPhase5Boss(level, session);
+      }
+
       if (session.eliteSanctum1Pos != null) {
          buildEliteTreasureSanctum(level, session, session.eliteSanctum1Pos, rank, theme);
-      }
-
-      if (session.eliteSanctum2Pos != null) {
-         buildEliteTreasureSanctum(level, session, session.eliteSanctum2Pos, rank, theme);
-      }
-
-      if (session.roomMB_Left != null) {
-         buildMinibossChamber(level, session, session.roomMB_Left, rank, theme, 1);
-      }
-
-      if (session.roomMB_Center != null) {
-         buildMinibossChamber(level, session, session.roomMB_Center, rank, theme, 2);
-      }
-
-      if (session.eliteSanctum1Pos != null) {
          spawnChamberMinions(level, session, session.eliteSanctum1Pos, rank, 4);
       }
 
       if (session.eliteSanctum2Pos != null) {
+         buildEliteTreasureSanctum(level, session, session.eliteSanctum2Pos, rank, theme);
          spawnChamberMinions(level, session, session.eliteSanctum2Pos, rank, 4);
       }
 
-      if (session.thronePos != null) {
-         spawnPhase5Boss(level, session);
+      if (session.miniboss1Pos != null) {
+         buildMinibossChamber(level, session, session.miniboss1Pos, rank, theme, 1);
+      }
+
+      if (session.miniboss2Pos != null) {
+         buildMinibossChamber(level, session, session.miniboss2Pos, rank, theme, 2);
       }
 
       session.totalEnemies = session.enemyUUIDs.size();
@@ -2189,6 +2105,9 @@ public final class DungeonManager {
                   mob.moveTo(p.getX() + 0.5, sy, p.getZ() + 0.5, level.random.nextFloat() * 360.0F, 0.0F);
                   mob.setPersistenceRequired();
                   mob.setCanPickUpLoot(false);
+                  mob.getPersistentData().putInt("dungeon_home_x", center.getX());
+                  mob.getPersistentData().putInt("dungeon_home_y", center.getY());
+                  mob.getPersistentData().putInt("dungeon_home_z", center.getZ());
                   applyDungeonMobMetadata(mob, session.rank, stage, false);
                   level.addFreshEntity(mob);
                   session.enemyUUIDs.add(mob.getUUID());
@@ -2306,70 +2225,31 @@ public final class DungeonManager {
    ) {
       if (roomCenter != null) {
          int oy = roomCenter.getY();
-         if (index == 2) {
-            BlockPos gateCenter = new BlockPos(roomCenter.getX() - 17, oy, roomCenter.getZ());
+         BlockPos[] gateCenters = new BlockPos[]{
+            new BlockPos(roomCenter.getX(), oy, roomCenter.getZ() + 18),
+            new BlockPos(roomCenter.getX(), oy, roomCenter.getZ() - 18)
+         };
 
-            for (int dz = -4; dz <= 4; dz++) {
+         for (BlockPos gateCenter : gateCenters) {
+            for (int dx = -4; dx <= 4; dx++) {
                for (int dy = 1; dy <= 6; dy++) {
-                  BlockPos bp = new BlockPos(gateCenter.getX(), oy + dy, gateCenter.getZ() + dz);
+                  BlockPos bp = new BlockPos(gateCenter.getX() + dx, oy + dy, gateCenter.getZ());
                   BlockState cur = level.getBlockState(bp);
                   if (cur.isAir() || cur.canBeReplaced() || cur.is(Blocks.BARRIER) || cur.is(Blocks.IRON_BARS)) {
-                     if (Math.abs(dz) != 4 && dy != 6) {
+                     if (Math.abs(dx) != 4 && dy != 6) {
                         level.setBlock(bp, Blocks.IRON_BARS.defaultBlockState(), 2);
                         session.barrierBossBlocks.add(bp);
                      } else {
                         level.setBlock(bp, Blocks.POLISHED_DEEPSLATE.defaultBlockState(), 2);
                      }
-
                      session.arenaBlocks.add(bp);
                   }
                }
             }
-
-            session.barrierBossPos2 = gateCenter;
-         } else if (index == 1) {
-            BlockPos gateCenter = new BlockPos(roomCenter.getX(), oy, roomCenter.getZ() - 17);
-
-            for (int dx = -4; dx <= 4; dx++) {
-               for (int dyx = 1; dyx <= 6; dyx++) {
-                  BlockPos bp = new BlockPos(gateCenter.getX() + dx, oy + dyx, gateCenter.getZ());
-                  BlockState cur = level.getBlockState(bp);
-                  if (cur.isAir() || cur.canBeReplaced() || cur.is(Blocks.BARRIER) || cur.is(Blocks.IRON_BARS)) {
-                     if (Math.abs(dx) != 4 && dyx != 6) {
-                        level.setBlock(bp, Blocks.IRON_BARS.defaultBlockState(), 2);
-                        session.barrierBossBlocks.add(bp);
-                     } else {
-                        level.setBlock(bp, Blocks.POLISHED_DEEPSLATE.defaultBlockState(), 2);
-                     }
-
-                     session.arenaBlocks.add(bp);
-                  }
-               }
-            }
-
-            session.barrierBossPos1 = gateCenter;
-         } else {
-            BlockPos gateCenter = new BlockPos(roomCenter.getX(), oy, roomCenter.getZ() - 17);
-
-            for (int dx = -4; dx <= 4; dx++) {
-               for (int dyxx = 1; dyxx <= 6; dyxx++) {
-                  BlockPos bp = new BlockPos(gateCenter.getX() + dx, oy + dyxx, gateCenter.getZ());
-                  BlockState cur = level.getBlockState(bp);
-                  if (cur.isAir() || cur.canBeReplaced() || cur.is(Blocks.BARRIER) || cur.is(Blocks.IRON_BARS)) {
-                     if (Math.abs(dx) != 4 && dyxx != 6) {
-                        level.setBlock(bp, Blocks.IRON_BARS.defaultBlockState(), 2);
-                        session.barrierBossBlocks.add(bp);
-                     } else {
-                        level.setBlock(bp, Blocks.POLISHED_DEEPSLATE.defaultBlockState(), 2);
-                     }
-
-                     session.arenaBlocks.add(bp);
-                  }
-               }
-            }
-
-            session.barrierBossPos3 = gateCenter;
          }
+
+         session.barrierBossPos1 = gateCenters[0];
+         session.barrierBossPos2 = gateCenters[1];
       }
    }
 
@@ -2972,40 +2852,25 @@ public final class DungeonManager {
 
    public static boolean isInsideChamberVolume(com.soybe.awakeningsystem.DungeonManager.DungeonSession session, BlockPos p) {
       if (session != null && p != null) {
-         BlockPos[] rooms = session.getAllRoomCenters();
-         if (rooms != null) {
-            for (BlockPos c : rooms) {
-               if (c != null) {
-                  int dx = p.getX() - c.getX();
-                  int dy = p.getY() - c.getY();
-                  int dz = p.getZ() - c.getZ();
-                  int rx = c == session.roomB_Mid || c == session.roomB_Top || c == session.roomB_Right
-                     ? 18
-                     : (
-                        c == session.roomMB_Left || c == session.roomMB_Center
-                           ? 16
-                           : (
-                              c == session.roomP
-                                 ? 10
-                                 : (c == session.roomL2_6 ? 11 : (c != session.roomC3 && c != session.roomL2_4 ? (c == session.roomL1_4 ? 13 : 12) : 14))
-                           )
-                     );
-                  int h = rx >= 18 ? 13 : (rx >= 16 ? 12 : (rx >= 14 ? 10 : (rx <= 11 ? 8 : 9)));
-                  if (dy >= -3 && dy <= h + 3) {
-                     double nX = dx / (rx - 1.2);
-                     double nZ = dz / (rx - 1.2);
+         if (session.activeRooms != null && !session.activeRooms.isEmpty()) {
+            for (com.soybe.awakeningsystem.DungeonManager.DungeonSession.ProceduralRoom r : session.activeRooms) {
+               if (r != null && r.pos != null) {
+                  int dx = p.getX() - r.pos.getX();
+                  int dy = p.getY() - r.pos.getY();
+                  int dz = p.getZ() - r.pos.getZ();
+                  if (dy >= -3 && dy <= r.height + 3) {
+                     double nX = dx / Math.max(1.0, r.rx - 1.2);
+                     double nZ = dz / Math.max(1.0, r.rz - 1.2);
                      if (nX * nX + nZ * nZ < 1.0) {
                         return true;
                      }
                   }
                }
             }
+            return false;
          }
-
-         return false;
-      } else {
-         return false;
       }
+      return false;
    }
 
    public static BlockPos getActiveBarrierPos(com.soybe.awakeningsystem.DungeonManager.DungeonSession session) {
@@ -4497,6 +4362,30 @@ public final class DungeonManager {
                }
 
                if (session.combatActive) {
+               // Anti-Swarming & Room Leashing: stop enemies from piling up between rooms
+               if (server.getTickCount() % 20 == 0 && session.enemyUUIDs != null && !session.enemyUUIDs.isEmpty()) {
+                  for (UUID mid : session.enemyUUIDs) {
+                     Entity ent = level.getEntity(mid);
+                     if (ent instanceof Mob m && m.isAlive()) {
+                        LivingEntity target = m.getTarget();
+                        if (target != null) {
+                           double distSq = m.distanceToSqr(target);
+                           if (distSq > 256.0) { // > 16 blocks: de-aggro so monsters don't chase across corridors
+                              m.setTarget(null);
+                           } else if (m.getPersistentData().contains("dungeon_home_x")) {
+                              int hx = m.getPersistentData().getInt("dungeon_home_x");
+                              int hy = m.getPersistentData().getInt("dungeon_home_y");
+                              int hz = m.getPersistentData().getInt("dungeon_home_z");
+                              double homeDistSq = m.distanceToSqr(hx + 0.5, m.getY(), hz + 0.5);
+                              if (homeDistSq > 400.0) { // > 20 blocks from chamber: leash back home
+                                 m.setTarget(null);
+                                 m.getNavigation().moveTo(hx + 0.5, hy, hz + 0.5, 1.25);
+                              }
+                           }
+                        }
+                     }
+                  }
+               }
                   if (session.enemyUUIDs != null && !session.enemyUUIDs.isEmpty()) {
                      boolean changed = session.enemyUUIDs.removeIf(uuid -> {
                         Entity ent = level.getEntity(uuid);
@@ -6410,6 +6299,36 @@ public final class DungeonManager {
    }
 
    public static final class DungeonSession {
+      public static final class ProceduralRoom {
+         public final BlockPos pos;
+         public final int rx;
+         public final int rz;
+         public final int height;
+         public final com.soybe.awakeningsystem.DungeonRoomType type;
+         public final int stage;
+         public final String label;
+
+         public ProceduralRoom(BlockPos pos, int rx, int rz, int height, com.soybe.awakeningsystem.DungeonRoomType type, int stage, String label) {
+            this.pos = pos;
+            this.rx = rx;
+            this.rz = rz;
+            this.height = height;
+            this.type = type;
+            this.stage = stage;
+            this.label = label;
+         }
+      }
+
+      public static final class ProceduralCorridor {
+         public final BlockPos from;
+         public final BlockPos to;
+
+         public ProceduralCorridor(BlockPos from, BlockPos to) {
+            this.from = from;
+            this.to = to;
+         }
+      }
+
       public UUID playerId;
       public final String rank;
       public final ResourceKey<Level> returnDimension;
@@ -6450,6 +6369,11 @@ public final class DungeonManager {
       public BlockPos barrier2Pos = null;
       public BlockPos barrier3Pos = null;
       public BlockPos barrier4Pos = null;
+
+      public final List<ProceduralRoom> activeRooms = new ArrayList<>();
+      public final List<ProceduralCorridor> activeCorridors = new ArrayList<>();
+      public int layoutType = 0;
+
       public BlockPos roomP = null;
       public BlockPos roomC1 = null;
       public BlockPos roomC2 = null;
@@ -6477,6 +6401,7 @@ public final class DungeonManager {
       public BlockPos roomR5_3 = null;
       public BlockPos roomR5_4 = null;
       public BlockPos roomR5_5 = null;
+
       public BlockPos portalRoomPos = null;
       public BlockPos roomC_W1 = null;
       public BlockPos miniboss1Pos = null;
@@ -6523,6 +6448,7 @@ public final class DungeonManager {
             }
          }
       }
+
       public BlockPos room2Center = null;
       public BlockPos room3Center = null;
       public BlockPos room4Center = null;
@@ -6602,6 +6528,10 @@ public final class DungeonManager {
          }
       }
 
+      private static int j(Random rng, int max) {
+         return rng.nextInt(max * 2 + 1) - max;
+      }
+
       public DungeonSession(
          UUID playerId,
          String rank,
@@ -6626,97 +6556,239 @@ public final class DungeonManager {
          this.arenaCenter = arenaCenter;
          this.maxFloors = maxFloors;
          this.isRedGate = isRedGate;
-         Random rng = new Random(playerId.getLeastSignificantBits() ^ System.currentTimeMillis());
+
+         Random rng = new Random(playerId.getLeastSignificantBits() ^ System.currentTimeMillis() ^ (long)arenaCenter.hashCode());
          int ox = arenaCenter.getX();
          int oy = arenaCenter.getY();
          int oz = arenaCenter.getZ();
-         int S = 32;
-         this.roomP = new BlockPos(ox, oy, oz);
-         this.portalRoomPos = this.roomP;
-         this.roomC1 = new BlockPos(ox, oy, oz - S);
-         this.roomC2 = new BlockPos(ox, oy, oz - 2 * S);
-         this.roomC3 = new BlockPos(ox, oy, oz - 3 * S);
-         this.roomMB_Center = new BlockPos(ox, oy, oz - 4 * S);
-         this.roomC5 = new BlockPos(ox, oy, oz - 5 * S);
-         this.roomL2_1 = new BlockPos(ox - S, oy, oz - S);
-         this.roomL2_2 = new BlockPos(ox - S, oy, oz - 2 * S);
-         this.roomB_Mid = new BlockPos(ox - S, oy, oz - 3 * S);
-         this.roomL2_4 = new BlockPos(ox - S, oy, oz - 4 * S);
-         this.roomB_Top = new BlockPos(ox - S, oy, oz - 5 * S);
-         this.roomL2_6 = new BlockPos(ox - S, oy, oz - 6 * S);
-         this.roomMB_Left = new BlockPos(ox - 2 * S, oy, oz - S);
-         this.roomL1_2 = new BlockPos(ox - 2 * S, oy, oz - 2 * S);
-         this.roomL1_3 = new BlockPos(ox - 2 * S, oy, oz - 3 * S);
-         this.roomL1_4 = new BlockPos(ox - 2 * S, oy, oz - 4 * S);
-         this.roomL1_5 = new BlockPos(ox - 2 * S, oy, oz - 5 * S);
-         this.roomR4_1 = new BlockPos(ox + S, oy, oz - S);
-         this.roomR4_2 = new BlockPos(ox + S, oy, oz - 2 * S);
-         this.roomR4_3 = new BlockPos(ox + S, oy, oz - 3 * S);
-         this.roomR4_4 = new BlockPos(ox + S, oy, oz - 4 * S);
-         this.roomR4_5 = new BlockPos(ox + S, oy, oz - 5 * S);
-         this.roomB_Right = new BlockPos(ox + 2 * S, oy, oz - S);
-         this.roomR5_2 = new BlockPos(ox + 2 * S, oy, oz - 2 * S);
-         this.roomR5_3 = new BlockPos(ox + 2 * S, oy, oz - 3 * S);
-         this.roomR5_4 = new BlockPos(ox + 2 * S, oy, oz - 4 * S);
-         this.roomR5_5 = new BlockPos(ox + 2 * S, oy, oz - 5 * S);
-         this.miniboss1Pos = this.roomMB_Left;
-         this.miniboss2Pos = this.roomMB_Center;
-         this.bossCandidate1Pos = this.roomB_Mid;
-         this.bossCandidate2Pos = this.roomB_Top;
-         this.bossCandidate3Pos = this.roomB_Right;
-         int chosenBoss = rng.nextInt(3);
-         if (chosenBoss == 0) {
-            this.thronePos = this.bossCandidate1Pos;
-            this.eliteSanctum1Pos = this.bossCandidate2Pos;
-            this.eliteSanctum2Pos = this.bossCandidate3Pos;
-         } else if (chosenBoss == 1) {
-            this.thronePos = this.bossCandidate2Pos;
-            this.eliteSanctum1Pos = this.bossCandidate1Pos;
-            this.eliteSanctum2Pos = this.bossCandidate3Pos;
+
+         this.activeRooms.clear();
+         this.activeCorridors.clear();
+         this.layoutType = rng.nextInt(4);
+
+         if (this.layoutType == 0) {
+            // Layout 0: Bifurcated Wings of the Abyss (Twin Wings)
+            BlockPos rP = new BlockPos(ox, oy, oz);
+            BlockPos rHub = new BlockPos(ox + j(rng, 2), oy + j(rng, 1), oz - 32);
+            BlockPos rL1 = new BlockPos(ox - 32 + j(rng, 3), oy + j(rng, 1), oz - 54);
+            BlockPos rMB1 = new BlockPos(ox - 62 + j(rng, 3), oy + j(rng, 1), oz - 76);
+            BlockPos rS1 = new BlockPos(ox - 64 + j(rng, 3), oy + j(rng, 1), oz - 112);
+            BlockPos rL2 = new BlockPos(ox - 30 + j(rng, 3), oy + j(rng, 1), oz - 124);
+            BlockPos rR1 = new BlockPos(ox + 32 + j(rng, 3), oy + j(rng, 1), oz - 54);
+            BlockPos rMB2 = new BlockPos(ox + 62 + j(rng, 3), oy + j(rng, 1), oz - 76);
+            BlockPos rS2 = new BlockPos(ox + 64 + j(rng, 3), oy + j(rng, 1), oz - 112);
+            BlockPos rR2 = new BlockPos(ox + 30 + j(rng, 3), oy + j(rng, 1), oz - 124);
+            BlockPos rGate = new BlockPos(ox + j(rng, 2), oy + j(rng, 1), oz - 148);
+            BlockPos rBoss = new BlockPos(ox, oy, oz - 190);
+
+            activeRooms.add(new ProceduralRoom(rP, 10, 10, 8, DungeonRoomType.PORTAL, 0, "Portal"));
+            activeRooms.add(new ProceduralRoom(rHub, 13, 13, 9, DungeonRoomType.NORMAL, 1, "Hub"));
+            activeRooms.add(new ProceduralRoom(rL1, 12, 12, 9, DungeonRoomType.NORMAL, 2, "WestEntry"));
+            activeRooms.add(new ProceduralRoom(rMB1, 16, 16, 12, DungeonRoomType.MINIBOSS, 3, "MinibossWest"));
+            activeRooms.add(new ProceduralRoom(rS1, 14, 14, 10, DungeonRoomType.NORMAL, 4, "SanctumWest"));
+            activeRooms.add(new ProceduralRoom(rL2, 12, 12, 9, DungeonRoomType.NORMAL, 3, "WestHall"));
+            activeRooms.add(new ProceduralRoom(rR1, 12, 12, 9, DungeonRoomType.NORMAL, 2, "EastEntry"));
+            activeRooms.add(new ProceduralRoom(rMB2, 16, 16, 12, DungeonRoomType.MINIBOSS, 3, "MinibossEast"));
+            activeRooms.add(new ProceduralRoom(rS2, 14, 14, 10, DungeonRoomType.NORMAL, 4, "SanctumEast"));
+            activeRooms.add(new ProceduralRoom(rR2, 12, 12, 9, DungeonRoomType.NORMAL, 3, "EastHall"));
+            activeRooms.add(new ProceduralRoom(rGate, 14, 14, 10, DungeonRoomType.NORMAL, 4, "GateHall"));
+            activeRooms.add(new ProceduralRoom(rBoss, 20, 20, 14, DungeonRoomType.BOSS_CANDIDATE, 5, "Throne"));
+
+            activeCorridors.add(new ProceduralCorridor(rP, rHub));
+            activeCorridors.add(new ProceduralCorridor(rHub, rL1));
+            activeCorridors.add(new ProceduralCorridor(rL1, rMB1));
+            activeCorridors.add(new ProceduralCorridor(rMB1, rS1));
+            activeCorridors.add(new ProceduralCorridor(rS1, rL2));
+            activeCorridors.add(new ProceduralCorridor(rL2, rGate));
+
+            activeCorridors.add(new ProceduralCorridor(rHub, rR1));
+            activeCorridors.add(new ProceduralCorridor(rR1, rMB2));
+            activeCorridors.add(new ProceduralCorridor(rMB2, rS2));
+            activeCorridors.add(new ProceduralCorridor(rS2, rR2));
+            activeCorridors.add(new ProceduralCorridor(rR2, rGate));
+
+            activeCorridors.add(new ProceduralCorridor(rGate, rBoss));
+
+            this.miniboss1Pos = rMB1;
+            this.miniboss2Pos = rMB2;
+            this.eliteSanctum1Pos = rS1;
+            this.eliteSanctum2Pos = rS2;
+            this.thronePos = rBoss;
+            this.room2Center = rHub;
+            this.room3Center = rMB1;
+            this.room4Center = rGate;
+            this.room5Center = rBoss;
+         } else if (this.layoutType == 1) {
+            // Layout 1: Serpentine Spider Caverns
+            BlockPos rP = new BlockPos(ox, oy, oz);
+            BlockPos r1 = new BlockPos(ox - 24 + j(rng, 3), oy + j(rng, 1), oz - 28);
+            BlockPos r2 = new BlockPos(ox + 22 + j(rng, 3), oy + j(rng, 1), oz - 56);
+            BlockPos rMB1 = new BlockPos(ox + 60 + j(rng, 3), oy + j(rng, 1), oz - 76);
+            BlockPos r3 = new BlockPos(ox - 20 + j(rng, 3), oy + j(rng, 1), oz - 90);
+            BlockPos rS1 = new BlockPos(ox - 58 + j(rng, 3), oy + j(rng, 1), oz - 102);
+            BlockPos r4 = new BlockPos(ox + 22 + j(rng, 3), oy + j(rng, 1), oz - 122);
+            BlockPos rMB2 = new BlockPos(ox - 32 + j(rng, 3), oy + j(rng, 1), oz - 144);
+            BlockPos rS2 = new BlockPos(ox + 52 + j(rng, 3), oy + j(rng, 1), oz - 152);
+            BlockPos rGate = new BlockPos(ox + j(rng, 2), oy + j(rng, 1), oz - 168);
+            BlockPos rBoss = new BlockPos(ox, oy, oz - 204);
+
+            activeRooms.add(new ProceduralRoom(rP, 10, 10, 8, DungeonRoomType.PORTAL, 0, "Portal"));
+            activeRooms.add(new ProceduralRoom(r1, 12, 12, 9, DungeonRoomType.NORMAL, 1, "Serpent1"));
+            activeRooms.add(new ProceduralRoom(r2, 13, 13, 9, DungeonRoomType.NORMAL, 2, "Serpent2"));
+            activeRooms.add(new ProceduralRoom(rMB1, 16, 16, 12, DungeonRoomType.MINIBOSS, 3, "MinibossNest"));
+            activeRooms.add(new ProceduralRoom(r3, 13, 13, 9, DungeonRoomType.NORMAL, 2, "Serpent3"));
+            activeRooms.add(new ProceduralRoom(rS1, 14, 14, 10, DungeonRoomType.NORMAL, 3, "SanctumWeb"));
+            activeRooms.add(new ProceduralRoom(r4, 14, 14, 10, DungeonRoomType.NORMAL, 3, "Serpent4"));
+            activeRooms.add(new ProceduralRoom(rMB2, 16, 16, 12, DungeonRoomType.MINIBOSS, 4, "MinibossDen"));
+            activeRooms.add(new ProceduralRoom(rS2, 14, 14, 10, DungeonRoomType.NORMAL, 4, "SanctumCache"));
+            activeRooms.add(new ProceduralRoom(rGate, 14, 14, 10, DungeonRoomType.NORMAL, 4, "GateHall"));
+            activeRooms.add(new ProceduralRoom(rBoss, 20, 20, 14, DungeonRoomType.BOSS_CANDIDATE, 5, "Throne"));
+
+            activeCorridors.add(new ProceduralCorridor(rP, r1));
+            activeCorridors.add(new ProceduralCorridor(r1, r2));
+            activeCorridors.add(new ProceduralCorridor(r2, rMB1));
+            activeCorridors.add(new ProceduralCorridor(r2, r3));
+            activeCorridors.add(new ProceduralCorridor(r3, rS1));
+            activeCorridors.add(new ProceduralCorridor(r3, r4));
+            activeCorridors.add(new ProceduralCorridor(r4, rMB2));
+            activeCorridors.add(new ProceduralCorridor(r4, rS2));
+            activeCorridors.add(new ProceduralCorridor(r4, rGate));
+            activeCorridors.add(new ProceduralCorridor(rGate, rBoss));
+
+            this.miniboss1Pos = rMB1;
+            this.miniboss2Pos = rMB2;
+            this.eliteSanctum1Pos = rS1;
+            this.eliteSanctum2Pos = rS2;
+            this.thronePos = rBoss;
+            this.room2Center = r2;
+            this.room3Center = rMB1;
+            this.room4Center = rGate;
+            this.room5Center = rBoss;
+         } else if (this.layoutType == 2) {
+            // Layout 2: Quad Cross Catacombs
+            BlockPos rP = new BlockPos(ox, oy, oz);
+            BlockPos rAnte = new BlockPos(ox + j(rng, 2), oy, oz - 28);
+            BlockPos rCross = new BlockPos(ox, oy, oz - 62);
+            BlockPos rW1 = new BlockPos(ox - 38 + j(rng, 3), oy + j(rng, 1), oz - 65);
+            BlockPos rMB1 = new BlockPos(ox - 70 + j(rng, 3), oy + j(rng, 1), oz - 65);
+            BlockPos rS1 = new BlockPos(ox - 52 + j(rng, 3), oy + j(rng, 1), oz - 105);
+            BlockPos rE1 = new BlockPos(ox + 38 + j(rng, 3), oy + j(rng, 1), oz - 65);
+            BlockPos rMB2 = new BlockPos(ox + 70 + j(rng, 3), oy + j(rng, 1), oz - 65);
+            BlockPos rS2 = new BlockPos(ox + 52 + j(rng, 3), oy + j(rng, 1), oz - 105);
+            BlockPos rN1 = new BlockPos(ox + j(rng, 2), oy + j(rng, 1), oz - 105);
+            BlockPos rGate = new BlockPos(ox + j(rng, 2), oy + j(rng, 1), oz - 145);
+            BlockPos rBoss = new BlockPos(ox, oy, oz - 188);
+
+            activeRooms.add(new ProceduralRoom(rP, 10, 10, 8, DungeonRoomType.PORTAL, 0, "Portal"));
+            activeRooms.add(new ProceduralRoom(rAnte, 12, 12, 9, DungeonRoomType.NORMAL, 1, "Ante"));
+            activeRooms.add(new ProceduralRoom(rCross, 16, 16, 12, DungeonRoomType.NORMAL, 2, "Crossroads"));
+            activeRooms.add(new ProceduralRoom(rW1, 12, 12, 9, DungeonRoomType.NORMAL, 2, "WestHall"));
+            activeRooms.add(new ProceduralRoom(rMB1, 16, 16, 12, DungeonRoomType.MINIBOSS, 3, "MinibossWest"));
+            activeRooms.add(new ProceduralRoom(rS1, 14, 14, 10, DungeonRoomType.NORMAL, 4, "SanctumWest"));
+            activeRooms.add(new ProceduralRoom(rE1, 12, 12, 9, DungeonRoomType.NORMAL, 2, "EastHall"));
+            activeRooms.add(new ProceduralRoom(rMB2, 16, 16, 12, DungeonRoomType.MINIBOSS, 3, "MinibossEast"));
+            activeRooms.add(new ProceduralRoom(rS2, 14, 14, 10, DungeonRoomType.NORMAL, 4, "SanctumEast"));
+            activeRooms.add(new ProceduralRoom(rN1, 13, 13, 10, DungeonRoomType.NORMAL, 3, "NorthHall"));
+            activeRooms.add(new ProceduralRoom(rGate, 14, 14, 10, DungeonRoomType.NORMAL, 4, "GateHall"));
+            activeRooms.add(new ProceduralRoom(rBoss, 20, 20, 14, DungeonRoomType.BOSS_CANDIDATE, 5, "Throne"));
+
+            activeCorridors.add(new ProceduralCorridor(rP, rAnte));
+            activeCorridors.add(new ProceduralCorridor(rAnte, rCross));
+            activeCorridors.add(new ProceduralCorridor(rCross, rW1));
+            activeCorridors.add(new ProceduralCorridor(rW1, rMB1));
+            activeCorridors.add(new ProceduralCorridor(rMB1, rS1));
+            activeCorridors.add(new ProceduralCorridor(rS1, rN1));
+            activeCorridors.add(new ProceduralCorridor(rCross, rE1));
+            activeCorridors.add(new ProceduralCorridor(rE1, rMB2));
+            activeCorridors.add(new ProceduralCorridor(rMB2, rS2));
+            activeCorridors.add(new ProceduralCorridor(rS2, rN1));
+            activeCorridors.add(new ProceduralCorridor(rCross, rN1));
+            activeCorridors.add(new ProceduralCorridor(rN1, rGate));
+            activeCorridors.add(new ProceduralCorridor(rGate, rBoss));
+
+            this.miniboss1Pos = rMB1;
+            this.miniboss2Pos = rMB2;
+            this.eliteSanctum1Pos = rS1;
+            this.eliteSanctum2Pos = rS2;
+            this.thronePos = rBoss;
+            this.room2Center = rCross;
+            this.room3Center = rMB1;
+            this.room4Center = rGate;
+            this.room5Center = rBoss;
          } else {
-            this.thronePos = this.bossCandidate3Pos;
-            this.eliteSanctum1Pos = this.bossCandidate1Pos;
-            this.eliteSanctum2Pos = this.bossCandidate2Pos;
+            // Layout 3: Stepped Descent Gauntlet
+            BlockPos rP = new BlockPos(ox, oy, oz);
+            BlockPos r1 = new BlockPos(ox + j(rng, 3), oy - 1, oz - 32);
+            BlockPos r2 = new BlockPos(ox + j(rng, 3), oy - 2, oz - 66);
+            BlockPos rMB1 = new BlockPos(ox - 42 + j(rng, 2), oy - 2, oz - 66);
+            BlockPos r3 = new BlockPos(ox + j(rng, 3), oy - 3, oz - 100);
+            BlockPos rMB2 = new BlockPos(ox + 42 + j(rng, 2), oy - 3, oz - 100);
+            BlockPos rS1 = new BlockPos(ox - 44 + j(rng, 2), oy - 3, oz - 132);
+            BlockPos rS2 = new BlockPos(ox + 44 + j(rng, 2), oy - 3, oz - 132);
+            BlockPos rGate = new BlockPos(ox + j(rng, 2), oy - 4, oz - 136);
+            BlockPos rBoss = new BlockPos(ox, oy - 4, oz - 178);
+
+            activeRooms.add(new ProceduralRoom(rP, 10, 10, 8, DungeonRoomType.PORTAL, 0, "Portal"));
+            activeRooms.add(new ProceduralRoom(r1, 12, 12, 9, DungeonRoomType.NORMAL, 1, "Descent1"));
+            activeRooms.add(new ProceduralRoom(r2, 13, 13, 9, DungeonRoomType.NORMAL, 2, "Descent2"));
+            activeRooms.add(new ProceduralRoom(rMB1, 16, 16, 12, DungeonRoomType.MINIBOSS, 3, "WestBastion"));
+            activeRooms.add(new ProceduralRoom(r3, 13, 13, 9, DungeonRoomType.NORMAL, 3, "Descent3"));
+            activeRooms.add(new ProceduralRoom(rMB2, 16, 16, 12, DungeonRoomType.MINIBOSS, 3, "EastBastion"));
+            activeRooms.add(new ProceduralRoom(rS1, 14, 14, 10, DungeonRoomType.NORMAL, 4, "WestSanctum"));
+            activeRooms.add(new ProceduralRoom(rS2, 14, 14, 10, DungeonRoomType.NORMAL, 4, "EastSanctum"));
+            activeRooms.add(new ProceduralRoom(rGate, 14, 14, 10, DungeonRoomType.NORMAL, 4, "GreatColosseum"));
+            activeRooms.add(new ProceduralRoom(rBoss, 20, 20, 14, DungeonRoomType.BOSS_CANDIDATE, 5, "Throne"));
+
+            activeCorridors.add(new ProceduralCorridor(rP, r1));
+            activeCorridors.add(new ProceduralCorridor(r1, r2));
+            activeCorridors.add(new ProceduralCorridor(r2, rMB1));
+            activeCorridors.add(new ProceduralCorridor(r2, r3));
+            activeCorridors.add(new ProceduralCorridor(r3, rMB2));
+            activeCorridors.add(new ProceduralCorridor(r3, rGate));
+            activeCorridors.add(new ProceduralCorridor(rGate, rS1));
+            activeCorridors.add(new ProceduralCorridor(rGate, rS2));
+            activeCorridors.add(new ProceduralCorridor(rGate, rBoss));
+
+            this.miniboss1Pos = rMB1;
+            this.miniboss2Pos = rMB2;
+            this.eliteSanctum1Pos = rS1;
+            this.eliteSanctum2Pos = rS2;
+            this.thronePos = rBoss;
+            this.room2Center = r2;
+            this.room3Center = rMB1;
+            this.room4Center = rGate;
+            this.room5Center = rBoss;
          }
 
-         this.roomC_W1 = this.roomL2_1;
-         this.roomC_W2 = this.roomL1_2;
-         this.roomC_W3 = this.roomL1_3;
-         this.roomC_MidW = this.roomL2_4;
-         this.roomC_W4 = this.roomL1_4;
-         this.roomC_W5 = this.roomL1_5;
-         this.roomC_N1 = this.roomC2;
-         this.roomC_Top1 = this.roomC5;
-         this.roomC_NE1 = this.roomR4_2;
-         this.roomC_NE2 = this.roomR4_3;
-         this.roomC_E1 = this.roomR4_1;
-         this.roomC_E2 = this.roomR4_2;
-         this.roomC_E3 = this.roomR5_3;
-         this.roomC_E4 = this.roomR5_4;
-         this.roomC_E5 = this.roomR5_2;
-         this.room2Center = this.roomC_W1;
-         this.room3Center = this.miniboss1Pos;
-         this.room4Center = this.roomC_N1;
-         this.room5Center = this.thronePos;
-         this.deadEndCentralChamber = this.miniboss2Pos;
-         this.deadEndWestChamber = this.eliteSanctum1Pos;
-         this.deadEndEastChamber = this.eliteSanctum2Pos;
-         this.secretTreasureChamber = this.roomC_E3;
+         this.portalRoomPos = this.activeRooms.get(0).pos;
+         this.roomP = this.portalRoomPos;
+         this.roomC1 = this.room2Center;
+         this.roomC2 = this.room3Center;
+         this.roomC3 = this.room4Center;
+         this.roomC5 = this.room5Center;
+         this.roomMB_Left = this.miniboss1Pos;
+         this.roomMB_Center = this.miniboss2Pos;
+         this.bossCandidate1Pos = this.eliteSanctum1Pos;
+         this.bossCandidate2Pos = this.eliteSanctum2Pos;
+         this.bossCandidate3Pos = this.thronePos;
+
          this.calculateBunkerBounds();
       }
 
       public void calculateBunkerBounds() {
          int minX = this.arenaCenter.getX();
          int maxX = this.arenaCenter.getX();
-         int minY = this.arenaCenter.getY() - 8;
-         int maxY = this.arenaCenter.getY() + 18;
-         int minZ = this.arenaCenter.getZ() - 220;
+         int minY = this.arenaCenter.getY() - 10;
+         int maxY = this.arenaCenter.getY() + 20;
+         int minZ = this.arenaCenter.getZ() - 250;
          int maxZ = this.arenaCenter.getZ() + 30;
 
          for (BlockPos r : this.getAllRoomCenters()) {
             if (r != null) {
                minX = Math.min(minX, r.getX() - 32);
                maxX = Math.max(maxX, r.getX() + 32);
+               minY = Math.min(minY, r.getY() - 10);
+               maxY = Math.max(maxY, r.getY() + 20);
                minZ = Math.min(minZ, r.getZ() - 32);
                maxZ = Math.max(maxZ, r.getZ() + 32);
             }
@@ -6732,35 +6804,10 @@ public final class DungeonManager {
       }
 
       public BlockPos[] getAllRoomCenters() {
-         return new BlockPos[]{
-            this.roomP,
-            this.roomC1,
-            this.roomC2,
-            this.roomC3,
-            this.roomMB_Center,
-            this.roomC5,
-            this.roomL2_1,
-            this.roomL2_2,
-            this.roomB_Mid,
-            this.roomL2_4,
-            this.roomB_Top,
-            this.roomL2_6,
-            this.roomMB_Left,
-            this.roomL1_2,
-            this.roomL1_3,
-            this.roomL1_4,
-            this.roomL1_5,
-            this.roomR4_1,
-            this.roomR4_2,
-            this.roomR4_3,
-            this.roomR4_4,
-            this.roomR4_5,
-            this.roomB_Right,
-            this.roomR5_2,
-            this.roomR5_3,
-            this.roomR5_4,
-            this.roomR5_5
-         };
+         if (this.activeRooms != null && !this.activeRooms.isEmpty()) {
+            return this.activeRooms.stream().map(r -> r.pos).toArray(BlockPos[]::new);
+         }
+         return new BlockPos[]{ this.arenaCenter };
       }
 
       public DungeonSession(

@@ -3386,5 +3386,35 @@
         "attenuation_distance": 80
       }
     ]
+  },
+  "tombstone_spawn": {
+    "category": "block",
+    "subtitle": "subtitles.awakening_system.tombstone_spawn",
+    "sounds": [
+      {
+        "name": "awakening_system:tombstone/spawn",
+        "attenuation_distance": 16
+      }
+    ]
+  },
+  "tombstone_idle": {
+    "category": "block",
+    "subtitle": "subtitles.awakening_system.tombstone_idle",
+    "sounds": [
+      {
+        "name": "awakening_system:tombstone/idle",
+        "attenuation_distance": 10
+      }
+    ]
+  },
+  "tombstone_breakdown": {
+    "category": "block",
+    "subtitle": "subtitles.awakening_system.tombstone_breakdown",
+    "sounds": [
+      {
+        "name": "awakening_system:tombstone/breakdown",
+        "attenuation_distance": 16
+      }
+    ]
   }
 }

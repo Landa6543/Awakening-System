@@ -1,0 +1,21 @@
+{
+  "type": "minecraft:crafting_shaped",
+  "category": "misc",
+  "pattern": [
+    "###",
+    "#X#",
+    "###"
+  ],
+  "key": {
+    "#": {
+      "item": "awakening_system:spirit_jade_shard"
+    },
+    "X": {
+      "item": "minecraft:golden_carrot"
+    }
+  },
+  "result": {
+    "count": 1,
+    "id": "awakening_system:spirit_qi_carrot"
+  }
+}

@@ -7,6 +7,7 @@ import com.soybe.awakeningsystem.item.DeathKingClockItem;
 import com.soybe.awakeningsystem.item.DreadScytheItem;
 import com.soybe.awakeningsystem.item.ElucidatorItem;
 import com.soybe.awakeningsystem.item.DarkRepulserItem;
+import com.soybe.awakeningsystem.item.KasakasVenomFangItem;
 import com.soybe.awakeningsystem.item.LambentLightItem;
 import com.soybe.awakeningsystem.item.FlyingSwordItem;
 import com.soybe.awakeningsystem.item.GiganticGreatswordItem;
@@ -82,6 +83,9 @@ import net.neoforged.neoforge.registries.DeferredHolder;
 import java.util.List;
 
 public final class SystemItems {
+    public static final DeferredHolder<Item, Item> HUNTER_ASSOCIATION_TRACKER = AwakeningSystemMod.ITEMS.register(
+            "hunter_association_tracker", () -> new com.soybe.awakeningsystem.item.HunterAssociationTrackerItem(new Item.Properties()));
+
     public static final DeferredHolder<Item, Item> AWAKENING_COIN = AwakeningSystemMod.ITEMS.register(
             "awakening_coin", () -> new com.soybe.awakeningsystem.item.AwakeningCoinItem(new Item.Properties()));
 
@@ -134,6 +138,56 @@ public final class SystemItems {
 
     public static final DeferredHolder<Item, Item> ROULETTE_ALTAR = AwakeningSystemMod.ITEMS.register(
             "roulette_altar", () -> new net.minecraft.world.item.BlockItem(com.soybe.awakeningsystem.block.SystemBlocks.ROULETTE_ALTAR.get(), new Item.Properties().rarity(net.minecraft.world.item.Rarity.EPIC)));
+
+    // Seasonal Holiday Events (Roadmap Section 42)
+    public static final DeferredHolder<Item, Item> CHRISTMAS_TREE = AwakeningSystemMod.ITEMS.register(
+            "christmas_tree", () -> new net.minecraft.world.item.BlockItem(com.soybe.awakeningsystem.block.SystemBlocks.CHRISTMAS_TREE.get(),
+                    new Item.Properties().rarity(net.minecraft.world.item.Rarity.RARE)));
+
+    public static final DeferredHolder<Item, Item> CHRISTMAS_GIFT_BOX = AwakeningSystemMod.ITEMS.register(
+            "christmas_gift_box", () -> new com.soybe.awakeningsystem.item.seasonal.ChristmasGiftBoxItem(new Item.Properties()));
+
+    public static final DeferredHolder<Item, Item> XMAS_TREE_SWORD = AwakeningSystemMod.ITEMS.register(
+            "xmas_tree_sword", () -> new com.soybe.awakeningsystem.item.seasonal.XmasTreeSwordItem(new Item.Properties()));
+
+    public static final DeferredHolder<Item, Item> CANDY_BASKET = AwakeningSystemMod.ITEMS.register(
+            "candy_basket", () -> new com.soybe.awakeningsystem.item.seasonal.CandyBasketItem(new Item.Properties()));
+
+    public static final DeferredHolder<Item, Item> GINGERBREAD_COOKIE = AwakeningSystemMod.ITEMS.register(
+            "gingerbread_cookie", () -> new com.soybe.awakeningsystem.item.seasonal.SeasonalFoodItem(
+                    com.soybe.awakeningsystem.item.seasonal.SeasonalFoodItem.SweetType.GINGERBREAD_COOKIE, new Item.Properties()));
+
+    public static final DeferredHolder<Item, Item> CANDY_CANE = AwakeningSystemMod.ITEMS.register(
+            "candy_cane", () -> new com.soybe.awakeningsystem.item.seasonal.SeasonalFoodItem(
+                    com.soybe.awakeningsystem.item.seasonal.SeasonalFoodItem.SweetType.CANDY_CANE, new Item.Properties()));
+
+    public static final DeferredHolder<Item, Item> HOT_CHOCOLATE = AwakeningSystemMod.ITEMS.register(
+            "hot_chocolate", () -> new com.soybe.awakeningsystem.item.seasonal.SeasonalFoodItem(
+                    com.soybe.awakeningsystem.item.seasonal.SeasonalFoodItem.SweetType.HOT_CHOCOLATE, new Item.Properties().stacksTo(16)));
+
+    public static final DeferredHolder<Item, Item> ALMOND_NOUGAT = AwakeningSystemMod.ITEMS.register(
+            "almond_nougat", () -> new com.soybe.awakeningsystem.item.seasonal.SeasonalFoodItem(
+                    com.soybe.awakeningsystem.item.seasonal.SeasonalFoodItem.SweetType.ALMOND_NOUGAT, new Item.Properties()));
+
+    public static final DeferredHolder<Item, Item> POLAR_PEPPERMINT = AwakeningSystemMod.ITEMS.register(
+            "polar_peppermint", () -> new com.soybe.awakeningsystem.item.seasonal.SeasonalFoodItem(
+                    com.soybe.awakeningsystem.item.seasonal.SeasonalFoodItem.SweetType.POLAR_PEPPERMINT, new Item.Properties()));
+
+    public static final DeferredHolder<Item, Item> SOUL_CANDY = AwakeningSystemMod.ITEMS.register(
+            "soul_candy", () -> new com.soybe.awakeningsystem.item.seasonal.SeasonalFoodItem(
+                    com.soybe.awakeningsystem.item.seasonal.SeasonalFoodItem.SweetType.SOUL_CANDY, new Item.Properties()));
+
+    public static final DeferredHolder<Item, Item> MANA_GUMMY = AwakeningSystemMod.ITEMS.register(
+            "mana_gummy", () -> new com.soybe.awakeningsystem.item.seasonal.SeasonalFoodItem(
+                    com.soybe.awakeningsystem.item.seasonal.SeasonalFoodItem.SweetType.MANA_GUMMY, new Item.Properties()));
+
+    public static final DeferredHolder<Item, Item> BERSERKER_CHOCOLATE = AwakeningSystemMod.ITEMS.register(
+            "berserker_chocolate", () -> new com.soybe.awakeningsystem.item.seasonal.SeasonalFoodItem(
+                    com.soybe.awakeningsystem.item.seasonal.SeasonalFoodItem.SweetType.BERSERKER_CHOCOLATE, new Item.Properties()));
+
+    public static final DeferredHolder<Item, Item> HAUNTED_CANDY = AwakeningSystemMod.ITEMS.register(
+            "haunted_candy", () -> new com.soybe.awakeningsystem.item.seasonal.SeasonalFoodItem(
+                    com.soybe.awakeningsystem.item.seasonal.SeasonalFoodItem.SweetType.HAUNTED_CANDY, new Item.Properties()));
 
     public static final DeferredHolder<Item, Item> LIMBO_DOOR_ITEM = AwakeningSystemMod.ITEMS.register(
             "limbo_door", () -> new com.soybe.awakeningsystem.item.LimboDoorItem(new Item.Properties()));
@@ -713,6 +767,10 @@ public final class SystemItems {
             "mount_hua_disciple_spawn_egg", () -> new net.neoforged.neoforge.common.DeferredSpawnEggItem(
                     com.soybe.awakeningsystem.entity.ModEntities.MOUNT_HUA_DISCIPLE, 0xEDE8F5, 0xFF69B4, new Item.Properties()));
 
+    public static final DeferredHolder<Item, Item> HUNTER_EVALUATOR_SPAWN_EGG = AwakeningSystemMod.ITEMS.register(
+            "hunter_evaluator_spawn_egg", () -> new net.neoforged.neoforge.common.DeferredSpawnEggItem(
+                    com.soybe.awakeningsystem.entity.ModEntities.HUNTER_EVALUATOR, 0x1A222D, 0x00E5FF, new Item.Properties()));
+
     public static final DeferredHolder<Item, Item> GOBLIN_EAR = AwakeningSystemMod.ITEMS.register(
             "goblin_ear", () -> new Item(new Item.Properties()));
 
@@ -742,6 +800,10 @@ public final class SystemItems {
 
     public static final DeferredHolder<Item, Item> FLYING_SWORD = AwakeningSystemMod.ITEMS.register(
             "flying_sword", () -> new FlyingSwordItem(new Item.Properties().stacksTo(1)));
+
+    public static final DeferredHolder<Item, Item> POCKET_SANCTUARY_DOOR = AwakeningSystemMod.ITEMS.register(
+            "pocket_sanctuary_door", () -> new com.soybe.awakeningsystem.item.PocketSanctuaryDoorItem(
+                    new Item.Properties().stacksTo(1).rarity(net.minecraft.world.item.Rarity.RARE)));
 
     public static final DeferredHolder<Item, Item> ASTRAL_CRYSTAL_SCALE = AwakeningSystemMod.ITEMS.register(
             "astral_crystal_scale", () -> new Item(new Item.Properties().rarity(net.minecraft.world.item.Rarity.RARE)));
@@ -782,6 +844,9 @@ public final class SystemItems {
 
     public static final DeferredHolder<Item, Item> SHADOW_DAGGERS = AwakeningSystemMod.ITEMS.register(
             "shadow_daggers", () -> new ShadowDaggersItem(new Item.Properties().stacksTo(1)));
+
+    public static final DeferredHolder<Item, Item> KASAKAS_VENOM_FANG = AwakeningSystemMod.ITEMS.register(
+            "kasakas_venom_fang", () -> new KasakasVenomFangItem(new Item.Properties().stacksTo(1)));
 
     public static final DeferredHolder<Item, Item> RADIANT_LIGHT_SWORD = AwakeningSystemMod.ITEMS.register(
             "radiant_light_sword", () -> new RadiantLightSwordItem(new Item.Properties().stacksTo(1)));
@@ -1378,6 +1443,13 @@ public final class SystemItems {
     public static final DeferredHolder<Item, Item> SPIRIT_JADE_SHARD = AwakeningSystemMod.ITEMS.register(
             "spirit_jade_shard", () -> new Item(new Item.Properties().fireResistant().rarity(Rarity.EPIC)));
 
+    public static final DeferredHolder<Item, Item> RAW_SIDERITE = AwakeningSystemMod.ITEMS.register(
+            "raw_siderite", () -> new Item(new Item.Properties().fireResistant().rarity(Rarity.RARE)));
+    public static final DeferredHolder<Item, Item> SIDERITE_FRAGMENT = AwakeningSystemMod.ITEMS.register(
+            "siderite_fragment", () -> new Item(new Item.Properties().fireResistant().rarity(Rarity.EPIC)));
+    public static final DeferredHolder<Item, Item> SIDERITE_INGOT = AwakeningSystemMod.ITEMS.register(
+            "siderite_ingot", () -> new Item(new Item.Properties().fireResistant().rarity(Rarity.RARE)));
+
     public static final DeferredHolder<Item, Item> RAW_ASTRAL = AwakeningSystemMod.ITEMS.register(
             "raw_astral", () -> new Item(new Item.Properties().fireResistant().rarity(Rarity.EPIC)));
     public static final DeferredHolder<Item, Item> ASTRAL_INGOT = AwakeningSystemMod.ITEMS.register(
@@ -1505,6 +1577,11 @@ public final class SystemItems {
     public static final DeferredHolder<Item, Item> ENCHANTED_PRIMORDIAL_APPLE = AwakeningSystemMod.ITEMS.register(
             "enchanted_primordial_apple", () -> new MineralAppleItem(MineralAppleItem.AppleTier.PRIMORDIAL, true));
 
+    public static final DeferredHolder<Item, Item> SHADOW_APPLE = AwakeningSystemMod.ITEMS.register(
+            "shadow_apple", () -> new com.soybe.awakeningsystem.item.ShadowAppleItem());
+    public static final DeferredHolder<Item, Item> SPIRIT_QI_CARROT = AwakeningSystemMod.ITEMS.register(
+            "spirit_qi_carrot", () -> new com.soybe.awakeningsystem.item.SpiritQiCarrotItem());
+
 
     public static final DeferredHolder<Item, Item> ABYSSAL_STONE = AwakeningSystemMod.ITEMS.register(
             "abyssal_stone", () -> new net.minecraft.world.item.BlockItem(SystemBlocks.ABYSSAL_STONE.get(), new Item.Properties().rarity(Rarity.RARE)));
@@ -1567,6 +1644,11 @@ public final class SystemItems {
             "spirit_jade_ore", () -> new net.minecraft.world.item.BlockItem(SystemBlocks.SPIRIT_JADE_ORE.get(), new Item.Properties().fireResistant().rarity(Rarity.EPIC)));
     public static final DeferredHolder<Item, Item> SPIRIT_JADE_BLOCK = AwakeningSystemMod.ITEMS.register(
             "spirit_jade_block", () -> new net.minecraft.world.item.BlockItem(SystemBlocks.SPIRIT_JADE_BLOCK.get(), new Item.Properties().fireResistant().rarity(Rarity.EPIC)));
+
+    public static final DeferredHolder<Item, Item> SIDERITE_ORE = AwakeningSystemMod.ITEMS.register(
+            "siderite_ore", () -> new net.minecraft.world.item.BlockItem(SystemBlocks.SIDERITE_ORE.get(), new Item.Properties().fireResistant().rarity(Rarity.RARE)));
+    public static final DeferredHolder<Item, Item> SIDERITE_BLOCK = AwakeningSystemMod.ITEMS.register(
+            "siderite_block", () -> new net.minecraft.world.item.BlockItem(SystemBlocks.SIDERITE_BLOCK.get(), new Item.Properties().fireResistant().rarity(Rarity.RARE)));
 
     public static final DeferredHolder<Item, Item> ASTRAL_ORE = AwakeningSystemMod.ITEMS.register(
             "astral_ore", () -> new net.minecraft.world.item.BlockItem(SystemBlocks.ASTRAL_ORE.get(), new Item.Properties().fireResistant().rarity(Rarity.EPIC)));
@@ -1721,6 +1803,16 @@ public final class SystemItems {
             "astralite_hoe", () -> new HoeItem(CustomToolTiers.ASTRALITE,
                     new Item.Properties().fireResistant().rarity(Rarity.EPIC).attributes(DiggerItem.createAttributes(CustomToolTiers.ASTRALITE, 0.0F, -3.0F))));
 
+    public static final DeferredHolder<Item, Item> SIDERITE_SWORD = AwakeningSystemMod.ITEMS.register(
+            "siderite_sword", () -> new SwordItem(CustomToolTiers.SIDERITE,
+                    new Item.Properties().fireResistant().rarity(Rarity.RARE).attributes(SwordItem.createAttributes(CustomToolTiers.SIDERITE, 3, -2.4F))));
+    public static final DeferredHolder<Item, Item> SIDERITE_PICKAXE = AwakeningSystemMod.ITEMS.register(
+            "siderite_pickaxe", () -> new PickaxeItem(CustomToolTiers.SIDERITE,
+                    new Item.Properties().fireResistant().rarity(Rarity.RARE).attributes(DiggerItem.createAttributes(CustomToolTiers.SIDERITE, 1.0F, -2.8F))));
+    public static final DeferredHolder<Item, Item> SIDERITE_HAMAXE = AwakeningSystemMod.ITEMS.register(
+            "siderite_hamaxe", () -> new AxeItem(CustomToolTiers.SIDERITE,
+                    new Item.Properties().fireResistant().rarity(Rarity.RARE).attributes(DiggerItem.createAttributes(CustomToolTiers.SIDERITE, 5.0F, -3.0F))));
+
     public static final DeferredHolder<Item, Item> MITHRIL_SWORD = AwakeningSystemMod.ITEMS.register(
             "mithril_sword", () -> new SwordItem(CustomToolTiers.MITHRIL,
                     new Item.Properties().rarity(Rarity.RARE).attributes(SwordItem.createAttributes(CustomToolTiers.MITHRIL, 3, -2.4F))));
@@ -1850,6 +1942,23 @@ public final class SystemItems {
             "soul_alloy_boots", () -> new ManhwaArmorItem(ModArmorMaterials.SOUL_ALLOY, ArmorItem.Type.BOOTS,
                     new Item.Properties().fireResistant().rarity(Rarity.EPIC).durability(ArmorItem.Type.BOOTS.getDurability(45)),
                     ManhwaArmorItem.SetType.SOUL_ALLOY));
+
+    public static final DeferredHolder<Item, Item> SIDERITE_HELMET = AwakeningSystemMod.ITEMS.register(
+            "siderite_helmet", () -> new ManhwaArmorItem(ModArmorMaterials.SIDERITE, ArmorItem.Type.HELMET,
+                    new Item.Properties().fireResistant().rarity(Rarity.RARE).durability(ArmorItem.Type.HELMET.getDurability(60)),
+                    ManhwaArmorItem.SetType.SIDERITE));
+    public static final DeferredHolder<Item, Item> SIDERITE_CHESTPLATE = AwakeningSystemMod.ITEMS.register(
+            "siderite_chestplate", () -> new ManhwaArmorItem(ModArmorMaterials.SIDERITE, ArmorItem.Type.CHESTPLATE,
+                    new Item.Properties().fireResistant().rarity(Rarity.RARE).durability(ArmorItem.Type.CHESTPLATE.getDurability(60)),
+                    ManhwaArmorItem.SetType.SIDERITE));
+    public static final DeferredHolder<Item, Item> SIDERITE_LEGGINGS = AwakeningSystemMod.ITEMS.register(
+            "siderite_leggings", () -> new ManhwaArmorItem(ModArmorMaterials.SIDERITE, ArmorItem.Type.LEGGINGS,
+                    new Item.Properties().fireResistant().rarity(Rarity.RARE).durability(ArmorItem.Type.LEGGINGS.getDurability(60)),
+                    ManhwaArmorItem.SetType.SIDERITE));
+    public static final DeferredHolder<Item, Item> SIDERITE_BOOTS = AwakeningSystemMod.ITEMS.register(
+            "siderite_boots", () -> new ManhwaArmorItem(ModArmorMaterials.SIDERITE, ArmorItem.Type.BOOTS,
+                    new Item.Properties().fireResistant().rarity(Rarity.RARE).durability(ArmorItem.Type.BOOTS.getDurability(60)),
+                    ManhwaArmorItem.SetType.SIDERITE));
 
     public static final DeferredHolder<Item, Item> MITHRIL_HELMET = AwakeningSystemMod.ITEMS.register(
             "mithril_helmet", () -> new ManhwaArmorItem(ModArmorMaterials.MITHRIL, ArmorItem.Type.HELMET,

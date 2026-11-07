@@ -565,6 +565,20 @@ public class GenshinWeaponItem extends SwordItem implements AwakeningWeaponItem 
     @Override
     public boolean hurtEnemy(ItemStack stack, LivingEntity target, LivingEntity attacker) {
         if (attacker instanceof Player player && player.level() instanceof ServerLevel sl) {
+            net.minecraft.core.particles.ParticleOptions strikeParticle = switch (weaponType) {
+                case WOLFS_GRAVESTONE, REDHORN_STONETHRESHER, VERDICT, HERTA_HAMMER, TAILLESS -> com.soybe.awakeningsystem.particle.ModParticles.STRIKE_CLEAVE.get();
+                case CRIMSON_MOONS_SEMBLANCE, THE_BLACK_SWORD, DOMAIN_OF_SANCTION -> com.soybe.awakeningsystem.particle.ModParticles.STRIKE_CLAW.get();
+                case SKYWARD_BLADE, ABSOLUTION, PRIMORDIAL_JADE_CUTTER, FREEDOM_SWORN, KEY_OF_KHAJ_NISUT, MISTSPLITTER_REFORGED -> com.soybe.awakeningsystem.particle.ModParticles.STRIKE_CELESTIAL.get();
+                default -> com.soybe.awakeningsystem.particle.ModParticles.STRIKE_SLASH.get();
+            };
+            sl.sendParticles(strikeParticle, target.getX(), target.getY() + 1.0D, target.getZ(), 1, 0, 0, 0, 0);
+            sl.playSound(null, target.getX(), target.getY(), target.getZ(),
+                    (weaponType == WeaponType.DOMAIN_OF_SANCTION || weaponType == WeaponType.CRIMSON_MOONS_SEMBLANCE)
+                            ? com.soybe.awakeningsystem.ModSounds.DOMAIN_OF_SANCTION_SLASH.get()
+                            : com.soybe.awakeningsystem.ModSounds.CULTIVATOR_SLASH.get(),
+                    SoundSource.PLAYERS, 1.3F, 1.2F);
+            com.soybe.awakeningsystem.CameraShakePayload.sendToNearby(sl, target.getX(), target.getY(), target.getZ(), 16.0D, 0.25F, 4);
+
             switch (weaponType) {
                 case ENGULFING_LIGHTNING -> {
                     target.hurt(attacker.damageSources().magic(), 4.0F);

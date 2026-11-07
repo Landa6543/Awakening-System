@@ -35,13 +35,13 @@ public class RouletteWheelModel extends Model {
         PartDefinition root = mesh.getRoot();
 
         PartDefinition stand = root.addOrReplaceChild("stand", CubeListBuilder.create()
-                .texOffs(0, 0).addBox(-13.0F, 0.0F, -6.0F, 4.0F, 2.0F, 8.0F, new CubeDeformation(0.0F))
-                .texOffs(0, 0).addBox(-12.5F, 0.0F, 2.0F, 3.0F, 1.2F, 1.5F, new CubeDeformation(0.0F))
+                .texOffs(0, 107).addBox(-13.0F, 0.0F, -6.0F, 4.0F, 2.0F, 8.0F, new CubeDeformation(0.0F))
+                .texOffs(0, 111).addBox(-12.5F, 0.0F, 2.0F, 3.0F, 1.2F, 1.5F, new CubeDeformation(0.0F))
 
-                .texOffs(0, 0).addBox(9.0F, 0.0F, -6.0F, 4.0F, 2.0F, 8.0F, new CubeDeformation(0.0F))
-                .texOffs(0, 0).addBox(9.5F, 0.0F, 2.0F, 3.0F, 1.2F, 1.5F, new CubeDeformation(0.0F))
+                .texOffs(0, 107).addBox(9.0F, 0.0F, -6.0F, 4.0F, 2.0F, 8.0F, new CubeDeformation(0.0F))
+                .texOffs(0, 111).addBox(9.5F, 0.0F, 2.0F, 3.0F, 1.2F, 1.5F, new CubeDeformation(0.0F))
 
-                .texOffs(64, 0).addBox(-10.0F, 0.0F, -3.5F, 20.0F, 2.0F, 4.0F, new CubeDeformation(0.0F))
+                .texOffs(30, 102).addBox(-9.0F, 0.0F, -3.5F, 18.0F, 2.0F, 4.0F, new CubeDeformation(0.0F))
                 .texOffs(64, 0).addBox(-6.0F, 0.2F, 0.5F, 12.0F, 1.6F, 0.5F, new CubeDeformation(0.0F))
 
                 .texOffs(64, 0).addBox(-9.0F, 2.0F, -3.0F, 18.0F, 2.0F, 2.0F, new CubeDeformation(0.0F))
@@ -57,24 +57,23 @@ public class RouletteWheelModel extends Model {
                 .texOffs(32, 0).addBox(5.5F, 14.0F, -3.5F, 2.5F, 6.0F, 2.5F, new CubeDeformation(0.0F))
                 .texOffs(32, 0).addBox(3.0F, 18.0F, -3.5F, 2.5F, 4.0F, 2.5F, new CubeDeformation(0.0F))
 
-                .texOffs(0, 32).addBox(-4.0F, 18.0F, -6.0F, 8.0F, 4.0F, 4.5F, new CubeDeformation(0.0F))
+                .texOffs(1, 32).addBox(-3.0F, 18.0F, -6.0F, 6.0F, 4.0F, 4.5F, new CubeDeformation(0.0F))
                 .texOffs(0, 32).addBox(-1.0F, 19.0F, -1.5F, 2.0F, 2.0F, 2.2F, new CubeDeformation(0.0F))
 
                 .texOffs(48, 32).addBox(-1.5F, 22.0F, -5.5F, 3.0F, 15.0F, 2.0F, new CubeDeformation(0.0F))
                 .texOffs(48, 32).addBox(-1.5F, 37.0F, -5.5F, 3.0F, 2.0F, 7.0F, new CubeDeformation(0.0F))
-                .texOffs(48, 32).addBox(-1.0F, 36.0F, 0.8F, 2.0F, 2.0F, 1.2F, new CubeDeformation(0.0F)),
+                .texOffs(48, 32).addBox(-1.0F, 37.1F, 0.8F, 2.0F, 1.7F, 1.3F, new CubeDeformation(0.0F)),
                 PartPose.offset(0.0F, 0.0F, 0.0F));
 
         root.addOrReplaceChild("pointer", CubeListBuilder.create()
-                .texOffs(0, 64).addBox(-1.2F, -0.6F, -0.6F, 2.4F, 1.2F, 1.2F, new CubeDeformation(0.0F))
-                .texOffs(0, 64).addBox(-1.0F, 0.0F, -0.4F, 2.0F, 2.6F, 0.8F, new CubeDeformation(0.0F))
-                .texOffs(0, 64).addBox(-0.5F, 2.6F, -0.4F, 1.0F, 1.2F, 0.8F, new CubeDeformation(0.0F)),
-                PartPose.offset(0.0F, 36.8F, 1.6F));
+                .texOffs(0, 107).addBox(-1.0F, -2.5F, -0.4F, 2.0F, 2.5F, 0.8F, new CubeDeformation(0.0F))
+                .texOffs(0, 106).addBox(-0.5F, -3.7F, -0.4F, 1.0F, 1.2F, 0.8F, new CubeDeformation(0.0F)),
+                PartPose.offset(0.0F, 38.8F, 2.5F));
 
         CubeListBuilder wheelBuilder = CubeListBuilder.create()
-                .texOffs(32, 64).addBox(-2.5F, -2.5F, 0.0F, 5.0F, 5.0F, 0.8F, new CubeDeformation(0.0F))
-                .texOffs(32, 64).addBox(-1.5F, -1.5F, 0.8F, 3.0F, 3.0F, 1.0F, new CubeDeformation(0.0F))
-                .texOffs(32, 64).addBox(-0.8F, -0.8F, 1.8F, 1.6F, 1.6F, 0.8F, new CubeDeformation(0.0F));
+                .texOffs(35, 109).addBox(-2.0F, -2.0F, -0.1F, 4.0F, 4.0F, 0.8F, new CubeDeformation(0.0F))
+                .texOffs(32, 111).addBox(-1.5F, -1.5F, 0.3F, 3.0F, 3.0F, 1.0F, new CubeDeformation(0.0F))
+                .texOffs(0, 173).addBox(-0.8F, -0.8F, 1.3F, 1.6F, 1.6F, 0.8F, new CubeDeformation(0.0F));
 
         for (int i = 0; i < 16; i++) {
             double rad = Math.toRadians(i * 22.5);

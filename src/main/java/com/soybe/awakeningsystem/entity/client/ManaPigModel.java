@@ -17,8 +17,8 @@ import net.neoforged.api.distmarker.Dist;
 import net.neoforged.api.distmarker.OnlyIn;
 
 /**
- * Modelo 3D exclusivo del Cerdo de ManÃ¡.
- * Cuenta con orejas tridimensionales expresivas, colmillos de cristal de manÃ¡
+ * Modelo 3D exclusivo del Cerdo de Maná.
+ * Cuenta con orejas tridimensionales expresivas, colmillos de cristal de maná
  * y una cola tridimensional curvada en la grupa, enriqueciendo su silueta celestial.
  */
 @OnlyIn(Dist.CLIENT)

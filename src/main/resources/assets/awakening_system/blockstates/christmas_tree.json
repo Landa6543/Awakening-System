@@ -1,0 +1,8 @@
+{
+  "variants": {
+    "facing=north": { "model": "awakening_system:block/christmas_tree" },
+    "facing=east":  { "model": "awakening_system:block/christmas_tree", "y": 90 },
+    "facing=south": { "model": "awakening_system:block/christmas_tree", "y": 180 },
+    "facing=west":  { "model": "awakening_system:block/christmas_tree", "y": 270 }
+  }
+}

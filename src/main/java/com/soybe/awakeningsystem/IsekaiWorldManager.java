@@ -37,6 +37,13 @@ public final class IsekaiWorldManager {
     private static volatile boolean worldTreeGenerated = false;
 
     public static void teleportToIsekai(ServerPlayer player) {
+        boolean isDevOrOp = player.hasPermissions(2) || player.isCreative();
+        if (!isDevOrOp && !SystemEvents.hasReachedEnd(player)) {
+            player.displayClientMessage(Component.translatable("awakening_system.tower.requires_end_reached"), true);
+            player.playNotifySound(SoundEvents.NOTE_BLOCK_BASS.value(), SoundSource.PLAYERS, 1.0F, 0.7F);
+            return;
+        }
+
         MinecraftServer server = player.getServer();
         if (server == null) return;
         ServerLevel isekaiLevel = server.getLevel(ISEKAI_WORLD);

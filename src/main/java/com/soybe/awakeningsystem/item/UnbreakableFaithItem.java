@@ -23,7 +23,6 @@ import net.minecraft.world.phys.AABB;
 import net.minecraft.world.phys.Vec3;
 import com.soybe.awakeningsystem.entity.SlashWaveEntity;
 import com.soybe.awakeningsystem.CameraShakePayload;
-import com.soybe.awakeningsystem.SpawnMagicCirclePayload;
 import net.neoforged.neoforge.network.PacketDistributor;
 
 import java.util.List;
@@ -60,24 +59,18 @@ public class UnbreakableFaithItem extends SwordItem implements AwakeningWeaponIt
             sp.hurtMarked = true;
 
             if (level instanceof ServerLevel sl) {
-                PacketDistributor.sendToPlayersNear(
-                        sl, null, sp.getX(), sp.getY(), sp.getZ(), 64.0D,
-                        new SpawnMagicCirclePayload(
-                                sp.getId(), sp.getX(), sp.getY() + 0.05D, sp.getZ(),
-                                0.0F, 1.0F, 0.0F,
-                                4.2F, 40, 0xE0F7FA, 0, false
-                        )
-                );
-
+                sp.swing(hand, true);
+                sl.sendParticles(com.soybe.awakeningsystem.particle.ModParticles.STRIKE_CELESTIAL.get(), sp.getX() + look.x * 1.5D, sp.getY() + 1.2D + look.y * 1.5D, sp.getZ() + look.z * 1.5D, 1, 0, 0, 0, 0);
                 sl.sendParticles(ParticleTypes.END_ROD, sp.getX(), sp.getY() + 1.0D, sp.getZ(), 45, 1.2D, 0.8D, 1.2D, 0.1D);
                 sl.sendParticles(ParticleTypes.ENCHANT, sp.getX(), sp.getY() + 1.0D, sp.getZ(), 50, 1.5D, 1.0D, 1.5D, 0.2D);
+                sl.playSound(null, sp.getX(), sp.getY(), sp.getZ(), com.soybe.awakeningsystem.ModSounds.CULTIVATOR_SLASH.get(), SoundSource.PLAYERS, 1.8F, 1.4F);
                 sl.playSound(null, sp.getX(), sp.getY(), sp.getZ(), SoundEvents.BEACON_POWER_SELECT, SoundSource.PLAYERS, 1.5F, 1.4F);
-                sl.playSound(null, sp.getX(), sp.getY(), sp.getZ(), SoundEvents.PLAYER_ATTACK_SWEEP, SoundSource.PLAYERS, 1.3F, 1.5F);
 
                 CameraShakePayload.sendToNearby(sl, sp.getX(), sp.getY(), sp.getZ(), 28.0D, 0.55F, 8);
 
                 float dmg = (float) (22.0D * WeaponLevelManager.getDamageMultiplier(stack));
                 SlashWaveEntity holyWave = new SlashWaveEntity(sl, sp, SlashWaveEntity.TYPE_SOLAR_LIGHT, dmg, 4.0F, 1.4F, 0.0F, 24, 8);
+                holyWave.setSlashStyle(SlashWaveEntity.STYLE_CELESTIAL);
                 holyWave.setDeltaMovement(look.scale(2.1D));
                 sl.addFreshEntity(holyWave);
 
@@ -112,6 +105,10 @@ public class UnbreakableFaithItem extends SwordItem implements AwakeningWeaponIt
     @Override
     public boolean hurtEnemy(ItemStack stack, LivingEntity target, LivingEntity attacker) {
         if (attacker.level() instanceof ServerLevel sl) {
+            sl.sendParticles(com.soybe.awakeningsystem.particle.ModParticles.STRIKE_CELESTIAL.get(), target.getX(), target.getY() + 1.0D, target.getZ(), 1, 0, 0, 0, 0);
+            sl.playSound(null, target.getX(), target.getY(), target.getZ(), com.soybe.awakeningsystem.ModSounds.CULTIVATOR_SLASH.get(), SoundSource.PLAYERS, 1.3F, 1.35F);
+            CameraShakePayload.sendToNearby(sl, target.getX(), target.getY(), target.getZ(), 16.0D, 0.25F, 4);
+
             sl.sendParticles(ParticleTypes.FIREWORK, target.getX(), target.getY() + 1.0D, target.getZ(), 15, 0.3D, 0.4D, 0.3D, 0.05D);
             sl.sendParticles(ParticleTypes.ENCHANT, target.getX(), target.getY() + 1.0D, target.getZ(), 20, 0.4D, 0.4D, 0.4D, 0.1D);
             if (attacker instanceof Player p) {

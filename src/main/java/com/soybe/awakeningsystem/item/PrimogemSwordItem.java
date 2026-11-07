@@ -1,7 +1,6 @@
 package com.soybe.awakeningsystem.item;
 
 import com.soybe.awakeningsystem.CameraShakePayload;
-import com.soybe.awakeningsystem.SpawnMagicCirclePayload;
 import com.soybe.awakeningsystem.entity.SlashWaveEntity;
 import net.minecraft.ChatFormatting;
 import net.minecraft.core.particles.ParticleTypes;
@@ -58,23 +57,20 @@ public class PrimogemSwordItem extends SwordItem implements AwakeningWeaponItem 
             if (level instanceof ServerLevel sl) {
                 Vec3 look = sp.getLookAngle();
 
-                PacketDistributor.sendToPlayersNear(
-                        sl, null, sp.getX(), sp.getY(), sp.getZ(), 64.0D,
-                        new SpawnMagicCirclePayload(
-                                sp.getId(), sp.getX(), sp.getY() + 0.05D, sp.getZ(),
-                                0.0F, 1.0F, 0.0F,
-                                4.5F, 45, 0x9370DB, 0, false
-                        )
-                );
+                sp.swing(hand, true);
+                sl.sendParticles(com.soybe.awakeningsystem.particle.ModParticles.STRIKE_CELESTIAL.get(), sp.getX() + look.x * 1.5D, sp.getY() + 1.2D + look.y * 1.5D, sp.getZ() + look.z * 1.5D, 1, 0, 0, 0, 0);
+                sl.sendParticles(ParticleTypes.END_ROD, sp.getX(), sp.getY() + 1.0D, sp.getZ(), 30, 0.8D, 0.8D, 0.8D, 0.08D);
+                sl.sendParticles(ParticleTypes.PORTAL, sp.getX(), sp.getY() + 1.0D, sp.getZ(), 40, 1.0D, 0.8D, 1.0D, 0.15D);
 
+                sl.playSound(null, sp.getX(), sp.getY(), sp.getZ(), com.soybe.awakeningsystem.ModSounds.CULTIVATOR_SLASH.get(), SoundSource.PLAYERS, 1.8F, 1.4F);
                 sl.playSound(null, sp.getX(), sp.getY(), sp.getZ(), SoundEvents.AMETHYST_BLOCK_CHIME, SoundSource.PLAYERS, 1.8F, 1.6F);
-                sl.playSound(null, sp.getX(), sp.getY(), sp.getZ(), SoundEvents.PLAYER_ATTACK_SWEEP, SoundSource.PLAYERS, 1.3F, 1.4F);
                 sl.playSound(null, sp.getX(), sp.getY(), sp.getZ(), SoundEvents.BEACON_ACTIVATE, SoundSource.PLAYERS, 1.4F, 1.7F);
 
                 CameraShakePayload.sendToNearby(sl, sp.getX(), sp.getY(), sp.getZ(), 28.0D, 0.55F, 8);
 
                 float dmg = (float) (24.0D * WeaponLevelManager.getDamageMultiplier(stack));
                 SlashWaveEntity starSlash = new SlashWaveEntity(sl, sp, SlashWaveEntity.TYPE_COSMIC_AMETHYST, dmg, 4.2F, 1.5F, 0.0F, 26, 8);
+                starSlash.setSlashStyle(SlashWaveEntity.STYLE_CELESTIAL);
                 starSlash.setDeltaMovement(look.scale(2.2D));
                 sl.addFreshEntity(starSlash);
 
@@ -96,6 +92,10 @@ public class PrimogemSwordItem extends SwordItem implements AwakeningWeaponItem 
     public boolean hurtEnemy(ItemStack stack, LivingEntity target, LivingEntity attacker) {
         boolean result = super.hurtEnemy(stack, target, attacker);
         if (result && !attacker.level().isClientSide() && attacker.level() instanceof ServerLevel serverLevel) {
+            serverLevel.sendParticles(com.soybe.awakeningsystem.particle.ModParticles.STRIKE_CELESTIAL.get(), target.getX(), target.getY() + 1.0D, target.getZ(), 1, 0, 0, 0, 0);
+            serverLevel.playSound(null, target.getX(), target.getY(), target.getZ(), com.soybe.awakeningsystem.ModSounds.CULTIVATOR_SLASH.get(), SoundSource.PLAYERS, 1.3F, 1.4F);
+            CameraShakePayload.sendToNearby(serverLevel, target.getX(), target.getY(), target.getZ(), 16.0D, 0.25F, 4);
+
             boolean isCrit = attacker.fallDistance > 0.0F && !attacker.onGround() && !attacker.onClimbable()
                     && !attacker.isInWater() && !attacker.hasEffect(net.minecraft.world.effect.MobEffects.BLINDNESS)
                     && !attacker.isPassenger();

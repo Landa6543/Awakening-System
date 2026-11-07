@@ -55,19 +55,20 @@ public class FlyingSwordEntity extends Entity {
         if (controller instanceof Player player) {
             this.setYRot(player.getYRot());
             this.yRotO = this.getYRot();
-            this.setXRot(player.getXRot() * 0.6F);
+            this.setXRot(player.getXRot() * 0.65F);
             this.xRotO = this.getXRot();
 
             float forward = player.zza;
             float strafe = player.xxa;
 
             Vec3 look = player.getLookAngle();
+            boolean isSprinting = player.isSprinting();
+            double speed = isSprinting ? 1.45D : 0.95D;
+
             if (forward > 0.0F) {
-                double speed = 0.85D;
                 this.setDeltaMovement(look.scale(speed));
             } else if (forward < 0.0F) {
-                double speed = 0.35D;
-                this.setDeltaMovement(look.scale(-speed));
+                this.setDeltaMovement(look.scale(-0.4D));
             } else {
                 Vec3 current = this.getDeltaMovement();
                 double hoverY = 0.015D * Math.sin(this.tickCount * 0.15D);
@@ -75,7 +76,7 @@ public class FlyingSwordEntity extends Entity {
             }
 
             if (strafe != 0.0F) {
-                Vec3 side = look.cross(new Vec3(0, 1, 0)).normalize().scale(strafe * 0.35D);
+                Vec3 side = look.cross(new Vec3(0, 1, 0)).normalize().scale(strafe * 0.45D);
                 this.setDeltaMovement(this.getDeltaMovement().add(side));
             }
 
@@ -84,14 +85,30 @@ public class FlyingSwordEntity extends Entity {
             if (this.tickCount % 2 == 0 && this.level() instanceof ServerLevel sl) {
                 sl.sendParticles(ParticleTypes.SOUL_FIRE_FLAME, this.getX(), this.getY() + 0.15D, this.getZ(), 2, 0.15D, 0.05D, 0.15D, 0.01D);
                 sl.sendParticles(ParticleTypes.END_ROD, this.getX(), this.getY() + 0.15D, this.getZ(), 1, 0.1D, 0.05D, 0.1D, 0.01D);
+                if (isSprinting) {
+                    sl.sendParticles(ParticleTypes.CLOUD, this.getX(), this.getY() + 0.1D, this.getZ(), 3, 0.25D, 0.05D, 0.25D, 0.02D);
+                }
             }
         } else {
             Vec3 cur = this.getDeltaMovement();
             this.setDeltaMovement(cur.x * 0.7D, 0.01D * Math.sin(this.tickCount * 0.1D), cur.z * 0.7D);
             this.move(MoverType.SELF, this.getDeltaMovement());
-            if (!this.level().isClientSide && this.tickCount > 36000) {
+            if (!this.level().isClientSide && this.tickCount > 600) {
                 this.discard();
             }
+        }
+    }
+
+    @Override
+    protected void removePassenger(Entity passenger) {
+        super.removePassenger(passenger);
+        if (!this.level().isClientSide) {
+            if (passenger instanceof Player player) {
+                player.resetFallDistance();
+                player.addEffect(new net.minecraft.world.effect.MobEffectInstance(net.minecraft.world.effect.MobEffects.SLOW_FALLING, 100, 0, false, false));
+                this.level().playSound(null, this.getX(), this.getY(), this.getZ(), SoundEvents.ARMOR_EQUIP_ELYTRA.value(), SoundSource.PLAYERS, 1.2F, 1.3F);
+            }
+            this.discard();
         }
     }
 

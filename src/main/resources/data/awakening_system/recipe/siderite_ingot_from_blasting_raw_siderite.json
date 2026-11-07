@@ -1,0 +1,13 @@
+{
+  "type": "minecraft:blasting",
+  "category": "misc",
+  "cookingtime": 100,
+  "experience": 1.2,
+  "ingredient": {
+    "item": "awakening_system:raw_siderite"
+  },
+  "result": {
+    "count": 1,
+    "id": "awakening_system:siderite_ingot"
+  }
+}

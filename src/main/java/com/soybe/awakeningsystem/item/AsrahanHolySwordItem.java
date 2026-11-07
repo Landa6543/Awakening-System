@@ -55,27 +55,23 @@ public class AsrahanHolySwordItem extends SwordItem implements AwakeningWeaponIt
             if (level instanceof ServerLevel sl) {
                 Vec3 look = sp.getLookAngle();
 
-                net.neoforged.neoforge.network.PacketDistributor.sendToPlayersNear(
-                        sl, null, sp.getX(), sp.getY(), sp.getZ(), 64.0D,
-                        new com.soybe.awakeningsystem.SpawnMagicCirclePayload(
-                                sp.getId(), sp.getX(), sp.getY(), sp.getZ(),
-                                (float) look.x, (float) look.y, (float) look.z,
-                                3.8F, 35, 0x00E5FF, 0, false
-                        )
-                );
+                sl.playSound(null, sp.getX(), sp.getY(), sp.getZ(), com.soybe.awakeningsystem.ModSounds.CULTIVATOR_SLASH.get(), SoundSource.PLAYERS, 1.8F, 1.4F);
+                sl.playSound(null, sp.getX(), sp.getY(), sp.getZ(), SoundEvents.CONDUIT_ATTACK_TARGET, SoundSource.PLAYERS, 1.6F, 1.2F);
+                sl.playSound(null, sp.getX(), sp.getY(), sp.getZ(), SoundEvents.BEACON_ACTIVATE, SoundSource.PLAYERS, 1.3F, 1.6F);
 
-                sl.playSound(null, sp.getX(), sp.getY(), sp.getZ(), SoundEvents.CONDUIT_ATTACK_TARGET, SoundSource.PLAYERS, 1.5F, 1.2F);
-                sl.playSound(null, sp.getX(), sp.getY(), sp.getZ(), SoundEvents.GENERIC_EXPLODE.value(), SoundSource.PLAYERS, 1.1F, 1.3F);
-                sl.playSound(null, sp.getX(), sp.getY(), sp.getZ(), SoundEvents.PLAYER_ATTACK_SWEEP, SoundSource.PLAYERS, 1.4F, 1.3F);
+                sl.sendParticles(com.soybe.awakeningsystem.particle.ModParticles.STRIKE_CELESTIAL.get(), sp.getX() + look.x * 1.5D, sp.getY() + 1.2D + look.y * 1.5D, sp.getZ() + look.z * 1.5D, 1, 0, 0, 0, 0);
+                sl.sendParticles(ParticleTypes.END_ROD, sp.getX(), sp.getY() + 1.2D, sp.getZ(), 45, 1.5D, 0.8D, 1.5D, 0.1D);
+                sl.sendParticles(ParticleTypes.GLOW, sp.getX(), sp.getY() + 1.0D, sp.getZ(), 35, 1.2D, 0.8D, 1.2D, 0.05D);
 
-                com.soybe.awakeningsystem.CameraShakePayload.sendToNearby(sl, sp.getX(), sp.getY(), sp.getZ(), 28.0D, 0.50F, 8);
+                com.soybe.awakeningsystem.CameraShakePayload.sendToNearby(sl, sp.getX(), sp.getY(), sp.getZ(), 30.0D, 0.60F, 9);
 
                 float dmg = (float) (28.0D * WeaponLevelManager.getDamageMultiplier(stack));
 
-                SlashWaveEntity tidalWave = new SlashWaveEntity(sl, sp, SlashWaveEntity.TYPE_CRYSTAL_AQUA, dmg, 4.4F, 1.6F, 0.0F, 26, 10);
-                tidalWave.setDeltaMovement(look.scale(2.2D));
+                SlashWaveEntity tidalWave = new SlashWaveEntity(sl, sp, SlashWaveEntity.TYPE_CRYSTAL_AQUA, SlashWaveEntity.STYLE_CELESTIAL, dmg, 4.8F, 1.7F, 0.0F, 26, 10);
+                tidalWave.setDeltaMovement(look.scale(2.25D));
                 sl.addFreshEntity(tidalWave);
 
+                sp.swing(hand, true);
                 WeaponLevelManager.addExp(stack, 35, sp);
             }
 
@@ -93,6 +89,10 @@ public class AsrahanHolySwordItem extends SwordItem implements AwakeningWeaponIt
     @Override
     public boolean hurtEnemy(ItemStack stack, LivingEntity target, LivingEntity attacker) {
         if (attacker.level() instanceof ServerLevel sl) {
+            sl.sendParticles(com.soybe.awakeningsystem.particle.ModParticles.STRIKE_CELESTIAL.get(), target.getX(), target.getY() + 1.0D, target.getZ(), 1, 0, 0, 0, 0);
+            sl.playSound(null, target.getX(), target.getY(), target.getZ(), com.soybe.awakeningsystem.ModSounds.CULTIVATOR_SLASH.get(), SoundSource.PLAYERS, 1.3F, 1.4F);
+            com.soybe.awakeningsystem.CameraShakePayload.sendToNearby(sl, target.getX(), target.getY(), target.getZ(), 16.0D, 0.25F, 4);
+
             sl.sendParticles(ParticleTypes.SPLASH, target.getX(), target.getY() + 1.0D, target.getZ(), 20, 0.3D, 0.4D, 0.3D, 0.1D);
             sl.sendParticles(ParticleTypes.GLOW, target.getX(), target.getY() + 1.0D, target.getZ(), 10, 0.2D, 0.3D, 0.2D, 0.05D);
             if (attacker instanceof Player p) {

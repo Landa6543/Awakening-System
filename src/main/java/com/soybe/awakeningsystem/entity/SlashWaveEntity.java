@@ -46,8 +46,21 @@ public class SlashWaveEntity extends Projectile {
     public static final int TYPE_FROST_WIND = 8;
     public static final int TYPE_CELESTIAL = 9;
     public static final int TYPE_PRIMORDIAL_GENESIS = 10;
+    public static final int TYPE_EARTH = 11;
+
+    // Visual styles for distinct weapon strike identities (Section 7)
+    public static final int STYLE_CRESCENT = 0;
+    public static final int STYLE_CROSS = 1;
+    public static final int STYLE_THRUST = 2;
+    public static final int STYLE_INK_WUXIA = 3;
+    public static final int STYLE_SHADOW_CLAW = 4;
+    public static final int STYLE_HEAVY_CLEAVE = 5;
+    public static final int STYLE_CELESTIAL = 6;
+    public static final int STYLE_SCYTHE_REAP = 7;
 
     private static final EntityDataAccessor<Integer> SLASH_TYPE =
+            SynchedEntityData.defineId(SlashWaveEntity.class, EntityDataSerializers.INT);
+    private static final EntityDataAccessor<Integer> SLASH_STYLE =
             SynchedEntityData.defineId(SlashWaveEntity.class, EntityDataSerializers.INT);
     private static final EntityDataAccessor<Float> WIDTH =
             SynchedEntityData.defineId(SlashWaveEntity.class, EntityDataSerializers.FLOAT);
@@ -74,13 +87,18 @@ public class SlashWaveEntity extends Projectile {
 
     public SlashWaveEntity(Level level, LivingEntity owner, int slashType, float damage,
                            float width, float height, float roll, int lifetime, int pierce) {
+        this(level, owner, slashType, STYLE_CRESCENT, damage, width, height, roll, lifetime, pierce);
+    }
+
+    public SlashWaveEntity(Level level, LivingEntity owner, int slashType, int slashStyle, float damage,
+                           float width, float height, float roll, int lifetime, int pierce) {
         super(ModEntities.SLASH_WAVE.get(), level);
         this.setOwner(owner);
         this.noPhysics = true;
 
         Vec3 eye = owner.getEyePosition();
         Vec3 look = owner.getLookAngle();
-        this.setPos(eye.x + look.x * 0.8D, eye.y - 0.2D + look.y * 0.8D, eye.z + look.z * 0.8D);
+        this.setPos(eye.x + look.x * 1.2D, eye.y - 0.05D + look.y * 1.2D, eye.z + look.z * 1.2D);
 
         this.setYRot(owner.getYRot());
         this.setXRot(owner.getXRot());
@@ -88,18 +106,20 @@ public class SlashWaveEntity extends Projectile {
         this.xRotO = this.getXRot();
 
         this.entityData.set(SLASH_TYPE, slashType);
+        this.entityData.set(SLASH_STYLE, slashStyle);
         this.entityData.set(DAMAGE, damage);
         this.entityData.set(WIDTH, width);
         this.entityData.set(HEIGHT, height);
         this.entityData.set(ROLL, roll);
         this.entityData.set(LIFETIME, lifetime);
         this.entityData.set(PIERCE, pierce);
-        this.entityData.set(IS_CROSS, false);
+        this.entityData.set(IS_CROSS, slashStyle == STYLE_CROSS);
     }
 
     @Override
     protected void defineSynchedData(SynchedEntityData.Builder builder) {
         builder.define(SLASH_TYPE, TYPE_DARK_VOID);
+        builder.define(SLASH_STYLE, STYLE_CRESCENT);
         builder.define(WIDTH, 2.4F);
         builder.define(HEIGHT, 1.2F);
         builder.define(ROLL, 0.0F);
@@ -111,6 +131,13 @@ public class SlashWaveEntity extends Projectile {
 
     public int getSlashType() { return this.entityData.get(SLASH_TYPE); }
     public void setSlashType(int type) { this.entityData.set(SLASH_TYPE, type); }
+    public int getSlashStyle() { return this.entityData.get(SLASH_STYLE); }
+    public void setSlashStyle(int style) {
+        this.entityData.set(SLASH_STYLE, style);
+        if (style == STYLE_CROSS) {
+            this.entityData.set(IS_CROSS, true);
+        }
+    }
     public float getSlashWidth() { return this.entityData.get(WIDTH); }
     public float getSlashHeight() { return this.entityData.get(HEIGHT); }
     public float getRoll() { return this.entityData.get(ROLL); }
@@ -119,7 +146,12 @@ public class SlashWaveEntity extends Projectile {
     public float getDamage() { return this.entityData.get(DAMAGE); }
     public int getPierce() { return this.entityData.get(PIERCE); }
     public boolean isCross() { return this.entityData.get(IS_CROSS); }
-    public void setCross(boolean cross) { this.entityData.set(IS_CROSS, cross); }
+    public void setCross(boolean cross) {
+        this.entityData.set(IS_CROSS, cross);
+        if (cross && getSlashStyle() == STYLE_CRESCENT) {
+            setSlashStyle(STYLE_CROSS);
+        }
+    }
 
     public void setArmorPenetration(float pen) { this.armorPenetration = pen; }
     public float getArmorPenetration() { return this.armorPenetration; }
@@ -146,8 +178,12 @@ public class SlashWaveEntity extends Projectile {
         BlockHitResult bhr = this.level().clip(new ClipContext(currentPos, nextPos,
                 ClipContext.Block.COLLIDER, ClipContext.Fluid.NONE, this));
         if (bhr.getType() != HitResult.Type.MISS) {
-            onHitBlock(bhr);
-            return;
+            if (bhr.getDirection().getAxis().isHorizontal()) {
+                onHitBlock(bhr);
+                return;
+            } else {
+                nextPos = new Vec3(nextPos.x, Math.max(nextPos.y, bhr.getLocation().y + 0.25D), nextPos.z);
+            }
         }
 
         this.setPos(nextPos);
@@ -191,6 +227,11 @@ public class SlashWaveEntity extends Projectile {
             applySlashEffect(target, owner);
 
             if (this.level() instanceof ServerLevel sl) {
+                sl.sendParticles(getImpactParticle(), target.getX(), target.getY() + 1.0D, target.getZ(), 1, 0, 0, 0, 0);
+                net.minecraft.sounds.SoundEvent hitSound = (getSlashType() == TYPE_DARK_VOID || getSlashType() == TYPE_CRIMSON_BLOOD)
+                        ? com.soybe.awakeningsystem.ModSounds.DOMAIN_OF_SANCTION_SLASH.get()
+                        : com.soybe.awakeningsystem.ModSounds.CULTIVATOR_SLASH.get();
+                sl.playSound(null, target.getX(), target.getY(), target.getZ(), hitSound, SoundSource.PLAYERS, 1.4F, 1.2F);
                 CameraShakePayload.sendToNearby(sl, target.getX(), target.getY(), target.getZ(), 28.0D, 0.45F, 7);
             }
 
@@ -275,17 +316,33 @@ public class SlashWaveEntity extends Projectile {
                 this.playSound(SoundEvents.WARDEN_SONIC_BOOM, 1.0F, 1.5F);
                 this.playSound(SoundEvents.RESPAWN_ANCHOR_CHARGE, 1.3F, 1.2F);
             }
+            case TYPE_EARTH -> {
+                target.addEffect(new MobEffectInstance(MobEffects.MOVEMENT_SLOWDOWN, 80, 2, false, true));
+                target.addEffect(new MobEffectInstance(MobEffects.WEAKNESS, 80, 1, false, true));
+                this.playSound(SoundEvents.ANVIL_LAND, 1.1F, 0.7F);
+            }
             default -> this.playSound(SoundEvents.PLAYER_ATTACK_SWEEP, 1.2F, 1.2F);
         }
+    }
+
+    public net.minecraft.core.particles.SimpleParticleType getImpactParticle() {
+        return switch (getSlashStyle()) {
+            case STYLE_SHADOW_CLAW -> com.soybe.awakeningsystem.particle.ModParticles.STRIKE_CLAW.get();
+            case STYLE_HEAVY_CLEAVE -> com.soybe.awakeningsystem.particle.ModParticles.STRIKE_CLEAVE.get();
+            case STYLE_CELESTIAL -> com.soybe.awakeningsystem.particle.ModParticles.STRIKE_CELESTIAL.get();
+            default -> com.soybe.awakeningsystem.particle.ModParticles.STRIKE_SLASH.get();
+        };
     }
 
     @Override
     protected void onHitBlock(BlockHitResult bhr) {
         super.onHitBlock(bhr);
         if (!this.level().isClientSide) {
-            this.playSound(SoundEvents.ANVIL_LAND, 0.6F, 1.8F);
+            this.playSound(com.soybe.awakeningsystem.ModSounds.CULTIVATOR_SLASH.get(), 1.0F, 1.3F);
             if (this.level() instanceof ServerLevel sl) {
-                CameraShakePayload.sendToNearby(sl, this.getX(), this.getY(), this.getZ(), 20.0D, 0.3F, 5);
+                sl.sendParticles(com.soybe.awakeningsystem.particle.ModParticles.STRIKE_CLEAVE.get(),
+                        bhr.getLocation().x, bhr.getLocation().y + 0.2D, bhr.getLocation().z, 1, 0, 0, 0, 0);
+                CameraShakePayload.sendToNearby(sl, this.getX(), this.getY(), this.getZ(), 20.0D, 0.35F, 5);
             }
             this.discard();
         }
@@ -348,6 +405,10 @@ public class SlashWaveEntity extends Projectile {
                     this.level().addParticle(ParticleTypes.SOUL_FIRE_FLAME, px, py, pz, 0, 0.02D, 0);
                     this.level().addParticle(ParticleTypes.REVERSE_PORTAL, px, py, pz, 0, 0.02D, 0);
                 }
+                case TYPE_EARTH -> {
+                    this.level().addParticle(ParticleTypes.LAVA, px, py, pz, 0, 0.02D, 0);
+                    this.level().addParticle(ParticleTypes.CAMPFIRE_COSY_SMOKE, px, py, pz, 0, 0.01D, 0);
+                }
             }
         }
     }
@@ -355,6 +416,7 @@ public class SlashWaveEntity extends Projectile {
     @Override
     protected void readAdditionalSaveData(CompoundTag tag) {
         if (tag.contains("SlashType")) setSlashType(tag.getInt("SlashType"));
+        if (tag.contains("SlashStyle")) setSlashStyle(tag.getInt("SlashStyle"));
         if (tag.contains("Width")) this.entityData.set(WIDTH, tag.getFloat("Width"));
         if (tag.contains("Height")) this.entityData.set(HEIGHT, tag.getFloat("Height"));
         if (tag.contains("Roll")) setRoll(tag.getFloat("Roll"));
@@ -367,6 +429,7 @@ public class SlashWaveEntity extends Projectile {
     @Override
     protected void addAdditionalSaveData(CompoundTag tag) {
         tag.putInt("SlashType", getSlashType());
+        tag.putInt("SlashStyle", getSlashStyle());
         tag.putFloat("Width", getSlashWidth());
         tag.putFloat("Height", getSlashHeight());
         tag.putFloat("Roll", getRoll());

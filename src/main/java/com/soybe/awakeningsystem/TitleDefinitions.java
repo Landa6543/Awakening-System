@@ -237,13 +237,43 @@ public final class TitleDefinitions {
             new Definition("michi_lover", "awakening_system.title.michi_lover", "", SkillDefinitions.Rarity.UNIQUE, "awakening_system.title.bonus.michi_lover", "awakening_system.title.description.michi_lover"),
             new Definition("caffeine_addict", "awakening_system.title.caffeine_addict", "", SkillDefinitions.Rarity.UNIQUE, "awakening_system.title.bonus.caffeine_addict", "awakening_system.title.description.caffeine_addict"),
             new Definition("futanari_hentai_master", "awakening_system.title.futanari_hentai_master", "", SkillDefinitions.Rarity.UNIQUE, "awakening_system.title.bonus.futanari_hentai_master", "awakening_system.title.description.futanari_hentai_master"),
-            new Definition("pokemon_master", "awakening_system.title.pokemon_master", "", SkillDefinitions.Rarity.UNIQUE, "awakening_system.title.bonus.pokemon_master", "awakening_system.title.description.pokemon_master")
+            new Definition("pokemon_master", "awakening_system.title.pokemon_master", "", SkillDefinitions.Rarity.UNIQUE, "awakening_system.title.bonus.pokemon_master", "awakening_system.title.description.pokemon_master"),
+
+            // Section 10: Habit & Constancy Mastery Titles
+            new Definition("hunter_gaze", "awakening_system.title.hunter_gaze", "", SkillDefinitions.Rarity.EPIC, "awakening_system.title.bonus.hunter_gaze"),
+            new Definition("unyielding_flesh", "awakening_system.title.unyielding_flesh", "", SkillDefinitions.Rarity.EPIC, "awakening_system.title.bonus.unyielding_flesh"),
+            new Definition("wind_strider", "awakening_system.title.wind_strider", "", SkillDefinitions.Rarity.EPIC, "awakening_system.title.bonus.wind_strider"),
+            new Definition("earth_instinct", "awakening_system.title.earth_instinct", "", SkillDefinitions.Rarity.EPIC, "awakening_system.title.bonus.earth_instinct"),
+            new Definition("steel_master", "awakening_system.title.steel_master", "", SkillDefinitions.Rarity.EPIC, "awakening_system.title.bonus.steel_master"),
+
+            // Armageddon RPG Integration Titles
+            new Definition("armageddon_colossus_breaker", "awakening_system.title.armageddon_colossus_breaker", "armageddon", SkillDefinitions.Rarity.RARE, "awakening_system.title.bonus.defense"),
+            new Definition("armageddon_goblin_subjugator", "awakening_system.title.armageddon_goblin_subjugator", "armageddon", SkillDefinitions.Rarity.RARE, "awakening_system.title.bonus.luck"),
+            new Definition("armageddon_emerald_conqueror", "awakening_system.title.armageddon_emerald_conqueror", "armageddon", SkillDefinitions.Rarity.EPIC, "awakening_system.title.bonus.attack"),
+            new Definition("armageddon_nether_gatekeeper", "awakening_system.title.armageddon_nether_gatekeeper", "armageddon", SkillDefinitions.Rarity.EPIC, "awakening_system.title.bonus.defense"),
+            new Definition("armageddon_void_reaper", "awakening_system.title.armageddon_void_reaper", "armageddon", SkillDefinitions.Rarity.LEGENDARY, "awakening_system.title.bonus.attack"),
+            new Definition("armageddon_elven_slayer", "awakening_system.title.armageddon_elven_slayer", "armageddon", SkillDefinitions.Rarity.LEGENDARY, "awakening_system.title.bonus.attack"),
+            new Definition("armageddon_doom_bringer_slayer", "awakening_system.title.armageddon_doom_bringer_slayer", "armageddon", SkillDefinitions.Rarity.LEGENDARY, "awakening_system.title.bonus.defense"),
+            new Definition("armageddon_calamity_overlord", "awakening_system.title.armageddon_calamity_overlord", "armageddon", SkillDefinitions.Rarity.MYTHIC, "awakening_system.title.bonus.unique"),
+
+            // Roadmap Expansion: Seasonal & Pinnacle Titles
+            new Definition("legendary_gambler", "awakening_system.title.legendary_gambler", "", SkillDefinitions.Rarity.LEGENDARY, "awakening_system.title.bonus.luck"),
+            new Definition("king_slayer", "awakening_system.title.king_slayer", "", SkillDefinitions.Rarity.LEGENDARY, "awakening_system.title.bonus.attack"),
+            new Definition("rift_explorer", "awakening_system.title.rift_explorer", "", SkillDefinitions.Rarity.EPIC, "awakening_system.title.bonus.speed"),
+            new Definition("festive_celebrator", "awakening_system.title.festive_celebrator", "", SkillDefinitions.Rarity.EPIC, "awakening_system.title.bonus.luck"),
+            new Definition("absolute_god_challenger", "awakening_system.title.absolute_god_challenger", "", SkillDefinitions.Rarity.MYTHIC, "awakening_system.title.bonus.unique")
     );
 
     public static List<Definition> availableDefinitions(SystemData data) {
         List<Definition> result = new ArrayList<>();
         for (Definition title : TITLES) {
-            if (!title.requiredMod().isEmpty() && !ModList.get().isLoaded(title.requiredMod())) continue;
+            if (!title.requiredMod().isEmpty()) {
+                if ("armageddon".equals(title.requiredMod())) {
+                    if (!com.soybe.awakeningsystem.compat.ArmageddonCompatHandler.isLoaded()) continue;
+                } else if (!ModList.get().isLoaded(title.requiredMod())) {
+                    continue;
+                }
+            }
             if (title.id().equals("creator") && !data.isCreator()) continue;
             if (title.id().equals("michi_lover") && !data.isNanda() && !data.isCreator()) continue;
             if (title.id().equals("caffeine_addict") && !data.isMisticPotato() && !data.isCreator()) continue;
@@ -336,14 +366,35 @@ public final class TitleDefinitions {
             if (title.id().equals("tracen_champion") && data.level() < 25) continue;
             if (title.id().equals("dao_sage") && data.dantianRealm() < 3) continue;
 
+            if (title.id().equals("hunter_gaze") && data.habitFocusTicks() < 3000 && data.skills().getOrDefault("deadeye", 0) < 5) continue;
+            if (title.id().equals("unyielding_flesh") && data.habitDamageTaken() < 2500 && data.skills().getOrDefault("enduring_flesh", 0) < 5) continue;
+            if (title.id().equals("wind_strider") && data.habitSprintDistance() < 7000.0 && data.skills().getOrDefault("windrunner", 0) < 5) continue;
+            if (title.id().equals("earth_instinct") && data.habitDeepBlocksMined() < 2500 && data.skills().getOrDefault("ore_sense", 0) < 5) continue;
+            if (title.id().equals("steel_master") && data.habitWeaponHits() < 1200 && data.skills().getOrDefault("combat_instinct", 0) < 5) continue;
+
+            if (title.id().equals("armageddon_colossus_breaker") && !data.hasFable("armageddon_colossus_breaker") && !data.hasFable("armageddon_iron_unlocked")) continue;
+            if (title.id().equals("armageddon_goblin_subjugator") && !data.hasFable("armageddon_goblin_subjugator") && !data.hasFable("armageddon_gold_unlocked")) continue;
+            if (title.id().equals("armageddon_emerald_conqueror") && !data.hasFable("armageddon_emerald_conqueror") && !data.hasFable("armageddon_emerald_unlocked")) continue;
+            if (title.id().equals("armageddon_nether_gatekeeper") && !data.hasFable("armageddon_nether_gatekeeper") && !data.hasFable("armageddon_nether_unlocked")) continue;
+            if (title.id().equals("armageddon_void_reaper") && !data.hasFable("armageddon_void_reaper") && !data.hasFable("armageddon_netherite_unlocked")) continue;
+            if (title.id().equals("armageddon_elven_slayer") && !data.hasFable("armageddon_elven_slayer") && !data.hasFable("armageddon_elvenite_unlocked")) continue;
+            if (title.id().equals("armageddon_doom_bringer_slayer") && !data.hasFable("armageddon_doom_bringer_slayer") && !data.hasFable("armageddon_doom_defeated") && !data.hasFable("armageddon_voiderite_unlocked")) continue;
+            if (title.id().equals("armageddon_calamity_overlord") && !data.hasFable("armageddon_calamity_overlord") && !data.hasFable("armageddon_calamity_slayer") && !data.hasFable("armageddon_zenith_slayer") && !data.hasFable("armageddon_oblivion_conquered")) continue;
+
             result.add(title);
         }
         return result;
     }
 
     public static boolean isAvailable(String titleId) {
-        return TITLES.stream().anyMatch(title -> title.id().equals(titleId)
-                && (title.requiredMod().isEmpty() || ModList.get().isLoaded(title.requiredMod())));
+        return TITLES.stream().anyMatch(title -> {
+            if (!title.id().equals(titleId)) return false;
+            if (title.requiredMod().isEmpty()) return true;
+            if ("armageddon".equals(title.requiredMod())) {
+                return com.soybe.awakeningsystem.compat.ArmageddonCompatHandler.isLoaded();
+            }
+            return ModList.get().isLoaded(title.requiredMod());
+        });
     }
 
     public static List<String> available(SystemData data) {

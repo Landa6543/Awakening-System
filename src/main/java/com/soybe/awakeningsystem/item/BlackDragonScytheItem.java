@@ -62,27 +62,23 @@ public class BlackDragonScytheItem extends SwordItem implements AwakeningWeaponI
             if (level instanceof ServerLevel sl) {
                 Vec3 look = sp.getLookAngle();
 
-                net.neoforged.neoforge.network.PacketDistributor.sendToPlayersNear(
-                        sl, null, sp.getX(), sp.getY(), sp.getZ(), 64.0D,
-                        new com.soybe.awakeningsystem.SpawnMagicCirclePayload(
-                                sp.getId(), sp.getX(), sp.getY(), sp.getZ(),
-                                (float) look.x, (float) look.y, (float) look.z,
-                                4.5F, 40, 0x4B0082, 0, false
-                        )
-                );
+                sl.playSound(null, sp.getX(), sp.getY(), sp.getZ(), com.soybe.awakeningsystem.ModSounds.DOMAIN_OF_SANCTION_SLASH.get(), SoundSource.PLAYERS, 1.9F, 0.85F);
+                sl.playSound(null, sp.getX(), sp.getY(), sp.getZ(), SoundEvents.ENDER_DRAGON_GROWL, SoundSource.PLAYERS, 1.3F, 1.4F);
+                sl.playSound(null, sp.getX(), sp.getY(), sp.getZ(), SoundEvents.GENERIC_EXPLODE.value(), SoundSource.PLAYERS, 1.2F, 0.9F);
 
-                sl.playSound(null, sp.getX(), sp.getY(), sp.getZ(), SoundEvents.GENERIC_EXPLODE.value(), SoundSource.PLAYERS, 1.4F, 0.8F);
-                sl.playSound(null, sp.getX(), sp.getY(), sp.getZ(), SoundEvents.ENDER_DRAGON_HURT, SoundSource.PLAYERS, 1.2F, 0.9F);
-                sl.playSound(null, sp.getX(), sp.getY(), sp.getZ(), SoundEvents.PLAYER_ATTACK_SWEEP, SoundSource.PLAYERS, 1.6F, 0.8F);
+                sl.sendParticles(com.soybe.awakeningsystem.particle.ModParticles.STRIKE_CLAW.get(), sp.getX() + look.x * 1.5D, sp.getY() + 1.2D + look.y * 1.5D, sp.getZ() + look.z * 1.5D, 1, 0, 0, 0, 0);
+                sl.sendParticles(ParticleTypes.SOUL, sp.getX(), sp.getY() + 1.2D, sp.getZ(), 35, 1.5D, 0.8D, 1.5D, 0.1D);
+                sl.sendParticles(ParticleTypes.DRAGON_BREATH, sp.getX(), sp.getY() + 1.0D, sp.getZ(), 40, 1.4D, 0.6D, 1.4D, 0.12D);
 
-                com.soybe.awakeningsystem.CameraShakePayload.sendToNearby(sl, sp.getX(), sp.getY(), sp.getZ(), 32.0D, 0.70F, 11);
+                com.soybe.awakeningsystem.CameraShakePayload.sendToNearby(sl, sp.getX(), sp.getY(), sp.getZ(), 34.0D, 0.75F, 12);
 
                 float dmg = (float) (32.0D * WeaponLevelManager.getDamageMultiplier(stack));
 
-                SlashWaveEntity scytheWave = new SlashWaveEntity(sl, sp, SlashWaveEntity.TYPE_DARK_VOID, dmg, 5.2F, 2.0F, -25.0F, 26, 12);
-                scytheWave.setDeltaMovement(look.scale(2.2D));
+                SlashWaveEntity scytheWave = new SlashWaveEntity(sl, sp, SlashWaveEntity.TYPE_DARK_VOID, SlashWaveEntity.STYLE_SCYTHE_REAP, dmg, 5.6F, 2.2F, -25.0F, 28, 14);
+                scytheWave.setDeltaMovement(look.scale(2.25D));
                 sl.addFreshEntity(scytheWave);
 
+                sp.swing(hand, true);
                 WeaponLevelManager.addExp(stack, 35, sp);
             }
 
@@ -110,6 +106,10 @@ public class BlackDragonScytheItem extends SwordItem implements AwakeningWeaponI
     @Override
     public boolean hurtEnemy(ItemStack stack, LivingEntity target, LivingEntity attacker) {
         if (attacker.level() instanceof ServerLevel sl) {
+            sl.sendParticles(com.soybe.awakeningsystem.particle.ModParticles.STRIKE_CLAW.get(), target.getX(), target.getY() + 1.0D, target.getZ(), 1, 0, 0, 0, 0);
+            sl.playSound(null, target.getX(), target.getY(), target.getZ(), com.soybe.awakeningsystem.ModSounds.DOMAIN_OF_SANCTION_SLASH.get(), SoundSource.PLAYERS, 1.4F, 1.1F);
+            com.soybe.awakeningsystem.CameraShakePayload.sendToNearby(sl, target.getX(), target.getY(), target.getZ(), 18.0D, 0.3F, 4);
+
             sl.sendParticles(ParticleTypes.FLAME, target.getX(), target.getY() + 1.0D, target.getZ(), 20, 0.3D, 0.4D, 0.3D, 0.08D);
             sl.sendParticles(ParticleTypes.SCULK_SOUL, target.getX(), target.getY() + 1.0D, target.getZ(), 10, 0.2D, 0.3D, 0.2D, 0.02D);
             target.igniteForSeconds(5);

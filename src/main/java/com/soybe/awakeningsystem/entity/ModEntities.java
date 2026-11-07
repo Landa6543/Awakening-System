@@ -15,6 +15,15 @@ public final class ModEntities {
     public static final DeferredRegister<EntityType<?>> ENTITY_TYPES =
             DeferredRegister.create(Registries.ENTITY_TYPE, AwakeningSystemMod.MOD_ID);
 
+    public static final Supplier<EntityType<FallingSideriteMeteorEntity>> FALLING_SIDERITE_METEOR =
+            ENTITY_TYPES.register("falling_siderite_meteor", () ->
+                    EntityType.Builder.<FallingSideriteMeteorEntity>of(FallingSideriteMeteorEntity::new, MobCategory.MISC)
+                            .sized(0.8F, 0.8F)
+                            .clientTrackingRange(128)
+                            .updateInterval(1)
+                            .fireImmune()
+                            .build("falling_siderite_meteor"));
+
     public static final Supplier<EntityType<GiantSandwormEntity>> GIANT_SANDWORM =
             ENTITY_TYPES.register("giant_sandworm", () ->
                     EntityType.Builder.<GiantSandwormEntity>of(GiantSandwormEntity::new, MobCategory.MONSTER)
@@ -466,6 +475,14 @@ public final class ModEntities {
                             .updateInterval(1)
                             .build("flying_sword"));
 
+    public static final Supplier<EntityType<PocketDoorEntity>> POCKET_DOOR =
+            ENTITY_TYPES.register("pocket_door", () ->
+                    EntityType.Builder.<PocketDoorEntity>of(PocketDoorEntity::new, MobCategory.MISC)
+                            .sized(1.2F, 2.4F)
+                            .clientTrackingRange(64)
+                            .updateInterval(1)
+                            .build("pocket_door"));
+
     public static final Supplier<EntityType<SubwayTrainCarriageEntity>> SUBWAY_TRAIN_CARRIAGE =
             ENTITY_TYPES.register("subway_train_carriage", () ->
                     EntityType.Builder.<SubwayTrainCarriageEntity>of(SubwayTrainCarriageEntity::new, MobCategory.MISC)
@@ -565,6 +582,12 @@ public final class ModEntities {
                     EntityType.Builder.<SeriesNpcEntity>of((type, level) -> new SeriesNpcEntity(type, level, NpcProfile.BLACK_MARKET_DEALER), MobCategory.CREATURE)
                             .sized(0.6F, 1.95F)
                             .build("black_market_dealer"));
+
+    public static final Supplier<EntityType<SeriesNpcEntity>> HUNTER_EVALUATOR =
+            ENTITY_TYPES.register("hunter_evaluator", () ->
+                    EntityType.Builder.<SeriesNpcEntity>of((type, level) -> new SeriesNpcEntity(type, level, NpcProfile.HUNTER_EVALUATOR), MobCategory.CREATURE)
+                            .sized(0.6F, 1.95F)
+                            .build("hunter_evaluator"));
 
     public static final Supplier<EntityType<DokkaebiEntity>> DOKKAEBI =
             ENTITY_TYPES.register("dokkaebi", () ->
@@ -1257,6 +1280,7 @@ public final class ModEntities {
         event.put(RYU_HANBIN.get(), npcAttrs);
         event.put(TWENTY_FIFTH_BAAM.get(), npcAttrs);
         event.put(BLACK_MARKET_DEALER.get(), npcAttrs);
+        event.put(HUNTER_EVALUATOR.get(), npcAttrs);
         event.put(DOKKAEBI.get(), DokkaebiEntity.createAttributes().build());
         event.put(PAIMON.get(), PaimonEntity.createAttributes().build());
         event.put(COMPANION.get(), CompanionEntity.createAttributes().build());

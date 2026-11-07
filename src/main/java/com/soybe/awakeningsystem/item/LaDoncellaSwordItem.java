@@ -129,15 +129,11 @@ public class LaDoncellaSwordItem extends SwordItem implements AwakeningWeaponIte
 
                 Vec3 look = sp.getLookAngle();
 
-                net.neoforged.neoforge.network.PacketDistributor.sendToPlayersNear(
-                        sl, null, sp.getX(), sp.getY(), sp.getZ(), 64.0D,
-                        new com.soybe.awakeningsystem.SpawnMagicCirclePayload(
-                                sp.getId(), sp.getX(), sp.getY(), sp.getZ(),
-                                (float) look.x, (float) look.y, (float) look.z,
-                                5.0F, 50, 0x880015, 0, false
-                        )
-                );
+                sp.swing(hand, true);
+                sl.sendParticles(com.soybe.awakeningsystem.particle.ModParticles.STRIKE_CLAW.get(), sp.getX() + look.x * 1.5D, sp.getY() + 1.2D + look.y * 1.5D, sp.getZ() + look.z * 1.5D, 1, 0, 0, 0, 0);
+                sl.sendParticles(ParticleTypes.CRIMSON_SPORE, sp.getX(), sp.getY() + 1.0D, sp.getZ(), 40, 1.2D, 0.8D, 1.2D, 0.1D);
 
+                sl.playSound(null, sp.getX(), sp.getY(), sp.getZ(), com.soybe.awakeningsystem.ModSounds.DOMAIN_OF_SANCTION_SLASH.get(), SoundSource.PLAYERS, 1.8F, 0.9F);
                 sl.playSound(null, sp.getX(), sp.getY(), sp.getZ(), SoundEvents.MACE_SMASH_GROUND, SoundSource.PLAYERS, 1.8F, 0.65F);
                 sl.playSound(null, sp.getX(), sp.getY(), sp.getZ(), SoundEvents.WITHER_SHOOT, SoundSource.PLAYERS, 1.4F, 1.25F);
                 sl.playSound(null, sp.getX(), sp.getY(), sp.getZ(), SoundEvents.SWEET_BERRY_BUSH_PICK_BERRIES, SoundSource.PLAYERS, 1.6F, 0.6F);
@@ -145,10 +141,12 @@ public class LaDoncellaSwordItem extends SwordItem implements AwakeningWeaponIte
                 com.soybe.awakeningsystem.CameraShakePayload.sendToNearby(sl, sp.getX(), sp.getY(), sp.getZ(), 36.0D, 0.85F, 14);
 
                 SlashWaveEntity bloodWave = new SlashWaveEntity(sl, sp, SlashWaveEntity.TYPE_CRIMSON_BLOOD, 75.0F, 5.4F, 2.2F, 0.0F, 30, 12);
+                bloodWave.setSlashStyle(SlashWaveEntity.STYLE_SCYTHE_REAP);
                 bloodWave.setDeltaMovement(look.scale(1.95D));
                 sl.addFreshEntity(bloodWave);
 
                 SlashWaveEntity verticalWave = new SlashWaveEntity(sl, sp, SlashWaveEntity.TYPE_CRIMSON_BLOOD, 45.0F, 3.8F, 2.6F, 90.0F, 24, 6);
+                verticalWave.setSlashStyle(SlashWaveEntity.STYLE_HEAVY_CLEAVE);
                 verticalWave.setDeltaMovement(look.scale(1.85D));
                 sl.addFreshEntity(verticalWave);
 
@@ -171,21 +169,18 @@ public class LaDoncellaSwordItem extends SwordItem implements AwakeningWeaponIte
 
                 Vec3 look = sp.getLookAngle();
 
-                net.neoforged.neoforge.network.PacketDistributor.sendToPlayersNear(
-                        sl, null, sp.getX(), sp.getY(), sp.getZ(), 64.0D,
-                        new com.soybe.awakeningsystem.SpawnMagicCirclePayload(
-                                sp.getId(), sp.getX(), sp.getY(), sp.getZ(),
-                                (float) look.x, (float) look.y, (float) look.z,
-                                4.0F, 40, 0xFFD1DC, 0, false
-                        )
-                );
+                sp.swing(hand, true);
+                sl.sendParticles(com.soybe.awakeningsystem.particle.ModParticles.STRIKE_CELESTIAL.get(), sp.getX() + look.x * 1.5D, sp.getY() + 1.2D + look.y * 1.5D, sp.getZ() + look.z * 1.5D, 1, 0, 0, 0, 0);
+                sl.sendParticles(ParticleTypes.CHERRY_LEAVES, sp.getX(), sp.getY() + 1.0D, sp.getZ(), 35, 1.0D, 0.8D, 1.0D, 0.08D);
+                sl.sendParticles(ParticleTypes.END_ROD, sp.getX(), sp.getY() + 1.0D, sp.getZ(), 20, 0.8D, 0.8D, 0.8D, 0.08D);
 
+                sl.playSound(null, sp.getX(), sp.getY(), sp.getZ(), com.soybe.awakeningsystem.ModSounds.CULTIVATOR_SLASH.get(), SoundSource.PLAYERS, 1.7F, 1.3F);
                 sl.playSound(null, sp.getX(), sp.getY(), sp.getZ(), SoundEvents.AMETHYST_BLOCK_RESONATE, SoundSource.PLAYERS, 1.6F, 1.4F);
-                sl.playSound(null, sp.getX(), sp.getY(), sp.getZ(), SoundEvents.PLAYER_ATTACK_SWEEP, SoundSource.PLAYERS, 1.5F, 1.2F);
 
                 com.soybe.awakeningsystem.CameraShakePayload.sendToNearby(sl, sp.getX(), sp.getY(), sp.getZ(), 28.0D, 0.45F, 8);
 
                 SlashWaveEntity silverWave = new SlashWaveEntity(sl, sp, SlashWaveEntity.TYPE_SILVER_ROSE, 55.0F, 4.4F, 1.8F, -20.0F, 26, 8);
+                silverWave.setSlashStyle(SlashWaveEntity.STYLE_CELESTIAL);
                 silverWave.setDeltaMovement(look.scale(2.05D));
                 sl.addFreshEntity(silverWave);
 
@@ -220,14 +215,16 @@ public class LaDoncellaSwordItem extends SwordItem implements AwakeningWeaponIte
                 target.addEffect(new MobEffectInstance(MobEffects.WITHER, 140, 2));
                 target.addEffect(new MobEffectInstance(MobEffects.MOVEMENT_SLOWDOWN, 120, 2));
 
-                sl.playSound(null, target.getX(), target.getY(), target.getZ(), SoundEvents.THORNS_HIT, SoundSource.PLAYERS, 1.3F, 0.8F);
-                sl.playSound(null, target.getX(), target.getY(), target.getZ(), SoundEvents.SWEET_BERRY_BUSH_PICK_BERRIES, SoundSource.PLAYERS, 1.2F, 0.9F);
+                sl.sendParticles(com.soybe.awakeningsystem.particle.ModParticles.STRIKE_CLAW.get(), target.getX(), target.getY() + 1.0D, target.getZ(), 1, 0, 0, 0, 0);
                 sl.sendParticles(ParticleTypes.CRIMSON_SPORE, target.getX(), target.getY() + 1.0D, target.getZ(), 40, 0.7D, 0.7D, 0.7D, 0.12D);
+                sl.playSound(null, target.getX(), target.getY(), target.getZ(), com.soybe.awakeningsystem.ModSounds.DOMAIN_OF_SANCTION_SLASH.get(), SoundSource.PLAYERS, 1.4F, 1.1F);
+                com.soybe.awakeningsystem.CameraShakePayload.sendToNearby(sl, target.getX(), target.getY(), target.getZ(), 16.0D, 0.3F, 4);
 
             } else {
-                sl.playSound(null, target.getX(), target.getY(), target.getZ(), SoundEvents.PLAYER_ATTACK_SWEEP, SoundSource.PLAYERS, 1.3F, 1.15F);
+                sl.sendParticles(com.soybe.awakeningsystem.particle.ModParticles.STRIKE_CELESTIAL.get(), target.getX(), target.getY() + 1.0D, target.getZ(), 1, 0, 0, 0, 0);
                 sl.sendParticles(ParticleTypes.CHERRY_LEAVES, target.getX(), target.getY() + 1.0D, target.getZ(), 35, 0.8D, 0.8D, 0.8D, 0.1D);
-                sl.sendParticles(ParticleTypes.SWEEP_ATTACK, target.getX(), target.getY() + 0.8D, target.getZ(), 3, 0.4D, 0.4D, 0.4D, 0.0D);
+                sl.playSound(null, target.getX(), target.getY(), target.getZ(), com.soybe.awakeningsystem.ModSounds.CULTIVATOR_SLASH.get(), SoundSource.PLAYERS, 1.4F, 1.35F);
+                com.soybe.awakeningsystem.CameraShakePayload.sendToNearby(sl, target.getX(), target.getY(), target.getZ(), 16.0D, 0.22F, 4);
 
                 AABB cleave = target.getBoundingBox().inflate(6.5D, 2.5D, 6.5D);
                 for (LivingEntity nearby : sl.getEntitiesOfClass(LivingEntity.class, cleave)) {

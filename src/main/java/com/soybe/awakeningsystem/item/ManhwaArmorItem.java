@@ -21,6 +21,8 @@ import java.util.function.Consumer;
 
 public class ManhwaArmorItem extends ArmorItem implements GeoItem {
     public enum SetType {
+        SIDERITE("siderite", "§e§l[SET: SIDERITA METEÓRICA]",
+                "§7Set Siderita: §eVuelo celestial con Alas Siderales (estilo Terraria), planeo en caída [Shift] e inmunidad total a caída. Mayor velocidad bajo el cielo nocturno. [Z] Lluvia de Fragmentos Siderales."),
         SOUL_ALLOY("soul_alloy", "§b§l[SET: FORJA DE ALMAS ARDIENTES]",
                 "§74 Piezas: §bInmunidad a daño de Wither y Fuego de Almas. Las almas atrapadas devoran la vida enemiga curándote un 15% del daño infligido. [Z] Almas Voraces (Onda de choque espectral)."),
         ABYSSAL("abyssal", "§9§l[SET: PRIMORDIAL ABYSS RESONANCE]",
@@ -75,8 +77,8 @@ public class ManhwaArmorItem extends ArmorItem implements GeoItem {
             if (entity != null && entity.getRandom().nextFloat() < 0.75F) return 0;
         } else if (setType == SetType.CELESTIAL || setType == SetType.ASTRAL || setType == SetType.ASTRALITE) {
             if (entity != null && entity.getRandom().nextFloat() < 0.50F) return 0;
-        } else if (setType == SetType.SPIRIT_JADE || setType == SetType.ADAMANTITE) {
-            if (entity != null && entity.getRandom().nextFloat() < 0.30F) return 0;
+        } else if (setType == SetType.SPIRIT_JADE || setType == SetType.ADAMANTITE || setType == SetType.SIDERITE) {
+            if (entity != null && entity.getRandom().nextFloat() < 0.25F) return 0;
         }
         return Math.min(amount, 1);
     }
@@ -91,6 +93,9 @@ public class ManhwaArmorItem extends ArmorItem implements GeoItem {
         }
         if (setType == SetType.ASTRALITE) {
             return net.minecraft.resources.ResourceLocation.fromNamespaceAndPath("awakening_system", "textures/models/armor/astralite_armor.png");
+        }
+        if (setType == SetType.SIDERITE) {
+            return net.minecraft.resources.ResourceLocation.fromNamespaceAndPath("awakening_system", "textures/models/armor/siderite_armor.png");
         }
         String layerNum = (slot == EquipmentSlot.LEGS || inner) ? "2" : "1";
         return net.minecraft.resources.ResourceLocation.fromNamespaceAndPath("awakening_system", "textures/models/armor/" + setType.id + "_layer_" + layerNum + ".png");
@@ -127,6 +132,7 @@ public class ManhwaArmorItem extends ArmorItem implements GeoItem {
 
     @Override
     public void registerControllers(AnimatableManager.ControllerRegistrar controllers) {
+        controllers.add(new software.bernie.geckolib.animation.AnimationController<>(this, "controller", 0, state -> software.bernie.geckolib.animation.PlayState.STOP));
     }
 
     @Override
@@ -140,6 +146,7 @@ public class ManhwaArmorItem extends ArmorItem implements GeoItem {
             private com.soybe.awakeningsystem.item.client.AbyssalArmorRenderer abyssalRenderer;
             private com.soybe.awakeningsystem.item.client.SoulforgeArmorRenderer soulforgeRenderer;
             private com.soybe.awakeningsystem.item.client.AstraliteArmorRenderer astraliteRenderer;
+            private com.soybe.awakeningsystem.item.client.SideriteArmorRenderer sideriteRenderer;
 
             @Override
             public <T extends LivingEntity> net.minecraft.client.model.HumanoidModel<?> getGeoArmorRenderer(T entity, ItemStack stack, EquipmentSlot slot, net.minecraft.client.model.HumanoidModel<T> original) {
@@ -163,6 +170,13 @@ public class ManhwaArmorItem extends ArmorItem implements GeoItem {
                     }
                     this.astraliteRenderer.prepForRender(entity, stack, slot, original);
                     return this.astraliteRenderer;
+                }
+                if (setType == SetType.SIDERITE) {
+                    if (this.sideriteRenderer == null) {
+                        this.sideriteRenderer = new com.soybe.awakeningsystem.item.client.SideriteArmorRenderer();
+                    }
+                    this.sideriteRenderer.prepForRender(entity, stack, slot, original);
+                    return this.sideriteRenderer;
                 }
                 return null;
             }

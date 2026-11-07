@@ -49,7 +49,7 @@ public final class MobScalingHandler {
 
         if (level.dimension() != Level.OVERWORLD) return;
 
-        if (mob instanceof Npc || mob instanceof Animal) return;
+        if ((mob instanceof Npc || mob instanceof Animal) && !com.soybe.awakeningsystem.RpgLevelZoneManager.isEligibleForRpgScaling(mob)) return;
         if (!(mob instanceof Enemy) && mob.getTarget() == null && mob.getAttribute(Attributes.ATTACK_DAMAGE) == null) {
             return;
         }

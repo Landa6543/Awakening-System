@@ -46,6 +46,14 @@ public final class ClassSelectionScreen extends Screen {
             return Component.translatable("awakening_system.class." + id + ".desc");
         }
 
+        public Component getManhwa() {
+            return Component.translatable("awakening_system.class." + id + ".manhwa");
+        }
+
+        public Component getShortManhwa() {
+            return Component.translatable("awakening_system.class." + id + ".short_manhwa");
+        }
+
         public Component getSignatureSkillName() {
             SkillDefinitions.Definition def = SkillDefinitions.get(signatureSkillId);
             return def != null ? def.name() : Component.literal(signatureSkillId);
@@ -248,7 +256,12 @@ public final class ClassSelectionScreen extends Screen {
         graphics.drawCenteredString(font, Component.translatable("awakening_system.screen.class_select.header").copy().withStyle(ChatFormatting.BOLD), left + panelW / 2, top + 20, 0xFFFFD700);
 
         int catTabW = (panelW - 30) / 4;
-        String[] catLabels = {"⚔ Guerreros", "🧙 Arcano", "🥋 Murim", "✦ Todas"};
+        Component[] catLabels = {
+            Component.translatable("awakening_system.screen.class_select.tab_warriors"),
+            Component.translatable("awakening_system.screen.class_select.tab_arcane"),
+            Component.translatable("awakening_system.screen.class_select.tab_murim"),
+            Component.translatable("awakening_system.screen.class_select.tab_all")
+        };
         int catY = top + 36;
         int catH = 16;
 
@@ -297,9 +310,9 @@ public final class ClassSelectionScreen extends Screen {
                 graphics.drawCenteredString(font, opt.getLine2(), cx + cardW / 2, cy + 13, textColor2);
 
                 if (selected) {
-                    graphics.drawCenteredString(font, "✔ ELEGIDO", cx + cardW / 2, cy + 23, 0xFF50FA7B);
+                    graphics.drawCenteredString(font, Component.translatable("awakening_system.screen.class_select.selected_badge"), cx + cardW / 2, cy + 23, 0xFF50FA7B);
                 } else {
-                    graphics.drawCenteredString(font, "§8[" + opt.shortManhwa() + "]", cx + cardW / 2, cy + 23, 0xFF888888);
+                    graphics.drawCenteredString(font, Component.literal("§8[").append(opt.getShortManhwa()).append("]"), cx + cardW / 2, cy + 23, 0xFF888888);
                 }
                 graphics.disableScissor();
             }
@@ -354,7 +367,7 @@ public final class ClassSelectionScreen extends Screen {
         graphics.fill(chamberX + chamberW - 2, chamberY + chamberH - 6, chamberX + chamberW, chamberY + chamberH, sel.color());
 
         graphics.drawString(font, Component.literal("✦ ").append(sel.getName()).append(" ✦").withStyle(s -> s.withBold(true).withColor(sel.color())), chamberX + 10, chamberY + 7, sel.color());
-        Component manhwaTag = Component.translatable("awakening_system.screen.class_select.manhwa", sel.manhwa());
+        Component manhwaTag = Component.translatable("awakening_system.screen.class_select.manhwa", sel.getManhwa());
         graphics.drawString(font, manhwaTag, chamberX + chamberW - 10 - font.width(manhwaTag), chamberY + 7, 0xFF70E8FF);
 
         Component roleComp = Component.translatable("awakening_system.screen.class_select.role_label", sel.getRoleTag().getString(), sel.getDescription().getString());

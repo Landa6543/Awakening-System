@@ -133,6 +133,8 @@ public final class AwakeningSystemMod {
             NeoForge.EVENT_BUS.addListener(AwakeningSystemClient::onRenderLevelStage);
             NeoForge.EVENT_BUS.addListener(AwakeningSystemClient::onRenderLivingPre);
             NeoForge.EVENT_BUS.addListener(AwakeningSystemClient::onRenderPlayerPre);
+            NeoForge.EVENT_BUS.addListener(AwakeningSystemClient::onRenderPlayerPost);
+            NeoForge.EVENT_BUS.addListener(AwakeningSystemClient::onRenderArm);
             NeoForge.EVENT_BUS.addListener(AwakeningSystemClient::onMovementInputUpdate);
             NeoForge.EVENT_BUS.addListener(AwakeningSystemClient::onComputeFovModifier);
             NeoForge.EVENT_BUS.addListener(AwakeningSystemClient::onComputeCameraAngles);
@@ -627,6 +629,8 @@ public final class AwakeningSystemMod {
         registrar.playToClient(ShadowEmergencePayload.TYPE, ShadowEmergencePayload.STREAM_CODEC,
                 (payload, context) -> context.enqueueWork(() -> AwakeningSystemClient.triggerShadowEmergence(
                         payload.entityId(), payload.x(), payload.y(), payload.z(), payload.durationTicks(), payload.height())));
+        registrar.playToClient(com.soybe.awakeningsystem.network.SyncShadowAlliancePayload.TYPE, com.soybe.awakeningsystem.network.SyncShadowAlliancePayload.STREAM_CODEC,
+                (payload, context) -> context.enqueueWork(() -> AwakeningSystemClient.handleSyncShadowAlliance(payload)));
         registrar.playToClient(OpenMurimAlchemyPayload.TYPE, OpenMurimAlchemyPayload.STREAM_CODEC,
                 (payload, context) -> context.enqueueWork(() -> AwakeningSystemClient.openMurimAlchemyScreen(payload)));
         registrar.playToServer(MurimAlchemyRefinePayload.TYPE, MurimAlchemyRefinePayload.STREAM_CODEC,
@@ -637,6 +641,10 @@ public final class AwakeningSystemMod {
                 }));
         registrar.playToClient(SyncPlayerBadgePayload.TYPE, SyncPlayerBadgePayload.STREAM_CODEC,
                 (payload, context) -> context.enqueueWork(() -> AwakeningSystemClient.handleSyncPlayerBadge(payload)));
+        registrar.playToClient(com.soybe.awakeningsystem.network.ClearDeathWaypointPayload.TYPE, com.soybe.awakeningsystem.network.ClearDeathWaypointPayload.STREAM_CODEC,
+                (payload, context) -> context.enqueueWork(AwakeningSystemClient::clearDeathWaypoints));
+        registrar.playToClient(com.soybe.awakeningsystem.network.SyncHunterAssociationWaypointPayload.TYPE, com.soybe.awakeningsystem.network.SyncHunterAssociationWaypointPayload.STREAM_CODEC,
+                (payload, context) -> context.enqueueWork(() -> AwakeningSystemClient.handleSyncHunterAssociationWaypoint(payload)));
         registrar.playToClient(OpenGachaScreenPayload.TYPE, OpenGachaScreenPayload.STREAM_CODEC,
                 (payload, context) -> context.enqueueWork(() -> AwakeningSystemClient.openGachaScreen(payload)));
         registrar.playToServer(GachaWishPayload.TYPE, GachaWishPayload.STREAM_CODEC,
@@ -883,6 +891,32 @@ public final class AwakeningSystemMod {
                 }));
         registrar.playToClient(com.soybe.awakeningsystem.uma.network.UmaGachaResultPayload.TYPE, com.soybe.awakeningsystem.uma.network.UmaGachaResultPayload.STREAM_CODEC,
                 (payload, context) -> context.enqueueWork(() -> AwakeningSystemClient.handleUmaGachaResult(payload)));
+
+        // Sistema de Dialogos Estilo Manhwa / RPG (Inspirado en saints-dragons)
+        registrar.playToClient(com.soybe.awakeningsystem.dialogue.network.OpenDialoguePayload.TYPE,
+                com.soybe.awakeningsystem.dialogue.network.OpenDialoguePayload.STREAM_CODEC,
+                (payload, context) -> context.enqueueWork(() -> AwakeningSystemClient.handleOpenDialogue(payload)));
+
+        registrar.playToServer(com.soybe.awakeningsystem.dialogue.network.SelectDialogueChoicePayload.TYPE,
+                com.soybe.awakeningsystem.dialogue.network.SelectDialogueChoicePayload.STREAM_CODEC,
+                (payload, context) -> context.enqueueWork(() -> {
+                    if (context.player() instanceof net.minecraft.server.level.ServerPlayer player) {
+                        com.soybe.awakeningsystem.dialogue.NpcDialogueManager.handleChoice(
+                                player, payload.entityId(), payload.dialogueId(), payload.nodeId(), payload.choiceId());
+                    }
+                }));
+
+        registrar.playToServer(com.soybe.awakeningsystem.dialogue.network.DismissDialoguePayload.TYPE,
+                com.soybe.awakeningsystem.dialogue.network.DismissDialoguePayload.STREAM_CODEC,
+                (payload, context) -> context.enqueueWork(() -> {
+                    if (context.player() instanceof net.minecraft.server.level.ServerPlayer player) {
+                        com.soybe.awakeningsystem.dialogue.NpcDialogueManager.clearForPlayer(player.getUUID());
+                    }
+                }));
+
+        registrar.playToClient(com.soybe.awakeningsystem.dialogue.network.CloseDialoguePayload.TYPE,
+                com.soybe.awakeningsystem.dialogue.network.CloseDialoguePayload.STREAM_CODEC,
+                (payload, context) -> context.enqueueWork(AwakeningSystemClient::handleCloseDialogue));
     }
 
     public static void handleUmaRaceAction(net.minecraft.server.level.ServerPlayer player, com.soybe.awakeningsystem.uma.network.UmaRaceActionC2SPayload payload) {
@@ -1359,7 +1393,7 @@ public final class AwakeningSystemMod {
                 int extraLevels = (int) (day / bench.daysPerLvl());
                 int extraPrestige = (int) (day / 45);
 
-                int lvl = Math.min(1000, bench.baseLvl() + extraLevels);
+                int lvl = Math.min(2000, bench.baseLvl() + extraLevels);
                 int pres = Math.min(100, bench.basePres() + extraPrestige);
                 int kills = bench.baseKills() + extraKills;
                 int coins = bench.baseCoins() + extraCoins;
@@ -1505,8 +1539,9 @@ public final class AwakeningSystemMod {
             case "SYNC" -> data.syncToPlayer(player);
             case "TPA" -> {
                 net.minecraft.server.level.ServerPlayer target = null;
+                java.util.UUID targetUuid = null;
                 try {
-                    java.util.UUID targetUuid = java.util.UUID.fromString(payload.target());
+                    targetUuid = java.util.UUID.fromString(payload.target());
                     target = player.server.getPlayerList().getPlayer(targetUuid);
                 } catch (IllegalArgumentException e) {
                     target = player.server.getPlayerList().getPlayerByName(payload.target());
@@ -1514,7 +1549,31 @@ public final class AwakeningSystemMod {
                 if (target != null) {
                     data.requestTpa(player, target);
                 } else {
-                    player.sendSystemMessage(net.minecraft.network.chat.Component.translatable("gui.awakening_system.guild.player_offline"));
+                    com.soybe.awakeningsystem.entity.SeriesNpcEntity foundNpc = null;
+                    if (targetUuid != null) {
+                        foundNpc = com.soybe.awakeningsystem.entity.SeriesNpcEntity.LOADED_SERIES_NPCS.get(targetUuid);
+                        if (foundNpc == null) {
+                            for (var sne : com.soybe.awakeningsystem.entity.SeriesNpcEntity.LOADED_SERIES_NPCS.values()) {
+                                if (com.soybe.awakeningsystem.guild.Guild.getNpcUuid(sne.getNpcProfile().id()).equals(targetUuid)) {
+                                    foundNpc = sne;
+                                    break;
+                                }
+                            }
+                        }
+                    }
+                    if (foundNpc == null) {
+                        foundNpc = com.soybe.awakeningsystem.entity.SeriesNpcEntity.LOADED_SERIES_NPCS_BY_PROFILE.get(payload.target());
+                    }
+
+                    if (foundNpc != null && foundNpc.isAlive()) {
+                        net.minecraft.server.level.ServerLevel targetLevel = (net.minecraft.server.level.ServerLevel) foundNpc.level();
+                        player.teleportTo(targetLevel, foundNpc.getX(), foundNpc.getY(), foundNpc.getZ(), player.getYRot(), player.getXRot());
+                        player.playNotifySound(net.minecraft.sounds.SoundEvents.ENDERMAN_TELEPORT, net.minecraft.sounds.SoundSource.PLAYERS, 1.0F, 1.0F);
+                        targetLevel.sendParticles(net.minecraft.core.particles.ParticleTypes.PORTAL, player.getX(), player.getY() + 1.0D, player.getZ(), 40, 0.5D, 1.0D, 0.5D, 0.15D);
+                        player.sendSystemMessage(net.minecraft.network.chat.Component.literal("§a[Gremio] §fTe has teletransportado junto a tu compañero §e" + foundNpc.getNpcProfile().displayName() + "§f."));
+                    } else {
+                        player.sendSystemMessage(net.minecraft.network.chat.Component.translatable("gui.awakening_system.guild.player_offline"));
+                    }
                 }
             }
             case "TPA_ACCEPT" -> data.acceptTpa(player, payload.target().isBlank() ? null : payload.target());

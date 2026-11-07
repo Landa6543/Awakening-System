@@ -28,6 +28,10 @@ public class FlyingSwordItem extends SwordItem implements AwakeningWeaponItem {
     @Override
     public boolean hurtEnemy(ItemStack stack, net.minecraft.world.entity.LivingEntity target, net.minecraft.world.entity.LivingEntity attacker) {
         if (attacker.level() instanceof net.minecraft.server.level.ServerLevel sl) {
+            sl.sendParticles(com.soybe.awakeningsystem.particle.ModParticles.STRIKE_SLASH.get(), target.getX(), target.getY() + 1.0D, target.getZ(), 1, 0, 0, 0, 0);
+            sl.playSound(null, target.getX(), target.getY(), target.getZ(), com.soybe.awakeningsystem.ModSounds.CULTIVATOR_SLASH.get(), SoundSource.PLAYERS, 1.3F, 1.3F);
+            com.soybe.awakeningsystem.CameraShakePayload.sendToNearby(sl, target.getX(), target.getY(), target.getZ(), 16.0D, 0.25F, 4);
+
             sl.sendParticles(net.minecraft.core.particles.ParticleTypes.SWEEP_ATTACK, target.getX(), target.getY() + 1.0D, target.getZ(), 2, 0.2D, 0.2D, 0.2D, 0.0D);
             sl.sendParticles(net.minecraft.core.particles.ParticleTypes.CLOUD, target.getX(), target.getY() + 1.0D, target.getZ(), 8, 0.3D, 0.3D, 0.3D, 0.03D);
             sl.playSound(null, target.getX(), target.getY(), target.getZ(), SoundEvents.PLAYER_ATTACK_SWEEP, SoundSource.PLAYERS, 1.1F, 1.4F);
@@ -57,12 +61,9 @@ public class FlyingSwordItem extends SwordItem implements AwakeningWeaponItem {
                 sp.startRiding(sword, true);
 
                 level.playSound(null, sp.getX(), sp.getY(), sp.getZ(), SoundEvents.TRIDENT_RIPTIDE_1.value(), SoundSource.PLAYERS, 1.2F, 1.2F);
-                sp.displayClientMessage(Component.translatable("awakening_system.item.flying_sword.action_bar"), true);
+                sp.displayClientMessage(Component.literal("§b§l[ESPADA VOLADORA] §fSurcando los cielos con Qi espiritual. (W para avanzar/ascender, Shift para descender/desmontar)"), true);
 
-                if (!player.getAbilities().instabuild) {
-                    stack.shrink(1);
-                }
-                return InteractionResultHolder.consume(stack);
+                return InteractionResultHolder.sidedSuccess(stack, false);
             }
         }
         return InteractionResultHolder.sidedSuccess(stack, level.isClientSide());

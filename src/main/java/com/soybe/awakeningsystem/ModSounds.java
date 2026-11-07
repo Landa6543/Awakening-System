@@ -1504,6 +1504,18 @@ public final class ModSounds {
             SOUND_EVENTS.register("sandworm_boom",
                     () -> SoundEvent.createVariableRangeEvent(ResourceLocation.fromNamespaceAndPath(AwakeningSystemMod.MOD_ID, "sandworm_boom")));
 
+    public static final DeferredHolder<SoundEvent, SoundEvent> TOMBSTONE_SPAWN =
+            SOUND_EVENTS.register("tombstone_spawn",
+                    () -> SoundEvent.createVariableRangeEvent(ResourceLocation.fromNamespaceAndPath(AwakeningSystemMod.MOD_ID, "tombstone_spawn")));
+
+    public static final DeferredHolder<SoundEvent, SoundEvent> TOMBSTONE_IDLE =
+            SOUND_EVENTS.register("tombstone_idle",
+                    () -> SoundEvent.createVariableRangeEvent(ResourceLocation.fromNamespaceAndPath(AwakeningSystemMod.MOD_ID, "tombstone_idle")));
+
+    public static final DeferredHolder<SoundEvent, SoundEvent> TOMBSTONE_BREAKDOWN =
+            SOUND_EVENTS.register("tombstone_breakdown",
+                    () -> SoundEvent.createVariableRangeEvent(ResourceLocation.fromNamespaceAndPath(AwakeningSystemMod.MOD_ID, "tombstone_breakdown")));
+
     private ModSounds() {}
 }
 

@@ -22,4 +22,16 @@ public final class ModParticles {
 
     public static final Supplier<SimpleParticleType> SHADOW_AURA =
             PARTICLE_TYPES.register("shadow_aura", () -> new SimpleParticleType(false));
+
+    public static final Supplier<SimpleParticleType> STRIKE_SLASH =
+            PARTICLE_TYPES.register("strike_slash", () -> new SimpleParticleType(false));
+
+    public static final Supplier<SimpleParticleType> STRIKE_CLAW =
+            PARTICLE_TYPES.register("strike_claw", () -> new SimpleParticleType(false));
+
+    public static final Supplier<SimpleParticleType> STRIKE_CLEAVE =
+            PARTICLE_TYPES.register("strike_cleave", () -> new SimpleParticleType(false));
+
+    public static final Supplier<SimpleParticleType> STRIKE_CELESTIAL =
+            PARTICLE_TYPES.register("strike_celestial", () -> new SimpleParticleType(false));
 }

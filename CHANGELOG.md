@@ -1,3 +1,447 @@
+# ⚡ Awakening System — Version 0.3.5
+### *Deadlock Tombstone, Interactive NPC Dialogue Engine & Hunter Evaluation Overhaul*
+
+* **Minecraft Version:** 1.21.1
+* **Mod Loader:** NeoForge 21.1.249+
+* **Java:** Java 21 LTS
+
+---
+
+## 💬 Motor de Diálogos Cinematográficos RPG (Inspirado en Saints & Dragons)
+Implementación integral de un sistema de diálogos interactivos cinematográficos con diseño holográfico de *Solo Leveling*:
+* **Giro Cinemático de Cámara (`beginCameraTurnToSpeaker`):** Al iniciar conversación con un NPC, la cámara del jugador rota suavemente hacia el rostro del interlocutor mediante interpolación cúbica fluida (`easeInOutCubic`, 260ms) sin pausar el juego ni distorsionar los shaders del mundo.
+* **Aparición Deslizante de Interfaz (`getBoxY`):** El panel de diálogo surge suavemente desde el borde inferior de la pantalla (`easeOutCubic`, 250ms) con cristal obsidiana oscuro, marco cian resplandeciente (`#00e5ff`) y placa del hablante.
+* **Efecto Máquina de Escribir y Blips de Voz (`playVoiceBlipForNewText`):**
+  * El texto se revela carácter a carácter con velocidad fluida (24ms por letra).
+  * Emisión de efectos de sonido sintetizados y modulados en tono aleatorio (1.82 - 2.08) por carácter ignorando espacios y puntuación, creando la sensación de una consola de RPG.
+  * Posibilidad de saltar instantáneamente la animación presionando `Espacio`, `Enter` o haciendo clic.
+* **Opciones y Ramificación Interactiva:**
+  * Opciones flotantes con fondo dinámico, borde cian al pasar el ratón (`hover`), prefijo en flecha dorada (`▶`) y soporte para desplazamiento con rueda de ratón (`mouseScrolled`).
+  * Protocolo de red nativo cliente/servidor (`OpenDialoguePayload`, `SelectDialogueChoicePayload`, `CloseDialoguePayload`).
+
+---
+
+## 🎖️ NPC Evaluador de la Asociación (Woo Jin-Chul) & Ascenso de Rango
+* **Entidad `hunter_evaluator`:** Inspector oficial de la Asociación de Cazadores con modelo bipedo y traje formal.
+* **Evaluación de Maná Oficial:**
+  * Detecta si el jugador ha llegado al límite de nivel de su rango (`isEvaluationPending`).
+  * Al iniciar la evaluación, el cristal reacciona violentamente con sonidos de fanfarria (`UI_TOAST_CHALLENGE_COMPLETE`, `PLAYER_LEVELUP`) y partículas de tótem de inmortalidad.
+  * Otorga +5 Puntos de Atributo permanentes y libera toda la experiencia acumulada en reserva (`reserveExperience`).
+* **Tabla de Rangos y Consulta:** Explica detalladamente los límites de nivel por rango (F hasta X) y beneficios del ascenso.
+* **Venta del Rastreador de la Asociación:** Posibilidad de adquirir el `hunter_association_tracker` por 100 Monedas directamente desde el diálogo.
+* **Comando y Huevo Generador:**
+  * Comando `/system summon_evaluator` para invocar al Inspector Woo Jin-Chul en la posición actual.
+  * Objeto `hunter_evaluator_spawn_egg` registrado en pestaña creativa.
+
+---
+
+## 🪙 Corrección de Textura de Monedas en HUD
+* **Restauración del Ícono de Moneda:** En el pie de la tarjeta del HUD (`SystemHudOverlay`), se reemplazó el carácter unicode genérico `✦` por el renderizado a escala del ítem real `awakening_coin` (`SystemItems.coin(1)` a escala 0.55x).
+* **Visualización de Monedas Garantizada:** Se corrigió la condición que reemplazaba la visualización de monedas por protogemas en Sistema 4.0, garantizando que el dinero del cazador siempre se aprecie con su textura dorada oficial y formato numérico estilizado (`§e`).
+
+---
+
+## ⚰️ Sistema de Lápidas (Deadlock Tombstone)
+Reemplazo total de la antigua entidad de muerte por un **bloque físico animado con GeckoLib 4**, solucionando desincronizaciones de colisión, problemas de traspaso y bugs visuales:
+* **Colisión Física Monumental:** Implementado como bloque sólido (`TombstoneBlock`) con `VoxelShape` de 1.9 bloques de altura, impidiendo que el jugador u otras entidades lo atraviesen.
+* **Textura del Sistema Limpia y 100% Sin Residuos:** Remapeo espectral completo de la textura original eliminando todos los tonos oliva/verdosos del musgo en la base y grietas (`Hue 44.0° - 55.9°`), transformándolos en cian cósmico y pizarra celeste armónica con la piedra.
+* **Resguardo Absoluto del Jugador al Morir:**
+  * **Inventario Completo (41 ranuras):** 36 ranuras principales/hotbar, 4 de armadura y 1 de segunda mano (`offhand`).
+  * **Accesorios Curios API:** Serialización profunda de todos los talismanes y amuletos equipados en los slots de Curios.
+  * **Experiencia Acumulada:** Preservación exacta del nivel de experiencia y los puntos porcentuales de progreso.
+* **Seguridad y Propiedad:** Solo el legítimo propietario de la tumba (o administradores en creativo) pueden reclamarla, evitando saqueos por otros jugadores en multijugador.
+* **Animaciones GeckoLib 4 Fluidas y Sincronizadas:**
+  * `spawn` (2.25s / 45 ticks): Erupción violenta de la tumba desde el suelo al momento de la muerte.
+  * `idle` (Cíclica): Resonancia espectral constante con almas flotantes estabilizadas.
+  * `breakdown` (1.68s / 33 ticks): Desmoronamiento y colapso de la piedra al interactuar para reclamar las pertenencias.
+* **Diseño Exclusivo del Evento de Muerte:** Retirado del menú creativo (`ModCreativeTabs`, `SystemItems`) para evitar la colocación manual descontextualizada.
+
+---
+
+## 👻 Modo Fantasma Espectral (Ghost Mode)
+Al morir, el cazador entra en una fase incorpórea para regresar por sus pertenencias de forma inmersiva y segura:
+* **Activación Fiable en Respawn:** Corrección del ciclo de vida en `PlayerEvent.Clone`, garantizando que las etiquetas de tumba y estado pasen del jugador muerto al clon reaparecido sin pérdida de datos.
+* **Renderizado Translúcido en 3ra y 1ra Persona:**
+  * **Tercera Persona (F5):** El modelo de la skin del jugador se procesa mediante `RenderType.entityTranslucent` con un resplandor etéreo cian-celeste (`0x7B8CDDFF`, ~48% de alfa), mostrando un cuerpo fantasmal semitransparente.
+  * **Primera Persona:** Implementado `onRenderArm` (`RenderArmEvent`) para que los brazos y mangas del jugador se rendericen con la misma translucidez espectral en primera persona.
+* **Inmunidad y Protección Física:** En este estado, los monstruos y peligros ambientales no pueden dañarte mientras viajas de vuelta a tu tumba.
+* **Orientación y Guía del Sistema:** Notificaciones detalladas en el chat con las coordenadas exactas (X, Y, Z) y dimensión de la tumba, junto con un indicador en pantalla de distancia en bloques.
+
+---
+
+## 🔊 Paisaje Sonoro 3D Inmersivo (Audio Espacial)
+Integración de 3 nuevos efectos de audio personalizados con motor OpenAL nativo:
+* **Audio Mono Posicional (1 Canal Vorbis):** Todos los archivos de audio se optimizaron a formato MONO, permitiendo que Minecraft calcule la atenuación volumétrica por distancia y el balance estéreo direccional (izq/der).
+* **`tombstone_spawn`:** Crujido y rugido telúrico al erigirse la lápida al morir (atenuación a 16 bloques, volumen moderado).
+* **`tombstone_idle`:** Murmullo espectral en bucle suave que solo se activa cuando el jugador está a menos de 8 bloques de su tumba (atenuación a 10 bloques), sirviendo de faro sonoro sin contaminar el entorno.
+* **`tombstone_breakdown`:** Resonancia y fractura de almas al momento de romper la lápida y recuperar las pertenencias.
+* **Subtítulos Accesibles:** Registrados en inglés (`en_us`) y español (`es_es`, `es_cl`).
+
+---
+
+## 🗺️ Integración con Diorama Map
+* **Marcador de Muerte en Español:** Generación automática del waypoint en el mapa voxel con nomenclatura localizada (`Muerte [Día]`).
+* **Autolimpieza de Waypoints:** El marcador se elimina automáticamente de la memoria y del cliente en cuanto el jugador reclama su lápida, evitando acumulación de marcas viejas.
+
+---
+
+## 🛡️ Gremios y Alianzas: Inmunidad contra Fuego Amigo de Sombras
+* **Inmunidad Estricta de Fuego Amigo en Ejército de Sombras:**
+  * **Protección Cruzada Integral:** Los miembros de un mismo gremio y de hermandades aliadas ya no pueden dañarse entre sí, ni dañar a las sombras (`shadow_soldier`) invocadas por sus compañeros.
+  * **Anulación Total de Ataques (`event.setCanceled(true)` & `newDamage = 0.0F`):** Golpes directos, flechas, habilidades mágicas, armas y ataques en área (AoE) infligidos accidentalmente a aliados o sus tropas son bloqueados por completo.
+  * **Inteligencia Artificial Pacífica entre Tropas Aliadas:** Las sombras de cazadores del mismo gremio o alianzas nunca se seleccionarán como objetivos de ataque ni responderán a provocaciones entre sí.
+  * **Diferenciación Visual en el Mundo:**
+    * Las sombras de compañeros de gremio y aliados adquieren un contorno brillante (*glowing aura*) de tonalidad **Verde Esmeralda** (`ChatFormatting.GREEN`), distinguiéndose con facilidad del cian propio del Monarca (`AQUA`) y del rojo hostil (`DARK_RED`).
+  * **Radar Táctico y Minimapa:**
+    * En el minimapa del Sistema, las sombras aliadas se renderizan con un borde verde esmeralda de compañero (`0xFF50FA7B`), evitando que se confundan con monstruos hostiles o generen falsas alarmas de peligro élite.
+  * **Protocolo de Red Sincronizado:** Incorporado el paquete `SyncShadowAlliancePayload` para sincronizar al instante el estado de alianza y propiedad de las sombras entre servidor y clientes cercanos.
+
+---
+
+## 🍎 Consumibles Sagrados de Clase y Raciones de Combate
+* **Manzana de las Sombras / del Monarca (`shadow_apple`):**
+  * Fruta sagrada de nigromancia imbuida con esencias de alma, metal abisal y la voluntad del Monarca.
+  * Otorga **Regeneración V** (30s), **Absorción VI** (24 corazones extra durante 2 minutos), **Resistencia al Fuego** (2 min) y **Visión Nocturna Táctica del Cazador** (2 min).
+  * **Regeneración Ultra-Rápida de Sombras Aliadas:** Durante 2 minutos, todas las sombras vivas del cazador en un radio de 48 bloques sanan pasivamente un 8% de su vida máxima + 2 puntos planos cada segundo, envueltas en llamas y partículas de alma.
+  * Restablece instantáneamente un **35% del Maná Máximo** del jugador.
+  * Receta de crafteo en mesa de trabajo combinando una manzana rodeada de Lingotes de Aleación de Almas (`soul_alloy_ingot`) y Lingotes Abisales (`abyssal_ingot`).
+* **Zanahoria de Qi Espiritual (`spirit_qi_carrot`):**
+  * Ración de combate suprema de los cazadores y cultivadores para expediciones en mazmorras prolongadas.
+  * **Saciedad y Nutrición:** Llena 10 puntos de hambre y otorga **20 puntos de saturación instantánea** (equivalente a 2.0F de modificador).
+  * **Restauración Espiritual Instantánea:** Regenera de inmediato un **25% de la reserva espiritual total** (Qi para cultivadores Murim y Maná para cazadores del Sistema).
+  * Receta de forja en mesa de crafteo combinando una Zanahoria Dorada rodeada de Fragmentos de Jade Espiritual (`spirit_jade_shard`).
+* **Integración en la Tienda del Sistema:**
+  * Ambos consumibles han sido incorporados en la categoría de consumibles de la tienda (`ShopDefinitions`), disponibles para compra por monedas del Sistema.
+
+---
+
+## 🎁 Expansión de Cofres de la Tienda y Texturas Exclusivas del Sistema
+Integración completa de la nueva jerarquía de cofres y cajas de botín directamente en la interfaz del Sistema, sin generar ítems físicos en el inventario ni registros innecesarios en el mundo:
+* **Iconografía y Arte Pixel Art Exclusivo:**
+  * Reemplazo de los antiguos placeholders vanilla (`chest`, `bundle`, `trapped_chest`, `ender_chest`, `shulker_box`) por 7 sprites personalizados de 16x16 creados para el mod.
+  * Cada cofre cuenta con remates metálicos reforzados, cerrojos únicos y paletas alineadas con su rareza y minerales:
+    * 🍀 **Caja de la Suerte (`lucky_box`):** Verde trébol de fortuna con cerrojo de oro premiado (Nivel 20+).
+    * ⚪ **Cofre Común (`box_common`):** Hierro forjado y acero pulido (Nivel 10+).
+    * 🔵 **Cofre Raro (`box_rare`):** Zafiro y resplandor de diamante (Nivel 35+).
+    * 🟣 **Cofre Épico (`box_epic`):** Amatista mística y astralita profunda (Nivel 55+).
+    * 🟡 **Cofre Legendario (`box_legendary`):** Oro solar imperial y ámbar (Nivel 75+).
+    * 🟢 **Cofre Mítico (`box_mythic`):** Jade espiritual supremo y metales de Isekai/Murim (Nivel 100+).
+    * 🌌 **Cofre Primordial (`box_primordial`):** Luz celestial y ébano divino del Monarca (Nivel 130+).
+* **Nuevos Tiers Superiores de Recompensas:**
+  * **Cofre Mítico:** Botín de alto nivel con lingotes de Mithril, Adamantita y Astral, manzanas de Mithril y Jade, píldoras de avance de reino marcial y el Martillo de Guerra de Adamantita.
+  * **Cofre Primordial:** El botín cumbre del Sistema con lingotes Celestiales y Primordiales, manzanas primordiales, núcleos y perlas de dragón, la Píldora del Renacimiento Primordial y armas de rango divino (Cortador de Jade Primordial y Lanza Alada).
+* **Enriquecimiento del Botín Progresivo:**
+  * Incorporación de los nuevos consumibles y materiales del mod en las cajas existentes (Zanahorias de Qi, Manzanas de las Sombras, Lingotes de Hierro Blanco Refinado y Aleaciones de Almas).
+  * Sistema de respaldo automático en memoria para mundos existentes (`CustomLootConfigManager`), garantizando la disponibilidad inmediata de los nuevos tiers sin requerir el reseteo manual de archivos JSON.
+* **Apertura Cinemática en Pantalla (`ChestOpeningScreen`):**
+  * Animación en vivo de la bóveda dimensional con vibración sísmica, auras de color por rareza, sello arcano original y ruleta interactiva con los ítems candidatos de alto nivel.
+
+---
+
+## 📖 Sistema de Adquisición de Habilidades por Hábito y Constancia (Progresión Procedural)
+Retomando los pilares fundacionales de las series clásicas de Sistemas, los cazadores ya no dependen exclusivamente de los puntos de nivel para fortalecerse: el Sistema premia **la perseverancia, el hábito y las acciones repetidas en el mundo** desbloqueando y evolucionando habilidades orgánicas y títulos de maestría:
+* **👁️ Ojo Perspicaz / Mirada del Cazador (`deadeye`):**
+  * **Hábito Desencadenante:** Mantener el punto de mira enfocado continuamente sobre enemigos distantes o jefes en combate (`habitFocusTicks`).
+  * **Desbloqueo y Evolución:** Se despierta a Nivel 1 tras 15 segundos de fijación y asciende hasta Nivel 6 (*Ojo de Halcón*).
+  * **Barra de Vida Numérica a Larga Distancia:** Las etiquetas de nombre y vida de criaturas élite y jefes se vuelven legibles a distancias tácticas ampliadas de hasta 48 metros (`❤ HP actual / HP máximo`).
+  * **Probabilidad de Golpe Crítico Observado:** Otorga un bono pasivo de impacto crítico (+5% por nivel, hasta +30%) al impactar presas y objetivos observados con proyectiles o tajos marciales.
+  * **Título de Maestría:** `Mirada del Cazador` (+1.5 Daño, +1.5 Suerte Perceptiva).
+* **🛡️ Cuerpo Templado / Resistencia al Dolor (`enduring_flesh`):**
+  * **Hábito Desencadenante:** Sobrevivir a grandes cantidades de daño acumulado recibido en batallas difíciles (`habitDamageTaken`).
+  * **Desbloqueo y Evolución:** Se adquiere tras sobrevivir a 150 puntos de daño acumulado y evoluciona hasta Nivel 6 (*Carne Inquebrantable*).
+  * **Mitigación Pasiva de Daño Físico:** Reduce directamente entre un 5% y un 15% todo el daño físico entrante.
+  * **Firmeza Monumental:** Otorga resistencia contra empuje pasiva (`Knockback Resistance` escalada hasta +0.24) y mantiene el pulso de regeneración celular al ser herido.
+  * **Título de Maestría:** `Cuerpo de Hierro` (+0.15 Firmeza, +2.0 Armadura).
+* **💨 Paso del Viento / Resistencia Pulmonar (`windrunner`):**
+  * **Hábito Desencadenante:** Esprintar largas distancias explorando y descubriendo múltiples biomas a lo largo del mundo (`habitSprintDistance` y `habitBiomesExplored`).
+  * **Desbloqueo y Evolución:** Se despierta al recorrer 500 bloques de esprint a través de al menos 2 biomas y escala hasta Nivel 6 (*Vendaval*).
+  * **Resistencia Pulmonar y Ahorro de Estamina:** Reduce significativamente el agotamiento de hambre al correr, permitiendo esprints prolongados sin drenar la barra de comida.
+  * **Ráfagas Espontáneas de Velocidad:** Posibilidad de activar ráfagas cinéticas de Velocidad II/III con estelas de viento y micro-impulsos en carrera libre, sumado a un aumento permanente de velocidad de movimiento en estadísticas base.
+  * **Título de Maestría:** `Caminante del Viento` (+0.02 Velocidad de Movimiento, +0.05 Cadencia de Ataque).
+* **⛏️ Instinto de la Tierra / Furia del Minero (`ore_sense`):**
+  * **Hábito Desencadenante:** Picar miles de bloques en las profundidades subterráneas ($Y < 32$ y estratos de pizarra profunda) (`habitDeepBlocksMined`).
+  * **Desbloqueo y Evolución:** Se despierta tras minar 150 bloques profundos y alcanza su cima a Nivel 6 (*Visión Telúrica*).
+  * **Celeridad Minera Pasiva:** Confiere Prisa Minera (*Haste*) automática al empuñar picos bajo tierra.
+  * **Duplicación Telúrica de Minerales:** Otorga una probabilidad del 4% al 24% de duplicar instantáneamente gemas y minerales extraídos (diamantes, esmeraldas, oro, hierro, etc.) con partículas de brillo y tañido de amatista.
+  * **Título de Maestría:** `Instinto de la Tierra` (+1.5 Suerte Minera, +1.0 Dureza de Armadura).
+* **⚔️ Maestría del Acero (`combat_instinct`):**
+  * **Hábito Desencadenante:** Ejecutar miles de golpes certeros contra criaturas con espadas, hachas u otras armas cuerpo a cuerpo (`habitWeaponHits`).
+  * **Desbloqueo y Evolución:** Se adquiere tras 80 impactos y progresa hasta Nivel 6 (*Instinto de Batalla*).
+  * **Cadencia y Daño Marcial:** Incrementa pasivamente la velocidad de ataque (+0.04 a +0.24 de cadencia) y añade daño plano y porcentual a todos los impactos físicos con armamento marcial.
+  * **Título de Maestría:** `Maestro del Acero` (+0.12 Velocidad de Ataque, +2.0 Daño de Arma).
+* **📢 Notificaciones Festivas del Sistema y Audio Dedicado:**
+  * Al desbloquear o evolucionar cualquier técnica por constancia, el Sistema despliega un banner dorado/esmeralda de celebración con efectos de partículas de resurrección y sonido de desafío completado (`SYSTEM_SKILL_UNLOCK`).
+
+---
+
+## 🗡️ Rediseño Visual y Estético de Habilidades de Armas (Fin del Círculo Genérico de Maná/Ki)
+Erradicación total de los círculos planos genéricos de maná y ki que se proyectaban en el suelo al utilizar habilidades de armas, sustituyéndolos por un **motor cinemático de tajos y ondas de choque 3D** con texturas HD exclusivas, geometrías volumétricas multicapa, animación de swing del portador y vibración de pantalla dinámica:
+
+* **Motor Gráfico de Tajos 3D Multicapa (`SlashWaveEntity` & `SlashWaveRenderer`):**
+  * **Renderizado de Doble Cara con Cara Emisiva Central:** La malla geométrica proyecta caras superior e inferior para garantizar 100% de visibilidad volumétrica desde cualquier ángulo y cámara (F5 o primera persona), combinada con una arista interna hiperbrillante de luz pura (`LightTexture.FULL_BRIGHT`).
+  * **Geometrías por Estilo de Impacto:**
+    * *Doble Corte en Cruz (`STYLE_CROSS`):* Planos duales cruzados a $\pm 32^\circ$ con separación tridimensional.
+    * *Estocada Espiral Perforante (`STYLE_THRUST`):* Planos ortogonales en ángulo recto ($0^\circ$ y $90^\circ$) simulando un haz de perforación supersónica.
+    * *Barrido y Creciente Curva:* Geometría extendida con inclinación dinámica por *roll* e inercia direccional.
+  * **Biblioteca de Nuevas Texturas VFX Exclusivas (256x256 ARGB HD):**
+    * 🖌️ `slash_ink_wuxia.png`: Trazado de caligrafía en tinta china negra y filo de Qi dorado para técnicas marciales de Murim.
+    * 🐾 `slash_shadow_claw.png`: Triple desgarro de garras abisales del Monarca de las Sombras.
+    * 🪨 `slash_heavy_cleave.png`: Brecha sísmica de fractura colosal para mandobles y martillos titánicos.
+    * ✨ `slash_celestial_blade.png`: Creciente sagrada de luz astral y filos de cristal divino.
+    * 🌙 `slash_scythe_reap.png`: Arco de siega de almas alargado y afilado para guadañas de combate.
+    * 💥 `slash_impact_burst.png`: Destello de impacto radial en estrella para colisiones físicas contundentes.
+* **Armamento Rediseñado con Identidades Visuales Propias:**
+  * **Espada de la Flor de Ciruelo (`PlumBlossomSwordItem`):** Despliega 3 tajos marciales de tinta Wuxia en abanico frontal con estelas de pétalos de cerezo flotantes, sonido de viento cortante y vibración de pantalla.
+  * **Espada Sacude Cielos (`HeavenShakingSwordItem`):** Dispara un corte horizontal y un tajo descendente de Qi marcial y fractura pesada con chispas de relámpago e impacto sísmico.
+  * **Espada del Demonio Celestial (`SkyDemonSwordItem`):** Emite una creciente carmesí Wuxia y un corte vertical abisal con partículas de fuego espectral y sonido de desgarro demoníaco.
+  * **Guandao Astral (`AstralGuandaoItem`):** Ejecuta un colosal barrido de alabarda marcial de 5.4 metros con rugido de dragón y micro sacudida táctica.
+  * **Guadaña del Dragón Negro (`BlackDragonScytheItem`):** Lanza un arco alargado de siega de almas de 5.6 metros con llamas de dragón abisal y corte etéreo.
+  * **Guadaña del Pavor (`DreadScytheItem`):** Desata una siega frontal espectral y una siega carmesí de retorno posterior en vórtice de almas purificadoras.
+  * **Mandoble del Creador (`CreatorClaymoreItem`):** Libera tajos cruzados de fractura colosal (horizontal y vertical) en energía de génesis primordial.
+  * **Mandoble Gigantesco (`GiganticGreatswordItem`):** Proyecta un tajo sísmico ígneo de 5.6 metros con partículas de lava y fractura del suelo.
+  * **Espada Sagrada de Asrahan (`AsrahanHolySwordItem`):** Lanza una onda radiante de luz estelar celestial de 4.8 metros con resonancia de campanas cósmicas.
+  * **Báculo de Homa (`StaffOfHomaItem`):** Descarga un corte colosal de fuego carmesí seguido de una estocada ígnea perforante a alta velocidad.
+  * **Dark Repulser (`DarkRepulserItem`):** Modo dual empuñado con Elucidator ejecuta ráfagas celestiales, ondas de vacío y corte en cruz; modo individual dispara olas de cristal sagrado.
+  * **Elucidator (`ElucidatorItem`):** Habilidad *Starburst Stream* despliega 3 tajos sucesivos de garras de sombra y un corte final en cruz con partículas de dragón del vacío.
+  * **Martillo de Guerra de Adamantita (`AdamantiteWarHammerItem`):** La habilidad sísmica proyecta 6 ondas de choque radiales de fractura telúrica (`TYPE_EARTH` y `STYLE_HEAVY_CLEAVE`) que emergen del suelo al impactar.
+  * **La Doncella (`LaDoncellaSwordItem`):** Modo Trono de Ceniza proyecta un arco de siega carmesí y tajo ascendente con drenaje de vida; modo Fragancia del Silencio emite ondas celestiales de pétalos plateados.
+  * **Luz Radiante / Rapier de Asuna (`LambentLightItem`):** Despliega una estocada de destello lineal supersónica con 50% de penetración de armadura y estela de luz solar.
+  * **Espada Protogema (`PrimogemSwordItem`):** Lanza una creciente estelar de amatista cósmica restaurando vitalidad al portador.
+  * **Espina Trascendente (`TranscendentThornItem`):** Emite una onda de choque sónica y fractura carmesí con explosión de fuego a su alrededor.
+  * **Fe Inquebrantable (`UnbreakableFaithItem`):** Desata un tajo celestial bendito con auras de protección y velocidad.
+  * **Balada del Amanecer (`DawnsBalladItem`):** Tras el teletransporte instantáneo, proyecta una onda de corte celestial amatista.
+  * **Espada de la Luz Radiante (`RadiantLightSwordItem`):** Lanza un barrido celestial y una estocada solar perforante de alta concentración.
+  * **Soul Solid (`SoulSolidSwordItem`):** Emite un haz de escarcha celestial congelante con fragmentación de hielo y fuego espectral.
+  * **Gran Espada del Vacío (`VoidClaymoreItem`):** Habilidad activa *Corte Dimensional del Vacío* incorpora un proyectil masivo de fractura abisal que atrae a los enemigos a la línea de corte con sacudida de pantalla.
+
+* **Sistema de Partículas de Impacto de Corte y Sonido Físico de Tajo (Golpes Básicos y Habilidades):**
+  * **Erradicación de Efectos Vanilla Inanimados:** Se eliminó la dependencia de partículas y sonidos genéricos de Minecraft (`CRIT`, `SWEEP_ATTACK`, `PLAYER_ATTACK_CRIT`, `ANVIL_LAND`) en ataques cuerpo a cuerpo de armas únicas del mod.
+  * **16 Nuevas Texturas de Partículas de Impacto (Animación 4-Frames por Categoría):**
+    * 🌸 **Tajo de Qi Marcial y Tinta (`STRIKE_SLASH`):** Corte en arco curvo dinámico y tinta caligráfica para espadas ligeras, katanas y guandaos de cultivador.
+    * 🐾 **Garras de Sombra del Monarca (`STRIKE_CLAW`):** Triple desgarro de garras abisales y cortes veloces para dagas, guadañas y armas demoníacas.
+    * 🪨 **Fractura Sísmica y Hendidura Titánica (`STRIKE_CLEAVE`):** Explosión radial de fractura y estallido contundente para mandobles colosales, martillos y claymores.
+    * ✨ **Destello de Filo Celestial y Diamante (`STRIKE_CELESTIAL`):** Corte sagrado en estrella de 4 puntas y destellos de luz pura para armas divinas, estoques y espadas sagradas.
+  * **Renderizado Billboard en Pantalla Completa:** Partículas emisivas con iluminación completa (`0xF000F0`) de 1.55 a 1.75 bloques de tamaño que se orientan hacia la cámara directamente sobre el pecho del objetivo impactado.
+  * **Paisaje Sonoro de Impacto Físico:** Cada golpe básico (clic izquierdo) y habilidad activa reproduce los efectos de audio de tajo marcial `CULTIVATOR_SLASH` y corte demoníaco `DOMAIN_OF_SANCTION_SLASH`, acompañados de micro sacudida sísmica de pantalla (`CameraShakePayload`).
+  * **Planeo Dinámico de Proyectiles sobre el Terreno:** Solucionado el problema donde las ondas de corte colisionaban con el suelo bajo los pies del jugador al mirar hacia adelante; ahora el motor detecta el terreno vertical y desliza la onda a +0.25 bloques sobre la superficie, impactando y destruyéndose únicamente ante muros sólidos horizontales.
+  * **Geometría Volumétrica Triplanar:** Las ondas de corte ahora proyectan 3 planos entrecruzados (plano de corte primario a $-16^\circ$, plano de cruce a $+22^\circ$ y espina vertical a $90^\circ$), otorgando un volumen 3D contundente visible desde cualquier perspectiva y distancia.
+
+---
+
+## ⚔️ Compatibilidad Total al 100% con Epic Fight y Better Combat
+Integración nativa profunda y puente universal de eventos entre Awakening System, **Better Combat** y **Epic Fight** (Battle Mode):
+* **Puente Universal de Daño y Ejecución de Habilidades (`LivingDamageEvent.Post`):**
+  * **Resolución del Bypass de Epic Fight:** Epic Fight en modo de combate omite el llamado nativo de Minecraft a `Item#hurtEnemy()` al procesar los impactos por sus propios colliders y fuentes de daño. El nuevo puente del sistema intercepta todo golpe infligido por el jugador bajo fuentes de Epic Fight (`isEpicFightDamage`) y ejecuta inmediatamente el ciclo completo de combate del arma.
+  * **Activación Garantizada de Partículas y Sonidos:** Todas las partículas visuales de corte (`STRIKE_SLASH`, `STRIKE_CLAW`, `STRIKE_CLEAVE`, `STRIKE_CELESTIAL`), efectos de audio físicos (`CULTIVATOR_SLASH`, `DOMAIN_OF_SANCTION_SLASH`), vibración de cámara (`CameraShakePayload`), combos pasivos y acumulación de EXP de arma (`WeaponLevelManager`) se ejecutan con 100% de fiabilidad en cada impacto de combo o animación de Epic Fight y Better Combat.
+  * **Protección contra Golpes Dobles:** Sistema de detección con cero duplicaciones de durabilidad o efectos al alternar entre ataques estándar y ataques con mods de combate.
+* **Sincronización y Corrección de Arquetipos en Better Combat:**
+  * **Dominio de la Sanción (`domain_of_sanction`):** Corregido arquetipo de animación de mandoble lento a **Katana** (`bettercombat:katana`) con alcance de 3.8 bloques.
+  * **Sin Cola / Samehada (`tailless`):** Corregido arquetipo de katana a **Mandoble Pesado** (`bettercombat:claymore`) con alcance de 3.6 bloques.
+  * **Martillo de Herta y Martillo de Guerra de Adamantita:** Corregidos arquetipos de maza ligera a **Martillo Pesado a Dos Manos** (`bettercombat:hammer`) con alcance de 3.4 bloques y barridos colosales.
+  * **Veredicto (`verdict`):** Configurado como **Gran Hacha de Batalla a Dos Manos** (`bettercombat:double_axe`) con alcance de 3.6 bloques.
+  * **Incorporación de Espadas de Mineral:** Creados e integrados los perfiles de combate para `soul_alloy_sword` y `astralite_sword` (`bettercombat:sword`).
+* **Capacidades y Atributos de Combate para Epic Fight:**
+  * **Configuración de Atributos Auténticos:** Todas las capacidades de armas (`capabilities/weapons/`) ahora incluyen bloques de atributos completos de impacto (`impact`), penetración de armadura (`armor_negation`) y límite de objetivos por tajo (`max_strikes`):
+    * *Katanas / Tachis:* 0.8 impacto, 15% penetración de armadura, 2 objetivos.
+    * *Grandes Espadas y Mandobles:* 2.5 impacto, 30% penetración de armadura, 3 objetivos.
+    * *Lanzas y Alabardas:* 1.2 impacto, 20% penetración de armadura, 2 objetivos.
+    * *Dagas:* 0.3 impacto, 25% penetración de armadura, 1 objetivo.
+    * *Espadas Ligeras:* 0.5 impacto, 5% penetración de armadura, 1 objetivo.
+  * **Corrección de Clases:** `domain_of_sanction` configurado como `epicfight:tachi`, `tailless` como `epicfight:greatsword`, y los martillos pesados como `epicfight:greatsword`.
+  * **Doble Compatibilidad de Rutas (Namespace Mirroring):** Los 75 archivos de capacidad se publican tanto en `data/awakening_system/capabilities/weapons/` como en `data/epicfight/capabilities/weapons/`, asegurando carga inmediata en cualquier versión o fork de Epic Fight.
+* **Estandarización Completa de Etiquetas de Armas (`Item Tags`):**
+  * Se agregaron todas las armas únicas, espadas de mineral, katanas, lanzas, dagas y mandobles a las etiquetas comunitarias e internas: `#c:melee_weapons`, `#c:tools/melee_weapon`, `#minecraft:swords`, `#c:tools/swords`, `#c:tools/spears`, `#c:tools/daggers` y `#c:tools/axes`.
+* **Internacionalización y Corrección de Localización en Pantalla de Clases (`ClassSelectionScreen`):**
+  * **Erradicación de Textos Bilingües y Hardcodeados:** Los botones de categorías (`Guerreros`, `Arcano`, `Murim`, `Todas`), la insignia de selección (`ELEGIDO`) y los nombres de manhwas de origen (`getShortManhwa`, `getManhwa`) fueron desvinculados de valores fijos en Java e integrados al sistema nativo de traducción (`Component.translatable`).
+  * **Sincronización Total de Idiomas Hispanohablantes:** Sincronizadas las 13,630 claves de traducción en todos los dialectos de español (`es_es.json`, `es_cl.json`, `es_mx.json`, `es_ar.json`, `es_co.json`, `es_ec.json`, `es_pe.json`, `es_uy.json`, `es_ve.json`), resolviendo claves faltantes de teletransporte de gremios (`guild.msg.tpa_*`), senderos HSR, manzanas y zanahorias nuevas, y cofres de la tienda.
+  * **Configuración del Perfil de Ejecución:** Ajustado el entorno de pruebas local (`run/options.txt`) a `lang:es_es` para alinearse de forma inmediata con las opciones del cliente del usuario.
+
+* **Reingeniería Total del Sistema de Habilidades por Hábito y Constancia:**
+  * **Habilidades Innatas Corporales del Cazador:** Las 5 habilidades de hábito (`enduring_flesh`, `windrunner`, `combat_instinct`, `ore_sense`, `deadeye`) son ahora **Habilidades Innatas Permanentes**. Ya no ocupan ranuras de talentos pasivos del árbol de clases ni requieren equiparse manualmente: una vez despertadas por la perseverancia del cuerpo, sus efectos y bonificadores de estadísticas se aplican automáticamente y de por vida.
+  * **Corrección del Error de Muestreo de Esprint en `Paso del Viento` (`windrunner`):** Se eliminó la compuerta de 20 ticks que provocaba que el esprint se muestreara solo 1 tick cada 20 ticks (haciendo que recorrer 500 metros requiriera en la práctica 10,000 metros de carrera). El esprint ahora se acumula fluidamente en cada tick de movimiento. Además, se ajustó el umbral de Nivel 1 a 300 metros sin exigir visitar múltiples biomas para el primer despertar.
+  * **Calibración de Enfoque Visual y Proyectiles en `Mirada del Cazador` (`deadeye`):** Se redujo la distancia mínima de fijación de 8 bloques a 3 bloques, ampliando el área de escaneo de combate. Asimismo, disparar e impactar a cualquier enemigo con proyectiles (flechas, tridentes, etc.) otorga instantáneamente +25 ticks de hábito hacia `deadeye`. El Nivel 1 ahora despierta a los 120 ticks (~6 segundos de combate o 5 disparos).
+  * **Reconocimiento Universal de Armas en `Maestría del Acero` (`combat_instinct`):** Ahora cualquier impacto con espadas, hachas, armas del mod, armas de Better Combat o combos de Epic Fight suma impactos de forma fiable. El Nivel 1 se alcanza a los 40 golpes.
+  * **Ajuste de Supervivencia en `Cuerpo Templado` (`enduring_flesh`):** Se redujo el umbral del primer despertar de 150 puntos a 50 puntos de daño acumulado sobrevivido, permitiendo que cazadores novatos despierten la habilidad tras sobrevivir a sus primeros combates reñidos.
+  * **Minería Subterránea Ampliada en `Instinto de la Tierra` (`ore_sense`):** Se reconoce la extracción de bloques y minerales en cualquier estrato subterráneo ($Y < 50$ o bajo el nivel del mar con pico), reduciendo el umbral de Nivel 1 a 80 bloques.
+  * **Resolución del Conflicto con la Afinidad Clásica:** Se crearon contadores de nivel dedicados para el progreso de hábito en NBT, evitando que la asignación de afinidades bloquee la detección del primer despertar por constancia.
+  * **Visualización en Vivo en la Interfaz del Sistema (`SystemScreen`):** Las habilidades de hábito ahora aparecen listadas en la pestaña de pasivas con la insignia `✦ INNATA`. Si aún no han sido despertadas, se muestran bloqueadas pero con una barra de progreso en tiempo real (ej. `Daño: 24/50`, `Esprint: 180/300m`), permitiendo al cazador ver con exactitud cuánto le falta para desbloquearlas.
+  * **Comando de Consulta de Hábitos (`/system habit` o `/system habito`):** Se integró un comando informativo que despliega en el chat los niveles y estadísticas exactas de cada hábito en tiempo real.
+
+---
+
+## ⚔️ Integración Cruzada con el Mod 'Armageddon' (`armageddon_mod`)
+Integración nativa profunda y modular entre Awakening System y el mod de progresión RPG **Armageddon** (desarrollado por choupicul):
+* **Detección Condicional y Arquitectura Modular (`ArmageddonCompatHandler`):**
+  * El módulo detecta automáticamente la presencia de `armageddon` o `armageddon_mod` sin imponer dependencias estrictas, permitiendo que ambos mods coexistan en armonía sin errores ni incompatibilidades.
+* **Reconocimiento de los 11 Jefes de Progresión:**
+  * Registro integral de los jefes pre y post-dragón en `BossCompatibilityManager`: *The Iron Colossus*, *The Goblin Lord*, *Arion (Tyrant of the Emerald Wrath)*, *Eldorath (the Ancient Builder)*, *Zoranth (the Forgotten One)*, *The Elvenite Paladin*, *Vaedric (the Fallen Wanderer)*, *The Bringer of Doom*, *The Calamities*, *Zoranth (Newborn of the Zenith)* y *Nyxaris (the Veil of Oblivion)*.
+* **Recompensas del Sistema por Superar Bloqueos de Tier:**
+  * Al derrotar por primera vez a cada uno de los jefes de tier de Armageddon, el Sistema despliega una notificación holográfica triunfal (`[ALERTA DEL SISTEMA: BLOQUEO SUPERADO]`), otorga **+5 Puntos de Atributo libres** para asignar en las estadísticas del personaje y entrega un bono masivo de Monedas del Sistema (+2,500 a +20,000 monedas según el rango).
+* **Títulos Exclusivos de Cazador con Atributos Dedicados:**
+  * `armageddon_colossus_breaker` (*Destructor del Coloso de Hierro*): +2.0 Armadura, +0.10 Resistencia al Empuje.
+  * `armageddon_goblin_subjugator` (*Subyugador del Señor Duende*): +1.5 Suerte, +0.05 Cadencia de Ataque.
+  * `armageddon_emerald_conqueror` (*Conquistador de la Furia Esmeralda*): +2.0 Daño de Ataque, +1.0 Suerte.
+  * `armageddon_nether_gatekeeper` (*Vencedor del Constructor Antiguo*): +4.0 Vida Máxima, +2.0 Armadura.
+  * `armageddon_void_reaper` (*Segador del Olvido*): +3.0 Daño de Ataque, +0.02 Velocidad de Movimiento.
+  * `armageddon_elven_slayer` (*Flagelo de Elvenita*): +2.5 Daño de Ataque, +0.08 Cadencia de Ataque.
+  * `armageddon_doom_bringer_slayer` (*Fin del Heraldo del Destino*): +6.0 Vida Máxima, +3.0 Armadura.
+  * `armageddon_calamity_overlord` (*Soberano del Armagedón*): Rango Mítico (+10.0 Vida Máxima, +5.0 Daño de Ataque, +3.0 Dureza de Armadura, +0.20 Resistencia al Empuje).
+* **Extracción de Sombras de Jefes y Criaturas de Armageddon:**
+  * El Monarca de las Sombras ahora puede extraer las sombras de todas las bestias y jefes de Armageddon. Los jefes son promovidos de forma automática a rangos jerárquicos superiores (*Elite Knight*, *Commander* y *Grand Marshal*).
+* **Habilidad Mítica Cruzada: Voluntad del Armagedón (`armageddon_breaker`):**
+  * Técnica pasiva de combate desbloqueada automáticamente al superar el primer gran desafío de Armageddon. Otorga entre un **+15% y un +35% de daño perforante directo contra jefes**, penetra la armadura del objetivo y, en su nivel máximo, emite un pulso táctico que restaura maná y Qi a todos los aliados cercanos en combate.
+* **Tienda Dokkaebi: Suministro de Invocaciones de Jefes:**
+  * Incorporación de las 10 herramientas y artefactos de invocación remota de jefes de Armageddon en el catálogo de compra por monedas del Sistema, permitiendo a cazadores veteranos re-enfrentar a los bosses sin requerir crafteos tediosos.
+
+---
+
+## 🎰 Repotenciación Integral de la Ruleta Digital del Sistema
+Revisión visual, acústica y de balance económico para la Ruleta del Destino del Sistema:
+* **Lluvia de Confeti Dinámico 2D en Pantalla (`ConfettiParticle`):**
+  * Implementación de un sistema de partículas de confeti en la interfaz (`ChestOpeningScreen`), con cintas multicolores (oro, cian, magenta, esmeralda y blanco) con física de gravedad, aceleración vertical, oscilación de vaivén y aleteo tridimensional al abrirse la ruleta o cajas de alta jerarquía.
+* **Integración de Efectos de Audio Nativos (Fanfarria y Trinquete Arcade):**
+  * Conexión de los eventos de audio dedicados `ModSounds.ROULETTE_SPIN`, `ModSounds.ROULETTE_WIN` y `ModSounds.CASINO_JACKPOT`.
+  * La ruleta reproduce su zumbido de giro rúnico al comenzar y una fanfarria orquestal con campanas triunfales al detenerse en la casilla premiada.
+* **Actualización del Botín y Gran Jackpot del Sistema:**
+  * Modernización del carrete y de la tabla de probabilidades con materiales avanzados de progresión: Zanahorias de Qi Espiritual, Lingotes de Hierro Blanco Refinado, Lingotes Abisales, Aleaciones de Almas, Manzanas de las Sombras, Lingotes de Mithril y Lingotes Primordiales.
+  * **¡¡Gran Jackpot del Sistema!! (Roll 99):** Casilla legendaria que otorga **25,000 Monedas del Sistema** directas más un **Lingote Celestial**, desatando una lluvia masiva de confeti dorado, sonido de jackpot arcade y un banner resplandeciente en pantalla.
+* **Tirada Diaria Gratuita por Constancia:**
+  * Cada nuevo día en el mundo de Minecraft, el jugador recibe **1 Tirada Gratuita** garantizada en la Ruleta.
+  * En la interfaz de la Tienda se destaca con un botón esmeralda resplandeciente (`✦ ¡GIRAR GRATIS (DIARIA)! ✦`).
+  * Sincronización persistente en NBT (`last_free_roulette_day`) evitando abusos en reconexiones.
+
+---
+
+## 🏛️ Renovación y Re-Roll Dinámico del Altar 3D de la Ruleta
+Modernización integral del bloque físico interactivo `RouletteAltarBlock` en el mundo:
+* **Re-Roll Garantizado al Romper y Colocar (Garantía de Botín Fresco):**
+  * Al romper o minar el Altar de la Ruleta, se extrae como bloque limpio sin NBT residual.
+  * Al volverse a colocar en el mundo (`setPlacedBy`), el bloque ejecuta automáticamente `populateSlotsFresh()`, re-sorteando por completo las 8 ranuras del disco físico tomando recompensas ponderadas desde la configuración de botines (`CustomLootConfigManager`).
+  * Despliegue de partículas rúnicas y varas del end (`ParticleTypes.ENCHANT` y `END_ROD`) al ser colocado para confirmar visualmente el refresco de premios.
+* **Requisito Estricto de Ficha de Ruleta del Sistema:**
+  * El Altar 3D físico exige obligatoriamente insertar 1x **Ficha de Ruleta del Sistema** (`RouletteTokenItem`) para activar el giro.
+  * Se eliminó el atajo de monedas directas: la ficha es un recurso prestigioso y de alto valor (10,000 monedas en la tienda del Sistema o botín élite), por lo que el altar físico protege su valor requiriendo la ficha física en mano.
+  * Si el jugador interactúa con la mano vacía o con cualquier otro ítem, el altar emite un sonido sordo de escudo e indica en pantalla que requiere obligatoriamente la Ficha de Ruleta.
+* **Resolución de Bloqueo / Crash por Serialización de Ítems (Codec Limit [1;99]):**
+  * Solucionado el error crítico `java.lang.IllegalStateException: Value must be within range [1;99]` provocado por `ContainerHelper.saveAllItems` en Minecraft 1.21.1 al serializar pilas de ítems monetarios con recuentos altos.
+  * En `CustomLootConfigManager#resolveStack`, el tamaño de la pila se limita estrictamente a `Math.min(64, defaultMaxStackSize)`.
+  * La entrega masiva de Mora en la ranura 7 se sustituyó por los ítems físicos correspondientes: **Fardos Dorados de Mora** (`mora_bundle`, 50,000 Mora) y **Bolsas de Mora del Aventurero** (`mora_pouch`, 10,000 Mora), que el jugador puede sostener e interactuar para añadir la moneda a su monedero.
+* **Holograma 3D Flotante y Exhibición Monumental del Premio:**
+  * Durante la secuencia de victoria (`winDisplayTicks`), el ítem premiado asciende en un arco parabólico girando a 720° con iluminación radiante máxima (`LightTexture.FULL_BRIGHT`).
+  * Se proyecta directamente sobre el ítem un **cartel holográfico tridimensional tipo nametag** orientado de cara al jugador (`cameraOrientation`), mostrando en letras doradas y blancas el nombre del objeto ganador (`★ [Nombre del Ítem] ★`) y el bono de monedas obtenido (`+XXX ⛃ Monedas`).
+  * La posición del holograma se compensa matemáticamente respecto a la orientación cardinal del bloque (`FACING`), garantizando nitidez perfecta desde cualquier ángulo.
+* **Diseño Acústico Arcade y Fanfarria en el Mundo:**
+  * Conexión de audio ambiental posicional OpenAL: zumbido de giro rúnico al arrancar (`ModSounds.ROULETTE_SPIN`), clics de trinquete desacelerados y campanas metálicas en cada sector.
+  * Fanfarria triunfal al detenerse la aguja (`ModSounds.ROULETTE_WIN`) y sonido de jackpot de casino (`ModSounds.CASINO_JACKPOT`) con fuegos artificiales y estallidos de tótem de la inmortalidad ante premios de alto calibre.
+* **Sobrecarga y Modernización Total del Botín del Altar 3D (Versión 2):**
+  * Auto-migración y actualización a la versión 2 de configuración (`roulette_rewards.json`) incorporando todo el contenido de progresión moderna del mod:
+    * **Ranura 0 (Gran Premio Mítico y Divino):** Lingotes Celestiales x2, Cortador de Jade Primordial, Reflejo de las Tinieblas, Báculo de Homa, Elucidator, Dark Repulser, Espada de Flor de Ciruelo, Espada del Demonio Celestial, Espada de Asrahan y Guadaña del Dragón Negro.
+    * **Ranura 1 (Reliquias Celestiales):** Lingotes Primordiales x2-x3, Núcleo del Dragón Celestial, Perla del Dragón Celestial, Píldora del Renacimiento Primordial, Reloj del Rey de la Muerte y Estrellas del Nether x2-x3.
+    * **Ranura 2 (Metales Supremos):** Lingotes de Mithril, Astralita, Adamantita, Abisales y Aleaciones de Almas (en lotes de x3 a x8 unidades).
+    * **Ranura 3 (Artefactos y Talismanes Divinos):** Fe Inquebrantable, Dagas de la Sombra, Espina Trascendente, Tótems de la Inmortalidad x2-x3 y Talismán de Ascensión Murim.
+    * **Ranura 4 (Consumibles Sagrados del Sistema):** Manzanas de las Sombras x2-x4, Zanahorias de Qi Espiritual x8-x16, Manzanas Doradas Encantadas x2-x4, Píldoras de Transformación Ósea y Purificación de Qi.
+    * **Ranura 5 (Metales Refinados y Riqueza):** Lingotes de Hierro Blanco Refinado x6-x12, Lingotes de Forja de Almas x4-x8, Bloques de Netherite x1-x2 y Bloques de Diamante x3-x6.
+    * **Ranura 6 (Fichas y Suministros de Expedición):** Fichas de Ruleta x3-x6, Hadas de Maná Embotelladas x2-x4, Manzanas Doradas x6-x12 y Perlas de Ender x16-x32.
+    * **Ranura 7 (Fortuna y Monedas del Sistema):** Monedas del Sistema x64-x128 y Mora Celestial (25,000 a 60,000).
+  * **Escalado Dinámico de Monedas Ganadas:** Se sustituyó la antigua recompensa plana (75-225 monedas) por una bonificación proporcional al tier del premio:
+    * *Premios de Suministros y Consumibles:* 500 a 1,800 monedas.
+    * *Metales y Minerales Supremos:* 1,500 a 3,000 monedas.
+    * *Reliquias Celestiales y Gran Premio Mítico:* 2,500 a 15,000 monedas.
+    * *Gran Jackpot (Roll 0 en Ranura Mítica):* **25,000 Monedas del Sistema** directas.
+
+---
+
+## 🚪 Dimensión de Bolsillo y Santuario Personal (Roadmap Sección 29)
+Implementación integral y nativa en NeoForge de la habilidad de invocación de la **Puerta a la Dimensión de Bolsillo** y el reino privado del cazador, operando de manera 100% autónoma y sin dependencias externas:
+* **Entidad Tridimensional de Puerta Física (`PocketDoorEntity` y `PocketDoorModel`):**
+  * Invocación de una puerta física tridimensional frente a la línea de visión del jugador al ejecutar la habilidad.
+  * Modelo 3D detallado con marco de madera oscura pulida, bisagras de hierro forjado y pomo/picaporte dorado reluciente.
+  * Al hacer clic derecho sobre la puerta, esta se abre o cierra interactivamente con efectos de sonido de puerta real.
+* **Animación Cinemática de Cierre Suave (18 Ticks):**
+  * Sistema de rotación angular fluida con interpolación de ticks parciales (`doorAngle`), cerrándose suavemente desde 90° hasta 0° a lo largo de 18 ticks de juego.
+  * Al culminar el recorrido de cierre, reproduce el sonido acústico de encaje y la puerta se desvanece de forma limpia.
+* **Teletransporte Instantáneo y Directo por Umbral:**
+  * Al atravesar el vano de la puerta abierta, el cazador es transportado de inmediato entre el Overworld y su dimensión de Santuario sin pantallas de carga forzadas ni esperas.
+  * Posicionamiento seguro garantizado: el punto de aparición ubica al jugador sobre el terreno firme frente a la puerta, evitando asfixia o caídas al vacío.
+* **Ciclo Completo de Ocultamiento y Privacidad Interdimensional (Roadmap 29.1):**
+  * **Invocación:** El cazador invoca la puerta en el mundo exterior y la abre con clic derecho para cruzar a su santuario.
+  * **Cierre Interior (Ocultamiento Total):** Al entrar al Santuario y cerrar la puerta desde adentro, la puerta del Overworld se oculta y desvanece por completo. Ningún mob hostil ni jugador ajeno puede ver la entrada ni seguir al cazador.
+  * **Reapertura de Retorno:** Al interactuar nuevamente con la puerta desde el interior para salir, la puerta exterior reaparece de forma idéntica en las coordenadas exactas de origen en el Overworld.
+  * **Retorno y Desvanecimiento:** Al cruzar de vuelta al Overworld y cerrar la puerta desde afuera, esta completa su animación de giro suave de 18 ticks y se despawnea por completo.
+* **Generación Procedural Natural del Santuario (Roadmap 29.2):**
+  * **Biomas Exclusivos de Paisaje Sereno:** Generación de un mundo pacífico de colinas suaves compuesto por praderas floridas (`sanctuary_peaceful_meadow`) y bosques susurrantes de robles y cerezos en flor (`sanctuary_whispering_forest`).
+  * **Erradicación de Estructuras Vanilla y Cajas Artificiales:** Eliminación total de aldeas vanilla, campamentos, fortalezas y estructuras no deseadas.
+  * **Spawn Directo en la Naturaleza:** Se eliminaron las plataformas artificiales de adoquín o spawn en el punto de aparición; la puerta se asienta orgánicamente sobre la hierba natural.
+  * **Clima y Atmósfera Zen:** Cielo diurno perpetuo con luz solar dorada, ausencia total de mobs hostiles y entorno zen optimizado para la meditación, cultivo y construcción de la base del cazador.
+  * **Domo Celeste Protector:** Frontera perimetral con barrera etérea que previene caídas al vacío y mantiene al cazador dentro de los límites territoriales de su santuario.
+* **Árbol de Habilidades y Progresión Territorial (Roadmap 29.3):**
+  * **Integración en Árbol de Habilidades (`SkillDetailScreen`):** Desbloqueo y gestión con icono pixel art personalizado de la puerta dimensional (`pocket_dimension_doorway.png`).
+  * **Niveles de Expansión Territorial:**
+    * *Nivel 1 (Puerta Inicial):* Radio territorial de 48 bloques alrededor de la puerta; acceso a los biomas pacíficos base.
+    * *Nivel 2 (Expansión Territorial):* Ampliación a un radio de 96 bloques de construcción libre y expansión del horizonte natural.
+    * *Nivel 3 (Dominio Soberano):* Radio extendido a 160 bloques, regeneración ambiental pasiva y control absoluto del espacio.
+* **Diferenciación Estricta con el Subespacio (Roadmap 29.4):**
+  * El **Subespacio** permanece dedicado exclusivamente como bóveda de almacenamiento y bodega dimensional de cofres/ítems.
+  * El **Santuario Personal** es un plano habitable, físico y editable donde el jugador puede construir su hogar, entrenar y resguardarse con total privacidad.
+* **Purga y Erradicación Total de Immersive Portals (100% Nativo en NeoForge):**
+  * Eliminación completa de mixins, accesstransformers, compatibilidades externas y jars de Immersive Portals (`imm_ptl`, `qouteall`).
+  * Operación 100% nativa y optimizada para NeoForge 1.21.1, garantizando compatibilidad absoluta con Iris, Sodium, Lodestone, Epic Fight, Better Combat y paquetes de shaders sin crasheos de VertexConsumer ni incompatibilidades de red.
+
+---
+
+## 🎃 Festividades Estacionales y Colección de Dulces Mágicos (Halloween y Navidad)
+Sistema dinámico de eventos de temporada integrando consumibles gastronómicos temáticos, efectos mágicos únicos y texturas exclusivas de alta resolución (32x32):
+* **Gestor de Eventos Estacionales (`SeasonalEventManager`):**
+  * Activación automática según el calendario del sistema: **Halloween** (15 de Octubre al 5 de Noviembre) y **Navidad** (1 de Diciembre al 7 de Enero).
+  * Los dulces y golosinas conservan sus valores nutricionales en cualquier época del año, pero sus efectos mágicos especiales solo despiertan durante su festividad correspondiente (mostrando un aviso elegante en el tooltip fuera de temporada).
+* **🍬 Colección de Noche de Brujas (Halloween Sweets):**
+  * 🍬 **Caramelo Embrujado (`haunted_candy`):** Dulce envuelto en papel festivo violeta y naranja. Desata el efecto de *Truco o Trato*: 50% de probabilidad de *Truco* (Levitación por 5s + Suerte II por 60s) o 50% de probabilidad de *Trato* (Invisibilidad por 20s + Hipervelocidad IV por 20s con partículas espectrales).
+  * 👻 **Caramelo de Alma (`soul_candy`):** Golosina etérea brillante. Otorga Resplandor (*Glowing* por 30s), Velocidad III (20s) y Visión Nocturna clara (30s) para cacerías en mazmorras oscuras.
+  * 🫐 **Gomitas de Maná (`mana_gummy`):** Gomitas azules masticables infusionadas con néctar de maná. Otorgan Regeneración II y restauran instantáneamente **+50 puntos de Maná** a la reserva del cazador.
+  * 🍫 **Chocolatín Berserker (`berserker_chocolate`):** Tableta de chocolate oscuro amargo con runa carmesí. Otorga Fuerza II (*Damage Boost* por 30s) y Resistencia I (20s) para asaltos directos en combate.
+  * 🧺 **Canasta de Dulces de Halloween (`candy_basket`):** Contenedor de mimbre con lazo de calabaza y rareza Rara. Al abrirse durante Halloween, reproduce sonidos espeluznantes de bruja/ghast, desata partículas de llamas de alma, humo y portal, entrega de 2 a 4 golosinas de Halloween aleatorias y otorga entre **+40 y +160 Monedas del Sistema** (Cosecha de Almas).
+* **🎄 Colección de Festividades Invernales (Christmas Sweets):**
+  * 🦯 **Bastón de Caramelo Mágico (`candy_cane`):** Bastón clásico de caramelo a rayas rojas y blancas con esencia de menta. Otorga Velocidad II y Prisa Minera II (*Haste* por 30s) para desplazamientos ágiles.
+  * 🍪 **Galleta de Jengibre Real (`gingerbread_cookie`):** Hombrecillo de jengibre horneado y glaseado. Ración de alta nutrición que otorga Regeneración II (15s) y Saturación instantánea prolongada.
+  * ☕ **Chocolate Caliente Gourmet (`hot_chocolate`):** Taza humeante de chocolate espeso con malvaviscos. Disipa inmediatamente el fuego o congelación, confiere Absorción II (4 corazones extra por 45s) y Resistencia al Fuego total por 45s.
+  * 🍬 **Turrón Imperial de Almendra (`almond_nougat`):** Barra de turrón duro tradicional de almendras seleccionadas. Proporciona una firmeza colosal otorgando Resistencia II (30s) y Fuerza I (30s).
+  * ❄️ **Caramelo de Menta Polar (`polar_peppermint`):** Caramelo blanco glacial con copos de nieve. Otorga Velocidad I por 30s y proyecta un aura de copos de nieve flotantes alrededor del cazador.
+  * 🎁 **Caja de Regalo Navideña (`christmas_gift_box`):** Paquete festivo envuelto con cintas rojas y doradas. Al interactuar durante la Navidad, desata tintineos de amatista y fuegos artificiales, recompensando al jugador con dulces navideños, monedas del Sistema y sorpresas festivas.
+* **Diseño Artístico y Balance Nutricional:**
+  * 9 texturas pixel art dedicadas en 32x32 píxeles con paletas armonizadas y legibilidad perfecta tanto en el inventario como en la mano del jugador.
+  * Propiedades de comida configuradas con `alwaysEdible()`, permitiendo a los cazadores consumir los dulces en cualquier momento del combate para recibir sus beneficios mágicos incluso con la barra de hambre al máximo.
+
+
+
+---
+
+# ⚡ Awakening System — Version 0.3.4
+### *Tiered Apples, Penalty Zone, UI Overhaul & Community Credits*
+
+* **Minecraft Version:** 1.21.1
+* **Mod Loader:** NeoForge 21.1.249+
+* **Java:** Java 21 LTS
+
+---
+
+## 🍎 Manzanas Escalonadas de Progresión
+* **Tiered Apples:** Integración de manzanas de poder místico (Soul Alloy Apple, Spirit Jade Apple) con buffs ascendentes y balanceados.
+
+---
+
+## 🏜️ Zona de Penalización (Penalty Zone)
+* **Biomas Desérticos Hostiles:** `penalty_desert`, `penalty_dunes` y `penalty_canyon`.
+* **Jefe de Penalización — Giant Sandworm:** Bestia colosal segmentada de arena con modelo y animaciones dinámicas (`GiantSandwormHeadModel`, `GiantSandwormBodyModel`).
+
+---
+
+## 🖥️ Modernización de Interfaz (UI Overhaul)
+* **ModernGuiHelper:** Estética pulida y unificada a través de los menús del Sistema.
+* **SystemWelcomeScreen:** Pantalla de bienvenida inmersiva para nuevos cazadores.
+* **Compatibilidad:** Manejadores de compatibilidad para Apotheosis y encantamientos Manhwa.
+
+---
+
 # ⚡ Awakening System — Version 0.3.3
 ### *The Monarchs, Limbo & Economy Overhaul*
 

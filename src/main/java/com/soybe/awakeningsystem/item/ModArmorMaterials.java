@@ -18,6 +18,25 @@ public final class ModArmorMaterials {
     public static final DeferredRegister<ArmorMaterial> ARMOR_MATERIALS =
             DeferredRegister.create(Registries.ARMOR_MATERIAL, AwakeningSystemMod.MOD_ID);
 
+    public static final DeferredHolder<ArmorMaterial, ArmorMaterial> SIDERITE = ARMOR_MATERIALS.register(
+            "siderite",
+            () -> new ArmorMaterial(
+                    Util.make(new EnumMap<>(ArmorItem.Type.class), map -> {
+                        map.put(ArmorItem.Type.BOOTS, 3);
+                        map.put(ArmorItem.Type.LEGGINGS, 6);
+                        map.put(ArmorItem.Type.CHESTPLATE, 8);
+                        map.put(ArmorItem.Type.HELMET, 3);
+                        map.put(ArmorItem.Type.BODY, 8);
+                    }),
+                    18,
+                    SoundEvents.ARMOR_EQUIP_NETHERITE,
+                    () -> Ingredient.of(com.soybe.awakeningsystem.SystemItems.SIDERITE_INGOT.get()),
+                    List.of(new ArmorMaterial.Layer(ResourceLocation.fromNamespaceAndPath(AwakeningSystemMod.MOD_ID, "siderite"))),
+                    2.5F,
+                    0.05F
+            )
+    );
+
     public static final DeferredHolder<ArmorMaterial, ArmorMaterial> ABYSSAL = ARMOR_MATERIALS.register(
             "abyssal",
             () -> new ArmorMaterial(
@@ -41,18 +60,18 @@ public final class ModArmorMaterials {
             "soul_alloy",
             () -> new ArmorMaterial(
                     Util.make(new EnumMap<>(ArmorItem.Type.class), map -> {
-                        map.put(ArmorItem.Type.BOOTS, 4);
-                        map.put(ArmorItem.Type.LEGGINGS, 7);
-                        map.put(ArmorItem.Type.CHESTPLATE, 9);
-                        map.put(ArmorItem.Type.HELMET, 4);
-                        map.put(ArmorItem.Type.BODY, 9);
+                        map.put(ArmorItem.Type.BOOTS, 5);
+                        map.put(ArmorItem.Type.LEGGINGS, 8);
+                        map.put(ArmorItem.Type.CHESTPLATE, 11);
+                        map.put(ArmorItem.Type.HELMET, 5);
+                        map.put(ArmorItem.Type.BODY, 11);
                     }),
-                    20,
+                    22,
                     SoundEvents.ARMOR_EQUIP_NETHERITE,
                     () -> Ingredient.of(com.soybe.awakeningsystem.SystemItems.SOUL_ALLOY_INGOT.get()),
                     List.of(new ArmorMaterial.Layer(ResourceLocation.fromNamespaceAndPath(AwakeningSystemMod.MOD_ID, "soul_alloy"))),
-                    3.5F,
-                    0.15F
+                    4.5F,
+                    0.25F
             )
     );
 

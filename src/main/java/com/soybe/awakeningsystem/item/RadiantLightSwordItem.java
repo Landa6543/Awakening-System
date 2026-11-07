@@ -57,28 +57,26 @@ public class RadiantLightSwordItem extends SwordItem implements AwakeningWeaponI
             sp.hurtMarked = true;
 
             if (level instanceof ServerLevel sl) {
-                net.neoforged.neoforge.network.PacketDistributor.sendToPlayersNear(
-                        sl, null, sp.getX(), sp.getY(), sp.getZ(), 64.0D,
-                        new com.soybe.awakeningsystem.SpawnMagicCirclePayload(
-                                sp.getId(), sp.getX(), sp.getY(), sp.getZ(),
-                                (float) look.x, (float) look.y, (float) look.z,
-                                3.6F, 35, 0xFFD700, 0, false
-                        )
-                );
+                sp.swing(hand, true);
+                sl.sendParticles(com.soybe.awakeningsystem.particle.ModParticles.STRIKE_CELESTIAL.get(), sp.getX() + look.x * 1.5D, sp.getY() + 1.2D + look.y * 1.5D, sp.getZ() + look.z * 1.5D, 1, 0, 0, 0, 0);
+                sl.sendParticles(ParticleTypes.END_ROD, sp.getX() + look.x * 1.5D, sp.getY() + 1.0D, sp.getZ() + look.z * 1.5D, 35, 0.8D, 0.8D, 0.8D, 0.1D);
+                sl.sendParticles(ParticleTypes.GLOW, sp.getX(), sp.getY() + 1.0D, sp.getZ(), 20, 0.5D, 0.5D, 0.5D, 0.05D);
 
+                sl.playSound(null, sp.getX(), sp.getY(), sp.getZ(), com.soybe.awakeningsystem.ModSounds.CULTIVATOR_SLASH.get(), SoundSource.PLAYERS, 1.8F, 1.5F);
                 sl.playSound(null, sp.getX(), sp.getY(), sp.getZ(), SoundEvents.AMETHYST_BLOCK_CHIME, SoundSource.PLAYERS, 1.8F, 1.5F);
                 sl.playSound(null, sp.getX(), sp.getY(), sp.getZ(), SoundEvents.TRIDENT_RIPTIDE_3.value(), SoundSource.PLAYERS, 1.3F, 1.4F);
-                sl.playSound(null, sp.getX(), sp.getY(), sp.getZ(), SoundEvents.PLAYER_ATTACK_SWEEP, SoundSource.PLAYERS, 1.4F, 1.5F);
 
                 com.soybe.awakeningsystem.CameraShakePayload.sendToNearby(sl, sp.getX(), sp.getY(), sp.getZ(), 28.0D, 0.55F, 8);
 
                 float dmg = (float) (25.0D * WeaponLevelManager.getDamageMultiplier(stack));
 
                 SlashWaveEntity solarWave = new SlashWaveEntity(sl, sp, SlashWaveEntity.TYPE_SOLAR_LIGHT, dmg, 4.2F, 1.4F, 0.0F, 24, 8);
+                solarWave.setSlashStyle(SlashWaveEntity.STYLE_CELESTIAL);
                 solarWave.setDeltaMovement(look.scale(2.2D));
                 sl.addFreshEntity(solarWave);
 
                 SlashWaveEntity solarBeam = new SlashWaveEntity(sl, sp, SlashWaveEntity.TYPE_SOLAR_LIGHT, dmg * 1.2F, 1.4F, 3.6F, 0.0F, 20, 10);
+                solarBeam.setSlashStyle(SlashWaveEntity.STYLE_THRUST);
                 solarBeam.setDeltaMovement(look.scale(2.7D));
                 solarBeam.setArmorPenetration(0.40F);
                 sl.addFreshEntity(solarBeam);
@@ -116,6 +114,10 @@ public class RadiantLightSwordItem extends SwordItem implements AwakeningWeaponI
     @Override
     public boolean hurtEnemy(ItemStack stack, LivingEntity target, LivingEntity attacker) {
         if (attacker.level() instanceof ServerLevel sl) {
+            sl.sendParticles(com.soybe.awakeningsystem.particle.ModParticles.STRIKE_CELESTIAL.get(), target.getX(), target.getY() + 1.0D, target.getZ(), 1, 0, 0, 0, 0);
+            sl.playSound(null, target.getX(), target.getY(), target.getZ(), com.soybe.awakeningsystem.ModSounds.CULTIVATOR_SLASH.get(), SoundSource.PLAYERS, 1.3F, 1.5F);
+            com.soybe.awakeningsystem.CameraShakePayload.sendToNearby(sl, target.getX(), target.getY(), target.getZ(), 16.0D, 0.25F, 4);
+
             sl.sendParticles(ParticleTypes.END_ROD, target.getX(), target.getY() + 1.0D, target.getZ(), 20, 0.3D, 0.4D, 0.3D, 0.05D);
             sl.sendParticles(ParticleTypes.GLOW, target.getX(), target.getY() + 1.0D, target.getZ(), 10, 0.2D, 0.2D, 0.2D, 0.01D);
             target.addEffect(new MobEffectInstance(MobEffects.GLOWING, 120, 0));

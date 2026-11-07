@@ -1,5 +1,6 @@
 package com.soybe.awakeningsystem;
 
+import net.minecraft.core.BlockPos;
 import net.minecraft.core.HolderLookup;
 import net.minecraft.core.NonNullList;
 import net.minecraft.nbt.CompoundTag;
@@ -88,6 +89,14 @@ public final class SystemData implements INBTSerializable<CompoundTag> {
 
     private int level = 1;
     private int experience;
+    private int reserveExperience = 0;
+    private boolean evaluationPending = false;
+    private String evaluatedRank = "F";
+    private boolean ascensionQuestActive = false;
+    private String ascensionTargetRank = "";
+    private int ascensionProgress = 0;
+    private int ascensionTarget = 0;
+    private boolean ascensionCompleted = false;
     private int attributePoints;
     private int coins;
     private int strength = ATTR_BASE;
@@ -142,6 +151,8 @@ public final class SystemData implements INBTSerializable<CompoundTag> {
     private int distanceMoved;
     private int deaths;
     private long lastDailyLoginDay = -1;
+    private long lastFreeRouletteDay = -1;
+    private long lastFreeAltarDay = -1;
     private boolean emergencyComplete;
     private boolean emergencyWounded;
     private boolean evolutionMissionComplete;
@@ -194,6 +205,10 @@ public final class SystemData implements INBTSerializable<CompoundTag> {
     private boolean conqueredYggdrasilLabyrinth = false;
     private boolean systemUpdated = false;
     private boolean isekaiUnlocked = false;
+    private boolean enderDragonDefeated = false;
+    private boolean ghostMode = false;
+    private String tombstoneDimension = "";
+    private BlockPos tombstonePos = BlockPos.ZERO;
     private boolean systemUpdating = false;
     private int systemUpdateRemainingTicks = 0;
     private String murimPhysique = "";
@@ -215,6 +230,19 @@ public final class SystemData implements INBTSerializable<CompoundTag> {
     private int dendroOculiProgress = 0;
     private int statueEnergyBonus = 0;
     private final Set<String> visitedDimensions = new HashSet<>();
+
+    // Section 10: Habit & Procedural Progression Trackers
+    private int habitDamageTaken = 0;
+    private double habitSprintDistance = 0.0;
+    private final Set<String> habitBiomesExplored = new HashSet<>();
+    private int habitDeepBlocksMined = 0;
+    private int habitWeaponHits = 0;
+    private int habitFocusTicks = 0;
+    private int habitEnduringFleshLvl = 0;
+    private int habitWindrunnerLvl = 0;
+    private int habitOreSenseLvl = 0;
+    private int habitCombatInstinctLvl = 0;
+    private int habitDeadeyeLvl = 0;
 
     private int tribulationTicks = 0;
     private int tribulationStrikesRemaining = 0;
@@ -316,6 +344,57 @@ public final class SystemData implements INBTSerializable<CompoundTag> {
         this.subspaceReturnZ = z;
         this.subspaceReturnYaw = yaw;
         this.subspaceReturnPitch = pitch;
+    }
+
+    private int sanctuaryLevel = 1;
+    private int sanctuaryBuiltLevel = 0;
+    private String sanctuaryReturnDim = "minecraft:overworld";
+    private double sanctuaryReturnX = 0.0;
+    private double sanctuaryReturnY = 64.0;
+    private double sanctuaryReturnZ = 0.0;
+    private float sanctuaryReturnYaw = 0.0F;
+    private float sanctuaryReturnPitch = 0.0F;
+
+    public int sanctuaryLevel() { return Math.max(1, Math.min(5, sanctuaryLevel)); }
+    public void setSanctuaryLevel(int lvl) { this.sanctuaryLevel = Math.max(1, Math.min(5, lvl)); }
+    public int sanctuaryBuiltLevel() { return sanctuaryBuiltLevel; }
+    public void setSanctuaryBuiltLevel(int lvl) { this.sanctuaryBuiltLevel = lvl; }
+    public String sanctuaryReturnDim() { return sanctuaryReturnDim; }
+    public double sanctuaryReturnX() { return sanctuaryReturnX; }
+    public double sanctuaryReturnY() { return sanctuaryReturnY; }
+    public double sanctuaryReturnZ() { return sanctuaryReturnZ; }
+    public float sanctuaryReturnYaw() { return sanctuaryReturnYaw; }
+    public float sanctuaryReturnPitch() { return sanctuaryReturnPitch; }
+
+    public void setSanctuaryReturnLocation(String dim, double x, double y, double z, float yaw, float pitch) {
+        this.sanctuaryReturnDim = (dim != null && !dim.isEmpty()) ? dim : "minecraft:overworld";
+        this.sanctuaryReturnX = x;
+        this.sanctuaryReturnY = y;
+        this.sanctuaryReturnZ = z;
+        this.sanctuaryReturnYaw = yaw;
+        this.sanctuaryReturnPitch = pitch;
+    }
+
+    private boolean sanctuaryExteriorDoorActive = false;
+    public boolean isSanctuaryExteriorDoorActive() { return sanctuaryExteriorDoorActive; }
+    public void setSanctuaryExteriorDoorActive(boolean active) { this.sanctuaryExteriorDoorActive = active; }
+
+    private int sanctuaryPlotX = Integer.MIN_VALUE;
+    private int sanctuaryPlotY = 80;
+    private int sanctuaryPlotZ = Integer.MIN_VALUE;
+
+    public boolean hasSanctuaryPlot() {
+        return sanctuaryPlotX != Integer.MIN_VALUE && sanctuaryPlotZ != Integer.MIN_VALUE;
+    }
+
+    public int sanctuaryPlotX() { return sanctuaryPlotX; }
+    public int sanctuaryPlotY() { return sanctuaryPlotY; }
+    public int sanctuaryPlotZ() { return sanctuaryPlotZ; }
+
+    public void setSanctuaryPlotPos(int x, int y, int z) {
+        this.sanctuaryPlotX = x;
+        this.sanctuaryPlotY = y;
+        this.sanctuaryPlotZ = z;
     }
 
     private int stardust = 0;
@@ -529,6 +608,10 @@ public final class SystemData implements INBTSerializable<CompoundTag> {
     public boolean spendMana(int amount) { return spendEnergy(amount); }
     public boolean restoreMana(int amount) { return restoreEnergy(amount); }
     public void setMana(int amount) { this.energy = Math.max(0, Math.min(maxMana(), amount)); }
+    public void addMana(int amount) { restoreMana(amount); }
+    public void addQi(int amount) { addCultivationQi(amount); }
+    public void addFreePoints(int amount) { addAttributePoints(amount); }
+    public void addAttributePoints(int amount) { this.attributePoints = Math.max(0, this.attributePoints + amount); }
 
     public boolean conqueredRankerTower() { return conqueredRankerTower; }
     public void setConqueredRankerTower(boolean conquered) { this.conqueredRankerTower = conquered; }
@@ -559,8 +642,18 @@ public final class SystemData implements INBTSerializable<CompoundTag> {
     public void decrementSystem40UpdateTicks() { if (system40UpdateRemainingTicks > 0) system40UpdateRemainingTicks--; }
     public boolean isAnySystemUpdating() { return systemUpdating || system30Updating || system40Updating; }
 
+    public boolean isGhostMode() { return ghostMode; }
+    public void setGhostMode(boolean ghostMode) { this.ghostMode = ghostMode; }
+    public String getTombstoneDimension() { return tombstoneDimension; }
+    public void setTombstoneDimension(String dim) { this.tombstoneDimension = dim != null ? dim : ""; }
+    public BlockPos getTombstonePos() { return tombstonePos; }
+    public void setTombstonePos(BlockPos pos) { this.tombstonePos = pos != null ? pos : BlockPos.ZERO; }
+
     public boolean isSkillEnabled(String skillId) {
         if (!skills.containsKey(skillId) || disabledSkills.contains(skillId)) return false;
+        if (SkillDefinitions.isHabitSkill(skillId)) {
+            return true;
+        }
         if (SkillDefinitions.isPassive(skillId)) {
             return isPassiveEquipped(skillId);
         }
@@ -820,9 +913,22 @@ public final class SystemData implements INBTSerializable<CompoundTag> {
 
     public boolean addExperience(int amount) {
         if (amount <= 0) return false;
+        int maxLvl = maxAllowedLevelForEvaluatedRank();
+        if (level >= maxLvl) {
+            reserveExperience += amount;
+            evaluationPending = true;
+            return false;
+        }
+
         experience += amount;
         boolean leveled = false;
         while (experience >= experienceToNextLevel()) {
+            if (level >= maxLvl) {
+                reserveExperience += (experience - experienceToNextLevel());
+                experience = experienceToNextLevel();
+                evaluationPending = true;
+                break;
+            }
             if (level >= 2000) {
                 level = 2000;
                 experience = 0;
@@ -832,6 +938,11 @@ public final class SystemData implements INBTSerializable<CompoundTag> {
             level++;
             attributePoints += ATTR_POINTS_PER_LEVEL;
             leveled = true;
+
+            if (level >= maxLvl) {
+                evaluationPending = true;
+                break;
+            }
         }
         return leveled;
     }
@@ -879,12 +990,13 @@ public final class SystemData implements INBTSerializable<CompoundTag> {
     }
 
     public boolean activateSkill(String skill, long gameTime) {
-        int cost = "architect_of_the_system".equals(sponsorConstellation) ? 20 : ACTIVE_SKILL_COST;
+        boolean isUtility = "pocket_dimension_doorway".equals(skill);
+        int cost = isUtility ? 0 : ("architect_of_the_system".equals(sponsorConstellation) ? 20 : ACTIVE_SKILL_COST);
         if (!skills.containsKey(skill) || !SkillDefinitions.isAvailable(skill)
                 || activeCooldownSeconds(skill, gameTime) > 0 || energy < cost) return false;
-        energy -= cost;
-        boolean isShadowSkill = "shadow_monarch".equals(skill) || "unique_absolute_extraction".equals(skill);
-        if (!isShadowSkill) {
+        if (cost > 0) energy -= cost;
+        boolean isNoCooldown = isUtility || "shadow_monarch".equals(skill) || "unique_absolute_extraction".equals(skill);
+        if (!isNoCooldown) {
             activeCooldowns.put(skill, gameTime + ACTIVE_SKILL_COOLDOWN_TICKS);
         } else {
             activeCooldowns.remove(skill);
@@ -946,6 +1058,12 @@ public final class SystemData implements INBTSerializable<CompoundTag> {
     public int deaths() { return deaths; }
     public long lastDailyLoginDay() { return lastDailyLoginDay; }
     public void setLastDailyLoginDay(long day) { this.lastDailyLoginDay = day; }
+    public long lastFreeRouletteDay() { return lastFreeRouletteDay; }
+    public boolean hasDailyFreeRoulette(long day) { return lastFreeRouletteDay != day; }
+    public void claimDailyFreeRoulette(long day) { this.lastFreeRouletteDay = day; }
+    public long lastFreeAltarDay() { return lastFreeAltarDay; }
+    public boolean hasDailyFreeAltar(long day) { return lastFreeAltarDay != day; }
+    public void claimDailyFreeAltar(long day) { this.lastFreeAltarDay = day; }
     public int energy() { return energy; }
     public int blocksMined() { return blocksMined; }
     public int oresMined() { return oresMined; }
@@ -1380,11 +1498,111 @@ public final class SystemData implements INBTSerializable<CompoundTag> {
     }
 
     public String rankTranslationKey() {
-        return rankTranslationKey(level);
+        String raw = evaluatedRank().toLowerCase(java.util.Locale.ROOT).replace("+", "_plus");
+        return "awakening_system.rank." + raw;
     }
 
     public net.minecraft.network.chat.Component rankComponent() {
-        return rankComponent(level);
+        return net.minecraft.network.chat.Component.translatable(rankTranslationKey());
+    }
+
+    public static final String[] RANK_ORDER = {
+        "F", "E", "D", "C", "B", "A", "S", "EX", "SS", "SSS", "NATIONAL",
+        "UR", "UR+", "LR", "SLR", "MR", "GR", "TRANSCENDENT", "TRANSCENDENTAL", "MONARCH", "RULER",
+        "SUPREME_BEING", "DEMIGOD", "GOD", "DEITY", "ANCESTRAL", "COSMIC", "MULTIVERSAL", "OMNIVERSAL",
+        "PRIMORDIAL", "INFINITE", "OMNIPOTENT", "ABSOLUTE_BEING", "ABSOLUTE", "SUPREME_CREATOR", "ABSOLUTE_CREATOR",
+        "CHAOS_SOVEREIGN", "TIMELESS_MONARCH", "ASTRAL_DEITY", "SINGULARITY", "LIMITLESS", "ABSOLUTE_GOD"
+    };
+
+    public int maxAllowedLevelForEvaluatedRank() {
+        String cur = evaluatedRank();
+        for (int i = 0; i < RANK_ORDER.length; i++) {
+            if (RANK_ORDER[i].equalsIgnoreCase(cur)) {
+                if (i < RANK_MILESTONES.length) {
+                    return RANK_MILESTONES[i];
+                }
+                return 2000;
+            }
+        }
+        return 10;
+    }
+
+    public static String getNextRank(String current) {
+        if (current == null || current.isEmpty()) return "E";
+        for (int i = 0; i < RANK_ORDER.length - 1; i++) {
+            if (RANK_ORDER[i].equalsIgnoreCase(current)) {
+                return RANK_ORDER[i + 1];
+            }
+        }
+        return current;
+    }
+
+    public int reserveExperience() { return reserveExperience; }
+    public void setReserveExperience(int exp) { this.reserveExperience = Math.max(0, exp); }
+    public boolean isEvaluationPending() { return evaluationPending; }
+    public void setEvaluationPending(boolean pending) { this.evaluationPending = pending; }
+    public String evaluatedRank() { return evaluatedRank != null && !evaluatedRank.isEmpty() ? evaluatedRank : rankForLevel(level); }
+    public void setEvaluatedRank(String rank) { this.evaluatedRank = rank != null ? rank : "F"; }
+
+    public boolean isAscensionQuestActive() { return ascensionQuestActive; }
+    public String ascensionTargetRank() { return ascensionTargetRank; }
+    public int ascensionProgress() { return ascensionProgress; }
+    public int ascensionTarget() { return ascensionTarget; }
+    public boolean isAscensionCompleted() { return ascensionCompleted; }
+
+    public void cancelAscensionQuest() {
+        this.ascensionQuestActive = false;
+        this.ascensionTargetRank = "";
+        this.ascensionProgress = 0;
+        this.ascensionTarget = 0;
+        this.ascensionCompleted = false;
+    }
+
+    public void startAscensionQuest(String targetRank, int targetKills) {
+        this.ascensionQuestActive = true;
+        this.ascensionTargetRank = targetRank != null ? targetRank : "";
+        this.ascensionProgress = 0;
+        this.ascensionTarget = Math.max(1, targetKills);
+        this.ascensionCompleted = false;
+    }
+
+    public boolean recordAscensionKill(net.minecraft.world.entity.LivingEntity victim, net.minecraft.server.level.ServerPlayer player) {
+        if (!ascensionQuestActive || ascensionCompleted) return false;
+        if (!(victim instanceof net.minecraft.world.entity.monster.Enemy) && !com.soybe.awakeningsystem.config.BossCompatibilityManager.isBoss(victim)) {
+            return false;
+        }
+        this.ascensionProgress++;
+        if (this.ascensionProgress >= this.ascensionTarget) {
+            this.ascensionCompleted = true;
+            if (player != null) {
+                player.playNotifySound(net.minecraft.sounds.SoundEvents.UI_TOAST_CHALLENGE_COMPLETE, net.minecraft.sounds.SoundSource.PLAYERS, 1.2F, 1.1F);
+                player.sendSystemMessage(net.minecraft.network.chat.Component.literal("§6§l★ [ASOCIACIÓN DE CAZADORES] §a¡Prueba de combate completada! (" + ascensionProgress + "/" + ascensionTarget + ") Regresa con el Inspector en la sede para tu Medición Oficial de Maná."));
+            }
+            return true;
+        }
+        return false;
+    }
+
+    public boolean passEvaluation() {
+        String next = getNextRank(evaluatedRank());
+        if (next == null || next.equalsIgnoreCase(evaluatedRank())) {
+            return false;
+        }
+        this.evaluatedRank = next;
+        this.evaluationPending = false;
+        this.ascensionQuestActive = false;
+        this.ascensionTargetRank = "";
+        this.ascensionProgress = 0;
+        this.ascensionTarget = 0;
+        this.ascensionCompleted = false;
+        this.attributePoints += 5; // Recompensa de 5 puntos de atributo por ascender de rango
+
+        int banked = this.reserveExperience;
+        this.reserveExperience = 0;
+        if (banked > 0) {
+            addExperience(banked);
+        }
+        return true;
     }
 
     private String dominantAffinity() {
@@ -1530,7 +1748,7 @@ public final class SystemData implements INBTSerializable<CompoundTag> {
     public boolean hasEvolvedSkill() { return skills.values().stream().anyMatch(level -> level >= 6); }
 
     public String rank() {
-        return rankForLevel(level);
+        return evaluatedRank();
     }
 
     public int nextRankLevel() {
@@ -1992,7 +2210,7 @@ public final class SystemData implements INBTSerializable<CompoundTag> {
     }
 
     public int selectedDaoSkill() { return selectedDaoSkill; }
-    public void setSelectedDaoSkill(int skill) { this.selectedDaoSkill = Math.max(0, Math.min(4, skill)); }
+    public void setSelectedDaoSkill(int skill) { this.selectedDaoSkill = Math.max(0, Math.min(7, skill)); }
     public int tribulationShieldTicks() { return tribulationShieldTicks; }
     public void setTribulationShieldTicks(int ticks) { this.tribulationShieldTicks = Math.max(0, ticks); }
     public void tickTribulationShield() { if (tribulationShieldTicks > 0) tribulationShieldTicks--; }
@@ -2003,6 +2221,8 @@ public final class SystemData implements INBTSerializable<CompoundTag> {
     public void setSystemUpdated(boolean updated) { this.systemUpdated = updated; }
     public boolean isekaiUnlocked() { return isekaiUnlocked; }
     public void setIsekaiUnlocked(boolean unlocked) { this.isekaiUnlocked = unlocked; }
+    public boolean isEnderDragonDefeated() { return enderDragonDefeated; }
+    public void setEnderDragonDefeated(boolean defeated) { this.enderDragonDefeated = defeated; }
 
     public String murimPhysique() { return murimPhysique == null ? "" : murimPhysique; }
     public void setMurimPhysique(String physique) { this.murimPhysique = physique == null ? "" : physique; }
@@ -2408,6 +2628,14 @@ public final class SystemData implements INBTSerializable<CompoundTag> {
         CompoundTag tag = new CompoundTag();
         tag.putInt("level", level);
         tag.putInt("experience", experience);
+        tag.putInt("reserve_experience", reserveExperience);
+        tag.putBoolean("evaluation_pending", evaluationPending);
+        tag.putString("evaluated_rank", evaluatedRank());
+        tag.putBoolean("ascension_quest_active", ascensionQuestActive);
+        tag.putString("ascension_target_rank", ascensionTargetRank);
+        tag.putInt("ascension_progress", ascensionProgress);
+        tag.putInt("ascension_target", ascensionTarget);
+        tag.putBoolean("ascension_completed", ascensionCompleted);
         tag.putInt("attribute_points", attributePoints);
         tag.putInt("coins", coins);
         tag.putInt("strength", strength);
@@ -2447,6 +2675,8 @@ public final class SystemData implements INBTSerializable<CompoundTag> {
         tag.putInt("distance_moved", distanceMoved);
         tag.putInt("deaths", deaths);
         tag.putLong("last_daily_login_day", lastDailyLoginDay);
+        tag.putLong("last_free_roulette_day", lastFreeRouletteDay);
+        tag.putLong("last_free_altar_day", lastFreeAltarDay);
         tag.putInt("prestige", prestige);
         CompoundTag achievementTag = new CompoundTag();
         achievements.forEach(achievementTag::putBoolean);
@@ -2541,6 +2771,10 @@ public final class SystemData implements INBTSerializable<CompoundTag> {
         tag.putInt("cultivation_sublevel", cultivationSubLevel);
         tag.putBoolean("system_updated", systemUpdated);
         tag.putBoolean("isekai_unlocked", isekaiUnlocked);
+        tag.putBoolean("ender_dragon_defeated", enderDragonDefeated);
+        tag.putBoolean("ghost_mode", ghostMode);
+        tag.putString("tombstone_dim", tombstoneDimension);
+        tag.putLong("tombstone_pos", tombstonePos.asLong());
         tag.putBoolean("system_updating", systemUpdating);
         tag.putInt("system_update_remaining_ticks", systemUpdateRemainingTicks);
         tag.putString("murim_physique", murimPhysique == null ? "" : murimPhysique);
@@ -2636,6 +2870,18 @@ public final class SystemData implements INBTSerializable<CompoundTag> {
         tag.putDouble("subspace_ret_z", subspaceReturnZ);
         tag.putFloat("subspace_ret_yaw", subspaceReturnYaw);
         tag.putFloat("subspace_ret_pitch", subspaceReturnPitch);
+        tag.putInt("sanctuary_level", sanctuaryLevel);
+        tag.putInt("sanctuary_built_level", sanctuaryBuiltLevel);
+        tag.putString("sanctuary_ret_dim", sanctuaryReturnDim);
+        tag.putDouble("sanctuary_ret_x", sanctuaryReturnX);
+        tag.putDouble("sanctuary_ret_y", sanctuaryReturnY);
+        tag.putDouble("sanctuary_ret_z", sanctuaryReturnZ);
+        tag.putFloat("sanctuary_ret_yaw", sanctuaryReturnYaw);
+        tag.putFloat("sanctuary_ret_pitch", sanctuaryReturnPitch);
+        tag.putBoolean("sanctuary_ext_active", sanctuaryExteriorDoorActive);
+        tag.putInt("sanctuary_plot_x", sanctuaryPlotX);
+        tag.putInt("sanctuary_plot_y", sanctuaryPlotY);
+        tag.putInt("sanctuary_plot_z", sanctuaryPlotZ);
         CompoundTag artifactTag = new CompoundTag();
         ContainerHelper.saveAllItems(artifactTag, artifactSlots, registries);
         tag.put("artifact_inventory", artifactTag);
@@ -2676,6 +2922,22 @@ public final class SystemData implements INBTSerializable<CompoundTag> {
         tag.putInt("casino_max_payout", casinoMaxPayout);
         tag.putInt("pool_matches_won", poolMatchesWon);
 
+        tag.putInt("habit_damage_taken", habitDamageTaken);
+        tag.putDouble("habit_sprint_distance", habitSprintDistance);
+        ListTag habitBiomesTag = new ListTag();
+        for (String b : habitBiomesExplored) {
+            habitBiomesTag.add(net.minecraft.nbt.StringTag.valueOf(b));
+        }
+        tag.put("habit_biomes", habitBiomesTag);
+        tag.putInt("habit_deep_blocks", habitDeepBlocksMined);
+        tag.putInt("habit_weapon_hits", habitWeaponHits);
+        tag.putInt("habit_focus_ticks", habitFocusTicks);
+        tag.putInt("habit_enduring_flesh_lvl", habitEnduringFleshLvl);
+        tag.putInt("habit_windrunner_lvl", habitWindrunnerLvl);
+        tag.putInt("habit_ore_sense_lvl", habitOreSenseLvl);
+        tag.putInt("habit_combat_instinct_lvl", habitCombatInstinctLvl);
+        tag.putInt("habit_deadeye_lvl", habitDeadeyeLvl);
+
         return tag;
     }
 
@@ -2683,6 +2945,26 @@ public final class SystemData implements INBTSerializable<CompoundTag> {
     public void deserializeNBT(HolderLookup.Provider registries, CompoundTag tag) {
         level = Math.max(1, tag.getInt("level"));
         experience = tag.getInt("experience");
+        reserveExperience = Math.max(0, tag.getInt("reserve_experience"));
+        evaluationPending = tag.getBoolean("evaluation_pending");
+        if (tag.contains("ascension_quest_active")) {
+            ascensionQuestActive = tag.getBoolean("ascension_quest_active");
+            ascensionTargetRank = tag.getString("ascension_target_rank");
+            ascensionProgress = tag.getInt("ascension_progress");
+            ascensionTarget = tag.getInt("ascension_target");
+            ascensionCompleted = tag.getBoolean("ascension_completed");
+        } else {
+            ascensionQuestActive = false;
+            ascensionTargetRank = "";
+            ascensionProgress = 0;
+            ascensionTarget = 0;
+            ascensionCompleted = false;
+        }
+        if (tag.contains("evaluated_rank")) {
+            evaluatedRank = tag.getString("evaluated_rank");
+        } else {
+            evaluatedRank = rankForLevel(level);
+        }
         attributePoints = tag.getInt("attribute_points");
         coins = Math.max(0, tag.getInt("coins"));
         strength = Math.max(1, tag.getInt("strength"));
@@ -2722,6 +3004,8 @@ public final class SystemData implements INBTSerializable<CompoundTag> {
         distanceMoved = Math.max(0, tag.getInt("distance_moved"));
         deaths = Math.max(0, tag.getInt("deaths"));
         lastDailyLoginDay = tag.contains("last_daily_login_day") ? tag.getLong("last_daily_login_day") : -1L;
+        lastFreeRouletteDay = tag.contains("last_free_roulette_day") ? tag.getLong("last_free_roulette_day") : -1L;
+        lastFreeAltarDay = tag.contains("last_free_altar_day") ? tag.getLong("last_free_altar_day") : -1L;
         prestige = Math.max(0, tag.getInt("prestige"));
         achievements.clear();
         CompoundTag achievementTag = tag.getCompound("achievements");
@@ -2830,6 +3114,10 @@ public final class SystemData implements INBTSerializable<CompoundTag> {
         cultivationSubLevel = tag.contains("cultivation_sublevel") ? Math.max(1, Math.min(9, tag.getInt("cultivation_sublevel"))) : 1;
         systemUpdated = tag.getBoolean("system_updated");
         isekaiUnlocked = tag.getBoolean("isekai_unlocked");
+        enderDragonDefeated = tag.getBoolean("ender_dragon_defeated");
+        ghostMode = tag.getBoolean("ghost_mode");
+        tombstoneDimension = tag.contains("tombstone_dim") ? tag.getString("tombstone_dim") : "";
+        tombstonePos = tag.contains("tombstone_pos") ? BlockPos.of(tag.getLong("tombstone_pos")) : BlockPos.ZERO;
         systemUpdating = tag.getBoolean("system_updating");
         systemUpdateRemainingTicks = tag.getInt("system_update_remaining_ticks");
         murimPhysique = tag.contains("murim_physique") ? tag.getString("murim_physique") : "";
@@ -2932,6 +3220,18 @@ public final class SystemData implements INBTSerializable<CompoundTag> {
         if (tag.contains("subspace_ret_z")) subspaceReturnZ = tag.getDouble("subspace_ret_z");
         if (tag.contains("subspace_ret_yaw")) subspaceReturnYaw = tag.getFloat("subspace_ret_yaw");
         if (tag.contains("subspace_ret_pitch")) subspaceReturnPitch = tag.getFloat("subspace_ret_pitch");
+        sanctuaryLevel = tag.contains("sanctuary_level") ? Math.max(1, Math.min(5, tag.getInt("sanctuary_level"))) : 1;
+        sanctuaryBuiltLevel = tag.contains("sanctuary_built_level") ? tag.getInt("sanctuary_built_level") : 0;
+        if (tag.contains("sanctuary_ret_dim")) sanctuaryReturnDim = tag.getString("sanctuary_ret_dim");
+        if (tag.contains("sanctuary_ret_x")) sanctuaryReturnX = tag.getDouble("sanctuary_ret_x");
+        if (tag.contains("sanctuary_ret_y")) sanctuaryReturnY = tag.getDouble("sanctuary_ret_y");
+        if (tag.contains("sanctuary_ret_z")) sanctuaryReturnZ = tag.getDouble("sanctuary_ret_z");
+        if (tag.contains("sanctuary_ret_yaw")) sanctuaryReturnYaw = tag.getFloat("sanctuary_ret_yaw");
+        if (tag.contains("sanctuary_ret_pitch")) sanctuaryReturnPitch = tag.getFloat("sanctuary_ret_pitch");
+        sanctuaryExteriorDoorActive = tag.getBoolean("sanctuary_ext_active");
+        if (tag.contains("sanctuary_plot_x")) sanctuaryPlotX = tag.getInt("sanctuary_plot_x");
+        if (tag.contains("sanctuary_plot_y")) sanctuaryPlotY = tag.getInt("sanctuary_plot_y");
+        if (tag.contains("sanctuary_plot_z")) sanctuaryPlotZ = tag.getInt("sanctuary_plot_z");
         java.util.Collections.fill(artifactSlots, ItemStack.EMPTY);
         if (tag.contains("artifact_inventory", net.minecraft.nbt.Tag.TAG_COMPOUND)) {
             ContainerHelper.loadAllItems(tag.getCompound("artifact_inventory"), artifactSlots, registries);
@@ -2991,6 +3291,24 @@ public final class SystemData implements INBTSerializable<CompoundTag> {
         this.casinoTotalWon = tag.contains("casino_total_won") ? tag.getLong("casino_total_won") : 0L;
         this.casinoMaxPayout = tag.contains("casino_max_payout") ? tag.getInt("casino_max_payout") : 0;
         this.poolMatchesWon = tag.contains("pool_matches_won") ? tag.getInt("pool_matches_won") : 0;
+
+        this.habitDamageTaken = Math.max(0, tag.getInt("habit_damage_taken"));
+        this.habitSprintDistance = Math.max(0.0, tag.getDouble("habit_sprint_distance"));
+        this.habitBiomesExplored.clear();
+        if (tag.contains("habit_biomes", net.minecraft.nbt.Tag.TAG_LIST)) {
+            ListTag bList = tag.getList("habit_biomes", net.minecraft.nbt.Tag.TAG_STRING);
+            for (int i = 0; i < bList.size(); i++) {
+                this.habitBiomesExplored.add(bList.getString(i));
+            }
+        }
+        this.habitDeepBlocksMined = Math.max(0, tag.getInt("habit_deep_blocks"));
+        this.habitWeaponHits = Math.max(0, tag.getInt("habit_weapon_hits"));
+        this.habitFocusTicks = Math.max(0, tag.getInt("habit_focus_ticks"));
+        this.habitEnduringFleshLvl = tag.contains("habit_enduring_flesh_lvl") ? Math.max(0, tag.getInt("habit_enduring_flesh_lvl")) : skills.getOrDefault("enduring_flesh", 0);
+        this.habitWindrunnerLvl = tag.contains("habit_windrunner_lvl") ? Math.max(0, tag.getInt("habit_windrunner_lvl")) : skills.getOrDefault("windrunner", 0);
+        this.habitOreSenseLvl = tag.contains("habit_ore_sense_lvl") ? Math.max(0, tag.getInt("habit_ore_sense_lvl")) : skills.getOrDefault("ore_sense", 0);
+        this.habitCombatInstinctLvl = tag.contains("habit_combat_instinct_lvl") ? Math.max(0, tag.getInt("habit_combat_instinct_lvl")) : skills.getOrDefault("combat_instinct", 0);
+        this.habitDeadeyeLvl = tag.contains("habit_deadeye_lvl") ? Math.max(0, tag.getInt("habit_deadeye_lvl")) : skills.getOrDefault("deadeye", 0);
     }
 
     public int getCarats() { return carats; }
@@ -3053,4 +3371,179 @@ public final class SystemData implements INBTSerializable<CompoundTag> {
         if (uma == null) return false;
         return uma.bloom();
     }
+
+    // ==========================================
+    // Section 10: Habit & Procedural Progression
+    // ==========================================
+    public int checkHabitEnduringFleshMilestone() {
+        int targetLevel = 0;
+        if (habitDamageTaken >= 6000) targetLevel = 6;
+        else if (habitDamageTaken >= 3000) targetLevel = 5;
+        else if (habitDamageTaken >= 1500) targetLevel = 4;
+        else if (habitDamageTaken >= 750) targetLevel = 3;
+        else if (habitDamageTaken >= 250) targetLevel = 2;
+        else if (habitDamageTaken >= 50) targetLevel = 1;
+
+        if (targetLevel > habitEnduringFleshLvl) {
+            habitEnduringFleshLvl = targetLevel;
+            int currentLevel = skills.getOrDefault("enduring_flesh", 0);
+            if (targetLevel > currentLevel) {
+                skills.put("enduring_flesh", targetLevel);
+            }
+            return targetLevel;
+        }
+        return 0;
+    }
+
+    public int recordHabitDamage(int damage) {
+        if (damage <= 0) return 0;
+        habitDamageTaken += damage;
+        return checkHabitEnduringFleshMilestone();
+    }
+
+    public int checkHabitWindrunnerMilestone() {
+        int biomesCount = habitBiomesExplored.size();
+        int targetLevel = 0;
+        if (habitSprintDistance >= 18000.0 && biomesCount >= 10) targetLevel = 6;
+        else if (habitSprintDistance >= 10000.0 && biomesCount >= 7) targetLevel = 5;
+        else if (habitSprintDistance >= 5000.0 && biomesCount >= 5) targetLevel = 4;
+        else if (habitSprintDistance >= 2500.0 && biomesCount >= 3) targetLevel = 3;
+        else if (habitSprintDistance >= 1000.0 && biomesCount >= 2) targetLevel = 2;
+        else if (habitSprintDistance >= 300.0) targetLevel = 1;
+
+        if (targetLevel > habitWindrunnerLvl) {
+            habitWindrunnerLvl = targetLevel;
+            int currentLevel = skills.getOrDefault("windrunner", 0);
+            if (targetLevel > currentLevel) {
+                skills.put("windrunner", targetLevel);
+            }
+            return targetLevel;
+        }
+        return 0;
+    }
+
+    public int recordHabitSprint(double distance, String biomeId) {
+        if (distance <= 0.0) return 0;
+        habitSprintDistance += distance;
+        if (biomeId != null && !biomeId.isEmpty()) {
+            habitBiomesExplored.add(biomeId);
+        }
+        return checkHabitWindrunnerMilestone();
+    }
+
+    public int checkHabitOreSenseMilestone() {
+        int targetLevel = 0;
+        if (habitDeepBlocksMined >= 6000) targetLevel = 6;
+        else if (habitDeepBlocksMined >= 3000) targetLevel = 5;
+        else if (habitDeepBlocksMined >= 1500) targetLevel = 4;
+        else if (habitDeepBlocksMined >= 700) targetLevel = 3;
+        else if (habitDeepBlocksMined >= 300) targetLevel = 2;
+        else if (habitDeepBlocksMined >= 80) targetLevel = 1;
+
+        if (targetLevel > habitOreSenseLvl) {
+            habitOreSenseLvl = targetLevel;
+            int currentLevel = skills.getOrDefault("ore_sense", 0);
+            if (targetLevel > currentLevel) {
+                skills.put("ore_sense", targetLevel);
+            }
+            return targetLevel;
+        }
+        return 0;
+    }
+
+    public int recordHabitDeepMining(int blocks) {
+        if (blocks <= 0) return 0;
+        habitDeepBlocksMined += blocks;
+        return checkHabitOreSenseMilestone();
+    }
+
+    public int checkHabitCombatInstinctMilestone() {
+        int targetLevel = 0;
+        if (habitWeaponHits >= 3500) targetLevel = 6;
+        else if (habitWeaponHits >= 1800) targetLevel = 5;
+        else if (habitWeaponHits >= 900) targetLevel = 4;
+        else if (habitWeaponHits >= 400) targetLevel = 3;
+        else if (habitWeaponHits >= 150) targetLevel = 2;
+        else if (habitWeaponHits >= 40) targetLevel = 1;
+
+        if (targetLevel > habitCombatInstinctLvl) {
+            habitCombatInstinctLvl = targetLevel;
+            int currentLevel = skills.getOrDefault("combat_instinct", 0);
+            if (targetLevel > currentLevel) {
+                skills.put("combat_instinct", targetLevel);
+            }
+            return targetLevel;
+        }
+        return 0;
+    }
+
+    public int recordHabitWeaponHit() {
+        habitWeaponHits++;
+        return checkHabitCombatInstinctMilestone();
+    }
+
+    public int checkHabitDeadeyeMilestone() {
+        int targetLevel = 0;
+        if (habitFocusTicks >= 5000) targetLevel = 6;
+        else if (habitFocusTicks >= 3000) targetLevel = 5;
+        else if (habitFocusTicks >= 1800) targetLevel = 4;
+        else if (habitFocusTicks >= 900) targetLevel = 3;
+        else if (habitFocusTicks >= 400) targetLevel = 2;
+        else if (habitFocusTicks >= 120) targetLevel = 1;
+
+        if (targetLevel > habitDeadeyeLvl) {
+            habitDeadeyeLvl = targetLevel;
+            int currentLevel = skills.getOrDefault("deadeye", 0);
+            if (targetLevel > currentLevel) {
+                skills.put("deadeye", targetLevel);
+            }
+            return targetLevel;
+        }
+        return 0;
+    }
+
+    public int recordHabitFocusTicks(int ticks) {
+        if (ticks <= 0) return 0;
+        habitFocusTicks += ticks;
+        return checkHabitDeadeyeMilestone();
+    }
+
+    public int getHabitProgress(String skillId) {
+        if (skillId == null) return 0;
+        String base = skillId.endsWith("_evolution") ? skillId.substring(0, skillId.length() - 10) : skillId;
+        return switch (base) {
+            case "enduring_flesh" -> habitDamageTaken;
+            case "windrunner" -> (int)habitSprintDistance;
+            case "ore_sense" -> habitDeepBlocksMined;
+            case "combat_instinct" -> habitWeaponHits;
+            case "deadeye" -> habitFocusTicks;
+            default -> 0;
+        };
+    }
+
+    public int getHabitRequired(String skillId) {
+        if (skillId == null) return 0;
+        String base = skillId.endsWith("_evolution") ? skillId.substring(0, skillId.length() - 10) : skillId;
+        int currentLvl = skills.getOrDefault(base, 0);
+        return switch (base) {
+            case "enduring_flesh" -> currentLvl == 0 ? 50 : (currentLvl == 1 ? 250 : (currentLvl == 2 ? 750 : (currentLvl == 3 ? 1500 : (currentLvl == 4 ? 3000 : 6000))));
+            case "windrunner" -> currentLvl == 0 ? 300 : (currentLvl == 1 ? 1000 : (currentLvl == 2 ? 2500 : (currentLvl == 3 ? 5000 : (currentLvl == 4 ? 10000 : 18000))));
+            case "ore_sense" -> currentLvl == 0 ? 80 : (currentLvl == 1 ? 300 : (currentLvl == 2 ? 700 : (currentLvl == 3 ? 1500 : (currentLvl == 4 ? 3000 : 6000))));
+            case "combat_instinct" -> currentLvl == 0 ? 40 : (currentLvl == 1 ? 150 : (currentLvl == 2 ? 400 : (currentLvl == 3 ? 900 : (currentLvl == 4 ? 1800 : 3500))));
+            case "deadeye" -> currentLvl == 0 ? 120 : (currentLvl == 1 ? 400 : (currentLvl == 2 ? 900 : (currentLvl == 3 ? 1800 : (currentLvl == 4 ? 3000 : 5000))));
+            default -> 0;
+        };
+    }
+
+    public int habitDamageTaken() { return habitDamageTaken; }
+    public double habitSprintDistance() { return habitSprintDistance; }
+    public Set<String> habitBiomesExplored() { return Collections.unmodifiableSet(habitBiomesExplored); }
+    public int habitDeepBlocksMined() { return habitDeepBlocksMined; }
+    public int habitWeaponHits() { return habitWeaponHits; }
+    public int habitFocusTicks() { return habitFocusTicks; }
+    public int habitEnduringFleshLvl() { return habitEnduringFleshLvl; }
+    public int habitWindrunnerLvl() { return habitWindrunnerLvl; }
+    public int habitOreSenseLvl() { return habitOreSenseLvl; }
+    public int habitCombatInstinctLvl() { return habitCombatInstinctLvl; }
+    public int habitDeadeyeLvl() { return habitDeadeyeLvl; }
 }

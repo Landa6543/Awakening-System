@@ -22,7 +22,7 @@ import net.minecraft.world.level.Level;
 import net.minecraft.world.phys.AABB;
 import net.minecraft.world.phys.Vec3;
 import com.soybe.awakeningsystem.CameraShakePayload;
-import com.soybe.awakeningsystem.SpawnMagicCirclePayload;
+import com.soybe.awakeningsystem.entity.SlashWaveEntity;
 import net.neoforged.neoforge.network.PacketDistributor;
 
 import java.util.List;
@@ -38,11 +38,13 @@ public class AdamantiteWarHammerItem extends SwordItem implements AwakeningWeapo
 
     @Override
     public boolean hurtEnemy(ItemStack stack, LivingEntity target, LivingEntity attacker) {
-        if ((attacker.fallDistance > 0.0F || !attacker.onGround()) && !attacker.onClimbable() && !attacker.isInWater()) {
-            if (attacker.level() instanceof ServerLevel sl) {
+        if (attacker.level() instanceof ServerLevel sl) {
+            sl.sendParticles(com.soybe.awakeningsystem.particle.ModParticles.STRIKE_CLEAVE.get(), target.getX(), target.getY() + 0.8D, target.getZ(), 1, 0, 0, 0, 0);
+            com.soybe.awakeningsystem.CameraShakePayload.sendToNearby(sl, target.getX(), target.getY(), target.getZ(), 16.0D, 0.35F, 5);
+
+            if ((attacker.fallDistance > 0.0F || !attacker.onGround()) && !attacker.onClimbable() && !attacker.isInWater()) {
                 sl.sendParticles(ParticleTypes.LAVA, target.getX(), target.getY() + 0.8D, target.getZ(), 20, 0.4D, 0.4D, 0.4D, 0.1D);
-                sl.sendParticles(ParticleTypes.CRIT, target.getX(), target.getY() + 0.8D, target.getZ(), 25, 0.5D, 0.5D, 0.5D, 0.2D);
-                sl.playSound(null, target.getX(), target.getY(), target.getZ(), SoundEvents.ANVIL_LAND, SoundSource.PLAYERS, 1.2F, 0.8F);
+                sl.playSound(null, target.getX(), target.getY(), target.getZ(), com.soybe.awakeningsystem.ModSounds.CULTIVATOR_SLASH.get(), SoundSource.PLAYERS, 1.4F, 0.65F);
 
                 target.addEffect(new MobEffectInstance(MobEffects.MOVEMENT_SLOWDOWN, 80, 3, false, true));
                 target.addEffect(new MobEffectInstance(MobEffects.WEAKNESS, 80, 1, false, true));
@@ -50,6 +52,8 @@ public class AdamantiteWarHammerItem extends SwordItem implements AwakeningWeapo
                 if (attacker instanceof Player p) {
                     p.displayClientMessage(Component.translatable("awakening_system.item.hammer.crushing_strike"), true);
                 }
+            } else {
+                sl.playSound(null, target.getX(), target.getY(), target.getZ(), com.soybe.awakeningsystem.ModSounds.CULTIVATOR_SLASH.get(), SoundSource.PLAYERS, 1.2F, 0.75F);
             }
         }
         return super.hurtEnemy(stack, target, attacker);
@@ -131,18 +135,22 @@ public class AdamantiteWarHammerItem extends SwordItem implements AwakeningWeapo
         double py = player.getY();
         double pz = player.getZ();
 
+        level.playSound(null, px, py, pz, com.soybe.awakeningsystem.ModSounds.CULTIVATOR_SLASH.get(), SoundSource.PLAYERS, 1.8F, 0.6F);
         level.playSound(null, px, py, pz, SoundEvents.GENERIC_EXPLODE.value(), SoundSource.PLAYERS, 1.5F, 0.7F);
-        level.playSound(null, px, py, pz, SoundEvents.ANVIL_LAND, SoundSource.PLAYERS, 1.6F, 0.5F);
         level.playSound(null, px, py, pz, SoundEvents.MUD_BREAK, SoundSource.PLAYERS, 1.5F, 0.5F);
 
-        PacketDistributor.sendToPlayersNear(
-                level, null, px, py, pz, 64.0D,
-                new SpawnMagicCirclePayload(
-                        player.getId(), px, py + 0.05D, pz,
-                        0.0F, 1.0F, 0.0F,
-                        (float)(radius * 0.9F), 45, 0xFF4500, 0, false
-                )
-        );
+        player.swing(InteractionHand.MAIN_HAND, true);
+        level.sendParticles(com.soybe.awakeningsystem.particle.ModParticles.STRIKE_CLEAVE.get(), px, py + 0.3D, pz, 1, 0, 0, 0, 0);
+
+        // Radial seismic shockwave cleaves
+        for (int i = 0; i < 6; i++) {
+            double angle = (2.0D * Math.PI * i) / 6.0D;
+            Vec3 dir = new Vec3(Math.cos(angle), 0.05D, Math.sin(angle));
+            SlashWaveEntity shockwave = new SlashWaveEntity(level, player, SlashWaveEntity.TYPE_EARTH, 18.0F * powerMultiplier, 4.2F, 1.6F, 0.0F, 22, 6);
+            shockwave.setSlashStyle(SlashWaveEntity.STYLE_HEAVY_CLEAVE);
+            shockwave.setDeltaMovement(dir.scale(1.7D));
+            level.addFreshEntity(shockwave);
+        }
 
         CameraShakePayload.sendToNearby(level, px, py, pz, radius + 16.0D, 0.95F * powerMultiplier, (int)(12 * powerMultiplier));
 

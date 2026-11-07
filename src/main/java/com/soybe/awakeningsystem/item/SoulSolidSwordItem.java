@@ -40,6 +40,10 @@ public class SoulSolidSwordItem extends SwordItem implements AwakeningWeaponItem
 
         Level level = target.level();
         if (level instanceof ServerLevel sl) {
+            sl.sendParticles(com.soybe.awakeningsystem.particle.ModParticles.STRIKE_SLASH.get(), target.getX(), target.getY() + 1.0D, target.getZ(), 1, 0, 0, 0, 0);
+            sl.playSound(null, target.blockPosition(), com.soybe.awakeningsystem.ModSounds.CULTIVATOR_SLASH.get(), SoundSource.PLAYERS, 1.3F, 1.4F);
+            com.soybe.awakeningsystem.CameraShakePayload.sendToNearby(sl, target.getX(), target.getY(), target.getZ(), 16.0D, 0.25F, 4);
+
             sl.sendParticles(ParticleTypes.SNOWFLAKE, target.getX(), target.getY() + 1.0D, target.getZ(), 16, 0.4D, 0.6D, 0.4D, 0.05D);
             sl.sendParticles(ParticleTypes.SOUL_FIRE_FLAME, target.getX(), target.getY() + 0.8D, target.getZ(), 8, 0.3D, 0.4D, 0.3D, 0.02D);
             sl.playSound(null, target.blockPosition(), SoundEvents.PLAYER_HURT_FREEZE, SoundSource.PLAYERS, 1.4F, 1.3F);
@@ -67,16 +71,12 @@ public class SoulSolidSwordItem extends SwordItem implements AwakeningWeaponItem
         if (!level.isClientSide() && player instanceof ServerPlayer sp) {
             ServerLevel sl = (ServerLevel) level;
 
-            net.neoforged.neoforge.network.PacketDistributor.sendToPlayersNear(
-                    sl, null, sp.getX(), sp.getY(), sp.getZ(), 64.0D,
-                    new com.soybe.awakeningsystem.SpawnMagicCirclePayload(
-                            sp.getId(), sp.getX(), sp.getY(), sp.getZ(),
-                            (float) forward.x, (float) forward.y, (float) forward.z,
-                            2.8F, 30, 0x88EEFF, 1, false
-                    )
-            );
+            sp.swing(hand, true);
+            sl.sendParticles(com.soybe.awakeningsystem.particle.ModParticles.STRIKE_SLASH.get(), sp.getX() + forward.x * 1.5D, sp.getY() + 1.2D + forward.y * 1.5D, sp.getZ() + forward.z * 1.5D, 1, 0, 0, 0, 0);
+            sl.sendParticles(ParticleTypes.SNOWFLAKE, sp.getX() + forward.x * 1.5D, sp.getY() + 1.0D, sp.getZ() + forward.z * 1.5D, 35, 0.7D, 0.7D, 0.7D, 0.08D);
+            sl.sendParticles(ParticleTypes.SOUL_FIRE_FLAME, sp.getX(), sp.getY() + 1.0D, sp.getZ(), 20, 0.5D, 0.5D, 0.5D, 0.05D);
 
-            sl.playSound(null, sp.blockPosition(), SoundEvents.PLAYER_ATTACK_SWEEP, SoundSource.PLAYERS, 1.8F, 1.6F);
+            sl.playSound(null, sp.blockPosition(), com.soybe.awakeningsystem.ModSounds.CULTIVATOR_SLASH.get(), SoundSource.PLAYERS, 1.8F, 1.4F);
             sl.playSound(null, sp.blockPosition(), SoundEvents.GLASS_BREAK, SoundSource.PLAYERS, 1.5F, 1.4F);
             sl.playSound(null, sp.blockPosition(), SoundEvents.SOUL_ESCAPE.value(), SoundSource.PLAYERS, 1.6F, 1.2F);
 
@@ -85,6 +85,7 @@ public class SoulSolidSwordItem extends SwordItem implements AwakeningWeaponItem
             float dmg = (float) (24.0D * WeaponLevelManager.getDamageMultiplier(stack));
 
             SlashWaveEntity frostBeam = new SlashWaveEntity(sl, sp, SlashWaveEntity.TYPE_FROST_WIND, dmg, 3.4F, 1.3F, 0.0F, 22, 8);
+            frostBeam.setSlashStyle(SlashWaveEntity.STYLE_CELESTIAL);
             frostBeam.setDeltaMovement(forward.scale(2.4D));
             sl.addFreshEntity(frostBeam);
 

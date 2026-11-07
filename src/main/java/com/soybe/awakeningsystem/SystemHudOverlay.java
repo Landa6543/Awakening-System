@@ -478,11 +478,15 @@ public final class SystemHudOverlay {
         int colW = (cardW - 14) / 3;
         graphics.drawString(mc.font, "§bDEF §f" + armor, cardX + 9, curY + 2, 0xFFFFFFFF, false);
         graphics.drawString(mc.font, "§cATK §f" + attack, cardX + 9 + colW, curY + 2, 0xFFFFFFFF, false);
-        if (isSys40 && data.primogems() > 0) {
-            graphics.drawString(mc.font, "§b✦ §f" + data.primogems(), cardX + 9 + colW * 2, curY + 2, 0xFFFFFFFF, false);
-        } else {
-            graphics.drawString(mc.font, "§6✦ §e" + coinStr, cardX + 9 + colW * 2, curY + 2, 0xFFFFFFFF, false);
-        }
+
+        int coinX = cardX + 9 + colW * 2;
+        ItemStack coinIcon = SystemItems.coin(1);
+        graphics.pose().pushPose();
+        graphics.pose().translate(coinX - 1, curY + 1.0F, 0.0F);
+        graphics.pose().scale(0.55F, 0.55F, 1.0F);
+        graphics.renderItem(coinIcon, 0, 0);
+        graphics.pose().popPose();
+        graphics.drawString(mc.font, "§e" + coinStr, coinX + 10, curY + 2, 0xFFFFFFFF, false);
 
         graphics.pose().popPose();
     }
@@ -689,7 +693,8 @@ public final class SystemHudOverlay {
                 return;
             }
             Component name = living.getName();
-            if (!living.hasCustomName() && living instanceof net.minecraft.world.entity.monster.Enemy && !(living instanceof com.soybe.awakeningsystem.entity.LimboOphanimEntity)) {
+            boolean isRpgEnemy = (living instanceof net.minecraft.world.entity.monster.Enemy || living.getTags().contains("rpg_scaled") || RpgLevelZoneManager.isEligibleForRpgScaling(living)) && !(living instanceof com.soybe.awakeningsystem.entity.LimboOphanimEntity);
+            if (!living.hasCustomName() && isRpgEnemy) {
                 int clientLevel = data != null ? Math.max(1, data.level()) : 1;
                 int perceived = AwakeningSystemClient.getPerceivedMobLevel(living, clientLevel);
                 net.minecraft.ChatFormatting color = perceived >= 80 ? net.minecraft.ChatFormatting.DARK_RED : (perceived >= 50 ? net.minecraft.ChatFormatting.RED : (perceived >= 25 ? net.minecraft.ChatFormatting.GOLD : (perceived >= 15 ? net.minecraft.ChatFormatting.YELLOW : net.minecraft.ChatFormatting.GREEN)));
@@ -698,7 +703,7 @@ public final class SystemHudOverlay {
             }
 
             boolean isBoss = com.soybe.awakeningsystem.config.BossCompatibilityManager.isBoss(living);
-            boolean isFriendly = living.getType().getCategory().isFriendly() || living instanceof net.minecraft.world.entity.animal.Animal || living instanceof net.minecraft.world.entity.npc.Npc;
+            boolean isFriendly = !isRpgEnemy && (living.getType().getCategory().isFriendly() || living instanceof net.minecraft.world.entity.animal.Animal || living instanceof net.minecraft.world.entity.npc.Npc);
 
             long now = System.currentTimeMillis();
             if (lastCardYRenderTime == 0L) lastCardYRenderTime = now;

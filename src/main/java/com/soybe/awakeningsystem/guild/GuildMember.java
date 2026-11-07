@@ -11,6 +11,7 @@ public class GuildMember {
     private long joinedAt;
     private long contributedMora;
     private int dungeonsCleared;
+    private boolean isNpc;
 
     public GuildMember(UUID uuid, String name, GuildRole role) {
         this.uuid = uuid;
@@ -19,7 +20,11 @@ public class GuildMember {
         this.joinedAt = System.currentTimeMillis();
         this.contributedMora = 0;
         this.dungeonsCleared = 0;
+        this.isNpc = false;
     }
+
+    public boolean isNpc() { return isNpc; }
+    public void setNpc(boolean npc) { this.isNpc = npc; }
 
     public UUID getUuid() { return uuid; }
     public String getName() { return name; }
@@ -40,6 +45,7 @@ public class GuildMember {
         tag.putLong("JoinedAt", joinedAt);
         tag.putLong("ContributedMora", contributedMora);
         tag.putInt("DungeonsCleared", dungeonsCleared);
+        tag.putBoolean("IsNpc", isNpc);
         return tag;
     }
 
@@ -55,6 +61,7 @@ public class GuildMember {
         member.joinedAt = tag.getLong("JoinedAt");
         member.contributedMora = tag.getLong("ContributedMora");
         member.dungeonsCleared = tag.getInt("DungeonsCleared");
+        member.isNpc = tag.getBoolean("IsNpc") || (name != null && name.contains("[NPC]"));
         return member;
     }
 }

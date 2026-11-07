@@ -33,6 +33,28 @@ public final class SystemAttributeEffects {
             apply(player, Attributes.ARMOR, "skill_blue_dragon_armor", 0.0D);
         }
 
+        // Section 10: Habit & Constancy Skill Attribute Modifiers
+        if (data.isSkillEnabled("enduring_flesh")) {
+            int fleshLevel = data.skills().getOrDefault("enduring_flesh", 1);
+            apply(player, Attributes.KNOCKBACK_RESISTANCE, "habit_enduring_flesh_kb", fleshLevel * 0.04D);
+        } else {
+            apply(player, Attributes.KNOCKBACK_RESISTANCE, "habit_enduring_flesh_kb", 0.0D);
+        }
+
+        if (data.isSkillEnabled("windrunner")) {
+            int windLevel = data.skills().getOrDefault("windrunner", 1);
+            apply(player, Attributes.MOVEMENT_SPEED, "habit_windrunner_speed", windLevel * 0.005D);
+        } else {
+            apply(player, Attributes.MOVEMENT_SPEED, "habit_windrunner_speed", 0.0D);
+        }
+
+        if (data.isSkillEnabled("combat_instinct")) {
+            int combatLevel = data.skills().getOrDefault("combat_instinct", 1);
+            apply(player, Attributes.ATTACK_SPEED, "habit_combat_instinct_spd", combatLevel * 0.04D);
+        } else {
+            apply(player, Attributes.ATTACK_SPEED, "habit_combat_instinct_spd", 0.0D);
+        }
+
         String hClass = data.hunterClass();
         apply(player, Attributes.ATTACK_SPEED, "hunter_sword_saint_spd", "sword_saint".equals(hClass) ? 0.35D : ("demonic_cultivator".equals(hClass) ? 0.15D : ("void_assassin".equals(hClass) ? 0.25D : ("lightning_emperor".equals(hClass) ? 0.20D : ("blood_emperor".equals(hClass) ? 0.10D : 0.0D)))));
         apply(player, Attributes.MAX_HEALTH, "hunter_colossal_hp", "colossal_berserker".equals(hClass) ? 16.0D : ("dragon_monarch".equals(hClass) ? 10.0D : ("spiritual_healer".equals(hClass) ? 6.0D : 0.0D)));
@@ -236,6 +258,60 @@ public final class SystemAttributeEffects {
                 apply(player, Attributes.ATTACK_DAMAGE, "title_evolved_damage", 1.0D);
                 apply(player, Attributes.MOVEMENT_SPEED, "title_evolved_speed", 0.01D);
             }
+            case "hunter_gaze" -> {
+                apply(player, Attributes.LUCK, "title_hunter_gaze_luck", 1.5D);
+                apply(player, Attributes.ATTACK_DAMAGE, "title_hunter_gaze_dmg", 1.5D);
+            }
+            case "unyielding_flesh" -> {
+                apply(player, Attributes.KNOCKBACK_RESISTANCE, "title_unyielding_flesh_kb", 0.15D);
+                apply(player, Attributes.ARMOR, "title_unyielding_flesh_armor", 2.0D);
+            }
+            case "wind_strider" -> {
+                apply(player, Attributes.MOVEMENT_SPEED, "title_wind_strider_speed", 0.02D);
+                apply(player, Attributes.ATTACK_SPEED, "title_wind_strider_spd", 0.05D);
+            }
+            case "earth_instinct" -> {
+                apply(player, Attributes.LUCK, "title_earth_instinct_luck", 1.5D);
+                apply(player, Attributes.ARMOR_TOUGHNESS, "title_earth_instinct_tough", 1.0D);
+            }
+            case "steel_master" -> {
+                apply(player, Attributes.ATTACK_SPEED, "title_steel_master_spd", 0.12D);
+                apply(player, Attributes.ATTACK_DAMAGE, "title_steel_master_dmg", 2.0D);
+            }
+            case "armageddon_colossus_breaker" -> {
+                apply(player, Attributes.ARMOR, "title_armageddon_colossus_armor", 2.0D);
+                apply(player, Attributes.KNOCKBACK_RESISTANCE, "title_armageddon_colossus_kb", 0.10D);
+            }
+            case "armageddon_goblin_subjugator" -> {
+                apply(player, Attributes.LUCK, "title_armageddon_goblin_luck", 1.5D);
+                apply(player, Attributes.ATTACK_SPEED, "title_armageddon_goblin_spd", 0.05D);
+            }
+            case "armageddon_emerald_conqueror" -> {
+                apply(player, Attributes.ATTACK_DAMAGE, "title_armageddon_emerald_dmg", 2.0D);
+                apply(player, Attributes.LUCK, "title_armageddon_emerald_luck", 1.0D);
+            }
+            case "armageddon_nether_gatekeeper" -> {
+                apply(player, Attributes.MAX_HEALTH, "title_armageddon_nether_hp", 4.0D);
+                apply(player, Attributes.ARMOR, "title_armageddon_nether_armor", 2.0D);
+            }
+            case "armageddon_void_reaper" -> {
+                apply(player, Attributes.ATTACK_DAMAGE, "title_armageddon_void_dmg", 3.0D);
+                apply(player, Attributes.MOVEMENT_SPEED, "title_armageddon_void_speed", 0.02D);
+            }
+            case "armageddon_elven_slayer" -> {
+                apply(player, Attributes.ATTACK_DAMAGE, "title_armageddon_elven_dmg", 2.5D);
+                apply(player, Attributes.ATTACK_SPEED, "title_armageddon_elven_spd", 0.08D);
+            }
+            case "armageddon_doom_bringer_slayer" -> {
+                apply(player, Attributes.MAX_HEALTH, "title_armageddon_doom_hp", 6.0D);
+                apply(player, Attributes.ARMOR, "title_armageddon_doom_armor", 3.0D);
+            }
+            case "armageddon_calamity_overlord" -> {
+                apply(player, Attributes.MAX_HEALTH, "title_armageddon_calamity_hp", 10.0D);
+                apply(player, Attributes.ATTACK_DAMAGE, "title_armageddon_calamity_dmg", 5.0D);
+                apply(player, Attributes.ARMOR_TOUGHNESS, "title_armageddon_calamity_tough", 3.0D);
+                apply(player, Attributes.KNOCKBACK_RESISTANCE, "title_armageddon_calamity_kb", 0.20D);
+            }
             case "awakening" -> apply(player, Attributes.MAX_HEALTH, "title_awakening_health", 0.5D);
             default -> {
                 apply(player, Attributes.LUCK, "title_generic_luck", 1.0D);
@@ -378,7 +454,9 @@ public final class SystemAttributeEffects {
     }
 
     private static void clearTitleModifiers(ServerPlayer player) {
-        String[] ids = {"rank_damage", "rank_health", "nanda_health", "nanda_damage", "nanda_armor", "nanda_speed", "nanda_luck", "caffeine_atk_speed", "caffeine_speed", "caffeine_health", "caffeine_damage", "caffeine_luck", "schvis_health", "schvis_damage", "schvis_armor", "schvis_speed", "schvis_kb", "schvis_luck", "schvis_scale", "creator_health", "creator_damage", "creator_armor", "creator_luck", "conqueror_health", "conqueror_damage", "conqueror_armor", "conqueror_luck", "stone_breaker_speed", "stone_breaker_luck", "deep_delver_health", "ironforged_resistance", "diamond_blessed_luck", "nether_walker_speed", "ender_walker_health", "dragon_slayer_damage", "village_hero_luck", "sea_explorer_health", "master_fisher_luck", "beast_hunter_damage", "raid_breaker_resistance", "ancient_hunter_damage", "warden_survivor_health", "librarian_attack_speed", "master_builder_health", "netherite_damage", "netherite_resistance", "ex_damage", "ex_health", "rank_s_damage", "rank_ss_damage", "rank_ss_health", "rank_sss_damage", "rank_sss_health", "rank_ex_plus_damage", "rank_ex_plus_health", "rank_transcendent_damage", "rank_transcendent_health", "rank_transcendent_speed", "rank_singularity_damage", "rank_singularity_health", "rank_singularity_luck", "ranker_damage", "ranker_health", "ranker_speed", "ranker_kb", "awakened_health", "evolved_damage", "evolved_speed", "awakening_health", "generic_luck", "generic_health"};
+        String[] ids = {"rank_damage", "rank_health", "nanda_health", "nanda_damage", "nanda_armor", "nanda_speed", "nanda_luck", "caffeine_atk_speed", "caffeine_speed", "caffeine_health", "caffeine_damage", "caffeine_luck", "schvis_health", "schvis_damage", "schvis_armor", "schvis_speed", "schvis_kb", "schvis_luck", "schvis_scale", "creator_health", "creator_damage", "creator_armor", "creator_luck", "conqueror_health", "conqueror_damage", "conqueror_armor", "conqueror_luck", "stone_breaker_speed", "stone_breaker_luck", "deep_delver_health", "ironforged_resistance", "diamond_blessed_luck", "nether_walker_speed", "ender_walker_health", "dragon_slayer_damage", "village_hero_luck", "sea_explorer_health", "master_fisher_luck", "beast_hunter_damage", "raid_breaker_resistance", "ancient_hunter_damage", "warden_survivor_health", "librarian_attack_speed", "master_builder_health", "netherite_damage", "netherite_resistance", "ex_damage", "ex_health", "rank_s_damage", "rank_ss_damage", "rank_ss_health", "rank_sss_damage", "rank_sss_health", "rank_ex_plus_damage", "rank_ex_plus_health", "rank_transcendent_damage", "rank_transcendent_health", "rank_transcendent_speed", "rank_singularity_damage", "rank_singularity_health", "rank_singularity_luck", "ranker_damage", "ranker_health", "ranker_speed", "ranker_kb", "awakened_health", "evolved_damage", "evolved_speed", "awakening_health", "generic_luck", "generic_health",
+                "hunter_gaze_luck", "hunter_gaze_dmg", "unyielding_flesh_kb", "unyielding_flesh_armor", "wind_strider_speed", "wind_strider_spd", "earth_instinct_luck", "earth_instinct_tough", "steel_master_spd", "steel_master_dmg",
+                "armageddon_colossus_armor", "armageddon_colossus_kb", "armageddon_goblin_luck", "armageddon_goblin_spd", "armageddon_emerald_dmg", "armageddon_emerald_luck", "armageddon_nether_hp", "armageddon_nether_armor", "armageddon_void_dmg", "armageddon_void_speed", "armageddon_elven_dmg", "armageddon_elven_spd", "armageddon_doom_hp", "armageddon_doom_armor", "armageddon_calamity_hp", "armageddon_calamity_dmg", "armageddon_calamity_tough", "armageddon_calamity_kb"};
         for (String id : ids) clearModifier(player, "title_" + id);
     }
 

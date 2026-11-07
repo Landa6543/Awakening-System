@@ -1,6 +1,5 @@
 package com.soybe.awakeningsystem.item;
 
-import com.soybe.awakeningsystem.SpawnMagicCirclePayload;
 import com.soybe.awakeningsystem.CameraShakePayload;
 import com.soybe.awakeningsystem.entity.SlashWaveEntity;
 import net.minecraft.ChatFormatting;
@@ -66,21 +65,29 @@ public class DreadScytheItem extends SwordItem implements AwakeningWeaponItem {
             sp.getPersistentData().putLong("dread_scythe_skill_cd", gameTime + 600L);
             sp.getCooldowns().addCooldown(this, 600);
 
-            PacketDistributor.sendToPlayersTrackingEntityAndSelf(sp, new SpawnMagicCirclePayload(
-                    sp.getId(),
-                    sp.getX(), sp.getY() + 0.05D, sp.getZ(),
-                    0.0F, 1.0F, 0.0F,
-                    12.0F, 50, 0xFF8A2BE2, 0, false
-            ));
-
-            sl.playSound(null, sp.getX(), sp.getY(), sp.getZ(), SoundEvents.WITHER_SPAWN, SoundSource.PLAYERS, 1.5F, 1.4F);
+            sl.playSound(null, sp.getX(), sp.getY(), sp.getZ(), com.soybe.awakeningsystem.ModSounds.DOMAIN_OF_SANCTION_SLASH.get(), SoundSource.PLAYERS, 2.0F, 0.75F);
+            sl.playSound(null, sp.getX(), sp.getY(), sp.getZ(), SoundEvents.WITHER_SPAWN, SoundSource.PLAYERS, 1.6F, 1.3F);
             sl.playSound(null, sp.getX(), sp.getY(), sp.getZ(), SoundEvents.SOUL_ESCAPE, SoundSource.PLAYERS, 2.0F, 0.8F);
-            sl.playSound(null, sp.getX(), sp.getY(), sp.getZ(), SoundEvents.WARDEN_SONIC_BOOM, SoundSource.PLAYERS, 1.6F, 1.5F);
+            sl.playSound(null, sp.getX(), sp.getY(), sp.getZ(), SoundEvents.WARDEN_SONIC_BOOM, SoundSource.PLAYERS, 1.6F, 1.4F);
 
+            com.soybe.awakeningsystem.CameraShakePayload.sendToNearby(sl, sp.getX(), sp.getY(), sp.getZ(), 40.0D, 0.90F, 16);
+
+            Vec3 look = sp.getLookAngle();
+            sl.sendParticles(com.soybe.awakeningsystem.particle.ModParticles.STRIKE_CLAW.get(), sp.getX() + look.x * 1.5D, sp.getY() + 1.2D + look.y * 1.5D, sp.getZ() + look.z * 1.5D, 1, 0, 0, 0, 0);
             sl.sendParticles(ParticleTypes.SOUL_FIRE_FLAME, sp.getX(), sp.getY() + 1.0D, sp.getZ(), 100, 5.0D, 1.5D, 5.0D, 0.15D);
             sl.sendParticles(ParticleTypes.SOUL, sp.getX(), sp.getY() + 1.2D, sp.getZ(), 60, 4.0D, 1.5D, 4.0D, 0.1D);
             sl.sendParticles(ParticleTypes.WITCH, sp.getX(), sp.getY() + 1.0D, sp.getZ(), 80, 5.0D, 1.5D, 5.0D, 0.2D);
             sl.sendParticles(ParticleTypes.PORTAL, sp.getX(), sp.getY() + 1.0D, sp.getZ(), 120, 6.0D, 2.0D, 6.0D, 0.3D);
+
+            SlashWaveEntity reapFront = new SlashWaveEntity(sl, sp, SlashWaveEntity.TYPE_DARK_VOID, SlashWaveEntity.STYLE_SCYTHE_REAP, 65.0F, 6.0F, 2.4F, -20.0F, 30, 16);
+            reapFront.setDeltaMovement(look.scale(2.3D));
+            sl.addFreshEntity(reapFront);
+
+            SlashWaveEntity reapBack = new SlashWaveEntity(sl, sp, SlashWaveEntity.TYPE_CRIMSON_BLOOD, SlashWaveEntity.STYLE_SCYTHE_REAP, 45.0F, 5.2F, 2.0F, 160.0F, 26, 12);
+            reapBack.setDeltaMovement(look.scale(-1.8D));
+            sl.addFreshEntity(reapBack);
+
+            sp.swing(hand, true);
 
             AABB area = sp.getBoundingBox().inflate(12.0D, 4.0D, 12.0D);
             int hitCount = 0;
@@ -104,13 +111,6 @@ public class DreadScytheItem extends SwordItem implements AwakeningWeaponItem {
             sp.addEffect(new MobEffectInstance(MobEffects.ABSORPTION, 240, 2, false, true));
             sp.addEffect(new MobEffectInstance(MobEffects.MOVEMENT_SPEED, 160, 1, false, true));
 
-            CameraShakePayload.sendToNearby(sl, sp.getX(), sp.getY(), sp.getZ(), 36.0D, 0.85F, 12);
-
-            Vec3 look = sp.getLookAngle();
-            SlashWaveEntity scytheWave = new SlashWaveEntity(sl, sp, SlashWaveEntity.TYPE_DARK_VOID, 60.0F, 5.4F, 2.0F, -30.0F, 28, 12);
-            scytheWave.setDeltaMovement(look.scale(2.2D));
-            sl.addFreshEntity(scytheWave);
-
             WeaponLevelManager.addExp(stack, 40, sp);
 
             sp.displayClientMessage(Component.translatableWithFallback("item.awakening_system.dread_scythe.vortex_msg", "§5§l☠ [VORTEX OF DREAD] §dHarvested the souls of %s enemies! (+Health restored)", hitCount), true);
@@ -123,6 +123,10 @@ public class DreadScytheItem extends SwordItem implements AwakeningWeaponItem {
     @Override
     public boolean hurtEnemy(ItemStack stack, LivingEntity target, LivingEntity attacker) {
         if (attacker.level() instanceof ServerLevel sl) {
+            sl.sendParticles(com.soybe.awakeningsystem.particle.ModParticles.STRIKE_CLAW.get(), target.getX(), target.getY() + 1.0D, target.getZ(), 1, 0, 0, 0, 0);
+            sl.playSound(null, target.getX(), target.getY(), target.getZ(), com.soybe.awakeningsystem.ModSounds.DOMAIN_OF_SANCTION_SLASH.get(), SoundSource.PLAYERS, 1.4F, 1.0F);
+            com.soybe.awakeningsystem.CameraShakePayload.sendToNearby(sl, target.getX(), target.getY(), target.getZ(), 18.0D, 0.3F, 4);
+
             if (attacker instanceof Player player) {
                 target.hurt(target.damageSources().playerAttack(player), 12.0F);
                 player.heal(2.0F);

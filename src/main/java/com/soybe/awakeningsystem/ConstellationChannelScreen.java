@@ -348,10 +348,6 @@ public final class ConstellationChannelScreen extends Screen {
                 g.fill(specBtnX, specBtnY, specBtnX + specBtnW, specBtnY + specBtnH, 0x1800E5FF);
                 g.renderOutline(specBtnX, specBtnY, specBtnW, specBtnH, 0x4400E5FF);
                 drawAutoScaledCenteredString(g, ModernGuiHelper.manhwa(Component.translatable("awakening_system.screen.constellation.cosmic_avatar")), specBtnX + specBtnW / 2, specBtnY + (specBtnH - 8) / 2, specBtnW - 8, 0xFF8AAAB8);
-            } else if (isMock) {
-                g.fill(specBtnX, specBtnY, specBtnX + specBtnW, specBtnY + specBtnH, specHov ? 0x603D1A58 : 0x40251038);
-                g.renderOutline(specBtnX, specBtnY, specBtnW, specBtnH, specHov ? 0xFFFFD700 : 0x889B51E0);
-                drawAutoScaledCenteredString(g, ModernGuiHelper.manhwa(Component.translatable("awakening_system.screen.constellation.simulation_btn")), specBtnX + specBtnW / 2, specBtnY + (specBtnH - 8) / 2, specBtnW - 8, specHov ? 0xFFFFD700 : 0xFFE0B0FF);
             } else {
                 g.fill(specBtnX, specBtnY, specBtnX + specBtnW, specBtnY + specBtnH, specHov ? 0xDD782098 : 0x99481A78);
                 g.renderOutline(specBtnX, specBtnY, specBtnW, specBtnH, specHov ? 0xFFFFD700 : 0xFFB388FF);
@@ -539,13 +535,8 @@ public final class ConstellationChannelScreen extends Screen {
                 int specBtnH = 22;
                 if (mouseX >= specBtnX && mouseX < specBtnX + specBtnW && mouseY >= specBtnY && mouseY < specBtnY + specBtnH) {
                     boolean isSelf = Minecraft.getInstance().player != null && target.uuid().equals(Minecraft.getInstance().player.getUUID());
-                    boolean isMock = target.uuid().toString().startsWith("00000000-0000-0000-0000-");
                     if (isSelf) {
                         Minecraft.getInstance().getSoundManager().play(SimpleSoundInstance.forUI(SoundEvents.NOTE_BLOCK_BASS.value(), 0.8F));
-                        return true;
-                    }
-                    if (isMock) {
-                        Minecraft.getInstance().getSoundManager().play(SimpleSoundInstance.forUI(SoundEvents.AMETHYST_BLOCK_CHIME, 0.9F));
                         return true;
                     }
                     PacketDistributor.sendToServer(new SpectateIncarnationPayload(target.uuid()));
@@ -639,6 +630,11 @@ public final class ConstellationChannelScreen extends Screen {
         if (mc.level != null) {
             Player p = mc.level.getPlayerByUUID(entry.uuid());
             if (p != null) return p;
+            for (net.minecraft.world.entity.Entity e : mc.level.entitiesForRendering()) {
+                if (e.getUUID().equals(entry.uuid()) && e instanceof LivingEntity le) {
+                    return le;
+                }
+            }
         }
         return mc.player;
     }

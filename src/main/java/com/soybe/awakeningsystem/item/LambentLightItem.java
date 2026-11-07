@@ -56,20 +56,17 @@ public class LambentLightItem extends SwordItem implements AwakeningWeaponItem {
             Vec3 look = sp.getLookAngle();
             Vec3 start = sp.position();
 
-            net.neoforged.neoforge.network.PacketDistributor.sendToPlayersNear(
-                    sl, null, sp.getX(), sp.getY(), sp.getZ(), 64.0D,
-                    new com.soybe.awakeningsystem.SpawnMagicCirclePayload(
-                            sp.getId(), sp.getX(), sp.getY(), sp.getZ(),
-                            (float) look.x, (float) look.y, (float) look.z,
-                            2.6F, 25, 0xFFE680, 1, false
-                    )
-            );
+            sp.swing(hand, true);
+            sl.sendParticles(com.soybe.awakeningsystem.particle.ModParticles.STRIKE_CELESTIAL.get(), sp.getX() + look.x * 1.5D, sp.getY() + 1.1D + look.y * 1.5D, sp.getZ() + look.z * 1.5D, 1, 0, 0, 0, 0);
+            sl.sendParticles(ParticleTypes.END_ROD, sp.getX() + look.x * 1.2D, sp.getY() + 1.1D, sp.getZ() + look.z * 1.2D, 20, 0.4D, 0.4D, 0.4D, 0.12D);
+            sl.sendParticles(ParticleTypes.ELECTRIC_SPARK, sp.getX() + look.x * 1.2D, sp.getY() + 1.1D, sp.getZ() + look.z * 1.2D, 15, 0.3D, 0.3D, 0.3D, 0.08D);
 
             Vec3 dashVec = new Vec3(look.x * 2.2D, 0.22D, look.z * 2.2D);
             sp.setDeltaMovement(dashVec);
             sp.hurtMarked = true;
 
-            sl.playSound(null, sp.getX(), sp.getY(), sp.getZ(), SoundEvents.TRIDENT_RIPTIDE_2.value(), SoundSource.PLAYERS, 1.6F, 1.5F);
+            sl.playSound(null, sp.getX(), sp.getY(), sp.getZ(), com.soybe.awakeningsystem.ModSounds.CULTIVATOR_SLASH.get(), SoundSource.PLAYERS, 1.8F, 1.6F);
+            sl.playSound(null, sp.getX(), sp.getY(), sp.getZ(), SoundEvents.TRIDENT_RIPTIDE_2.value(), SoundSource.PLAYERS, 1.4F, 1.5F);
             sl.playSound(null, sp.getX(), sp.getY(), sp.getZ(), SoundEvents.PLAYER_ATTACK_CRIT, SoundSource.PLAYERS, 1.5F, 1.6F);
             sl.playSound(null, sp.getX(), sp.getY(), sp.getZ(), SoundEvents.CROSSBOW_SHOOT, SoundSource.PLAYERS, 1.3F, 1.7F);
 
@@ -78,6 +75,7 @@ public class LambentLightItem extends SwordItem implements AwakeningWeaponItem {
             float dmg = (float) (28.0D * WeaponLevelManager.getDamageMultiplier(stack));
 
             SlashWaveEntity thrustBeam = new SlashWaveEntity(sl, sp, SlashWaveEntity.TYPE_SOLAR_LIGHT, dmg, 1.4F, 3.6F, 0.0F, 20, 10);
+            thrustBeam.setSlashStyle(SlashWaveEntity.STYLE_THRUST);
             thrustBeam.setDeltaMovement(look.scale(2.8D));
             thrustBeam.setArmorPenetration(0.50F);
             sl.addFreshEntity(thrustBeam);
@@ -89,5 +87,16 @@ public class LambentLightItem extends SwordItem implements AwakeningWeaponItem {
         }
 
         return InteractionResultHolder.sidedSuccess(stack, level.isClientSide());
+    }
+
+    @Override
+    public boolean hurtEnemy(ItemStack stack, LivingEntity target, LivingEntity attacker) {
+        if (attacker.level() instanceof ServerLevel sl) {
+            sl.sendParticles(com.soybe.awakeningsystem.particle.ModParticles.STRIKE_CELESTIAL.get(), target.getX(), target.getY() + 1.0D, target.getZ(), 1, 0, 0, 0, 0);
+            sl.sendParticles(ParticleTypes.END_ROD, target.getX(), target.getY() + 1.0D, target.getZ(), 15, 0.3D, 0.3D, 0.3D, 0.08D);
+            sl.playSound(null, target.getX(), target.getY(), target.getZ(), com.soybe.awakeningsystem.ModSounds.CULTIVATOR_SLASH.get(), SoundSource.PLAYERS, 1.4F, 1.55F);
+            com.soybe.awakeningsystem.CameraShakePayload.sendToNearby(sl, target.getX(), target.getY(), target.getZ(), 16.0D, 0.22F, 4);
+        }
+        return super.hurtEnemy(stack, target, attacker);
     }
 }

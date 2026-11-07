@@ -216,6 +216,14 @@ public final class WaypointManager {
         }
     }
 
+    public static synchronized void removeDeathWaypoints() {
+        ensureCurrentWorld();
+        boolean removed = WAYPOINTS.removeIf(wp -> wp.isDeathPoint() || (wp.getId() != null && wp.getId().startsWith("death_point")));
+        if (removed) {
+            save();
+        }
+    }
+
     public static String getWorldIdentifier() {
         Minecraft mc = Minecraft.getInstance();
         try {

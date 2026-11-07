@@ -20,7 +20,7 @@ public final class SkillDefinitions {
 
             "system_core", "beast_bond", "cataclysm_breaker", "twilight_attunement",
             "aether_ascension", "deep_dark_resonance", "adventurer_instinct",
-            "eclipse_edge", "eclipse_core",
+            "eclipse_edge", "eclipse_core", "armageddon_breaker",
 
             "unique_absolute_extraction", "unique_rulers_authority_prime",
             "unique_fourth_wall_infinite", "unique_dragon_breath_annihilation",
@@ -39,6 +39,62 @@ public final class SkillDefinitions {
 
         Rarity(String id) { this.id = id; }
         public String id() { return id; }
+    }
+
+    public enum SkillArchetype {
+        OFFENSIVE("⚔", 0xFFFF5555, "Ofensiva"),
+        DEFENSIVE("🛡", 0xFF55FF55, "Defensiva"),
+        MOBILITY("⚡", 0xFF55FFFF, "Movilidad"),
+        SUMMON("👁", 0xFFFF55FF, "Invocación"),
+        CONTROL("⛓", 0xFFFFAA00, "Control"),
+        UTILITY("✦", 0xFFFFD700, "Utilidad");
+
+        private final String symbol;
+        private final int color;
+        private final String label;
+
+        SkillArchetype(String symbol, int color, String label) {
+            this.symbol = symbol;
+            this.color = color;
+            this.label = label;
+        }
+
+        public String getSymbol() { return symbol; }
+        public int getColor() { return color; }
+        public String getLabel() { return label; }
+    }
+
+    public static SkillArchetype getArchetype(String skillId) {
+        if (skillId == null) return SkillArchetype.UTILITY;
+        String id = skillId.toLowerCase();
+        if (id.equals("pocket_dimension_doorway") || id.contains("sanctuary") || id.contains("subspace")) {
+            return SkillArchetype.UTILITY;
+        }
+        if (id.contains("slash") || id.contains("strike") || id.contains("sword") || id.contains("blade") 
+                || id.contains("rend") || id.contains("burst") || id.contains("apocalypse") || id.contains("fury")
+                || id.contains("combat_instinct") || id.contains("fatal") || id.contains("execute") || id.contains("bloodthirst")) {
+            return SkillArchetype.OFFENSIVE;
+        }
+        if (id.contains("shield") || id.contains("barrier") || id.contains("wall") || id.contains("iron") 
+                || id.contains("armor") || id.contains("resilience") || id.contains("flesh") || id.contains("thick")
+                || id.contains("protection") || id.contains("suppression") || id.contains("defensive")) {
+            return SkillArchetype.DEFENSIVE;
+        }
+        if (id.contains("step") || id.contains("dash") || id.contains("leap") || id.contains("speed") 
+                || id.contains("wind") || id.contains("runner") || id.contains("rush") || id.contains("stride")
+                || id.contains("sprint") || id.contains("evasion") || id.contains("phantom")) {
+            return SkillArchetype.MOBILITY;
+        }
+        if (id.contains("shadow") || id.contains("summon") || id.contains("pack") || id.contains("avatar") 
+                || id.contains("beast") || id.contains("familiar") || id.contains("necro") || id.contains("undead")) {
+            return SkillArchetype.SUMMON;
+        }
+        if (id.contains("bind") || id.contains("chain") || id.contains("slow") || id.contains("stun") 
+                || id.contains("roar") || id.contains("freeze") || id.contains("frost") || id.contains("intimidat")
+                || id.contains("gravity") || id.contains("lock") || id.contains("mark")) {
+            return SkillArchetype.CONTROL;
+        }
+        return SkillArchetype.UTILITY;
     }
 
     public record Definition(String nameKey, String descriptionKey, String effectKey, Rarity rarity, String requiredMod) {
@@ -122,6 +178,7 @@ public final class SkillDefinitions {
             case "shadow_monarch", "bloodthirst" -> "combat";
             case "phoenix_rebirth", "death_king_rewind" -> "survival";
             case "eclipse_edge", "eclipse_core" -> "eclipse";
+            case "armageddon_breaker" -> "combat";
             case "rulers_authority" -> "system";
             case "asrahan_mana_blade" -> "combat";
             case "electrification" -> "combat";
@@ -526,7 +583,14 @@ public final class SkillDefinitions {
             case "va_death_mark" -> new Definition("awakening_system.skill.va_death_mark.name", "awakening_system.skill.va_death_mark.description", "awakening_system.skill.va_death_mark.effect", Rarity.EPIC, "");
             case "ga_pain_suppression" -> new Definition("awakening_system.skill.ga_pain_suppression.name", "awakening_system.skill.ga_pain_suppression.description", "awakening_system.skill.ga_pain_suppression.effect", Rarity.EPIC, "");
 
-            case "system_core", "beast_bond", "cataclysm_breaker", "twilight_attunement", "aether_ascension", "deep_dark_resonance", "adventurer_instinct", "eclipse_edge", "eclipse_core" -> modSkill(baseSkillId, skillId.equals(baseSkillId));
+            case "pocket_dimension_doorway" -> new Definition(
+                    "awakening_system.skill.pocket_dimension_doorway.name",
+                    "awakening_system.skill.pocket_dimension_doorway.description",
+                    "awakening_system.skill.pocket_dimension_doorway.effect",
+                    Rarity.RARE, "textures/gui/skills/pocket_dimension_doorway.png"
+            );
+
+            case "system_core", "beast_bond", "cataclysm_breaker", "twilight_attunement", "aether_ascension", "deep_dark_resonance", "adventurer_instinct", "eclipse_edge", "eclipse_core", "armageddon_breaker" -> modSkill(baseSkillId, skillId.equals(baseSkillId));
             default -> {
                 ClassSkillTree.SkillNode treeNode = ClassSkillTree.getNode(baseSkillId);
                 if (treeNode != null) {
@@ -555,6 +619,7 @@ public final class SkillDefinitions {
             case "adventurer_instinct" -> new Definition("awakening_system.skill.adventurer_instinct" + suffix + ".name", "awakening_system.skill.adventurer_instinct" + suffix + ".description", "awakening_system.skill.adventurer_instinct" + suffix + ".effect", Rarity.RARE, "adventurez");
             case "eclipse_edge" -> new Definition("awakening_system.skill.eclipse_edge" + suffix + ".name", "awakening_system.skill.eclipse_edge" + suffix + ".description", "awakening_system.skill.eclipse_edge" + suffix + ".effect", Rarity.LEGENDARY, "eclipse_expansion");
             case "eclipse_core" -> new Definition("awakening_system.skill.eclipse_core" + suffix + ".name", "awakening_system.skill.eclipse_core" + suffix + ".description", "awakening_system.skill.eclipse_core" + suffix + ".effect", Rarity.MYTHIC, "eclipse_expansion");
+            case "armageddon_breaker" -> new Definition("awakening_system.skill.armageddon_breaker" + suffix + ".name", "awakening_system.skill.armageddon_breaker" + suffix + ".description", "awakening_system.skill.armageddon_breaker" + suffix + ".effect", Rarity.MYTHIC, "armageddon");
             default -> null;
         };
     }
@@ -566,6 +631,9 @@ public final class SkillDefinitions {
         if (definition == null) return false;
         if ("eclipse_expansion".equals(definition.requiredMod())) {
             return ModList.get().isLoaded("eclipse_expansion") || ModList.get().isLoaded("eclipse");
+        }
+        if ("armageddon".equals(definition.requiredMod())) {
+            return com.soybe.awakeningsystem.compat.ArmageddonCompatHandler.isLoaded();
         }
         return definition.requiredMod().isEmpty() || ModList.get().isLoaded(definition.requiredMod());
     }
@@ -589,12 +657,22 @@ public final class SkillDefinitions {
                  "shadow_step_blink", "vital_strike", "infinite_mirror_blades", "smoke_bomb_escape",
                  "elemental_spear", "gravity_crush", "supernova_incineration", "arcane_overload", "time_dilation",
                  "dragon_breath", "meteor_fall", "breath_of_annihilation", "dragon_wings_flight", "dragon_form_avatar",
-                 "shonen_infinite_void", "shonen_getsuga_tensho", "shonen_conquerors_haki", "shonen_zoltraak", "shonen_rasenshuriken" -> true;
+                 "shonen_infinite_void", "shonen_getsuga_tensho", "shonen_conquerors_haki", "shonen_zoltraak", "shonen_rasenshuriken",
+                 "pocket_dimension_doorway" -> true;
             default -> false;
         };
         if (inSwitch) return true;
         ClassSkillTree.SkillNode treeNode = ClassSkillTree.getNode(base);
         return treeNode != null && treeNode.isActive();
+    }
+
+    public static boolean isHabitSkill(String skillId) {
+        if (skillId == null || skillId.isEmpty()) return false;
+        String base = skillId.endsWith("_evolution") ? skillId.substring(0, skillId.length() - 10) : skillId;
+        return switch (base) {
+            case "enduring_flesh", "windrunner", "combat_instinct", "ore_sense", "deadeye" -> true;
+            default -> false;
+        };
     }
 
     public static boolean isPassive(String skillId) {

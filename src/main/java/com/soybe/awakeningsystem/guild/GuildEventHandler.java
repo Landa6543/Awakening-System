@@ -19,6 +19,12 @@ import net.neoforged.neoforge.event.tick.PlayerTickEvent;
 
 import net.neoforged.neoforge.event.ServerChatEvent;
 import net.minecraft.network.chat.Component;
+import net.minecraft.server.MinecraftServer;
+import net.minecraft.world.entity.Entity;
+import net.minecraft.world.entity.Mob;
+import net.minecraft.world.entity.player.Player;
+import net.neoforged.neoforge.network.PacketDistributor;
+import com.soybe.awakeningsystem.network.SyncShadowAlliancePayload;
 import java.util.Set;
 import java.util.UUID;
 import java.util.concurrent.ConcurrentHashMap;
@@ -78,26 +84,78 @@ public final class GuildEventHandler {
         }
     }
 
-    @SubscribeEvent
-    public static void onCombatDamage(LivingDamageEvent.Pre event) {
-        if (event.getEntity() instanceof ServerPlayer victim && event.getSource().getEntity() instanceof ServerPlayer attacker && attacker.server != null) {
-            Guild vGuild = GuildSavedData.get(victim.server).getGuildByPlayer(victim.getUUID());
-            Guild aGuild = GuildSavedData.get(attacker.server).getGuildByPlayer(attacker.getUUID());
-            if (vGuild != null && aGuild != null && (vGuild.getId().equals(aGuild.getId()) || vGuild.isAlliedWith(aGuild.getId()))) {
-                event.setNewDamage(0.0F);
-                return;
+    public static UUID getEffectiveOwnerUUID(Entity entity) {
+        if (entity == null) return null;
+        if (entity instanceof Player player) {
+            return player.getUUID();
+        }
+        if (entity instanceof com.soybe.awakeningsystem.entity.CompanionEntity companion) {
+            return companion.getOwnerUUID();
+        }
+        if (entity.getTags().contains("shadow_soldier")) {
+            for (String tag : entity.getTags()) {
+                if (tag.startsWith("shadow_master_")) {
+                    try {
+                        return UUID.fromString(tag.substring("shadow_master_".length()));
+                    } catch (Exception ignored) {}
+                }
             }
         }
+        return null;
+    }
 
-        if (event.getEntity() instanceof ServerPlayer victim && victim.server != null) {
-            Guild guild = GuildSavedData.get(victim.server).getGuildByPlayer(victim.getUUID());
+    public static boolean areAlliesOrSameGuild(Entity e1, Entity e2) {
+        if (e1 == null || e2 == null) return false;
+        if (e1 == e2) return true;
+        UUID u1 = getEffectiveOwnerUUID(e1);
+        UUID u2 = getEffectiveOwnerUUID(e2);
+        if (u1 == null || u2 == null) return false;
+        if (u1.equals(u2)) return true;
+
+        MinecraftServer server = null;
+        if (e1.level() != null && e1.level().getServer() != null) {
+            server = e1.level().getServer();
+        } else if (e2.level() != null && e2.level().getServer() != null) {
+            server = e2.level().getServer();
+        }
+        if (server == null) return false;
+
+        GuildSavedData data = GuildSavedData.get(server);
+        Guild g1 = data.getGuildByPlayer(u1);
+        Guild g2 = data.getGuildByPlayer(u2);
+        if (g1 == null || g2 == null) return false;
+        return g1.getId().equals(g2.getId()) || g1.isAlliedWith(g2.getId()) || g2.isAlliedWith(g1.getId());
+    }
+
+    public static void syncShadowAllianceToPlayer(ServerPlayer player, Mob shadowMob) {
+        if (player == null || shadowMob == null) return;
+        byte allianceType = 0;
+        if (shadowMob.getTags().contains("shadow_master_" + player.getUUID())) {
+            allianceType = 1; // Propia del jugador
+        } else if (areAlliesOrSameGuild(player, shadowMob)) {
+            allianceType = 2; // Aliado de gremio o alianza
+        }
+        PacketDistributor.sendToPlayer(player, new SyncShadowAlliancePayload(shadowMob.getId(), allianceType));
+    }
+
+    @SubscribeEvent
+    public static void onCombatDamage(LivingDamageEvent.Pre event) {
+        Entity victim = event.getEntity();
+        Entity attacker = event.getSource().getEntity() != null ? event.getSource().getEntity() : event.getSource().getDirectEntity();
+        if (victim != null && attacker != null && areAlliesOrSameGuild(victim, attacker)) {
+            event.setNewDamage(0.0F);
+            return;
+        }
+
+        if (event.getEntity() instanceof ServerPlayer vPlayer && vPlayer.server != null) {
+            Guild guild = GuildSavedData.get(vPlayer.server).getGuildByPlayer(vPlayer.getUUID());
             if (guild != null && guild.hasPerk(GuildPerk.COLLECTIVE_FORTITUDE)) {
                 event.setNewDamage(event.getNewDamage() * 0.92F);
             }
         }
 
-        if (event.getSource().getEntity() instanceof ServerPlayer attacker && attacker.server != null) {
-            Guild guild = GuildSavedData.get(attacker.server).getGuildByPlayer(attacker.getUUID());
+        if (event.getSource().getEntity() instanceof ServerPlayer aPlayer && aPlayer.server != null) {
+            Guild guild = GuildSavedData.get(aPlayer.server).getGuildByPlayer(aPlayer.getUUID());
             if (guild != null) {
                 float multiplier = 1.0F;
 
@@ -196,6 +254,23 @@ public final class GuildEventHandler {
                     if (data.mana() < data.maxMana()) {
                         data.setMana(Math.min(data.maxMana(), data.mana() + 5));
                         AwakeningSystemMod.sync(player);
+                    }
+                }
+            }
+
+            // Contribuciones periódicas de miembros NPC del gremio (cada 60s)
+            if (player.tickCount % 1200 == 0) {
+                GuildSavedData gData = GuildSavedData.get(player.server);
+                Guild guild = gData.getGuildByPlayer(player.getUUID());
+                if (guild != null && player.getUUID().equals(guild.getLeaderUuid())) {
+                    for (GuildMember m : guild.getMembers().values()) {
+                        if (m.isNpc()) {
+                            long moraReward = 30L + player.level().getRandom().nextInt(40);
+                            guild.depositMora(moraReward);
+                            guild.addExp(15L);
+                            m.addContribution(moraReward);
+                            gData.setDirty();
+                        }
                     }
                 }
             }

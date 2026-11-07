@@ -42,10 +42,17 @@ public class PlushiesLootboxBlock extends Block {
     @Override
     public BlockState playerWillDestroy(Level level, BlockPos pos, BlockState state, Player player) {
         if (!level.isClientSide() && level instanceof ServerLevel sl && !player.isCreative()) {
-            ItemStack randomPlushie = SystemItems.getRandomPlushieItem(sl.random);
-            popResource(sl, pos, randomPlushie);
-            sl.sendParticles(ParticleTypes.TOTEM_OF_UNDYING, pos.getX() + 0.5D, pos.getY() + 0.5D, pos.getZ() + 0.5D, 25, 0.3D, 0.3D, 0.3D, 0.1D);
-            sl.playSound(null, pos, SoundEvents.UI_TOAST_CHALLENGE_COMPLETE, SoundSource.BLOCKS, 0.9F, 1.1F);
+            if (player.isShiftKeyDown()) {
+                // Si el jugador está agachado (sneak), recupera la caja como bloque sin abrirla ni duplicar
+                popResource(sl, pos, new ItemStack(SystemBlocks.PLUSHIES_LOOTBOX.get()));
+            } else {
+                // Apertura estándar por destrucción: otorga el peluche
+                ItemStack randomPlushie = SystemItems.getRandomPlushieItem(sl.random);
+                popResource(sl, pos, randomPlushie);
+                sl.sendParticles(ParticleTypes.TOTEM_OF_UNDYING, pos.getX() + 0.5D, pos.getY() + 0.5D, pos.getZ() + 0.5D, 25, 0.3D, 0.3D, 0.3D, 0.1D);
+                sl.playSound(null, pos, SoundEvents.UI_TOAST_CHALLENGE_COMPLETE, SoundSource.BLOCKS, 0.9F, 1.1F);
+                player.displayClientMessage(net.minecraft.network.chat.Component.translatable("block.awakening_system.plushie_lootbox.opened", randomPlushie.getHoverName()), true);
+            }
         }
         return super.playerWillDestroy(level, pos, state, player);
     }

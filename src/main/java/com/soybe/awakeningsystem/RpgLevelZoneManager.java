@@ -52,10 +52,12 @@ import java.util.Random;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Vec3i;
 import net.minecraft.network.chat.Component;
+import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.world.entity.LivingEntity;
 import net.minecraft.world.entity.Mob;
+import net.minecraft.world.entity.TamableAnimal;
 import net.minecraft.world.entity.ai.attributes.AttributeInstance;
 import net.minecraft.world.entity.ai.attributes.Attributes;
 import net.minecraft.world.entity.monster.EnderMan;
@@ -67,6 +69,7 @@ import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.Items;
 import net.minecraft.world.level.ItemLike;
 import net.minecraft.world.level.Level;
+import java.util.Locale;
 
 public final class RpgLevelZoneManager {
     private static final Random RNG = new Random();
@@ -110,15 +113,21 @@ public final class RpgLevelZoneManager {
         BlockPos spawn = level.getSharedSpawnPos();
         double dist = Math.sqrt(pos.distSqr((Vec3i)spawn));
         if (dist <= 500.0) {
-            return 1 + (int)(dist / 500.0 * 19.0);
+            return 1 + (int)(dist / 500.0 * 29.0);
         }
         if (dist <= 1500.0) {
-            return 20 + (int)((dist - 500.0) / 1000.0 * 30.0);
+            return 30 + (int)((dist - 500.0) / 1000.0 * 50.0);
         }
-        if (dist <= 3500.0) {
-            return 50 + (int)((dist - 1500.0) / 2000.0 * 30.0);
+        if (dist <= 4000.0) {
+            return 80 + (int)((dist - 1500.0) / 2500.0 * 100.0);
         }
-        return 80 + Math.min(25, (int)((dist - 3500.0) / 3000.0 * 20.0));
+        if (dist <= 8000.0) {
+            return 180 + (int)((dist - 4000.0) / 4000.0 * 140.0);
+        }
+        if (dist <= 13000.0) {
+            return 320 + (int)((dist - 8000.0) / 5000.0 * 100.0);
+        }
+        return 420 + Math.min(80, (int)((dist - 13000.0) / 5000.0 * 80.0));
     }
 
     public static int getDimensionMinLevel(Level level) {
@@ -149,8 +158,8 @@ public final class RpgLevelZoneManager {
         if (level.dimension() == Level.OVERWORLD) {
             BlockPos spawnPos = level.getSharedSpawnPos();
             double distFromSpawn = Math.sqrt(pos.distSqr(new Vec3i(spawnPos.getX(), pos.getY(), spawnPos.getZ())));
-            double distanceFactor = Math.min(0.40D, distFromSpawn / 5000.0D);
-            return Math.max(20, (int) Math.round(safePlayerLvl * (1.0D + distanceFactor + 0.05D)) + 4);
+            double distanceFactor = Math.min(1.0D, distFromSpawn / 15000.0D);
+            return Math.min(500, Math.max(30, (int) Math.round(safePlayerLvl * (1.0D + distanceFactor + 0.05D)) + 6));
         }
         if (level.dimension() == Level.NETHER) {
             return Math.max(55, safePlayerLvl + 5);
@@ -171,20 +180,47 @@ public final class RpgLevelZoneManager {
     }
 
     public static int getMaxWildLevelForDimension(Level level) {
-        return 120;
+        if (level.dimension() == Level.OVERWORLD) {
+            return 500;
+        }
+        return 150;
     }
 
     public static String getZoneName(int level) {
-        if (level < 20) {
-            return "\u00a7aNovice Plains (Lv. 1-20)";
-        }
-        if (level < 50) {
-            return "\u00a7eForbidden Forest & Ruins (Lv. 20-50)";
+        if (level < 30) {
+            return "\u00a7aNovice Plains (Lv. 1-30)";
         }
         if (level < 80) {
-            return "\u00a7cAshen & Fury Lands (Lv. 50-80)";
+            return "\u00a7eForbidden Forest & Ruins (Lv. 30-80)";
         }
-        return "\u00a74\u00a7lAbyss of Calamities (Lv. 80-100+)";
+        if (level < 180) {
+            return "\u00a76Siderite Wastelands (Lv. 80-180)";
+        }
+        if (level < 320) {
+            return "\u00a7bSoulforge & Blazing Lands (Lv. 180-320)";
+        }
+        if (level < 420) {
+            return "\u00a7cAdamantite Peaks (Lv. 320-420)";
+        }
+        return "\u00a74\u00a7lAbyss of Calamities (Lv. 420-500+)";
+    }
+
+    public static boolean isEligibleForRpgScaling(LivingEntity living) {
+        if (living == null || !living.isAlive()) return false;
+        if (living instanceof Player) return false;
+        if (living.getTags().contains("shadow_soldier")) return false;
+        if (living.getTags().contains("no_rpg_scaling")) return false;
+        if (living instanceof TamableAnimal tamable && tamable.isTame() && tamable.getOwnerUUID() != null) return false;
+        if (living.getPersistentData().getBoolean("Tamed") && living.getPersistentData().hasUUID("Owner")) return false;
+        if (living instanceof Enemy) return true;
+        if (com.soybe.awakeningsystem.config.BossCompatibilityManager.isBoss(living)) return true;
+        String typeKey = BuiltInRegistries.ENTITY_TYPE.getKey(living.getType()).toString().toLowerCase(Locale.ROOT);
+        if (typeKey.startsWith("iceandfire:") || living.getClass().getName().contains("iceandfire")) return true;
+        if (com.soybe.awakeningsystem.compat.iceandfire.IceAndFireCompat.isHostileOrExtractable(living)) {
+            if (living instanceof Mob mob && mob.getTarget() != null) return true;
+            if (living.getAttribute(Attributes.ATTACK_DAMAGE) != null && living.getMaxHealth() >= 20.0F) return true;
+        }
+        return false;
     }
 
     public static void scaleMobOnSpawn(Mob mob, ServerLevel level) {
@@ -204,7 +240,7 @@ public final class RpgLevelZoneManager {
         if (WorldBossScalingManager.isWorldBoss((LivingEntity)mob)) {
             return;
         }
-        if (!(mob instanceof Enemy)) {
+        if (!isEligibleForRpgScaling(mob)) {
             return;
         }
         if (mob instanceof HypostasisBaseBossEntity || mob instanceof AnemoRevivalOrbEntity || mob instanceof ElectroRevivalPrismEntity || mob instanceof EnderMan && level.dimension() == Level.END) {
@@ -359,7 +395,7 @@ public final class RpgLevelZoneManager {
                 || com.soybe.awakeningsystem.tower.GreatTowerWorldManager.isGreatTowerDimension(mob.level())) {
             return;
         }
-        if (!(mob instanceof Enemy)) {
+        if (!isEligibleForRpgScaling(mob)) {
             return;
         }
         int playerLevel = Math.max(1, SystemEvents.data((Player)player).level());
@@ -590,202 +626,423 @@ public final class RpgLevelZoneManager {
         }
         double equipChance = Math.min(0.18D, 0.03 + (double)mobLevel * 0.0006);
         if (RNG.nextDouble() < equipChance) {
-            ItemStack dropStack = RpgLevelZoneManager.rollRandomRpgEquipment(mobLevel);
+            ItemStack dropStack = RpgLevelZoneManager.rollRandomRpgEquipment(level, mobLevel);
             RpgAffixManager.rollAffixes(dropStack, mobLevel);
             entity.spawnAtLocation(dropStack);
         }
     }
 
-    public static ItemStack rollRandomRpgEquipment(int mobLevel) {
-        boolean isArmor = RNG.nextInt(100) < 65;
-        if (isArmor) {
-            int slot = RNG.nextInt(4);
-            // Tier 1: Nivel 1 - 34 (Cuero, Malla, Hierro)
-            if (mobLevel < 35) {
-                int tier = RNG.nextInt(3);
-                if (tier == 0) {
-                    return switch (slot) {
-                        case 0 -> new ItemStack((ItemLike)Items.LEATHER_HELMET);
-                        case 1 -> new ItemStack((ItemLike)Items.LEATHER_CHESTPLATE);
-                        case 2 -> new ItemStack((ItemLike)Items.LEATHER_LEGGINGS);
-                        default -> new ItemStack((ItemLike)Items.LEATHER_BOOTS);
+    public enum EquipTier {
+        LEATHER,
+        CHAINMAIL,
+        IRON,
+        GOLD,
+        DIAMOND,
+        NETHERITE,
+        SIDERITE,
+        SOUL_ALLOY,
+        MITHRIL,
+        ADAMANTITE,
+        SPIRIT_JADE,
+        ASTRAL,
+        CELESTIAL,
+        ASTRALITE,
+        PRIMORDIAL
+    }
+
+    private static ItemStack getArmorPiece(EquipTier tier, int slot) {
+        return switch (tier) {
+            case LEATHER -> switch (slot) {
+                case 0 -> new ItemStack((ItemLike)Items.LEATHER_HELMET);
+                case 1 -> new ItemStack((ItemLike)Items.LEATHER_CHESTPLATE);
+                case 2 -> new ItemStack((ItemLike)Items.LEATHER_LEGGINGS);
+                default -> new ItemStack((ItemLike)Items.LEATHER_BOOTS);
+            };
+            case CHAINMAIL -> switch (slot) {
+                case 0 -> new ItemStack((ItemLike)Items.CHAINMAIL_HELMET);
+                case 1 -> new ItemStack((ItemLike)Items.CHAINMAIL_CHESTPLATE);
+                case 2 -> new ItemStack((ItemLike)Items.CHAINMAIL_LEGGINGS);
+                default -> new ItemStack((ItemLike)Items.CHAINMAIL_BOOTS);
+            };
+            case IRON -> switch (slot) {
+                case 0 -> new ItemStack((ItemLike)Items.IRON_HELMET);
+                case 1 -> new ItemStack((ItemLike)Items.IRON_CHESTPLATE);
+                case 2 -> new ItemStack((ItemLike)Items.IRON_LEGGINGS);
+                default -> new ItemStack((ItemLike)Items.IRON_BOOTS);
+            };
+            case GOLD -> switch (slot) {
+                case 0 -> new ItemStack((ItemLike)Items.GOLDEN_HELMET);
+                case 1 -> new ItemStack((ItemLike)Items.GOLDEN_CHESTPLATE);
+                case 2 -> new ItemStack((ItemLike)Items.GOLDEN_LEGGINGS);
+                default -> new ItemStack((ItemLike)Items.GOLDEN_BOOTS);
+            };
+            case DIAMOND -> switch (slot) {
+                case 0 -> new ItemStack((ItemLike)Items.DIAMOND_HELMET);
+                case 1 -> new ItemStack((ItemLike)Items.DIAMOND_CHESTPLATE);
+                case 2 -> new ItemStack((ItemLike)Items.DIAMOND_LEGGINGS);
+                default -> new ItemStack((ItemLike)Items.DIAMOND_BOOTS);
+            };
+            case NETHERITE -> switch (slot) {
+                case 0 -> new ItemStack((ItemLike)Items.NETHERITE_HELMET);
+                case 1 -> new ItemStack((ItemLike)Items.NETHERITE_CHESTPLATE);
+                case 2 -> new ItemStack((ItemLike)Items.NETHERITE_LEGGINGS);
+                default -> new ItemStack((ItemLike)Items.NETHERITE_BOOTS);
+            };
+            case SIDERITE -> {
+                if (SystemItems.SIDERITE_HELMET.isBound()) {
+                    yield switch (slot) {
+                        case 0 -> new ItemStack((ItemLike)SystemItems.SIDERITE_HELMET.get());
+                        case 1 -> new ItemStack((ItemLike)SystemItems.SIDERITE_CHESTPLATE.get());
+                        case 2 -> new ItemStack((ItemLike)SystemItems.SIDERITE_LEGGINGS.get());
+                        default -> new ItemStack((ItemLike)SystemItems.SIDERITE_BOOTS.get());
                     };
                 }
-                if (tier == 1) {
-                    return switch (slot) {
-                        case 0 -> new ItemStack((ItemLike)Items.CHAINMAIL_HELMET);
-                        case 1 -> new ItemStack((ItemLike)Items.CHAINMAIL_CHESTPLATE);
-                        case 2 -> new ItemStack((ItemLike)Items.CHAINMAIL_LEGGINGS);
-                        default -> new ItemStack((ItemLike)Items.CHAINMAIL_BOOTS);
-                    };
-                }
-                return switch (slot) {
-                    case 0 -> new ItemStack((ItemLike)Items.IRON_HELMET);
-                    case 1 -> new ItemStack((ItemLike)Items.IRON_CHESTPLATE);
-                    case 2 -> new ItemStack((ItemLike)Items.IRON_LEGGINGS);
-                    default -> new ItemStack((ItemLike)Items.IRON_BOOTS);
-                };
+                yield getArmorPiece(EquipTier.NETHERITE, slot);
             }
-            // Tier 2: Nivel 35 - 79 (Hierro, Oro, Diamante)
-            if (mobLevel < 80) {
-                int tier = RNG.nextInt(3);
-                if (tier == 0) {
-                    return switch (slot) {
-                        case 0 -> new ItemStack((ItemLike)Items.IRON_HELMET);
-                        case 1 -> new ItemStack((ItemLike)Items.IRON_CHESTPLATE);
-                        case 2 -> new ItemStack((ItemLike)Items.IRON_LEGGINGS);
-                        default -> new ItemStack((ItemLike)Items.IRON_BOOTS);
+            case SOUL_ALLOY -> {
+                if (SystemItems.SOUL_ALLOY_HELMET.isBound()) {
+                    yield switch (slot) {
+                        case 0 -> new ItemStack((ItemLike)SystemItems.SOUL_ALLOY_HELMET.get());
+                        case 1 -> new ItemStack((ItemLike)SystemItems.SOUL_ALLOY_CHESTPLATE.get());
+                        case 2 -> new ItemStack((ItemLike)SystemItems.SOUL_ALLOY_LEGGINGS.get());
+                        default -> new ItemStack((ItemLike)SystemItems.SOUL_ALLOY_BOOTS.get());
                     };
                 }
-                if (tier == 1) {
-                    return switch (slot) {
-                        case 0 -> new ItemStack((ItemLike)Items.GOLDEN_HELMET);
-                        case 1 -> new ItemStack((ItemLike)Items.GOLDEN_CHESTPLATE);
-                        case 2 -> new ItemStack((ItemLike)Items.GOLDEN_LEGGINGS);
-                        default -> new ItemStack((ItemLike)Items.GOLDEN_BOOTS);
-                    };
-                }
-                return switch (slot) {
-                    case 0 -> new ItemStack((ItemLike)Items.DIAMOND_HELMET);
-                    case 1 -> new ItemStack((ItemLike)Items.DIAMOND_CHESTPLATE);
-                    case 2 -> new ItemStack((ItemLike)Items.DIAMOND_LEGGINGS);
-                    default -> new ItemStack((ItemLike)Items.DIAMOND_BOOTS);
-                };
+                yield getArmorPiece(EquipTier.NETHERITE, slot);
             }
-            // Tier 3: Nivel 80 - 179 (Diamante y Netherite vanilla puro)
-            if (mobLevel < 180) {
-                int tier = RNG.nextInt(3);
-                if (tier < 2) {
-                    return switch (slot) {
-                        case 0 -> new ItemStack((ItemLike)Items.DIAMOND_HELMET);
-                        case 1 -> new ItemStack((ItemLike)Items.DIAMOND_CHESTPLATE);
-                        case 2 -> new ItemStack((ItemLike)Items.DIAMOND_LEGGINGS);
-                        default -> new ItemStack((ItemLike)Items.DIAMOND_BOOTS);
-                    };
-                }
-                return switch (slot) {
-                    case 0 -> new ItemStack((ItemLike)Items.NETHERITE_HELMET);
-                    case 1 -> new ItemStack((ItemLike)Items.NETHERITE_CHESTPLATE);
-                    case 2 -> new ItemStack((ItemLike)Items.NETHERITE_LEGGINGS);
-                    default -> new ItemStack((ItemLike)Items.NETHERITE_BOOTS);
-                };
-            }
-            // Tier 4: Nivel 180 - 239 (Netherite y Mithril)
-            if (mobLevel < 240) {
-                int tier = RNG.nextInt(2);
-                if (tier == 0 || !SystemItems.MITHRIL_HELMET.isBound()) {
-                    return switch (slot) {
-                        case 0 -> new ItemStack((ItemLike)Items.NETHERITE_HELMET);
-                        case 1 -> new ItemStack((ItemLike)Items.NETHERITE_CHESTPLATE);
-                        case 2 -> new ItemStack((ItemLike)Items.NETHERITE_LEGGINGS);
-                        default -> new ItemStack((ItemLike)Items.NETHERITE_BOOTS);
-                    };
-                }
-                return switch (slot) {
-                    case 0 -> new ItemStack((ItemLike)SystemItems.MITHRIL_HELMET.get());
-                    case 1 -> new ItemStack((ItemLike)SystemItems.MITHRIL_CHESTPLATE.get());
-                    case 2 -> new ItemStack((ItemLike)SystemItems.MITHRIL_LEGGINGS.get());
-                    default -> new ItemStack((ItemLike)SystemItems.MITHRIL_BOOTS.get());
-                };
-            }
-            // Tier 5: Nivel 240 - 299 (Mithril y Adamantita)
-            if (mobLevel < 300) {
-                int tier = RNG.nextInt(2);
-                if (tier == 0 && SystemItems.MITHRIL_HELMET.isBound()) {
-                    return switch (slot) {
+            case MITHRIL -> {
+                if (SystemItems.MITHRIL_HELMET.isBound()) {
+                    yield switch (slot) {
                         case 0 -> new ItemStack((ItemLike)SystemItems.MITHRIL_HELMET.get());
                         case 1 -> new ItemStack((ItemLike)SystemItems.MITHRIL_CHESTPLATE.get());
                         case 2 -> new ItemStack((ItemLike)SystemItems.MITHRIL_LEGGINGS.get());
                         default -> new ItemStack((ItemLike)SystemItems.MITHRIL_BOOTS.get());
                     };
                 }
+                yield getArmorPiece(EquipTier.NETHERITE, slot);
+            }
+            case ADAMANTITE -> {
                 if (SystemItems.ADAMANTITE_HELMET.isBound()) {
-                    return switch (slot) {
+                    yield switch (slot) {
                         case 0 -> new ItemStack((ItemLike)SystemItems.ADAMANTITE_HELMET.get());
                         case 1 -> new ItemStack((ItemLike)SystemItems.ADAMANTITE_CHESTPLATE.get());
                         case 2 -> new ItemStack((ItemLike)SystemItems.ADAMANTITE_LEGGINGS.get());
                         default -> new ItemStack((ItemLike)SystemItems.ADAMANTITE_BOOTS.get());
                     };
                 }
-                return switch (slot) {
-                    case 0 -> new ItemStack((ItemLike)Items.NETHERITE_HELMET);
-                    case 1 -> new ItemStack((ItemLike)Items.NETHERITE_CHESTPLATE);
-                    case 2 -> new ItemStack((ItemLike)Items.NETHERITE_LEGGINGS);
-                    default -> new ItemStack((ItemLike)Items.NETHERITE_BOOTS);
+                yield getArmorPiece(EquipTier.MITHRIL, slot);
+            }
+            case SPIRIT_JADE -> {
+                if (SystemItems.SPIRIT_JADE_HELMET.isBound()) {
+                    yield switch (slot) {
+                        case 0 -> new ItemStack((ItemLike)SystemItems.SPIRIT_JADE_HELMET.get());
+                        case 1 -> new ItemStack((ItemLike)SystemItems.SPIRIT_JADE_CHESTPLATE.get());
+                        case 2 -> new ItemStack((ItemLike)SystemItems.SPIRIT_JADE_LEGGINGS.get());
+                        default -> new ItemStack((ItemLike)SystemItems.SPIRIT_JADE_BOOTS.get());
+                    };
+                }
+                yield getArmorPiece(EquipTier.ADAMANTITE, slot);
+            }
+            case ASTRAL -> {
+                if (SystemItems.ASTRAL_HELMET.isBound()) {
+                    yield switch (slot) {
+                        case 0 -> new ItemStack((ItemLike)SystemItems.ASTRAL_HELMET.get());
+                        case 1 -> new ItemStack((ItemLike)SystemItems.ASTRAL_CHESTPLATE.get());
+                        case 2 -> new ItemStack((ItemLike)SystemItems.ASTRAL_LEGGINGS.get());
+                        default -> new ItemStack((ItemLike)SystemItems.ASTRAL_BOOTS.get());
+                    };
+                }
+                yield getArmorPiece(EquipTier.SPIRIT_JADE, slot);
+            }
+            case CELESTIAL -> {
+                if (SystemItems.CELESTIAL_HELMET.isBound()) {
+                    yield switch (slot) {
+                        case 0 -> new ItemStack((ItemLike)SystemItems.CELESTIAL_HELMET.get());
+                        case 1 -> new ItemStack((ItemLike)SystemItems.CELESTIAL_CHESTPLATE.get());
+                        case 2 -> new ItemStack((ItemLike)SystemItems.CELESTIAL_LEGGINGS.get());
+                        default -> new ItemStack((ItemLike)SystemItems.CELESTIAL_BOOTS.get());
+                    };
+                }
+                yield getArmorPiece(EquipTier.ASTRAL, slot);
+            }
+            case ASTRALITE -> {
+                if (SystemItems.ASTRALITE_HELMET.isBound()) {
+                    yield switch (slot) {
+                        case 0 -> new ItemStack((ItemLike)SystemItems.ASTRALITE_HELMET.get());
+                        case 1 -> new ItemStack((ItemLike)SystemItems.ASTRALITE_CHESTPLATE.get());
+                        case 2 -> new ItemStack((ItemLike)SystemItems.ASTRALITE_LEGGINGS.get());
+                        default -> new ItemStack((ItemLike)SystemItems.ASTRALITE_BOOTS.get());
+                    };
+                }
+                yield getArmorPiece(EquipTier.CELESTIAL, slot);
+            }
+            case PRIMORDIAL -> {
+                if (SystemItems.PRIMORDIAL_HELMET.isBound()) {
+                    yield switch (slot) {
+                        case 0 -> new ItemStack((ItemLike)SystemItems.PRIMORDIAL_HELMET.get());
+                        case 1 -> new ItemStack((ItemLike)SystemItems.PRIMORDIAL_CHESTPLATE.get());
+                        case 2 -> new ItemStack((ItemLike)SystemItems.PRIMORDIAL_LEGGINGS.get());
+                        default -> new ItemStack((ItemLike)SystemItems.PRIMORDIAL_BOOTS.get());
+                    };
+                }
+                yield getArmorPiece(EquipTier.ASTRALITE, slot);
+            }
+        };
+    }
+
+    private static ItemStack getWeaponPiece(EquipTier tier, boolean isAxe) {
+        return switch (tier) {
+            case LEATHER, CHAINMAIL -> isAxe ? new ItemStack((ItemLike)Items.STONE_AXE) : new ItemStack((ItemLike)Items.STONE_SWORD);
+            case IRON -> isAxe ? new ItemStack((ItemLike)Items.IRON_AXE) : new ItemStack((ItemLike)Items.IRON_SWORD);
+            case GOLD -> isAxe ? new ItemStack((ItemLike)Items.GOLDEN_AXE) : new ItemStack((ItemLike)Items.GOLDEN_SWORD);
+            case DIAMOND -> isAxe ? new ItemStack((ItemLike)Items.DIAMOND_AXE) : new ItemStack((ItemLike)Items.DIAMOND_SWORD);
+            case NETHERITE -> isAxe ? new ItemStack((ItemLike)Items.NETHERITE_AXE) : new ItemStack((ItemLike)Items.NETHERITE_SWORD);
+            case SIDERITE -> {
+                if (isAxe && SystemItems.SIDERITE_HAMAXE.isBound()) {
+                    yield new ItemStack((ItemLike)SystemItems.SIDERITE_HAMAXE.get());
+                } else if (!isAxe && SystemItems.SIDERITE_SWORD.isBound()) {
+                    yield new ItemStack((ItemLike)SystemItems.SIDERITE_SWORD.get());
+                }
+                yield getWeaponPiece(EquipTier.NETHERITE, isAxe);
+            }
+            case SOUL_ALLOY -> {
+                if (isAxe && SystemItems.SOUL_ALLOY_AXE.isBound()) {
+                    yield new ItemStack((ItemLike)SystemItems.SOUL_ALLOY_AXE.get());
+                } else if (!isAxe && SystemItems.SOUL_ALLOY_SWORD.isBound()) {
+                    yield new ItemStack((ItemLike)SystemItems.SOUL_ALLOY_SWORD.get());
+                }
+                yield getWeaponPiece(EquipTier.NETHERITE, isAxe);
+            }
+            case MITHRIL -> {
+                if (isAxe && SystemItems.MITHRIL_AXE.isBound()) {
+                    yield new ItemStack((ItemLike)SystemItems.MITHRIL_AXE.get());
+                } else if (!isAxe && SystemItems.MITHRIL_SWORD.isBound()) {
+                    yield new ItemStack((ItemLike)SystemItems.MITHRIL_SWORD.get());
+                }
+                yield getWeaponPiece(EquipTier.NETHERITE, isAxe);
+            }
+            case ADAMANTITE -> {
+                if (isAxe && SystemItems.ADAMANTITE_AXE.isBound()) {
+                    yield new ItemStack((ItemLike)SystemItems.ADAMANTITE_AXE.get());
+                } else if (!isAxe && SystemItems.ADAMANTITE_SWORD.isBound()) {
+                    yield new ItemStack((ItemLike)SystemItems.ADAMANTITE_SWORD.get());
+                }
+                yield getWeaponPiece(EquipTier.MITHRIL, isAxe);
+            }
+            case SPIRIT_JADE -> {
+                if (isAxe && SystemItems.SPIRIT_JADE_AXE.isBound()) {
+                    yield new ItemStack((ItemLike)SystemItems.SPIRIT_JADE_AXE.get());
+                } else if (!isAxe && SystemItems.SPIRIT_JADE_SWORD.isBound()) {
+                    yield new ItemStack((ItemLike)SystemItems.SPIRIT_JADE_SWORD.get());
+                }
+                yield getWeaponPiece(EquipTier.ADAMANTITE, isAxe);
+            }
+            case ASTRAL -> {
+                if (isAxe && SystemItems.ASTRAL_AXE.isBound()) {
+                    yield new ItemStack((ItemLike)SystemItems.ASTRAL_AXE.get());
+                } else if (!isAxe && SystemItems.ASTRAL_SWORD.isBound()) {
+                    yield new ItemStack((ItemLike)SystemItems.ASTRAL_SWORD.get());
+                }
+                yield getWeaponPiece(EquipTier.SPIRIT_JADE, isAxe);
+            }
+            case CELESTIAL -> {
+                if (isAxe && SystemItems.CELESTIAL_AXE.isBound()) {
+                    yield new ItemStack((ItemLike)SystemItems.CELESTIAL_AXE.get());
+                } else if (!isAxe && SystemItems.CELESTIAL_SWORD.isBound()) {
+                    yield new ItemStack((ItemLike)SystemItems.CELESTIAL_SWORD.get());
+                }
+                yield getWeaponPiece(EquipTier.ASTRAL, isAxe);
+            }
+            case ASTRALITE -> {
+                if (isAxe && SystemItems.ASTRALITE_AXE.isBound()) {
+                    yield new ItemStack((ItemLike)SystemItems.ASTRALITE_AXE.get());
+                } else if (!isAxe && SystemItems.ASTRALITE_SWORD.isBound()) {
+                    yield new ItemStack((ItemLike)SystemItems.ASTRALITE_SWORD.get());
+                }
+                yield getWeaponPiece(EquipTier.CELESTIAL, isAxe);
+            }
+            case PRIMORDIAL -> {
+                if (isAxe && SystemItems.PRIMORDIAL_AXE.isBound()) {
+                    yield new ItemStack((ItemLike)SystemItems.PRIMORDIAL_AXE.get());
+                } else if (!isAxe && SystemItems.PRIMORDIAL_SWORD.isBound()) {
+                    yield new ItemStack((ItemLike)SystemItems.PRIMORDIAL_SWORD.get());
+                }
+                yield getWeaponPiece(EquipTier.ASTRALITE, isAxe);
+            }
+        };
+    }
+
+    public static ItemStack rollRandomRpgEquipment(Level level, int mobLevel) {
+        boolean isArmor = RNG.nextInt(100) < 65;
+        int slot = RNG.nextInt(4);
+        boolean isAxe = RNG.nextBoolean();
+
+        EquipTier chosenTier;
+
+        if (level == null || level.dimension() == Level.OVERWORLD) {
+            // ==========================================
+            // OVERWORLD (MUNDO 1): Escala 1 a 500+
+            // NUNCA suelta minerales de otros mundos
+            // ==========================================
+            if (mobLevel < 80) {
+                chosenTier = switch (RNG.nextInt(3)) {
+                    case 0 -> EquipTier.LEATHER;
+                    case 1 -> EquipTier.CHAINMAIL;
+                    default -> EquipTier.IRON;
+                };
+            } else if (mobLevel < 180) {
+                chosenTier = switch (RNG.nextInt(3)) {
+                    case 0 -> EquipTier.IRON;
+                    case 1 -> EquipTier.GOLD;
+                    default -> EquipTier.DIAMOND;
+                };
+            } else if (mobLevel < 280) {
+                chosenTier = switch (RNG.nextInt(3)) {
+                    case 0 -> EquipTier.DIAMOND;
+                    case 1 -> EquipTier.NETHERITE;
+                    default -> EquipTier.SIDERITE;
+                };
+            } else {
+                // Nivel 280 a 500+ en Overworld: Siderita Meteórica, Forja de Almas / Soul Alloy y Netherite
+                chosenTier = switch (RNG.nextInt(4)) {
+                    case 0, 1 -> EquipTier.SOUL_ALLOY;
+                    case 2 -> EquipTier.SIDERITE;
+                    default -> EquipTier.NETHERITE;
                 };
             }
-            // Tier 6: Nivel 300+ (Adamantita y Jade Espiritual)
-            int tier = RNG.nextInt(2);
-            if (tier == 0 && SystemItems.ADAMANTITE_HELMET.isBound()) {
-                return switch (slot) {
-                    case 0 -> new ItemStack((ItemLike)SystemItems.ADAMANTITE_HELMET.get());
-                    case 1 -> new ItemStack((ItemLike)SystemItems.ADAMANTITE_CHESTPLATE.get());
-                    case 2 -> new ItemStack((ItemLike)SystemItems.ADAMANTITE_LEGGINGS.get());
-                    default -> new ItemStack((ItemLike)SystemItems.ADAMANTITE_BOOTS.get());
+        } else if (level.dimension() == Level.NETHER) {
+            if (mobLevel < 150) {
+                chosenTier = RNG.nextBoolean() ? EquipTier.GOLD : EquipTier.IRON;
+            } else if (mobLevel < 280) {
+                chosenTier = switch (RNG.nextInt(3)) {
+                    case 0 -> EquipTier.DIAMOND;
+                    case 1 -> EquipTier.NETHERITE;
+                    default -> EquipTier.SOUL_ALLOY;
+                };
+            } else {
+                chosenTier = RNG.nextBoolean() ? EquipTier.SOUL_ALLOY : EquipTier.NETHERITE;
+            }
+        } else if (level.dimension() == Level.END) {
+            if (mobLevel < 250) {
+                chosenTier = RNG.nextBoolean() ? EquipTier.DIAMOND : EquipTier.NETHERITE;
+            } else {
+                chosenTier = switch (RNG.nextInt(3)) {
+                    case 0 -> EquipTier.NETHERITE;
+                    case 1 -> EquipTier.SIDERITE;
+                    default -> EquipTier.SOUL_ALLOY;
                 };
             }
-            if (SystemItems.SPIRIT_JADE_HELMET.isBound()) {
-                return switch (slot) {
-                    case 0 -> new ItemStack((ItemLike)SystemItems.SPIRIT_JADE_HELMET.get());
-                    case 1 -> new ItemStack((ItemLike)SystemItems.SPIRIT_JADE_CHESTPLATE.get());
-                    case 2 -> new ItemStack((ItemLike)SystemItems.SPIRIT_JADE_LEGGINGS.get());
-                    default -> new ItemStack((ItemLike)SystemItems.SPIRIT_JADE_BOOTS.get());
+        } else if (level.dimension().equals(IsekaiWorldManager.ISEKAI_WORLD)) {
+            // ==========================================
+            // ISEKAI (MUNDO 2): Escala 500 a 1000
+            // Mithril y Adamantita
+            // ==========================================
+            if (mobLevel < 750) {
+                chosenTier = switch (RNG.nextInt(3)) {
+                    case 0, 1 -> EquipTier.MITHRIL;
+                    default -> EquipTier.SOUL_ALLOY;
+                };
+            } else {
+                chosenTier = switch (RNG.nextInt(3)) {
+                    case 0, 1 -> EquipTier.ADAMANTITE;
+                    default -> EquipTier.MITHRIL;
                 };
             }
-            return switch (slot) {
-                case 0 -> new ItemStack((ItemLike)Items.NETHERITE_HELMET);
-                case 1 -> new ItemStack((ItemLike)Items.NETHERITE_CHESTPLATE);
-                case 2 -> new ItemStack((ItemLike)Items.NETHERITE_LEGGINGS);
-                default -> new ItemStack((ItemLike)Items.NETHERITE_BOOTS);
-            };
+        } else if (level.dimension().equals(MurimWorldManager.MURIM_WORLD)) {
+            // ==========================================
+            // MURIM (MUNDO 3): Escala 1000 a 1500
+            // Jade Espiritual, Astral y Celestial
+            // ==========================================
+            if (mobLevel < 1250) {
+                chosenTier = switch (RNG.nextInt(3)) {
+                    case 0, 1 -> EquipTier.SPIRIT_JADE;
+                    default -> EquipTier.ADAMANTITE;
+                };
+            } else {
+                chosenTier = switch (RNG.nextInt(3)) {
+                    case 0 -> EquipTier.CELESTIAL;
+                    case 1 -> EquipTier.ASTRAL;
+                    default -> EquipTier.SPIRIT_JADE;
+                };
+            }
+        } else if (level.dimension().equals(TeyvatWorldManager.TEYVAT_WORLD)
+                || com.soybe.awakeningsystem.limbo.LimboWorldManager.isLimboDimension(level)) {
+            // ==========================================
+            // TEYVAT / ABISMO / LIMBO (MUNDO 4): Escala 1500 a 2000+
+            // Astralita y Primordial
+            // ==========================================
+            if (mobLevel < 1800) {
+                chosenTier = EquipTier.ASTRALITE;
+            } else {
+                chosenTier = switch (RNG.nextInt(3)) {
+                    case 0, 1 -> EquipTier.PRIMORDIAL;
+                    default -> EquipTier.ASTRALITE;
+                };
+            }
+        } else {
+            // ==========================================
+            // TORRE / DUNGEONS / MULTI-MUNDO UNIVERSAL:
+            // Escala completa de 2000 niveles según el nivel del enemigo
+            // ==========================================
+            if (mobLevel < 80) {
+                chosenTier = switch (RNG.nextInt(3)) {
+                    case 0 -> EquipTier.LEATHER;
+                    case 1 -> EquipTier.CHAINMAIL;
+                    default -> EquipTier.IRON;
+                };
+            } else if (mobLevel < 180) {
+                chosenTier = switch (RNG.nextInt(3)) {
+                    case 0 -> EquipTier.IRON;
+                    case 1 -> EquipTier.GOLD;
+                    default -> EquipTier.DIAMOND;
+                };
+            } else if (mobLevel < 280) {
+                chosenTier = switch (RNG.nextInt(3)) {
+                    case 0 -> EquipTier.DIAMOND;
+                    case 1 -> EquipTier.NETHERITE;
+                    default -> EquipTier.SIDERITE;
+                };
+            } else if (mobLevel < 500) {
+                chosenTier = switch (RNG.nextInt(3)) {
+                    case 0 -> EquipTier.SOUL_ALLOY;
+                    case 1 -> EquipTier.SIDERITE;
+                    default -> EquipTier.NETHERITE;
+                };
+            } else if (mobLevel < 750) {
+                chosenTier = switch (RNG.nextInt(3)) {
+                    case 0, 1 -> EquipTier.MITHRIL;
+                    default -> EquipTier.SOUL_ALLOY;
+                };
+            } else if (mobLevel < 1000) {
+                chosenTier = switch (RNG.nextInt(3)) {
+                    case 0, 1 -> EquipTier.ADAMANTITE;
+                    default -> EquipTier.MITHRIL;
+                };
+            } else if (mobLevel < 1250) {
+                chosenTier = switch (RNG.nextInt(3)) {
+                    case 0, 1 -> EquipTier.SPIRIT_JADE;
+                    default -> EquipTier.ADAMANTITE;
+                };
+            } else if (mobLevel < 1500) {
+                chosenTier = switch (RNG.nextInt(3)) {
+                    case 0 -> EquipTier.CELESTIAL;
+                    case 1 -> EquipTier.ASTRAL;
+                    default -> EquipTier.SPIRIT_JADE;
+                };
+            } else if (mobLevel < 1800) {
+                chosenTier = EquipTier.ASTRALITE;
+            } else {
+                chosenTier = switch (RNG.nextInt(3)) {
+                    case 0, 1 -> EquipTier.PRIMORDIAL;
+                    default -> EquipTier.ASTRALITE;
+                };
+            }
         }
 
-        // Armas (Espadas y Hachas)
-        boolean isAxe = RNG.nextBoolean();
-        if (mobLevel < 35) {
-            return isAxe ? new ItemStack((ItemLike)Items.IRON_AXE) : new ItemStack((ItemLike)Items.IRON_SWORD);
-        }
-        if (mobLevel < 80) {
-            return isAxe
-                    ? (RNG.nextBoolean() ? new ItemStack((ItemLike)Items.IRON_AXE) : new ItemStack((ItemLike)Items.DIAMOND_AXE))
-                    : (RNG.nextBoolean() ? new ItemStack((ItemLike)Items.IRON_SWORD) : new ItemStack((ItemLike)Items.DIAMOND_SWORD));
-        }
-        if (mobLevel < 180) {
-            return isAxe
-                    ? (RNG.nextBoolean() ? new ItemStack((ItemLike)Items.DIAMOND_AXE) : new ItemStack((ItemLike)Items.NETHERITE_AXE))
-                    : (RNG.nextBoolean() ? new ItemStack((ItemLike)Items.DIAMOND_SWORD) : new ItemStack((ItemLike)Items.NETHERITE_SWORD));
-        }
-        if (mobLevel < 240) {
-            if (isAxe) {
-                return SystemItems.MITHRIL_AXE.isBound() && RNG.nextBoolean()
-                        ? new ItemStack((ItemLike)SystemItems.MITHRIL_AXE.get())
-                        : new ItemStack((ItemLike)Items.NETHERITE_AXE);
-            } else {
-                return SystemItems.MITHRIL_SWORD.isBound() && RNG.nextBoolean()
-                        ? new ItemStack((ItemLike)SystemItems.MITHRIL_SWORD.get())
-                        : new ItemStack((ItemLike)Items.NETHERITE_SWORD);
-            }
-        }
-        if (mobLevel < 300) {
-            if (isAxe) {
-                return SystemItems.ADAMANTITE_AXE.isBound() && RNG.nextBoolean()
-                        ? new ItemStack((ItemLike)SystemItems.ADAMANTITE_AXE.get())
-                        : (SystemItems.MITHRIL_AXE.isBound() ? new ItemStack((ItemLike)SystemItems.MITHRIL_AXE.get()) : new ItemStack((ItemLike)Items.NETHERITE_AXE));
-            } else {
-                return SystemItems.ADAMANTITE_SWORD.isBound() && RNG.nextBoolean()
-                        ? new ItemStack((ItemLike)SystemItems.ADAMANTITE_SWORD.get())
-                        : (SystemItems.MITHRIL_SWORD.isBound() ? new ItemStack((ItemLike)SystemItems.MITHRIL_SWORD.get()) : new ItemStack((ItemLike)Items.NETHERITE_SWORD));
-            }
-        }
-        // Nivel 300+: Jade Espiritual o Adamantita
-        if (isAxe) {
-            return SystemItems.SPIRIT_JADE_AXE.isBound() && RNG.nextBoolean()
-                    ? new ItemStack((ItemLike)SystemItems.SPIRIT_JADE_AXE.get())
-                    : (SystemItems.ADAMANTITE_AXE.isBound() ? new ItemStack((ItemLike)SystemItems.ADAMANTITE_AXE.get()) : new ItemStack((ItemLike)Items.NETHERITE_AXE));
-        } else {
-            return SystemItems.SPIRIT_JADE_SWORD.isBound() && RNG.nextBoolean()
-                    ? new ItemStack((ItemLike)SystemItems.SPIRIT_JADE_SWORD.get())
-                    : (SystemItems.ADAMANTITE_SWORD.isBound() ? new ItemStack((ItemLike)SystemItems.ADAMANTITE_SWORD.get()) : new ItemStack((ItemLike)Items.NETHERITE_SWORD));
-        }
+        return isArmor ? getArmorPiece(chosenTier, slot) : getWeaponPiece(chosenTier, isAxe);
+    }
+
+    public static ItemStack rollRandomRpgEquipment(int mobLevel) {
+        return rollRandomRpgEquipment(null, mobLevel);
     }
 }

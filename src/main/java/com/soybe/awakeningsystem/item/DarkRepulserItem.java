@@ -81,28 +81,15 @@ public class DarkRepulserItem extends SwordItem implements AwakeningWeaponItem {
             float baseDmg = (float) (20.0D * WeaponLevelManager.getDamageMultiplier(stack));
 
             if (hasDualBlades) {
-                net.neoforged.neoforge.network.PacketDistributor.sendToPlayersNear(
-                        sl, null, sp.getX(), sp.getY(), sp.getZ(), 64.0D,
-                        new com.soybe.awakeningsystem.SpawnMagicCirclePayload(
-                                sp.getId(), sp.getX(), sp.getY(), sp.getZ(),
-                                (float) look.x, (float) look.y, (float) look.z,
-                                4.2F, 50, 0x00FFCC, 0, false
-                        )
-                );
-                net.neoforged.neoforge.network.PacketDistributor.sendToPlayersNear(
-                        sl, null, sp.getX(), sp.getY(), sp.getZ(), 64.0D,
-                        new com.soybe.awakeningsystem.SpawnMagicCirclePayload(
-                                sp.getId(), sp.getX(), sp.getY(), sp.getZ(),
-                                (float) look.x, (float) look.y, (float) look.z,
-                                3.2F, 40, 0x1A0933, 1, false
-                        )
-                );
-
+                sl.playSound(null, sp.getX(), sp.getY(), sp.getZ(), com.soybe.awakeningsystem.ModSounds.DOMAIN_OF_SANCTION_SLASH.get(), SoundSource.PLAYERS, 1.9F, 1.2F);
                 sl.playSound(null, sp.getX(), sp.getY(), sp.getZ(), SoundEvents.AMETHYST_BLOCK_CHIME, SoundSource.PLAYERS, 1.8F, 1.5F);
-                sl.playSound(null, sp.getX(), sp.getY(), sp.getZ(), SoundEvents.PLAYER_ATTACK_SWEEP, SoundSource.PLAYERS, 1.6F, 1.4F);
-                sl.playSound(null, sp.getX(), sp.getY(), sp.getZ(), SoundEvents.WITHER_SHOOT, SoundSource.PLAYERS, 1.2F, 1.6F);
+                sl.playSound(null, sp.getX(), sp.getY(), sp.getZ(), SoundEvents.WITHER_SHOOT, SoundSource.PLAYERS, 1.3F, 1.6F);
 
-                com.soybe.awakeningsystem.CameraShakePayload.sendToNearby(sl, sp.getX(), sp.getY(), sp.getZ(), 36.0D, 0.75F, 12);
+                sl.sendParticles(com.soybe.awakeningsystem.particle.ModParticles.STRIKE_CLAW.get(), sp.getX() + look.x * 1.5D, sp.getY() + 1.2D + look.y * 1.5D, sp.getZ() + look.z * 1.5D, 1, 0, 0, 0, 0);
+                sl.sendParticles(ParticleTypes.END_ROD, sp.getX(), sp.getY() + 1.2D, sp.getZ(), 40, 1.2D, 0.8D, 1.2D, 0.15D);
+                sl.sendParticles(ParticleTypes.SOUL_FIRE_FLAME, sp.getX(), sp.getY() + 1.0D, sp.getZ(), 35, 1.2D, 0.8D, 1.2D, 0.1D);
+
+                com.soybe.awakeningsystem.CameraShakePayload.sendToNearby(sl, sp.getX(), sp.getY(), sp.getZ(), 36.0D, 0.80F, 14);
 
                 AABB pullBox = sp.getBoundingBox().inflate(8.5D);
                 for (LivingEntity nearby : sl.getEntitiesOfClass(LivingEntity.class, pullBox,
@@ -112,48 +99,44 @@ public class DarkRepulserItem extends SwordItem implements AwakeningWeaponItem {
                     nearby.hurtMarked = true;
                 }
 
-                SlashWaveEntity dualCrystal = new SlashWaveEntity(sl, sp, SlashWaveEntity.TYPE_CRYSTAL_AQUA, baseDmg * 1.3F, 3.8F, 1.4F, -30.0F, 26, 6);
-                dualCrystal.setDeltaMovement(look.scale(2.2D));
+                SlashWaveEntity dualCrystal = new SlashWaveEntity(sl, sp, SlashWaveEntity.TYPE_CRYSTAL_AQUA, SlashWaveEntity.STYLE_CELESTIAL, baseDmg * 1.3F, 4.2F, 1.5F, -30.0F, 26, 8);
+                dualCrystal.setDeltaMovement(look.scale(2.25D));
                 sl.addFreshEntity(dualCrystal);
 
-                SlashWaveEntity dualVoid = new SlashWaveEntity(sl, sp, SlashWaveEntity.TYPE_DARK_VOID, baseDmg * 1.4F, 3.8F, 1.4F, 30.0F, 26, 6);
-                dualVoid.setDeltaMovement(look.scale(2.2D));
+                SlashWaveEntity dualVoid = new SlashWaveEntity(sl, sp, SlashWaveEntity.TYPE_DARK_VOID, SlashWaveEntity.STYLE_SHADOW_CLAW, baseDmg * 1.4F, 4.2F, 1.5F, 30.0F, 26, 8);
+                dualVoid.setDeltaMovement(look.scale(2.25D));
                 sl.addFreshEntity(dualVoid);
 
-                SlashWaveEntity dualCross = new SlashWaveEntity(sl, sp, SlashWaveEntity.TYPE_CRYSTAL_AQUA, baseDmg * 1.8F, 4.6F, 4.6F, 0.0F, 30, 8);
+                SlashWaveEntity dualCross = new SlashWaveEntity(sl, sp, SlashWaveEntity.TYPE_CRYSTAL_AQUA, SlashWaveEntity.STYLE_CROSS, baseDmg * 1.8F, 4.8F, 4.8F, 0.0F, 30, 10);
                 dualCross.setCross(true);
-                dualCross.setDeltaMovement(look.scale(2.4D));
+                dualCross.setDeltaMovement(look.scale(2.45D));
                 sl.addFreshEntity(dualCross);
 
+                sp.swing(hand, true);
                 sp.heal(10.0F);
                 WeaponLevelManager.addExp(stack, 50, sp);
 
                 sp.displayClientMessage(Component.translatable("item.awakening_system.dark_repulser.dual_eclipse"), true);
 
             } else {
-                net.neoforged.neoforge.network.PacketDistributor.sendToPlayersNear(
-                        sl, null, sp.getX(), sp.getY(), sp.getZ(), 64.0D,
-                        new com.soybe.awakeningsystem.SpawnMagicCirclePayload(
-                                sp.getId(), sp.getX(), sp.getY(), sp.getZ(),
-                                (float) look.x, (float) look.y, (float) look.z,
-                                3.0F, 35, 0x00FFCC, 0, false
-                        )
-                );
+                sl.playSound(null, sp.getX(), sp.getY(), sp.getZ(), com.soybe.awakeningsystem.ModSounds.CULTIVATOR_SLASH.get(), SoundSource.PLAYERS, 1.8F, 1.4F);
+                sl.playSound(null, sp.getX(), sp.getY(), sp.getZ(), SoundEvents.AMETHYST_BLOCK_CHIME, SoundSource.PLAYERS, 1.6F, 1.4F);
+                sl.playSound(null, sp.getX(), sp.getY(), sp.getZ(), SoundEvents.GLASS_BREAK, SoundSource.PLAYERS, 1.2F, 1.6F);
 
-                sl.playSound(null, sp.getX(), sp.getY(), sp.getZ(), SoundEvents.PLAYER_ATTACK_SWEEP, SoundSource.PLAYERS, 1.5F, 1.3F);
-                sl.playSound(null, sp.getX(), sp.getY(), sp.getZ(), SoundEvents.AMETHYST_BLOCK_CHIME, SoundSource.PLAYERS, 1.6F, 1.3F);
-                sl.playSound(null, sp.getX(), sp.getY(), sp.getZ(), SoundEvents.GLASS_BREAK, SoundSource.PLAYERS, 1.1F, 1.6F);
+                sl.sendParticles(com.soybe.awakeningsystem.particle.ModParticles.STRIKE_CELESTIAL.get(), sp.getX() + look.x * 1.5D, sp.getY() + 1.2D + look.y * 1.5D, sp.getZ() + look.z * 1.5D, 1, 0, 0, 0, 0);
+                sl.sendParticles(ParticleTypes.GLOW, sp.getX(), sp.getY() + 1.0D, sp.getZ(), 30, 1.0D, 0.6D, 1.0D, 0.08D);
 
-                com.soybe.awakeningsystem.CameraShakePayload.sendToNearby(sl, sp.getX(), sp.getY(), sp.getZ(), 28.0D, 0.5F, 8);
+                com.soybe.awakeningsystem.CameraShakePayload.sendToNearby(sl, sp.getX(), sp.getY(), sp.getZ(), 28.0D, 0.55F, 8);
 
-                SlashWaveEntity wave1 = new SlashWaveEntity(sl, sp, SlashWaveEntity.TYPE_CRYSTAL_AQUA, baseDmg * 1.1F, 3.6F, 1.3F, 0.0F, 24, 6);
-                wave1.setDeltaMovement(look.scale(2.1D));
+                SlashWaveEntity wave1 = new SlashWaveEntity(sl, sp, SlashWaveEntity.TYPE_CRYSTAL_AQUA, SlashWaveEntity.STYLE_CELESTIAL, baseDmg * 1.1F, 4.0F, 1.4F, 0.0F, 24, 6);
+                wave1.setDeltaMovement(look.scale(2.15D));
                 sl.addFreshEntity(wave1);
 
-                SlashWaveEntity wave2 = new SlashWaveEntity(sl, sp, SlashWaveEntity.TYPE_CRYSTAL_AQUA, baseDmg * 0.9F, 2.8F, 1.8F, 90.0F, 22, 4);
-                wave2.setDeltaMovement(look.scale(2.0D));
+                SlashWaveEntity wave2 = new SlashWaveEntity(sl, sp, SlashWaveEntity.TYPE_CRYSTAL_AQUA, SlashWaveEntity.STYLE_CELESTIAL, baseDmg * 0.9F, 3.2F, 2.0F, 90.0F, 22, 6);
+                wave2.setDeltaMovement(look.scale(2.05D));
                 sl.addFreshEntity(wave2);
 
+                sp.swing(hand, true);
                 sp.heal(6.0F);
                 WeaponLevelManager.addExp(stack, 35, sp);
 
@@ -163,5 +146,18 @@ public class DarkRepulserItem extends SwordItem implements AwakeningWeaponItem {
         }
 
         return InteractionResultHolder.sidedSuccess(stack, level.isClientSide());
+    }
+
+    @Override
+    public boolean hurtEnemy(ItemStack stack, LivingEntity target, LivingEntity attacker) {
+        if (attacker.level() instanceof ServerLevel sl) {
+            sl.sendParticles(com.soybe.awakeningsystem.particle.ModParticles.STRIKE_CELESTIAL.get(), target.getX(), target.getY() + 1.0D, target.getZ(), 1, 0, 0, 0, 0);
+            sl.playSound(null, target.getX(), target.getY(), target.getZ(), com.soybe.awakeningsystem.ModSounds.CULTIVATOR_SLASH.get(), SoundSource.PLAYERS, 1.3F, 1.4F);
+            com.soybe.awakeningsystem.CameraShakePayload.sendToNearby(sl, target.getX(), target.getY(), target.getZ(), 16.0D, 0.25F, 4);
+
+            sl.sendParticles(ParticleTypes.GLOW, target.getX(), target.getY() + 1.0D, target.getZ(), 15, 0.3D, 0.4D, 0.3D, 0.05D);
+            sl.sendParticles(ParticleTypes.ENCHANT, target.getX(), target.getY() + 1.0D, target.getZ(), 10, 0.3D, 0.3D, 0.3D, 0.1D);
+        }
+        return super.hurtEnemy(stack, target, attacker);
     }
 }

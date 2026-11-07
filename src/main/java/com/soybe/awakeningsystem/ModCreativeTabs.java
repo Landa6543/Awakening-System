@@ -80,15 +80,23 @@ public final class ModCreativeTabs {
                         accept(output, SystemItems.BLACK_DRAGON_SCYTHE);
                         accept(output, SystemItems.DREAD_SCYTHE);
                         accept(output, SystemItems.SHADOW_DAGGERS);
+                        accept(output, SystemItems.KASAKAS_VENOM_FANG);
                         accept(output, SystemItems.RADIANT_LIGHT_SWORD);
                         accept(output, SystemItems.SKY_DEMON_SWORD);
                         accept(output, SystemItems.HEAVEN_SHAKING_SWORD);
                         accept(output, SystemItems.TRANSCENDENT_THORN);
                         accept(output, SystemItems.FLYING_SWORD);
+                        accept(output, SystemItems.POCKET_SANCTUARY_DOOR);
                         accept(output, SystemItems.JADE_FEIJIAN);
                         accept(output, SystemItems.DEATH_KING_CLOCK);
                         accept(output, SystemItems.WILDFIRE_CROWN);
+                        if (com.soybe.awakeningsystem.seasonal.SeasonalEventManager.isChristmasActive()) {
+                            accept(output, SystemItems.XMAS_TREE_SWORD);
+                        }
 
+                        accept(output, SystemItems.SIDERITE_SWORD);
+                        accept(output, SystemItems.SIDERITE_HAMAXE);
+                        accept(output, SystemItems.SIDERITE_PICKAXE);
                         accept(output, SystemItems.ABYSSAL_SWORD);
                         accept(output, SystemItems.ABYSSAL_AXE);
                         accept(output, SystemItems.SOUL_ALLOY_SWORD);
@@ -111,6 +119,10 @@ public final class ModCreativeTabs {
                         accept(output, SystemItems.PRIMORDIAL_SWORD);
                         accept(output, SystemItems.PRIMORDIAL_AXE);
 
+                        accept(output, SystemItems.SIDERITE_HELMET);
+                        accept(output, SystemItems.SIDERITE_CHESTPLATE);
+                        accept(output, SystemItems.SIDERITE_LEGGINGS);
+                        accept(output, SystemItems.SIDERITE_BOOTS);
                         accept(output, SystemItems.ABYSSAL_HELMET);
                         accept(output, SystemItems.ABYSSAL_CHESTPLATE);
                         accept(output, SystemItems.ABYSSAL_LEGGINGS);
@@ -270,6 +282,10 @@ public final class ModCreativeTabs {
                         accept(output, SystemItems.GALACTIC_BIG_LOTTO);
                         accept(output, SystemItems.ROBE_OF_THE_BEAUTY);
                         accept(output, SystemItems.PRAISE_OF_LOFTY_MORALITY);
+                        if (com.soybe.awakeningsystem.seasonal.SeasonalEventManager.isChristmasActive()) {
+                            accept(output, SystemItems.CHRISTMAS_TREE);
+                            accept(output, SystemItems.CHRISTMAS_GIFT_BOX);
+                        }
                         accept(output, SystemItems.ORIGINAL_RESIN);
                         accept(output, SystemItems.CONDENSED_RESIN);
                         accept(output, SystemItems.TRANSIENT_RESIN);
@@ -433,6 +449,7 @@ public final class ModCreativeTabs {
                         accept(output, SystemItems.PHOENIX_FEATHER);
                         accept(output, SystemItems.ELEMENTAL_DEMON_CROWN);
 
+                        accept(output, SystemItems.HUNTER_ASSOCIATION_TRACKER);
                         accept(output, SystemItems.HUNTER_GUIDE);
                         accept(output, SystemItems.HUNTER_BESTIARY);
                         output.accept(com.soybe.awakeningsystem.item.WornLoreBookItem.createVolume(1));
@@ -484,6 +501,12 @@ public final class ModCreativeTabs {
                         accept(output, SystemItems.ABYSSAL_STONE_COPPER_ORE);
                         accept(output, SystemItems.ABYSSAL_STONE_COAL_ORE);
                         accept(output, SystemItems.ABYSSAL_BLOCK);
+
+                        accept(output, SystemItems.RAW_SIDERITE);
+                        accept(output, SystemItems.SIDERITE_FRAGMENT);
+                        accept(output, SystemItems.SIDERITE_INGOT);
+                        accept(output, SystemItems.SIDERITE_ORE);
+                        accept(output, SystemItems.SIDERITE_BLOCK);
 
                         accept(output, SystemItems.RAW_MITHRIL);
                         accept(output, SystemItems.MITHRIL_INGOT);
@@ -967,6 +990,10 @@ public final class ModCreativeTabs {
                         accept(output, SystemItems.WILDFIRE_CROWN_FRAGMENT);
 
                         accept(output, SystemItems.ROULETTE_ALTAR);
+                        if (com.soybe.awakeningsystem.seasonal.SeasonalEventManager.isChristmasActive()) {
+                            accept(output, SystemItems.CHRISTMAS_TREE);
+                            accept(output, SystemItems.CHRISTMAS_GIFT_BOX);
+                        }
                         accept(output, SystemItems.CELESTIAL_DRAGON_TRIBUTE);
                         accept(output, SystemItems.CELESTIAL_DRAGON_ALTAR);
                         accept(output, SystemItems.GODDESS_ALTAR);
@@ -1037,6 +1064,7 @@ public final class ModCreativeTabs {
                         accept(output, SystemItems.DEMONIC_CULTIVATOR_SPAWN_EGG);
                         accept(output, SystemItems.JADE_ARMORED_BEAST_SPAWN_EGG);
                         accept(output, SystemItems.MOUNT_HUA_DISCIPLE_SPAWN_EGG);
+                        accept(output, SystemItems.HUNTER_EVALUATOR_SPAWN_EGG);
                         accept(output, SystemItems.MANA_COW_SPAWN_EGG);
                         accept(output, SystemItems.MANA_PIG_SPAWN_EGG);
                         accept(output, SystemItems.MANA_SHEEP_SPAWN_EGG);
@@ -1133,6 +1161,8 @@ public final class ModCreativeTabs {
                         accept(output, SystemItems.ENCHANTED_CELESTIAL_APPLE);
                         accept(output, SystemItems.PRIMORDIAL_APPLE);
                         accept(output, SystemItems.ENCHANTED_PRIMORDIAL_APPLE);
+                        accept(output, SystemItems.SHADOW_APPLE);
+                        accept(output, SystemItems.SPIRIT_QI_CARROT);
 
                         // Frutas Sagradas y Medicina Milenaria
                         accept(output, SystemItems.THOUSAND_YEAR_GINSENG);
@@ -1167,6 +1197,24 @@ public final class ModCreativeTabs {
                         accept(output, SystemItems.FRIED_RADISH_BALLS);
                         accept(output, SystemItems.OMINOUS_DISH);
                         accept(output, SystemItems.RADISH);
+
+                        // Seasonal Events Items & Confectionery (Roadmap Section 42)
+                        if (com.soybe.awakeningsystem.seasonal.SeasonalEventManager.isChristmasActive()) {
+                            accept(output, SystemItems.CHRISTMAS_GIFT_BOX);
+                            accept(output, SystemItems.GINGERBREAD_COOKIE);
+                            accept(output, SystemItems.CANDY_CANE);
+                            accept(output, SystemItems.HOT_CHOCOLATE);
+                            accept(output, SystemItems.ALMOND_NOUGAT);
+                            accept(output, SystemItems.POLAR_PEPPERMINT);
+                        }
+
+                        if (com.soybe.awakeningsystem.seasonal.SeasonalEventManager.isHalloweenActive()) {
+                            accept(output, SystemItems.CANDY_BASKET);
+                            accept(output, SystemItems.SOUL_CANDY);
+                            accept(output, SystemItems.MANA_GUMMY);
+                            accept(output, SystemItems.BERSERKER_CHOCOLATE);
+                            accept(output, SystemItems.HAUNTED_CANDY);
+                        }
                     })
                     .build()
     );

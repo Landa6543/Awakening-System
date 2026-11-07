@@ -404,9 +404,12 @@ public final class CultivationScreen extends Screen {
                     }
                 }
             } else {
-                int listY = top + 100;
+                int listY = top + 102;
+                int cardX = left + 14;
+                int cardW = PANEL_W - 30;
                 int visibleCount = 3;
                 int realm = data.dantianRealm();
+
                 for (int i = 0; i < visibleCount; i++) {
                     int index = scrollOffset + i;
                     if (index >= DAO_SKILLS.size()) break;
@@ -415,24 +418,50 @@ public final class CultivationScreen extends Screen {
                     boolean isUnlocked = realm >= s.reqRealm();
 
                     if (isUnlocked) {
-                        int btnW1 = 70;
+                        int btnW2 = 48;
                         int btnH = 18;
-                        int btnX1 = left + PANEL_W - btnW1 - 65;
-                        int btnY = itemY + 12;
+                        int btnX2 = cardX + cardW - btnW2 - 8;
+                        int btnW1 = 78;
+                        int btnX1 = btnX2 - btnW1 - 6;
+                        int btnY = itemY + 11;
+
                         if (mouseX >= btnX1 && mouseX <= btnX1 + btnW1 && mouseY >= btnY && mouseY <= btnY + btnH) {
                             minecraft.getSoundManager().play(SimpleSoundInstance.forUI(SoundEvents.UI_BUTTON_CLICK, 1.2F));
+                            data.setSelectedDaoSkill(s.id());
                             AwakeningSystemClient.performCultivationAction("select_dao_skill", s.id());
                             return true;
                         }
 
-                        int btnW2 = 50;
-                        int btnX2 = left + PANEL_W - btnW2 - 14;
                         if (mouseX >= btnX2 && mouseX <= btnX2 + btnW2 && mouseY >= btnY && mouseY <= btnY + btnH) {
                             minecraft.getSoundManager().play(SimpleSoundInstance.forUI(SoundEvents.UI_BUTTON_CLICK, 1.0F));
                             AwakeningSystemClient.performCultivationAction("use_dao_skill", s.id());
+                            this.onClose();
                             return true;
                         }
                     }
+                }
+
+                // Scroll navigation buttons [▲] [▼] in bottom plate
+                int infoY = top + 238;
+                int btnUpX = cardX + cardW - 52;
+                int btnDownX = cardX + cardW - 26;
+                int btnNavY = infoY + 12;
+                int btnNavSize = 20;
+                int maxScroll = Math.max(0, DAO_SKILLS.size() - visibleCount);
+
+                if (mouseX >= btnUpX && mouseX <= btnUpX + btnNavSize && mouseY >= btnNavY && mouseY <= btnNavY + btnNavSize) {
+                    if (scrollOffset > 0) {
+                        scrollOffset--;
+                        minecraft.getSoundManager().play(SimpleSoundInstance.forUI(SoundEvents.UI_BUTTON_CLICK, 1.1F));
+                    }
+                    return true;
+                }
+                if (mouseX >= btnDownX && mouseX <= btnDownX + btnNavSize && mouseY >= btnNavY && mouseY <= btnNavY + btnNavSize) {
+                    if (scrollOffset < maxScroll) {
+                        scrollOffset++;
+                        minecraft.getSoundManager().play(SimpleSoundInstance.forUI(SoundEvents.UI_BUTTON_CLICK, 1.1F));
+                    }
+                    return true;
                 }
             }
         }
@@ -1022,8 +1051,11 @@ public final class CultivationScreen extends Screen {
     }
 
     private void renderDaoSkillsTab(GuiGraphics graphics, int left, int top, SystemData data, int realm, int mX, int mY) {
-        int listY = top + 92;
+        int listY = top + 102;
+        int cardX = left + 14;
+        int cardW = PANEL_W - 30;
         int visibleCount = 3;
+
         for (int i = 0; i < visibleCount; i++) {
             int index = scrollOffset + i;
             if (index >= DAO_SKILLS.size()) break;
@@ -1034,32 +1066,41 @@ public final class CultivationScreen extends Screen {
 
             int bgCol = isUnlocked ? (isEquipped ? 0x3500E5FF : 0x1400E5FF) : 0x0C00E5FF;
             int borderCol = isUnlocked ? (isEquipped ? 0xFF00E5FF : 0x4400E5FF) : 0x2000E5FF;
-            graphics.fill(left + 12, itemY, left + PANEL_W - 12, itemY + 40, bgCol);
-            graphics.renderOutline(left + 12, itemY, PANEL_W - 24, 40, borderCol);
+            graphics.fill(cardX, itemY, cardX + cardW, itemY + 40, bgCol);
+            graphics.renderOutline(cardX, itemY, cardW, 40, borderCol);
 
             if (isEquipped) {
                 // Left cyan indicator bar
-                graphics.fill(left + 12, itemY, left + 15, itemY + 40, 0xFF00E5FF);
+                graphics.fill(cardX, itemY, cardX + 3, itemY + 40, 0xFF00E5FF);
             }
+
+            int btnW2 = 48;
+            int btnH = 18;
+            int btnX2 = cardX + cardW - btnW2 - 8;
+            int btnW1 = 78;
+            int btnX1 = btnX2 - btnW1 - 6;
+            int btnY = itemY + 11;
+
+            int maxTextW = btnX1 - (cardX + 10) - 6;
 
             Component prefix = isEquipped
                     ? Component.translatable("awakening_system.screen.cultivation.dao_equipped_prefix")
                     : Component.literal(isUnlocked ? "§a[✓] " : "§c[🔒] ");
             Component titleComp = Component.empty().append(prefix).append(Component.literal("§f")).append(s.name()).append(Component.literal(" §8| §b" + s.qiCost() + " Qi §8| §e" + s.cooldownSec() + "s CD"));
-            graphics.drawString(font, ModernGuiHelper.manhwa(titleComp), left + 20, itemY + 5, 0xFFFFFFFF, false);
+            String titleText = titleComp.getString();
+            if (font.width(titleText) > maxTextW) {
+                titleText = font.plainSubstrByWidth(titleText, maxTextW - 10) + "...";
+            }
+            graphics.drawString(font, ModernGuiHelper.manhwa(titleText), cardX + 8, itemY + 6, 0xFFFFFFFF, false);
 
             Component descComp = isUnlocked ? s.desc() : Component.translatable("awakening_system.screen.cultivation.dao_req_realm", s.reqRealm(), SystemEvents.getDantianRealmComponent(s.reqRealm()));
             String descText = descComp.getString();
-            if (font.width(descText) > 280) {
-                descText = font.plainSubstrByWidth(descText, 270) + "...";
+            if (font.width(descText) > maxTextW) {
+                descText = font.plainSubstrByWidth(descText, maxTextW - 10) + "...";
             }
-            graphics.drawString(font, descText, left + 20, itemY + 18, isUnlocked ? 0xFFCCE3EC : 0xFFFF7777, false);
+            graphics.drawString(font, descText, cardX + 8, itemY + 20, isUnlocked ? 0xFFCCE3EC : 0xFFFF7777, false);
 
             if (isUnlocked) {
-                int btnW1 = 70;
-                int btnH = 18;
-                int btnX1 = left + PANEL_W - btnW1 - 65;
-                int btnY = itemY + 11;
                 boolean hoverBtn1 = mX >= btnX1 && mX <= btnX1 + btnW1 && mY >= btnY && mY <= btnY + btnH;
                 int bCol1 = isEquipped ? 0x80805500 : (hoverBtn1 ? 0x4000E5FF : 0x2000E5FF);
                 graphics.fill(btnX1, btnY, btnX1 + btnW1, btnY + btnH, bCol1);
@@ -1067,8 +1108,6 @@ public final class CultivationScreen extends Screen {
                 Component assignText = isEquipped ? Component.translatable("awakening_system.screen.cultivation.dao_assigned") : Component.translatable("awakening_system.screen.cultivation.dao_assign");
                 graphics.drawCenteredString(font, ModernGuiHelper.manhwa(assignText), btnX1 + btnW1 / 2, btnY + 5, isEquipped ? 0xFFFFD700 : 0xFFCCE3EC);
 
-                int btnW2 = 50;
-                int btnX2 = left + PANEL_W - btnW2 - 12;
                 boolean canAfford = data.cultivationQi() >= s.qiCost();
                 boolean hoverBtn2 = mX >= btnX2 && mX <= btnX2 + btnW2 && mY >= btnY && mY <= btnY + btnH;
                 int bCol2 = canAfford ? (hoverBtn2 ? 0x5000E5FF : 0x2500E5FF) : 0x1400E5FF;
@@ -1076,21 +1115,57 @@ public final class CultivationScreen extends Screen {
                 graphics.renderOutline(btnX2, btnY, btnW2, btnH, canAfford ? (hoverBtn2 ? 0xFF00E5FF : 0x5000E5FF) : 0x2500E5FF);
                 graphics.drawCenteredString(font, ModernGuiHelper.manhwa(Component.translatable("awakening_system.screen.cultivation.dao_use")), btnX2 + btnW2 / 2, btnY + 5, canAfford ? 0xFF00E5FF : 0xFF888888);
             } else {
-                int tagW = 100;
-                int tagX = left + PANEL_W - tagW - 14;
-                graphics.drawCenteredString(font, Component.translatable("awakening_system.screen.cultivation.dao_locked").getString(), tagX + tagW / 2, itemY + 15, 0xFFFF7777);
+                int tagW = 96;
+                int tagX = cardX + cardW - tagW - 8;
+                graphics.fill(tagX, btnY, tagX + tagW, btnY + btnH, 0x14FF0000);
+                graphics.renderOutline(tagX, btnY, tagW, btnH, 0x44FF5555);
+                graphics.drawCenteredString(font, Component.translatable("awakening_system.screen.cultivation.dao_locked").getString(), tagX + tagW / 2, btnY + 5, 0xFFFF7777);
             }
         }
 
-        int scrollBarH = 120;
+        // Scrollbar
+        int scrollBarH = 128;
         int scrollBarY = listY;
-        graphics.fill(left + PANEL_W - 8, scrollBarY, left + PANEL_W - 6, scrollBarY + scrollBarH, 0x2500E5FF);
+        int scrollBarX = left + PANEL_W - 12;
+        graphics.fill(scrollBarX, scrollBarY, scrollBarX + 4, scrollBarY + scrollBarH, 0x2500E5FF);
         int maxScroll = Math.max(1, DAO_SKILLS.size() - visibleCount);
-        int thumbH = Math.max(20, scrollBarH / (DAO_SKILLS.size() - visibleCount + 1));
+        int thumbH = Math.max(24, scrollBarH / (DAO_SKILLS.size() - visibleCount + 1));
         int thumbY = scrollBarY + (int) ((float) scrollOffset / maxScroll * (scrollBarH - thumbH));
-        graphics.fill(left + PANEL_W - 8, thumbY, left + PANEL_W - 6, thumbY + thumbH, 0xCC00E5FF);
+        graphics.fill(scrollBarX, thumbY, scrollBarX + 4, thumbY + thumbH, 0xCC00E5FF);
 
-        // Guide hint at bottom
-        graphics.drawCenteredString(font, Component.translatable("awakening_system.screen.cultivation.dao_help").getString(), left + PANEL_W / 2, top + PANEL_H - 18, 0xFF8AAAB8);
+        // Bottom status & navigation plate
+        int infoY = top + 238;
+        int infoH = 44;
+        graphics.fill(cardX, infoY, cardX + cardW, infoY + infoH, 0x1400E5FF);
+        graphics.renderOutline(cardX, infoY, cardW, infoH, 0x4400E5FF);
+
+        DaoSkillInfo eqSkill = (data.selectedDaoSkill() >= 0 && data.selectedDaoSkill() < DAO_SKILLS.size()) ? DAO_SKILLS.get(data.selectedDaoSkill()) : null;
+        String eqName = eqSkill != null ? eqSkill.name().getString() : "---";
+        Component eqComp = Component.literal("§6★ ")
+                .append(Component.translatable("awakening_system.screen.cultivation.dao_equipped_prefix"))
+                .append(Component.literal("§f" + eqName))
+                .append(Component.literal(" §8| §b" + (eqSkill != null ? eqSkill.qiCost() + " Qi" : "0 Qi") + " §8| §e" + (eqSkill != null ? eqSkill.cooldownSec() + "s CD" : "0s")));
+        graphics.drawString(font, ModernGuiHelper.manhwa(eqComp), cardX + 8, infoY + 8, 0xFFFFFFFF, false);
+
+        Component hintComp = Component.translatable("awakening_system.screen.cultivation.dao_help");
+        graphics.drawString(font, hintComp, cardX + 8, infoY + 22, 0xFF8AAAB8, false);
+
+        // Scroll navigation buttons [▲] [▼]
+        int btnUpX = cardX + cardW - 52;
+        int btnDownX = cardX + cardW - 26;
+        int btnNavY = infoY + 12;
+        int btnNavSize = 20;
+
+        boolean hoverUp = mX >= btnUpX && mX <= btnUpX + btnNavSize && mY >= btnNavY && mY <= btnNavY + btnNavSize;
+        boolean canUp = scrollOffset > 0;
+        graphics.fill(btnUpX, btnNavY, btnUpX + btnNavSize, btnNavY + btnNavSize, canUp ? (hoverUp ? 0x5000E5FF : 0x2500E5FF) : 0x1000E5FF);
+        graphics.renderOutline(btnUpX, btnNavY, btnNavSize, btnNavSize, canUp ? (hoverUp ? 0xFF00E5FF : 0x5500E5FF) : 0x2500E5FF);
+        graphics.drawCenteredString(font, "▲", btnUpX + btnNavSize / 2, btnNavY + 6, canUp ? 0xFF00E5FF : 0xFF555555);
+
+        boolean hoverDown = mX >= btnDownX && mX <= btnDownX + btnNavSize && mY >= btnNavY && mY <= btnNavY + btnNavSize;
+        boolean canDown = scrollOffset < maxScroll;
+        graphics.fill(btnDownX, btnNavY, btnDownX + btnNavSize, btnNavY + btnNavSize, canDown ? (hoverDown ? 0x5000E5FF : 0x2500E5FF) : 0x1000E5FF);
+        graphics.renderOutline(btnDownX, btnNavY, btnNavSize, btnNavSize, canDown ? (hoverDown ? 0xFF00E5FF : 0x5500E5FF) : 0x2500E5FF);
+        graphics.drawCenteredString(font, "▼", btnDownX + btnNavSize / 2, btnNavY + 6, canDown ? 0xFF00E5FF : 0xFF555555);
     }
 }

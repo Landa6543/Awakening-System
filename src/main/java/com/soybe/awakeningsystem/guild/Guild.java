@@ -53,6 +53,25 @@ public class Guild {
     public void setMotto(String motto) { this.motto = motto; }
     public UUID getLeaderUuid() { return leaderUuid; }
     public void setLeaderUuid(UUID leaderUuid) { this.leaderUuid = leaderUuid; }
+    public static UUID getNpcUuid(String npcId) {
+        if (npcId == null) npcId = "unknown";
+        return UUID.nameUUIDFromBytes(("guild_npc_" + npcId.toLowerCase(Locale.ROOT)).getBytes(java.nio.charset.StandardCharsets.UTF_8));
+    }
+
+    public boolean hasNpcMember(String npcId) {
+        return members.containsKey(getNpcUuid(npcId));
+    }
+
+    public boolean addNpcMember(String npcId, String displayName, GuildRole role) {
+        UUID npcUuid = getNpcUuid(npcId);
+        if (members.containsKey(npcUuid)) return false;
+        String nameWithTag = displayName != null ? (displayName + " [NPC]") : (npcId + " [NPC]");
+        GuildMember npcMember = new GuildMember(npcUuid, nameWithTag, role != null ? role : GuildRole.MEMBER);
+        npcMember.setNpc(true);
+        members.put(npcUuid, npcMember);
+        return true;
+    }
+
     public Map<UUID, GuildMember> getMembers() { return members; }
     public int getLevel() { return level; }
     public long getExp() { return exp; }

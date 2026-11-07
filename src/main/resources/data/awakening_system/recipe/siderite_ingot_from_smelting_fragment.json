@@ -1,0 +1,13 @@
+{
+  "type": "minecraft:smelting",
+  "category": "misc",
+  "cookingtime": 180,
+  "experience": 1.5,
+  "ingredient": {
+    "item": "awakening_system:siderite_fragment"
+  },
+  "result": {
+    "count": 1,
+    "id": "awakening_system:siderite_ingot"
+  }
+}

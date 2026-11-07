@@ -1,8 +1,4 @@
 {
-  "attributes": {
-    "common": {
-      "impact": 0.5
-    }
-  },
-  "type": "epicfight:bow"
+    "type":  "epicfight:bow",
+    "weapon_type":  "epicfight:bow"
 }

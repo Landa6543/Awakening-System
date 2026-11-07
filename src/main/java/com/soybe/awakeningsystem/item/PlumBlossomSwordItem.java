@@ -55,35 +55,29 @@ public class PlumBlossomSwordItem extends SwordItem implements AwakeningWeaponIt
             if (level instanceof ServerLevel sl) {
                 Vec3 look = sp.getLookAngle();
 
-                net.neoforged.neoforge.network.PacketDistributor.sendToPlayersNear(
-                        sl, null, sp.getX(), sp.getY(), sp.getZ(), 64.0D,
-                        new com.soybe.awakeningsystem.SpawnMagicCirclePayload(
-                                sp.getId(), sp.getX(), sp.getY(), sp.getZ(),
-                                (float) look.x, (float) look.y, (float) look.z,
-                                3.8F, 40, 0xFFB7C5, 2, false
-                        )
-                );
-
-                sl.playSound(null, sp.getX(), sp.getY(), sp.getZ(), SoundEvents.CHERRY_WOOD_BREAK, SoundSource.PLAYERS, 1.5F, 1.5F);
-                sl.playSound(null, sp.getX(), sp.getY(), sp.getZ(), SoundEvents.PLAYER_ATTACK_SWEEP, SoundSource.PLAYERS, 1.5F, 1.2F);
+                sl.playSound(null, sp.getX(), sp.getY(), sp.getZ(), com.soybe.awakeningsystem.ModSounds.CULTIVATOR_SLASH.get(), SoundSource.PLAYERS, 1.8F, 1.1F);
                 sl.playSound(null, sp.getX(), sp.getY(), sp.getZ(), SoundEvents.AMETHYST_BLOCK_CHIME, SoundSource.PLAYERS, 1.4F, 1.6F);
 
-                com.soybe.awakeningsystem.CameraShakePayload.sendToNearby(sl, sp.getX(), sp.getY(), sp.getZ(), 30.0D, 0.55F, 9);
+                sl.sendParticles(com.soybe.awakeningsystem.particle.ModParticles.STRIKE_SLASH.get(), sp.getX() + look.x * 1.5D, sp.getY() + 1.2D + look.y * 1.5D, sp.getZ() + look.z * 1.5D, 1, 0, 0, 0, 0);
+                sl.sendParticles(ParticleTypes.CHERRY_LEAVES, sp.getX(), sp.getY() + 1.2D, sp.getZ(), 45, 1.2D, 0.8D, 1.2D, 0.1D);
+
+                com.soybe.awakeningsystem.CameraShakePayload.sendToNearby(sl, sp.getX(), sp.getY(), sp.getZ(), 30.0D, 0.65F, 10);
 
                 float dmg = (float) (24.0D * WeaponLevelManager.getDamageMultiplier(stack));
 
-                SlashWaveEntity waveH = new SlashWaveEntity(sl, sp, SlashWaveEntity.TYPE_CHERRY_BLOSSOM, dmg * 1.1F, 4.2F, 1.4F, 0.0F, 24, 8);
-                waveH.setDeltaMovement(look.scale(2.1D));
+                SlashWaveEntity waveH = new SlashWaveEntity(sl, sp, SlashWaveEntity.TYPE_CHERRY_BLOSSOM, SlashWaveEntity.STYLE_INK_WUXIA, dmg * 1.1F, 4.4F, 1.5F, 0.0F, 24, 8);
+                waveH.setDeltaMovement(look.scale(2.15D));
                 sl.addFreshEntity(waveH);
 
-                SlashWaveEntity waveD1 = new SlashWaveEntity(sl, sp, SlashWaveEntity.TYPE_CHERRY_BLOSSOM, dmg * 0.85F, 3.2F, 1.2F, -40.0F, 22, 6);
+                SlashWaveEntity waveD1 = new SlashWaveEntity(sl, sp, SlashWaveEntity.TYPE_CHERRY_BLOSSOM, SlashWaveEntity.STYLE_INK_WUXIA, dmg * 0.85F, 3.4F, 1.3F, -38.0F, 22, 6);
                 waveD1.setDeltaMovement(look.scale(1.95D));
                 sl.addFreshEntity(waveD1);
 
-                SlashWaveEntity waveD2 = new SlashWaveEntity(sl, sp, SlashWaveEntity.TYPE_CHERRY_BLOSSOM, dmg * 0.85F, 3.2F, 1.2F, 40.0F, 22, 6);
+                SlashWaveEntity waveD2 = new SlashWaveEntity(sl, sp, SlashWaveEntity.TYPE_CHERRY_BLOSSOM, SlashWaveEntity.STYLE_INK_WUXIA, dmg * 0.85F, 3.4F, 1.3F, 38.0F, 22, 6);
                 waveD2.setDeltaMovement(look.scale(1.95D));
                 sl.addFreshEntity(waveD2);
 
+                sp.swing(hand, true);
                 sp.addEffect(new MobEffectInstance(MobEffects.MOVEMENT_SPEED, 160, 1, false, true));
                 sp.displayClientMessage(Component.translatable("item.awakening_system.plum_blossom_sword.unleashed"), true);
             }
@@ -95,7 +89,10 @@ public class PlumBlossomSwordItem extends SwordItem implements AwakeningWeaponIt
     @Override
     public boolean hurtEnemy(ItemStack stack, LivingEntity target, LivingEntity attacker) {
         if (attacker.level() instanceof ServerLevel sl) {
-            sl.sendParticles(ParticleTypes.CRIT, target.getX(), target.getY() + 1.0D, target.getZ(), 10, 0.3D, 0.3D, 0.3D, 0.1D);
+            sl.sendParticles(com.soybe.awakeningsystem.particle.ModParticles.STRIKE_SLASH.get(), target.getX(), target.getY() + 1.0D, target.getZ(), 1, 0, 0, 0, 0);
+            sl.sendParticles(ParticleTypes.CHERRY_LEAVES, target.getX(), target.getY() + 1.0D, target.getZ(), 20, 0.4D, 0.4D, 0.4D, 0.08D);
+            sl.playSound(null, target.getX(), target.getY(), target.getZ(), com.soybe.awakeningsystem.ModSounds.CULTIVATOR_SLASH.get(), SoundSource.PLAYERS, 1.3F, 1.3F);
+            com.soybe.awakeningsystem.CameraShakePayload.sendToNearby(sl, target.getX(), target.getY(), target.getZ(), 16.0D, 0.25F, 4);
 
             int combo = attacker.getPersistentData().getInt("plum_blossom_combo") + 1;
             if (combo >= 5) {

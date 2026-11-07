@@ -93,6 +93,11 @@ public enum ShadowRank {
     public static ShadowRank determineInitialRank(Mob mob) {
         if (mob == null) return SOLDIER;
 
+        if (com.soybe.awakeningsystem.compat.ArmageddonCompatHandler.isLoaded()
+                || com.soybe.awakeningsystem.compat.ArmageddonCompatHandler.isArmageddonEntity(mob)) {
+            return com.soybe.awakeningsystem.compat.ArmageddonCompatHandler.getShadowRankForEntity(mob);
+        }
+
         if (com.soybe.awakeningsystem.compat.ApotheosisCompatHandler.isLoaded()) {
             com.soybe.awakeningsystem.compat.ApotheosisCompatHandler.ApothRarity apothRarity = com.soybe.awakeningsystem.compat.ApotheosisCompatHandler.getMobRarity(mob);
             if (apothRarity == com.soybe.awakeningsystem.compat.ApotheosisCompatHandler.ApothRarity.ANCIENT) {

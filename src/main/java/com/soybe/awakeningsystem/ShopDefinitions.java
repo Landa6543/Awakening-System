@@ -40,11 +40,13 @@ public final class ShopDefinitions {
 
     private static final List<Entry> ENTRIES = List.of(
             // --- BOXES & TICKETS ---
-            new Entry("box_common", "minecraft:chest", 350, 1, "awakening_system.shop.item.box_common", "boxes", "", 1, "", 10),
-            new Entry("lucky_box", "minecraft:bundle", 850, 1, "awakening_system.shop.item.lucky_box", "boxes", "", 1, "", 20),
-            new Entry("box_rare", "minecraft:trapped_chest", 2200, 1, "awakening_system.shop.item.box_rare", "boxes", "", 1, "", 35),
-            new Entry("box_epic", "minecraft:ender_chest", 6500, 1, "awakening_system.shop.item.box_epic", "boxes", "", 1, "", 55),
-            new Entry("box_legendary", "minecraft:shulker_box", 20000, 1, "awakening_system.shop.item.box_legendary", "boxes", "", 1, "", 75),
+            new Entry("box_common", "awakening_system:box_common", 350, 1, "awakening_system.shop.item.box_common", "boxes", "", 1, "", 10),
+            new Entry("lucky_box", "awakening_system:lucky_box", 850, 1, "awakening_system.shop.item.lucky_box", "boxes", "", 1, "", 20),
+            new Entry("box_rare", "awakening_system:box_rare", 2200, 1, "awakening_system.shop.item.box_rare", "boxes", "", 1, "", 35),
+            new Entry("box_epic", "awakening_system:box_epic", 6500, 1, "awakening_system.shop.item.box_epic", "boxes", "", 1, "", 55),
+            new Entry("box_legendary", "awakening_system:box_legendary", 20000, 1, "awakening_system.shop.item.box_legendary", "boxes", "", 1, "", 75),
+            new Entry("box_mythic", "awakening_system:box_mythic", 50000, 1, "awakening_system.shop.item.box_mythic", "boxes", "", 2, "awakening_system:isekai", 100),
+            new Entry("box_primordial", "awakening_system:box_primordial", 130000, 1, "awakening_system.shop.item.box_primordial", "boxes", "", 4, "awakening_system:teyvat_world", 130),
             new Entry("plushies_lootbox", "awakening_system:plushieslootbox", 5000, 1, "awakening_system.shop.item.plushieslootbox", "boxes"),
             new Entry("roulette_token", "awakening_system:roulette_token", 10000, 1, "item.awakening_system.roulette_token", "boxes", 1, 20),
             new Entry("dungeon_key", "awakening_system:dungeon_key", 4500, 1, "awakening_system.shop.item.dungeon_key", "boxes"),
@@ -57,6 +59,7 @@ public final class ShopDefinitions {
             new Entry("ranker_tower_ticket", "awakening_system:ranker_tower_ticket", 5000, 1, "item.awakening_system.ranker_tower_ticket", "boxes"),
             new Entry("ranker_return_scroll", "awakening_system:ranker_return_scroll", 2500, 1, "item.awakening_system.ranker_return_scroll", "boxes"),
             new Entry("roulette_altar", "awakening_system:roulette_altar", 85000, 1, "block.awakening_system.roulette_altar", "equipment", 1, 25),
+            new Entry("christmas_tree", "awakening_system:christmas_tree", 2500, 1, "block.awakening_system.christmas_tree", "boxes", 1, 1),
             new Entry("death_king_clock", "awakening_system:death_king_clock", 2800, 1, "awakening_system.shop.item.death_king_clock", "equipment", 2, 30),
 
             // --- HORNOS POR DIMENSION (Mundo 1 a Mundo 4) ---
@@ -222,6 +225,7 @@ public final class ShopDefinitions {
             new Entry("king_slayer_necklace", "awakening_system:king_slayer_necklace", 2700, 1, "item.awakening_system.king_slayer_necklace", "equipment", 1),
             new Entry("phoenix_feather", "awakening_system:phoenix_feather", 3600, 1, "item.awakening_system.phoenix_feather", "equipment", 2),
             new Entry("fable_star_fragment", "awakening_system:fable_star_fragment", 18500, 1, "awakening_system.shop.item.fable_star_fragment", "rare", 2, 35),
+            new Entry("hunter_association_tracker", "awakening_system:hunter_association_tracker", 100, 1, "item.awakening_system.hunter_association_tracker", "consumables", 1, 1),
             new Entry("constellation_nectar", "awakening_system:constellation_nectar", 350, 1, "awakening_system.shop.item.constellation_nectar", "consumables", 1),
             new Entry("tribulation_shield_pill", "awakening_system:tribulation_shield_pill", 1200, 1, "item.awakening_system.tribulation_shield_pill", "consumables", 3),
             new Entry("realm_breakthrough_pill", "awakening_system:realm_breakthrough_pill", 3500, 1, "item.awakening_system.realm_breakthrough_pill", "consumables", 3),
@@ -307,6 +311,8 @@ public final class ShopDefinitions {
             new Entry("enchanted_celestial_apple", "awakening_system:enchanted_celestial_apple", 950000, 1, "item.awakening_system.enchanted_celestial_apple", "rare", 1, 140),
             new Entry("primordial_apple", "awakening_system:primordial_apple", 550000, 1, "item.awakening_system.primordial_apple", "consumables", 1, 155),
             new Entry("enchanted_primordial_apple", "awakening_system:enchanted_primordial_apple", 1600000, 1, "item.awakening_system.enchanted_primordial_apple", "rare", 1, 155),
+            new Entry("shadow_apple", "awakening_system:shadow_apple", 85000, 1, "item.awakening_system.shadow_apple", "consumables", 1, 80),
+            new Entry("spirit_qi_carrot", "awakening_system:spirit_qi_carrot", 12000, 1, "item.awakening_system.spirit_qi_carrot", "consumables", 1, 35),
             new Entry("totem_of_undying", "minecraft:totem_of_undying", 16000, 1, "awakening_system.shop.item.totem", "rare", 1, 45),
             new Entry("nether_star", "minecraft:nether_star", 9500, 1, "awakening_system.shop.item.nether_star", "rare", "", 1, "minecraft:the_nether", 60),
             new Entry("elytra", "minecraft:elytra", 45000, 1, "awakening_system.shop.item.elytra", "rare", "", 2, "minecraft:the_end", 70),
@@ -524,6 +530,18 @@ public final class ShopDefinitions {
             new Entry("fd_hamburger", "farmersdelight:hamburger", 40, 2, "awakening_system.shop.item.fd_hamburger", "consumables", "farmersdelight"),
             new Entry("fd_pasta", "farmersdelight:pasta_with_meatballs", 50, 2, "awakening_system.shop.item.fd_pasta", "consumables", "farmersdelight"),
             new Entry("fd_steak_potatoes", "farmersdelight:steak_and_potatoes", 55, 2, "awakening_system.shop.item.fd_steak_potatoes", "consumables", "farmersdelight"),
+
+            // --- ARMAGEDDON RPG INTEGRATION (INVOCACIONES DE JEFES & REMOTES) ---
+            new Entry("armageddon_iron_colossus_remote", "armageddon:iron_colossus_remote", 4000, 1, "awakening_system.shop.item.armageddon_iron_colossus_remote", "utility", "armageddon", 1, 20),
+            new Entry("armageddon_goblin_lord_remote", "armageddon:goblin_lord_remote", 6000, 1, "awakening_system.shop.item.armageddon_goblin_lord_remote", "utility", "armageddon", 1, 35),
+            new Entry("armageddon_arion_remote", "armageddon:arion_remote", 9000, 1, "awakening_system.shop.item.armageddon_arion_remote", "utility", "armageddon", 1, 50),
+            new Entry("armageddon_eldorath_remote", "armageddon:eldorath_remote", 14000, 1, "awakening_system.shop.item.armageddon_eldorath_remote", "utility", "armageddon", 2, "minecraft:the_nether", 70),
+            new Entry("armageddon_zoranth_remote", "armageddon:zoranth_remote", 20000, 1, "awakening_system.shop.item.armageddon_zoranth_remote", "utility", "armageddon", 2, "minecraft:the_nether", 90),
+            new Entry("armageddon_elvenite_paladin_remote", "armageddon:elvenite_paladin_remote", 28000, 1, "awakening_system.shop.item.armageddon_elvenite_paladin_remote", "utility", "armageddon", 3, 110),
+            new Entry("armageddon_vaedric_remote", "armageddon:vaedric_remote", 38000, 1, "awakening_system.shop.item.armageddon_vaedric_remote", "utility", "armageddon", 3, 130),
+            new Entry("armageddon_bringer_of_doom_remote", "armageddon:bringer_of_doom_remote", 50000, 1, "awakening_system.shop.item.armageddon_bringer_of_doom_remote", "utility", "armageddon", 4, 150),
+            new Entry("armageddon_calamities_remote", "armageddon:calamities_remote", 65000, 1, "awakening_system.shop.item.armageddon_calamities_remote", "utility", "armageddon", 4, 170),
+            new Entry("armageddon_nyxaris_remote", "armageddon:nyxaris_remote", 90000, 1, "awakening_system.shop.item.armageddon_nyxaris_remote", "utility", "armageddon", 4, 200),
             new Entry("fd_roast_chicken", "farmersdelight:roast_chicken_block", 95, 1, "awakening_system.shop.item.fd_roast_chicken", "consumables", "farmersdelight"),
             new Entry("fd_apple_cider", "farmersdelight:apple_cider", 35, 2, "awakening_system.shop.item.fd_apple_cider", "consumables", "farmersdelight"),
             new Entry("fd_hot_cocoa", "farmersdelight:hot_cocoa", 35, 2, "awakening_system.shop.item.fd_hot_cocoa", "consumables", "farmersdelight"),
@@ -582,6 +600,9 @@ public final class ShopDefinitions {
 
     public static boolean isAvailable(Entry entry) {
         if (entry == null) return false;
+        if ("christmas_tree".equals(entry.id())) {
+            return com.soybe.awakeningsystem.seasonal.SeasonalEventManager.isChristmasActive();
+        }
         if (!entry.requiredMod().isEmpty()) {
             if ("apotheosis".equals(entry.requiredMod())) {
                 if (!ModList.get().isLoaded("apotheosis") && !ModList.get().isLoaded("apothic_enchanting") && !ModList.get().isLoaded("apothic_attributes")) {
@@ -591,11 +612,31 @@ public final class ShopDefinitions {
                 if (!ModList.get().isLoaded("pamhc2foodextended") && !ModList.get().isLoaded("pamhc2foodcore")) {
                     return false;
                 }
+            } else if ("armageddon".equals(entry.requiredMod())) {
+                if (!com.soybe.awakeningsystem.compat.ArmageddonCompatHandler.isLoaded()) {
+                    return false;
+                }
             } else if (!ModList.get().isLoaded(entry.requiredMod())) {
                 return false;
             }
         }
+        if (isBoxEntry(entry)) {
+            return true;
+        }
         return !createStack(entry).isEmpty();
+    }
+
+    public static boolean isBoxEntry(Entry entry) {
+        if (entry == null) return false;
+        return isBoxId(entry.id());
+    }
+
+    public static boolean isBoxId(String id) {
+        if (id == null) return false;
+        return switch (id) {
+            case "box_common", "lucky_box", "box_rare", "box_epic", "box_legendary", "box_mythic", "box_primordial" -> true;
+            default -> false;
+        };
     }
 
     public static boolean matchesCategory(Entry entry, String category) {
@@ -655,6 +696,16 @@ public final class ShopDefinitions {
                 }
             }
         }
+        // Fallback para modulaciones de Armageddon (armageddon / armageddon_mod)
+        if ("armageddon".equals(id.getNamespace()) || "armageddon_mod".equals(id.getNamespace())) {
+            String path = id.getPath();
+            for (String ns : new String[]{"armageddon", "armageddon_mod"}) {
+                ResourceLocation alt = ResourceLocation.fromNamespaceAndPath(ns, path);
+                if (BuiltInRegistries.ITEM.containsKey(alt)) {
+                    return new ItemStack(BuiltInRegistries.ITEM.get(alt), entry.amount());
+                }
+            }
+        }
         return ItemStack.EMPTY;
     }
 
@@ -671,6 +722,13 @@ public final class ShopDefinitions {
         // 1. Bloqueo estricto por Nivel de Jugador
         if (entry.minLevel() > 0 && data.level() < entry.minLevel()) {
             return false;
+        }
+
+        // Bloqueo de Progresion Lineal: El boleto a la Torre de Rankers requiere haber viajado al End
+        if ("ranker_tower_ticket".equals(entry.id())) {
+            if (!data.hasVisitedDimension("minecraft:the_end") && !data.hasVisitedDimension("the_end") && !data.isEnderDragonDefeated()) {
+                return false;
+            }
         }
 
         // 2. Bloqueo estricto por Dimensión (ambos requisitos de nivel y dimensión deben cumplirse obligatoriamente)

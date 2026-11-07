@@ -229,10 +229,11 @@ public final class EntityIconRenderer {
 
         // Fallback estilizado para entidades de mods externos
         boolean isBoss = com.soybe.awakeningsystem.config.BossCompatibilityManager.isBoss(entity);
-        int fallbackCol = isBoss ? 0xFFFFD700 : (entity instanceof net.minecraft.world.entity.monster.Enemy ? 0xFFFF3333 : (entity instanceof NeutralMob ? 0xFFFFB86C : 0xFF50FA7B));
+        boolean isShadow = com.soybe.awakeningsystem.AwakeningSystemClient.isShadowSoldier(entity);
+        int fallbackCol = isBoss ? 0xFFFFD700 : (isShadow ? 0xFF50FA7B : (entity instanceof net.minecraft.world.entity.monster.Enemy ? 0xFFFF3333 : (entity instanceof NeutralMob ? 0xFFFFB86C : 0xFF50FA7B)));
         g.fill(x, y, x + size, y + size, 0xFF14202B);
         g.renderOutline(x, y, size, size, fallbackCol);
-        String iconChar = isBoss ? "☠" : (entity instanceof net.minecraft.world.entity.monster.Enemy ? "⚔" : "☘");
+        String iconChar = isBoss ? "☠" : (isShadow ? "⚔" : (entity instanceof net.minecraft.world.entity.monster.Enemy ? "⚔" : "☘"));
         g.drawCenteredString(Minecraft.getInstance().font, iconChar, x + size / 2, y + (size - 8) / 2, fallbackCol);
     }
 
@@ -251,7 +252,7 @@ public final class EntityIconRenderer {
         int drawX = x - halfSize;
         int drawY = y - halfSize;
 
-        boolean isEnemy = entity instanceof net.minecraft.world.entity.monster.Enemy;
+        boolean isEnemy = entity instanceof net.minecraft.world.entity.monster.Enemy && !com.soybe.awakeningsystem.AwakeningSystemClient.isShadowSoldier(entity);
         boolean isPassive = entity instanceof Animal || entity instanceof AbstractVillager;
         if (!com.soybe.awakeningsystem.client.gui.GuiConfig.minimapShowHostiles && isEnemy) return;
         if (!com.soybe.awakeningsystem.client.gui.GuiConfig.minimapShowPassives && isPassive) return;
@@ -260,6 +261,17 @@ public final class EntityIconRenderer {
         int borderCol;
         if (isBoss) {
             borderCol = 0xFFFFD700; // Dorado Jefe
+        } else if (com.soybe.awakeningsystem.AwakeningSystemClient.isShadowSoldier(entity)) {
+            byte alliance = com.soybe.awakeningsystem.AwakeningSystemClient.getShadowAlliance(entity.getId());
+            if (alliance == 2) {
+                borderCol = 0xFF50FA7B; // Verde Esmeralda Aliado de Gremio
+            } else if (alliance == 1) {
+                borderCol = 0xFF00E5FF; // Cian Monarca Propio
+            } else if (alliance == 0 && com.soybe.awakeningsystem.AwakeningSystemClient.SHADOW_ALLIANCE_MAP.containsKey(entity.getId())) {
+                borderCol = 0xFFFF3333; // Rojo Enemigo Hostil
+            } else {
+                borderCol = 0xFF50FA7B; // Verde Aliado por defecto
+            }
         } else if (entity instanceof net.minecraft.world.entity.monster.Enemy) {
             borderCol = 0xFFFF3333; // Rojo Enemigo
         } else if (entity instanceof NeutralMob) {

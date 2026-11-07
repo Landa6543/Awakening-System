@@ -116,11 +116,11 @@ public final class TowerManager {
         double dz = player.getZ() - (session.floorOrigin.getZ() + 0.5D);
         double distSq = dx * dx + dz * dz;
         double y = player.getY();
-        double minY = session.floorOrigin.getY() - 1.0;
-        double maxY = session.floorOrigin.getY() + CHAMBER_HEIGHT + 3.0;
+        double minY = session.floorOrigin.getY();
+        double maxY = session.floorOrigin.getY() + CHAMBER_HEIGHT;
 
-        if (distSq > (ARENA_RADIUS + 2.0) * (ARENA_RADIUS + 2.0)) return true;
-        if (y < minY || y > maxY) return true;
+        if (distSq > (ARENA_RADIUS - 1.5D) * (ARENA_RADIUS - 1.5D)) return true;
+        if (y < minY || y >= maxY) return true;
 
         BlockPos headPos = BlockPos.containing(player.getX(), y + 1.0, player.getZ());
         BlockPos feetPos = BlockPos.containing(player.getX(), y, player.getZ());
@@ -147,6 +147,12 @@ public final class TowerManager {
     }
 
     public static void enterTowerAtFloor(ServerPlayer player, int startFloor) {
+        boolean isDevOrOp = player.hasPermissions(2) || player.isCreative();
+        if (!isDevOrOp && !SystemEvents.hasReachedEnd(player)) {
+            player.displayClientMessage(Component.translatable("awakening_system.tower.requires_end_reached"), true);
+            player.playNotifySound(net.minecraft.sounds.SoundEvents.NOTE_BLOCK_BASS.value(), net.minecraft.sounds.SoundSource.PLAYERS, 1.0F, 0.7F);
+            return;
+        }
         player.getPersistentData().putBoolean("tower_has_entered", true);
         if (com.soybe.awakeningsystem.penalty.PenaltyZoneManager.isInPenaltyZone(player) ||
             com.soybe.awakeningsystem.limbo.LimboWorldManager.isLimboDimension(player.level())) {

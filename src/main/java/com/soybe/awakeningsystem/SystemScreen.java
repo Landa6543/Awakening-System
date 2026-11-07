@@ -120,6 +120,20 @@ public final class SystemScreen extends Screen {
         };
     }
 
+    public static ResourceLocation getShopBoxTexture(String boxId) {
+        if (boxId == null) return null;
+        return switch (boxId) {
+            case "lucky_box" -> ResourceLocation.fromNamespaceAndPath("awakening_system", "textures/gui/shop/box/lucky_box.png");
+            case "box_common" -> ResourceLocation.fromNamespaceAndPath("awakening_system", "textures/gui/shop/box/box_common.png");
+            case "box_rare" -> ResourceLocation.fromNamespaceAndPath("awakening_system", "textures/gui/shop/box/box_rare.png");
+            case "box_epic" -> ResourceLocation.fromNamespaceAndPath("awakening_system", "textures/gui/shop/box/box_epic.png");
+            case "box_legendary" -> ResourceLocation.fromNamespaceAndPath("awakening_system", "textures/gui/shop/box/box_legendary.png");
+            case "box_mythic" -> ResourceLocation.fromNamespaceAndPath("awakening_system", "textures/gui/shop/box/box_mythic.png");
+            case "box_primordial" -> ResourceLocation.fromNamespaceAndPath("awakening_system", "textures/gui/shop/box/box_primordial.png");
+            default -> null;
+        };
+    }
+
     private int tab;
     private int skillScroll;
     private int skillTabMode = 0;
@@ -158,6 +172,9 @@ public final class SystemScreen extends Screen {
     @Override
     protected void init() {
         super.init();
+        com.soybe.awakeningsystem.client.gui.GuiConfig.systemGuiOffsetX = 0;
+        com.soybe.awakeningsystem.client.gui.GuiConfig.systemGuiOffsetY = 0;
+        com.soybe.awakeningsystem.client.gui.GuiConfig.freeMoveEnabled = false;
         if (data().isAnySystemUpdating()) {
             this.minecraft.setScreen(new SystemMaintenanceScreen());
             return;
@@ -262,11 +279,11 @@ public final class SystemScreen extends Screen {
     private float resizeStartScale;
 
     public int getGuiLeft() {
-        return (this.width - W) / 2 + com.soybe.awakeningsystem.client.gui.GuiConfig.systemGuiOffsetX;
+        return (this.width - W) / 2;
     }
 
     public int getGuiTop() {
-        return (this.height - H) / 2 + com.soybe.awakeningsystem.client.gui.GuiConfig.systemGuiOffsetY;
+        return (this.height - H) / 2;
     }
 
     public double getGuiCenterX() {
@@ -356,19 +373,8 @@ public final class SystemScreen extends Screen {
             return true;
         }
 
-        // [⟲] Reset window position/scale
-        if (mouseX >= left + W - 70 && mouseX < left + W - 54 && mouseY >= top + 16 && mouseY < top + 32) {
-            com.soybe.awakeningsystem.client.gui.GuiConfig.systemGuiOffsetX = 0;
-            com.soybe.awakeningsystem.client.gui.GuiConfig.systemGuiOffsetY = 0;
-            com.soybe.awakeningsystem.client.gui.GuiConfig.systemGuiScale = 1.0F;
-            com.soybe.awakeningsystem.client.gui.GuiConfig.save();
-            updateSearchBoxPosition();
-            AwakeningSystemClient.playUiSound(SoundEvents.ANVIL_USE, 0.7F, 1.4F);
-            return true;
-        }
-
         // [⚔] Guild button
-        if (mouseX >= left + W - 88 && mouseX < left + W - 72 && mouseY >= top + 16 && mouseY < top + 32) {
+        if (mouseX >= left + W - 70 && mouseX < left + W - 54 && mouseY >= top + 16 && mouseY < top + 32) {
             AwakeningSystemClient.playUiSound(ModSounds.SYSTEM_CLICK.value(), 1.0F, 1.2F);
             AwakeningSystemClient.requestOpenGuild();
             return true;
@@ -376,30 +382,12 @@ public final class SystemScreen extends Screen {
 
         // [🥕] Uma button (unlocked exclusively in Teyvat / World 4)
         boolean showUma = isSys40() || (data() != null && data().teyvatUnlocked());
-        if (showUma && mouseX >= left + W - 106 && mouseX < left + W - 90 && mouseY >= top + 16 && mouseY < top + 32) {
+        if (showUma && mouseX >= left + W - 88 && mouseX < left + W - 72 && mouseY >= top + 16 && mouseY < top + 32) {
             AwakeningSystemClient.playUiSound(ModSounds.SYSTEM_CLICK.value(), 1.0F, 1.2F);
             this.onClose();
             net.neoforged.neoforge.network.PacketDistributor.sendToServer(
                     new com.soybe.awakeningsystem.uma.network.UmaHubActionPayload("REFRESH", net.minecraft.core.BlockPos.ZERO, "", 0)
             );
-            return true;
-        }
-
-        if (mouseX >= left + W - 20 && mouseX <= left + W && mouseY >= top + H - 20 && mouseY <= top + H) {
-            isResizingWindow = true;
-            resizeStartMouseX = rawX;
-            resizeStartMouseY = rawY;
-            resizeStartScale = com.soybe.awakeningsystem.client.gui.GuiConfig.systemGuiScale;
-            return true;
-        }
-
-        if (com.soybe.awakeningsystem.client.gui.GuiConfig.freeMoveEnabled
-                && mouseX >= left + 14 && mouseX < left + W - 112 && mouseY >= top + 12 && mouseY < top + 44) {
-            isDraggingWindow = true;
-            dragStartMouseX = rawX;
-            dragStartMouseY = rawY;
-            dragStartOffsetX = com.soybe.awakeningsystem.client.gui.GuiConfig.systemGuiOffsetX;
-            dragStartOffsetY = com.soybe.awakeningsystem.client.gui.GuiConfig.systemGuiOffsetY;
             return true;
         }
 
@@ -651,9 +639,14 @@ public final class SystemScreen extends Screen {
                         }
                     }
 
+                    boolean isHabit = SkillDefinitions.isHabitSkill(entry.getKey());
                     int toggleX = entry.getValue() == 5 ? left + W - 165 : left + W - 90;
                     int toggleW = 70;
                     if (mouseX >= toggleX && mouseX < toggleX + toggleW && mouseY >= itemY + 8 && mouseY < itemY + 26) {
+                        if (isHabit) {
+                            Minecraft.getInstance().setScreen(new SkillDetailScreen(entry.getKey(), entry.getValue()));
+                            return true;
+                        }
                         if (eqSlot >= 0) {
                             AwakeningSystemClient.equipSkillSlot(true, eqSlot, "");
                         } else {
@@ -1094,7 +1087,9 @@ public final class SystemScreen extends Screen {
                 int btnY = top + 102 + 106;
                 if (mouseX >= btnX && mouseX < btnX + btnW && mouseY >= btnY && mouseY < btnY + btnH) {
                     SystemData d = data();
-                    if (d.coins() < 1000) {
+                    long currentDay = minecraft != null && minecraft.level != null ? minecraft.level.getDayTime() / 24000L : 0L;
+                    boolean isFreeDaily = d.hasDailyFreeRoulette(currentDay);
+                    if (!isFreeDaily && d.coins() < 1000) {
                         if (minecraft != null && minecraft.player != null) {
                             minecraft.player.playSound(net.minecraft.sounds.SoundEvents.UI_BUTTON_CLICK.value(), 0.3F, 0.6F);
                         }
@@ -1106,7 +1101,7 @@ public final class SystemScreen extends Screen {
                         minecraft.player.playSound(ModSounds.ROULETTE_SPIN.value(), 1.0F, 1.0F);
                     }
                     AwakeningSystemClient.buyShopItem("system_roulette");
-                    Minecraft.getInstance().setScreen(new ChestOpeningScreen(this, "system_roulette", "awakening_system.screen.roulette.title", 5, 1000));
+                    Minecraft.getInstance().setScreen(new ChestOpeningScreen(this, "system_roulette", "awakening_system.screen.roulette.title", 5, isFreeDaily ? 0 : 1000));
                     return true;
                 }
                 return true;
@@ -1155,8 +1150,7 @@ public final class SystemScreen extends Screen {
                             }
                             return true;
                         }
-                        boolean isDirectOpenBox = "box_common".equals(entry.id()) || "box_rare".equals(entry.id())
-                                || "box_epic".equals(entry.id()) || "box_legendary".equals(entry.id()) || "lucky_box".equals(entry.id());
+                        boolean isDirectOpenBox = ShopDefinitions.isBoxId(entry.id());
                         if (isDirectOpenBox) {
                             if (d.coins() < entry.cost()) {
                                 if (minecraft != null && minecraft.player != null) {
@@ -1170,6 +1164,8 @@ public final class SystemScreen extends Screen {
                                 case "box_rare" -> 2;
                                 case "box_epic" -> 3;
                                 case "box_legendary" -> 4;
+                                case "box_mythic" -> 5;
+                                case "box_primordial" -> 6;
                                 default -> 1;
                             };
                             AwakeningSystemClient.buyShopItem(entry.id());
@@ -1718,20 +1714,6 @@ public final class SystemScreen extends Screen {
 
     @Override
     public boolean mouseDragged(double mouseX, double mouseY, int button, double dragX, double dragY) {
-        if (isDraggingWindow && button == 0) {
-            double dx = mouseX - dragStartMouseX;
-            double dy = mouseY - dragStartMouseY;
-            com.soybe.awakeningsystem.client.gui.GuiConfig.systemGuiOffsetX = (int) Math.round(dragStartOffsetX + dx);
-            com.soybe.awakeningsystem.client.gui.GuiConfig.systemGuiOffsetY = (int) Math.round(dragStartOffsetY + dy);
-            updateSearchBoxPosition();
-            return true;
-        }
-        if (isResizingWindow && button == 0) {
-            double delta = ((mouseX - resizeStartMouseX) + (mouseY - resizeStartMouseY)) / 160.0;
-            com.soybe.awakeningsystem.client.gui.GuiConfig.systemGuiScale = (float) Math.max(0.5, Math.min(1.8, resizeStartScale + delta));
-            updateSearchBoxPosition();
-            return true;
-        }
         mouseX = transformMouseX(mouseX);
         mouseY = transformMouseY(mouseY);
         int left = getGuiLeft();
@@ -1988,21 +1970,14 @@ public final class SystemScreen extends Screen {
         g.renderOutline(btnSetX, btnSetY, 16, 16, setHov ? 0xFFFFFFFF : 0x7700E5FF);
         g.drawCenteredString(font, "⚙", btnSetX + 8, btnSetY + 4, setHov ? 0xFFFFFFFF : 0xFFDFB76C);
 
-        int btnResetX = left + W - 70;
-        int btnResetY = top + 16;
-        boolean resetHov = mX >= btnResetX && mX < btnResetX + 16 && mY >= btnResetY && mY < btnResetY + 16;
-        g.fill(btnResetX, btnResetY, btnResetX + 16, btnResetY + 16, resetHov ? 0xDD2A4560 : 0x55122030);
-        g.renderOutline(btnResetX, btnResetY, 16, 16, resetHov ? 0xFFFFFFFF : 0x7700E5FF);
-        g.drawCenteredString(font, "⟲", btnResetX + 8, btnResetY + 4, resetHov ? 0xFFFFFFFF : 0xFF70E8FF);
-
-        int btnGuildX = left + W - 88;
+        int btnGuildX = left + W - 70;
         int btnGuildY = top + 16;
         boolean guildHov = mX >= btnGuildX && mX < btnGuildX + 16 && mY >= btnGuildY && mY < btnGuildY + 16;
         g.fill(btnGuildX, btnGuildY, btnGuildX + 16, btnGuildY + 16, guildHov ? 0xDD2A4560 : 0x55122030);
         g.renderOutline(btnGuildX, btnGuildY, 16, 16, guildHov ? 0xFFFFFFFF : 0x7700E5FF);
         g.drawCenteredString(font, "⚔", btnGuildX + 8, btnGuildY + 4, guildHov ? 0xFFFFFFFF : 0xFF70E8FF);
 
-        int btnUmaX = left + W - 106;
+        int btnUmaX = left + W - 88;
         int btnUmaY = top + 16;
         boolean umaHov = showUma && mX >= btnUmaX && mX < btnUmaX + 16 && mY >= btnUmaY && mY < btnUmaY + 16;
         if (showUma) {
@@ -2052,17 +2027,6 @@ public final class SystemScreen extends Screen {
             tip.add(Component.translatable("awakening_system.screen.header.settings.title").withStyle(ChatFormatting.BOLD));
             tip.add(Component.translatable("awakening_system.screen.header.settings.desc"));
             tip.add(Component.translatable("awakening_system.screen.header.settings.action").withStyle(ChatFormatting.AQUA));
-            g.renderComponentTooltip(font, tip, mX, mY);
-        } else if (resetHov) {
-            List<Component> tip = new ArrayList<>();
-            tip.add(Component.translatable("awakening_system.screen.header.reset.title").withStyle(ChatFormatting.BOLD));
-            tip.add(Component.translatable("awakening_system.screen.header.reset.desc"));
-            g.renderComponentTooltip(font, tip, mX, mY);
-        } else if (gripHov) {
-            List<Component> tip = new ArrayList<>();
-            tip.add(Component.translatable("awakening_system.screen.header.resize.title").withStyle(ChatFormatting.BOLD));
-            tip.add(Component.translatable("awakening_system.screen.header.resize.desc1"));
-            tip.add(Component.translatable("awakening_system.screen.header.resize.desc2"));
             g.renderComponentTooltip(font, tip, mX, mY);
         }
 
@@ -2762,16 +2726,22 @@ public final class SystemScreen extends Screen {
         int expNeeded = Math.max(1, d.nextLevelExperience());
         int expCurrent = d.experience();
         int pct = Math.min(100, (int) ((double) expCurrent / expNeeded * 100));
-        String expStr = "EXP " + expCurrent + " / " + expNeeded + " (" + pct + "%)";
-        g.drawString(font, Component.literal(expStr), left + 24, top + 127, sys40 ? 0xFFFFE082 : ((sys30 || sys20) ? 0xFFFFD700 : 0xFF8BE9FD));
+        String expStr;
+        if (d.isEvaluationPending()) {
+            expStr = "EXP " + expCurrent + " / " + expNeeded + " [★ EVALUACIÓN PENDIENTE ★] (Reserva: +" + String.format(java.util.Locale.US, "%,d", d.reserveExperience()) + ")";
+        } else {
+            expStr = "EXP " + expCurrent + " / " + expNeeded + " (" + pct + "%)";
+        }
+        int expTextColor = d.isEvaluationPending() ? 0xFFFF7666 : (sys40 ? 0xFFFFE082 : ((sys30 || sys20) ? 0xFFFFD700 : 0xFF8BE9FD));
+        g.drawString(font, Component.literal(expStr), left + 24, top + 127, expTextColor);
 
         com.mojang.blaze3d.systems.RenderSystem.enableBlend();
         com.mojang.blaze3d.systems.RenderSystem.defaultBlendFunc();
         g.blit(GAUGE_EXP_FRAME, left + 20, top + 138, W - 40, 7, 0.0F, 0.0F, 800, 14, 800, 14);
         int bar = (int) ((W - 42) * Math.min(1.0D, (double) expCurrent / expNeeded));
         if (bar > 0) {
-            int expCol1 = sys40 ? 0xFFFFD700 : ((sys30 || sys20) ? 0xFFFFD700 : 0xFF00E5FF);
-            int expCol2 = sys40 ? 0xFFDFB76C : ((sys30 || sys20) ? 0xFFC0392B : 0xFF0077B6);
+            int expCol1 = d.isEvaluationPending() ? 0xFFFF5555 : (sys40 ? 0xFFFFD700 : ((sys30 || sys20) ? 0xFFFFD700 : 0xFF00E5FF));
+            int expCol2 = d.isEvaluationPending() ? 0xFFFFB86C : (sys40 ? 0xFFDFB76C : ((sys30 || sys20) ? 0xFFC0392B : 0xFF0077B6));
             g.fillGradient(left + 21, top + 139, left + 21 + bar, top + 144, expCol1, expCol2);
             g.fill(left + 21, top + 139, left + 21 + bar, top + 141, 0x60FFFFFF);
         }
@@ -3102,11 +3072,18 @@ public final class SystemScreen extends Screen {
     }
 
     private List<Map.Entry<String, Integer>> visiblePassiveSkills() {
-        return visibleSkills().stream()
+        List<Map.Entry<String, Integer>> list = new ArrayList<>(visibleSkills().stream()
                 .filter(e -> SkillDefinitions.isPassive(e.getKey()))
-                .sorted(Map.Entry.<String, Integer>comparingByValue().reversed()
-                        .thenComparing(Map.Entry.comparingByKey()))
-                .toList();
+                .toList());
+        String[] habitSkills = {"enduring_flesh", "windrunner", "combat_instinct", "ore_sense", "deadeye"};
+        for (String h : habitSkills) {
+            if (!data().skills().containsKey(h) && SkillDefinitions.isAvailable(h)) {
+                list.add(Map.entry(h, 0));
+            }
+        }
+        list.sort(Map.Entry.<String, Integer>comparingByValue().reversed()
+                .thenComparing(Map.Entry.comparingByKey()));
+        return list;
     }
 
     private List<Component> activeMissions(SystemData d) {
@@ -3307,10 +3284,14 @@ public final class SystemScreen extends Screen {
 
                     g.fill(left + 20, itemY, left + 23, itemY + 34, rarityColor(def.rarity()));
 
-                    Component nameComp = def.name().copy().append(Component.translatable("awakening_system.screen.skills.level_tag", entry.getValue()));
-                    drawClipped(g, nameComp, left + 28, itemY + 5, itemHov ? ((sys30 || sys20) ? 0xFFFFD700 : CYAN) : rarityColor(def.rarity()), W - 200);
+                    // Iconografía Manhwa de Arquetipo (Roadmap Sección 9)
+                    SkillDefinitions.SkillArchetype arch = SkillDefinitions.getArchetype(entry.getKey());
+                    g.drawString(font, arch.getSymbol(), left + 27, itemY + 6, arch.getColor());
 
-                    drawClipped(g, Component.translatable("awakening_system.screen.skills.ep_cost", def.effect()), left + 28, itemY + 19, sys30 ? 0xFF88C999 : (sys20 ? 0xFFD1B3E0 : MUTED), W - 200);
+                    Component nameComp = def.name().copy().append(Component.translatable("awakening_system.screen.skills.level_tag", entry.getValue()));
+                    drawClipped(g, nameComp, left + 40, itemY + 5, itemHov ? ((sys30 || sys20) ? 0xFFFFD700 : CYAN) : rarityColor(def.rarity()), W - 212);
+
+                    drawClipped(g, Component.translatable("awakening_system.screen.skills.ep_cost", def.effect()), left + 40, itemY + 19, sys30 ? 0xFF88C999 : (sys20 ? 0xFFD1B3E0 : MUTED), W - 212);
 
                     if (isEq) {
                         int bX = left + W - 150;
@@ -3416,19 +3397,39 @@ public final class SystemScreen extends Screen {
 
                     g.fill(left + 20, itemY, left + 23, itemY + 34, rarityColor(def.rarity()));
 
-                    int curProg = d.skillProgress(entry.getKey());
-                    int reqProg = d.skillProgressRequired(entry.getKey());
-                    Component nameComp = def.name().copy().append(Component.translatable("awakening_system.screen.skills.level_tag", entry.getValue())).append(" §8(" + curProg + "/" + reqProg + ")");
-                    drawClipped(g, nameComp, left + 28, itemY + 5, itemHov ? ((sys30 || sys20) ? 0xFFFFD700 : CYAN) : rarityColor(def.rarity()), W - 180);
+                    // Iconografía Manhwa de Arquetipo (Roadmap Sección 9)
+                    SkillDefinitions.SkillArchetype arch = SkillDefinitions.getArchetype(entry.getKey());
+                    g.drawString(font, arch.getSymbol(), left + 27, itemY + 6, arch.getColor());
 
-                    drawClipped(g, def.effect(), left + 28, itemY + 19, sys30 ? 0xFF88C999 : (sys20 ? 0xFFD1B3E0 : MUTED), W - 180);
+                    boolean isHabit = SkillDefinitions.isHabitSkill(entry.getKey());
+                    int curProg = isHabit ? d.getHabitProgress(entry.getKey()) : d.skillProgress(entry.getKey());
+                    int reqProg = isHabit ? d.getHabitRequired(entry.getKey()) : d.skillProgressRequired(entry.getKey());
+                    Component nameComp;
+                    if (entry.getValue() <= 0) {
+                        nameComp = def.name().copy().append(" §8[").append(Component.translatable("awakening_system.skill.locked")).append("] §7(" + curProg + "/" + reqProg + ")");
+                    } else {
+                        nameComp = def.name().copy().append(Component.translatable("awakening_system.screen.skills.level_tag", entry.getValue())).append(" §8(" + curProg + "/" + reqProg + ")");
+                    }
+                    drawClipped(g, nameComp, left + 40, itemY + 5, entry.getValue() <= 0 ? 0xFF888888 : (itemHov ? ((sys30 || sys20) ? 0xFFFFD700 : CYAN) : rarityColor(def.rarity())), W - 192);
+
+                    drawClipped(g, def.effect(), left + 40, itemY + 19, sys30 ? 0xFF88C999 : (sys20 ? 0xFFD1B3E0 : MUTED), W - 192);
 
                     int toggleX = entry.getValue() == 5 ? left + W - 165 : left + W - 90;
                     int toggleW = 70;
                     int toggleY = itemY + 8;
                     boolean togHov = mouseX >= toggleX && mouseX < toggleX + toggleW && mouseY >= toggleY && mouseY < toggleY + 18;
 
-                    if (isEq) {
+                    if (isHabit) {
+                        if (entry.getValue() <= 0) {
+                            g.fill(toggleX, toggleY, toggleX + toggleW, toggleY + 18, 0xFF181818);
+                            drawBorder(g, toggleX, toggleY, toggleW, 18, 0xFF3A3A3A);
+                            g.drawCenteredString(font, Component.translatable("awakening_system.skill.locked_badge"), toggleX + toggleW / 2, toggleY + 5, 0xFF777777);
+                        } else {
+                            g.fill(toggleX, toggleY, toggleX + toggleW, toggleY + 18, 0xFF0D3325);
+                            drawBorder(g, toggleX, toggleY, toggleW, 18, 0xFF50FA7B);
+                            g.drawCenteredString(font, Component.translatable("awakening_system.skill.innate_badge"), toggleX + toggleW / 2, toggleY + 5, 0xFF50FA7B);
+                        }
+                    } else if (isEq) {
                         g.fill(toggleX, toggleY, toggleX + toggleW, toggleY + 18, togHov ? (sys30 ? 0xFF1C382E : (sys20 ? 0xFF3A1259 : 0xFF276A82)) : 0xFF163E2A);
                         drawBorder(g, toggleX, toggleY, toggleW, 18, togHov ? 0xFFFFFFFF : 0xFF50FA7B);
                         g.drawCenteredString(font, Component.translatable("awakening_system.screen.skills.talent_equipped", eqSlot + 1), toggleX + toggleW / 2, toggleY + 5, 0xFF50FA7B);
@@ -4224,14 +4225,14 @@ public final class SystemScreen extends Screen {
         g.drawCenteredString(font, poolHeader, left + W / 2, poolHeaderY, (sys30 || sys20) ? 0xFFFFD700 : CYAN);
 
         net.minecraft.world.item.Item[] showcase = new net.minecraft.world.item.Item[]{
-                net.minecraft.world.item.Items.NETHERITE_INGOT,
-                net.minecraft.world.item.Items.TOTEM_OF_UNDYING,
-                net.minecraft.world.item.Items.ENCHANTED_GOLDEN_APPLE,
-                net.minecraft.world.item.Items.DIAMOND_BLOCK,
-                net.minecraft.world.item.Items.NETHER_STAR,
-                net.minecraft.world.item.Items.NETHERITE_SCRAP,
-                net.minecraft.world.item.Items.GOLDEN_APPLE,
-                net.minecraft.world.item.Items.ENDER_PEARL
+                SystemItems.CELESTIAL_INGOT.get(),
+                SystemItems.PRIMORDIAL_INGOT.get(),
+                SystemItems.MITHRIL_INGOT.get(),
+                SystemItems.SOUL_ALLOY_INGOT.get(),
+                SystemItems.SHADOW_APPLE.get(),
+                SystemItems.ABYSSAL_INGOT.get(),
+                SystemItems.SPIRIT_QI_CARROT.get(),
+                SystemItems.REFINED_WHITE_IRON_INGOT.get()
         };
 
         int startItemX = left + W / 2 - (showcase.length * 36) / 2 + 10;
@@ -4243,10 +4244,18 @@ public final class SystemScreen extends Screen {
             g.renderItem(new net.minecraft.world.item.ItemStack(showcase[i]), ix, itemY);
         }
 
-        int cost = 1000;
-        boolean canAfford = d.coins() >= cost;
-        Component costComp = Component.translatable("awakening_system.screen.roulette.cost", cost, (canAfford ? "§a" : "§c") + d.coins());
-        g.drawCenteredString(font, costComp, left + W / 2, panelY + 89, canAfford ? 0xFFDDECF2 : 0xFFFF7666);
+        long currentDay = minecraft != null && minecraft.level != null ? minecraft.level.getDayTime() / 24000L : 0L;
+        boolean isFreeDaily = d.hasDailyFreeRoulette(currentDay);
+        int cost = isFreeDaily ? 0 : 1000;
+        boolean canAfford = isFreeDaily || d.coins() >= cost;
+
+        Component costComp;
+        if (isFreeDaily) {
+            costComp = Component.translatable("awakening_system.screen.roulette.free_daily").withStyle(ChatFormatting.GREEN, ChatFormatting.BOLD);
+        } else {
+            costComp = Component.translatable("awakening_system.screen.roulette.cost", cost, (canAfford ? "§a" : "§c") + d.coins());
+        }
+        g.drawCenteredString(font, costComp, left + W / 2, panelY + 89, isFreeDaily ? 0xFF50FA7B : (canAfford ? 0xFFDDECF2 : 0xFFFF7666));
 
         int btnW = 260;
         int btnH = 24;
@@ -4254,13 +4263,15 @@ public final class SystemScreen extends Screen {
         int btnY = panelY + 106;
         boolean btnHov = mouseX >= btnX && mouseX < btnX + btnW && mouseY >= btnY && mouseY < btnY + btnH;
 
-        int btnBg = canAfford ? (btnHov ? 0xFFFFAA00 : 0xFFB8860B) : 0xFF333333;
-        int borderCol = canAfford ? (btnHov ? 0xFFFFFFFF : 0xFFFFD866) : 0xFF555555;
-        int textCol = canAfford ? (btnHov ? 0xFF10202D : 0xFFFFFFFF) : 0xFF888888;
+        int btnBg = isFreeDaily ? (btnHov ? 0xFF2ECC71 : 0xFF1D5A40) : (canAfford ? (btnHov ? 0xFFFFAA00 : 0xFFB8860B) : 0xFF333333);
+        int borderCol = isFreeDaily ? 0xFF50FA7B : (canAfford ? (btnHov ? 0xFFFFFFFF : 0xFFFFD866) : 0xFF555555);
+        int textCol = isFreeDaily ? (btnHov ? 0xFFFFFFFF : 0xFFDDECF2) : (canAfford ? (btnHov ? 0xFF10202D : 0xFFFFFFFF) : 0xFF888888);
 
         g.fill(btnX, btnY, btnX + btnW, btnY + btnH, btnBg);
         drawBorder(g, btnX, btnY, btnW, btnH, borderCol);
-        Component btnText = Component.translatable("awakening_system.screen.roulette.spin_btn", cost).withStyle(ChatFormatting.BOLD);
+        Component btnText = isFreeDaily
+                ? Component.translatable("awakening_system.screen.roulette.spin_free").withStyle(ChatFormatting.BOLD)
+                : Component.translatable("awakening_system.screen.roulette.spin_btn", cost).withStyle(ChatFormatting.BOLD);
         g.drawCenteredString(font, btnText, btnX + btnW / 2, btnY + 8, textCol);
     }
 
@@ -4302,6 +4313,7 @@ public final class SystemScreen extends Screen {
 
         enableScissorScaled(g, left + 28, top + 119, left + 412, top + 260);
         ItemStack hoveredStack = null;
+        ShopDefinitions.Entry hoveredBoxEntry = null;
         List<Component> lockedTooltip = null;
         for (int row = 0; row < entries.size(); row++) {
             ShopDefinitions.Entry entry = entries.get(row);
@@ -4309,10 +4321,21 @@ public final class SystemScreen extends Screen {
             if (entryY < top + 118 || entryY >= top + 258) continue;
             boolean hovered = mouseX >= left + 30 && mouseX < left + 406 && mouseY >= entryY && mouseY < entryY + 28;
             if (hovered) g.fill(left + 30, entryY, left + 406, entryY + 28, sys30 ? 0x30163E2A : (sys20 ? 0x303A1259 : 0x301C465D));
-            ItemStack stack = ShopDefinitions.createStack(entry);
-            g.renderItem(stack, left + 34, entryY + 4);
-            if (mouseX >= left + 34 && mouseX < left + 52 && mouseY >= entryY + 4 && mouseY < entryY + 22) {
-                hoveredStack = stack;
+
+            ItemStack stack = ItemStack.EMPTY;
+            ResourceLocation boxTex = getShopBoxTexture(entry.id());
+            if (boxTex != null) {
+                com.mojang.blaze3d.systems.RenderSystem.enableBlend();
+                g.blit(boxTex, left + 34, entryY + 4, 0.0F, 0.0F, 16, 16, 16, 16);
+                if (mouseX >= left + 34 && mouseX < left + 52 && mouseY >= entryY + 4 && mouseY < entryY + 22) {
+                    hoveredBoxEntry = entry;
+                }
+            } else {
+                stack = ShopDefinitions.createStack(entry);
+                g.renderItem(stack, left + 34, entryY + 4);
+                if (mouseX >= left + 34 && mouseX < left + 52 && mouseY >= entryY + 4 && mouseY < entryY + 22) {
+                    hoveredStack = stack;
+                }
             }
 
             boolean unlocked = ShopDefinitions.isUnlocked(entry, d);
@@ -4320,6 +4343,8 @@ public final class SystemScreen extends Screen {
             int nameColor = 0xFFFFFFFF;
             if ("boxes".equals(entry.category())) {
                 nameColor = switch (entry.id()) {
+                    case "box_primordial" -> 0xFFFFD700;
+                    case "box_mythic" -> 0xFF00FFB0;
                     case "box_rare" -> 0xFF55AAFF;
                     case "box_epic" -> 0xFFD055FF;
                     case "box_legendary" -> 0xFFFFAA00;
@@ -4380,6 +4405,8 @@ public final class SystemScreen extends Screen {
                     }
                 } else if (levelLocked && dimLocked) {
                     lockMsg = Component.translatable("awakening_system.screen.shop.lock.dual", entry.minLevel(), getDimShortName(entry.requiredDimension()));
+                } else if ("ranker_tower_ticket".equals(entry.id()) && (!d.hasVisitedDimension("minecraft:the_end") && !d.hasVisitedDimension("the_end") && !d.isEnderDragonDefeated())) {
+                    lockMsg = Component.translatable("awakening_system.shop.lock_end_short");
                 } else if (levelLocked) {
                     lockMsg = Component.translatable("awakening_system.screen.shop.lock.level", entry.minLevel());
                 } else if (dimLocked) {
@@ -4391,8 +4418,7 @@ public final class SystemScreen extends Screen {
             }
 
             if (unlocked) {
-                boolean isDirectOpenBox = "box_common".equals(entry.id()) || "box_rare".equals(entry.id())
-                        || "box_epic".equals(entry.id()) || "box_legendary".equals(entry.id()) || "lucky_box".equals(entry.id());
+                boolean isDirectOpenBox = ShopDefinitions.isBoxId(entry.id());
                 String btnKey = isDirectOpenBox ? "awakening_system.screen.shop.open_btn" : "awakening_system.screen.shop.buy_btn";
                 Component btnText = Component.translatable(btnKey);
                 g.fill(btnX, entryY + 5, btnX + btnW, entryY + 23, btnHovered ? (canAfford ? 0xFF2ECC71 : 0xFFE74C3C) : (canAfford ? 0xFF1D5A40 : 0xFF3A1E24));
@@ -4428,6 +4454,13 @@ public final class SystemScreen extends Screen {
                         list.add(Component.literal(mark).withStyle(cf)
                                 .append(Component.translatable("awakening_system.screen.shop.lock.level", entry.minLevel()).copy().withStyle(cf)));
                     }
+                    if ("ranker_tower_ticket".equals(entry.id())) {
+                        boolean endLocked = !d.hasVisitedDimension("minecraft:the_end") && !d.hasVisitedDimension("the_end") && !d.isEnderDragonDefeated();
+                        net.minecraft.ChatFormatting cf = endLocked ? net.minecraft.ChatFormatting.RED : net.minecraft.ChatFormatting.GREEN;
+                        String mark = endLocked ? "✖ " : "✔ ";
+                        list.add(Component.literal(mark).withStyle(cf)
+                                .append(Component.translatable("awakening_system.shop.locked_end").copy().withStyle(cf)));
+                    }
                     if (!entry.requiredDimension().isEmpty()) {
                         net.minecraft.ChatFormatting cf = dimLocked ? net.minecraft.ChatFormatting.RED : net.minecraft.ChatFormatting.GREEN;
                         String mark = dimLocked ? "✗ " : "✔ ";
@@ -4440,7 +4473,13 @@ public final class SystemScreen extends Screen {
         }
         g.disableScissor();
 
-        if (hoveredStack != null && !hoveredStack.isEmpty()) {
+        if (hoveredBoxEntry != null) {
+            List<Component> boxTooltip = new ArrayList<>();
+            boxTooltip.add(Component.translatable(hoveredBoxEntry.nameKey()).copy().withStyle(net.minecraft.ChatFormatting.BOLD));
+            String descKey = hoveredBoxEntry.nameKey() + ".desc";
+            boxTooltip.add(Component.translatable(descKey).copy().withStyle(net.minecraft.ChatFormatting.GRAY));
+            g.renderComponentTooltip(font, boxTooltip, mouseX, mouseY);
+        } else if (hoveredStack != null && !hoveredStack.isEmpty()) {
             g.renderTooltip(font, hoveredStack, mouseX, mouseY);
         } else if (lockedTooltip != null) {
             g.renderComponentTooltip(font, lockedTooltip, mouseX, mouseY);

@@ -237,6 +237,20 @@ public class GuildSavedData extends SavedData {
         return true;
     }
 
+    public boolean recruitNpcToGuild(Guild guild, net.minecraft.server.MinecraftServer server, String npcId, String displayName, GuildRole role) {
+        if (guild == null || npcId == null || "hunter_evaluator".equalsIgnoreCase(npcId) || "elena_receptionist".equalsIgnoreCase(npcId) || "black_market_dealer".equalsIgnoreCase(npcId) || "casino_receptionist".equalsIgnoreCase(npcId)) return false;
+        boolean added = guild.addNpcMember(npcId, displayName, role);
+        if (added) {
+            UUID npcUuid = Guild.getNpcUuid(npcId);
+            playerToGuildId.put(npcUuid, guild.getId());
+            setDirty();
+            if (server != null) {
+                broadcastToGuild(guild, server, Component.literal("§6§l[GREMIO] §a¡El cazador §e" + displayName + " §aha sido reclutado formalmente como miembro del gremio!"));
+            }
+        }
+        return added;
+    }
+
     public boolean declineInvite(ServerPlayer target) {
         if (target == null) return false;
         PendingInvite invite = pendingInvites.remove(target.getUUID());

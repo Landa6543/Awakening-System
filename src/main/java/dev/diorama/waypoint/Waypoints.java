@@ -102,7 +102,8 @@ public final class Waypoints {
 			return;
 		}
 		BlockPos pos = player.blockPosition();
-		Waypoint death = new Waypoint("Death " + LocalTime.now().format(TIME), pos.getX(), pos.getY(), pos.getZ(), dimension, 0xFF60646C);
+		String deathLabel = net.minecraft.network.chat.Component.translatable("diorama.waypoint.death_name", LocalTime.now().format(TIME)).getString();
+		Waypoint death = new Waypoint(deathLabel, pos.getX(), pos.getY(), pos.getZ(), dimension, 0xFF60646C);
 		death.kind = Waypoint.Kind.DEATH;
 		store.add(death);
 	}

@@ -13,6 +13,14 @@ public final class ModBlockEntities {
     public static final DeferredRegister<BlockEntityType<?>> BLOCK_ENTITY_TYPES =
             DeferredRegister.create(BuiltInRegistries.BLOCK_ENTITY_TYPE, AwakeningSystemMod.MOD_ID);
 
+    public static final DeferredHolder<BlockEntityType<?>, BlockEntityType<TombstoneBlockEntity>> TOMBSTONE =
+            BLOCK_ENTITY_TYPES.register("tombstone", () ->
+                    BlockEntityType.Builder.of(TombstoneBlockEntity::new, SystemBlocks.TOMBSTONE.get()).build(null));
+
+    public static final DeferredHolder<BlockEntityType<?>, BlockEntityType<ChristmasTreeBlockEntity>> CHRISTMAS_TREE =
+            BLOCK_ENTITY_TYPES.register("christmas_tree", () ->
+                    BlockEntityType.Builder.of(ChristmasTreeBlockEntity::new, SystemBlocks.CHRISTMAS_TREE.get()).build(null));
+
     public static final DeferredHolder<BlockEntityType<?>, BlockEntityType<RouletteAltarBlockEntity>> ROULETTE_ALTAR =
             BLOCK_ENTITY_TYPES.register("roulette_altar", () ->
                     BlockEntityType.Builder.of(RouletteAltarBlockEntity::new, SystemBlocks.ROULETTE_ALTAR.get()).build(null));

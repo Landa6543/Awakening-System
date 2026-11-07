@@ -948,15 +948,22 @@ public final class HunterMinimapRenderer {
             double dz = living.getZ() - pz;
             double distBlocks = Math.sqrt(dx * dx + dz * dz);
 
+            boolean isFriendly = (living instanceof com.soybe.awakeningsystem.entity.SeriesNpcEntity)
+                    || (living instanceof net.minecraft.world.entity.npc.Npc)
+                    || (living instanceof net.minecraft.world.entity.player.Player)
+                    || com.soybe.awakeningsystem.AwakeningSystemClient.isFriendlyOrGuildShadow(living);
+            if (isFriendly) continue;
+
             boolean isBoss = com.soybe.awakeningsystem.config.BossCompatibilityManager.isBoss(living)
                     || living instanceof net.minecraft.world.entity.boss.wither.WitherBoss
                     || living instanceof net.minecraft.world.entity.monster.warden.Warden
                     || living instanceof com.soybe.awakeningsystem.entity.hypostasis.HypostasisBaseBossEntity;
 
             float maxHp = living.getMaxHealth();
-            boolean isApex = isBoss || (maxHp >= 150.0F);
             boolean isTargetingMe = (living instanceof net.minecraft.world.entity.Mob mob && mob.getTarget() == mc.player);
-            boolean isHostileElite = (living instanceof net.minecraft.world.entity.monster.Enemy) && (maxHp >= 60.0F || isTargetingMe);
+            boolean isEnemyMob = !isFriendly && ((living instanceof net.minecraft.world.entity.monster.Enemy) || isTargetingMe || com.soybe.awakeningsystem.RpgLevelZoneManager.isEligibleForRpgScaling(living));
+            boolean isApex = !isFriendly && (isBoss || (maxHp >= 150.0F && isEnemyMob));
+            boolean isHostileElite = !isFriendly && (isEnemyMob && (maxHp >= 60.0F || isTargetingMe));
 
             if (isApex) {
                 int level = (maxHp >= 300.0F || living instanceof net.minecraft.world.entity.monster.warden.Warden || living instanceof net.minecraft.world.entity.boss.wither.WitherBoss) ? 3 : 2;
@@ -1074,15 +1081,21 @@ public final class HunterMinimapRenderer {
             }
 
             // Detección de Peligro / Amenaza Inminente (Bosses, Monarcas, Rango S, Calamidades)
-            boolean isBoss = com.soybe.awakeningsystem.config.BossCompatibilityManager.isBoss(living)
+            boolean isFriendly = (living instanceof com.soybe.awakeningsystem.entity.SeriesNpcEntity)
+                    || (living instanceof net.minecraft.world.entity.npc.Npc)
+                    || (living instanceof net.minecraft.world.entity.player.Player)
+                    || com.soybe.awakeningsystem.AwakeningSystemClient.isFriendlyOrGuildShadow(living);
+
+            boolean isBoss = !isFriendly && (com.soybe.awakeningsystem.config.BossCompatibilityManager.isBoss(living)
                     || living instanceof net.minecraft.world.entity.boss.wither.WitherBoss
                     || living instanceof net.minecraft.world.entity.monster.warden.Warden
-                    || living instanceof com.soybe.awakeningsystem.entity.hypostasis.HypostasisBaseBossEntity;
+                    || living instanceof com.soybe.awakeningsystem.entity.hypostasis.HypostasisBaseBossEntity);
 
             float maxHp = living.getMaxHealth();
-            boolean isApex = isBoss || (maxHp >= 150.0F);
             boolean isTargetingMe = (living instanceof net.minecraft.world.entity.Mob mob && mob.getTarget() == mc.player);
-            boolean isHostileElite = (living instanceof net.minecraft.world.entity.monster.Enemy) && (maxHp >= 60.0F || isTargetingMe);
+            boolean isEnemyMob = !isFriendly && ((living instanceof net.minecraft.world.entity.monster.Enemy) || isTargetingMe || com.soybe.awakeningsystem.RpgLevelZoneManager.isEligibleForRpgScaling(living));
+            boolean isApex = !isFriendly && (isBoss || (maxHp >= 150.0F && isEnemyMob));
+            boolean isHostileElite = !isFriendly && (isEnemyMob && (maxHp >= 60.0F || isTargetingMe));
 
             if (isApex) {
                 int level = (maxHp >= 300.0F || living instanceof net.minecraft.world.entity.monster.warden.Warden || living instanceof net.minecraft.world.entity.boss.wither.WitherBoss) ? 3 : 2;

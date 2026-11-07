@@ -293,6 +293,17 @@ public final class WaypointStore {
 		this.save();
 	}
 
+	/** Removes all death waypoints when a player reclaims their tombstone. */
+	public void removeDeathWaypoints() {
+		List<Waypoint> deaths = this.waypoints.stream()
+				.filter(w -> w.kind == Waypoint.Kind.DEATH)
+				.toList();
+		if (!deaths.isEmpty()) {
+			this.waypoints.removeAll(deaths);
+			this.save();
+		}
+	}
+
 	/** Call after changing a waypoint in place. */
 	public void changed() {
 		this.save();

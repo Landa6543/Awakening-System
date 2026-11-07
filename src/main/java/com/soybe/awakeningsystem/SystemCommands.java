@@ -80,7 +80,39 @@ public final class SystemCommands {
                 .then(Commands.literal("give_all").executes(context -> giveAll(context.getSource())))
                 .then(Commands.literal("unlock_all").executes(context -> giveAll(context.getSource())))
                 .then(Commands.literal("max").executes(context -> giveAll(context.getSource())))
+                .then(Commands.literal("habit").executes(context -> showHabits(context.getSource())))
+                .then(Commands.literal("habito").executes(context -> showHabits(context.getSource())))
+                .then(Commands.literal("evaluate").executes(context -> evaluateHunterCommand(context.getSource())))
+                .then(Commands.literal("ascender").executes(context -> evaluateHunterCommand(context.getSource())))
+                .then(Commands.literal("rankup").executes(context -> evaluateHunterCommand(context.getSource())))
+                .then(Commands.literal("summon_evaluator").executes(context -> summonEvaluatorCommand(context.getSource())))
                 .then(Commands.literal("penalty").executes(context -> triggerPenaltyCommand(context.getSource())))
+                .then(Commands.literal("dev")
+                        .requires(source -> hasAdminOrCreatorPermission(source))
+                        .then(Commands.literal("season")
+                                .then(Commands.literal("halloween").executes(context -> setSeasonCommand(context.getSource(), "halloween")))
+                                .then(Commands.literal("christmas").executes(context -> setSeasonCommand(context.getSource(), "christmas")))
+                                .then(Commands.literal("off").executes(context -> setSeasonCommand(context.getSource(), "off")))
+                                .then(Commands.literal("status").executes(context -> getSeasonStatusCommand(context.getSource()))))
+                        .then(Commands.literal("tribulation")
+                                .executes(context -> startTribulationDevCommand(context.getSource(), -1, -1))
+                                .then(Commands.argument("realm", com.mojang.brigadier.arguments.IntegerArgumentType.integer(2, 9))
+                                        .executes(context -> startTribulationDevCommand(context.getSource(), com.mojang.brigadier.arguments.IntegerArgumentType.getInteger(context, "realm"), -1))
+                                        .then(Commands.argument("strikes", com.mojang.brigadier.arguments.IntegerArgumentType.integer(1, 36))
+                                                .executes(context -> startTribulationDevCommand(context.getSource(), com.mojang.brigadier.arguments.IntegerArgumentType.getInteger(context, "realm"), com.mojang.brigadier.arguments.IntegerArgumentType.getInteger(context, "strikes")))))))
+                .then(Commands.literal("tribulation")
+                        .requires(source -> hasAdminOrCreatorPermission(source))
+                        .executes(context -> startTribulationDevCommand(context.getSource(), -1, -1))
+                        .then(Commands.argument("realm", com.mojang.brigadier.arguments.IntegerArgumentType.integer(2, 9))
+                                .executes(context -> startTribulationDevCommand(context.getSource(), com.mojang.brigadier.arguments.IntegerArgumentType.getInteger(context, "realm"), -1))
+                                .then(Commands.argument("strikes", com.mojang.brigadier.arguments.IntegerArgumentType.integer(1, 36))
+                                        .executes(context -> startTribulationDevCommand(context.getSource(), com.mojang.brigadier.arguments.IntegerArgumentType.getInteger(context, "realm"), com.mojang.brigadier.arguments.IntegerArgumentType.getInteger(context, "strikes"))))))
+                .then(Commands.literal("season")
+                        .requires(source -> hasAdminOrCreatorPermission(source))
+                        .then(Commands.literal("halloween").executes(context -> setSeasonCommand(context.getSource(), "halloween")))
+                        .then(Commands.literal("christmas").executes(context -> setSeasonCommand(context.getSource(), "christmas")))
+                        .then(Commands.literal("off").executes(context -> setSeasonCommand(context.getSource(), "off")))
+                        .then(Commands.literal("status").executes(context -> getSeasonStatusCommand(context.getSource()))))
                 .then(Commands.literal("workout")
                         .then(Commands.literal("push_ups").executes(context -> startWorkoutCommand(context.getSource(), 0)))
                         .then(Commands.literal("flexiones").executes(context -> startWorkoutCommand(context.getSource(), 0)))
@@ -253,6 +285,26 @@ public final class SystemCommands {
                         .then(Commands.literal("sincronizar").executes(context -> syncSubspaceCommand(context.getSource())))
                         .then(Commands.literal("upgrade").executes(context -> upgradeSubspaceCommand(context.getSource())))
                         .then(Commands.literal("mejorar").executes(context -> upgradeSubspaceCommand(context.getSource()))))
+                .then(Commands.literal("sanctuary")
+                        .executes(context -> enterSanctuaryCommand(context.getSource()))
+                        .then(Commands.literal("door").executes(context -> summonSanctuaryDoorCommand(context.getSource())))
+                        .then(Commands.literal("puerta").executes(context -> summonSanctuaryDoorCommand(context.getSource())))
+                        .then(Commands.literal("enter").executes(context -> enterSanctuaryCommand(context.getSource())))
+                        .then(Commands.literal("entrar").executes(context -> enterSanctuaryCommand(context.getSource())))
+                        .then(Commands.literal("exit").executes(context -> exitSanctuaryCommand(context.getSource())))
+                        .then(Commands.literal("salir").executes(context -> exitSanctuaryCommand(context.getSource())))
+                        .then(Commands.literal("upgrade").executes(context -> upgradeSanctuaryCommand(context.getSource())))
+                        .then(Commands.literal("mejorar").executes(context -> upgradeSanctuaryCommand(context.getSource()))))
+                .then(Commands.literal("santuario")
+                        .executes(context -> enterSanctuaryCommand(context.getSource()))
+                        .then(Commands.literal("door").executes(context -> summonSanctuaryDoorCommand(context.getSource())))
+                        .then(Commands.literal("puerta").executes(context -> summonSanctuaryDoorCommand(context.getSource())))
+                        .then(Commands.literal("enter").executes(context -> enterSanctuaryCommand(context.getSource())))
+                        .then(Commands.literal("entrar").executes(context -> enterSanctuaryCommand(context.getSource())))
+                        .then(Commands.literal("exit").executes(context -> exitSanctuaryCommand(context.getSource())))
+                        .then(Commands.literal("salir").executes(context -> exitSanctuaryCommand(context.getSource())))
+                        .then(Commands.literal("upgrade").executes(context -> upgradeSanctuaryCommand(context.getSource())))
+                        .then(Commands.literal("mejorar").executes(context -> upgradeSanctuaryCommand(context.getSource()))))
                 .then(Commands.literal("version")
                         .then(Commands.argument("ver", StringArgumentType.word())
                                 .executes(context -> setSystemVersion(context.getSource(), StringArgumentType.getString(context, "ver")))))
@@ -516,6 +568,17 @@ public final class SystemCommands {
                                 .executes(context -> triggerDokkaebiScenarioCommand(context.getSource(), com.mojang.brigadier.arguments.IntegerArgumentType.getInteger(context, "target")))))
                 .then(Commands.literal("dismiss")
                         .executes(context -> dismissDokkaebiCommand(context.getSource()))));
+
+        dispatcher.register(Commands.literal("meteor")
+                .requires(source -> hasAdminOrCreatorPermission(source))
+                .executes(context -> {
+                    ServerPlayer player = context.getSource().getPlayerOrException();
+                    boolean spawned = com.soybe.awakeningsystem.world.SideriteMeteorManager.spawnMeteorNearPlayer(player, true);
+                    if (spawned) {
+                        context.getSource().sendSuccess(() -> Component.literal("§a[METEORITO] §f¡Se ha invocado una caída de meteorito de Siderita!"), true);
+                    }
+                    return 1;
+                }));
 
         dispatcher.register(Commands.literal("boss")
                 .requires(source -> hasAdminOrCreatorPermission(source))
@@ -1089,6 +1152,11 @@ public final class SystemCommands {
         }
         SystemEvents.grantAll(player);
         SystemData data = SystemEvents.data(player);
+        data.recordHabitDamage(10000);
+        data.recordHabitSprint(20000, "minecraft:plains");
+        data.recordHabitDeepMining(10000);
+        for (int i = 0; i < 5000; i++) data.recordHabitWeaponHit();
+        data.recordHabitFocusTicks(7500);
         data.addCoins(1000000);
         var keyItem = BuiltInRegistries.ITEM.get(ResourceLocation.fromNamespaceAndPath("awakening_system", "dungeon_key"));
         if (keyItem != null && keyItem != net.minecraft.world.item.Items.AIR) {
@@ -1097,6 +1165,93 @@ public final class SystemCommands {
         AwakeningSystemMod.sync(player);
         source.sendSuccess(() -> Component.literal("§a§l[SYSTEM]§r Full unlock complete! Level " + data.level() + ", " + data.skills().size() + " skills unlocked at Level VI (active, passive, and manhwas), mythic titles, max affinities, 16 dungeon keys, and 1,000,000 coins."), true);
         return 1;
+    }
+
+    private static int showHabits(CommandSourceStack source) {
+        if (!(source.getEntity() instanceof ServerPlayer player)) {
+            source.sendFailure(Component.literal("Este comando debe ser ejecutado por un jugador."));
+            return 0;
+        }
+        SystemData data = SystemEvents.data(player);
+        source.sendSuccess(() -> Component.literal("§6§l✦ [SISTEMA — HÁBITO Y CONSTANCIA] ✦"), false);
+        source.sendSuccess(() -> Component.literal("§c🛡️ Cuerpo Templado: §fNiv. " + data.skills().getOrDefault("enduring_flesh", 0) + " §7(Daño resistido: §e" + data.habitDamageTaken() + " §7/ §b" + data.getHabitRequired("enduring_flesh") + "§7)"), false);
+        source.sendSuccess(() -> Component.literal("§a💨 Paso del Viento: §fNiv. " + data.skills().getOrDefault("windrunner", 0) + " §7(Esprint: §e" + (int)data.habitSprintDistance() + "m §7/ §b" + data.getHabitRequired("windrunner") + "m§7, Biomas: §e" + data.habitBiomesExplored().size() + "§7)"), false);
+        source.sendSuccess(() -> Component.literal("§6⚔️ Maestría del Acero: §fNiv. " + data.skills().getOrDefault("combat_instinct", 0) + " §7(Golpes de arma: §e" + data.habitWeaponHits() + " §7/ §b" + data.getHabitRequired("combat_instinct") + "§7)"), false);
+        source.sendSuccess(() -> Component.literal("§e⛏️ Instinto de la Tierra: §fNiv. " + data.skills().getOrDefault("ore_sense", 0) + " §7(Bloques subterráneos: §e" + data.habitDeepBlocksMined() + " §7/ §b" + data.getHabitRequired("ore_sense") + "§7)"), false);
+        source.sendSuccess(() -> Component.literal("§b👁️ Mirada del Cazador: §fNiv. " + data.skills().getOrDefault("deadeye", 0) + " §7(Enfoque / Puntería: §e" + data.habitFocusTicks() + " §7/ §b" + data.getHabitRequired("deadeye") + " ticks§7)"), false);
+        source.sendSuccess(() -> Component.literal("§8* Las habilidades de hábito son innatas y se activan permanentemente en tu cuerpo al desbloquearlas."), false);
+        return 1;
+    }
+
+    private static int evaluateHunterCommand(CommandSourceStack source) {
+        if (!(source.getEntity() instanceof ServerPlayer player)) {
+            source.sendFailure(Component.literal("§cEste comando solo puede ser ejecutado por un jugador."));
+            return 0;
+        }
+
+        SystemData data = SystemEvents.data(player);
+        if (data == null) {
+            source.sendFailure(Component.literal("§cNo se pudo acceder a los datos del Sistema."));
+            return 0;
+        }
+
+        if (!data.isEvaluationPending() && data.level() < data.maxAllowedLevelForEvaluatedRank()) {
+            player.sendSystemMessage(Component.literal("§c§l[ASOCIACIÓN DE CAZADORES] §7No tienes ninguna evaluación pendiente en este momento. Tu rango oficial actual es §b§l"
+                    + data.rank() + "§7 (Límite del rango actual: Nivel " + data.maxAllowedLevelForEvaluatedRank() + ")."));
+            return 0;
+        }
+
+        String prevRank = data.rank();
+        int prevLevel = data.level();
+        int banked = data.reserveExperience();
+
+        if (data.passEvaluation()) {
+            AwakeningSystemMod.sync(player);
+
+            player.serverLevel().playSound(null, player.getX(), player.getY(), player.getZ(),
+                    SoundEvents.UI_TOAST_CHALLENGE_COMPLETE, SoundSource.PLAYERS, 1.2F, 1.0F);
+            player.serverLevel().playSound(null, player.getX(), player.getY(), player.getZ(),
+                    SoundEvents.PLAYER_LEVELUP, SoundSource.PLAYERS, 1.0F, 1.2F);
+
+            player.serverLevel().sendParticles(ParticleTypes.TOTEM_OF_UNDYING,
+                    player.getX(), player.getY() + 1.2, player.getZ(), 50, 0.8, 0.8, 0.8, 0.2);
+            player.serverLevel().sendParticles(ParticleTypes.FIREWORK,
+                    player.getX(), player.getY() + 1.5, player.getZ(), 30, 0.6, 0.6, 0.6, 0.1);
+
+            player.sendSystemMessage(Component.literal("§6§l╔═══════════════════════════════════════════════╗"));
+            player.sendSystemMessage(Component.literal("§6§l║      ★ ¡EVALUACIÓN DE RANGO COMPLETADA! ★     ║"));
+            player.sendSystemMessage(Component.literal("§6§l╠═══════════════════════════════════════════════╣"));
+            player.sendSystemMessage(Component.literal("§f║  §7Rango Anterior: §c" + prevRank + " §f➔ §7Nuevo Rango: §b§l" + data.rank()));
+            player.sendSystemMessage(Component.literal("§f║  §a+5 Puntos de Atributo §fotorgados por ascender."));
+            if (banked > 0) {
+                player.sendSystemMessage(Component.literal("§f║  §e¡Se han transferido +" + String.format(java.util.Locale.US, "%,d", banked) + " EXP en reserva!"));
+                if (data.level() > prevLevel) {
+                    player.sendSystemMessage(Component.literal("§f║  §a¡Has subido al Nivel " + data.level() + "!"));
+                }
+            }
+            player.sendSystemMessage(Component.literal("§f║  §7Próximo umbral de evaluación: §eNivel " + data.maxAllowedLevelForEvaluatedRank()));
+            player.sendSystemMessage(Component.literal("§6§l╚═══════════════════════════════════════════════╝"));
+
+            return 1;
+        } else {
+            player.sendSystemMessage(Component.literal("§c§l[SISTEMA] §7No se pudo procesar la ascensión (posiblemente estés en el rango máximo)."));
+            return 0;
+        }
+    }
+
+    private static int summonEvaluatorCommand(CommandSourceStack source) {
+        if (source.getEntity() instanceof ServerPlayer player) {
+            com.soybe.awakeningsystem.entity.SeriesNpcEntity evaluator = new com.soybe.awakeningsystem.entity.SeriesNpcEntity(
+                    com.soybe.awakeningsystem.entity.ModEntities.HUNTER_EVALUATOR.get(),
+                    player.level(),
+                    com.soybe.awakeningsystem.entity.NpcProfile.HUNTER_EVALUATOR
+            );
+            evaluator.moveTo(player.getX(), player.getY(), player.getZ(), player.getYRot(), 0.0F);
+            player.level().addFreshEntity(evaluator);
+            source.sendSuccess(() -> Component.literal("§b§l✦ [SISTEMA] §fInspector de la Asociación invocado."), true);
+            return 1;
+        }
+        return 0;
     }
 
     private static int resetPlayer(CommandSourceStack source, ServerPlayer target) {
@@ -2575,6 +2730,41 @@ public final class SystemCommands {
         return 0;
     }
 
+    private static int summonSanctuaryDoorCommand(CommandSourceStack source) {
+        if (source.getEntity() instanceof ServerPlayer player) {
+            var door = com.soybe.awakeningsystem.sanctuary.PocketSanctuaryManager.summonExteriorDoor(player);
+            return door != null ? 1 : 0;
+        }
+        source.sendFailure(Component.literal("Solo jugadores pueden invocar la puerta del santuario."));
+        return 0;
+    }
+
+    private static int enterSanctuaryCommand(CommandSourceStack source) {
+        if (source.getEntity() instanceof ServerPlayer player) {
+            com.soybe.awakeningsystem.sanctuary.PocketSanctuaryManager.enterSanctuary(player, null);
+            return 1;
+        }
+        source.sendFailure(Component.literal("Solo jugadores pueden entrar a su santuario."));
+        return 0;
+    }
+
+    private static int exitSanctuaryCommand(CommandSourceStack source) {
+        if (source.getEntity() instanceof ServerPlayer player) {
+            com.soybe.awakeningsystem.sanctuary.PocketSanctuaryManager.exitSanctuary(player, null);
+            return 1;
+        }
+        source.sendFailure(Component.literal("Solo jugadores pueden salir del santuario."));
+        return 0;
+    }
+
+    private static int upgradeSanctuaryCommand(CommandSourceStack source) {
+        if (source.getEntity() instanceof ServerPlayer player) {
+            return com.soybe.awakeningsystem.sanctuary.PocketSanctuaryManager.upgradeSanctuary(player) ? 1 : 0;
+        }
+        source.sendFailure(Component.literal("Solo jugadores pueden mejorar el santuario."));
+        return 0;
+    }
+
     private static int setSystemVersion(CommandSourceStack source, String verStr) {
         if (!(source.getEntity() instanceof ServerPlayer player)) {
             source.sendFailure(Component.translatable("awakening_system.command.only_players"));
@@ -3188,6 +3378,12 @@ public final class SystemCommands {
             return 1;
         }
 
+        if (dim.equals(com.soybe.awakeningsystem.sanctuary.PocketSanctuaryManager.SANCTUARY_REALM)) {
+            com.soybe.awakeningsystem.sanctuary.PocketSanctuaryManager.exitSanctuary(player, null);
+            source.sendSuccess(() -> Component.literal("Has regresado de tu Santuario personal.").withStyle(ChatFormatting.GREEN), false);
+            return 1;
+        }
+
         if (dim.equals(com.soybe.awakeningsystem.abyss.SpiralAbyssManager.SPIRAL_ABYSS_DIMENSION)) {
             com.soybe.awakeningsystem.abyss.SpiralAbyssManager.handleLeaveAbyss(player);
             source.sendSuccess(() -> Component.translatable("awakening_system.abyss.escape_success").withStyle(ChatFormatting.GREEN), false);
@@ -3719,5 +3915,82 @@ public final class SystemCommands {
         }
         SystemEvents.startWorkout(player, type);
         return 1;
+    }
+
+    private static int setSeasonCommand(CommandSourceStack source, String seasonStr) {
+        if (!hasAdminOrCreatorPermission(source)) {
+            source.sendFailure(Component.literal("§cAcceso denegado: Solo el creador del mod o administradores pueden usar este comando."));
+            return 0;
+        }
+
+        com.soybe.awakeningsystem.seasonal.SeasonalEventManager.Season target =
+                "off".equalsIgnoreCase(seasonStr) ? com.soybe.awakeningsystem.seasonal.SeasonalEventManager.Season.OFF :
+                        com.soybe.awakeningsystem.seasonal.SeasonalEventManager.Season.fromString(seasonStr);
+
+        com.soybe.awakeningsystem.seasonal.SeasonalEventManager.setDevOverride(target);
+
+        source.sendSuccess(() -> Component.literal("§6§l[SEASONAL EVENT] §fEstado de temporada fijado manualmente a: §e" + target.name()
+                + (target == com.soybe.awakeningsystem.seasonal.SeasonalEventManager.Season.OFF ? " §7(Desactivado / Modo Calendario Real)" : " §a(Activado)")), true);
+        return 1;
+    }
+
+    private static int getSeasonStatusCommand(CommandSourceStack source) {
+        var current = com.soybe.awakeningsystem.seasonal.SeasonalEventManager.getCurrentSeason();
+        var override = com.soybe.awakeningsystem.seasonal.SeasonalEventManager.getDevOverride();
+        source.sendSuccess(() -> Component.literal("§6§l[SEASONAL EVENT] §fTemporada activa actual: §e" + current.name()
+                + (override != null ? " §d[Forzado por Desarrollador: " + override.name() + "]" : " §b[Automático por Calendario Real]")), false);
+        return 1;
+    }
+
+    private static int startTribulationDevCommand(CommandSourceStack source, int realmArg, int strikesArg) {
+        if (!hasAdminOrCreatorPermission(source)) {
+            source.sendFailure(Component.literal("§cAcceso denegado: Solo el creador del mod o administradores pueden usar este comando."));
+            return 0;
+        }
+
+        try {
+            ServerPlayer player = source.getPlayerOrException();
+            SystemData data = SystemEvents.data(player);
+            if (data == null) {
+                source.sendFailure(Component.literal("§cError: No se encontró perfil de Sistema para este jugador."));
+                return 0;
+            }
+
+            int currentRealm = data.dantianRealm();
+            int targetRealm = (realmArg >= 2 && realmArg <= 9) ? realmArg : Math.max(2, Math.min(9, currentRealm + 1));
+            int strikes = strikesArg > 0 ? strikesArg : switch (targetRealm) {
+                case 2 -> 3;
+                case 3 -> 6;
+                case 4 -> 9;
+                case 5 -> 12;
+                case 6 -> 15;
+                case 7 -> 18;
+                case 8 -> 27;
+                case 9 -> 36;
+                default -> 3;
+            };
+
+            data.startTribulation(targetRealm, strikes);
+            ServerLevel sl = player.serverLevel();
+            sl.setWeatherParameters(0, strikes * 40 + 200, true, true);
+            sl.playSound(null, player.getX(), player.getY(), player.getZ(),
+                    ModSounds.CELESTIAL_TRIBULATION.get(), SoundSource.WEATHER, 3.5F, 1.0F);
+            sl.sendParticles(ParticleTypes.FLASH, player.getX(), player.getEyeY(), player.getZ(), 6, 0.0, 0.0, 0.0, 0.0);
+            sl.sendParticles(ParticleTypes.ELECTRIC_SPARK, player.getX(), player.getY() + 1.0, player.getZ(), 80, 1.5, 1.5, 1.5, 0.2);
+
+            player.connection.send(new net.minecraft.network.protocol.game.ClientboundSetTitleTextPacket(
+                    Component.literal("§6§l⚡ TRIBULACIÓN CELESTIAL ⚡")));
+            player.connection.send(new net.minecraft.network.protocol.game.ClientboundSetSubtitleTextPacket(
+                    Component.literal("§eSobrevive a " + strikes + " rayos divinos hacia el Reino " + targetRealm)));
+
+            source.sendSuccess(() -> Component.literal("§6§l[TRIBULACIÓN ACTIVADA] §fJuicio del Cielo iniciado: Reino Objetivo §e"
+                    + targetRealm + " §f(" + strikes + " rayos)."), true);
+
+            AwakeningSystemMod.sync(player);
+            return 1;
+        } catch (Exception e) {
+            source.sendFailure(Component.literal("§cError ejecutando comando de tribulación: " + e.getMessage()));
+            return 0;
+        }
     }
 }

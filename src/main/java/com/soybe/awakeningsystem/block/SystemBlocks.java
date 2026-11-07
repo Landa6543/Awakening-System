@@ -39,6 +39,27 @@ public final class SystemBlocks {
     public static final DeferredRegister<Block> BLOCKS =
             DeferredRegister.create(BuiltInRegistries.BLOCK, AwakeningSystemMod.MOD_ID);
 
+    public static final DeferredHolder<Block, TombstoneBlock> TOMBSTONE = BLOCKS.register(
+            "tombstone", () -> new TombstoneBlock(
+                    BlockBehaviour.Properties.of()
+                            .mapColor(MapColor.STONE)
+                            .strength(-1.0F, 3600000.0F)
+                            .noOcclusion()
+                            .sound(SoundType.STONE)
+            )
+    );
+
+    public static final DeferredHolder<Block, ChristmasTreeBlock> CHRISTMAS_TREE = BLOCKS.register(
+            "christmas_tree", () -> new ChristmasTreeBlock(
+                    BlockBehaviour.Properties.of()
+                            .mapColor(MapColor.COLOR_GREEN)
+                            .strength(1.5F, 3.0F)
+                            .sound(SoundType.GRASS)
+                            .lightLevel(state -> 10)
+                            .noOcclusion()
+            )
+    );
+
     public static final DeferredHolder<Block, WildGinsengBlock> WILD_GINSENG = BLOCKS.register(
             "wild_ginseng", () -> new WildGinsengBlock(
                     BlockBehaviour.Properties.of()
@@ -743,6 +764,28 @@ public final class SystemBlocks {
                             .strength(12.0F, 1200.0F)
                             .sound(SoundType.NETHERITE_BLOCK)
                             .lightLevel(s -> 6)
+            )
+    );
+
+    public static final DeferredHolder<Block, Block> SIDERITE_ORE = BLOCKS.register(
+            "siderite_ore", () -> new Block(
+                    BlockBehaviour.Properties.of()
+                            .mapColor(MapColor.COLOR_PURPLE)
+                            .strength(8.0F, 25.0F)
+                            .sound(SoundType.NETHERITE_BLOCK)
+                            .lightLevel(s -> 7)
+                            .requiresCorrectToolForDrops()
+            )
+    );
+
+    public static final DeferredHolder<Block, Block> SIDERITE_BLOCK = BLOCKS.register(
+            "siderite_block", () -> new Block(
+                    BlockBehaviour.Properties.of()
+                            .mapColor(MapColor.COLOR_PURPLE)
+                            .strength(10.0F, 30.0F)
+                            .sound(SoundType.NETHERITE_BLOCK)
+                            .lightLevel(s -> 5)
+                            .requiresCorrectToolForDrops()
             )
     );
 
@@ -1911,6 +1954,7 @@ public final class SystemBlocks {
                             .mapColor(MapColor.WOOD)
                             .strength(1.0F, 3.0F)
                             .sound(SoundType.WOOD)
+                            .noLootTable()
             )
     );
 

@@ -17,6 +17,7 @@ import net.minecraft.util.RandomSource;
 import net.minecraft.world.InteractionHand;
 import net.minecraft.world.InteractionResult;
 import net.minecraft.world.ItemInteractionResult;
+import net.minecraft.world.entity.LivingEntity;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.level.Level;
@@ -55,6 +56,14 @@ public class RouletteAltarBlock extends BaseEntityBlock {
     @Override
     public BlockState getStateForPlacement(BlockPlaceContext context) {
         return this.defaultBlockState().setValue(FACING, context.getHorizontalDirection().getOpposite());
+    }
+
+    @Override
+    public void setPlacedBy(Level level, BlockPos pos, BlockState state, @Nullable LivingEntity placer, ItemStack stack) {
+        super.setPlacedBy(level, pos, state, placer, stack);
+        if (!level.isClientSide && level.getBlockEntity(pos) instanceof RouletteAltarBlockEntity be) {
+            be.populateSlotsFresh();
+        }
     }
 
     @Override
@@ -139,16 +148,31 @@ public class RouletteAltarBlock extends BaseEntityBlock {
                     }
                     level.playSound(null, pos, SoundEvents.VAULT_INSERT_ITEM, SoundSource.BLOCKS, 1.0F, 1.2F);
                     level.playSound(null, pos, SoundEvents.AMETHYST_BLOCK_CHIME, SoundSource.BLOCKS, 1.2F, 1.0F);
+                    sp.displayClientMessage(Component.translatable("awakening_system.altar.spin_token_used"), true);
                     return ItemInteractionResult.SUCCESS;
                 }
             }
             return ItemInteractionResult.sidedSuccess(level.isClientSide());
         }
 
+        // Si no tiene ficha, verificar si puede reclamar la tirada diaria gratuita del Altar
         if (!level.isClientSide() && player instanceof ServerPlayer sp) {
-            level.playSound(null, pos, SoundEvents.SHIELD_BLOCK, SoundSource.BLOCKS, 0.9F, 1.2F);
-            level.playSound(null, pos, SoundEvents.AMETHYST_BLOCK_HIT, SoundSource.BLOCKS, 1.0F, 0.65F);
-            sp.displayClientMessage(Component.translatable("awakening_system.altar.need_token_mandatory"), true);
+            long currentDay = level.getDayTime() / 24000L;
+            SystemData data = SystemEvents.data(sp);
+            if (data.hasDailyFreeAltar(currentDay)) {
+                if (rouletteBE.startSpin(sp)) {
+                    data.claimDailyFreeAltar(currentDay);
+                    AwakeningSystemMod.sync(sp);
+                    level.playSound(null, pos, SoundEvents.PLAYER_LEVELUP, SoundSource.BLOCKS, 0.9F, 1.4F);
+                    level.playSound(null, pos, SoundEvents.AMETHYST_BLOCK_CHIME, SoundSource.BLOCKS, 1.2F, 1.0F);
+                    sp.displayClientMessage(Component.translatable("awakening_system.altar.free_daily_spin_used"), true);
+                    return ItemInteractionResult.SUCCESS;
+                }
+            } else {
+                level.playSound(null, pos, SoundEvents.SHIELD_BLOCK, SoundSource.BLOCKS, 0.9F, 1.2F);
+                level.playSound(null, pos, SoundEvents.AMETHYST_BLOCK_HIT, SoundSource.BLOCKS, 1.0F, 0.65F);
+                sp.displayClientMessage(Component.translatable("awakening_system.altar.need_token_mandatory"), true);
+            }
         }
         return ItemInteractionResult.sidedSuccess(level.isClientSide());
     }
@@ -168,10 +192,22 @@ public class RouletteAltarBlock extends BaseEntityBlock {
         }
 
         if (!level.isClientSide() && player instanceof ServerPlayer sp) {
-            level.playSound(null, pos, SoundEvents.SHIELD_BLOCK, SoundSource.BLOCKS, 0.9F, 1.2F);
-            level.playSound(null, pos, SoundEvents.AMETHYST_BLOCK_HIT, SoundSource.BLOCKS, 1.0F, 0.65F);
-            sp.displayClientMessage(Component.translatable("awakening_system.altar.need_token_mandatory"), true);
-            return InteractionResult.CONSUME;
+            long currentDay = level.getDayTime() / 24000L;
+            SystemData data = SystemEvents.data(sp);
+            if (data.hasDailyFreeAltar(currentDay)) {
+                if (rouletteBE.startSpin(sp)) {
+                    data.claimDailyFreeAltar(currentDay);
+                    AwakeningSystemMod.sync(sp);
+                    level.playSound(null, pos, SoundEvents.PLAYER_LEVELUP, SoundSource.BLOCKS, 0.9F, 1.4F);
+                    level.playSound(null, pos, SoundEvents.AMETHYST_BLOCK_CHIME, SoundSource.BLOCKS, 1.2F, 1.0F);
+                    sp.displayClientMessage(Component.translatable("awakening_system.altar.free_daily_spin_used"), true);
+                    return InteractionResult.SUCCESS;
+                }
+            } else {
+                level.playSound(null, pos, SoundEvents.SHIELD_BLOCK, SoundSource.BLOCKS, 0.9F, 1.2F);
+                level.playSound(null, pos, SoundEvents.AMETHYST_BLOCK_HIT, SoundSource.BLOCKS, 1.0F, 0.65F);
+                sp.displayClientMessage(Component.translatable("awakening_system.altar.need_token_mandatory"), true);
+            }
         }
         return InteractionResult.sidedSuccess(level.isClientSide());
     }

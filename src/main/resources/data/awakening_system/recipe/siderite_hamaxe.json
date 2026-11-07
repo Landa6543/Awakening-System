@@ -1,0 +1,24 @@
+{
+  "type": "minecraft:crafting_shaped",
+  "category": "equipment",
+  "key": {
+    "#": {
+      "item": "awakening_system:siderite_ingot"
+    },
+    "*": {
+      "item": "awakening_system:siderite_fragment"
+    },
+    "/": {
+      "item": "minecraft:stick"
+    }
+  },
+  "pattern": [
+    "##*",
+    "#/ ",
+    " / "
+  ],
+  "result": {
+    "count": 1,
+    "id": "awakening_system:siderite_hamaxe"
+  }
+}

@@ -405,14 +405,15 @@ public class GuildScreen extends Screen {
             int rowBg = rHov ? 0x4000E5FF : ((i % 2 == 0) ? 0x1400E5FF : 0x0800E5FF);
             g.fill(listX + 2, rY, listX + listW - 2, rY + rowH - 1, rowBg);
 
-            boolean isOnline = mc.getConnection() != null && mc.getConnection().getPlayerInfo(m.getUuid()) != null;
-            g.drawString(font, isOnline ? "§a●" : "§7○", colDotX, rY + 5, isOnline ? 0xFF50FA7B : 0xFF777777);
+            boolean isOnline = m.isNpc() || (mc.getConnection() != null && mc.getConnection().getPlayerInfo(m.getUuid()) != null);
+            g.drawString(font, m.isNpc() ? "§e★" : (isOnline ? "§a●" : "§7○"), colDotX, rY + 5, m.isNpc() ? 0xFFFFD700 : (isOnline ? 0xFF50FA7B : 0xFF777777));
 
-            g.drawString(font, m.getRole().getLabel(), colRankX, rY + 5, 0xFFFFFFFF);
+            String roleLabel = m.isNpc() ? ("§e[NPC] " + m.getRole().getLabel()) : m.getRole().getLabel();
+            g.drawString(font, roleLabel, colRankX, rY + 5, 0xFFFFFFFF);
 
             String nameStr = m.getName();
             if (m.getUuid().equals(myUuid)) nameStr += " " + Component.translatable("awakening_system.guild.you").getString();
-            drawScaledString(g, nameStr, colNameX, rY + 5, 170, 0xFFFFFFFF);
+            drawScaledString(g, nameStr, colNameX, rY + 5, 170, m.isNpc() ? 0xFFFFD866 : 0xFFFFFFFF);
 
             g.drawString(font, "§e" + String.format(Locale.US, "%,d", m.getContributedMora()) + " ✦ Mora", colDonatedX, rY + 5, 0xFFFFD700);
 
@@ -1227,10 +1228,11 @@ public class GuildScreen extends Screen {
                         }
 
                         if (!m.getUuid().equals(myUuid)) {
-                            boolean isOnline = mc.getConnection() != null && mc.getConnection().getPlayerInfo(m.getUuid()) != null;
-                            int tpaX = left + 460;
+                            boolean isOnline = m.isNpc() || (mc.getConnection() != null && mc.getConnection().getPlayerInfo(m.getUuid()) != null);
+                            int colActionsX = left + 395;
+                            int tpaX = colActionsX + 65;
                             if (isOnline && mouseX >= tpaX && mouseX < tpaX + 18 && mouseY >= rY + 2 && mouseY < rY + 16) {
-                                PacketDistributor.sendToServer(new GuildActionPayload("TPA", m.getName(), 0));
+                                PacketDistributor.sendToServer(new GuildActionPayload("TPA", m.getUuid().toString(), 0));
                                 AwakeningSystemClient.playUiSound(SoundEvents.ENDERMAN_TELEPORT, 1.0F, 1.2F);
                                 return true;
                             }

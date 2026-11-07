@@ -1,0 +1,285 @@
+{
+  "credit": "Made with Blockbench for Awakening System",
+  "textures": {
+    "0": "awakening_system:block/christmas_tree",
+    "particle": "awakening_system:block/christmas_tree"
+  },
+  "elements": [
+    {
+      "name": "gift_base",
+      "from": [
+        6.75,
+        6.5,
+        6.75
+      ],
+      "to": [
+        9.25,
+        8.5,
+        9.25
+      ],
+      "faces": {
+        "north": {
+          "uv": [
+            7.5,
+            7.25,
+            8.125,
+            7.75
+          ],
+          "texture": "#0"
+        },
+        "east": {
+          "uv": [
+            7.5,
+            7.25,
+            8.125,
+            7.75
+          ],
+          "texture": "#0"
+        },
+        "south": {
+          "uv": [
+            7.5,
+            7.25,
+            8.125,
+            7.75
+          ],
+          "texture": "#0"
+        },
+        "west": {
+          "uv": [
+            7.5,
+            7.25,
+            8.125,
+            7.75
+          ],
+          "texture": "#0"
+        },
+        "up": {
+          "uv": [
+            8.125,
+            1.375,
+            7.5,
+            0.75
+          ],
+          "texture": "#0"
+        },
+        "down": {
+          "uv": [
+            1.625,
+            7.5,
+            1,
+            8.125
+          ],
+          "texture": "#0"
+        }
+      }
+    },
+    {
+      "name": "gift_lid",
+      "from": [
+        6.5,
+        8.5,
+        6.5
+      ],
+      "to": [
+        9.5,
+        9.5,
+        9.5
+      ],
+      "faces": {
+        "north": {
+          "uv": [
+            7.75,
+            6.25,
+            8.5,
+            6.5
+          ],
+          "texture": "#0"
+        },
+        "east": {
+          "uv": [
+            7.75,
+            6.25,
+            8.5,
+            6.5
+          ],
+          "texture": "#0"
+        },
+        "south": {
+          "uv": [
+            7.75,
+            6.25,
+            8.5,
+            6.5
+          ],
+          "texture": "#0"
+        },
+        "west": {
+          "uv": [
+            7.75,
+            6.25,
+            8.5,
+            6.5
+          ],
+          "texture": "#0"
+        },
+        "up": {
+          "uv": [
+            4.5,
+            7.5,
+            3.75,
+            6.75
+          ],
+          "texture": "#0"
+        },
+        "down": {
+          "uv": [
+            7.75,
+            5.75,
+            7,
+            6.5
+          ],
+          "texture": "#0"
+        }
+      }
+    }
+  ],
+  "display": {
+    "thirdperson_righthand": {
+      "rotation": [
+        0,
+        0,
+        0
+      ],
+      "translation": [
+        0,
+        2,
+        0
+      ],
+      "scale": [
+        1.8,
+        1.8,
+        1.8
+      ]
+    },
+    "thirdperson_lefthand": {
+      "rotation": [
+        0,
+        0,
+        0
+      ],
+      "translation": [
+        0,
+        2,
+        0
+      ],
+      "scale": [
+        1.8,
+        1.8,
+        1.8
+      ]
+    },
+    "firstperson_righthand": {
+      "rotation": [
+        0,
+        45,
+        0
+      ],
+      "translation": [
+        0,
+        3,
+        0
+      ],
+      "scale": [
+        2,
+        2,
+        2
+      ]
+    },
+    "firstperson_lefthand": {
+      "rotation": [
+        0,
+        45,
+        0
+      ],
+      "translation": [
+        0,
+        3,
+        0
+      ],
+      "scale": [
+        2,
+        2,
+        2
+      ]
+    },
+    "ground": {
+      "rotation": [
+        0,
+        0,
+        0
+      ],
+      "translation": [
+        0,
+        2,
+        0
+      ],
+      "scale": [
+        1.8,
+        1.8,
+        1.8
+      ]
+    },
+    "gui": {
+      "rotation": [
+        30,
+        225,
+        0
+      ],
+      "translation": [
+        0,
+        0,
+        0
+      ],
+      "scale": [
+        3.3,
+        3.3,
+        3.3
+      ]
+    },
+    "head": {
+      "rotation": [
+        0,
+        0,
+        0
+      ],
+      "translation": [
+        0,
+        14.5,
+        0
+      ],
+      "scale": [
+        1,
+        1,
+        1
+      ]
+    },
+    "fixed": {
+      "rotation": [
+        0,
+        0,
+        0
+      ],
+      "translation": [
+        0,
+        0,
+        0
+      ],
+      "scale": [
+        2,
+        2,
+        2
+      ]
+    }
+  }
+}

@@ -1,7 +1,6 @@
 package com.soybe.awakeningsystem.item;
 
 import com.soybe.awakeningsystem.AwakeningSystemClient;
-import com.soybe.awakeningsystem.SpawnMagicCirclePayload;
 import com.soybe.awakeningsystem.entity.SlashWaveEntity;
 import net.minecraft.ChatFormatting;
 import net.minecraft.core.particles.ParticleTypes;
@@ -67,33 +66,28 @@ public class CreatorClaymoreItem extends SwordItem implements AwakeningWeaponIte
             sp.getCooldowns().addCooldown(this, 600);
 
             Vec3 look = sp.getLookAngle();
-            PacketDistributor.sendToPlayersTrackingEntityAndSelf(sp, new SpawnMagicCirclePayload(
-                    sp.getId(),
-                    sp.getX(), sp.getY() + 0.05D, sp.getZ(),
-                    0.0F, 1.0F, 0.0F,
-                    18.0F, 70, 0xFF9D4EDD, 0, false
-            ));
-            PacketDistributor.sendToPlayersTrackingEntityAndSelf(sp, new SpawnMagicCirclePayload(
-                    sp.getId(),
-                    sp.getX() + look.x * 4.0D, sp.getEyeY() + look.y * 4.0D, sp.getZ() + look.z * 4.0D,
-                    (float) look.x, (float) look.y, (float) look.z,
-                    14.0F, 70, 0xFFE0AAFF, 1, false
-            ));
 
+            sl.playSound(null, sp.getX(), sp.getY(), sp.getZ(), com.soybe.awakeningsystem.ModSounds.CULTIVATOR_SLASH.get(), SoundSource.PLAYERS, 2.0F, 0.6F);
             sl.playSound(null, sp.getX(), sp.getY(), sp.getZ(), SoundEvents.BEACON_ACTIVATE, SoundSource.PLAYERS, 2.2F, 0.8F);
             sl.playSound(null, sp.getX(), sp.getY(), sp.getZ(), SoundEvents.LIGHTNING_BOLT_THUNDER, SoundSource.PLAYERS, 2.2F, 0.6F);
             sl.playSound(null, sp.getX(), sp.getY(), sp.getZ(), SoundEvents.WARDEN_SONIC_BOOM, SoundSource.PLAYERS, 2.0F, 1.1F);
-            sl.playSound(null, sp.getX(), sp.getY(), sp.getZ(), SoundEvents.END_PORTAL_SPAWN, SoundSource.PLAYERS, 1.8F, 1.3F);
 
+            sl.sendParticles(com.soybe.awakeningsystem.particle.ModParticles.STRIKE_CLEAVE.get(), sp.getX() + look.x * 1.5D, sp.getY() + 1.2D + look.y * 1.5D, sp.getZ() + look.z * 1.5D, 1, 0, 0, 0, 0);
             sl.sendParticles(ParticleTypes.FLASH, sp.getX(), sp.getY() + 1.5D, sp.getZ(), 12, 0, 0, 0, 0);
             sl.sendParticles(ParticleTypes.END_ROD, sp.getX(), sp.getY() + 1.0D, sp.getZ(), 220, 9.0D, 2.5D, 9.0D, 0.25D);
             sl.sendParticles(ParticleTypes.DRAGON_BREATH, sp.getX(), sp.getY() + 1.0D, sp.getZ(), 140, 8.0D, 2.0D, 8.0D, 0.18D);
 
             com.soybe.awakeningsystem.CameraShakePayload.sendToNearby(sl, sp.getX(), sp.getY(), sp.getZ(), 48.0D, 1.0F, 18);
 
-            SlashWaveEntity genesisSlash = new SlashWaveEntity(sl, sp, SlashWaveEntity.TYPE_COSMIC_AMETHYST, 120.0F, 6.4F, 2.8F, 0.0F, 36, 20);
+            SlashWaveEntity genesisSlash = new SlashWaveEntity(sl, sp, SlashWaveEntity.TYPE_COSMIC_AMETHYST, SlashWaveEntity.STYLE_HEAVY_CLEAVE, 120.0F, 6.8F, 3.0F, 0.0F, 36, 20);
             genesisSlash.setDeltaMovement(look.scale(2.4D));
             sl.addFreshEntity(genesisSlash);
+
+            SlashWaveEntity verticalTectonic = new SlashWaveEntity(sl, sp, SlashWaveEntity.TYPE_PRIMORDIAL_GENESIS, SlashWaveEntity.STYLE_HEAVY_CLEAVE, 80.0F, 4.8F, 3.2F, 90.0F, 32, 14);
+            verticalTectonic.setDeltaMovement(look.scale(2.2D));
+            sl.addFreshEntity(verticalTectonic);
+
+            sp.swing(hand, true);
 
             AABB cataclysmArea = sp.getBoundingBox().inflate(18.0D, 6.0D, 18.0D);
             int hitCount = 0;
@@ -135,6 +129,10 @@ public class CreatorClaymoreItem extends SwordItem implements AwakeningWeaponIte
     @Override
     public boolean hurtEnemy(ItemStack stack, LivingEntity target, LivingEntity attacker) {
         if (attacker.level() instanceof ServerLevel sl) {
+            sl.sendParticles(com.soybe.awakeningsystem.particle.ModParticles.STRIKE_CLEAVE.get(), target.getX(), target.getY() + 1.0D, target.getZ(), 1, 0, 0, 0, 0);
+            sl.playSound(null, target.getX(), target.getY(), target.getZ(), com.soybe.awakeningsystem.ModSounds.CULTIVATOR_SLASH.get(), SoundSource.PLAYERS, 1.6F, 0.7F);
+            com.soybe.awakeningsystem.CameraShakePayload.sendToNearby(sl, target.getX(), target.getY(), target.getZ(), 20.0D, 0.35F, 5);
+
             if (attacker instanceof Player player) {
                 target.hurt(target.damageSources().playerAttack(player), 36.0F);
 

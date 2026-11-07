@@ -58,6 +58,7 @@ public final class AwakeningSystemClient {
     public static final net.minecraft.resources.ResourceLocation MAGIC_CIRCLE_ARCANE = net.minecraft.resources.ResourceLocation.fromNamespaceAndPath(AwakeningSystemMod.MOD_ID, "textures/magic/magic_circle_arcane.png");
     public static final net.minecraft.resources.ResourceLocation MAGIC_CIRCLE_MURIM = net.minecraft.resources.ResourceLocation.fromNamespaceAndPath(AwakeningSystemMod.MOD_ID, "textures/magic/magic_circle_murim.png");
     public static final net.minecraft.resources.ResourceLocation CELESTIA_TEX = net.minecraft.resources.ResourceLocation.fromNamespaceAndPath(AwakeningSystemMod.MOD_ID, "textures/environment/celestia_sky.png");
+    private static BlockPos activeTrackerTargetPos = null;
 
     public static void registerDimensionSpecialEffects(net.neoforged.neoforge.client.event.RegisterDimensionSpecialEffectsEvent event) {
         event.register(
@@ -145,9 +146,26 @@ public final class AwakeningSystemClient {
 
     public record ShadowEmergenceData(long startTimeMs, long durationMs, double x, double y, double z, float height) {}
     public static final java.util.Set<Integer> SHADOW_SOLDIER_IDS = java.util.concurrent.ConcurrentHashMap.newKeySet();
+    public static final java.util.Map<Integer, Byte> SHADOW_ALLIANCE_MAP = new java.util.concurrent.ConcurrentHashMap<>();
     public static final java.util.Set<Integer> NON_SHADOW_ENTITY_IDS = java.util.concurrent.ConcurrentHashMap.newKeySet();
     public static final java.util.Set<Integer> CONFIGURED_SHADOW_TEAM_IDS = java.util.concurrent.ConcurrentHashMap.newKeySet();
     public static final java.util.Map<Integer, ShadowEmergenceData> SHADOW_EMERGENCE_MAP = new java.util.concurrent.ConcurrentHashMap<>();
+
+    public static void handleSyncShadowAlliance(com.soybe.awakeningsystem.network.SyncShadowAlliancePayload payload) {
+        if (payload == null) return;
+        SHADOW_SOLDIER_IDS.add(payload.entityId());
+        SHADOW_ALLIANCE_MAP.put(payload.entityId(), payload.allianceType());
+    }
+
+    public static byte getShadowAlliance(int entityId) {
+        return SHADOW_ALLIANCE_MAP.getOrDefault(entityId, (byte) 2);
+    }
+
+    public static boolean isFriendlyOrGuildShadow(net.minecraft.world.entity.LivingEntity entity) {
+        if (!isShadowSoldier(entity)) return false;
+        byte alliance = SHADOW_ALLIANCE_MAP.getOrDefault(entity.getId(), (byte) 2);
+        return alliance != 0;
+    }
 
     public static void triggerShadowEmergence(int entityId, double x, double y, double z, int durationTicks, float height) {
         SHADOW_SOLDIER_IDS.add(entityId);
@@ -437,6 +455,7 @@ public final class AwakeningSystemClient {
         event.registerEntityRenderer(com.soybe.awakeningsystem.entity.ModEntities.WORKOUT.get(), com.soybe.awakeningsystem.entity.client.WorkoutEntityRenderer::new);
         event.registerEntityRenderer(com.soybe.awakeningsystem.entity.ModEntities.TAVERN_SEAT.get(), net.minecraft.client.renderer.entity.NoopRenderer::new);
         event.registerEntityRenderer(com.soybe.awakeningsystem.entity.ModEntities.FLYING_SWORD.get(), com.soybe.awakeningsystem.entity.client.FlyingSwordRenderer::new);
+        event.registerEntityRenderer(com.soybe.awakeningsystem.entity.ModEntities.POCKET_DOOR.get(), com.soybe.awakeningsystem.entity.client.PocketDoorRenderer::new);
         event.registerEntityRenderer(com.soybe.awakeningsystem.entity.ModEntities.SUBWAY_PILOT_SEAT.get(), net.minecraft.client.renderer.entity.NoopRenderer::new);
         event.registerEntityRenderer(com.soybe.awakeningsystem.entity.ModEntities.SUBWAY_TRAIN_CARRIAGE.get(), com.soybe.awakeningsystem.entity.client.SubwayTrainCarriageRenderer::new);
         event.registerEntityRenderer(com.soybe.awakeningsystem.entity.ModEntities.AWAKENING_COIN_PROJECTILE.get(), net.minecraft.client.renderer.entity.ThrownItemRenderer::new);
@@ -479,6 +498,7 @@ public final class AwakeningSystemClient {
         event.registerEntityRenderer(com.soybe.awakeningsystem.entity.ModEntities.RYU_HANBIN.get(), com.soybe.awakeningsystem.entity.client.SeriesNpcRenderer::new);
         event.registerEntityRenderer(com.soybe.awakeningsystem.entity.ModEntities.TWENTY_FIFTH_BAAM.get(), com.soybe.awakeningsystem.entity.client.SeriesNpcRenderer::new);
         event.registerEntityRenderer(com.soybe.awakeningsystem.entity.ModEntities.BLACK_MARKET_DEALER.get(), com.soybe.awakeningsystem.entity.client.SeriesNpcRenderer::new);
+        event.registerEntityRenderer(com.soybe.awakeningsystem.entity.ModEntities.HUNTER_EVALUATOR.get(), com.soybe.awakeningsystem.entity.client.SeriesNpcRenderer::new);
         event.registerEntityRenderer(com.soybe.awakeningsystem.entity.ModEntities.DOKKAEBI.get(), com.soybe.awakeningsystem.entity.client.DokkaebiRenderer::new);
         event.registerEntityRenderer(com.soybe.awakeningsystem.entity.ModEntities.PAIMON.get(), com.soybe.awakeningsystem.entity.client.PaimonRenderer::new);
         event.registerEntityRenderer(com.soybe.awakeningsystem.entity.ModEntities.COMPANION.get(), com.soybe.awakeningsystem.entity.client.CompanionRenderer::new);
@@ -487,6 +507,7 @@ public final class AwakeningSystemClient {
         event.registerEntityRenderer(com.soybe.awakeningsystem.entity.ModEntities.BARAN_BOSS.get(), com.soybe.awakeningsystem.entity.client.BaranBossRenderer::new);
         event.registerEntityRenderer(com.soybe.awakeningsystem.entity.ModEntities.STATUE_OF_GOD.get(), com.soybe.awakeningsystem.entity.client.StatueOfGodRenderer::new);
         event.registerEntityRenderer(com.soybe.awakeningsystem.entity.ModEntities.BERU_BOSS.get(), com.soybe.awakeningsystem.entity.client.BeruBossRenderer::new);
+        event.registerEntityRenderer(com.soybe.awakeningsystem.entity.ModEntities.FALLING_SIDERITE_METEOR.get(), com.soybe.awakeningsystem.entity.client.FallingSideriteMeteorRenderer::new);
         event.registerEntityRenderer(com.soybe.awakeningsystem.entity.ModEntities.ISEKAI_SLIME.get(), com.soybe.awakeningsystem.entity.client.IsekaiSlimeRenderer::new);
         event.registerEntityRenderer(com.soybe.awakeningsystem.entity.ModEntities.SPIRIT_FOX.get(), com.soybe.awakeningsystem.entity.client.SpiritFoxRenderer::new);
         event.registerEntityRenderer(com.soybe.awakeningsystem.entity.ModEntities.ASTRAL_DRAGON.get(), com.soybe.awakeningsystem.entity.client.AstralDragonRenderer::new);
@@ -587,9 +608,12 @@ public final class AwakeningSystemClient {
         event.registerBlockEntityRenderer(com.soybe.awakeningsystem.block.entity.ModBlockEntities.CASINO_WALL_DISPLAY_STAND.get(), com.soybe.awakeningsystem.client.renderer.CasinoWallDisplayStandRenderer::new);
         event.registerBlockEntityRenderer(com.soybe.awakeningsystem.block.entity.ModBlockEntities.TOWER_MISSION_BOARD.get(), com.soybe.awakeningsystem.client.renderer.TowerMissionBoardRenderer::new);
         event.registerBlockEntityRenderer(com.soybe.awakeningsystem.block.entity.ModBlockEntities.TOWER_PORTAL.get(), com.soybe.awakeningsystem.client.renderer.AscensionPortalRenderer::new);
+        event.registerBlockEntityRenderer(com.soybe.awakeningsystem.block.entity.ModBlockEntities.TOMBSTONE.get(), com.soybe.awakeningsystem.client.renderer.TombstoneBlockEntityRenderer::new);
+        event.registerBlockEntityRenderer(com.soybe.awakeningsystem.block.entity.ModBlockEntities.CHRISTMAS_TREE.get(), com.soybe.awakeningsystem.client.renderer.ChristmasTreeBlockEntityRenderer::new);
     }
 
     public static void registerLayerDefinitions(net.neoforged.neoforge.client.event.EntityRenderersEvent.RegisterLayerDefinitions event) {
+        event.registerLayerDefinition(com.soybe.awakeningsystem.entity.client.PocketDoorModel.LAYER_LOCATION, com.soybe.awakeningsystem.entity.client.PocketDoorModel::createBodyLayer);
         event.registerLayerDefinition(com.soybe.awakeningsystem.entity.client.GiantSandwormModelLayers.HEAD, com.soybe.awakeningsystem.entity.client.GiantSandwormHeadModel::createBodyLayer);
         event.registerLayerDefinition(com.soybe.awakeningsystem.entity.client.GiantSandwormModelLayers.BODY, com.soybe.awakeningsystem.entity.client.GiantSandwormBodyModel::createBodyLayer);
         event.registerLayerDefinition(com.soybe.awakeningsystem.client.model.CustomPlushieModel.LAYER_LOCATION, com.soybe.awakeningsystem.client.model.CustomPlushieModel::createBodyLayer);
@@ -709,6 +733,14 @@ public final class AwakeningSystemClient {
                 com.soybe.awakeningsystem.particle.client.ManaAuraParticle.Provider::new);
         event.registerSpriteSet(com.soybe.awakeningsystem.particle.ModParticles.SHADOW_AURA.get(),
                 com.soybe.awakeningsystem.particle.client.ShadowAuraParticle.Provider::new);
+        event.registerSpriteSet(com.soybe.awakeningsystem.particle.ModParticles.STRIKE_SLASH.get(),
+                com.soybe.awakeningsystem.particle.client.StrikeEffectParticle.SlashProvider::new);
+        event.registerSpriteSet(com.soybe.awakeningsystem.particle.ModParticles.STRIKE_CLAW.get(),
+                com.soybe.awakeningsystem.particle.client.StrikeEffectParticle.ClawProvider::new);
+        event.registerSpriteSet(com.soybe.awakeningsystem.particle.ModParticles.STRIKE_CLEAVE.get(),
+                com.soybe.awakeningsystem.particle.client.StrikeEffectParticle.CleaveProvider::new);
+        event.registerSpriteSet(com.soybe.awakeningsystem.particle.ModParticles.STRIKE_CELESTIAL.get(),
+                com.soybe.awakeningsystem.particle.client.StrikeEffectParticle.CelestialProvider::new);
     }
 
     public static void onClientSetup(net.neoforged.fml.event.lifecycle.FMLClientSetupEvent event) {
@@ -868,6 +900,31 @@ public final class AwakeningSystemClient {
         if (SystemItems.ASTRALITE_BOOTS.isBound()) {
             event.registerItem(astraliteArmorExt, SystemItems.ASTRALITE_BOOTS.get());
         }
+
+        net.neoforged.neoforge.client.extensions.common.IClientItemExtensions sideriteArmorExt = new net.neoforged.neoforge.client.extensions.common.IClientItemExtensions() {
+            private com.soybe.awakeningsystem.item.client.SideriteArmorRenderer sideriteRenderer;
+
+            @Override
+            public net.minecraft.client.model.HumanoidModel<?> getHumanoidArmorModel(net.minecraft.world.entity.LivingEntity livingEntity, net.minecraft.world.item.ItemStack itemStack, net.minecraft.world.entity.EquipmentSlot equipmentSlot, net.minecraft.client.model.HumanoidModel<?> original) {
+                if (this.sideriteRenderer == null) {
+                    this.sideriteRenderer = new com.soybe.awakeningsystem.item.client.SideriteArmorRenderer();
+                }
+                return this.sideriteRenderer;
+            }
+        };
+
+        if (SystemItems.SIDERITE_HELMET.isBound()) {
+            event.registerItem(sideriteArmorExt, SystemItems.SIDERITE_HELMET.get());
+        }
+        if (SystemItems.SIDERITE_CHESTPLATE.isBound()) {
+            event.registerItem(sideriteArmorExt, SystemItems.SIDERITE_CHESTPLATE.get());
+        }
+        if (SystemItems.SIDERITE_LEGGINGS.isBound()) {
+            event.registerItem(sideriteArmorExt, SystemItems.SIDERITE_LEGGINGS.get());
+        }
+        if (SystemItems.SIDERITE_BOOTS.isBound()) {
+            event.registerItem(sideriteArmorExt, SystemItems.SIDERITE_BOOTS.get());
+        }
     }
 
     public static void onClientEntityJoinLevel(net.neoforged.neoforge.event.entity.EntityJoinLevelEvent event) {
@@ -885,6 +942,35 @@ public final class AwakeningSystemClient {
         if (notificationTicks > 0) notificationTicks--;
         if (coinNotificationTicks > 0) coinNotificationTicks--;
         SystemNotificationOverlay.tick();
+
+        // Rastreador de la Asociación: detección de llegada para remover waypoint temporal de Diorama
+        if (activeTrackerTargetPos != null && minecraft.player != null && minecraft.level != null && minecraft.player.tickCount % 5 == 0) {
+            if (minecraft.level.dimension() == net.minecraft.world.level.Level.OVERWORLD) {
+                double distSq = minecraft.player.distanceToSqr(activeTrackerTargetPos.getX() + 0.5D, activeTrackerTargetPos.getY(), activeTrackerTargetPos.getZ() + 0.5D);
+                if (distSq <= 14.0D * 14.0D) {
+                    // Remover waypoint temporal de Diorama
+                    dev.diorama.waypoint.WaypointStore store = dev.diorama.waypoint.WaypointStore.get();
+                    if (store != null) {
+                        store.all().stream()
+                                .filter(w -> w.kind == dev.diorama.waypoint.Waypoint.Kind.TEMPORARY && "Salón de Evaluación".equals(w.name))
+                                .toList()
+                                .forEach(store::remove);
+                    }
+                    // Remover de WaypointManager interno si existe
+                    com.soybe.awakeningsystem.client.map.Waypoint existingWp = com.soybe.awakeningsystem.client.map.WaypointManager.getAllWaypoints().stream()
+                            .filter(w -> "Salón de Evaluación".equals(w.getName()))
+                            .findFirst()
+                            .orElse(null);
+                    if (existingWp != null) {
+                        com.soybe.awakeningsystem.client.map.WaypointManager.removeWaypoint(existingWp.getId());
+                    }
+
+                    activeTrackerTargetPos = null;
+                    minecraft.player.playSound(net.minecraft.sounds.SoundEvents.PLAYER_LEVELUP, 0.9F, 1.4F);
+                    minecraft.player.displayClientMessage(net.minecraft.network.chat.Component.literal("§a§l✓ ¡Has llegado al Salón de Evaluación! Marcador temporal removido."), false);
+                }
+            }
+        }
 
         if (pendingWelcomeScreen && minecraft.player != null && minecraft.level != null) {
             if (minecraft.screen == null) {
@@ -1069,6 +1155,7 @@ public final class AwakeningSystemClient {
                     if (ent == null || !ent.isAlive()) {
                         it.remove();
                         CONFIGURED_SHADOW_TEAM_IDS.remove(sid);
+                        SHADOW_ALLIANCE_MAP.remove(sid);
                         continue;
                     }
                     if (ent instanceof net.minecraft.world.entity.LivingEntity living) {
@@ -1610,7 +1697,7 @@ public final class AwakeningSystemClient {
             playUiSound(ModSounds.SYSTEM_COINS.value(), 0.75F, 1.0F);
         } else if (titleKey.equals("awakening_system.notification.shop.title")) {
             playUiSound(ModSounds.SYSTEM_COINS.value(), 0.75F, 1.0F);
-        } else if (titleKey.contains("skill_level") || titleKey.equals("awakening_system.notification.skill.title")) {
+        } else if (titleKey.contains("habit") || titleKey.contains("skill_level") || titleKey.equals("awakening_system.notification.skill.title")) {
             playUiSound(ModSounds.SYSTEM_SKILL_UNLOCK.value(), 0.8F, 1.0F);
         } else if (titleKey.contains("level_up")) {
             playUiSound(ModSounds.SYSTEM_LEVEL_UP.value(), 0.85F, 1.0F);
@@ -2109,6 +2196,22 @@ public final class AwakeningSystemClient {
         Minecraft.getInstance().setScreen(new com.soybe.awakeningsystem.uma.screen.UmaRaceScreen(payload));
     }
 
+    public static void handleOpenDialogue(com.soybe.awakeningsystem.dialogue.network.OpenDialoguePayload payload) {
+        Minecraft mc = Minecraft.getInstance();
+        if (mc.screen instanceof com.soybe.awakeningsystem.dialogue.client.NpcDialogueScreen screen) {
+            screen.updatePayload(payload);
+        } else {
+            mc.setScreen(new com.soybe.awakeningsystem.dialogue.client.NpcDialogueScreen(payload));
+        }
+    }
+
+    public static void handleCloseDialogue() {
+        Minecraft mc = Minecraft.getInstance();
+        if (mc.screen instanceof com.soybe.awakeningsystem.dialogue.client.NpcDialogueScreen) {
+            mc.setScreen(null);
+        }
+    }
+
     public static void openUmaHubScreen(com.soybe.awakeningsystem.uma.network.OpenUmaHubPayload payload) {
         if (Minecraft.getInstance().screen instanceof com.soybe.awakeningsystem.uma.screen.UmaHubScreen screen) {
             screen.updateData(payload);
@@ -2293,26 +2396,43 @@ public final class AwakeningSystemClient {
         }
 
         if (isShadowSoldier(living)) {
-            if (CONFIGURED_SHADOW_TEAM_IDS.add(entityId)) {
-                Minecraft mc = Minecraft.getInstance();
-                if (mc.level != null) {
-                    net.minecraft.world.scores.Scoreboard csb = mc.level.getScoreboard();
-                    net.minecraft.world.scores.PlayerTeam cteam = csb.getPlayerTeam("shadows");
-                    if (cteam == null) {
-                        cteam = csb.addPlayerTeam("shadows");
-                        cteam.setColor(net.minecraft.ChatFormatting.AQUA);
-                        cteam.setDisplayName(net.minecraft.network.chat.Component.translatable("team.awakening_system.shadows"));
-                    } else if (cteam.getColor() != net.minecraft.ChatFormatting.AQUA) {
-                        cteam.setColor(net.minecraft.ChatFormatting.AQUA);
-                    }
-                    String member = living.getScoreboardName();
-                    if (!cteam.getPlayers().contains(member)) {
-                        csb.addPlayerToTeam(member, cteam);
-                    }
-                    String uuidStr = living.getStringUUID();
-                    if (!cteam.getPlayers().contains(uuidStr)) {
-                        csb.addPlayerToTeam(uuidStr, cteam);
-                    }
+            Minecraft mc = Minecraft.getInstance();
+            byte alliance = SHADOW_ALLIANCE_MAP.getOrDefault(entityId, (byte) 2);
+            if (mc.player != null && living.getTags().contains("shadow_master_" + mc.player.getUUID())) {
+                alliance = 1;
+            }
+
+            if (mc.level != null) {
+                net.minecraft.world.scores.Scoreboard csb = mc.level.getScoreboard();
+                String teamName;
+                net.minecraft.ChatFormatting teamColor;
+
+                if (alliance == 2) {
+                    teamName = "shadows_guild";
+                    teamColor = net.minecraft.ChatFormatting.GREEN; // Contorno Verde Esmeralda Aliado de Gremio
+                } else if (alliance == 1) {
+                    teamName = "shadows_own";
+                    teamColor = net.minecraft.ChatFormatting.AQUA; // Contorno Cian Monarca Propio
+                } else {
+                    teamName = "shadows_enemy";
+                    teamColor = net.minecraft.ChatFormatting.DARK_RED; // Contorno Rojo Enemigo Hostil
+                }
+
+                net.minecraft.world.scores.PlayerTeam cteam = csb.getPlayerTeam(teamName);
+                if (cteam == null) {
+                    cteam = csb.addPlayerTeam(teamName);
+                    cteam.setColor(teamColor);
+                } else if (cteam.getColor() != teamColor) {
+                    cteam.setColor(teamColor);
+                }
+
+                String member = living.getScoreboardName();
+                if (!cteam.getPlayers().contains(member)) {
+                    csb.addPlayerToTeam(member, cteam);
+                }
+                String uuidStr = living.getStringUUID();
+                if (!cteam.getPlayers().contains(uuidStr)) {
+                    csb.addPlayerToTeam(uuidStr, cteam);
                 }
             }
             living.setGlowingTag(true);
@@ -2390,22 +2510,45 @@ public final class AwakeningSystemClient {
             // Si el mob ya tiene un nombre personalizado fijado por el servidor (ej: mazmorras [Nv. X], bosses, etc.)
             // se respeta 100% para evitar inconsistencias entre la etiqueta flotante y el HUD de objetivo
             if (mob.hasCustomName()) {
-                event.setContent(mob.getCustomName());
+                SystemData clientData = mc.player.getData(AwakeningSystemMod.PLAYER_SYSTEM);
+                int deadeyeLevel = (clientData != null && clientData.isSkillEnabled("deadeye")) ? clientData.skills().getOrDefault("deadeye", 0) : 0;
+                double maxDistSq = 576.0D + (deadeyeLevel * 300.0D);
+                if (mc.getCameraEntity() != null && mob.distanceToSqr(mc.getCameraEntity()) > maxDistSq) return;
+
+                if (deadeyeLevel > 0 && !mob.getCustomName().getString().contains("❤")) {
+                    int curHp = (int) Math.ceil(mob.getHealth());
+                    int maxHp = (int) Math.ceil(mob.getMaxHealth());
+                    event.setContent(mob.getCustomName().copy().append(Component.literal(" [❤ " + curHp + "/" + maxHp + "]").withStyle(ChatFormatting.RED)));
+                } else {
+                    event.setContent(mob.getCustomName());
+                }
                 event.setCanRender(net.neoforged.neoforge.common.util.TriState.TRUE);
                 return;
             }
 
             // Renderizado de nivel de mob percibido individualmente para criaturas salvajes sin nombre
-            if (mob instanceof net.minecraft.world.entity.monster.Enemy || mob.getTags().contains("rpg_scaled")) {
-                if (mc.getCameraEntity() != null && mob.distanceToSqr(mc.getCameraEntity()) > 576.0D) return;
-
+            if (mob instanceof net.minecraft.world.entity.monster.Enemy || mob.getTags().contains("rpg_scaled") || RpgLevelZoneManager.isEligibleForRpgScaling(mob)) {
                 SystemData clientData = mc.player.getData(AwakeningSystemMod.PLAYER_SYSTEM);
+                int deadeyeLevel = (clientData != null && clientData.isSkillEnabled("deadeye")) ? clientData.skills().getOrDefault("deadeye", 0) : 0;
+                double maxDistSq = 576.0D + (deadeyeLevel * 300.0D);
+                if (mc.getCameraEntity() != null && mob.distanceToSqr(mc.getCameraEntity()) > maxDistSq) return;
+
                 int clientLevel = clientData != null ? Math.max(1, clientData.level()) : 1;
                 int perceivedLevel = getPerceivedMobLevel(mob, clientLevel);
 
                 ChatFormatting color = perceivedLevel >= 80 ? ChatFormatting.DARK_RED : (perceivedLevel >= 50 ? ChatFormatting.RED : (perceivedLevel >= 25 ? ChatFormatting.GOLD : (perceivedLevel >= 15 ? ChatFormatting.YELLOW : ChatFormatting.GREEN)));
-                event.setContent(Component.literal("[Nv. " + perceivedLevel + "] ").withStyle(color)
-                        .append(mob.getType().getDescription().copy().withStyle(ChatFormatting.WHITE)));
+                Component content;
+                if (deadeyeLevel > 0) {
+                    int curHp = (int) Math.ceil(mob.getHealth());
+                    int maxHp = (int) Math.ceil(mob.getMaxHealth());
+                    content = Component.literal("[Nv. " + perceivedLevel + "] ").withStyle(color)
+                            .append(mob.getType().getDescription().copy().withStyle(ChatFormatting.WHITE))
+                            .append(Component.literal(" [❤ " + curHp + "/" + maxHp + "]").withStyle(ChatFormatting.RED));
+                } else {
+                    content = Component.literal("[Nv. " + perceivedLevel + "] ").withStyle(color)
+                            .append(mob.getType().getDescription().copy().withStyle(ChatFormatting.WHITE));
+                }
+                event.setContent(content);
                 event.setCanRender(net.neoforged.neoforge.common.util.TriState.TRUE);
             }
             return;
@@ -2581,6 +2724,19 @@ public final class AwakeningSystemClient {
     }
 
     public static void onRenderPlayerPre(net.neoforged.neoforge.client.event.RenderPlayerEvent.Pre event) {
+        var player = event.getEntity();
+        if (com.soybe.awakeningsystem.tombstone.TombstoneManager.isGhostMode(player)) {
+            var renderer = event.getRenderer();
+            var model = renderer.getModel();
+            var texture = ((net.minecraft.client.player.AbstractClientPlayer) player).getSkin().texture();
+            var buffer = event.getMultiBufferSource().getBuffer(net.minecraft.client.renderer.RenderType.entityTranslucent(texture));
+            // Renderizado translúcido espectral del jugador en Modo Fantasma (alfa ~48%)
+            int ghostColor = 0x7B8CDDFF;
+            model.renderToBuffer(event.getPoseStack(), buffer, event.getPackedLight(), net.minecraft.client.renderer.texture.OverlayTexture.NO_OVERLAY, ghostColor);
+            event.setCanceled(true);
+            return;
+        }
+
         if (event.getEntity().getVehicle() instanceof com.soybe.awakeningsystem.entity.WorkoutEntity) {
             event.setCanceled(true);
             return;
@@ -2611,7 +2767,6 @@ public final class AwakeningSystemClient {
             model.rightArm.zRot = 0.25F;
         }
 
-        var player = event.getEntity();
         if (isPlayerCastingAttack(player.getId())) {
             var model = event.getRenderer().getModel();
             float pitch = player.getXRot();
@@ -2626,6 +2781,36 @@ public final class AwakeningSystemClient {
                 model.rightArm.yRot = (float) Math.toRadians(-4.0F);
                 model.rightArm.zRot = 0.0F;
             }
+        }
+    }
+
+    public static void onRenderPlayerPost(net.neoforged.neoforge.client.event.RenderPlayerEvent.Post event) {
+        if (com.soybe.awakeningsystem.tombstone.TombstoneManager.isGhostMode(event.getEntity())) {
+            com.mojang.blaze3d.systems.RenderSystem.setShaderColor(1.0F, 1.0F, 1.0F, 1.0F);
+        }
+    }
+
+    public static void onRenderArm(net.neoforged.neoforge.client.event.RenderArmEvent event) {
+        if (com.soybe.awakeningsystem.tombstone.TombstoneManager.isGhostMode(event.getPlayer())) {
+            var player = event.getPlayer();
+            var arm = event.getArm();
+            var poseStack = event.getPoseStack();
+            var bufferSource = event.getMultiBufferSource();
+            var entityRenderDispatcher = net.minecraft.client.Minecraft.getInstance().getEntityRenderDispatcher();
+            var playerRenderer = (net.minecraft.client.renderer.entity.player.PlayerRenderer) entityRenderDispatcher.getRenderer(player);
+            var model = playerRenderer.getModel();
+            var texture = player.getSkin().texture();
+            var buffer = bufferSource.getBuffer(net.minecraft.client.renderer.RenderType.entityTranslucent(texture));
+
+            int ghostColor = 0x7B8CDDFF;
+            if (arm == net.minecraft.world.entity.HumanoidArm.RIGHT) {
+                model.rightArm.render(poseStack, buffer, event.getPackedLight(), net.minecraft.client.renderer.texture.OverlayTexture.NO_OVERLAY, ghostColor);
+                model.rightSleeve.render(poseStack, buffer, event.getPackedLight(), net.minecraft.client.renderer.texture.OverlayTexture.NO_OVERLAY, ghostColor);
+            } else {
+                model.leftArm.render(poseStack, buffer, event.getPackedLight(), net.minecraft.client.renderer.texture.OverlayTexture.NO_OVERLAY, ghostColor);
+                model.leftSleeve.render(poseStack, buffer, event.getPackedLight(), net.minecraft.client.renderer.texture.OverlayTexture.NO_OVERLAY, ghostColor);
+            }
+            event.setCanceled(true);
         }
     }
 
@@ -3487,6 +3672,58 @@ public final class AwakeningSystemClient {
         }
         String string = title.getString().toLowerCase(java.util.Locale.ROOT);
         return string.contains("experimental") || string.contains("experimentales");
+    }
+
+    public static void clearDeathWaypoints() {
+        dev.diorama.waypoint.WaypointStore dioramaStore = dev.diorama.waypoint.WaypointStore.get();
+        if (dioramaStore != null) {
+            dioramaStore.removeDeathWaypoints();
+        }
+        com.soybe.awakeningsystem.client.map.WaypointManager.removeDeathWaypoints();
+    }
+
+    public static void handleSyncHunterAssociationWaypoint(com.soybe.awakeningsystem.network.SyncHunterAssociationWaypointPayload payload) {
+        activeTrackerTargetPos = new BlockPos(payload.x(), payload.y(), payload.z());
+
+        // 1. Integración con Diorama: Marcador Temporal oficial
+        dev.diorama.waypoint.WaypointStore dioramaStore = dev.diorama.waypoint.WaypointStore.get();
+        if (dioramaStore != null) {
+            dioramaStore.all().stream()
+                    .filter(w -> w.kind == dev.diorama.waypoint.Waypoint.Kind.TEMPORARY && "Salón de Evaluación".equals(w.name))
+                    .toList()
+                    .forEach(dioramaStore::remove);
+
+            dev.diorama.waypoint.Waypoint tempWp = new dev.diorama.waypoint.Waypoint(
+                    "Salón de Evaluación", payload.x(), payload.y(), payload.z(), "minecraft:overworld", 0xFF00E5FF
+            );
+            tempWp.kind = dev.diorama.waypoint.Waypoint.Kind.TEMPORARY;
+            dioramaStore.add(tempWp);
+        }
+
+        // 2. Compatibilidad con WaypointManager interno
+        com.soybe.awakeningsystem.client.map.WaypointManager.ensureCurrentWorld();
+        String name = "Salón de Evaluación";
+        com.soybe.awakeningsystem.client.map.Waypoint existing = com.soybe.awakeningsystem.client.map.WaypointManager.getAllWaypoints().stream()
+                .filter(w -> name.equals(w.getName()))
+                .findFirst()
+                .orElse(null);
+
+        if (existing != null) {
+            existing.setX(payload.x());
+            existing.setY(payload.y());
+            existing.setZ(payload.z());
+            existing.setEnabled(true);
+            existing.setShowBeam(true);
+            existing.setShowLabel(true);
+            com.soybe.awakeningsystem.client.map.WaypointManager.save();
+        } else {
+            com.soybe.awakeningsystem.client.map.Waypoint wp = new com.soybe.awakeningsystem.client.map.Waypoint(
+                    name, "minecraft:overworld", payload.x(), payload.y(), payload.z(), 0x00E5FF
+            );
+            wp.setShowBeam(true);
+            wp.setShowLabel(true);
+            com.soybe.awakeningsystem.client.map.WaypointManager.addWaypoint(wp);
+        }
     }
 }
 

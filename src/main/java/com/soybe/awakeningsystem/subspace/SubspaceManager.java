@@ -301,6 +301,16 @@ public final class SubspaceManager {
 
     public static void reconcileSubspaceStorage(List<Container> containers, SystemData data) {
         net.minecraft.core.NonNullList<ItemStack> items = data.getSubspaceItems();
+
+        // Determinar si los cofres físicos acaban de ser generados por primera vez y están 100% vacíos
+        boolean allPhysicalEmpty = true;
+        for (Container chest : containers) {
+            if (!chest.isEmpty()) {
+                allPhysicalEmpty = false;
+                break;
+            }
+        }
+
         int globalIndex = 0;
         for (Container chest : containers) {
             int cSize = chest.getContainerSize();
@@ -309,16 +319,15 @@ public final class SubspaceManager {
                 ItemStack virtualStack = (globalIndex < items.size()) ? items.get(globalIndex) : ItemStack.EMPTY;
                 ItemStack physicalStack = chest.getItem(s);
 
-                if (virtualStack.isEmpty() && !physicalStack.isEmpty()) {
-                    if (globalIndex < items.size()) {
-                        items.set(globalIndex, physicalStack.copy());
-                    }
-                } else if (!virtualStack.isEmpty() && physicalStack.isEmpty()) {
+                if (allPhysicalEmpty && !virtualStack.isEmpty()) {
+                    // Migración / restauración inicial exclusiva tras generar un cofre nuevo vacío
                     chest.setItem(s, virtualStack.copy());
                     changed = true;
-                } else if (!ItemStack.matches(virtualStack, physicalStack)) {
+                } else {
+                    // El estado físico en el cofre es la fuente de verdad absoluta.
+                    // Si el jugador extrae un ítem, el slot virtual se vacía inmediatamente para erradicar cualquier duplicación.
                     if (globalIndex < items.size()) {
-                        items.set(globalIndex, physicalStack.copy());
+                        items.set(globalIndex, physicalStack.isEmpty() ? ItemStack.EMPTY : physicalStack.copy());
                     }
                 }
                 globalIndex++;
@@ -766,18 +775,38 @@ public final class SubspaceManager {
         int oy = getPlotOriginY();
         ServerLevel level = player.serverLevel();
 
-        // 1. Limpieza segura de la parcela previa
+        // 1. Limpieza segura y anti-duplicación de la parcela previa
         int cleanRadius = 16;
         BlockPos.MutableBlockPos mpos = new BlockPos.MutableBlockPos();
         for (int dx = -cleanRadius; dx <= cleanRadius; dx++) {
             for (int dz = -cleanRadius; dz <= cleanRadius; dz++) {
                 for (int y = oy - 4; y <= oy + 22; y++) {
                     mpos.set(ox + dx, y, oz + dz);
+                    // IMPORTANTE: Vaciar cualquier contenedor antes de destruir el bloque
+                    // para evitar que Minecraft active Containers.dropContentsOnDestroy() y arroje los ítems al suelo duplicándolos
+                    net.minecraft.world.level.block.entity.BlockEntity be = level.getBlockEntity(mpos);
+                    if (be instanceof Container c) {
+                        c.clearContent();
+                    } else if (be != null) {
+                        try {
+                            var handler = level.getCapability(Capabilities.ItemHandler.BLOCK, mpos, level.getBlockState(mpos), be, null);
+                            if (handler instanceof IItemHandlerModifiable modifiable) {
+                                for (int i = 0; i < modifiable.getSlots(); i++) {
+                                    modifiable.setStackInSlot(i, ItemStack.EMPTY);
+                                }
+                            }
+                        } catch (Throwable ignored) {}
+                    }
                     if (!level.getBlockState(mpos).isAir()) {
                         level.setBlock(mpos, Blocks.AIR.defaultBlockState(), 2);
                     }
                 }
             }
+        }
+        // Purgar rigurosamente cualquier ItemEntity en el suelo dentro de la parcela para erradicar cualquier duplicado residual
+        net.minecraft.world.phys.AABB plotArea = new net.minecraft.world.phys.AABB(ox - cleanRadius - 4, oy - 6, oz - cleanRadius - 4, ox + cleanRadius + 4, oy + 26, oz + cleanRadius + 4);
+        for (net.minecraft.world.entity.item.ItemEntity itemEntity : level.getEntitiesOfClass(net.minecraft.world.entity.item.ItemEntity.class, plotArea)) {
+            itemEntity.discard();
         }
         clearBedrockBelow(level, ox, oz, 20);
 
@@ -874,13 +903,6 @@ public final class SubspaceManager {
         BlockPos chest1 = new BlockPos(ox + 3, oy, oz);
         BlockPos chest2 = new BlockPos(ox + 3, oy, oz + 1);
         if (level.getBlockState(chest1).isAir() && level.getBlockState(chest2).isAir()) {
-            level.setBlockAndUpdate(chest1, Blocks.CHEST.defaultBlockState()
-                    .setValue(net.minecraft.world.level.block.ChestBlock.FACING, net.minecraft.core.Direction.WEST)
-                    .setValue(net.minecraft.world.level.block.ChestBlock.TYPE, net.minecraft.world.level.block.state.properties.ChestType.RIGHT));
-            level.setBlockAndUpdate(chest2, Blocks.CHEST.defaultBlockState()
-                    .setValue(net.minecraft.world.level.block.ChestBlock.FACING, net.minecraft.core.Direction.WEST)
-                    .setValue(net.minecraft.world.level.block.ChestBlock.TYPE, net.minecraft.world.level.block.state.properties.ChestType.LEFT));
-        } else if (level.getBlockState(chest1).is(Blocks.CHEST) && level.getBlockState(chest2).isAir()) {
             level.setBlockAndUpdate(chest1, Blocks.CHEST.defaultBlockState()
                     .setValue(net.minecraft.world.level.block.ChestBlock.FACING, net.minecraft.core.Direction.WEST)
                     .setValue(net.minecraft.world.level.block.ChestBlock.TYPE, net.minecraft.world.level.block.state.properties.ChestType.RIGHT));

@@ -38,7 +38,7 @@ import java.util.List;
 public class ColossalSculkWardenEntity extends Warden {
 
     private final ServerBossEvent bossEvent = (ServerBossEvent) new ServerBossEvent(
-            Component.literal("Titán Colosal de Sculk").withStyle(net.minecraft.ChatFormatting.DARK_AQUA, net.minecraft.ChatFormatting.BOLD),
+            Component.translatableWithFallback("entity.awakening_system.colossal_sculk_warden", "Titán Colosal de Sculk").withStyle(net.minecraft.ChatFormatting.DARK_AQUA, net.minecraft.ChatFormatting.BOLD),
             BossEvent.BossBarColor.BLUE,
             BossEvent.BossBarOverlay.NOTCHED_20
     ).setDarkenScreen(true);
@@ -51,7 +51,7 @@ public class ColossalSculkWardenEntity extends Warden {
     public ColossalSculkWardenEntity(EntityType<? extends Warden> entityType, Level level) {
         super(entityType, level);
         this.xpReward = 500;
-        this.setCustomName(Component.literal("Titán Colosal de Sculk").withStyle(net.minecraft.ChatFormatting.DARK_AQUA, net.minecraft.ChatFormatting.BOLD));
+        this.setCustomName(Component.translatableWithFallback("entity.awakening_system.colossal_sculk_warden", "Titán Colosal de Sculk").withStyle(net.minecraft.ChatFormatting.DARK_AQUA, net.minecraft.ChatFormatting.BOLD));
         this.setCustomNameVisible(true);
     }
 
@@ -145,7 +145,7 @@ public class ColossalSculkWardenEntity extends Warden {
             if (!this.enraged && this.getHealth() <= this.getMaxHealth() * 0.5F) {
                 this.enraged = true;
                 this.bossEvent.setColor(BossEvent.BossBarColor.RED);
-                this.bossEvent.setName(Component.literal("Titán Colosal de Sculk (Enfurecido)").withStyle(net.minecraft.ChatFormatting.DARK_RED, net.minecraft.ChatFormatting.BOLD));
+                this.bossEvent.setName(Component.translatableWithFallback("entity.awakening_system.colossal_sculk_warden.enraged", "Titán Colosal de Sculk (Enfurecido)").withStyle(net.minecraft.ChatFormatting.DARK_RED, net.minecraft.ChatFormatting.BOLD));
 
                 if (this.level() instanceof ServerLevel sl) {
                     sl.playSound(null, this.getX(), this.getY(), this.getZ(),

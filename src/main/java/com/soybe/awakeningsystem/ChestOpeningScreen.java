@@ -34,6 +34,76 @@ public final class ChestOpeningScreen extends Screen {
     private int coinsWon = 0;
     private final List<ItemStack> rewardStacks = new ArrayList<>();
     private final List<ItemStack> reelItems = new ArrayList<>();
+    private final List<Confetti> confettiList = new ArrayList<>();
+
+    private static final class Confetti {
+        float x, y;
+        float vx, vy;
+        float rot, vrot;
+        float sizeW, sizeH;
+        int color;
+        float flutterPhase;
+        float flutterSpeed;
+
+        Confetti(float x, float y, float vx, float vy, float sizeW, float sizeH, int color, float vrot, float flutterSpeed) {
+            this.x = x;
+            this.y = y;
+            this.vx = vx;
+            this.vy = vy;
+            this.sizeW = sizeW;
+            this.sizeH = sizeH;
+            this.color = color;
+            this.vrot = vrot;
+            this.flutterSpeed = flutterSpeed;
+            this.flutterPhase = (float) (Math.random() * Math.PI * 2);
+        }
+
+        void update() {
+            vy += 0.14F;
+            if (vy > 2.8F) vy = 2.8F;
+            vx *= 0.98F;
+            x += vx + (float) Math.sin(flutterPhase) * 0.9F;
+            y += vy;
+            rot += vrot;
+            flutterPhase += flutterSpeed;
+        }
+
+        void render(GuiGraphics g) {
+            float scaleW = Math.max(1.0F, Math.abs((float) Math.cos(rot)) * sizeW);
+            int ix = (int) x;
+            int iy = (int) y;
+            int iw = (int) scaleW;
+            int ih = (int) sizeH;
+            g.fill(ix, iy, ix + iw, iy + ih, color);
+            if (iw > 2 && ih > 2) {
+                g.fill(ix + 1, iy + 1, ix + iw - 1, iy + ih - 1, (color & 0x00FFFFFF) | 0x88FFFFFF);
+            }
+        }
+    }
+
+    private void spawnConfetti(int count) {
+        confettiList.clear();
+        int cx = width / 2;
+        int cy = height / 2 - 20;
+        int[] palette = {
+            0xFFFFD700, 0xFFFFEA75, 0xFF00E5FF, 0xFF70E8FF,
+            0xFFFF4081, 0xFFE040FB, 0xFF50FA7B, 0xFF2ECC71,
+            0xFFBD93F9, 0xFFFFFFFF, 0xFFFF9100
+        };
+        java.util.Random rnd = new java.util.Random();
+        for (int i = 0; i < count; i++) {
+            float angle = (float) (rnd.nextFloat() * Math.PI * 2);
+            float speed = 2.5F + rnd.nextFloat() * 5.5F;
+            float vx = (float) Math.cos(angle) * speed;
+            float vy = -3.0F - rnd.nextFloat() * 6.5F;
+            float w = 4.0F + rnd.nextFloat() * 4.0F;
+            float h = 2.5F + rnd.nextFloat() * 3.0F;
+            int col = palette[rnd.nextInt(palette.length)];
+            float vrot = 0.08F + rnd.nextFloat() * 0.16F;
+            float flutter = 0.1F + rnd.nextFloat() * 0.15F;
+            confettiList.add(new Confetti(cx + (rnd.nextFloat() - 0.5F) * 30, cy + (rnd.nextFloat() - 0.5F) * 20, vx, vy, w, h, col, vrot, flutter));
+        }
+    }
 
     public ChestOpeningScreen(Screen parentScreen, String boxId, String nameKey, int tier, int cost) {
         super(Component.translatable(nameKey));
@@ -49,34 +119,40 @@ public final class ChestOpeningScreen extends Screen {
     private void initReelCandidates() {
         if ("system_roulette".equals(this.boxId)) {
             reelItems.clear();
-            reelItems.add(new ItemStack(Items.NETHERITE_INGOT));
-            reelItems.add(new ItemStack(Items.TOTEM_OF_UNDYING));
-            reelItems.add(new ItemStack(Items.ENCHANTED_GOLDEN_APPLE));
-            reelItems.add(new ItemStack(Items.DIAMOND_BLOCK));
-            reelItems.add(new ItemStack(Items.NETHER_STAR));
-            reelItems.add(new ItemStack(Items.NETHERITE_SCRAP));
-            reelItems.add(new ItemStack(Items.GOLDEN_APPLE));
-            reelItems.add(new ItemStack(Items.ENDER_PEARL));
+            reelItems.add(new ItemStack(SystemItems.CELESTIAL_INGOT.get()));
+            reelItems.add(new ItemStack(SystemItems.PRIMORDIAL_INGOT.get()));
+            reelItems.add(new ItemStack(SystemItems.MITHRIL_INGOT.get()));
+            reelItems.add(new ItemStack(SystemItems.SOUL_ALLOY_INGOT.get()));
+            reelItems.add(new ItemStack(SystemItems.SHADOW_APPLE.get()));
+            reelItems.add(new ItemStack(SystemItems.ABYSSAL_INGOT.get()));
+            reelItems.add(new ItemStack(SystemItems.SPIRIT_QI_CARROT.get()));
+            reelItems.add(new ItemStack(SystemItems.REFINED_WHITE_IRON_INGOT.get()));
             return;
         }
 
         Item[] pool;
-        if (this.tier >= 5) {
+        if (this.tier >= 6) {
             pool = new Item[]{
-                    Items.NETHERITE_BLOCK, Items.NETHERITE_INGOT, Items.MACE, Items.HEAVY_CORE,
-                    Items.ENCHANTED_GOLDEN_APPLE, Items.TOTEM_OF_UNDYING, Items.NETHER_STAR,
-                    Items.ELYTRA, Items.DIAMOND_BLOCK, Items.TRIDENT
+                    SystemItems.CELESTIAL_INGOT.get(), SystemItems.PRIMORDIAL_INGOT.get(),
+                    SystemItems.ENCHANTED_CELESTIAL_APPLE.get(), SystemItems.PRIMORDIAL_APPLE.get(),
+                    SystemItems.SHADOW_APPLE.get(), SystemItems.CELESTIAL_DRAGON_PEARL.get(),
+                    SystemItems.PRIMORDIAL_REBIRTH_PILL.get(), SystemItems.PRIMORDIAL_JADE_CUTTER.get(),
+                    SystemItems.PRIMORDIAL_JADE_WINGED_SPEAR.get()
             };
-        } else if ("system_roulette".equals(boxId)) {
-            reelItems.add(new ItemStack(Items.STICK));
-            reelItems.add(new ItemStack(Items.POISONOUS_POTATO));
-            reelItems.add(new ItemStack(Items.GOLD_INGOT));
-            reelItems.add(new ItemStack(SystemItems.AWAKENING_COIN.isBound() ? SystemItems.AWAKENING_COIN.get() : Items.EMERALD));
-            reelItems.add(new ItemStack(Items.DIAMOND));
-            reelItems.add(new ItemStack(Items.GOLDEN_APPLE));
-            reelItems.add(new ItemStack(Items.NETHERITE_SCRAP));
-            reelItems.add(new ItemStack(Items.MACE));
-            return;
+        } else if (this.tier == 5) {
+            pool = new Item[]{
+                    SystemItems.MITHRIL_INGOT.get(), SystemItems.ADAMANTITE_INGOT.get(), SystemItems.ASTRAL_INGOT.get(),
+                    SystemItems.ENCHANTED_MITHRIL_APPLE.get(), SystemItems.ADAMANTITE_APPLE.get(),
+                    SystemItems.SPIRIT_JADE_APPLE.get(), SystemItems.SHADOW_APPLE.get(),
+                    SystemItems.REALM_BREAKTHROUGH_PILL.get(), SystemItems.ADAMANTITE_WAR_HAMMER.get()
+            };
+        } else if (this.tier == 4) {
+            pool = new Item[]{
+                    Items.NETHERITE_BLOCK, Items.NETHERITE_INGOT, SystemItems.SOUL_ALLOY_INGOT.get(),
+                    SystemItems.ASTRALITE_INGOT.get(), SystemItems.SHADOW_APPLE.get(),
+                    Items.ENCHANTED_GOLDEN_APPLE, Items.TOTEM_OF_UNDYING, Items.NETHER_STAR,
+                    Items.DIAMOND_BLOCK
+            };
         } else {
             pool = new Item[]{
                     Items.STICK, Items.POISONOUS_POTATO, Items.STRING, Items.COBWEB, Items.DIRT, Items.ROTTEN_FLESH, Items.WOODEN_HOE, Items.BONE,
@@ -152,6 +228,9 @@ public final class ChestOpeningScreen extends Screen {
         boolean isRoulette = "system_roulette".equals(boxId);
         if (!opened && ticks <= 56) {
             if (isRoulette) {
+                if (ticks == 1) {
+                    player.playSound(ModSounds.ROULETTE_SPIN.value(), 0.9F, 1.0F);
+                }
                 float progress = Math.min(1.0F, ticks / 56.0F);
                 float ease = 1.0F - (float) Math.pow(1.0F - progress, 3.2);
                 float spinAngle = (1.0F - ease) * (5.0F * 360.0F);
@@ -174,6 +253,12 @@ public final class ChestOpeningScreen extends Screen {
             }
         }
 
+        if (!confettiList.isEmpty()) {
+            for (Confetti c : confettiList) {
+                c.update();
+            }
+        }
+
         if (isRoulette && opened && ticks > 56 && ticks <= 70 && ticks % 2 == 0) {
             int step = (ticks - 56) / 2;
             float bellPitch = Math.min(2.0F, 1.2F + (step * 0.12F));
@@ -190,18 +275,25 @@ public final class ChestOpeningScreen extends Screen {
             flashAlpha = 0.85F;
 
             if (isRoulette) {
-                player.playSound(SoundEvents.UI_BUTTON_CLICK.value(), 1.0F, 2.0F);
-                player.playSound(SoundEvents.NOTE_BLOCK_BELL.value(), 0.85F, 2.0F);
-                player.playSound(SoundEvents.NOTE_BLOCK_CHIME.value(), 0.65F, 2.0F);
-                player.playSound(SoundEvents.PLAYER_LEVELUP, 1.0F, 1.2F);
-                player.playSound(SoundEvents.FIREWORK_ROCKET_BLAST, 0.8F, 1.1F);
-                player.playSound(SoundEvents.AMETHYST_BLOCK_CHIME, 1.0F, 1.3F);
+                if (coinsWon >= 10000) {
+                    player.playSound(ModSounds.CASINO_JACKPOT.value(), 1.0F, 1.0F);
+                    player.playSound(ModSounds.ROULETTE_WIN.value(), 1.0F, 1.0F);
+                    player.playSound(SoundEvents.UI_TOAST_CHALLENGE_COMPLETE, 1.0F, 1.0F);
+                    spawnConfetti(120);
+                } else {
+                    player.playSound(ModSounds.ROULETTE_WIN.value(), 1.0F, 1.0F);
+                    player.playSound(SoundEvents.PLAYER_LEVELUP, 0.9F, 1.2F);
+                    player.playSound(SoundEvents.FIREWORK_ROCKET_BLAST, 0.8F, 1.1F);
+                    spawnConfetti(70);
+                }
             } else if (tier >= 4) {
                 player.playSound(SoundEvents.TOTEM_USE, 0.7F, 1.0F);
                 player.playSound(SoundEvents.UI_TOAST_CHALLENGE_COMPLETE, 0.9F, 1.0F);
+                spawnConfetti(tier >= 6 ? 110 : (tier == 5 ? 80 : 55));
             } else if (tier == 3) {
                 player.playSound(SoundEvents.PLAYER_LEVELUP, 0.9F, 0.95F);
                 player.playSound(SoundEvents.ENDER_CHEST_OPEN, 0.8F, 1.2F);
+                spawnConfetti(35);
             } else if (tier == 2) {
                 player.playSound(SoundEvents.PLAYER_LEVELUP, 0.9F, 1.15F);
             } else {
@@ -225,6 +317,8 @@ public final class ChestOpeningScreen extends Screen {
         float animTime = ticks + partialTick;
 
         int rarityColor = switch (tier) {
+            case 6 -> 0xFFFFD700;
+            case 5 -> 0xFF00FFB0;
             case 4 -> 0xFFFFAA00;
             case 3 -> 0xFFD055FF;
             case 2 -> 0xFF55AAFF;
@@ -254,13 +348,20 @@ public final class ChestOpeningScreen extends Screen {
             } else {
                 renderRouletteReel(g, cx, cy - 14, 56.0F, rarityColor, true);
 
+                if (coinsWon >= 10000) {
+                    float jPulse = (float) ((Math.sin(animTime * 0.8F) + 1.0F) * 0.5F);
+                    int jCol = ((int) (200 + jPulse * 55) << 24) | 0xFFD700;
+                    Component jackpotComp = Component.translatable("awakening_system.chest.jackpot_banner").withStyle(ChatFormatting.BOLD);
+                    g.drawCenteredString(font, jackpotComp, cx, cy + 34, jCol);
+                }
+
                 String prizeName = !rewardStacks.isEmpty() ? rewardStacks.get(0).getHoverName().getString() : (!rewardSummary.isEmpty() ? rewardSummary : Component.translatable("awakening_system.chest.default_prize").getString());
                 Component prizeComp = Component.translatable("awakening_system.chest.prize_banner", prizeName);
-                g.drawCenteredString(font, prizeComp, cx, cy + 48, 0xFFFFD700);
+                g.drawCenteredString(font, prizeComp, cx, cy + (coinsWon >= 10000 ? 46 : 48), 0xFFFFD700);
 
                 if (coinsWon > 0) {
                     Component coinComp = Component.translatable("awakening_system.chest.coins_won", coinsWon);
-                    g.drawCenteredString(font, coinComp, cx, cy + 60, 0xFFFFD866);
+                    g.drawCenteredString(font, coinComp, cx, cy + (coinsWon >= 10000 ? 58 : 60), coinsWon >= 10000 ? 0xFFFFEA75 : 0xFFFFD866);
                 }
 
                 int btnW = 140;
@@ -313,6 +414,14 @@ public final class ChestOpeningScreen extends Screen {
         if (flashAlpha > 0.0F) {
             int a = (int) (flashAlpha * 255);
             g.fill(0, 0, width, height, (a << 24) | 0xFFFFFF);
+        }
+
+        if (!confettiList.isEmpty()) {
+            for (Confetti c : confettiList) {
+                if (c.y < height + 20) {
+                    c.render(g);
+                }
+            }
         }
 
         super.render(g, mouseX, mouseY, partialTick);

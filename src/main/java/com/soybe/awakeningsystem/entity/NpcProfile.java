@@ -21,14 +21,14 @@ public enum NpcProfile {
     SUNG_JINWOO(
             "sung_jinwoo",
             "Sung Jin-Woo",
-            "Shadow Monarch",
+            "Monarca de las Sombras",
             "Solo Leveling",
             "§5§l",
             List.of(
-                    "Arise... Those who fall under my command will serve the shadows for eternity.",
-                    "Are you pushing yourself in your dungeons? The System does not reward weakness.",
-                    "My army never sleeps. Stay calm and keep leveling up.",
-                    "I only kneel before those who protect the ones who cannot fight."
+                    "Surjan... Aquellos que caigan bajo mi mando servirán a las sombras por la eternidad.",
+                    "¿Te estás esforzando en tus mazmorras? El Sistema no recompensa la debilidad.",
+                    "Mi ejército nunca duerme. Mantén la calma y continúa subiendo de nivel.",
+                    "Solo me arrodillo ante aquellos que protegen a quienes no pueden luchar."
             )
     ) {
         @Override
@@ -46,14 +46,14 @@ public enum NpcProfile {
     CHA_HAEIN(
             "cha_haein",
             "Cha Hae-In",
-            "S-Rank Hunter",
+            "Cazadora de Rango S",
             "Solo Leveling",
             "§e§l",
             List.of(
-                    "Your scent isn't like the other hunters'... Are you connected to the System?",
-                    "The sword stance requires absolute focus. Never hesitate at the decisive moment.",
-                    "Don't neglect your physical training; agility is everything when a Red Gate opens.",
-                    "Whenever you draw your blade, remember who you are fighting for."
+                    "Tu aroma no es como el de los otros cazadores... ¿Estás conectado al Sistema?",
+                    "La postura de la espada exige concentración absoluta. Jamás dudes en el momento decisivo.",
+                    "No descuides tu entrenamiento físico; la agilidad lo es todo cuando se abre una Puerta Roja.",
+                    "Siempre que desenvaines tu espada, recuerda por quién estás luchando."
             )
     ) {
         @Override
@@ -71,14 +71,14 @@ public enum NpcProfile {
     KIM_DOKJA(
             "kim_dokja",
             "Kim Dokja",
-            "Demon King of Salvation",
-            "Omniscient Reader's Viewpoint",
+            "Rey Demonio de la Salvación",
+            "Punto de Vista del Lector Omnisciente",
             "§f§l",
             List.of(
-                    "Looking for a guide to the next scenario? It's all written if you read between the lines.",
-                    "Don't blindly trust Star Stream Constellations; they charge heavily for every miracle.",
-                    "This world is not a tragedy if we fight to the very last chapter.",
-                    "Take some System coins. In this scenario, information and resources are everything."
+                    "¿Buscas una guía para el próximo escenario? Todo está escrito si sabes leer entre líneas.",
+                    "No confíes ciegamente en las Constelaciones del Star Stream; cobran muy caro cada milagro.",
+                    "Este mundo no es una tragedia si luchamos hasta el mismísimo último capítulo.",
+                    "Toma algunas monedas del Sistema. En este escenario, la información y los recursos lo son todo."
             )
     ) {
         @Override
@@ -100,14 +100,14 @@ public enum NpcProfile {
     YOO_JOONGHYUK(
             "yoo_joonghyuk",
             "Yoo Joonghyuk",
-            "The Supreme Regressor",
-            "Omniscient Reader's Viewpoint",
+            "El Regresor Supremo",
+            "Punto de Vista del Lector Omnisciente",
             "§8§l",
             List.of(
-                    "If you are weak, you will die before scenario 10. Stay out of my path.",
-                    "I have seen this world perish hundreds of times. I will not repeat past mistakes.",
-                    "Think your resolve is enough? Prove it with your blade on the battlefield.",
-                    "Do not die in some random dungeon. A pathetic death deserves no remembrance."
+                    "Si eres débil, morirás antes del décimo escenario. Apártate de mi camino.",
+                    "He visto este mundo perecer cientos de veces. No repetiré los errores del pasado.",
+                    "¿Crees que tu determinación basta? Demuéstralo con tu espada en el campo de batalla.",
+                    "No mueras en una mazmorra cualquiera. Una muerte patética no merece recuerdo."
             )
     ) {
         @Override
@@ -125,14 +125,14 @@ public enum NpcProfile {
     LLOYD_FRONTERA(
             "lloyd_frontera",
             "Lloyd Frontera",
-            "The Supreme Engineer",
-            "The Greatest Estate Developer",
+            "El Ingeniero Supremo",
+            "El Mejor Diseñador Inmobiliario",
             "§6§l",
             List.of(
-                    "Money moves the world, but cement, water, and shovels build it!",
-                    "Warm ondol in winter, clean aqueducts in summer! That's real quality of life!",
-                    "Got System coins? I've got blueprints, contracts, and top-tier materials!",
-                    "Javier, invoice this adventurer! Every square meter of land has its price!"
+                    "¡El dinero mueve el mundo, pero el cemento, el agua y las palas lo construyen!",
+                    "¡Ondol caliente en invierno, acueductos limpios en verano! ¡Eso sí es calidad de vida!",
+                    "¿Tienes monedas del Sistema? ¡Tengo planos, contratos y materiales de primera calidad!",
+                    "¡Javier, factura a este aventurero! ¡Cada metro cuadrado de terreno tiene su precio!"
             )
     ) {
         @Override
@@ -150,14 +150,14 @@ public enum NpcProfile {
     JAVIER_ASRAHAN(
             "javier_asrahan",
             "Javier Asrahan",
-            "The Holy Knight",
-            "The Greatest Estate Developer",
+            "El Caballero Sagrado",
+            "El Mejor Diseñador Inmobiliario",
             "§b§l",
             List.of(
-                    "Young Master Lloyd looks greedy, but his projects always save people in the end.",
-                    "The Sword of Asrahan protects the innocent and strikes down all evil.",
-                    "Keep your guard up. A true warrior never lets down their vigilance in unknown lands.",
-                    "If you need help with monsters threatening your lands, call upon my sword."
+                    "El joven amo Lloyd parece codicioso, pero sus proyectos siempre terminan salvando vidas.",
+                    "La Espada de Asrahan protege a los inocentes y aniquila todo mal.",
+                    "Mantén la guardia alta. Un verdadero guerrero jamás baja la vigilancia en tierras desconocidas.",
+                    "Si necesitas ayuda contra monstruos que amenacen tus tierras, cuenta con mi espada."
             )
     ) {
         @Override
@@ -174,14 +174,14 @@ public enum NpcProfile {
     CHEON_YEOWOON(
             "cheon_yeowoon",
             "Cheon Yeo-woon",
-            "Lord of the Demonic Cult",
+            "Líder del Culto Demoníaco",
             "Nano Machine",
             "§4§l",
             List.of(
-                    "Nano, scan this hunter's meridians... Biological and energetic structure acceptable.",
-                    "The Heavenly Demonic Cult bows its head to neither god nor emperor.",
-                    "Absolute power needs no excuses; it is forged with millimeter precision and ruthless steel.",
-                    "Cut down your enemy before their first thought of betrayal can form."
+                    "Nano, escanea los meridianos de este cazador... Estructura biológica y energética aceptable.",
+                    "El Culto Celestial Demoníaco no inclina la cabeza ni ante dioses ni emperadores.",
+                    "El poder absoluto no necesita excusas; se forja con precisión milimétrica y acero implacable.",
+                    "Elimina a tu enemigo antes de que pueda formular su primer pensamiento de traición."
             )
     ) {
         @Override
@@ -199,14 +199,14 @@ public enum NpcProfile {
     ARTHUR_LEYWIN(
             "arthur_leywin",
             "Arthur Leywin",
-            "Ruler of Aether",
+            "Gobernante del Éter",
             "The Beginning After The End",
             "§9§l",
             List.of(
-                    "Mana fills the body, but aether governs the very dimensions of space and reality.",
-                    "I fight not for titles or vain glory; I fight to ensure my loved ones have a tomorrow.",
-                    "Purify your core. The clarity of your intent defines the strength of your awakening.",
-                    "Learn to flow with your surroundings; brute force without control only breeds ruin."
+                    "El maná llena el cuerpo, pero el éter gobierna las dimensiones mismas del espacio y la realidad.",
+                    "No lucho por títulos ni gloria vana; lucho para asegurar que mis seres queridos tengan un mañana.",
+                    "Purifica tu núcleo. La claridad de tu intención define la fuerza de tu despertar.",
+                    "Aprende a fluir con tu entorno; la fuerza bruta sin control solo engendra ruina."
             )
     ) {
         @Override
@@ -224,14 +224,14 @@ public enum NpcProfile {
     CHA_YEONWOO(
             "cha_yeonwoo",
             "Cha Yeon-woo",
-            "The Hunter Cain",
+            "El Cazador Caín",
             "Second Life Ranker",
             "§c§l",
             List.of(
-                    "My brother left me a pocket watch and a diary. Every floor of this Tower will be conquered and purged.",
-                    "The Black Dragon's wings devour false gods of the heavens.",
-                    "If you scale the Tower of Desires, prepare never to look back.",
-                    "Weakness is a sin in a realm governed by Constellations."
+                    "Mi hermano me dejó un reloj de bolsillo y un diario. Cada piso de esta Torre será conquistado y purgado.",
+                    "Las alas del Dragón Negro devoran a los falsos dioses de los cielos.",
+                    "Si asciendes por la Torre de los Deseos, prepárate para no mirar jamás atrás.",
+                    "La debilidad es un pecado en un reino gobernado por Constelaciones."
             )
     ) {
         @Override
@@ -249,14 +249,14 @@ public enum NpcProfile {
     CHUNG_MYUNG(
             "chung_myung",
             "Chung Myung",
-            "Divine Dragon of Mount Hua",
-            "Return of the Mount Hua Sect",
+            "Dragón Divino de Mount Hua",
+            "El Retorno de la Secta Mount Hua",
             "§a§l",
             List.of(
-                    "Where's the plum blossom wine? And more importantly, where's Shaolin's money?!",
-                    "At Mount Hua we don't surrender; we strike twice as hard until the enemy gets it!",
-                    "Think 10,000 thrusts a day is hard? Back in my day we did 100,000 before breakfast!",
-                    "Draw your sword. If you wield a blade, cut through doubts like plum blossoms in deep winter."
+                    "¿Dónde está el vino de flor de ciruelo? Y más importante aún, ¡¿dónde está el dinero de Shaolin?!",
+                    "¡En Mount Hua no nos rendimos; golpeamos el doble de fuerte hasta que el enemigo lo entienda!",
+                    "¿Crees que 10.000 estocadas al día es difícil? ¡En mis tiempos hacíamos 100.000 antes de desayunar!",
+                    "Desenvaina tu espada. Si empuñas una hoja, corta las dudas como flores de ciruelo en pleno invierno."
             )
     ) {
         @Override
@@ -274,14 +274,14 @@ public enum NpcProfile {
     RYU_HANBIN(
             "ryu_hanbin",
             "Ryu Hanbin",
-            "The Valter Sword King",
-            "Survival Story of a Sword King",
+            "El Rey de la Espada Valter",
+            "Historia de Supervivencia de un Rey de la Espada",
             "§c§l",
             List.of(
-                    "I spent over twenty years trapped in the Rocky Mountain because of a glitched guideline... Nothing scares me anymore.",
-                    "My level? Still says 'Level 5', but my strength can split a mountain in two.",
-                    "Don't overcomplicate things. If a beast attacks you, grab a bigger sword and smash it.",
-                    "Sometimes I miss fried chicken and ramen from Earth... This fantasy world is pure chaos."
+                    "Pasé más de veinte años atrapado en la Montaña Rocosa por culpa de una guía con bugs... Ya nada me asusta.",
+                    "¿Mi nivel? Sigue diciendo 'Nivel 5', pero mi fuerza puede partir una montaña en dos.",
+                    "No te compliques la vida. Si una bestia te ataca, agarra una espada más grande y aplástala.",
+                    "A veces extraño el pollo frito y el ramen de la Tierra... Este mundo de fantasía es un caos total."
             )
     ) {
         @Override
@@ -299,14 +299,14 @@ public enum NpcProfile {
     TWENTY_FIFTH_BAAM(
             "twenty_fifth_baam",
             "Vigesimoquinto Baam",
-            "The Tower's Irregular",
+            "El Irregular de la Torre",
             "Tower of God",
             "§b§l",
             List.of(
-                    "What are you seeking at the top of the Tower? Wealth, glory, or the ones you cherish?",
-                    "Shinsoo isn't a weapon to possess; it is the world's breath that allows us to live together.",
-                    "I won't let anyone hurt my friends again. If I must break the Tower's rules, I will.",
-                    "The Thorn beats within me... A power that defies the very fate of the Great Families."
+                    "¿Qué buscas en la cima de la Torre? ¿Riquezas, gloria o a aquellos que amas?",
+                    "El Shinsoo no es un arma que poseer; es el aliento del mundo que nos permite existir juntos.",
+                    "No permitiré que nadie vuelva a herir a mis amigos. Si debo romper las reglas de la Torre, lo haré.",
+                    "La Espina pulsa dentro de mí... Un poder capaz de desafiar el mismísimo destino de las Grandes Familias."
             )
     ) {
         @Override
@@ -325,14 +325,14 @@ public enum NpcProfile {
     ELENA_RECEPTIONIST(
             "elena_receptionist",
             "Elena",
-            "Guild Receptionist",
-            "Adventurers' Guild",
+            "Recepcionista del Gremio",
+            "Gremio de Aventureros",
             "§6§l",
             List.of(
-                    "Welcome to the Adventurers Guild! Check the Bounty Board on the wall for hunting contracts.",
-                    "Seeking glory and rightful rewards? Complete contracts to rank up all the way to mythical Rank S.",
-                    "Don't forget to upkeep your gear at the upstairs smithing tables before heading into the wild.",
-                    "Every beast slain in the guild's name earns you Adventurer Medals and realm-wide prestige."
+                    "¡Bienvenida al Gremio de Aventureros! Consulta el Tablón de Misiones en la pared para contratos de cacería.",
+                    "¿Buscas gloria y recompensas? Completa contratos para ascender de rango hasta el mítico Rango S.",
+                    "No olvides reparar y mejorar tu equipo en las mesas de herrería antes de aventurarte en tierras salvajes.",
+                    "Cada bestia mágica eliminada a nombre del gremio te otorga Medallas de Aventurero y prestigio en el reino."
             )
     ) {
         @Override
@@ -349,15 +349,15 @@ public enum NpcProfile {
 
     BLACK_MARKET_DEALER(
             "black_market_dealer",
-            "Valerius the Silent",
-            "Black Market Dealer",
-            "Clandestine Underworld",
+            "Valerio el Silencioso",
+            "Traficante del Mercado Negro",
+            "Bajos Fondos Clandestinos",
             "§5§l",
             List.of(
-                    "Black chips leave no trace... and Mora asks no questions.",
-                    "Looking for clandestine machinery or a pool duel where stakes have no ceiling?",
-                    "What happens in this crypt stays hidden in underworld shadows.",
-                    "Your eyes saw nothing, your hands only counted chips."
+                    "Las fichas negras no dejan rastro... y las Monedas no hacen preguntas.",
+                    "¿Buscas maquinaria clandestina o un duelo de billar donde las apuestas no tienen techo?",
+                    "Lo que ocurre en esta cripta se queda oculto en las sombras del bajo mundo.",
+                    "Tus ojos no vieron nada; tus manos solo contaron fichas."
             )
     ) {
         @Override
@@ -375,14 +375,14 @@ public enum NpcProfile {
     CASINO_RECEPTIONIST(
             "casino_receptionist",
             "Madame Valerie",
-            "Receptionist & VIP Hostess",
+            "Recepcionista y Anfitriona VIP",
             "Gran Casino Real",
             "§6§l",
             List.of(
-                    "Welcome to the Grand Royal Casino of Teyvat! Here fortune and glamour converge under golden lights.",
-                    "Looking to test your luck at the high-stakes tables? Get your VIP Pass to enter the exclusive high-roller lounge.",
-                    "At our counter you can exchange Mora for Official Chips and request your VIP accreditation.",
-                    "Remember that in VIP Blackjack and VIP Roulette, only the most coveted stakes in the entire realm are wagered."
+                    "¡Bienvenido al Gran Casino Real de Teyvat! Aquí la fortuna y el glamour convergen bajo luces doradas.",
+                    "¿Deseas probar tu suerte en las mesas de altas apuestas? Obtén tu Pase VIP para el salón exclusivo.",
+                    "En nuestro mostrador puedes cambiar Monedas por Fichas Oficiales y solicitar tu acreditación VIP.",
+                    "Recuerda que en el Blackjack VIP y la Ruleta VIP solo se juegan los tesoros más codiciados de todo el reino."
             )
     ) {
         @Override
@@ -399,14 +399,14 @@ public enum NpcProfile {
     RAIDEN_SHOGUN(
             "raiden_shogun",
             "Raiden Shogun",
-            "Electro Archon",
+            "Arconte Electro",
             "Genshin Impact",
             "§5§l",
             List.of(
-                    "Thunder roars and illusions fade. Only Eternity remains unchanging.",
-                    "Do you seek to defy heavenly decrees? Prove the strength of your will.",
-                    "Do not fear the lightning; fear hesitation at the moment of supreme judgment.",
-                    "The Engulfing Lightning shall guide your path through the storm."
+                    "El trueno ruge y las ilusiones se desvanecen. Solo la Eternidad permanece inmutable.",
+                    "¿Buscas desafiar los decretos celestiales? Demuestra la firmeza de tu voluntad.",
+                    "No temas al relámpago; teme a la vacilación en el instante del juicio supremo.",
+                    "La Luz del Segador guiará tu camino a través de la tormenta."
             )
     ) {
         @Override
@@ -423,14 +423,14 @@ public enum NpcProfile {
     ZHONGLI(
             "zhongli",
             "Zhongli",
-            "Rex Lapis • Geo Archon",
+            "Rex Lapis • Arconte Geo",
             "Genshin Impact",
             "§6§l",
             List.of(
-                    "Contracts are carved in stone and gold. Those who break their promises shall suffer the Wrath of the Rock.",
-                    "Osmanthus wine tastes the same as I remember... but where are those who share the memory?",
-                    "The steadfastness of a shield lies not in the ore, but in the unshakable calm of the spirit.",
-                    "Walk Teyvat with steady footsteps; history never forgets those who forge their own destiny."
+                    "Los contratos se graban en piedra y oro. Quienes rompen sus promesas sufren la Ira de la Roca.",
+                    "El vino de osmanthus sabe igual que en mis recuerdos... pero ¿dónde están aquellos que compartieron la memoria?",
+                    "La firmeza de un escudo no reside en el mineral, sino en la calma inquebrantable del espíritu.",
+                    "Camina con pasos firmes; la historia jamás olvida a quienes forjan su propio destino."
             )
     ) {
         @Override
@@ -447,14 +447,14 @@ public enum NpcProfile {
     HUTAO(
             "hu_tao",
             "Hu Tao",
-            "Wangsheng Funeral Parlor Director",
+            "Directora de la Funeraria El Camino",
             "Genshin Impact",
             "§c§l",
             List.of(
-                    "Aiya! Customer spotted! Need funeral coupons? Buy two, get the third free!",
-                    "There's a fine line between life and death... make sure to enjoy every single step!",
-                    "Spirit butterflies dance in the night; the Staff of Homa purifies restless souls.",
-                    "Don't fret about danger! If you fall in battle, Wangsheng Funeral Parlor will take good care of you, haha!"
+                    "¡Aiya! ¡Cliente a la vista! ¿Necesitas cupones funerarios? ¡Compra dos y llévate el tercero gratis!",
+                    "Hay una línea delgada entre la vida y la muerte... ¡así que asegúrate de disfrutar cada paso!",
+                    "Las mariposas espirituales danzan en la noche; el Báculo de Homa purifica las almas inquietas.",
+                    "¡No te preocupes por el peligro! Si caes en combate, en la Funeraria te cuidaremos muy bien, ¡jaja!"
             )
     ) {
         @Override
@@ -471,14 +471,14 @@ public enum NpcProfile {
     GANYU(
             "ganyu",
             "Ganyu",
-            "General Secretary of the Qixing",
+            "Secretaria General del Qixing",
             "Genshin Impact",
             "§b§l",
             List.of(
-                    "Dawn dew soothes the heart... We must not delay Liyue's pending duties.",
-                    "Amos' Bow whispers with the icy wind; a clean, true shot dispels any threat.",
-                    "Have you rested enough? Overexertion clouds a hunter's precision.",
-                    "For the peace of mortals and the thousand-year pact of the Adepti."
+                    "El rocío del amanecer calma el corazón... No debemos retrasar los deberes pendientes de Liyue.",
+                    "El Arco de Amos susurra con el viento gélido; un disparo certero disipa cualquier amenaza.",
+                    "¿Has descansado lo suficiente? El sobreesfuerzo nubla la puntería de un cazador.",
+                    "Por la paz de los mortales y el pacto milenario de los Adeptus."
             )
     ) {
         @Override
@@ -495,14 +495,14 @@ public enum NpcProfile {
     NEUVILLETTE(
             "neuvillette",
             "Neuvillette",
-            "Iudex of Fontaine",
+            "Juez Supremo de Fontaine",
             "Genshin Impact",
             "§9§l",
             List.of(
-                    "The tides of Fontaine cleanse every stain of iniquity. May justice guide your judgments.",
-                    "Water holds memories, and the heavens weep when the scales of truth are shattered.",
-                    "Do you hear the rain? It is the dragon's judgment purifying the land.",
-                    "Maintain composure in the face of chaos. Primordial order shall prevail."
+                    "Las mareas de Fontaine limpian toda mancha de iniquidad. Que la justicia guíe tus juicios.",
+                    "El agua guarda memorias, y los cielos lloran cuando la balanza de la verdad se quiebra.",
+                    "¿Escuchas la lluvia? Es el juicio del dragón purificando la tierra.",
+                    "Mantén la compostura ante el caos. El orden primordial prevalecerá."
             )
     ) {
         @Override
@@ -520,14 +520,14 @@ public enum NpcProfile {
     MARCH_7TH(
             "march_7th",
             "Siete de Marzo",
-            "Astral Express Archer",
+            "Arquera del Expreso Astral",
             "Honkai: Star Rail",
             "§d§l",
             List.of(
-                    "Check out that pose! Smile for the Astral Express camera before battle starts!",
-                    "A six-phased ice arrow for every monster trying to ruin our journey!",
-                    "Traveling among the stars is thrilling, but you always have to be ready for adventure!",
-                    "Don't fall behind! The next world is waiting for us!"
+                    "¡Mira qué pose! ¡Sonríe para la cámara del Expreso Astral antes de que comience el combate!",
+                    "¡Una flecha de hielo hexagonal para cada monstruo que intente arruinar nuestro viaje!",
+                    "Viajar entre las estrellas es emocionante, ¡pero siempre hay que estar preparados para la aventura!",
+                    "¡No te quedes atrás! ¡El próximo mundo nos está esperando!"
             )
     ) {
         @Override
@@ -544,14 +544,14 @@ public enum NpcProfile {
     ACHERON(
             "acheron",
             "Acheron",
-            "Emanator of Nihility",
+            "Emanadora de la Nihilidad",
             "Honkai: Star Rail",
             "§5§l",
             List.of(
-                    "I have walked along countless crimson rivers... Past and future fade into nothingness.",
-                    "Rain never ceases along this path. Draw your blade only when prepared to shoulder the void.",
-                    "Dreams and waking life intertwine. Remember your name before crossing the horizon.",
-                    "Fear not the darkness; even in deepest nihility, a fleeting spark persists."
+                    "He caminado junto a incontables ríos carmesíes... Pasado y futuro se desvanecen en la nada.",
+                    "La lluvia nunca cesa en este sendero. Desenvaina tu hoja solo si estás dispuesto a cargar con el vacío.",
+                    "Los sueños y la vigilia se entrelazan. Recuerda tu nombre antes de cruzar el horizonte.",
+                    "No temas a la oscuridad; incluso en la más profunda nihilidad, una chispa fugaz persiste."
             )
     ) {
         @Override
@@ -568,14 +568,14 @@ public enum NpcProfile {
     HOSHIMI_MIYABI(
             "hoshimi_miyabi",
             "Hoshimi Miyabi",
-            "Chief of Section 6",
+            "Jefa de la Sección 6",
             "Zenless Zone Zero",
             "§3§l",
             List.of(
-                    "Section 6 in position. Every etheric distortion within the Hollows shall be eradicated.",
-                    "The Shunguang Blade does not hesitate. Cutting speed surpasses thought itself.",
-                    "Maintain composure before ethereals. Discipline is an operative's sharpest weapon.",
-                    "Mission received. Proceeding with immediate target neutralization."
+                    "Sección 6 en posición. Toda distorsión etérea dentro de los Huecos será erradicada.",
+                    "La Hoja Shunguang no vacila. La velocidad de corte supera al propio pensamiento.",
+                    "Mantén la serenidad ante los etéreos. La disciplina es el arma más afilada de un operativo.",
+                    "Misión recibida. Procediendo con la neutralización inmediata del objetivo."
             )
     ) {
         @Override
@@ -592,14 +592,14 @@ public enum NpcProfile {
     ELLEN_JOE(
             "ellen_joe",
             "Ellen Joe",
-            "Cleaner of Victoria Housekeeping",
+            "Limpiadora de Victoria Housekeeping",
             "Zenless Zone Zero",
             "§b§l",
             List.of(
-                    "Ugh... More overtime work? I just want my coffee candies and a nap.",
-                    "If you get between me and the exit, I'll slice you to pieces before my shift ends.",
-                    "Victoria Housekeeping leaves no loose ends or stains on the carpet.",
-                    "Let's wrap this up fast... I hate it when work interrupts my break time."
+                    "Uff... ¿Más horas extras? Solo quiero mis dulces de café y una buena siesta.",
+                    "Si te interpones entre la salida y yo, te haré trizas antes de que termine mi turno.",
+                    "Victoria Housekeeping no deja cabos sueltos ni manchas en la alfombra.",
+                    "Terminemos esto rápido... Odio que el trabajo interrumpa mi descanso."
             )
     ) {
         @Override
@@ -616,14 +616,14 @@ public enum NpcProfile {
     DILUC(
             "diluc",
             "Diluc Ragnvindr",
-            "Tycoon of Dawn",
+            "Magnate del Amanecer",
             "Genshin Impact",
             "§c§l",
             List.of(
-                    "Welcome to Dawn Winery. A glass of grape juice before you continue on your way?",
-                    "The Knights of Favonius are far too sluggish. Certain threats can only be quelled from the shadows.",
-                    "The fire of dawn never flickers. Never let your guard down when night falls over Teyvat.",
-                    "If you seek intel or respite in these lands, this winery's doors remain open."
+                    "Bienvenido al Viñedo del Amanecer. ¿Una copa de jugo de uva antes de seguir tu camino?",
+                    "Los Caballeros de Favonius son demasiado lentos. Ciertas amenazas solo se neutralizan desde las sombras.",
+                    "El fuego del amanecer nunca vacila. Jamás bajes la guardia cuando caiga la noche sobre Teyvat.",
+                    "Si buscas información o descanso en estas tierras, las puertas de este viñedo permanecen abiertas."
             )
     ) {
         @Override
@@ -637,6 +637,30 @@ public enum NpcProfile {
                 sl.sendParticles(ParticleTypes.CAMPFIRE_COSY_SMOKE, player.getX(), player.getY() + 1.2D, player.getZ(), 15, 0.3D, 0.5D, 0.3D, 0.02D);
             }
             AwakeningSystemMod.notify(player, "awakening_system.npc.diluc.blessing_title", "awakening_system.npc.diluc.blessing_desc", 0xFFFF4500);
+        }
+    },
+
+    HUNTER_EVALUATOR(
+            "hunter_evaluator",
+            "Inspector de la Asociación",
+            "Evaluador Oficial",
+            "Solo Leveling",
+            "§b§l",
+            List.of(
+                    "Saludos, Cazador. Soy el Inspector de Evaluación de la Asociación de Cazadores.",
+                    "El maná acumulado en tu núcleo determina el rango que el mundo te otorga.",
+                    "Si has alcanzado tu límite de nivel, realiza la Evaluación Oficial para romper el sello.",
+                    "El deber de un cazador es proteger a la humanidad de los horrores tras los Portales."
+            )
+    ) {
+        @Override
+        public void applyBlessing(ServerPlayer player) {
+            player.addEffect(new MobEffectInstance(MobEffects.DAMAGE_RESISTANCE, 6000, 1, false, true));
+            player.addEffect(new MobEffectInstance(MobEffects.REGENERATION, 3000, 1, false, true));
+            if (player.level() instanceof ServerLevel sl) {
+                sl.sendParticles(ParticleTypes.END_ROD, player.getX(), player.getY() + 1.0D, player.getZ(), 35, 0.4D, 0.6D, 0.4D, 0.05D);
+            }
+            AwakeningSystemMod.notify(player, "awakening_system.npc.hunter_evaluator.blessing_title", "awakening_system.npc.hunter_evaluator.blessing_desc", 0xFF00E5FF);
         }
     };
 
@@ -737,7 +761,8 @@ public enum NpcProfile {
             case ELENA_RECEPTIONIST -> com.soybe.awakeningsystem.ModSounds.COMPANION_NOELLE_AMBIENT.get();
             case BLACK_MARKET_DEALER -> com.soybe.awakeningsystem.ModSounds.COMPANION_AVENTURINE_AMBIENT.get();
             case CASINO_RECEPTIONIST -> com.soybe.awakeningsystem.ModSounds.COMPANION_ROBIN_AMBIENT.get();
-            default -> com.soybe.awakeningsystem.ModSounds.NPC_INTERACT.get();
+            case HUNTER_EVALUATOR -> null;
+            default -> null;
         };
     }
 

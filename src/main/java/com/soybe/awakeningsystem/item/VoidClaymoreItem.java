@@ -1,5 +1,7 @@
 package com.soybe.awakeningsystem.item;
 
+import com.soybe.awakeningsystem.CameraShakePayload;
+import com.soybe.awakeningsystem.entity.SlashWaveEntity;
 import net.minecraft.ChatFormatting;
 import net.minecraft.core.particles.ParticleTypes;
 import net.minecraft.network.chat.Component;
@@ -51,6 +53,10 @@ public class VoidClaymoreItem extends SwordItem implements AwakeningWeaponItem {
             target.addEffect(new MobEffectInstance(MobEffects.MOVEMENT_SLOWDOWN, 60, 1));
 
             if (target.level() instanceof ServerLevel sl) {
+                sl.sendParticles(com.soybe.awakeningsystem.particle.ModParticles.STRIKE_CLEAVE.get(), target.getX(), target.getY() + 1.0D, target.getZ(), 1, 0, 0, 0, 0);
+                sl.playSound(null, target.getX(), target.getY(), target.getZ(), com.soybe.awakeningsystem.ModSounds.DOMAIN_OF_SANCTION_SLASH.get(), SoundSource.PLAYERS, 1.3F, 0.9F);
+                CameraShakePayload.sendToNearby(sl, target.getX(), target.getY(), target.getZ(), 18.0D, 0.3F, 4);
+
                 sl.sendParticles(ParticleTypes.PORTAL, target.getX(), target.getY() + 1.0D, target.getZ(),
                         20, 0.4D, 0.5D, 0.4D, 0.1D);
             }
@@ -71,7 +77,24 @@ public class VoidClaymoreItem extends SwordItem implements AwakeningWeaponItem {
             Vec3 look = player.getLookAngle();
             Vec3 eyePos = player.getEyePosition();
 
+            if (player instanceof net.minecraft.server.level.ServerPlayer sp) {
+                sp.swing(hand, true);
+                CameraShakePayload.sendToNearby(sl, sp.getX(), sp.getY(), sp.getZ(), 36.0D, 0.85F, 12);
+
+                sl.sendParticles(com.soybe.awakeningsystem.particle.ModParticles.STRIKE_CLEAVE.get(), sp.getX() + look.x * 1.5D, sp.getY() + 1.2D + look.y * 1.5D, sp.getZ() + look.z * 1.5D, 1, 0, 0, 0, 0);
+
+                float dmg = (float) (45.0D * WeaponLevelManager.getDamageMultiplier(stack));
+                SlashWaveEntity voidWave = new SlashWaveEntity(sl, sp, SlashWaveEntity.TYPE_DARK_VOID, dmg, 5.5F, 2.2F, 0.0F, 26, 10);
+                voidWave.setSlashStyle(SlashWaveEntity.STYLE_HEAVY_CLEAVE);
+                voidWave.setDeltaMovement(look.scale(2.1D));
+                sl.addFreshEntity(voidWave);
+
+                WeaponLevelManager.addExp(stack, 35, sp);
+            }
+
             // Sonido de desgarro dimensional
+            sl.playSound(null, player.getX(), player.getY(), player.getZ(),
+                    com.soybe.awakeningsystem.ModSounds.DOMAIN_OF_SANCTION_SLASH.get(), SoundSource.PLAYERS, 1.8F, 0.75F);
             sl.playSound(null, player.getX(), player.getY(), player.getZ(),
                     SoundEvents.WARDEN_SONIC_BOOM, SoundSource.PLAYERS, 1.2F, 1.4F);
             sl.playSound(null, player.getX(), player.getY(), player.getZ(),
@@ -89,7 +112,7 @@ public class VoidClaymoreItem extends SwordItem implements AwakeningWeaponItem {
             List<LivingEntity> targets = level.getEntitiesOfClass(LivingEntity.class, area, e -> e != player && e.isAlive());
 
             for (LivingEntity target : targets) {
-                target.hurt(level.damageSources().playerAttack(player), 55.0F);
+                target.hurt(level.damageSources().playerAttack(player), 35.0F);
                 target.addEffect(new MobEffectInstance(MobEffects.WITHER, 160, 2));
 
                 // Atraer ligeramente hacia la línea de corte

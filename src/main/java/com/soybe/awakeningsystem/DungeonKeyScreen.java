@@ -58,7 +58,7 @@ public class DungeonKeyScreen extends Screen {
             case "COSMIC" -> 490;
             case "PRIMORDIAL" -> 580;
             case "SUPREME_CREATOR" -> 730;
-            case "ABSOLUTE_GOD" -> 1000;
+            case "ABSOLUTE_GOD" -> 2000;
             default -> 1;
         };
     }

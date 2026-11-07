@@ -368,6 +368,32 @@ public final class FableDefinitions {
                 "Relato Gigante: Conquistó los mayores desafíos de las tres dimensiones: Overworld, Isekai y Murim.",
                 Grade.GIANT_STORY, 400, false, "🌌"));
 
+        // Seasonal & Pinnacle Fables (Roadmap Sections 41, 42)
+        register(new Fable("fable_seasonal_miracle",
+                "El Milagro de las Festividades",
+                "Presenció el despertar del Árbol Sagrado de Invierno y reclamó la bendición de la nieve eterna.",
+                Grade.LEGENDARY, 50, false, "🎄"));
+
+        register(new Fable("fable_halloween_nightmare",
+                "La Noche de la Canasta Maldita",
+                "Sobrevivió a la cosecha de pesadilla y desató los espíritus de la noche de brujas.",
+                Grade.HISTORICAL, 30, false, "🎃"));
+
+        register(new Fable("fable_legendary_roulette",
+                "El Giro del Destino Dorado",
+                "Desafió la Ruleta del Sistema y obtuvo la bendición absoluta de los dioses del azar.",
+                Grade.LEGENDARY, 60, false, "🎰"));
+
+        register(new Fable("fable_rift_conqueror",
+                "El Conquistador de Grietas Primordiales",
+                "Cerró una ruptura dimensional y purificó la anomalía de la realidad.",
+                Grade.SEMI_MYTH, 90, false, "🌀"));
+
+        register(new Fable("fable_absolute_god_trial",
+                "El Juicio del Dios Absoluto",
+                "Relato Gigante: Desafió el Juicio Supremo de la Fuente Primordial de Toda la Existencia.",
+                Grade.GIANT_STORY, 450, false, "👑"));
+
     }
 
     public static Fable get(String id) {
