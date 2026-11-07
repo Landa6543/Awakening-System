@@ -144,6 +144,22 @@ public final class SeriesStructureBuilder {
         return state;
     }
 
+    /**
+     * Un NPC expulsado del gremio (o cuyo gremio se disolvió) vuelve a casa: se retira del mundo y su
+     * estructura lo hace aparecer de nuevo. Si siguiera suelto, la estructura crearía un segundo.
+     */
+    public static void returnExpelledNpcs(net.minecraft.server.MinecraftServer server) {
+        var guilds = com.soybe.awakeningsystem.guild.GuildSavedData.get(server);
+        for (SeriesNpcEntity npc : List.copyOf(SeriesNpcEntity.LOADED_SERIES_NPCS.values())) {
+            if (npc.isRemoved() || npc.getOwnerUuid() == null || npc.getNpcProfile() == null) continue;
+            if (guilds.getGuildByPlayer(com.soybe.awakeningsystem.guild.Guild.getNpcUuid(npc.getNpcProfile().id())) != null) continue;
+            if (npc.level() instanceof ServerLevel sl) {
+                sl.sendParticles(net.minecraft.core.particles.ParticleTypes.POOF, npc.getX(), npc.getY() + 1.0D, npc.getZ(), 20, 0.3D, 0.5D, 0.3D, 0.02D);
+            }
+            npc.discard();
+        }
+    }
+
     public static void spawnNpcIfAbsent(ServerLevel level, BlockPos pos, EntityType<SeriesNpcEntity> type, NpcProfile profile) {
         // Un NPC reclutado ya existe aunque esté lejos de su estructura: volver a crearlo lo duplicaría
         var guilds = com.soybe.awakeningsystem.guild.GuildSavedData.get(level.getServer());

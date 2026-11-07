@@ -1094,6 +1094,7 @@ public final class SeriesStructureWorldGen {
 
     public static void tickNaturalGeneration(MinecraftServer server) {
         if (server == null) return;
+        SeriesStructureBuilder.returnExpelledNpcs(server);
         checkAndEnsureNpcsPresent(server);
 
         ServerLevel level = server.overworld();
