@@ -145,6 +145,10 @@ public final class SeriesStructureBuilder {
     }
 
     public static void spawnNpcIfAbsent(ServerLevel level, BlockPos pos, EntityType<SeriesNpcEntity> type, NpcProfile profile) {
+        // Un NPC reclutado ya existe aunque esté lejos de su estructura: volver a crearlo lo duplicaría
+        var guilds = com.soybe.awakeningsystem.guild.GuildSavedData.get(level.getServer());
+        if (guilds.getGuildByPlayer(com.soybe.awakeningsystem.guild.Guild.getNpcUuid(profile.id())) != null) return;
+
         level.getChunk(pos);
         level.setBlock(pos, Blocks.AIR.defaultBlockState(), 2);
         level.setBlock(pos.above(), Blocks.AIR.defaultBlockState(), 2);
