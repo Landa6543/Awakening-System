@@ -167,13 +167,11 @@ public class FallingSideriteMeteorEntity extends Entity {
                 sl.sendParticles(viewer, ParticleTypes.EXPLOSION_EMITTER, true, cx, cy + 2.0D, cz, 6, 3.0D, 2.5D, 3.0D, 0.0D);
                 sl.sendParticles(viewer, ParticleTypes.FLASH, true, cx, cy + 3.0D, cz, 4, 1.0D, 1.0D, 1.0D, 0.0D);
                 sl.sendParticles(viewer, ParticleTypes.LAVA, true, cx, cy, cz, 60, 3.0D, 1.0D, 3.0D, 0.0D);
-                for (int i = 0; i < 24; i++) {
-                    double angle = Math.PI * 2.0D * i / 24.0D;
-                    // Con cantidad 0 los tres valores son la velocidad: chorros de fuego que salen en abanico
-                    sl.sendParticles(viewer, ParticleTypes.FLAME, true, cx, cy + 1.0D, cz, 0,
-                            Math.cos(angle) * 0.6D, 0.9D, Math.sin(angle) * 0.6D, 1.0D);
-                    sl.sendParticles(viewer, ParticleTypes.END_ROD, true, cx, cy + 1.0D, cz, 0,
-                            Math.cos(angle) * 0.25D, 1.4D, Math.sin(angle) * 0.25D, 1.0D);
+                for (int i = 0; i < 32; i++) {
+                    double angle = Math.PI * 2.0D * i / 32.0D;
+                    // Con cantidad 0 los tres valores son la velocidad: un anillo de fuego que se abre a ras de suelo
+                    sl.sendParticles(viewer, ParticleTypes.FLAME, true, cx, cy + 0.5D, cz, 0,
+                            Math.cos(angle) * 0.8D, 0.25D, Math.sin(angle) * 0.8D, 1.0D);
                 }
             }
 

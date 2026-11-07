@@ -32,10 +32,11 @@ public final class MeteorSkyRenderer {
     private static final float END_ELEVATION = 1.5F;
     private static final float AZIMUTH_SWEEP = 70.0F;
     private static final float TAIL_LENGTH = 0.34F;
-    private static final float TAIL_FADE_TICKS = 14.0F;
-    private static final float IMPACT_TICKS = 70.0F;
+    private static final float TAIL_FADE_TICKS = 10.0F;
+    private static final float IMPACT_TICKS = 120.0F;
     private static final int TAIL_SEGMENTS = 22;
     private static final int GLOW_SEGMENTS = 18;
+    private static final int SMOKE_PUFFS = 8;
 
     private static boolean active = false;
     private static long startTick;
@@ -76,12 +77,21 @@ public final class MeteorSkyRenderer {
         Matrix4f pose = event.getModelViewMatrix();
 
         RenderSystem.enableBlend();
-        RenderSystem.blendFunc(GlStateManager.SourceFactor.SRC_ALPHA, GlStateManager.DestFactor.ONE);
         RenderSystem.disableDepthTest();
         RenderSystem.depthMask(false);
         RenderSystem.disableCull();
         RenderSystem.setShader(GameRenderer::getPositionColorShader);
 
+        // El humo va primero y con mezcla normal: oscurece el cielo en vez de sumarle luz
+        if (age > duration) {
+            RenderSystem.defaultBlendFunc();
+            BufferBuilder smoke = Tesselator.getInstance().begin(VertexFormat.Mode.TRIANGLES, DefaultVertexFormat.POSITION_COLOR);
+            drawSmoke(smoke, pose, age - duration);
+            BufferUploader.drawWithShader(smoke.buildOrThrow());
+        }
+
+        // Todo lo que brilla se suma a la luz del cielo
+        RenderSystem.blendFunc(GlStateManager.SourceFactor.SRC_ALPHA, GlStateManager.DestFactor.ONE);
         BufferBuilder builder = Tesselator.getInstance().begin(VertexFormat.Mode.TRIANGLES, DefaultVertexFormat.POSITION_COLOR);
         if (fade > 0.0F) drawTail(builder, pose, progress, fade);
         if (age <= duration) {
@@ -144,55 +154,68 @@ public final class MeteorSkyRenderer {
     }
 
     /**
-     * Estallido en el horizonte: un destello blanco que se abre de golpe, un resplandor naranja que
-     * se apaga despacio y una columna de fuego y humo que sube desde el punto de impacto.
+     * Estallido en el horizonte: un destello blanco, una cúpula de fuego que se hincha sobre el suelo,
+     * una onda de choque que corre a lo largo del horizonte y brasas que siguen brillando un rato.
      */
     private static void drawImpact(BufferBuilder builder, Matrix4f pose, float t) {
         Vector3f ground = skyPoint(1.0F);
-        float life = 1.0F - t / IMPACT_TICKS;
-
-        float burst = Math.min(1.0F, t / 4.0F);
-        float flashAlpha = t < 3.0F ? 1.0F : Math.max(0.0F, 1.0F - (t - 3.0F) / 18.0F);
-        drawGlow(builder, pose, ground, 16.0F + 10.0F * burst, 1.0F, 0.45F, 0.12F, 0.55F * life);
-        if (flashAlpha > 0.0F) {
-            drawGlow(builder, pose, ground, 3.0F + 13.0F * burst, 1.0F, 0.97F, 0.88F, flashAlpha);
-        }
-
-        // La columna crece rápido y luego se queda, perdiendo brillo
-        float height = 22.0F * (1.0F - (float) Math.pow(1.0F - Math.min(1.0F, t / 25.0F), 3.0D));
+        Vector3f side = horizontalSide(ground);
         Vector3f up = new Vector3f(0.0F, 1.0F, 0.0F);
-        Vector3f side = new Vector3f(ground).cross(up).normalize();
-        int segments = 10;
-        for (int i = 0; i < segments; i++) {
-            float a = (float) i / segments;
-            float b = (float) (i + 1) / segments;
-            Vector3f lower = new Vector3f(ground).add(0.0F, height * a, 0.0F);
-            Vector3f upper = new Vector3f(ground).add(0.0F, height * b, 0.0F);
-            // Más ancha arriba, como el humo que se abre al subir
-            Vector3f lowerSide = new Vector3f(side).mul(2.0F + 3.0F * a);
-            Vector3f upperSide = new Vector3f(side).mul(2.0F + 3.0F * b);
-            float[] lowerColor = columnColor(a);
-            float[] upperColor = columnColor(b);
-            float lowerAlpha = 0.75F * life * (1.0F - a * 0.6F);
-            float upperAlpha = 0.75F * life * (1.0F - b * 0.6F);
+        float life = Math.max(0.0F, 1.0F - t / IMPACT_TICKS);
 
-            vertex(builder, pose, new Vector3f(lower).add(lowerSide), lowerColor, lowerAlpha);
-            vertex(builder, pose, new Vector3f(lower).sub(lowerSide), lowerColor, lowerAlpha);
-            vertex(builder, pose, new Vector3f(upper).add(upperSide), upperColor, upperAlpha);
-            vertex(builder, pose, new Vector3f(lower).sub(lowerSide), lowerColor, lowerAlpha);
-            vertex(builder, pose, new Vector3f(upper).sub(upperSide), upperColor, upperAlpha);
-            vertex(builder, pose, new Vector3f(upper).add(upperSide), upperColor, upperAlpha);
+        // Destello: blanco y breve
+        float burst = easeOut(Math.min(1.0F, t / 4.0F));
+        float flash = t < 2.0F ? 1.0F : Math.max(0.0F, 1.0F - (t - 2.0F) / 14.0F);
+        if (flash > 0.0F) {
+            drawGlow(builder, pose, ground, 4.0F + 16.0F * burst, 1.0F, 0.97F, 0.9F, flash);
         }
-        // Bola de fuego en la cima de la columna
-        if (height > 1.0F) {
-            Vector3f top = new Vector3f(ground).add(0.0F, height, 0.0F);
-            drawGlow(builder, pose, top, 7.0F, 1.0F, 0.5F, 0.15F, 0.5F * life);
+
+        // Cúpula de fuego: media esfera que crece sobre el horizonte y se enfría de amarillo a rojo
+        float domeGrow = easeOut(Math.min(1.0F, t / 16.0F));
+        float domeLife = Math.max(0.0F, 1.0F - t / 60.0F);
+        if (domeLife > 0.0F) {
+            float heat = Math.min(1.0F, t / 50.0F);
+            drawHalfGlow(builder, pose, ground, side, up, 4.0F + 9.0F * domeGrow,
+                    1.0F, 0.75F - 0.4F * heat, 0.35F - 0.25F * heat, 0.85F * domeLife * domeLife);
+        }
+
+        // Onda de choque: una franja de luz que se abre a lo largo del horizonte
+        float waveLife = Math.max(0.0F, 1.0F - t / 32.0F);
+        if (waveLife > 0.0F) {
+            float width = 6.0F + 46.0F * easeOut(Math.min(1.0F, t / 32.0F));
+            drawHorizonBand(builder, pose, ground, side, width, 1.1F, new float[]{1.0F, 0.8F, 0.55F}, 0.7F * waveLife);
+        }
+
+        // Brasas: el resplandor rojizo del cráter, que dura hasta el final
+        drawHalfGlow(builder, pose, ground, side, up, 7.0F, 1.0F, 0.35F, 0.12F, 0.4F * life);
+    }
+
+    /** Humo oscuro que sube despacio y se ensancha; abajo lo tiñe el fuego del cráter. */
+    private static void drawSmoke(BufferBuilder builder, Matrix4f pose, float t) {
+        Vector3f ground = skyPoint(1.0F);
+        Vector3f side = horizontalSide(ground);
+        float life = Math.max(0.0F, 1.0F - t / IMPACT_TICKS);
+        for (int i = 0; i < SMOKE_PUFFS; i++) {
+            float puffAge = t - 6.0F - i * 7.0F;
+            if (puffAge <= 0.0F) continue;
+            float rise = Math.min(18.0F, puffAge * 0.16F);
+            float drift = (float) Math.sin(i * 1.7F) * (1.0F + puffAge * 0.03F);
+            Vector3f center = new Vector3f(ground).add(0.0F, 2.0F + rise, 0.0F).add(new Vector3f(side).mul(drift));
+            float radius = 3.5F + puffAge * 0.07F;
+            float fadeIn = Math.min(1.0F, puffAge / 8.0F);
+            // Recién salido, el humo refleja el fuego; al subir se vuelve gris oscuro
+            float warm = Math.max(0.0F, 1.0F - rise / 8.0F);
+            float r = 0.16F + 0.4F * warm, g = 0.13F + 0.16F * warm, b = 0.14F + 0.04F * warm;
+            drawGlow(builder, pose, center, radius, r, g, b, 0.6F * fadeIn * life);
         }
     }
 
-    /** De naranja intenso en la base a rojo apagado arriba. */
-    private static float[] columnColor(float t) {
-        return new float[]{1.0F - 0.35F * t, 0.62F - 0.45F * t, 0.25F - 0.1F * t};
+    private static Vector3f horizontalSide(Vector3f point) {
+        return new Vector3f(point).cross(0.0F, 1.0F, 0.0F).normalize();
+    }
+
+    private static float easeOut(float x) {
+        return 1.0F - (1.0F - x) * (1.0F - x) * (1.0F - x);
     }
 
     /** Del blanco caliente junto a la cabeza al azul y violeta de la cola. */
@@ -213,6 +236,35 @@ public final class MeteorSkyRenderer {
             vertex(builder, pose, center, color, alpha);
             vertex(builder, pose, onCircle(center, right, up, radius, start), color, 0.0F);
             vertex(builder, pose, onCircle(center, right, up, radius, end), color, 0.0F);
+        }
+    }
+
+    /** Medio disco suave apoyado en el horizonte, como una cúpula que sale del suelo. */
+    private static void drawHalfGlow(BufferBuilder builder, Matrix4f pose, Vector3f center, Vector3f side, Vector3f up,
+                                     float radius, float r, float g, float b, float alpha) {
+        float[] color = {r, g, b};
+        for (int i = 0; i < GLOW_SEGMENTS; i++) {
+            double start = Math.PI * i / GLOW_SEGMENTS;
+            double end = Math.PI * (i + 1) / GLOW_SEGMENTS;
+            vertex(builder, pose, center, color, alpha);
+            vertex(builder, pose, onCircle(center, side, up, radius, start), color, 0.0F);
+            vertex(builder, pose, onCircle(center, side, up, radius, end), color, 0.0F);
+        }
+    }
+
+    /** Franja horizontal que se desvanece hacia los extremos y hacia arriba y abajo. */
+    private static void drawHorizonBand(BufferBuilder builder, Matrix4f pose, Vector3f center, Vector3f side,
+                                        float halfWidth, float halfHeight, float[] color, float alpha) {
+        Vector3f top = new Vector3f(center).add(0.0F, halfHeight, 0.0F);
+        Vector3f bottom = new Vector3f(center).add(0.0F, -halfHeight, 0.0F);
+        for (int dir = -1; dir <= 1; dir += 2) {
+            Vector3f end = new Vector3f(center).add(new Vector3f(side).mul(halfWidth * dir));
+            vertex(builder, pose, center, color, alpha);
+            vertex(builder, pose, top, color, 0.0F);
+            vertex(builder, pose, end, color, 0.0F);
+            vertex(builder, pose, center, color, alpha);
+            vertex(builder, pose, bottom, color, 0.0F);
+            vertex(builder, pose, end, color, 0.0F);
         }
     }
 
