@@ -736,31 +736,6 @@ public enum NpcProfile {
 
     public net.minecraft.sounds.SoundEvent getVoiceSound() {
         return switch (this) {
-            case SUNG_JINWOO -> com.soybe.awakeningsystem.ModSounds.COMPANION_SUNG_JINWOO_AMBIENT.get();
-            case CHA_HAEIN -> com.soybe.awakeningsystem.ModSounds.COMPANION_CHA_HAEIN_AMBIENT.get();
-            case KIM_DOKJA -> com.soybe.awakeningsystem.ModSounds.COMPANION_KAZUHA_AMBIENT.get();
-            case YOO_JOONGHYUK -> com.soybe.awakeningsystem.ModSounds.COMPANION_JIYAN_AMBIENT.get();
-            case LLOYD_FRONTERA -> com.soybe.awakeningsystem.ModSounds.COMPANION_YUJI_ITADORI_AMBIENT.get();
-            case JAVIER_ASRAHAN -> com.soybe.awakeningsystem.ModSounds.COMPANION_ARCHER_AMBIENT.get();
-            case CHEON_YEOWOON -> com.soybe.awakeningsystem.ModSounds.COMPANION_XIAO_AMBIENT.get();
-            case ARTHUR_LEYWIN -> com.soybe.awakeningsystem.ModSounds.COMPANION_TANJIRO_AMBIENT.get();
-            case CHA_YEONWOO -> com.soybe.awakeningsystem.ModSounds.COMPANION_IGRIS_AMBIENT.get();
-            case CHUNG_MYUNG -> com.soybe.awakeningsystem.ModSounds.COMPANION_RENGOKU_AMBIENT.get();
-            case RYU_HANBIN -> com.soybe.awakeningsystem.ModSounds.COMPANION_SUKUNA_AMBIENT.get();
-            case TWENTY_FIFTH_BAAM -> com.soybe.awakeningsystem.ModSounds.COMPANION_DAN_HENG_IL_AMBIENT.get();
-            case RAIDEN_SHOGUN -> com.soybe.awakeningsystem.ModSounds.COMPANION_RAIDEN_SHOGUN_AMBIENT.get();
-            case ZHONGLI -> com.soybe.awakeningsystem.ModSounds.COMPANION_ZHONGLI_AMBIENT.get();
-            case HUTAO -> com.soybe.awakeningsystem.ModSounds.COMPANION_HU_TAO_AMBIENT.get();
-            case GANYU -> com.soybe.awakeningsystem.ModSounds.COMPANION_GANYU_AMBIENT.get();
-            case NEUVILLETTE -> com.soybe.awakeningsystem.ModSounds.COMPANION_NEUVILLETTE_AMBIENT.get();
-            case MARCH_7TH -> com.soybe.awakeningsystem.ModSounds.COMPANION_MARCH_7TH_AMBIENT.get();
-            case ACHERON -> com.soybe.awakeningsystem.ModSounds.COMPANION_ACHERON_AMBIENT.get();
-            case HOSHIMI_MIYABI -> com.soybe.awakeningsystem.ModSounds.COMPANION_HOSHIMI_MIYABI_AMBIENT.get();
-            case ELLEN_JOE -> com.soybe.awakeningsystem.ModSounds.COMPANION_ELLEN_JOE_AMBIENT.get();
-            case DILUC -> com.soybe.awakeningsystem.ModSounds.COMPANION_DILUC_AMBIENT.get();
-            case ELENA_RECEPTIONIST -> com.soybe.awakeningsystem.ModSounds.COMPANION_NOELLE_AMBIENT.get();
-            case BLACK_MARKET_DEALER -> com.soybe.awakeningsystem.ModSounds.COMPANION_AVENTURINE_AMBIENT.get();
-            case CASINO_RECEPTIONIST -> com.soybe.awakeningsystem.ModSounds.COMPANION_ROBIN_AMBIENT.get();
             case HUNTER_EVALUATOR -> null;
             default -> null;
         };

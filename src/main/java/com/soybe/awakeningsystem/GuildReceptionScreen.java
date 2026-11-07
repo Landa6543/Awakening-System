@@ -25,7 +25,6 @@ public final class GuildReceptionScreen extends Screen {
     @Override
     protected void init() {
         super.init();
-        AwakeningSystemClient.playUiSound(com.soybe.awakeningsystem.entity.NpcProfile.ELENA_RECEPTIONIST.getVoiceSound(), 1.0F, 1.0F);
     }
 
     @Override

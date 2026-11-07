@@ -469,10 +469,12 @@ public class SeriesNpcEntity extends PathfinderMob {
                     "awakening_system.npc." + profile.id() + ".dialogue." + diagIdx,
                     0xFFFFD700);
 
-            net.minecraft.sounds.SoundEvent voice = profile.getVoiceSound();
-            if (voice != null) {
-                serverPlayer.connection.send(new ClientboundStopSoundPacket(null, SoundSource.VOICE));
-                serverPlayer.playNotifySound(voice, SoundSource.VOICE, 1.2F, 1.0F);
+            if (profile == NpcProfile.HUNTER_EVALUATOR) {
+                net.minecraft.sounds.SoundEvent voice = profile.getVoiceSound();
+                if (voice != null) {
+                    serverPlayer.connection.send(new ClientboundStopSoundPacket(null, SoundSource.VOICE));
+                    serverPlayer.playNotifySound(voice, SoundSource.VOICE, 1.2F, 1.0F);
+                }
             }
 
             if (profile == NpcProfile.ELENA_RECEPTIONIST) {
