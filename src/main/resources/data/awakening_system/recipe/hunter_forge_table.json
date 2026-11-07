@@ -1,0 +1,27 @@
+{
+  "type": "minecraft:crafting_shaped",
+  "category": "misc",
+  "pattern": [
+    "IAI",
+    "SMS",
+    "SSS"
+  ],
+  "key": {
+    "I": {
+      "item": "minecraft:iron_block"
+    },
+    "A": {
+      "item": "minecraft:anvil"
+    },
+    "S": {
+      "item": "minecraft:smooth_stone"
+    },
+    "M": {
+      "item": "awakening_system:mana_crystal_shard_d"
+    }
+  },
+  "result": {
+    "count": 1,
+    "id": "awakening_system:hunter_forge_table"
+  }
+}

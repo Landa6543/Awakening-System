@@ -179,4 +179,10 @@ public final class ModBlockEntities {
                     BlockEntityType.Builder.of(AscensionPortalBlockEntity::new,
                             SystemBlocks.ASCENSION_PORTAL.get()
                     ).build(null));
+
+    public static final DeferredHolder<BlockEntityType<?>, BlockEntityType<com.soybe.awakeningsystem.workshop.HunterForgeBlockEntity>> HUNTER_FORGE_TABLE =
+            BLOCK_ENTITY_TYPES.register("hunter_forge_table", () ->
+                    BlockEntityType.Builder.of(com.soybe.awakeningsystem.workshop.HunterForgeBlockEntity::new,
+                            SystemBlocks.HUNTER_FORGE_TABLE.get()
+                    ).build(null));
 }

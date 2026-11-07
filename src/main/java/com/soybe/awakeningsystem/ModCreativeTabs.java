@@ -470,6 +470,13 @@ public final class ModCreativeTabs {
                         accept(output, SystemItems.MUSIC_DISC_DAY_OF_HOPE);
                         accept(output, SystemItems.MUSIC_DISC_CHASING_STARS);
                         accept(output, SystemItems.MUSIC_DISC_SALTED_MOON);
+                        accept(output, SystemItems.HUNTER_FORGE_TABLE);
+                        accept(output, SystemItems.MONSTER_CORE_E);
+                        accept(output, SystemItems.MONSTER_CORE_D);
+                        accept(output, SystemItems.MONSTER_CORE_C);
+                        accept(output, SystemItems.MONSTER_CORE_B);
+                        accept(output, SystemItems.MONSTER_CORE_A);
+                        accept(output, SystemItems.MONSTER_CORE_S);
                     })
                     .build()
     );

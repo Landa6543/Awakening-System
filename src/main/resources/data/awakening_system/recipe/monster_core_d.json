@@ -1,0 +1,17 @@
+{
+  "type": "minecraft:crafting_shaped",
+  "category": "misc",
+  "pattern": [
+    "CC",
+    "CC"
+  ],
+  "key": {
+    "C": {
+      "item": "awakening_system:monster_core_e"
+    }
+  },
+  "result": {
+    "count": 1,
+    "id": "awakening_system:monster_core_d"
+  }
+}

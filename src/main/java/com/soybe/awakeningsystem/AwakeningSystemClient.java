@@ -438,6 +438,7 @@ public final class AwakeningSystemClient {
         event.register(com.soybe.awakeningsystem.furnace.ModMenus.SUBSPACE_MENU.get(), com.soybe.awakeningsystem.subspace.SubspaceScreen::new);
         event.register(com.soybe.awakeningsystem.furnace.ModMenus.POUCH_MENU.get(), com.soybe.awakeningsystem.item.pouch.PouchScreen::new);
         event.register(com.soybe.awakeningsystem.furnace.ModMenus.FISHING_TRAP_MENU.get(), com.soybe.awakeningsystem.block.entity.FishingTrapScreen::new);
+        event.register(com.soybe.awakeningsystem.furnace.ModMenus.HUNTER_FORGE_MENU.get(), com.soybe.awakeningsystem.workshop.HunterForgeScreen::new);
     }
 
     public static void registerEntityRenderers(net.neoforged.neoforge.client.event.EntityRenderersEvent.RegisterRenderers event) {
@@ -3622,6 +3623,8 @@ public final class AwakeningSystemClient {
             if (com.soybe.awakeningsystem.item.WeaponLevelManager.isLevelableWeapon(event.getItemStack())) {
                 com.soybe.awakeningsystem.item.WeaponLevelManager.appendWeaponLevelTooltip(event.getItemStack(), event.getToolTip());
             }
+
+            com.soybe.awakeningsystem.workshop.HunterForgeQuality.appendTooltip(event.getItemStack(), event.getToolTip());
         }
     }
 

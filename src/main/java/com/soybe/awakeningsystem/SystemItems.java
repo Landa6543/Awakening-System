@@ -3616,6 +3616,27 @@ public final class SystemItems {
     public static final DeferredHolder<Item, Item> AWAKENING_MONARCH_TOTEM = AwakeningSystemMod.ITEMS.register(
             "awakening_monarch_totem", () -> new AwakeningTotemItem(new Item.Properties().stacksTo(1).rarity(Rarity.EPIC).fireResistant(), AwakeningTotemItem.TotemType.AWAKENING_MONARCH));
 
+    public static final DeferredHolder<Item, Item> HUNTER_FORGE_TABLE = AwakeningSystemMod.ITEMS.register(
+            "hunter_forge_table", () -> new net.minecraft.world.item.BlockItem(com.soybe.awakeningsystem.block.SystemBlocks.HUNTER_FORGE_TABLE.get(), new Item.Properties().rarity(Rarity.RARE)));
+
+    public static final DeferredHolder<Item, Item> MONSTER_CORE_E = AwakeningSystemMod.ITEMS.register(
+            "monster_core_e", () -> new com.soybe.awakeningsystem.workshop.MonsterCoreItem(com.soybe.awakeningsystem.workshop.MonsterCoreItem.CoreRank.E, new Item.Properties()));
+
+    public static final DeferredHolder<Item, Item> MONSTER_CORE_D = AwakeningSystemMod.ITEMS.register(
+            "monster_core_d", () -> new com.soybe.awakeningsystem.workshop.MonsterCoreItem(com.soybe.awakeningsystem.workshop.MonsterCoreItem.CoreRank.D, new Item.Properties()));
+
+    public static final DeferredHolder<Item, Item> MONSTER_CORE_C = AwakeningSystemMod.ITEMS.register(
+            "monster_core_c", () -> new com.soybe.awakeningsystem.workshop.MonsterCoreItem(com.soybe.awakeningsystem.workshop.MonsterCoreItem.CoreRank.C, new Item.Properties()));
+
+    public static final DeferredHolder<Item, Item> MONSTER_CORE_B = AwakeningSystemMod.ITEMS.register(
+            "monster_core_b", () -> new com.soybe.awakeningsystem.workshop.MonsterCoreItem(com.soybe.awakeningsystem.workshop.MonsterCoreItem.CoreRank.B, new Item.Properties()));
+
+    public static final DeferredHolder<Item, Item> MONSTER_CORE_A = AwakeningSystemMod.ITEMS.register(
+            "monster_core_a", () -> new com.soybe.awakeningsystem.workshop.MonsterCoreItem(com.soybe.awakeningsystem.workshop.MonsterCoreItem.CoreRank.A, new Item.Properties()));
+
+    public static final DeferredHolder<Item, Item> MONSTER_CORE_S = AwakeningSystemMod.ITEMS.register(
+            "monster_core_s", () -> new com.soybe.awakeningsystem.workshop.MonsterCoreItem(com.soybe.awakeningsystem.workshop.MonsterCoreItem.CoreRank.S, new Item.Properties()));
+
     public static void register() {
     }
 

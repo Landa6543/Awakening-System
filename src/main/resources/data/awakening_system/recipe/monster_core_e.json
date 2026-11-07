@@ -1,0 +1,24 @@
+{
+  "type": "minecraft:crafting_shaped",
+  "category": "misc",
+  "pattern": [
+    "FBF",
+    "BSB",
+    "FBF"
+  ],
+  "key": {
+    "F": {
+      "item": "minecraft:rotten_flesh"
+    },
+    "B": {
+      "item": "minecraft:bone"
+    },
+    "S": {
+      "item": "minecraft:slime_ball"
+    }
+  },
+  "result": {
+    "count": 1,
+    "id": "awakening_system:monster_core_e"
+  }
+}

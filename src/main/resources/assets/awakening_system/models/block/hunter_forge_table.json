@@ -1,0 +1,181 @@
+{
+  "parent": "minecraft:block/block",
+  "credit": "Awakening System - Hunter Forge",
+  "render_type": "minecraft:cutout",
+  "textures": {
+    "forge": "awakening_system:block/hunter_forge",
+    "particle": "awakening_system:block/hunter_forge"
+  },
+  "elements": [
+    {
+      "name": "base",
+      "from": [1, 0, 1],
+      "to": [15, 3, 15],
+      "faces": {
+        "north": { "uv": [0.25, 0, 3.75, 0.75], "texture": "#forge" },
+        "south": { "uv": [0.25, 0, 3.75, 0.75], "texture": "#forge" },
+        "west": { "uv": [0.25, 0, 3.75, 0.75], "texture": "#forge" },
+        "east": { "uv": [0.25, 0, 3.75, 0.75], "texture": "#forge" },
+        "up": { "uv": [4.25, 0.25, 7.75, 3.75], "texture": "#forge" },
+        "down": { "uv": [4.25, 0.25, 7.75, 3.75], "texture": "#forge" }
+      }
+    },
+    {
+      "name": "base_step",
+      "from": [2, 3, 2],
+      "to": [14, 5, 14],
+      "faces": {
+        "north": { "uv": [0.5, 0, 3.5, 0.5], "texture": "#forge" },
+        "south": { "uv": [0.5, 0, 3.5, 0.5], "texture": "#forge" },
+        "west": { "uv": [0.5, 0, 3.5, 0.5], "texture": "#forge" },
+        "east": { "uv": [0.5, 0, 3.5, 0.5], "texture": "#forge" },
+        "up": { "uv": [4.5, 0.5, 7.5, 3.5], "texture": "#forge" },
+        "down": { "uv": [4.5, 0.5, 7.5, 3.5], "texture": "#forge" }
+      }
+    },
+    {
+      "name": "neck",
+      "from": [4, 5, 5],
+      "to": [12, 9, 11],
+      "faces": {
+        "north": { "uv": [5, 4, 7, 5], "texture": "#forge" },
+        "south": { "uv": [5, 4, 7, 5], "texture": "#forge" },
+        "west": { "uv": [5.25, 4, 6.75, 5], "texture": "#forge" },
+        "east": { "uv": [5.25, 4, 6.75, 5], "texture": "#forge" },
+        "up": { "uv": [5, 5.25, 7, 6.75], "texture": "#forge" },
+        "down": { "uv": [5, 5.25, 7, 6.75], "texture": "#forge" }
+      }
+    },
+    {
+      "name": "neck_flare",
+      "from": [3, 8, 4],
+      "to": [13, 9, 12],
+      "faces": {
+        "north": { "uv": [8.75, 0, 11.25, 0.25], "texture": "#forge" },
+        "south": { "uv": [8.75, 0, 11.25, 0.25], "texture": "#forge" },
+        "west": { "uv": [9, 0, 11, 0.25], "texture": "#forge" },
+        "east": { "uv": [9, 0, 11, 0.25], "texture": "#forge" },
+        "up": { "uv": [4.75, 5, 7.25, 7], "texture": "#forge" },
+        "down": { "uv": [4.75, 5, 7.25, 7], "texture": "#forge" }
+      }
+    },
+    {
+      "name": "anvil",
+      "from": [2, 9, 4],
+      "to": [14, 13, 12],
+      "faces": {
+        "north": { "uv": [8.5, 0, 11.5, 1], "texture": "#forge" },
+        "south": { "uv": [8.5, 0, 11.5, 1], "texture": "#forge" },
+        "west": { "uv": [9, 0, 11, 1], "texture": "#forge" },
+        "east": { "uv": [9, 0, 11, 1], "texture": "#forge" },
+        "up": { "uv": [12.5, 1, 15.5, 3], "texture": "#forge" },
+        "down": { "uv": [4.5, 5, 7.5, 7], "texture": "#forge" }
+      }
+    },
+    {
+      "name": "horn",
+      "from": [14, 10, 5.5],
+      "to": [16, 12.5, 10.5],
+      "faces": {
+        "north": { "uv": [8, 0, 8.5, 0.625], "texture": "#forge" },
+        "south": { "uv": [11.5, 0, 12, 0.625], "texture": "#forge" },
+        "west": { "uv": [9.375, 0, 10.625, 0.625], "texture": "#forge" },
+        "east": { "uv": [9.375, 0, 10.625, 0.625], "texture": "#forge" },
+        "up": { "uv": [11.5, 1.375, 12, 2.625], "texture": "#forge" },
+        "down": { "uv": [7.5, 5.375, 8, 6.625], "texture": "#forge" }
+      }
+    },
+    {
+      "name": "horn_tip",
+      "from": [16, 10.5, 6.5],
+      "to": [17.5, 12, 9.5],
+      "faces": {
+        "north": { "uv": [8, 0, 8, 0.375], "texture": "#forge" },
+        "south": { "uv": [12, 0, 12, 0.375], "texture": "#forge" },
+        "west": { "uv": [9.625, 0, 10.375, 0.375], "texture": "#forge" },
+        "east": { "uv": [9.625, 0, 10.375, 0.375], "texture": "#forge" },
+        "up": { "uv": [12, 1.625, 12, 2.375], "texture": "#forge" },
+        "down": { "uv": [8, 5.625, 8, 6.375], "texture": "#forge" }
+      }
+    },
+    {
+      "name": "heel",
+      "from": [0, 10, 5],
+      "to": [2, 13, 11],
+      "faces": {
+        "north": { "uv": [11.5, 0, 12, 0.75], "texture": "#forge" },
+        "south": { "uv": [8, 0, 8.5, 0.75], "texture": "#forge" },
+        "west": { "uv": [9.25, 0, 10.75, 0.75], "texture": "#forge" },
+        "east": { "uv": [9.25, 0, 10.75, 0.75], "texture": "#forge" },
+        "up": { "uv": [8, 1.25, 8.5, 2.75], "texture": "#forge" },
+        "down": { "uv": [4, 5.25, 4.5, 6.75], "texture": "#forge" }
+      }
+    },
+    {
+      "name": "rune_north",
+      "from": [4, 0.5, 0.95],
+      "to": [12, 2.5, 1],
+      "faces": {
+        "north": { "uv": [8, 5.5, 12, 6.5], "texture": "#forge", "neoforge_data": { "block_light": 15, "sky_light": 15 } },
+        "south": { "uv": [8, 5.5, 12, 6.5], "texture": "#forge", "neoforge_data": { "block_light": 15, "sky_light": 15 } },
+        "west": { "uv": [8, 5.5, 12, 6.5], "texture": "#forge", "neoforge_data": { "block_light": 15, "sky_light": 15 } },
+        "east": { "uv": [8, 5.5, 12, 6.5], "texture": "#forge", "neoforge_data": { "block_light": 15, "sky_light": 15 } },
+        "up": { "uv": [8, 5.5, 12, 6.5], "texture": "#forge", "neoforge_data": { "block_light": 15, "sky_light": 15 } },
+        "down": { "uv": [8, 5.5, 12, 6.5], "texture": "#forge", "neoforge_data": { "block_light": 15, "sky_light": 15 } }
+      }
+    },
+    {
+      "name": "rune_south",
+      "from": [4, 0.5, 15],
+      "to": [12, 2.5, 15.05],
+      "faces": {
+        "north": { "uv": [8, 5.5, 12, 6.5], "texture": "#forge", "neoforge_data": { "block_light": 15, "sky_light": 15 } },
+        "south": { "uv": [8, 5.5, 12, 6.5], "texture": "#forge", "neoforge_data": { "block_light": 15, "sky_light": 15 } },
+        "west": { "uv": [8, 5.5, 12, 6.5], "texture": "#forge", "neoforge_data": { "block_light": 15, "sky_light": 15 } },
+        "east": { "uv": [8, 5.5, 12, 6.5], "texture": "#forge", "neoforge_data": { "block_light": 15, "sky_light": 15 } },
+        "up": { "uv": [8, 5.5, 12, 6.5], "texture": "#forge", "neoforge_data": { "block_light": 15, "sky_light": 15 } },
+        "down": { "uv": [8, 5.5, 12, 6.5], "texture": "#forge", "neoforge_data": { "block_light": 15, "sky_light": 15 } }
+      }
+    },
+    {
+      "name": "rune_west",
+      "from": [0.95, 0.5, 4],
+      "to": [1, 2.5, 12],
+      "faces": {
+        "north": { "uv": [8, 5.5, 12, 6.5], "texture": "#forge", "neoforge_data": { "block_light": 15, "sky_light": 15 } },
+        "south": { "uv": [8, 5.5, 12, 6.5], "texture": "#forge", "neoforge_data": { "block_light": 15, "sky_light": 15 } },
+        "west": { "uv": [8, 5.5, 12, 6.5], "texture": "#forge", "neoforge_data": { "block_light": 15, "sky_light": 15 } },
+        "east": { "uv": [8, 5.5, 12, 6.5], "texture": "#forge", "neoforge_data": { "block_light": 15, "sky_light": 15 } },
+        "up": { "uv": [8, 5.5, 12, 6.5], "texture": "#forge", "neoforge_data": { "block_light": 15, "sky_light": 15 } },
+        "down": { "uv": [8, 5.5, 12, 6.5], "texture": "#forge", "neoforge_data": { "block_light": 15, "sky_light": 15 } }
+      }
+    },
+    {
+      "name": "rune_east",
+      "from": [15, 0.5, 4],
+      "to": [15.05, 2.5, 12],
+      "faces": {
+        "north": { "uv": [8, 5.5, 12, 6.5], "texture": "#forge", "neoforge_data": { "block_light": 15, "sky_light": 15 } },
+        "south": { "uv": [8, 5.5, 12, 6.5], "texture": "#forge", "neoforge_data": { "block_light": 15, "sky_light": 15 } },
+        "west": { "uv": [8, 5.5, 12, 6.5], "texture": "#forge", "neoforge_data": { "block_light": 15, "sky_light": 15 } },
+        "east": { "uv": [8, 5.5, 12, 6.5], "texture": "#forge", "neoforge_data": { "block_light": 15, "sky_light": 15 } },
+        "up": { "uv": [8, 5.5, 12, 6.5], "texture": "#forge", "neoforge_data": { "block_light": 15, "sky_light": 15 } },
+        "down": { "uv": [8, 5.5, 12, 6.5], "texture": "#forge", "neoforge_data": { "block_light": 15, "sky_light": 15 } }
+      }
+    },
+    {
+      "name": "system_crystal",
+      "from": [6.5, 14.5, 6.5],
+      "to": [9.5, 19.5, 9.5],
+      "rotation": { "angle": 45, "axis": "y", "origin": [8, 16, 8] },
+      "faces": {
+        "north": { "uv": [1, 4, 3, 8], "texture": "#forge", "neoforge_data": { "block_light": 15, "sky_light": 15 } },
+        "south": { "uv": [1, 4, 3, 8], "texture": "#forge", "neoforge_data": { "block_light": 15, "sky_light": 15 } },
+        "west": { "uv": [1, 4, 3, 8], "texture": "#forge", "neoforge_data": { "block_light": 15, "sky_light": 15 } },
+        "east": { "uv": [1, 4, 3, 8], "texture": "#forge", "neoforge_data": { "block_light": 15, "sky_light": 15 } },
+        "up": { "uv": [0, 4, 4, 4.5], "texture": "#forge", "neoforge_data": { "block_light": 15, "sky_light": 15 } },
+        "down": { "uv": [0, 4, 4, 4.5], "texture": "#forge", "neoforge_data": { "block_light": 15, "sky_light": 15 } }
+      }
+    }
+  ]
+}

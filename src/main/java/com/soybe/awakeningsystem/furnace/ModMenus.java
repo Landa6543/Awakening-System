@@ -57,5 +57,8 @@ public final class ModMenus {
 
     public static final DeferredHolder<MenuType<?>, MenuType<com.soybe.awakeningsystem.block.entity.FishingTrapMenu>> FISHING_TRAP_MENU =
             MENUS.register("fishing_trap_menu", () -> new MenuType<>(com.soybe.awakeningsystem.block.entity.FishingTrapMenu::new, FeatureFlags.VANILLA_SET));
+
+    public static final DeferredHolder<MenuType<?>, MenuType<com.soybe.awakeningsystem.workshop.HunterForgeMenu>> HUNTER_FORGE_MENU =
+            MENUS.register("hunter_forge_menu", () -> new MenuType<>(com.soybe.awakeningsystem.workshop.HunterForgeMenu::new, FeatureFlags.VANILLA_SET));
 }
 

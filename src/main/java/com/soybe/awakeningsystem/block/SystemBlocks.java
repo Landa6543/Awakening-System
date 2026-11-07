@@ -2476,5 +2476,17 @@ public final class SystemBlocks {
     public static Block[] getPlushieBlocksArray() {
         return PLUSHIE_BLOCKS.values().stream().map(DeferredHolder::get).toArray(Block[]::new);
     }
+
+    public static final DeferredHolder<Block, com.soybe.awakeningsystem.workshop.HunterForgeBlock> HUNTER_FORGE_TABLE = BLOCKS.register(
+            "hunter_forge_table", () -> new com.soybe.awakeningsystem.workshop.HunterForgeBlock(
+                    BlockBehaviour.Properties.of()
+                            .mapColor(MapColor.METAL)
+                            .strength(4.0F, 1200.0F)
+                            .sound(SoundType.NETHERITE_BLOCK)
+                            .lightLevel(s -> 6)
+                            // El modelo no es un cubo entero: sin esto los bloques vecinos se verían huecos
+                            .noOcclusion()
+            )
+    );
 }
 
