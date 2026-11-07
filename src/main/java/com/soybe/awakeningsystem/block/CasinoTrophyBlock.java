@@ -154,9 +154,9 @@ public class CasinoTrophyBlock extends BaseEntityBlock {
 
                 player.sendSystemMessage(Component.literal("§6§l✦==============================✦"));
                 player.sendSystemMessage(Component.literal("§6§l🏆 " + title.toUpperCase() + " 🏆"));
-                player.sendSystemMessage(Component.literal("§e✦ Champion: §f" + winner));
-                player.sendSystemMessage(Component.literal("§b✦ Feat: §7" + desc));
-                player.sendSystemMessage(Component.literal("§8✦ Awarded: §7" + date));
+                player.sendSystemMessage(Component.translatable("awakening_system.msg.champion", String.valueOf(winner)));
+                player.sendSystemMessage(Component.translatable("awakening_system.msg.feat", String.valueOf(desc)));
+                player.sendSystemMessage(Component.translatable("awakening_system.msg.awarded", String.valueOf(date)));
                 player.sendSystemMessage(Component.literal("§6§l✦==============================✦"));
 
                 level.playSound(null, pos, SoundEvents.AMETHYST_BLOCK_CHIME, SoundSource.BLOCKS, 1.0F, 1.6F);

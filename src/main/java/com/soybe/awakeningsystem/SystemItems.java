@@ -354,10 +354,10 @@ public final class SystemItems {
                     new Item.Properties().rarity(net.minecraft.world.item.Rarity.RARE)) {
                 @Override
                 public void appendHoverText(ItemStack stack, TooltipContext context, List<Component> tooltip, TooltipFlag flag) {
-                    tooltip.add(Component.literal("§6§lTablón de Misiones de la Torre"));
-                    tooltip.add(Component.literal("§7Tablón físico donde se publican contratos diarios rotativos"));
-                    tooltip.add(Component.literal("§7para los cazadores. Progresión vinculada a los pisos de la Torre."));
-                    tooltip.add(Component.literal("§eClick derecho para inspeccionar contratos."));
+                    tooltip.add(Component.translatable("awakening_system.msg.tablon_de_misiones_de_la_torre"));
+                    tooltip.add(Component.translatable("awakening_system.msg.tablon_fisico_donde_se_publican_contratos"));
+                    tooltip.add(Component.translatable("awakening_system.msg.para_los_cazadores_progresion_vinculada_los"));
+                    tooltip.add(Component.translatable("awakening_system.msg.click_derecho_para_inspeccionar_contratos"));
                 }
             });
 
@@ -367,9 +367,9 @@ public final class SystemItems {
                     new Item.Properties().rarity(net.minecraft.world.item.Rarity.EPIC)) {
                 @Override
                 public void appendHoverText(ItemStack stack, TooltipContext context, List<Component> tooltip, TooltipFlag flag) {
-                    tooltip.add(Component.literal("§d§lPortal de la Torre (Ascension Portal)"));
-                    tooltip.add(Component.literal("§7Portal monumental animado con runas dimensionales y rocas arcanas."));
-                    tooltip.add(Component.literal("§5Permite entrar a la Torre del Cazador y viajar entre dimensiones."));
+                    tooltip.add(Component.translatable("awakening_system.msg.portal_de_la_torre_ascension_portal"));
+                    tooltip.add(Component.translatable("awakening_system.msg.portal_monumental_animado_con_runas_dimensionales"));
+                    tooltip.add(Component.translatable("awakening_system.msg.permite_entrar_la_torre_del_cazador"));
                 }
             });
 
@@ -379,9 +379,9 @@ public final class SystemItems {
                     new Item.Properties().rarity(net.minecraft.world.item.Rarity.RARE)) {
                 @Override
                 public void appendHoverText(ItemStack stack, TooltipContext context, List<Component> tooltip, TooltipFlag flag) {
-                    tooltip.add(Component.literal("§6§lRoca Parda Ancestral"));
-                    tooltip.add(Component.literal("§7Roca milenaria forjada en los cimientos y estratos de la Gran Torre."));
-                    tooltip.add(Component.literal("§8Apreciada por constructores y artesanos por su resistencia y textura natural."));
+                    tooltip.add(Component.translatable("awakening_system.msg.roca_parda_ancestral"));
+                    tooltip.add(Component.translatable("awakening_system.msg.roca_milenaria_forjada_en_los_cimientos"));
+                    tooltip.add(Component.translatable("awakening_system.msg.apreciada_por_constructores_artesanos_por_su"));
                 }
             });
 
@@ -391,10 +391,10 @@ public final class SystemItems {
                     new Item.Properties().rarity(net.minecraft.world.item.Rarity.RARE)) {
                 @Override
                 public void appendHoverText(ItemStack stack, TooltipContext context, List<Component> tooltip, TooltipFlag flag) {
-                    tooltip.add(Component.literal("§b§lFarol Victoriano del Limbo"));
-                    tooltip.add(Component.literal("§7Farola gótica victoriana forjada en hierro oscuro del Limbo."));
-                    tooltip.add(Component.literal("§3Tridente de triple linterna que arde con fuego de almas etéreo."));
-                    tooltip.add(Component.literal("§8Clic derecho para encender o apagar la llama espectral."));
+                    tooltip.add(Component.translatable("awakening_system.msg.farol_victoriano_del_limbo"));
+                    tooltip.add(Component.translatable("awakening_system.msg.farola_gotica_victoriana_forjada_en_hierro"));
+                    tooltip.add(Component.translatable("awakening_system.msg.tridente_de_triple_linterna_que_arde"));
+                    tooltip.add(Component.translatable("awakening_system.msg.clic_derecho_para_encender_apagar_la"));
                 }
             });
 

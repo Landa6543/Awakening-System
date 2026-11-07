@@ -749,7 +749,7 @@ public final class SystemScreen extends Screen {
                 if (d.dailyRunning() < 1000) {
                     if (this.minecraft != null && this.minecraft.player != null) {
                         this.minecraft.player.displayClientMessage(
-                            Component.literal("§6§l[MISIÓN DIARIA] §e¡Camina o corre a pie por el mundo para acumular los 1000 metros (1 km)! (" + d.dailyRunning() + " / 1000 m)"),
+                            Component.translatable("awakening_system.msg.mision_diaria_camina_corre_pie_por", String.valueOf(d.dailyRunning())),
                             false
                         );
                     }
@@ -1378,8 +1378,8 @@ public final class SystemScreen extends Screen {
                     allCount++;
                     if (myUuid != null && myUuid.equals(l.sellerUuid())) myCount++;
                 }
-                Component allComp = Component.literal("Todos (" + allCount + ")");
-                Component myComp = Component.literal("Mis Ofertas (" + myCount + ")");
+                Component allComp = Component.translatable("awakening_system.msg.todos", String.valueOf(allCount));
+                Component myComp = Component.translatable("awakening_system.msg.mis_ofertas", String.valueOf(myCount));
                 Component pubComp = Component.translatable("awakening_system.p2p.btn.publish");
 
                 int allW = font.width(allComp) + 12;
@@ -2998,8 +2998,8 @@ public final class SystemScreen extends Screen {
             int cx = (boxX1 + boxX2) / 2;
             int cy = (boxY1 + boxY2) / 2;
             g.drawCenteredString(font, "§6✦ " + player.getScoreboardName(), cx, cy - 14, 0xFFDFB76C);
-            g.drawCenteredString(font, "§7[Modelo 3D Desactivado]", cx, cy, 0x888888);
-            g.drawCenteredString(font, "§8(Activar en ⚙ Config GUI)", cx, cy + 12, 0x666666);
+            g.drawCenteredString(font, Component.translatable("awakening_system.msg.modelo_3d_desactivado").getString(), cx, cy, 0x888888);
+            g.drawCenteredString(font, Component.translatable("awakening_system.msg.activar_en_config_gui").getString(), cx, cy + 12, 0x666666);
         }
 
         SystemData dData = data();
@@ -3807,7 +3807,7 @@ public final class SystemScreen extends Screen {
         g.fill(b3X, b3Y, b3X + trainBtnW, b3Y + trainBtnH, h3 ? 0xFF1E88E5 : (d.dailyRunning() >= 1000 ? 0x401B7A4E : 0x400B141D));
         g.renderOutline(b3X, b3Y, trainBtnW, trainBtnH, h3 ? 0xFFFFFFFF : (d.dailyRunning() >= 1000 ? 0xFF50FA7B : 0x50336688));
         Component runStatus = d.dailyRunning() >= 1000 ? Component.literal("§a✔ 1km") :
-                (h3 ? Component.literal("§bA pie") : Component.literal("§71000m"));
+                (h3 ? Component.translatable("awakening_system.msg.pie") : Component.literal("§71000m"));
         drawAutoScaledCentered(g, runStatus, b3X + trainBtnW / 2, b3Y + 2, d.dailyRunning() >= 1000 ? 0xFF50FA7B : (h3 ? 0xFFFFFFFF : 0xFF8AAAB8), trainBtnW - 4);
 
         // Warning & Rewards summary
@@ -4666,8 +4666,8 @@ public final class SystemScreen extends Screen {
             }
         }
 
-        Component allComp = Component.literal("Todos (" + allCount + ")");
-        Component myComp = Component.literal("Mis Ofertas (" + myCount + ")");
+        Component allComp = Component.translatable("awakening_system.msg.todos", String.valueOf(allCount));
+        Component myComp = Component.translatable("awakening_system.msg.mis_ofertas", String.valueOf(myCount));
         Component pubComp = Component.translatable("awakening_system.p2p.btn.publish");
 
         int allW = font.width(allComp) + 12;

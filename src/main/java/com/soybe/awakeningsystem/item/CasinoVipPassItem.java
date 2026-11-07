@@ -51,7 +51,7 @@ public class CasinoVipPassItem extends Item {
         tag.putString("bound_player_name", player.getGameProfile().getName());
         tag.putString("bound_date", java.time.LocalDate.now().toString());
         stack.set(DataComponents.CUSTOM_DATA, CustomData.of(tag));
-        stack.set(DataComponents.CUSTOM_NAME, Component.literal("§6✦ Pase VIP Oficial §7(" + player.getGameProfile().getName() + ")"));
+        stack.set(DataComponents.CUSTOM_NAME, Component.translatable("awakening_system.msg.pase_vip_oficial", String.valueOf(player.getGameProfile().getName())));
     }
 
     @Override

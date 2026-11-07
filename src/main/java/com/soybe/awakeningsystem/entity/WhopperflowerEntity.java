@@ -132,7 +132,7 @@ public class WhopperflowerEntity extends Monster {
 
     private void updateName() {
         Type t = getFlowerType();
-        this.setCustomName(Component.literal(t.getDisplayName() + " §lMegaflora"));
+        this.setCustomName(Component.translatable("awakening_system.msg.megaflora", String.valueOf(t.getDisplayName())));
         this.setCustomNameVisible(true);
     }
 

@@ -34,7 +34,7 @@ public class ChristmasGiftBoxItem extends Item {
 
         if (!com.soybe.awakeningsystem.seasonal.SeasonalEventManager.isChristmasActive()) {
             if (!level.isClientSide()) {
-                player.displayClientMessage(Component.literal("§c§l[ESPÍRITU INVERNAL EN LETARGO] §7La Caja de Regalo solo puede abrirse durante Navidad (1 Dic - 7 Ene)."), true);
+                player.displayClientMessage(Component.translatable("awakening_system.msg.espiritu_invernal_en_letargo_la_caja"), true);
             }
             return InteractionResultHolder.fail(held);
         }
@@ -69,7 +69,7 @@ public class ChristmasGiftBoxItem extends Item {
             SystemData data = SystemEvents.data(serverPlayer);
             if (data != null) {
                 data.addCoins(coinReward);
-                serverPlayer.sendSystemMessage(Component.literal("§e+" + coinReward + " Monedas del Sistema §7(Regalo Festivo)").withStyle(ChatFormatting.GOLD));
+                serverPlayer.sendSystemMessage(Component.translatable("awakening_system.msg.monedas_del_sistema_regalo_festivo", String.valueOf(coinReward)).withStyle(ChatFormatting.GOLD));
             }
 
             // 3. High tier loot chance
@@ -90,10 +90,10 @@ public class ChristmasGiftBoxItem extends Item {
                 }
                 serverLevel.playSound(null, player.getX(), player.getY(), player.getZ(),
                         SoundEvents.UI_TOAST_CHALLENGE_COMPLETE, SoundSource.PLAYERS, 1.2F, 1.0F);
-                serverPlayer.sendSystemMessage(Component.literal("§6§l¡PREMIO MAYOR FESTIVO! §b¡Has obtenido la legendaria §eEspada Árbol de Navidad§b!")
+                serverPlayer.sendSystemMessage(Component.translatable("awakening_system.msg.premio_mayor_festivo_has_obtenido_la")
                         .withStyle(ChatFormatting.GOLD));
             } else {
-                serverPlayer.sendSystemMessage(Component.literal("§a§l[REGALO NAVIDEÑO] §f¡Has abierto una Caja de Regalo Navideña!")
+                serverPlayer.sendSystemMessage(Component.translatable("awakening_system.msg.regalo_navideno_has_abierto_una_caja")
                         .withStyle(ChatFormatting.GREEN));
             }
 
@@ -117,13 +117,13 @@ public class ChristmasGiftBoxItem extends Item {
 
     @Override
     public void appendHoverText(ItemStack stack, TooltipContext context, List<Component> tooltip, TooltipFlag flag) {
-        tooltip.add(Component.literal("§e§l[PAQUETE FESTIVO DE NAVIDAD]"));
-        tooltip.add(Component.literal("§7Un regalo envuelto con lazos brillantes y esencia invernal."));
-        tooltip.add(Component.literal("§bClic Derecho: §fAbrir para recibir dulces, monedas y tesoros."));
-        tooltip.add(Component.literal("§6Oportunidad rara: §eEspada Árbol de Navidad 3D"));
+        tooltip.add(Component.translatable("awakening_system.msg.paquete_festivo_de_navidad"));
+        tooltip.add(Component.translatable("awakening_system.msg.un_regalo_envuelto_con_lazos_brillantes"));
+        tooltip.add(Component.translatable("awakening_system.msg.clic_derecho_abrir_para_recibir_dulces"));
+        tooltip.add(Component.translatable("awakening_system.msg.oportunidad_rara_espada_arbol_de_navidad"));
         if (!com.soybe.awakeningsystem.seasonal.SeasonalEventManager.isChristmasActive()) {
-            tooltip.add(Component.literal("§c§l[BLOQUEADO FUERA DE TEMPORADA]"));
-            tooltip.add(Component.literal("§7Solo activo del 1 de Diciembre al 7 de Enero."));
+            tooltip.add(Component.translatable("awakening_system.msg.bloqueado_fuera_de_temporada"));
+            tooltip.add(Component.translatable("awakening_system.msg.solo_activo_del_de_diciembre_al"));
         }
         super.appendHoverText(stack, context, tooltip, flag);
     }

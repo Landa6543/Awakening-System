@@ -1357,7 +1357,7 @@ public final class SystemEvents {
                      );
                } else if (!spxx.hasPermissions(2)) {
                   event.setCanceled(true);
-                  spxx.displayClientMessage(Component.literal("§c[Subespacio] El Subespacio es estrictamente para almacenamiento. Solo se permite colocar cofres, barriles y contenedores."), true);
+                  spxx.displayClientMessage(Component.translatable("awakening_system.msg.subespacio_el_subespacio_es_estrictamente_para"), true);
                   return;
                }
             }
@@ -5034,7 +5034,7 @@ public final class SystemEvents {
                      SoundEvents.UI_TOAST_CHALLENGE_COMPLETE, SoundSource.PLAYERS, 1.0F, 1.0F
                   );
                   player.displayClientMessage(
-                     Component.literal("§6§l[MISIÓN DIARIA] §a¡Has completado los 1000m de carrera diaria!"),
+                     Component.translatable("awakening_system.msg.mision_diaria_has_completado_los_1000m"),
                      false
                   );
                   if (data.isDailyQuestComplete()) {
@@ -11864,7 +11864,7 @@ public final class SystemEvents {
          shadowMob.addTag("shadow_soldier");
          shadowMob.addTag("shadow_master_" + master.getUUID());
          String mobName = defeated.getCustomName() != null ? defeated.getCustomName().getString() : defeated.getType().getDescription().getString();
-         shadowMob.setCustomName(Component.literal("§8§l[SOMBRA] §9" + mobName));
+         shadowMob.setCustomName(Component.translatable("awakening_system.msg.sombra", String.valueOf(mobName)));
          shadowMob.setCustomNameVisible(true);
          if (defeated instanceof Mob defeatedMob) {
             for (EquipmentSlot slot : EquipmentSlot.values()) {

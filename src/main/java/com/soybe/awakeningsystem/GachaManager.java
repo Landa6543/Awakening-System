@@ -301,12 +301,12 @@ public final class GachaManager {
                         CompanionProfile wonProf = hsr5Stars.get(RNG.nextInt(hsr5Stars.size()));
                         won = CompanionContractItem.createContract(wonProf);
                         dropName = wonProf.displayName() + " (5★)";
-                        Component ann = Component.literal("§b§l✦✦✦✦✦ [STELLAR WARP] §fYou summoned §d§l" + wonProf.displayName() + " §ffrom the Astral Express!");
+                        Component ann = Component.translatable("awakening_system.msg.stellar_warp_you_summoned_from_the", String.valueOf(wonProf.displayName()));
                         player.displayClientMessage(ann, true);
                     } else {
                         won = hsr5LightCones.get(RNG.nextInt(hsr5LightCones.size())).get().copy();
                         dropName = won.getHoverName().getString() + " (5★)";
-                        Component ann = Component.literal("§6§l✦✦✦✦✦ [STELLAR WARP] §fYou obtained the Legendary Light Cone §e§l" + won.getHoverName().getString() + "§f!");
+                        Component ann = Component.translatable("awakening_system.msg.stellar_warp_you_obtained_the_legendary", String.valueOf(won.getHoverName().getString()));
                         player.displayClientMessage(ann, true);
                     }
 

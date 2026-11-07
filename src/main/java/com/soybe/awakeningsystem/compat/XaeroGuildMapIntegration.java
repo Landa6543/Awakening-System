@@ -126,7 +126,7 @@ public final class XaeroGuildMapIntegration {
         String tag = (info != null && info.contains("tag")) ? info.getString("tag") : guildTag;
         int level = (info != null && info.contains("level")) ? info.getInt("level") : 1;
 
-        return Component.literal("§6🛡️ [Guild] §f" + name + " §7[§b" + tag + "§7] §e(Lv. " + level + ")");
+        return Component.translatable("awakening_system.msg.guild_lv", String.valueOf(name), String.valueOf(tag), String.valueOf(level));
     }
 
     public static void addMinimapTooltips(xaero.hud.minimap.info.render.compile.InfoDisplayCompiler compiler,

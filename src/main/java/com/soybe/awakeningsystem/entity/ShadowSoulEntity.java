@@ -183,7 +183,7 @@ public class ShadowSoulEntity extends Entity {
 
     public void setMobNameComponent(Component component) {
         if (component == null) {
-            component = Component.literal("Fallen Enemy");
+            component = Component.translatable("awakening_system.msg.fallen_enemy");
         }
         this.entityData.set(MOB_NAME_COMP, Optional.of(component));
         this.entityData.set(MOB_NAME, component.getString());

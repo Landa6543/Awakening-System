@@ -1576,7 +1576,7 @@ public final class SystemData implements INBTSerializable<CompoundTag> {
             this.ascensionCompleted = true;
             if (player != null) {
                 player.playNotifySound(net.minecraft.sounds.SoundEvents.UI_TOAST_CHALLENGE_COMPLETE, net.minecraft.sounds.SoundSource.PLAYERS, 1.2F, 1.1F);
-                player.sendSystemMessage(net.minecraft.network.chat.Component.literal("§6§l★ [ASOCIACIÓN DE CAZADORES] §a¡Prueba de combate completada! (" + ascensionProgress + "/" + ascensionTarget + ") Regresa con el Inspector en la sede para tu Medición Oficial de Maná."));
+                player.sendSystemMessage(net.minecraft.network.chat.Component.translatable("awakening_system.msg.asociacion_de_cazadores_prueba_de_combate", String.valueOf(ascensionProgress), String.valueOf(ascensionTarget)));
             }
             return true;
         }

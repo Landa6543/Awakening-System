@@ -468,12 +468,12 @@ public class WaypointEditScreen extends Screen {
         int tBtnH = 15;
 
         // Botón Haz de Luz (Beam)
-        Component beamComp = Component.literal("Beam: ")
+        Component beamComp = Component.translatable("awakening_system.msg.beam")
                 .append(showBeam ? Component.translatable("awakening_system.gui_config.toggle.on") : Component.translatable("awakening_system.gui_config.toggle.off"));
         renderButton(g, rightX, toggleY, tBtnW, tBtnH, beamComp, mouseX, mouseY, showBeam ? 0xFF00E5FF : 0xFFFFAAAA);
 
         // Botón Etiqueta 3D (Label)
-        Component labelComp = Component.literal("Label: ")
+        Component labelComp = Component.translatable("awakening_system.msg.label")
                 .append(showLabel ? Component.translatable("awakening_system.gui_config.toggle.on") : Component.translatable("awakening_system.gui_config.toggle.off"));
         renderButton(g, rightX + 74, toggleY, tBtnW, tBtnH, labelComp, mouseX, mouseY, showLabel ? 0xFF50FA7B : 0xFFFFAAAA);
 

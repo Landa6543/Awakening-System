@@ -1804,9 +1804,9 @@ public final class GachaWishScreen extends Screen {
         if (mouseY >= pillY && mouseY <= pillY + pillH) {
             if (activeBanner == BANNER_UMA) {
                 if (mouseX >= pillCaratX && mouseX <= pillCaratX + pillCaratW) {
-                    graphics.renderTooltip(this.font, Component.literal("§6🥕 Tracen Carats: §f" + String.format(java.util.Locale.US, "%,d", carats) + " §7(Click [+] to recharge)"), (int) mouseX, (int) mouseY);
+                    graphics.renderTooltip(this.font, Component.translatable("awakening_system.msg.tracen_carats_click_to_recharge", String.valueOf(String.format(java.util.Locale.US, "%,d", carats))), (int) mouseX, (int) mouseY);
                 } else if (mouseX >= pillCoinX && mouseX <= pillCoinX + pillCoinW) {
-                    graphics.renderTooltip(this.font, Component.literal("§e🪙 System Coins: §f" + String.format(java.util.Locale.US, "%,d", coins)), (int) mouseX, (int) mouseY);
+                    graphics.renderTooltip(this.font, Component.translatable("awakening_system.msg.system_coins", String.valueOf(String.format(java.util.Locale.US, "%,d", coins))), (int) mouseX, (int) mouseY);
                 }
             } else if (activeBanner == BANNER_STELLAR_WARP) {
                 String sJade = String.format(java.util.Locale.US, "%,d", stellarJade);
@@ -1814,7 +1814,7 @@ public final class GachaWishScreen extends Screen {
                 int pillJadeX = getVirtW() - pillJadeW - 10;
                 int pillPrimoX = pillJadeX - pill2W - 6;
                 if (mouseX >= pillJadeX && mouseX <= pillJadeX + pillJadeW) {
-                    graphics.renderTooltip(this.font, Component.literal("§d💠 Stellar Jade: §f" + sJade + " §7(Click [+] to recharge)"), (int) mouseX, (int) mouseY);
+                    graphics.renderTooltip(this.font, Component.translatable("awakening_system.msg.stellar_jade_click_to_recharge", String.valueOf(sJade)), (int) mouseX, (int) mouseY);
                 } else if (mouseX >= pillPrimoX && mouseX <= pillPrimoX + pill2W) {
                     String primoName = Component.translatable("awakening_system.gacha.currency.primogems").getString();
                     graphics.renderTooltip(this.font, Component.literal("§6✦ " + primoName + ": §f" + String.format(java.util.Locale.US, "%,d", primogems)), (int) mouseX, (int) mouseY);
@@ -2903,8 +2903,8 @@ public final class GachaWishScreen extends Screen {
         int roofH = 34;
         graphics.fill(centerX - gateW / 2, gateY, centerX + gateW / 2, gateY + roofH, 0xFF1B5E20);
         graphics.renderOutline(centerX - gateW / 2, gateY, gateW, roofH, 0xFFFFD700);
-        graphics.drawCenteredString(this.font, "§6§l✦ ESTABLO • PISTA DE SALIDA #1 ✦", centerX, gateY + 6, 0xFFFFFF);
-        graphics.drawCenteredString(this.font, "§e★ PRETTY DERBY RECRUITMENT ★", centerX, gateY + 18, 0xFFFFD700);
+        graphics.drawCenteredString(this.font, Component.translatable("awakening_system.msg.establo_pista_de_salida").getString(), centerX, gateY + 6, 0xFFFFFF);
+        graphics.drawCenteredString(this.font, Component.translatable("awakening_system.msg.pretty_derby_recruitment").getString(), centerX, gateY + 18, 0xFFFFD700);
 
         for (int l = 0; l < 9; l++) {
             int lx = centerX - (gateW / 2 - 20) + l * ((gateW - 40) / 8);
@@ -3197,7 +3197,7 @@ public final class GachaWishScreen extends Screen {
 
             graphics.fill(centerX - 60, doorTop - 20, centerX + 60, doorTop - 4, 0xFF2A1B40);
             graphics.renderOutline(centerX - 60, doorTop - 20, 120, 16, 0xFFFFD700);
-            graphics.drawCenteredString(this.font, "§e★ ASTRAL EXPRESS ★", centerX, doorTop - 17, 0xFFFFD700);
+            graphics.drawCenteredString(this.font, Component.translatable("awakening_system.msg.astral_express").getString(), centerX, doorTop - 17, 0xFFFFD700);
 
             float openProgress = 0.0F;
             if (doorElapsed >= 600L) {
@@ -3337,7 +3337,7 @@ public final class GachaWishScreen extends Screen {
         boolean isUma = (activeBanner == BANNER_UMA) || CompanionContractItem.isUmaContract(item);
         if (isUma) {
             graphics.drawString(this.font, Component.translatable("gui.awakening_system.gacha.reveal.uma_count", (currentRevealIndex + 1), resultItems.size()), 20, 20, 0x81C784, false);
-            graphics.drawCenteredString(this.font, "§6§l✦ OFFICIAL FILE • TRACEN ACADEMY PRETTY DERBY ✦", getVirtW() / 2, 20, 0xFFFFD700);
+            graphics.drawCenteredString(this.font, Component.translatable("awakening_system.msg.official_file_tracen_academy_pretty_derby").getString(), getVirtW() / 2, 20, 0xFFFFD700);
         } else {
             graphics.drawString(this.font, Component.translatable("gui.awakening_system.gacha.reveal.item_count", (currentRevealIndex + 1), resultItems.size()), 20, 20, 0xAAAAAA, false);
         }
@@ -3587,11 +3587,11 @@ public final class GachaWishScreen extends Screen {
 
         graphics.fill(barX, barY, barX + barW, barY + barH, 0xFFFFFFFF);
         graphics.renderOutline(barX, barY, barW, barH, 0xFFD1D5DB);
-        graphics.drawString(this.font, "§8Racer Spark Points", barX + 6, barY + 3, 0x374151, false);
+        graphics.drawString(this.font, Component.translatable("awakening_system.msg.racer_spark_points").getString(), barX + 6, barY + 3, 0x374151, false);
         int prevPt = Math.max(0, totalWishes - totalPulls);
         graphics.drawString(this.font, "§8" + prevPt + " §7▷ §e§l" + totalWishes, barX + barW - 55, barY + 3, 0xD97706, false);
 
-        graphics.drawCenteredString(this.font, "§7Duplicate racers grant Star Pieces and Goddess Statues", virtW / 2, barY + 15, 0x475569);
+        graphics.drawCenteredString(this.font, Component.translatable("awakening_system.msg.duplicate_racers_grant_star_pieces_and").getString(), virtW / 2, barY + 15, 0x475569);
     }
 
     private static final int UMA_RESULT_BTN_H = 22;

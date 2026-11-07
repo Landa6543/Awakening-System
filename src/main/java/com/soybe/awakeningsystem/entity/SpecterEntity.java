@@ -146,7 +146,7 @@ public class SpecterEntity extends Monster {
     private void updateName() {
         Element el = getElement();
         String enragedPrefix = isEnraged() ? "§4[Furia] " : "";
-        this.setCustomName(Component.literal(enragedPrefix + el.getDisplayName() + " §lEspectro"));
+        this.setCustomName(Component.translatable("awakening_system.msg.espectro", String.valueOf(enragedPrefix), String.valueOf(el.getDisplayName())));
         this.setCustomNameVisible(true);
     }
 

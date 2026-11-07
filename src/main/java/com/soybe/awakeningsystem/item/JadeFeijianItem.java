@@ -69,7 +69,7 @@ public class JadeFeijianItem extends SwordItem implements AwakeningWeaponItem {
                     sp.startRiding(sword, true);
 
                     level.playSound(null, sp.getX(), sp.getY(), sp.getZ(), SoundEvents.TRIDENT_RIPTIDE_1.value(), SoundSource.PLAYERS, 1.2F, 1.4F);
-                    sp.displayClientMessage(Component.literal("§a§l[FEIJIAN DE JADE] §fMontura espiritual de vuelo activada. (W para volar, Shift para descender/desmontar)"), true);
+                    sp.displayClientMessage(Component.translatable("awakening_system.msg.feijian_de_jade_montura_espiritual_de"), true);
                     return InteractionResultHolder.sidedSuccess(held, false);
                 }
             }
@@ -112,7 +112,7 @@ public class JadeFeijianItem extends SwordItem implements AwakeningWeaponItem {
         tooltip.add(Component.translatable("item.awakening_system.jade_feijian.desc1"));
         tooltip.add(Component.translatable("item.awakening_system.jade_feijian.desc2"));
         tooltip.add(Component.empty());
-        tooltip.add(Component.literal("§aShift + Clic Derecho: §fMontar como Espada Voladora espiritual"));
+        tooltip.add(Component.translatable("awakening_system.msg.shift_clic_derecho_montar_como_espada"));
         super.appendHoverText(stack, context, tooltip, flag);
     }
 }

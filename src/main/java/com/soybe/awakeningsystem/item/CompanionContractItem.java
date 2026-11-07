@@ -219,13 +219,13 @@ public class CompanionContractItem extends Item {
             com.soybe.awakeningsystem.uma.UmaProfile up = com.soybe.awakeningsystem.uma.UmaProfile.byId(tag.getString("UmaId"));
             int r = tag.getInt("UmaRarity");
             String col = r == 3 ? "§6§l" : (r == 2 ? "§d§l" : "§b§l");
-            return Component.literal(col + "Racer Contract: " + up.getDisplayName() + " §e[" + "★".repeat(r) + "]");
+            return Component.translatable("awakening_system.msg.racer_contract", String.valueOf(col), String.valueOf(up.getDisplayName()), String.valueOf("★".repeat(r)));
         }
         CompanionProfile p = getProfile(stack);
         String stars = "★".repeat(p.stars());
         int c = getConstellation(stack);
         String cStr = c > 0 ? " §d[C" + c + "]" : "";
-        return Component.literal(p.colorCode() + "Summoning Contract: " + p.displayName() + " §e[" + stars + "]" + cStr);
+        return Component.translatable("awakening_system.msg.summoning_contract", String.valueOf(p.colorCode()), String.valueOf(p.displayName()), String.valueOf(stars), String.valueOf(cStr));
     }
 
     @Override

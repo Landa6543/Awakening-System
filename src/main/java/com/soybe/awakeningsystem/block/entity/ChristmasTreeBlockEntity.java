@@ -68,7 +68,7 @@ public class ChristmasTreeBlockEntity extends BlockEntity implements GeoBlockEnt
 
         if (!com.soybe.awakeningsystem.seasonal.SeasonalEventManager.isChristmasActive()) {
             serverPlayer.displayClientMessage(
-                    Component.literal("§7El Árbol de Navidad descansa en letargo estacional. Su magia y regalos diarios solo florecen durante la temporada navideña (1 Dic - 7 Ene)."),
+                    Component.translatable("awakening_system.msg.el_arbol_de_navidad_descansa_en"),
                     true
             );
             sl.playSound(null, worldPosition, SoundEvents.DISPENSER_FAIL, SoundSource.BLOCKS, 0.8F, 1.2F);
@@ -77,7 +77,7 @@ public class ChristmasTreeBlockEntity extends BlockEntity implements GeoBlockEnt
 
         if (!hasGift) {
             serverPlayer.displayClientMessage(
-                    Component.literal("§7Las ramas del Árbol de Navidad están vacías por hoy. Nuevos regalos aparecerán mañana."),
+                    Component.translatable("awakening_system.msg.las_ramas_del_arbol_de_navidad"),
                     true
             );
             sl.playSound(null, worldPosition, SoundEvents.DISPENSER_FAIL, SoundSource.BLOCKS, 0.8F, 1.2F);
@@ -120,7 +120,7 @@ public class ChristmasTreeBlockEntity extends BlockEntity implements GeoBlockEnt
         SystemData data = SystemEvents.data(serverPlayer);
         if (data != null) {
             data.addCoins(coins);
-            serverPlayer.sendSystemMessage(Component.literal("§6+" + coins + " Monedas del Sistema §7(Regalo Diario del Árbol)").withStyle(ChatFormatting.GOLD));
+            serverPlayer.sendSystemMessage(Component.translatable("awakening_system.msg.monedas_del_sistema_regalo_diario_del", String.valueOf(coins)).withStyle(ChatFormatting.GOLD));
             SystemEvents.grantFable(serverPlayer, "fable_seasonal_miracle");
         }
 
@@ -128,11 +128,11 @@ public class ChristmasTreeBlockEntity extends BlockEntity implements GeoBlockEnt
         if (sl.random.nextFloat() < 0.05F && SystemItems.XMAS_TREE_SWORD != null && SystemItems.XMAS_TREE_SWORD.isBound()) {
             ItemStack sword = new ItemStack(SystemItems.XMAS_TREE_SWORD.value());
             if (!player.getInventory().add(sword)) player.drop(sword, false);
-            serverPlayer.sendSystemMessage(Component.literal("§6§l¡MILAGRO NAVIDEÑO! §b¡Bajo el árbol encontraste la §eEspada Árbol de Navidad§b legendaria!")
+            serverPlayer.sendSystemMessage(Component.translatable("awakening_system.msg.milagro_navideno_bajo_el_arbol_encontraste")
                     .withStyle(ChatFormatting.GOLD));
         }
 
-        serverPlayer.sendSystemMessage(Component.literal("§a§l[FESTIVIDAD NAVIDEÑA] §f¡Has abierto los regalos del Árbol de Navidad! Vuelve mañana para recibir más sorpresas.")
+        serverPlayer.sendSystemMessage(Component.translatable("awakening_system.msg.festividad_navidena_has_abierto_los_regalos")
                 .withStyle(ChatFormatting.GREEN));
 
         return InteractionResult.SUCCESS;

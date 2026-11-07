@@ -967,7 +967,7 @@ public final class AwakeningSystemClient {
 
                     activeTrackerTargetPos = null;
                     minecraft.player.playSound(net.minecraft.sounds.SoundEvents.PLAYER_LEVELUP, 0.9F, 1.4F);
-                    minecraft.player.displayClientMessage(net.minecraft.network.chat.Component.literal("§a§l✓ ¡Has llegado al Salón de Evaluación! Marcador temporal removido."), false);
+                    minecraft.player.displayClientMessage(net.minecraft.network.chat.Component.translatable("awakening_system.msg.has_llegado_al_salon_de_evaluacion"), false);
                 }
             }
         }
@@ -2501,7 +2501,7 @@ public final class AwakeningSystemClient {
 
             // Ángeles del Limbo: escalan con el jugador pero no muestran etiqueta de nivel (Ángel Guardián)
             if (mob instanceof com.soybe.awakeningsystem.entity.LimboOphanimEntity) {
-                Component angelName = mob.hasCustomName() ? mob.getCustomName() : Component.literal("§6Ángel Guardián");
+                Component angelName = mob.hasCustomName() ? mob.getCustomName() : Component.translatable("awakening_system.msg.angel_guardian");
                 event.setContent(angelName);
                 event.setCanRender(net.neoforged.neoforge.common.util.TriState.TRUE);
                 return;
@@ -3514,7 +3514,7 @@ public final class AwakeningSystemClient {
                                     com.soybe.awakeningsystem.client.gui.GuiConfig.save();
                                     if (Minecraft.getInstance().player != null) {
                                         Minecraft.getInstance().player.displayClientMessage(
-                                                Component.literal("§eMinimapa: " + (com.soybe.awakeningsystem.client.gui.GuiConfig.showMinimap ? "§aActivado" : "§cDesactivado")), false);
+                                                Component.translatable("awakening_system.msg.minimapa", String.valueOf((com.soybe.awakeningsystem.client.gui.GuiConfig.showMinimap ? "§aActivado" : "§cDesactivado"))), false);
                                     }
                                     return 1;
                                 })
@@ -3522,7 +3522,7 @@ public final class AwakeningSystemClient {
                                     com.soybe.awakeningsystem.client.gui.GuiConfig.minimapShape = "CIRCULAR";
                                     com.soybe.awakeningsystem.client.gui.GuiConfig.save();
                                     if (Minecraft.getInstance().player != null) {
-                                        Minecraft.getInstance().player.displayClientMessage(Component.literal("§eMarco de Minimapa: §bCircular"), false);
+                                        Minecraft.getInstance().player.displayClientMessage(Component.translatable("awakening_system.msg.marco_de_minimapa_circular"), false);
                                     }
                                     return 1;
                                 }))
@@ -3530,7 +3530,7 @@ public final class AwakeningSystemClient {
                                     com.soybe.awakeningsystem.client.gui.GuiConfig.minimapShape = "SQUARE";
                                     com.soybe.awakeningsystem.client.gui.GuiConfig.save();
                                     if (Minecraft.getInstance().player != null) {
-                                        Minecraft.getInstance().player.displayClientMessage(Component.literal("§eMarco de Minimapa: §bCuadrado"), false);
+                                        Minecraft.getInstance().player.displayClientMessage(Component.translatable("awakening_system.msg.marco_de_minimapa_cuadrado"), false);
                                     }
                                     return 1;
                                 }))
@@ -3539,7 +3539,7 @@ public final class AwakeningSystemClient {
                                             com.soybe.awakeningsystem.client.gui.GuiConfig.minimapCaveMode = "AUTO";
                                             com.soybe.awakeningsystem.client.gui.GuiConfig.save();
                                             if (Minecraft.getInstance().player != null) {
-                                                Minecraft.getInstance().player.displayClientMessage(Component.literal("§eModo Cueva: §bAutomático"), false);
+                                                Minecraft.getInstance().player.displayClientMessage(Component.translatable("awakening_system.msg.modo_cueva_automatico"), false);
                                             }
                                             return 1;
                                         }))
@@ -3547,7 +3547,7 @@ public final class AwakeningSystemClient {
                                             com.soybe.awakeningsystem.client.gui.GuiConfig.minimapCaveMode = "ALWAYS";
                                             com.soybe.awakeningsystem.client.gui.GuiConfig.save();
                                             if (Minecraft.getInstance().player != null) {
-                                                Minecraft.getInstance().player.displayClientMessage(Component.literal("§eModo Cueva: §aSiempre Activo"), false);
+                                                Minecraft.getInstance().player.displayClientMessage(Component.translatable("awakening_system.msg.modo_cueva_siempre_activo"), false);
                                             }
                                             return 1;
                                         }))
@@ -3555,7 +3555,7 @@ public final class AwakeningSystemClient {
                                             com.soybe.awakeningsystem.client.gui.GuiConfig.minimapCaveMode = "NEVER";
                                             com.soybe.awakeningsystem.client.gui.GuiConfig.save();
                                             if (Minecraft.getInstance().player != null) {
-                                                Minecraft.getInstance().player.displayClientMessage(Component.literal("§eModo Cueva: §cDesactivado"), false);
+                                                Minecraft.getInstance().player.displayClientMessage(Component.translatable("awakening_system.msg.modo_cueva_desactivado"), false);
                                             }
                                             return 1;
                                         }))

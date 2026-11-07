@@ -237,7 +237,7 @@ public class WelkinMoonScreen extends Screen {
         } else {
             graphics.fill(questX, questY, questX + questW, questY + questH, 0x882A084E);
             graphics.renderOutline(questX, questY, questW, questH, 0xAAAB47BC);
-            graphics.drawCenteredString(this.font, "✦ TRI-LUNAR GODDESS AWAKENED (+50% PRIMOGEMS) ✦", cx, questY + 5, 0xFFE1BEE7);
+            graphics.drawCenteredString(this.font, Component.translatable("awakening_system.msg.tri_lunar_goddess_awakened_50_primogems").getString(), cx, questY + 5, 0xFFE1BEE7);
         }
 
         int btnY = questY + questH + 8;
@@ -379,10 +379,10 @@ public class WelkinMoonScreen extends Screen {
             }
 
             if (isEnhanced) {
-                graphics.drawCenteredString(this.font, "§d§l✦ §6§l+" + rewardPrimos + " PRIMOGEMS §d§l✦", cx, cy + 30, 0xFFFFD700);
-                graphics.drawCenteredString(this.font, "§b✦ COLUMBINA'S GRACE (+50% BONUS) ✦", cx, cy + 42, 0xFF80D8FF);
+                graphics.drawCenteredString(this.font, Component.translatable("awakening_system.msg.primogems", String.valueOf(rewardPrimos)).getString(), cx, cy + 30, 0xFFFFD700);
+                graphics.drawCenteredString(this.font, Component.translatable("awakening_system.msg.columbina_grace_50_bonus").getString(), cx, cy + 42, 0xFF80D8FF);
             } else {
-                graphics.drawCenteredString(this.font, "§6§l✦ §e§l+" + rewardPrimos + " PRIMOGEMS §6§l✦", cx, cy + 32, 0xFFFFD700);
+                graphics.drawCenteredString(this.font, Component.translatable("awakening_system.msg.primogems_2", String.valueOf(rewardPrimos)).getString(), cx, cy + 32, 0xFFFFD700);
             }
         }
     }

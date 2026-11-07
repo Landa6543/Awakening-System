@@ -100,11 +100,11 @@ public class CustomTierFurnaceScreen extends AbstractContainerScreen<CustomTierF
                 case CELESTIAL -> "Celestial";
                 case PRIMORDIAL -> "Primordial";
             };
-            g.drawString(this.font, Component.literal("Mejoras: " + tierLabel), 8, 6, 0x404040, false);
+            g.drawString(this.font, Component.translatable("awakening_system.msg.mejoras", String.valueOf(tierLabel)), 8, 6, 0x404040, false);
 
-            g.drawCenteredString(this.font, "§cModo", 35, 23, 0x802020);
-            g.drawCenteredString(this.font, "§aVelocidad", 89, 23, 0x206020);
-            g.drawCenteredString(this.font, "§bUtilidad", 143, 23, 0x105070);
+            g.drawCenteredString(this.font, Component.translatable("awakening_system.msg.modo").getString(), 35, 23, 0x802020);
+            g.drawCenteredString(this.font, Component.translatable("awakening_system.msg.velocidad").getString(), 89, 23, 0x206020);
+            g.drawCenteredString(this.font, Component.translatable("awakening_system.msg.utilidad").getString(), 143, 23, 0x105070);
 
             g.drawString(this.font, this.playerInventoryTitle, 8, this.imageHeight - 93, 0x404040, false);
         } else {

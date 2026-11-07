@@ -616,7 +616,7 @@ public final class SubspaceManager {
         SystemData data = SystemEvents.data(player);
         int curLvl = data.subspaceLevel();
         if (curLvl >= 3) {
-            player.sendSystemMessage(Component.literal("§e[Subespacio] §bNivel 3§e alcanzado. Es el nivel máximo disponible por ahora (próximamente niveles 4 y 5)."));
+            player.sendSystemMessage(Component.translatable("awakening_system.msg.subespacio_nivel_alcanzado_es_el_nivel"));
             return false;
         }
 
@@ -674,7 +674,7 @@ public final class SubspaceManager {
         }
 
         player.sendSystemMessage(Component.translatable("awakening_system.subspace.msg.ascended", nextLvl));
-        player.sendSystemMessage(Component.literal("§a[Subespacio] ¡Tu parcela ha sido mejorada al diseño oficial de Nivel " + nextLvl + "!"));
+        player.sendSystemMessage(Component.translatable("awakening_system.msg.subespacio_tu_parcela_ha_sido_mejorada", String.valueOf(nextLvl)));
         return true;
     }
 
@@ -754,17 +754,17 @@ public final class SubspaceManager {
         SystemData data = SystemEvents.data(player);
         int lvl = data.subspaceLevel();
         player.sendSystemMessage(Component.literal("§e========================================"));
-        player.sendSystemMessage(Component.literal("§c§l[ADVERTENCIA: REGENERACIÓN DE SUBESPACIO]"));
-        player.sendSystemMessage(Component.literal("§eEsta acción limpiará tu parcela y regenerará el nuevo diseño oficial de §bNivel " + lvl + "§e."));
-        player.sendSystemMessage(Component.literal("§c¡PELIGRO! §fCualquier cofre, construcción o ítem en tu parcela actual será §c§lSOBRESCRITO§f."));
-        player.sendSystemMessage(Component.literal("§6Por favor, retira todos tus cofres y objetos valiosos antes de continuar."));
-        player.sendSystemMessage(Component.literal("§aSi estás listo y deseas proceder, ejecuta: §b/subspace update_structure confirm"));
+        player.sendSystemMessage(Component.translatable("awakening_system.msg.advertencia_regeneracion_de_subespacio"));
+        player.sendSystemMessage(Component.translatable("awakening_system.msg.esta_accion_limpiara_tu_parcela_regenerara", String.valueOf(lvl)));
+        player.sendSystemMessage(Component.translatable("awakening_system.msg.peligro_cualquier_cofre_construccion_item_en"));
+        player.sendSystemMessage(Component.translatable("awakening_system.msg.por_favor_retira_todos_tus_cofres"));
+        player.sendSystemMessage(Component.translatable("awakening_system.msg.si_estas_listo_deseas_proceder_ejecuta"));
         player.sendSystemMessage(Component.literal("§e========================================"));
     }
 
     public static void regenerateSubspaceStructure(ServerPlayer player) {
         if (!player.serverLevel().dimension().equals(SUBSPACE_REALM)) {
-            player.sendSystemMessage(Component.literal("§cDebes estar dentro de tu subespacio para regenerar la estructura."));
+            player.sendSystemMessage(Component.translatable("awakening_system.msg.debes_estar_dentro_de_tu_subespacio"));
             return;
         }
 
@@ -825,7 +825,7 @@ public final class SubspaceManager {
         // 5. Notificación y efectos
         level.sendParticles(ParticleTypes.END_ROD, ox + 0.5D, oy + 2.0D, oz + 0.5D, 80, 2.0D, 1.5D, 2.0D, 0.1D);
         player.playNotifySound(SoundEvents.PLAYER_LEVELUP, SoundSource.PLAYERS, 1.0F, 1.0F);
-        player.sendSystemMessage(Component.literal("§a§l[Subespacio] ¡Tu subespacio ha sido regenerado con éxito al nuevo diseño oficial de Nivel " + lvl + "!"));
+        player.sendSystemMessage(Component.translatable("awakening_system.msg.subespacio_tu_subespacio_ha_sido_regenerado", String.valueOf(lvl)));
         AwakeningSystemMod.sync(player);
     }
 

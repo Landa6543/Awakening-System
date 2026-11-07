@@ -267,7 +267,7 @@ public final class GuildCommands {
                             }
                             player.sendSystemMessage(Component.translatable("guild.msg.guild_list_header"));
                             for (Guild g : guilds) {
-                                player.sendSystemMessage(Component.literal("§e✦ [" + g.getTag() + "] §b" + g.getName() + " §7- Nv. §a" + g.getLevel() + " §7(Miembros: §f" + g.getMembers().size() + "§7)"));
+                                player.sendSystemMessage(Component.translatable("awakening_system.msg.nv_miembros", String.valueOf(g.getTag()), String.valueOf(g.getName()), String.valueOf(g.getLevel()), String.valueOf(g.getMembers().size())));
                             }
                             return 1;
                         }))

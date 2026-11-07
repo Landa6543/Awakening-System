@@ -34,7 +34,7 @@ public class CandyBasketItem extends Item {
 
         if (!com.soybe.awakeningsystem.seasonal.SeasonalEventManager.isHalloweenActive()) {
             if (!level.isClientSide()) {
-                player.displayClientMessage(Component.literal("§c§l[NOCHE DE BRUJAS EN LETARGO] §7La Canasta de Dulces solo puede abrirse durante Halloween (15 Oct - 5 Nov)."), true);
+                player.displayClientMessage(Component.translatable("awakening_system.msg.noche_de_brujas_en_letargo_la"), true);
             }
             return InteractionResultHolder.fail(held);
         }
@@ -71,10 +71,10 @@ public class CandyBasketItem extends Item {
             SystemData data = SystemEvents.data(serverPlayer);
             if (data != null) {
                 data.addCoins(coinReward);
-                serverPlayer.sendSystemMessage(Component.literal("§6+" + coinReward + " Monedas del Sistema §7(Cosecha de Almas)").withStyle(ChatFormatting.GOLD));
+                serverPlayer.sendSystemMessage(Component.translatable("awakening_system.msg.monedas_del_sistema_cosecha_de_almas", String.valueOf(coinReward)).withStyle(ChatFormatting.GOLD));
             }
 
-            serverPlayer.sendSystemMessage(Component.literal("§6§l[CANASTA DE DULCES] §f¡Has abierto una Canasta de Halloween y desatado los dulces mágicos!")
+            serverPlayer.sendSystemMessage(Component.translatable("awakening_system.msg.canasta_de_dulces_has_abierto_una")
                     .withStyle(ChatFormatting.GOLD));
 
             return InteractionResultHolder.sidedSuccess(held, level.isClientSide());
@@ -96,12 +96,12 @@ public class CandyBasketItem extends Item {
 
     @Override
     public void appendHoverText(ItemStack stack, TooltipContext context, List<Component> tooltip, TooltipFlag flag) {
-        tooltip.add(Component.literal("§6§l[CANASTA DE DULCES DE HALLOWEEN]"));
-        tooltip.add(Component.literal("§7Canastilla calabaza rebosante de golosinas de la noche de brujas."));
-        tooltip.add(Component.literal("§bClic Derecho: §fAbrir para cosechar dulces mágicos y monedas."));
+        tooltip.add(Component.translatable("awakening_system.msg.canasta_de_dulces_de_halloween"));
+        tooltip.add(Component.translatable("awakening_system.msg.canastilla_calabaza_rebosante_de_golosinas_de"));
+        tooltip.add(Component.translatable("awakening_system.msg.clic_derecho_abrir_para_cosechar_dulces"));
         if (!com.soybe.awakeningsystem.seasonal.SeasonalEventManager.isHalloweenActive()) {
-            tooltip.add(Component.literal("§c§l[BLOQUEADO FUERA DE TEMPORADA]"));
-            tooltip.add(Component.literal("§7Solo activo del 15 de Octubre al 5 de Noviembre."));
+            tooltip.add(Component.translatable("awakening_system.msg.bloqueado_fuera_de_temporada"));
+            tooltip.add(Component.translatable("awakening_system.msg.solo_activo_del_15_de_octubre"));
         }
         super.appendHoverText(stack, context, tooltip, flag);
     }

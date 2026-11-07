@@ -185,7 +185,7 @@ public class CompanionScreen extends Screen {
         g.fill(modelBoxX, hpY, modelBoxX + modelBoxW, hpY + 8, 0xFF222222);
         float hpRatio = maxHealth > 0 ? Math.min(1.0F, Math.max(0.0F, health / maxHealth)) : 1.0F;
         g.fill(modelBoxX, hpY, modelBoxX + (int) (modelBoxW * hpRatio), hpY + 8, 0xFF2ECC71);
-        g.drawString(font, "§fHP: " + (int) health + "/" + (int) maxHealth, modelBoxX + 4, hpY + 1, 0xFFFFFF);
+        g.drawString(font, Component.translatable("awakening_system.msg.hp", String.valueOf((int) health), String.valueOf((int) maxHealth)).getString(), modelBoxX + 4, hpY + 1, 0xFFFFFF);
 
         int btnX = left + 114;
         int btnW = 105;

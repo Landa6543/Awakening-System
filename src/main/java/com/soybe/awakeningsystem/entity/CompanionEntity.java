@@ -314,7 +314,7 @@ public class CompanionEntity extends TamableAnimal {
         String starsStr = "★".repeat(p.stars());
         int c = getConstellation();
         String cStr = c > 0 ? " §d[C" + c + "]" : "";
-        this.setCustomName(Component.literal(p.colorCode() + p.displayName() + " §e[" + starsStr + "]" + cStr + " §fNv." + getCompanionLevel()));
+        this.setCustomName(Component.translatable("awakening_system.msg.nv", String.valueOf(p.colorCode()), String.valueOf(p.displayName()), String.valueOf(starsStr), String.valueOf(cStr), String.valueOf(getCompanionLevel())));
         this.setCustomNameVisible(true);
     }
 

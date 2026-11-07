@@ -53,7 +53,7 @@ public class GoldenWolflordBossEntity extends Monster {
             SynchedEntityData.defineId(GoldenWolflordBossEntity.class, EntityDataSerializers.BOOLEAN);
 
     private final ServerBossEvent bossEvent = (ServerBossEvent) new ServerBossEvent(
-            Component.literal("§6§lGolden Wolflord §7- §eAbyss Monarch"),
+            Component.translatable("awakening_system.msg.golden_wolflord_abyss_monarch"),
             BossEvent.BossBarColor.YELLOW,
             BossEvent.BossBarOverlay.NOTCHED_10
     ).setDarkenScreen(false);

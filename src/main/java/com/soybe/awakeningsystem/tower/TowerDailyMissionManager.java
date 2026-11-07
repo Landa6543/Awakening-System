@@ -441,14 +441,14 @@ public final class TowerDailyMissionManager {
 
         CompoundTag tag = player.getPersistentData();
         if (!tag.getBoolean("tower_has_entered")) {
-            player.sendSystemMessage(Component.literal("§c[!] Debes cruzar primero el Portal hacia la Torre del Ranker para registrarte antes de poder aceptar misiones."));
+            player.sendSystemMessage(Component.translatable("awakening_system.msg.debes_cruzar_primero_el_portal_hacia"));
             player.playNotifySound(SoundEvents.VILLAGER_NO, SoundSource.PLAYERS, 1.0F, 1.0F);
             return;
         }
 
         // Comprobación de piso estricta
         if (template.floor() > data.savedTowerFloor()) {
-            player.sendSystemMessage(Component.literal("§c[!] Este contrato está bloqueado. Requiere conquistar el Piso " + template.floor() + " de la Torre."));
+            player.sendSystemMessage(Component.translatable("awakening_system.msg.este_contrato_esta_bloqueado_requiere_conquistar", String.valueOf(template.floor())));
             player.playNotifySound(SoundEvents.VILLAGER_NO, SoundSource.PLAYERS, 1.0F, 1.0F);
             return;
         }
@@ -457,7 +457,7 @@ public final class TowerDailyMissionManager {
 
         // Comprobar si ya la completó hoy
         if (tag.getLong("tower_mission_comp_day_" + missionIndex) == currentDay) {
-            player.sendSystemMessage(Component.literal("§e[!] Ya has completado este contrato de la torre en el día de hoy."));
+            player.sendSystemMessage(Component.translatable("awakening_system.msg.ya_has_completado_este_contrato_de"));
             player.playNotifySound(SoundEvents.VILLAGER_NO, SoundSource.PLAYERS, 1.0F, 1.0F);
             return;
         }
@@ -480,9 +480,9 @@ public final class TowerDailyMissionManager {
         player.playNotifySound(SoundEvents.VILLAGER_WORK_CARTOGRAPHER, SoundSource.BLOCKS, 1.0F, 1.0F);
         player.playNotifySound(SoundEvents.BOOK_PAGE_TURN, SoundSource.BLOCKS, 1.0F, 1.2F);
 
-        player.sendSystemMessage(Component.literal("§6📜 §l[CONTRATO DE LA TORRE ACEPTADO] §e" + template.title()));
-        player.sendSystemMessage(Component.literal("§7Objetivo: " + template.targetName() + " x" + template.targetCount() + " en el Piso " + template.floor()));
-        player.displayClientMessage(Component.literal("§a¡Misión de la Torre aceptada!"), true);
+        player.sendSystemMessage(Component.translatable("awakening_system.msg.contrato_de_la_torre_aceptado", String.valueOf(template.title())));
+        player.sendSystemMessage(Component.translatable("awakening_system.msg.objetivo_en_el_piso", String.valueOf(template.targetName()), String.valueOf(template.targetCount()), String.valueOf(template.floor())));
+        player.displayClientMessage(Component.translatable("awakening_system.msg.mision_de_la_torre_aceptada"), true);
 
         openBoardFor(player);
     }
@@ -500,13 +500,13 @@ public final class TowerDailyMissionManager {
 
         if (template.isCollection()) {
             if (!consumeCollectionItems(player, template.targetType(), needed)) {
-                player.displayClientMessage(Component.literal("§cNo tienes los materiales requeridos en tu inventario."), true);
+                player.displayClientMessage(Component.translatable("awakening_system.msg.no_tienes_los_materiales_requeridos_en"), true);
                 player.playNotifySound(SoundEvents.VILLAGER_NO, SoundSource.PLAYERS, 1.0F, 1.0F);
                 return;
             }
         } else {
             if (progress < needed) {
-                player.displayClientMessage(Component.literal("§cEl objetivo de la misión aún no está completo (" + progress + "/" + needed + ")."), true);
+                player.displayClientMessage(Component.translatable("awakening_system.msg.el_objetivo_de_la_mision_aun", String.valueOf(progress), String.valueOf(needed)), true);
                 player.playNotifySound(SoundEvents.VILLAGER_NO, SoundSource.PLAYERS, 1.0F, 1.0F);
                 return;
             }
@@ -544,11 +544,11 @@ public final class TowerDailyMissionManager {
         player.playNotifySound(SoundEvents.UI_TOAST_CHALLENGE_COMPLETE, SoundSource.PLAYERS, 1.2F, 1.0F);
         player.playNotifySound(SoundEvents.PLAYER_LEVELUP, SoundSource.PLAYERS, 1.0F, 1.2F);
 
-        player.sendSystemMessage(Component.literal("§6§l🏆 [MISIÓN DE LA TORRE COMPLETADA] §f" + template.title())
+        player.sendSystemMessage(Component.translatable("awakening_system.msg.mision_de_la_torre_completada", String.valueOf(template.title()))
                 .withStyle(ChatFormatting.GOLD, ChatFormatting.BOLD));
         player.sendSystemMessage(Component.literal(String.format("§aRecompensas: §e+%d Monedas §7| §b+%d EXP §7| §d+%d Primogemas §7| §f+%s",
                 template.rewardCoins(), template.rewardExp(), template.rewardGems(), template.rewardMaterialName())));
-        player.displayClientMessage(Component.literal("§a¡Recompensa del Tablón reclamada con éxito!"), true);
+        player.displayClientMessage(Component.translatable("awakening_system.msg.recompensa_del_tablon_reclamada_con_exito"), true);
 
         openBoardFor(player);
     }
@@ -557,7 +557,7 @@ public final class TowerDailyMissionManager {
         CompoundTag tag = player.getPersistentData();
         if (tag.getBoolean("tower_mission_active")) {
             tag.putBoolean("tower_mission_active", false);
-            player.sendSystemMessage(Component.literal("§c[!] Has abandonado tu misión actual de la torre."));
+            player.sendSystemMessage(Component.translatable("awakening_system.msg.has_abandonado_tu_mision_actual_de"));
             player.playNotifySound(SoundEvents.LEASH_KNOT_BREAK, SoundSource.PLAYERS, 1.0F, 0.8F);
             openBoardFor(player);
         }
@@ -616,9 +616,9 @@ public final class TowerDailyMissionManager {
 
             if (killed == needed) {
                 player.playNotifySound(SoundEvents.PLAYER_LEVELUP, SoundSource.PLAYERS, 1.0F, 1.5F);
-                player.sendSystemMessage(Component.literal("§6§l✨ [OBJETIVO DE LA TORRE COMPLETADO] §a" + template.title()));
-                player.sendSystemMessage(Component.literal("§7Regresa al Tablón de Misiones en la entrada exterior para reclamar tu recompensa."));
-                player.displayClientMessage(Component.literal("§a¡Misión completada! Reclama tu recompensa en el Tablón exterior."), true);
+                player.sendSystemMessage(Component.translatable("awakening_system.msg.objetivo_de_la_torre_completado", String.valueOf(template.title())));
+                player.sendSystemMessage(Component.translatable("awakening_system.msg.regresa_al_tablon_de_misiones_en"));
+                player.displayClientMessage(Component.translatable("awakening_system.msg.mision_completada_reclama_tu_recompensa_en"), true);
             } else if (killed < needed) {
                 player.displayClientMessage(Component.literal("§e" + template.targetName() + ": §a" + killed + "§7/§e" + needed), true);
             }

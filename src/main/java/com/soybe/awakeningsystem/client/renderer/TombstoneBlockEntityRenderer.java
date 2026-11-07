@@ -49,7 +49,7 @@ public class TombstoneBlockEntityRenderer extends GeoBlockRenderer<TombstoneBloc
                     poseStack.scale(-0.02F, -0.02F, 0.02F);
 
                     Font font = mc.font;
-                    Component nameComp = Component.literal("§b☠ Lápida de §f" + ownerName);
+                    Component nameComp = Component.translatable("awakening_system.msg.lapida_de", String.valueOf(ownerName));
                     float x = -font.width(nameComp) / 2.0F;
                     font.drawInBatch(nameComp, x, 0, 0xFFFFFFFF, false, poseStack.last().pose(), bufferSource, Font.DisplayMode.POLYGON_OFFSET, 0x40000000, packedLight);
                     poseStack.popPose();

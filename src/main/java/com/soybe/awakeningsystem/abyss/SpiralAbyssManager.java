@@ -708,7 +708,7 @@ public final class SpiralAbyssManager {
         AbyssChallengeKeyEntity keyEntity = ModEntities.ABYSS_CHALLENGE_KEY.get().create(level);
         if (keyEntity != null) {
             keyEntity.moveTo(center.getX() + 0.5, center.getY() + 1.0, center.getZ() + 0.5, 0.0F, 0.0F);
-            keyEntity.setCustomName(Component.literal("§c§l✦ START CHALLENGE (CHAMBER " + session.currentChamber + ") ✦"));
+            keyEntity.setCustomName(Component.translatable("awakening_system.msg.start_challenge_chamber", String.valueOf(session.currentChamber)));
             keyEntity.setCustomNameVisible(true);
             level.addFreshEntity(keyEntity);
             session.challengeKeyEntityId = keyEntity.getUUID();
@@ -1246,7 +1246,7 @@ public final class SpiralAbyssManager {
                     if (monolith != null) {
                         monolithHpPct = Math.max(0.0F, Math.min(1.0F, monolith.getHealth() / session.monolithMaxHp));
                         String col = monolithHpPct >= 0.6F ? "§a" : (monolithHpPct >= 0.3F ? "§e" : "§c");
-                        monolith.setCustomName(Component.literal("§b§l✦ Monolito: " + col + (int)(monolithHpPct * 100) + "% §b✦"));
+                        monolith.setCustomName(Component.translatable("awakening_system.msg.monolito", String.valueOf(col), String.valueOf((int)(monolithHpPct * 100))));
 
                         if (session.ticksInChamber % 20 == 0) {
                             for (UUID mobId : session.activeEnemies) {
@@ -1286,16 +1286,11 @@ public final class SpiralAbyssManager {
                             BossEvent.BossBarColor barCol = monolithHpPct >= 0.6F ? BossEvent.BossBarColor.GREEN : (monolithHpPct >= 0.3F ? BossEvent.BossBarColor.YELLOW : BossEvent.BossBarColor.RED);
                             session.bossEvent.setColor(barCol);
                             String pctCol = monolithHpPct >= 0.6F ? "§a" : (monolithHpPct >= 0.3F ? "§e" : "§c");
-                            session.bossEvent.setName(Component.literal(
-                                    "§b✦ SPIRAL ABYSS §7| §6Monolith: " + pctCol + (int)(monolithHpPct * 100) + "%" + halfTag + " §7(" + timeStr + ") §8| §cMonsters: " + remaining + "/" + session.totalEnemiesInWave
-                            ));
+                            session.bossEvent.setName(Component.translatable("awakening_system.msg.spiral_abyss_monolith_monsters", String.valueOf(pctCol), String.valueOf((int)(monolithHpPct * 100)), String.valueOf(halfTag), String.valueOf(timeStr), String.valueOf(remaining), String.valueOf(session.totalEnemiesInWave)));
                         } else {
                             float progress = Math.max(0.0F, (float) session.chamberSecondsRemaining / 300.0F);
                             session.bossEvent.setProgress(progress);
-                            session.bossEvent.setName(Component.literal(
-                                    "§b✦ SPIRAL ABYSS §7| §eFloor " + session.floorNumber + " - Chamber " + session.currentChamber + halfTag +
-                                            " §7(" + timeStr + ") §8| §cMonsters: " + remaining + "/" + session.totalEnemiesInWave
-                            ));
+                            session.bossEvent.setName(Component.translatable("awakening_system.msg.spiral_abyss_floor_chamber_monsters", String.valueOf(session.floorNumber), String.valueOf(session.currentChamber), String.valueOf(halfTag), String.valueOf(timeStr), String.valueOf(remaining), String.valueOf(session.totalEnemiesInWave)));
                         }
                     }
 

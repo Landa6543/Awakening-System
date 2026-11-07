@@ -347,7 +347,7 @@ public class GachaCapsuleItem extends Item {
         }
 
         ItemStack leftover = data.addToSubspace(remaining);
-        player.sendSystemMessage(Component.literal("§6✦ [SYSTEM] §eYour inventory was full! §fReward (" + rewardStack.getHoverName().getString() + ") was stored in your §eSystem Subspace§f."));
+        player.sendSystemMessage(Component.translatable("awakening_system.msg.system_your_inventory_was_full_reward", String.valueOf(rewardStack.getHoverName().getString())));
         player.playNotifySound(SoundEvents.CHEST_OPEN, SoundSource.PLAYERS, 0.8f, 1.2f);
         com.soybe.awakeningsystem.AwakeningSystemMod.sync(player);
 

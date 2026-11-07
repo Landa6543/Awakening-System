@@ -1570,7 +1570,7 @@ public final class AwakeningSystemMod {
                         player.teleportTo(targetLevel, foundNpc.getX(), foundNpc.getY(), foundNpc.getZ(), player.getYRot(), player.getXRot());
                         player.playNotifySound(net.minecraft.sounds.SoundEvents.ENDERMAN_TELEPORT, net.minecraft.sounds.SoundSource.PLAYERS, 1.0F, 1.0F);
                         targetLevel.sendParticles(net.minecraft.core.particles.ParticleTypes.PORTAL, player.getX(), player.getY() + 1.0D, player.getZ(), 40, 0.5D, 1.0D, 0.5D, 0.15D);
-                        player.sendSystemMessage(net.minecraft.network.chat.Component.literal("§a[Gremio] §fTe has teletransportado junto a tu compañero §e" + foundNpc.getNpcProfile().displayName() + "§f."));
+                        player.sendSystemMessage(net.minecraft.network.chat.Component.translatable("awakening_system.msg.gremio_te_has_teletransportado_junto_tu", String.valueOf(foundNpc.getNpcProfile().displayName())));
                     } else {
                         player.sendSystemMessage(net.minecraft.network.chat.Component.translatable("gui.awakening_system.guild.player_offline"));
                     }

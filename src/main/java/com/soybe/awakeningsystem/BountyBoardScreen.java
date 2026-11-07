@@ -223,7 +223,7 @@ public final class BountyBoardScreen extends Screen {
                 if (payload.activeKilled() >= payload.activeNeeded()) {
                     g.drawString(this.font, Component.translatable("awakening_system.bounty_board.ready"), listX + 22, itemY + 15, 0xFF2E7D32, false);
                 } else {
-                    g.drawString(this.font, "§4[" + payload.activeKilled() + "/" + payload.activeNeeded() + "] §8En curso", listX + 22, itemY + 15, 0xFF444444, false);
+                    g.drawString(this.font, Component.translatable("awakening_system.msg.en_curso", String.valueOf(payload.activeKilled()), String.valueOf(payload.activeNeeded())).getString(), listX + 22, itemY + 15, 0xFF444444, false);
                 }
             } else {
                 g.drawString(this.font, "§6" + item.coins + " M §8| §5" + item.medals + "🏅", listX + 22, itemY + 15, 0xFF555555, false);
@@ -341,7 +341,7 @@ public final class BountyBoardScreen extends Screen {
                 int rewH = 32;
                 g.fill(detX + 8, rewY, detX + detW - 8, rewY + rewH, 0xFFEEDBB7);
                 g.drawString(this.font, Component.translatable("awakening_system.bounty_board.rewards_header"), detX + 14, rewY + 4, 0xFF8B5A00, false);
-                g.drawString(this.font, Component.literal("§0• §6+" + sel.coins + " M   §2+" + sel.exp + " EXP   §5+" + sel.medals + " 🏅"), detX + 14, rewY + 16, 0xFF000000, false);
+                g.drawString(this.font, Component.translatable("awakening_system.msg.exp", String.valueOf(sel.coins), String.valueOf(sel.exp), String.valueOf(sel.medals)), detX + 14, rewY + 16, 0xFF000000, false);
 
                 // Estado de progreso
                 boolean isActiveContract = (payload.hasActiveBounty() && payload.activeIndex() == selGlobalIdx);

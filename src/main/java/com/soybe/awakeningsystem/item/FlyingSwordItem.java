@@ -61,7 +61,7 @@ public class FlyingSwordItem extends SwordItem implements AwakeningWeaponItem {
                 sp.startRiding(sword, true);
 
                 level.playSound(null, sp.getX(), sp.getY(), sp.getZ(), SoundEvents.TRIDENT_RIPTIDE_1.value(), SoundSource.PLAYERS, 1.2F, 1.2F);
-                sp.displayClientMessage(Component.literal("§b§l[ESPADA VOLADORA] §fSurcando los cielos con Qi espiritual. (W para avanzar/ascender, Shift para descender/desmontar)"), true);
+                sp.displayClientMessage(Component.translatable("awakening_system.msg.espada_voladora_surcando_los_cielos_con"), true);
 
                 return InteractionResultHolder.sidedSuccess(stack, false);
             }

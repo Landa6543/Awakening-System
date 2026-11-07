@@ -621,7 +621,7 @@ public class UmaHubScreen extends Screen {
                 graphics.renderOutline(cx, cy, cardW, cardH, 0x8800E5FF);
                 String tag = part.isNpc() ? "§e[NPC] " : "§6★ ";
                 graphics.drawString(this.font, Component.translatable("awakening_system.uma.hub.race.lane", lane + 1, tag + part.displayName()), cx + 8, cy + 4, 0xFFFFFF, true);
-                graphics.drawString(this.font, "§e" + UmaProfile.byId(part.umaId()).getDisplayName() + " §6(★" + part.rarity() + ") §7• Spd: §a§l" + part.speed(), cx + 8, cy + 16, 0xFFCCE3EC, true);
+                graphics.drawString(this.font, Component.translatable("awakening_system.msg.spd", String.valueOf(UmaProfile.byId(part.umaId()).getDisplayName()), String.valueOf(part.rarity()), String.valueOf(part.speed())).getString(), cx + 8, cy + 16, 0xFFCCE3EC, true);
             } else {
                 graphics.fillGradient(cx, cy, cx + cardW, cy + cardH, 0x300F1F30, 0x30091420);
                 graphics.renderOutline(cx, cy, cardW, cardH, 0x4000E5FF);

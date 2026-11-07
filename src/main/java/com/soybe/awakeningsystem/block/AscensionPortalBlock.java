@@ -154,7 +154,7 @@ public class AscensionPortalBlock extends Block implements EntityBlock {
     public static void handlePortalActivation(ServerPlayer player, BlockPos pos, Level level) {
         if (player.isShiftKeyDown()) {
             player.setRespawnPosition(level.dimension(), pos, player.getYRot(), true, true);
-            player.displayClientMessage(net.minecraft.network.chat.Component.literal("§d§l[Portal de la Torre] §aPunto de reaparición establecido."), true);
+            player.displayClientMessage(net.minecraft.network.chat.Component.translatable("awakening_system.msg.portal_de_la_torre_punto_de"), true);
             player.playNotifySound(net.minecraft.sounds.SoundEvents.RESPAWN_ANCHOR_SET_SPAWN, SoundSource.BLOCKS, 1.0F, 1.0F);
             return;
         }
@@ -177,7 +177,7 @@ public class AscensionPortalBlock extends Block implements EntityBlock {
             int currentFloor = com.soybe.awakeningsystem.tower.GreatTowerWorldManager.getFloorForPos(level, pos);
             if (pType == PortalType.ASCEND) {
                 if (currentFloor >= 10) {
-                    player.displayClientMessage(Component.literal("§6§l[Gran Torre] §7Has alcanzado la cima de los pisos disponibles en esta versión (Piso 10). ¡Nuevos pisos en próximas actualizaciones!"), true);
+                    player.displayClientMessage(Component.translatable("awakening_system.msg.gran_torre_has_alcanzado_la_cima"), true);
                     player.playNotifySound(SoundEvents.BEACON_DEACTIVATE, SoundSource.PLAYERS, 0.8F, 1.0F);
                 } else {
                     com.soybe.awakeningsystem.tower.GreatTowerWorldManager.enterFloor(player, currentFloor + 1);
@@ -196,7 +196,7 @@ public class AscensionPortalBlock extends Block implements EntityBlock {
         boolean hasPotential = player.getPersistentData().contains("tower_potential_rank")
                 || player.getPersistentData().getBoolean("tower_selected");
         if (!hasPotential) {
-            player.displayClientMessage(net.minecraft.network.chat.Component.literal("§5§l[Gran Torre] §r§7El vórtice dimensional te rechaza... Solo aquellos §deleggidos por la Torre§7 cuyo §dPotencial Innato§7 haya sido despertado en el altar pueden cruzar este umbral."), true);
+            player.displayClientMessage(net.minecraft.network.chat.Component.translatable("awakening_system.msg.gran_torre_el_vortice_dimensional_te"), true);
             player.playNotifySound(SoundEvents.BEACON_DEACTIVATE, SoundSource.PLAYERS, 0.8F, 0.75F);
         } else {
             String rank = player.getPersistentData().getString("tower_potential_rank");
@@ -248,7 +248,7 @@ public class AscensionPortalBlock extends Block implements EntityBlock {
                 int currentFloor = com.soybe.awakeningsystem.tower.GreatTowerWorldManager.getFloorForPos(level, pos);
                 if (pType == PortalType.ASCEND) {
                     if (currentFloor >= 20) {
-                        player.displayClientMessage(Component.literal("§6§l[Gran Torre] §7Has alcanzado la cima de los pisos disponibles en esta versión (Piso 20). ¡Nuevos pisos en próximas actualizaciones!"), true);
+                        player.displayClientMessage(Component.translatable("awakening_system.msg.gran_torre_has_alcanzado_la_cima_2"), true);
                         player.playNotifySound(SoundEvents.BEACON_DEACTIVATE, SoundSource.PLAYERS, 0.8F, 1.0F);
                     } else {
                         com.soybe.awakeningsystem.tower.GreatTowerWorldManager.enterFloor(player, currentFloor + 1);
@@ -265,7 +265,7 @@ public class AscensionPortalBlock extends Block implements EntityBlock {
                 boolean hasPotential = player.getPersistentData().contains("tower_potential_rank")
                         || player.getPersistentData().getBoolean("tower_selected");
                 if (!hasPotential) {
-                    player.displayClientMessage(net.minecraft.network.chat.Component.literal("§5§l[Gran Torre] §r§7El vórtice dimensional te rechaza... Solo aquellos §deleggidos por la Torre§7 cuyo §dPotencial Innato§7 haya sido despertado en el altar pueden cruzar este umbral."), true);
+                    player.displayClientMessage(net.minecraft.network.chat.Component.translatable("awakening_system.msg.gran_torre_el_vortice_dimensional_te"), true);
                     player.playNotifySound(SoundEvents.BEACON_DEACTIVATE, SoundSource.PLAYERS, 0.8F, 0.75F);
                 } else {
                     String rank = player.getPersistentData().getString("tower_potential_rank");

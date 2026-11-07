@@ -342,7 +342,7 @@ public final class LimboWorldManager {
      * cuando un jugador ha cruzado victorioso, preparando el desafío para futuros cazadores.
      */
     private static void setupGuardianAngel(LimboOphanimEntity ophanim, ServerLevel level) {
-        ophanim.setCustomName(Component.literal("§6Ángel Guardián"));
+        ophanim.setCustomName(Component.translatable("awakening_system.msg.angel_guardian"));
         ophanim.setCustomNameVisible(true);
         // Escala orgánicamente con los cazadores en el Limbo sin exhibir un nivel numérico
         int maxHunterLevel = 1;

@@ -90,7 +90,7 @@ public class AceCombatHudOverlay {
             g.drawString(mc.font, pips, 0, 9, pipColor, false);
         } else {
             // In MINING mode, show a small sub-hint
-            g.drawString(mc.font, "Vainilla", 0, 9, (alphaInt << 24) | 0x81D4FA, false);
+            g.drawString(mc.font, net.minecraft.network.chat.Component.translatable("awakening_system.msg.vainilla").getString(), 0, 9, (alphaInt << 24) | 0x81D4FA, false);
         }
         g.pose().popPose();
     }

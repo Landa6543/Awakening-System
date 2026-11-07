@@ -327,8 +327,8 @@ public class MineralAppleItem extends Item {
     @Override
     public void appendHoverText(ItemStack stack, TooltipContext context, List<Component> tooltip, TooltipFlag flag) {
         String encPrefix = enchanted ? "§6✦ Encantada ✦" : "§7Base";
-        tooltip.add(Component.literal("§8Tier " + tier.tierNumber + " - " + encPrefix));
-        tooltip.add(Component.literal("§7Nivel Requerido: §eNv. " + tier.reqLevel + "+"));
+        tooltip.add(Component.translatable("awakening_system.msg.tier", String.valueOf(tier.tierNumber), String.valueOf(encPrefix)));
+        tooltip.add(Component.translatable("awakening_system.msg.nivel_requerido_nv", String.valueOf(tier.reqLevel)));
         tooltip.add(Component.literal(""));
         tooltip.add(Component.translatable("item.awakening_system." + (enchanted ? "enchanted_" : "") + tier.idName + "_apple.desc"));
     }

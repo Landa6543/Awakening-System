@@ -476,8 +476,8 @@ public final class SystemHudOverlay {
         graphics.renderOutline(cardX + 6, curY, cardW - 12, footerH, 0x40276A82);
 
         int colW = (cardW - 14) / 3;
-        graphics.drawString(mc.font, "§bDEF §f" + armor, cardX + 9, curY + 2, 0xFFFFFFFF, false);
-        graphics.drawString(mc.font, "§cATK §f" + attack, cardX + 9 + colW, curY + 2, 0xFFFFFFFF, false);
+        graphics.drawString(mc.font, Component.translatable("awakening_system.msg.def", String.valueOf(armor)).getString(), cardX + 9, curY + 2, 0xFFFFFFFF, false);
+        graphics.drawString(mc.font, Component.translatable("awakening_system.msg.atk", String.valueOf(attack)).getString(), cardX + 9 + colW, curY + 2, 0xFFFFFFFF, false);
 
         int coinX = cardX + 9 + colW * 2;
         ItemStack coinIcon = SystemItems.coin(1);

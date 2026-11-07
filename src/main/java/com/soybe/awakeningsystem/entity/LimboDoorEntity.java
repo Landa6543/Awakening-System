@@ -81,11 +81,11 @@ public class LimboDoorEntity extends Entity implements GeoEntity {
 
             for (ServerPlayer player : this.level().getEntitiesOfClass(ServerPlayer.class, this.getBoundingBox().inflate(64.0D))) {
                 player.displayClientMessage(
-                        Component.literal("§b§l[PUERTA DEL LIMBO] §a§l¡Los 2 Ángeles Guardianes han sido derrotados! El umbral de escape está abierto."),
+                        Component.translatable("awakening_system.msg.puerta_del_limbo_los_angeles_guardianes"),
                         false
                 );
                 player.displayClientMessage(
-                        Component.literal("§a§l¡Portal Desbloqueado! Cruza la puerta para volver al Overworld."),
+                        Component.translatable("awakening_system.msg.portal_desbloqueado_cruza_la_puerta_para"),
                         true
                 );
             }
@@ -94,7 +94,7 @@ public class LimboDoorEntity extends Entity implements GeoEntity {
                     SoundEvents.RESPAWN_ANCHOR_CHARGE, SoundSource.BLOCKS, 1.0F, 1.0F);
             for (ServerPlayer player : this.level().getEntitiesOfClass(ServerPlayer.class, this.getBoundingBox().inflate(64.0D))) {
                 player.displayClientMessage(
-                        Component.literal("§e§l[PUERTA DEL LIMBO] §6Ángel derrotado (" + this.guardiansDefeated + "/2). Derrota al siguiente ángel para abrir el portal."),
+                        Component.translatable("awakening_system.msg.puerta_del_limbo_angel_derrotado_derrota", String.valueOf(this.guardiansDefeated)),
                         true
                 );
             }
@@ -195,7 +195,7 @@ public class LimboDoorEntity extends Entity implements GeoEntity {
         if (!this.level().isClientSide() && player instanceof ServerPlayer serverPlayer) {
             if (serverPlayer.isShiftKeyDown()) {
                 serverPlayer.setRespawnPosition(this.level().dimension(), this.blockPosition(), serverPlayer.getYRot(), true, true);
-                serverPlayer.displayClientMessage(Component.literal("§b§l[Puerta del Limbo] §aPunto de reaparición establecido."), true);
+                serverPlayer.displayClientMessage(Component.translatable("awakening_system.msg.puerta_del_limbo_punto_de_reaparicion"), true);
                 this.level().playSound(null, this.getX(), this.getY(), this.getZ(), SoundEvents.RESPAWN_ANCHOR_SET_SPAWN, SoundSource.BLOCKS, 1.0F, 1.0F);
                 return InteractionResult.SUCCESS;
             }
@@ -223,7 +223,7 @@ public class LimboDoorEntity extends Entity implements GeoEntity {
             if (lockedAlertCooldown <= 0) {
                 int needed = Math.max(1, 2 - this.guardiansDefeated);
                 player.displayClientMessage(
-                        Component.literal("§c§l[Puerta del Limbo Sellada] §eDerrota a los 2 Ángeles Guardianes para desbloquear el portal. (" + this.guardiansDefeated + "/2 derrotados)"),
+                        Component.translatable("awakening_system.msg.puerta_del_limbo_sellada_derrota_los", String.valueOf(this.guardiansDefeated)),
                         true
                 );
                 this.level().playSound(null, this.getX(), this.getY(), this.getZ(),

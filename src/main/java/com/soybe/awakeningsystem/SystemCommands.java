@@ -575,7 +575,7 @@ public final class SystemCommands {
                     ServerPlayer player = context.getSource().getPlayerOrException();
                     boolean spawned = com.soybe.awakeningsystem.world.SideriteMeteorManager.spawnMeteorNearPlayer(player, true);
                     if (spawned) {
-                        context.getSource().sendSuccess(() -> Component.literal("§a[METEORITO] §f¡Se ha invocado una caída de meteorito de Siderita!"), true);
+                        context.getSource().sendSuccess(() -> Component.translatable("awakening_system.msg.meteorito_se_ha_invocado_una_caida"), true);
                     }
                     return 1;
                 }));
@@ -638,7 +638,7 @@ public final class SystemCommands {
                             ServerPlayer p = context.getSource().getPlayerOrException();
                             BlockPos target = p.blockPosition().relative(p.getDirection(), 5);
                             DungeonManager.buildDungeonGateRuins(p.serverLevel(), target);
-                            context.getSource().sendSuccess(() -> Component.literal("§5✦ Dungeon Gate Ruins NBT structure placed at §e" + target.toShortString() + "§5!"), true);
+                            context.getSource().sendSuccess(() -> Component.translatable("awakening_system.msg.dungeon_gate_ruins_nbt_structure_placed", String.valueOf(target.toShortString())), true);
                             return 1;
                         }))
                 .then(Commands.literal("ruins")
@@ -647,7 +647,7 @@ public final class SystemCommands {
                             ServerPlayer p = context.getSource().getPlayerOrException();
                             BlockPos target = p.blockPosition().relative(p.getDirection(), 5);
                             DungeonManager.buildDungeonGateRuins(p.serverLevel(), target);
-                            context.getSource().sendSuccess(() -> Component.literal("§5✦ Dungeon Gate Ruins NBT structure placed at §e" + target.toShortString() + "§5!"), true);
+                            context.getSource().sendSuccess(() -> Component.translatable("awakening_system.msg.dungeon_gate_ruins_nbt_structure_placed", String.valueOf(target.toShortString())), true);
                             return 1;
                         }))
                 .then(Commands.literal("rift")
@@ -834,7 +834,7 @@ public final class SystemCommands {
                     if (context.getSource().getEntity() instanceof ServerPlayer sp) {
                         return resetPlayer(context.getSource(), sp);
                     } else {
-                        context.getSource().sendFailure(Component.literal("Specify a player: /resetprogress <player>"));
+                        context.getSource().sendFailure(Component.translatable("awakening_system.msg.specify_player_resetprogress_player"));
                         return 0;
                     }
                 })
@@ -1056,7 +1056,7 @@ public final class SystemCommands {
         data.setBannerEpochStartTick(now);
         PromotionalBanner.setBannerEpochTick(now);
         PromotionalBanner.BannerPhase phase1 = PromotionalBanner.getActivePhase(now, 0);
-        source.sendSuccess(() -> Component.literal("§6§l✦ [BANNERS RESET] §fThe promotional banner cycle has begun from §ePhase 1: " + phase1.bannerTitle() + " (" + phase1.franchise().displayName() + ") §fwith §a14 days remaining §f(336,000 ticks)."), true);
+        source.sendSuccess(() -> Component.translatable("awakening_system.msg.banners_reset_the_promotional_banner_cycle", String.valueOf(phase1.bannerTitle()), String.valueOf(phase1.franchise().displayName())), true);
         return 1;
     }
 
@@ -1068,7 +1068,7 @@ public final class SystemCommands {
         data.setBannerEpochStartTick(targetEpoch);
         PromotionalBanner.setBannerEpochTick(targetEpoch);
         PromotionalBanner.BannerPhase activeP = PromotionalBanner.getActivePhase(now, 0);
-        source.sendSuccess(() -> Component.literal("§6§l✦ [PHASE CHANGED] §fSet to §ePhase " + phase + ": " + activeP.bannerTitle() + " (" + activeP.franchise().displayName() + ") §fwith §a14 days remaining§f."), true);
+        source.sendSuccess(() -> Component.translatable("awakening_system.msg.phase_changed_set_to_phase_with", String.valueOf(phase), String.valueOf(activeP.bannerTitle()), String.valueOf(activeP.franchise().displayName())), true);
         return 1;
     }
 
@@ -1078,21 +1078,17 @@ public final class SystemCommands {
             return 0;
         }
         SystemData data = SystemEvents.data(player);
-        source.sendSuccess(() -> Component.literal("§b========== SYSTEM ==========\n" +
-                "§fLevel: §e" + data.level() + " §7| §fEXP: §b" + data.experience() + "/" + data.nextLevelExperience() + "\n" +
-                "§6Coins: §e" + data.coins() + " §8| §ePoints: §a" + data.attributePoints() + "\n" +
-                "§c⚔ STR §f" + data.strength() + "  §a❤ VIT §f" + data.vitality() + "  §b⚡ AGI §f" + data.agility() + "\n" +
-                "§d👁 PER §f" + data.perception() + "  §9🧠 INT §f" + data.intelligence() + "  §5🛡 WIL §f" + data.willpower()), false);
+        source.sendSuccess(() -> Component.translatable("awakening_system.msg.system_level_exp_coins_points_str", String.valueOf(data.level()), String.valueOf(data.experience()), String.valueOf(data.nextLevelExperience()), String.valueOf(data.coins()), String.valueOf(data.attributePoints()), String.valueOf(data.strength()), String.valueOf(data.vitality()), String.valueOf(data.agility()), String.valueOf(data.perception()), String.valueOf(data.intelligence()), String.valueOf(data.willpower())), false);
         return 1;
     }
 
     private static int showCoins(CommandSourceStack source) {
         if (!(source.getEntity() instanceof ServerPlayer player)) {
-            source.sendFailure(Component.literal("Usage: /coins <amount> <player>"));
+            source.sendFailure(Component.translatable("awakening_system.msg.usage_coins_amount_player"));
             return 0;
         }
         SystemData data = SystemEvents.data(player);
-        source.sendSuccess(() -> Component.literal("§6§l[SYSTEM]§r Current balance: §e" + data.coins() + " §fAwakening coins. (Use: §e/coins <amount>§f)"), false);
+        source.sendSuccess(() -> Component.translatable("awakening_system.msg.system_current_balance_awakening_coins_use", String.valueOf(data.coins())), false);
         return 1;
     }
 
@@ -1102,7 +1098,7 @@ public final class SystemCommands {
             player = sp;
         }
         if (player == null) {
-            source.sendFailure(Component.literal("You must specify a target player."));
+            source.sendFailure(Component.translatable("awakening_system.msg.you_must_specify_target_player"));
             return 0;
         }
         SystemData data = SystemEvents.data(player);
@@ -1112,18 +1108,17 @@ public final class SystemCommands {
         AwakeningSystemMod.notify(player, "awakening_system.notification.shop.coin_title",
                 "awakening_system.notification.shop.coin_message", 0xFFFFD866, amount);
         final ServerPlayer finalPlayer = player;
-        source.sendSuccess(() -> Component.literal("§6§l[SYSTEM]§r Added §e" + amount + " §fcoins to §b"
-                + finalPlayer.getGameProfile().getName() + "§f. Total: §e" + data.coins() + " §fcoins."), true);
+        source.sendSuccess(() -> Component.translatable("awakening_system.msg.system_added_coins_to_total_coins", String.valueOf(amount), String.valueOf(finalPlayer.getGameProfile().getName()), String.valueOf(data.coins())), true);
         return 1;
     }
 
     private static int showCarats(CommandSourceStack source) {
         if (!(source.getEntity() instanceof ServerPlayer player)) {
-            source.sendFailure(Component.literal("Usage: /carats <amount> [player]"));
+            source.sendFailure(Component.translatable("awakening_system.msg.usage_carats_amount_player"));
             return 0;
         }
         SystemData data = SystemEvents.data(player);
-        source.sendSuccess(() -> Component.literal("§6🥕 [TRACEN] §fCurrent Carats balance: §e" + data.getCarats() + " 🥕§f."), false);
+        source.sendSuccess(() -> Component.translatable("awakening_system.msg.tracen_current_carats_balance", String.valueOf(data.getCarats())), false);
         return 1;
     }
 
@@ -1133,15 +1128,14 @@ public final class SystemCommands {
             player = sp;
         }
         if (player == null) {
-            source.sendFailure(Component.literal("You must specify a target player."));
+            source.sendFailure(Component.translatable("awakening_system.msg.you_must_specify_target_player"));
             return 0;
         }
         SystemData data = SystemEvents.data(player);
         data.addCarats(amount);
         AwakeningSystemMod.sync(player);
         final ServerPlayer finalPlayer = player;
-        source.sendSuccess(() -> Component.literal("§6🥕 [TRACEN] §fGranted §e" + amount + " Carats 🥕 §fto §e"
-                + finalPlayer.getGameProfile().getName() + "§f. Total: §e" + data.getCarats() + " 🥕§f."), true);
+        source.sendSuccess(() -> Component.translatable("awakening_system.msg.tracen_granted_carats_to_total", String.valueOf(amount), String.valueOf(finalPlayer.getGameProfile().getName()), String.valueOf(data.getCarats())), true);
         return 1;
     }
 
@@ -1163,7 +1157,7 @@ public final class SystemCommands {
             player.getInventory().add(new ItemStack(keyItem, 16));
         }
         AwakeningSystemMod.sync(player);
-        source.sendSuccess(() -> Component.literal("§a§l[SYSTEM]§r Full unlock complete! Level " + data.level() + ", " + data.skills().size() + " skills unlocked at Level VI (active, passive, and manhwas), mythic titles, max affinities, 16 dungeon keys, and 1,000,000 coins."), true);
+        source.sendSuccess(() -> Component.translatable("awakening_system.msg.system_full_unlock_complete_level_skills", String.valueOf(data.level()), String.valueOf(data.skills().size())), true);
         return 1;
     }
 
@@ -1173,13 +1167,13 @@ public final class SystemCommands {
             return 0;
         }
         SystemData data = SystemEvents.data(player);
-        source.sendSuccess(() -> Component.literal("§6§l✦ [SISTEMA — HÁBITO Y CONSTANCIA] ✦"), false);
-        source.sendSuccess(() -> Component.literal("§c🛡️ Cuerpo Templado: §fNiv. " + data.skills().getOrDefault("enduring_flesh", 0) + " §7(Daño resistido: §e" + data.habitDamageTaken() + " §7/ §b" + data.getHabitRequired("enduring_flesh") + "§7)"), false);
-        source.sendSuccess(() -> Component.literal("§a💨 Paso del Viento: §fNiv. " + data.skills().getOrDefault("windrunner", 0) + " §7(Esprint: §e" + (int)data.habitSprintDistance() + "m §7/ §b" + data.getHabitRequired("windrunner") + "m§7, Biomas: §e" + data.habitBiomesExplored().size() + "§7)"), false);
-        source.sendSuccess(() -> Component.literal("§6⚔️ Maestría del Acero: §fNiv. " + data.skills().getOrDefault("combat_instinct", 0) + " §7(Golpes de arma: §e" + data.habitWeaponHits() + " §7/ §b" + data.getHabitRequired("combat_instinct") + "§7)"), false);
-        source.sendSuccess(() -> Component.literal("§e⛏️ Instinto de la Tierra: §fNiv. " + data.skills().getOrDefault("ore_sense", 0) + " §7(Bloques subterráneos: §e" + data.habitDeepBlocksMined() + " §7/ §b" + data.getHabitRequired("ore_sense") + "§7)"), false);
-        source.sendSuccess(() -> Component.literal("§b👁️ Mirada del Cazador: §fNiv. " + data.skills().getOrDefault("deadeye", 0) + " §7(Enfoque / Puntería: §e" + data.habitFocusTicks() + " §7/ §b" + data.getHabitRequired("deadeye") + " ticks§7)"), false);
-        source.sendSuccess(() -> Component.literal("§8* Las habilidades de hábito son innatas y se activan permanentemente en tu cuerpo al desbloquearlas."), false);
+        source.sendSuccess(() -> Component.translatable("awakening_system.msg.sistema_habito_constancia"), false);
+        source.sendSuccess(() -> Component.translatable("awakening_system.msg.cuerpo_templado_niv_dano_resistido", String.valueOf(data.skills().getOrDefault("enduring_flesh", 0)), String.valueOf(data.habitDamageTaken()), String.valueOf(data.getHabitRequired("enduring_flesh"))), false);
+        source.sendSuccess(() -> Component.translatable("awakening_system.msg.paso_del_viento_niv_esprint_biomas", String.valueOf(data.skills().getOrDefault("windrunner", 0)), String.valueOf((int)data.habitSprintDistance()), String.valueOf(data.getHabitRequired("windrunner")), String.valueOf(data.habitBiomesExplored().size())), false);
+        source.sendSuccess(() -> Component.translatable("awakening_system.msg.maestria_del_acero_niv_golpes_de", String.valueOf(data.skills().getOrDefault("combat_instinct", 0)), String.valueOf(data.habitWeaponHits()), String.valueOf(data.getHabitRequired("combat_instinct"))), false);
+        source.sendSuccess(() -> Component.translatable("awakening_system.msg.instinto_de_la_tierra_niv_bloques", String.valueOf(data.skills().getOrDefault("ore_sense", 0)), String.valueOf(data.habitDeepBlocksMined()), String.valueOf(data.getHabitRequired("ore_sense"))), false);
+        source.sendSuccess(() -> Component.translatable("awakening_system.msg.mirada_del_cazador_niv_enfoque_punteria", String.valueOf(data.skills().getOrDefault("deadeye", 0)), String.valueOf(data.habitFocusTicks()), String.valueOf(data.getHabitRequired("deadeye"))), false);
+        source.sendSuccess(() -> Component.translatable("awakening_system.msg.las_habilidades_de_habito_son_innatas"), false);
         return 1;
     }
 
@@ -1191,13 +1185,12 @@ public final class SystemCommands {
 
         SystemData data = SystemEvents.data(player);
         if (data == null) {
-            source.sendFailure(Component.literal("§cNo se pudo acceder a los datos del Sistema."));
+            source.sendFailure(Component.translatable("awakening_system.msg.no_se_pudo_acceder_los_datos"));
             return 0;
         }
 
         if (!data.isEvaluationPending() && data.level() < data.maxAllowedLevelForEvaluatedRank()) {
-            player.sendSystemMessage(Component.literal("§c§l[ASOCIACIÓN DE CAZADORES] §7No tienes ninguna evaluación pendiente en este momento. Tu rango oficial actual es §b§l"
-                    + data.rank() + "§7 (Límite del rango actual: Nivel " + data.maxAllowedLevelForEvaluatedRank() + ")."));
+            player.sendSystemMessage(Component.translatable("awakening_system.msg.asociacion_de_cazadores_no_tienes_ninguna", String.valueOf(data.rank()), String.valueOf(data.maxAllowedLevelForEvaluatedRank())));
             return 0;
         }
 
@@ -1219,22 +1212,22 @@ public final class SystemCommands {
                     player.getX(), player.getY() + 1.5, player.getZ(), 30, 0.6, 0.6, 0.6, 0.1);
 
             player.sendSystemMessage(Component.literal("§6§l╔═══════════════════════════════════════════════╗"));
-            player.sendSystemMessage(Component.literal("§6§l║      ★ ¡EVALUACIÓN DE RANGO COMPLETADA! ★     ║"));
+            player.sendSystemMessage(Component.translatable("awakening_system.msg.evaluacion_de_rango_completada"));
             player.sendSystemMessage(Component.literal("§6§l╠═══════════════════════════════════════════════╣"));
-            player.sendSystemMessage(Component.literal("§f║  §7Rango Anterior: §c" + prevRank + " §f➔ §7Nuevo Rango: §b§l" + data.rank()));
-            player.sendSystemMessage(Component.literal("§f║  §a+5 Puntos de Atributo §fotorgados por ascender."));
+            player.sendSystemMessage(Component.translatable("awakening_system.msg.rango_anterior_nuevo_rango", String.valueOf(prevRank), String.valueOf(data.rank())));
+            player.sendSystemMessage(Component.translatable("awakening_system.msg.puntos_de_atributo_otorgados_por_ascender"));
             if (banked > 0) {
-                player.sendSystemMessage(Component.literal("§f║  §e¡Se han transferido +" + String.format(java.util.Locale.US, "%,d", banked) + " EXP en reserva!"));
+                player.sendSystemMessage(Component.translatable("awakening_system.msg.se_han_transferido_exp_en_reserva", String.valueOf(String.format(java.util.Locale.US, "%,d", banked))));
                 if (data.level() > prevLevel) {
-                    player.sendSystemMessage(Component.literal("§f║  §a¡Has subido al Nivel " + data.level() + "!"));
+                    player.sendSystemMessage(Component.translatable("awakening_system.msg.has_subido_al_nivel", String.valueOf(data.level())));
                 }
             }
-            player.sendSystemMessage(Component.literal("§f║  §7Próximo umbral de evaluación: §eNivel " + data.maxAllowedLevelForEvaluatedRank()));
+            player.sendSystemMessage(Component.translatable("awakening_system.msg.proximo_umbral_de_evaluacion_nivel", String.valueOf(data.maxAllowedLevelForEvaluatedRank())));
             player.sendSystemMessage(Component.literal("§6§l╚═══════════════════════════════════════════════╝"));
 
             return 1;
         } else {
-            player.sendSystemMessage(Component.literal("§c§l[SISTEMA] §7No se pudo procesar la ascensión (posiblemente estés en el rango máximo)."));
+            player.sendSystemMessage(Component.translatable("awakening_system.msg.sistema_no_se_pudo_procesar_la"));
             return 0;
         }
     }
@@ -1248,7 +1241,7 @@ public final class SystemCommands {
             );
             evaluator.moveTo(player.getX(), player.getY(), player.getZ(), player.getYRot(), 0.0F);
             player.level().addFreshEntity(evaluator);
-            source.sendSuccess(() -> Component.literal("§b§l✦ [SISTEMA] §fInspector de la Asociación invocado."), true);
+            source.sendSuccess(() -> Component.translatable("awakening_system.msg.sistema_inspector_de_la_asociacion_invocado"), true);
             return 1;
         }
         return 0;
@@ -1262,7 +1255,7 @@ public final class SystemCommands {
         AwakeningSystemMod.sync(target);
 
         target.displayClientMessage(Component.translatable("awakening_system.command.reset_success"), true);
-        source.sendSuccess(() -> Component.literal("§a§l[SYSTEM]§r All progress has been reset for §e" + target.getGameProfile().getName() + "§r."), true);
+        source.sendSuccess(() -> Component.translatable("awakening_system.msg.system_all_progress_has_been_reset", String.valueOf(target.getGameProfile().getName())), true);
         return 1;
     }
 
@@ -1272,22 +1265,20 @@ public final class SystemCommands {
             return 0;
         }
         if (!SystemEvents.spendAttribute(player, name)) {
-            source.sendFailure(Component.literal("Invalid attribute or no points available."));
+            source.sendFailure(Component.translatable("awakening_system.msg.invalid_attribute_or_no_points_available"));
             return 0;
         }
-        source.sendSuccess(() -> Component.literal("Attribute upgraded: " + name), false);
+        source.sendSuccess(() -> Component.translatable("awakening_system.msg.attribute_upgraded", String.valueOf(name)), false);
         return 1;
     }
 
     private static int inspect(CommandSourceStack source, ServerPlayer target) {
         SystemData data = SystemEvents.data(target);
-        source.sendSuccess(() -> Component.literal("=== INSPECT: " + target.getGameProfile().getName() + " ===").withStyle(ChatFormatting.GOLD), false);
-        source.sendSuccess(() -> Component.literal("Level: " + data.level() + " | Prestige: " + data.prestigeLevel() + " | Coins: " + data.coins()).withStyle(ChatFormatting.AQUA), false);
-        source.sendSuccess(() -> Component.literal("STR " + data.strength() + "  VIT " + data.vitality() + "  AGI " + data.agility()
-                + "  PER " + data.perception() + "  INT " + data.intelligence() + "  WIL " + data.willpower()).withStyle(ChatFormatting.WHITE), false);
-        source.sendSuccess(() -> Component.literal("Defeated Mobs: " + data.creaturesDefeated() + " | Bosses: " + data.bossKills()
-                + " | Completed Quests: " + data.missionsCompleted()).withStyle(ChatFormatting.GREEN), false);
-        source.sendSuccess(() -> Component.literal("Skills (" + data.skills().size() + "): " + data.skills().keySet()).withStyle(ChatFormatting.LIGHT_PURPLE), false);
+        source.sendSuccess(() -> Component.translatable("awakening_system.msg.inspect", String.valueOf(target.getGameProfile().getName())).withStyle(ChatFormatting.GOLD), false);
+        source.sendSuccess(() -> Component.translatable("awakening_system.msg.level_prestige_coins", String.valueOf(data.level()), String.valueOf(data.prestigeLevel()), String.valueOf(data.coins())).withStyle(ChatFormatting.AQUA), false);
+        source.sendSuccess(() -> Component.translatable("awakening_system.msg.str_vit_agi_per_int_wil", String.valueOf(data.strength()), String.valueOf(data.vitality()), String.valueOf(data.agility()), String.valueOf(data.perception()), String.valueOf(data.intelligence()), String.valueOf(data.willpower())).withStyle(ChatFormatting.WHITE), false);
+        source.sendSuccess(() -> Component.translatable("awakening_system.msg.defeated_mobs_bosses_completed_quests", String.valueOf(data.creaturesDefeated()), String.valueOf(data.bossKills()), String.valueOf(data.missionsCompleted())).withStyle(ChatFormatting.GREEN), false);
+        source.sendSuccess(() -> Component.translatable("awakening_system.msg.skills", String.valueOf(data.skills().size()), String.valueOf(data.skills().keySet())).withStyle(ChatFormatting.LIGHT_PURPLE), false);
         return 1;
     }
 
@@ -1301,15 +1292,13 @@ public final class SystemCommands {
             return pCmp != 0 ? pCmp : Integer.compare(db.level(), da.level());
         });
 
-        source.sendSuccess(() -> Component.literal("=== SYSTEM LEADERBOARD ===").withStyle(ChatFormatting.GOLD), false);
+        source.sendSuccess(() -> Component.translatable("awakening_system.msg.system_leaderboard").withStyle(ChatFormatting.GOLD), false);
         int rank = 1;
         for (ServerPlayer player : players) {
             if (rank > 5) break;
             SystemData d = SystemEvents.data(player);
             final int pos = rank;
-            source.sendSuccess(() -> Component.literal("#" + pos + " " + player.getGameProfile().getName()
-                    + " | Lvl: " + d.level() + " | Prestige: " + d.prestigeLevel()
-                    + " | Mobs: " + d.creaturesDefeated()).withStyle(pos == 1 ? ChatFormatting.YELLOW : ChatFormatting.AQUA), false);
+            source.sendSuccess(() -> Component.translatable("awakening_system.msg.lvl_prestige_mobs", String.valueOf(pos), String.valueOf(player.getGameProfile().getName()), String.valueOf(d.level()), String.valueOf(d.prestigeLevel()), String.valueOf(d.creaturesDefeated())).withStyle(pos == 1 ? ChatFormatting.YELLOW : ChatFormatting.AQUA), false);
             rank++;
         }
         return 1;
@@ -1323,7 +1312,7 @@ public final class SystemCommands {
                 "awakening_system.notification.trance.message", 0xFFFF5555);
         player.playNotifySound(net.minecraft.sounds.SoundEvents.ENDER_DRAGON_GROWL, net.minecraft.sounds.SoundSource.PLAYERS, 0.7F, 1.8F);
         AwakeningSystemMod.sync(player);
-        source.sendSuccess(() -> Component.literal("§c§l[TRANCE MODE]§r Activated for 10 seconds. (+3.0 Damage and sweeping edge attacks enabled).").withStyle(ChatFormatting.RED), false);
+        source.sendSuccess(() -> Component.translatable("awakening_system.msg.trance_mode_activated_for_10_seconds").withStyle(ChatFormatting.RED), false);
         return 1;
     }
 
@@ -1332,7 +1321,7 @@ public final class SystemCommands {
         SystemData data = SystemEvents.data(player);
         data.setComboCount(count);
         AwakeningSystemMod.sync(player);
-        source.sendSuccess(() -> Component.literal("§e§l[COMBO]§r Counter set to: §f" + count), false);
+        source.sendSuccess(() -> Component.translatable("awakening_system.msg.combo_counter_set_to", String.valueOf(count)), false);
         return 1;
     }
 
@@ -1342,17 +1331,17 @@ public final class SystemCommands {
         data.setLevel(level);
         SystemAttributeEffects.apply(player);
         AwakeningSystemMod.sync(player);
-        source.sendSuccess(() -> Component.literal("§a§l[LEVEL]§r Level set to: §e" + level + "§a. Attribute points calculated."), false);
+        source.sendSuccess(() -> Component.translatable("awakening_system.msg.level_level_set_to_attribute_points", String.valueOf(level)), false);
         return 1;
     }
 
     private static int setSponsor(CommandSourceStack source, String constellationId) {
         if (!(source.getEntity() instanceof ServerPlayer player)) return 0;
         if (!SystemEvents.selectConstellation(player, constellationId)) {
-            source.sendFailure(Component.literal("Invalid constellation ID or level below 25. Available constellations: abyssal_black_dragon, demon_like_judge_of_fire, secretive_plotter, prisoner_of_the_golden_headband, master_of_the_underworld"));
+            source.sendFailure(Component.translatable("awakening_system.msg.invalid_constellation_id_or_level_below"));
             return 0;
         }
-        source.sendSuccess(() -> Component.literal("§d§l[CONSTELLATION]§r Sponsor assigned: " + constellationId), false);
+        source.sendSuccess(() -> Component.translatable("awakening_system.msg.constellation_sponsor_assigned", String.valueOf(constellationId)), false);
         return 1;
     }
 
@@ -1367,7 +1356,7 @@ public final class SystemCommands {
         };
         data.setScenarioDirect(scenarioId, target);
         AwakeningSystemMod.sync(player);
-        source.sendSuccess(() -> Component.literal("§b§l[SCENARIO]§r Active scenario set to: " + scenarioId + " (Target: " + target + ")"), false);
+        source.sendSuccess(() -> Component.translatable("awakening_system.msg.scenario_active_scenario_set_to_target", String.valueOf(scenarioId), String.valueOf(target)), false);
         return 1;
     }
 
@@ -1377,7 +1366,7 @@ public final class SystemCommands {
         data.completeScenarioDirect();
         SystemEvents.announceScenarioComplete(player, data);
         AwakeningSystemMod.sync(player);
-        source.sendSuccess(() -> Component.literal("§6§l[SCENARIO]§r Scenario completed! Open the menu (Quests) to click [★ CLAIM]."), false);
+        source.sendSuccess(() -> Component.translatable("awakening_system.msg.scenario_scenario_completed_open_the_menu"), false);
         return 1;
     }
 
@@ -1391,7 +1380,7 @@ public final class SystemCommands {
                 "awakening_system.notification.skill_assimilated.message", 0xFFBB7DFF,
                 def != null ? def.nameKey() : skillId);
         AwakeningSystemMod.sync(player);
-        source.sendSuccess(() -> Component.literal("§b§l[SKILL]§r Skill learned: " + (def != null ? def.nameKey() : skillId)), false);
+        source.sendSuccess(() -> Component.translatable("awakening_system.msg.skill_skill_learned", String.valueOf((def != null ? def.nameKey() : skillId))), false);
         return 1;
     }
 
@@ -1438,14 +1427,14 @@ public final class SystemCommands {
         AwakeningSystemMod.notify(player, "awakening_system.notification.awakening_complete.title",
                 "awakening_system.notification.awakening_complete.message", 0xFFFFD866);
         AwakeningSystemMod.sync(player);
-        source.sendSuccess(() -> Component.literal("§6§l[AWAKENING]§r System Awakening Quest completed!"), false);
+        source.sendSuccess(() -> Component.translatable("awakening_system.msg.awakening_system_awakening_quest_completed"), false);
         return 1;
     }
 
     private static int openSponsorSelection(CommandSourceStack source) {
         if (!(source.getEntity() instanceof ServerPlayer player)) return 0;
         net.neoforged.neoforge.network.PacketDistributor.sendToPlayer(player, new OpenSponsorScreenPayload(false));
-        source.sendSuccess(() -> Component.literal("§6§l[SPONSORSHIP]§r Opening Constellation selection screen."), false);
+        source.sendSuccess(() -> Component.translatable("awakening_system.msg.sponsorship_opening_constellation_selection_screen"), false);
         return 1;
     }
 
@@ -1527,13 +1516,13 @@ public final class SystemCommands {
             player = sp;
         }
         if (player == null) {
-            source.sendFailure(Component.literal("Specify a target player: /system constellation ascend <player> [name]"));
+            source.sendFailure(Component.translatable("awakening_system.msg.specify_target_player_system_constellation_ascend"));
             return 0;
         }
         final ServerPlayer finalP = player;
         ConstellationAscension.triggerAscension(finalP, "System Administrative Command",
                 (customModifier == null || customModifier.isBlank()) ? null : customModifier.trim());
-        source.sendSuccess(() -> Component.literal("§d§l[STAR STREAM]§r Player §e" + finalP.getGameProfile().getName() + " §dhas ascended to Constellation."), true);
+        source.sendSuccess(() -> Component.translatable("awakening_system.msg.star_stream_player_has_ascended_to", String.valueOf(finalP.getGameProfile().getName())), true);
         return 1;
     }
 
@@ -1543,7 +1532,7 @@ public final class SystemCommands {
             player = sp;
         }
         if (player == null) {
-            source.sendFailure(Component.literal("Specify a target player: /system constellation demote <player>"));
+            source.sendFailure(Component.translatable("awakening_system.msg.specify_target_player_system_constellation_demote"));
             return 0;
         }
         final ServerPlayer finalP = player;
@@ -1551,7 +1540,7 @@ public final class SystemCommands {
         data.setIsConstellation(false);
         data.setConstellationModifier("");
         AwakeningSystemMod.sync(finalP);
-        source.sendSuccess(() -> Component.literal("§c§l[STAR STREAM]§r Constellation status of §e" + finalP.getGameProfile().getName() + " §chas been revoked."), true);
+        source.sendSuccess(() -> Component.translatable("awakening_system.msg.star_stream_constellation_status_of_has", String.valueOf(finalP.getGameProfile().getName())), true);
         finalP.displayClientMessage(Component.translatable("awakening_system.command.constellation_reverted"), true);
         return 1;
     }
@@ -1563,13 +1552,13 @@ public final class SystemCommands {
         }
         SystemData data = SystemEvents.data(player);
         if (!data.isConstellation()) {
-            source.sendFailure(Component.literal("§cYou are not a Constellation. You must ascend first through mythical events or transcendent feats."));
+            source.sendFailure(Component.translatable("awakening_system.msg.you_are_not_constellation_you_must"));
             return 0;
         }
         String clean = modifier.trim().replace("[", "").replace("]", "");
         data.setConstellationModifier(clean);
         AwakeningSystemMod.sync(player);
-        source.sendSuccess(() -> Component.literal("§d§l[STAR STREAM]§r Your True Name as a Constellation has been updated to: §e[" + clean + "§e]"), false);
+        source.sendSuccess(() -> Component.translatable("awakening_system.msg.star_stream_your_true_name_as", String.valueOf(clean)), false);
         return 1;
     }
 
@@ -1579,7 +1568,7 @@ public final class SystemCommands {
             return 0;
         }
         if (!ConstellationChannelHandler.isAstralWatching(player.getUUID())) {
-            source.sendFailure(Component.literal("§cYou are not in astral projection."));
+            source.sendFailure(Component.translatable("awakening_system.msg.you_are_not_in_astral_projection"));
             return 0;
         }
         ConstellationChannelHandler.returnFromAstral(player);
@@ -1595,25 +1584,23 @@ public final class SystemCommands {
         if ("abyss".equalsIgnoreCase(name) || "abyss_portal".equalsIgnoreCase(name) || "spiral_abyss".equalsIgnoreCase(name) || "teyvat_portal".equalsIgnoreCase(name)) {
             Direction dir = (source.getEntity() instanceof ServerPlayer sp) ? sp.getDirection() : Direction.SOUTH;
             com.soybe.awakeningsystem.world.TeyvatAbyssPortalBuilder.generateMuskReefIsland(level, pos, dir, com.soybe.awakeningsystem.TeyvatWorldManager.isAbyssActive());
-            source.sendSuccess(() -> Component.literal("§b§l✦ [TEYVAT] §aMusk Reef and Spiral Abyss Island generated at " + pos.toShortString()), true);
+            source.sendSuccess(() -> Component.translatable("awakening_system.msg.teyvat_musk_reef_and_spiral_abyss", String.valueOf(pos.toShortString())), true);
             return 1;
         }
         boolean ok = com.soybe.awakeningsystem.world.SeriesStructureWorldGen.generateStructure(level, pos, name);
         if (ok) {
             com.soybe.awakeningsystem.world.SeriesStructureWorldGen.checkAndEnsureNpcsPresent(level.getServer());
-            source.sendSuccess(() -> Component.literal("§a§l[SYSTEM]§r Themed structure '§e" + name + "§r' generated at " + pos.toShortString()), true);
+            source.sendSuccess(() -> Component.translatable("awakening_system.msg.system_themed_structure_generated_at", String.valueOf(name), String.valueOf(pos.toShortString())), true);
             return 1;
         }
 
         boolean teyvatOk = com.soybe.awakeningsystem.world.TeyvatWorldGenManager.spawnTeyvatStructure(level, pos, name);
         if (teyvatOk) {
-            source.sendSuccess(() -> Component.literal("§b§l✦ [TEYVAT] §aTeyvat structure '§e" + name + "§a' successfully generated at " + pos.toShortString()), true);
+            source.sendSuccess(() -> Component.translatable("awakening_system.msg.teyvat_teyvat_structure_successfully_generated_at", String.valueOf(name), String.valueOf(pos.toShortString())), true);
             return 1;
         }
 
-        source.sendFailure(Component.literal("§cUnknown structure type. Options:\n" +
-                "§7Teyvat: §bgolden_house (Childe), tenshukaku (Raiden), wolflord (Wolflord), azhdaha, anemo_hypostasis, electro_hypostasis, geo_hypostasis, cryo_hypostasis, pyro_hypostasis, hydro_hypostasis, cryo_regisvine, anemo_shrine, geo_shrine, electro_shrine, dendro_shrine, statue, waypoint, camp, windrise, jade_chamber, beidou_ship, primal_temple, chasm_mine, karst, updraft, abyss.\n" +
-                "§7Manhwa: §eabyss, solo_leveling, orv, estate, nano, tbate, ranker, mount_hua, valter, tower_of_god, ascension, etc."));
+        source.sendFailure(Component.translatable("awakening_system.msg.unknown_structure_type_options_teyvat_golden"));
         return 0;
     }
 
@@ -1625,10 +1612,10 @@ public final class SystemCommands {
         BlockPos pos = BlockPos.containing(source.getPosition());
         boolean ok = com.soybe.awakeningsystem.world.TeyvatWorldGenManager.spawnTeyvatStructure(level, pos, name);
         if (ok) {
-            source.sendSuccess(() -> Component.literal("§b§l✦ [TEYVAT] §aStructure '§e" + name + "§a' successfully generated at " + pos.toShortString()), true);
+            source.sendSuccess(() -> Component.translatable("awakening_system.msg.teyvat_structure_successfully_generated_at", String.valueOf(name), String.valueOf(pos.toShortString())), true);
             return 1;
         } else {
-            source.sendFailure(Component.literal("§cUnrecognized Teyvat structure. Options: golden_house (Childe), tenshukaku (Raiden Shogun), wolflord (Wolflord), azhdaha, anemo_hypostasis, electro_hypostasis, geo_hypostasis, cryo_hypostasis, pyro_hypostasis, hydro_hypostasis, cryo_regisvine, anemo_shrine, geo_shrine, electro_shrine, dendro_shrine, statue, waypoint, camp, windrise, fix_windrise, fix_arenas, clean_arenas, jade_chamber, beidou_ship, primal_temple, chasm_mine, karst, updraft, abyss."));
+            source.sendFailure(Component.translatable("awakening_system.msg.unrecognized_teyvat_structure_options_golden_house"));
             return 0;
         }
     }
@@ -1667,7 +1654,7 @@ public final class SystemCommands {
         MinecraftServer server = level.getServer();
         ServerLevel teyvat = server.getLevel(TeyvatWorldManager.TEYVAT_WORLD);
         if (teyvat == null) {
-            source.sendFailure(Component.literal("§cTeyvat dimension is not loaded. Travel first using /teyvat."));
+            source.sendFailure(Component.translatable("awakening_system.msg.teyvat_dimension_is_not_loaded_travel"));
             return 0;
         }
 
@@ -1745,7 +1732,7 @@ public final class SystemCommands {
             BlockPos targetPos = alreadyBuilt ? actualPos : finalTarget.canonicalPos();
             int dist = (int) Math.sqrt(targetPos.distSqr(origin));
 
-            var warpBtn = Component.literal(" §e§l[TRAVEL & ENTER]")
+            var warpBtn = Component.translatable("awakening_system.msg.travel_enter")
                     .withStyle(style -> style
                             .withColor(ChatFormatting.GOLD)
                             .withBold(true)
@@ -1754,11 +1741,9 @@ public final class SystemCommands {
                                     "/teyvat " + finalTarget.cmd()))
                             .withHoverEvent(new net.minecraft.network.chat.HoverEvent(
                                     net.minecraft.network.chat.HoverEvent.Action.SHOW_TEXT,
-                                    Component.literal("§aClick to " + (alreadyBuilt ? "travel" : "build and enter") + " " + finalTarget.displayName()))));
+                                    Component.translatable("awakening_system.msg.click_to", String.valueOf((alreadyBuilt ? "travel" : "build and enter")), String.valueOf(finalTarget.displayName())))));
 
-            var msg = Component.literal("§b§l✦ [TEYVAT] §aStructure: §e" + finalTarget.displayName() +
-                    "\n§7Coordinates: §b[" + targetPos.getX() + ", " + targetPos.getY() + ", " + targetPos.getZ() + "] §8(" + dist + "m) " +
-                    (alreadyBuilt ? "§2✔ [Built]" : "§6★ [Canonical Site]") + " ")
+            var msg = Component.translatable("awakening_system.msg.teyvat_structure_coordinates", String.valueOf(finalTarget.displayName()), String.valueOf(targetPos.getX()), String.valueOf(targetPos.getY()), String.valueOf(targetPos.getZ()), String.valueOf(dist), String.valueOf((alreadyBuilt ? "§2✔ [Built]" : "§6★ [Canonical Site]")))
                     .append(warpBtn);
 
             source.sendSuccess(() -> msg, false);
@@ -1769,7 +1754,7 @@ public final class SystemCommands {
             if (!q.isEmpty() && entry.getKey().contains(q)) {
                 BlockPos p = entry.getValue();
                 int dist = (int) Math.sqrt(p.distSqr(origin));
-                var tpBtn = Component.literal(" §e§l[TELEPORT]")
+                var tpBtn = Component.translatable("awakening_system.msg.teleport")
                         .withStyle(style -> style
                                 .withColor(ChatFormatting.YELLOW)
                                 .withBold(true)
@@ -1778,8 +1763,8 @@ public final class SystemCommands {
                                         "/tp @s " + p.getX() + " " + (p.getY() + 1) + " " + p.getZ()))
                                 .withHoverEvent(new net.minecraft.network.chat.HoverEvent(
                                         net.minecraft.network.chat.HoverEvent.Action.SHOW_TEXT,
-                                        Component.literal("§aClick to teleport"))));
-                var msg = Component.literal("§b§l✦ [TEYVAT] §aRegistered structure: §e" + entry.getKey() + " §7at §b[" + p.getX() + ", " + p.getY() + ", " + p.getZ() + "] §8(" + dist + "m)").append(tpBtn);
+                                        Component.translatable("awakening_system.msg.click_to_teleport"))));
+                var msg = Component.translatable("awakening_system.msg.teyvat_registered_structure_at", String.valueOf(entry.getKey()), String.valueOf(p.getX()), String.valueOf(p.getY()), String.valueOf(p.getZ()), String.valueOf(dist)).append(tpBtn);
                 source.sendSuccess(() -> msg, false);
                 return 1;
             }
@@ -1804,7 +1789,7 @@ public final class SystemCommands {
         if (featureList != null) {
             final String finalFeatureLabel = featureLabel;
             if (featureList.isEmpty()) {
-                source.sendSuccess(() -> Component.literal("§e§l[TEYVAT]§r No " + finalFeatureLabel + "s have been discovered on the map yet. Explore new regions beyond 300 blocks."), false);
+                source.sendSuccess(() -> Component.translatable("awakening_system.msg.teyvat_no_have_been_discovered_on", String.valueOf(finalFeatureLabel)), false);
                 return 1;
             }
             BlockPos nearest = null;
@@ -1818,7 +1803,7 @@ public final class SystemCommands {
             }
             final BlockPos fp = nearest;
             int dist = (int) Math.sqrt(bestD);
-            var tpBtn = Component.literal(" §e§l[TELEPORT]")
+            var tpBtn = Component.translatable("awakening_system.msg.teleport")
                     .withStyle(style -> style
                             .withColor(ChatFormatting.YELLOW)
                             .withBold(true)
@@ -1827,17 +1812,17 @@ public final class SystemCommands {
                                     "/tp @s " + fp.getX() + " " + (fp.getY() + 1) + " " + fp.getZ()))
                             .withHoverEvent(new net.minecraft.network.chat.HoverEvent(
                                     net.minecraft.network.chat.HoverEvent.Action.SHOW_TEXT,
-                                    Component.literal("§aClick to teleport to " + finalFeatureLabel))));
-            source.sendSuccess(() -> Component.literal("§b§l✦ [TEYVAT] §aNearest " + finalFeatureLabel + " at §b[" + fp.getX() + ", " + fp.getY() + ", " + fp.getZ() + "] §8(" + dist + "m)").append(tpBtn), false);
+                                    Component.translatable("awakening_system.msg.click_to_teleport_to", String.valueOf(finalFeatureLabel)))));
+            source.sendSuccess(() -> Component.translatable("awakening_system.msg.teyvat_nearest_at", String.valueOf(finalFeatureLabel), String.valueOf(fp.getX()), String.valueOf(fp.getY()), String.valueOf(fp.getZ()), String.valueOf(dist)).append(tpBtn), false);
             return 1;
         }
 
-        source.sendSuccess(() -> Component.literal("§e§l[TEYVAT]§r No structure found matching term '§c" + q + "§r'."), false);
-        source.sendSuccess(() -> Component.literal("§7Use §b/teyvat list§7 to view the interactive catalog or travel directly to bosses:"), false);
-        source.sendSuccess(() -> Component.literal("  §6✦ [Tartaglia / Childe] §7-> §e/teyvat golden_house"), false);
-        source.sendSuccess(() -> Component.literal("  §d✦ [Raiden Shogun]      §7-> §e/teyvat tenshukaku"), false);
-        source.sendSuccess(() -> Component.literal("  §6✦ [Golden Wolflord]    §7-> §e/teyvat wolflord"), false);
-        source.sendSuccess(() -> Component.literal("  §e✦ [Azhdaha Dragon]     §7-> §e/teyvat azhdaha"), false);
+        source.sendSuccess(() -> Component.translatable("awakening_system.msg.teyvat_no_structure_found_matching_term", String.valueOf(q)), false);
+        source.sendSuccess(() -> Component.translatable("awakening_system.msg.use_teyvat_list_to_view_the"), false);
+        source.sendSuccess(() -> Component.translatable("awakening_system.msg.tartaglia_childe_teyvat_golden_house"), false);
+        source.sendSuccess(() -> Component.translatable("awakening_system.msg.raiden_shogun_teyvat_tenshukaku"), false);
+        source.sendSuccess(() -> Component.translatable("awakening_system.msg.golden_wolflord_teyvat_wolflord"), false);
+        source.sendSuccess(() -> Component.translatable("awakening_system.msg.azhdaha_dragon_teyvat_azhdaha"), false);
         return 1;
     }
 
@@ -1850,15 +1835,15 @@ public final class SystemCommands {
         var tData = com.soybe.awakeningsystem.world.TeyvatWorldGenManager.TeyvatFeaturesData.get(server);
         BlockPos origin = BlockPos.containing(source.getPosition());
 
-        source.sendSuccess(() -> Component.literal("§b§l================ TEYVAT STRUCTURE CATALOG ================"), false);
+        source.sendSuccess(() -> Component.translatable("awakening_system.msg.teyvat_structure_catalog"), false);
 
-        source.sendSuccess(() -> Component.literal("§6§l👑 WEEKLY BOSSES AND AUTHENTIC PALACES:"), false);
+        source.sendSuccess(() -> Component.translatable("awakening_system.msg.weekly_bosses_and_authentic_palaces"), false);
         sendLocateEntry(source, origin, "🏰 The Golden House (Tartaglia / Childe Boss)", "golden_house", TeyvatWorldManager.GOLDEN_HOUSE_POS.offset(0, 7, 4), tData);
         sendLocateEntry(source, origin, "⚡ Tenshukaku Palace (Raiden Shogun Boss)", "tenshukaku", TeyvatWorldManager.TENSHUKAKU_POS, tData);
         sendLocateEntry(source, origin, "🐺 Enkanomiya Island (Golden Wolflord)", "wolflord", TeyvatWorldManager.WOLFLORD_POS, tData);
         sendLocateEntry(source, origin, "🐉 Azhdaha's Underground Domain", "azhdaha", TeyvatWorldManager.AZHDAHA_POS, tData);
 
-        source.sendSuccess(() -> Component.literal("§b§l💎 ELEMENTAL HYPOSTASES AND REGISVINE:"), false);
+        source.sendSuccess(() -> Component.translatable("awakening_system.msg.elemental_hypostases_and_regisvine"), false);
         sendLocateEntry(source, origin, "🍃 Anemo Hypostasis (Beth)", "anemo_hypostasis", TeyvatWorldManager.ANEMO_HYPOSTASIS_POS, tData);
         sendLocateEntry(source, origin, "⚡ Electro Hypostasis (Aleph)", "electro_hypostasis", TeyvatWorldManager.ELECTRO_HYPOSTASIS_POS, tData);
         sendLocateEntry(source, origin, "🔶 Geo Hypostasis (Gimel)", "geo_hypostasis", TeyvatWorldManager.GEO_HYPOSTASIS_POS, tData);
@@ -1867,19 +1852,16 @@ public final class SystemCommands {
         sendLocateEntry(source, origin, "💧 Hydro Hypostasis (He)", "hydro_hypostasis", TeyvatWorldManager.HYDRO_HYPOSTASIS_POS, tData);
         sendLocateEntry(source, origin, "❄ Cryo Regisvine", "cryo_regisvine", TeyvatWorldManager.CRYO_REGISVINE_POS, tData);
 
-        source.sendSuccess(() -> Component.literal("§a§l🌳 MONUMENTS AND NATION SEATS:"), false);
+        source.sendSuccess(() -> Component.translatable("awakening_system.msg.monuments_and_nation_seats"), false);
         sendLocateEntry(source, origin, "🌳 Great Sacred Oak of Windrise", "windrise", TeyvatWorldManager.WINDRISE_POS, tData);
         sendLocateEntry(source, origin, "🏯 Floating Jade Chamber", "jade_chamber", TeyvatWorldManager.JADE_CHAMBER_POS, tData);
         sendLocateEntry(source, origin, "🍷 Dawn Winery", "dawn_winery", TeyvatWorldManager.WINERY_POS, tData);
         sendLocateEntry(source, origin, "⛵ The Alcor (Beidou's Flagship)", "alcor", TeyvatWorldManager.ALCOR_POS, tData);
         sendLocateEntry(source, origin, "🌀 Spiral Abyss (Musk Reef)", "abyss", TeyvatWorldManager.MUSK_REEF_ISLAND_POS, tData);
 
-        source.sendSuccess(() -> Component.literal("§e§l⛩ EXPLORATION AND RESOURCES:"), false);
-        source.sendSuccess(() -> Component.literal("  §fShrines of Depths: §e" + tData.shrinesOfDepths.size() +
-                " §7| §fStatues of the Seven: §e" + tData.statues.size() +
-                " §7| §fWaypoints: §e" + tData.waypoints.size() +
-                " §7| §fCamps: §e" + tData.camps.size()), false);
-        source.sendSuccess(() -> Component.literal("§7Use §b/teyvat <name>§7 to travel directly to any structure or boss."), false);
+        source.sendSuccess(() -> Component.translatable("awakening_system.msg.exploration_and_resources"), false);
+        source.sendSuccess(() -> Component.translatable("awakening_system.msg.shrines_of_depths_statues_of_the", String.valueOf(tData.shrinesOfDepths.size()), String.valueOf(tData.statues.size()), String.valueOf(tData.waypoints.size()), String.valueOf(tData.camps.size())), false);
+        source.sendSuccess(() -> Component.translatable("awakening_system.msg.use_teyvat_name_to_travel_directly"), false);
         source.sendSuccess(() -> Component.literal("§b§l=================================================================="), false);
         return 1;
     }
@@ -1899,7 +1881,7 @@ public final class SystemCommands {
                                 "/teyvat " + cmdKey))
                         .withHoverEvent(new net.minecraft.network.chat.HoverEvent(
                                 net.minecraft.network.chat.HoverEvent.Action.SHOW_TEXT,
-                                Component.literal("§aClick to travel to " + displayName + (built ? "" : " (Will materialize instantly)")))));
+                                Component.translatable("awakening_system.msg.click_to_travel_to", String.valueOf(displayName), String.valueOf((built ? "" : " (Will materialize instantly)"))))));
 
         source.sendSuccess(() -> Component.literal("  §f" + displayName + " §7en §b[" + p.getX() + ", " + p.getY() + ", " + p.getZ() + "] §8(" + dist + "m) " + (built ? "§2✔" : "§7○")).append(btn), false);
     }
@@ -1914,7 +1896,7 @@ public final class SystemCommands {
 
         if ("island".equalsIgnoreCase(modeArg)) {
             com.soybe.awakeningsystem.world.TeyvatAbyssPortalBuilder.generateMuskReefIsland(level, pos, dir, com.soybe.awakeningsystem.TeyvatWorldManager.isAbyssActive());
-            source.sendSuccess(() -> Component.literal("§b§l✦ [TEYVAT] §aMusk Reef Island and Spiral Abyss generated at " + pos.toShortString()), true);
+            source.sendSuccess(() -> Component.translatable("awakening_system.msg.teyvat_musk_reef_island_and_spiral", String.valueOf(pos.toShortString())), true);
             return 1;
         }
 
@@ -1931,7 +1913,7 @@ public final class SystemCommands {
                 : com.soybe.awakeningsystem.world.TeyvatAbyssPortalBuilder.CenterMode.AIR);
 
         com.soybe.awakeningsystem.world.TeyvatAbyssPortalBuilder.build(level, pos, dir, buildMode, centerMode, active);
-        source.sendSuccess(() -> Component.literal("§b§l✦ [TEYVAT] §aSpiral Abyss Monument (13x13) successfully built at " + pos.toShortString() + " [" + (active ? "§bACTIVE§a" : "§cLOCKED§a") + "]"), true);
+        source.sendSuccess(() -> Component.translatable("awakening_system.msg.teyvat_spiral_abyss_monument_13x13_successfully", String.valueOf(pos.toShortString()), String.valueOf((active ? "§bACTIVE§a" : "§cLOCKED§a"))), true);
         return 1;
     }
 
@@ -1950,7 +1932,7 @@ public final class SystemCommands {
             source.sendFailure(Component.literal("Only players can teleport to the abyssal cave."));
             return 0;
         }
-        source.sendSuccess(() -> Component.literal("§d✦ Teleporting to the Overworld Great Abyssal Cavern..."), false);
+        source.sendSuccess(() -> Component.translatable("awakening_system.msg.teleporting_to_the_overworld_great_abyssal"), false);
         com.soybe.awakeningsystem.world.AbyssalCaveBuilder.teleportToAbyssalCave(player);
         return 1;
     }
@@ -1958,7 +1940,7 @@ public final class SystemCommands {
     private static int openAbyssMenu(CommandSourceStack source) {
         if (source.getEntity() instanceof ServerPlayer player) {
             com.soybe.awakeningsystem.abyss.SpiralAbyssManager.openAbyssMenuFromCommand(player);
-            source.sendSuccess(() -> Component.literal("§b✦ [Spiral Abyss] Opening interface..."), false);
+            source.sendSuccess(() -> Component.translatable("awakening_system.msg.spiral_abyss_opening_interface"), false);
             return 1;
         }
         source.sendFailure(Component.literal("Only players can open the Spiral Abyss interface."));
@@ -1986,7 +1968,7 @@ public final class SystemCommands {
     private static int setAbyssStateCommand(CommandSourceStack source, boolean active) {
         var server = source.getServer();
         com.soybe.awakeningsystem.TeyvatWorldManager.setAbyssActive(server, active);
-        source.sendSuccess(() -> Component.literal("§b§l✦ [SPIRAL ABYSS] §aStatus updated to: " + (active ? "§bACTIVE (Cosmic Vortex OPEN)" : "§cLOCKED (Portal SEALED)")), true);
+        source.sendSuccess(() -> Component.translatable("awakening_system.msg.spiral_abyss_status_updated_to", String.valueOf((active ? "§bACTIVE (Cosmic Vortex OPEN)" : "§cLOCKED (Portal SEALED)"))), true);
         return 1;
     }
 
@@ -2000,10 +1982,10 @@ public final class SystemCommands {
         ServerLevel teyvat = server.getLevel(com.soybe.awakeningsystem.TeyvatWorldManager.TEYVAT_WORLD);
         if (teyvat != null) {
             com.soybe.awakeningsystem.TeyvatWorldManager.forceRebuildStructures(teyvat);
-            source.sendSuccess(() -> Component.literal("§b§l✦ [SPIRAL ABYSS] §aMusk Reef Island and portal successfully rebuilt."), true);
+            source.sendSuccess(() -> Component.translatable("awakening_system.msg.spiral_abyss_musk_reef_island_and"), true);
             return 1;
         }
-        source.sendFailure(Component.literal("§cTeyvat dimension is not loaded."));
+        source.sendFailure(Component.translatable("awakening_system.msg.teyvat_dimension_is_not_loaded"));
         return 0;
     }
 
@@ -2104,7 +2086,7 @@ public final class SystemCommands {
             }
             final String k = bestKey;
             final int distBlocks = (int) Math.sqrt(bestDistSq);
-            source.sendSuccess(() -> Component.literal("§a§l[SYSTEM]§r Teleported to existing structure: §e" + k + " §7at §b[" + landing.getX() + ", " + landing.getY() + ", " + landing.getZ() + "] §8(" + targetLevel.dimension().location().getPath() + ", " + distBlocks + "m)"), true);
+            source.sendSuccess(() -> Component.translatable("awakening_system.msg.system_teleported_to_existing_structure_at", String.valueOf(k), String.valueOf(landing.getX()), String.valueOf(landing.getY()), String.valueOf(landing.getZ()), String.valueOf(targetLevel.dimension().location().getPath()), String.valueOf(distBlocks)), true);
             return 1;
         }
 
@@ -2118,11 +2100,11 @@ public final class SystemCommands {
             } else {
                 player.teleportTo(landing.getX() + 0.5D, landing.getY(), landing.getZ() + 0.5D);
             }
-            source.sendSuccess(() -> Component.literal("§a§l[SYSTEM]§r Teleported to natural site of '§e" + naturalResult.canonicalName() + "§r' at §b[" + landing.getX() + ", " + landing.getY() + ", " + landing.getZ() + "] §7(Dimension: §b" + resultLevel.dimension().location().getPath() + "§7, Biome: §d" + naturalResult.biomeName() + "§7)"), true);
+            source.sendSuccess(() -> Component.translatable("awakening_system.msg.system_teleported_to_natural_site_of", String.valueOf(naturalResult.canonicalName()), String.valueOf(landing.getX()), String.valueOf(landing.getY()), String.valueOf(landing.getZ()), String.valueOf(resultLevel.dimension().location().getPath()), String.valueOf(naturalResult.biomeName())), true);
             return 1;
         }
 
-        source.sendFailure(Component.literal("§cUnknown structure type: '§e" + name + "§c'.\n§7Use §b/structure list§7 to view registered structures."));
+        source.sendFailure(Component.translatable("awakening_system.msg.unknown_structure_type_use_structure_list", String.valueOf(name)));
         return 0;
     }
 
@@ -2179,8 +2161,8 @@ public final class SystemCommands {
             net.minecraft.network.chat.Component coords = Component.literal("§b[" + p.getX() + ", " + p.getY() + ", " + p.getZ() + "]")
                 .withStyle(style -> style
                     .withClickEvent(new net.minecraft.network.chat.ClickEvent(net.minecraft.network.chat.ClickEvent.Action.RUN_COMMAND, "/structure tp " + (canonicalFilter != null ? canonicalFilter : found.getKey())))
-                    .withHoverEvent(new net.minecraft.network.chat.HoverEvent(net.minecraft.network.chat.HoverEvent.Action.SHOW_TEXT, Component.literal("§aClick to teleport here"))));
-            net.minecraft.network.chat.Component msg = Component.literal("§a§l[SYSTEM]§r Existing structure '§e" + found.getKey() + "§r' in (" + targetLevel.dimension().location().getPath() + "): ").append(coords).append(Component.literal(" §7(" + distBlocks + " blocks away)"));
+                    .withHoverEvent(new net.minecraft.network.chat.HoverEvent(net.minecraft.network.chat.HoverEvent.Action.SHOW_TEXT, Component.translatable("awakening_system.msg.click_to_teleport_here"))));
+            net.minecraft.network.chat.Component msg = Component.translatable("awakening_system.msg.system_existing_structure_in", String.valueOf(found.getKey()), String.valueOf(targetLevel.dimension().location().getPath())).append(coords).append(Component.translatable("awakening_system.msg.blocks_away", String.valueOf(distBlocks)));
             source.sendSuccess(() -> msg, false);
             return 1;
         }
@@ -2193,14 +2175,14 @@ public final class SystemCommands {
                 net.minecraft.network.chat.Component coords = Component.literal("§b[" + p.getX() + ", " + p.getY() + ", " + p.getZ() + "]")
                     .withStyle(style -> style
                         .withClickEvent(new net.minecraft.network.chat.ClickEvent(net.minecraft.network.chat.ClickEvent.Action.RUN_COMMAND, "/structure tp " + nat.canonicalName()))
-                        .withHoverEvent(new net.minecraft.network.chat.HoverEvent(net.minecraft.network.chat.HoverEvent.Action.SHOW_TEXT, Component.literal("§aClick to teleport here"))));
-                net.minecraft.network.chat.Component msg = Component.literal("§6§l[SYSTEM]§r Natural structure '§e" + nat.canonicalName() + "§r' discovered in (" + nat.level().dimension().location().getPath() + "): ").append(coords).append(Component.literal(" §7(Biome: §d" + nat.biomeName() + "§7, " + distBlocks + "m away)"));
+                        .withHoverEvent(new net.minecraft.network.chat.HoverEvent(net.minecraft.network.chat.HoverEvent.Action.SHOW_TEXT, Component.translatable("awakening_system.msg.click_to_teleport_here"))));
+                net.minecraft.network.chat.Component msg = Component.translatable("awakening_system.msg.system_natural_structure_discovered_in", String.valueOf(nat.canonicalName()), String.valueOf(nat.level().dimension().location().getPath())).append(coords).append(Component.translatable("awakening_system.msg.biome_away", String.valueOf(nat.biomeName()), String.valueOf(distBlocks)));
                 source.sendSuccess(() -> msg, false);
                 return 1;
             }
         }
 
-        source.sendFailure(Component.literal("§cNo coordinates found within current range."));
+        source.sendFailure(Component.translatable("awakening_system.msg.no_coordinates_found_within_current_range"));
         return 0;
     }
 
@@ -2218,11 +2200,11 @@ public final class SystemCommands {
         if (teyvatData != null && teyvatData.namedStructures != null) all.putAll(teyvatData.namedStructures);
 
         if (all.isEmpty()) {
-            source.sendSuccess(() -> Component.literal("§e§l[SYSTEM]§r No structures have generated in this world yet. Explore new regions or use §b/structure tp <name>§r."), false);
+            source.sendSuccess(() -> Component.translatable("awakening_system.msg.system_no_structures_have_generated_in"), false);
             return 1;
         }
 
-        source.sendSuccess(() -> Component.literal("§6§l=== REGISTERED STRUCTURES (" + all.size() + ") ==="), false);
+        source.sendSuccess(() -> Component.translatable("awakening_system.msg.registered_structures", String.valueOf(all.size())), false);
         BlockPos origin = BlockPos.containing(source.getPosition());
         for (java.util.Map.Entry<String, BlockPos> entry : all.entrySet()) {
             BlockPos p = entry.getValue();
@@ -2230,7 +2212,7 @@ public final class SystemCommands {
             net.minecraft.network.chat.Component coords = Component.literal("§b[" + p.getX() + ", " + p.getY() + ", " + p.getZ() + "]")
                 .withStyle(style -> style
                     .withClickEvent(new net.minecraft.network.chat.ClickEvent(net.minecraft.network.chat.ClickEvent.Action.RUN_COMMAND, "/structure tp " + entry.getKey()))
-                    .withHoverEvent(new net.minecraft.network.chat.HoverEvent(net.minecraft.network.chat.HoverEvent.Action.SHOW_TEXT, Component.literal("§aClick to teleport here"))));
+                    .withHoverEvent(new net.minecraft.network.chat.HoverEvent(net.minecraft.network.chat.HoverEvent.Action.SHOW_TEXT, Component.translatable("awakening_system.msg.click_to_teleport_here"))));
             net.minecraft.network.chat.Component line = Component.literal("§e✦ " + entry.getKey() + " §7en ").append(coords).append(Component.literal(" §8(" + dist + "m)"));
             source.sendSuccess(() -> line, false);
         }
@@ -2250,7 +2232,7 @@ public final class SystemCommands {
         npc.moveTo(pos.getX() + 0.5D, pos.getY(), pos.getZ() + 0.5D, 0.0F, 0.0F);
         npc.setHomePos(pos);
         level.addFreshEntity(npc);
-        source.sendSuccess(() -> Component.literal("§a§l[SYSTEM]§r NPC " + profile.titleColor() + profile.displayName() + "§r successfully summoned."), true);
+        source.sendSuccess(() -> Component.translatable("awakening_system.msg.system_npc_successfully_summoned", String.valueOf(profile.titleColor()), String.valueOf(profile.displayName())), true);
         return 1;
     }
 
@@ -2261,9 +2243,9 @@ public final class SystemCommands {
         }
         int count = SystemEvents.storePlayerShadows(player);
         if (count > 0) {
-            source.sendSuccess(() -> Component.literal("§8[§9Shadow Army§8] §aSaved §f" + count + " §asoldier(s) to your domain."), false);
+            source.sendSuccess(() -> Component.translatable("awakening_system.msg.shadow_army_saved_soldier_to_your", String.valueOf(count)), false);
         } else {
-            source.sendFailure(Component.literal("§cYou have no shadow soldiers nearby in the field to store."));
+            source.sendFailure(Component.translatable("awakening_system.msg.you_have_no_shadow_soldiers_nearby"));
         }
         return count;
     }
@@ -2275,9 +2257,9 @@ public final class SystemCommands {
         }
         int deployed = SystemEvents.deployPlayerShadows(player, 4);
         if (deployed > 0) {
-            source.sendSuccess(() -> Component.literal("§8[§9Shadow Army§8] §bDeployed §f" + deployed + " §bsoldier(s) to battle."), false);
+            source.sendSuccess(() -> Component.translatable("awakening_system.msg.shadow_army_deployed_soldier_to_battle", String.valueOf(deployed)), false);
         } else {
-            source.sendFailure(Component.literal("§cYou have no shadow soldiers in your domain reserve."));
+            source.sendFailure(Component.translatable("awakening_system.msg.you_have_no_shadow_soldiers_in"));
         }
         return deployed;
     }
@@ -2297,11 +2279,11 @@ public final class SystemCommands {
         int stored = data.storedShadowCount();
         int energy = data.energy();
         final long finalActive = activeCount;
-        source.sendSuccess(() -> Component.literal("§8================ §9§lSHADOW DOMAIN §8================"), false);
-        source.sendSuccess(() -> Component.literal("§7Active soldiers in field: §b" + finalActive), false);
-        source.sendSuccess(() -> Component.literal("§7Stored soldiers in domain: §a" + stored), false);
-        source.sendSuccess(() -> Component.literal("§7Current mana for regeneration: §d" + energy + " / 100 §f(Regen cost: 1 mana/s, revive: 15 mana)"), false);
-        source.sendSuccess(() -> Component.literal("§7Quick controls: §e[V] §7to Extract/Deploy, §e[Shift + V] §7to Store in domain."), false);
+        source.sendSuccess(() -> Component.translatable("awakening_system.msg.shadow_domain"), false);
+        source.sendSuccess(() -> Component.translatable("awakening_system.msg.active_soldiers_in_field", String.valueOf(finalActive)), false);
+        source.sendSuccess(() -> Component.translatable("awakening_system.msg.stored_soldiers_in_domain", String.valueOf(stored)), false);
+        source.sendSuccess(() -> Component.translatable("awakening_system.msg.current_mana_for_regeneration_100_regen", String.valueOf(energy)), false);
+        source.sendSuccess(() -> Component.translatable("awakening_system.msg.quick_controls_to_extract_deploy_shift"), false);
         source.sendSuccess(() -> Component.literal("§8======================================================="), false);
         return 1;
     }
@@ -2312,7 +2294,7 @@ public final class SystemCommands {
             return 0;
         }
         SystemEvents.dismissAllShadows(player);
-        source.sendSuccess(() -> Component.literal("§8[§9Shadow Army§8] §eAll your active shadows have been dismissed."), false);
+        source.sendSuccess(() -> Component.translatable("awakening_system.msg.shadow_army_all_your_active_shadows"), false);
         return 1;
     }
 
@@ -2322,7 +2304,7 @@ public final class SystemCommands {
             return 0;
         }
         SystemEvents.spawnDokkaebiNearPlayer(player);
-        source.sendSuccess(() -> Component.literal("§e§l[Star Stream]§r Dokkaebi successfully summoned beside you."), false);
+        source.sendSuccess(() -> Component.translatable("awakening_system.msg.star_stream_dokkaebi_successfully_summoned_beside"), false);
         return 1;
     }
 
@@ -2335,16 +2317,16 @@ public final class SystemCommands {
         net.minecraft.world.phys.AABB nearby = player.getBoundingBox().inflate(32.0D);
         java.util.List<com.soybe.awakeningsystem.entity.DokkaebiEntity> dokkaebis = level.getEntitiesOfClass(com.soybe.awakeningsystem.entity.DokkaebiEntity.class, nearby);
         if (dokkaebis.isEmpty()) {
-            source.sendFailure(Component.literal("§cThere is no Dokkaebi broadcasting nearby. Wait for one to appear or use /dokkaebi spawn."));
+            source.sendFailure(Component.translatable("awakening_system.msg.there_is_no_dokkaebi_broadcasting_nearby"));
             return 0;
         }
         var dokkaebi = dokkaebis.get(0);
         if (!dokkaebi.isQuestActive()) {
-            source.sendSuccess(() -> Component.literal("§e§l[Star Stream]§r The Dokkaebi has not assigned you a Sub-Scenario yet. Right-click it to receive one."), false);
+            source.sendSuccess(() -> Component.translatable("awakening_system.msg.star_stream_the_dokkaebi_has_not"), false);
         } else {
             String title = (dokkaebi.getQuestTitle() != null && !dokkaebi.getQuestTitle().isEmpty()) ? dokkaebi.getQuestTitle() : "Sub-Scenario";
             String desc = (dokkaebi.getQuestDesc() != null) ? dokkaebi.getQuestDesc() : "";
-            source.sendSuccess(() -> Component.literal("§8[§eStar Stream§8] §fSub-Escenario: §b" + title + " §7(" + dokkaebi.getQuestProgress() + "/" + dokkaebi.getQuestTarget() + ") §e- " + desc), false);
+            source.sendSuccess(() -> Component.translatable("awakening_system.msg.star_stream_sub_escenario", String.valueOf(title), String.valueOf(dokkaebi.getQuestProgress()), String.valueOf(dokkaebi.getQuestTarget()), String.valueOf(desc)), false);
         }
         return 1;
     }
@@ -2358,13 +2340,13 @@ public final class SystemCommands {
         net.minecraft.world.phys.AABB nearby = player.getBoundingBox().inflate(32.0D);
         java.util.List<com.soybe.awakeningsystem.entity.DokkaebiEntity> dokkaebis = level.getEntitiesOfClass(com.soybe.awakeningsystem.entity.DokkaebiEntity.class, nearby);
         if (dokkaebis.isEmpty()) {
-            source.sendFailure(Component.literal("§cThere is no Dokkaebi nearby to dismiss."));
+            source.sendFailure(Component.translatable("awakening_system.msg.there_is_no_dokkaebi_nearby_to"));
             return 0;
         }
         for (var d : dokkaebis) {
             d.dismissWithParticles();
         }
-        source.sendSuccess(() -> Component.literal("§e§l[Star Stream]§r The Dokkaebi has closed the broadcast."), false);
+        source.sendSuccess(() -> Component.translatable("awakening_system.msg.star_stream_the_dokkaebi_has_closed"), false);
         return 1;
     }
 
@@ -2376,10 +2358,10 @@ public final class SystemCommands {
         }
         boolean started = SystemEvents.triggerServerDokkaebiEvent(server, forcedTarget);
         if (started) {
-            source.sendSuccess(() -> Component.literal("§e§l[Star Stream]§r Server-wide Dokkaebi scenario successfully initiated for all active players."), true);
+            source.sendSuccess(() -> Component.translatable("awakening_system.msg.star_stream_server_wide_dokkaebi_scenario"), true);
             return 1;
         } else {
-            source.sendFailure(Component.literal("§cCould not start scenario: no eligible players found."));
+            source.sendFailure(Component.translatable("awakening_system.msg.could_not_start_scenario_no_eligible"));
             return 0;
         }
     }
@@ -2395,7 +2377,7 @@ public final class SystemCommands {
             if (igris != null) {
                 igris.moveTo(player.getX() + 2.0, player.getY(), player.getZ() + 2.0, player.getYRot(), 0.0F);
                 level.addFreshEntity(igris);
-                source.sendSuccess(() -> Component.literal("§c§l[Boss Spawned]§r Igris, the Bloodred Commander has appeared!"), true);
+                source.sendSuccess(() -> Component.translatable("awakening_system.msg.boss_spawned_igris_the_bloodred_commander"), true);
                 return 1;
             }
         } else if ("baran".equalsIgnoreCase(type)) {
@@ -2403,7 +2385,7 @@ public final class SystemCommands {
             if (baran != null) {
                 baran.moveTo(player.getX() + 2.0, player.getY(), player.getZ() + 2.0, player.getYRot(), 0.0F);
                 level.addFreshEntity(baran);
-                source.sendSuccess(() -> Component.literal("§b§l[Boss Spawned]§r Baran, Monarch of White Flames has appeared!"), true);
+                source.sendSuccess(() -> Component.translatable("awakening_system.msg.boss_spawned_baran_monarch_of_white"), true);
                 return 1;
             }
         } else if ("patriarch".equalsIgnoreCase(type) || "patriarca".equalsIgnoreCase(type) || "blood_patriarch".equalsIgnoreCase(type)) {
@@ -2411,7 +2393,7 @@ public final class SystemCommands {
             if (patriarch != null) {
                 patriarch.moveTo(player.getX() + 2.0, player.getY(), player.getZ() + 2.0, player.getYRot(), 0.0F);
                 level.addFreshEntity(patriarch);
-                source.sendSuccess(() -> Component.literal("§4§l[Boss Spawned]§r Great Patriarch of the Blood Sect has appeared!"), true);
+                source.sendSuccess(() -> Component.translatable("awakening_system.msg.boss_spawned_great_patriarch_of_the"), true);
                 return 1;
             }
         } else if ("treant".equalsIgnoreCase(type) || "yggdrasil_treant".equalsIgnoreCase(type)) {
@@ -2419,7 +2401,7 @@ public final class SystemCommands {
             if (treant != null) {
                 treant.moveTo(player.getX() + 2.0, player.getY(), player.getZ() + 2.0, player.getYRot(), 0.0F);
                 level.addFreshEntity(treant);
-                source.sendSuccess(() -> Component.literal("§2§l[Boss Spawned]§r Ancestral Treant of Yggdrasil has appeared!"), true);
+                source.sendSuccess(() -> Component.translatable("awakening_system.msg.boss_spawned_ancestral_treant_of_yggdrasil"), true);
                 return 1;
             }
         } else if ("childe".equalsIgnoreCase(type) || "tartaglia".equalsIgnoreCase(type) || "nobile".equalsIgnoreCase(type)) {
@@ -2427,7 +2409,7 @@ public final class SystemCommands {
             if (childe != null) {
                 childe.moveTo(player.getX() + 2.0, player.getY(), player.getZ() + 2.0, player.getYRot(), 0.0F);
                 level.addFreshEntity(childe);
-                source.sendSuccess(() -> Component.literal("§b§l[Boss Spawned]§r Tartaglia (Childe), 11th of the Fatui Harbingers has appeared!"), true);
+                source.sendSuccess(() -> Component.translatable("awakening_system.msg.boss_spawned_tartaglia_childe_11th_of"), true);
                 return 1;
             }
         } else if ("raiden".equalsIgnoreCase(type) || "shogun".equalsIgnoreCase(type) || "baal".equalsIgnoreCase(type)) {
@@ -2435,7 +2417,7 @@ public final class SystemCommands {
             if (raiden != null) {
                 raiden.moveTo(player.getX() + 2.0, player.getY(), player.getZ() + 2.0, player.getYRot(), 0.0F);
                 level.addFreshEntity(raiden);
-                source.sendSuccess(() -> Component.literal("§d§l[Boss Spawned]§r Raiden Shogun / Baal, God of Eternity has appeared!"), true);
+                source.sendSuccess(() -> Component.translatable("awakening_system.msg.boss_spawned_raiden_shogun_baal_god"), true);
                 return 1;
             }
         } else if ("wolflord".equalsIgnoreCase(type) || "rey_acechador".equalsIgnoreCase(type) || "golden_wolflord".equalsIgnoreCase(type)) {
@@ -2443,7 +2425,7 @@ public final class SystemCommands {
             if (wolflord != null) {
                 wolflord.moveTo(player.getX() + 2.0, player.getY() + 4.0, player.getZ() + 2.0, player.getYRot(), 0.0F);
                 level.addFreshEntity(wolflord);
-                source.sendSuccess(() -> Component.literal("§6§l[Boss Spawned]§r Golden Wolflord, Monarch of the Rift Hound Pack has appeared!"), true);
+                source.sendSuccess(() -> Component.translatable("awakening_system.msg.boss_spawned_golden_wolflord_monarch_of"), true);
                 return 1;
             }
         } else if ("azhdaha".equalsIgnoreCase(type)) {
@@ -2451,7 +2433,7 @@ public final class SystemCommands {
             if (azhdaha != null) {
                 azhdaha.moveTo(player.getX() + 2.0, player.getY(), player.getZ() + 2.0, player.getYRot(), 0.0F);
                 level.addFreshEntity(azhdaha);
-                source.sendSuccess(() -> Component.literal("§6§l[Boss Spawned]§r Azhdaha, Sealed Primeval Dragon King has appeared!"), true);
+                source.sendSuccess(() -> Component.translatable("awakening_system.msg.boss_spawned_azhdaha_sealed_primeval_dragon"), true);
                 return 1;
             }
         } else if ("anemo_hypostasis".equalsIgnoreCase(type) || "anemo_cube".equalsIgnoreCase(type)) {
@@ -2459,7 +2441,7 @@ public final class SystemCommands {
             if (h != null) {
                 h.moveTo(player.getX() + 2.0, player.getY() + 2.0, player.getZ() + 2.0, player.getYRot(), 0.0F);
                 level.addFreshEntity(h);
-                source.sendSuccess(() -> Component.literal("§a§l[Boss Spawned]§r Anemo Hypostasis (Beth) has appeared!"), true);
+                source.sendSuccess(() -> Component.translatable("awakening_system.msg.boss_spawned_anemo_hypostasis_beth_has"), true);
                 return 1;
             }
         } else if ("electro_hypostasis".equalsIgnoreCase(type) || "electro_cube".equalsIgnoreCase(type)) {
@@ -2467,7 +2449,7 @@ public final class SystemCommands {
             if (h != null) {
                 h.moveTo(player.getX() + 2.0, player.getY() + 2.0, player.getZ() + 2.0, player.getYRot(), 0.0F);
                 level.addFreshEntity(h);
-                source.sendSuccess(() -> Component.literal("§d§l[Boss Spawned]§r Electro Hypostasis (Aleph) has appeared!"), true);
+                source.sendSuccess(() -> Component.translatable("awakening_system.msg.boss_spawned_electro_hypostasis_aleph_has"), true);
                 return 1;
             }
         } else if ("geo_hypostasis".equalsIgnoreCase(type) || "geo_cube".equalsIgnoreCase(type)) {
@@ -2475,7 +2457,7 @@ public final class SystemCommands {
             if (h != null) {
                 h.moveTo(player.getX() + 2.0, player.getY() + 2.0, player.getZ() + 2.0, player.getYRot(), 0.0F);
                 level.addFreshEntity(h);
-                source.sendSuccess(() -> Component.literal("§e§l[Boss Spawned]§r Geo Hypostasis (Gimel) has appeared!"), true);
+                source.sendSuccess(() -> Component.translatable("awakening_system.msg.boss_spawned_geo_hypostasis_gimel_has"), true);
                 return 1;
             }
         } else if ("cryo_hypostasis".equalsIgnoreCase(type) || "cryo_cube".equalsIgnoreCase(type)) {
@@ -2483,7 +2465,7 @@ public final class SystemCommands {
             if (h != null) {
                 h.moveTo(player.getX() + 2.0, player.getY() + 2.0, player.getZ() + 2.0, player.getYRot(), 0.0F);
                 level.addFreshEntity(h);
-                source.sendSuccess(() -> Component.literal("§b§l[Boss Spawned]§r Cryo Hypostasis (Daleth) has appeared!"), true);
+                source.sendSuccess(() -> Component.translatable("awakening_system.msg.boss_spawned_cryo_hypostasis_daleth_has"), true);
                 return 1;
             }
         } else if ("pyro_hypostasis".equalsIgnoreCase(type) || "pyro_cube".equalsIgnoreCase(type)) {
@@ -2491,7 +2473,7 @@ public final class SystemCommands {
             if (h != null) {
                 h.moveTo(player.getX() + 2.0, player.getY() + 2.0, player.getZ() + 2.0, player.getYRot(), 0.0F);
                 level.addFreshEntity(h);
-                source.sendSuccess(() -> Component.literal("§c§l[Boss Spawned]§r Pyro Hypostasis (Ayin) has appeared!"), true);
+                source.sendSuccess(() -> Component.translatable("awakening_system.msg.boss_spawned_pyro_hypostasis_ayin_has"), true);
                 return 1;
             }
         } else if ("hydro_hypostasis".equalsIgnoreCase(type) || "hydro_cube".equalsIgnoreCase(type)) {
@@ -2499,7 +2481,7 @@ public final class SystemCommands {
             if (h != null) {
                 h.moveTo(player.getX() + 2.0, player.getY() + 2.0, player.getZ() + 2.0, player.getYRot(), 0.0F);
                 level.addFreshEntity(h);
-                source.sendSuccess(() -> Component.literal("§9§l[Boss Spawned]§r Hydro Hypostasis (He) has appeared!"), true);
+                source.sendSuccess(() -> Component.translatable("awakening_system.msg.boss_spawned_hydro_hypostasis_he_has"), true);
                 return 1;
             }
         } else if ("cryo_regisvine".equalsIgnoreCase(type) || "regisvine".equalsIgnoreCase(type)) {
@@ -2507,7 +2489,7 @@ public final class SystemCommands {
             if (r != null) {
                 r.moveTo(player.getX() + 2.0, player.getY(), player.getZ() + 2.0, player.getYRot(), 0.0F);
                 level.addFreshEntity(r);
-                source.sendSuccess(() -> Component.literal("§b§l[Boss Spawned]§r Cryo Regisvine has appeared!"), true);
+                source.sendSuccess(() -> Component.translatable("awakening_system.msg.boss_spawned_cryo_regisvine_has_appeared"), true);
                 return 1;
             }
         } else if ("sculk".equalsIgnoreCase(type) || "warden".equalsIgnoreCase(type) || "colossus".equalsIgnoreCase(type) || "coloso".equalsIgnoreCase(type) || "sculk_warden".equalsIgnoreCase(type)) {
@@ -2515,7 +2497,7 @@ public final class SystemCommands {
             if (wardenBoss != null) {
                 wardenBoss.moveTo(player.getX() + 3.0, player.getY(), player.getZ() + 3.0, player.getYRot(), 0.0F);
                 level.addFreshEntity(wardenBoss);
-                source.sendSuccess(() -> Component.literal("§3§l[Boss Spawned]§r ¡El Titán Colosal de Sculk ha despertado!"), true);
+                source.sendSuccess(() -> Component.translatable("awakening_system.msg.boss_spawned_el_titan_colosal_de"), true);
                 return 1;
             }
         } else if ("sculk_golem".equalsIgnoreCase(type) || "golem".equalsIgnoreCase(type)) {
@@ -2524,7 +2506,7 @@ public final class SystemCommands {
                 golem.moveTo(player.getX() + 2.0, player.getY(), player.getZ() + 2.0, player.getYRot(), 0.0F);
                 golem.setStatue(false);
                 level.addFreshEntity(golem);
-                source.sendSuccess(() -> Component.literal("§3§l[Mob Spawned]§r Golem de Sculk invocado."), true);
+                source.sendSuccess(() -> Component.translatable("awakening_system.msg.mob_spawned_golem_de_sculk_invocado"), true);
                 return 1;
             }
         } else if ("sculk_statue".equalsIgnoreCase(type) || "statue".equalsIgnoreCase(type)) {
@@ -2533,11 +2515,11 @@ public final class SystemCommands {
                 golem.moveTo(player.getX() + 2.0, player.getY(), player.getZ() + 2.0, player.getYRot(), 0.0F);
                 golem.setStatue(true);
                 level.addFreshEntity(golem);
-                source.sendSuccess(() -> Component.literal("§7§l[Mob Spawned]§r Estatua durmiente de Golem de Sculk invocada."), true);
+                source.sendSuccess(() -> Component.translatable("awakening_system.msg.mob_spawned_estatua_durmiente_de_golem"), true);
                 return 1;
             }
         } else {
-            source.sendFailure(Component.literal("§cJefe desconocido. Usa: /boss <warden | colossus | sculk_golem | igris | baran | patriarch | treant | childe | raiden | wolflord | azhdaha | anemo_hypostasis | electro_hypostasis | geo_hypostasis | cryo_hypostasis | pyro_hypostasis | hydro_hypostasis | cryo_regisvine>"));
+            source.sendFailure(Component.translatable("awakening_system.msg.jefe_desconocido_usa_boss_warden_colossus"));
             return 0;
         }
         return 0;
@@ -2549,7 +2531,7 @@ public final class SystemCommands {
             return 0;
         }
         com.soybe.awakeningsystem.penalty.PenaltyZoneManager.teleportToPenaltyZone(player);
-        source.sendSuccess(() -> Component.literal("§c[Sistema] §eTransportado a la Zona de Castigo."), false);
+        source.sendSuccess(() -> Component.translatable("awakening_system.msg.sistema_transportado_la_zona_de_castigo"), false);
         return 1;
     }
 
@@ -2580,7 +2562,7 @@ public final class SystemCommands {
             ServerLevel level = player.serverLevel();
             BlockPos pos = player.blockPosition();
             com.soybe.awakeningsystem.world.TowerStructureGenerator.generate(level, pos);
-            source.sendSuccess(() -> Component.literal("§a[Sistema] ¡Fachada y estructura monumental de la Torre generadas con éxito en X=" + pos.getX() + ", Z=" + pos.getZ() + "!"), true);
+            source.sendSuccess(() -> Component.translatable("awakening_system.msg.sistema_fachada_estructura_monumental_de_la", String.valueOf(pos.getX()), String.valueOf(pos.getZ())), true);
             player.playNotifySound(SoundEvents.END_PORTAL_SPAWN, SoundSource.PLAYERS, 1.2F, 0.8F);
             return 1;
         }
@@ -2594,11 +2576,11 @@ public final class SystemCommands {
             BlockPos pos = player.blockPosition();
             int count = com.soybe.awakeningsystem.world.TowerStructureGenerator.exportTower(level, pos, customRadius);
             if (count > 0) {
-                source.sendSuccess(() -> Component.literal("§a[Sistema] ¡Torre exportada exitosamente! §e(" + count + " bloques guardados en config/awakening_system/custom_tower/tower_exterior.json)"), true);
+                source.sendSuccess(() -> Component.translatable("awakening_system.msg.sistema_torre_exportada_exitosamente_bloques_guardados", String.valueOf(count)), true);
                 player.playNotifySound(SoundEvents.PLAYER_LEVELUP, SoundSource.PLAYERS, 1.0F, 1.2F);
                 return 1;
             } else {
-                source.sendFailure(Component.literal("§cError al exportar la torre. Revisa los logs."));
+                source.sendFailure(Component.translatable("awakening_system.msg.error_al_exportar_la_torre_revisa"));
                 return 0;
             }
         }
@@ -2610,14 +2592,14 @@ public final class SystemCommands {
         java.nio.file.Path p = com.soybe.awakeningsystem.world.TowerStructureGenerator.getExportFilePath();
         try {
             if (java.nio.file.Files.deleteIfExists(p)) {
-                source.sendSuccess(() -> Component.literal("§a[Sistema] Archivo custom eliminado. Ahora la torre se generará con el diseño procedural por defecto."), true);
+                source.sendSuccess(() -> Component.translatable("awakening_system.msg.sistema_archivo_custom_eliminado_ahora_la"), true);
                 return 1;
             } else {
-                source.sendSuccess(() -> Component.literal("§e[Sistema] No había ningún archivo custom activo. Ya se usa el diseño procedural por defecto."), false);
+                source.sendSuccess(() -> Component.translatable("awakening_system.msg.sistema_no_habia_ningun_archivo_custom"), false);
                 return 1;
             }
         } catch (Exception e) {
-            source.sendFailure(Component.literal("§cError al eliminar archivo custom: " + e.getMessage()));
+            source.sendFailure(Component.translatable("awakening_system.msg.error_al_eliminar_archivo_custom", String.valueOf(e.getMessage())));
             return 0;
         }
     }
@@ -2632,9 +2614,9 @@ public final class SystemCommands {
                 b.discard();
             }
             com.soybe.awakeningsystem.tower.GreatTowerWorldManager.ensureFloor10Boss(floor10);
-            source.sendSuccess(() -> Component.literal("§a[Sistema] §fEl Titán Colosal de Sculk ha sido reaparecido en la arena del Piso 10."), true);
+            source.sendSuccess(() -> Component.translatable("awakening_system.msg.sistema_el_titan_colosal_de_sculk"), true);
         } else {
-            source.sendSuccess(() -> Component.literal("§e[Sistema] §fEl estado del Titán Colosal ha sido reiniciado a no derrotado."), true);
+            source.sendSuccess(() -> Component.translatable("awakening_system.msg.sistema_el_estado_del_titan_colosal"), true);
         }
         return 1;
     }
@@ -2663,18 +2645,18 @@ public final class SystemCommands {
             SystemData data = SystemEvents.data(player);
             if (data.isSystem40Updating()) {
                 TeyvatWorldManager.completeSystem40Update(player, data);
-                source.sendSuccess(() -> Component.literal("§a✔ System 4.0 update completed instantly without waiting."), true);
+                source.sendSuccess(() -> Component.translatable("awakening_system.msg.system_update_completed_instantly_without_waiting"), true);
                 return 1;
             } else if (data.isSystem30Updating()) {
                 MurimWorldManager.completeSystem30Update(player, data);
-                source.sendSuccess(() -> Component.literal("§a✔ System 3.0 update completed instantly without waiting."), true);
+                source.sendSuccess(() -> Component.translatable("awakening_system.msg.system_update_completed_instantly_without_waiting_2"), true);
                 return 1;
             } else if (data.isSystemUpdating()) {
                 IsekaiWorldManager.completeSystemUpdate(player, data);
                 source.sendSuccess(() -> Component.translatable("awakening_system.command.complete_update_success"), true);
                 return 1;
             } else {
-                source.sendFailure(Component.literal("§cThere is no update in progress. You can force the version with: /system version <1|2|3|4>"));
+                source.sendFailure(Component.translatable("awakening_system.msg.there_is_no_update_in_progress"));
                 return 0;
             }
         }
@@ -2784,7 +2766,7 @@ public final class SystemCommands {
             data.setSystem40Updated(false);
             data.setTeyvatUnlocked(false);
             AwakeningSystemMod.sync(player);
-            source.sendSuccess(() -> Component.literal("§e[SYSTEM] §aVersion switched instantly to: §b§lSystem 1.0 (Awakening Base)"), true);
+            source.sendSuccess(() -> Component.translatable("awakening_system.msg.system_version_switched_instantly_to_system"), true);
             return 1;
         } else if (v.equals("2") || v.equals("2.0") || v.equals("isekai") || v.equals("v2")) {
             data.setSystemUpdated(true);
@@ -2794,7 +2776,7 @@ public final class SystemCommands {
             data.setSystem40Updated(false);
             data.setTeyvatUnlocked(false);
             AwakeningSystemMod.sync(player);
-            source.sendSuccess(() -> Component.literal("§e[SYSTEM] §aVersion switched instantly to: §d§lSystem 2.0 (Isekai & Constellations)"), true);
+            source.sendSuccess(() -> Component.translatable("awakening_system.msg.system_version_switched_instantly_to_system_2"), true);
             return 1;
         } else if (v.equals("3") || v.equals("3.0") || v.equals("murim") || v.equals("v3")) {
             data.setSystemUpdated(true);
@@ -2804,7 +2786,7 @@ public final class SystemCommands {
             data.setSystem40Updated(false);
             data.setTeyvatUnlocked(false);
             AwakeningSystemMod.sync(player);
-            source.sendSuccess(() -> Component.literal("§e[SYSTEM] §aVersion switched instantly to: §a§lSystem 3.0 (Murim & Xianxia Cultivation)"), true);
+            source.sendSuccess(() -> Component.translatable("awakening_system.msg.system_version_switched_instantly_to_system_3"), true);
             return 1;
         } else if (v.equals("4") || v.equals("4.0") || v.equals("teyvat") || v.equals("v4")) {
             data.setSystemUpdated(true);
@@ -2814,10 +2796,10 @@ public final class SystemCommands {
             data.setSystem40Updated(true);
             data.setTeyvatUnlocked(true);
             AwakeningSystemMod.sync(player);
-            source.sendSuccess(() -> Component.literal("§e[SYSTEM] §aVersion switched instantly to: §6§lSystem 4.0 (Teyvat & Celestial Impact)"), true);
+            source.sendSuccess(() -> Component.translatable("awakening_system.msg.system_version_switched_instantly_to_system_4"), true);
             return 1;
         } else {
-            source.sendFailure(Component.literal("§cInvalid version. Use: /system version <1 | 2 | 3 | 4>"));
+            source.sendFailure(Component.translatable("awakening_system.msg.invalid_version_use_system_version"));
             return 0;
         }
     }
@@ -2878,7 +2860,7 @@ public final class SystemCommands {
     private static int warpTeyvat(CommandSourceStack source) {
         if (source.getEntity() instanceof ServerPlayer player) {
             TeyvatWorldManager.teleportToTeyvat(player);
-            source.sendSuccess(() -> Component.literal("§b[Teyvat] Traveling to Teyvat Ceremonial Plaza..."), true);
+            source.sendSuccess(() -> Component.translatable("awakening_system.msg.teyvat_traveling_to_teyvat_ceremonial_plaza"), true);
             return 1;
         }
         source.sendFailure(Component.literal("Only players can travel to Teyvat."));
@@ -2926,12 +2908,7 @@ public final class SystemCommands {
                 return warpCasinoCommand(source);
             }
             default -> {
-                source.sendFailure(Component.literal("§cUnrecognized destination. Available options:\n" +
-                        "§6Weekly Bosses: §e/teyvat golden_house §7(Childe), §e/teyvat tenshukaku §7(Raiden), §e/teyvat wolflord §7(Wolflord), §e/teyvat azhdaha\n" +
-                        "§bHypostases: §e/teyvat anemo_hypostasis§7, §eelectro_hypostasis§7, §egeo_hypostasis§7, §ecryo_hypostasis§7, §epyro_hypostasis§7, §ehydro_hypostasis§7, §ecryo_regisvine\n" +
-                        "§aLandmarks & Monuments: §e/teyvat windrise§7, §ejade_chamber§7, §edawn_winery§7, §ealcor§7, §eabyss§7, §emondstadt§7, §esumeru§7, §efontaine\n" +
-                        "§6Grand Casino of Teyvat: §e/teyvat casino §7(or /casino / /system casino build)\n" +
-                        "§dUma Racetrack: §e/teyvat racetrack §7(or /system racetrack rebuild / start)"));
+                source.sendFailure(Component.translatable("awakening_system.msg.unrecognized_destination_available_options_weekly_bosses"));
                 return 0;
             }
         }
@@ -2946,12 +2923,12 @@ public final class SystemCommands {
         var server = source.getServer();
         ServerLevel teyvat = server.getLevel(TeyvatWorldManager.TEYVAT_WORLD);
         if (teyvat == null) {
-            source.sendFailure(Component.literal("§cTeyvat dimension is not loaded."));
+            source.sendFailure(Component.translatable("awakening_system.msg.teyvat_dimension_is_not_loaded"));
             return 0;
         }
         com.soybe.awakeningsystem.world.TeyvatCasinoBuilder.buildCasinoIfAbsent(teyvat);
         TeyvatWorldManager.teleportToCasino(player);
-        source.sendSuccess(() -> Component.literal("§6✦ [Grand Casino of Teyvat] §aYou have teleported to the Grand Royal Casino esplanade of Teyvat!"), true);
+        source.sendSuccess(() -> Component.translatable("awakening_system.msg.grand_casino_of_teyvat_you_have"), true);
         return 1;
     }
 
@@ -2959,11 +2936,11 @@ public final class SystemCommands {
         var server = source.getServer();
         ServerLevel teyvat = server.getLevel(TeyvatWorldManager.TEYVAT_WORLD);
         if (teyvat == null) {
-            source.sendFailure(Component.literal("§cTeyvat dimension is not loaded."));
+            source.sendFailure(Component.translatable("awakening_system.msg.teyvat_dimension_is_not_loaded"));
             return 0;
         }
         com.soybe.awakeningsystem.world.TeyvatCasinoBuilder.forceRebuild(teyvat);
-        source.sendSuccess(() -> Component.literal("§6✦ [Grand Casino of Teyvat] §aMonte Carlo Casino monumental structure successfully rebuilt!"), true);
+        source.sendSuccess(() -> Component.translatable("awakening_system.msg.grand_casino_of_teyvat_monte_carlo"), true);
         return 1;
     }
 
@@ -2971,7 +2948,7 @@ public final class SystemCommands {
         ServerLevel level = source.getLevel();
         BlockPos origin = (source.getEntity() instanceof ServerPlayer sp) ? sp.blockPosition() : com.soybe.awakeningsystem.world.TeyvatCasinoBuilder.getOrFindCasinoPos(level);
         int cleared = com.soybe.awakeningsystem.casino.CasinoJsonHelper.clearFurniture(level, origin, radius);
-        source.sendSuccess(() -> Component.literal("§6✦ [Casino] §aCleared §e" + cleared + " §afurniture in a radius of §e" + radius + " §ablocks around (" + origin.getX() + ", " + origin.getY() + ", " + origin.getZ() + "). Ready to arrange as you wish!"), true);
+        source.sendSuccess(() -> Component.translatable("awakening_system.msg.casino_cleared_furniture_in_radius_of", String.valueOf(cleared), String.valueOf(radius), String.valueOf(origin.getX()), String.valueOf(origin.getY()), String.valueOf(origin.getZ())), true);
         return cleared;
     }
 
@@ -2980,10 +2957,10 @@ public final class SystemCommands {
         BlockPos origin = (source.getEntity() instanceof ServerPlayer sp) ? sp.blockPosition() : com.soybe.awakeningsystem.world.TeyvatCasinoBuilder.getOrFindCasinoPos(level);
         java.io.File file = com.soybe.awakeningsystem.casino.CasinoJsonHelper.exportFurniture(level, origin, radius, layoutName);
         if (file != null) {
-            source.sendSuccess(() -> Component.literal("§a✅ Casino furniture successfully exported to: §econfig/awakening_system/custom_casino/" + file.getName() + "§a!"), true);
+            source.sendSuccess(() -> Component.translatable("awakening_system.msg.casino_furniture_successfully_exported_to_config", String.valueOf(file.getName())), true);
             return 1;
         } else {
-            source.sendFailure(Component.literal("§cError exporting casino configuration file."));
+            source.sendFailure(Component.translatable("awakening_system.msg.error_exporting_casino_configuration_file"));
             return 0;
         }
     }
@@ -2993,10 +2970,10 @@ public final class SystemCommands {
         BlockPos origin = (source.getEntity() instanceof ServerPlayer sp) ? sp.blockPosition() : com.soybe.awakeningsystem.world.TeyvatCasinoBuilder.getOrFindCasinoPos(level);
         int placed = com.soybe.awakeningsystem.casino.CasinoJsonHelper.importFurniture(level, origin, layoutName);
         if (placed >= 0) {
-            source.sendSuccess(() -> Component.literal("§a✅ Layout §e" + layoutName + " §asuccessfully loaded! Placed §e" + placed + " §afurniture and machines."), true);
+            source.sendSuccess(() -> Component.translatable("awakening_system.msg.layout_successfully_loaded_placed_furniture_and", String.valueOf(layoutName), String.valueOf(placed)), true);
             return placed;
         } else {
-            source.sendFailure(Component.literal("§cFile not found: §e" + layoutName + "§c in config/awakening_system/custom_casino/"));
+            source.sendFailure(Component.translatable("awakening_system.msg.file_not_found_in_config_awakening", String.valueOf(layoutName)));
             return 0;
         }
     }
@@ -3005,7 +2982,7 @@ public final class SystemCommands {
         ServerLevel level = source.getLevel();
         BlockPos origin = (source.getEntity() instanceof ServerPlayer sp) ? sp.blockPosition() : com.soybe.awakeningsystem.world.TeyvatCasinoBuilder.getOrFindCasinoPos(level);
         com.soybe.awakeningsystem.world.TeyvatCasinoBuilder.populateDefaultFurniture(level, origin);
-        source.sendSuccess(() -> Component.literal("§6✦ [Casino] §aOfficial regulation furniture (Slots, Blackjack 2x2, Roulette 2x3, Pool 3x4, Chairs, and Trophies) successfully deployed!"), true);
+        source.sendSuccess(() -> Component.translatable("awakening_system.msg.casino_official_regulation_furniture_slots_blackjack"), true);
         return 1;
     }
 
@@ -3038,10 +3015,9 @@ public final class SystemCommands {
         level.sendParticles(ParticleTypes.TOTEM_OF_UNDYING, player.getX(), player.getY() + 1.2D, player.getZ(), 70, 0.4D, 0.4D, 0.4D, 0.2D);
 
         source.getServer().getPlayerList().broadcastSystemMessage(
-                Component.literal("§6§l✦ CASINO MEGA JACKPOT! §ePlayer §f" + player.getName().getString() +
-                        " §ehas claimed their legitimate prize for §6TRIPLE 777 §ewith Platinum Chip: §6+50,000,000 Mora, 10 Platinum Chips, 1,600 Primogems, and Legendary Trophy!"), false);
+                Component.translatable("awakening_system.msg.casino_mega_jackpot_player_has_claimed", String.valueOf(player.getName().getString())), false);
 
-        player.sendSystemMessage(Component.literal("§a§l✔ [Awakening Casino] §eYou have successfully claimed all complete rewards from the Grand Platinum 777 Jackpot!"));
+        player.sendSystemMessage(Component.translatable("awakening_system.msg.awakening_casino_you_have_successfully_claimed"));
         return 1;
     }
 
@@ -3059,7 +3035,7 @@ public final class SystemCommands {
         var server = source.getServer();
         ServerLevel teyvat = server.getLevel(TeyvatWorldManager.TEYVAT_WORLD);
         if (teyvat == null) {
-            source.sendFailure(Component.literal("§cTeyvat dimension is not loaded."));
+            source.sendFailure(Component.translatable("awakening_system.msg.teyvat_dimension_is_not_loaded"));
             return 0;
         }
         com.soybe.awakeningsystem.world.TeyvatRacetrackBuilder.buildRacetrackIfAbsent(teyvat);
@@ -3068,7 +3044,7 @@ public final class SystemCommands {
             manager.pruneDuplicateRunners();
         }
         player.teleportTo(teyvat, 122.5, 68.0, 224.5, 180.0F, 0.0F);
-        source.sendSuccess(() -> Component.literal("§6🏇 [Teyvat Racetrack] §aYou have teleported to the Official Tracen Betting Pavilion!"), true);
+        source.sendSuccess(() -> Component.translatable("awakening_system.msg.teyvat_racetrack_you_have_teleported_to"), true);
         return 1;
     }
 
@@ -3076,7 +3052,7 @@ public final class SystemCommands {
         var server = source.getServer();
         ServerLevel teyvat = server.getLevel(TeyvatWorldManager.TEYVAT_WORLD);
         if (teyvat == null) {
-            source.sendFailure(Component.literal("§cTeyvat dimension is not loaded."));
+            source.sendFailure(Component.translatable("awakening_system.msg.teyvat_dimension_is_not_loaded"));
             return 0;
         }
         BlockPos center = com.soybe.awakeningsystem.uma.TeyvatRacetrackManager.TRACK_CENTER;
@@ -3094,7 +3070,7 @@ public final class SystemCommands {
         var server = source.getServer();
         ServerLevel teyvat = server.getLevel(TeyvatWorldManager.TEYVAT_WORLD);
         if (teyvat == null) {
-            source.sendFailure(Component.literal("§cTeyvat dimension is not loaded."));
+            source.sendFailure(Component.translatable("awakening_system.msg.teyvat_dimension_is_not_loaded"));
             return 0;
         }
         com.soybe.awakeningsystem.world.TeyvatRacetrackBuilder.forceRebuild(teyvat);
@@ -3102,7 +3078,7 @@ public final class SystemCommands {
         if (manager != null) {
             manager.setupNewRace();
         }
-        source.sendSuccess(() -> Component.literal("§6🏇 [Teyvat Racetrack] §aTrack completely rebuilt without gaps, tree clearing done, and starting gates ready!"), true);
+        source.sendSuccess(() -> Component.translatable("awakening_system.msg.teyvat_racetrack_track_completely_rebuilt_without"), true);
         return 1;
     }
 
@@ -3110,16 +3086,16 @@ public final class SystemCommands {
         var server = source.getServer();
         ServerLevel teyvat = server.getLevel(TeyvatWorldManager.TEYVAT_WORLD);
         if (teyvat == null) {
-            source.sendFailure(Component.literal("§cTeyvat dimension is not loaded."));
+            source.sendFailure(Component.translatable("awakening_system.msg.teyvat_dimension_is_not_loaded"));
             return 0;
         }
         var manager = com.soybe.awakeningsystem.uma.TeyvatRacetrackManager.get(teyvat);
         if (manager != null) {
             manager.startRaceNow();
-            source.sendSuccess(() -> Component.literal("§6🏇 [Teyvat Racetrack] §eRace countdown forcefully started!"), true);
+            source.sendSuccess(() -> Component.translatable("awakening_system.msg.teyvat_racetrack_race_countdown_forcefully_started"), true);
             return 1;
         }
-        source.sendFailure(Component.literal("§cCould not access the racetrack manager."));
+        source.sendFailure(Component.translatable("awakening_system.msg.could_not_access_the_racetrack_manager"));
         return 0;
     }
 
@@ -3178,30 +3154,28 @@ public final class SystemCommands {
                 new com.google.gson.GsonBuilder().setPrettyPrinting().create().toJson(root, writer);
             }
             final int finalCount = count;
-            source.sendSuccess(() -> Component.literal("§a✅ Track successfully exported! Scanned §e" + finalCount +
-                    " blocks §ain: §b" + exportPath.getFileName() +
-                    "§a. Mod generator and wizard can now read your changes directly."), true);
+            source.sendSuccess(() -> Component.translatable("awakening_system.msg.track_successfully_exported_scanned_blocks_in", String.valueOf(finalCount), String.valueOf(exportPath.getFileName())), true);
             return 1;
         } catch (Exception e) {
-            source.sendFailure(Component.literal("§cError saving exported file: " + e.getMessage()));
+            source.sendFailure(Component.translatable("awakening_system.msg.error_saving_exported_file", String.valueOf(e.getMessage())));
             return 0;
         }
     }
 
     private static int rebuildCapitalsCommand(CommandSourceStack source) {
-        source.sendSuccess(() -> Component.literal("§e[TEYVAT] Artificial capital structures have been permanently removed and disabled. The world generates its natural terrain cleanly."), false);
+        source.sendSuccess(() -> Component.translatable("awakening_system.msg.teyvat_artificial_capital_structures_have_been"), false);
         return 1;
     }
 
     private static int syncTeyvatMapCommand(CommandSourceStack source) {
-        source.sendSuccess(() -> Component.literal("§e[Teyvat] External region injection is disabled. The dimension generates its natural terrain cleanly."), false);
+        source.sendSuccess(() -> Component.translatable("awakening_system.msg.teyvat_external_region_injection_is_disabled"), false);
         return 1;
     }
 
     private static int openGachaCommand(CommandSourceStack source) {
         if (source.getEntity() instanceof ServerPlayer player) {
             GachaManager.openGachaScreen(player);
-            source.sendSuccess(() -> Component.literal("§6[Gacha] Opening Teyvat Wish System interface..."), false);
+            source.sendSuccess(() -> Component.translatable("awakening_system.msg.gacha_opening_teyvat_wish_system_interface"), false);
             return 1;
         }
         source.sendFailure(Component.literal("Only players can open the Wish System."));
@@ -3246,7 +3220,7 @@ public final class SystemCommands {
         ServerLevel level = player.serverLevel();
         BlockPos origin = player.blockPosition();
         PagodaTrialManager.generateArenaInWorld(level, origin, stage, true);
-        source.sendSuccess(() -> Component.literal("§6§l[PAGODA] §aArena del Piso " + stage + " generada en §e" + origin.toShortString() + "§a!\n§eSe coloco un §bBloque de Estructuras §epreconfigurado frente a la puerta para guardar como §bawakening_system:pagoda_arena_stage_" + stage + "§e (o §bawakening_system:pagoda_arena§e)."), true);
+        source.sendSuccess(() -> Component.translatable("awakening_system.msg.pagoda_arena_del_piso_generada_en", String.valueOf(stage), String.valueOf(origin.toShortString()), String.valueOf(stage)), true);
         return 1;
     }
 
@@ -3263,18 +3237,18 @@ public final class SystemCommands {
         if (!(source.getEntity() instanceof ServerPlayer player)) return 0;
         SystemData data = SystemEvents.data(player);
         source.sendSuccess(() -> Component.literal("§6========================================"), false);
-        source.sendSuccess(() -> Component.literal("§e✦ STAR STREAM CHRONICLES §8| §f" + player.getName().getString()), false);
-        source.sendSuccess(() -> Component.literal("§7Unlocked Fables: §e" + data.unlockedFables().size() + "/61"), false);
-        source.sendSuccess(() -> Component.literal("§7Total Narrative Weight: §b" + data.fableWeight() + " pts"), false);
-        source.sendSuccess(() -> Component.literal("§7Eligible for Constellation: " + (data.isConstellation() ? "§e[Already Ascended]" : (ConstellationAscension.isEligibleForAscension(data) ? "§a✔ [ELIGIBLE]" : "§c✖ [Missing requirements: Lv 50+, 8+ fables, 400+ weight, 1 Mythic/Giant, 2 Legendary/Semi, 3 Historical]"))), false);
+        source.sendSuccess(() -> Component.translatable("awakening_system.msg.star_stream_chronicles", String.valueOf(player.getName().getString())), false);
+        source.sendSuccess(() -> Component.translatable("awakening_system.msg.unlocked_fables_61", String.valueOf(data.unlockedFables().size())), false);
+        source.sendSuccess(() -> Component.translatable("awakening_system.msg.total_narrative_weight_pts", String.valueOf(data.fableWeight())), false);
+        source.sendSuccess(() -> Component.translatable("awakening_system.msg.eligible_for_constellation", String.valueOf((data.isConstellation() ? "§e[Already Ascended]" : (ConstellationAscension.isEligibleForAscension(data) ? "§a✔ [ELIGIBLE]" : "§c✖ [Missing requirements: Lv 50+, 8+ fables, 400+ weight, 1 Mythic/Giant, 2 Legendary/Semi, 3 Historical]")))), false);
         source.sendSuccess(() -> Component.literal("§8----------------------------------------"), false);
         for (String fid : data.unlockedFables()) {
             var f = com.soybe.awakeningsystem.fable.FableDefinitions.get(fid);
             if (f != null) {
-                source.sendSuccess(() -> Component.literal(" §e" + f.icon() + " ").append(f.getFormattedTitle()).append(Component.literal(" §8(+§b" + f.weight() + " pts§8)" + (f.isWorldFirst() ? " §6[★ PRIMACÍA]" : ""))), false);
+                source.sendSuccess(() -> Component.literal(" §e" + f.icon() + " ").append(f.getFormattedTitle()).append(Component.translatable("awakening_system.msg.pts", String.valueOf(f.weight()), String.valueOf((f.isWorldFirst() ? " §6[★ PRIMACÍA]" : "")))), false);
             }
         }
-        source.sendSuccess(() -> Component.literal("§7Abre el menú del Sistema (§eH§7) y presiona §6[FÁBULAS]§7 para la interfaz completa."), false);
+        source.sendSuccess(() -> Component.translatable("awakening_system.msg.abre_el_menu_del_sistema_presiona"), false);
         source.sendSuccess(() -> Component.literal("§6========================================"), false);
         return 1;
     }
@@ -3283,11 +3257,11 @@ public final class SystemCommands {
         if (!(source.getEntity() instanceof ServerPlayer player)) return 0;
         var fable = com.soybe.awakeningsystem.fable.FableDefinitions.get(fableId);
         if (fable == null) {
-            source.sendFailure(Component.literal("§cFábula no encontrada: " + fableId));
+            source.sendFailure(Component.translatable("awakening_system.msg.fabula_no_encontrada", String.valueOf(fableId)));
             return 0;
         }
         SystemEvents.grantFable(player, fableId);
-        source.sendSuccess(() -> Component.literal("§aFábula otorgada: ").append(fable.getFormattedTitle()), false);
+        source.sendSuccess(() -> Component.translatable("awakening_system.msg.fabula_otorgada").append(fable.getFormattedTitle()), false);
         return 1;
     }
 
@@ -3380,7 +3354,7 @@ public final class SystemCommands {
 
         if (dim.equals(com.soybe.awakeningsystem.sanctuary.PocketSanctuaryManager.SANCTUARY_REALM)) {
             com.soybe.awakeningsystem.sanctuary.PocketSanctuaryManager.exitSanctuary(player, null);
-            source.sendSuccess(() -> Component.literal("Has regresado de tu Santuario personal.").withStyle(ChatFormatting.GREEN), false);
+            source.sendSuccess(() -> Component.translatable("awakening_system.msg.has_regresado_de_tu_santuario_personal").withStyle(ChatFormatting.GREEN), false);
             return 1;
         }
 
@@ -3432,9 +3406,9 @@ public final class SystemCommands {
         data.setWelkinEnhanced(newState);
         if (newState) {
             data.setWelkinQuestStep(4);
-            source.sendSuccess(() -> Component.literal("§d✦ Columbina's Blessing (Enhanced +50%) successfully activated for " + player.getName().getString() + "."), true);
+            source.sendSuccess(() -> Component.translatable("awakening_system.msg.columbina_blessing_enhanced_50_successfully_activated", String.valueOf(player.getName().getString())), true);
         } else {
-            source.sendSuccess(() -> Component.literal("§7✦ Welkin Moon Blessing restored to standard (90 primos/day)."), true);
+            source.sendSuccess(() -> Component.translatable("awakening_system.msg.welkin_moon_blessing_restored_to_standard"), true);
         }
         AwakeningSystemMod.sync(player);
         return 1;
@@ -3451,7 +3425,7 @@ public final class SystemCommands {
         ServerPlayer player = source.getPlayer();
         if (player == null) return 0;
         GachaManager.completeColumbinaAscension(player);
-        source.sendSuccess(() -> Component.literal("§d✦ Columbina Ascension Quest completed."), true);
+        source.sendSuccess(() -> Component.translatable("awakening_system.msg.columbina_ascension_quest_completed"), true);
         return 1;
     }
 
@@ -3463,7 +3437,7 @@ public final class SystemCommands {
         data.setWelkinQuestStep(0);
         data.setWelkinQuestProgress(0);
         AwakeningSystemMod.sync(player);
-        source.sendSuccess(() -> Component.literal("§e✦ Columbina Quest progress reset to 0."), true);
+        source.sendSuccess(() -> Component.translatable("awakening_system.msg.columbina_quest_progress_reset_to"), true);
         return 1;
     }
 
@@ -3473,7 +3447,7 @@ public final class SystemCommands {
         SystemData data = SystemEvents.data(player);
         data.addWelkinDays(days);
         AwakeningSystemMod.sync(player);
-        source.sendSuccess(() -> Component.literal("§a✦ Added " + days + " days of Welkin Moon Blessing. Total days: " + data.welkinDays()), true);
+        source.sendSuccess(() -> Component.translatable("awakening_system.msg.added_days_of_welkin_moon_blessing", String.valueOf(days), String.valueOf(data.welkinDays())), true);
         return 1;
     }
 
@@ -3484,7 +3458,7 @@ public final class SystemCommands {
         net.minecraft.core.BlockPos center = player.blockPosition().below();
         TrilunarSanctuaryManager.buildSanctuary(level, center);
         player.teleportTo(center.getX() + 0.5D, center.getY() + 2.0D, center.getZ() + 0.5D);
-        source.sendSuccess(() -> Component.literal("§d✦ Sanctuary of the Three Moon Goddesses (Aria, Sonnet, Canon) successfully manifested."), true);
+        source.sendSuccess(() -> Component.translatable("awakening_system.msg.sanctuary_of_the_three_moon_goddesses"), true);
         return 1;
     }
 
@@ -3504,11 +3478,11 @@ public final class SystemCommands {
         if (targetBe != null) {
             java.io.File file = com.soybe.awakeningsystem.uma.RacetrackJsonHelper.exportTrack(targetBe, (ServerLevel) player.level());
             if (file != null) {
-                source.sendSuccess(() -> Component.literal("§a💾 Track successfully exported to JSON!: §econfig/awakening_system/custom_racetracks/" + file.getName()), true);
+                source.sendSuccess(() -> Component.translatable("awakening_system.msg.track_successfully_exported_to_json_config", String.valueOf(file.getName())), true);
                 return 1;
             }
         }
-        source.sendFailure(Component.literal("§cNo Custom Racetrack Core found within 32 blocks radius."));
+        source.sendFailure(Component.translatable("awakening_system.msg.no_custom_racetrack_core_found_within"));
         return 0;
     }
 
@@ -3529,14 +3503,14 @@ public final class SystemCommands {
             boolean ok = com.soybe.awakeningsystem.uma.RacetrackJsonHelper.importTrack(targetBe, fileName);
             if (ok) {
                 final int wpCount = targetBe.getWaypoints().size();
-                source.sendSuccess(() -> Component.literal("§a✔ Track successfully reloaded from §e" + fileName + " §a(" + wpCount + " waypoints)."), true);
+                source.sendSuccess(() -> Component.translatable("awakening_system.msg.track_successfully_reloaded_from_waypoints", String.valueOf(fileName), String.valueOf(wpCount)), true);
                 return 1;
             } else {
-                source.sendFailure(Component.literal("§cCould not load file §e" + fileName + "§c in config/awakening_system/custom_racetracks/"));
+                source.sendFailure(Component.translatable("awakening_system.msg.could_not_load_file_in_config", String.valueOf(fileName)));
                 return 0;
             }
         }
-        source.sendFailure(Component.literal("§cNo Custom Racetrack Core found within 32 blocks radius."));
+        source.sendFailure(Component.translatable("awakening_system.msg.no_custom_racetrack_core_found_within"));
         return 0;
     }
 
@@ -3560,13 +3534,13 @@ public final class SystemCommands {
         }
 
         PacketDistributor.sendToAllPlayers(new com.soybe.awakeningsystem.network.SystemAnnouncementPayload(title, message, color));
-        source.sendSuccess(() -> Component.literal("§6✦ [Global Announcement] §aTest announcement sent to all players: §f" + title), true);
+        source.sendSuccess(() -> Component.translatable("awakening_system.msg.global_announcement_test_announcement_sent_to", String.valueOf(title)), true);
         return 1;
     }
 
     private static int customAnnouncementCommand(CommandSourceStack source, String title, String message) {
         PacketDistributor.sendToAllPlayers(new com.soybe.awakeningsystem.network.SystemAnnouncementPayload(title, message, 0xFFFFD700));
-        source.sendSuccess(() -> Component.literal("§6✦ [Global Announcement] §aCustom announcement triggered: §f" + title + " §7- " + message), true);
+        source.sendSuccess(() -> Component.translatable("awakening_system.msg.global_announcement_custom_announcement_triggered", String.valueOf(title), String.valueOf(message)), true);
         return 1;
     }
 
@@ -3602,10 +3576,10 @@ public final class SystemCommands {
         if (closest != null) {
             int dist = (int) Math.sqrt(closestDistSq);
             final BlockPos foundPos = closest;
-            source.sendSuccess(() -> Component.literal("§5☠ [Black Market] §aNearest underground den at: §eX=" + foundPos.getX() + ", Y=" + foundPos.getY() + ", Z=" + foundPos.getZ() + " §7(Distance: §d" + dist + " blocks§7). Use §d/black_market tp §7to teleport!"), false);
+            source.sendSuccess(() -> Component.translatable("awakening_system.msg.black_market_nearest_underground_den_at", String.valueOf(foundPos.getX()), String.valueOf(foundPos.getY()), String.valueOf(foundPos.getZ()), String.valueOf(dist)), false);
             return 1;
         } else {
-            source.sendSuccess(() -> Component.literal("§5☠ [Black Market] §eNo den has been registered in this world yet. Generates in the underground Overworld (Y=10 to 20) beneath forests, swamps, or jungles, or run §d/black_market tp §eto locate or spawn one immediately."), false);
+            source.sendSuccess(() -> Component.translatable("awakening_system.msg.black_market_no_den_has_been"), false);
             return 0;
         }
     }
@@ -3645,7 +3619,7 @@ public final class SystemCommands {
         BlockPos targetPos = denPos.offset(0, 1, 0);
         player.teleportTo(overworld, targetPos.getX() + 0.5D, targetPos.getY(), targetPos.getZ() + 0.5D, 0.0F, 0.0F);
         player.playNotifySound(SoundEvents.ENDERMAN_TELEPORT, SoundSource.PLAYERS, 1.0F, 0.8F);
-        source.sendSuccess(() -> Component.literal("§5☠ [Black Market] §aYou have descended to the clandestine den of Valerius the Silent at (" + denPos.getX() + ", " + denPos.getY() + ", " + denPos.getZ() + ")!"), true);
+        source.sendSuccess(() -> Component.translatable("awakening_system.msg.black_market_you_have_descended_to", String.valueOf(denPos.getX()), String.valueOf(denPos.getY()), String.valueOf(denPos.getZ())), true);
         return 1;
     }
 
@@ -3713,7 +3687,7 @@ public final class SystemCommands {
         player.teleportTo(overworld, targetPos.getX() + 0.5D, targetPos.getY(), targetPos.getZ() + 0.5D, 0.0F, 0.0F);
         player.playNotifySound(SoundEvents.ENDERMAN_TELEPORT, SoundSource.PLAYERS, 1.0F, 0.8F);
         final BlockPos fHatch = closestHatch;
-        source.sendSuccess(() -> Component.literal("§5☠ [Black Market] §aYou have been transported to the ground-level surface hatch at (" + fHatch.getX() + ", " + fHatch.getY() + ", " + fHatch.getZ() + ")! Open the trapdoor on the ground to descend into the shaft."), true);
+        source.sendSuccess(() -> Component.translatable("awakening_system.msg.black_market_you_have_been_transported", String.valueOf(fHatch.getX()), String.valueOf(fHatch.getY()), String.valueOf(fHatch.getZ())), true);
         return 1;
     }
 
@@ -3728,7 +3702,7 @@ public final class SystemCommands {
         var data = com.soybe.awakeningsystem.world.SeriesStructureWorldGen.SeriesStructureData.get(source.getServer());
         data.recordStructure("black_market_den", denPos);
 
-        source.sendSuccess(() -> Component.literal("§5☠ [Black Market] §aClandestine den built at §e(" + denPos.getX() + ", " + denPos.getY() + ", " + denPos.getZ() + ") §awith Valerius the Silent ready to trade!"), true);
+        source.sendSuccess(() -> Component.translatable("awakening_system.msg.black_market_clandestine_den_built_at", String.valueOf(denPos.getX()), String.valueOf(denPos.getY()), String.valueOf(denPos.getZ())), true);
         return 1;
     }
 
@@ -3742,10 +3716,10 @@ public final class SystemCommands {
         java.io.File file = com.soybe.awakeningsystem.world.BlackMarketJsonHelper.exportStructure(level, origin, radius, name);
         if (file != null) {
             long size = file.length();
-            source.sendSuccess(() -> Component.literal("§5☠ [Black Market] §aStructure exported successfully! Saved to: §econfig/awakening_system/custom_black_market/" + file.getName() + " §7(" + size + " bytes)"), true);
+            source.sendSuccess(() -> Component.translatable("awakening_system.msg.black_market_structure_exported_successfully_saved", String.valueOf(file.getName()), String.valueOf(size)), true);
             return 1;
         } else {
-            source.sendFailure(Component.literal("§cError exporting the Black Market structure."));
+            source.sendFailure(Component.translatable("awakening_system.msg.error_exporting_the_black_market_structure"));
             return 0;
         }
     }
@@ -3759,10 +3733,10 @@ public final class SystemCommands {
         BlockPos origin = player.blockPosition();
         int placed = com.soybe.awakeningsystem.world.BlackMarketJsonHelper.importStructure(level, origin, name);
         if (placed >= 0) {
-            source.sendSuccess(() -> Component.literal("§5☠ [Black Market] §aStructure §e" + name + " §aloaded successfully! Placed §e" + placed + " §ablocks."), true);
+            source.sendSuccess(() -> Component.translatable("awakening_system.msg.black_market_structure_loaded_successfully_placed", String.valueOf(name), String.valueOf(placed)), true);
             return 1;
         } else {
-            source.sendFailure(Component.literal("§cFile not found: §e" + name + "§c in config/awakening_system/custom_black_market/"));
+            source.sendFailure(Component.translatable("awakening_system.msg.file_not_found_in_config_awakening_2", String.valueOf(name)));
             return 0;
         }
     }
@@ -3789,7 +3763,7 @@ public final class SystemCommands {
 
             player.sendSystemMessage(Component.literal("§6=================================================="));
             player.sendSystemMessage(Component.translatable("awakening_system.creator.privileges_activated"));
-            player.sendSystemMessage(Component.literal("§fUsuario: §e" + player.getGameProfile().getName() + " §7(UUID: " + player.getUUID() + ")"));
+            player.sendSystemMessage(Component.translatable("awakening_system.msg.usuario_uuid", String.valueOf(player.getGameProfile().getName()), String.valueOf(player.getUUID())));
             player.sendSystemMessage(Component.translatable("awakening_system.creator.equipped"));
             player.sendSystemMessage(Component.literal("§6=================================================="));
             return 1;
@@ -3919,7 +3893,7 @@ public final class SystemCommands {
 
     private static int setSeasonCommand(CommandSourceStack source, String seasonStr) {
         if (!hasAdminOrCreatorPermission(source)) {
-            source.sendFailure(Component.literal("§cAcceso denegado: Solo el creador del mod o administradores pueden usar este comando."));
+            source.sendFailure(Component.translatable("awakening_system.msg.acceso_denegado_solo_el_creador_del"));
             return 0;
         }
 
@@ -3929,22 +3903,20 @@ public final class SystemCommands {
 
         com.soybe.awakeningsystem.seasonal.SeasonalEventManager.setDevOverride(target);
 
-        source.sendSuccess(() -> Component.literal("§6§l[SEASONAL EVENT] §fEstado de temporada fijado manualmente a: §e" + target.name()
-                + (target == com.soybe.awakeningsystem.seasonal.SeasonalEventManager.Season.OFF ? " §7(Desactivado / Modo Calendario Real)" : " §a(Activado)")), true);
+        source.sendSuccess(() -> Component.translatable("awakening_system.msg.seasonal_event_estado_de_temporada_fijado", String.valueOf(target.name()), String.valueOf((target == com.soybe.awakeningsystem.seasonal.SeasonalEventManager.Season.OFF ? " §7(Desactivado / Modo Calendario Real)" : " §a(Activado)"))), true);
         return 1;
     }
 
     private static int getSeasonStatusCommand(CommandSourceStack source) {
         var current = com.soybe.awakeningsystem.seasonal.SeasonalEventManager.getCurrentSeason();
         var override = com.soybe.awakeningsystem.seasonal.SeasonalEventManager.getDevOverride();
-        source.sendSuccess(() -> Component.literal("§6§l[SEASONAL EVENT] §fTemporada activa actual: §e" + current.name()
-                + (override != null ? " §d[Forzado por Desarrollador: " + override.name() + "]" : " §b[Automático por Calendario Real]")), false);
+        source.sendSuccess(() -> Component.translatable("awakening_system.msg.seasonal_event_temporada_activa_actual", String.valueOf(current.name()), String.valueOf((override != null ? " §d[Forzado por Desarrollador: " + override.name() + "]" : " §b[Automático por Calendario Real]"))), false);
         return 1;
     }
 
     private static int startTribulationDevCommand(CommandSourceStack source, int realmArg, int strikesArg) {
         if (!hasAdminOrCreatorPermission(source)) {
-            source.sendFailure(Component.literal("§cAcceso denegado: Solo el creador del mod o administradores pueden usar este comando."));
+            source.sendFailure(Component.translatable("awakening_system.msg.acceso_denegado_solo_el_creador_del"));
             return 0;
         }
 
@@ -3952,7 +3924,7 @@ public final class SystemCommands {
             ServerPlayer player = source.getPlayerOrException();
             SystemData data = SystemEvents.data(player);
             if (data == null) {
-                source.sendFailure(Component.literal("§cError: No se encontró perfil de Sistema para este jugador."));
+                source.sendFailure(Component.translatable("awakening_system.msg.error_no_se_encontro_perfil_de"));
                 return 0;
             }
 
@@ -3979,17 +3951,16 @@ public final class SystemCommands {
             sl.sendParticles(ParticleTypes.ELECTRIC_SPARK, player.getX(), player.getY() + 1.0, player.getZ(), 80, 1.5, 1.5, 1.5, 0.2);
 
             player.connection.send(new net.minecraft.network.protocol.game.ClientboundSetTitleTextPacket(
-                    Component.literal("§6§l⚡ TRIBULACIÓN CELESTIAL ⚡")));
+                    Component.translatable("awakening_system.msg.tribulacion_celestial")));
             player.connection.send(new net.minecraft.network.protocol.game.ClientboundSetSubtitleTextPacket(
-                    Component.literal("§eSobrevive a " + strikes + " rayos divinos hacia el Reino " + targetRealm)));
+                    Component.translatable("awakening_system.msg.sobrevive_rayos_divinos_hacia_el_reino", String.valueOf(strikes), String.valueOf(targetRealm))));
 
-            source.sendSuccess(() -> Component.literal("§6§l[TRIBULACIÓN ACTIVADA] §fJuicio del Cielo iniciado: Reino Objetivo §e"
-                    + targetRealm + " §f(" + strikes + " rayos)."), true);
+            source.sendSuccess(() -> Component.translatable("awakening_system.msg.tribulacion_activada_juicio_del_cielo_iniciado", String.valueOf(targetRealm), String.valueOf(strikes)), true);
 
             AwakeningSystemMod.sync(player);
             return 1;
         } catch (Exception e) {
-            source.sendFailure(Component.literal("§cError ejecutando comando de tribulación: " + e.getMessage()));
+            source.sendFailure(Component.translatable("awakening_system.msg.error_ejecutando_comando_de_tribulacion", String.valueOf(e.getMessage())));
             return 0;
         }
     }

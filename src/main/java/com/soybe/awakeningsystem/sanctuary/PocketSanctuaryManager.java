@@ -106,12 +106,12 @@ public final class PocketSanctuaryManager {
      */
     public static PocketDoorEntity summonExteriorDoor(ServerPlayer player) {
         if (isSanctuaryDimension(player.level())) {
-            player.displayClientMessage(Component.literal("§cYa te encuentras dentro de tu Santuario personal. Usa la puerta interior para regresar."), true);
+            player.displayClientMessage(Component.translatable("awakening_system.msg.ya_te_encuentras_dentro_de_tu"), true);
             return null;
         }
 
         if (isDimensionSealed(player)) {
-            player.displayClientMessage(Component.literal("§c§l[SANTUARIO SELLADO] §7Las leyes espaciales de esta dimensión impiden abrir la puerta de bolsillo."), true);
+            player.displayClientMessage(Component.translatable("awakening_system.msg.santuario_sellado_las_leyes_espaciales_de"), true);
             player.playNotifySound(SoundEvents.NOTE_BLOCK_BASS.value(), SoundSource.PLAYERS, 0.8F, 0.7F);
             return null;
         }
@@ -144,7 +144,7 @@ public final class PocketSanctuaryManager {
             SystemEvents.data(player).setSanctuaryExteriorDoorActive(true);
 
             level.playSound(null, spawnX, spawnY, spawnZ, SoundEvents.WOODEN_DOOR_CLOSE, SoundSource.BLOCKS, 1.0F, 0.9F);
-            player.displayClientMessage(Component.literal("§a[Puerta de Bolsillo] Puerta física invocada. Haz clic derecho para abrirla y cruzar."), true);
+            player.displayClientMessage(Component.translatable("awakening_system.msg.puerta_de_bolsillo_puerta_fisica_invocada"), true);
         }
         return door;
     }
@@ -154,12 +154,12 @@ public final class PocketSanctuaryManager {
      */
     public static void handleSkillActivation(ServerPlayer player) {
         if (isSanctuaryDimension(player.level())) {
-            player.displayClientMessage(Component.literal("§eYa estás dentro de tu dimensión de bolsillo. Abre la puerta interior para regresar."), true);
+            player.displayClientMessage(Component.translatable("awakening_system.msg.ya_estas_dentro_de_tu_dimension_2"), true);
             return;
         }
 
         if (isDimensionSealed(player)) {
-            player.displayClientMessage(Component.literal("§c§l[SANTUARIO SELLADO] §7Las leyes espaciales impiden abrir la puerta de bolsillo aquí."), true);
+            player.displayClientMessage(Component.translatable("awakening_system.msg.santuario_sellado_las_leyes_espaciales_impiden"), true);
             player.playNotifySound(SoundEvents.NOTE_BLOCK_BASS.value(), SoundSource.PLAYERS, 0.8F, 0.7F);
             return;
         }
@@ -176,12 +176,12 @@ public final class PocketSanctuaryManager {
      */
     public static void enterSanctuary(ServerPlayer player, PocketDoorEntity exteriorDoor) {
         if (isSanctuaryDimension(player.level())) {
-            player.displayClientMessage(Component.literal("§eYa estás dentro de tu dimensión de bolsillo."), true);
+            player.displayClientMessage(Component.translatable("awakening_system.msg.ya_estas_dentro_de_tu_dimension_3"), true);
             return;
         }
 
         if (isDimensionSealed(player)) {
-            player.displayClientMessage(Component.literal("§c§l[SANTUARIO SELLADO] §7No puedes acceder a tu santuario desde este confinamiento."), true);
+            player.displayClientMessage(Component.translatable("awakening_system.msg.santuario_sellado_no_puedes_acceder_tu"), true);
             return;
         }
 
@@ -231,8 +231,8 @@ public final class PocketSanctuaryManager {
         player.fallDistance = 0.0F;
         player.getPersistentData().putLong("pocket_door_cooldown", sanctuaryLevel.getGameTime() + 80);
 
-        player.sendSystemMessage(Component.literal("§6§l[SANTUARIO PERSONAL] §fHas entrado a tu dimensión de bolsillo."));
-        player.sendSystemMessage(Component.literal("§eCierra la puerta desde adentro con clic derecho para que el acceso desaparezca del mundo exterior."));
+        player.sendSystemMessage(Component.translatable("awakening_system.msg.santuario_personal_has_entrado_tu_dimension"));
+        player.sendSystemMessage(Component.translatable("awakening_system.msg.cierra_la_puerta_desde_adentro_con"));
 
         AwakeningSystemMod.sync(player);
     }
@@ -377,7 +377,7 @@ public final class PocketSanctuaryManager {
         player.fallDistance = 0.0F;
         player.getPersistentData().putLong("pocket_door_cooldown", returnLevel.getGameTime() + 80);
 
-        player.displayClientMessage(Component.literal("§aHas regresado al mundo exterior. Cierra la puerta con clic derecho para retirarla."), true);
+        player.displayClientMessage(Component.translatable("awakening_system.msg.has_regresado_al_mundo_exterior_cierra"), true);
         AwakeningSystemMod.sync(player);
     }
 
@@ -467,7 +467,7 @@ public final class PocketSanctuaryManager {
             double targetZ = oz + (dz / dist) * (radius - 1.5D);
             player.teleportTo(targetX, player.getY(), targetZ);
             player.setDeltaMovement(0.0, player.getDeltaMovement().y, 0.0);
-            player.displayClientMessage(Component.literal("§e§l[DOMO CELESTE] §7Has alcanzado la frontera de tu territorio actual (Nivel " + sancLvl + ")."), true);
+            player.displayClientMessage(Component.translatable("awakening_system.msg.domo_celeste_has_alcanzado_la_frontera", String.valueOf(sancLvl)), true);
         }
 
         // Protección contra caída al vacío
@@ -478,7 +478,7 @@ public final class PocketSanctuaryManager {
             player.teleportTo(targetX + 0.5D, targetY + 1.0D, targetZ + 0.5D);
             player.setDeltaMovement(0.0, 0.0, 0.0);
             player.fallDistance = 0.0F;
-            player.displayClientMessage(Component.literal("§a§l[SANTUARIO] §7El domo celestial te ha salvado de caer al vacío."), true);
+            player.displayClientMessage(Component.translatable("awakening_system.msg.santuario_el_domo_celestial_te_ha"), true);
         }
     }
 
@@ -489,7 +489,7 @@ public final class PocketSanctuaryManager {
         SystemData data = SystemEvents.data(player);
         int currentLvl = data.sanctuaryLevel();
         if (currentLvl >= 3) {
-            player.sendSystemMessage(Component.literal("§e[Santuario] §bNivel 3 (Pabellón Celestial)§e ya alcanzado. Es el nivel máximo de desarrollo actual."));
+            player.sendSystemMessage(Component.translatable("awakening_system.msg.santuario_nivel_pabellon_celestial_ya_alcanzado"));
             return false;
         }
 
@@ -501,7 +501,7 @@ public final class PocketSanctuaryManager {
         };
 
         if (data.coins() < coinCost) {
-            player.sendSystemMessage(Component.literal("§c[Santuario] Requiere §6" + coinCost + " Monedas del Sistema§c para expandir el Santuario a Nivel " + nextLvl + ". (Tienes: " + data.coins() + ")"));
+            player.sendSystemMessage(Component.translatable("awakening_system.msg.santuario_requiere_monedas_del_sistema_para", String.valueOf(coinCost), String.valueOf(nextLvl), String.valueOf(data.coins())));
             return false;
         }
 
@@ -522,7 +522,7 @@ public final class PocketSanctuaryManager {
         }
 
         player.playNotifySound(SoundEvents.PLAYER_LEVELUP, SoundSource.PLAYERS, 1.0F, 1.0F);
-        player.sendSystemMessage(Component.literal("§a§l[SANTUARIO EXPANDIDO] §fTu territorio ha alcanzado el §eNivel " + nextLvl + "§f. ¡Nuevas tierras y estructuras generadas!"));
+        player.sendSystemMessage(Component.translatable("awakening_system.msg.santuario_expandido_tu_territorio_ha_alcanzado", String.valueOf(nextLvl)));
         AwakeningSystemMod.sync(player);
         return true;
     }

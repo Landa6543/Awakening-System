@@ -86,7 +86,7 @@ public class SeasonalFoodItem extends Item {
 
         if (!level.isClientSide() && entity instanceof ServerPlayer player) {
             if (!sweetType.isSeasonActive()) {
-                player.displayClientMessage(Component.literal("§c§l[FESTIVIDAD EN LETARGO] §7Este manjar mágico solo despierta durante su festividad correspondiente."), true);
+                player.displayClientMessage(Component.translatable("awakening_system.msg.festividad_en_letargo_este_manjar_magico"), true);
                 return result;
             }
 
@@ -136,12 +136,12 @@ public class SeasonalFoodItem extends Item {
                         // Trick!
                         player.addEffect(new MobEffectInstance(MobEffects.LEVITATION, 100, 0));
                         player.addEffect(new MobEffectInstance(MobEffects.LUCK, 1200, 1));
-                        player.sendSystemMessage(Component.literal("§d§l[TRUCO O TRATO] §f¡Flotando hacia la luna con fortuna festiva!"));
+                        player.sendSystemMessage(Component.translatable("awakening_system.msg.truco_trato_flotando_hacia_la_luna"));
                     } else {
                         // Treat!
                         player.addEffect(new MobEffectInstance(MobEffects.INVISIBILITY, 400, 0));
                         player.addEffect(new MobEffectInstance(MobEffects.MOVEMENT_SPEED, 400, 3));
-                        player.sendSystemMessage(Component.literal("§a§l[TRUCO O TRATO] §f¡Disfraz de sombra fantasmal e hipervelocidad!"));
+                        player.sendSystemMessage(Component.translatable("awakening_system.msg.truco_trato_disfraz_de_sombra_fantasmal"));
                     }
                 }
             }
@@ -155,7 +155,7 @@ public class SeasonalFoodItem extends Item {
         tooltip.add(Component.literal(sweetType.displayName));
         tooltip.add(Component.literal(sweetType.effectDesc));
         if (!sweetType.isSeasonActive()) {
-            tooltip.add(Component.literal("§c§l[INACTIVO FUERA DE TEMPORADA]"));
+            tooltip.add(Component.translatable("awakening_system.msg.inactivo_fuera_de_temporada"));
             tooltip.add(Component.literal(sweetType.isChristmas() ? "§7Disponible únicamente del 1 de Dic al 7 de Ene." : "§7Disponible únicamente del 15 de Oct al 5 de Nov."));
         }
         super.appendHoverText(stack, context, tooltip, flag);

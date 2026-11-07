@@ -55,7 +55,7 @@ public class XmasTreeSwordItem extends SwordItem implements AwakeningWeaponItem 
 
         if (!com.soybe.awakeningsystem.seasonal.SeasonalEventManager.isChristmasActive()) {
             if (!level.isClientSide()) {
-                player.displayClientMessage(Component.literal("§c§l[ESPÍRITU INVERNAL EN LETARGO] §7El Vórtice Invernal de la espada solo puede desatarse durante la temporada navideña (1 Dic - 7 Ene)."), true);
+                player.displayClientMessage(Component.translatable("awakening_system.msg.espiritu_invernal_en_letargo_el_vortice"), true);
             }
             return InteractionResultHolder.fail(held);
         }
@@ -97,7 +97,7 @@ public class XmasTreeSwordItem extends SwordItem implements AwakeningWeaponItem 
                     enemy.hurtMarked = true;
                 }
 
-                serverPlayer.sendSystemMessage(Component.literal("§b§l[VÓRTICE INVERNAL] §f¡Tormenta de nieve desatada congelando a " + enemies.size() + " objetivos!")
+                serverPlayer.sendSystemMessage(Component.translatable("awakening_system.msg.vortice_invernal_tormenta_de_nieve_desatada", String.valueOf(enemies.size()))
                         .withStyle(ChatFormatting.AQUA));
 
                 // 15 seconds cooldown
@@ -112,13 +112,13 @@ public class XmasTreeSwordItem extends SwordItem implements AwakeningWeaponItem 
 
     @Override
     public void appendHoverText(ItemStack stack, TooltipContext context, List<Component> tooltip, TooltipFlag flag) {
-        tooltip.add(Component.literal("§b§l[ESPADA DE NAVIDAD: ÁRBOL FESTIVO]"));
-        tooltip.add(Component.literal("§7Forjada con ramas de abeto ancestral, escarcha eterna y luces festivas."));
-        tooltip.add(Component.literal("§9Pasiva: §fLos tajos congelan y ralentizan al objetivo."));
-        tooltip.add(Component.literal("§bClic Derecho: §fVórtice Invernal (Tormenta gélida en área de 5 bloques)."));
+        tooltip.add(Component.translatable("awakening_system.msg.espada_de_navidad_arbol_festivo"));
+        tooltip.add(Component.translatable("awakening_system.msg.forjada_con_ramas_de_abeto_ancestral"));
+        tooltip.add(Component.translatable("awakening_system.msg.pasiva_los_tajos_congelan_ralentizan_al"));
+        tooltip.add(Component.translatable("awakening_system.msg.clic_derecho_vortice_invernal_tormenta_gelida"));
         if (!com.soybe.awakeningsystem.seasonal.SeasonalEventManager.isChristmasActive()) {
-            tooltip.add(Component.literal("§c§l[PODER EN LETARGO FUERA DE TEMPORADA]"));
-            tooltip.add(Component.literal("§7Habilidad activa solo disponible del 1 de Diciembre al 7 de Enero."));
+            tooltip.add(Component.translatable("awakening_system.msg.poder_en_letargo_fuera_de_temporada"));
+            tooltip.add(Component.translatable("awakening_system.msg.habilidad_activa_solo_disponible_del_de"));
         }
         super.appendHoverText(stack, context, tooltip, flag);
     }

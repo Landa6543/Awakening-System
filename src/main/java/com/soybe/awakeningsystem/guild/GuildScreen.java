@@ -415,7 +415,7 @@ public class GuildScreen extends Screen {
             if (m.getUuid().equals(myUuid)) nameStr += " " + Component.translatable("awakening_system.guild.you").getString();
             drawScaledString(g, nameStr, colNameX, rY + 5, 170, m.isNpc() ? 0xFFFFD866 : 0xFFFFFFFF);
 
-            g.drawString(font, "§e" + String.format(Locale.US, "%,d", m.getContributedMora()) + " ✦ Mora", colDonatedX, rY + 5, 0xFFFFD700);
+            g.drawString(font, Component.translatable("awakening_system.msg.mora", String.valueOf(String.format(Locale.US, "%,d", m.getContributedMora()))).getString(), colDonatedX, rY + 5, 0xFFFFD700);
 
             if (isLeader && !m.getUuid().equals(myUuid)) {
                 int btnUpX = colActionsX;

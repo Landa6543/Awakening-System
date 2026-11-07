@@ -245,7 +245,7 @@ public class GuildSavedData extends SavedData {
             playerToGuildId.put(npcUuid, guild.getId());
             setDirty();
             if (server != null) {
-                broadcastToGuild(guild, server, Component.literal("§6§l[GREMIO] §a¡El cazador §e" + displayName + " §aha sido reclutado formalmente como miembro del gremio!"));
+                broadcastToGuild(guild, server, Component.translatable("awakening_system.msg.gremio_el_cazador_ha_sido_reclutado", String.valueOf(displayName)));
             }
         }
         return added;
@@ -951,7 +951,7 @@ public class GuildSavedData extends SavedData {
         GuildRole role = guild.getMemberRole(player.getUUID());
         String rolePrefix = role != null ? role.getLabel() : "";
 
-        Component chatMsg = Component.literal("§6[Guild] §7" + rolePrefix + " §e" + player.getScoreboardName() + "§7: §f" + message);
+        Component chatMsg = Component.translatable("awakening_system.msg.guild", String.valueOf(rolePrefix), String.valueOf(player.getScoreboardName()), String.valueOf(message));
         broadcastToGuild(guild, player.server, chatMsg);
     }
 

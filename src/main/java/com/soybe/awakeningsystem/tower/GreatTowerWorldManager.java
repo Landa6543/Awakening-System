@@ -267,7 +267,7 @@ public final class GreatTowerWorldManager {
          ResourceKey<Level> targetDim = getDimensionForFloor(targetFloor);
          ServerLevel targetLevel = server.getLevel(targetDim);
          if (targetLevel == null) {
-            player.displayClientMessage(Component.literal("§c[Gran Torre] La dimensión del Piso " + targetFloor + " aún no está disponible."), true);
+            player.displayClientMessage(Component.translatable("awakening_system.msg.gran_torre_la_dimension_del_piso", String.valueOf(targetFloor)), true);
             return false;
          } else {
             ensureWorldBorder(targetLevel);
@@ -339,31 +339,29 @@ public final class GreatTowerWorldManager {
             ensureFloorSpawns(targetLevel, new BlockPos(spawnX, groundY, spawnZ), targetFloor);
             player.playNotifySound((SoundEvent)ModSounds.GATE_TRAVEL.value(), SoundSource.PLAYERS, 0.9F, 1.0F);
             player.displayClientMessage(
-               Component.literal("§d§l[Gran Torre] §fHas ascendido al §e§lPiso " + targetFloor + " §7(" + layout.themeName() + "§7)"), false
+               Component.translatable("awakening_system.msg.gran_torre_has_ascendido_al_piso", String.valueOf(targetFloor), String.valueOf(layout.themeName())), false
             );
-            player.displayClientMessage(Component.literal("§7El portal de avance se encuentra en las coordenadas §e[" + advX + ", " + advZ + "]§7."), false);
+            player.displayClientMessage(Component.translatable("awakening_system.msg.el_portal_de_avance_se_encuentra", String.valueOf(advX), String.valueOf(advZ)), false);
             if (targetFloor == 5) {
                player.displayClientMessage(
-                  Component.literal("§b§l[La Gran Caverna] §7Te encuentras en una inmensa boveda subterranea natural de mas de 80 bloques de altura."), false
+                  Component.translatable("awakening_system.msg.la_gran_caverna_te_encuentras_en"), false
                );
             } else if (targetFloor == 10) {
-               player.displayClientMessage(Component.literal("§c§l[ALERTA DE JEFE] §6¡Has entrado a la Boveda del Titan Colosal de Sculk (Piso 10)!"), false);
+               player.displayClientMessage(Component.translatable("awakening_system.msg.alerta_de_jefe_has_entrado_la"), false);
                player.playNotifySound(SoundEvents.WITHER_SPAWN, SoundSource.PLAYERS, 0.8F, 0.9F);
                ensureFloor10Boss(targetLevel);
                ensureFloor10Spawns(targetLevel, player.blockPosition());
             } else if (targetFloor == 11) {
                player.displayClientMessage(
-                  Component.literal("§a§l[Aldea Serena] §fHas llegado a un pacífico refugio habitado por aldeanos dentro de la Gran Torre."), false
+                  Component.translatable("awakening_system.msg.aldea_serena_has_llegado_un_pacifico"), false
                );
             } else if (targetFloor == 15) {
                player.displayClientMessage(
-                  Component.literal(
-                     "§b§l[Caverna Mineral Ancestral] §7Inmensa cueva pacífica enriquecida con abundantes vetas de minerales y cristales de dimensiones."
-                  ),
+                  Component.translatable("awakening_system.msg.caverna_mineral_ancestral_inmensa_cueva_pacifica"),
                   false
                );
             } else if (targetFloor == 20) {
-               player.displayClientMessage(Component.literal("§c§l[ALERTA DE JEFE] §6¡Has entrado a la Camara Real de la Reina de los Nidos (Piso 20)!"), false);
+               player.displayClientMessage(Component.translatable("awakening_system.msg.alerta_de_jefe_has_entrado_la_2"), false);
                player.playNotifySound(SoundEvents.WITHER_SPAWN, SoundSource.PLAYERS, 0.8F, 0.9F);
                ensureFloor20Boss(targetLevel);
             }
@@ -401,7 +399,7 @@ public final class GreatTowerWorldManager {
          player.teleportTo(returnLevel, x, y, z, yaw, pitch);
          player.setPortalCooldown();
          player.playNotifySound(SoundEvents.BEACON_DEACTIVATE, SoundSource.PLAYERS, 0.8F, 1.0F);
-         player.displayClientMessage(Component.literal("§d§l[Gran Torre] §7Has descendido de la Torre hacia el mundo exterior."), true);
+         player.displayClientMessage(Component.translatable("awakening_system.msg.gran_torre_has_descendido_de_la"), true);
       }
    }
 
@@ -969,7 +967,7 @@ public final class GreatTowerWorldManager {
             player.teleportTo((double)layout.returnX() + 0.5, (double)groundY, (double)layout.returnZ() + 0.5);
             player.setDeltaMovement(0.0, 0.0, 0.0);
             player.fallDistance = 0.0F;
-            player.displayClientMessage(Component.literal("§e§l[Gran Torre] §7Has sido devuelto a la zona segura del piso."), true);
+            player.displayClientMessage(Component.translatable("awakening_system.msg.gran_torre_has_sido_devuelto_la"), true);
             player.playNotifySound(SoundEvents.CHORUS_FRUIT_TELEPORT, SoundSource.PLAYERS, 0.8F, 1.0F);
          }
       }
@@ -1723,7 +1721,7 @@ public final class GreatTowerWorldManager {
             if (existingQueens.isEmpty()) {
                MotherSpiderBossEntity boss = new MotherSpiderBossEntity((EntityType)ModEntities.MOTHER_SPIDER_BOSS.get(), level);
                boss.moveTo(0.5, (double)arenaY + 1.0, 0.5, 0.0F, 0.0F);
-               boss.setCustomName(Component.literal("§c§l[Jefe] Reina Araña Madre - Nvl. 150"));
+               boss.setCustomName(Component.translatable("awakening_system.msg.jefe_reina_arana_madre_nvl_150"));
                boss.setCustomNameVisible(true);
                level.addFreshEntity(boss);
                int[][] nestOffsets = new int[][]{{-15, -15}, {15, -15}, {-15, 15}, {15, 15}};

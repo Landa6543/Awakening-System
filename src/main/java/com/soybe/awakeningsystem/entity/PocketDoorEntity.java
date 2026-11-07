@@ -145,7 +145,7 @@ public class PocketDoorEntity extends Entity {
                             ServerPlayer sp = this.getServer().getPlayerList().getPlayer(getOwnerUUID());
                             if (sp != null) {
                                 PocketSanctuaryManager.onSanctuaryDoorClosed(sp);
-                                sp.displayClientMessage(Component.literal("§7[Santuario] Puerta cerrada. El acceso en el mundo exterior ha desaparecido por completo."), true);
+                                sp.displayClientMessage(Component.translatable("awakening_system.msg.santuario_puerta_cerrada_el_acceso_en"), true);
                             }
                         }
                     } else {
@@ -154,7 +154,7 @@ public class PocketDoorEntity extends Entity {
                             ServerPlayer sp = this.getServer().getPlayerList().getPlayer(getOwnerUUID());
                             if (sp != null) {
                                 SystemEvents.data(sp).setSanctuaryExteriorDoorActive(false);
-                                sp.displayClientMessage(Component.literal("§aPuerta cerrada y desvanecida."), true);
+                                sp.displayClientMessage(Component.translatable("awakening_system.msg.puerta_cerrada_desvanecida"), true);
                             }
                         }
                         AABB cleanBox = new AABB(this.getX() - 8.0D, this.getY() - 4.0D, this.getZ() - 8.0D, this.getX() + 8.0D, this.getY() + 4.0D, this.getZ() + 8.0D);
@@ -229,7 +229,7 @@ public class PocketDoorEntity extends Entity {
 
         UUID owner = getOwnerUUID();
         if (owner != null && !player.getUUID().equals(owner) && !player.hasPermissions(2)) {
-            player.displayClientMessage(Component.literal("§c§l[ACCESO DENEGADO] §7Esta puerta pertenece al Santuario de otro cazador."), true);
+            player.displayClientMessage(Component.translatable("awakening_system.msg.acceso_denegado_esta_puerta_pertenece_al"), true);
             player.playNotifySound(SoundEvents.NOTE_BLOCK_BASS.value(), SoundSource.PLAYERS, 0.7F, 0.6F);
             return InteractionResult.CONSUME;
         }
@@ -244,7 +244,7 @@ public class PocketDoorEntity extends Entity {
                 setClosing(true);
                 this.closingTicks = 18;
                 if (player instanceof ServerPlayer sp) {
-                    sp.displayClientMessage(Component.literal("§7[Santuario] Cerrando puerta interior..."), true);
+                    sp.displayClientMessage(Component.translatable("awakening_system.msg.santuario_cerrando_puerta_interior"), true);
                 }
             } else if (!isOpen() && !isClosing()) {
                 // Paso 3 del Roadmap: El cazador abre la puerta desde adentro para salir
@@ -255,7 +255,7 @@ public class PocketDoorEntity extends Entity {
                 this.level().playSound(null, this.getX(), this.getY(), this.getZ(), SoundEvents.WOODEN_DOOR_OPEN, SoundSource.BLOCKS, 1.0F, 1.0F);
                 if (player instanceof ServerPlayer sp) {
                     PocketSanctuaryManager.onSanctuaryDoorOpened(sp);
-                    sp.displayClientMessage(Component.literal("§a[Santuario] Puerta abierta. El portal de retorno ha reaparecido en el mundo exterior."), true);
+                    sp.displayClientMessage(Component.translatable("awakening_system.msg.santuario_puerta_abierta_el_portal_de"), true);
                 }
             }
         } else {
@@ -265,7 +265,7 @@ public class PocketDoorEntity extends Entity {
             // Shift + Clic derecho para retirar la puerta directamente
             if (player.isShiftKeyDown()) {
                 this.level().playSound(null, this.getX(), this.getY(), this.getZ(), SoundEvents.WOODEN_DOOR_CLOSE, SoundSource.BLOCKS, 1.0F, 0.9F);
-                player.displayClientMessage(Component.literal("§ePuerta física de santuario retirada."), true);
+                player.displayClientMessage(Component.translatable("awakening_system.msg.puerta_fisica_de_santuario_retirada"), true);
                 this.discard();
                 return InteractionResult.CONSUME;
             }
@@ -276,7 +276,7 @@ public class PocketDoorEntity extends Entity {
                 setClosing(true);
                 this.closingTicks = 18;
                 if (player instanceof ServerPlayer sp) {
-                    sp.displayClientMessage(Component.literal("§aCerrando puerta dimensional..."), true);
+                    sp.displayClientMessage(Component.translatable("awakening_system.msg.cerrando_puerta_dimensional"), true);
                 }
             } else if (!isOpen() && !isClosing()) {
                 // Paso 1 del Roadmap: Abre la puerta desde afuera para cruzar al santuario
@@ -285,7 +285,7 @@ public class PocketDoorEntity extends Entity {
                 this.closingTicks = -1;
                 if (player instanceof ServerPlayer sp) {
                     SystemEvents.data(sp).setSanctuaryExteriorDoorActive(true);
-                    sp.displayClientMessage(Component.literal("§aPuerta abierta. Cruza el umbral para entrar a tu santuario personal."), true);
+                    sp.displayClientMessage(Component.translatable("awakening_system.msg.puerta_abierta_cruza_el_umbral_para"), true);
                 }
                 this.level().playSound(null, this.getX(), this.getY(), this.getZ(), SoundEvents.WOODEN_DOOR_OPEN, SoundSource.BLOCKS, 1.0F, 1.0F);
             }

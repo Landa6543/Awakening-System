@@ -663,9 +663,7 @@ public class GuildChunkMapScreen extends Screen {
         g.drawCenteredString(this.font, Component.translatable("gui.awakening_system.guild.map.back"), backBtnX + backBtnW / 2, navY + 4, 0xFFFF8888);
 
         if (hoveredChunkX != Integer.MIN_VALUE) {
-            Component tip = Component.literal("§eChunk [" + hoveredChunkX + ", " + hoveredChunkZ + "] §7| §b"
-                    + Component.translatable("gui.awakening_system.guild.map.coords", hoveredBlockX, hoveredBlockZ).getString()
-                    + "\n" + hoveredClaimInfo);
+            Component tip = Component.translatable("awakening_system.msg.chunk", String.valueOf(hoveredChunkX), String.valueOf(hoveredChunkZ), String.valueOf(Component.translatable("gui.awakening_system.guild.map.coords", hoveredBlockX, hoveredBlockZ).getString()), String.valueOf(hoveredClaimInfo));
             g.renderTooltip(this.font, tip, mX, mY);
         }
 

@@ -34,12 +34,12 @@ public class PocketSanctuaryDoorItem extends Item {
 
         if (player instanceof ServerPlayer sp) {
             if (PocketSanctuaryManager.isSanctuaryDimension(level)) {
-                sp.displayClientMessage(Component.literal("§eYa estás dentro de tu dimensión de bolsillo. Utiliza la puerta interior para regresar."), true);
+                sp.displayClientMessage(Component.translatable("awakening_system.msg.ya_estas_dentro_de_tu_dimension"), true);
                 return InteractionResultHolder.fail(held);
             }
 
             if (PocketSanctuaryManager.isDimensionSealed(sp)) {
-                sp.displayClientMessage(Component.literal("§c§l[SANCTUARIO SELLADO] §7Las leyes espaciales de esta dimensión impiden abrir la puerta de bolsillo."), true);
+                sp.displayClientMessage(Component.translatable("awakening_system.msg.sanctuario_sellado_las_leyes_espaciales_de"), true);
                 return InteractionResultHolder.fail(held);
             }
 
@@ -54,12 +54,12 @@ public class PocketSanctuaryDoorItem extends Item {
 
     @Override
     public void appendHoverText(ItemStack stack, TooltipContext context, List<Component> tooltip, TooltipFlag flag) {
-        tooltip.add(Component.literal("§6§lHabilidad de Refugio Dimensional §7(Sección 29)"));
-        tooltip.add(Component.literal("§fInvoca una §bpuerta física tridimensional§f frente a ti."));
-        tooltip.add(Component.literal("§7• Haz clic derecho para abrirla y cruzar al Santuario."));
-        tooltip.add(Component.literal("§7• Al cerrarse desde dentro, la puerta exterior §ndesaparece del mundo§7."));
-        tooltip.add(Component.literal("§7• Dimensión 100% privada, pacífica y libre de monstruos."));
-        tooltip.add(Component.literal("§8Shift + Clic derecho sobre la puerta exterior para retirarla."));
+        tooltip.add(Component.translatable("awakening_system.msg.habilidad_de_refugio_dimensional_seccion_29"));
+        tooltip.add(Component.translatable("awakening_system.msg.invoca_una_puerta_fisica_tridimensional_frente"));
+        tooltip.add(Component.translatable("awakening_system.msg.haz_clic_derecho_para_abrirla_cruzar"));
+        tooltip.add(Component.translatable("awakening_system.msg.al_cerrarse_desde_dentro_la_puerta"));
+        tooltip.add(Component.translatable("awakening_system.msg.dimension_100_privada_pacifica_libre_de"));
+        tooltip.add(Component.translatable("awakening_system.msg.shift_clic_derecho_sobre_la_puerta"));
         super.appendHoverText(stack, context, tooltip, flag);
     }
 }

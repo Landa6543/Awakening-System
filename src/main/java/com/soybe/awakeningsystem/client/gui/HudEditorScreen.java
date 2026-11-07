@@ -344,7 +344,7 @@ public class HudEditorScreen extends Screen {
             case BOSS_ALERT -> {
                 g.fill(x + 2, y + 2, x + w - 2, y + h - 2, 0xEE330008);
                 g.renderOutline(x + 2, y + 2, w - 4, h - 4, 0xFFFF2244);
-                g.drawString(font, "§c§l▲ JEFE: §f[Nv. 4] Ángel Ofanim (44m)", x + 6, y + 4, 0xFFFFFFFF, true);
+                g.drawString(font, Component.translatable("awakening_system.msg.jefe_nv_angel_ofanim_44m").getString(), x + 6, y + 4, 0xFFFFFFFF, true);
             }
         }
     }

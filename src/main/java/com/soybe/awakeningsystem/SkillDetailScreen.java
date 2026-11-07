@@ -273,7 +273,7 @@ public final class SkillDetailScreen extends Screen {
 
             Component upgText;
             if (sancLvl >= 3) {
-                upgText = Component.literal("§a✔ Santuario Máximo (Nv. 3: Pabellón Celestial - Radio 58m)");
+                upgText = Component.translatable("awakening_system.msg.santuario_maximo_nv_pabellon_celestial_radio");
             } else {
                 upgText = Component.literal(canUpg
                         ? "§e★ Expandir Santuario a Nv. " + (sancLvl + 1) + " (§6" + nextCost + " Monedas§e)"

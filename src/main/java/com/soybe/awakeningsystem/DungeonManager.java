@@ -1729,7 +1729,7 @@ public final class DungeonManager {
             if (isBaran) {
                if (i % 2 == 0) {
                   AbyssalOrcEntity orc = new AbyssalOrcEntity(ModEntities.ABYSSAL_ORC.get(), level);
-                  orc.setCustomName(Component.literal("§c§l[GUARDIA DE BARAN] §6Demonio Guerrero Ã\u008dgneo"));
+                  orc.setCustomName(Component.translatable("awakening_system.msg.guardia_de_baran_demonio_guerrero_u008dgneo"));
                   orc.setItemSlot(EquipmentSlot.MAINHAND, new ItemStack(Items.NETHERITE_SWORD));
                   buffMob(orc, 180.0 * hpMult, 12.0 * dmgMult, 10.0, 0.4);
                   orc.addEffect(new MobEffectInstance(MobEffects.FIRE_RESISTANCE, 99999, 0));
@@ -1744,7 +1744,7 @@ public final class DungeonManager {
                }
             } else if (i % 2 == 0) {
                ShadowInfantryEntity inf = new ShadowInfantryEntity(ModEntities.SHADOW_INFANTRY.get(), level);
-               inf.setCustomName(Component.literal("§4§l[GUARDIA CARMESÃ\u008d] §cCaballero de Igris"));
+               inf.setCustomName(Component.translatable("awakening_system.msg.guardia_carmesa_u008d_caballero_de_igris"));
                inf.setItemSlot(EquipmentSlot.MAINHAND, new ItemStack(Items.DIAMOND_SWORD));
                buffMob(inf, 160.0 * hpMult, 12.0 * dmgMult, 9.0, 0.4);
                guard = inf;
@@ -1827,7 +1827,7 @@ public final class DungeonManager {
                mb = igris;
             } else {
                BeruBossEntity beru = new BeruBossEntity(ModEntities.BERU_BOSS.get(), level);
-               beru.setCustomName(Component.literal("§5§l[JEFE DE CÁMARA] §dBeru, Rey Hormiga"));
+               beru.setCustomName(Component.translatable("awakening_system.msg.jefe_de_camara_beru_rey_hormiga"));
                mb = beru;
             }
          } else {
@@ -4471,7 +4471,7 @@ public final class DungeonManager {
                   String timeStr = String.format("%02d:%02d", secRemaining / 60, secRemaining % 60);
                   if (session.bossUUID != null) {
                      if (level.getEntity(session.bossUUID) instanceof LivingEntity le && le.isAlive()) {
-                        session.bossEvent.setName(Component.literal("§4§l[JEFE] " + le.getDisplayName().getString()));
+                        session.bossEvent.setName(Component.translatable("awakening_system.msg.jefe", String.valueOf(le.getDisplayName().getString())));
                         session.bossEvent.setProgress(Math.max(0.0F, Math.min(1.0F, le.getHealth() / Math.max(1.0F, le.getMaxHealth()))));
                      } else {
                         session.bossEvent.setName(formatPhaseBossName(session.rank, session.isRedGate, 1, remaining, timeStr));
