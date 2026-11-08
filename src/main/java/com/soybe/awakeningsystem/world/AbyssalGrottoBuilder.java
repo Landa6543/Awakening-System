@@ -245,7 +245,7 @@ public final class AbyssalGrottoBuilder {
     }
 
     // ---------------------------------------------------------------- shapes
-    /** A rounded chamber: flat floor, a domed roof and a lumpy rim. */
+    /** A rounded chamber: flat floor (so tunnels meet it cleanly), a domed roof and an irregular outline. */
     private void carveRoom(Room r) {
         for (int dx = -r.r - 3; dx <= r.r + 3; dx++) for (int dz = -r.r - 3; dz <= r.r + 3; dz++) {
             int x = r.x + dx, z = r.z + dz;
@@ -254,9 +254,8 @@ public final class AbyssalGrottoBuilder {
             if (d > rr) continue;
             double k = d / rr;
             int ceil = r.fy + Math.max(3, (int) Math.round(r.h * Math.sqrt(1 - k * k)) + 1);
-            int bump = r.theme != Theme.BOSS && k > 0.78 && noise(x * 0.3, 5.0, z * 0.3) > 0.25 ? 1 : 0;
-            for (int y = r.fy + bump; y <= ceil; y++) carve(x, y, z);
-            floors.add(new BlockPos(x, r.fy + bump - 1, z));
+            for (int y = r.fy; y <= ceil; y++) carve(x, y, z);
+            floors.add(new BlockPos(x, r.fy - 1, z));
         }
     }
 
@@ -270,8 +269,11 @@ public final class AbyssalGrottoBuilder {
     }
 
     /**
-     * A winding tunnel (a bent curve between the two points), about 5–6 blocks wide and 5 tall. Its floor
-     * slopes evenly from one end to the other, never more than one block per step.
+     * A winding tunnel (a bent curve between the two points), about 5–6 blocks wide and 5 tall.
+     * <p>
+     * Each column takes its height from the nearest point of the curve, so the floor rises as one smooth
+     * ramp instead of stacked terraces. A little noise breaks the edge of every one-block rise into an
+     * irregular line, like worn rock, and the roof follows the floor.
      */
     private void corridor(double ax, double az, int aWalk, double bx, double bz, int bWalk, double radius, double bend) {
         double len = Math.hypot(bx - ax, bz - az);
@@ -281,22 +283,51 @@ public final class AbyssalGrottoBuilder {
         double off = (rand.nextDouble() * 2 - 1) * len * bend;
         double mx = (ax + bx) / 2 + px * off, mz = (az + bz) / 2 + pz * off;
         int n = (int) Math.ceil(len * 2.5) + 1;
+        // column -> {distance to the curve, height along the curve, local radius}
+        Map<Long, double[]> cols = new HashMap<>();
         for (int i = 0; i <= n; i++) {
             double t = i / (double) n, u = 1 - t;
             double x = u * u * ax + 2 * u * t * mx + t * t * bx;
             double z = u * u * az + 2 * u * t * mz + t * t * bz;
-            int walk = (int) Math.round(aWalk + (bWalk - aWalk) * t);
+            double walk = aWalk + (bWalk - aWalk) * t;
             double r = radius + 0.45 * noise(x * 0.21, walk * 0.1, z * 0.21);
             int ix = (int) Math.floor(x), iz = (int) Math.floor(z);
             for (int dx = -4; dx <= 4; dx++) for (int dz = -4; dz <= 4; dz++) {
                 int cx = ix + dx, cz = iz + dz;
                 double d = Math.hypot(cx + 0.5 - x, cz + 0.5 - z);
                 if (d > r) continue;
-                int top = d < r - 1.3 ? 4 : 3;
-                for (int h = 0; h <= top; h++) carve(cx, walk + h, cz);
-                if (d < 1.6) for (int h = 0; h <= 2; h++) keep(cx, walk + h, cz);
-                floors.add(new BlockPos(cx, walk - 1, cz));
+                long key = BlockPos.asLong(cx, 0, cz);
+                double[] c = cols.get(key);
+                if (c == null || d < c[0]) cols.put(key, new double[]{d, walk, r});
             }
+        }
+        boolean sloped = aWalk != bWalk;
+        Map<Long, Integer> heights = new HashMap<>();
+        for (Map.Entry<Long, double[]> e : cols.entrySet()) {
+            int cx = BlockPos.getX(e.getKey()), cz = BlockPos.getZ(e.getKey());
+            double walk = e.getValue()[1];
+            double jitter = sloped ? 0.42 * noise(cx * 0.37, walk * 0.15, cz * 0.37) : 0;
+            heights.put(e.getKey(), (int) Math.floor(walk + 0.5 + jitter));
+        }
+        // never a rise of two blocks between neighbouring columns: it could not be climbed back up
+        for (boolean changed = true; changed; ) {
+            changed = false;
+            for (Map.Entry<Long, Integer> e : heights.entrySet()) {
+                int cx = BlockPos.getX(e.getKey()), cz = BlockPos.getZ(e.getKey());
+                for (Direction dir : Direction.Plane.HORIZONTAL) {
+                    Integer ny = heights.get(BlockPos.asLong(cx + dir.getStepX(), 0, cz + dir.getStepZ()));
+                    if (ny != null && e.getValue() > ny + 1) { e.setValue(ny + 1); changed = true; }
+                }
+            }
+        }
+        for (Map.Entry<Long, double[]> e : cols.entrySet()) {
+            int cx = BlockPos.getX(e.getKey()), cz = BlockPos.getZ(e.getKey());
+            double d = e.getValue()[0], r = e.getValue()[2];
+            int y = heights.get(e.getKey());
+            int top = d < r - 1.3 ? 4 : 3;
+            for (int h = 0; h <= top; h++) carve(cx, y + h, cz);
+            if (d < 1.6) for (int h = 0; h <= 2; h++) keep(cx, y + h, cz);
+            floors.add(new BlockPos(cx, y - 1, cz));
         }
     }
 
@@ -855,8 +886,24 @@ public final class AbyssalGrottoBuilder {
     private void walkCheck(int ox, int oz, int base, BlockPos mouth, Room boss) {
         int[] box = {ox - 115, ox + 115, base - 40, Math.max(base, mouth.getY()) + 12, oz - 115, oz + 115};
         BlockPos arena = new BlockPos(boss.x, boss.fy, boss.z);
+        for (int dy = 2; dy >= -3; dy--) if (standable(mouth.getX(), mouth.getY() + dy, mouth.getZ())) { mouth = mouth.above(dy); break; }
         Set<Long> in = walk(mouth, box);
         Set<Long> out = walk(arena, box);
+        BlockPos highest = arena;
+        for (long k : out) if (BlockPos.getY(k) > highest.getY()) highest = BlockPos.of(k);
+        AwakeningSystemMod.LOGGER.info("[Gruta Abisal] desde la arena se sube hasta {} ({} celdas)", highest.toShortString(), out.size());
+        int shown = 0;
+        for (long k : out) {
+            BlockPos p = BlockPos.of(k);
+            for (Direction d : Direction.Plane.HORIZONTAL) for (int dy = 1; dy <= 3; dy++) {
+                BlockPos q = p.relative(d).above(dy);
+                if (in.contains(q.asLong()) && !out.contains(q.asLong()) && shown < 6) {
+                    shown++;
+                    AwakeningSystemMod.LOGGER.info("[Gruta Abisal] escalón sin subida: {} -> {} ({} / {} / {})", p.toShortString(), q.toShortString(),
+                            level.getBlockState(q.below()), level.getBlockState(p.above(2)), level.getBlockState(q.above()));
+                }
+            }
+        }
         int chestsIn = 0;
         for (BlockPos c : chestList) if (touches(in, c)) chestsIn++;
         int roomsIn = 0;
