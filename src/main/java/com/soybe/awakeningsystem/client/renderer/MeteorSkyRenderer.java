@@ -26,12 +26,13 @@ import org.joml.Vector3f;
 public final class MeteorSkyRenderer {
 
     private static final float SKY_RADIUS = 80.0F;
-    // Entra en diagonal: cruza buena parte del cielo de lado antes de llegar al horizonte
-    private static final float START_ELEVATION = 28.0F;
+    // Aparece alto en el cielo y cae casi en vertical, en línea recta, hacia el lugar del impacto
+    private static final float START_ELEVATION = 62.0F;
     // Termina justo bajo la línea del horizonte: el centro del estallido queda a ras de suelo y solo
     // asoma la cúpula de fuego, como si estallara al tocar tierra a lo lejos
     private static final float END_ELEVATION = -0.6F;
-    private static final float AZIMUTH_SWEEP = 70.0F;
+    // Apenas una leve inclinación lateral, para que no parezca una línea dibujada con regla
+    private static final float AZIMUTH_SWEEP = 8.0F;
     private static final float TAIL_LENGTH = 0.34F;
     private static final float TAIL_FADE_TICKS = 10.0F;
     private static final float IMPACT_TICKS = 120.0F;
@@ -111,17 +112,23 @@ public final class MeteorSkyRenderer {
         RenderSystem.disableBlend();
     }
 
-    /** Punto del cielo en un momento de la caída, que empieza lenta y va acelerando. */
+    /**
+     * Punto del cielo en un momento de la caída, que empieza lenta y va acelerando. Recorre la recta
+     * entre el punto de entrada y el del impacto (proyectada sobre la bóveda), así que se ve como una
+     * caída derecha y no como un arco que se va doblando.
+     */
     private static Vector3f skyPoint(float progress) {
         float eased = (float) Math.pow(progress, 1.5D);
-        double azimuth = Math.toRadians(bearing + driftSign * AZIMUTH_SWEEP * (1.0F - eased));
-        double elevation = Math.toRadians(START_ELEVATION + (END_ELEVATION - START_ELEVATION) * eased);
+        Vector3f from = direction(bearing + driftSign * AZIMUTH_SWEEP, START_ELEVATION);
+        Vector3f to = direction(bearing, END_ELEVATION);
+        return from.lerp(to, eased).normalize().mul(SKY_RADIUS);
+    }
+
+    private static Vector3f direction(float azimuthDegrees, float elevationDegrees) {
+        double azimuth = Math.toRadians(azimuthDegrees);
+        double elevation = Math.toRadians(elevationDegrees);
         float horizontal = (float) Math.cos(elevation);
-        return new Vector3f(
-                (float) -Math.sin(azimuth) * horizontal,
-                (float) Math.sin(elevation),
-                (float) Math.cos(azimuth) * horizontal
-        ).mul(SKY_RADIUS);
+        return new Vector3f((float) -Math.sin(azimuth) * horizontal, (float) Math.sin(elevation), (float) Math.cos(azimuth) * horizontal);
     }
 
     private static void drawTail(BufferBuilder builder, Matrix4f pose, float progress, float fade) {

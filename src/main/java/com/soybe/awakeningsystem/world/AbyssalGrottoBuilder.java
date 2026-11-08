@@ -13,30 +13,37 @@ import net.minecraft.world.entity.EntityType;
 import net.minecraft.world.level.block.AmethystClusterBlock;
 import net.minecraft.world.level.block.Block;
 import net.minecraft.world.level.block.Blocks;
+import net.minecraft.world.level.block.CandleBlock;
 import net.minecraft.world.level.block.ChestBlock;
+import net.minecraft.world.level.block.LanternBlock;
 import net.minecraft.world.level.block.MultifaceBlock;
 import net.minecraft.world.level.block.PointedDripstoneBlock;
 import net.minecraft.world.level.block.entity.ChestBlockEntity;
 import net.minecraft.world.level.block.entity.SpawnerBlockEntity;
 import net.minecraft.world.level.block.state.BlockState;
+import net.minecraft.world.level.block.state.properties.BlockStateProperties;
 import net.minecraft.world.level.block.state.properties.DripstoneThickness;
 import net.minecraft.world.level.levelgen.Heightmap;
 import net.minecraft.world.level.storage.loot.LootTable;
 
 import java.util.ArrayList;
+import java.util.Collections;
+import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Map;
 import java.util.Random;
 import java.util.Set;
 
 /**
- * Gruta Abisal (roadmap sección 20): una cueva que se encuentra explorando el mundo, sin puerta.
+ * Gruta Abisal (roadmap sección 20): una red de cuevas que se encuentra explorando el mundo, sin puerta.
  * <ul>
- *   <li>Una dolina en la superficie con una rampa en espiral que baja pegada a la pared.</li>
- *   <li>Una caverna grande e irregular con estalactitas y estalagmitas, cristales de maná,
- *       amatista, liquen brillante, una cascada y un abismo de lava cruzado por un puente de roca.</li>
- *   <li>Nidos de monstruos (arañas de cueva y esqueletos) con generadores.</li>
- *   <li>Una cámara del jefe en forma de domo, con gradas de roca, un minijefe y el cofre del tesoro.</li>
+ *   <li>La entrada es una boca al pie de un peñasco, con un túnel que baja en diagonal bajo la roca.</li>
+ *   <li>Abajo hay una red de túneles anchos y sinuosos sobre una cuadrícula de 4×4 salas: hay varios
+ *       caminos, vueltas y bloques de roca entre ellos, y la red baja a medida que se aleja de la entrada.</li>
+ *   <li>Nueve salas temáticas (cristales, geoda, nido de arañas, osario, setas, lago, lava, campamento
+ *       minero y cripta), cruces pequeños, callejones sin salida con un cofre escondido y, en la esquina
+ *       más lejana y profunda, la arena del jefe.</li>
  * </ul>
  * Los cofres llevan una tabla de botín y no objetos sueltos, como los de las mazmorras: así Lootr
  * los convierte en cofres por jugador.
@@ -47,23 +54,42 @@ public final class AbyssalGrottoBuilder {
     public static final ResourceKey<LootTable> TREASURE = ResourceKey.create(Registries.LOOT_TABLE,
             ResourceLocation.fromNamespaceAndPath(AwakeningSystemMod.MOD_ID, "chests/abyssal_grotto_treasure"));
 
-    private static final int RX = 22, RY = 12, RZ = 18;     // main cavern radii
-    private static final int DOME_R = 11;                    // boss dome radius
+    private static final int GRID = 4, CELL = 26;
+    /** Outward direction of each side of the grid: north, east, south, west. */
+    private static final int[][] SIDE_DIR = {{0, -1}, {1, 0}, {0, 1}, {-1, 0}};
+
+    private enum Theme { ENTRY, JUNCTION, CRYSTAL, GEODE, SPIDER, BONES, MUSHROOM, LAKE, LAVA, CAMP, CRYPT, POCKET, BOSS }
+
+    private static final class Room {
+        final int x, z, fy, r, h;
+        final Theme theme;
+        final List<BlockPos> cells = new ArrayList<>();
+
+        Room(int x, int z, int fy, int r, int h, Theme theme) {
+            this.x = x; this.z = z; this.fy = fy; this.r = r; this.h = h; this.theme = theme;
+        }
+
+        double dist(int px, int pz) {
+            return Math.hypot(px - x, pz - z);
+        }
+    }
 
     private final ServerLevel level;
     private final Random rand;
     private final double[] phase = new double[9];
     private final Set<Long> air = new HashSet<>();
     private final List<BlockPos> carvedList = new ArrayList<>();
-    /** Walking space (tunnels, ramp, bridge): kept free of dripstone, crystals, nests and chests. */
+    /** Walking space of tunnels: kept free of dripstone, crystals, nests and chests. */
     private final Set<Long> keep = new HashSet<>();
-    /** Floor blocks laid under tunnels once all carving is done. */
-    private final List<BlockPos> tunnelFloors = new ArrayList<>();
-    /** Terrain height of each column before the grotto touched it, to tell open sky from caves to seal. */
-    private final java.util.Map<Long, Integer> surface = new java.util.HashMap<>();
+    /** Floor blocks laid under tunnels and rooms once all the carving is done. */
+    private final List<BlockPos> floors = new ArrayList<>();
+    /** Ground height of each column before the grotto touched it, to tell open sky from caves to seal. */
+    private final Map<Long, Integer> surface = new HashMap<>();
+    private final List<Room> rooms = new ArrayList<>();
     private final List<BlockPos> chestList = new ArrayList<>();
-    private BlockState wallA, wallB, wallC;
-    private int chests, spawners, sealed;
+    private final List<BlockPos> taken = new ArrayList<>();
+    private final BlockState wallA, wallB, wallC;
+    private int chests, spawners, sealed, originX, originZ;
 
     private AbyssalGrottoBuilder(ServerLevel level, long seed) {
         this.level = level;
@@ -74,183 +100,786 @@ public final class AbyssalGrottoBuilder {
         this.wallC = SystemBlocks.ABYSSAL_STONE.get().defaultBlockState();
     }
 
-    /** Builds the grotto with its sinkhole near {@code surface}; returns the sinkhole mouth, or null if it does not fit. */
+    /** Builds the grotto centred near {@code surface}; returns the entrance mouth, or null if it does not fit. */
     public static BlockPos build(ServerLevel level, BlockPos surface) {
+        level.getChunk(surface.getX() >> 4, surface.getZ() >> 4);
         int surfaceY = level.getHeight(Heightmap.Types.OCEAN_FLOOR, surface.getX(), surface.getZ());
-        int cy = Math.max(level.getMinBuildHeight() + 34, Math.min(40, surfaceY - 34));
-        if (surfaceY - cy < 26) return null;
+        int base = Math.max(level.getMinBuildHeight() + 24, Math.min(40, surfaceY - 30));
+        if (surfaceY - base < 20) return null;
         AbyssalGrottoBuilder b = new AbyssalGrottoBuilder(level, level.getSeed() ^ surface.asLong());
-        int dir = b.rand.nextBoolean() ? 1 : -1;   // boss dome on +x or -x, sinkhole on the other side
-        BlockPos center = new BlockPos(surface.getX(), cy, surface.getZ());
-        return b.buildAt(center, dir);
+        return b.buildAt(surface.getX(), surface.getZ(), base);
     }
 
-    private BlockPos buildAt(BlockPos c, int dir) {
-        int cx = c.getX(), cy = c.getY(), cz = c.getZ();
+    private BlockPos buildAt(int ox, int oz, int base) {
+        // ------------------------------------------------------------ 1. layout on a 4x4 grid
+        originX = ox;
+        originZ = oz;
+        int side = rand.nextInt(4), opp = (side + 2) % 4;
+        int[] entryCell = cellOnSide(side, 1 + rand.nextInt(2));
+        int[] bossCell = cellOnSide(opp, rand.nextBoolean() ? 0 : GRID - 1);
+        List<Theme> themes = new ArrayList<>(List.of(Theme.CRYSTAL, Theme.GEODE, Theme.SPIDER, Theme.BONES,
+                Theme.MUSHROOM, Theme.LAKE, Theme.LAVA, Theme.CAMP, Theme.CRYPT));
+        Collections.shuffle(themes, rand);
+        List<int[]> free = new ArrayList<>();
+        for (int gx = 0; gx < GRID; gx++) for (int gz = 0; gz < GRID; gz++) {
+            if (gx == entryCell[0] && gz == entryCell[1] || gx == bossCell[0] && gz == bossCell[1]) continue;
+            free.add(new int[]{gx, gz});
+        }
+        Collections.shuffle(free, rand);
+        Theme[][] theme = new Theme[GRID][GRID];
+        for (int[] c : free) theme[c[0]][c[1]] = Theme.JUNCTION;
+        for (int i = 0; i < themes.size() && i < free.size(); i++) theme[free.get(i)[0]][free.get(i)[1]] = themes.get(i);
+        theme[entryCell[0]][entryCell[1]] = Theme.ENTRY;
+        theme[bossCell[0]][bossCell[1]] = Theme.BOSS;
 
-        // 1. main cavern, irregular ellipsoid with a lumpy floor
-        for (int dx = -RX - 3; dx <= RX + 3; dx++) for (int dz = -RZ - 3; dz <= RZ + 3; dz++) {
-            int floor = (int) Math.round(-8 + 1.6 * noise(dx * 0.21, 0, dz * 0.21));
-            for (int dy = -RY; dy <= RY + 2; dy++) {
-                double n = noise(dx * 0.13, dy * 0.17, dz * 0.13);
-                double d = sq(dx / (double) RX) + sq(dy / (double) RY) + sq(dz / (double) RZ);
-                if (d < 1.0 + 0.22 * n && dy > floor) carve(cx + dx, cy + dy, cz + dz);
-            }
+        Room[][] grid = new Room[GRID][GRID];
+        Room entry = null, boss = null;
+        for (int gx = 0; gx < GRID; gx++) for (int gz = 0; gz < GRID; gz++) {
+            Theme t = theme[gx][gz];
+            int steps = Math.abs(gx - entryCell[0]) + Math.abs(gz - entryCell[1]);   // the network sinks as it goes
+            int x = ox + (int) Math.round((gx - (GRID - 1) / 2.0) * CELL) + rand.nextInt(9) - 4;
+            int z = oz + (int) Math.round((gz - (GRID - 1) / 2.0) * CELL) + rand.nextInt(9) - 4;
+            int fy = base - 2 * steps + rand.nextInt(5) - 2;
+            Room room = switch (t) {
+                case ENTRY -> new Room(x, z, base, 6, 6, t);
+                case BOSS -> new Room(
+                        ox + (int) Math.round((gx - (GRID - 1) / 2.0) * CELL) + (gx == 0 ? -7 : gx == GRID - 1 ? 7 : 0),
+                        oz + (int) Math.round((gz - (GRID - 1) / 2.0) * CELL) + (gz == 0 ? -7 : gz == GRID - 1 ? 7 : 0),
+                        base - 14, 14, 13, t);
+                case JUNCTION -> new Room(x, z, fy, 3 + rand.nextInt(2), 5, t);
+                case LAKE, LAVA -> new Room(x, z, fy, 9, 8, t);
+                default -> new Room(x, z, fy, 7 + rand.nextInt(2), 7 + rand.nextInt(3), t);
+            };
+            grid[gx][gz] = room;
+            rooms.add(room);
+            if (t == Theme.ENTRY) entry = room;
+            if (t == Theme.BOSS) boss = room;
         }
 
-        // 2. the abyss: a lava trench across the cavern, crossed by a natural rock bridge
-        int abyssBottom = cy - 22;
-        for (int dz = -RZ; dz <= RZ; dz++) for (int dx = -4; dx <= 4; dx++) {
-            double wobble = 1.6 * noise(0, 3.1, dz * 0.25);
-            if (Math.abs(dx - wobble) > 3.2) continue;
-            if (!isAir(cx + dx, cy - 6, cz + dz) && !isAir(cx + dx, cy - 4, cz + dz)) continue;
-            for (int y = abyssBottom; y <= cy - 6; y++) carve(cx + dx, y, cz + dz);
+        // ------------------------------------------------------------ 2. which rooms are joined
+        // a random spanning tree over the grid (everything reachable) plus some extra links for loops
+        List<int[]> links = new ArrayList<>();
+        for (int gx = 0; gx < GRID; gx++) for (int gz = 0; gz < GRID; gz++) {
+            if (gx + 1 < GRID) links.add(new int[]{gx, gz, gx + 1, gz});
+            if (gz + 1 < GRID) links.add(new int[]{gx, gz, gx, gz + 1});
         }
-        for (int dz = -RZ; dz <= RZ; dz++) for (int dx = -4; dx <= 4; dx++) {
-            for (int y = abyssBottom; y <= abyssBottom + 1; y++)
-                if (isAir(cx + dx, y, cz + dz)) set(cx + dx, y, cz + dz, Blocks.LAVA.defaultBlockState(), 3);
-        }
-
-        // 3. sinkhole shaft with a spiral ramp, then a wide tunnel into the cavern
-        int sx = cx - dir * (RX + 9), sz = cz;
-        int topY = level.getHeight(Heightmap.Types.MOTION_BLOCKING_NO_LEAVES, sx, sz);
-        int bottomY = cy - 7;
-        int shaftR = 6;
-        for (int y = bottomY; y <= topY + 2; y++) for (int dx = -shaftR - 1; dx <= shaftR + 1; dx++) for (int dz = -shaftR - 1; dz <= shaftR + 1; dz++) {
-            double r = Math.sqrt(dx * dx + dz * dz) + 0.7 * noise(dx * 0.3, y * 0.2, dz * 0.3);
-            if (r <= shaftR) carve(sx + dx, y, sz + dz);
-        }
-        spiralRamp(sx, sz, shaftR, topY, bottomY);
-        // landing ring at the bottom of the shaft
-        for (int dx = -shaftR; dx <= shaftR; dx++) for (int dz = -shaftR; dz <= shaftR; dz++)
-            if (dx * dx + dz * dz <= shaftR * shaftR) tunnelFloors.add(new BlockPos(sx + dx, bottomY - 1, sz + dz));
-        int entryX = cx - dir * (RX - 6);
-        tunnelX(sx, entryX, sz, bottomY, cavernWalk(entryX, cy, cz, bottomY));
-
-        // 4. boss dome beyond the cavern, joined by a tunnel that climbs to its outer terrace
-        int bx = cx + dir * (RX + DOME_R + 4), by = cy - 6, bz = cz;
-        for (int dx = -DOME_R; dx <= DOME_R; dx++) for (int dz = -DOME_R; dz <= DOME_R; dz++) for (int dy = -3; dy <= DOME_R; dy++) {
-            double d = Math.sqrt(dx * dx + dy * dy * 1.4 + dz * dz) + 0.6 * noise(dx * 0.2, dy * 0.2, dz * 0.2);
-            if (d <= DOME_R) carve(bx + dx, by + dy, bz + dz);
-        }
-        int domeExitX = cx + dir * (RX - 6);
-        tunnelX(domeExitX, bx - dir * (DOME_R - 2), bz, cavernWalk(domeExitX, cy, cz, by), by + 2);
-
-        // 5. skin every exposed wall with the grotto's stone and seal any cave, water or lava it cut into
-        skin();
-
-        // floors that stay walkable: fill the dome's bottom and its terraces
-        for (int dx = -DOME_R; dx <= DOME_R; dx++) for (int dz = -DOME_R; dz <= DOME_R; dz++) {
-            double r = Math.sqrt(dx * dx + dz * dz);
-            if (r > DOME_R) continue;
-            int floorY = by - 1 + (r > DOME_R - 3 ? 2 : (r > DOME_R - 6 ? 1 : 0));   // stepped rings
-            for (int y = by - 3; y <= floorY; y++) set(bx + dx, y, bz + dz, r > DOME_R - 6 ? wallB : polished(), 2);
-        }
-        layRamp();
-        for (BlockPos f : tunnelFloors) {
-            BlockState st = level.getBlockState(f);
-            if (st.isAir() || !st.getFluidState().isEmpty() || !isSolid(f.getX(), f.getY(), f.getZ())) set(f.getX(), f.getY(), f.getZ(), wallA, 2);
+        Collections.shuffle(links, rand);
+        int[] parent = new int[GRID * GRID];
+        for (int i = 0; i < parent.length; i++) parent[i] = i;
+        List<int[]> used = new ArrayList<>();
+        for (int[] l : links) {
+            int a = find(parent, l[0] * GRID + l[1]), b = find(parent, l[2] * GRID + l[3]);
+            if (a != b) { parent[a] = b; used.add(l); }
+            else if (rand.nextInt(100) < 40) used.add(l);
         }
 
-        // 6. rock bridge over the abyss: 5 wide, thick in the middle, meeting the floor on both sides
-        // the trench runs along z, so the bridge crosses it along x
-        int walkL = cavernWalk(cx - 8, cy, cz, cy - 7), walkR = cavernWalk(cx + 8, cy, cz, cy - 7);
-        for (int dx = -8; dx <= 8; dx++) {
-            int walk = (int) Math.round(walkL + (walkR - walkL) * ((dx + 8) / 16.0));
-            for (int dz = -2; dz <= 2; dz++) {
-                int x = cx + dx, z = cz + dz;
-                int depth = Math.abs(dz) == 2 ? 2 : (Math.abs(dx) <= 4 ? 4 : 3);   // a keel under the middle
-                for (int k = 1; k <= depth; k++) set(x, walk - k, z, k == 1 ? (Math.abs(dz) == 2 ? wallA : wallB) : wallA, 2);
-                for (int h = 0; h <= 3; h++) { carve(x, walk + h, z); keep(x, walk + h, z); }
-            }
-        }
+        // ------------------------------------------------------------ 3. carve rooms and tunnels
+        for (Room r : rooms) carveRoom(r);
+        for (int[] l : used) connect(grid[l[0]][l[1]], grid[l[2]][l[3]]);
 
-        // 7. decoration
-        decorate(cx, cy, cz);
-
-        // 8. waterfall from a wall alcove into the cavern
-        waterfall(cx, cy, cz, -dir);
-
-        // 9. nests with spawners, chests in the cavern, treasure in the dome
-        List<BlockPos> taken = new ArrayList<>();
-        BlockPos spiderNest = floorSpot(cx, cy, cz, -RX + 3, RX - 3, 3, RZ - 2, taken);
-        if (spiderNest != null) nest(spiderNest, EntityType.CAVE_SPIDER, true);
-        BlockPos boneNest = floorSpot(cx, cy, cz, -RX + 3, RX - 3, -RZ + 2, -3, taken);
-        if (boneNest != null) nest(boneNest, EntityType.SKELETON, false);
-        for (int[] zone : new int[][]{{3, RZ - 2}, {-RZ + 2, -3}, {-RZ + 2, RZ - 2}}) {
-            BlockPos spot = floorSpot(cx, cy, cz, -RX + 3, RX - 3, zone[0], zone[1], taken);
-            if (spot != null) placeChest(spot, Direction.from2DDataValue(rand.nextInt(4)), LOOT);
-        }
-        BlockPos treasure = new BlockPos(bx + dir * (DOME_R - 4), by + 1, bz);
-        clearAbove(treasure, 3);
-        placeChest(treasure, dir > 0 ? Direction.WEST : Direction.EAST, TREASURE);
-        set(treasure.getX(), treasure.getY(), treasure.getZ() + 2, Blocks.SOUL_LANTERN.defaultBlockState(), 2);
-        set(treasure.getX(), treasure.getY(), treasure.getZ() - 2, Blocks.SOUL_LANTERN.defaultBlockState(), 2);
-        // lanterns at the dome's mouth
-        int mouthX = cx + dir * (RX + 2);
-        set(mouthX, by, bz + 3, Blocks.SOUL_LANTERN.defaultBlockState(), 2);
-        set(mouthX, by, bz - 3, Blocks.SOUL_LANTERN.defaultBlockState(), 2);
-        // ring of shroomlights in the dome's ceiling
-        for (int i = 0; i < 10; i++) {
-            double a = i * Math.PI * 2 / 10;
-            int x = bx + (int) Math.round(Math.cos(a) * 6), z = bz + (int) Math.round(Math.sin(a) * 6);
-            for (int y = by + DOME_R + 1; y > by + 2; y--) {
-                if (isAir(x, y - 1, z) && !isAir(x, y, z)) { set(x, y, z, Blocks.SHROOMLIGHT.defaultBlockState(), 2); break; }
-            }
-        }
-        SeriesStructureWorldGen.spawnOverworldMiniboss(level, new BlockPos(bx, by - 1, bz));
-
-        // 10. sinkhole rim: mossy stone and hanging vines around the mouth
-        for (int dx = -shaftR - 2; dx <= shaftR + 2; dx++) for (int dz = -shaftR - 2; dz <= shaftR + 2; dz++) {
-            double r = Math.sqrt(dx * dx + dz * dz);
-            if (r <= shaftR || r > shaftR + 2) continue;
-            int y = level.getHeight(Heightmap.Types.MOTION_BLOCKING_NO_LEAVES, sx + dx, sz + dz) - 1;
-            if (y < topY - 4) continue;
-            set(sx + dx, y, sz + dz, rand.nextInt(3) == 0 ? Blocks.MOSSY_COBBLESTONE.defaultBlockState() : Blocks.MOSS_BLOCK.defaultBlockState(), 2);
-        }
-        for (int i = 0; i < 14; i++) {
+        // dead ends with a hidden chest at the end
+        int spurs = 0;
+        for (int attempt = 0; attempt < 40 && spurs < 3; attempt++) {
+            Room from = rooms.get(rand.nextInt(rooms.size()));
+            if (from.theme == Theme.BOSS || from.theme == Theme.ENTRY || from.theme == Theme.POCKET) continue;
             double a = rand.nextDouble() * Math.PI * 2;
-            int x = sx + (int) Math.round(Math.cos(a) * (shaftR + 0.4)), z = sz + (int) Math.round(Math.sin(a) * (shaftR + 0.4));
-            int y = topY - 1 - rand.nextInt(3);
-            Direction toWall = Direction.getNearest(Math.cos(a), 0, Math.sin(a));
-            int len = 2 + rand.nextInt(5);
-            for (int k = 0; k < len; k++) {
-                BlockPos p = new BlockPos(x, y - k, z).relative(toWall.getOpposite());
-                if (!isAir(p.getX(), p.getY(), p.getZ())) break;
-                set(p.getX(), p.getY(), p.getZ(), Blocks.CAVE_VINES.defaultBlockState(), 2);
-            }
+            int len = 13 + rand.nextInt(7);
+            int ex = from.x + (int) Math.round(Math.cos(a) * (from.r + len));
+            int ez = from.z + (int) Math.round(Math.sin(a) * (from.r + len));
+            boolean clash = false;
+            for (Room o : rooms) if (o != from && o.dist(ex, ez) < o.r + 7) { clash = true; break; }
+            if (clash) continue;
+            Room pocket = new Room(ex, ez, from.fy - rand.nextInt(3), 3, 4, Theme.POCKET);
+            carveRoom(pocket);
+            rooms.add(pocket);
+            corridor(from.x + Math.cos(a) * (from.r - 1.5), from.z + Math.sin(a) * (from.r - 1.5), from.fy,
+                    ex - Math.cos(a) * 1.5, ez - Math.sin(a) * 1.5, pocket.fy, 2.1, 0.3);
+            spurs++;
         }
-        AwakeningSystemMod.LOGGER.info("[Gruta Abisal] construida en {} {} {}: {} bloques excavados, {} huecos sellados, {} cofres, {} generadores",
-                cx, cy, cz, carvedList.size(), sealed, chests, spawners);
+
+        // the entrance: a mouth at the foot of a rocky outcrop, with a tunnel sloping down under it
+        int[] sd = SIDE_DIR[side];
+        // the shortest tunnel that still reaches the surface at a gentle slope (one block down every 1.35)
+        int mx = 0, mz = 0, mouthY = 0;
+        for (int length = 12; length <= 120; length++) {
+            mx = entry.x + sd[0] * (entry.r + length);
+            mz = entry.z + sd[1] * (entry.r + length);
+            mouthY = height(Heightmap.Types.OCEAN_FLOOR, mx, mz);
+            if (length >= (mouthY - entry.fy) * 1.35 + 2) break;
+        }
+        outcrop(mx, mz, -sd[0], -sd[1]);
+        corridor(mx + sd[0] * 2, mz + sd[1] * 2, mouthY, entry.x + sd[0] * (entry.r - 1.5), entry.z + sd[1] * (entry.r - 1.5),
+                entry.fy, 2.6, 0.08);
+
+        // ------------------------------------------------------------ 4. walls, seals and floors
+        skin();
+        for (BlockPos f : floors)
+            if (!isSolid(f.getX(), f.getY(), f.getZ())) set(f.getX(), f.getY(), f.getZ(), wallA, 2);
+        assignCells();
+
+        // ------------------------------------------------------------ 5. what each room holds
+        for (Room r : rooms) furnish(r);
+        decorate();
+        BlockPos mouth = new BlockPos(mx, mouthY, mz);
+        AwakeningSystemMod.LOGGER.info("[Gruta Abisal] construida en {} {} {}: {} salas, {} bloques excavados, {} huecos sellados, {} cofres, {} generadores",
+                ox, base, oz, rooms.size(), carvedList.size(), sealed, chests, spawners);
         if (System.getProperty("awakening.debugGrotto") != null) {
-            debugSlices(cx, cy, cz, sx, topY);
-            walkCheck(cx, cy, cz, sx, sz, shaftR, topY, new BlockPos(bx, by, bz));
+            debugPlan(ox, oz, base);
+            walkCheck(ox, oz, base, mouth, boss);
         }
-        return new BlockPos(sx, topY, sz);
+        return mouth;
+    }
+
+    private static int[] cellOnSide(int side, int i) {
+        return switch (side) {
+            case 0 -> new int[]{i, 0};
+            case 1 -> new int[]{GRID - 1, i};
+            case 2 -> new int[]{i, GRID - 1};
+            default -> new int[]{0, i};
+        };
+    }
+
+    private static int find(int[] parent, int i) {
+        while (parent[i] != i) i = parent[i] = parent[parent[i]];
+        return i;
+    }
+
+    // ---------------------------------------------------------------- shapes
+    /** A rounded chamber: flat floor, a domed roof and a lumpy rim. */
+    private void carveRoom(Room r) {
+        for (int dx = -r.r - 3; dx <= r.r + 3; dx++) for (int dz = -r.r - 3; dz <= r.r + 3; dz++) {
+            int x = r.x + dx, z = r.z + dz;
+            double rr = r.r * (1 + 0.18 * noise(x * 0.15, r.fy * 0.1, z * 0.15));
+            double d = Math.hypot(dx, dz);
+            if (d > rr) continue;
+            double k = d / rr;
+            int ceil = r.fy + Math.max(3, (int) Math.round(r.h * Math.sqrt(1 - k * k)) + 1);
+            int bump = r.theme != Theme.BOSS && k > 0.78 && noise(x * 0.3, 5.0, z * 0.3) > 0.25 ? 1 : 0;
+            for (int y = r.fy + bump; y <= ceil; y++) carve(x, y, z);
+            floors.add(new BlockPos(x, r.fy + bump - 1, z));
+        }
+    }
+
+    /** A tunnel between two rooms, leaving each one from its rim. */
+    private void connect(Room a, Room b) {
+        double dx = b.x - a.x, dz = b.z - a.z, len = Math.hypot(dx, dz);
+        double ux = dx / len, uz = dz / len;
+        double radius = 2.6 + rand.nextDouble() * 0.6;
+        corridor(a.x + ux * (a.r - 1.5), a.z + uz * (a.r - 1.5), a.fy,
+                b.x - ux * (b.r - 1.5), b.z - uz * (b.r - 1.5), b.fy, radius, 0.22);
     }
 
     /**
-     * Dev aid: walks the grotto like a player (steps of one block up, drops of at most three) from the
-     * surface next to the sinkhole, and back out from the boss dome, and logs what can and cannot be reached.
+     * A winding tunnel (a bent curve between the two points), about 5–6 blocks wide and 5 tall. Its floor
+     * slopes evenly from one end to the other, never more than one block per step.
      */
-    private void walkCheck(int cx, int cy, int cz, int sx, int sz, int shaftR, int topY, BlockPos dome) {
-        RampCell top = ramp.get(0);   // the ramp's first step, just under the sinkhole's rim
-        BlockPos start = new BlockPos(top.x(), top.y(), top.z());
-        int[] box = {cx - RX - 32, cx + RX + 32, cy - 26, topY + 6, cz - RZ - 10, cz + RZ + 10};
-        Set<Long> in = walk(start, box);
-        Set<Long> out = walk(dome, box);
+    private void corridor(double ax, double az, int aWalk, double bx, double bz, int bWalk, double radius, double bend) {
+        double len = Math.hypot(bx - ax, bz - az);
+        if (len < 1) return;
+        if (Math.abs(bWalk - aWalk) > len) bWalk = aWalk + (int) Math.signum(bWalk - aWalk) * (int) len;
+        double px = -(bz - az) / len, pz = (bx - ax) / len;
+        double off = (rand.nextDouble() * 2 - 1) * len * bend;
+        double mx = (ax + bx) / 2 + px * off, mz = (az + bz) / 2 + pz * off;
+        int n = (int) Math.ceil(len * 2.5) + 1;
+        for (int i = 0; i <= n; i++) {
+            double t = i / (double) n, u = 1 - t;
+            double x = u * u * ax + 2 * u * t * mx + t * t * bx;
+            double z = u * u * az + 2 * u * t * mz + t * t * bz;
+            int walk = (int) Math.round(aWalk + (bWalk - aWalk) * t);
+            double r = radius + 0.45 * noise(x * 0.21, walk * 0.1, z * 0.21);
+            int ix = (int) Math.floor(x), iz = (int) Math.floor(z);
+            for (int dx = -4; dx <= 4; dx++) for (int dz = -4; dz <= 4; dz++) {
+                int cx = ix + dx, cz = iz + dz;
+                double d = Math.hypot(cx + 0.5 - x, cz + 0.5 - z);
+                if (d > r) continue;
+                int top = d < r - 1.3 ? 4 : 3;
+                for (int h = 0; h <= top; h++) carve(cx, walk + h, cz);
+                if (d < 1.6) for (int h = 0; h <= 2; h++) keep(cx, walk + h, cz);
+                floors.add(new BlockPos(cx, walk - 1, cz));
+            }
+        }
+    }
+
+    /**
+     * Rocky outcrop over the entrance: a steep face where the mouth opens and a back that slopes down
+     * over the tunnel, in stone, andesite and mossy cobblestone with moss on top.
+     */
+    private void outcrop(int mx, int mz, int ix, int iz) {
+        int px = -iz, pz = ix;
+        for (int t = -1; t <= 14; t++) for (int s = -7; s <= 7; s++) {
+            double hmax = t <= 0 ? 8.5 : 8.5 - t * 0.55;
+            double hh = hmax - Math.abs(s) * 0.85 + 1.5 * noise(t * 0.4, 2.0, s * 0.4);
+            if (hh < 1) continue;
+            int x = mx + ix * t + px * s, z = mz + iz * t + pz * s;
+            int g = height(Heightmap.Types.MOTION_BLOCKING_NO_LEAVES, x, z);
+            surface.putIfAbsent(BlockPos.asLong(x, 0, z), g);
+            int top = g + (int) hh;
+            for (int y = g - 1; y < top; y++) {
+                BlockState st = level.getBlockState(new BlockPos(x, y, z));
+                if (!st.isAir() && !st.canBeReplaced() && y >= g) continue;
+                int roll = rand.nextInt(100);
+                BlockState rock = y == top - 1 && roll < 45 ? Blocks.MOSS_BLOCK.defaultBlockState()
+                        : roll < 50 ? Blocks.STONE.defaultBlockState()
+                        : roll < 70 ? Blocks.ANDESITE.defaultBlockState()
+                        : roll < 85 ? Blocks.COBBLESTONE.defaultBlockState() : Blocks.MOSSY_COBBLESTONE.defaultBlockState();
+                set(x, y, z, rock, 2);
+            }
+        }
+    }
+
+    // ---------------------------------------------------------------- rooms
+    private void assignCells() {
+        for (BlockPos p : carvedList) {
+            Room best = null;
+            double bestD = Double.MAX_VALUE;
+            for (Room r : rooms) {
+                double d = r.dist(p.getX(), p.getZ());
+                if (d <= r.r * 1.2 + 1 && p.getY() >= r.fy - 2 && p.getY() <= r.fy + r.h + 4 && d / r.r < bestD) {
+                    best = r;
+                    bestD = d / r.r;
+                }
+            }
+            if (best != null) best.cells.add(p);
+        }
+    }
+
+    private void furnish(Room r) {
+        BlockState crystal = SystemBlocks.MANA_CRYSTAL_CLUSTER_C.get().defaultBlockState();
+        switch (r.theme) {
+            case ENTRY -> {
+                for (BlockPos p : floorCells(r)) if (rand.nextInt(100) < 35) set(p.getX(), p.getY() - 1, p.getZ(), Blocks.MOSS_BLOCK.defaultBlockState(), 2);
+                for (int i = 0; i < 2; i++) hangingLantern(r, Blocks.SOUL_LANTERN);
+            }
+            case JUNCTION -> {
+                if (rand.nextBoolean()) hangingLantern(r, Blocks.LANTERN);
+            }
+            case CRYSTAL -> {
+                for (BlockPos p : r.cells) {
+                    if (!isAir(p) || keep.contains(p.asLong())) continue;
+                    int roll = rand.nextInt(100);
+                    if (onFloor(p) && roll < 11 && !nearKeep(p)) set(p, crystal.setValue(TeyvatCrystalBlock.FACING, Direction.UP));
+                    else if (onFloor(p) && roll < 25) set(p.getX(), p.getY() - 1, p.getZ(), wallC, 2);
+                    else if (onCeiling(p) && roll < 5) set(p, crystal.setValue(TeyvatCrystalBlock.FACING, Direction.DOWN));
+                    else if (roll < 7) wallCrystal(p, crystal);
+                }
+                for (int i = 0; i < 3; i++) ceilingLight(r, Blocks.SHROOMLIGHT.defaultBlockState());
+                chestIn(r, LOOT);
+            }
+            case GEODE -> {
+                for (BlockPos p : r.cells) for (Direction d : Direction.values()) {
+                    BlockPos n = p.relative(d);
+                    if (air.contains(n.asLong()) || d == Direction.DOWN && keep.contains(p.asLong())) continue;
+                    if (n.getY() < r.fy - 1) continue;
+                    BlockState st = level.getBlockState(n);
+                    if (st.isAir() || !st.getFluidState().isEmpty() || st.hasBlockEntity()) continue;
+                    set(n, rand.nextInt(100) < 72 ? Blocks.AMETHYST_BLOCK.defaultBlockState() : Blocks.CALCITE.defaultBlockState());
+                }
+                for (BlockPos p : r.cells) {
+                    if (!isAir(p) || keep.contains(p.asLong()) || nearKeep(p) && onFloor(p)) continue;
+                    if (rand.nextInt(100) < 10) {
+                        Direction from = solidSide(p);
+                        if (from != null) set(p, Blocks.AMETHYST_CLUSTER.defaultBlockState().setValue(AmethystClusterBlock.FACING, from.getOpposite()));
+                    }
+                }
+                chestIn(r, LOOT);
+            }
+            case SPIDER -> {
+                for (BlockPos p : r.cells) {
+                    if (!isAir(p) || keep.contains(p.asLong())) continue;
+                    boolean byWall = solidSide(p) != null || onCeiling(p);
+                    if (byWall && rand.nextInt(100) < 20 || onFloor(p) && rand.nextInt(100) < 5 && !nearKeep(p))
+                        set(p, Blocks.COBWEB.defaultBlockState());
+                }
+                spawnerIn(r, EntityType.CAVE_SPIDER);
+                for (BlockPos p : floorCells(r)) if (rand.nextInt(100) < 3 && !nearKeep(p)) set(p, Blocks.SKELETON_SKULL.defaultBlockState());
+            }
+            case BONES -> {
+                for (BlockPos p : floorCells(r)) {
+                    int roll = rand.nextInt(100);
+                    if (roll < 22) set(p.getX(), p.getY() - 1, p.getZ(), Blocks.BONE_BLOCK.defaultBlockState(), 2);
+                    else if (roll < 45) set(p.getX(), p.getY() - 1, p.getZ(), Blocks.SOUL_SOIL.defaultBlockState(), 2);
+                    else if (roll < 49 && !nearKeep(p)) set(p, Blocks.SKELETON_SKULL.defaultBlockState());
+                }
+                spawnerIn(r, EntityType.SKELETON);
+                for (int i = 0; i < 2; i++) {
+                    BlockPos p = spotIn(r, 3);
+                    if (p != null) set(p, Blocks.SOUL_LANTERN.defaultBlockState());
+                }
+            }
+            case MUSHROOM -> {
+                for (BlockPos p : floorCells(r)) {
+                    set(p.getX(), p.getY() - 1, p.getZ(), rand.nextInt(100) < 80 ? Blocks.MOSS_BLOCK.defaultBlockState() : Blocks.MYCELIUM.defaultBlockState(), 2);
+                    if (nearKeep(p)) continue;
+                    int roll = rand.nextInt(100);
+                    if (roll < 18) set(p, Blocks.MOSS_CARPET.defaultBlockState());
+                    else if (roll < 23) set(p, (rand.nextBoolean() ? Blocks.RED_MUSHROOM : Blocks.BROWN_MUSHROOM).defaultBlockState());
+                }
+                for (BlockPos p : r.cells) if (onCeiling(p) && isAir(p) && !keep.contains(p.asLong()) && rand.nextInt(100) < 7) caveVines(p);
+                for (int i = 0; i < 3; i++) {
+                    BlockPos p = spotIn(r, 3);
+                    if (p != null) hugeMushroom(p);
+                }
+                for (int i = 0; i < 2; i++) ceilingLight(r, Blocks.SHROOMLIGHT.defaultBlockState());
+            }
+            case LAKE -> {
+                pool(r, Blocks.WATER.defaultBlockState(), 2, 0.68);
+                BlockPos island = new BlockPos(r.x, r.fy, r.z);
+                if (!keep.contains(island.asLong()) && isAir(island)) {
+                    placeChest(island, Direction.from2DDataValue(rand.nextInt(4)), LOOT);
+                    taken.add(island);
+                }
+                for (BlockPos p : r.cells) if (isAir(p) && solidSide(p) != null && rand.nextInt(100) < 6)
+                    lichen(p);
+                for (int i = 0; i < 2; i++) ceilingLight(r, Blocks.SHROOMLIGHT.defaultBlockState());
+            }
+            case LAVA -> {
+                pool(r, Blocks.LAVA.defaultBlockState(), 1, 0.6);
+                for (BlockPos p : floorCells(r)) {
+                    double k = r.dist(p.getX(), p.getZ()) / r.r;
+                    if (k > 0.6 && k < 0.8) set(p.getX(), p.getY() - 1, p.getZ(),
+                            rand.nextBoolean() ? Blocks.MAGMA_BLOCK.defaultBlockState() : Blocks.BASALT.defaultBlockState(), 2);
+                }
+            }
+            case CAMP -> {
+                for (BlockPos p : floorCells(r))
+                    if (r.dist(p.getX(), p.getZ()) < r.r * 0.6 && rand.nextInt(100) < 55) set(p.getX(), p.getY() - 1, p.getZ(), Blocks.SPRUCE_PLANKS.defaultBlockState(), 2);
+                for (int i = 0; i < 3; i++) {
+                    BlockPos p = spotIn(r, 3);
+                    if (p == null) continue;
+                    set(p, Blocks.SPRUCE_FENCE.defaultBlockState());
+                    if (isAir(p.above())) set(p.above(), Blocks.SPRUCE_FENCE.defaultBlockState());
+                    if (isAir(p.above(2))) set(p.above(2), Blocks.LANTERN.defaultBlockState());
+                }
+                BlockPos table = spotIn(r, 2);
+                if (table != null) set(table, Blocks.CRAFTING_TABLE.defaultBlockState());
+                BlockPos barrel = spotIn(r, 2);
+                if (barrel != null) set(barrel, Blocks.BARREL.defaultBlockState());
+                BlockPos rails = spotIn(r, 3);
+                if (rails != null) for (int k = 0; k < 4; k++) {
+                    BlockPos q = rails.east(k);
+                    if (isAir(q) && isSolid(q.getX(), q.getY() - 1, q.getZ()) && !keep.contains(q.asLong())) set(q, Blocks.RAIL.defaultBlockState());
+                }
+                chestIn(r, LOOT);
+            }
+            case CRYPT -> {
+                for (BlockPos p : floorCells(r)) set(p.getX(), p.getY() - 1, p.getZ(),
+                        rand.nextInt(100) < 70 ? Blocks.DEEPSLATE_TILES.defaultBlockState() : Blocks.CRACKED_DEEPSLATE_TILES.defaultBlockState(), 2);
+                for (BlockPos p : r.cells) for (Direction d : Direction.Plane.HORIZONTAL) {
+                    BlockPos n = p.relative(d);
+                    if (!air.contains(n.asLong()) && isSolid(n.getX(), n.getY(), n.getZ()) && rand.nextInt(100) < 55)
+                        set(n, Blocks.DEEPSLATE_BRICKS.defaultBlockState());
+                }
+                for (int i = 0; i < 3; i++) {
+                    BlockPos p = spotIn(r, 3);
+                    if (p == null) continue;
+                    BlockPos q = p.relative(Direction.from2DDataValue(rand.nextInt(4)));
+                    set(p, Blocks.POLISHED_DEEPSLATE.defaultBlockState());
+                    if (isAir(q) && !keep.contains(q.asLong())) set(q, Blocks.POLISHED_DEEPSLATE.defaultBlockState());
+                    if (isAir(p.above())) set(p.above(), Blocks.CANDLE.defaultBlockState().setValue(CandleBlock.LIT, true).setValue(CandleBlock.CANDLES, 1 + rand.nextInt(3)));
+                }
+                spawnerIn(r, EntityType.ZOMBIE);
+                chestIn(r, LOOT);
+            }
+            case POCKET -> {
+                BlockPos p = new BlockPos(r.x, r.fy, r.z);
+                if (isAir(p) && isSolid(r.x, r.fy - 1, r.z)) placeChest(p, Direction.from2DDataValue(rand.nextInt(4)), LOOT);
+                else chestIn(r, LOOT);
+                BlockPos c = spotIn(r, 1);
+                if (c != null) set(c, Blocks.CANDLE.defaultBlockState().setValue(CandleBlock.LIT, true).setValue(CandleBlock.CANDLES, 2));
+            }
+            case BOSS -> furnishBoss(r);
+        }
+    }
+
+    /** Boss arena: polished centre, four great pillars, a ring of lights in the roof and the treasure. */
+    private void furnishBoss(Room r) {
+        for (BlockPos p : floorCells(r)) {
+            double d = r.dist(p.getX(), p.getZ());
+            if (d < 5) set(p.getX(), p.getY() - 1, p.getZ(), rand.nextInt(5) == 0 ? Blocks.CHISELED_DEEPSLATE.defaultBlockState() : Blocks.POLISHED_DEEPSLATE.defaultBlockState(), 2);
+            else if (d < 5.8) set(p.getX(), p.getY() - 1, p.getZ(), Blocks.DEEPSLATE_TILES.defaultBlockState(), 2);
+        }
+        for (int i = 0; i < 4; i++) {
+            double a = Math.PI / 4 + i * Math.PI / 2;
+            int px = r.x + (int) Math.round(Math.cos(a) * 9), pz = r.z + (int) Math.round(Math.sin(a) * 9);
+            for (int dx = -1; dx <= 1; dx++) for (int dz = -1; dz <= 1; dz++) {
+                if (Math.abs(dx) + Math.abs(dz) == 2) continue;
+                for (int y = r.fy; y < r.fy + r.h + 4; y++) {
+                    BlockPos q = new BlockPos(px + dx, y, pz + dz);
+                    if (!air.contains(q.asLong()) || keep.contains(q.asLong())) continue;
+                    set(q, (y - r.fy) % 4 == 0 ? Blocks.CHISELED_TUFF.defaultBlockState() : Blocks.TUFF_BRICKS.defaultBlockState());
+                }
+            }
+            set(px, r.fy + 3, pz + 2, Blocks.SOUL_LANTERN.defaultBlockState(), 2);
+        }
+        for (int i = 0; i < 12; i++) {
+            double a = i * Math.PI * 2 / 12;
+            int x = r.x + (int) Math.round(Math.cos(a) * 6), z = r.z + (int) Math.round(Math.sin(a) * 6);
+            for (int y = r.fy + r.h + 3; y > r.fy + 3; y--) {
+                if (isAir(new BlockPos(x, y - 1, z)) && !isAir(new BlockPos(x, y, z))) { set(x, y, z, Blocks.SHROOMLIGHT.defaultBlockState(), 2); break; }
+            }
+        }
+        // treasure on the far side of the arena, away from the grid
+        double ax = r.x - originX, az = r.z - originZ;
+        double al = Math.max(1, Math.hypot(ax, az));
+        BlockPos treasure = null;
+        for (int k = 10; k >= 4 && treasure == null; k--) {
+            BlockPos p = new BlockPos(r.x + (int) Math.round(ax / al * k), r.fy, r.z + (int) Math.round(az / al * k));
+            if (isAir(p) && isSolid(p.getX(), p.getY() - 1, p.getZ()) && !keep.contains(p.asLong())) treasure = p;
+        }
+        if (treasure == null) treasure = spotIn(r, 2);
+        if (treasure != null) {
+            Direction face = Direction.getNearest(-ax, 0, -az);
+            placeChest(treasure, face, TREASURE);
+            BlockPos l = treasure.relative(face.getClockWise(), 2), l2 = treasure.relative(face.getCounterClockWise(), 2);
+            if (isAir(l)) set(l, Blocks.SOUL_LANTERN.defaultBlockState());
+            if (isAir(l2)) set(l2, Blocks.SOUL_LANTERN.defaultBlockState());
+        }
+        SeriesStructureWorldGen.spawnOverworldMiniboss(level, new BlockPos(r.x, r.fy - 1, r.z));
+    }
+
+    /** Sinks the middle of a room into a pool; the tunnels crossing it stay as causeways. */
+    private void pool(Room r, BlockState fluid, int depth, double extent) {
+        for (BlockPos p : floorCells(r)) {
+            double d = r.dist(p.getX(), p.getZ());
+            if (d > r.r * extent || d < 2.3 && fluid.is(Blocks.WATER)) continue;
+            if (keep.contains(p.asLong()) || nearKeep(p)) continue;
+            for (int k = 1; k <= depth; k++) set(p.getX(), p.getY() - k, p.getZ(), fluid, 3);
+            BlockPos under = p.below(depth + 1);
+            if (!isSolid(under.getX(), under.getY(), under.getZ())) set(under, wallA);
+        }
+    }
+
+    // ---------------------------------------------------------------- general decoration
+    private void decorate() {
+        BlockState crystal = SystemBlocks.MANA_CRYSTAL_CLUSTER_C.get().defaultBlockState();
+        for (BlockPos p : carvedList) {
+            if (!isAir(p)) continue;
+            boolean kept = keep.contains(p.asLong());
+            int roll = rand.nextInt(1000);
+            if (onCeiling(p) && roll < 9) dripstone(p.getX(), p.getY(), p.getZ(), Direction.DOWN, 2 + rand.nextInt(4));
+            else if (kept) continue;
+            else if (onFloor(p) && roll < 14 && !nearKeep(p)) dripstone(p.getX(), p.getY(), p.getZ(), Direction.UP, 1 + rand.nextInt(3));
+            else if (onFloor(p) && roll < 19 && !nearKeep(p)) set(p, crystal.setValue(TeyvatCrystalBlock.FACING, Direction.UP));
+            else if (roll < 45 && solidSide(p) != null) lichen(p);
+            else if (roll < 49) wallCrystal(p, crystal);
+        }
+    }
+
+    private void lichen(BlockPos p) {
+        Direction d = solidSide(p);
+        if (d != null) set(p, Blocks.GLOW_LICHEN.defaultBlockState().setValue(MultifaceBlock.getFaceProperty(d), true));
+    }
+
+    private void wallCrystal(BlockPos p, BlockState crystal) {
+        Direction d = solidSide(p);
+        if (d != null && !keep.contains(p.asLong())) set(p, crystal.setValue(TeyvatCrystalBlock.FACING, d.getOpposite()));
+    }
+
+    private void dripstone(int x, int y, int z, Direction tip, int len) {
+        int step = tip == Direction.DOWN ? -1 : 1;
+        // shorten it so it never reaches into a path, and stalactites leave head room below them
+        int fit = 0;
+        for (int i = 0; i < len; i++) {
+            int yy = y + step * i;
+            if (!isAir(new BlockPos(x, yy, z)) || keep.contains(BlockPos.asLong(x, yy, z))) break;
+            if (tip == Direction.DOWN) {
+                boolean clear = true;
+                for (int k = 1; k <= 3; k++) if (!isAir(new BlockPos(x, yy - k, z))) { clear = false; break; }
+                if (!clear) break;
+            }
+            fit++;
+        }
+        if (fit == 0) return;
+        set(x, y - step, z, Blocks.DRIPSTONE_BLOCK.defaultBlockState(), 2);
+        for (int i = 0; i < fit; i++) {
+            DripstoneThickness t = fit == 1 || i == fit - 1 ? DripstoneThickness.TIP
+                    : i == fit - 2 ? DripstoneThickness.FRUSTUM
+                    : i == 0 ? DripstoneThickness.BASE : DripstoneThickness.MIDDLE;
+            set(x, y + step * i, z, Blocks.POINTED_DRIPSTONE.defaultBlockState()
+                    .setValue(PointedDripstoneBlock.TIP_DIRECTION, tip)
+                    .setValue(PointedDripstoneBlock.THICKNESS, t), 2);
+        }
+    }
+
+    private void caveVines(BlockPos top) {
+        int len = 1 + rand.nextInt(4), fit = 0;
+        for (int i = 0; i < len; i++) {
+            BlockPos q = top.below(i);
+            if (!isAir(q) || keep.contains(q.asLong()) || !isAir(q.below(2))) break;
+            fit++;
+        }
+        for (int i = 0; i < fit; i++) {
+            boolean last = i == fit - 1;
+            BlockState st = (last ? Blocks.CAVE_VINES : Blocks.CAVE_VINES_PLANT).defaultBlockState()
+                    .setValue(BlockStateProperties.BERRIES, rand.nextInt(100) < 35);
+            set(top.below(i), st);
+        }
+    }
+
+    private void hugeMushroom(BlockPos at) {
+        int stem = 3 + rand.nextInt(3);
+        for (int k = 0; k <= stem + 1; k++) if (!isAir(at.above(k))) return;
+        for (int k = 0; k < stem; k++) set(at.above(k), Blocks.MUSHROOM_STEM.defaultBlockState());
+        boolean red = rand.nextBoolean();
+        BlockState cap = (red ? Blocks.RED_MUSHROOM_BLOCK : Blocks.BROWN_MUSHROOM_BLOCK).defaultBlockState();
+        int cy = at.getY() + stem;
+        for (int dx = -2; dx <= 2; dx++) for (int dz = -2; dz <= 2; dz++) {
+            if (Math.abs(dx) == 2 && Math.abs(dz) == 2) continue;
+            BlockPos q = new BlockPos(at.getX() + dx, cy, at.getZ() + dz);
+            if (isAir(q) && !keep.contains(q.asLong())) set(q, cap);
+            if (red && (Math.abs(dx) == 2 || Math.abs(dz) == 2)) {
+                BlockPos s = q.below();
+                if (isAir(s) && !keep.contains(s.asLong())) set(s, cap);
+            }
+        }
+    }
+
+    private void hangingLantern(Room r, Block lantern) {
+        List<BlockPos> options = new ArrayList<>();
+        for (BlockPos p : r.cells) if (isAir(p) && onCeiling(p) && p.getY() <= r.fy + 6) options.add(p);
+        if (options.isEmpty()) return;
+        set(options.get(rand.nextInt(options.size())), lantern.defaultBlockState().setValue(LanternBlock.HANGING, true));
+    }
+
+    private void ceilingLight(Room r, BlockState light) {
+        List<BlockPos> options = new ArrayList<>();
+        for (BlockPos p : r.cells) if (isAir(p) && onCeiling(p)) options.add(p.above());
+        if (!options.isEmpty()) set(options.get(rand.nextInt(options.size())), light);
+    }
+
+    // ---------------------------------------------------------------- spots, chests and spawners
+    private List<BlockPos> floorCells(Room r) {
+        List<BlockPos> out = new ArrayList<>();
+        for (BlockPos p : r.cells) if (isAir(p) && onFloor(p) && !keep.contains(p.asLong())) out.add(p);
+        return out;
+    }
+
+    /** A free floor spot in a room, off the paths and at least {@code spacing} blocks from earlier ones. */
+    private BlockPos spotIn(Room r, int spacing) {
+        List<BlockPos> options = new ArrayList<>();
+        for (BlockPos p : floorCells(r)) {
+            if (nearKeep(p) || !isAir(p.above())) continue;
+            boolean crowded = false;
+            for (BlockPos t : taken) if (t.distSqr(p) < spacing * spacing) { crowded = true; break; }
+            if (!crowded) options.add(p);
+        }
+        if (options.isEmpty()) return null;
+        BlockPos pick = options.get(rand.nextInt(options.size()));
+        taken.add(pick);
+        return pick;
+    }
+
+    private void chestIn(Room r, ResourceKey<LootTable> loot) {
+        BlockPos p = spotIn(r, 4);
+        if (p != null) placeChest(p, Direction.from2DDataValue(rand.nextInt(4)), loot);
+    }
+
+    private void spawnerIn(Room r, EntityType<?> type) {
+        BlockPos p = spotIn(r, 4);
+        if (p == null) return;
+        set(p, Blocks.SPAWNER.defaultBlockState());
+        if (level.getBlockEntity(p) instanceof SpawnerBlockEntity s) {
+            s.setEntityId(type, level.getRandom());
+            spawners++;
+        }
+    }
+
+    private void placeChest(BlockPos p, Direction facing, ResourceKey<LootTable> loot) {
+        level.setBlock(p, Blocks.CHEST.defaultBlockState().setValue(ChestBlock.FACING, facing), 2);
+        if (level.getBlockEntity(p) instanceof ChestBlockEntity chest) {
+            chest.setLootTable(loot, rand.nextLong());
+            chests++;
+            chestList.add(p);
+        }
+    }
+
+    // ---------------------------------------------------------------- carving helpers
+    private void carve(int x, int y, int z) {
+        if (y <= level.getMinBuildHeight() + 4) return;
+        BlockPos p = new BlockPos(x, y, z);
+        BlockState s = level.getBlockState(p);
+        if (s.is(Blocks.BEDROCK)) return;
+        surface.computeIfAbsent(BlockPos.asLong(x, 0, z), k -> level.getHeight(Heightmap.Types.MOTION_BLOCKING_NO_LEAVES, x, z));
+        if (air.add(p.asLong())) carvedList.add(p);
+        if (!s.isAir()) level.setBlock(p, Blocks.CAVE_AIR.defaultBlockState(), 2);
+    }
+
+    private void keep(int x, int y, int z) {
+        keep.add(BlockPos.asLong(x, y, z));
+    }
+
+    /** True when a path cell is right next to this one (same level or one up), so nothing blocks the way. */
+    private boolean nearKeep(BlockPos p) {
+        for (int dx = -1; dx <= 1; dx++) for (int dz = -1; dz <= 1; dz++) for (int dy = 0; dy <= 1; dy++)
+            if (keep.contains(BlockPos.asLong(p.getX() + dx, p.getY() + dy, p.getZ() + dz))) return true;
+        return false;
+    }
+
+    private int surfaceAt(int x, int z) {
+        Integer h = surface.get(BlockPos.asLong(x, 0, z));
+        return h != null ? h : height(Heightmap.Types.MOTION_BLOCKING_NO_LEAVES, x, z);
+    }
+
+    /** Heightmap value, loading the chunk first: an unloaded chunk would report the bottom of the world. */
+    private int height(Heightmap.Types type, int x, int z) {
+        level.getChunk(x >> 4, z >> 4);
+        return level.getHeight(type, x, z);
+    }
+
+    /**
+     * Gives every wall the grotto's stone. Air, water or lava next to the grotto that is not open sky
+     * (another cave, an aquifer, a lake bed) gets walled off too, so the grotto never floods or has holes.
+     * Near the surface the natural rock is left as it is.
+     */
+    private void skin() {
+        for (BlockPos p : carvedList) {
+            for (Direction d : Direction.values()) {
+                BlockPos n = p.relative(d);
+                if (air.contains(n.asLong())) continue;
+                BlockState s = level.getBlockState(n);
+                if (s.is(Blocks.BEDROCK) || s.hasBlockEntity()) continue;
+                boolean open = s.isAir() || !s.getFluidState().isEmpty() || s.canBeReplaced();
+                int ground = surfaceAt(n.getX(), n.getZ());
+                if (open) {
+                    if (n.getY() >= ground) continue;   // open sky at the entrance
+                    sealed++;
+                } else if (n.getY() >= ground - 3) continue;
+                double v = noise(n.getX() * 0.18, n.getY() * 0.18, n.getZ() * 0.18);
+                level.setBlock(n, v > 0.45 ? wallC : (v > -0.1 ? wallA : wallB), 2);
+            }
+        }
+    }
+
+    private boolean onFloor(BlockPos p) {
+        return isSolid(p.getX(), p.getY() - 1, p.getZ());
+    }
+
+    private boolean onCeiling(BlockPos p) {
+        return isSolid(p.getX(), p.getY() + 1, p.getZ());
+    }
+
+    private Direction solidSide(BlockPos p) {
+        for (Direction d : Direction.Plane.HORIZONTAL) if (isSolid(p.getX() + d.getStepX(), p.getY(), p.getZ() + d.getStepZ())) return d;
+        return null;
+    }
+
+    private boolean isAir(BlockPos p) {
+        return level.getBlockState(p).isAir();
+    }
+
+    private boolean isSolid(int x, int y, int z) {
+        BlockPos p = new BlockPos(x, y, z);
+        BlockState s = level.getBlockState(p);
+        return !s.isAir() && s.getFluidState().isEmpty() && s.isSolidRender(level, p);
+    }
+
+    private void set(BlockPos p, BlockState state) {
+        set(p.getX(), p.getY(), p.getZ(), state, 2);
+    }
+
+    private void set(int x, int y, int z, BlockState state, int flags) {
+        if (y <= level.getMinBuildHeight()) return;
+        level.setBlock(new BlockPos(x, y, z), state, flags | Block.UPDATE_KNOWN_SHAPE);
+    }
+
+    private double noise(double x, double y, double z) {
+        return (Math.sin(x * 1.7 + phase[0]) * Math.cos(y * 1.3 + phase[1])
+                + Math.sin(z * 1.5 + phase[2]) * Math.cos(x * 0.9 + phase[3])
+                + Math.sin(y * 1.1 + phase[4]) * Math.cos(z * 1.2 + phase[5])
+                + 0.5 * Math.sin((x + z) * 2.3 + phase[6]) + 0.5 * Math.sin((y - x) * 2.1 + phase[7])) / 4.0;
+    }
+
+    // ---------------------------------------------------------------- dev aids
+    /** Writes a floor plan as a PNG: the floor under every open column, coloured by what is there. */
+    private void debugPlan(int ox, int oz, int base) {
+        try {
+            int r = 110, s = 3;
+            java.awt.image.BufferedImage plan = new java.awt.image.BufferedImage(2 * r * s, 2 * r * s, java.awt.image.BufferedImage.TYPE_INT_RGB);
+            Map<Long, Integer> top = new HashMap<>();
+            for (BlockPos p : carvedList) {
+                long k = BlockPos.asLong(p.getX(), 0, p.getZ());
+                if (!top.containsKey(k) || p.getY() < top.get(k)) top.put(k, p.getY());
+            }
+            for (int x = -r; x < r; x++) for (int z = -r; z < r; z++) {
+                int col = 0x303030;
+                Integer y = top.get(BlockPos.asLong(ox + x, 0, oz + z));
+                if (y != null) {
+                    // the lowest open cell's contents if it holds something, else the floor under it
+                    BlockState here = level.getBlockState(new BlockPos(ox + x, y, oz + z));
+                    col = here.isAir() ? shade(colour(level.getBlockState(new BlockPos(ox + x, y - 1, oz + z))), y - base) : colour(here);
+                }
+                fillCell(plan, (x + r) * s, (z + r) * s, s, col);
+            }
+            java.io.File dir = level.getServer().getServerDirectory().resolve("grotto_debug").toFile();
+            dir.mkdirs();
+            javax.imageio.ImageIO.write(plan, "png", new java.io.File(dir, "plan.png"));
+        } catch (Exception e) {
+            AwakeningSystemMod.LOGGER.warn("[Gruta Abisal] debug plan failed", e);
+        }
+    }
+
+    private static int shade(int rgb, int dy) {
+        double f = Math.max(0.45, Math.min(1.3, 1.0 + dy * 0.035));
+        int r = (int) Math.min(255, ((rgb >> 16) & 255) * f), g = (int) Math.min(255, ((rgb >> 8) & 255) * f), b = (int) Math.min(255, (rgb & 255) * f);
+        return r << 16 | g << 8 | b;
+    }
+
+    private static void fillCell(java.awt.image.BufferedImage img, int px, int py, int s, int col) {
+        for (int i = 0; i < s; i++) for (int j = 0; j < s; j++) img.setRGB(px + i, py + j, col);
+    }
+
+    private static int colour(BlockState st) {
+        if (st.is(Blocks.CHEST)) return 0xFFE040;
+        if (st.is(Blocks.SPAWNER)) return 0xFF40FF;
+        if (st.is(Blocks.LAVA) || st.is(Blocks.MAGMA_BLOCK)) return 0xFF6A10;
+        if (st.is(Blocks.WATER)) return 0x3070FF;
+        if (st.is(Blocks.SHROOMLIGHT) || st.is(Blocks.SOUL_LANTERN) || st.is(Blocks.LANTERN)) return 0xFFB060;
+        if (st.is(Blocks.AMETHYST_BLOCK) || st.is(Blocks.AMETHYST_CLUSTER) || st.is(Blocks.CALCITE)) return 0xB070FF;
+        if (st.getBlock() instanceof TeyvatCrystalBlock) return 0x40F0FF;
+        if (st.is(Blocks.MOSS_BLOCK) || st.is(Blocks.MOSS_CARPET) || st.is(Blocks.MYCELIUM)) return 0x50B050;
+        if (st.is(Blocks.COBWEB) || st.is(Blocks.BONE_BLOCK)) return 0xF0F0F0;
+        if (st.is(Blocks.SOUL_SOIL)) return 0x5A4430;
+        if (st.is(Blocks.SPRUCE_PLANKS)) return 0x8A6234;
+        if (st.is(Blocks.DEEPSLATE_TILES) || st.is(Blocks.CRACKED_DEEPSLATE_TILES) || st.is(Blocks.POLISHED_DEEPSLATE)) return 0x8A8A9A;
+        if (st.is(Blocks.TUFF_BRICKS)) return 0xB0B4A0;
+        if (st.is(Blocks.TUFF)) return 0x707468;
+        if (st.is(Blocks.DEEPSLATE) || st.is(Blocks.COBBLED_DEEPSLATE)) return 0x4A4A55;
+        if (st.getBlock() == SystemBlocks.ABYSSAL_STONE.get()) return 0x3A2E5A;
+        return 0x9A9A9A;
+    }
+
+    /**
+     * Walks the grotto like a player (steps of one block up, drops of at most three) from the entrance
+     * and back out from the boss arena, and logs what can and cannot be reached.
+     */
+    private void walkCheck(int ox, int oz, int base, BlockPos mouth, Room boss) {
+        int[] box = {ox - 115, ox + 115, base - 40, Math.max(base, mouth.getY()) + 12, oz - 115, oz + 115};
+        BlockPos arena = new BlockPos(boss.x, boss.fy, boss.z);
+        Set<Long> in = walk(mouth, box);
+        Set<Long> out = walk(arena, box);
         int chestsIn = 0;
         for (BlockPos c : chestList) if (touches(in, c)) chestsIn++;
-        int floors = 0, lost = 0;
+        int roomsIn = 0;
+        for (Room r : rooms) {
+            for (BlockPos p : r.cells) if (in.contains(p.asLong())) { roomsIn++; break; }
+        }
+        int floorsTotal = 0, lost = 0;
         for (BlockPos p : carvedList) {
             if (!standable(p.getX(), p.getY(), p.getZ())) continue;
-            floors++;
+            floorsTotal++;
             if (!in.contains(p.asLong())) lost++;
         }
-        AwakeningSystemMod.LOGGER.info("[Gruta Abisal] recorrido: domo alcanzable={}, salida desde el domo={}, cofres alcanzables {}/{}, suelo sin acceso {}/{} (inicio {} {} {}, domo {} {} -> {} y {} celdas)",
-                in.contains(dome.asLong()), out.contains(start.asLong()), chestsIn, chestList.size(), lost, floors,
-                start.toShortString(), standable(start.getX(), start.getY(), start.getZ()), level.getBlockState(start.below()),
-                dome.toShortString(), standable(dome.getX(), dome.getY(), dome.getZ()), in.size(), out.size());
+        AwakeningSystemMod.LOGGER.info("[Gruta Abisal] entrada {} (pisable {}, abajo {}), arena {} (pisable {})", mouth.toShortString(),
+                standable(mouth.getX(), mouth.getY(), mouth.getZ()), level.getBlockState(mouth.below()), arena.toShortString(),
+                standable(arena.getX(), arena.getY(), arena.getZ()));
+        AwakeningSystemMod.LOGGER.info("[Gruta Abisal] recorrido: arena del jefe={}, salida desde la arena={}, salas visitadas {}/{}, cofres alcanzables {}/{}, suelo sin acceso {}/{}",
+                in.contains(arena.asLong()), touchesPos(out, mouth), roomsIn, rooms.size(), chestsIn, chestList.size(), lost, floorsTotal);
+    }
+
+    private boolean touchesPos(Set<Long> reached, BlockPos p) {
+        for (int dx = -2; dx <= 2; dx++) for (int dz = -2; dz <= 2; dz++) for (int dy = -2; dy <= 2; dy++)
+            if (reached.contains(p.offset(dx, dy, dz).asLong())) return true;
+        return false;
     }
 
     private boolean touches(Set<Long> reached, BlockPos c) {
@@ -298,350 +927,5 @@ public final class AbyssalGrottoBuilder {
     private boolean standable(int x, int y, int z) {
         BlockPos below = new BlockPos(x, y - 1, z);
         return passable(x, y, z) && passable(x, y + 1, z) && !level.getBlockState(below).getCollisionShape(level, below).isEmpty();
-    }
-
-    /** Dev aid: writes a side cut (through the sinkhole, cavern and dome) and a floor plan as PNGs. */
-    private void debugSlices(int cx, int cy, int cz, int sx, int topY) {
-        try {
-            int x0 = cx - RX - 30, x1 = cx + RX + 30, s = 4;
-            int y0 = cy - 26, y1 = topY + 4;
-            java.awt.image.BufferedImage side = new java.awt.image.BufferedImage((x1 - x0) * s, (y1 - y0) * s, java.awt.image.BufferedImage.TYPE_INT_RGB);
-            for (int x = x0; x < x1; x++) for (int y = y0; y < y1; y++) fillCell(side, (x - x0) * s, (y1 - 1 - y) * s, s, colour(level.getBlockState(new BlockPos(x, y, cz))));
-            int z0 = cz - RZ - 6, z1 = cz + RZ + 6;
-            java.awt.image.BufferedImage plan = new java.awt.image.BufferedImage((x1 - x0) * s, (z1 - z0) * s, java.awt.image.BufferedImage.TYPE_INT_RGB);
-            for (int x = x0; x < x1; x++) for (int z = z0; z < z1; z++) {
-                int col = 0x202020;
-                for (int y = cy + 2; y > cy - 24; y--) {       // first thing below the cavern's middle
-                    BlockState st = level.getBlockState(new BlockPos(x, y, z));
-                    if (!st.isAir()) { col = colour(st); break; }
-                }
-                fillCell(plan, (x - x0) * s, (z - z0) * s, s, col);
-            }
-            java.io.File dir = level.getServer().getServerDirectory().resolve("grotto_debug").toFile();
-            dir.mkdirs();
-            javax.imageio.ImageIO.write(side, "png", new java.io.File(dir, "side.png"));
-            javax.imageio.ImageIO.write(plan, "png", new java.io.File(dir, "plan.png"));
-        } catch (Exception e) {
-            AwakeningSystemMod.LOGGER.warn("[Gruta Abisal] debug slices failed", e);
-        }
-    }
-
-    private static void fillCell(java.awt.image.BufferedImage img, int px, int py, int s, int col) {
-        for (int i = 0; i < s; i++) for (int j = 0; j < s; j++) img.setRGB(px + i, py + j, col);
-    }
-
-    private static int colour(BlockState st) {
-        if (st.is(Blocks.CAVE_AIR)) return 0x1A2230;
-        if (st.isAir()) return 0x86B4E8;
-        if (st.is(Blocks.CHEST)) return 0xFFE040;
-        if (st.is(Blocks.SPAWNER)) return 0xFF40FF;
-        if (st.is(Blocks.LAVA)) return 0xFF6A10;
-        if (st.is(Blocks.WATER)) return 0x3070FF;
-        if (st.is(Blocks.SHROOMLIGHT) || st.is(Blocks.SOUL_LANTERN)) return 0xFFB060;
-        if (st.is(Blocks.POINTED_DRIPSTONE) || st.is(Blocks.DRIPSTONE_BLOCK)) return 0x9A6E50;
-        if (st.is(Blocks.AMETHYST_CLUSTER) || st.getBlock() instanceof TeyvatCrystalBlock) return 0x40F0FF;
-        if (st.is(Blocks.MOSS_BLOCK) || st.is(Blocks.MOSSY_COBBLESTONE) || st.is(Blocks.CAVE_VINES) || st.is(Blocks.GLOW_LICHEN)) return 0x50B050;
-        if (st.is(Blocks.COBWEB) || st.is(Blocks.BONE_BLOCK)) return 0xF0F0F0;
-        if (st.is(Blocks.TUFF)) return 0x707468;
-        if (st.is(Blocks.POLISHED_DEEPSLATE) || st.is(Blocks.CHISELED_DEEPSLATE)) return 0x8A8A9A;
-        if (st.is(Blocks.DEEPSLATE) || st.is(Blocks.COBBLED_DEEPSLATE)) return 0x4A4A55;
-        if (st.getBlock() == SystemBlocks.ABYSSAL_STONE.get()) return 0x3A2E5A;
-        if (st.is(Blocks.GRASS_BLOCK) || st.is(Blocks.DIRT)) return 0x5E8A3A;
-        return 0x9A9A9A;
-    }
-
-    // ---------------------------------------------------------------- decoration
-    private void decorate(int cx, int cy, int cz) {
-        BlockState crystal = SystemBlocks.MANA_CRYSTAL_CLUSTER_C.get().defaultBlockState();
-        for (BlockPos p : carvedList) {
-            int x = p.getX(), y = p.getY(), z = p.getZ();
-            if (!isAir(x, y, z)) continue;
-            boolean kept = keep.contains(p.asLong());
-            boolean floor = !isAir(x, y - 1, z) && isSolid(x, y - 1, z);
-            boolean ceiling = !isAir(x, y + 1, z) && isSolid(x, y + 1, z);
-            int roll = rand.nextInt(1000);
-            if (ceiling && roll < 14) dripstone(x, y, z, Direction.DOWN, 2 + rand.nextInt(5));
-            else if (ceiling && roll < 22) set(x, y + 1, z, Blocks.SHROOMLIGHT.defaultBlockState(), 2);
-            else if (kept) continue;
-            else if (floor && roll < 6 && y > cy - 8 && !nearKeep(x, y, z)) dripstone(x, y, z, Direction.UP, 1 + rand.nextInt(3));
-            else if (floor && roll < 16 && y > cy - 8) set(x, y, z, crystal.setValue(TeyvatCrystalBlock.FACING, Direction.UP), 2);
-            else if (floor && roll < 22 && y > cy - 8) set(x, y, z, Blocks.AMETHYST_CLUSTER.defaultBlockState().setValue(AmethystClusterBlock.FACING, Direction.UP), 2);
-            else if (roll < 60) {
-                for (Direction d : Direction.Plane.HORIZONTAL) {
-                    if (isSolid(x + d.getStepX(), y, z + d.getStepZ())) {
-                        if (roll < 34) set(x, y, z, Blocks.GLOW_LICHEN.defaultBlockState().setValue(MultifaceBlock.getFaceProperty(d), true), 2);
-                        else if (roll < 40) set(x, y, z, crystal.setValue(TeyvatCrystalBlock.FACING, d.getOpposite()), 2);
-                        break;
-                    }
-                }
-            }
-        }
-    }
-
-    private void dripstone(int x, int y, int z, Direction tip, int len) {
-        int step = tip == Direction.DOWN ? -1 : 1;
-        // shorten it so it never reaches into a path, and stalactites leave head room below them
-        int fit = 0;
-        for (int i = 0; i < len; i++) {
-            int yy = y + step * i;
-            if (!isAir(x, yy, z) || keep.contains(BlockPos.asLong(x, yy, z))) break;
-            if (tip == Direction.DOWN) {
-                boolean clear = true;
-                for (int k = 1; k <= 3; k++) if (!isAir(x, yy - k, z)) { clear = false; break; }
-                if (!clear) break;
-            }
-            fit++;
-        }
-        if (fit == 0) return;
-        len = fit;
-        int anchorY = y - step;
-        set(x, anchorY, z, Blocks.DRIPSTONE_BLOCK.defaultBlockState(), 2);
-        for (int i = 0; i < len; i++) {
-            int yy = y + step * i;
-            DripstoneThickness t = len == 1 ? DripstoneThickness.TIP
-                    : i == len - 1 ? DripstoneThickness.TIP
-                    : i == len - 2 ? DripstoneThickness.FRUSTUM
-                    : i == 0 ? DripstoneThickness.BASE : DripstoneThickness.MIDDLE;
-            set(x, yy, z, Blocks.POINTED_DRIPSTONE.defaultBlockState()
-                    .setValue(PointedDripstoneBlock.TIP_DIRECTION, tip)
-                    .setValue(PointedDripstoneBlock.THICKNESS, t), 2);
-        }
-    }
-
-    private void waterfall(int cx, int cy, int cz, int side) {
-        // a source in the wall above the cavern floor on the sinkhole side, falling into a small pool
-        int x = cx + side * (RX - 5), z = cz + RZ / 2;
-        for (int y = cy + RY - 2; y > cy - 6; y--) {
-            if (!isAir(x, y, z)) continue;
-            // find the wall towards +z
-            int wz = z;
-            while (wz < z + 8 && isAir(x, y, wz + 1)) wz++;
-            if (wz == z + 8) continue;
-            set(x, y, wz + 1, Blocks.STONE.defaultBlockState(), 2);
-            set(x, y, wz, Blocks.WATER.defaultBlockState(), 3);
-            // pool where it lands
-            for (int fy = y; fy > cy - 12; fy--) {
-                if (!isAir(x, fy - 1, wz)) {
-                    for (int px = -1; px <= 1; px++) for (int pz = -1; pz <= 1; pz++)
-                        if (isAir(x + px, fy, wz + pz) || px == 0 && pz == 0) set(x + px, fy - 1, wz + pz, Blocks.WATER.defaultBlockState(), 3);
-                    break;
-                }
-            }
-            // a chest tucked behind the falling water
-            chestOnFloor(x + side, y, wz, LOOT);
-            return;
-        }
-    }
-
-    /** A random open floor spot in the main cavern (off the abyss), at least 7 blocks from earlier ones. */
-    private BlockPos floorSpot(int cx, int cy, int cz, int minX, int maxX, int minZ, int maxZ, List<BlockPos> taken) {
-        List<BlockPos> options = new ArrayList<>();
-        for (BlockPos p : carvedList) {
-            int dx = p.getX() - cx, dz = p.getZ() - cz;
-            if (dx < minX || dx > maxX || dz < minZ || dz > maxZ || Math.abs(dx) <= 9 || p.getY() > cy) continue;
-            if (nearKeep(p.getX(), p.getY(), p.getZ())) continue;
-            if (!isAir(p.getX(), p.getY(), p.getZ()) || !isAir(p.getX(), p.getY() + 1, p.getZ()) || !isSolid(p.getX(), p.getY() - 1, p.getZ())) continue;
-            boolean crowded = false;
-            for (BlockPos t : taken) if (t.distSqr(p) < 49) { crowded = true; break; }
-            if (!crowded) options.add(p);
-        }
-        if (options.isEmpty()) return null;
-        BlockPos pick = options.get(rand.nextInt(options.size()));
-        taken.add(pick);
-        return pick;
-    }
-
-    private void nest(BlockPos at, EntityType<?> type, boolean spider) {
-        int x = at.getX(), y = at.getY(), z = at.getZ();
-        set(x, y, z, Blocks.SPAWNER.defaultBlockState(), 2);
-        if (level.getBlockEntity(new BlockPos(x, y, z)) instanceof SpawnerBlockEntity s) {
-            s.setEntityId(type, level.getRandom());
-            spawners++;
-        }
-        for (int dx = -3; dx <= 3; dx++) for (int dz = -3; dz <= 3; dz++) {
-            if (dx == 0 && dz == 0) continue;
-            if (rand.nextInt(10) > 4) continue;
-            int fy = floorAt(x + dx, y + 2, z + dz);
-            if (fy == Integer.MIN_VALUE || Math.abs(fy - y) > 2) continue;
-            if (spider) set(x + dx, fy, z + dz, Blocks.COBWEB.defaultBlockState(), 2);
-            else set(x + dx, fy - 1, z + dz, rand.nextBoolean() ? Blocks.BONE_BLOCK.defaultBlockState() : Blocks.SOUL_SOIL.defaultBlockState(), 2);
-        }
-        if (!spider) set(x + 1, y, z, Blocks.SKELETON_SKULL.defaultBlockState(), 2);
-    }
-
-    private void chestOnFloor(int x, int cy, int z, ResourceKey<LootTable> loot) {
-        int y = floorAt(x, cy, z);
-        if (y == Integer.MIN_VALUE) return;
-        Direction facing = Direction.from2DDataValue(rand.nextInt(4));
-        placeChest(new BlockPos(x, y, z), facing, loot);
-    }
-
-    private void placeChest(BlockPos p, Direction facing, ResourceKey<LootTable> loot) {
-        level.setBlock(p, Blocks.CHEST.defaultBlockState().setValue(ChestBlock.FACING, facing), 2);
-        if (level.getBlockEntity(p) instanceof ChestBlockEntity chest) {
-            chest.setLootTable(loot, rand.nextLong());
-            chests++;
-            chestList.add(p);
-        }
-    }
-
-    // ---------------------------------------------------------------- carving helpers
-    private void carve(int x, int y, int z) {
-        if (y <= level.getMinBuildHeight() + 4) return;
-        BlockPos p = new BlockPos(x, y, z);
-        BlockState s = level.getBlockState(p);
-        if (s.is(Blocks.BEDROCK)) return;
-        surface.computeIfAbsent(BlockPos.asLong(x, 0, z), k -> level.getHeight(Heightmap.Types.MOTION_BLOCKING_NO_LEAVES, x, z));
-        long key = p.asLong();
-        if (air.add(key)) carvedList.add(p);
-        if (!s.isAir()) level.setBlock(p, Blocks.CAVE_AIR.defaultBlockState(), 2);
-    }
-
-    private void keep(int x, int y, int z) {
-        keep.add(BlockPos.asLong(x, y, z));
-    }
-
-    /** True when a path cell is right next to this one (same level or one up), so nothing blocks the way. */
-    private boolean nearKeep(int x, int y, int z) {
-        for (int dx = -1; dx <= 1; dx++) for (int dz = -1; dz <= 1; dz++) for (int dy = 0; dy <= 1; dy++)
-            if (keep.contains(BlockPos.asLong(x + dx, y + dy, z + dz))) return true;
-        return false;
-    }
-
-    /** Terrain height of a column as it was before carving. */
-    private int surfaceAt(int x, int z) {
-        Integer h = surface.get(BlockPos.asLong(x, 0, z));
-        return h != null ? h : level.getHeight(Heightmap.Types.MOTION_BLOCKING_NO_LEAVES, x, z);
-    }
-
-    /**
-     * Gives every wall the grotto's stone. Air, water or lava next to the grotto that is not open sky
-     * (another cave, an aquifer, a lake bed) gets walled off too, so the grotto never floods or has holes.
-     */
-    private void skin() {
-        for (BlockPos p : carvedList) {
-            for (Direction d : Direction.values()) {
-                BlockPos n = p.relative(d);
-                if (air.contains(n.asLong())) continue;
-                BlockState s = level.getBlockState(n);
-                if (s.is(Blocks.BEDROCK) || s.hasBlockEntity()) continue;
-                boolean open = s.isAir() || !s.getFluidState().isEmpty() || s.canBeReplaced();
-                if (open) {
-                    if (n.getY() >= surfaceAt(n.getX(), n.getZ())) continue;   // open sky above the sinkhole
-                    sealed++;
-                }
-                double v = noise(n.getX() * 0.18, n.getY() * 0.18, n.getZ() * 0.18);
-                level.setBlock(n, v > 0.45 ? wallC : (v > -0.1 ? wallA : wallB), 2);
-            }
-        }
-    }
-
-    /**
-     * Walking surface of the cavern at a column: the first air block standing on something solid, searched
-     * downwards from the cavern's middle. Falls back to {@code fallback} when the column has no floor.
-     */
-    private int cavernWalk(int x, int cy, int z, int fallback) {
-        for (int y = cy; y > cy - RY - 2; y--)
-            if (air.contains(BlockPos.asLong(x, y, z)) && !air.contains(BlockPos.asLong(x, y - 1, z))) return y;
-        return fallback;
-    }
-
-    /**
-     * A wide tunnel along x from {@code x0} to {@code x1}: 7 blocks wide, 5 tall with a rounded roof. Its
-     * floor slopes evenly from {@code walk0} to {@code walk1} (never more than one block per step) and is laid
-     * once all the carving is done. The walking space is kept clear of decoration.
-     */
-    private void tunnelX(int x0, int x1, int z, int walk0, int walk1) {
-        int len = Math.abs(x1 - x0), step = Integer.signum(x1 - x0);
-        if (Math.abs(walk1 - walk0) > len) walk1 = walk0 + Integer.signum(walk1 - walk0) * len;
-        for (int t = 0; t <= len; t++) {
-            int x = x0 + step * t;
-            int walk = (int) Math.round(walk0 + (walk1 - walk0) * (t / (double) Math.max(1, len)));
-            int wob = (int) Math.round(0.8 * noise(x * 0.15, 7.0, z * 0.1));   // gentle sideways wander
-            for (int dz = -3; dz <= 3; dz++) {
-                int zz = z + dz + wob;
-                int top = Math.abs(dz) == 3 ? 3 : (Math.abs(dz) == 2 ? 4 : 5);
-                for (int h = 0; h < top; h++) carve(x, walk + h, zz);
-                for (int h = 0; h < Math.min(top, 3); h++) keep(x, walk + h, zz);
-                tunnelFloors.add(new BlockPos(x, walk - 1, zz));
-            }
-        }
-    }
-
-    /**
-     * Ramp spiralling down the sinkhole wall: 3 blocks wide and 4 tall, one block lower every three blocks
-     * along it. Each drop is a stair so the climb back up reads as a path rather than a ledge.
-     */
-    private record RampCell(int x, int y, int z, boolean stair, Direction up) {}
-    private final List<RampCell> ramp = new ArrayList<>();
-
-    private void spiralRamp(int sx, int sz, int shaftR, int topY, int bottomY) {
-        List<RampCell> cells = ramp;
-        double angle = 0, rr = shaftR - 0.9;
-        for (int y = topY - 1; y > bottomY; y--) {
-            for (int k = 0; k < 3; k++) {
-                Direction up = Direction.getNearest(Math.sin(angle), 0, -Math.cos(angle));
-                for (double w = -1.2; w <= 1.2; w += 0.4) {
-                    int lx = sx + (int) Math.round(Math.cos(angle) * (rr + w));
-                    int lz = sz + (int) Math.round(Math.sin(angle) * (rr + w));
-                    cells.add(new RampCell(lx, y, lz, k == 0 && y < topY - 1, up));
-                }
-                angle += 1.0 / rr;
-            }
-        }
-        for (RampCell c : cells) for (int h = 0; h <= 3; h++) { carve(c.x, c.y + h, c.z); if (h <= 2) keep(c.x, c.y + h, c.z); }
-    }
-
-    /** Lays the ramp's floor and stairs; runs after {@link #skin()} so the stone pass does not cover them. */
-    private void layRamp() {
-        for (RampCell c : ramp) set(c.x, c.y - 1, c.z, ledgeBlock(), 2);
-        for (RampCell c : ramp) if (c.stair) set(c.x, c.y, c.z, Blocks.COBBLED_DEEPSLATE_STAIRS.defaultBlockState()
-                .setValue(net.minecraft.world.level.block.StairBlock.FACING, c.up), 2);
-    }
-
-    private BlockState ledgeBlock() {
-        return rand.nextInt(4) == 0 ? Blocks.MOSSY_COBBLESTONE.defaultBlockState() : Blocks.COBBLED_DEEPSLATE.defaultBlockState();
-    }
-
-    private BlockState polished() {
-        return rand.nextInt(5) == 0 ? Blocks.CHISELED_DEEPSLATE.defaultBlockState() : Blocks.POLISHED_DEEPSLATE.defaultBlockState();
-    }
-
-    private void clearAbove(BlockPos p, int h) {
-        for (int i = 0; i < h; i++) carve(p.getX(), p.getY() + i, p.getZ());
-        set(p.getX(), p.getY() - 1, p.getZ(), polished(), 2);
-    }
-
-    /** First air block standing on solid ground, searching down from {@code fromY}. */
-    private int floorAt(int x, int fromY, int z) {
-        for (int y = fromY + 4; y > fromY - 14; y--) {
-            if (isAir(x, y, z) && isSolid(x, y - 1, z) && isAir(x, y + 1, z)) return y;
-        }
-        return Integer.MIN_VALUE;
-    }
-
-    private boolean isAir(int x, int y, int z) {
-        return level.getBlockState(new BlockPos(x, y, z)).isAir();
-    }
-
-    private boolean isSolid(int x, int y, int z) {
-        BlockState s = level.getBlockState(new BlockPos(x, y, z));
-        return !s.isAir() && s.getFluidState().isEmpty() && s.isSolidRender(level, new BlockPos(x, y, z));
-    }
-
-    private void set(int x, int y, int z, BlockState state, int flags) {
-        if (y <= level.getMinBuildHeight()) return;
-        level.setBlock(new BlockPos(x, y, z), state, flags | Block.UPDATE_KNOWN_SHAPE);
-    }
-
-    private double noise(double x, double y, double z) {
-        return (Math.sin(x * 1.7 + phase[0]) * Math.cos(y * 1.3 + phase[1])
-                + Math.sin(z * 1.5 + phase[2]) * Math.cos(x * 0.9 + phase[3])
-                + Math.sin(y * 1.1 + phase[4]) * Math.cos(z * 1.2 + phase[5])
-                + 0.5 * Math.sin((x + z) * 2.3 + phase[6]) + 0.5 * Math.sin((y - x) * 2.1 + phase[7])) / 4.0;
-    }
-
-    private static double sq(double v) {
-        return v * v;
     }
 }
