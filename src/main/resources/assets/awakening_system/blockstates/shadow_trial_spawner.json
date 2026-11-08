@@ -1,6 +1,0 @@
-{
-  "variants": {
-    "active=false": { "model": "awakening_system:block/shadow_trial_spawner" },
-    "active=true": { "model": "awakening_system:block/shadow_trial_spawner_active" }
-  }
-}

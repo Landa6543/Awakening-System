@@ -972,13 +972,6 @@ public final class SeriesStructureWorldGen {
                 recordPlaced(level, "grand_casino", pos);
                 return true;
             }
-            case "trial_chamber", "trial_chambers", "camaras_desafio", "camara_desafio" -> {
-                // se registra la entrada en superficie, que es a donde llevan locate y tp
-                BlockPos entrance = com.soybe.awakeningsystem.trial.TrialChamberBuilder.build(level, pos);
-                if (entrance == null) return false;
-                recordPlaced(level, "trial_chamber", entrance);
-                return true;
-            }
             case "racetrack", "hipodromo", "uma_racetrack" -> {
                 TeyvatRacetrackBuilder.buildRacetrackAt(level, pos);
                 recordPlaced(level, "racetrack", pos);
@@ -2133,7 +2126,6 @@ public final class SeriesStructureWorldGen {
             case "overworld_miniboss_arena", "miniboss_arena", "arena_miniboss", "arena_overworld", "hypostasis" -> "overworld_miniboss_arena";
             case "grand_casino", "casino", "monte_carlo", "casino_monte_carlo" -> "grand_casino";
             case "racetrack", "hipodromo", "uma_racetrack" -> "racetrack";
-            case "trial_chamber", "trial_chambers", "camaras_desafio", "camara_desafio" -> "trial_chamber";
             case "golden_house", "casa_dorada", "childe_arena" -> "golden_house";
             case "tenshukaku", "shogun_palace", "inazuma_castle", "palacio_shogun" -> "tenshukaku";
             case "anemo_shrine", "anemo_shrine_of_depths", "anemo_shrine_of_depths_final", "santuario_anemo", "anemo" -> "anemo_shrine";

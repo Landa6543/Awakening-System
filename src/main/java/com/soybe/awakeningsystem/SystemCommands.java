@@ -1994,7 +1994,6 @@ public final class SystemCommands {
     }
 
     public static final java.util.List<String> ALL_STRUCTURE_NAMES = java.util.List.of(
-            "trial_chamber",
             "solo_leveling", "jinwoo", "hunter_office",
             "orv", "dokja", "subway", "orv_subway_carriage",
             "estate", "lloyd", "frontera_estate",

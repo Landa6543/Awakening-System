@@ -90,7 +90,6 @@ public final class AwakeningSystemMod {
         com.soybe.awakeningsystem.furnace.ModMenus.MENUS.register(modBus);
         ATTACHMENTS.register(modBus);
         ITEMS.register(modBus);
-        com.soybe.awakeningsystem.trial.TrialRegistry.register(modBus);
         FEATURES.register(modBus);
         com.soybe.awakeningsystem.item.ModArmorMaterials.ARMOR_MATERIALS.register(modBus);
         ModSounds.SOUND_EVENTS.register(modBus);
