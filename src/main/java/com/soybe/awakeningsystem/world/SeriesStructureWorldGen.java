@@ -977,6 +977,13 @@ public final class SeriesStructureWorldGen {
                 recordPlaced(level, "racetrack", pos);
                 return true;
             }
+            case "abyssal_grotto", "gruta_abisal" -> {
+                // se registra la boca de la dolina, que es a donde llevan locate y tp
+                BlockPos mouth = AbyssalGrottoBuilder.build(level, pos);
+                if (mouth == null) return false;
+                recordPlaced(level, "abyssal_grotto", mouth);
+                return true;
+            }
 
             case "anemo_shrine", "anemo_shrine_of_depths", "anemo_shrine_of_depths_final", "santuario_anemo" -> {
                 clearStructureVegetation(level, pos, 8, 12, 8);
@@ -1123,6 +1130,12 @@ public final class SeriesStructureWorldGen {
                         if (areAllChunksLoaded(level, chunkX, chunkZ)) {
                             EVALUATED_CHUNKS.add(chunkKey);
                             attemptOverworldRacetrackGeneration(level, chunkX, chunkZ, data);
+                            if (++generatedCount >= 2) return;
+                        }
+                    } else if (isAbyssalGrottoTargetChunk(level, chunkX, chunkZ)) {
+                        if (areAllChunksLoaded(level, chunkX, chunkZ)) {
+                            EVALUATED_CHUNKS.add(chunkKey);
+                            attemptAbyssalGrottoGeneration(level, chunkX, chunkZ, data);
                             if (++generatedCount >= 2) return;
                         }
                     } else if (isRegionTargetChunk(level, chunkX, chunkZ)) {
@@ -1480,6 +1493,31 @@ public final class SeriesStructureWorldGen {
         BlockPos center = new BlockPos(blockX, surfaceY, blockZ);
         if (data.hasStructureNearbyOfType("racetrack", center, 3200.0D)) return;
         generateStructure(level, center, "racetrack");
+    }
+
+    /** Gruta Abisal: una por región de 32x32 chunks (512 bloques), en un chunk al azar de la región. */
+    private static boolean isAbyssalGrottoTargetChunk(ServerLevel level, int chunkX, int chunkZ) {
+        int regionX = Math.floorDiv(chunkX, 32);
+        int regionZ = Math.floorDiv(chunkZ, 32);
+        long seed = ((long) regionX * 735918274123L + (long) regionZ * 192837465091L) ^ (level.getSeed() + 6029384751L);
+        java.util.Random rand = new java.util.Random(seed);
+        int targetChunkX = regionX * 32 + rand.nextInt(26) + 3;
+        int targetChunkZ = regionZ * 32 + rand.nextInt(26) + 3;
+        return chunkX == targetChunkX && chunkZ == targetChunkZ;
+    }
+
+    private static void attemptAbyssalGrottoGeneration(ServerLevel level, int chunkX, int chunkZ, SeriesStructureData data) {
+        int blockX = chunkX * 16 + 8;
+        int blockZ = chunkZ * 16 + 8;
+        if (blockX * blockX + blockZ * blockZ < 250 * 250) return;   // lejos del spawn
+        int surfaceY = findSolidSurfaceGround(level, blockX, blockZ);
+        if (surfaceY < 58 || surfaceY > 150) return;
+        BlockPos center = new BlockPos(blockX, surfaceY, blockZ);
+        if (data.hasStructureNearbyOfType("abyssal_grotto", center, 380.0D)) return;
+        String biomeKey = level.getBiome(center).unwrapKey().map(k -> k.location().getPath()).orElse("").toLowerCase(java.util.Locale.ROOT);
+        if (biomeKey.contains("ocean") || biomeKey.contains("river") || biomeKey.contains("beach")
+                || biomeKey.contains("swamp") || biomeKey.contains("frozen_peaks")) return;
+        generateStructure(level, center, "abyssal_grotto");
     }
 
     private static boolean isOverworldRacetrackTargetChunk(ServerLevel level, int chunkX, int chunkZ) {
@@ -2126,6 +2164,7 @@ public final class SeriesStructureWorldGen {
             case "overworld_miniboss_arena", "miniboss_arena", "arena_miniboss", "arena_overworld", "hypostasis" -> "overworld_miniboss_arena";
             case "grand_casino", "casino", "monte_carlo", "casino_monte_carlo" -> "grand_casino";
             case "racetrack", "hipodromo", "uma_racetrack" -> "racetrack";
+            case "abyssal_grotto", "gruta_abisal" -> "abyssal_grotto";
             case "golden_house", "casa_dorada", "childe_arena" -> "golden_house";
             case "tenshukaku", "shogun_palace", "inazuma_castle", "palacio_shogun" -> "tenshukaku";
             case "anemo_shrine", "anemo_shrine_of_depths", "anemo_shrine_of_depths_final", "santuario_anemo", "anemo" -> "anemo_shrine";
