@@ -18,8 +18,11 @@ public final class SystemAttributeEffects {
         int strPoints = Math.max(0, data.strength() - SystemData.ATTR_BASE);
         apply(player, Attributes.ATTACK_DAMAGE, "strength", strPoints * 0.5D);
         apply(player, Attributes.ATTACK_SPEED, "agility", diminishing(data.agility(), SystemData.ATTR_BASE, 0.015D));
+        // Velocidad por Agilidad: se nota desde los primeros puntos y se acerca a +50% sin pasarlo
+        // (5 puntos ≈ +6%, 10 ≈ +11%, 20 ≈ +20%, 40 ≈ +32%, 100 ≈ +46% sobre la velocidad base 0.1).
+        int agiPoints = Math.max(0, data.agility() - SystemData.ATTR_BASE);
         double agiSpeedBonus = data.agilitySpeedEnabled()
-                ? Math.min(0.022D, Math.max(0, data.agility() - SystemData.ATTR_BASE) * 0.00025D)
+                ? 0.05D * (1.0D - Math.exp(-agiPoints / 40.0D))
                 : 0.0D;
         apply(player, Attributes.MOVEMENT_SPEED, "agility_move_speed", agiSpeedBonus);
         apply(player, Attributes.LUCK, "perception", diminishing(data.perception(), SystemData.ATTR_BASE, 0.1D));
