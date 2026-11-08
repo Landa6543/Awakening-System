@@ -89,5 +89,8 @@ CHANGELOG_*.md
 
 ### Internal Developer Notes & Roadmaps ###
 ROADMAP_*.md
+# Mensajes entre Claude y Gemini
+PARA_GEMINI.md
+PARA_CLAUDE.md
 PLAN_*.md
 NOTAS_*.md

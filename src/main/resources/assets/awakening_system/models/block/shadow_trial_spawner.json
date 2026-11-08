@@ -1,0 +1,35 @@
+{
+  "parent": "minecraft:block/block",
+  "render_type": "minecraft:cutout",
+  "textures": {
+    "cage": "awakening_system:block/shadow_trial_spawner_cage",
+    "core": "awakening_system:block/shadow_trial_spawner_core",
+    "particle": "awakening_system:block/shadow_trial_spawner_cage"
+  },
+  "elements": [
+    {
+      "name": "core",
+      "from": [4, 4, 4], "to": [12, 12, 12],
+      "faces": {
+        "north": { "uv": [0, 0, 16, 16], "texture": "#core", "neoforge_data": { "block_light": 15, "sky_light": 15 } },
+        "south": { "uv": [0, 0, 16, 16], "texture": "#core", "neoforge_data": { "block_light": 15, "sky_light": 15 } },
+        "east": { "uv": [0, 0, 16, 16], "texture": "#core", "neoforge_data": { "block_light": 15, "sky_light": 15 } },
+        "west": { "uv": [0, 0, 16, 16], "texture": "#core", "neoforge_data": { "block_light": 15, "sky_light": 15 } },
+        "up": { "uv": [0, 0, 16, 16], "texture": "#core", "neoforge_data": { "block_light": 15, "sky_light": 15 } },
+        "down": { "uv": [0, 0, 16, 16], "texture": "#core", "neoforge_data": { "block_light": 15, "sky_light": 15 } }
+      }
+    },
+    {
+      "name": "cage",
+      "from": [0, 0, 0], "to": [16, 16, 16],
+      "faces": {
+        "north": { "uv": [0, 0, 16, 16], "texture": "#cage" },
+        "south": { "uv": [0, 0, 16, 16], "texture": "#cage" },
+        "east": { "uv": [0, 0, 16, 16], "texture": "#cage" },
+        "west": { "uv": [0, 0, 16, 16], "texture": "#cage" },
+        "up": { "uv": [0, 0, 16, 16], "texture": "#cage" },
+        "down": { "uv": [0, 0, 16, 16], "texture": "#cage" }
+      }
+    }
+  ]
+}
