@@ -397,7 +397,7 @@ public final class SystemScreen extends Screen {
             int tabH = 26;
             int tabSpacing = 30;
             int tx = dockX - tabW;
-            List<DimTab> sideTabs = getActiveSideTabs();
+            List<DimTab> sideTabs = getDisplayedSideTabs();
             boolean isBlockedRealm = minecraft != null && minecraft.level != null &&
                     (com.soybe.awakeningsystem.penalty.PenaltyZoneManager.isPenaltyDimension(minecraft.level) ||
                      com.soybe.awakeningsystem.limbo.LimboWorldManager.isLimboDimension(minecraft.level));
@@ -406,6 +406,13 @@ public final class SystemScreen extends Screen {
                 int tabY = top + 52 + i * tabSpacing;
                 if (mouseX >= tx && mouseX <= dockX && mouseY >= tabY && mouseY < tabY + tabH) {
                     DimTab t = sideTabs.get(i);
+                    if ("archive".equals(t.id)) {
+                        AwakeningSystemClient.playUiSound(ModSounds.SYSTEM_CLICK.value(), 1.0F, 1.2F);
+                        if (minecraft != null) {
+                            minecraft.setScreen(new com.soybe.awakeningsystem.worldarchive.WorldArchiveScreen(this));
+                        }
+                        return true;
+                    }
                     if (isBlockedRealm && !"subspace".equals(t.id)) {
                         AwakeningSystemClient.playUiSound(net.minecraft.sounds.SoundEvents.NOTE_BLOCK_BASS.value(), 0.8F, 0.7F);
                         if (minecraft.player != null) {
@@ -2408,6 +2415,8 @@ public final class SystemScreen extends Screen {
             net.minecraft.resources.ResourceLocation.fromNamespaceAndPath(AwakeningSystemMod.MOD_ID, "textures/gui/tab_murim.png");
     private static final net.minecraft.resources.ResourceLocation TAB_TEYVAT_TEX =
             net.minecraft.resources.ResourceLocation.fromNamespaceAndPath(AwakeningSystemMod.MOD_ID, "textures/gui/tab_teyvat.png");
+    private static final net.minecraft.resources.ResourceLocation TAB_WORLD_ARCHIVE_TEX =
+            net.minecraft.resources.ResourceLocation.fromNamespaceAndPath(AwakeningSystemMod.MOD_ID, "textures/gui/tab_world_archive.png");
 
     private static final ItemStack SUBSPACE_TAB_ICON = new ItemStack(net.minecraft.world.item.Items.ENDER_CHEST);
 
@@ -2461,6 +2470,26 @@ public final class SystemScreen extends Screen {
         return list;
     }
 
+    /** Pestañas que caben en el costado izquierdo de la ventana (H, desde top + 52, cada 30 px). */
+    private static final int MAX_SIDE_TABS = (H - 52 - 8) / 30;
+
+    /**
+     * Las pestañas que se dibujan: todas, mientras quepan. Si hay más mundos de los que entran, los
+     * que sobran se agrupan en la pestaña del Archivo de Mundos (que los lista a todos) y la bóveda
+     * queda siempre al final.
+     */
+    private List<DimTab> getDisplayedSideTabs() {
+        List<DimTab> all = getActiveSideTabs();
+        if (all.size() <= MAX_SIDE_TABS) return all;
+        DimTab subspace = all.get(all.size() - 1);
+        List<DimTab> shown = new ArrayList<>(all.subList(0, MAX_SIDE_TABS - 2));
+        shown.add(new DimTab("archive", TAB_WORLD_ARCHIVE_TEX,
+                Component.translatable("awakening_system.world_archive.tab_title"),
+                Component.translatable("awakening_system.world_archive.tab_desc")));
+        shown.add(subspace);
+        return shown;
+    }
+
     private void renderDimensionSideTabs(GuiGraphics g, int left, int top, int mouseX, int mouseY) {
         String currentDim = "";
         if (minecraft != null && minecraft.level != null) {
@@ -2478,7 +2507,7 @@ public final class SystemScreen extends Screen {
         int tabH = 26;
         int tabSpacing = 30;
         int tx = dockX - tabW;
-        List<DimTab> sideTabs = getActiveSideTabs();
+        List<DimTab> sideTabs = getDisplayedSideTabs();
         boolean isBlockedRealm = minecraft != null && minecraft.level != null &&
                 (com.soybe.awakeningsystem.penalty.PenaltyZoneManager.isPenaltyDimension(minecraft.level) ||
                  com.soybe.awakeningsystem.limbo.LimboWorldManager.isLimboDimension(minecraft.level));
@@ -2488,7 +2517,7 @@ public final class SystemScreen extends Screen {
             int tabY = top + 52 + i * tabSpacing;
             boolean hov = mouseX >= tx && mouseX <= dockX && mouseY >= tabY && mouseY < tabY + tabH;
             boolean act = t.id.equals(currentDim);
-            boolean isSealed = isBlockedRealm && !"subspace".equals(t.id);
+            boolean isSealed = isBlockedRealm && !"subspace".equals(t.id) && !"archive".equals(t.id);
 
             // 1. Manhwa High-Tech Translucent Glass Palette
             int bg = act ? 0xF00A1A2A : (hov ? (isSealed ? 0xDD2A0D15 : 0xDD0D2235) : (isSealed ? 0xBB1D060A : 0xBB06101D));
@@ -2539,7 +2568,7 @@ public final class SystemScreen extends Screen {
         int tabH = 26;
         int tabSpacing = 30;
         int tx = dockX - tabW;
-        List<DimTab> sideTabs = getActiveSideTabs();
+        List<DimTab> sideTabs = getDisplayedSideTabs();
         boolean isBlockedRealm = minecraft != null && minecraft.level != null &&
                 (com.soybe.awakeningsystem.penalty.PenaltyZoneManager.isPenaltyDimension(minecraft.level) ||
                  com.soybe.awakeningsystem.limbo.LimboWorldManager.isLimboDimension(minecraft.level));
@@ -2549,7 +2578,11 @@ public final class SystemScreen extends Screen {
             int tabY = top + 52 + i * tabSpacing;
             if (mouseX >= tx && mouseX <= dockX && mouseY >= tabY && mouseY < tabY + tabH) {
                 List<net.minecraft.util.FormattedCharSequence> tip = new ArrayList<>();
-                if ("subspace".equals(t.id)) {
+                if ("archive".equals(t.id)) {
+                    tip.add(Component.translatable("awakening_system.world_archive.tab_title").getVisualOrderText());
+                    tip.addAll(font.split(Component.translatable("awakening_system.world_archive.tab_desc"), 200));
+                    tip.add(Component.translatable("awakening_system.world_archive.tab_click").getVisualOrderText());
+                } else if ("subspace".equals(t.id)) {
                     tip.add(Component.translatable("awakening_system.screen.dim.subspace.vault_title").getVisualOrderText());
                     tip.add(Component.translatable("awakening_system.screen.dim.subspace.vault_desc").getVisualOrderText());
                     tip.add(Component.translatable("awakening_system.screen.dim.subspace.click_open").getVisualOrderText());
@@ -4405,7 +4438,7 @@ public final class SystemScreen extends Screen {
                     }
                 } else if (levelLocked && dimLocked) {
                     lockMsg = Component.translatable("awakening_system.screen.shop.lock.dual", entry.minLevel(), getDimShortName(entry.requiredDimension()));
-                } else if ("ranker_tower_ticket".equals(entry.id()) && (!d.hasVisitedDimension("minecraft:the_end") && !d.hasVisitedDimension("the_end") && !d.isEnderDragonDefeated())) {
+                } else if (ShopDefinitions.requiresEnd(entry.id()) && (!d.hasVisitedDimension("minecraft:the_end") && !d.hasVisitedDimension("the_end") && !d.isEnderDragonDefeated())) {
                     lockMsg = Component.translatable("awakening_system.shop.lock_end_short");
                 } else if (levelLocked) {
                     lockMsg = Component.translatable("awakening_system.screen.shop.lock.level", entry.minLevel());
@@ -4454,7 +4487,7 @@ public final class SystemScreen extends Screen {
                         list.add(Component.literal(mark).withStyle(cf)
                                 .append(Component.translatable("awakening_system.screen.shop.lock.level", entry.minLevel()).copy().withStyle(cf)));
                     }
-                    if ("ranker_tower_ticket".equals(entry.id())) {
+                    if (ShopDefinitions.requiresEnd(entry.id())) {
                         boolean endLocked = !d.hasVisitedDimension("minecraft:the_end") && !d.hasVisitedDimension("the_end") && !d.isEnderDragonDefeated();
                         net.minecraft.ChatFormatting cf = endLocked ? net.minecraft.ChatFormatting.RED : net.minecraft.ChatFormatting.GREEN;
                         String mark = endLocked ? "✖ " : "✔ ";

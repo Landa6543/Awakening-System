@@ -715,6 +715,11 @@ public final class ShopDefinitions {
         return Math.min(25, reward);
     }
 
+    /** Objetos de la Torre de Rankers: se desbloquean junto con la torre, al llegar al End. */
+    public static boolean requiresEnd(String entryId) {
+        return "ranker_tower_ticket".equals(entryId) || "ranker_return_scroll".equals(entryId);
+    }
+
     public static boolean isUnlocked(Entry entry, SystemData data) {
         if (entry == null || !isAvailable(entry)) return false;
         if (data == null) return entry.requiredSystemTier() <= 1 && entry.requiredDimension().isEmpty() && entry.minLevel() <= 0;
@@ -724,8 +729,8 @@ public final class ShopDefinitions {
             return false;
         }
 
-        // Bloqueo de Progresion Lineal: El boleto a la Torre de Rankers requiere haber viajado al End
-        if ("ranker_tower_ticket".equals(entry.id())) {
+        // Bloqueo de Progresion Lineal: lo de la Torre de Rankers (boleto y pergamino de retorno) requiere haber viajado al End
+        if (requiresEnd(entry.id())) {
             if (!data.hasVisitedDimension("minecraft:the_end") && !data.hasVisitedDimension("the_end") && !data.isEnderDragonDefeated()) {
                 return false;
             }
