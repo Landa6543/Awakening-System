@@ -55,8 +55,15 @@ public final class AbyssalGrottoBuilder {
     private final double[] phase = new double[9];
     private final Set<Long> air = new HashSet<>();
     private final List<BlockPos> carvedList = new ArrayList<>();
+    /** Walking space (tunnels, ramp, bridge): kept free of dripstone, crystals, nests and chests. */
+    private final Set<Long> keep = new HashSet<>();
+    /** Floor blocks laid under tunnels once all carving is done. */
+    private final List<BlockPos> tunnelFloors = new ArrayList<>();
+    /** Terrain height of each column before the grotto touched it, to tell open sky from caves to seal. */
+    private final java.util.Map<Long, Integer> surface = new java.util.HashMap<>();
+    private final List<BlockPos> chestList = new ArrayList<>();
     private BlockState wallA, wallB, wallC;
-    private int chests, spawners;
+    private int chests, spawners, sealed;
 
     private AbyssalGrottoBuilder(ServerLevel level, long seed) {
         this.level = level;
@@ -104,7 +111,7 @@ public final class AbyssalGrottoBuilder {
                 if (isAir(cx + dx, y, cz + dz)) set(cx + dx, y, cz + dz, Blocks.LAVA.defaultBlockState(), 3);
         }
 
-        // 3. sinkhole shaft with a spiral ledge, then a short tunnel into the cavern
+        // 3. sinkhole shaft with a spiral ramp, then a wide tunnel into the cavern
         int sx = cx - dir * (RX + 9), sz = cz;
         int topY = level.getHeight(Heightmap.Types.MOTION_BLOCKING_NO_LEAVES, sx, sz);
         int bottomY = cy - 7;
@@ -113,52 +120,23 @@ public final class AbyssalGrottoBuilder {
             double r = Math.sqrt(dx * dx + dz * dz) + 0.7 * noise(dx * 0.3, y * 0.2, dz * 0.3);
             if (r <= shaftR) carve(sx + dx, y, sz + dz);
         }
-        // spiral ledge: a 2-wide walkway down the wall, one block lower every three blocks along it
-        double angle = 0;
-        for (int y = topY - 1; y > bottomY; ) {
-            for (int k = 0; k < 3; k++) {
-                double rr = shaftR - 0.6;
-                for (double w = -0.9; w <= 0.9; w += 0.45) {
-                    int lx = sx + (int) Math.round(Math.cos(angle) * (rr + w));
-                    int lz = sz + (int) Math.round(Math.sin(angle) * (rr + w));
-                    set(lx, y - 1, lz, ledgeBlock(), 2);
-                    for (int h = 0; h <= 2; h++) carve(lx, y + h, lz);
-                }
-                angle += 1.0 / (shaftR - 0.6);
-            }
-            y--;
-        }
+        spiralRamp(sx, sz, shaftR, topY, bottomY);
         // landing ring at the bottom of the shaft
         for (int dx = -shaftR; dx <= shaftR; dx++) for (int dz = -shaftR; dz <= shaftR; dz++)
-            if (dx * dx + dz * dz <= shaftR * shaftR) set(sx + dx, bottomY - 1, sz + dz, wallA, 2);
-        // tunnel from the shaft into the cavern wall
-        int ty = bottomY;
-        for (int t = 0; t <= Math.abs((cx - dir * (RX - 4)) - sx); t++) {
-            int x = sx + dir * t;
-            for (int dz = -2; dz <= 2; dz++) for (int h = 0; h <= 3; h++) {
-                if (Math.abs(dz) == 2 && h == 3) continue;
-                carve(x, ty + h, sz + dz);
-            }
-            set(x, ty - 1, sz, wallA, 2);
-            set(x, ty - 1, sz - 1, wallA, 2);
-            set(x, ty - 1, sz + 1, wallA, 2);
-        }
+            if (dx * dx + dz * dz <= shaftR * shaftR) tunnelFloors.add(new BlockPos(sx + dx, bottomY - 1, sz + dz));
+        int entryX = cx - dir * (RX - 6);
+        tunnelX(sx, entryX, sz, bottomY, cavernWalk(entryX, cy, cz, bottomY));
 
-        // 4. boss dome beyond the cavern, joined by a tunnel
-        int bx = cx + dir * (RX + DOME_R + 4), by = cy - 3, bz = cz;
+        // 4. boss dome beyond the cavern, joined by a tunnel that climbs to its outer terrace
+        int bx = cx + dir * (RX + DOME_R + 4), by = cy - 6, bz = cz;
         for (int dx = -DOME_R; dx <= DOME_R; dx++) for (int dz = -DOME_R; dz <= DOME_R; dz++) for (int dy = -3; dy <= DOME_R; dy++) {
             double d = Math.sqrt(dx * dx + dy * dy * 1.4 + dz * dz) + 0.6 * noise(dx * 0.2, dy * 0.2, dz * 0.2);
             if (d <= DOME_R) carve(bx + dx, by + dy, bz + dz);
         }
-        for (int t = 0; t <= DOME_R + 8; t++) {
-            int x = cx + dir * (RX - 3 + t);
-            for (int dz = -2; dz <= 2; dz++) for (int h = 0; h <= 4; h++) {
-                if (Math.abs(dz) == 2 && h >= 4) continue;
-                carve(x, by + h, bz + dz);
-            }
-        }
+        int domeExitX = cx + dir * (RX - 6);
+        tunnelX(domeExitX, bx - dir * (DOME_R - 2), bz, cavernWalk(domeExitX, cy, cz, by), by + 2);
 
-        // 5. skin every exposed wall with the grotto's stone
+        // 5. skin every exposed wall with the grotto's stone and seal any cave, water or lava it cut into
         skin();
 
         // floors that stay walkable: fill the dome's bottom and its terraces
@@ -168,17 +146,23 @@ public final class AbyssalGrottoBuilder {
             int floorY = by - 1 + (r > DOME_R - 3 ? 2 : (r > DOME_R - 6 ? 1 : 0));   // stepped rings
             for (int y = by - 3; y <= floorY; y++) set(bx + dx, y, bz + dz, r > DOME_R - 6 ? wallB : polished(), 2);
         }
-        for (int t = 0; t <= DOME_R + 8; t++) for (int dz = -2; dz <= 2; dz++)
-            set(cx + dir * (RX - 3 + t), by - 1, bz + dz, wallA, 2);
+        layRamp();
+        for (BlockPos f : tunnelFloors) {
+            BlockState st = level.getBlockState(f);
+            if (st.isAir() || !st.getFluidState().isEmpty() || !isSolid(f.getX(), f.getY(), f.getZ())) set(f.getX(), f.getY(), f.getZ(), wallA, 2);
+        }
 
-        // 6. rock bridge over the abyss (2 blocks thick, slightly arched)
+        // 6. rock bridge over the abyss: 5 wide, thick in the middle, meeting the floor on both sides
         // the trench runs along z, so the bridge crosses it along x
-        int bridgeY = cy - 7;
-        for (int dx = -6; dx <= 6; dx++) for (int dz = -1; dz <= 1; dz++) {
-            int arch = Math.abs(dx) < 3 ? 1 : 0;
-            set(cx + dx, bridgeY + arch, cz + dz, wallB, 2);
-            set(cx + dx, bridgeY - 1 + arch, cz + dz, wallA, 2);
-            for (int h = 1; h <= 3; h++) carve(cx + dx, bridgeY + arch + h, cz + dz);
+        int walkL = cavernWalk(cx - 8, cy, cz, cy - 7), walkR = cavernWalk(cx + 8, cy, cz, cy - 7);
+        for (int dx = -8; dx <= 8; dx++) {
+            int walk = (int) Math.round(walkL + (walkR - walkL) * ((dx + 8) / 16.0));
+            for (int dz = -2; dz <= 2; dz++) {
+                int x = cx + dx, z = cz + dz;
+                int depth = Math.abs(dz) == 2 ? 2 : (Math.abs(dx) <= 4 ? 4 : 3);   // a keel under the middle
+                for (int k = 1; k <= depth; k++) set(x, walk - k, z, k == 1 ? (Math.abs(dz) == 2 ? wallA : wallB) : wallA, 2);
+                for (int h = 0; h <= 3; h++) { carve(x, walk + h, z); keep(x, walk + h, z); }
+            }
         }
 
         // 7. decoration
@@ -236,15 +220,90 @@ public final class AbyssalGrottoBuilder {
                 set(p.getX(), p.getY(), p.getZ(), Blocks.CAVE_VINES.defaultBlockState(), 2);
             }
         }
-        AwakeningSystemMod.LOGGER.info("[Gruta Abisal] construida en {} {} {}: {} bloques excavados, {} cofres, {} generadores", cx, cy, cz, carvedList.size(), chests, spawners);
-        if (System.getProperty("awakening.debugGrotto") != null) debugSlices(cx, cy, cz, sx, topY);
+        AwakeningSystemMod.LOGGER.info("[Gruta Abisal] construida en {} {} {}: {} bloques excavados, {} huecos sellados, {} cofres, {} generadores",
+                cx, cy, cz, carvedList.size(), sealed, chests, spawners);
+        if (System.getProperty("awakening.debugGrotto") != null) {
+            debugSlices(cx, cy, cz, sx, topY);
+            walkCheck(cx, cy, cz, sx, sz, shaftR, topY, new BlockPos(bx, by, bz));
+        }
         return new BlockPos(sx, topY, sz);
+    }
+
+    /**
+     * Dev aid: walks the grotto like a player (steps of one block up, drops of at most three) from the
+     * surface next to the sinkhole, and back out from the boss dome, and logs what can and cannot be reached.
+     */
+    private void walkCheck(int cx, int cy, int cz, int sx, int sz, int shaftR, int topY, BlockPos dome) {
+        RampCell top = ramp.get(0);   // the ramp's first step, just under the sinkhole's rim
+        BlockPos start = new BlockPos(top.x(), top.y(), top.z());
+        int[] box = {cx - RX - 32, cx + RX + 32, cy - 26, topY + 6, cz - RZ - 10, cz + RZ + 10};
+        Set<Long> in = walk(start, box);
+        Set<Long> out = walk(dome, box);
+        int chestsIn = 0;
+        for (BlockPos c : chestList) if (touches(in, c)) chestsIn++;
+        int floors = 0, lost = 0;
+        for (BlockPos p : carvedList) {
+            if (!standable(p.getX(), p.getY(), p.getZ())) continue;
+            floors++;
+            if (!in.contains(p.asLong())) lost++;
+        }
+        AwakeningSystemMod.LOGGER.info("[Gruta Abisal] recorrido: domo alcanzable={}, salida desde el domo={}, cofres alcanzables {}/{}, suelo sin acceso {}/{} (inicio {} {} {}, domo {} {} -> {} y {} celdas)",
+                in.contains(dome.asLong()), out.contains(start.asLong()), chestsIn, chestList.size(), lost, floors,
+                start.toShortString(), standable(start.getX(), start.getY(), start.getZ()), level.getBlockState(start.below()),
+                dome.toShortString(), standable(dome.getX(), dome.getY(), dome.getZ()), in.size(), out.size());
+    }
+
+    private boolean touches(Set<Long> reached, BlockPos c) {
+        for (Direction d : Direction.Plane.HORIZONTAL) for (int dy = -1; dy <= 1; dy++)
+            if (reached.contains(c.relative(d).above(dy).asLong())) return true;
+        return reached.contains(c.above().asLong());
+    }
+
+    private Set<Long> walk(BlockPos start, int[] box) {
+        Set<Long> seen = new HashSet<>();
+        java.util.ArrayDeque<BlockPos> queue = new java.util.ArrayDeque<>();
+        if (!standable(start.getX(), start.getY(), start.getZ())) return seen;
+        seen.add(start.asLong());
+        queue.add(start);
+        while (!queue.isEmpty()) {
+            BlockPos p = queue.poll();
+            boolean headroom = passable(p.getX(), p.getY() + 2, p.getZ());
+            for (Direction d : Direction.Plane.HORIZONTAL) {
+                int x = p.getX() + d.getStepX(), z = p.getZ() + d.getStepZ();
+                if (x < box[0] || x > box[1] || z < box[4] || z > box[5]) continue;
+                int found = Integer.MIN_VALUE;
+                if (headroom && standable(x, p.getY() + 1, z)) found = p.getY() + 1;
+                else if (passable(x, p.getY(), z) && passable(x, p.getY() + 1, z)) {
+                    for (int k = 0; k <= 3; k++) {
+                        int y = p.getY() - k;
+                        if (y < box[2]) break;
+                        if (standable(x, y, z)) { found = y; break; }
+                        if (!passable(x, y, z)) break;
+                    }
+                }
+                if (found == Integer.MIN_VALUE || found > box[3]) continue;
+                BlockPos n = new BlockPos(x, found, z);
+                if (seen.add(n.asLong())) queue.add(n);
+            }
+        }
+        return seen;
+    }
+
+    private boolean passable(int x, int y, int z) {
+        BlockPos p = new BlockPos(x, y, z);
+        BlockState s = level.getBlockState(p);
+        return s.getCollisionShape(level, p).isEmpty() && !s.is(Blocks.LAVA);
+    }
+
+    private boolean standable(int x, int y, int z) {
+        BlockPos below = new BlockPos(x, y - 1, z);
+        return passable(x, y, z) && passable(x, y + 1, z) && !level.getBlockState(below).getCollisionShape(level, below).isEmpty();
     }
 
     /** Dev aid: writes a side cut (through the sinkhole, cavern and dome) and a floor plan as PNGs. */
     private void debugSlices(int cx, int cy, int cz, int sx, int topY) {
         try {
-            int x0 = cx - RX - 20, x1 = cx + RX + 30, s = 4;
+            int x0 = cx - RX - 30, x1 = cx + RX + 30, s = 4;
             int y0 = cy - 26, y1 = topY + 4;
             java.awt.image.BufferedImage side = new java.awt.image.BufferedImage((x1 - x0) * s, (y1 - y0) * s, java.awt.image.BufferedImage.TYPE_INT_RGB);
             for (int x = x0; x < x1; x++) for (int y = y0; y < y1; y++) fillCell(side, (x - x0) * s, (y1 - 1 - y) * s, s, colour(level.getBlockState(new BlockPos(x, y, cz))));
@@ -297,12 +356,14 @@ public final class AbyssalGrottoBuilder {
         for (BlockPos p : carvedList) {
             int x = p.getX(), y = p.getY(), z = p.getZ();
             if (!isAir(x, y, z)) continue;
+            boolean kept = keep.contains(p.asLong());
             boolean floor = !isAir(x, y - 1, z) && isSolid(x, y - 1, z);
             boolean ceiling = !isAir(x, y + 1, z) && isSolid(x, y + 1, z);
             int roll = rand.nextInt(1000);
             if (ceiling && roll < 14) dripstone(x, y, z, Direction.DOWN, 2 + rand.nextInt(5));
             else if (ceiling && roll < 22) set(x, y + 1, z, Blocks.SHROOMLIGHT.defaultBlockState(), 2);
-            else if (floor && roll < 10 && y > cy - 8) dripstone(x, y, z, Direction.UP, 1 + rand.nextInt(4));
+            else if (kept) continue;
+            else if (floor && roll < 6 && y > cy - 8 && !nearKeep(x, y, z)) dripstone(x, y, z, Direction.UP, 1 + rand.nextInt(3));
             else if (floor && roll < 16 && y > cy - 8) set(x, y, z, crystal.setValue(TeyvatCrystalBlock.FACING, Direction.UP), 2);
             else if (floor && roll < 22 && y > cy - 8) set(x, y, z, Blocks.AMETHYST_CLUSTER.defaultBlockState().setValue(AmethystClusterBlock.FACING, Direction.UP), 2);
             else if (roll < 60) {
@@ -319,11 +380,24 @@ public final class AbyssalGrottoBuilder {
 
     private void dripstone(int x, int y, int z, Direction tip, int len) {
         int step = tip == Direction.DOWN ? -1 : 1;
+        // shorten it so it never reaches into a path, and stalactites leave head room below them
+        int fit = 0;
+        for (int i = 0; i < len; i++) {
+            int yy = y + step * i;
+            if (!isAir(x, yy, z) || keep.contains(BlockPos.asLong(x, yy, z))) break;
+            if (tip == Direction.DOWN) {
+                boolean clear = true;
+                for (int k = 1; k <= 3; k++) if (!isAir(x, yy - k, z)) { clear = false; break; }
+                if (!clear) break;
+            }
+            fit++;
+        }
+        if (fit == 0) return;
+        len = fit;
         int anchorY = y - step;
         set(x, anchorY, z, Blocks.DRIPSTONE_BLOCK.defaultBlockState(), 2);
         for (int i = 0; i < len; i++) {
             int yy = y + step * i;
-            if (!isAir(x, yy, z)) return;
             DripstoneThickness t = len == 1 ? DripstoneThickness.TIP
                     : i == len - 1 ? DripstoneThickness.TIP
                     : i == len - 2 ? DripstoneThickness.FRUSTUM
@@ -364,7 +438,8 @@ public final class AbyssalGrottoBuilder {
         List<BlockPos> options = new ArrayList<>();
         for (BlockPos p : carvedList) {
             int dx = p.getX() - cx, dz = p.getZ() - cz;
-            if (dx < minX || dx > maxX || dz < minZ || dz > maxZ || Math.abs(dx) <= 5 || p.getY() > cy) continue;
+            if (dx < minX || dx > maxX || dz < minZ || dz > maxZ || Math.abs(dx) <= 9 || p.getY() > cy) continue;
+            if (nearKeep(p.getX(), p.getY(), p.getZ())) continue;
             if (!isAir(p.getX(), p.getY(), p.getZ()) || !isAir(p.getX(), p.getY() + 1, p.getZ()) || !isSolid(p.getX(), p.getY() - 1, p.getZ())) continue;
             boolean crowded = false;
             for (BlockPos t : taken) if (t.distSqr(p) < 49) { crowded = true; break; }
@@ -406,6 +481,7 @@ public final class AbyssalGrottoBuilder {
         if (level.getBlockEntity(p) instanceof ChestBlockEntity chest) {
             chest.setLootTable(loot, rand.nextLong());
             chests++;
+            chestList.add(p);
         }
     }
 
@@ -415,23 +491,112 @@ public final class AbyssalGrottoBuilder {
         BlockPos p = new BlockPos(x, y, z);
         BlockState s = level.getBlockState(p);
         if (s.is(Blocks.BEDROCK)) return;
+        surface.computeIfAbsent(BlockPos.asLong(x, 0, z), k -> level.getHeight(Heightmap.Types.MOTION_BLOCKING_NO_LEAVES, x, z));
         long key = p.asLong();
         if (air.add(key)) carvedList.add(p);
         if (!s.isAir()) level.setBlock(p, Blocks.CAVE_AIR.defaultBlockState(), 2);
     }
 
+    private void keep(int x, int y, int z) {
+        keep.add(BlockPos.asLong(x, y, z));
+    }
+
+    /** True when a path cell is right next to this one (same level or one up), so nothing blocks the way. */
+    private boolean nearKeep(int x, int y, int z) {
+        for (int dx = -1; dx <= 1; dx++) for (int dz = -1; dz <= 1; dz++) for (int dy = 0; dy <= 1; dy++)
+            if (keep.contains(BlockPos.asLong(x + dx, y + dy, z + dz))) return true;
+        return false;
+    }
+
+    /** Terrain height of a column as it was before carving. */
+    private int surfaceAt(int x, int z) {
+        Integer h = surface.get(BlockPos.asLong(x, 0, z));
+        return h != null ? h : level.getHeight(Heightmap.Types.MOTION_BLOCKING_NO_LEAVES, x, z);
+    }
+
+    /**
+     * Gives every wall the grotto's stone. Air, water or lava next to the grotto that is not open sky
+     * (another cave, an aquifer, a lake bed) gets walled off too, so the grotto never floods or has holes.
+     */
     private void skin() {
         for (BlockPos p : carvedList) {
             for (Direction d : Direction.values()) {
                 BlockPos n = p.relative(d);
                 if (air.contains(n.asLong())) continue;
                 BlockState s = level.getBlockState(n);
-                if (s.isAir() || !s.getFluidState().isEmpty() || s.is(Blocks.BEDROCK)) continue;
-                if (s.hasBlockEntity()) continue;
+                if (s.is(Blocks.BEDROCK) || s.hasBlockEntity()) continue;
+                boolean open = s.isAir() || !s.getFluidState().isEmpty() || s.canBeReplaced();
+                if (open) {
+                    if (n.getY() >= surfaceAt(n.getX(), n.getZ())) continue;   // open sky above the sinkhole
+                    sealed++;
+                }
                 double v = noise(n.getX() * 0.18, n.getY() * 0.18, n.getZ() * 0.18);
                 level.setBlock(n, v > 0.45 ? wallC : (v > -0.1 ? wallA : wallB), 2);
             }
         }
+    }
+
+    /**
+     * Walking surface of the cavern at a column: the first air block standing on something solid, searched
+     * downwards from the cavern's middle. Falls back to {@code fallback} when the column has no floor.
+     */
+    private int cavernWalk(int x, int cy, int z, int fallback) {
+        for (int y = cy; y > cy - RY - 2; y--)
+            if (air.contains(BlockPos.asLong(x, y, z)) && !air.contains(BlockPos.asLong(x, y - 1, z))) return y;
+        return fallback;
+    }
+
+    /**
+     * A wide tunnel along x from {@code x0} to {@code x1}: 7 blocks wide, 5 tall with a rounded roof. Its
+     * floor slopes evenly from {@code walk0} to {@code walk1} (never more than one block per step) and is laid
+     * once all the carving is done. The walking space is kept clear of decoration.
+     */
+    private void tunnelX(int x0, int x1, int z, int walk0, int walk1) {
+        int len = Math.abs(x1 - x0), step = Integer.signum(x1 - x0);
+        if (Math.abs(walk1 - walk0) > len) walk1 = walk0 + Integer.signum(walk1 - walk0) * len;
+        for (int t = 0; t <= len; t++) {
+            int x = x0 + step * t;
+            int walk = (int) Math.round(walk0 + (walk1 - walk0) * (t / (double) Math.max(1, len)));
+            int wob = (int) Math.round(0.8 * noise(x * 0.15, 7.0, z * 0.1));   // gentle sideways wander
+            for (int dz = -3; dz <= 3; dz++) {
+                int zz = z + dz + wob;
+                int top = Math.abs(dz) == 3 ? 3 : (Math.abs(dz) == 2 ? 4 : 5);
+                for (int h = 0; h < top; h++) carve(x, walk + h, zz);
+                for (int h = 0; h < Math.min(top, 3); h++) keep(x, walk + h, zz);
+                tunnelFloors.add(new BlockPos(x, walk - 1, zz));
+            }
+        }
+    }
+
+    /**
+     * Ramp spiralling down the sinkhole wall: 3 blocks wide and 4 tall, one block lower every three blocks
+     * along it. Each drop is a stair so the climb back up reads as a path rather than a ledge.
+     */
+    private record RampCell(int x, int y, int z, boolean stair, Direction up) {}
+    private final List<RampCell> ramp = new ArrayList<>();
+
+    private void spiralRamp(int sx, int sz, int shaftR, int topY, int bottomY) {
+        List<RampCell> cells = ramp;
+        double angle = 0, rr = shaftR - 0.9;
+        for (int y = topY - 1; y > bottomY; y--) {
+            for (int k = 0; k < 3; k++) {
+                Direction up = Direction.getNearest(Math.sin(angle), 0, -Math.cos(angle));
+                for (double w = -1.2; w <= 1.2; w += 0.4) {
+                    int lx = sx + (int) Math.round(Math.cos(angle) * (rr + w));
+                    int lz = sz + (int) Math.round(Math.sin(angle) * (rr + w));
+                    cells.add(new RampCell(lx, y, lz, k == 0 && y < topY - 1, up));
+                }
+                angle += 1.0 / rr;
+            }
+        }
+        for (RampCell c : cells) for (int h = 0; h <= 3; h++) { carve(c.x, c.y + h, c.z); if (h <= 2) keep(c.x, c.y + h, c.z); }
+    }
+
+    /** Lays the ramp's floor and stairs; runs after {@link #skin()} so the stone pass does not cover them. */
+    private void layRamp() {
+        for (RampCell c : ramp) set(c.x, c.y - 1, c.z, ledgeBlock(), 2);
+        for (RampCell c : ramp) if (c.stair) set(c.x, c.y, c.z, Blocks.COBBLED_DEEPSLATE_STAIRS.defaultBlockState()
+                .setValue(net.minecraft.world.level.block.StairBlock.FACING, c.up), 2);
     }
 
     private BlockState ledgeBlock() {
