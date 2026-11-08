@@ -57,12 +57,12 @@ public final class SystemAttributeEffects {
 
         String hClass = data.hunterClass();
         apply(player, Attributes.ATTACK_SPEED, "hunter_sword_saint_spd", "sword_saint".equals(hClass) ? 0.35D : ("demonic_cultivator".equals(hClass) ? 0.15D : ("void_assassin".equals(hClass) ? 0.25D : ("lightning_emperor".equals(hClass) ? 0.20D : ("blood_emperor".equals(hClass) ? 0.10D : 0.0D)))));
-        apply(player, Attributes.MAX_HEALTH, "hunter_colossal_hp", "colossal_berserker".equals(hClass) ? 16.0D : ("dragon_monarch".equals(hClass) ? 10.0D : ("spiritual_healer".equals(hClass) ? 6.0D : 0.0D)));
-        apply(player, Attributes.KNOCKBACK_RESISTANCE, "hunter_colossal_kb", "colossal_berserker".equals(hClass) ? 0.5D : ("dragon_monarch".equals(hClass) ? 0.3D : 0.0D));
+        apply(player, Attributes.MAX_HEALTH, "hunter_colossal_hp", "iron_bastion".equals(hClass) ? 24.0D : ("colossal_berserker".equals(hClass) ? 16.0D : ("dragon_monarch".equals(hClass) ? 10.0D : ("spiritual_healer".equals(hClass) ? 6.0D : 0.0D))));
+        apply(player, Attributes.KNOCKBACK_RESISTANCE, "hunter_colossal_kb", "iron_bastion".equals(hClass) ? 0.6D : ("colossal_berserker".equals(hClass) ? 0.5D : ("dragon_monarch".equals(hClass) ? 0.3D : 0.0D)));
         apply(player, Attributes.ATTACK_DAMAGE, "hunter_demonic_dmg", "demonic_cultivator".equals(hClass) ? 3.0D : ("dragon_monarch".equals(hClass) ? 2.5D : ("beast_monarch".equals(hClass) ? 2.5D : ("blood_emperor".equals(hClass) ? 2.0D : 0.0D))));
         apply(player, Attributes.MOVEMENT_SPEED, "hunter_void_spd", "void_assassin".equals(hClass) ? 0.035D : ("lightning_emperor".equals(hClass) ? 0.030D : ("beast_monarch".equals(hClass) ? 0.020D : 0.0D)));
-        apply(player, Attributes.ARMOR, "hunter_dragon_armor", "dragon_monarch".equals(hClass) ? 4.0D : ("spiritual_healer".equals(hClass) ? 4.0D : 0.0D));
-        apply(player, Attributes.ARMOR_TOUGHNESS, "hunter_dragon_toughness", "dragon_monarch".equals(hClass) ? 2.0D : 0.0D);
+        apply(player, Attributes.ARMOR, "hunter_dragon_armor", "iron_bastion".equals(hClass) ? 8.0D : ("dragon_monarch".equals(hClass) ? 4.0D : ("spiritual_healer".equals(hClass) ? 4.0D : 0.0D)));
+        apply(player, Attributes.ARMOR_TOUGHNESS, "hunter_dragon_toughness", "iron_bastion".equals(hClass) ? 4.0D : ("dragon_monarch".equals(hClass) ? 2.0D : 0.0D));
         apply(player, Attributes.LUCK, "hunter_archmage_luck", "grand_archmage".equals(hClass) ? 1.0D : 0.0D);
 
         com.soybe.awakeningsystem.compat.MagicModCompatHandler.applyMagicAttributes(player, data);

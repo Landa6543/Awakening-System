@@ -77,7 +77,8 @@ public final class SkillDefinitions {
         }
         if (id.contains("shield") || id.contains("barrier") || id.contains("wall") || id.contains("iron") 
                 || id.contains("armor") || id.contains("resilience") || id.contains("flesh") || id.contains("thick")
-                || id.contains("protection") || id.contains("suppression") || id.contains("defensive")) {
+                || id.contains("protection") || id.contains("suppression") || id.contains("defensive")
+                || id.contains("bulwark") || id.contains("bastion") || id.contains("fortress")) {
             return SkillArchetype.DEFENSIVE;
         }
         if (id.contains("step") || id.contains("dash") || id.contains("leap") || id.contains("speed") 
@@ -91,7 +92,8 @@ public final class SkillDefinitions {
         }
         if (id.contains("bind") || id.contains("chain") || id.contains("slow") || id.contains("stun") 
                 || id.contains("roar") || id.contains("freeze") || id.contains("frost") || id.contains("intimidat")
-                || id.contains("gravity") || id.contains("lock") || id.contains("mark")) {
+                || id.contains("gravity") || id.contains("lock") || id.contains("mark")
+                || id.contains("taunt") || id.contains("stomp")) {
             return SkillArchetype.CONTROL;
         }
         return SkillArchetype.UTILITY;

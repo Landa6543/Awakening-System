@@ -76,6 +76,7 @@ public final class ClassSelectionScreen extends Screen {
             new ClassOption("sword_saint", "Return of the Blossoming Blade", "Blossoming Blade", 0xFF50FA7B, "asrahan_mana_blade", 0),
             new ClassOption("void_assassin", "Solo Max-Level Newbie", "Max-Level Newbie", 0xFF00E5FF, "nano_blade_overdrive", 0),
             new ClassOption("beast_monarch", "Solo Leveling / White Tiger", "Solo Leveling", 0xFFFFA500, "bm_seismic_roar", 0),
+            new ClassOption("iron_bastion", "Omniscient Reader's Viewpoint / Pure Steel", "Pure Steel", 0xFF78909C, "ib_taunt_roar", 0),
 
             new ClassOption("shadow_monarch", "Solo Leveling", "Solo Leveling", 0xFF9966FF, "shadow_monarch", 1),
             new ClassOption("dragon_monarch", "Solo Leveling / Dragon Sovereign", "Dragon Sovereign", 0xFFFF6E40, "isekai_dragon_roar", 1),
@@ -286,9 +287,10 @@ public final class ClassSelectionScreen extends Screen {
 
         int cardStartY = top + 56;
         if (!isAllMode) {
-            int cardW = (panelW - 30 - 3 * 6) / 4;
+            int count = Math.max(1, visible.size());
+            int spacingX = count > 4 ? 4 : 6;
+            int cardW = (panelW - 30 - (count - 1) * spacingX) / count;
             int cardH = 34;
-            int spacingX = 6;
 
             for (int i = 0; i < visible.size(); i++) {
                 ClassOption opt = visible.get(i);
@@ -320,15 +322,16 @@ public final class ClassSelectionScreen extends Screen {
                 graphics.disableScissor();
             }
         } else {
-            int cardW = (panelW - 30 - 5 * 4) / 6;
+            int cols = 7;
             int cardH = 26;
             int spacingX = 4;
             int spacingY = 3;
+            int cardW = (panelW - 30 - (cols - 1) * spacingX) / cols;
 
             for (int i = 0; i < visible.size(); i++) {
                 ClassOption opt = visible.get(i);
-                int col = i % 6;
-                int row = i / 6;
+                int col = i % cols;
+                int row = i / cols;
                 int cx = left + 15 + col * (cardW + spacingX);
                 int cy = cardStartY + row * (cardH + spacingY);
 
@@ -548,9 +551,10 @@ public final class ClassSelectionScreen extends Screen {
             int cardStartY = top + 56;
 
             if (!isAllMode) {
-                int cardW = (panelW - 30 - 3 * 6) / 4;
+                int count = Math.max(1, visible.size());
+                int spacingX = count > 4 ? 4 : 6;
+                int cardW = (panelW - 30 - (count - 1) * spacingX) / count;
                 int cardH = 34;
-                int spacingX = 6;
 
                 for (int i = 0; i < visible.size(); i++) {
                     int cx = left + 15 + i * (cardW + spacingX);
@@ -562,14 +566,15 @@ public final class ClassSelectionScreen extends Screen {
                     }
                 }
             } else {
-                int cardW = (panelW - 30 - 5 * 4) / 6;
+                int cols = 7;
                 int cardH = 26;
                 int spacingX = 4;
                 int spacingY = 3;
+                int cardW = (panelW - 30 - (cols - 1) * spacingX) / cols;
 
                 for (int i = 0; i < visible.size(); i++) {
-                    int col = i % 6;
-                    int row = i / 6;
+                    int col = i % cols;
+                    int row = i / cols;
                     int cx = left + 15 + col * (cardW + spacingX);
                     int cy = cardStartY + row * (cardH + spacingY);
                     if (mouseX >= cx && mouseX < cx + cardW && mouseY >= cy && mouseY < cy + cardH) {

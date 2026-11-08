@@ -431,6 +431,33 @@ public final class ClassSkillTree {
         register(new SkillNode("bm_hp_2", "beast_monarch", "branch_c", 4, 60, 255, 55, 1, List.of("bm_wild_resilience"), StatType.MAX_HEALTH, 12.0D, "❤"));
         register(new SkillNode("bm_titan_roar", "beast_monarch", "branch_c", 4, 110, 255, 55, 1, List.of("bm_wild_resilience"), NodeType.MAJOR_ACTIVE, "💥"));
         register(new SkillNode("bm_apex_hide", "beast_monarch", "branch_c", 5, 85, 320, 65, 1, List.of("bm_hp_2", "bm_titan_roar"), StatType.KNOCKBACK_RESISTANCE, 0.35D, "★"));
+
+        // === IRON BASTION ===
+        register(new SkillNode("ib_iron_fortress", "iron_bastion", "root", 0, 255, 25, 30, 0, List.of(), NodeType.ROOT, "🛡"));
+
+        register(new SkillNode("ib_hp_1", "iron_bastion", "branch_a", 1, 255, 75, 30, 1, List.of("ib_iron_fortress"), StatType.MAX_HEALTH, 10.0D, "❤"));
+        register(new SkillNode("ib_taunt_roar", "iron_bastion", "branch_a", 2, 230, 135, 35, 1, List.of("ib_hp_1"), NodeType.MAJOR_ACTIVE, "📢"));
+        register(new SkillNode("ib_armor_1", "iron_bastion", "branch_a", 2, 280, 135, 35, 1, List.of("ib_hp_1"), StatType.ARMOR, 4.0D, "🛡"));
+        register(new SkillNode("ib_shield_bash", "iron_bastion", "branch_a", 3, 255, 195, 45, 1, List.of("ib_taunt_roar", "ib_armor_1"), NodeType.MAJOR_ACTIVE, "💥"));
+        register(new SkillNode("ib_retribution_spikes", "iron_bastion", "branch_a", 4, 230, 255, 55, 1, List.of("ib_shield_bash"), NodeType.MAJOR_PASSIVE, "⚡"));
+        register(new SkillNode("ib_war_stomp", "iron_bastion", "branch_a", 4, 280, 255, 55, 1, List.of("ib_shield_bash"), NodeType.MAJOR_ACTIVE, "🔨"));
+        register(new SkillNode("ib_apex_titan", "iron_bastion", "branch_a", 5, 255, 320, 65, 1, List.of("ib_retribution_spikes", "ib_war_stomp"), StatType.MAX_HEALTH, 20.0D, "★"));
+
+        register(new SkillNode("ib_armor_2", "iron_bastion", "branch_b", 1, 425, 75, 30, 1, List.of("ib_iron_fortress"), StatType.ARMOR, 4.0D, "🛡"));
+        register(new SkillNode("ib_aegis_bulwark", "iron_bastion", "branch_b", 2, 400, 135, 35, 1, List.of("ib_armor_2"), NodeType.MAJOR_ACTIVE, "🏰"));
+        register(new SkillNode("ib_kb_1", "iron_bastion", "branch_b", 2, 450, 135, 35, 1, List.of("ib_armor_2"), StatType.KNOCKBACK_RESISTANCE, 0.30D, "🛡"));
+        register(new SkillNode("ib_guardian_sacrifice", "iron_bastion", "branch_b", 3, 425, 195, 45, 1, List.of("ib_aegis_bulwark", "ib_kb_1"), NodeType.MAJOR_PASSIVE, "✨"));
+        register(new SkillNode("ib_bastion_rally", "iron_bastion", "branch_b", 4, 400, 255, 55, 1, List.of("ib_guardian_sacrifice"), NodeType.MAJOR_ACTIVE, "🎺"));
+        register(new SkillNode("ib_impenetrable_wall", "iron_bastion", "branch_b", 4, 450, 255, 55, 1, List.of("ib_guardian_sacrifice"), NodeType.MAJOR_PASSIVE, "🧱"));
+        register(new SkillNode("ib_apex_bastion", "iron_bastion", "branch_b", 5, 425, 320, 65, 1, List.of("ib_bastion_rally", "ib_impenetrable_wall"), StatType.ARMOR, 8.0D, "★"));
+
+        register(new SkillNode("ib_kb_2", "iron_bastion", "branch_c", 1, 85, 75, 30, 1, List.of("ib_iron_fortress"), StatType.KNOCKBACK_RESISTANCE, 0.30D, "🛡"));
+        register(new SkillNode("ib_shield_parry", "iron_bastion", "branch_c", 2, 60, 135, 35, 1, List.of("ib_kb_2"), NodeType.MAJOR_ACTIVE, "⚔"));
+        register(new SkillNode("ib_hp_2", "iron_bastion", "branch_c", 2, 110, 135, 35, 1, List.of("ib_kb_2"), StatType.MAX_HEALTH, 14.0D, "❤"));
+        register(new SkillNode("ib_unbreakable_body", "iron_bastion", "branch_c", 3, 85, 195, 45, 1, List.of("ib_shield_parry", "ib_hp_2"), NodeType.MAJOR_PASSIVE, "🗿"));
+        register(new SkillNode("ib_adamantine_skin", "iron_bastion", "branch_c", 4, 60, 255, 55, 1, List.of("ib_unbreakable_body"), NodeType.MAJOR_PASSIVE, "💎"));
+        register(new SkillNode("ib_avatar_of_steel", "iron_bastion", "branch_c", 4, 110, 255, 55, 1, List.of("ib_unbreakable_body"), NodeType.MAJOR_ACTIVE, "🦾"));
+        register(new SkillNode("ib_apex_fortress", "iron_bastion", "branch_c", 5, 85, 320, 65, 1, List.of("ib_adamantine_skin", "ib_avatar_of_steel"), StatType.KNOCKBACK_RESISTANCE, 0.50D, "★"));
     }
 
     public static final int MAX_SKILL_LEVEL = 3;
@@ -448,6 +475,7 @@ public final class ClassSkillTree {
             case "blood" -> "blood_emperor";
             case "beast" -> "beast_monarch";
             case "dragon" -> "dragon_monarch";
+            case "tank", "bastion", "guardian", "iron_bastion" -> "iron_bastion";
             default -> hunterClass;
         };
     }

@@ -3882,6 +3882,84 @@ public final class SystemEvents {
                   .playSound(null, targetPlayer.getX(), targetPlayer.getY(), targetPlayer.getZ(), SoundEvents.SHIELD_BREAK, SoundSource.PLAYERS, 1.2F, 0.9F);
             }
 
+            if ("colossal_berserker".equals(data.hunterClass())) {
+               float hpPct = player.getHealth() / Math.max(1.0F, player.getMaxHealth());
+               if (hpPct < 0.8F) {
+                  float rageBonus = 1.0F + (0.8F - hpPct) * 0.6F;
+                  event.setNewDamage(event.getNewDamage() * rageBonus);
+                  if (player.level() instanceof ServerLevel sl && hpPct < 0.4F) {
+                     sl.sendParticles(ParticleTypes.ANGRY_VILLAGER, player.getX(), player.getY() + 1.2, player.getZ(), 4, 0.3, 0.3, 0.3, 0.05);
+                  }
+               }
+            }
+
+            if ("void_assassin".equals(data.hunterClass())) {
+               Vec3 pLook = player.getLookAngle();
+               Vec3 tLook = event.getEntity().getLookAngle();
+               double dot = pLook.x * tLook.x + pLook.z * tLook.z;
+               if (dot > 0.4) {
+                  float bonus = (player.hasEffect(MobEffects.INVISIBILITY) || player.isCrouching()) ? 2.0F : 1.5F;
+                  event.setNewDamage(event.getNewDamage() * bonus);
+                  event.getEntity().addEffect(new MobEffectInstance(MobEffects.MOVEMENT_SLOWDOWN, 60, 2));
+                  if (player.level() instanceof ServerLevel sl) {
+                     sl.sendParticles(ParticleTypes.CRIT, event.getEntity().getX(), event.getEntity().getY() + 1.0, event.getEntity().getZ(), 16, 0.3, 0.4, 0.3, 0.15);
+                     sl.playSound(null, player.getX(), player.getY(), player.getZ(), SoundEvents.PLAYER_ATTACK_CRIT, SoundSource.PLAYERS, 1.4F, 1.5F);
+                  }
+               }
+            }
+
+            if ("demonic_cultivator".equals(data.hunterClass())) {
+               event.getEntity().setRemainingFireTicks(80);
+               event.getEntity().addEffect(new MobEffectInstance(MobEffects.WITHER, 60, 1));
+               if (player.level() instanceof ServerLevel sl) {
+                  sl.sendParticles(ParticleTypes.SOUL_FIRE_FLAME, event.getEntity().getX(), event.getEntity().getY() + 0.8, event.getEntity().getZ(), 8, 0.2, 0.3, 0.2, 0.05);
+               }
+            }
+
+            if ("lightning_emperor".equals(data.hunterClass()) && player.isSprinting()) {
+               event.setNewDamage(event.getNewDamage() + 6.0F);
+               if (player.level() instanceof ServerLevel sl) {
+                  // la descarga salta solo a monstruos hostiles, como mucho a 3
+                  for (LivingEntity nearby : sl.getEntitiesOfClass(LivingEntity.class, event.getEntity().getBoundingBox().inflate(5.0),
+                        e -> e != player && e != event.getEntity() && e.isAlive() && e instanceof net.minecraft.world.entity.monster.Enemy && !e.getTags().contains("shadow_soldier"))
+                        .stream().limit(3).toList()) {
+                     nearby.hurt(player.damageSources().lightningBolt(), 15.0F);
+                     nearby.addEffect(new MobEffectInstance(MobEffects.MOVEMENT_SLOWDOWN, 40, 1));
+                     sl.sendParticles(ParticleTypes.ELECTRIC_SPARK, nearby.getX(), nearby.getY() + 1.0, nearby.getZ(), 6, 0.2, 0.2, 0.2, 0.05);
+                  }
+                  sl.sendParticles(ParticleTypes.ELECTRIC_SPARK, event.getEntity().getX(), event.getEntity().getY() + 1.0, event.getEntity().getZ(), 14, 0.3, 0.4, 0.3, 0.1);
+                  sl.playSound(null, player.getX(), player.getY(), player.getZ(), SoundEvents.LIGHTNING_BOLT_IMPACT, SoundSource.PLAYERS, 1.2F, 1.5F);
+               }
+            }
+
+            if ("blood_emperor".equals(data.hunterClass())) {
+               float leech = Math.max(1.0F, event.getNewDamage() * 0.12F);
+               player.heal(leech);
+               if (player.level() instanceof ServerLevel sl) {
+                  sl.sendParticles(ParticleTypes.DAMAGE_INDICATOR, player.getX(), player.getY() + 1.0, player.getZ(), 3, 0.2, 0.3, 0.2, 0.02);
+               }
+            }
+
+            if ("beast_monarch".equals(data.hunterClass())) {
+               LivingEntity victim = event.getEntity();
+               if (victim.getHealth() < victim.getMaxHealth() * 0.5F) {
+                  event.setNewDamage(event.getNewDamage() * 1.30F);
+                  if (player.level() instanceof ServerLevel sl) {
+                     sl.sendParticles(ParticleTypes.SWEEP_ATTACK, victim.getX(), victim.getY() + 0.8, victim.getZ(), 2, 0.2, 0.2, 0.2, 0.02);
+                     sl.playSound(null, player.getX(), player.getY(), player.getZ(), SoundEvents.WOLF_GROWL, SoundSource.PLAYERS, 1.3F, 1.2F);
+                  }
+               }
+            }
+
+            if ("iron_bastion".equals(data.hunterClass())) {
+               if (event.getEntity() instanceof Mob targetMob) {
+                  targetMob.setTarget(player);
+               }
+               if (player.isBlocking()) {
+                  event.setNewDamage(event.getNewDamage() * 1.20F);
+               }
+            }
+
             if (data.isSkillEnabled("dragon_sense") && player.fallDistance > 0.0F && !player.onGround() && !player.onClimbable() && !player.isInWater()) {
                event.setNewDamage(event.getNewDamage() * 1.35F);
                if (player.level() instanceof ServerLevel sl) {
@@ -4828,6 +4906,47 @@ public final class SystemEvents {
                boolean evolved = level >= 6;
                event.setNewDamage(Math.max(0.0F, event.getNewDamage() - (level.intValue() * 0.5F + (evolved ? 1.0F : 0.0F))));
                changed |= gainSkillProgress(player, var11, "guardian_stance");
+            }
+         }
+
+         if ("iron_bastion".equals(var11.hunterClass())) {
+            // El escudo solo para golpes que un escudo puede parar y que vienen de delante:
+            // nada de anular caídas, fuego, veneno o el vacío por tener el escudo alzado
+            net.minecraft.world.phys.Vec3 hitFrom = event.getSource().getSourcePosition();
+            boolean frontal = hitFrom != null
+                    && hitFrom.subtract(player.position()).normalize().dot(player.getViewVector(1.0F)) > 0.0D;
+            boolean blockable = !event.getSource().is(DamageTypeTags.BYPASSES_SHIELD);
+            // las púas no se reflejan entre sí: dos baluartes se devolverían el daño sin fin
+            boolean fromThorns = event.getSource().is(net.minecraft.world.damagesource.DamageTypes.THORNS);
+            if (player.isBlocking() && frontal && blockable) {
+               float incomingDmg = event.getNewDamage();
+               event.setNewDamage(0.0F);
+               if (!fromThorns && var11.skills().containsKey("ib_retribution_spikes") && event.getSource().getEntity() instanceof LivingEntity attacker) {
+                  attacker.hurt(player.damageSources().thorns(player), Math.max(4.0F, incomingDmg * 0.35F));
+                  if (player.level() instanceof ServerLevel sl) {
+                     sl.sendParticles(ParticleTypes.CRIT, attacker.getX(), attacker.getY() + 1.0, attacker.getZ(), 10, 0.3, 0.3, 0.3, 0.1);
+                  }
+               }
+               if (player.getTags().contains("ib_parry_active")) {
+                  player.removeTag("ib_parry_active");
+                  if (event.getSource().getEntity() instanceof LivingEntity attacker) {
+                     attacker.addEffect(new MobEffectInstance(MobEffects.MOVEMENT_SLOWDOWN, 60, 4));
+                     attacker.addEffect(new MobEffectInstance(MobEffects.WEAKNESS, 60, 4));
+                     attacker.hurt(player.damageSources().playerAttack(player), 30.0F);
+                     if (player.level() instanceof ServerLevel sl) {
+                        sl.playSound(null, player.getX(), player.getY(), player.getZ(), SoundEvents.SHIELD_BLOCK, SoundSource.PLAYERS, 1.8F, 1.4F);
+                        sl.playSound(null, player.getX(), player.getY(), player.getZ(), SoundEvents.BELL_RESONATE, SoundSource.PLAYERS, 1.5F, 1.8F);
+                        spawnShockwaveRing(sl, player.getX(), player.getY() + 0.8, player.getZ(), ParticleTypes.FLASH, 3.0, 16, 0.1);
+                     }
+                  }
+               }
+            } else {
+               if (var11.skills().containsKey("ib_unbreakable_body")) {
+                  event.setNewDamage(event.getNewDamage() * 0.85F);
+               }
+               if (var11.skills().containsKey("ib_adamantine_skin") && (event.getSource().is(DamageTypeTags.IS_PROJECTILE) || event.getSource().is(DamageTypeTags.IS_EXPLOSION))) {
+                  event.setNewDamage(event.getNewDamage() * 0.50F);
+               }
             }
          }
 
@@ -11810,6 +11929,160 @@ public final class SystemEvents {
                      player.displayClientMessage(Component.translatable("awakening_system.skill.dragon_dive.msg"), true);
                      break;
                   }
+                  case "ib_iron_fortress": {
+                     player.addEffect(new MobEffectInstance(MobEffects.DAMAGE_RESISTANCE, 240, 2));
+                     player.addEffect(new MobEffectInstance(MobEffects.ABSORPTION, 400, 2));
+                     player.addEffect(new MobEffectInstance(MobEffects.MOVEMENT_SLOWDOWN, 80, 0));
+                     if (player.level() instanceof ServerLevel sl) {
+                        spawnShockwaveRing(sl, player.getX(), player.getY() + 0.1, player.getZ(), ParticleTypes.POOF, 5.0, 28, 0.12);
+                        spawnShockwaveRing(sl, player.getX(), player.getY() + 0.1, player.getZ(), ParticleTypes.END_ROD, 4.0, 20, 0.08);
+                        sl.playSound(null, player.getX(), player.getY(), player.getZ(), SoundEvents.ANVIL_LAND, SoundSource.PLAYERS, 1.4F, 0.7F);
+                        sl.playSound(null, player.getX(), player.getY(), player.getZ(), SoundEvents.WARDEN_ROAR, SoundSource.PLAYERS, 1.2F, 1.4F);
+                     }
+                     player.displayClientMessage(Component.translatable("awakening_system.skill.ib_iron_fortress.msg"), true);
+                     break;
+                  }
+                  case "ib_taunt_roar": {
+                     if (player.level() instanceof ServerLevel sl) {
+                        for (Mob mob : sl.getEntitiesOfClass(
+                           Mob.class,
+                           player.getBoundingBox().inflate(20.0),
+                           m -> m.isAlive() && !m.getTags().contains("shadow_soldier") && !m.getType().getCategory().isFriendly()
+                        )) {
+                           mob.setTarget(player);
+                           mob.addEffect(new MobEffectInstance(MobEffects.WEAKNESS, 160, 1));
+                           mob.addEffect(new MobEffectInstance(MobEffects.GLOWING, 160, 0));
+                           sl.sendParticles(ParticleTypes.ANGRY_VILLAGER, mob.getX(), mob.getEyeY(), mob.getZ(), 5, 0.3, 0.2, 0.3, 0.02);
+                        }
+                        spawnShockwaveRing(sl, player.getX(), player.getY() + 0.2, player.getZ(), ParticleTypes.SONIC_BOOM, 8.0, 32, 0.18);
+                        sl.playSound(null, player.getX(), player.getY(), player.getZ(), SoundEvents.RAVAGER_ROAR, SoundSource.PLAYERS, 1.6F, 0.8F);
+                        sl.playSound(null, player.getX(), player.getY(), player.getZ(), SoundEvents.WARDEN_ROAR, SoundSource.PLAYERS, 1.3F, 1.2F);
+                     }
+                     player.addEffect(new MobEffectInstance(MobEffects.DAMAGE_RESISTANCE, 200, 1));
+                     player.displayClientMessage(Component.translatable("awakening_system.skill.ib_taunt_roar.msg"), true);
+                     break;
+                  }
+                  case "ib_shield_bash": {
+                     Vec3 look = player.getLookAngle();
+                     player.setDeltaMovement(look.x * 1.5, 0.25, look.z * 1.5);
+                     player.hurtMarked = true;
+                     if (player.level() instanceof ServerLevel sl) {
+                        Vec3 targetPos = player.position().add(look.scale(3.0));
+                        float bashDmg = (35.0F + vit * 0.4F + player.getArmorValue() * 1.5F) * treeSkillMult;
+                        for (LivingEntity exx : sl.getEntitiesOfClass(
+                           LivingEntity.class,
+                           new AABB(targetPos.x - 3.0, targetPos.y - 2.0, targetPos.z - 3.0, targetPos.x + 3.0, targetPos.y + 2.0, targetPos.z + 3.0),
+                           e -> e != player && e.isAlive() && !e.getTags().contains("shadow_soldier")
+                        )) {
+                           exx.hurt(player.damageSources().playerAttack(player), bashDmg);
+                           exx.addEffect(new MobEffectInstance(MobEffects.MOVEMENT_SLOWDOWN, 60, 4));
+                           exx.addEffect(new MobEffectInstance(MobEffects.WEAKNESS, 60, 4));
+                           if (exx instanceof Player targetPlayer && targetPlayer.isBlocking()) {
+                              targetPlayer.disableShield();
+                           }
+                           exx.setDeltaMovement(look.x * 1.2, 0.4, look.z * 1.2);
+                        }
+                        sl.sendParticles(ParticleTypes.CRIT, targetPos.x, targetPos.y + 1.0, targetPos.z, 20, 0.5, 0.5, 0.5, 0.1);
+                        sl.playSound(null, player.getX(), player.getY(), player.getZ(), SoundEvents.SHIELD_BLOCK, SoundSource.PLAYERS, 1.6F, 0.7F);
+                        sl.playSound(null, player.getX(), player.getY(), player.getZ(), SoundEvents.ANVIL_LAND, SoundSource.PLAYERS, 1.3F, 1.1F);
+                     }
+                     player.displayClientMessage(Component.translatable("awakening_system.skill.ib_shield_bash.msg"), true);
+                     break;
+                  }
+                  case "ib_war_stomp": {
+                     if (player.level() instanceof ServerLevel sl) {
+                        float stompDmg = (40.0F + vit * 0.5F) * treeSkillMult;
+                        for (LivingEntity exx : sl.getEntitiesOfClass(
+                           LivingEntity.class,
+                           player.getBoundingBox().inflate(8.0),
+                           e -> e != player && e.isAlive() && !e.getTags().contains("shadow_soldier")
+                        )) {
+                           exx.hurt(player.damageSources().playerAttack(player), stompDmg);
+                           double dx = player.getX() - exx.getX();
+                           double dz = player.getZ() - exx.getZ();
+                           double distx = Math.max(0.1, Math.sqrt(dx * dx + dz * dz));
+                           exx.setDeltaMovement(dx / distx * 0.5, 0.3, dz / distx * 0.5);
+                           exx.addEffect(new MobEffectInstance(MobEffects.MOVEMENT_SLOWDOWN, 100, 2));
+                        }
+                        spawnShockwaveRing(sl, player.getX(), player.getY() + 0.1, player.getZ(), ParticleTypes.EXPLOSION, 7.0, 30, 0.15);
+                        sl.playSound(null, player.getX(), player.getY(), player.getZ(), (SoundEvent)SoundEvents.GENERIC_EXPLODE.value(), SoundSource.PLAYERS, 1.4F, 0.8F);
+                        sl.playSound(null, player.getX(), player.getY(), player.getZ(), SoundEvents.MACE_SMASH_GROUND, SoundSource.PLAYERS, 1.5F, 0.7F);
+                     }
+                     player.displayClientMessage(Component.translatable("awakening_system.skill.ib_war_stomp.msg"), true);
+                     break;
+                  }
+                  case "ib_aegis_bulwark": {
+                     player.addEffect(new MobEffectInstance(MobEffects.DAMAGE_RESISTANCE, 300, 3));
+                     player.addEffect(new MobEffectInstance(MobEffects.ABSORPTION, 400, 3));
+                     if (player.level() instanceof ServerLevel sl) {
+                        for (LivingEntity ally : sl.getEntitiesOfClass(
+                           LivingEntity.class,
+                           player.getBoundingBox().inflate(12.0),
+                           e -> e != player && (e instanceof Player || e instanceof TamableAnimal t && player.getUUID().equals(t.getOwnerUUID()) || e.getTags().contains("shadow_soldier"))
+                        )) {
+                           ally.addEffect(new MobEffectInstance(MobEffects.DAMAGE_RESISTANCE, 300, 1));
+                           ally.addEffect(new MobEffectInstance(MobEffects.REGENERATION, 200, 1));
+                        }
+                        spawnExpandingDome(sl, player.getX(), player.getY(), player.getZ(), ParticleTypes.END_ROD, 7.0, 4, 20);
+                        spawnShockwaveRing(sl, player.getX(), player.getY() + 0.2, player.getZ(), ParticleTypes.GLOW, 8.0, 32, 0.1);
+                        sl.playSound(null, player.getX(), player.getY(), player.getZ(), SoundEvents.BEACON_ACTIVATE, SoundSource.PLAYERS, 1.5F, 1.3F);
+                        sl.playSound(null, player.getX(), player.getY(), player.getZ(), SoundEvents.CONDUIT_ACTIVATE, SoundSource.PLAYERS, 1.4F, 1.1F);
+                     }
+                     player.displayClientMessage(Component.translatable("awakening_system.skill.ib_aegis_bulwark.msg"), true);
+                     break;
+                  }
+                  case "ib_bastion_rally": {
+                     player.removeEffect(MobEffects.POISON);
+                     player.removeEffect(MobEffects.WITHER);
+                     player.removeEffect(MobEffects.WEAKNESS);
+                     player.removeEffect(MobEffects.MOVEMENT_SLOWDOWN);
+                     player.removeEffect(MobEffects.DARKNESS);
+                     player.addEffect(new MobEffectInstance(MobEffects.ABSORPTION, 400, 2));
+                     player.addEffect(new MobEffectInstance(MobEffects.SATURATION, 100, 0));
+                     if (player.level() instanceof ServerLevel sl) {
+                        for (LivingEntity ally : sl.getEntitiesOfClass(
+                           LivingEntity.class,
+                           player.getBoundingBox().inflate(16.0),
+                           e -> e != player && (e instanceof Player || e instanceof TamableAnimal t && player.getUUID().equals(t.getOwnerUUID()) || e.getTags().contains("shadow_soldier"))
+                        )) {
+                           ally.removeEffect(MobEffects.POISON);
+                           ally.removeEffect(MobEffects.WITHER);
+                           ally.removeEffect(MobEffects.WEAKNESS);
+                           ally.removeEffect(MobEffects.MOVEMENT_SLOWDOWN);
+                           ally.addEffect(new MobEffectInstance(MobEffects.ABSORPTION, 400, 2));
+                           ally.addEffect(new MobEffectInstance(MobEffects.REGENERATION, 160, 1));
+                        }
+                        spawnShockwaveRing(sl, player.getX(), player.getY() + 0.5, player.getZ(), ParticleTypes.TOTEM_OF_UNDYING, 8.0, 36, 0.12);
+                        sl.playSound(null, player.getX(), player.getY(), player.getZ(), SoundEvents.BELL_RESONATE, SoundSource.PLAYERS, 1.6F, 1.5F);
+                        sl.playSound(null, player.getX(), player.getY(), player.getZ(), SoundEvents.GOAT_HORN_SOUND_VARIANTS.get(0).value(), SoundSource.PLAYERS, 1.6F, 0.9F);
+                     }
+                     player.displayClientMessage(Component.translatable("awakening_system.skill.ib_bastion_rally.msg"), true);
+                     break;
+                  }
+                  case "ib_shield_parry": {
+                     player.addTag("ib_parry_active");
+                     player.addEffect(new MobEffectInstance(MobEffects.DAMAGE_RESISTANCE, 40, 4));
+                     if (player.level() instanceof ServerLevel sl) {
+                        spawnShockwaveRing(sl, player.getX(), player.getY() + 0.8, player.getZ(), ParticleTypes.ENCHANTED_HIT, 2.5, 20, 0.08);
+                        sl.playSound(null, player.getX(), player.getY(), player.getZ(), SoundEvents.SHIELD_BLOCK, SoundSource.PLAYERS, 1.6F, 1.2F);
+                     }
+                     player.displayClientMessage(Component.translatable("awakening_system.skill.ib_shield_parry.msg"), true);
+                     break;
+                  }
+                  case "ib_avatar_of_steel": {
+                     player.addEffect(new MobEffectInstance(MobEffects.DAMAGE_RESISTANCE, 400, 3));
+                     player.addEffect(new MobEffectInstance(MobEffects.ABSORPTION, 500, 4));
+                     player.addEffect(new MobEffectInstance(MobEffects.FIRE_RESISTANCE, 500, 0));
+                     player.addEffect(new MobEffectInstance(MobEffects.REGENERATION, 400, 1));
+                     if (player.level() instanceof ServerLevel sl) {
+                        spawnVortexPillar(sl, player.getX(), player.getY(), player.getZ(), ParticleTypes.END_ROD, 4.0, 6.0, 5, 20);
+                        spawnShockwaveRing(sl, player.getX(), player.getY() + 0.1, player.getZ(), ParticleTypes.POOF, 8.0, 36, 0.2);
+                        sl.playSound(null, player.getX(), player.getY(), player.getZ(), SoundEvents.ANVIL_LAND, SoundSource.PLAYERS, 1.6F, 0.6F);
+                        sl.playSound(null, player.getX(), player.getY(), player.getZ(), SoundEvents.WARDEN_ROAR, SoundSource.PLAYERS, 1.5F, 1.0F);
+                     }
+                     player.displayClientMessage(Component.translatable("awakening_system.skill.ib_avatar_of_steel.msg"), true);
+                     break;
+                  }
                   default:
                      player.addEffect(new MobEffectInstance(MobEffects.DAMAGE_BOOST, 160, 0, false, true, true));
                }
@@ -12866,6 +13139,7 @@ public final class SystemEvents {
             case "blood_emperor" -> "be_bloodthirst";
             case "lightning_emperor" -> "le_electrification";
             case "spiritual_healer" -> "sh_caregiver_blessing";
+            case "iron_bastion" -> "ib_taunt_roar";
             default -> null;
          };
          if (signatureSkill != null) {
@@ -12885,6 +13159,10 @@ public final class SystemEvents {
                   break;
                case "colossal_berserker":
                   data.skills().put("dragon_dive", 1);
+                  break;
+               case "iron_bastion":
+                  data.skills().put("ib_iron_fortress", 1);
+                  break;
             }
 
             data.setEquippedActiveSkill(0, signatureSkill);
@@ -12902,6 +13180,7 @@ public final class SystemEvents {
             case "blood_emperor" -> "§cBlood Emperor";
             case "lightning_emperor" -> "§bLightning Emperor";
             case "spiritual_healer" -> "§aCelestial Healer";
+            case "iron_bastion" -> "§7Iron Bastion";
             default -> hunterClass;
          };
          AwakeningSystemMod.notify(
