@@ -1,0 +1,8 @@
+{
+  "parent": "minecraft:block/orientable",
+  "textures": {
+    "front": "awakening_system:block/rune_arrow_trap_front",
+    "side": "awakening_system:block/rune_arrow_trap_side",
+    "top": "awakening_system:block/rune_arrow_trap_side"
+  }
+}

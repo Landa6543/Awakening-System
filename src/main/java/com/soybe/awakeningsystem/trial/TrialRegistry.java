@@ -35,6 +35,31 @@ public final class TrialRegistry {
             () -> new TrialVaultBlock(BlockBehaviour.Properties.of().mapColor(MapColor.COLOR_CYAN)
                     .strength(-1.0F, 3600000.0F).sound(SoundType.VAULT).lightLevel(s -> 6)));
 
+    // Barrera de fuerza: encierra a los cazadores en la sala mientras dura la prueba
+    public static final DeferredHolder<Block, net.minecraft.world.level.block.TransparentBlock> FORCE_BARRIER = BLOCKS.register("trial_force_barrier",
+            () -> new net.minecraft.world.level.block.TransparentBlock(BlockBehaviour.Properties.of().mapColor(MapColor.COLOR_LIGHT_BLUE)
+                    .strength(-1.0F, 3600000.0F).sound(SoundType.AMETHYST).noOcclusion().noLootTable()
+                    .lightLevel(s -> 10).isViewBlocking((s, l, p) -> false).isSuffocating((s, l, p) -> false)
+                    .isRedstoneConductor((s, l, p) -> false)));
+    public static final DeferredHolder<Block, RuneArrowTrapBlock> RUNE_ARROW_TRAP = BLOCKS.register("rune_arrow_trap",
+            () -> new RuneArrowTrapBlock(BlockBehaviour.Properties.of().mapColor(MapColor.COLOR_BLUE)
+                    .strength(30.0F, 1200.0F).sound(SoundType.DEEPSLATE_BRICKS).requiresCorrectToolForDrops().lightLevel(s -> 3)));
+    public static final DeferredHolder<Block, AnemoVentBlock> ANEMO_VENT = BLOCKS.register("anemo_vent",
+            () -> new AnemoVentBlock(BlockBehaviour.Properties.of().mapColor(MapColor.COLOR_CYAN)
+                    .strength(-1.0F, 3600000.0F).sound(SoundType.COPPER_GRATE).lightLevel(s -> 8)));
+    public static final DeferredHolder<Block, Block> RUNIC_ABYSSAL_STONE = BLOCKS.register("runic_abyssal_stone",
+            () -> new Block(BlockBehaviour.Properties.of().mapColor(MapColor.COLOR_BLUE)
+                    .strength(3.0F, 9.0F).sound(SoundType.DEEPSLATE_BRICKS).requiresCorrectToolForDrops().lightLevel(s -> 5)));
+
+    public static final DeferredHolder<Item, BlockItem> FORCE_BARRIER_ITEM = ITEMS.register("trial_force_barrier",
+            () -> new BlockItem(FORCE_BARRIER.get(), new Item.Properties().rarity(Rarity.EPIC)));
+    public static final DeferredHolder<Item, BlockItem> RUNE_ARROW_TRAP_ITEM = ITEMS.register("rune_arrow_trap",
+            () -> new BlockItem(RUNE_ARROW_TRAP.get(), new Item.Properties().rarity(Rarity.UNCOMMON)));
+    public static final DeferredHolder<Item, BlockItem> ANEMO_VENT_ITEM = ITEMS.register("anemo_vent",
+            () -> new BlockItem(ANEMO_VENT.get(), new Item.Properties().rarity(Rarity.RARE)));
+    public static final DeferredHolder<Item, BlockItem> RUNIC_ABYSSAL_STONE_ITEM = ITEMS.register("runic_abyssal_stone",
+            () -> new BlockItem(RUNIC_ABYSSAL_STONE.get(), new Item.Properties()));
+
     public static final DeferredHolder<Item, BlockItem> SHADOW_TRIAL_SPAWNER_ITEM = ITEMS.register("shadow_trial_spawner",
             () -> new BlockItem(SHADOW_TRIAL_SPAWNER.get(), new Item.Properties().rarity(Rarity.EPIC)));
     public static final DeferredHolder<Item, BlockItem> AWAKENING_VAULT_ITEM = ITEMS.register("awakening_vault",
@@ -55,6 +80,15 @@ public final class TrialRegistry {
     public static final DeferredHolder<BlockEntityType<?>, BlockEntityType<TrialVaultBlockEntity>> VAULT_ENTITY =
             BLOCK_ENTITIES.register("awakening_vault",
                     () -> BlockEntityType.Builder.of(TrialVaultBlockEntity::new, AWAKENING_VAULT.get()).build(null));
+
+    @SuppressWarnings("ConstantConditions")
+    public static final DeferredHolder<BlockEntityType<?>, BlockEntityType<RuneArrowTrapBlock.Entity>> ARROW_TRAP_ENTITY =
+            BLOCK_ENTITIES.register("rune_arrow_trap",
+                    () -> BlockEntityType.Builder.of(RuneArrowTrapBlock.Entity::new, RUNE_ARROW_TRAP.get()).build(null));
+    @SuppressWarnings("ConstantConditions")
+    public static final DeferredHolder<BlockEntityType<?>, BlockEntityType<AnemoVentBlock.VentEntity>> ANEMO_VENT_ENTITY =
+            BLOCK_ENTITIES.register("anemo_vent",
+                    () -> BlockEntityType.Builder.of(AnemoVentBlock.VentEntity::new, ANEMO_VENT.get()).build(null));
 
     private TrialRegistry() {}
 

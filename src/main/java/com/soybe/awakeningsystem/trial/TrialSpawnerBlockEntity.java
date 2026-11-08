@@ -65,6 +65,51 @@ public class TrialSpawnerBlockEntity extends BlockEntity {
     private int abandon = 0;
     private final List<UUID> mobs = new ArrayList<>();
     private final Set<UUID> participants = new HashSet<>();
+    /** Huecos de las puertas que se cierran con barreras de fuerza durante la prueba. */
+    private final List<BlockPos> barriers = new ArrayList<>();
+
+    public void addBarrier(BlockPos pos) {
+        barriers.add(pos.immutable());
+        setChanged();
+    }
+
+    private void raiseBarriers(ServerLevel level) {
+        for (BlockPos p : barriers) {
+            if (level.getBlockState(p).isAir()) level.setBlock(p, TrialRegistry.FORCE_BARRIER.get().defaultBlockState(), 3);
+        }
+        if (!barriers.isEmpty()) level.playSound(null, worldPosition, SoundEvents.BEACON_ACTIVATE, SoundSource.BLOCKS, 1.0F, 1.6F);
+    }
+
+    private void lowerBarriers(ServerLevel level) {
+        for (BlockPos p : barriers) {
+            if (level.getBlockState(p).is(TrialRegistry.FORCE_BARRIER.get())) level.setBlock(p, net.minecraft.world.level.block.Blocks.AIR.defaultBlockState(), 3);
+        }
+        if (!barriers.isEmpty()) level.playSound(null, worldPosition, SoundEvents.BEACON_DEACTIVATE, SoundSource.BLOCKS, 1.0F, 1.6F);
+    }
+
+    /**
+     * Niebla de la sala de Sombras: quien no lleve una antorcha o un farol en la mano queda casi a
+     * ciegas. Es lo que pide el roadmap: antorchas tácticas.
+     */
+    private void applyShadowFog(ServerLevel level, BlockPos pos) {
+        for (ServerPlayer p : level.players()) {
+            if (p.isSpectator() || p.isCreative()) continue;
+            double dx = p.getX() - (pos.getX() + 0.5D), dz = p.getZ() - (pos.getZ() + 0.5D), dy = p.getY() - pos.getY();
+            if (dx * dx + dz * dz > 11.0D * 11.0D || Math.abs(dy) > 7.0D) continue;
+            if (holdsLight(p)) continue;
+            p.addEffect(new net.minecraft.world.effect.MobEffectInstance(net.minecraft.world.effect.MobEffects.DARKNESS, 60, 0, false, false));
+            p.addEffect(new net.minecraft.world.effect.MobEffectInstance(net.minecraft.world.effect.MobEffects.BLINDNESS, 40, 0, false, false));
+            if (level.getGameTime() % 100 == 0) p.displayClientMessage(Component.translatable("awakening_system.trial.shadow_fog"), true);
+        }
+    }
+
+    private static boolean holdsLight(ServerPlayer p) {
+        for (ItemStack s : new ItemStack[]{p.getMainHandItem(), p.getOffhandItem()}) {
+            if (s.is(net.minecraft.world.item.Items.TORCH) || s.is(net.minecraft.world.item.Items.SOUL_TORCH)
+                    || s.is(net.minecraft.world.item.Items.LANTERN) || s.is(net.minecraft.world.item.Items.SOUL_LANTERN)) return true;
+        }
+        return false;
+    }
 
     public TrialSpawnerBlockEntity(BlockPos pos, BlockState state) {
         super(TrialRegistry.SPAWNER_ENTITY.get(), pos, state);
@@ -81,6 +126,7 @@ public class TrialSpawnerBlockEntity extends BlockEntity {
 
     private void tick(ServerLevel level, BlockPos pos) {
         long now = level.getGameTime();
+        if (theme == THEME_SHADOW && now % 20 == 0) applyShadowFog(level, pos);
         switch (state) {
             case COOLDOWN -> {
                 if (now >= cooldownUntil) {
@@ -152,6 +198,7 @@ public class TrialSpawnerBlockEntity extends BlockEntity {
         delay = 30;
         abandon = 0;
         setActiveLook(level, pos, true);
+        raiseBarriers(level);
         level.playSound(null, pos, SoundEvents.TRIAL_SPAWNER_DETECT_PLAYER, SoundSource.BLOCKS, 1.0F, 0.8F);
         level.playSound(null, pos, SoundEvents.WITHER_AMBIENT, SoundSource.BLOCKS, 0.5F, 1.4F);
         notifyParticipants(level, Component.translatable("awakening_system.trial.started"));
@@ -248,6 +295,7 @@ public class TrialSpawnerBlockEntity extends BlockEntity {
         state = COOLDOWN;
         cooldownUntil = level.getGameTime() + COOLDOWN_TICKS;
         setActiveLook(level, pos, false);
+        lowerBarriers(level);
 
         Item core = coreForTier(tier);
         for (UUID id : participants) {
@@ -291,6 +339,7 @@ public class TrialSpawnerBlockEntity extends BlockEntity {
         wave = 0;
         abandon = 0;
         setActiveLook(level, pos, false);
+        lowerBarriers(level);
         setChanged();
     }
 
@@ -322,6 +371,7 @@ public class TrialSpawnerBlockEntity extends BlockEntity {
         ListTag playerList = new ListTag();
         participants.forEach(id -> playerList.add(NbtUtils.createUUID(id)));
         tag.put("Participants", playerList);
+        tag.putLongArray("Barriers", barriers.stream().mapToLong(BlockPos::asLong).toArray());
     }
 
     @Override
@@ -337,5 +387,7 @@ public class TrialSpawnerBlockEntity extends BlockEntity {
         for (Tag t : tag.getList("Mobs", Tag.TAG_INT_ARRAY)) mobs.add(NbtUtils.loadUUID(t));
         participants.clear();
         for (Tag t : tag.getList("Participants", Tag.TAG_INT_ARRAY)) participants.add(NbtUtils.loadUUID(t));
+        barriers.clear();
+        for (long l : tag.getLongArray("Barriers")) barriers.add(BlockPos.of(l));
     }
 }

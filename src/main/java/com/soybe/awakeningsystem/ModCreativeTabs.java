@@ -474,6 +474,10 @@ public final class ModCreativeTabs {
                         output.accept(com.soybe.awakeningsystem.trial.TrialRegistry.SHADOW_TRIAL_SPAWNER_ITEM.get());
                         output.accept(com.soybe.awakeningsystem.trial.TrialRegistry.AWAKENING_VAULT_ITEM.get());
                         output.accept(com.soybe.awakeningsystem.trial.TrialRegistry.TRIAL_KEY.get());
+                        output.accept(com.soybe.awakeningsystem.trial.TrialRegistry.RUNE_ARROW_TRAP_ITEM.get());
+                        output.accept(com.soybe.awakeningsystem.trial.TrialRegistry.ANEMO_VENT_ITEM.get());
+                        output.accept(com.soybe.awakeningsystem.trial.TrialRegistry.RUNIC_ABYSSAL_STONE_ITEM.get());
+                        output.accept(com.soybe.awakeningsystem.trial.TrialRegistry.FORCE_BARRIER_ITEM.get());
                         accept(output, SystemItems.MONSTER_CORE_E);
                         accept(output, SystemItems.MONSTER_CORE_D);
                         accept(output, SystemItems.MONSTER_CORE_C);

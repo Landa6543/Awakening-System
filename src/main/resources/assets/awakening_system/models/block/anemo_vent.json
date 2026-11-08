@@ -1,0 +1,8 @@
+{
+  "parent": "minecraft:block/cube_bottom_top",
+  "textures": {
+    "top": "awakening_system:block/anemo_vent_top",
+    "bottom": "awakening_system:block/anemo_vent_side",
+    "side": "awakening_system:block/anemo_vent_side"
+  }
+}
