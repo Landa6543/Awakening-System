@@ -2,8 +2,7 @@ package com.soybe.awakeningsystem.item;
 
 import com.soybe.awakeningsystem.AwakeningSystemMod;
 import com.soybe.awakeningsystem.SystemData;
-import java.util.List;
-import java.util.function.Supplier;
+import com.soybe.awakeningsystem.SystemItems;
 import net.minecraft.ChatFormatting;
 import net.minecraft.core.particles.ParticleTypes;
 import net.minecraft.network.chat.Component;
@@ -18,69 +17,92 @@ import net.minecraft.world.entity.LivingEntity;
 import net.minecraft.world.entity.ai.attributes.AttributeModifier;
 import net.minecraft.world.entity.ai.attributes.Attributes;
 import net.minecraft.world.entity.player.Player;
+import net.minecraft.world.item.Item;
 import net.minecraft.world.item.ItemStack;
+import net.minecraft.world.item.Items;
 import net.minecraft.world.item.ShieldItem;
-import net.minecraft.world.item.TooltipFlag;
 import net.minecraft.world.item.component.ItemAttributeModifiers;
-import net.minecraft.world.item.crafting.Ingredient;
 import net.neoforged.bus.api.SubscribeEvent;
 import net.neoforged.fml.common.EventBusSubscriber;
+import net.neoforged.neoforge.event.AnvilUpdateEvent;
 import net.neoforged.neoforge.event.entity.living.LivingShieldBlockEvent;
+import net.neoforged.neoforge.event.entity.player.ItemTooltipEvent;
 
 /**
- * Escudos del Sistema (sección 58). Funcionan como el escudo normal, pero llevan modelo 3D propio,
- * dan armadura en la mano secundaria y tienen un efecto al bloquear. Los puede usar cualquiera;
- * el Bastión de Hierro saca un extra del Escudo Torre.
+ * Escudos del Sistema (sección 58). Son escudos de Minecraft puros ({@link ShieldItem} tal cual, no
+ * una subclase): Epic Fight elige la pose, el render y el bloqueo de escudo por la clase exacta del
+ * ítem, así que solo así se sostienen igual que el escudo normal. Lo propio de cada escudo (efecto
+ * al bloquear, reparación con su material y descripción) se engancha aquí con eventos.
  */
 @EventBusSubscriber(modid = AwakeningSystemMod.MOD_ID)
-public class SystemShieldItem extends ShieldItem {
+public final class SystemShields {
     public enum Kind { SIDERITE_KITE, BASTION_TOWER, SPIRIT_JADE_ROUND }
 
-    private final Kind kind;
-    private final Supplier<Ingredient> repair;
+    private SystemShields() {}
 
-    public SystemShieldItem(Kind kind, Supplier<Ingredient> repair, int durability, double armor, double knockbackResistance, double maxHealth, Properties props) {
-        super(props.durability(durability).attributes(attributes(kind, armor, knockbackResistance, maxHealth)));
-        this.kind = kind;
-        this.repair = repair;
-    }
-
-    private static ItemAttributeModifiers attributes(Kind kind, double armor, double kb, double hp) {
+    /** Un escudo normal con su durabilidad y los atributos que da en la mano secundaria. */
+    public static ShieldItem create(Kind kind, int durability, double armor, double knockbackResistance, double maxHealth, Item.Properties props) {
         String base = kind.name().toLowerCase();
         ItemAttributeModifiers.Builder b = ItemAttributeModifiers.builder();
         if (armor > 0) b.add(Attributes.ARMOR, mod(base + "_armor", armor), EquipmentSlotGroup.OFFHAND);
-        if (kb > 0) b.add(Attributes.KNOCKBACK_RESISTANCE, mod(base + "_knockback", kb), EquipmentSlotGroup.OFFHAND);
-        if (hp > 0) b.add(Attributes.MAX_HEALTH, mod(base + "_health", hp), EquipmentSlotGroup.OFFHAND);
-        return b.build();
+        if (knockbackResistance > 0) b.add(Attributes.KNOCKBACK_RESISTANCE, mod(base + "_knockback", knockbackResistance), EquipmentSlotGroup.OFFHAND);
+        if (maxHealth > 0) b.add(Attributes.MAX_HEALTH, mod(base + "_health", maxHealth), EquipmentSlotGroup.OFFHAND);
+        return new ShieldItem(props.durability(durability).attributes(b.build()));
     }
 
     private static AttributeModifier mod(String id, double amount) {
         return new AttributeModifier(ResourceLocation.fromNamespaceAndPath(AwakeningSystemMod.MOD_ID, "shield_" + id), amount, AttributeModifier.Operation.ADD_VALUE);
     }
 
-    @Override
-    public boolean isValidRepairItem(ItemStack stack, ItemStack material) {
-        return repair.get().test(material);
+    static Kind kindOf(ItemStack stack) {
+        if (stack.is(SystemItems.SIDERITE_KITE_SHIELD.get())) return Kind.SIDERITE_KITE;
+        if (stack.is(SystemItems.BASTION_TOWER_SHIELD.get())) return Kind.BASTION_TOWER;
+        if (stack.is(SystemItems.SPIRIT_JADE_ROUND_SHIELD.get())) return Kind.SPIRIT_JADE_ROUND;
+        return null;
     }
 
-    @Override
-    public void appendHoverText(ItemStack stack, TooltipContext ctx, List<Component> tooltip, TooltipFlag flag) {
-        String key = getDescriptionId() + ".desc";
-        tooltip.add(Component.translatable(key).withStyle(ChatFormatting.GRAY));
-        if (kind == Kind.BASTION_TOWER) tooltip.add(Component.translatable(key + "_class").withStyle(ChatFormatting.DARK_AQUA));
-        super.appendHoverText(stack, ctx, tooltip, flag);
+    static Item repairMaterial(Kind kind) {
+        return switch (kind) {
+            case SIDERITE_KITE -> SystemItems.SIDERITE_INGOT.get();
+            case BASTION_TOWER -> Items.IRON_INGOT;
+            case SPIRIT_JADE_ROUND -> SystemItems.SPIRIT_JADE.get();
+        };
+    }
+
+    @SubscribeEvent
+    public static void onTooltip(ItemTooltipEvent event) {
+        Kind kind = kindOf(event.getItemStack());
+        if (kind == null) return;
+        String key = event.getItemStack().getDescriptionId() + ".desc";
+        event.getToolTip().add(1, Component.translatable(key).withStyle(ChatFormatting.GRAY));
+        if (kind == Kind.BASTION_TOWER) event.getToolTip().add(2, Component.translatable(key + "_class").withStyle(ChatFormatting.DARK_AQUA));
+    }
+
+    /** Reparar en el yunque con el material del escudo: cada unidad devuelve un cuarto de la durabilidad, como las herramientas. */
+    @SubscribeEvent
+    public static void onAnvil(AnvilUpdateEvent event) {
+        ItemStack left = event.getLeft(), right = event.getRight();
+        Kind kind = kindOf(left);
+        if (kind == null || !left.isDamaged() || !right.is(repairMaterial(kind))) return;
+        int perUnit = Math.max(1, left.getMaxDamage() / 4);
+        int units = Math.min(right.getCount(), (left.getDamageValue() + perUnit - 1) / perUnit);
+        ItemStack out = left.copy();
+        out.setDamageValue(Math.max(0, left.getDamageValue() - perUnit * units));
+        event.setOutput(out);
+        event.setMaterialCost(units);
+        event.setCost(units);
     }
 
     @SubscribeEvent
     public static void onShieldBlock(LivingShieldBlockEvent event) {
         if (!event.getBlocked()) return;
         LivingEntity blocker = event.getEntity();
-        if (!(blocker.getUseItem().getItem() instanceof SystemShieldItem shield)) return;
-        if (!(blocker.level() instanceof ServerLevel level)) return;
+        Kind kind = kindOf(blocker.getUseItem());
+        if (kind == null || !(blocker.level() instanceof ServerLevel level)) return;
         float blocked = event.getBlockedDamage();
         LivingEntity attacker = event.getDamageSource().getDirectEntity() instanceof LivingEntity le && le != blocker ? le : null;
 
-        switch (shield.kind) {
+        switch (kind) {
             case SIDERITE_KITE -> {
                 // metal de meteorito: el golpe rebota y empuja al atacante cuerpo a cuerpo
                 if (attacker != null) {
@@ -92,7 +114,7 @@ public class SystemShieldItem extends ShieldItem {
                 level.playSound(null, blocker.blockPosition(), SoundEvents.ANVIL_PLACE, SoundSource.PLAYERS, 0.35F, 1.6F);
             }
             case BASTION_TOWER -> {
-                // muralla: cada bloqueo da Resistencia; el Bastión de Hierro además devuelve parte del golpe
+                // muralla: cada bloqueo da Resistencia; el Baluarte de Hierro además devuelve parte del golpe
                 blocker.addEffect(new MobEffectInstance(MobEffects.DAMAGE_RESISTANCE, 40, 0, false, false, true));
                 if (attacker != null && blocker instanceof Player p
                         && "iron_bastion".equals(((SystemData) p.getData(AwakeningSystemMod.PLAYER_SYSTEM)).hunterClass())) {
@@ -103,8 +125,7 @@ public class SystemShieldItem extends ShieldItem {
             }
             case SPIRIT_JADE_ROUND -> {
                 // jade espiritual: el Qi del golpe detenido cura al portador
-                float heal = Math.min(4.0F, Math.max(1.0F, blocked * 0.15F));
-                blocker.heal(heal);
+                blocker.heal(Math.min(4.0F, Math.max(1.0F, blocked * 0.15F)));
                 level.sendParticles(ParticleTypes.HAPPY_VILLAGER, blocker.getX(), blocker.getY() + 1.2, blocker.getZ(), 5, 0.3, 0.3, 0.3, 0.02);
                 level.playSound(null, blocker.blockPosition(), SoundEvents.AMETHYST_BLOCK_CHIME, SoundSource.PLAYERS, 0.8F, 1.3F);
             }

@@ -1809,19 +1809,16 @@ public final class SystemItems {
 
     // Escudos del Sistema con modelo 3D (sección 58)
     public static final DeferredHolder<Item, Item> SIDERITE_KITE_SHIELD = AwakeningSystemMod.ITEMS.register(
-            "siderite_kite_shield", () -> new com.soybe.awakeningsystem.item.SystemShieldItem(
-                    com.soybe.awakeningsystem.item.SystemShieldItem.Kind.SIDERITE_KITE,
-                    () -> net.minecraft.world.item.crafting.Ingredient.of(SIDERITE_INGOT.get()),
+            "siderite_kite_shield", () -> com.soybe.awakeningsystem.item.SystemShields.create(
+                    com.soybe.awakeningsystem.item.SystemShields.Kind.SIDERITE_KITE,
                     900, 2.0, 0.0, 0.0, new Item.Properties().fireResistant().rarity(Rarity.RARE)));
     public static final DeferredHolder<Item, Item> BASTION_TOWER_SHIELD = AwakeningSystemMod.ITEMS.register(
-            "bastion_tower_shield", () -> new com.soybe.awakeningsystem.item.SystemShieldItem(
-                    com.soybe.awakeningsystem.item.SystemShieldItem.Kind.BASTION_TOWER,
-                    () -> net.minecraft.world.item.crafting.Ingredient.of(net.minecraft.world.item.Items.IRON_INGOT),
+            "bastion_tower_shield", () -> com.soybe.awakeningsystem.item.SystemShields.create(
+                    com.soybe.awakeningsystem.item.SystemShields.Kind.BASTION_TOWER,
                     1400, 4.0, 0.25, 0.0, new Item.Properties().rarity(Rarity.EPIC)));
     public static final DeferredHolder<Item, Item> SPIRIT_JADE_ROUND_SHIELD = AwakeningSystemMod.ITEMS.register(
-            "spirit_jade_round_shield", () -> new com.soybe.awakeningsystem.item.SystemShieldItem(
-                    com.soybe.awakeningsystem.item.SystemShieldItem.Kind.SPIRIT_JADE_ROUND,
-                    () -> net.minecraft.world.item.crafting.Ingredient.of(SPIRIT_JADE.get()),
+            "spirit_jade_round_shield", () -> com.soybe.awakeningsystem.item.SystemShields.create(
+                    com.soybe.awakeningsystem.item.SystemShields.Kind.SPIRIT_JADE_ROUND,
                     2200, 3.0, 0.10, 4.0, new Item.Properties().fireResistant().rarity(Rarity.EPIC)));
 
     public static final DeferredHolder<Item, Item> SIDERITE_SWORD = AwakeningSystemMod.ITEMS.register(
