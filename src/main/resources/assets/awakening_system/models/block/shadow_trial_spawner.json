@@ -2,9 +2,11 @@
   "parent": "minecraft:block/block",
   "render_type": "minecraft:cutout",
   "textures": {
-    "cage": "awakening_system:block/shadow_trial_spawner_cage",
+    "side": "awakening_system:block/shadow_trial_spawner_side",
+    "top": "awakening_system:block/shadow_trial_spawner_top",
+    "bottom": "awakening_system:block/shadow_trial_spawner_bottom",
     "core": "awakening_system:block/shadow_trial_spawner_core",
-    "particle": "awakening_system:block/shadow_trial_spawner_cage"
+    "particle": "awakening_system:block/shadow_trial_spawner_side"
   },
   "elements": [
     {
@@ -23,12 +25,24 @@
       "name": "cage",
       "from": [0, 0, 0], "to": [16, 16, 16],
       "faces": {
-        "north": { "uv": [0, 0, 16, 16], "texture": "#cage" },
-        "south": { "uv": [0, 0, 16, 16], "texture": "#cage" },
-        "east": { "uv": [0, 0, 16, 16], "texture": "#cage" },
-        "west": { "uv": [0, 0, 16, 16], "texture": "#cage" },
-        "up": { "uv": [0, 0, 16, 16], "texture": "#cage" },
-        "down": { "uv": [0, 0, 16, 16], "texture": "#cage" }
+        "north": { "uv": [0, 0, 16, 16], "texture": "#side", "cullface": "north" },
+        "south": { "uv": [0, 0, 16, 16], "texture": "#side", "cullface": "south" },
+        "east": { "uv": [0, 0, 16, 16], "texture": "#side", "cullface": "east" },
+        "west": { "uv": [0, 0, 16, 16], "texture": "#side", "cullface": "west" },
+        "up": { "uv": [0, 0, 16, 16], "texture": "#top", "cullface": "up" },
+        "down": { "uv": [0, 0, 16, 16], "texture": "#bottom", "cullface": "down" }
+      }
+    },
+    {
+      "name": "cage_inside",
+      "from": [15.998, 0.002, 0.002], "to": [0.002, 15.998, 15.998],
+      "faces": {
+        "north": { "uv": [16, 0, 0, 16], "texture": "#side" },
+        "south": { "uv": [16, 0, 0, 16], "texture": "#side" },
+        "east": { "uv": [16, 0, 0, 16], "texture": "#side" },
+        "west": { "uv": [16, 0, 0, 16], "texture": "#side" },
+        "up": { "uv": [16, 0, 0, 16], "texture": "#top" },
+        "down": { "uv": [16, 0, 0, 16], "texture": "#bottom" }
       }
     }
   ]
