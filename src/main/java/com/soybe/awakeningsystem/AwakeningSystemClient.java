@@ -767,6 +767,14 @@ public final class AwakeningSystemClient {
                         return tracker != null ? tracker.target().orElse(null) : null;
                     }));
 
+            // Escudos del Sistema: cambian al modelo de bloqueo igual que el escudo normal
+            for (net.minecraft.world.item.Item shield : java.util.List.of(SystemItems.SIDERITE_KITE_SHIELD.get(),
+                    SystemItems.BASTION_TOWER_SHIELD.get(), SystemItems.SPIRIT_JADE_ROUND_SHIELD.get())) {
+                net.minecraft.client.renderer.item.ItemProperties.register(shield,
+                        net.minecraft.resources.ResourceLocation.withDefaultNamespace("blocking"),
+                        (stack, level, entity, seed) -> entity != null && entity.isUsingItem() && entity.getUseItem() == stack ? 1.0F : 0.0F);
+            }
+
             if (SystemItems.LA_DONCELLA.isBound()) {
                 net.minecraft.client.renderer.item.ItemProperties.register(
                         SystemItems.LA_DONCELLA.get(),

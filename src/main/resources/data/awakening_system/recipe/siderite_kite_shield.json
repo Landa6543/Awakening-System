@@ -1,0 +1,14 @@
+{
+  "type": "minecraft:crafting_shaped",
+  "category": "equipment",
+  "pattern": [
+    " S ",
+    "SXS",
+    " S "
+  ],
+  "key": {
+    "S": {"item": "awakening_system:siderite_ingot"},
+    "X": {"item": "minecraft:shield"}
+  },
+  "result": {"id": "awakening_system:siderite_kite_shield", "count": 1}
+}

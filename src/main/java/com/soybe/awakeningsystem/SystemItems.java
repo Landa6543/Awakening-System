@@ -1807,6 +1807,23 @@ public final class SystemItems {
             "astralite_hoe", () -> new HoeItem(CustomToolTiers.ASTRALITE,
                     new Item.Properties().fireResistant().rarity(Rarity.EPIC).attributes(DiggerItem.createAttributes(CustomToolTiers.ASTRALITE, 0.0F, -3.0F))));
 
+    // Escudos del Sistema con modelo 3D (sección 58)
+    public static final DeferredHolder<Item, Item> SIDERITE_KITE_SHIELD = AwakeningSystemMod.ITEMS.register(
+            "siderite_kite_shield", () -> new com.soybe.awakeningsystem.item.SystemShieldItem(
+                    com.soybe.awakeningsystem.item.SystemShieldItem.Kind.SIDERITE_KITE,
+                    () -> net.minecraft.world.item.crafting.Ingredient.of(SIDERITE_INGOT.get()),
+                    900, 2.0, 0.0, 0.0, new Item.Properties().fireResistant().rarity(Rarity.RARE)));
+    public static final DeferredHolder<Item, Item> BASTION_TOWER_SHIELD = AwakeningSystemMod.ITEMS.register(
+            "bastion_tower_shield", () -> new com.soybe.awakeningsystem.item.SystemShieldItem(
+                    com.soybe.awakeningsystem.item.SystemShieldItem.Kind.BASTION_TOWER,
+                    () -> net.minecraft.world.item.crafting.Ingredient.of(net.minecraft.world.item.Items.IRON_INGOT),
+                    1400, 4.0, 0.25, 0.0, new Item.Properties().rarity(Rarity.EPIC)));
+    public static final DeferredHolder<Item, Item> SPIRIT_JADE_ROUND_SHIELD = AwakeningSystemMod.ITEMS.register(
+            "spirit_jade_round_shield", () -> new com.soybe.awakeningsystem.item.SystemShieldItem(
+                    com.soybe.awakeningsystem.item.SystemShieldItem.Kind.SPIRIT_JADE_ROUND,
+                    () -> net.minecraft.world.item.crafting.Ingredient.of(SPIRIT_JADE.get()),
+                    2200, 3.0, 0.10, 4.0, new Item.Properties().fireResistant().rarity(Rarity.EPIC)));
+
     public static final DeferredHolder<Item, Item> SIDERITE_SWORD = AwakeningSystemMod.ITEMS.register(
             "siderite_sword", () -> new SwordItem(CustomToolTiers.SIDERITE,
                     new Item.Properties().fireResistant().rarity(Rarity.RARE).attributes(SwordItem.createAttributes(CustomToolTiers.SIDERITE, 3, -2.4F))));

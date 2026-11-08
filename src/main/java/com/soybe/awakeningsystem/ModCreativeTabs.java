@@ -99,6 +99,9 @@ public final class ModCreativeTabs {
                         accept(output, SystemItems.SIDERITE_SWORD);
                         accept(output, SystemItems.SIDERITE_HAMAXE);
                         accept(output, SystemItems.SIDERITE_PICKAXE);
+                        accept(output, SystemItems.SIDERITE_KITE_SHIELD);
+                        accept(output, SystemItems.BASTION_TOWER_SHIELD);
+                        accept(output, SystemItems.SPIRIT_JADE_ROUND_SHIELD);
                         accept(output, SystemItems.ABYSSAL_SWORD);
                         accept(output, SystemItems.ABYSSAL_AXE);
                         accept(output, SystemItems.SOUL_ALLOY_SWORD);
