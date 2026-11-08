@@ -1,21 +1,36 @@
 package com.soybe.awakeningsystem;
 
 import com.soybe.awakeningsystem.client.gui.ModernGuiHelper;
-import net.minecraft.client.Minecraft;
+import net.minecraft.ChatFormatting;
 import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.gui.screens.Screen;
 import net.minecraft.network.chat.Component;
 import net.minecraft.sounds.SoundEvents;
+import net.minecraft.util.FormattedCharSequence;
+import net.minecraft.util.Mth;
 import org.lwjgl.glfw.GLFW;
 
 import java.util.List;
 
+/**
+ * Elección de constelación patrocinadora. Lista a la izquierda; a la derecha la ficha de la elegida
+ * (nombre, título, origen, estigma, bendición, donación y todas sus misiones). El texto largo se
+ * desplaza con la rueda del ratón en vez de salirse del panel.
+ */
 public final class SponsorSelectionScreen extends Screen {
+    private static final int BASE_W = 410;
+    private static final int BASE_H = 240;
+    private static final int LIST_W = 132;
+    private static final int ITEM_H = 28;
+    private static final int BTN_H = 18;
+
     private final Screen parentScreen;
     private final boolean forced;
     private final List<ConstellationDefinitions.Constellation> constellations;
     private int selectedIndex = 0;
     private int listScroll = 0;
+    private int bodyScroll = 0;
+    private int bodyContentH = 0;
 
     public SponsorSelectionScreen(Screen parentScreen, boolean forced) {
         super(Component.translatable("awakening_system.screen.sponsor.header"));
@@ -40,31 +55,12 @@ public final class SponsorSelectionScreen extends Screen {
 
     @Override
     public void onClose() {
-        if (minecraft != null) {
-            minecraft.setScreen(parentScreen);
-        }
+        if (minecraft != null) minecraft.setScreen(parentScreen);
     }
 
-    @Override
-    public boolean mouseScrolled(double mouseX, double mouseY, double scrollX, double scrollY) {
-        int maxScroll = Math.max(0, constellations.size() - 6);
-        if (scrollY > 0) {
-            listScroll = Math.max(0, listScroll - 1);
-            return true;
-        } else if (scrollY < 0) {
-            listScroll = Math.min(maxScroll, listScroll + 1);
-            return true;
-        }
-        return super.mouseScrolled(mouseX, mouseY, scrollX, scrollY);
-    }
-
-    private static final int BASE_W = 410;
-    private static final int BASE_H = 235;
-
+    // ---------------------------------------------------------------- scaling (small windows)
     public float getGuiScale() {
-        float scaleX = (float) this.width / (BASE_W + 16.0F);
-        float scaleY = (float) this.height / (BASE_H + 16.0F);
-        float scale = Math.min(scaleX, scaleY);
+        float scale = Math.min((float) this.width / (BASE_W + 16.0F), (float) this.height / (BASE_H + 16.0F));
         return Math.min(1.0F, Math.max(0.35F, scale));
     }
 
@@ -96,148 +92,204 @@ public final class SponsorSelectionScreen extends Screen {
     public void renderBackground(GuiGraphics graphics, int mouseX, int mouseY, float partialTick) {
     }
 
+    // ---------------------------------------------------------------- layout
+    private int left() { return (width - BASE_W) / 2; }
+    private int top() { return (height - BASE_H) / 2; }
+    private int listX() { return left() + 12; }
+    private int bodyTop() { return top() + 42; }
+    private int bodyBottom() { return top() + BASE_H - 12; }
+    private int infoX() { return listX() + LIST_W + 8; }
+    private int infoW() { return left() + BASE_W - 12 - infoX(); }
+    private int visibleItems() { return (bodyBottom() - bodyTop() - 4) / (ITEM_H + 2); }
+    private int btnY() { return bodyBottom() - BTN_H - 6; }
+    private int scrollTop() { return bodyTop() + 44; }
+    private int scrollBottom() { return btnY() - 6; }
+
+    private String fit(String s, int w) {
+        return font.width(s) <= w ? s : font.plainSubstrByWidth(s, w - font.width("…")) + "…";
+    }
+
+    /** "strength" → "Fuerza" (con las claves de atributos del Sistema). */
+    private static Component statName(String id) {
+        String key = switch (id == null ? "" : id.toLowerCase()) {
+            case "strength", "str" -> "str";
+            case "agility", "agi" -> "agi";
+            case "vitality", "vit" -> "vit";
+            case "willpower", "wil" -> "wil";
+            case "perception", "per", "sense" -> "per";
+            case "intelligence", "int" -> "int";
+            default -> null;
+        };
+        return key == null ? Component.literal(id == null ? "" : id) : Component.translatable("awakening_system.attribute." + key + ".name");
+    }
+
+    private boolean isCurrentSponsor(ConstellationDefinitions.Constellation c) {
+        if (minecraft == null || minecraft.player == null) return false;
+        SystemData data = minecraft.player.getData(AwakeningSystemMod.PLAYER_SYSTEM);
+        return data != null && c.id().equals(data.sponsorConstellation());
+    }
+
+    // ---------------------------------------------------------------- render
     @Override
     public void render(GuiGraphics g, int mouseX, int mouseY, float partialTick) {
-        g.fillGradient(0, 0, width, height, 0xDD040810, 0xF0081420);
-
+        g.fillGradient(0, 0, width, height, 0xCC040810, 0xE0081420);
         float scale = getGuiScale();
         int mX = (int) Math.round(transformMouseX(mouseX));
         int mY = (int) Math.round(transformMouseY(mouseY));
 
         g.pose().pushPose();
         if (scale < 1.0F) {
-            float cxF = this.width / 2.0F;
-            float cyF = this.height / 2.0F;
-            g.pose().translate(cxF, cyF, 0.0F);
+            float cx = width / 2.0F, cy = height / 2.0F;
+            g.pose().translate(cx, cy, 0.0F);
             g.pose().scale(scale, scale, 1.0F);
-            g.pose().translate(-cxF, -cyF, 0.0F);
+            g.pose().translate(-cx, -cy, 0.0F);
         }
 
-        int boxW = BASE_W;
-        int boxH = BASE_H;
-        int left = (width - boxW) / 2;
-        int top = (height - boxH) / 2;
+        int left = left(), top = top();
+        SystemData data = minecraft != null && minecraft.player != null ? minecraft.player.getData(AwakeningSystemMod.PLAYER_SYSTEM) : null;
+        ModernGuiHelper.drawModernWindow(g, left, top, BASE_W, BASE_H, ModernGuiHelper.getTheme(data));
 
-        ModernGuiHelper.GuiTheme theme = ModernGuiHelper.GuiTheme.ISEKAI;
-        ModernGuiHelper.drawModernWindow(g, left, top, boxW, boxH, theme);
-        ModernGuiHelper.drawModernHeader(g, left + 8, top + 4, boxW - 16, 28, null, 0, theme, font);
-
-        Component headerComp = Component.translatable("awakening_system.screen.sponsor.header");
-        Component subtitleComp = Component.translatable("awakening_system.screen.sponsor.subtitle");
-        g.drawCenteredString(font, headerComp, left + boxW / 2, top + 7, 0xFFFFD866);
-        g.drawCenteredString(font, subtitleComp, left + boxW / 2, top + 19, 0xFF8AA8B8);
+        Component header = Component.translatable("awakening_system.screen.sponsor.header").withStyle(ChatFormatting.BOLD);
+        g.drawString(font, fit(header.getString(), BASE_W - 60), left + 16, top + 12, 0xFFFFC94A, false);
+        g.drawString(font, fit(Component.translatable("awakening_system.screen.sponsor.subtitle").getString(), BASE_W - 40),
+                left + 16, top + 25, 0xFF8FA6BC, false);
 
         if (!forced) {
-            int closeX = left + boxW - 20;
-            int closeY = top + 6;
-            boolean closeHov = mX >= closeX && mX < closeX + 14 && mY >= closeY && mY < closeY + 12;
-            g.fill(closeX, closeY, closeX + 14, closeY + 12, closeHov ? 0xFFFF4444 : 0xFF203545);
-            g.drawCenteredString(font, Component.literal("X"), closeX + 7, closeY + 2, 0xFFFFFFFF);
+            int closeX = left + BASE_W - 26, closeY = top + 10;
+            boolean hov = mX >= closeX && mX < closeX + 14 && mY >= closeY && mY < closeY + 14;
+            g.fill(closeX, closeY, closeX + 14, closeY + 14, hov ? 0xDDFF3344 : 0x88301018);
+            g.drawCenteredString(font, "✕", closeX + 7, closeY + 3, 0xFFFFFFFF);
         }
 
-        int listX = left + 10;
-        int listY = top + 34;
-        int listW = 125;
-        int itemH = 29;
-        int visibleCount = Math.min(6, (boxH - 44) / itemH);
-
-        for (int i = 0; i < visibleCount; i++) {
-            int idx = listScroll + i;
-            if (idx >= constellations.size()) break;
-            ConstellationDefinitions.Constellation c = constellations.get(idx);
-            int iy = listY + i * itemH;
-            boolean isSelected = (idx == selectedIndex);
-            boolean isHovered = mX >= listX && mX < listX + listW && mY >= iy && mY < iy + itemH - 2;
-
-            int bg = isSelected ? 0xFF225577 : (isHovered ? 0xFF18374D : 0x80102030);
-            int border = isSelected ? 0xFFFFD866 : (isHovered ? 0xFF70E8FF : 0xFF203A4C);
-
-            g.fill(listX, iy, listX + listW, iy + itemH - 2, bg);
-            g.fill(listX, iy, listX + 2, iy + itemH - 2, border);
-
-            String cName = c.name().getString();
-            if (font.width(cName) > listW - 8) {
-                cName = font.plainSubstrByWidth(cName, listW - 14) + "..";
-            }
-            g.drawString(font, Component.literal(cName), listX + 6, iy + 4, isSelected ? 0xFFFFD866 : 0xFFE0F4FF, false);
-
-            String attr = "★ +" + c.attributeBonus().toUpperCase();
-            g.drawString(font, Component.literal(attr), listX + 6, iy + 16, 0xFF70E8FF, false);
-        }
-
-        int infoX = left + 142;
-        int infoY = top + 34;
-        int infoW = boxW - 152;
-        int infoH = boxH - 42;
-
-        g.fill(infoX, infoY, infoX + infoW, infoY + infoH, 0x7007111A);
-        g.fill(infoX, infoY, infoX + infoW, infoY + 1, 0xFF356B82);
-
+        renderList(g, mX, mY);
         if (selectedIndex >= 0 && selectedIndex < constellations.size()) {
-            ConstellationDefinitions.Constellation current = constellations.get(selectedIndex);
-
-            g.drawString(font, Component.literal("§6§l[").append(current.name()).append(Component.literal("]")), infoX + 8, infoY + 6, 0xFFFFD866, false);
-            g.drawString(font, Component.translatable("awakening_system.screen.sponsor.title_label", current.title()), infoX + 8, infoY + 18, 0xFFD0E0E8, false);
-
-            String seriesTag = getSeriesReference(current.id());
-            g.drawString(font, Component.translatable("awakening_system.screen.sponsor.origin_label", seriesTag), infoX + 8, infoY + 30, 0xFF70E8FF, false);
-
-            int stgY = infoY + 44;
-            int stgH = 46;
-            g.fill(infoX + 6, stgY, infoX + infoW - 6, stgY + stgH, 0x80102636);
-            g.fill(infoX + 6, stgY, infoX + 8, stgY + stgH, 0xFF50FA7B);
-
-            Component stgLabel = Component.translatable("awakening_system.screen.sponsor.stigma_label");
-            g.drawString(font, Component.literal("§a§l" + stgLabel.getString() + " §f").append(current.stigmaName()), infoX + 12, stgY + 4, 0xFF50FA7B, false);
-
-            var stgLines = font.split(current.stigmaEffect(), infoW - 24);
-            int ly = stgY + 16;
-            for (int lineIdx = 0; lineIdx < Math.min(3, stgLines.size()); lineIdx++) {
-                g.drawString(font, stgLines.get(lineIdx), infoX + 12, ly, 0xFFD8E4EC, false);
-                ly += 10;
-            }
-
-            int statY = stgY + stgH + 6;
-            g.drawString(font, Component.translatable("awakening_system.screen.sponsor.attribute_blessing", current.attributeBonus().toUpperCase()), infoX + 8, statY, 0xFF70E8FF, false);
-            g.drawString(font, Component.translatable("awakening_system.screen.sponsor.initial_donation", current.defaultDonation()), infoX + 8, statY + 11, 0xFFFFD866, false);
-
-            List<SponsorQuestDefinitions.Quest> quests = SponsorQuestDefinitions.getQuestsForSponsor(current.id());
-            int qY = statY + 24;
-            if (!quests.isEmpty()) {
-                g.drawString(font, Component.translatable("awakening_system.screen.sponsor.quests_available", quests.size()), infoX + 8, qY, 0xFFFF79C6, false);
-                SponsorQuestDefinitions.Quest firstQ = quests.get(0);
-                g.drawString(font, Component.literal("§7• ").append(firstQ.title()).append(Component.literal(" §8(+" + firstQ.coinReward() + " $ / +" + firstQ.bonusStatAmount() + " " + firstQ.bonusStat() + ")")), infoX + 12, qY + 11, 0xFFC0D0D8, false);
-            } else {
-                g.drawString(font, Component.translatable("awakening_system.screen.sponsor.quests_support"), infoX + 8, qY, 0xFF8AA8B8, false);
-            }
-
-            int btnW = infoW - 16;
-            int btnH = 20;
-            int btnX = infoX + 8;
-            int btnY = infoY + infoH - btnH - 6;
-
-            boolean isCurrentSponsor = false;
-            if (minecraft != null && minecraft.player != null) {
-                SystemData data = minecraft.player.getData(AwakeningSystemMod.PLAYER_SYSTEM);
-                if (data != null && current.id().equals(data.sponsorConstellation())) {
-                    isCurrentSponsor = true;
-                }
-            }
-
-            boolean btnHov = mX >= btnX && mX < btnX + btnW && mY >= btnY && mY < btnY + btnH;
-            if (isCurrentSponsor) {
-                g.fill(btnX, btnY, btnX + btnW, btnY + btnH, 0xFF183B2B);
-                g.drawCenteredString(font, Component.translatable("awakening_system.screen.sponsor.already_signed"), btnX + btnW / 2, btnY + 6, 0xFF50FA7B);
-            } else {
-                int btnColor = btnHov ? 0xFF358C62 : 0xFF216844;
-                g.fill(btnX, btnY, btnX + btnW, btnY + btnH, btnColor);
-                g.fill(btnX, btnY, btnX + btnW, btnY + 1, 0xFF50FA7B);
-                g.drawCenteredString(font, Component.translatable("awakening_system.screen.sponsor.sign_contract"), btnX + btnW / 2, btnY + 6, btnHov ? 0xFFFFFFFF : 0xFFE0FFE8);
-            }
+            renderInfo(g, constellations.get(selectedIndex), mX, mY);
         }
 
         super.render(g, mX, mY, partialTick);
         g.pose().popPose();
+    }
+
+    private void renderList(GuiGraphics g, int mX, int mY) {
+        int x = listX(), y = bodyTop(), h = bodyBottom() - bodyTop();
+        g.fill(x, y, x + LIST_W, y + h, 0x55081422);
+        g.renderOutline(x, y, LIST_W, h, 0x4400E5FF);
+
+        for (int i = 0; i < visibleItems(); i++) {
+            int idx = listScroll + i;
+            if (idx >= constellations.size()) break;
+            ConstellationDefinitions.Constellation c = constellations.get(idx);
+            int iy = y + 3 + i * (ITEM_H + 2);
+            boolean sel = idx == selectedIndex;
+            boolean hov = mX >= x + 3 && mX < x + LIST_W - 3 && mY >= iy && mY < iy + ITEM_H;
+            g.fill(x + 3, iy, x + LIST_W - 3, iy + ITEM_H, sel ? 0xDD0D3554 : (hov ? 0x990A2238 : 0x66051220));
+            g.renderOutline(x + 3, iy, LIST_W - 6, ITEM_H, sel ? 0xFFFFC94A : (hov ? 0xAA70E8FF : 0x3300E5FF));
+            if (sel) g.fill(x + 3, iy + 4, x + 5, iy + ITEM_H - 4, 0xFFFFC94A);
+
+            int tw = LIST_W - 14;
+            g.drawString(font, fit(c.name().getString(), tw), x + 9, iy + 5, sel ? 0xFFFFE08A : 0xFFE0F4FF, false);
+            String bonus = "★ +" + statName(c.attributeBonus()).getString() + (isCurrentSponsor(c) ? "  ✔" : "");
+            g.drawString(font, fit(bonus, tw), x + 9, iy + 16, isCurrentSponsor(c) ? 0xFF50FA7B : 0xFF70E8FF, false);
+        }
+        // scroll hint when there are more
+        int max = Math.max(0, constellations.size() - visibleItems());
+        if (max > 0) {
+            int trackTop = y + 3, trackH = h - 6;
+            int thumbH = Math.max(12, trackH * visibleItems() / constellations.size());
+            int thumbY = trackTop + (trackH - thumbH) * listScroll / max;
+            g.fill(x + LIST_W - 3, trackTop, x + LIST_W - 1, trackTop + trackH, 0x33000000);
+            g.fill(x + LIST_W - 3, thumbY, x + LIST_W - 1, thumbY + thumbH, 0xAA00E5FF);
+        }
+    }
+
+    private void renderInfo(GuiGraphics g, ConstellationDefinitions.Constellation c, int mX, int mY) {
+        int x = infoX(), y = bodyTop(), w = infoW(), h = bodyBottom() - bodyTop();
+        g.fill(x, y, x + w, y + h, 0x55081422);
+        g.renderOutline(x, y, w, h, 0x4400E5FF);
+
+        // cabecera de la ficha
+        int tw = w - 16;
+        g.drawString(font, fit("【" + c.name().getString() + "】", tw), x + 8, y + 7, 0xFFFFC94A, false);
+        g.drawString(font, fit(Component.translatable("awakening_system.screen.sponsor.title_label", c.title()).getString(), tw), x + 8, y + 19, 0xFFD0E0E8, false);
+        g.drawString(font, fit(Component.translatable("awakening_system.screen.sponsor.origin_label", getSeriesReference(c.id())).getString(), tw), x + 8, y + 30, 0xFF70E8FF, false);
+        g.fill(x + 6, y + 41, x + w - 6, y + 42, 0x4400E5FF);
+
+        // cuerpo desplazable
+        int st = scrollTop(), sb = scrollBottom();
+        int maxScroll = Math.max(0, bodyContentH - (sb - st));
+        bodyScroll = Mth.clamp(bodyScroll, 0, maxScroll);
+        g.enableScissor(x + 1, st, x + w - 1, sb);
+        int end = drawBody(g, c, x + 8, st - bodyScroll, w - 18);
+        g.disableScissor();
+        bodyContentH = end - (st - bodyScroll);
+        if (maxScroll > 0) {
+            int trackH = sb - st;
+            int thumbH = Math.max(12, trackH * trackH / bodyContentH);
+            int thumbY = st + (trackH - thumbH) * bodyScroll / maxScroll;
+            g.fill(x + w - 4, st, x + w - 2, sb, 0x33000000);
+            g.fill(x + w - 4, thumbY, x + w - 2, thumbY + thumbH, 0xAA00E5FF);
+        }
+
+        // botón de firmar
+        int bx = x + 6, bw = w - 12, by = btnY();
+        boolean signed = isCurrentSponsor(c);
+        boolean hov = !signed && mX >= bx && mX < bx + bw && mY >= by && mY < by + BTN_H;
+        g.fill(bx, by, bx + bw, by + BTN_H, signed ? 0xCC183B2B : (hov ? 0xF00F5A3B : 0xCC093E26));
+        g.renderOutline(bx, by, bw, BTN_H, signed ? 0x8850FA7B : (hov ? 0xFF00FF88 : 0x8800E5FF));
+        Component label = Component.translatable(signed ? "awakening_system.screen.sponsor.already_signed" : "awakening_system.screen.sponsor.sign_contract");
+        g.drawCenteredString(font, label, bx + bw / 2, by + 5, signed ? 0xFF50FA7B : (hov ? 0xFFFFFFFF : 0xFF7BED9F));
+    }
+
+    /** Estigma, bendición, donación y misiones a partir de y; devuelve dónde termina. */
+    private int drawBody(GuiGraphics g, ConstellationDefinitions.Constellation c, int x, int y, int w) {
+        // estigma en un recuadro que crece con su texto
+        List<FormattedCharSequence> effect = font.split(c.stigmaEffect(), w - 12);
+        int boxH = 16 + effect.size() * 10 + 2;
+        g.fill(x, y, x + w, y + boxH, 0x80102636);
+        g.fill(x, y, x + 2, y + boxH, 0xFF50FA7B);
+        Component stigma = Component.translatable("awakening_system.screen.sponsor.stigma_label").withStyle(ChatFormatting.GREEN, ChatFormatting.BOLD)
+                .append(Component.literal(" ")).append(c.stigmaName().copy().withStyle(ChatFormatting.WHITE));
+        g.drawString(font, fit(stigma.getString(), w - 10), x + 6, y + 4, 0xFF50FA7B, false);
+        int ly = y + 16;
+        for (FormattedCharSequence line : effect) {
+            g.drawString(font, line, x + 6, ly, 0xFFD8E4EC, false);
+            ly += 10;
+        }
+        y += boxH + 6;
+
+        g.drawString(font, Component.translatable("awakening_system.screen.sponsor.attribute_blessing", statName(c.attributeBonus())), x, y, 0xFF70E8FF, false);
+        y += 11;
+        g.drawString(font, Component.translatable("awakening_system.screen.sponsor.initial_donation", c.defaultDonation()), x, y, 0xFFFFD866, false);
+        y += 15;
+
+        List<SponsorQuestDefinitions.Quest> quests = SponsorQuestDefinitions.getQuestsForSponsor(c.id());
+        if (quests.isEmpty()) {
+            g.drawString(font, Component.translatable("awakening_system.screen.sponsor.quests_support"), x, y, 0xFF8AA8B8, false);
+            return y + 12;
+        }
+        g.drawString(font, Component.translatable("awakening_system.screen.sponsor.quests_available", quests.size()), x, y, 0xFFFF79C6, false);
+        y += 12;
+        for (SponsorQuestDefinitions.Quest q : quests) {
+            g.drawString(font, fit("• " + q.title().getString(), w), x + 4, y, 0xFFE0ECF2, false);
+            y += 10;
+            String reward = "+" + q.coinReward() + " $   +" + q.bonusStatAmount() + " " + statName(q.bonusStat()).getString();
+            g.drawString(font, fit(reward, w - 10), x + 12, y, 0xFF8FA6BC, false);
+            y += 12;
+        }
+        return y;
+    }
+
+    // ---------------------------------------------------------------- input
+    @Override
+    public boolean mouseScrolled(double mouseX, double mouseY, double scrollX, double scrollY) {
+        double mx = transformMouseX(mouseX);
+        if (mx < infoX()) {
+            int max = Math.max(0, constellations.size() - visibleItems());
+            listScroll = Mth.clamp(listScroll - (int) Math.signum(scrollY), 0, max);
+        } else {
+            bodyScroll -= (int) Math.signum(scrollY) * 10;
+        }
+        return true;
     }
 
     @Override
@@ -246,61 +298,42 @@ public final class SponsorSelectionScreen extends Screen {
         mouseY = transformMouseY(mouseY);
         if (button != 0) return super.mouseClicked(mouseX, mouseY, button);
 
-        int boxW = BASE_W;
-        int boxH = BASE_H;
-        int left = (width - boxW) / 2;
-        int top = (height - boxH) / 2;
-
         if (!forced) {
-            int closeX = left + boxW - 20;
-            int closeY = top + 6;
-            if (mouseX >= closeX && mouseX < closeX + 14 && mouseY >= closeY && mouseY < closeY + 12) {
+            int closeX = left() + BASE_W - 26, closeY = top() + 10;
+            if (mouseX >= closeX && mouseX < closeX + 14 && mouseY >= closeY && mouseY < closeY + 14) {
                 onClose();
                 return true;
             }
         }
 
-        int listX = left + 10;
-        int listY = top + 34;
-        int listW = 125;
-        int itemH = 29;
-        int visibleCount = Math.min(6, (boxH - 44) / itemH);
-
-        for (int i = 0; i < visibleCount; i++) {
+        int x = listX(), y = bodyTop();
+        for (int i = 0; i < visibleItems(); i++) {
             int idx = listScroll + i;
             if (idx >= constellations.size()) break;
-            int iy = listY + i * itemH;
-            if (mouseX >= listX && mouseX < listX + listW && mouseY >= iy && mouseY < iy + itemH - 2) {
-                selectedIndex = idx;
-                if (minecraft != null && minecraft.player != null) {
-                    minecraft.player.playSound(SoundEvents.UI_BUTTON_CLICK.value(), 0.7F, 1.2F);
+            int iy = y + 3 + i * (ITEM_H + 2);
+            if (mouseX >= x + 3 && mouseX < x + LIST_W - 3 && mouseY >= iy && mouseY < iy + ITEM_H) {
+                if (selectedIndex != idx) {
+                    selectedIndex = idx;
+                    bodyScroll = 0;
+                    if (minecraft != null && minecraft.player != null) minecraft.player.playSound(SoundEvents.UI_BUTTON_CLICK.value(), 0.7F, 1.2F);
                 }
                 return true;
             }
         }
 
-        int infoX = left + 142;
-        int infoY = top + 34;
-        int infoW = boxW - 152;
-        int infoH = boxH - 42;
-        int btnW = infoW - 16;
-        int btnH = 20;
-        int btnX = infoX + 8;
-        int btnY = infoY + infoH - btnH - 6;
-
-        if (mouseX >= btnX && mouseX < btnX + btnW && mouseY >= btnY && mouseY < btnY + btnH) {
-            if (selectedIndex >= 0 && selectedIndex < constellations.size()) {
-                ConstellationDefinitions.Constellation selected = constellations.get(selectedIndex);
-                AwakeningSystemClient.selectConstellation(selected.id());
-                if (minecraft != null && minecraft.player != null) {
-                    minecraft.player.playSound(SoundEvents.UI_TOAST_CHALLENGE_COMPLETE, 1.0F, 1.0F);
-                    minecraft.player.playSound(SoundEvents.PLAYER_LEVELUP, 0.8F, 1.2F);
-                }
-                onClose();
-                return true;
+        int bx = infoX() + 6, bw = infoW() - 12, by = btnY();
+        if (mouseX >= bx && mouseX < bx + bw && mouseY >= by && mouseY < by + BTN_H
+                && selectedIndex >= 0 && selectedIndex < constellations.size()) {
+            ConstellationDefinitions.Constellation selected = constellations.get(selectedIndex);
+            if (isCurrentSponsor(selected)) return true;
+            AwakeningSystemClient.selectConstellation(selected.id());
+            if (minecraft != null && minecraft.player != null) {
+                minecraft.player.playSound(SoundEvents.UI_TOAST_CHALLENGE_COMPLETE, 1.0F, 1.0F);
+                minecraft.player.playSound(SoundEvents.PLAYER_LEVELUP, 0.8F, 1.2F);
             }
+            onClose();
+            return true;
         }
-
         return super.mouseClicked(mouseX, mouseY, button);
     }
 
