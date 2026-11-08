@@ -975,6 +975,7 @@ public final class SeriesStructureWorldGen {
             case "trial_chamber", "trial_chambers", "camaras_desafio", "camara_desafio" -> {
                 // se registra la entrada en superficie, que es a donde llevan locate y tp
                 BlockPos entrance = com.soybe.awakeningsystem.trial.TrialChamberBuilder.build(level, pos);
+                if (entrance == null) return false;
                 recordPlaced(level, "trial_chamber", entrance);
                 return true;
             }
@@ -1125,13 +1126,7 @@ public final class SeriesStructureWorldGen {
                     long chunkKey = net.minecraft.world.level.ChunkPos.asLong(chunkX, chunkZ);
                     if (EVALUATED_CHUNKS.contains(chunkKey)) continue;
 
-                    if (isTrialChamberTargetChunk(level, chunkX, chunkZ)) {
-                        if (areAllChunksLoaded(level, chunkX, chunkZ)) {
-                            EVALUATED_CHUNKS.add(chunkKey);
-                            attemptTrialChamberGeneration(level, chunkX, chunkZ, data);
-                            if (++generatedCount >= 2) return;
-                        }
-                    } else if (isOverworldRacetrackTargetChunk(level, chunkX, chunkZ)) {
+                    if (isOverworldRacetrackTargetChunk(level, chunkX, chunkZ)) {
                         if (areAllChunksLoaded(level, chunkX, chunkZ)) {
                             EVALUATED_CHUNKS.add(chunkKey);
                             attemptOverworldRacetrackGeneration(level, chunkX, chunkZ, data);
@@ -1492,30 +1487,6 @@ public final class SeriesStructureWorldGen {
         BlockPos center = new BlockPos(blockX, surfaceY, blockZ);
         if (data.hasStructureNearbyOfType("racetrack", center, 3200.0D)) return;
         generateStructure(level, center, "racetrack");
-    }
-
-    /** Una Cámara de Desafío por región de 80x80 chunks (unos 1280 bloques), en un chunk al azar de ella. */
-    private static boolean isTrialChamberTargetChunk(ServerLevel level, int chunkX, int chunkZ) {
-        int regionX = Math.floorDiv(chunkX, 80);
-        int regionZ = Math.floorDiv(chunkZ, 80);
-        long seed = ((long) regionX * 192837465019L + (long) regionZ * 564738291037L) ^ (level.getSeed() + 9182736455L);
-        java.util.Random rand = new java.util.Random(seed);
-        int targetChunkX = regionX * 80 + rand.nextInt(64) + 8;
-        int targetChunkZ = regionZ * 80 + rand.nextInt(64) + 8;
-        return (chunkX == targetChunkX && chunkZ == targetChunkZ);
-    }
-
-    private static void attemptTrialChamberGeneration(ServerLevel level, int chunkX, int chunkZ, SeriesStructureData data) {
-        int blockX = chunkX * 16 + 8;
-        int blockZ = chunkZ * 16 + 8;
-        int surfaceY = level.getHeight(net.minecraft.world.level.levelgen.Heightmap.Types.MOTION_BLOCKING_NO_LEAVES, blockX, blockZ) - 1;
-        // bajo tierra hace falta sitio de sobra por debajo, y nada de océanos encima
-        if (surfaceY < 62 || surfaceY > 150) return;
-        if (!level.getFluidState(new BlockPos(blockX, surfaceY + 1, blockZ)).isEmpty()) return;
-        BlockPos center = new BlockPos(blockX, surfaceY, blockZ);
-        if (data.hasStructureNearby(center, 200.0D)) return;
-        if (data.hasStructureNearbyOfType("trial_chamber", center, 900.0D)) return;
-        generateStructure(level, center, "trial_chamber");
     }
 
     private static boolean isOverworldRacetrackTargetChunk(ServerLevel level, int chunkX, int chunkZ) {
