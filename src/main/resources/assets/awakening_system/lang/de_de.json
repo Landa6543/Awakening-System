@@ -5130,6 +5130,7 @@
     "awakening_system.ruin_gate.not_inside": "Du bist nicht in einem Ruinentor.",
     "awakening_system.ruin_gate.spawned": "In der Nähe hat sich ein Ruinentor geöffnet: %s. Geh in sein Portal, um es zu betreten.",
     "awakening_system.ruin_gate.unknown": "Unbekanntes Ruinentor. Verwende dark oder temple.",
+    "awakening_system.ruin_gate.unknown_rank": "Unbekannter Rang. Verwende E, D, C, B, A oder S.",
     "awakening_system.rune.msg.bloodthirst": "§c[Bloodthirst] §4Angriffing frenzies life leech and combat speed.",
     "awakening_system.rune.msg.cooldown": "§cRune Fertigkeit on cooldown: §f%ds",
     "awakening_system.rune.msg.dragon_eyes": "§6[Dragon Eyes] §ePerceiving life auras and blind spots.",

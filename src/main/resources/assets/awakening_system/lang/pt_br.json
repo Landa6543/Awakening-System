@@ -5554,6 +5554,7 @@
     "awakening_system.ruin_gate.not_inside": "Você não está dentro de um Portal das Ruínas.",
     "awakening_system.ruin_gate.spawned": "Um Portal das Ruínas se abriu por perto: %s. Entre no portal para passar.",
     "awakening_system.ruin_gate.unknown": "Portal das Ruínas desconhecido. Use dark ou temple.",
+    "awakening_system.ruin_gate.unknown_rank": "Rank desconhecido. Use E, D, C, B, A ou S.",
     "awakening_system.rune.msg.bloodthirst": "§c[Sede de Sangue] §4Atacar aumenta o roubo de vida e a velocidade de combate.",
     "awakening_system.rune.msg.cooldown": "§cHabilidade de Runa em recarga: §f%ds",
     "awakening_system.rune.msg.dragon_eyes": "§6[Olhos de Dragão] §ePercebendo auras de vida e pontos cegos.",

@@ -72,11 +72,14 @@ import java.util.UUID;
  * The pieces and their joining rules come from the DungeonZ mod by Globox_Z (MIT licence, see
  * {@code licenses/DungeonZ-LICENSE.txt}). Two dungeons: the Dark Mines and the Jungle Temple.
  * <ul>
- *   <li>{@code /ruingate dark|temple} raises the gate's entrance in front of the player. Walking into it
- *       builds a fresh copy of the dungeon in its own dimension ({@code awakening_system:ruin_realm}).</li>
- *   <li>Marker blocks hidden in the pieces become monsters, the boss, the boss's treasure and the exit.</li>
+ *   <li>{@code /ruingate dark|temple [rank]} opens a gate in front of the player, drawn like the regular
+ *       Gates. Walking into it builds a fresh copy of the dungeon in its own dimension
+ *       ({@code awakening_system:ruin_realm}).</li>
+ *   <li>The rank (E to S, rolled when not given) sets the monsters' level and the loot: chests give only
+ *       that rank's crystals, the boss's chest at most one rank above.</li>
+ *   <li>Marker blocks hidden in the pieces become monsters, the boss, the boss's treasure and the exits.</li>
  *   <li>Every chest and barrel gets a loot table, so Lootr turns them into per-player containers.</li>
- *   <li>The exit opens when the boss falls; {@code /ruingate leave} always gets you out.</li>
+ *   <li>The exits open, as portals, when the boss falls; {@code /ruingate leave} always gets you out.</li>
  * </ul>
  * Nothing here touches the regular Gates or their dimension.
  */
@@ -86,9 +89,13 @@ public final class RuinGateManager {
             ResourceLocation.fromNamespaceAndPath(AwakeningSystemMod.MOD_ID, "ruin_realm"));
     private static final String NS = "ruin_gate/";
     private static final int MAX_MONSTERS = 70;
+    /** Chests beyond this many get plain supplies, so one run does not hand out a pile of crystals. */
+    private static final int MAX_RANK_CHESTS = 12;
 
-    private static final List<ResourceKey<LootTable>> CHEST_LOOT = List.of(loot("dungeon_tier_low"), loot("dungeon_tier_mid"), loot("dungeon_tier_mid"), loot("dungeon_tier_high"));
-    private static final ResourceKey<LootTable> BOSS_LOOT = loot("abyssal_grotto_treasure");
+    /** Gate ranks, weakest first. A gate's rank sets its monsters' level and the crystals it gives. */
+    private static final List<String> RANKS = List.of("E", "D", "C", "B", "A", "S");
+    private static final int[] RANK_WEIGHTS = {30, 25, 20, 13, 8, 4};
+    private static final ResourceKey<LootTable> SUPPLIES = loot("ruin_gate/supplies");
 
     /** One dungeon type: where its pieces start and what each marker block stands for. */
     private record Kind(String id, String entrance, String startPool, Map<Block, String> spawns) {}
@@ -115,6 +122,7 @@ public final class RuinGateManager {
     /** A player's run through one dungeon copy. */
     private static final class Session {
         String kind;
+        String rank = "C";
         ResourceKey<Level> returnDim;
         Vec3 returnPos;
         float returnYaw;
@@ -124,6 +132,7 @@ public final class RuinGateManager {
         UUID boss;
         boolean bossDead;
         long lastLockedHint;
+        int sampleLevel;   // one monster's level, for the test report
     }
 
     private static final Map<UUID, Session> SESSIONS = new HashMap<>();
@@ -138,6 +147,43 @@ public final class RuinGateManager {
         return ResourceLocation.fromNamespaceAndPath(AwakeningSystemMod.MOD_ID, NS + path);
     }
 
+    private static String randomRank(net.minecraft.util.RandomSource random) {
+        int total = 0;
+        for (int w : RANK_WEIGHTS) total += w;
+        int roll = random.nextInt(total);
+        for (int i = 0; i < RANK_WEIGHTS.length; i++) {
+            roll -= RANK_WEIGHTS[i];
+            if (roll < 0) return RANKS.get(i);
+        }
+        return "C";
+    }
+
+    /** The rank typed in a command, or null when it is not one of E to S. */
+    private static String parseRank(String typed) {
+        String r = typed.toUpperCase(java.util.Locale.ROOT);
+        return RANKS.contains(r) ? r : null;
+    }
+
+    private static Component gateName(String kind, String rank) {
+        return Component.translatable("awakening_system.ruin_gate.name." + kind).append(" [" + rank + "]");
+    }
+
+    /** Monster level for a rank, from the same table the regular Gates use. */
+    private static int rankLevel(String rank, boolean boss, net.minecraft.util.RandomSource random) {
+        int base = com.soybe.awakeningsystem.DungeonManager.getRankBaseLevel(rank);
+        return boss ? base + 6 : base + random.nextInt(5);
+    }
+
+    /** How big the portal is drawn, in blocks from its centre (same sizes as the regular Gates). */
+    private static float portalSize(String rank) {
+        return switch (rank) {
+            case "S" -> 5.2F;
+            case "A" -> 4.6F;
+            case "B", "C" -> 4.0F;
+            default -> 3.5F;
+        };
+    }
+
     // ---------------------------------------------------------------- commands
     @SubscribeEvent
     public static void onRegisterCommands(RegisterCommandsEvent event) {
@@ -147,69 +193,135 @@ public final class RuinGateManager {
                     if (!leave(p)) ctx.getSource().sendFailure(Component.translatable("awakening_system.ruin_gate.not_inside"));
                     return 1;
                 }))
-                .then(Commands.literal("test").then(Commands.argument("kind", StringArgumentType.word()).executes(ctx -> {
-                    // builds a copy without anyone entering it and reports what came out (works from the console)
-                    Kind k = KINDS.get(StringArgumentType.getString(ctx, "kind"));
-                    ServerLevel realm = ctx.getSource().getServer().getLevel(RUIN_REALM);
-                    if (k == null || realm == null) return 0;
-                    Data data = Data.get(ctx.getSource().getServer());
-                    BlockPos origin = new BlockPos(-30000 - (data.nextRun++ % 200) * 1600, 120, 30000);
-                    List<BoundingBox> boxes = build(realm, k, origin);
-                    Session s = new Session();
-                    int mobs = boxes.isEmpty() ? 0 : processMarkers(realm, k, boxes, s);
-                    int chests = 0;
-                    for (BoundingBox b : boxes) for (BlockPos p : BlockPos.betweenClosed(b.minX(), b.minY(), b.minZ(), b.maxX(), b.maxY(), b.maxZ()))
-                        if (realm.getBlockEntity(p) instanceof RandomizableContainerBlockEntity c && c.getLootTable() != null) chests++;
-                    String msg = "[Ruin Gate] test " + k.id + " at " + origin.toShortString() + ": " + boxes.size() + " pieces, " + mobs + " monsters, "
-                            + chests + " containers with loot, boss " + (s.boss != null) + ", boss chest spot " + (s.bossLoot != null) + ", " + s.exits.size()
-                            + " exits, spawn " + standableNear(realm, origin).toShortString();
-                    AwakeningSystemMod.LOGGER.info(msg);
-                    ctx.getSource().sendSuccess(() -> Component.literal(msg), false);
-                    return 1;
-                })))
+                .then(Commands.literal("test").then(Commands.argument("kind", StringArgumentType.word())
+                        .executes(ctx -> test(ctx.getSource(), StringArgumentType.getString(ctx, "kind"), "C"))
+                        .then(Commands.argument("rank", StringArgumentType.word())
+                                .executes(ctx -> test(ctx.getSource(), StringArgumentType.getString(ctx, "kind"), StringArgumentType.getString(ctx, "rank"))))))
                 .then(Commands.literal("enter").then(Commands.argument("kind", StringArgumentType.word())
                         .suggests((c, b) -> { KINDS.keySet().forEach(b::suggest); return b.buildFuture(); })
-                        .executes(ctx -> {
-                            Kind k = KINDS.get(StringArgumentType.getString(ctx, "kind"));
-                            if (k == null) { ctx.getSource().sendFailure(Component.translatable("awakening_system.ruin_gate.unknown")); return 0; }
-                            enter(ctx.getSource().getPlayerOrException(), k);
-                            return 1;
-                        })))
+                        .executes(ctx -> enterCommand(ctx.getSource(), StringArgumentType.getString(ctx, "kind"), null))
+                        .then(Commands.argument("rank", StringArgumentType.word())
+                                .suggests((c, b) -> { RANKS.forEach(b::suggest); return b.buildFuture(); })
+                                .executes(ctx -> enterCommand(ctx.getSource(), StringArgumentType.getString(ctx, "kind"), StringArgumentType.getString(ctx, "rank"))))))
                 .then(Commands.argument("kind", StringArgumentType.word())
                         .suggests((c, b) -> { KINDS.keySet().forEach(b::suggest); return b.buildFuture(); })
-                        .executes(ctx -> {
-                            Kind k = KINDS.get(StringArgumentType.getString(ctx, "kind"));
-                            if (k == null) { ctx.getSource().sendFailure(Component.translatable("awakening_system.ruin_gate.unknown")); return 0; }
-                            raiseGate(ctx.getSource().getPlayerOrException(), k);
-                            return 1;
-                        })));
+                        .executes(ctx -> raiseCommand(ctx.getSource(), StringArgumentType.getString(ctx, "kind"), null))
+                        .then(Commands.argument("rank", StringArgumentType.word())
+                                .suggests((c, b) -> { RANKS.forEach(b::suggest); return b.buildFuture(); })
+                                .executes(ctx -> raiseCommand(ctx.getSource(), StringArgumentType.getString(ctx, "kind"), StringArgumentType.getString(ctx, "rank"))))));
+    }
+
+    /** Reads the kind and rank typed in a command; a missing rank is rolled. Null when either is wrong. */
+    private static String[] readKindAndRank(net.minecraft.commands.CommandSourceStack source, String kind, String rank) {
+        if (!KINDS.containsKey(kind)) {
+            source.sendFailure(Component.translatable("awakening_system.ruin_gate.unknown"));
+            return null;
+        }
+        String r = rank == null ? randomRank(source.getLevel().getRandom()) : parseRank(rank);
+        if (r == null) {
+            source.sendFailure(Component.translatable("awakening_system.ruin_gate.unknown_rank"));
+            return null;
+        }
+        return new String[]{kind, r};
+    }
+
+    private static int raiseCommand(net.minecraft.commands.CommandSourceStack source, String kind, String rank) throws com.mojang.brigadier.exceptions.CommandSyntaxException {
+        String[] kr = readKindAndRank(source, kind, rank);
+        if (kr == null) return 0;
+        raiseGate(source.getPlayerOrException(), KINDS.get(kr[0]), kr[1]);
+        return 1;
+    }
+
+    private static int enterCommand(net.minecraft.commands.CommandSourceStack source, String kind, String rank) throws com.mojang.brigadier.exceptions.CommandSyntaxException {
+        String[] kr = readKindAndRank(source, kind, rank);
+        if (kr == null) return 0;
+        enter(source.getPlayerOrException(), KINDS.get(kr[0]), kr[1]);
+        return 1;
+    }
+
+    /** Builds a copy without anyone entering it and reports what came out (works from the console). */
+    private static int test(net.minecraft.commands.CommandSourceStack source, String kind, String rank) {
+        Kind k = KINDS.get(kind);
+        String r = parseRank(rank);
+        ServerLevel realm = source.getServer().getLevel(RUIN_REALM);
+        if (k == null || r == null || realm == null) return 0;
+        Data data = Data.get(source.getServer());
+        BlockPos origin = new BlockPos(-30000 - (data.nextRun++ % 200) * 1600, 120, 30000);
+        List<BoundingBox> boxes = build(realm, k, origin);
+        Session s = new Session();
+        s.rank = r;
+        int mobs = boxes.isEmpty() ? 0 : processMarkers(realm, k, boxes, s);
+        Map<String, Integer> tables = new java.util.TreeMap<>();
+        for (BoundingBox b : boxes) for (BlockPos p : BlockPos.betweenClosed(b.minX(), b.minY(), b.minZ(), b.maxX(), b.maxY(), b.maxZ()))
+            if (realm.getBlockEntity(p) instanceof RandomizableContainerBlockEntity c && c.getLootTable() != null)
+                tables.merge(c.getLootTable().location().getPath(), 1, Integer::sum);
+        Mob boss = s.boss == null ? null : (realm.getEntity(s.boss) instanceof Mob m ? m : null);
+        String msg = "[Ruin Gate] test " + k.id + " rank " + r + " at " + origin.toShortString() + ": " + boxes.size() + " pieces, " + mobs + " monsters (level "
+                + s.sampleLevel + "), containers " + tables + ", boss " + (boss == null ? "none" : boss.getType().toShortString() + " level "
+                + boss.getPersistentData().getInt("rpg_mob_level")) + ", boss chest spot " + (s.bossLoot != null) + ", " + s.exits.size()
+                + " exits, spawn " + standableNear(realm, origin).toShortString();
+        AwakeningSystemMod.LOGGER.info(msg);
+        source.sendSuccess(() -> Component.literal(msg), false);
+        // one roll of each table, to see what a run hands out
+        for (String table : List.of(r.toLowerCase(java.util.Locale.ROOT), r.toLowerCase(java.util.Locale.ROOT) + "_boss", "supplies")) {
+            net.minecraft.world.level.storage.loot.LootParams params = new net.minecraft.world.level.storage.loot.LootParams.Builder(realm)
+                    .withParameter(net.minecraft.world.level.storage.loot.parameters.LootContextParams.ORIGIN, Vec3.atCenterOf(origin))
+                    .create(net.minecraft.world.level.storage.loot.parameters.LootContextParamSets.CHEST);
+            List<String> items = new ArrayList<>();
+            for (int roll = 0; roll < 3; roll++) {
+                for (net.minecraft.world.item.ItemStack st : source.getServer().reloadableRegistries().getLootTable(loot("ruin_gate/" + table)).getRandomItems(params))
+                    items.add(st.getCount() + " " + net.minecraft.core.registries.BuiltInRegistries.ITEM.getKey(st.getItem()).getPath());
+                items.add("|");
+            }
+            AwakeningSystemMod.LOGGER.info("[Ruin Gate] sample {}: {}", table, items);
+        }
+        return 1;
     }
 
     // ---------------------------------------------------------------- the gate in the world
-    /** Places the dungeon's entrance a few blocks in front of the player and registers its portal blocks. */
-    private static void raiseGate(ServerPlayer player, Kind kind) {
+    /**
+     * Opens a gate a few blocks in front of the player: a standing portal drawn like the regular Gates
+     * (colour and size by rank), facing the player.
+     */
+    private static void raiseGate(ServerPlayer player, Kind kind, String rank) {
         ServerLevel level = player.serverLevel();
-        Optional<StructureTemplate> template = level.getStructureManager().get(id(kind.entrance));
-        if (template.isEmpty()) {
-            player.sendSystemMessage(Component.translatable("awakening_system.ruin_gate.failed"));
-            return;
-        }
-        StructureTemplate t = template.get();
         Direction facing = player.getDirection();
-        BlockPos ahead = player.blockPosition().relative(facing, 6 + Math.max(t.getSize().getX(), t.getSize().getZ()) / 2);
-        int ground = level.getHeight(Heightmap.Types.MOTION_BLOCKING_NO_LEAVES, ahead.getX(), ahead.getZ());
-        BlockPos corner = new BlockPos(ahead.getX() - t.getSize().getX() / 2, ground - 1, ahead.getZ() - t.getSize().getZ() / 2);
-        t.placeInWorld(level, corner, corner, new StructurePlaceSettings(), level.getRandom(), Block.UPDATE_CLIENTS);
-        List<BlockPos> portal = new ArrayList<>();
-        for (BlockPos p : BlockPos.betweenClosed(corner, corner.offset(t.getSize()).offset(-1, -1, -1))) {
-            if (level.getBlockState(p).is(Blocks.LIGHT)) portal.add(p.immutable());
-        }
-        if (portal.isEmpty()) portal.add(corner.offset(t.getSize().getX() / 2, 1, t.getSize().getZ() / 2));
+        BlockPos ahead = player.blockPosition().relative(facing, 6);
+        level.getChunk(ahead.getX() >> 4, ahead.getZ() >> 4);
+        BlockPos pos = new BlockPos(ahead.getX(), level.getHeight(Heightmap.Types.MOTION_BLOCKING_NO_LEAVES, ahead.getX(), ahead.getZ()), ahead.getZ());
         Data data = Data.get(level.getServer());
-        data.gates.add(new Gate(kind.id, level.dimension(), portal));
+        data.gates.add(new Gate(kind.id, rank, level.dimension(), pos, facing.toYRot()));
         data.setDirty();
-        level.playSound(null, portal.get(0), SoundEvents.END_PORTAL_SPAWN, SoundSource.BLOCKS, 0.8F, 1.2F);
-        player.sendSystemMessage(Component.translatable("awakening_system.ruin_gate.spawned", Component.translatable("awakening_system.ruin_gate.name." + kind.id)));
+        level.playSound(null, pos, SoundEvents.END_PORTAL_SPAWN, SoundSource.BLOCKS, 0.8F, 1.2F);
+        com.soybe.awakeningsystem.DungeonManager.syncRiftsToAll(level.getServer());
+        player.sendSystemMessage(Component.translatable("awakening_system.ruin_gate.spawned", gateName(kind.id, rank)));
+    }
+
+    /** True when the player stands inside the gate's portal (a slab around its centre line). */
+    private static boolean insidePortal(Gate gate, ServerPlayer player) {
+        double dx = player.getX() - (gate.pos.getX() + 0.5), dz = player.getZ() - (gate.pos.getZ() + 0.5);
+        double dy = player.getY() - gate.pos.getY();
+        double rad = Math.toRadians(gate.yaw);
+        // across the portal (along the way the player faced when it opened) and along its width
+        double across = Math.abs(dx * -Math.sin(rad) + dz * Math.cos(rad));
+        double along = Math.abs(dx * Math.cos(rad) + dz * Math.sin(rad));
+        float size = portalSize(gate.rank);
+        return across < 0.9 && along < size * 0.7 && dy > -1.0 && dy < size * 2;
+    }
+
+    /** Called when the rift list is sent to a player, so the Ruin Gates and the open exits show up as portals. */
+    public static void addRiftEntries(ServerPlayer player, List<com.soybe.awakeningsystem.SyncRiftsPayload.RiftEntry> entries) {
+        MinecraftServer server = player.getServer();
+        if (server == null) return;
+        for (Gate gate : Data.get(server).gates) {
+            if (gate.dimension.equals(player.level().dimension()))
+                entries.add(new com.soybe.awakeningsystem.SyncRiftsPayload.RiftEntry(gate.pos, gate.rank, false, 0, gate.yaw, 0, -1));
+        }
+        Session s = SESSIONS.get(player.getUUID());
+        if (s != null && s.bossDead && player.level().dimension().equals(RUIN_REALM)) {
+            // type 1 is the regular Gates' exit portal; it is drawn one block above the position it is given
+            for (BlockPos exit : s.exits) entries.add(new com.soybe.awakeningsystem.SyncRiftsPayload.RiftEntry(exit.below(), s.rank, false, 1));
+        }
     }
 
     @SubscribeEvent
@@ -220,16 +332,13 @@ public final class RuinGateManager {
         boolean sparkle = server.getTickCount() % 10 == 0;
         for (Gate gate : new ArrayList<>(data.gates)) {
             ServerLevel level = server.getLevel(gate.dimension);
-            if (level == null) continue;
-            for (BlockPos p : gate.portal) {
-                if (!level.isLoaded(p)) continue;
-                if (sparkle) level.sendParticles(ParticleTypes.REVERSE_PORTAL, p.getX() + 0.5, p.getY() + 0.5, p.getZ() + 0.5, 3, 0.3, 0.4, 0.3, 0.02);
-            }
+            if (level == null || !level.isLoaded(gate.pos)) continue;
+            if (sparkle) level.sendParticles(ParticleTypes.REVERSE_PORTAL, gate.pos.getX() + 0.5, gate.pos.getY() + 0.3, gate.pos.getZ() + 0.5,
+                    6, portalSize(gate.rank) * 0.4, 0.2, portalSize(gate.rank) * 0.4, 0.02);
             // a copy: entering teleports the player, which takes them out of this level's player list
             for (ServerPlayer player : new ArrayList<>(level.players())) {
                 if (player.isSpectator() || SESSIONS.containsKey(player.getUUID())) continue;
-                BlockPos at = player.blockPosition();
-                if (gate.portal.contains(at) || gate.portal.contains(at.above())) enter(player, KINDS.get(gate.kind));
+                if (insidePortal(gate, player)) enter(player, KINDS.get(gate.kind), gate.rank);
             }
         }
         // the exits inside the dungeons
@@ -258,7 +367,7 @@ public final class RuinGateManager {
     }
 
     // ---------------------------------------------------------------- building a dungeon copy
-    private static void enter(ServerPlayer player, Kind kind) {
+    private static void enter(ServerPlayer player, Kind kind, String rank) {
         if (kind == null || SESSIONS.containsKey(player.getUUID())) return;
         MinecraftServer server = player.getServer();
         ServerLevel realm = server == null ? null : server.getLevel(RUIN_REALM);
@@ -270,7 +379,7 @@ public final class RuinGateManager {
         int run = data.nextRun++;
         data.setDirty();
         BlockPos origin = new BlockPos(-30000 - (run % 200) * 1600, 120, -30000 - (run / 200) * 1600);
-        player.displayClientMessage(Component.translatable("awakening_system.ruin_gate.entering", Component.translatable("awakening_system.ruin_gate.name." + kind.id)), true);
+        player.displayClientMessage(Component.translatable("awakening_system.ruin_gate.entering", gateName(kind.id, rank)), true);
 
         List<BoundingBox> boxes = build(realm, kind, origin);
         if (boxes.isEmpty()) {
@@ -279,6 +388,7 @@ public final class RuinGateManager {
         }
         Session s = new Session();
         s.kind = kind.id;
+        s.rank = rank;
         s.returnDim = player.level().dimension();
         s.returnPos = player.position();
         s.returnYaw = player.getYRot();
@@ -292,8 +402,8 @@ public final class RuinGateManager {
         player.teleportTo(realm, spawn.getX() + 0.5, spawn.getY(), spawn.getZ() + 0.5, player.getYRot(), 0.0F);
         player.fallDistance = 0;
         realm.playSound(null, spawn, SoundEvents.PORTAL_TRAVEL, SoundSource.PLAYERS, 0.4F, 1.4F);
-        AwakeningSystemMod.LOGGER.info("[Ruin Gate] {} built at {} for {}: {} pieces, {} monsters, boss {}, {} exits",
-                kind.id, origin.toShortString(), player.getName().getString(), boxes.size(), mobs, s.boss != null, s.exits.size());
+        AwakeningSystemMod.LOGGER.info("[Ruin Gate] {} rank {} built at {} for {}: {} pieces, {} monsters, boss {}, {} exits",
+                kind.id, rank, origin.toShortString(), player.getName().getString(), boxes.size(), mobs, s.boss != null, s.exits.size());
     }
 
     /** Lays out the jigsaw pieces from the start pool and places them; returns each piece's bounds. */
@@ -323,6 +433,8 @@ public final class RuinGateManager {
      */
     private static int processMarkers(ServerLevel level, Kind kind, List<BoundingBox> boxes, Session s) {
         int mobs = 0;
+        List<RandomizableContainerBlockEntity> containers = new ArrayList<>();
+        ResourceKey<LootTable> rankLoot = loot("ruin_gate/" + s.rank.toLowerCase(java.util.Locale.ROOT));
         BlockPos bossPos = null;
         Set<BlockPos> done = new HashSet<>();
         List<Map.Entry<BlockPos, String>> spots = new ArrayList<>();
@@ -346,34 +458,58 @@ public final class RuinGateManager {
                     level.setBlock(pos, Blocks.AIR.defaultBlockState(), Block.UPDATE_CLIENTS);
                     s.exits.add(pos);
                 } else if (level.getBlockEntity(pos) instanceof RandomizableContainerBlockEntity container && container.getLootTable() == null) {
-                    container.setLootTable(CHEST_LOOT.get(level.getRandom().nextInt(CHEST_LOOT.size())), level.getRandom().nextLong());
+                    containers.add(container);
                 }
             }
+        }
+        // about a third of the containers (chests first, then barrels and the rest) hold the rank's loot,
+        // up to a limit; the others hold plain supplies
+        java.util.Random shuffle = new java.util.Random(level.getRandom().nextLong());
+        java.util.Collections.shuffle(containers, shuffle);
+        containers.sort(java.util.Comparator.comparingInt(c -> c instanceof ChestBlockEntity ? 0 : 1));
+        int treasure = Math.min(MAX_RANK_CHESTS, Math.max(Math.min(4, containers.size()), containers.size() / 3));
+        for (int i = 0; i < containers.size(); i++) {
+            containers.get(i).setLootTable(i < treasure ? rankLoot : SUPPLIES, level.getRandom().nextLong());
         }
         // the pieces hold far more marker blocks than a fight needs (some are plain decoration), so a
         // random share of them, spread over the whole dungeon, gets a monster
         java.util.Collections.shuffle(spots, new java.util.Random(level.getRandom().nextLong()));
         for (Map.Entry<BlockPos, String> spot : spots) {
             if (mobs >= MAX_MONSTERS) break;
-            if (spawn(level, spot.getValue(), spot.getKey()) != null) mobs++;
+            Mob mob = spawn(level, spot.getValue(), spot.getKey(), rankLevel(s.rank, false, level.getRandom()));
+            if (mob != null) {
+                mobs++;
+                s.sampleLevel = mob.getPersistentData().getInt("rpg_mob_level");
+            }
         }
         if (bossPos != null) {
             SeriesStructureWorldGen.spawnOverworldMiniboss(level, bossPos.below());
             List<Mob> found = level.getEntitiesOfClass(Mob.class, new AABB(bossPos).inflate(3),
                     m -> m.getPersistentData().getBoolean("is_overworld_miniboss"));
-            if (!found.isEmpty()) s.boss = found.get(0).getUUID();
+            if (!found.isEmpty()) {
+                Mob boss = found.get(0);
+                s.boss = boss.getUUID();
+                boss.addTag("no_rpg_scaling");
+                com.soybe.awakeningsystem.RpgLevelZoneManager.applyMobLevelAttributes(boss, rankLevel(s.rank, true, level.getRandom()), false);
+            }
         }
         if (s.boss == null) s.bossDead = true;   // no boss in this copy: the exit is open from the start
         return mobs;
     }
 
-    private static Mob spawn(ServerLevel level, String typeId, BlockPos pos) {
+    /**
+     * Spawns one monster at the gate's level. It is kept out of the usual level scaling, which would
+     * otherwise match it to the player and make it drop gear from the later worlds.
+     */
+    private static Mob spawn(ServerLevel level, String typeId, BlockPos pos, int mobLevel) {
         Optional<EntityType<?>> type = EntityType.byString(typeId);
         if (type.isEmpty()) return null;
         Entity e = type.get().create(level);
         if (!(e instanceof Mob mob)) return null;
         mob.moveTo(pos.getX() + 0.5, pos.getY(), pos.getZ() + 0.5, level.getRandom().nextFloat() * 360F, 0);
         EventHooks.finalizeMobSpawn(mob, level, level.getCurrentDifficultyAt(pos), MobSpawnType.STRUCTURE, null);
+        mob.addTag("no_rpg_scaling");
+        com.soybe.awakeningsystem.RpgLevelZoneManager.applyMobLevelAttributes(mob, mobLevel, false);
         mob.setPersistenceRequired();
         level.addFreshEntity(mob);
         return mob;
@@ -405,9 +541,11 @@ public final class RuinGateManager {
             s.bossDead = true;
             BlockPos chestPos = s.bossLoot != null ? s.bossLoot : event.getEntity().blockPosition();
             level.setBlock(chestPos, Blocks.CHEST.defaultBlockState().setValue(ChestBlock.FACING, Direction.NORTH), Block.UPDATE_ALL);
-            if (level.getBlockEntity(chestPos) instanceof ChestBlockEntity chest) chest.setLootTable(BOSS_LOOT, level.getRandom().nextLong());
+            if (level.getBlockEntity(chestPos) instanceof ChestBlockEntity chest)
+                chest.setLootTable(loot("ruin_gate/" + s.rank.toLowerCase(java.util.Locale.ROOT) + "_boss"), level.getRandom().nextLong());
             ServerPlayer p = level.getServer().getPlayerList().getPlayer(e.getKey());
             if (p != null) {
+                com.soybe.awakeningsystem.DungeonManager.syncRiftsToPlayer(p);   // the exit portals appear
                 p.sendSystemMessage(Component.translatable("awakening_system.ruin_gate.boss_defeated"));
                 p.playNotifySound(SoundEvents.UI_TOAST_CHALLENGE_COMPLETE, SoundSource.PLAYERS, 0.8F, 1.0F);
             }
@@ -442,7 +580,8 @@ public final class RuinGateManager {
     }
 
     // ---------------------------------------------------------------- saved gates
-    private record Gate(String kind, ResourceKey<Level> dimension, List<BlockPos> portal) {}
+    /** A gate standing in the world: its portal is drawn at {@code pos}, facing {@code yaw}. */
+    private record Gate(String kind, String rank, ResourceKey<Level> dimension, BlockPos pos, float yaw) {}
 
     private static final class Data extends SavedData {
         final List<Gate> gates = new ArrayList<>();
@@ -458,11 +597,18 @@ public final class RuinGateManager {
             ListTag list = tag.getList("Gates", Tag.TAG_COMPOUND);
             for (int i = 0; i < list.size(); i++) {
                 CompoundTag g = list.getCompound(i);
-                List<BlockPos> portal = new ArrayList<>();
-                for (long l : g.getLongArray("Portal")) portal.add(BlockPos.of(l));
                 ResourceLocation dim = ResourceLocation.tryParse(g.getString("Dimension"));
-                if (dim == null || portal.isEmpty()) continue;
-                d.gates.add(new Gate(g.getString("Kind"), ResourceKey.create(Registries.DIMENSION, dim), portal));
+                if (dim == null) continue;
+                BlockPos pos;
+                if (g.contains("Pos")) pos = BlockPos.of(g.getLong("Pos"));
+                else {
+                    // saved by the first test version, which kept the entrance's portal blocks
+                    long[] old = g.getLongArray("Portal");
+                    if (old.length == 0) continue;
+                    pos = BlockPos.of(old[0]);
+                }
+                String rank = parseRank(g.getString("Rank"));
+                d.gates.add(new Gate(g.getString("Kind"), rank == null ? "C" : rank, ResourceKey.create(Registries.DIMENSION, dim), pos, g.getFloat("Yaw")));
             }
             return d;
         }
@@ -474,8 +620,10 @@ public final class RuinGateManager {
             for (Gate g : gates) {
                 CompoundTag c = new CompoundTag();
                 c.putString("Kind", g.kind);
+                c.putString("Rank", g.rank);
                 c.putString("Dimension", g.dimension.location().toString());
-                c.putLongArray("Portal", g.portal.stream().mapToLong(BlockPos::asLong).toArray());
+                c.putLong("Pos", g.pos.asLong());
+                c.putFloat("Yaw", g.yaw);
                 list.add(c);
             }
             tag.put("Gates", list);

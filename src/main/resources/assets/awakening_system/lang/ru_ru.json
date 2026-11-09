@@ -5554,6 +5554,7 @@
     "awakening_system.ruin_gate.not_inside": "Ты не находишься во Вратах Руин.",
     "awakening_system.ruin_gate.spawned": "Поблизости открылись Врата Руин: %s. Войди в портал, чтобы пройти.",
     "awakening_system.ruin_gate.unknown": "Неизвестные Врата Руин. Используй dark или temple.",
+    "awakening_system.ruin_gate.unknown_rank": "Неизвестный ранг. Используй E, D, C, B, A или S.",
     "awakening_system.rune.msg.bloodthirst": "§c[Жажда крови] §4Атаки усиливают вампиризм и скорость боя.",
     "awakening_system.rune.msg.cooldown": "§cНавык руны перезаряжается: §f%ds",
     "awakening_system.rune.msg.dragon_eyes": "§6[Глаза дракона] §eВидение жизненной ауры и уязвимых мест.",

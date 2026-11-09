@@ -5127,6 +5127,7 @@
     "awakening_system.ruin_gate.not_inside": "Tu n'es pas dans une Porte des Ruines.",
     "awakening_system.ruin_gate.spawned": "Une Porte des Ruines s'est ouverte non loin : %s. Entre dans son portail pour la franchir.",
     "awakening_system.ruin_gate.unknown": "Porte des Ruines inconnue. Utilise dark ou temple.",
+    "awakening_system.ruin_gate.unknown_rank": "Rang inconnu. Utilise E, D, C, B, A ou S.",
     "awakening_system.rune.msg.bloodthirst": "§c[Bloodthirst] §4Attaqueing frenzies life leech and combat speed.",
     "awakening_system.rune.msg.cooldown": "§cRune Compétence on cooldown: §f%ds",
     "awakening_system.rune.msg.dragon_eyes": "§6[Dragon Eyes] §ePerceiving life auras and blind spots.",

@@ -6291,6 +6291,8 @@ public final class DungeonManager {
          entries.add(new com.soybe.awakeningsystem.SyncRiftsPayload.RiftEntry(session.exitPortalPos, session.rank, session.isRedGate, 1));
       }
 
+      com.soybe.awakeningsystem.world.RuinGateManager.addRiftEntries(player, entries);
+
       PacketDistributor.sendToPlayer(player, new com.soybe.awakeningsystem.SyncRiftsPayload(entries), new CustomPacketPayload[0]);
    }
 

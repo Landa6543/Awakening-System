@@ -5554,6 +5554,7 @@
     "awakening_system.ruin_gate.not_inside": "No estás dentro de una Puerta de las Ruinas.",
     "awakening_system.ruin_gate.spawned": "Se abrió una Puerta de las Ruinas cerca: %s. Entra en su portal para pasar.",
     "awakening_system.ruin_gate.unknown": "Puerta de las Ruinas desconocida. Usa dark o temple.",
+    "awakening_system.ruin_gate.unknown_rank": "Rango desconocido. Usa E, D, C, B, A o S.",
     "awakening_system.rune.msg.bloodthirst": "§c[Sed de Sangre] §4El frenesí de ataque potencia el robo de vida y velocidad.",
     "awakening_system.rune.msg.cooldown": "§cHabilidad de Runa en enfriamiento: §f%ds",
     "awakening_system.rune.msg.dragon_eyes": "§6[Ojos Dracónicos] §ePercibiendo auras vitales y puntos ciegos.",

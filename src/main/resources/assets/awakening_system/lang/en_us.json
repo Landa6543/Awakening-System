@@ -5554,6 +5554,7 @@
     "awakening_system.ruin_gate.not_inside": "You are not inside a Ruin Gate.",
     "awakening_system.ruin_gate.spawned": "A Ruin Gate has opened nearby: %s. Walk into its portal to enter.",
     "awakening_system.ruin_gate.unknown": "Unknown Ruin Gate. Use dark or temple.",
+    "awakening_system.ruin_gate.unknown_rank": "Unknown rank. Use E, D, C, B, A or S.",
     "awakening_system.rune.msg.bloodthirst": "§c[Bloodthirst] §4Attacking frenzies life leech and combat speed.",
     "awakening_system.rune.msg.cooldown": "§cRune Skill on cooldown: §f%ds",
     "awakening_system.rune.msg.dragon_eyes": "§6[Dragon Eyes] §ePerceiving life auras and blind spots.",
