@@ -205,6 +205,21 @@ public final class AwakeningSystemClient {
 
     private AwakeningSystemClient() {}
 
+    /** Rift type the server sends for a Ruin Gate's portal (see RuinGateManager). */
+    public static final int RUIN_GATE_TYPE = 95;
+
+    /** Colour of a Ruin Gate's rune rings, by rank. */
+    private static int ruinGateTint(String rank) {
+        String rk = rank == null ? "E" : rank.toUpperCase(java.util.Locale.ROOT);
+        return switch (rk) {
+            case "S" -> 0xFF4455;
+            case "A" -> 0xFFB040;
+            case "B", "C" -> 0x60FF90;
+            case "D" -> 0x6090FF;
+            default -> 0x60E0FF;
+        };
+    }
+
     public static net.minecraft.resources.ResourceLocation getGateTexture(SyncRiftsPayload.RiftEntry rift) {
         if ("TEYVAT_ABYSS_BLOCKED".equalsIgnoreCase(rift.rank()) || rift.type() == 96) return GATE_CRIMSON_TEX;
         if ("TEYVAT_ABYSS".equalsIgnoreCase(rift.rank()) || rift.type() == 97) return GATE_CYAN_TEX;
@@ -2880,10 +2895,17 @@ public final class AwakeningSystemClient {
             boolean isDimensional = isIsekai || isMurim || isTeyvatAbyss || isTeyvatAbyssBlocked;
             boolean isRedGate = rift.isRedGate();
             boolean isDungeonExit = (rift.type() == 1);
+            // Ruin Gate: a tall, narrow doorway in the rank's colour with a ring of runes turning behind it
+            boolean isRuinGate = (rift.type() == RUIN_GATE_TYPE);
 
             float hw, hh;
             double ry;
-            if (isTeyvatAbyss || isTeyvatAbyssBlocked) {
+            if (isRuinGate) {
+                float size = getGateSize(rift);
+                hw = size * 0.55F;
+                hh = size;
+                ry = rift.pos().getY() + size + 0.2D - camPos.y;
+            } else if (isTeyvatAbyss || isTeyvatAbyssBlocked) {
                 hw = 5.0F;
                 hh = 5.0F;
                 ry = rift.pos().getY() + 0.5D - camPos.y;
@@ -2931,7 +2953,7 @@ public final class AwakeningSystemClient {
             float curHw = hw * pulse;
             float curHh = hh * pulse;
 
-            if (!isDimensional && !isDungeonExit) {
+            if (!isDimensional && !isDungeonExit && !isRuinGate) {
                 double bob = Math.sin(gameTime * 0.08D) * 0.04D;
                 poseStack.translate(0.0D, bob, 0.0D);
             }
@@ -2998,6 +3020,25 @@ public final class AwakeningSystemClient {
                         .setOverlay(net.minecraft.client.renderer.texture.OverlayTexture.NO_OVERLAY).setLight(net.minecraft.client.renderer.LightTexture.FULL_BRIGHT).setNormal(0, 0, -1);
                 builder.addVertex(matrix, cHw, cHh, -zOff).setColor(255, 255, 255, secAlpha).setUv(cu0, cv0)
                         .setOverlay(net.minecraft.client.renderer.texture.OverlayTexture.NO_OVERLAY).setLight(net.minecraft.client.renderer.LightTexture.FULL_BRIGHT).setNormal(0, 0, -1);
+            }
+
+            if (isRuinGate) {
+                int tint = ruinGateTint(rift.rank());
+                int tr = (tint >> 16) & 0xFF, tg = (tint >> 8) & 0xFF, tb = tint & 0xFF;
+                var ring = bufferSource.getBuffer(net.minecraft.client.renderer.RenderType.entityTranslucent(MAGIC_CIRCLE_ARCANE));
+                float outer = curHh * 1.08F;
+                poseStack.pushPose();
+                poseStack.mulPose(com.mojang.math.Axis.ZP.rotationDegrees(gameTime * 0.6F));
+                var rm = poseStack.last().pose();
+                renderMagicQuad(ring, rm, -outer, -outer, outer, outer, -0.03F, tr, tg, tb, 190);
+                renderMagicQuad(ring, rm, outer, -outer, -outer, outer, -0.03F, tr, tg, tb, 190);
+                // a smaller ring turning the other way, close around the doorway
+                poseStack.mulPose(com.mojang.math.Axis.ZP.rotationDegrees(-gameTime * 1.5F));
+                float inner = curHh * 0.8F;
+                var im = poseStack.last().pose();
+                renderMagicQuad(ring, im, -inner, -inner, inner, inner, -0.05F, Math.min(255, tr + 40), Math.min(255, tg + 40), Math.min(255, tb + 40), 140);
+                renderMagicQuad(ring, im, inner, -inner, -inner, inner, -0.05F, Math.min(255, tr + 40), Math.min(255, tg + 40), Math.min(255, tb + 40), 140);
+                poseStack.popPose();
             }
 
             poseStack.popPose();

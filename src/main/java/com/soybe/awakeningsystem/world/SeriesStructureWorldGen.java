@@ -984,6 +984,13 @@ public final class SeriesStructureWorldGen {
                 recordPlaced(level, "abyssal_grotto", mouth);
                 return true;
             }
+            case "forgotten_catacombs", "catacumbas", "catacumbas_olvidadas" -> {
+                // se registra la cima de la escalera de entrada
+                BlockPos entrance = ForgottenCatacombsBuilder.build(level, pos);
+                if (entrance == null) return false;
+                recordPlaced(level, "forgotten_catacombs", entrance);
+                return true;
+            }
 
             case "anemo_shrine", "anemo_shrine_of_depths", "anemo_shrine_of_depths_final", "santuario_anemo" -> {
                 clearStructureVegetation(level, pos, 8, 12, 8);
@@ -1136,6 +1143,12 @@ public final class SeriesStructureWorldGen {
                         if (areAllChunksLoaded(level, chunkX, chunkZ)) {
                             EVALUATED_CHUNKS.add(chunkKey);
                             attemptAbyssalGrottoGeneration(level, chunkX, chunkZ, data);
+                            if (++generatedCount >= 2) return;
+                        }
+                    } else if (isCatacombsTargetChunk(level, chunkX, chunkZ)) {
+                        if (areAllChunksLoaded(level, chunkX, chunkZ)) {
+                            EVALUATED_CHUNKS.add(chunkKey);
+                            attemptCatacombsGeneration(level, chunkX, chunkZ, data);
                             if (++generatedCount >= 2) return;
                         }
                     } else if (isRegionTargetChunk(level, chunkX, chunkZ)) {
@@ -1518,6 +1531,32 @@ public final class SeriesStructureWorldGen {
         if (biomeKey.contains("ocean") || biomeKey.contains("river") || biomeKey.contains("beach")
                 || biomeKey.contains("swamp") || biomeKey.contains("frozen_peaks")) return;
         generateStructure(level, center, "abyssal_grotto");
+    }
+
+    /** Catacumbas Olvidadas: una por región de 40x40 chunks (640 bloques), en un chunk al azar de la región. */
+    private static boolean isCatacombsTargetChunk(ServerLevel level, int chunkX, int chunkZ) {
+        int regionX = Math.floorDiv(chunkX, 40);
+        int regionZ = Math.floorDiv(chunkZ, 40);
+        long seed = ((long) regionX * 918273645127L + (long) regionZ * 364519283741L) ^ (level.getSeed() + 7319284651L);
+        java.util.Random rand = new java.util.Random(seed);
+        int targetChunkX = regionX * 40 + rand.nextInt(32) + 4;
+        int targetChunkZ = regionZ * 40 + rand.nextInt(32) + 4;
+        return chunkX == targetChunkX && chunkZ == targetChunkZ;
+    }
+
+    private static void attemptCatacombsGeneration(ServerLevel level, int chunkX, int chunkZ, SeriesStructureData data) {
+        int blockX = chunkX * 16 + 8;
+        int blockZ = chunkZ * 16 + 8;
+        if (blockX * blockX + blockZ * blockZ < 300 * 300) return;   // lejos del spawn
+        int surfaceY = findSolidSurfaceGround(level, blockX, blockZ);
+        if (surfaceY < 60 || surfaceY > 140) return;
+        BlockPos center = new BlockPos(blockX, surfaceY, blockZ);
+        if (data.hasStructureNearbyOfType("forgotten_catacombs", center, 500.0D)) return;
+        if (data.hasStructureNearbyOfType("abyssal_grotto", center, 160.0D)) return;
+        String biomeKey = level.getBiome(center).unwrapKey().map(k -> k.location().getPath()).orElse("").toLowerCase(java.util.Locale.ROOT);
+        if (biomeKey.contains("ocean") || biomeKey.contains("river") || biomeKey.contains("beach")
+                || biomeKey.contains("swamp") || biomeKey.contains("peaks")) return;
+        generateStructure(level, center, "forgotten_catacombs");
     }
 
     private static boolean isOverworldRacetrackTargetChunk(ServerLevel level, int chunkX, int chunkZ) {
@@ -2165,6 +2204,7 @@ public final class SeriesStructureWorldGen {
             case "grand_casino", "casino", "monte_carlo", "casino_monte_carlo" -> "grand_casino";
             case "racetrack", "hipodromo", "uma_racetrack" -> "racetrack";
             case "abyssal_grotto", "gruta_abisal" -> "abyssal_grotto";
+            case "forgotten_catacombs", "catacumbas", "catacumbas_olvidadas" -> "forgotten_catacombs";
             case "golden_house", "casa_dorada", "childe_arena" -> "golden_house";
             case "tenshukaku", "shogun_palace", "inazuma_castle", "palacio_shogun" -> "tenshukaku";
             case "anemo_shrine", "anemo_shrine_of_depths", "anemo_shrine_of_depths_final", "santuario_anemo", "anemo" -> "anemo_shrine";

@@ -2029,7 +2029,7 @@ public final class SystemCommands {
             "chasm_mine", "overworld_miniboss_arena",
             "dawn_winery", "jade_chamber", "windrise_giant_tree",
             "beidou_ship", "grand_casino", "racetrack", "golden_house", "tenshukaku",
-            "witch_island", "teyvat_treehouses", "abyssal_grotto"
+            "witch_island", "teyvat_treehouses", "abyssal_grotto", "forgotten_catacombs"
     );
 
     private static int tpStructureCommand(CommandSourceStack source, String name) {
