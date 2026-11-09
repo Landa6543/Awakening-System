@@ -51,8 +51,8 @@ public class BbToGeo {
         }
         int atlasH = 1;
         while (atlasH < y + shelf) atlasH *= 2;
-        // textures Blockbench draws "additive" are glow layers laid over other cubes: they go into a separate
-        // glowmask (GeckoLib draws it lit, over the model) and stay empty in the base texture
+        // textures Blockbench draws "additive" are glow layers laid over other cubes: they go into NAME_glow.png
+        // (to be drawn additively over the model, as Blockbench does) and stay empty in the base texture
         BufferedImage atlas = new BufferedImage(atlasW, atlasH, BufferedImage.TYPE_INT_ARGB);
         BufferedImage glow = new BufferedImage(atlasW, atlasH, BufferedImage.TYPE_INT_ARGB);
         boolean anyGlow = false;
@@ -65,7 +65,7 @@ public class BbToGeo {
         File texOut = assets.resolve("textures/entity/" + name + ".png").toFile();
         texOut.getParentFile().mkdirs();
         ImageIO.write(atlas, "png", texOut);
-        if (anyGlow) ImageIO.write(glow, "png", assets.resolve("textures/entity/" + name + "_glowmask.png").toFile());
+        if (anyGlow) ImageIO.write(glow, "png", assets.resolve("textures/entity/" + name + "_glow.png").toFile());
 
         // ---- bones from the outliner
         Map<String, JsonObject> groups = new HashMap<>();
@@ -124,15 +124,18 @@ public class BbToGeo {
                     JsonArray dps = kf.getAsJsonArray("data_points");
                     JsonObject frame = new JsonObject();
                     String interp = kf.has("interpolation") ? kf.get("interpolation").getAsString() : "linear";
+                    // GeckoLib flips x and y of each bone's rest rotation when it loads the model, but adds the
+                    // animation's rotations as they are; Blockbench subtracts them. So x and y rotations change sign.
+                    boolean rot = ch.equals("rotation");
                     if (dps.size() > 1) {
-                        frame.add("pre", vec(dps.get(0).getAsJsonObject()));
-                        frame.add("post", vec(dps.get(1).getAsJsonObject()));
+                        frame.add("pre", vec(dps.get(0).getAsJsonObject(), rot));
+                        frame.add("post", vec(dps.get(1).getAsJsonObject(), rot));
                     } else if (interp.equals("catmullrom")) {
                         // GeckoLib only reads the lerp mode next to "vector"; with "post" it rejects the whole animation
-                        frame.add("vector", vec(dps.get(0).getAsJsonObject()));
+                        frame.add("vector", vec(dps.get(0).getAsJsonObject(), rot));
                         frame.addProperty("lerp_mode", "catmullrom");
                     } else {
-                        frame.add("post", vec(dps.get(0).getAsJsonObject()));
+                        frame.add("post", vec(dps.get(0).getAsJsonObject(), rot));
                     }
                     chan.put(Math.round(kf.get("time").getAsDouble() * 10000) / 10000.0, frame);
                 }
@@ -154,7 +157,7 @@ public class BbToGeo {
         Files.createDirectories(animOut.getParent());
         Files.writeString(animOut, new GsonBuilder().create().toJson(animRoot));
         System.out.println("bones " + bones.size() + ", cubes " + stats[0] + " (skipped " + stats[1] + "), atlas " + atlasW + "x" + atlasH
-                + (anyGlow ? " + glowmask" : "")
+                + (anyGlow ? " + additive glow texture" : "")
                 + ", animations " + anims.keySet());
     }
 
@@ -162,13 +165,20 @@ public class BbToGeo {
         return String.valueOf(Math.round(t * 10000) / 10000.0);
     }
 
-    /** A keyframe value: numbers stay numbers, Molang stays a string. */
-    static JsonArray vec(JsonObject dp) {
+    /** A keyframe value: numbers stay numbers, Molang stays a string; {@code flipXY} negates x and y. */
+    static JsonArray vec(JsonObject dp, boolean flipXY) {
         JsonArray arr = new JsonArray();
-        for (String k : new String[]{"x", "y", "z"}) {
-            String s = dp.has(k) ? dp.get(k).getAsString().trim() : "0";
+        String[] axes = {"x", "y", "z"};
+        for (int i = 0; i < 3; i++) {
+            String s = dp.has(axes[i]) ? dp.get(axes[i]).getAsString().trim() : "0";
             if (s.isEmpty()) s = "0";
-            try { arr.add(Double.parseDouble(s)); } catch (NumberFormatException e) { arr.add(s); }
+            boolean flip = flipXY && i < 2;
+            try {
+                double d = Double.parseDouble(s);
+                arr.add(flip && d != 0 ? -d : d);
+            } catch (NumberFormatException e) {
+                arr.add(flip ? "-(" + s + ")" : s);
+            }
         }
         return arr;
     }
