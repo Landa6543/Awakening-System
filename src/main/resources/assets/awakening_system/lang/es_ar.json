@@ -7182,6 +7182,8 @@
     "awakening_system.skill.dragon_wings_flight.description": "Despliega alas etéreas de dragón que te elevan a los cielos, otorgando vuelo controlado y caída lenta.",
     "awakening_system.skill.dragon_wings_flight.effect": "Impulso vertical, Caída Lenta y Salto III",
     "awakening_system.skill.dragon_wings_flight.name": "Vuelo de Alas Dracónicas",
+    "awakening_system.skill.dual_plunge.cooldown": "Colmillos en Picada: listo en %s s",
+    "awakening_system.skill.dual_plunge.no_stamina": "Colmillos en Picada: no tienes estamina suficiente",
     "awakening_system.skill.eclipse_core": "Núcleo del Eclipse",
     "awakening_system.skill.eclipse_core.description": "Un núcleo nacido de la expansión Eclipse sincroniza tu combate con sus energías oscuras.",
     "awakening_system.skill.eclipse_core.effect": "Contra entidades del Eclipse, infliges daño adicional y desarrollas dominio al luchar.",

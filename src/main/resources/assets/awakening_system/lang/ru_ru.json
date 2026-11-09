@@ -7182,6 +7182,8 @@
     "awakening_system.skill.dragon_wings_flight.description": "Расправляет неземные драконьи крылья, которые поднимают вас в небо, позволяя прыгать в высоту и медленно падать.",
     "awakening_system.skill.dragon_wings_flight.effect": "Вертикальный старт, медленное падение и прыжок III.",
     "awakening_system.skill.dragon_wings_flight.name": "Полет Крыльев Дракона",
+    "awakening_system.skill.dual_plunge.cooldown": "Нырок клыков: готово через %s с",
+    "awakening_system.skill.dual_plunge.no_stamina": "Нырок клыков: не хватает выносливости",
     "awakening_system.skill.eclipse_core": "Ядро Затмения",
     "awakening_system.skill.eclipse_core.description": "Ядро, рожденное в дополнении «Затмение», синхронизирует ваш бой со своими темными энергиями.",
     "awakening_system.skill.eclipse_core.effect": "Сущностям Затмения наносите дополнительный урон и повышаете мастерство во время боя.",

@@ -7315,6 +7315,9 @@ public final class SystemEvents {
    public static boolean activateWeaponSkill(ServerPlayer player, int handOrdinal) {
       if (player == null) {
          return false;
+      } else if (handOrdinal == 2) {
+         // a dagger in each hand: the dual-dagger skill
+         return com.soybe.awakeningsystem.combat.DualDaggerPlunge.tryStart(player);
       } else {
          InteractionHand hand = handOrdinal == 1 ? InteractionHand.OFF_HAND : InteractionHand.MAIN_HAND;
          ItemStack stack = player.getItemInHand(hand);

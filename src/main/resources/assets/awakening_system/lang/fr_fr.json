@@ -6755,6 +6755,8 @@
     "awakening_system.skill.dragon_wings_flight.description": "Spreads ethereal dragon wings that launch you into the skies, granting high jump and slow falling.",
     "awakening_system.skill.dragon_wings_flight.effect": "Vertical launch, Slow Falling, and Jump III",
     "awakening_system.skill.dragon_wings_flight.name": "Dragon Wings Flight",
+    "awakening_system.skill.dual_plunge.cooldown": "Crocs plongeants : prêt dans %s s",
+    "awakening_system.skill.dual_plunge.no_stamina": "Crocs plongeants : pas assez d'endurance",
     "awakening_system.skill.eclipse_core": "Eclipse Core",
     "awakening_system.skill.eclipse_core.description": "A core born from the Eclipse expansion synchronizes your combat with its dark energies.",
     "awakening_system.skill.eclipse_core.effect": "Against Eclipse entities, deal bonus damage and gain mastery while fighting.",

@@ -1458,6 +1458,14 @@ public final class AwakeningSystemClient {
                     }
                 }
 
+                // a dagger in each hand: right-click is the dual-dagger skill (shift + right-click keeps the weapon's own)
+                if (!mc.player.isShiftKeyDown() && com.soybe.awakeningsystem.combat.DualDaggerPlunge.holdsTwoDaggers(mc.player)
+                        && (mc.hitResult == null || mc.hitResult.getType() != net.minecraft.world.phys.HitResult.Type.BLOCK)) {
+                    event.setCanceled(true);
+                    PacketDistributor.sendToServer(new ActivateWeaponSkillPayload(2));
+                    return;
+                }
+
                 boolean mainHasWeapon = com.soybe.awakeningsystem.item.AwakeningWeaponItem.isAwakeningWeapon(mc.player.getMainHandItem());
                 boolean offHasWeapon = com.soybe.awakeningsystem.item.AwakeningWeaponItem.isAwakeningWeapon(mc.player.getOffhandItem());
                 if (mainHasWeapon || offHasWeapon) {

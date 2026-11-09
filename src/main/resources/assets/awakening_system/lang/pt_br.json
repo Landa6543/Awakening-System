@@ -7182,6 +7182,8 @@
     "awakening_system.skill.dragon_wings_flight.description": "Abre etéreas asas de dragão que lançam você aos céus, concedendo salto alto e queda lenta.",
     "awakening_system.skill.dragon_wings_flight.effect": "Lançamento vertical, Queda Lenta e Salto III",
     "awakening_system.skill.dragon_wings_flight.name": "Voo das Asas de Dragão",
+    "awakening_system.skill.dual_plunge.cooldown": "Presas em Mergulho: pronto em %s s",
+    "awakening_system.skill.dual_plunge.no_stamina": "Presas em Mergulho: estamina insuficiente",
     "awakening_system.skill.eclipse_core": "Núcleo do Eclipse",
     "awakening_system.skill.eclipse_core.description": "Um núcleo nascido da expansão Eclipse sincroniza seu combate com as energias sombrias dela.",
     "awakening_system.skill.eclipse_core.effect": "Contra entidades do Eclipse, causa dano bônus e ganha maestria ao lutar.",
