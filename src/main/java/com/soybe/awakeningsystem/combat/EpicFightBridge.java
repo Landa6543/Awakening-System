@@ -40,9 +40,22 @@ public final class EpicFightBridge {
         return Impl.isDagger(stack);
     }
 
-    /** Plays one of Epic Fight's animations on the player, for everyone to see. Does nothing without Epic Fight. */
+    /**
+     * Plays the animation on the player, for everyone around to see. With Epic Fight it is Epic Fight's own;
+     * without it, the closest of the mod's own player animations (needs PlayerAnimator on the clients).
+     */
     public static void play(ServerPlayer player, Anim anim) {
-        if (loaded()) Impl.play(player, anim);
+        if (loaded()) {
+            Impl.play(player, anim);
+            return;
+        }
+        String fallback = switch (anim) {
+            case LEAP -> "dual_handed_slash_cross";
+            case SLAM -> "dual_handed_stab";
+            case DUAL_DAGGER_AIR -> "dual_handed_slash_uncross";
+        };
+        net.neoforged.neoforge.network.PacketDistributor.sendToPlayersTrackingEntityAndSelf(player,
+                new com.soybe.awakeningsystem.PlaySkillAnimationPayload(player.getId(), fallback));
     }
 
     /** Takes stamina from Epic Fight's bar; true when there was enough (always true without Epic Fight). */

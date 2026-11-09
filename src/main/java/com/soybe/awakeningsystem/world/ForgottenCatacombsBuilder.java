@@ -58,10 +58,10 @@ import java.util.Set;
  * Chests carry a loot table, not items, so Lootr turns them into per-player chests.
  */
 public final class ForgottenCatacombsBuilder {
-    private static final int GRID = 4, CELL = 22;
+    private static final int GRID = 4, CELL = 36;
     /** Outward direction of each side of the grid: north, east, south, west. */
     private static final int[][] SIDE_DIR = {{0, -1}, {1, 0}, {0, 1}, {-1, 0}};
-    private static final int BOSS_DROP = 6;
+    private static final int BOSS_DROP = 8;
 
     private enum Theme { ENTRY, HALL, LIBRARY, ARMORY, PRISON, CRYPT, SHRINE, STORAGE, FOUNTAIN, SPIDER, BOSS }
 
@@ -74,7 +74,7 @@ public final class ForgottenCatacombsBuilder {
         }
 
         boolean onPath(int px, int pz) {
-            return Math.abs(px - x) <= 1 || Math.abs(pz - z) <= 1;
+            return Math.abs(px - x) <= 2 || Math.abs(pz - z) <= 2;
         }
     }
 
@@ -164,14 +164,14 @@ public final class ForgottenCatacombsBuilder {
             int x = ox + (int) Math.round((gx - (GRID - 1) / 2.0) * CELL);
             int z = oz + (int) Math.round((gz - (GRID - 1) / 2.0) * CELL);
             Room room = switch (t) {
-                case ENTRY -> new Room(x, z, base, 4, 4, 6, t);
-                case BOSS -> new Room(x + SIDE_DIR[opp][0] * 4, z + SIDE_DIR[opp][1] * 4, base - BOSS_DROP, 10, 10, 11, t);
-                case HALL -> new Room(x, z, base, 3, 3, 5, t);
-                default -> new Room(x, z, base, 5 + rand.nextInt(3), 5 + rand.nextInt(3), 6 + rand.nextInt(2), t);
+                case ENTRY -> new Room(x, z, base, 6, 6, 8, t);
+                case BOSS -> new Room(x + SIDE_DIR[opp][0] * 6, z + SIDE_DIR[opp][1] * 6, base - BOSS_DROP, 16, 16, 16, t);
+                case HALL -> new Room(x, z, base, 5, 5, 7, t);
+                default -> new Room(x, z, base, 9 + rand.nextInt(3), 9 + rand.nextInt(3), 9 + rand.nextInt(3), t);
             };
             if (same(bossDoor, gx, gz) && t != Theme.ENTRY) {
                 // keep the corridor down to the boss long enough for its staircase
-                room = new Room(room.x, room.z, room.fy, Math.min(room.hx, 5), Math.min(room.hz, 5), room.h, room.theme);
+                room = new Room(room.x, room.z, room.fy, Math.min(room.hx, 9), Math.min(room.hz, 9), room.h, room.theme);
             }
             grid[gx][gz] = room;
             rooms.add(room);
@@ -282,15 +282,15 @@ public final class ForgottenCatacombsBuilder {
             int prev = i == 0 ? 0 : Math.max(0, Math.min(drop, i - 1 - k0));
             int feet = a.fy - d;
             boolean stair = d > prev;
-            for (int w = -1; w <= 1; w++) {
-                int top = w == 0 ? 4 : 3;
+            for (int w = -2; w <= 2; w++) {
+                int top = 6 - Math.abs(w);
                 for (int dy = 0; dy < top + (stair ? 1 : 0); dy++) {
                     int x = alongX ? c : line + w, z = alongX ? line + w : c;
                     air.add(BlockPos.asLong(x, feet + dy, z));
                 }
                 if (stair) stairs.add(new Stair(alongX ? new BlockPos(c, feet, line + w) : new BlockPos(line + w, feet, c), travel.getOpposite()));
             }
-            if (i % 5 == 2 && !stair) corridorLights.add(alongX ? new BlockPos(c, feet + 3, line) : new BlockPos(line, feet + 3, c));
+            if (i % 5 == 2 && !stair) corridorLights.add(alongX ? new BlockPos(c, feet + 5, line) : new BlockPos(line, feet + 5, c));
         }
     }
 
@@ -312,14 +312,14 @@ public final class ForgottenCatacombsBuilder {
             int prev = i == 0 ? 0 : Math.max(0, Math.min(drop, i - 3));
             int feet = ground - d;
             boolean stair = d > prev;
-            for (int w = -1; w <= 1; w++) {
+            for (int w = -2; w <= 2; w++) {
                 int wx = x + (dz != 0 ? w : 0), wz = z + (dx != 0 ? w : 0);
-                int top = w == 0 ? 4 : 3;
+                int top = 6 - Math.abs(w);
                 for (int dy = 0; dy < top + (stair ? 1 : 0); dy++) air.add(BlockPos.asLong(wx, feet + dy, wz));
                 if (stair) stairs.add(new Stair(new BlockPos(wx, feet, wz), travel.getOpposite()));
                 else laidFloor.add(new BlockPos(wx, feet - 1, wz));
             }
-            if (i % 5 == 4 && !stair) corridorLights.add(new BlockPos(x, feet + 3, z));
+            if (i % 5 == 4 && !stair) corridorLights.add(new BlockPos(x, feet + 5, z));
         }
         return new BlockPos(edgeX + dx * len, ground, edgeZ + dz * len);
     }
@@ -385,7 +385,7 @@ public final class ForgottenCatacombsBuilder {
                 case FOUNTAIN -> new EntityType<?>[]{EntityType.DROWNED, EntityType.ZOMBIE};
                 default -> new EntityType<?>[]{EntityType.ZOMBIE, EntityType.SKELETON, EntityType.SPIDER};
             };
-            int count = r.theme == Theme.HALL ? 1 + rand.nextInt(2) : 2 + rand.nextInt(3);
+            int count = r.theme == Theme.HALL ? 2 + rand.nextInt(2) : 3 + rand.nextInt(3);
             for (int i = 0; i < count; i++) {
                 BlockPos p = spotIn(r, false);
                 if (p != null) monster(pool[rand.nextInt(pool.length)], p);
@@ -550,9 +550,9 @@ public final class ForgottenCatacombsBuilder {
     }
 
     private void fountain(Room r) {
-        for (int dx = -2; dx <= 2; dx++) for (int dz = -2; dz <= 2; dz++) {
+        for (int dx = -3; dx <= 3; dx++) for (int dz = -3; dz <= 3; dz++) {
             BlockPos p = new BlockPos(r.x + dx, r.fy, r.z + dz);
-            boolean rim = Math.abs(dx) == 2 || Math.abs(dz) == 2;
+            boolean rim = Math.abs(dx) == 3 || Math.abs(dz) == 3;
             set(p, rim ? Blocks.STONE_BRICK_SLAB.defaultBlockState() : Blocks.WATER.defaultBlockState());
             if (!rim) set(p.below(), Blocks.STONE_BRICKS.defaultBlockState());
         }
@@ -581,7 +581,7 @@ public final class ForgottenCatacombsBuilder {
     /** The throne hall: two rows of great pillars, braziers, a dais with the throne and the treasure behind it. */
     private void bossHall(Room r) {
         // the way in arrives on one of the hall's centre lines, so the pillars keep off both of them
-        for (int dz : new int[]{-7, -3, 3, 7}) for (int sx = -1; sx <= 1; sx += 2) {
+        for (int dz : new int[]{-12, -5, 5, 12}) for (int sx = -1; sx <= 1; sx += 2) {
             int x = r.x + sx * (r.hx - 3), z = r.z + dz;
             // floor to ceiling: this far in, every layer of the vault is open above the pillar
             for (int dy = 0; dy < r.h; dy++) set(new BlockPos(x, r.fy + dy, z), dy == 0 || dy == r.h - 1
@@ -684,13 +684,13 @@ public final class ForgottenCatacombsBuilder {
         int dx = SIDE_DIR[side][0], dz = SIDE_DIR[side][1];
         int px = dz != 0 ? 1 : 0, pz = dx != 0 ? 1 : 0;   // across the stair
         Direction in = Direction.fromDelta(-dx, 0, -dz);
-        for (int i = 0; i <= 6; i++) {
+        for (int i = 0; i <= 8; i++) {
             int cx = top.getX() - dx * i, cz = top.getZ() - dz * i;
             int ground = top.getY();
             for (int s = -1; s <= 1; s += 2) {
-                int wx = cx + px * s * 2, wz = cz + pz * s * 2;
-                boolean pillar = i == 0 || i == 6;
-                int hgt = pillar ? 5 : 2 + rand.nextInt(3);
+                int wx = cx + px * s * 3, wz = cz + pz * s * 3;
+                boolean pillar = i == 0 || i == 8;
+                int hgt = pillar ? 7 : 3 + rand.nextInt(4);
                 // walls rest on solid ground: fill down to it first
                 for (int y = ground - 1; y > ground - 6 && !level.getBlockState(new BlockPos(wx, y, wz)).isSolid(); y--) set(new BlockPos(wx, y, wz), wallBlock(new BlockPos(wx, y, wz)));
                 for (int y = 0; y < hgt; y++) {
@@ -701,12 +701,12 @@ public final class ForgottenCatacombsBuilder {
             }
         }
         // the lintel over the way in, and broken roof slabs further in
-        for (int s = -2; s <= 2; s++) {
-            set(new BlockPos(top.getX() + px * s, top.getY() + 4, top.getZ() + pz * s), Math.abs(s) == 2
+        for (int s = -3; s <= 3; s++) {
+            set(new BlockPos(top.getX() + px * s, top.getY() + 6, top.getZ() + pz * s), Math.abs(s) == 3
                     ? Blocks.CHISELED_STONE_BRICKS.defaultBlockState()
                     : Blocks.STONE_BRICK_STAIRS.defaultBlockState().setValue(StairBlock.FACING, in).setValue(StairBlock.HALF, net.minecraft.world.level.block.state.properties.Half.TOP));
-            for (int i = 1; i <= 5; i++) if (rand.nextInt(3) == 0)
-                set(new BlockPos(top.getX() - dx * i + px * s, top.getY() + 4, top.getZ() - dz * i + pz * s), Blocks.STONE_BRICK_SLAB.defaultBlockState());
+            for (int i = 1; i <= 7; i++) if (rand.nextInt(3) == 0)
+                set(new BlockPos(top.getX() - dx * i + px * s, top.getY() + 6, top.getZ() - dz * i + pz * s), Blocks.STONE_BRICK_SLAB.defaultBlockState());
         }
         // rubble and a worn path in front
         for (int i = 0; i < 10; i++) {
@@ -722,7 +722,7 @@ public final class ForgottenCatacombsBuilder {
     /** Dev aid: a top-down picture of the floor plan (lowest open block of each column) in the server folder. */
     private void debugPlan(int ox, int oz, int base) {
         try {
-            int r = 75, s = 4;
+            int r = 110, s = 3;
             java.awt.image.BufferedImage plan = new java.awt.image.BufferedImage(2 * r * s, 2 * r * s, java.awt.image.BufferedImage.TYPE_INT_RGB);
             Map<Long, Integer> low = new HashMap<>();
             for (long l : air) {

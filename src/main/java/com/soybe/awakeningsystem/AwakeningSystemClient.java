@@ -1421,6 +1421,16 @@ public final class AwakeningSystemClient {
         PacketDistributor.sendToServer(new ActivateArmorSkillPayload());
     }
 
+    /** A weapon skill's body animation for players without Epic Fight (see PlaySkillAnimationPayload). */
+    public static void playSkillAnimation(int entityId, String animation) {
+        Minecraft mc = Minecraft.getInstance();
+        if (mc.level == null) return;
+        if (mc.level.getEntity(entityId) instanceof net.minecraft.client.player.AbstractClientPlayer player) {
+            com.soybe.awakeningsystem.combat.AcePlayerAnimationBridge.playAnimation(player,
+                    net.minecraft.resources.ResourceLocation.fromNamespaceAndPath("awakeningsystem", animation));
+        }
+    }
+
     public static void activateWeaponSkill() {
         Minecraft mc = Minecraft.getInstance();
         if (mc.player == null || mc.level == null) return;

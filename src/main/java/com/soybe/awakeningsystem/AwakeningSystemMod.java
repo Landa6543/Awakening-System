@@ -304,6 +304,8 @@ public final class AwakeningSystemMod {
                         sendLeaderboard(player);
                     }
                 }));
+        registrar.playToClient(PlaySkillAnimationPayload.TYPE, PlaySkillAnimationPayload.STREAM_CODEC,
+                (payload, context) -> context.enqueueWork(() -> AwakeningSystemClient.playSkillAnimation(payload.entityId(), payload.animation())));
         registrar.playToClient(LeaderboardPayload.TYPE, LeaderboardPayload.STREAM_CODEC,
                 (payload, context) -> context.enqueueWork(() -> AwakeningSystemClient.setLeaderboard(payload.entries())));
         registrar.playToServer(PrestigePayload.TYPE, PrestigePayload.STREAM_CODEC,

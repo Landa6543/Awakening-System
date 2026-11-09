@@ -159,7 +159,8 @@ public final class RpgLevelZoneManager {
             BlockPos spawnPos = level.getSharedSpawnPos();
             double distFromSpawn = Math.sqrt(pos.distSqr(new Vec3i(spawnPos.getX(), pos.getY(), spawnPos.getZ())));
             double distanceFactor = Math.min(1.0D, distFromSpawn / 15000.0D);
-            return Math.min(500, Math.max(30, (int) Math.round(safePlayerLvl * (1.0D + distanceFactor + 0.05D)) + 6));
+            // no fixed ceiling: monsters keep up with the player, however high their level
+            return Math.max(30, (int) Math.round(safePlayerLvl * (1.0D + distanceFactor + 0.05D)) + 6);
         }
         if (level.dimension() == Level.NETHER) {
             return Math.max(55, safePlayerLvl + 5);
@@ -322,7 +323,9 @@ public final class RpgLevelZoneManager {
         } else if (mobLevel <= 100) {
             hpMultiplier = 5.0 + (double)(mobLevel - 60) * 0.04;
         } else {
-            hpMultiplier = 6.6 + (double)(mobLevel - 100) * 0.025;
+            // past level 100 health keeps climbing steadily, so high-level monsters are real fights
+            // (a zombie: ~610 HP at level 500, ~2400 at level 2000)
+            hpMultiplier = 6.6 + (double)(mobLevel - 100) * 0.06;
         }
         double newHp = baseHp * hpMultiplier;
         AttributeInstance maxHpAttr = mob.getAttribute(Attributes.MAX_HEALTH);

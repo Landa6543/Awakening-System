@@ -135,12 +135,16 @@ public class AcePlayerAnimationBridge {
      * Plays the skeletal attack animation for the client player.
      */
     public static boolean playAttackAnimation(AbstractClientPlayer player, ItemStack weapon, int comboStep) {
+        return playAnimation(player, getAnimationId(weapon, comboStep));
+    }
+
+    /** Plays one of the mod's player animations by id (assets/awakeningsystem/player_animations/&lt;name&gt;.json). */
+    public static boolean playAnimation(AbstractClientPlayer player, ResourceLocation animId) {
         if (!available || player == null) {
             return false;
         }
 
         try {
-            ResourceLocation animId = getAnimationId(weapon, comboStep);
             IPlayable playable = PlayerAnimationRegistry.getAnimation(animId);
 
             if (playable instanceof KeyframeAnimation anim) {
