@@ -218,14 +218,15 @@ public final class RuinGateManager {
         if (server.getTickCount() % 5 != 0) return;
         Data data = Data.get(server);
         boolean sparkle = server.getTickCount() % 10 == 0;
-        for (Gate gate : data.gates) {
+        for (Gate gate : new ArrayList<>(data.gates)) {
             ServerLevel level = server.getLevel(gate.dimension);
             if (level == null) continue;
             for (BlockPos p : gate.portal) {
                 if (!level.isLoaded(p)) continue;
                 if (sparkle) level.sendParticles(ParticleTypes.REVERSE_PORTAL, p.getX() + 0.5, p.getY() + 0.5, p.getZ() + 0.5, 3, 0.3, 0.4, 0.3, 0.02);
             }
-            for (ServerPlayer player : level.players()) {
+            // a copy: entering teleports the player, which takes them out of this level's player list
+            for (ServerPlayer player : new ArrayList<>(level.players())) {
                 if (player.isSpectator() || SESSIONS.containsKey(player.getUUID())) continue;
                 BlockPos at = player.blockPosition();
                 if (gate.portal.contains(at) || gate.portal.contains(at.above())) enter(player, KINDS.get(gate.kind));
