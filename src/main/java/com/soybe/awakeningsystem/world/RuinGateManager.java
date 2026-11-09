@@ -496,6 +496,8 @@ public final class RuinGateManager {
                     if (run.bossDead && player.level().dimension().equals(RUIN_REALM) && run.exits.contains(e.getValue())) leave(player);
                     continue;
                 }
+                Long left = LEFT_AT.get(player.getUUID());
+                if (left != null && server.getTickCount() - left < REENTRY_DELAY) continue;   // just came out
                 for (Gate gate : data.gates) {
                     if (gate.dimension.equals(player.level().dimension()) && gate.portal.contains(e.getValue())) {
                         enter(player, KINDS.get(gate.kind), gate.rank);
@@ -760,10 +762,35 @@ public final class RuinGateManager {
         if (s == null) return false;
         ServerLevel back = player.getServer().getLevel(s.returnDim);
         if (back == null) back = player.getServer().overworld();
-        player.teleportTo(back, s.returnPos.x, s.returnPos.y, s.returnPos.z, s.returnYaw, 0.0F);
+        // they went in by stepping into the portal, so that is where they came from: set them down
+        // clear of it, or they would walk straight back in
+        Vec3 to = clearOfPortals(back, s.returnPos);
+        LEFT_AT.put(player.getUUID(), (long) player.getServer().getTickCount());
+        player.teleportTo(back, to.x, to.y, to.z, s.returnYaw, 0.0F);
         player.fallDistance = 0;
         player.sendSystemMessage(Component.translatable("awakening_system.ruin_gate.left"));
         return true;
+    }
+
+    /** When a player last came out of a dungeon: portals ignore them for a few seconds after. */
+    private static final Map<UUID, Long> LEFT_AT = new HashMap<>();
+    private static final int REENTRY_DELAY = 100;
+
+    /** A standing spot near {@code from} at least three blocks from any Ruin Portal block. */
+    private static Vec3 clearOfPortals(ServerLevel level, Vec3 from) {
+        BlockPos origin = BlockPos.containing(from);
+        net.minecraft.world.level.block.Block portal = com.soybe.awakeningsystem.block.SystemBlocks.RUIN_PORTAL.get();
+        if (BlockPos.findClosestMatch(origin, 2, 2, p -> level.getBlockState(p).is(portal)).isEmpty()) return from;
+        for (int r = 3; r <= 9; r++) for (int dy = 4; dy >= -6; dy--) for (int dx = -r; dx <= r; dx++) for (int dz = -r; dz <= r; dz++) {
+            if (Math.max(Math.abs(dx), Math.abs(dz)) != r) continue;
+            BlockPos p = origin.offset(dx, dy, dz);
+            if (!level.getBlockState(p).getCollisionShape(level, p).isEmpty() || !level.getBlockState(p.above()).getCollisionShape(level, p.above()).isEmpty()
+                    || level.getBlockState(p.below()).getCollisionShape(level, p.below()).isEmpty()) continue;
+            if (!level.getBlockState(p).getFluidState().isEmpty()) continue;
+            if (BlockPos.findClosestMatch(p, 2, 2, q -> level.getBlockState(q).is(portal)).isPresent()) continue;
+            return Vec3.atBottomCenterOf(p);
+        }
+        return from.add(0, 3, 0);
     }
 
     /** Someone in the ruin dimension with no run (after a restart): back to their spawn point. */
