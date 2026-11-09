@@ -608,7 +608,8 @@ public final class ForgottenCatacombsBuilder {
         placeChest(back.relative(across, -2).above(), in.getOpposite(), chestLoot);
         for (int w = -1; w <= 1; w += 2) set(back.relative(across, w).above(), Blocks.SOUL_LANTERN.defaultBlockState());
         for (int i = 0; i < 4; i++) set(new BlockPos(r.x + rand.nextInt(9) - 4, r.fy + r.h - 2, r.z + rand.nextInt(9) - 4), Blocks.CHAIN.defaultBlockState());
-        spawnBoss(new BlockPos(r.x, r.fy, r.z));
+        // the Skeleton Lord stands sealed in crystal before its throne, facing the way in
+        spawnBoss(back.relative(in.getOpposite(), 4), in.getOpposite().toYRot(), new BlockPos(r.x, r.fy, r.z));
     }
 
     /** A point on the corridor that leads into the room (its staircase), to tell which side the way in is. */
@@ -623,27 +624,25 @@ public final class ForgottenCatacombsBuilder {
     }
 
     /**
-     * The boss: the mod's Abyssal Necromancer, an undead caster that raises skeletons, a little bigger and
-     * tougher than the ones met in the Gates. Held to its hall like the other bosses.
+     * The boss: the Skeleton Lord, waiting as a crystal statue until someone comes close. Held to its hall
+     * (around {@code centre}) like the other bosses.
      */
-    private void spawnBoss(BlockPos pos) {
-        var boss = com.soybe.awakeningsystem.entity.ModEntities.ABYSSAL_NECROMANCER.get().create(level);
+    private void spawnBoss(BlockPos pos, float yaw, BlockPos centre) {
+        var boss = com.soybe.awakeningsystem.entity.CatacombEntities.SKELETON_LORD.get().create(level);
         if (boss == null) return;
-        boss.moveTo(pos.getX() + 0.5, pos.getY(), pos.getZ() + 0.5, rand.nextFloat() * 360F, 0);
+        boss.moveTo(pos.getX() + 0.5, pos.getY(), pos.getZ() + 0.5, yaw, 0);
+        boss.setYHeadRot(yaw);
+        boss.setYBodyRot(yaw);
         net.neoforged.neoforge.event.EventHooks.finalizeMobSpawn(boss, level, level.getCurrentDifficultyAt(pos), MobSpawnType.STRUCTURE, null);
-        AttributeInstance hp = boss.getAttribute(Attributes.MAX_HEALTH);
-        if (hp != null) hp.setBaseValue(hp.getBaseValue() * 1.5);
-        AttributeInstance scale = boss.getAttribute(Attributes.SCALE);
-        if (scale != null) scale.setBaseValue(1.3);
-        boss.setHealth(boss.getMaxHealth());
         boss.setPersistenceRequired();
         CompoundTag tag = boss.getPersistentData();
-        tag.putDouble("arena_center_x", pos.getX() + 0.5);
-        tag.putDouble("arena_center_y", pos.getY());
-        tag.putDouble("arena_center_z", pos.getZ() + 0.5);
-        tag.putDouble("arena_max_radius", 14.0);
+        tag.putDouble("arena_center_x", centre.getX() + 0.5);
+        tag.putDouble("arena_center_y", centre.getY());
+        tag.putDouble("arena_center_z", centre.getZ() + 0.5);
+        tag.putDouble("arena_max_radius", 15.0);
         tag.putBoolean("is_overworld_miniboss", true);
-        level.addFreshEntity(boss);
+        boolean added = level.addFreshEntity(boss);
+        AwakeningSystemMod.LOGGER.info("[Catacombs] Skeleton Lord at {}: {}", pos.toShortString(), added ? "waiting in its crystal" : "could not be placed");
     }
 
     private void hangLantern(BlockPos p) {

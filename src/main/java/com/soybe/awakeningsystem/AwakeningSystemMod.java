@@ -100,6 +100,7 @@ public final class AwakeningSystemMod {
         modBus.addListener(SystemItems::addCreativeTabs);
         modBus.addListener(this::commonSetup);
         com.soybe.awakeningsystem.entity.ModEntities.ENTITY_TYPES.register(modBus);
+        com.soybe.awakeningsystem.entity.CatacombEntities.ENTITY_TYPES.register(modBus);
         modBus.addListener(com.soybe.awakeningsystem.entity.ModEntities::registerAttributes);
         modBus.addListener(com.soybe.awakeningsystem.entity.ModEntities::registerSpawnPlacements);
         net.neoforged.fml.ModContainer modContainer = net.neoforged.fml.ModList.get().getModContainerById(MOD_ID).orElse(null);
