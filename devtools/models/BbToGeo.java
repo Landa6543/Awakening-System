@@ -11,7 +11,7 @@ import java.util.*;
  * Converts a Blockbench .bbmodel (cubes, any number of textures) into GeckoLib files:
  * geo/NAME.geo.json, animations/NAME.animation.json and textures/entity/NAME.png (all textures packed
  * into one atlas, since a GeckoLib model has one texture).
- * args: model.bbmodel assetsDir name
+ * args: model.bbmodel assetsDir name [once=anim1,anim2] (animations to play once even if Blockbench loops them)
  * Follows Blockbench's own Bedrock export: x mirrored, x/y rotations negated, up/down face UVs flipped.
  */
 public class BbToGeo {
@@ -19,6 +19,8 @@ public class BbToGeo {
         JsonObject m = JsonParser.parseString(Files.readString(Path.of(a[0]))).getAsJsonObject();
         Path assets = Path.of(a[1]);
         String name = a[2];
+        Set<String> once = new HashSet<>();
+        if (a.length > 3 && a[3].startsWith("once=")) once.addAll(Arrays.asList(a[3].substring(5).split(",")));
 
         // ---- textures: decode and pack into a power-of-two atlas, shelf by shelf, biggest first
         JsonArray texs = m.getAsJsonArray("textures");
@@ -103,6 +105,7 @@ public class BbToGeo {
             JsonObject an = ae.getAsJsonObject();
             JsonObject out = new JsonObject();
             String loop = an.has("loop") ? an.get("loop").getAsString() : "once";
+            if (once.contains(an.get("name").getAsString())) loop = "once";   // attacks: play once, then let the AI decide
             if (loop.equals("loop")) out.addProperty("loop", true);
             else if (loop.equals("hold")) out.addProperty("loop", "hold_on_last_frame");
             double len = an.has("length") ? an.get("length").getAsDouble() : 0;
@@ -125,17 +128,18 @@ public class BbToGeo {
                     JsonObject frame = new JsonObject();
                     String interp = kf.has("interpolation") ? kf.get("interpolation").getAsString() : "linear";
                     // GeckoLib flips x and y of each bone's rest rotation when it loads the model, but adds the
-                    // animation's rotations as they are; Blockbench subtracts them. So x and y rotations change sign.
-                    boolean rot = ch.equals("rotation");
+                    // animation's rotations as they are; Blockbench subtracts them. So x and y rotations change sign,
+                    // and x of positions too (GeckoLib moves bones along x the other way from Blockbench).
+                    int flip = ch.equals("rotation") ? 2 : ch.equals("position") ? 1 : 0;
                     if (dps.size() > 1) {
-                        frame.add("pre", vec(dps.get(0).getAsJsonObject(), rot));
-                        frame.add("post", vec(dps.get(1).getAsJsonObject(), rot));
+                        frame.add("pre", vec(dps.get(0).getAsJsonObject(), flip));
+                        frame.add("post", vec(dps.get(1).getAsJsonObject(), flip));
                     } else if (interp.equals("catmullrom")) {
                         // GeckoLib only reads the lerp mode next to "vector"; with "post" it rejects the whole animation
-                        frame.add("vector", vec(dps.get(0).getAsJsonObject(), rot));
+                        frame.add("vector", vec(dps.get(0).getAsJsonObject(), flip));
                         frame.addProperty("lerp_mode", "catmullrom");
                     } else {
-                        frame.add("post", vec(dps.get(0).getAsJsonObject(), rot));
+                        frame.add("post", vec(dps.get(0).getAsJsonObject(), flip));
                     }
                     chan.put(Math.round(kf.get("time").getAsDouble() * 10000) / 10000.0, frame);
                 }
@@ -165,14 +169,14 @@ public class BbToGeo {
         return String.valueOf(Math.round(t * 10000) / 10000.0);
     }
 
-    /** A keyframe value: numbers stay numbers, Molang stays a string; {@code flipXY} negates x and y. */
-    static JsonArray vec(JsonObject dp, boolean flipXY) {
+    /** A keyframe value: numbers stay numbers, Molang stays a string; the first {@code flipAxes} axes change sign. */
+    static JsonArray vec(JsonObject dp, int flipAxes) {
         JsonArray arr = new JsonArray();
         String[] axes = {"x", "y", "z"};
         for (int i = 0; i < 3; i++) {
             String s = dp.has(axes[i]) ? dp.get(axes[i]).getAsString().trim() : "0";
             if (s.isEmpty()) s = "0";
-            boolean flip = flipXY && i < 2;
+            boolean flip = i < flipAxes;
             try {
                 double d = Double.parseDouble(s);
                 arr.add(flip && d != 0 ? -d : d);

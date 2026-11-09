@@ -232,10 +232,10 @@ public class SkeletonLordEntity extends Monster implements GeoEntity {
             summonCd = 300;
         } else if (blastCd <= 0 && d < BLAST_RANGE) {
             cast(Spell.BLAST);
-            blastCd = 60;
+            blastCd = 100;   // 5 s: in between it fights hand to hand
         } else if (boltCd <= 0 && d > 6 && d < 22 && hasLineOfSight(target)) {
             cast(Spell.BOLT);
-            boltCd = 90;
+            boltCd = 110;
         }
     }
 
