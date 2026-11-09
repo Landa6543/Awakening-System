@@ -369,7 +369,11 @@ public final class RuinGateManager {
         }
         BlockState portalState = com.soybe.awakeningsystem.block.SystemBlocks.RUIN_PORTAL.get().defaultBlockState()
                 .setValue(com.soybe.awakeningsystem.block.RuinPortalBlock.AXIS, axis);
-        for (BlockPos p : portal) level.setBlock(p, portalState, Block.UPDATE_CLIENTS);
+        for (BlockPos p : portal) {
+            level.setBlock(p, portalState, Block.UPDATE_CLIENTS);
+            // the mine ruin has four stone wall posts over the pit's corners: they would stand in the portal
+            if (axis == Direction.Axis.Y) level.setBlock(p.above(), Blocks.AIR.defaultBlockState(), Block.UPDATE_CLIENTS);
+        }
         BlockPos centre = portal.get(portal.size() / 2);
         Data data = Data.get(level.getServer());
         data.gates.add(new Gate(kind.id, rank, level.dimension(), centre, 0F, expireTick, portal));
