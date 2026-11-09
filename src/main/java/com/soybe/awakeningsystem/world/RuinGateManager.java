@@ -399,7 +399,24 @@ public final class RuinGateManager {
 
     /** Called by the portal block when a player walks into it. */
     public static void onPortalTouched(ServerPlayer player, BlockPos pos) {
-        if (!SESSIONS.containsKey(player.getUUID())) TOUCHED.putIfAbsent(player.getUUID(), pos.immutable());
+        TOUCHED.putIfAbsent(player.getUUID(), pos.immutable());
+    }
+
+    /**
+     * Opens the exits once the boss falls: each exit marker becomes a portal block, set across the
+     * doorway it stands in (between its walls, or in line with the exit blocks next to it).
+     */
+    private static void openExits(ServerLevel level, Session s) {
+        BlockState base = com.soybe.awakeningsystem.block.SystemBlocks.RUIN_PORTAL.get().defaultBlockState();
+        for (BlockPos exit : s.exits) {
+            if (!level.getBlockState(exit).canBeReplaced()) continue;
+            Direction.Axis axis;
+            if (s.exits.contains(exit.east()) || s.exits.contains(exit.west())) axis = Direction.Axis.X;
+            else if (s.exits.contains(exit.north()) || s.exits.contains(exit.south())) axis = Direction.Axis.Z;
+            else if (level.getBlockState(exit.north()).isSolid() && level.getBlockState(exit.south()).isSolid()) axis = Direction.Axis.Z;
+            else axis = Direction.Axis.X;
+            level.setBlock(exit, base.setValue(com.soybe.awakeningsystem.block.RuinPortalBlock.AXIS, axis), Block.UPDATE_CLIENTS);
+        }
     }
 
     /**
@@ -460,10 +477,7 @@ public final class RuinGateManager {
                         gate.expireTick <= 0 ? -1 : (int) Math.max(0, gate.expireTick - player.serverLevel().getGameTime())));
         }
         Session s = SESSIONS.get(player.getUUID());
-        if (s != null && s.bossDead && player.level().dimension().equals(RUIN_REALM)) {
-            // type 1 is the regular Gates' exit portal; it is drawn one block above the position it is given
-            for (BlockPos exit : s.exits) entries.add(new com.soybe.awakeningsystem.SyncRiftsPayload.RiftEntry(exit.below(), s.rank, false, 1));
-        }
+
     }
 
     @SubscribeEvent
@@ -475,7 +489,13 @@ public final class RuinGateManager {
             TOUCHED.clear();
             for (Map.Entry<UUID, BlockPos> e : touched.entrySet()) {
                 ServerPlayer player = server.getPlayerList().getPlayer(e.getKey());
-                if (player == null || SESSIONS.containsKey(player.getUUID())) continue;
+                if (player == null) continue;
+                Session run = SESSIONS.get(player.getUUID());
+                if (run != null) {
+                    // inside a dungeon: the open exits lead home
+                    if (run.bossDead && player.level().dimension().equals(RUIN_REALM) && run.exits.contains(e.getValue())) leave(player);
+                    continue;
+                }
                 for (Gate gate : data.gates) {
                     if (gate.dimension.equals(player.level().dimension()) && gate.portal.contains(e.getValue())) {
                         enter(player, KINDS.get(gate.kind), gate.rank);
@@ -497,7 +517,7 @@ public final class RuinGateManager {
                 continue;
             }
             for (BlockPos exit : s.exits) {
-                if (sparkle) realm.sendParticles(s.bossDead ? ParticleTypes.END_ROD : ParticleTypes.SMOKE, exit.getX() + 0.5, exit.getY() + 0.8, exit.getZ() + 0.5, 4, 0.3, 0.5, 0.3, 0.01);
+                if (sparkle && !s.bossDead) realm.sendParticles(ParticleTypes.SMOKE, exit.getX() + 0.5, exit.getY() + 0.8, exit.getZ() + 0.5, 4, 0.3, 0.5, 0.3, 0.01);
                 if (player.distanceToSqr(Vec3.atBottomCenterOf(exit)) > 2.5) continue;
                 if (s.bossDead) {
                     leave(player);
@@ -643,7 +663,10 @@ public final class RuinGateManager {
                 }
             }
         }
-        if (s.boss == null) s.bossDead = true;   // no boss in this copy: the exit is open from the start
+        if (s.boss == null) {   // no boss in this copy: the exits are open from the start
+            s.bossDead = true;
+            openExits(level, s);
+        }
         return mobs;
     }
 
@@ -712,6 +735,7 @@ public final class RuinGateManager {
             Session s = e.getValue();
             if (!dead.equals(s.boss) || s.bossDead) continue;
             s.bossDead = true;
+            openExits(level, s);
             BlockPos chestPos = s.bossLoot != null ? s.bossLoot : event.getEntity().blockPosition();
             level.setBlock(chestPos, Blocks.CHEST.defaultBlockState().setValue(ChestBlock.FACING, Direction.NORTH), Block.UPDATE_ALL);
             if (level.getBlockEntity(chestPos) instanceof ChestBlockEntity chest)
