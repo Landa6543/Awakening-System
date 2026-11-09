@@ -147,6 +147,8 @@ This project is a passion-driven tribute inspired by the greatest works of moder
     *   Designed, developed, and created by **LanderAlo**.
 *   🗺️ **Diorama Mod (Ray-Traced Minimap & World Map Engine):**
     *   Original concept and engine created by **Dara Adedeji** (`SunkenInTime`). Licensed under the **[MIT License](https://github.com/Landa6543/Awakening-System/blob/main/LICENSE_DIORAMA.txt)**.
+*   **DungeonZ (Ruin Gate dungeon pieces):**
+    *   Structure pieces and jigsaw pools of the Dark Dungeon and Jungle Temple by **Globox_Z**. Licensed under the **[MIT License](https://github.com/Landa6543/Awakening-System/blob/main/LICENSE_DUNGEONZ.txt)**.
 *   🕳️ **YUNG's Better Caves (Cave Generation):**
     *   Original mod created by **YUNGNICKYOUNG**. Licensed under the **[LGPL-3.0 License](https://github.com/Landa6543/Awakening-System/blob/main/LICENSE_BETTER_CAVES.txt)**.
 *   🗿 **Community 3D Models & Blockbench Workshop:**

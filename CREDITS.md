@@ -15,6 +15,14 @@ This project incorporates third-party 3D models, creative assets, and open-sourc
 * **Usage in Awakening System:**
   * Serves as the high-performance ray-traced voxel mapping engine powering the mod's HUD Minimap, underground cave slice navigation, fullscreen tactical map (`M`), fluid waypoint markers, and entity radar system.
 
+### 2. DungeonZ (Dungeon Structure Pieces)
+* **Author / Creator:** **Globox_Z** and Zura (structures built by `ftxeven`)
+* **CurseForge Page:** [DungeonZ on CurseForge](https://www.curseforge.com/minecraft/mc-mods/dungeonz)
+* **Source Code:** [GitHub - Globox1997/Dungeonz](https://github.com/Globox1997/Dungeonz)
+* **License:** [MIT License](https://opensource.org/licenses/MIT) *(Full legal notice bundled in [LICENSE_DUNGEONZ.txt](https://github.com/Landa6543/Awakening-System/blob/main/LICENSE_DUNGEONZ.txt))*
+* **Usage in Awakening System:**
+  * The structure pieces (`.nbt`) and jigsaw template pools of the Dark Dungeon and the Jungle Temple, adapted under `data/awakening_system/structure/ruin_gate/` and `worldgen/template_pool/ruin_gate/` for the Ruin Gates. Their own blocks were swapped for vanilla ones; the placement code is the mod's own.
+
 ---
 
 ## 🗿 3D Entity Models & Animations (Blockbench Community)
