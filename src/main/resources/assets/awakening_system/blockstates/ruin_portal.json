@@ -1,0 +1,7 @@
+{
+  "variants": {
+    "axis=x": { "model": "awakening_system:block/ruin_portal_x" },
+    "axis=z": { "model": "awakening_system:block/ruin_portal_z" },
+    "axis=y": { "model": "awakening_system:block/ruin_portal_y" }
+  }
+}

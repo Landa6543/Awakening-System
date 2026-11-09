@@ -92,7 +92,7 @@ public final class ForgottenCatacombsBuilder {
     private final List<BlockPos> corridorLights = new ArrayList<>();
     private ResourceKey<LootTable> chestLoot, bossLoot, supplies;
     private String rank;
-    private int chests, spawners;
+    private int chests, spawners, monsters;
 
     private ForgottenCatacombsBuilder(ServerLevel level, long seed) {
         this.level = level;
@@ -228,8 +228,8 @@ public final class ForgottenCatacombsBuilder {
 
         boolean ok = walkCheck(top, new BlockPos(boss.x, boss.fy, boss.z));
         if (System.getProperty("awakening.debugGrotto") != null) debugPlan(ox, oz, base);
-        AwakeningSystemMod.LOGGER.info("[Catacombs] built at {} (rank {}, floor y={}): {} rooms, {} chests, {} spawners, entrance {}, boss hall reachable: {}",
-                new BlockPos(ox, base, oz).toShortString(), rank, base, rooms.size(), chests, spawners, top.toShortString(), ok);
+        AwakeningSystemMod.LOGGER.info("[Catacombs] built at {} (rank {}, floor y={}): {} rooms, {} chests, {} spawners, {} monsters, entrance {}, boss hall reachable: {}",
+                new BlockPos(ox, base, oz).toShortString(), rank, base, rooms.size(), chests, spawners, monsters, top.toShortString(), ok);
         return top;
     }
 
@@ -290,7 +290,7 @@ public final class ForgottenCatacombsBuilder {
                 }
                 if (stair) stairs.add(new Stair(alongX ? new BlockPos(c, feet, line + w) : new BlockPos(line + w, feet, c), travel.getOpposite()));
             }
-            if (i % 7 == 3 && !stair) corridorLights.add(alongX ? new BlockPos(c, feet + 3, line) : new BlockPos(line, feet + 3, c));
+            if (i % 5 == 2 && !stair) corridorLights.add(alongX ? new BlockPos(c, feet + 3, line) : new BlockPos(line, feet + 3, c));
         }
     }
 
@@ -319,7 +319,7 @@ public final class ForgottenCatacombsBuilder {
                 if (stair) stairs.add(new Stair(new BlockPos(wx, feet, wz), travel.getOpposite()));
                 else laidFloor.add(new BlockPos(wx, feet - 1, wz));
             }
-            if (i % 7 == 5 && !stair) corridorLights.add(new BlockPos(x, feet + 3, z));
+            if (i % 5 == 4 && !stair) corridorLights.add(new BlockPos(x, feet + 3, z));
         }
         return new BlockPos(edgeX + dx * len, ground, edgeZ + dz * len);
     }
@@ -354,25 +354,52 @@ public final class ForgottenCatacombsBuilder {
 
     // ---------------------------------------------------------------- furnishing
     private void furnish(Room r) {
-        // a hanging lantern from the top of every vault
+        // a hanging lantern from the top of every vault, and one over each corner of the bigger rooms
         hangLantern(new BlockPos(r.x, r.fy + r.h - 1, r.z));
+        if (r.hx >= 5 && r.hz >= 5 && r.theme != Theme.SPIDER) {
+            for (int sx = -1; sx <= 1; sx += 2) for (int sz = -1; sz <= 1; sz += 2)
+                hangLantern(new BlockPos(r.x + sx * (r.hx - 2), r.fy + r.h - 1, r.z + sz * (r.hz - 2)));
+        }
         switch (r.theme) {
             case ENTRY -> { pillars(r, Blocks.CHISELED_STONE_BRICKS.defaultBlockState()); cobwebs(r, 4); }
             case HALL -> {
                 pillars(r, Blocks.STONE_BRICK_WALL.defaultBlockState());
                 cobwebs(r, 3);
-                if (rand.nextInt(3) == 0) spawnerIn(r, rand.nextBoolean() ? EntityType.ZOMBIE : EntityType.SPIDER);
+                if (rand.nextInt(3) != 0) spawnerIn(r, rand.nextBoolean() ? EntityType.ZOMBIE : EntityType.SPIDER);
             }
-            case LIBRARY -> library(r);
+            case LIBRARY -> { library(r); spawnerIn(r, EntityType.SKELETON); }
             case ARMORY -> armory(r);
             case PRISON -> prison(r);
             case CRYPT -> crypt(r);
             case SHRINE -> shrine(r);
-            case STORAGE -> storage(r);
+            case STORAGE -> { storage(r); spawnerIn(r, EntityType.ZOMBIE); }
             case FOUNTAIN -> fountain(r);
             case SPIDER -> spiderNest(r);
             case BOSS -> bossHall(r);
         }
+        // a few monsters already waiting in every room, on top of what the spawners bring
+        if (r.theme != Theme.BOSS && r.theme != Theme.ENTRY) {
+            EntityType<?>[] pool = switch (r.theme) {
+                case SPIDER -> new EntityType<?>[]{EntityType.CAVE_SPIDER, EntityType.SPIDER};
+                case CRYPT, PRISON -> new EntityType<?>[]{EntityType.SKELETON, EntityType.ZOMBIE, EntityType.HUSK};
+                case FOUNTAIN -> new EntityType<?>[]{EntityType.DROWNED, EntityType.ZOMBIE};
+                default -> new EntityType<?>[]{EntityType.ZOMBIE, EntityType.SKELETON, EntityType.SPIDER};
+            };
+            int count = r.theme == Theme.HALL ? 1 + rand.nextInt(2) : 2 + rand.nextInt(3);
+            for (int i = 0; i < count; i++) {
+                BlockPos p = spotIn(r, false);
+                if (p != null) monster(pool[rand.nextInt(pool.length)], p);
+            }
+        }
+    }
+
+    private void monster(EntityType<?> type, BlockPos p) {
+        if (!(type.create(level) instanceof net.minecraft.world.entity.Mob mob)) return;
+        mob.moveTo(p.getX() + 0.5, p.getY(), p.getZ() + 0.5, rand.nextFloat() * 360F, 0);
+        net.neoforged.neoforge.event.EventHooks.finalizeMobSpawn(mob, level, level.getCurrentDifficultyAt(p), MobSpawnType.STRUCTURE, null);
+        mob.setPersistenceRequired();
+        level.addFreshEntity(mob);
+        monsters++;
     }
 
     /** Cells of the room's floor (the feet level), optionally only those along the walls. */
@@ -405,7 +432,8 @@ public final class ForgottenCatacombsBuilder {
     private void pillars(Room r, BlockState state) {
         for (int sx = -1; sx <= 1; sx += 2) for (int sz = -1; sz <= 1; sz += 2) {
             int x = r.x + sx * (r.hx - 1), z = r.z + sz * (r.hz - 1);
-            for (int dy = 0; dy < r.h - 2; dy++) set(new BlockPos(x, r.fy + dy, z), state);
+            // up to the vault: the top layer of the room draws in by two, so the pillar meets the ceiling there
+            for (int dy = 0; dy < r.h - 1; dy++) set(new BlockPos(x, r.fy + dy, z), state);
         }
     }
 
@@ -555,7 +583,8 @@ public final class ForgottenCatacombsBuilder {
         // the way in arrives on one of the hall's centre lines, so the pillars keep off both of them
         for (int dz : new int[]{-7, -3, 3, 7}) for (int sx = -1; sx <= 1; sx += 2) {
             int x = r.x + sx * (r.hx - 3), z = r.z + dz;
-            for (int dy = 0; dy < r.h - 2; dy++) set(new BlockPos(x, r.fy + dy, z), dy == 0 || dy == r.h - 3
+            // floor to ceiling: this far in, every layer of the vault is open above the pillar
+            for (int dy = 0; dy < r.h; dy++) set(new BlockPos(x, r.fy + dy, z), dy == 0 || dy == r.h - 1
                     ? Blocks.CHISELED_STONE_BRICKS.defaultBlockState() : Blocks.POLISHED_DEEPSLATE.defaultBlockState());
             set(new BlockPos(x + -sx, r.fy, z), Blocks.SOUL_CAMPFIRE.defaultBlockState());
         }
@@ -593,22 +622,20 @@ public final class ForgottenCatacombsBuilder {
         return best;
     }
 
-    /** The Crypt Lord: a big wither skeleton held to its hall like the other bosses. */
+    /**
+     * The boss: the mod's Abyssal Necromancer, an undead caster that raises skeletons, a little bigger and
+     * tougher than the ones met in the Gates. Held to its hall like the other bosses.
+     */
     private void spawnBoss(BlockPos pos) {
-        WitherSkeleton boss = EntityType.WITHER_SKELETON.create(level);
+        var boss = com.soybe.awakeningsystem.entity.ModEntities.ABYSSAL_NECROMANCER.get().create(level);
         if (boss == null) return;
         boss.moveTo(pos.getX() + 0.5, pos.getY(), pos.getZ() + 0.5, rand.nextFloat() * 360F, 0);
         net.neoforged.neoforge.event.EventHooks.finalizeMobSpawn(boss, level, level.getCurrentDifficultyAt(pos), MobSpawnType.STRUCTURE, null);
-        boss.setItemSlot(EquipmentSlot.MAINHAND, new ItemStack(Items.IRON_SWORD));
-        boss.setItemSlot(EquipmentSlot.CHEST, new ItemStack(Items.CHAINMAIL_CHESTPLATE));
-        boss.setItemSlot(EquipmentSlot.HEAD, new ItemStack(Items.IRON_HELMET));
-        for (EquipmentSlot slot : EquipmentSlot.values()) boss.setDropChance(slot, 0.0F);
         AttributeInstance hp = boss.getAttribute(Attributes.MAX_HEALTH);
-        if (hp != null) hp.setBaseValue(hp.getBaseValue() * 4);
+        if (hp != null) hp.setBaseValue(hp.getBaseValue() * 1.5);
         AttributeInstance scale = boss.getAttribute(Attributes.SCALE);
-        if (scale != null) scale.setBaseValue(1.5);
+        if (scale != null) scale.setBaseValue(1.3);
         boss.setHealth(boss.getMaxHealth());
-        boss.setCustomName(net.minecraft.network.chat.Component.translatable("entity.awakening_system.crypt_lord"));
         boss.setPersistenceRequired();
         CompoundTag tag = boss.getPersistentData();
         tag.putDouble("arena_center_x", pos.getX() + 0.5);

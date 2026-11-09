@@ -1,0 +1,11 @@
+{
+  "render_type": "minecraft:translucent",
+  "ambientocclusion": false,
+  "textures": {
+    "particle": "awakening_system:block/ruin_portal",
+    "portal": "awakening_system:block/ruin_portal"
+  },
+  "elements": [
+    {"from": [7, 0, 0], "to": [9, 16, 16], "faces": {"east": {"uv": [0, 0, 16, 16], "texture": "#portal"}, "west": {"uv": [0, 0, 16, 16], "texture": "#portal"}}}
+  ]
+}

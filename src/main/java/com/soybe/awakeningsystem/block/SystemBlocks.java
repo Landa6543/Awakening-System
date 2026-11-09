@@ -49,6 +49,20 @@ public final class SystemBlocks {
             )
     );
 
+    /** The swirling surface filling a Ruin Gate's entrance; walking into it enters the dungeon. */
+    public static final DeferredHolder<Block, RuinPortalBlock> RUIN_PORTAL = BLOCKS.register(
+            "ruin_portal", () -> new RuinPortalBlock(
+                    BlockBehaviour.Properties.of()
+                            .mapColor(MapColor.COLOR_CYAN)
+                            .strength(-1.0F, 3600000.0F)
+                            .noCollission()
+                            .noOcclusion()
+                            .noLootTable()
+                            .lightLevel(state -> 11)
+                            .sound(SoundType.GLASS)
+            )
+    );
+
     public static final DeferredHolder<Block, ChristmasTreeBlock> CHRISTMAS_TREE = BLOCKS.register(
             "christmas_tree", () -> new ChristmasTreeBlock(
                     BlockBehaviour.Properties.of()

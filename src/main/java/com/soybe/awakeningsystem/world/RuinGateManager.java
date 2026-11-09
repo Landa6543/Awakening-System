@@ -105,18 +105,18 @@ public final class RuinGateManager {
     private static final long NATURAL_LIFETIME = 36000L;        // 30 minutes
     private static final int MAX_NATURAL_GATES = 3;
 
-    /** One dungeon type: its Overworld boss, where its pieces start and what each marker block stands for. */
-    private record Kind(String id, String boss, String startPool, Map<Block, String> spawns) {}
+    /** One dungeon type: its Overworld boss, its entrance ruin, where its pieces start and what each marker block stands for. */
+    private record Kind(String id, String boss, String entrance, String startPool, Map<Block, String> spawns) {}
 
     private static final Map<String, Kind> KINDS = Map.of(
-            "dark", new Kind("dark", "minecraft:ravager", "dark_dungeon/dungeon_spawn", Map.of(
+            "dark", new Kind("dark", "minecraft:ravager", "dark_dungeon_entrance", "dark_dungeon/dungeon_spawn", Map.of(
                     Blocks.DIAMOND_BLOCK, "minecraft:wither_skeleton",
                     Blocks.GOLD_BLOCK, "minecraft:skeleton",
                     Blocks.IRON_BLOCK, "minecraft:zombie",
                     Blocks.RAW_GOLD_BLOCK, "minecraft:spider",
                     Blocks.RAW_COPPER_BLOCK, "minecraft:creeper",
                     Blocks.RAW_IRON_BLOCK, "minecraft:witch")),
-            "temple", new Kind("temple", "minecraft:evoker", "temple_dungeon/temple_spawn", Map.of(
+            "temple", new Kind("temple", "minecraft:evoker", "temple_dungeon_entrance", "temple_dungeon/temple_spawn", Map.of(
                     Blocks.WHITE_WOOL, "minecraft:skeleton",
                     Blocks.CYAN_WOOL, "minecraft:zombie",
                     Blocks.LIME_WOOL, "minecraft:creeper",
@@ -206,9 +206,13 @@ public final class RuinGateManager {
                     // closes the gates within 12 blocks
                     ServerPlayer p = ctx.getSource().getPlayerOrException();
                     Data data = Data.get(ctx.getSource().getServer());
-                    int before = data.gates.size();
-                    data.gates.removeIf(g -> g.dimension.equals(p.level().dimension()) && g.pos.distSqr(p.blockPosition()) < 12 * 12);
-                    int closed = before - data.gates.size();
+                    List<Gate> near = data.gates.stream()
+                            .filter(g -> g.dimension.equals(p.level().dimension()) && g.pos.distSqr(p.blockPosition()) < 16 * 16).toList();
+                    for (Gate g : near) {
+                        closePortal(ctx.getSource().getServer(), g);
+                        data.gates.remove(g);
+                    }
+                    int closed = near.size();
                     data.setDirty();
                     com.soybe.awakeningsystem.DungeonManager.syncRiftsToAll(ctx.getSource().getServer());
                     ctx.getSource().sendSuccess(() -> Component.translatable("awakening_system.ruin_gate.closed", closed), false);
@@ -283,6 +287,17 @@ public final class RuinGateManager {
                 + " exits, spawn " + standableNear(realm, origin).toShortString();
         AwakeningSystemMod.LOGGER.info(msg);
         source.sendSuccess(() -> Component.literal(msg), false);
+        // the entrance ruin with its portal, raised near the world spawn (it closes on the next check)
+        ServerLevel world = source.getServer().overworld();
+        BlockPos at = world.getSharedSpawnPos().offset(30 + data.nextRun * 20, 0, 0);
+        world.getChunk(at.getX() >> 4, at.getZ() >> 4);
+        at = new BlockPos(at.getX(), world.getHeight(Heightmap.Types.MOTION_BLOCKING_NO_LEAVES, at.getX(), at.getZ()), at.getZ());
+        boolean opened = openGate(world, k, r, at, world.getGameTime() + 200);
+        Gate g = opened ? data.gates.get(data.gates.size() - 1) : null;
+        long blocks = g == null ? 0 : g.portal.stream().filter(p -> world.getBlockState(p).is(com.soybe.awakeningsystem.block.SystemBlocks.RUIN_PORTAL.get())).count();
+        AwakeningSystemMod.LOGGER.info("[Ruin Gate] entrance at {}: opened {}, {} portal blocks ({}), axis {}", at.toShortString(), opened, blocks,
+                g == null ? "-" : g.portal.get(0).toShortString(),
+                g == null ? "-" : world.getBlockState(g.portal.get(0)).getOptionalValue(com.soybe.awakeningsystem.block.RuinPortalBlock.AXIS).map(Object::toString).orElse("?"));
         // one roll of each table, to see what a run hands out
         for (String table : List.of(r.toLowerCase(java.util.Locale.ROOT), r.toLowerCase(java.util.Locale.ROOT) + "_boss", "supplies")) {
             net.minecraft.world.level.storage.loot.LootParams params = new net.minecraft.world.level.storage.loot.LootParams.Builder(realm)
@@ -300,27 +315,87 @@ public final class RuinGateManager {
     }
 
     // ---------------------------------------------------------------- the gate in the world
-    /**
-     * Opens a gate a few blocks in front of the player: a standing portal drawn like the regular Gates
-     * (colour and size by rank), facing the player.
-     */
+    /** Opens a gate a few blocks in front of the player. */
     private static void raiseGate(ServerPlayer player, Kind kind, String rank) {
         ServerLevel level = player.serverLevel();
-        Direction facing = player.getDirection();
-        BlockPos ahead = player.blockPosition().relative(facing, 6);
+        BlockPos ahead = player.blockPosition().relative(player.getDirection(), 12);
         level.getChunk(ahead.getX() >> 4, ahead.getZ() >> 4);
         BlockPos pos = new BlockPos(ahead.getX(), level.getHeight(Heightmap.Types.MOTION_BLOCKING_NO_LEAVES, ahead.getX(), ahead.getZ()), ahead.getZ());
-        Data data = Data.get(level.getServer());
-        openGate(level, kind, rank, pos, facing.toYRot(), 0L);   // opened by command: stays until removed
+        if (!openGate(level, kind, rank, pos, 0L)) {   // opened by command: stays until closed
+            player.sendSystemMessage(Component.translatable("awakening_system.ruin_gate.failed"));
+            return;
+        }
         player.sendSystemMessage(Component.translatable("awakening_system.ruin_gate.spawned", gateName(kind.id, rank)));
     }
 
-    private static void openGate(ServerLevel level, Kind kind, String rank, BlockPos pos, float yaw, long expireTick) {
+    /**
+     * Raises the gate's entrance ruin on the ground at {@code pos} (turned at random) and fills the opening
+     * the ruin was made for with portal blocks: a doorway in the temple, a pit on top of the mine ruin.
+     */
+    private static boolean openGate(ServerLevel level, Kind kind, String rank, BlockPos pos, long expireTick) {
+        Optional<StructureTemplate> template = level.getStructureManager().get(id(kind.entrance));
+        if (template.isEmpty()) return false;
+        StructureTemplate t = template.get();
+        net.minecraft.world.level.block.Rotation rotation = net.minecraft.world.level.block.Rotation.getRandom(level.getRandom());
+        StructurePlaceSettings settings = new StructurePlaceSettings().setRotation(rotation);
+        BoundingBox local = t.getBoundingBox(settings, BlockPos.ZERO);
+        BlockPos corner = new BlockPos(pos.getX() - (local.minX() + local.maxX()) / 2, pos.getY() - 1, pos.getZ() - (local.minZ() + local.maxZ()) / 2);
+        BoundingBox box = t.getBoundingBox(settings, corner);
+        t.placeInWorld(level, corner, corner, settings, level.getRandom(), Block.UPDATE_CLIENTS);
+        // footings: fill the gaps under the ruin's bottom layer so it does not float on a slope
+        for (int x = box.minX(); x <= box.maxX(); x++) for (int z = box.minZ(); z <= box.maxZ(); z++) {
+            if (level.getBlockState(new BlockPos(x, box.minY(), z)).isAir()) continue;
+            for (int y = box.minY() - 1; y > box.minY() - 8; y--) {
+                BlockPos p = new BlockPos(x, y, z);
+                BlockState st = level.getBlockState(p);
+                if (!st.canBeReplaced() && st.getFluidState().isEmpty()) break;
+                level.setBlock(p, (x + z) % 3 == 0 ? Blocks.MOSSY_COBBLESTONE.defaultBlockState() : Blocks.COBBLESTONE.defaultBlockState(), Block.UPDATE_CLIENTS);
+            }
+        }
+        List<BlockPos> lights = new ArrayList<>();
+        for (BlockPos p : BlockPos.betweenClosed(box.minX(), box.minY(), box.minZ(), box.maxX(), box.maxY(), box.maxZ()))
+            if (level.getBlockState(p).is(Blocks.LIGHT)) lights.add(p.immutable());
+        if (lights.isEmpty()) return false;
+        List<BlockPos> portal = new ArrayList<>();
+        Direction.Axis axis;
+        if (lights.size() == 1) {
+            // a single marker sits at the bottom of a pit: the portal lies flat and fills the pit's floor
+            axis = Direction.Axis.Y;
+            for (int dx = -1; dx <= 1; dx++) for (int dz = -1; dz <= 1; dz++) portal.add(lights.get(0).offset(dx, 0, dz));
+        } else {
+            boolean sameZ = lights.stream().allMatch(p -> p.getZ() == lights.get(0).getZ());
+            axis = sameZ ? Direction.Axis.X : Direction.Axis.Z;
+            portal.addAll(lights);
+        }
+        BlockState portalState = com.soybe.awakeningsystem.block.SystemBlocks.RUIN_PORTAL.get().defaultBlockState()
+                .setValue(com.soybe.awakeningsystem.block.RuinPortalBlock.AXIS, axis);
+        for (BlockPos p : portal) level.setBlock(p, portalState, Block.UPDATE_CLIENTS);
+        BlockPos centre = portal.get(portal.size() / 2);
         Data data = Data.get(level.getServer());
-        data.gates.add(new Gate(kind.id, rank, level.dimension(), pos, yaw, expireTick));
+        data.gates.add(new Gate(kind.id, rank, level.dimension(), centre, 0F, expireTick, portal));
         data.setDirty();
-        level.playSound(null, pos, SoundEvents.END_PORTAL_SPAWN, SoundSource.BLOCKS, 0.8F, 1.2F);
+        level.playSound(null, centre, SoundEvents.END_PORTAL_SPAWN, SoundSource.BLOCKS, 0.8F, 1.2F);
         com.soybe.awakeningsystem.DungeonManager.syncRiftsToAll(level.getServer());
+        return true;
+    }
+
+    /** Takes the portal blocks out of a gate that closes; the ruin stays as an empty shell. */
+    private static void closePortal(MinecraftServer server, Gate gate) {
+        ServerLevel level = server.getLevel(gate.dimension);
+        if (level == null) return;
+        for (BlockPos p : gate.portal) {
+            level.getChunk(p.getX() >> 4, p.getZ() >> 4);
+            if (level.getBlockState(p).is(com.soybe.awakeningsystem.block.SystemBlocks.RUIN_PORTAL.get()))
+                level.setBlock(p, Blocks.AIR.defaultBlockState(), Block.UPDATE_ALL);
+        }
+    }
+
+    /** Players who touched a portal this tick; they go through on the next server tick, outside their own movement. */
+    private static final Map<UUID, BlockPos> TOUCHED = new HashMap<>();
+
+    /** Called by the portal block when a player walks into it. */
+    public static void onPortalTouched(ServerPlayer player, BlockPos pos) {
+        if (!SESSIONS.containsKey(player.getUUID())) TOUCHED.putIfAbsent(player.getUUID(), pos.immutable());
     }
 
     /**
@@ -330,7 +405,12 @@ public final class RuinGateManager {
     private static void tickNaturalGates(MinecraftServer server, Data data) {
         ServerLevel world = server.overworld();
         long now = world.getGameTime();
-        boolean removed = data.gates.removeIf(g -> g.expireTick > 0 && now > g.expireTick);
+        List<Gate> expired = data.gates.stream().filter(g -> g.expireTick > 0 && now > g.expireTick).toList();
+        boolean removed = !expired.isEmpty();
+        for (Gate g : expired) {
+            closePortal(server, g);
+            data.gates.remove(g);
+        }
         if (removed) {
             data.setDirty();
             com.soybe.awakeningsystem.DungeonManager.syncRiftsToAll(server);
@@ -356,10 +436,7 @@ public final class RuinGateManager {
             List<String> kinds = new ArrayList<>(KINDS.keySet());
             Kind kind = KINDS.get(kinds.get(world.getRandom().nextInt(kinds.size())));
             String rank = randomRank(world.getRandom());
-            // the portal faces the player who is nearest when it opens
-            float yaw = (float) Math.toDegrees(Math.atan2(-(near.getX() - x), near.getZ() - z));
-            yaw = Math.round(yaw / 90F) * 90F;
-            openGate(world, kind, rank, pos, yaw, now + NATURAL_LIFETIME);
+            if (!openGate(world, kind, rank, pos, now + NATURAL_LIFETIME)) continue;
             for (ServerPlayer p : players) {
                 if (p.distanceToSqr(x, y, z) < 200 * 200)
                     p.sendSystemMessage(Component.translatable("awakening_system.ruin_gate.spawned", gateName(kind.id, rank)));
@@ -369,19 +446,7 @@ public final class RuinGateManager {
         }
     }
 
-    /** True when the player stands inside the gate's portal (a slab around its centre line). */
-    private static boolean insidePortal(Gate gate, ServerPlayer player) {
-        double dx = player.getX() - (gate.pos.getX() + 0.5), dz = player.getZ() - (gate.pos.getZ() + 0.5);
-        double dy = player.getY() - gate.pos.getY();
-        double rad = Math.toRadians(gate.yaw);
-        // across the portal (along the way the player faced when it opened) and along its width
-        double across = Math.abs(dx * -Math.sin(rad) + dz * Math.cos(rad));
-        double along = Math.abs(dx * Math.cos(rad) + dz * Math.sin(rad));
-        float size = portalSize(gate.rank);
-        return across < 0.9 && along < size * 0.5 && dy > -1.0 && dy < size * 2;
-    }
-
-    /** Called when the rift list is sent to a player, so the Ruin Gates and the open exits show up as portals. */
+    /** Called when the rift list is sent to a player: the Ruin Gates show on the maps, and the open exits as portals. */
     public static void addRiftEntries(ServerPlayer player, List<com.soybe.awakeningsystem.SyncRiftsPayload.RiftEntry> entries) {
         MinecraftServer server = player.getServer();
         if (server == null) return;
@@ -400,21 +465,24 @@ public final class RuinGateManager {
     @SubscribeEvent
     public static void onServerTick(ServerTickEvent.Post event) {
         MinecraftServer server = event.getServer();
-        if (server.getTickCount() % 5 != 0) return;
         Data data = Data.get(server);
-        tickNaturalGates(server, data);
-        boolean sparkle = server.getTickCount() % 10 == 0;
-        for (Gate gate : new ArrayList<>(data.gates)) {
-            ServerLevel level = server.getLevel(gate.dimension);
-            if (level == null || !level.isLoaded(gate.pos)) continue;
-            if (sparkle) level.sendParticles(ParticleTypes.REVERSE_PORTAL, gate.pos.getX() + 0.5, gate.pos.getY() + 0.3, gate.pos.getZ() + 0.5,
-                    6, portalSize(gate.rank) * 0.4, 0.2, portalSize(gate.rank) * 0.4, 0.02);
-            // a copy: entering teleports the player, which takes them out of this level's player list
-            for (ServerPlayer player : new ArrayList<>(level.players())) {
-                if (player.isSpectator() || SESSIONS.containsKey(player.getUUID())) continue;
-                if (insidePortal(gate, player)) enter(player, KINDS.get(gate.kind), gate.rank);
+        if (!TOUCHED.isEmpty()) {
+            Map<UUID, BlockPos> touched = new HashMap<>(TOUCHED);
+            TOUCHED.clear();
+            for (Map.Entry<UUID, BlockPos> e : touched.entrySet()) {
+                ServerPlayer player = server.getPlayerList().getPlayer(e.getKey());
+                if (player == null || SESSIONS.containsKey(player.getUUID())) continue;
+                for (Gate gate : data.gates) {
+                    if (gate.dimension.equals(player.level().dimension()) && gate.portal.contains(e.getValue())) {
+                        enter(player, KINDS.get(gate.kind), gate.rank);
+                        break;
+                    }
+                }
             }
         }
+        if (server.getTickCount() % 5 != 0) return;
+        tickNaturalGates(server, data);
+        boolean sparkle = server.getTickCount() % 10 == 0;
         // the exits inside the dungeons
         ServerLevel realm = server.getLevel(RUIN_REALM);
         if (realm == null) return;
@@ -681,8 +749,8 @@ public final class RuinGateManager {
     }
 
     // ---------------------------------------------------------------- saved gates
-    /** A gate standing in the world: its portal is drawn at {@code pos}, facing {@code yaw}. */
-    private record Gate(String kind, String rank, ResourceKey<Level> dimension, BlockPos pos, float yaw, long expireTick) {}
+    /** A gate standing in the world: its entrance ruin's portal blocks, with {@code pos} (their middle) for the maps. */
+    private record Gate(String kind, String rank, ResourceKey<Level> dimension, BlockPos pos, float yaw, long expireTick, List<BlockPos> portal) {}
 
     private static final class Data extends SavedData {
         final List<Gate> gates = new ArrayList<>();
@@ -700,17 +768,13 @@ public final class RuinGateManager {
                 CompoundTag g = list.getCompound(i);
                 ResourceLocation dim = ResourceLocation.tryParse(g.getString("Dimension"));
                 if (dim == null) continue;
-                BlockPos pos;
-                if (g.contains("Pos")) pos = BlockPos.of(g.getLong("Pos"));
-                else {
-                    // saved by the first test version, which kept the entrance's portal blocks
-                    long[] old = g.getLongArray("Portal");
-                    if (old.length == 0) continue;
-                    pos = BlockPos.of(old[0]);
-                }
+                List<BlockPos> portal = new ArrayList<>();
+                for (long l : g.getLongArray("Portal")) portal.add(BlockPos.of(l));
+                if (portal.isEmpty()) continue;   // a floating portal from the previous test version: nothing to walk into
+                BlockPos pos = g.contains("Pos") ? BlockPos.of(g.getLong("Pos")) : portal.get(0);
                 String rank = parseRank(g.getString("Rank"));
                 d.gates.add(new Gate(g.getString("Kind"), rank == null ? "C" : rank, ResourceKey.create(Registries.DIMENSION, dim), pos,
-                        g.getFloat("Yaw"), g.getLong("Expire")));
+                        g.getFloat("Yaw"), g.getLong("Expire"), portal));
             }
             return d;
         }
@@ -727,6 +791,7 @@ public final class RuinGateManager {
                 c.putLong("Pos", g.pos.asLong());
                 c.putFloat("Yaw", g.yaw);
                 c.putLong("Expire", g.expireTick);
+                c.putLongArray("Portal", g.portal.stream().mapToLong(BlockPos::asLong).toArray());
                 list.add(c);
             }
             tag.put("Gates", list);
