@@ -51,11 +51,21 @@ public class BbToGeo {
         }
         int atlasH = 1;
         while (atlasH < y + shelf) atlasH *= 2;
+        // textures Blockbench draws "additive" are glow layers laid over other cubes: they go into a separate
+        // glowmask (GeckoLib draws it lit, over the model) and stay empty in the base texture
         BufferedImage atlas = new BufferedImage(atlasW, atlasH, BufferedImage.TYPE_INT_ARGB);
-        for (int i = 0; i < n; i++) atlas.getGraphics().drawImage(img[i], ox[i], oy[i], null);
+        BufferedImage glow = new BufferedImage(atlasW, atlasH, BufferedImage.TYPE_INT_ARGB);
+        boolean anyGlow = false;
+        for (int i = 0; i < n; i++) {
+            JsonObject t = texs.get(i).getAsJsonObject();
+            boolean additive = t.has("render_mode") && t.get("render_mode").getAsString().equals("additive");
+            (additive ? glow : atlas).getGraphics().drawImage(img[i], ox[i], oy[i], null);
+            anyGlow |= additive;
+        }
         File texOut = assets.resolve("textures/entity/" + name + ".png").toFile();
         texOut.getParentFile().mkdirs();
         ImageIO.write(atlas, "png", texOut);
+        if (anyGlow) ImageIO.write(glow, "png", assets.resolve("textures/entity/" + name + "_glowmask.png").toFile());
 
         // ---- bones from the outliner
         Map<String, JsonObject> groups = new HashMap<>();
@@ -103,24 +113,34 @@ public class BbToGeo {
                 if (!animator.has("keyframes")) continue;
                 String bone = boneNameByUuid.getOrDefault(ent.getKey(), animator.has("name") ? animator.get("name").getAsString() : null);
                 if (bone == null || !used.contains(bone)) continue;
-                JsonObject channels = new JsonObject();
+                // GeckoLib needs each channel's keyframes in time order (Blockbench keeps them in the order they
+                // were made); a later frame at 0 makes it throw the whole animation away
+                Map<String, TreeMap<Double, JsonObject>> sorted = new LinkedHashMap<>();
                 for (JsonElement ke : animator.getAsJsonArray("keyframes")) {
                     JsonObject kf = ke.getAsJsonObject();
                     String ch = kf.get("channel").getAsString();
                     if (!ch.equals("rotation") && !ch.equals("position") && !ch.equals("scale")) continue;
-                    JsonObject chan = channels.has(ch) ? channels.getAsJsonObject(ch) : new JsonObject();
-                    channels.add(ch, chan);
+                    TreeMap<Double, JsonObject> chan = sorted.computeIfAbsent(ch, k -> new TreeMap<>());
                     JsonArray dps = kf.getAsJsonArray("data_points");
                     JsonObject frame = new JsonObject();
                     String interp = kf.has("interpolation") ? kf.get("interpolation").getAsString() : "linear";
                     if (dps.size() > 1) {
                         frame.add("pre", vec(dps.get(0).getAsJsonObject()));
                         frame.add("post", vec(dps.get(1).getAsJsonObject()));
+                    } else if (interp.equals("catmullrom")) {
+                        // GeckoLib only reads the lerp mode next to "vector"; with "post" it rejects the whole animation
+                        frame.add("vector", vec(dps.get(0).getAsJsonObject()));
+                        frame.addProperty("lerp_mode", "catmullrom");
                     } else {
                         frame.add("post", vec(dps.get(0).getAsJsonObject()));
-                        if (interp.equals("catmullrom")) frame.addProperty("lerp_mode", "catmullrom");
                     }
-                    chan.add(time(kf.get("time").getAsDouble()), frame);
+                    chan.put(Math.round(kf.get("time").getAsDouble() * 10000) / 10000.0, frame);
+                }
+                JsonObject channels = new JsonObject();
+                for (Map.Entry<String, TreeMap<Double, JsonObject>> ch : sorted.entrySet()) {
+                    JsonObject chan = new JsonObject();
+                    for (Map.Entry<Double, JsonObject> f : ch.getValue().entrySet()) chan.add(time(f.getKey()), f.getValue());
+                    channels.add(ch.getKey(), chan);
                 }
                 boneAnims.add(bone, channels);
             }
@@ -134,6 +154,7 @@ public class BbToGeo {
         Files.createDirectories(animOut.getParent());
         Files.writeString(animOut, new GsonBuilder().create().toJson(animRoot));
         System.out.println("bones " + bones.size() + ", cubes " + stats[0] + " (skipped " + stats[1] + "), atlas " + atlasW + "x" + atlasH
+                + (anyGlow ? " + glowmask" : "")
                 + ", animations " + anims.keySet());
     }
 

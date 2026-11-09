@@ -609,15 +609,18 @@ public final class ForgottenCatacombsBuilder {
         for (int w = -1; w <= 1; w += 2) set(back.relative(across, w).above(), Blocks.SOUL_LANTERN.defaultBlockState());
         for (int i = 0; i < 4; i++) set(new BlockPos(r.x + rand.nextInt(9) - 4, r.fy + r.h - 2, r.z + rand.nextInt(9) - 4), Blocks.CHAIN.defaultBlockState());
         // the Skeleton Lord stands sealed in crystal before its throne, facing the way in
+        AwakeningSystemMod.LOGGER.info("[Catacombs] boss hall centre {}, way in from {} ({} side), throne on the {} side, lord faces {}",
+                new BlockPos(r.x, r.fy, r.z).toShortString(), door.toShortString(), in.getOpposite().getName(), in.getName(), in.getOpposite().getName());
         spawnBoss(back.relative(in.getOpposite(), 4), in.getOpposite().toYRot(), new BlockPos(r.x, r.fy, r.z));
     }
 
     /** A point on the corridor that leads into the room (its staircase), to tell which side the way in is. */
     private BlockPos nearestDoor(Room r) {
-        BlockPos best = new BlockPos(r.x, r.fy, r.z);
+        // the stair closest to the hall's centre belongs to the staircase coming down into it
+        BlockPos centre = new BlockPos(r.x, r.fy, r.z), best = centre;
         double bestD = Double.MAX_VALUE;
         for (Stair s : stairs) {
-            double d = s.pos.distSqr(best);
+            double d = s.pos.distSqr(centre);
             if (d < bestD && s.pos.getY() < r.fy + BOSS_DROP + 2) { bestD = d; best = s.pos; }
         }
         return best;
