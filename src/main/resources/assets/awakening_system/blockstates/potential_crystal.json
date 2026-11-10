@@ -1,0 +1,31 @@
+{
+    "variants":  {
+                     "rank=0":  {
+                                    "model":  "awakening_system:block/potential_crystal"
+                                },
+                     "rank=1":  {
+                                    "model":  "awakening_system:block/potential_crystal"
+                                },
+                     "rank=2":  {
+                                    "model":  "awakening_system:block/potential_crystal"
+                                },
+                     "rank=3":  {
+                                    "model":  "awakening_system:block/potential_crystal"
+                                },
+                     "rank=4":  {
+                                    "model":  "awakening_system:block/potential_crystal"
+                                },
+                     "rank=5":  {
+                                    "model":  "awakening_system:block/potential_crystal"
+                                },
+                     "rank=6":  {
+                                    "model":  "awakening_system:block/potential_crystal"
+                                },
+                     "rank=7":  {
+                                    "model":  "awakening_system:block/potential_crystal"
+                                },
+                     "rank=8":  {
+                                    "model":  "awakening_system:block/potential_crystal_cracked"
+                                }
+                 }
+}

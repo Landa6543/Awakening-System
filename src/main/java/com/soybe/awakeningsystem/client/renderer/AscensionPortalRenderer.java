@@ -1,25 +1,42 @@
 package com.soybe.awakeningsystem.client.renderer;
 
 import com.mojang.blaze3d.vertex.PoseStack;
+import com.mojang.blaze3d.vertex.VertexConsumer;
+import com.mojang.math.Axis;
+import com.soybe.awakeningsystem.AwakeningSystemMod;
 import com.soybe.awakeningsystem.block.AscensionPortalBlock;
 import com.soybe.awakeningsystem.block.entity.AscensionPortalBlockEntity;
 import net.minecraft.client.renderer.LightTexture;
 import net.minecraft.client.renderer.MultiBufferSource;
 import net.minecraft.client.renderer.RenderType;
 import net.minecraft.client.renderer.blockentity.BlockEntityRendererProvider;
+import net.minecraft.client.renderer.texture.OverlayTexture;
 import net.minecraft.core.Direction;
 import net.minecraft.resources.ResourceLocation;
+import net.minecraft.world.level.Level;
+import net.minecraft.world.phys.AABB;
+import org.joml.Matrix4f;
 import software.bernie.geckolib.renderer.GeoBlockRenderer;
 
 /**
  * Renderer GeckoLib para el Portal Dimensional de la Gran Torre (Ascension Portal / Gate).
- * Renderiza el portal 3D con arcos de piedra y discos de vórtice dimensional animados,
- * iluminación full-bright translúcida y escala majestuosa.
+ * In the Overworld the portal sits inside the round gate of the Great Tower's vestibule, so there it is
+ * drawn as a turning vortex filling that gate instead of the stone gate model.
  */
 public class AscensionPortalRenderer extends GeoBlockRenderer<AscensionPortalBlockEntity> {
+    private static final ResourceLocation DEPTH = tex("tower_vortex_depth");
+    private static final ResourceLocation SWIRL = tex("tower_vortex_swirl");
+    private static final ResourceLocation GLOW = tex("tower_vortex_glow");
+    /** The gate is a circle of radius 4.4 centred 4 blocks above the portal block. */
+    private static final float RADIUS = 4.7F;
+    private static final float CENTER_Y = 4.0F;
 
     public AscensionPortalRenderer(BlockEntityRendererProvider.Context context) {
         super(new AscensionPortalGeoModel());
+    }
+
+    private static ResourceLocation tex(String name) {
+        return ResourceLocation.fromNamespaceAndPath(AwakeningSystemMod.MOD_ID, "textures/entity/" + name + ".png");
     }
 
     @Override
@@ -27,9 +44,17 @@ public class AscensionPortalRenderer extends GeoBlockRenderer<AscensionPortalBlo
         return RenderType.entityTranslucent(texture);
     }
 
+    private static boolean isTowerGate(AscensionPortalBlockEntity be) {
+        return be.getLevel() != null && be.getLevel().dimension().equals(Level.OVERWORLD);
+    }
+
     @Override
     public void render(AscensionPortalBlockEntity animatable, float partialTick, PoseStack poseStack,
                        MultiBufferSource bufferSource, int packedLight, int packedOverlay) {
+        if (isTowerGate(animatable)) {
+            renderVortex(animatable, partialTick, poseStack, bufferSource);
+            return;
+        }
         poseStack.pushPose();
         // Escalar sutilmente (1.4x) centrado en el bloque para darle porte imponente de Gate
         poseStack.translate(0.5D, 0.0D, 0.5D);
@@ -38,6 +63,57 @@ public class AscensionPortalRenderer extends GeoBlockRenderer<AscensionPortalBlo
 
         super.render(animatable, partialTick, poseStack, bufferSource, LightTexture.FULL_BRIGHT, packedOverlay);
         poseStack.popPose();
+    }
+
+    private void renderVortex(AscensionPortalBlockEntity be, float partialTick, PoseStack pose, MultiBufferSource buffers) {
+        float time = (be.getLevel().getGameTime() % 72000L) + partialTick;
+        Direction facing = getFacing(be);
+        pose.pushPose();
+        pose.translate(0.5D, CENTER_Y, 0.5D);
+        pose.mulPose(Axis.YP.rotationDegrees(-facing.toYRot()));
+        // the dark depth behind everything, then two swirls turning at different speeds, then the glow
+        disc(pose, buffers.getBuffer(RenderType.entityTranslucent(DEPTH)), RADIUS, 0.0F, -0.06F, 255);
+        disc(pose, buffers.getBuffer(RenderType.entityTranslucent(SWIRL)), RADIUS * 0.98F, time * 2.2F, -0.03F, 235);
+        disc(pose, buffers.getBuffer(RenderType.eyes(SWIRL)), RADIUS * 0.8F, -time * 3.4F + 40.0F, 0.0F, 150);
+        float pulse = 0.85F + 0.15F * (float) Math.sin(time * 0.08F);
+        disc(pose, buffers.getBuffer(RenderType.eyes(GLOW)), RADIUS * 1.08F * pulse, time * 0.5F, 0.03F, 200);
+        pose.popPose();
+    }
+
+    /** A square of side 2r centred on the pose, turned {@code spin} degrees, visible from both sides. */
+    private static void disc(PoseStack pose, VertexConsumer vc, float r, float spin, float z, int alpha) {
+        pose.pushPose();
+        pose.translate(0.0F, 0.0F, z);
+        pose.mulPose(Axis.ZP.rotationDegrees(spin % 360.0F));
+        PoseStack.Pose last = pose.last();
+        Matrix4f m = last.pose();
+        int light = LightTexture.FULL_BRIGHT;
+        // front
+        vertex(vc, last, m, -r, -r, 0, 1, alpha, light, 1);
+        vertex(vc, last, m, r, -r, 1, 1, alpha, light, 1);
+        vertex(vc, last, m, r, r, 1, 0, alpha, light, 1);
+        vertex(vc, last, m, -r, r, 0, 0, alpha, light, 1);
+        // back
+        vertex(vc, last, m, -r, r, 0, 0, alpha, light, -1);
+        vertex(vc, last, m, r, r, 1, 0, alpha, light, -1);
+        vertex(vc, last, m, r, -r, 1, 1, alpha, light, -1);
+        vertex(vc, last, m, -r, -r, 0, 1, alpha, light, -1);
+        pose.popPose();
+    }
+
+    private static void vertex(VertexConsumer vc, PoseStack.Pose last, Matrix4f m, float x, float y, float u, float v, int alpha, int light, int nz) {
+        vc.addVertex(m, x, y, 0.0F).setColor(255, 255, 255, alpha).setUv(u, v)
+                .setOverlay(OverlayTexture.NO_OVERLAY).setLight(light).setNormal(last, 0.0F, 0.0F, nz);
+    }
+
+    @Override
+    public AABB getRenderBoundingBox(AscensionPortalBlockEntity be) {
+        return new AABB(be.getBlockPos()).inflate(6.0D);
+    }
+
+    @Override
+    public boolean shouldRenderOffScreen(AscensionPortalBlockEntity be) {
+        return true;
     }
 
     @Override

@@ -5092,6 +5092,11 @@ public final class SystemEvents {
          : player.level().getDayTime() / 24000L;
       int streakBefore = data.dailyFailStreak();
       data.ensureDailyDay(currentDay);
+      if (!data.isAwakened()) {
+         // no penalty before the Great Tower has awakened the System
+         data.resetDailyPenaltyStreak();
+         return;
+      }
       if (data.dailyFailStreak() == SystemData.DAILY_PENALTY_STREAK - 1 && streakBefore != data.dailyFailStreak()) {
          // one more day without the missions and the System sends them to the penalty zone
          player.displayClientMessage(Component.translatable("awakening_system.penalty.streak_warning",

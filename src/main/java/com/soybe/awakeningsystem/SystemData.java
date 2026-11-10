@@ -131,6 +131,9 @@ public final class SystemData implements INBTSerializable<CompoundTag> {
     private int weeklyProgress;
     private boolean weeklyComplete;
     private boolean awakeningComplete;
+    private String potentialRank = "";
+    private boolean towerHintKnown;
+    private int towerHintX, towerHintZ;
     public static final int DAILY_PUSH_UPS_TARGET = 100;
     public static final int DAILY_SIT_UPS_TARGET = 100;
     public static final int DAILY_SQUATS_TARGET = 100;
@@ -913,6 +916,9 @@ public final class SystemData implements INBTSerializable<CompoundTag> {
 
     public boolean addExperience(int amount) {
         if (amount <= 0) return false;
+        // the System stays locked until the player awakens at the Great Tower
+        if (!awakeningComplete) return false;
+        amount = (int) Math.max(1L, Math.round(amount * potentialExpMultiplier(potentialRank)));
         int maxLvl = maxAllowedLevelForEvaluatedRank();
         if (level >= maxLvl) {
             reserveExperience += amount;
@@ -936,7 +942,7 @@ public final class SystemData implements INBTSerializable<CompoundTag> {
             }
             experience -= experienceToNextLevel();
             level++;
-            attributePoints += ATTR_POINTS_PER_LEVEL;
+            attributePoints += ATTR_POINTS_PER_LEVEL + potentialPointsPerLevel(potentialRank);
             leveled = true;
 
             if (level >= maxLvl) {
@@ -1162,7 +1168,7 @@ public final class SystemData implements INBTSerializable<CompoundTag> {
         activeCooldowns.clear();
         energy = MAX_ENERGY;
         awakeningMining = awakeningCombat = 0;
-        awakeningComplete = false;
+        // the awakening at the Great Tower is permanent: prestige keeps it
         if (!isConstellation) equippedTitle = "";
         return true;
     }
@@ -1194,11 +1200,61 @@ public final class SystemData implements INBTSerializable<CompoundTag> {
         return true;
     }
 
+    /** The old mining/combat awakening is gone: the System now awakens at the Altar of Origin in the Great Tower. */
     public boolean completeAwakening() {
-        if (awakeningComplete || awakeningMining < 16 || awakeningCombat < 5) return false;
+        return false;
+    }
+
+    // ── Potential measured at the Altar of Origin (F..EX). Permanent: prestige never touches it. ──
+    public static final String[] POTENTIAL_RANKS = {"F", "E", "D", "C", "B", "A", "S", "EX"};
+
+    public String potentialRank() { return potentialRank; }
+    public boolean potentialMeasured() { return !potentialRank.isEmpty(); }
+    /** Before awakening the System can be opened but does not let the player grow. */
+    public boolean isAwakened() { return awakeningComplete; }
+
+    public void awakenWithPotential(String rank) {
+        potentialRank = rank;
         awakeningComplete = true;
         skills.putIfAbsent("system_core", 1);
-        return true;
+        attributePoints += potentialBonusPoints(rank);
+    }
+
+    public static int potentialIndex(String rank) {
+        for (int i = 0; i < POTENTIAL_RANKS.length; i++) if (POTENTIAL_RANKS[i].equals(rank)) return i;
+        return -1;
+    }
+
+    /** One-off attribute points granted when the potential is revealed. */
+    public static int potentialBonusPoints(String rank) {
+        return switch (rank) { case "E" -> 2; case "D" -> 4; case "C" -> 6; case "B" -> 10; case "A" -> 15; case "S" -> 20; case "EX" -> 40; default -> 0; };
+    }
+
+    /** Experience multiplier from the potential. */
+    public static double potentialExpMultiplier(String rank) {
+        return switch (rank) { case "E" -> 1.05; case "D" -> 1.10; case "C" -> 1.15; case "B" -> 1.25; case "A" -> 1.35; case "S" -> 1.5; case "EX" -> 2.0; default -> 1.0; };
+    }
+
+    /** Extra attribute points per level from the potential. */
+    public static int potentialPointsPerLevel(String rank) {
+        return switch (rank) { case "A" -> 1; case "S" -> 1; case "EX" -> 2; default -> 0; };
+    }
+
+    /** Where the Great Tower stands, so the System can point the way before awakening. */
+    public void setTowerHint(int x, int z) { towerHintX = x; towerHintZ = z; towerHintKnown = true; }
+    public boolean towerHintKnown() { return towerHintKnown; }
+    public int towerHintX() { return towerHintX; }
+    public int towerHintZ() { return towerHintZ; }
+
+    /** Testing only (/greattower unawaken). */
+    public void resetForTesting() {
+        potentialRank = "";
+        awakeningComplete = false;
+    }
+
+    public void resetDailyPenaltyStreak() {
+        dailyFailStreak = 0;
+        dailyPenaltyDue = false;
     }
 
     public int awakeningMining() { return awakeningMining; }
@@ -2718,6 +2774,11 @@ public final class SystemData implements INBTSerializable<CompoundTag> {
         tag.putInt("awakening_mining", awakeningMining);
         tag.putInt("awakening_combat", awakeningCombat);
         tag.putBoolean("awakening_complete", awakeningComplete);
+        tag.putString("potential_rank", potentialRank);
+        if (towerHintKnown) {
+            tag.putInt("tower_hint_x", towerHintX);
+            tag.putInt("tower_hint_z", towerHintZ);
+        }
         tag.putLong("daily_day", dailyDay);
         tag.putInt("daily_type", dailyType);
         tag.putInt("daily_progress", dailyProgress);
@@ -3049,6 +3110,15 @@ public final class SystemData implements INBTSerializable<CompoundTag> {
         awakeningMining = tag.getInt("awakening_mining");
         awakeningCombat = tag.getInt("awakening_combat");
         awakeningComplete = tag.getBoolean("awakening_complete");
+        if (tag.contains("potential_rank")) {
+            potentialRank = tag.getString("potential_rank");
+        } else if (tag.getInt("level") > 1) {
+            // saves from before the Great Tower awakening: a player who already progressed keeps the System
+            awakeningComplete = true;
+        }
+        towerHintKnown = tag.contains("tower_hint_x");
+        towerHintX = tag.getInt("tower_hint_x");
+        towerHintZ = tag.getInt("tower_hint_z");
         dailyDay = tag.getLong("daily_day");
         dailyType = Math.max(0, Math.min(4, tag.getInt("daily_type")));
         dailyProgress = Math.max(0, tag.getInt("daily_progress"));

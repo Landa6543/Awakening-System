@@ -40,9 +40,9 @@ public final class TowerStructureGenerator {
         return FMLPaths.CONFIGDIR.get().resolve("awakening_system/custom_tower/tower_exterior.json");
     }
 
+    /** Only a tower the player exported themselves replaces the Great Tower design. */
     public static boolean hasCustomExport() {
-        if (Files.exists(getExportFilePath())) return true;
-        return TowerStructureGenerator.class.getResource("/data/awakening_system/custom_tower/tower_exterior.json") != null;
+        return Files.exists(getExportFilePath());
     }
 
     public static void generate(ServerLevel level, BlockPos origin) {
@@ -52,7 +52,7 @@ public final class TowerStructureGenerator {
                 return;
             }
         }
-        buildProceduralTower(level, origin);
+        com.soybe.awakeningsystem.tower.GreatTowerBuilder.build(level, origin, Direction.SOUTH);
     }
 
     // =========================================================================

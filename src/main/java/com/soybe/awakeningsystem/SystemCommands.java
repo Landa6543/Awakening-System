@@ -1436,9 +1436,7 @@ public final class SystemCommands {
     private static int completeAwakeningCommand(CommandSourceStack source) {
         if (!(source.getEntity() instanceof ServerPlayer player)) return 0;
         SystemData data = SystemEvents.data(player);
-        for (int i = 0; i < 16; i++) data.recordAwakeningMining();
-        for (int i = 0; i < 5; i++) data.recordAwakeningCombat();
-        data.completeAwakening();
+        if (!data.isAwakened()) data.awakenWithPotential(data.potentialMeasured() ? data.potentialRank() : "F");
         data.addCoins(100);
         SystemEvents.awardExperience(player, data, 250);
         AwakeningSystemMod.notify(player, "awakening_system.notification.awakening_complete.title",

@@ -344,6 +344,17 @@ public final class SystemBlocks {
             )
     );
 
+    /** The measuring cube on the Altar of Origin in the Great Tower. */
+    public static final DeferredHolder<Block, PotentialCrystalBlock> POTENTIAL_CRYSTAL = BLOCKS.register(
+            "potential_crystal", () -> new PotentialCrystalBlock(
+                    BlockBehaviour.Properties.of()
+                            .mapColor(MapColor.COLOR_LIGHT_BLUE)
+                            .strength(-1.0F, 3600000.0F)
+                            .sound(SoundType.AMETHYST)
+                            .noOcclusion()
+                            .lightLevel(s -> s.getValue(PotentialCrystalBlock.RANK) == 0 ? 6 : 7 + s.getValue(PotentialCrystalBlock.RANK))
+            ));
+
     public static final DeferredHolder<Block, AscensionPortalBlock> ASCENSION_PORTAL = BLOCKS.register(
             "tower_portal", () -> new AscensionPortalBlock(
                     BlockBehaviour.Properties.of()

@@ -255,8 +255,11 @@ public final class SystemScreen extends Screen {
 
     @Override
     public void onClose() {
+        // the real close happens once the window has folded away (see updateReveal)
+        if (closing) return;
         AwakeningSystemClient.playUiSound(ModSounds.SYSTEM_CLOSE.value(), 0.9F, 1.0F);
-        super.onClose();
+        closing = true;
+        animStart = net.minecraft.Util.getMillis();
     }
 
     @Override
@@ -352,6 +355,7 @@ public final class SystemScreen extends Screen {
 
     @Override
     public boolean mouseClicked(double mouseX, double mouseY, int button) {
+        if (closing) return true;
         double rawX = mouseX;
         double rawY = mouseY;
         mouseX = transformMouseX(mouseX);
@@ -1858,6 +1862,7 @@ public final class SystemScreen extends Screen {
 
     @Override
     public boolean keyPressed(int keyCode, int scanCode, int modifiers) {
+        if (closing) return true;
         if (shopSearchBox != null && shopSearchBox.isFocused()) {
             if (keyCode == 256) {
                 shopSearchBox.setFocused(false);
@@ -1903,18 +1908,20 @@ public final class SystemScreen extends Screen {
 
     @Override
     public void render(GuiGraphics g, int mouseX, int mouseY, float partialTick) {
-        g.fill(0, 0, width, height, 0x55060D15);
+        float reveal = updateReveal();
+        if (this.minecraft == null || this.minecraft.screen != this) return;
+        g.fill(0, 0, width, height, ((int) (0x55 * reveal) << 24) | 0x060D15);
 
         float scale = getGuiScale();
         int mX = (int) Math.round(transformMouseX(mouseX));
         int mY = (int) Math.round(transformMouseY(mouseY));
 
         g.pose().pushPose();
-        if (Math.abs(scale - 1.0F) > 0.001F) {
+        if (Math.abs(scale - 1.0F) > 0.001F || reveal < 1.0F) {
             float cx = (float) getGuiCenterX();
             float cy = (float) getGuiCenterY();
             g.pose().translate(cx, cy, 0.0F);
-            g.pose().scale(scale, scale, 1.0F);
+            g.pose().scale(scale, scale * reveal, 1.0F);
             g.pose().translate(-cx, -cy, 0.0F);
         }
 
@@ -2043,7 +2050,42 @@ public final class SystemScreen extends Screen {
 
         g.pose().popPose();
 
+        // bright edges of the window while it unfolds or folds away
+        if (reveal < 1.0F) {
+            float cy = (float) getGuiCenterY();
+            float half = H * scale / 2.0F * reveal + 1.0F;
+            int x0 = (int) (getGuiCenterX() - W * scale / 2.0F) + 6, x1 = (int) (getGuiCenterX() + W * scale / 2.0F) - 6;
+            int edge = 0xFF70E8FF, soft = 0x6070E8FF;
+            g.fill(x0, (int) (cy - half), x1, (int) (cy - half) + 1, edge);
+            g.fill(x0, (int) (cy + half) - 1, x1, (int) (cy + half), edge);
+            g.fill(x0, (int) (cy - half) + 1, x1, (int) (cy - half) + 2, soft);
+            g.fill(x0, (int) (cy + half) - 2, x1, (int) (cy + half) - 1, soft);
+        }
+
         super.render(g, mouseX, mouseY, partialTick);
+    }
+
+    // ── open / close animation: the window unfolds from its middle line and folds back on close ──
+    private static final long ANIM_MS = 180L;
+    private long animStart = -1L;
+    private boolean closing;
+
+    /** 0..1 how open the window is right now; finishes the close when it has folded away. */
+    private float updateReveal() {
+        if (animStart < 0L) animStart = net.minecraft.Util.getMillis();
+        float raw = Math.min(1.0F, (net.minecraft.Util.getMillis() - animStart) / (float) ANIM_MS);
+        float eased = raw * raw * (3.0F - 2.0F * raw);
+        if (closing && raw >= 1.0F && this.minecraft != null && this.minecraft.screen == this) {
+            super.onClose();
+        }
+        return Math.max(0.02F, closing ? 1.0F - eased : eased);
+    }
+
+    private static boolean clientAwakened() {
+        Minecraft mc = Minecraft.getInstance();
+        if (mc.player == null) return true;
+        SystemData d = mc.player.getData(AwakeningSystemMod.PLAYER_SYSTEM);
+        return d == null || d.isAwakened();
     }
 
     private static final String[] ARTIFACT_SLOT_EMOJIS = {"🌸", "🪶", "⏳", "🏆", "👑"};
@@ -2642,6 +2684,12 @@ public final class SystemScreen extends Screen {
         if (com.soybe.awakeningsystem.client.gui.GuiConfig.showTabProgress) list.add(5);
         if (com.soybe.awakeningsystem.client.gui.GuiConfig.showTabRanking) list.add(6);
         if (com.soybe.awakeningsystem.client.gui.GuiConfig.showTabArtifacts && isClientSys40()) list.add(7);
+        // a dormant System only shows its status and the call of the Great Tower
+        if (!clientAwakened()) {
+            list.clear();
+            list.add(0);
+            list.add(2);
+        }
         if (list.isEmpty()) {
             list.add(0);
         }
@@ -3719,31 +3767,20 @@ public final class SystemScreen extends Screen {
         boolean sys30 = isSys30();
         boolean sys20 = isSys20() || sys30;
 
-        if (!d.awakeningComplete()) {
+        if (!d.isAwakened()) {
+            // the dormant System: it only points the way to the Great Tower
             int startY = top + 108;
-            g.drawString(font, Component.translatable("awakening_system.screen.missions.awakening").copy().withStyle(ChatFormatting.BOLD), left + 34, startY, (sys30 || sys20) ? 0xFFFFD700 : 0xFF70E8FF);
-
-            Component mineText = Component.translatable("awakening_system.screen.missions.mine", d.awakeningMining(), 16);
-            drawClipped(g, mineText, left + 34, startY + 20, 0xFFE0E0E0, W - 68);
-            int barW = W - 68;
-            g.fill(left + 34, startY + 34, left + 34 + barW, startY + 42, sys30 ? 0xFF0E261E : (sys20 ? 0xFF160926 : 0xFF0B141D));
-            drawBorder(g, left + 34, startY + 34, barW, 8, sys30 ? 0x50D4AF37 : (sys20 ? 0x509D4EDD : 0x502D7691));
-            int mineFill = (int) (barW * Math.min(1.0F, (float) d.awakeningMining() / 16.0F));
-            if (mineFill > 0) {
-                g.fill(left + 34, startY + 34, left + 34 + mineFill, startY + 42, 0xFF50FA7B);
+            g.drawString(font, Component.translatable("awakening_system.screen.missions.dormant.title").copy().withStyle(ChatFormatting.BOLD), left + 34, startY, 0xFF70E8FF);
+            drawClipped(g, Component.translatable("awakening_system.screen.missions.dormant.line1"), left + 34, startY + 20, 0xFFE0E0E0, W - 68);
+            drawClipped(g, Component.translatable("awakening_system.screen.missions.dormant.line2"), left + 34, startY + 34, 0xFFE0E0E0, W - 68);
+            if (d.towerHintKnown() && minecraft != null && minecraft.player != null) {
+                int dx = d.towerHintX() - minecraft.player.getBlockX(), dz = d.towerHintZ() - minecraft.player.getBlockZ();
+                int dist = (int) Math.sqrt((double) dx * dx + (double) dz * dz);
+                Component dir = Component.translatable("awakening_system.direction." + com.soybe.awakeningsystem.tower.GreatTowerSite.direction(dx, dz));
+                drawClipped(g, Component.translatable("awakening_system.screen.missions.dormant.where", String.valueOf(dist), dir, String.valueOf(d.towerHintX()), String.valueOf(d.towerHintZ())),
+                        left + 34, startY + 56, 0xFFFFD866, W - 68);
             }
-
-            Component combatText = Component.translatable("awakening_system.screen.missions.combat", d.awakeningCombat(), 5);
-            drawClipped(g, combatText, left + 34, startY + 54, 0xFFE0E0E0, W - 68);
-            g.fill(left + 34, startY + 68, left + 34 + barW, startY + 76, sys30 ? 0xFF0E261E : (sys20 ? 0xFF160926 : 0xFF0B141D));
-            drawBorder(g, left + 34, startY + 68, barW, 8, sys30 ? 0x50D4AF37 : (sys20 ? 0x509D4EDD : 0x502D7691));
-            int combatFill = (int) (barW * Math.min(1.0F, (float) d.awakeningCombat() / 5.0F));
-            if (combatFill > 0) {
-                g.fill(left + 34, startY + 68, left + 34 + combatFill, startY + 76, 0xFFFF5555);
-            }
-
-            drawClipped(g, Component.translatable("awakening_system.screen.missions.reward"), left + 34, startY + 98, 0xFFFFD866, W - 68);
-            drawClipped(g, Component.translatable("awakening_system.screen.progress.quest_hint"), left + 34, startY + 114, sys30 ? 0xFF88C999 : (sys20 ? 0xFFD1B3E0 : MUTED), W - 68);
+            drawClipped(g, Component.translatable("awakening_system.screen.missions.dormant.locked"), left + 34, startY + 80, MUTED, W - 68);
             return;
         }
 

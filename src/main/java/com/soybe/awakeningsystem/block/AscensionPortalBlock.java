@@ -193,13 +193,12 @@ public class AscensionPortalBlock extends Block implements EntityBlock {
         }
 
         // Gran Torre Física (Fase 14): Verificación de Selección de la Torre y Despertar de Potencial
-        boolean hasPotential = player.getPersistentData().contains("tower_potential_rank")
-                || player.getPersistentData().getBoolean("tower_selected");
+        boolean hasPotential = com.soybe.awakeningsystem.SystemEvents.data(player).potentialMeasured();
         if (!hasPotential) {
             player.displayClientMessage(net.minecraft.network.chat.Component.translatable("awakening_system.msg.gran_torre_el_vortice_dimensional_te"), true);
             player.playNotifySound(SoundEvents.BEACON_DEACTIVATE, SoundSource.PLAYERS, 0.8F, 0.75F);
         } else {
-            String rank = player.getPersistentData().getString("tower_potential_rank");
+            String rank = com.soybe.awakeningsystem.SystemEvents.data(player).potentialRank();
             if (rank.isEmpty()) rank = "EX";
             com.soybe.awakeningsystem.tower.GreatTowerWorldManager.enterFloor(player, 1);
             player.playNotifySound(SoundEvents.BEACON_POWER_SELECT, SoundSource.PLAYERS, 0.8F, 1.2F);
@@ -262,13 +261,12 @@ public class AscensionPortalBlock extends Block implements EntityBlock {
                 }
             } else if (level.dimension().equals(Level.OVERWORLD)) {
                 player.setPortalCooldown();
-                boolean hasPotential = player.getPersistentData().contains("tower_potential_rank")
-                        || player.getPersistentData().getBoolean("tower_selected");
+                boolean hasPotential = com.soybe.awakeningsystem.SystemEvents.data(player).potentialMeasured();
                 if (!hasPotential) {
                     player.displayClientMessage(net.minecraft.network.chat.Component.translatable("awakening_system.msg.gran_torre_el_vortice_dimensional_te"), true);
                     player.playNotifySound(SoundEvents.BEACON_DEACTIVATE, SoundSource.PLAYERS, 0.8F, 0.75F);
                 } else {
-                    String rank = player.getPersistentData().getString("tower_potential_rank");
+                    String rank = com.soybe.awakeningsystem.SystemEvents.data(player).potentialRank();
                     if (rank.isEmpty()) rank = "EX";
                     com.soybe.awakeningsystem.tower.GreatTowerWorldManager.enterFloor(player, 1);
                     player.playNotifySound(SoundEvents.BEACON_POWER_SELECT, SoundSource.PLAYERS, 0.8F, 1.2F);

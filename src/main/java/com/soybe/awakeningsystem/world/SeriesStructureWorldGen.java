@@ -599,6 +599,8 @@ public final class SeriesStructureWorldGen {
                 });
                 SeriesStructureBuilder.spawnNpcIfAbsent(level, new BlockPos(pos.getX(), pos.getY() + 1, pos.getZ() + 4), ModEntities.SUNG_JINWOO.get(), NpcProfile.SUNG_JINWOO);
                 SeriesStructureBuilder.spawnNpcIfAbsent(level, new BlockPos(pos.getX() + 4, pos.getY() + 1, pos.getZ() - 3), ModEntities.CHA_HAEIN.get(), NpcProfile.CHA_HAEIN);
+                // the Association's inspector works here: he evaluates ranks and hands out the tracker
+                SeriesStructureBuilder.spawnNpcIfAbsent(level, new BlockPos(pos.getX() - 4, pos.getY() + 1, pos.getZ() - 3), ModEntities.HUNTER_EVALUATOR.get(), NpcProfile.HUNTER_EVALUATOR);
                 recordPlaced(level, "solo_leveling", pos);
                 return true;
             }

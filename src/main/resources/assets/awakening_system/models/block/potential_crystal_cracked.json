@@ -1,0 +1,228 @@
+{
+    "parent":  "block/block",
+    "render_type":  "minecraft:translucent",
+    "textures":  {
+                     "particle":  "awakening_system:block/potential_crystal",
+                     "crystal":  "awakening_system:block/potential_crystal",
+                     "core":  "awakening_system:block/potential_crystal_core",
+                     "cracks":  "awakening_system:block/potential_crystal_cracks"
+                 },
+    "elements":  [
+                     {
+                         "from":  [
+                                      5.5,
+                                      4.5,
+                                      5.5
+                                  ],
+                         "to":  [
+                                    10.5,
+                                    9.5,
+                                    10.5
+                                ],
+                         "faces":  {
+                                       "south":  {
+                                                     "texture":  "#core",
+                                                     "uv":  [
+                                                                0,
+                                                                0,
+                                                                16,
+                                                                16
+                                                            ],
+                                                     "tintindex":  0
+                                                 },
+                                       "north":  {
+                                                     "texture":  "#core",
+                                                     "uv":  [
+                                                                0,
+                                                                0,
+                                                                16,
+                                                                16
+                                                            ],
+                                                     "tintindex":  0
+                                                 },
+                                       "up":  {
+                                                  "texture":  "#core",
+                                                  "uv":  [
+                                                             0,
+                                                             0,
+                                                             16,
+                                                             16
+                                                         ],
+                                                  "tintindex":  0
+                                              },
+                                       "west":  {
+                                                    "texture":  "#core",
+                                                    "uv":  [
+                                                               0,
+                                                               0,
+                                                               16,
+                                                               16
+                                                           ],
+                                                    "tintindex":  0
+                                                },
+                                       "down":  {
+                                                    "texture":  "#core",
+                                                    "uv":  [
+                                                               0,
+                                                               0,
+                                                               16,
+                                                               16
+                                                           ],
+                                                    "tintindex":  0
+                                                },
+                                       "east":  {
+                                                    "texture":  "#core",
+                                                    "uv":  [
+                                                               0,
+                                                               0,
+                                                               16,
+                                                               16
+                                                           ],
+                                                    "tintindex":  0
+                                                }
+                                   }
+                     },
+                     {
+                         "from":  [
+                                      3,
+                                      2,
+                                      3
+                                  ],
+                         "to":  [
+                                    13,
+                                    12,
+                                    13
+                                ],
+                         "faces":  {
+                                       "south":  {
+                                                     "texture":  "#crystal",
+                                                     "uv":  [
+                                                                0,
+                                                                0,
+                                                                16,
+                                                                16
+                                                            ],
+                                                     "tintindex":  0
+                                                 },
+                                       "north":  {
+                                                     "texture":  "#crystal",
+                                                     "uv":  [
+                                                                0,
+                                                                0,
+                                                                16,
+                                                                16
+                                                            ],
+                                                     "tintindex":  0
+                                                 },
+                                       "up":  {
+                                                  "texture":  "#crystal",
+                                                  "uv":  [
+                                                             0,
+                                                             0,
+                                                             16,
+                                                             16
+                                                         ],
+                                                  "tintindex":  0
+                                              },
+                                       "west":  {
+                                                    "texture":  "#crystal",
+                                                    "uv":  [
+                                                               0,
+                                                               0,
+                                                               16,
+                                                               16
+                                                           ],
+                                                    "tintindex":  0
+                                                },
+                                       "down":  {
+                                                    "texture":  "#crystal",
+                                                    "uv":  [
+                                                               0,
+                                                               0,
+                                                               16,
+                                                               16
+                                                           ],
+                                                    "tintindex":  0
+                                                },
+                                       "east":  {
+                                                    "texture":  "#crystal",
+                                                    "uv":  [
+                                                               0,
+                                                               0,
+                                                               16,
+                                                               16
+                                                           ],
+                                                    "tintindex":  0
+                                                }
+                                   }
+                     },
+                     {
+                         "from":  [
+                                      2.95,
+                                      1.95,
+                                      2.95
+                                  ],
+                         "to":  [
+                                    13.05,
+                                    12.05,
+                                    13.05
+                                ],
+                         "faces":  {
+                                       "south":  {
+                                                     "texture":  "#cracks",
+                                                     "uv":  [
+                                                                0,
+                                                                0,
+                                                                16,
+                                                                16
+                                                            ]
+                                                 },
+                                       "north":  {
+                                                     "texture":  "#cracks",
+                                                     "uv":  [
+                                                                0,
+                                                                0,
+                                                                16,
+                                                                16
+                                                            ]
+                                                 },
+                                       "up":  {
+                                                  "texture":  "#cracks",
+                                                  "uv":  [
+                                                             0,
+                                                             0,
+                                                             16,
+                                                             16
+                                                         ]
+                                              },
+                                       "west":  {
+                                                    "texture":  "#cracks",
+                                                    "uv":  [
+                                                               0,
+                                                               0,
+                                                               16,
+                                                               16
+                                                           ]
+                                                },
+                                       "down":  {
+                                                    "texture":  "#cracks",
+                                                    "uv":  [
+                                                               0,
+                                                               0,
+                                                               16,
+                                                               16
+                                                           ]
+                                                },
+                                       "east":  {
+                                                    "texture":  "#cracks",
+                                                    "uv":  [
+                                                               0,
+                                                               0,
+                                                               16,
+                                                               16
+                                                           ]
+                                                }
+                                   }
+                     }
+                 ]
+}
