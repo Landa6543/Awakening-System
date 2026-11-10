@@ -34,7 +34,7 @@ public final class SideriteMeteorManager {
     private static long lastMeteorTime = 0L;
 
     // Como mínimo 3 días de juego entre meteoritos naturales
-    private static final long NATURAL_COOLDOWN_TICKS = 72000L;
+    private static final long NATURAL_COOLDOWN_TICKS = 7 * 24000L;   // al menos 7 días de juego entre meteoritos
     // Se comprueba cada 10 segundos: cerca de 1 noche de cada 5 una vez pasado el cooldown
     private static final float CHANCE_PER_CHECK = 0.005F;
 
@@ -93,6 +93,8 @@ public final class SideriteMeteorManager {
 
         // Chequeo cada 200 ticks (10 segundos)
         if (gameTime % 200L != 0L) return;
+        // old craters that nobody built in heal back into the ground
+        MeteorCraterHealer.tick(server);
 
         ServerLevel overworld = server.getLevel(Level.OVERWORLD);
         if (overworld == null) return;
@@ -200,7 +202,9 @@ public final class SideriteMeteorManager {
             meteor.age++;
             // the fall itself is drawn by each client; here only the impact happens, on time
             if (meteor.age >= FALL_TICKS) {
+                MeteorCraterHealer.Snapshot ground = MeteorCraterHealer.before(meteor.level, meteor.target);
                 FallingSideriteMeteorEntity.createImpact(meteor.level, meteor.target);
+                MeteorCraterHealer.record(meteor.level, meteor.target, ground);
                 int ores = 0, blocks = 0;
                 for (BlockPos p : BlockPos.betweenClosed(meteor.target.offset(-9, -6, -9), meteor.target.offset(9, 3, 9))) {
                     BlockState st = meteor.level.getBlockState(p);

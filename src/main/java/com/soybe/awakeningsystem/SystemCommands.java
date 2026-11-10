@@ -581,6 +581,13 @@ public final class SystemCommands {
                     com.soybe.awakeningsystem.AwakeningSystemMod.LOGGER.info("[Meteor] test meteor falling towards {}", at == null ? "nowhere (no flat natural ground)" : at.toShortString());
                     return at == null ? 0 : 1;
                 }))
+                .then(Commands.literal("heal").executes(context -> {
+                    // for testing: every crater counts as 5 days old and heals now if nobody is close by
+                    int n = com.soybe.awakeningsystem.world.MeteorCraterHealer.ageAll(context.getSource().getServer());
+                    com.soybe.awakeningsystem.world.MeteorCraterHealer.tick(context.getSource().getServer());
+                    com.soybe.awakeningsystem.AwakeningSystemMod.LOGGER.info("[Meteor] heal check on {} crater(s)", n);
+                    return n;
+                }))
                 .executes(context -> {
                     ServerPlayer player = context.getSource().getPlayerOrException();
                     boolean spawned = com.soybe.awakeningsystem.world.SideriteMeteorManager.spawnMeteorNearPlayer(player, true);
