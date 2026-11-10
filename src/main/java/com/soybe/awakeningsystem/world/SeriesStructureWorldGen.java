@@ -658,10 +658,8 @@ public final class SeriesStructureWorldGen {
                 return true;
             }
             case "valter", "hanbin", "barbarian", "rock_dimension", "valter_camp", "sword_king" -> {
-                placeSeriesNbtStructure(level, pos, "valter_camp", 12, 14, 12, () -> {
-                    clearStructureVegetation(level, pos, 12, 14, 12);
-                    SeriesStructureBuilder.buildValterCamp(level, pos);
-                });
+                // Valter's war camp (the old template was a few loose logs and an anvil)
+                ValterWarCamp.build(level, pos);
                 SeriesStructureBuilder.spawnNpcIfAbsent(level, new BlockPos(pos.getX() + 2, pos.getY() + 2, pos.getZ() - 1), ModEntities.RYU_HANBIN.get(), NpcProfile.RYU_HANBIN);
                 recordPlaced(level, "valter", pos);
                 return true;
@@ -789,6 +787,7 @@ public final class SeriesStructureWorldGen {
                 });
                 // the Demon King's castle in the middle is rebuilt as a proper gothic castle
                 ElementalCastleKeep.build(level, airPos);
+                ElementalCastleKeep.decorateIslands(level, airPos);
                 SeriesStructureBuilder.populateElementalFloatingCastles(level, airPos);
                 recordPlaced(level, "elemental_floating_castles", airPos);
                 return true;

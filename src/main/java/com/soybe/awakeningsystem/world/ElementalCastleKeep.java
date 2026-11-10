@@ -68,6 +68,79 @@ public final class ElementalCastleKeep {
 
     private static int[] hatch = {0, 0};
 
+    /** The four elemental islands, 42 blocks out: wind north, frost south, fire east, storm west. */
+    public static void decorateIslands(ServerLevel level, BlockPos center) {
+        int cx = center.getX(), cz = center.getZ();
+        island(level, cx, cz - 42, center.getY(), 0);
+        island(level, cx, cz + 42, center.getY(), 1);
+        island(level, cx + 42, cz, center.getY(), 2);
+        island(level, cx - 42, cz, center.getY(), 3);
+    }
+
+    private static void island(ServerLevel level, int ix, int iz, int cy, int element) {
+        int fy = cy;
+        for (int y = cy + 14; y > cy - 12; y--) {
+            BlockPos p = new BlockPos(ix + 6, y, iz + 3);
+            if (level.getBlockState(p).isSolid()) { fy = y; break; }
+        }
+        // clear what stood on the island (keeping its floor), then raise its shrine
+        for (int x = -12; x <= 12; x++)
+            for (int z = -12; z <= 12; z++)
+                if (x * x + z * z <= 144)
+                    for (int y = fy + 1; y <= fy + 14; y++) {
+                        BlockPos p = new BlockPos(ix + x, y, iz + z);
+                        if (!level.getBlockState(p).isAir()) level.setBlock(p, Blocks.AIR.defaultBlockState(), 2);
+                    }
+        BlockState body, top, cap, accent;
+        switch (element) {
+            case 0 -> { body = Blocks.CALCITE.defaultBlockState(); top = Blocks.CYAN_STAINED_GLASS.defaultBlockState(); cap = Blocks.END_ROD.defaultBlockState(); accent = Blocks.WHITE_STAINED_GLASS.defaultBlockState(); }
+            case 1 -> { body = Blocks.PACKED_ICE.defaultBlockState(); top = Blocks.BLUE_ICE.defaultBlockState(); cap = Blocks.SNOW_BLOCK.defaultBlockState(); accent = Blocks.POWDER_SNOW_CAULDRON.defaultBlockState(); }
+            case 2 -> { body = Blocks.POLISHED_BLACKSTONE_BRICKS.defaultBlockState(); top = Blocks.MAGMA_BLOCK.defaultBlockState(); cap = Blocks.CAMPFIRE.defaultBlockState(); accent = Blocks.LAVA.defaultBlockState(); }
+            default -> { body = Blocks.CUT_COPPER.defaultBlockState(); top = Blocks.PURPLE_STAINED_GLASS.defaultBlockState(); cap = Blocks.LIGHTNING_ROD.defaultBlockState(); accent = Blocks.AMETHYST_BLOCK.defaultBlockState(); }
+        }
+        // the direction of the bridge to the castle is left open
+        int dirX = element == 2 ? -1 : element == 3 ? 1 : 0, dirZ = element == 0 ? 1 : element == 1 ? -1 : 0;
+        for (int i = 0; i < 8; i++) {
+            double a = i * Math.PI / 4.0D + Math.PI / 8.0D;
+            int px = (int) Math.round(Math.sin(a) * 9.0D), pz = (int) Math.round(Math.cos(a) * 9.0D);
+            if (px * dirX + pz * dirZ > 6) continue;                 // keep the bridge end clear
+            int h = 8 + (i % 2) * 3;
+            for (int ox = 0; ox <= 1; ox++)
+                for (int oz = 0; oz <= 1; oz++)
+                    for (int y = 1; y <= h; y++) set(level, ix + px + ox, fy + y, iz + pz + oz, (y == h || y == h / 2) ? top : body);
+            set(level, ix + px, fy + h + 1, iz + pz, cap);
+            if (element == 1) {
+                // icicles hanging around the frost pillars
+                set(level, ix + px, fy + h + 2, iz + pz, Blocks.POINTED_DRIPSTONE.defaultBlockState()
+                        .setValue(net.minecraft.world.level.block.PointedDripstoneBlock.TIP_DIRECTION, Direction.UP));
+            }
+        }
+        // the element itself, set in the floor around the arena
+        for (int i = 0; i < 4; i++) {
+            double a = i * Math.PI / 2.0D + Math.PI / 4.0D;
+            int px = (int) Math.round(Math.sin(a) * 6.0D), pz = (int) Math.round(Math.cos(a) * 6.0D);
+            set(level, ix + px, fy, iz + pz, accent.is(Blocks.LAVA) || accent.is(Blocks.POWDER_SNOW_CAULDRON) ? body : accent);
+            if (accent.is(Blocks.LAVA)) {
+                set(level, ix + px, fy, iz + pz, Blocks.LAVA.defaultBlockState());
+                set(level, ix + px, fy - 1, iz + pz, Blocks.POLISHED_BLACKSTONE_BRICKS.defaultBlockState());
+                for (Direction d : Direction.Plane.HORIZONTAL) {
+                    BlockPos side = new BlockPos(ix + px, fy, iz + pz).relative(d);
+                    if (level.getBlockState(side).isAir()) level.setBlock(side, Blocks.POLISHED_BLACKSTONE_BRICKS.defaultBlockState(), 2);
+                }
+            } else if (accent.is(Blocks.POWDER_SNOW_CAULDRON)) {
+                set(level, ix + px, fy + 1, iz + pz, Blocks.POWDER_SNOW_CAULDRON.defaultBlockState());
+            }
+        }
+        if (element == 1) {
+            // snow drifts on the frost island
+            for (int x = -10; x <= 10; x++)
+                for (int z = -10; z <= 10; z++)
+                    if (x * x + z * z <= 100 && ((x * 31 + z * 17) & 3) == 0 && level.getBlockState(new BlockPos(ix + x, fy + 1, iz + z)).isAir()
+                            && level.getBlockState(new BlockPos(ix + x, fy, iz + z)).isSolid())
+                        set(level, ix + x, fy + 1, iz + z, Blocks.SNOW.defaultBlockState());
+        }
+    }
+
     private static void set(ServerLevel level, int x, int y, int z, BlockState s) {
         level.setBlock(new BlockPos(x, y, z), s, 2);
     }

@@ -76,14 +76,7 @@ public final class ScreenUnfoldAnimation {
     public static void onRenderPost(ScreenEvent.Render.Post event) {
         if (!pushed) return;
         pushed = false;
-        GuiGraphics g = event.getGuiGraphics();
-        g.pose().popPose();
-        float r = reveal();
-        Screen s = event.getScreen();
-        float cy = s.height / 2.0F, half = s.height * 0.32F * r + 1.0F;
-        int x0 = (int) (s.width * 0.18F), x1 = (int) (s.width * 0.82F);
-        g.fill(x0, (int) (cy - half), x1, (int) (cy - half) + 1, 0xFF70E8FF);
-        g.fill(x0, (int) (cy + half) - 1, x1, (int) (cy + half), 0xFF70E8FF);
+        event.getGuiGraphics().pose().popPose();
     }
 
     @SubscribeEvent

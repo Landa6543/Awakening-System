@@ -26,7 +26,7 @@ public class PotentialCrystalBlock extends Block {
     private static final VoxelShape SHAPE = Block.box(1.0D, 2.0D, 1.0D, 15.0D, 20.0D, 15.0D);
 
     /** Tint for each RANK value: dormant, F, E, D, C, B, A, S, EX. */
-    public static final int[] COLORS = {0x8FA6B8, 0x9A9A9A, 0x6FE3FF, 0x3D7BFF, 0x3CE070, 0xB050FF, 0xFF3A4A, 0xFFC93A, 0xFFFFFF};
+    public static final int[] COLORS = {0x7FD8FF,0x9A9A9A, 0x6FE3FF, 0x3D7BFF, 0x3CE070, 0xB050FF, 0xFF3A4A, 0xFFC93A, 0xFFFFFF};
 
     public PotentialCrystalBlock(Properties properties) {
         super(properties);

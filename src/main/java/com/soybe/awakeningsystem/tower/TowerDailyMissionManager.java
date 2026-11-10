@@ -341,10 +341,10 @@ public final class TowerDailyMissionManager {
     }
 
     public static boolean isMissionLockedForPlayer(Player player, TowerMissionTemplate template) {
-        CompoundTag tag = player.getPersistentData();
-        if (!tag.getBoolean("tower_has_entered")) return true;
         SystemData data = SystemEvents.data(player);
-        int savedFloor = data.savedTowerFloor();
+        // measuring the potential at the Altar of Origin registers the player with the Tower
+        if (!player.getPersistentData().getBoolean("tower_has_entered") && !data.potentialMeasured()) return true;
+        int savedFloor = Math.max(1, data.savedTowerFloor());
         return template.floor() > savedFloor;
     }
 
@@ -397,8 +397,9 @@ public final class TowerDailyMissionManager {
         CompoundTag tag = player.getPersistentData();
         long currentDay = getCurrentWorldDay(player.level());
         SystemData data = SystemEvents.data(player);
-        boolean hasEntered = tag.getBoolean("tower_has_entered");
-        int savedFloor = hasEntered ? data.savedTowerFloor() : 0;
+        // measuring the potential at the Altar of Origin registers the player with the Tower
+        boolean hasEntered = tag.getBoolean("tower_has_entered") || data.potentialMeasured();
+        int savedFloor = hasEntered ? Math.max(1, data.savedTowerFloor()) : 0;
 
         int[] dailyIndices = getDailyMissionIndicesForDay(currentDay);
 
@@ -440,7 +441,7 @@ public final class TowerDailyMissionManager {
         SystemData data = SystemEvents.data(player);
 
         CompoundTag tag = player.getPersistentData();
-        if (!tag.getBoolean("tower_has_entered")) {
+        if (!tag.getBoolean("tower_has_entered") && !data.potentialMeasured()) {
             player.sendSystemMessage(Component.translatable("awakening_system.msg.debes_cruzar_primero_el_portal_hacia"));
             player.playNotifySound(SoundEvents.VILLAGER_NO, SoundSource.PLAYERS, 1.0F, 1.0F);
             return;

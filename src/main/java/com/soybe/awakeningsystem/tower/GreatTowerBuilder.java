@@ -270,12 +270,6 @@ public final class GreatTowerBuilder {
                 if (z > 0 && Math.abs(x) <= 3) continue;               // keep the doorway clear
                 int h = d > r + 2.5D ? 2 : (d > r + 1.5D ? 4 : 6);
                 for (int y = 1; y <= h; y++) set(x, y, z, y == h ? TRIM : WALL_DARK);
-                double a = angle(x, z);
-                if ((a % 30.0D) < 3.0D || (a % 30.0D) > 27.0D) {
-                    // buttress rising along the pilaster
-                    int bh = d > r + 2.5D ? 10 : (d > r + 1.5D ? 16 : 22);
-                    for (int y = 1; y <= bh; y++) set(x, y, z, y == bh ? Blocks.CHISELED_POLISHED_BLACKSTONE.defaultBlockState() : PILLAR);
-                }
             }
         }
     }
@@ -323,15 +317,9 @@ public final class GreatTowerBuilder {
                 set(x, VESTIBULE_CEILING, z, (Math.abs(d - 8.0D) < 0.5D) ? GLOW : TILES);
             }
         }
-        // eight great columns
+        // lanterns hanging from the ceiling (the hall itself is left open, without columns)
         for (int i = 0; i < 8; i++) {
             double a = Math.toRadians(22.5D + i * 45.0D);
-            int cx = (int) Math.round(Math.sin(a) * 12.0D), cz = (int) Math.round(Math.cos(a) * 12.0D);
-            for (int y = 1; y < VESTIBULE_CEILING; y++) {
-                BlockState s = (y == 1 || y == VESTIBULE_CEILING - 1) ? TRIM : PILLAR;
-                if (y == 12) s = Blocks.CHISELED_POLISHED_BLACKSTONE.defaultBlockState();
-                set(cx, y, cz, s);
-            }
             int lx = (int) Math.round(Math.sin(a) * 10.0D), lz = (int) Math.round(Math.cos(a) * 10.0D);
             set(lx, VESTIBULE_CEILING - 1, lz, Blocks.SOUL_LANTERN.defaultBlockState().setValue(LanternBlock.HANGING, true));
         }
@@ -366,16 +354,9 @@ public final class GreatTowerBuilder {
         for (int x = -2; x <= 2; x++)
             for (int z = -2; z <= 2; z++)
                 if (Math.abs(x) == 2 || Math.abs(z) == 2) set(x, 1, z, (x + z) % 2 == 0 ? GLOW : TRIM);
-        // four rune pillars on the corners
-        for (int sx = -1; sx <= 1; sx += 2) {
-            for (int sz = -1; sz <= 1; sz += 2) {
-                int x = sx * 3, z = sz * 3;
-                set(x, 1, z, TRIM);
-                for (int y = 2; y <= 4; y++) set(x, y, z, y == 3 ? Blocks.CHISELED_QUARTZ_BLOCK.defaultBlockState() : Blocks.QUARTZ_PILLAR.defaultBlockState());
-                set(x, 5, z, Blocks.AMETHYST_BLOCK.defaultBlockState());
-                set(x, 6, z, Blocks.AMETHYST_CLUSTER.defaultBlockState());
-            }
-        }
+        // the corners of the dais, left open
+        for (int sx = -1; sx <= 1; sx += 2)
+            for (int sz = -1; sz <= 1; sz += 2) set(sx * 3, 1, sz * 3, TRIM);
         // central pedestal and the crystal
         set(0, 2, 0, Blocks.CHISELED_POLISHED_BLACKSTONE.defaultBlockState());
         set(0, 3, 0, Blocks.CHISELED_QUARTZ_BLOCK.defaultBlockState());
@@ -410,13 +391,10 @@ public final class GreatTowerBuilder {
     private static BlockPos board() {
         int z = TIER_RADIUS[0] + 4;
         int x = -7;
-        for (int dx = -2; dx <= 2; dx++) set(x + dx, 1, z, WALL_DARK);
-        for (int y = 1; y <= 4; y++) {
-            set(x - 3, y, z, y == 4 ? TRIM : PILLAR);
-            set(x + 3, y, z, y == 4 ? TRIM : PILLAR);
-        }
-        set(x - 3, 5, z, Blocks.SOUL_LANTERN.defaultBlockState());
-        set(x + 3, 5, z, Blocks.SOUL_LANTERN.defaultBlockState());
+        // a low stone step under the board and a lantern on each end, nothing standing beside it
+        for (int dx = -3; dx <= 3; dx++) set(x + dx, 1, z, WALL_DARK);
+        set(x - 3, 2, z, Blocks.SOUL_LANTERN.defaultBlockState());
+        set(x + 3, 2, z, Blocks.SOUL_LANTERN.defaultBlockState());
         BlockPos p = w(x, 2, z);
         level.setBlock(p, SystemBlocks.TOWER_MISSION_BOARD.get().defaultBlockState()
                 .setValue(TowerMissionBoardBlock.FACING, Direction.SOUTH).rotate(rot), 3);

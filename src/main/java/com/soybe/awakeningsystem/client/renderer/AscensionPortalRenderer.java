@@ -74,10 +74,10 @@ public class AscensionPortalRenderer extends GeoBlockRenderer<AscensionPortalBlo
         // the dark depth behind everything, then two swirls turning at different speeds, then the glow
         disc(pose, buffers.getBuffer(RenderType.entityTranslucent(DEPTH)), RADIUS, 0.0F, -0.06F, 255);
         disc(pose, buffers.getBuffer(RenderType.entityTranslucent(SWIRL)), RADIUS * 0.98F, time * 2.2F, -0.03F, 235);
-        // additive layers: their strength goes in the colour, since additive blending ignores alpha
-        disc(pose, buffers.getBuffer(RenderType.eyes(SWIRL)), RADIUS * 0.8F, -time * 3.4F + 40.0F, 0.0F, 70);
+        // glowing layers that still respect the textures' transparency (no square around the circle)
+        disc(pose, buffers.getBuffer(RenderType.entityTranslucentEmissive(SWIRL)), RADIUS * 0.8F, -time * 3.4F + 40.0F, 0.0F, 120);
         float pulse = 0.9F + 0.1F * (float) Math.sin(time * 0.08F);
-        disc(pose, buffers.getBuffer(RenderType.eyes(GLOW)), RADIUS * 0.95F * pulse, time * 0.5F, 0.03F, 90);
+        disc(pose, buffers.getBuffer(RenderType.entityTranslucentEmissive(GLOW)), RADIUS * 0.95F * pulse, time * 0.5F, 0.03F, 150);
         pose.popPose();
     }
 
@@ -103,7 +103,7 @@ public class AscensionPortalRenderer extends GeoBlockRenderer<AscensionPortalBlo
     }
 
     private static void vertex(VertexConsumer vc, PoseStack.Pose last, Matrix4f m, float x, float y, float u, float v, int alpha, int light, int nz) {
-        vc.addVertex(m, x, y, 0.0F).setColor(alpha, alpha, alpha, alpha).setUv(u, v)
+        vc.addVertex(m, x, y, 0.0F).setColor(255, 255, 255, alpha).setUv(u, v)
                 .setOverlay(OverlayTexture.NO_OVERLAY).setLight(light).setNormal(last, 0.0F, 0.0F, nz);
     }
 

@@ -323,6 +323,17 @@ public final class GreatTowerSite {
                     }
                     return 1;
                 }))))
+                .then(Commands.literal("rebuild").executes(ctx -> {
+                    // rebuilds the tower where it stands with the current design
+                    Data d = Data.get(ctx.getSource().getServer());
+                    if (!d.built) return 0;
+                    GreatTowerBuilder.Layout l = GreatTowerBuilder.build(ctx.getSource().getServer().overworld(), d.origin, d.front);
+                    d.altar = l.altar();
+                    d.portal = l.portal();
+                    d.setDirty();
+                    ctx.getSource().sendSuccess(() -> Component.literal("Great Tower rebuilt"), false);
+                    return 1;
+                }))
                 .then(Commands.literal("altar").executes(ctx -> {
                     Data d = Data.get(ctx.getSource().getServer());
                     if (!d.built) return 0;
