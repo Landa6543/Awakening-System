@@ -28,7 +28,7 @@ public class AscensionPortalRenderer extends GeoBlockRenderer<AscensionPortalBlo
     private static final ResourceLocation SWIRL = tex("tower_vortex_swirl");
     private static final ResourceLocation GLOW = tex("tower_vortex_glow");
     /** The gate is a circle of radius 4.4 centred 4 blocks above the portal block. */
-    private static final float RADIUS = 4.7F;
+    private static final float RADIUS = 4.1F;
     private static final float CENTER_Y = 4.0F;
 
     public AscensionPortalRenderer(BlockEntityRendererProvider.Context context) {
@@ -74,9 +74,10 @@ public class AscensionPortalRenderer extends GeoBlockRenderer<AscensionPortalBlo
         // the dark depth behind everything, then two swirls turning at different speeds, then the glow
         disc(pose, buffers.getBuffer(RenderType.entityTranslucent(DEPTH)), RADIUS, 0.0F, -0.06F, 255);
         disc(pose, buffers.getBuffer(RenderType.entityTranslucent(SWIRL)), RADIUS * 0.98F, time * 2.2F, -0.03F, 235);
-        disc(pose, buffers.getBuffer(RenderType.eyes(SWIRL)), RADIUS * 0.8F, -time * 3.4F + 40.0F, 0.0F, 150);
-        float pulse = 0.85F + 0.15F * (float) Math.sin(time * 0.08F);
-        disc(pose, buffers.getBuffer(RenderType.eyes(GLOW)), RADIUS * 1.08F * pulse, time * 0.5F, 0.03F, 200);
+        // additive layers: their strength goes in the colour, since additive blending ignores alpha
+        disc(pose, buffers.getBuffer(RenderType.eyes(SWIRL)), RADIUS * 0.8F, -time * 3.4F + 40.0F, 0.0F, 70);
+        float pulse = 0.9F + 0.1F * (float) Math.sin(time * 0.08F);
+        disc(pose, buffers.getBuffer(RenderType.eyes(GLOW)), RADIUS * 0.95F * pulse, time * 0.5F, 0.03F, 90);
         pose.popPose();
     }
 
@@ -102,7 +103,7 @@ public class AscensionPortalRenderer extends GeoBlockRenderer<AscensionPortalBlo
     }
 
     private static void vertex(VertexConsumer vc, PoseStack.Pose last, Matrix4f m, float x, float y, float u, float v, int alpha, int light, int nz) {
-        vc.addVertex(m, x, y, 0.0F).setColor(255, 255, 255, alpha).setUv(u, v)
+        vc.addVertex(m, x, y, 0.0F).setColor(alpha, alpha, alpha, alpha).setUv(u, v)
                 .setOverlay(OverlayTexture.NO_OVERLAY).setLight(light).setNormal(last, 0.0F, 0.0F, nz);
     }
 

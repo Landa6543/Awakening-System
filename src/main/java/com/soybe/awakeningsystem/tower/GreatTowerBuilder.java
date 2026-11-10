@@ -370,8 +370,8 @@ public final class GreatTowerBuilder {
         int x = -7;
         for (int dx = -2; dx <= 2; dx++) set(x + dx, 1, z, WALL_DARK);
         for (int y = 1; y <= 4; y++) {
-            set(x - 3, y, z, Blocks.POLISHED_BLACKSTONE_WALL.defaultBlockState());
-            set(x + 3, y, z, Blocks.POLISHED_BLACKSTONE_WALL.defaultBlockState());
+            set(x - 3, y, z, y == 4 ? TRIM : PILLAR);
+            set(x + 3, y, z, y == 4 ? TRIM : PILLAR);
         }
         set(x - 3, 5, z, Blocks.SOUL_LANTERN.defaultBlockState());
         set(x + 3, 5, z, Blocks.SOUL_LANTERN.defaultBlockState());
