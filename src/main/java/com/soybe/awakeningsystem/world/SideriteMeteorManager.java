@@ -1,7 +1,7 @@
 package com.soybe.awakeningsystem.world;
 
-import com.soybe.awakeningsystem.MeteorStreakPayload;
 import com.soybe.awakeningsystem.entity.FallingSideriteMeteorEntity;
+import net.minecraft.world.phys.Vec3;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.particles.ParticleTypes;
 import net.minecraft.network.chat.Component;
@@ -37,14 +37,18 @@ public final class SideriteMeteorManager {
     // Se comprueba cada 10 segundos: cerca de 1 noche de cada 5 una vez pasado el cooldown
     private static final float CHANCE_PER_CHECK = 0.005F;
 
-    private static final int MIN_IMPACT_DISTANCE = 180;
-    private static final int MAX_IMPACT_DISTANCE = 400;
-    private static final int MIN_DISTANCE_TO_PLAYERS = 96;
+    // Cerca para que el juego tenga cargada la zona y se vea caer el bloque de verdad; lejos para tener que ir a buscarlo
+    private static final int MIN_IMPACT_DISTANCE = 70;
+    private static final int MAX_IMPACT_DISTANCE = 130;
+    private static final int MIN_DISTANCE_TO_PLAYERS = 48;
+    // Desde dónde entra: muy alto y algo apartado del punto de impacto, hacia el lado del jugador
+    private static final int ENTRY_HEIGHT = 130;
+    private static final int ENTRY_OFFSET = 45;
     private static final int SITE_ATTEMPTS = 6;
     private static final int CRATER_CLEARANCE = 10;
     private static final int MAX_TERRAIN_STEP = 6;
 
-    private static final int FALL_TICKS = 80;
+    private static final int FALL_TICKS = 90;
     // El cráter humea un minuto: una columna alta que sirve de pista para encontrarlo
     private static final int SMOKE_TICKS = 1200;
     private static final double SMOKE_VIEW_DISTANCE = 640.0D;
@@ -65,11 +69,21 @@ public final class SideriteMeteorManager {
     private static final class FallingMeteor {
         final ServerLevel level;
         final BlockPos target;
+        final Vec3 start, end;
+        FallingSideriteMeteorEntity entity;
         int age = 0;
 
-        FallingMeteor(ServerLevel level, BlockPos target) {
+        FallingMeteor(ServerLevel level, BlockPos target, Vec3 start) {
             this.level = level;
             this.target = target;
+            this.start = start;
+            this.end = Vec3.atBottomCenterOf(target.above());
+        }
+
+        /** Where it is after {@code age} ticks: a straight line, starting slow and speeding up. */
+        Vec3 at(int age) {
+            double t = Math.min(1.0D, age / (double) FALL_TICKS);
+            return start.lerp(end, Math.pow(t, 1.4D));
         }
     }
 
@@ -119,23 +133,55 @@ public final class SideriteMeteorManager {
 
         BlockPos impactSite = findImpactSite(sl, player);
         if (impactSite == null) return false;
+        launch(sl, impactSite, player.position());
+        return true;
+    }
 
-        FALLING.add(new FallingMeteor(sl, impactSite));
-        float driftSign = RANDOM.nextBoolean() ? 1.0F : -1.0F;
+    /**
+     * Prueba desde la consola: un meteorito que cae a unos 90 bloques del punto de aparición del mundo.
+     * Devuelve dónde cae, o null si no encontró suelo natural y llano.
+     */
+    public static BlockPos spawnTestMeteor(ServerLevel sl) {
+        BlockPos spawn = sl.getSharedSpawnPos();
+        for (int attempt = 0; attempt < 40; attempt++) {
+            double angle = RANDOM.nextDouble() * Math.PI * 2.0D;
+            int dist = 70 + RANDOM.nextInt(150);
+            int x = spawn.getX() + (int) Math.round(Math.cos(angle) * dist), z = spawn.getZ() + (int) Math.round(Math.sin(angle) * dist);
+            // the ground check looks 10 blocks around: those chunks must be loaded too
+            for (int cx = (x - CRATER_CLEARANCE) >> 4; cx <= (x + CRATER_CLEARANCE) >> 4; cx++)
+                for (int cz = (z - CRATER_CLEARANCE) >> 4; cz <= (z + CRATER_CLEARANCE) >> 4; cz++) sl.getChunk(cx, cz);
+            BlockPos pos = new BlockPos(x, sl.getHeight(Heightmap.Types.MOTION_BLOCKING_NO_LEAVES, x, z) - 1, z);
+            if (isUntouchedGround(sl, pos)) {
+                launch(sl, pos, Vec3.atCenterOf(spawn));
+                return pos;
+            }
+        }
+        return null;
+    }
+
+    /** Lanza el meteorito hacia {@code impactSite}, entrando por el lado de {@code viewer}. */
+    private static void launch(ServerLevel sl, BlockPos impactSite, Vec3 viewer) {
+        // Entra por el cielo desde el lado del jugador, así lo ve caer en diagonal hacia el impacto
+        Vec3 toPlayer = new Vec3(viewer.x - impactSite.getX(), 0, viewer.z - impactSite.getZ());
+        toPlayer = toPlayer.lengthSqr() < 1.0E-4 ? new Vec3(1, 0, 0) : toPlayer.normalize();
+        double sideways = (RANDOM.nextDouble() - 0.5D) * 0.8D;
+        Vec3 offset = new Vec3(toPlayer.x - toPlayer.z * sideways, 0, toPlayer.z + toPlayer.x * sideways).normalize().scale(ENTRY_OFFSET);
+        double startY = Math.min(sl.getMaxBuildHeight() + 40, impactSite.getY() + ENTRY_HEIGHT);
+        Vec3 start = new Vec3(impactSite.getX() + 0.5D + offset.x, startY, impactSite.getZ() + 0.5D + offset.z);
+        FallingMeteor meteor = new FallingMeteor(sl, impactSite, start);
+        meteor.entity = new FallingSideriteMeteorEntity(sl, start, impactSite);
+        sl.addFreshEntity(meteor.entity);
+        FALLING.add(meteor);
 
         Component skyAnnouncement = Component.translatable("awakening_system.announcement.meteor_entry");
         for (ServerPlayer sp : sl.players()) {
             sp.sendSystemMessage(skyAnnouncement);
-            // Cada jugador ve la estrella caer hacia la dirección real del impacto
-            float bearing = (float) Math.toDegrees(Math.atan2(-(impactSite.getX() - sp.getX()), impactSite.getZ() - sp.getZ()));
-            PacketDistributor.sendToPlayer(sp, new MeteorStreakPayload(bearing, driftSign, FALL_TICKS));
             // Rugido grave de aire al cruzar la atmósfera, con un siseo de fuego; se corta al impactar
             sp.playNotifySound(SoundEvents.ELYTRA_FLYING, SoundSource.WEATHER, 0.55F, 0.45F);
             sp.playNotifySound(SoundEvents.FIRECHARGE_USE, SoundSource.WEATHER, 0.35F, 0.5F);
         }
 
         lastMeteorTime = sl.getGameTime();
-        return true;
     }
 
     private static void tickFallingMeteors(MinecraftServer server) {
@@ -148,8 +194,28 @@ public final class SideriteMeteorManager {
             }
 
             meteor.age++;
+            // Lo lleva por su recta tick a tick (así cae aunque su chunk no esté activo); la velocidad es
+            // para que el cliente lo dibuje suave entre un tick y otro
+            if (meteor.entity != null && meteor.entity.isAlive()) {
+                Vec3 now = meteor.at(meteor.age), next = meteor.at(meteor.age + 1);
+                meteor.entity.setPos(now.x, now.y, now.z);
+                meteor.entity.setDeltaMovement(next.subtract(now));
+            }
             if (meteor.age >= FALL_TICKS) {
+                if (meteor.entity != null) {
+                    com.soybe.awakeningsystem.AwakeningSystemMod.LOGGER.info("[Meteor] reached {} (aimed at {})",
+                            meteor.entity.blockPosition().toShortString(), meteor.target.toShortString());
+                    meteor.entity.discard();
+                }
                 FallingSideriteMeteorEntity.createImpact(meteor.level, meteor.target);
+                int ores = 0, blocks = 0;
+                for (BlockPos p : BlockPos.betweenClosed(meteor.target.offset(-9, -6, -9), meteor.target.offset(9, 3, 9))) {
+                    BlockState st = meteor.level.getBlockState(p);
+                    if (st.is(com.soybe.awakeningsystem.block.SystemBlocks.SIDERITE_ORE.get())) ores++;
+                    if (st.is(com.soybe.awakeningsystem.block.SystemBlocks.SIDERITE_BLOCK.get())) blocks++;
+                }
+                com.soybe.awakeningsystem.AwakeningSystemMod.LOGGER.info("[Meteor] crater at {}: {} siderite ore, {} siderite blocks",
+                        meteor.target.toShortString(), ores, blocks);
                 MeteorImpactData.get(server).setLastImpact(meteor.level.dimension(), meteor.target);
                 SMOKING.add(new SmokingCrater(meteor.level, meteor.target, meteor.level.getGameTime()));
                 long now = meteor.level.getGameTime();

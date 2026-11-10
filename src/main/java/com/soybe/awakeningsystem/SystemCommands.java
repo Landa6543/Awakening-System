@@ -575,6 +575,12 @@ public final class SystemCommands {
 
         dispatcher.register(Commands.literal("meteor")
                 .requires(source -> hasAdminOrCreatorPermission(source))
+                .then(Commands.literal("test").executes(context -> {
+                    // from the console too: one falls about 90 blocks from the world spawn
+                    BlockPos at = com.soybe.awakeningsystem.world.SideriteMeteorManager.spawnTestMeteor(context.getSource().getServer().overworld());
+                    com.soybe.awakeningsystem.AwakeningSystemMod.LOGGER.info("[Meteor] test meteor falling towards {}", at == null ? "nowhere (no flat natural ground)" : at.toShortString());
+                    return at == null ? 0 : 1;
+                }))
                 .executes(context -> {
                     ServerPlayer player = context.getSource().getPlayerOrException();
                     boolean spawned = com.soybe.awakeningsystem.world.SideriteMeteorManager.spawnMeteorNearPlayer(player, true);

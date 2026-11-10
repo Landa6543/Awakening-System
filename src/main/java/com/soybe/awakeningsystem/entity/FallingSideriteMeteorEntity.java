@@ -24,13 +24,19 @@ import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.phys.Vec3;
 
 /**
- * Entidad proyectil del meteorito de Siderita que cae del firmamento en trayectoria diagonal
- * con estela de partículas estelares e impacta en el suelo creando un cráter y soltando fragmentos.
+ * El meteorito de Siderita mientras cae: un bloque de siderita de verdad, girando y envuelto en el fuego
+ * normal de Minecraft, con una estela de llamas, lava y humo.
+ * <p>
+ * Lo mueve {@link com.soybe.awakeningsystem.world.SideriteMeteorManager} tick a tick por una recta desde lo
+ * alto del cielo hasta el punto de impacto (así cae bien aunque su chunk no esté "activo"); esta entidad solo
+ * se ve y deja la estela. El impacto y el cráter están en {@link #createImpact}.
  */
 public class FallingSideriteMeteorEntity extends Entity {
 
     private static final EntityDataAccessor<BlockPos> TARGET_POS = SynchedEntityData.defineId(
             FallingSideriteMeteorEntity.class, EntityDataSerializers.BLOCK_POS);
+    /** Tamaño a efectos de dibujo: el fuego del juego envuelve toda la caja de la entidad. */
+    private static final net.minecraft.world.entity.EntityDimensions SIZE = net.minecraft.world.entity.EntityDimensions.fixed(1.6F, 1.6F);
 
     private int lifeTicks = 0;
 
@@ -38,6 +44,27 @@ public class FallingSideriteMeteorEntity extends Entity {
         super(type, level);
         this.noPhysics = true;
         this.setNoGravity(true);
+        this.refreshDimensions();
+    }
+
+    @Override
+    public net.minecraft.world.entity.EntityDimensions getDimensions(net.minecraft.world.entity.Pose pose) {
+        return SIZE;
+    }
+
+    /** Siempre ardiendo: el juego le dibuja sus llamas normales alrededor. */
+    @Override
+    public boolean displayFireAnimation() {
+        return true;
+    }
+
+    @Override
+    public boolean shouldRenderAtSqrDistance(double distance) {
+        return distance < 512.0D * 512.0D;
+    }
+
+    public int getLifeTicks() {
+        return lifeTicks;
     }
 
     public FallingSideriteMeteorEntity(Level level, Vec3 startPos, BlockPos targetPos) {
@@ -66,112 +93,65 @@ public class FallingSideriteMeteorEntity extends Entity {
     public void tick() {
         super.tick();
         this.lifeTicks++;
-
-        BlockPos target = this.getTargetPos();
-        Vec3 currentPos = this.position();
-
-        // Calcular dirección hacia el objetivo
-        if (target != null && target != BlockPos.ZERO) {
-            Vec3 diff = target.getCenter().subtract(currentPos);
-            double dist = diff.length();
-            if (dist > 0.1D) {
-                Vec3 dir = diff.normalize();
-                double speed = Math.min(1.10D, dist);
-                this.setDeltaMovement(dir.scale(speed));
-            }
+        if (!this.level().isClientSide()) {
+            // sin nadie que lo mueva (por ejemplo tras reiniciar el servidor) no tiene sentido que siga ahí
+            if (this.lifeTicks > 400) this.discard();
+            return;
         }
-
-        // Movimiento suave sin colisiones prematuras
-        Vec3 nextPos = currentPos.add(this.getDeltaMovement());
-        this.setPos(nextPos.x, nextPos.y, nextPos.z);
-
-        // Estela cósmica y efectos visuales de bólido celeste en cada tick
-        if (this.level().isClientSide()) {
-            for (int i = 0; i < 14; i++) {
-                double rx = (this.random.nextDouble() - 0.5D) * 1.0D;
-                double ry = (this.random.nextDouble() - 0.5D) * 1.0D;
-                double rz = (this.random.nextDouble() - 0.5D) * 1.0D;
-                this.level().addParticle(ParticleTypes.FIREWORK, this.getX() + rx, this.getY() + ry, this.getZ() + rz, 0.0, 0.02, 0.0);
-                this.level().addParticle(ParticleTypes.END_ROD, this.getX() + rx, this.getY() + ry, this.getZ() + rz, 0.0, 0.01, 0.0);
-                this.level().addParticle(ParticleTypes.SOUL_FIRE_FLAME, this.getX() + rx, this.getY() + ry, this.getZ() + rz, 0.0, 0.01, 0.0);
-            }
-            this.level().addParticle(ParticleTypes.FLASH, this.getX(), this.getY(), this.getZ(), 0.0, 0.0, 0.0);
-            this.level().addParticle(ParticleTypes.GLOW, this.getX(), this.getY(), this.getZ(), 0.0, 0.0, 0.0);
-        } else if (this.level() instanceof ServerLevel sl) {
-            // Emisión de partículas desde el servidor para visibilidad global
-            sl.sendParticles(ParticleTypes.END_ROD, this.getX(), this.getY(), this.getZ(), 16, 0.7, 0.7, 0.7, 0.03);
-            sl.sendParticles(ParticleTypes.SOUL_FIRE_FLAME, this.getX(), this.getY(), this.getZ(), 12, 0.6, 0.6, 0.6, 0.02);
-            sl.sendParticles(ParticleTypes.FIREWORK, this.getX(), this.getY(), this.getZ(), 14, 0.6, 0.6, 0.6, 0.04);
-            sl.sendParticles(ParticleTypes.CAMPFIRE_COSY_SMOKE, this.getX(), this.getY(), this.getZ(), 4, 0.4, 0.4, 0.4, 0.01);
-
-            if (this.lifeTicks % 5 == 0) {
-                sl.sendParticles(ParticleTypes.FLASH, this.getX(), this.getY(), this.getZ(), 1, 0.0, 0.0, 0.0, 0.0);
-                sl.playSound(null, this.getX(), this.getY(), this.getZ(), SoundEvents.FIREWORK_ROCKET_BLAST, SoundSource.WEATHER, 4.0F, 0.6F);
-            }
-
-            // Comprobar llegada al suelo / objetivo
-            boolean arrived = false;
-            if (target != null && target != BlockPos.ZERO) {
-                if (this.getY() <= target.getY() + 1.2 || this.position().distanceToSqr(target.getCenter()) < 9.0) {
-                    arrived = true;
-                }
-            }
-
-            if (arrived || this.lifeTicks > 180) {
-                this.detonateImpact();
-            }
+        // Estela con partículas del juego: fuego y lava pegados al bloque, humo que queda flotando detrás.
+        // "Siempre visibles": las partículas normales desaparecen a 32 bloques y el meteorito cae más lejos.
+        double x = this.getX(), y = this.getY() + 0.8D, z = this.getZ();
+        Vec3 back = this.getDeltaMovement().lengthSqr() > 1.0E-4 ? this.getDeltaMovement().normalize().scale(-0.4D) : Vec3.ZERO;
+        for (int i = 0; i < 6; i++) {
+            double rx = (this.random.nextDouble() - 0.5D) * 1.4D, ry = (this.random.nextDouble() - 0.5D) * 1.4D, rz = (this.random.nextDouble() - 0.5D) * 1.4D;
+            this.level().addAlwaysVisibleParticle(ParticleTypes.FLAME, true, x + rx, y + ry, z + rz, back.x * 0.3, back.y * 0.3, back.z * 0.3);
         }
-    }
-
-    private void detonateImpact() {
-        if (this.level() instanceof ServerLevel sl) {
-            BlockPos impactPos = this.blockPosition();
-            BlockPos target = this.getTargetPos();
-            if (target != null && target != BlockPos.ZERO) {
-                impactPos = target;
-            }
-            createImpact(sl, impactPos);
+        for (int i = 0; i < 2; i++) {
+            this.level().addAlwaysVisibleParticle(ParticleTypes.LAVA, true, x, y, z, 0, 0, 0);
         }
-
-        this.discard();
+        for (int i = 0; i < 3; i++) {
+            double rx = (this.random.nextDouble() - 0.5D) * 1.0D, rz = (this.random.nextDouble() - 0.5D) * 1.0D;
+            this.level().addAlwaysVisibleParticle(ParticleTypes.LARGE_SMOKE, true, x + rx, y, z + rz, back.x * 0.15, 0.02, back.z * 0.15);
+        }
+        if (this.lifeTicks % 2 == 0) {
+            // la columna de humo que deja en el cielo y que tarda en deshacerse
+            this.level().addAlwaysVisibleParticle(ParticleTypes.CAMPFIRE_COSY_SMOKE, true, x, y, z, 0, 0.01, 0);
+        }
     }
 
     /** Efectos, cráter y aviso del impacto. El aviso no da la ubicación: el jugador debe buscarlo. */
     public static void createImpact(ServerLevel sl, BlockPos impactPos) {
         {
-            // 1. Sonidos resonantes de cataclismo estelar
+            // 1. El golpe: explosión y trueno del propio juego
             sl.playSound(null, impactPos.getX(), impactPos.getY(), impactPos.getZ(), SoundEvents.GENERIC_EXPLODE.value(), SoundSource.BLOCKS, 10.0F, 0.65F);
             sl.playSound(null, impactPos.getX(), impactPos.getY(), impactPos.getZ(), SoundEvents.LIGHTNING_BOLT_THUNDER, SoundSource.WEATHER, 5.0F, 0.80F);
-            sl.playSound(null, impactPos.getX(), impactPos.getY(), impactPos.getZ(), SoundEvents.END_PORTAL_SPAWN, SoundSource.WEATHER, 4.0F, 1.4F);
 
-            // 2. Ondas y ráfagas masivas de partículas cósmicas
-            sl.sendParticles(ParticleTypes.EXPLOSION_EMITTER, impactPos.getX() + 0.5, impactPos.getY() + 1.0, impactPos.getZ() + 0.5, 4, 2.0, 2.0, 2.0, 0.0);
-            sl.sendParticles(ParticleTypes.FLASH, impactPos.getX() + 0.5, impactPos.getY() + 1.0, impactPos.getZ() + 0.5, 3, 0.0, 0.0, 0.0, 0.0);
-            sl.sendParticles(ParticleTypes.FIREWORK, impactPos.getX() + 0.5, impactPos.getY() + 1.0, impactPos.getZ() + 0.5, 150, 3.5, 2.5, 3.5, 0.40);
-            sl.sendParticles(ParticleTypes.END_ROD, impactPos.getX() + 0.5, impactPos.getY() + 1.0, impactPos.getZ() + 0.5, 100, 3.0, 2.0, 3.0, 0.25);
-            sl.sendParticles(ParticleTypes.SOUL_FIRE_FLAME, impactPos.getX() + 0.5, impactPos.getY() + 1.0, impactPos.getZ() + 0.5, 80, 2.5, 2.0, 2.5, 0.20);
-
-            // 3. Columna de luz y humo cósmico de 45 bloques de altura para ubicar el cráter desde lejos
-            for (int y = 0; y <= 45; y += 2) {
-                sl.sendParticles(ParticleTypes.END_ROD, impactPos.getX() + 0.5, impactPos.getY() + y, impactPos.getZ() + 0.5, 4, 0.3, 0.5, 0.3, 0.01);
-                sl.sendParticles(ParticleTypes.CAMPFIRE_COSY_SMOKE, impactPos.getX() + 0.5, impactPos.getY() + y, impactPos.getZ() + 0.5, 3, 0.3, 0.5, 0.3, 0.03);
-            }
-
-            // 3b. Explosión forzada: las partículas normales solo se ven a 32 bloques y el meteorito cae
-            // a cientos, así que se envían forzadas a quien esté lo bastante cerca para verla en el horizonte
+            // 2. La explosión, en el sitio real del impacto y con partículas del juego. Se envían "forzadas"
+            // (las normales solo se ven a 32 bloques) a quien esté a menos de 512 bloques
             double cx = impactPos.getX() + 0.5D;
             double cy = impactPos.getY() + 1.0D;
             double cz = impactPos.getZ() + 0.5D;
+            BlockState ground = sl.getBlockState(impactPos);
             for (ServerPlayer viewer : sl.players()) {
-                if (viewer.distanceToSqr(cx, cy, cz) > 640.0D * 640.0D) continue;
-                sl.sendParticles(viewer, ParticleTypes.EXPLOSION_EMITTER, true, cx, cy + 2.0D, cz, 6, 3.0D, 2.5D, 3.0D, 0.0D);
-                sl.sendParticles(viewer, ParticleTypes.FLASH, true, cx, cy + 3.0D, cz, 4, 1.0D, 1.0D, 1.0D, 0.0D);
-                sl.sendParticles(viewer, ParticleTypes.LAVA, true, cx, cy, cz, 60, 3.0D, 1.0D, 3.0D, 0.0D);
+                if (viewer.distanceToSqr(cx, cy, cz) > 512.0D * 512.0D) continue;
+                sl.sendParticles(viewer, ParticleTypes.EXPLOSION_EMITTER, true, cx, cy + 1.0D, cz, 5, 2.5D, 1.5D, 2.5D, 0.0D);
+                sl.sendParticles(viewer, ParticleTypes.EXPLOSION, true, cx, cy + 1.0D, cz, 30, 4.0D, 2.0D, 4.0D, 0.0D);
+                sl.sendParticles(viewer, ParticleTypes.LAVA, true, cx, cy, cz, 70, 3.0D, 1.0D, 3.0D, 0.0D);
+                sl.sendParticles(viewer, ParticleTypes.LARGE_SMOKE, true, cx, cy + 1.0D, cz, 80, 3.5D, 2.0D, 3.5D, 0.05D);
+                if (!ground.isAir()) {
+                    // tierra y piedra que salen volando
+                    sl.sendParticles(viewer, new net.minecraft.core.particles.BlockParticleOption(ParticleTypes.BLOCK, ground), true,
+                            cx, cy + 0.5D, cz, 150, 3.5D, 1.0D, 3.5D, 0.3D);
+                }
                 for (int i = 0; i < 32; i++) {
                     double angle = Math.PI * 2.0D * i / 32.0D;
                     // Con cantidad 0 los tres valores son la velocidad: un anillo de fuego que se abre a ras de suelo
-                    sl.sendParticles(viewer, ParticleTypes.FLAME, true, cx, cy + 0.5D, cz, 0,
-                            Math.cos(angle) * 0.8D, 0.25D, Math.sin(angle) * 0.8D, 1.0D);
+                    sl.sendParticles(viewer, ParticleTypes.FLAME, true, cx, cy + 0.3D, cz, 0,
+                            Math.cos(angle) * 0.8D, 0.2D, Math.sin(angle) * 0.8D, 1.0D);
+                }
+                // la columna de humo que sube del cráter
+                for (int y = 0; y <= 30; y += 3) {
+                    sl.sendParticles(viewer, ParticleTypes.CAMPFIRE_SIGNAL_SMOKE, true, cx, cy + y, cz, 3, 0.6D, 0.8D, 0.6D, 0.02D);
                 }
             }
 
@@ -204,17 +184,17 @@ public class FallingSideriteMeteorEntity extends Entity {
                         BlockPos floorPos = new BlockPos(impactPos.getX() + dx, floorY, impactPos.getZ() + dz);
                         BlockState currentFloorState = sl.getBlockState(floorPos);
                         if (canTransform(sl, currentFloorState)) {
-                            if (dist <= 1.4D) {
-                                // Núcleo del impacto: Meteorito de Siderita puro encajado en el fondo
-                                sl.setBlockAndUpdate(floorPos, SystemBlocks.SIDERITE_BLOCK.get().defaultBlockState());
-                                BlockPos under = floorPos.below();
-                                if (canTransform(sl, sl.getBlockState(under))) {
-                                    sl.setBlockAndUpdate(under, SystemBlocks.SIDERITE_ORE.get().defaultBlockState());
-                                }
+                            if (dx == 0 && dz == 0) {
+                                // El meteorito en sí: una sola roca de mineral de siderita en el fondo del cráter
+                                // (antes había 9 bloques de siderita y mineral debajo: regalaba demasiada)
+                                sl.setBlockAndUpdate(floorPos, SystemBlocks.SIDERITE_ORE.get().defaultBlockState());
+                            } else if (dist <= 1.5D) {
+                                // la roca fundida que lo rodea
+                                sl.setBlockAndUpdate(floorPos, sl.random.nextBoolean() ? Blocks.MAGMA_BLOCK.defaultBlockState() : Blocks.BLACKSTONE.defaultBlockState());
                             } else if (dist <= 3.2D) {
-                                // Capa interior fundida: Magma ardiente, obsidiana llorosa, basalto y vetas de siderita
+                                // Capa interior fundida: magma, obsidiana llorosa, basalto y, muy rara vez, una veta de siderita
                                 float roll = sl.random.nextFloat();
-                                if (roll < 0.20F) {
+                                if (roll < 0.03F) {
                                     sl.setBlockAndUpdate(floorPos, SystemBlocks.SIDERITE_ORE.get().defaultBlockState());
                                 } else if (roll < 0.50F) {
                                     sl.setBlockAndUpdate(floorPos, Blocks.MAGMA_BLOCK.defaultBlockState());
@@ -228,9 +208,7 @@ public class FallingSideriteMeteorEntity extends Entity {
                             } else {
                                 // Paredes y pendiente exterior: Basalto, piedra negra, tierra calcinada y piedra agrietada
                                 float roll = sl.random.nextFloat();
-                                if (roll < 0.10F) {
-                                    sl.setBlockAndUpdate(floorPos, SystemBlocks.SIDERITE_ORE.get().defaultBlockState());
-                                } else if (roll < 0.40F) {
+                                if (roll < 0.40F) {
                                     sl.setBlockAndUpdate(floorPos, Blocks.BASALT.defaultBlockState());
                                 } else if (roll < 0.65F) {
                                     sl.setBlockAndUpdate(floorPos, Blocks.BLACKSTONE.defaultBlockState());
