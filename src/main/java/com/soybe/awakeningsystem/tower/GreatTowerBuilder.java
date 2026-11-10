@@ -171,14 +171,6 @@ public final class GreatTowerBuilder {
                 set(x, 0, z, s);
             }
         }
-        // eight obelisks around the plaza
-        for (int i = 0; i < 8; i++) {
-            double a = Math.toRadians(22.5D + i * 45.0D);
-            int x = (int) Math.round(Math.sin(a) * 26.0D), z = (int) Math.round(Math.cos(a) * 26.0D);
-            for (int y = 1; y <= 9; y++) set(x, y, z, y == 1 ? TRIM : (y == 6 ? Blocks.CHISELED_POLISHED_BLACKSTONE.defaultBlockState() : PILLAR));
-            set(x, 10, z, Blocks.CRYING_OBSIDIAN.defaultBlockState());
-            set(x, 11, z, Blocks.END_ROD.defaultBlockState());
-        }
     }
 
     private static void tier(int t, int y0, int height) {
@@ -387,17 +379,27 @@ public final class GreatTowerBuilder {
         return p;
     }
 
-    /** The tower's mission board, just right of the entrance outside. */
+    /**
+     * The tower's mission board, inside the vestibule on the left of the door: it hangs on a flat stretch of
+     * wall built for it (the board is drawn against the block behind it, so it needs a straight wall).
+     */
     private static BlockPos board() {
-        int z = TIER_RADIUS[0] + 4;
-        int x = -7;
-        // a low stone step under the board and a lantern on each end, nothing standing beside it
-        for (int dx = -3; dx <= 3; dx++) set(x + dx, 1, z, WALL_DARK);
-        set(x - 3, 2, z, Blocks.SOUL_LANTERN.defaultBlockState());
-        set(x + 3, 2, z, Blocks.SOUL_LANTERN.defaultBlockState());
-        BlockPos p = w(x, 2, z);
+        int x = -15, zc = 7;
+        // a flat backing wall, framed, filling the curve behind it
+        for (int z = zc - 4; z <= zc + 4; z++) {
+            for (int y = 1; y <= 6; y++) {
+                for (int bx = x - 3; bx <= x - 1; bx++) {
+                    boolean frame = z == zc - 4 || z == zc + 4 || y == 6;
+                    set(bx, y, z, bx == x - 1 ? (frame ? TRIM : WALL_DARK) : WALL);
+                }
+            }
+        }
+        for (int z = zc - 3; z <= zc + 3; z++) set(x, 0, z, TILES);
+        set(x, 1, zc - 3, Blocks.SOUL_LANTERN.defaultBlockState());
+        set(x, 1, zc + 3, Blocks.SOUL_LANTERN.defaultBlockState());
+        BlockPos p = w(x, 1, zc);
         level.setBlock(p, SystemBlocks.TOWER_MISSION_BOARD.get().defaultBlockState()
-                .setValue(TowerMissionBoardBlock.FACING, Direction.SOUTH).rotate(rot), 3);
+                .setValue(TowerMissionBoardBlock.FACING, Direction.EAST).rotate(rot), 3);
         return p;
     }
 }

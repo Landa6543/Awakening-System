@@ -260,6 +260,8 @@ public class AscensionPortalBlock extends Block implements EntityBlock {
                     }
                 }
             } else if (level.dimension().equals(Level.OVERWORLD)) {
+                // just back from the tower: don't pull them straight in again
+                if (level.getGameTime() - player.getPersistentData().getLong("tower_exit_time") < 100L) return;
                 player.setPortalCooldown();
                 boolean hasPotential = com.soybe.awakeningsystem.SystemEvents.data(player).potentialMeasured();
                 if (!hasPotential) {

@@ -28,8 +28,9 @@ public class AscensionPortalRenderer extends GeoBlockRenderer<AscensionPortalBlo
     private static final ResourceLocation SWIRL = tex("tower_vortex_swirl");
     private static final ResourceLocation GLOW = tex("tower_vortex_glow");
     /** The gate is a circle of radius 4.4 centred 4 blocks above the portal block. */
-    private static final float RADIUS = 4.1F;
+    private static final float RADIUS = 5.0F;   // reaches under the obsidian ring, so no gap shows
     private static final float CENTER_Y = 4.0F;
+    private static int tint = 0xFFFFFF;
 
     public AscensionPortalRenderer(BlockEntityRendererProvider.Context context) {
         super(new AscensionPortalGeoModel());
@@ -45,7 +46,8 @@ public class AscensionPortalRenderer extends GeoBlockRenderer<AscensionPortalBlo
     }
 
     private static boolean isTowerGate(AscensionPortalBlockEntity be) {
-        return be.getLevel() != null && be.getLevel().dimension().equals(Level.OVERWORLD);
+        return be.getLevel() != null && (be.getLevel().dimension().equals(Level.OVERWORLD)
+                || com.soybe.awakeningsystem.tower.GreatTowerWorldManager.isGreatTowerDimension(be.getLevel()));
     }
 
     @Override
@@ -68,17 +70,27 @@ public class AscensionPortalRenderer extends GeoBlockRenderer<AscensionPortalBlo
     private void renderVortex(AscensionPortalBlockEntity be, float partialTick, PoseStack pose, MultiBufferSource buffers) {
         float time = (be.getLevel().getGameTime() % 72000L) + partialTick;
         Direction facing = getFacing(be);
+        boolean overworld = be.getLevel().dimension().equals(Level.OVERWORLD);
+        // the Great Tower's own gate is big; the shrines on the tower's floors have a smaller one
+        float radius = overworld ? RADIUS : 2.75F;
+        float centerY = overworld ? CENTER_Y : 2.5F;
+        // the way back glows red, the way up blue, the tower's entrance keeps its violet
+        AscensionPortalBlock.PortalType type = be.getBlockState().hasProperty(AscensionPortalBlock.PORTAL_TYPE)
+                ? be.getBlockState().getValue(AscensionPortalBlock.PORTAL_TYPE) : AscensionPortalBlock.PortalType.BASE;
+        tint = overworld || type == AscensionPortalBlock.PortalType.BASE ? 0xFFFFFF
+                : type == AscensionPortalBlock.PortalType.RETURN ? 0xFF8C8C : 0x8CC8FF;
         pose.pushPose();
-        pose.translate(0.5D, CENTER_Y, 0.5D);
+        pose.translate(0.5D, centerY, 0.5D);
         pose.mulPose(Axis.YP.rotationDegrees(-facing.toYRot()));
         // the dark depth behind everything, then two swirls turning at different speeds, then the glow
-        disc(pose, buffers.getBuffer(RenderType.entityTranslucent(DEPTH)), RADIUS, 0.0F, -0.06F, 255);
-        disc(pose, buffers.getBuffer(RenderType.entityTranslucent(SWIRL)), RADIUS * 0.98F, time * 2.2F, -0.03F, 235);
+        disc(pose, buffers.getBuffer(RenderType.entityTranslucent(DEPTH)), radius, 0.0F, -0.06F, 255);
+        disc(pose, buffers.getBuffer(RenderType.entityTranslucent(SWIRL)), radius * 0.98F, time * 2.2F, -0.03F, 235);
         // glowing layers that still respect the textures' transparency (no square around the circle)
-        disc(pose, buffers.getBuffer(RenderType.entityTranslucentEmissive(SWIRL)), RADIUS * 0.8F, -time * 3.4F + 40.0F, 0.0F, 120);
-        float pulse = 0.9F + 0.1F * (float) Math.sin(time * 0.08F);
-        disc(pose, buffers.getBuffer(RenderType.entityTranslucentEmissive(GLOW)), RADIUS * 0.95F * pulse, time * 0.5F, 0.03F, 150);
+        disc(pose, buffers.getBuffer(RenderType.entityTranslucentEmissive(SWIRL)), radius * 0.7F, time * 4.0F + 40.0F, 0.0F, 110);
+        float pulse = 0.92F + 0.08F * (float) Math.sin(time * 0.08F);
+        disc(pose, buffers.getBuffer(RenderType.entityTranslucentEmissive(GLOW)), radius * 0.92F * pulse, 0.0F, 0.03F, 170);
         pose.popPose();
+        tint = 0xFFFFFF;
     }
 
     /** A square of side 2r centred on the pose, turned {@code spin} degrees, visible from both sides. */
@@ -103,7 +115,7 @@ public class AscensionPortalRenderer extends GeoBlockRenderer<AscensionPortalBlo
     }
 
     private static void vertex(VertexConsumer vc, PoseStack.Pose last, Matrix4f m, float x, float y, float u, float v, int alpha, int light, int nz) {
-        vc.addVertex(m, x, y, 0.0F).setColor(255, 255, 255, alpha).setUv(u, v)
+        vc.addVertex(m, x, y, 0.0F).setColor((tint >> 16) & 255, (tint >> 8) & 255, tint & 255, alpha).setUv(u, v)
                 .setOverlay(OverlayTexture.NO_OVERLAY).setLight(light).setNormal(last, 0.0F, 0.0F, nz);
     }
 

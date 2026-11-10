@@ -185,8 +185,8 @@ public final class TowerMissionBoardScreen extends Screen {
             // Barra Inferior de Estado de Misión Activa
             renderActiveMissionStatusBar(g, left, top + 296, boardW, mX, mY, hasEntered);
         } else {
-            // Fondo oscuro semitransparente atenuando las notas para evitar solapamientos
-            g.fill(left + 12, top + 38, left + boardW - 12, top + boardH - 12, 0xCC000000);
+            // the whole board dims behind the dossier, header included, so nothing peeks out from under it
+            g.fill(left, top, left + boardW, top + boardH, 0xD8000000);
 
             if (selectedSlot >= 0 && selectedSlot < TowerDailyMissionManager.DAILY_OFFERS_COUNT && dailyIndices != null && selectedSlot < dailyIndices.length) {
                 renderDossierModal(g, left, top, boardW, boardH, dailyIndices[selectedSlot], selectedSlot, mX, mY, hasEntered);
@@ -255,7 +255,7 @@ public final class TowerMissionBoardScreen extends Screen {
         String rew1 = formatRewardAmount(item.rewardCoins()) + " C | " + formatRewardAmount(item.rewardExp()) + " XP";
         drawCleanCentered(g, rew1, cx, y + 56, 0xFF8A5A10);
 
-        String rew2 = "+" + item.rewardGems() + " Gemas";
+        String rew2 = "+" + item.crystalReward().getCount() + " Cristales de Mana";
         drawCleanCentered(g, rew2, cx, y + 68, 0xFF1E6E28);
 
         // Insignia inferior
@@ -322,7 +322,8 @@ public final class TowerMissionBoardScreen extends Screen {
         int dosY = (this.height - dosH) / 2;
 
         // Hoja del expediente
-        g.blit(PARCHMENT_DOSSIER, dosX, dosY, 0, 0, dosW, dosH, 320, 330);
+        // the whole parchment, scaled to the sheet (it used to be cropped, cutting its edges off)
+        g.blit(PARCHMENT_DOSSIER, dosX, dosY, dosW, dosH, 0.0F, 0.0F, 320, 330, 320, 330);
 
         // Botón de Cerrar (X) arriba a la derecha
         int closeX = dosX + dosW - 24;
@@ -390,9 +391,14 @@ public final class TowerMissionBoardScreen extends Screen {
         g.fill(dosX + 20, curY, dosX + dosW - 20, curY + 44, 0x222E5E28);
         drawCleanCentered(g, "RECOMPENSAS GARANTIZADAS", cx, curY + 4, 0xFF1E5E28);
         drawCleanCentered(g, "Monedas: " + item.rewardCoins() + "  |  EXP: +" + item.rewardExp(), cx, curY + 16, 0xFF4A3515);
-        drawCleanCentered(g, "Primogemas: " + item.rewardGems() + "  |  " + item.rewardMaterialName() + " x" + item.rewardMaterial().getCount(), cx, curY + 28, 0xFF1F4430);
+        net.minecraft.world.item.ItemStack crystals = item.crystalReward();
+        net.minecraft.world.item.ItemStack material = item.materialReward();
+        String line2 = crystals.getHoverName().getString() + " x" + crystals.getCount()
+                + (material.isEmpty() ? "" : "  |  " + item.rewardMaterialName() + " x" + material.getCount());
+        drawCleanCentered(g, line2, cx, curY + 28, 0xFF1F4430);
 
-        g.renderItem(item.rewardMaterial(), dosX + dosW - 40, curY + 16);
+        g.renderItem(crystals, dosX + 26, curY + 16);
+        if (!material.isEmpty()) g.renderItem(material, dosX + dosW - 40, curY + 16);
 
         // Botón de acción
         int btnW = 230;

@@ -84,6 +84,72 @@ public final class ImmortalGrottoShell {
             hangLantern(level, cx + x, cy, cz + z);
         }
         stairToSurface(level, cx, cy, cz);
+        sanctum(level, cx, cy, cz + SANCTUM_Z);
+    }
+
+    /** Where the Jade Guardian waits: the open middle of the sanctum, with room for its 4-block height. */
+    public static BlockPos guardianSpot(BlockPos center) {
+        return center.offset(0, 1, SANCTUM_Z - 3);
+    }
+
+    /**
+     * The sanctum: its middle left open for the fight with the Jade Guardian, and the treasure on a jade altar
+     * against the far wall, the chest facing the way in.
+     */
+    private static void sanctum(ServerLevel level, int sx, int cy, int sz) {
+        // take the chest (and what is in it) off the old altar in the middle
+        java.util.List<net.minecraft.world.item.ItemStack> loot = new java.util.ArrayList<>();
+        BlockState chest = null;
+        for (BlockPos p : BlockPos.betweenClosed(sx - 4, cy, sz - 4, sx + 4, cy + 4, sz + 4)) {
+            BlockState s = level.getBlockState(p);
+            if (s.is(com.soybe.awakeningsystem.block.SystemBlocks.LOCKED_TREASURE_CHEST.get())) {
+                chest = s;
+                if (level.getBlockEntity(p) instanceof net.minecraft.world.Container c) {
+                    for (int i = 0; i < c.getContainerSize(); i++) loot.add(c.getItem(i).copy());
+                    c.clearContent();
+                }
+                break;
+            }
+        }
+        // clear the room down to its floor
+        for (int x = -SANCTUM_R; x <= SANCTUM_R; x++)
+            for (int z = -SANCTUM_R; z <= SANCTUM_R; z++)
+                for (int y = 1; y <= SANCTUM_H + 1; y++)
+                    if (dome(x, y, z, SANCTUM_R, SANCTUM_H)) level.setBlock(new BlockPos(sx + x, cy + y, sz + z), Blocks.AIR.defaultBlockState(), 2);
+        // a jade floor: rings of prismarine and quartz around a dark centre
+        for (int x = -SANCTUM_R; x <= SANCTUM_R; x++) {
+            for (int z = -SANCTUM_R; z <= SANCTUM_R; z++) {
+                double d = Math.sqrt(x * x + z * z);
+                if (d > SANCTUM_R - 0.3D) continue;
+                BlockState f = d < 2.5D ? Blocks.POLISHED_DEEPSLATE.defaultBlockState()
+                        : Math.abs(d - 4.5D) < 0.6D ? Blocks.PRISMARINE_BRICKS.defaultBlockState()
+                        : Math.abs(d - 7.5D) < 0.6D ? Blocks.CHISELED_QUARTZ_BLOCK.defaultBlockState()
+                        : Blocks.DEEPSLATE_TILES.defaultBlockState();
+                level.setBlock(new BlockPos(sx + x, cy, sz + z), f, 2);
+            }
+        }
+        // the altar against the far (south) wall
+        int az = sz + 6;
+        for (int x = -2; x <= 2; x++) {
+            for (int z = 0; z <= 1; z++) level.setBlock(new BlockPos(sx + x, cy + 1, az + z), Blocks.DARK_PRISMARINE.defaultBlockState(), 2);
+            level.setBlock(new BlockPos(sx + x, cy + 1, az - 1), Blocks.DARK_PRISMARINE_STAIRS.defaultBlockState()
+                    .setValue(StairBlock.FACING, Direction.SOUTH), 2);
+        }
+        for (int sxs = -2; sxs <= 2; sxs += 4) {
+            level.setBlock(new BlockPos(sx + sxs, cy + 2, az + 1), Blocks.VERDANT_FROGLIGHT.defaultBlockState(), 2);
+            level.setBlock(new BlockPos(sx + sxs, cy + 3, az + 1), Blocks.AMETHYST_CLUSTER.defaultBlockState(), 2);
+        }
+        BlockPos chestPos = new BlockPos(sx, cy + 2, az);
+        BlockState placed = (chest != null ? chest : com.soybe.awakeningsystem.block.SystemBlocks.LOCKED_TREASURE_CHEST.get().defaultBlockState())
+                .setValue(com.soybe.awakeningsystem.block.LockedTreasureChestBlock.FACING, Direction.NORTH);
+        level.setBlock(chestPos, placed, 3);
+        if (level.getBlockEntity(chestPos) instanceof net.minecraft.world.Container c)
+            for (int i = 0; i < loot.size() && i < c.getContainerSize(); i++) c.setItem(i, loot.get(i));
+        // four jade lights around the arena
+        for (int i = 0; i < 4; i++) {
+            double a = i * Math.PI / 2.0D + Math.PI / 4.0D;
+            hangLantern(level, sx + (int) Math.round(Math.sin(a) * 5.0D), cy, sz + (int) Math.round(Math.cos(a) * 5.0D));
+        }
     }
 
     /** Inside one of the caverns, the passage between them or the entrance corridor (local coordinates). */

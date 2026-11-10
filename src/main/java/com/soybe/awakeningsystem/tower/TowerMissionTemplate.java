@@ -24,4 +24,17 @@ public record TowerMissionTemplate(
     public boolean isCollection() {
         return targetType != null && targetType.startsWith("collect_");
     }
+
+    /** The mana crystal shards of the floor's rank, paid in place of primogems (those belong to Teyvat). */
+    public ItemStack crystalReward() {
+        String rank = floor <= 10 ? "e" : floor <= 20 ? "d" : floor <= 40 ? "c" : floor <= 60 ? "b" : floor <= 80 ? "a" : floor < 100 ? "s" : "ex";
+        var item = net.minecraft.core.registries.BuiltInRegistries.ITEM.get(
+                net.minecraft.resources.ResourceLocation.fromNamespaceAndPath("awakening_system", "mana_crystal_shard_" + rank));
+        return new ItemStack(item, Math.max(1, Math.min(64, rewardGems / 2 + 1)));
+    }
+
+    /** A collection contract does not pay back in its own kind of block; only hunts add a material. */
+    public ItemStack materialReward() {
+        return isCollection() || rewardMaterial == null ? ItemStack.EMPTY : rewardMaterial;
+    }
 }

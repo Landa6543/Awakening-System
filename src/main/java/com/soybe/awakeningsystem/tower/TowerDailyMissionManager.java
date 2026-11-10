@@ -523,17 +523,13 @@ public final class TowerDailyMissionManager {
         data.addCoins(template.rewardCoins());
         data.addExperience(template.rewardExp());
 
-        // Otorgar Primogemas
-        if (template.rewardGems() > 0 && SystemItems.PRIMOGEM.isBound()) {
-            ItemStack gemStack = new ItemStack(SystemItems.PRIMOGEM.get(), template.rewardGems());
-            if (!player.getInventory().add(gemStack)) {
-                player.drop(gemStack, false);
-            }
-        }
+        // mana crystal shards of the floor's rank (no primogems: those are Teyvat's)
+        ItemStack crystals = template.crystalReward();
+        if (!crystals.isEmpty() && !player.getInventory().add(crystals.copy())) player.drop(crystals.copy(), false);
 
-        // Otorgar Material
-        if (template.rewardMaterial() != null && !template.rewardMaterial().isEmpty()) {
-            ItemStack matCopy = template.rewardMaterial().copy();
+        // a material only for hunts: a collection contract does not pay back in its own kind of block
+        if (!template.materialReward().isEmpty()) {
+            ItemStack matCopy = template.materialReward().copy();
             if (!player.getInventory().add(matCopy)) {
                 player.drop(matCopy, false);
             }
@@ -547,8 +543,10 @@ public final class TowerDailyMissionManager {
 
         player.sendSystemMessage(Component.translatable("awakening_system.msg.mision_de_la_torre_completada", String.valueOf(template.title()))
                 .withStyle(ChatFormatting.GOLD, ChatFormatting.BOLD));
-        player.sendSystemMessage(Component.literal(String.format("§aRecompensas: §e+%d Monedas §7| §b+%d EXP §7| §d+%d Primogemas §7| §f+%s",
-                template.rewardCoins(), template.rewardExp(), template.rewardGems(), template.rewardMaterialName())));
+        player.sendSystemMessage(Component.literal(String.format("§aRecompensas: §e+%d Monedas §7| §b+%d EXP §7| §d+%d %s",
+                template.rewardCoins(), template.rewardExp(), crystals.getCount(), crystals.getHoverName().getString()))
+                .append(template.materialReward().isEmpty() ? Component.empty()
+                        : Component.literal(" §7| §f+" + template.materialReward().getCount() + " " + template.rewardMaterialName())));
         player.displayClientMessage(Component.translatable("awakening_system.msg.recompensa_del_tablon_reclamada_con_exito"), true);
 
         openBoardFor(player);

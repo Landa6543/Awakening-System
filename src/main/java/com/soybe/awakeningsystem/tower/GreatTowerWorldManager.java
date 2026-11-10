@@ -187,6 +187,41 @@ public final class GreatTowerWorldManager {
       }
    }
 
+   private static final java.util.Map<Integer, int[]> LAND_SPOTS = new java.util.concurrent.ConcurrentHashMap<>();
+
+   /** The nearest dry ground to (x, z) inside the floor's border, searched in widening rings and remembered. */
+   public static int[] landNear(ServerLevel level, int key, int x, int z) {
+      int[] cached = LAND_SPOTS.get(key);
+      if (cached != null) return cached;
+      int[] found = {x, z};
+      search:
+      for (int r = 0; r <= 280; r += 12) {
+         int steps = Math.max(1, r / 6);
+         for (int i = 0; i < steps; i++) {
+            double a = i * Math.PI * 2.0D / steps;
+            int px = x + (int) Math.round(Math.cos(a) * r), pz = z + (int) Math.round(Math.sin(a) * r);
+            if (Math.abs(px) > 300 || Math.abs(pz) > 300) continue;
+            level.getChunk(px >> 4, pz >> 4);
+            int h = level.getHeight(Types.MOTION_BLOCKING, px, pz);
+            BlockState top = level.getBlockState(new BlockPos(px, h - 1, pz));
+            if (top.getFluidState().isEmpty() && h > level.getSeaLevel()) {
+               // dry around it too, so the pavilion does not stand in a pond
+               boolean dry = true;
+               for (int[] d : new int[][]{{5, 0}, {-5, 0}, {0, 5}, {0, -5}}) {
+                  int hh = level.getHeight(Types.MOTION_BLOCKING, px + d[0], pz + d[1]);
+                  if (!level.getBlockState(new BlockPos(px + d[0], hh - 1, pz + d[1])).getFluidState().isEmpty()) dry = false;
+               }
+               if (dry) {
+                  found = new int[]{px, pz};
+                  break search;
+               }
+            }
+         }
+      }
+      LAND_SPOTS.put(key, found);
+      return found;
+   }
+
    public static int findSafeGroundY(ServerLevel level, int x, int z, int defaultY) {
       int floor = getFloorForPos(level, new BlockPos(x, 64, z));
       if (!level.dimensionType().hasCeiling()) {
@@ -286,6 +321,15 @@ public final class GreatTowerWorldManager {
             int spawnZ = layout.returnZ();
             int advX = layout.advanceX();
             int advZ = layout.advanceZ();
+            if (targetFloor != 10 && targetFloor != 20) {
+               // never arrive (or find the way up) in the middle of the sea
+               int[] r = landNear(targetLevel, targetFloor * 2, spawnX, spawnZ);
+               int[] a = landNear(targetLevel, targetFloor * 2 + 1, advX, advZ);
+               spawnX = r[0];
+               spawnZ = r[1];
+               advX = a[0];
+               advZ = a[1];
+            }
             int spawnChunkX = spawnX >> 4;
             int spawnChunkZ = spawnZ >> 4;
 
@@ -394,6 +438,24 @@ public final class GreatTowerWorldManager {
             : (double)returnLevel.getSharedSpawnPos().getZ() + 0.5;
          float yaw = player.getPersistentData().getFloat("tower_return_yaw");
          float pitch = player.getPersistentData().getFloat("tower_return_pitch");
+         // the saved spot is the entrance portal itself: step out in front of it, or the portal pulls the player
+         // straight back in and they loop between the tower and its floors
+         BlockPos saved = BlockPos.containing(x, y, z);
+         returnLevel.getChunk(saved);
+         for (BlockPos p : BlockPos.betweenClosed(saved.offset(-3, -2, -3), saved.offset(3, 3, 3))) {
+            BlockState st = returnLevel.getBlockState(p);
+            if (st.getBlock() instanceof AscensionPortalBlock && st.hasProperty(AscensionPortalBlock.FACING)) {
+               Direction out = st.getValue(AscensionPortalBlock.FACING);
+               BlockPos stand = p.relative(out, 4).below();
+               x = stand.getX() + 0.5;
+               y = stand.getY();
+               z = stand.getZ() + 0.5;
+               yaw = out.toYRot();
+               pitch = 0.0F;
+               break;
+            }
+         }
+         player.getPersistentData().putLong("tower_exit_time", returnLevel.getGameTime());
          player.setDeltaMovement(0.0, 0.0, 0.0);
          player.fallDistance = 0.0F;
          player.teleportTo(returnLevel, x, y, z, yaw, pitch);
@@ -404,6 +466,68 @@ public final class GreatTowerWorldManager {
    }
 
    public static void buildThemedReturnPavilion(ServerLevel level, int floor, int x, int groundY, int z, Direction facing) {
+      buildShrineGate(level, floor, x, groundY, z, facing, PortalType.RETURN);
+   }
+
+   public static void buildThemedAdvancePavilion(ServerLevel level, int floor, int x, int groundY, int z, Direction facing) {
+      buildShrineGate(level, floor, x, groundY, z, facing, PortalType.ASCEND);
+   }
+
+   /**
+    * The shrine around a floor's portal: a round platform edged with light on a solid footing, four lantern
+    * posts, and a round gate whose vortex (drawn by the portal's renderer) fills it.
+    */
+   private static void buildShrineGate(ServerLevel level, int floor, int x, int groundY, int z, Direction facing, PortalType type) {
+      BlockState floorBlock = getThemedFloorBlock(floor);
+      BlockState pillarBlock = getThemedPillarBlock(floor);
+      BlockState lightBlock = getThemedLightBlock(floor);
+      BlockState rock = ((Block)SystemBlocks.ANCIENT_BROWN_ROCK.get()).defaultBlockState();
+      BlockState air = Blocks.AIR.defaultBlockState();
+      MutableBlockPos m = new MutableBlockPos();
+      int baseDepth = Math.max(level.getMinBuildHeight() + 1, groundY - 18);
+      // platform, footing and a clear space above
+      for (int dx = -6; dx <= 6; dx++) {
+         for (int dz = -6; dz <= 6; dz++) {
+            double d = Math.sqrt(dx * dx + dz * dz);
+            if (d > 6.2) continue;
+            for (int y = baseDepth; y < groundY - 1; y++) {
+               m.set(x + dx, y, z + dz);
+               BlockState cur = level.getBlockState(m);
+               if (cur.isAir() || cur.liquid()) level.setBlock(m, rock, 2);
+            }
+            m.set(x + dx, groundY - 1, z + dz);
+            level.setBlock(m, d > 5.3 ? lightBlock : (Math.abs(d - 3.5) < 0.5 ? pillarBlock : floorBlock), 2);
+            for (int h = 0; h <= 8; h++) {
+               m.set(x + dx, groundY + h, z + dz);
+               BlockState cur = level.getBlockState(m);
+               if (!cur.isAir()) level.setBlock(m, air, 2);
+            }
+         }
+      }
+      // four lantern posts on the diagonals
+      for (int[] c : new int[][]{{-4, -4}, {4, -4}, {-4, 4}, {4, 4}}) {
+         for (int h = 0; h <= 2; h++) level.setBlock(new BlockPos(x + c[0], groundY + h, z + c[1]), pillarBlock, 2);
+         level.setBlock(new BlockPos(x + c[0], groundY + 3, z + c[1]), lightBlock, 2);
+      }
+      // the round gate, standing across the facing axis, two blocks behind the centre
+      int gx = x - facing.getStepX() * 2, gz = z - facing.getStepZ() * 2;
+      int ux = facing.getAxis() == Axis.X ? 0 : 1, uz = facing.getAxis() == Axis.X ? 1 : 0;
+      for (int u = -4; u <= 4; u++) {
+         for (int v = -1; v <= 6; v++) {
+            double d = Math.sqrt(u * u + (v - 2) * (v - 2));
+            BlockPos p = new BlockPos(gx + u * ux, groundY + v, gz + u * uz);
+            if (d <= 2.45) level.setBlock(p, air, 2);
+            else if (d <= 3.5 && v >= 0) level.setBlock(p, (Math.abs(u) + v) % 3 == 0 ? lightBlock : pillarBlock, 2);
+         }
+      }
+      BlockState portal = SystemBlocks.ASCENSION_PORTAL.get().defaultBlockState()
+         .setValue(AscensionPortalBlock.FACING, facing)
+         .setValue(AscensionPortalBlock.AXIS, facing.getAxis() == Axis.X ? Axis.Z : Axis.X)
+         .setValue(AscensionPortalBlock.PORTAL_TYPE, type);
+      level.setBlock(new BlockPos(gx, groundY, gz), portal, 2);
+   }
+   @SuppressWarnings("unused")
+   private static void legacyReturnPavilion(ServerLevel level, int floor, int x, int groundY, int z, Direction facing) {
       BlockState floorBlock = getThemedFloorBlock(floor);
       BlockState pillarBlock = getThemedPillarBlock(floor);
       BlockState lightBlock = getThemedLightBlock(floor);
@@ -475,7 +599,8 @@ public final class GreatTowerWorldManager {
       }
    }
 
-   public static void buildThemedAdvancePavilion(ServerLevel level, int floor, int x, int groundY, int z, Direction facing) {
+   @SuppressWarnings("unused")
+   private static void legacyAdvancePavilion(ServerLevel level, int floor, int x, int groundY, int z, Direction facing) {
       BlockState floorBlock = getThemedFloorBlock(floor);
       BlockState pillarBlock = getThemedPillarBlock(floor);
       BlockState lightBlock = getThemedLightBlock(floor);
@@ -963,8 +1088,9 @@ public final class GreatTowerWorldManager {
             GreatTowerWorldManager.FloorLayout layout = getLayout(floor);
             int groundY = floor == 10
                ? 28
-               : findSafeGroundY(player.serverLevel(), layout.returnX(), layout.returnZ(), floor == 6 ? 64 : (floor == 5 ? 32 : 64));
-            player.teleportTo((double)layout.returnX() + 0.5, (double)groundY, (double)layout.returnZ() + 0.5);
+               : findSafeGroundY(player.serverLevel(), landNear(player.serverLevel(), floor * 2, layout.returnX(), layout.returnZ())[0], landNear(player.serverLevel(), floor * 2, layout.returnX(), layout.returnZ())[1], floor == 6 ? 64 : (floor == 5 ? 32 : 64));
+            int[] land = floor == 10 ? new int[]{layout.returnX(), layout.returnZ()} : landNear(player.serverLevel(), floor * 2, layout.returnX(), layout.returnZ());
+            player.teleportTo((double)land[0] + 0.5, (double)groundY, (double)land[1] + 0.5);
             player.setDeltaMovement(0.0, 0.0, 0.0);
             player.fallDistance = 0.0F;
             player.displayClientMessage(Component.translatable("awakening_system.msg.gran_torre_has_sido_devuelto_la"), true);

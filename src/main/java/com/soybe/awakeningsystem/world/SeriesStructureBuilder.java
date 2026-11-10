@@ -3657,7 +3657,8 @@ public final class SeriesStructureBuilder {
     }
 
     public static void populateAncestralImmortalGrotto(ServerLevel level, BlockPos center) {
-        spawnJadeGuardian(level, new BlockPos(center.getX(), center.getY() + 1, center.getZ() + 15));
+        // in the open sanctum (the old spot was the 5-block passage, too low for a 4-block guardian)
+        spawnJadeGuardian(level, ImmortalGrottoShell.guardianSpot(center));
     }
 
     /**
