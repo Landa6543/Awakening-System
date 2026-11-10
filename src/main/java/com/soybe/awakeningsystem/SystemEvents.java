@@ -5090,7 +5090,21 @@ public final class SystemEvents {
       long currentDay = player.server != null && player.server.overworld() != null
          ? player.server.overworld().getDayTime() / 24000L
          : player.level().getDayTime() / 24000L;
+      int streakBefore = data.dailyFailStreak();
       data.ensureDailyDay(currentDay);
+      if (data.dailyFailStreak() == SystemData.DAILY_PENALTY_STREAK - 1 && streakBefore != data.dailyFailStreak()) {
+         // one more day without the missions and the System sends them to the penalty zone
+         player.displayClientMessage(Component.translatable("awakening_system.penalty.streak_warning",
+            data.dailyFailStreak(), SystemData.DAILY_PENALTY_STREAK), false);
+      }
+      if (data.takeDailyPenaltyDue()) {
+         // only from the Overworld, never in the middle of a dungeon, tower or other world: otherwise it waits
+         if (player.level().dimension() == net.minecraft.world.level.Level.OVERWORLD && !player.isCreative()) {
+            com.soybe.awakeningsystem.penalty.PenaltyZoneManager.teleportToPenaltyZone(player);
+         } else {
+            data.keepDailyPenaltyDue();
+         }
+      }
 
       // Si la carrera ya fue completada (>= 1000m) o la misión diaria ya fue reclamada, no gastar CPU
       if (data.dailyRunning() >= SystemData.DAILY_RUNNING_TARGET || data.isDailyClaimed()) {

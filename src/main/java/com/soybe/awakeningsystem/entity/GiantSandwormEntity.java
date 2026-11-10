@@ -43,11 +43,24 @@ import java.util.List;
  */
 public class GiantSandwormEntity extends Monster {
 
+    /**
+     * How a giant sandworm hunts:
+     * PROWL - swims under the sand in wide curves, each worm in its own sector around the player, keeping
+     *         away from the other worms; a ripple of sand on the surface shows where it is.
+     * STALK - one worm at a time drives straight at the player under the sand.
+     * BREACH - right under the player it bursts out upwards, biting, and arcs over.
+     * DIVE / RETREAT - it plunges back in, swims off and prowls a while before the next attack.
+     */
     public enum Stage {
-        WAVE_MOVEMENT,
-        CHARGE,
-        RESET_Y
+        PROWL,
+        STALK,
+        BREACH,
+        RETREAT
     }
+
+    /** When any worm in a dimension last went for the player: attacks are spaced out, never two at once. */
+    private static final java.util.Map<net.minecraft.resources.ResourceKey<Level>, Long> LAST_ATTACK = new java.util.concurrent.ConcurrentHashMap<>();
+    private static final int MIN_GAP_BETWEEN_ATTACKS = 100;   // 5 s between one worm's attack and the next's
 
     private static final EntityDataAccessor<Integer> BODY_PART_COUNT =
             SynchedEntityData.defineId(GiantSandwormEntity.class, EntityDataSerializers.INT);
@@ -62,14 +75,15 @@ public class GiantSandwormEntity extends Monster {
     public GiantSandwormHeadPart head;
     public final List<GiantSandwormBodyPart> bodyParts = new ArrayList<>();
 
-    private Stage stage = Stage.WAVE_MOVEMENT;
+    private Stage stage = Stage.PROWL;
     private int waveTicks = 0;
-    private int chargeTickCounter = 0;
-    private static final int CHARGE_TICK_DURATION = 40;
-    private Vec3 chargeDirection = Vec3.ZERO;
+    private int stageTicks = 0;
+    private int attackCooldown = 120;
+    private Vec3 breachVelocity = Vec3.ZERO;
     private boolean wasInSolid = false;
     private Player currentTarget;
     private float currentHeadingYaw = 0.0F;
+    /** This worm's own angle around the player while prowling, so the worms spread out instead of bunching up. */
     private float wanderAngle = 0.0F;
 
     public GiantSandwormEntity(EntityType<? extends Monster> type, Level level) {
@@ -264,153 +278,153 @@ public class GiantSandwormEntity extends Monster {
     }
 
     private void tickMovementAI() {
-        if (this.currentHeadingYaw == 0.0F && this.getYRot() != 0.0F) {
-            this.currentHeadingYaw = this.getYRot();
-            this.wanderAngle = this.getYRot();
-        }
-
+        if (this.currentHeadingYaw == 0.0F && this.getYRot() != 0.0F) this.currentHeadingYaw = this.getYRot();
+        if (this.wanderAngle == 0.0F) this.wanderAngle = this.random.nextFloat() * 360.0F;
         double groundY = getGroundHeight();
-        double targetSubY = groundY - 4.0D;
+        double cruiseY = groundY - 4.0D;
+        stageTicks++;
+        waveTicks++;
 
-        if (stage == Stage.WAVE_MOVEMENT) {
-            // If the worm was airborne or launched into the sky, immediately force a dive into the sand
-            if (this.getY() > groundY + 1.0D) {
-                stage = Stage.RESET_Y;
-                chargeTickCounter = 0;
-                setDeltaMovement(this.getDeltaMovement().x * 0.7D, -1.2D, this.getDeltaMovement().z * 0.7D);
-            } else if (currentTarget != null && currentTarget.isAlive()) {
-                double dx = currentTarget.getX() - getX();
-                double dz = currentTarget.getZ() - getZ();
-                double horizDist = Math.sqrt(dx * dx + dz * dz);
-
-                // If the worm gets too far away (> 75 blocks), subterranean burrow relocation so it NEVER disappears in unloaded chunks
-                if (horizDist > 75.0D) {
-                    double relocateAngle = currentTarget.getYRot() * (Math.PI / 180.0D) + (this.random.nextDouble() * 1.0D - 0.5D);
-                    double relocateDist = 32.0D + this.random.nextDouble() * 10.0D;
-                    double targetX = currentTarget.getX() - Math.sin(relocateAngle) * relocateDist;
-                    double targetZ = currentTarget.getZ() + Math.cos(relocateAngle) * relocateDist;
-                    double targetY = getGroundHeight() - 4.0D;
-
-                    this.setPos(targetX, targetY, targetZ);
-                    this.currentHeadingYaw = (float) (Mth.atan2(currentTarget.getX() - targetX, currentTarget.getZ() - targetZ) * 180.0F / (float) Math.PI) + 180.0F;
-                    this.rebuildParts();
-                    level().playSound(null, blockPosition(), ModSounds.SANDWORM_ROAR.get(), SoundSource.HOSTILE, 4.0F, 1.0F);
-                    return;
-                }
-
-                // Smooth turning towards player with realistic max turn rate (max 3.0 degrees per tick)
-                float desiredYaw = (float) (Mth.atan2(dx, dz) * 180.0F / (float) Math.PI) + 180.0F;
-                float yawDiff = Mth.wrapDegrees(desiredYaw - currentHeadingYaw);
-                float maxTurn = 3.0F;
-                currentHeadingYaw += Mth.clamp(yawDiff, -maxTurn, maxTurn);
-
-                double rad = Math.toRadians(currentHeadingYaw);
-                // Subterranean speed scaling: speeds up if player sprints or runs away
-                double speedH = horizDist > 40.0D ? 1.05D : (horizDist > 25.0D ? 0.85D : 0.65D);
-                double moveX = -Math.sin(rad) * speedH;
-                double moveZ = -Math.cos(rad) * speedH;
-
-                // Subterranean wave oscillation around targetSubY (-5.6 to -2.4 blocks below surface)
-                double waveOffset = Math.sin(waveTicks * 0.08D) * 1.6D;
-                double desiredY = targetSubY + waveOffset;
-                double yDelta = Mth.clamp((desiredY - this.getY()) * 0.16D, -0.5D, 0.5D);
-
-                // Chance to breach the sand and leap (charge) toward the player when submerged and in range
-                if (horizDist > 14.0D && horizDist < 48.0D && this.getY() <= groundY - 1.5D) {
-                    if (this.random.nextInt(60) == 0) {
-                        stage = Stage.CHARGE;
-                        chargeTickCounter = 0;
-                        Vec3 leapAim = currentTarget.position().add(0, 1.5D, 0).subtract(position()).normalize();
-                        chargeDirection = leapAim;
-                        level().playSound(null, blockPosition(), ModSounds.SANDWORM_ROAR.get(), SoundSource.HOSTILE, 5.0F, 1.0F);
-                    }
-                }
-
-                setDeltaMovement(moveX, yDelta, moveZ);
-            } else {
-                // If wandering in penalty zone, steer towards active players so it never wanders off into the infinite void
-                if (PenaltyZoneManager.isPenaltyDimension(level())) {
-                    for (Player p : level().players()) {
-                        if (p.isAlive() && !p.isSpectator()) {
-                            double pDx = p.getX() - getX();
-                            double pDz = p.getZ() - getZ();
-                            wanderAngle = (float) (Mth.atan2(pDx, pDz) * 180.0F / (float) Math.PI) + 180.0F;
-                            break;
-                        }
-                    }
-                }
-
-                // Idle subterranean cruising under the dunes in broad, majestic S-curves (no tight circles!)
-                if (waveTicks % 160 == 0) {
-                    wanderAngle += (this.random.nextFloat() - 0.5F) * 50.0F;
-                }
-                float sCurve = (float) (Math.sin(waveTicks * 0.02D) * 20.0D);
-                float desiredYaw = wanderAngle + sCurve;
-
-                float yawDiff = Mth.wrapDegrees(desiredYaw - currentHeadingYaw);
-                currentHeadingYaw += Mth.clamp(yawDiff, -1.2F, 1.2F); // wide turning radius
-
-                double rad = Math.toRadians(currentHeadingYaw);
-                double speedH = 0.55D;
-                double moveX = -Math.sin(rad) * speedH;
-                double moveZ = -Math.cos(rad) * speedH;
-
-                double waveOffset = Math.sin(waveTicks * 0.06D) * 1.4D;
-                double desiredY = targetSubY + waveOffset;
-                double yDelta = Mth.clamp((desiredY - this.getY()) * 0.14D, -0.4D, 0.4D);
-
-                setDeltaMovement(moveX, yDelta, moveZ);
-            }
-            waveTicks++;
-        } else if (stage == Stage.CHARGE) {
-            // Dynamic parabolic leap: bursts up from sand, arcs down naturally
-            chargeTickCounter++;
-            double progress = (double) chargeTickCounter / CHARGE_TICK_DURATION;
-
-            double leapSpeedH = 1.30D;
-            double verticalCurve = (1.0D - (progress * 1.8D)) * 1.1D;
-
-            float leapYaw = (float) (Mth.atan2(chargeDirection.x, chargeDirection.z) * 180.0F / (float) Math.PI) + 180.0F;
-            currentHeadingYaw = leapYaw;
-
-            setDeltaMovement(
-                    chargeDirection.x * leapSpeedH,
-                    verticalCurve,
-                    chargeDirection.z * leapSpeedH
-            );
-
-            checkAttackPlayer();
-
-            // When charge expires or worm has plunged deep back into the sand
-            if (chargeTickCounter >= CHARGE_TICK_DURATION || (chargeTickCounter > 15 && this.getY() < targetSubY)) {
-                stage = Stage.RESET_Y;
-                chargeTickCounter = 0;
-            }
-        } else if (stage == Stage.RESET_Y) {
-            // Dive phase: smoothly plunge down back into the dunes
-            if (this.getY() <= targetSubY + 0.5D) {
-                stage = Stage.WAVE_MOVEMENT;
-                waveTicks = 0;
-                setDeltaMovement(this.getDeltaMovement().x * 0.5D, 0, this.getDeltaMovement().z * 0.5D);
-            } else {
-                double diveH = 0.55D;
-                double diveY = Math.min(-0.90D, (targetSubY - this.getY()) * 0.22D);
-                double rad = Math.toRadians(currentHeadingYaw);
-                double moveX = -Math.sin(rad) * diveH;
-                double moveZ = -Math.cos(rad) * diveH;
-                setDeltaMovement(moveX, diveY, moveZ);
-            }
-        } else {
-            stage = Stage.WAVE_MOVEMENT;
-            waveTicks = 0;
+        Player target = currentTarget != null && currentTarget.isAlive() ? currentTarget : null;
+        // too far from the player (it would sit in unloaded ground): resurface underground at the edge of the area
+        if (target != null && stage != Stage.BREACH && horizontalDistance(target) > 110.0D) {
+            relocateNear(target);
+            return;
         }
 
-        // Apply movement velocity
-        this.setPos(this.getX() + this.getDeltaMovement().x,
-                    this.getY() + this.getDeltaMovement().y,
-                    this.getZ() + this.getDeltaMovement().z);
+        switch (stage) {
+            case PROWL -> {
+                if (attackCooldown > 0) attackCooldown--;
+                if (target != null) {
+                    // its own spot on a slowly turning ring around the player, 30-55 blocks out
+                    wanderAngle += 0.25F;
+                    double ring = 42.0D + Math.sin(waveTicks * 0.015D + getId()) * 13.0D;
+                    double a = Math.toRadians(wanderAngle);
+                    double gx = target.getX() + Math.cos(a) * ring, gz = target.getZ() + Math.sin(a) * ring;
+                    Vec3 away = awayFromOtherWorms();
+                    steerToward(gx + away.x * 25.0D, gz + away.z * 25.0D, 2.0F);
+                    long last = LAST_ATTACK.getOrDefault(level().dimension(), 0L);
+                    if (attackCooldown <= 0 && level().getGameTime() - last > MIN_GAP_BETWEEN_ATTACKS) {
+                        LAST_ATTACK.put(level().dimension(), level().getGameTime());
+                        setStage(Stage.STALK);
+                        level().playSound(null, blockPosition(), ModSounds.SANDWORM_ROAR.get(), SoundSource.HOSTILE, 4.0F, 0.8F);
+                    }
+                } else {
+                    // nobody around: long lazy curves through the dunes
+                    if (waveTicks % 140 == 0) wanderAngle += (this.random.nextFloat() - 0.5F) * 70.0F;
+                    Vec3 away = awayFromOtherWorms();
+                    double a = Math.toRadians(wanderAngle);
+                    steerToward(getX() + Math.cos(a) * 30.0D + away.x * 25.0D, getZ() + Math.sin(a) * 30.0D + away.z * 25.0D, 1.2F);
+                }
+                swim(0.6D, cruiseY + Math.sin(waveTicks * 0.06D) * 1.2D);
+                surfaceRipple(groundY, 6);
+            }
+            case STALK -> {
+                if (target == null || stageTicks > 220) {
+                    setStage(Stage.RETREAT);
+                    break;
+                }
+                double dist = horizontalDistance(target);
+                steerToward(target.getX(), target.getZ(), 4.5F);
+                // closer under the sand as it comes, and faster
+                swim(dist > 30.0D ? 1.0D : 0.85D, groundY - (dist > 20.0D ? 4.0D : 2.5D));
+                surfaceRipple(groundY, 2);
+                if (stageTicks % 20 == 0) level().playSound(null, blockPosition(), SoundEvents.SAND_BREAK, SoundSource.HOSTILE, 3.0F, 0.5F);
+                if (dist < 5.0D) {
+                    // right under them: burst out of the sand
+                    Vec3 flat = new Vec3(target.getX() - getX(), 0, target.getZ() - getZ());
+                    flat = flat.lengthSqr() < 1.0E-4 ? Vec3.ZERO : flat.normalize();
+                    breachVelocity = new Vec3(flat.x * 0.45D, 1.7D, flat.z * 0.45D);
+                    setStage(Stage.BREACH);
+                    level().playSound(null, blockPosition(), ModSounds.SANDWORM_ROAR.get(), SoundSource.HOSTILE, 5.0F, 1.0F);
+                }
+            }
+            case BREACH -> {
+                // a leap straight up out of the sand that falls back under its own weight
+                breachVelocity = breachVelocity.add(0, -0.085D, 0);
+                setDeltaMovement(breachVelocity);
+                float yaw = (float) (Mth.atan2(breachVelocity.x, breachVelocity.z) * 180.0F / (float) Math.PI) + 180.0F;
+                if (breachVelocity.horizontalDistanceSqr() > 1.0E-4) currentHeadingYaw = yaw;
+                checkAttackPlayer();
+                if (breachVelocity.y < 0 && getY() < groundY - 3.0D) setStage(Stage.RETREAT);
+                if (stageTicks > 80) setStage(Stage.RETREAT);
+            }
+            case RETREAT -> {
+                // dive and swim away before prowling again
+                if (target != null && stageTicks < 5) wanderAngle = (float) Math.toDegrees(Math.atan2(getZ() - target.getZ(), getX() - target.getX()));
+                double a = Math.toRadians(wanderAngle);
+                steerToward(getX() + Math.cos(a) * 30.0D, getZ() + Math.sin(a) * 30.0D, 3.0F);
+                swim(0.9D, cruiseY - 1.5D);
+                if (stageTicks > 70) {
+                    attackCooldown = 160 + this.random.nextInt(180);   // 8-17 s before it may attack again
+                    setStage(Stage.PROWL);
+                }
+            }
+        }
 
-        checkAttackPlayer();
+        this.setPos(this.getX() + this.getDeltaMovement().x, this.getY() + this.getDeltaMovement().y, this.getZ() + this.getDeltaMovement().z);
+        if (stage != Stage.BREACH) checkAttackPlayer();
+    }
+
+    private void setStage(Stage next) {
+        stage = next;
+        stageTicks = 0;
+    }
+
+    private double horizontalDistance(Player p) {
+        double dx = p.getX() - getX(), dz = p.getZ() - getZ();
+        return Math.sqrt(dx * dx + dz * dz);
+    }
+
+    /** Turns the heading towards a point, at most {@code maxTurn} degrees this tick (a big worm turns wide). */
+    private void steerToward(double x, double z, float maxTurn) {
+        float desired = (float) (Mth.atan2(x - getX(), z - getZ()) * 180.0F / (float) Math.PI) + 180.0F;
+        currentHeadingYaw += Mth.clamp(Mth.wrapDegrees(desired - currentHeadingYaw), -maxTurn, maxTurn);
+    }
+
+    /** Moves along the heading at {@code speed}, easing towards depth {@code y}. */
+    private void swim(double speed, double y) {
+        double rad = Math.toRadians(currentHeadingYaw);
+        double dy = Mth.clamp((y - getY()) * 0.15D, -0.6D, 0.6D);
+        setDeltaMovement(-Math.sin(rad) * speed, dy, -Math.cos(rad) * speed);
+    }
+
+    /** A push away from other worms within 35 blocks, so they spread out over the desert. */
+    private Vec3 awayFromOtherWorms() {
+        Vec3 push = Vec3.ZERO;
+        for (GiantSandwormEntity other : level().getEntitiesOfClass(GiantSandwormEntity.class, getBoundingBox().inflate(35.0D), w -> w != this)) {
+            Vec3 d = new Vec3(getX() - other.getX(), 0, getZ() - other.getZ());
+            double len = d.length();
+            if (len < 1.0E-3) d = new Vec3(this.random.nextDouble() - 0.5D, 0, this.random.nextDouble() - 0.5D);
+            push = push.add(d.normalize().scale((35.0D - Math.min(35.0D, len)) / 35.0D));
+        }
+        return push.lengthSqr() > 1.0D ? push.normalize() : push;
+    }
+
+    /** Sand churning on the surface above it, so the player can see it coming. */
+    private void surfaceRipple(double groundY, int every) {
+        if (stageTicks % every != 0 || !(level() instanceof ServerLevel sl) || getY() < groundY - 6.0D) return;
+        sl.sendParticles(new BlockParticleOption(ParticleTypes.BLOCK, Blocks.SAND.defaultBlockState()),
+                getX(), groundY + 0.1D, getZ(), 12, 1.6D, 0.1D, 1.6D, 0.15D);
+    }
+
+    /** Moves the worm, underground, to somewhere around the player 55-70 blocks out, away from the other worms. */
+    private void relocateNear(Player target) {
+        double best = -1, bx = 0, bz = 0;
+        for (int i = 0; i < 8; i++) {
+            double a = this.random.nextDouble() * Math.PI * 2.0D, r = 55.0D + this.random.nextDouble() * 15.0D;
+            double x = target.getX() + Math.cos(a) * r, z = target.getZ() + Math.sin(a) * r;
+            double nearest = Double.MAX_VALUE;
+            for (GiantSandwormEntity w : level().getEntitiesOfClass(GiantSandwormEntity.class, target.getBoundingBox().inflate(150.0D), w -> w != this))
+                nearest = Math.min(nearest, w.distanceToSqr(x, w.getY(), z));
+            if (nearest > best) { best = nearest; bx = x; bz = z; }
+        }
+        this.setPos(bx, getY(), bz);
+        this.setPos(bx, getGroundHeight() - 5.0D, bz);
+        this.currentHeadingYaw = (float) (Mth.atan2(target.getX() - bx, target.getZ() - bz) * 180.0F / (float) Math.PI) + 180.0F;
+        this.wanderAngle = (float) Math.toDegrees(Math.atan2(bz - target.getZ(), bx - target.getX()));
+        setStage(Stage.PROWL);
+        this.rebuildParts();
     }
 
     private void tickHeadPart() {

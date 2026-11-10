@@ -1210,10 +1210,35 @@ public final class SystemData implements INBTSerializable<CompoundTag> {
     public int dailySquats() { return dailySquats; }
     public int dailyRunning() { return dailyRunning; }
 
+    /** Days in a row (days the player was in the game) that ended without every daily mission done. */
+    private int dailyFailStreak;
+    /** Set when the streak reaches {@link #DAILY_PENALTY_STREAK}: the player is due a trip to the penalty zone. */
+    private boolean dailyPenaltyDue;
+    public static final int DAILY_PENALTY_STREAK = 5;
+
+    public int dailyFailStreak() { return dailyFailStreak; }
+
+    /** True once, when the penalty zone is due; clears the flag. */
+    public boolean takeDailyPenaltyDue() {
+        boolean due = dailyPenaltyDue;
+        dailyPenaltyDue = false;
+        return due;
+    }
+
+    /** Puts a due penalty back (the player was somewhere it could not be sent from yet). */
+    public void keepDailyPenaltyDue() { dailyPenaltyDue = true; }
+
     public void ensureDailyDay(long day) {
         if (dailyDay != day) {
-            if (dailyDay >= 0 && !dailyComplete && !dailyFailed && (dailyPushUps > 0 || dailySitUps > 0 || dailySquats > 0 || dailyRunning > 0)) {
-                dailyFailed = true;
+            // the day that just ended: only days the player was in the game reach this, so time spent away
+            // from the game does not count. Every mission done resets the streak; anything less adds a day.
+            if (dailyDay >= 0) {
+                if (dailyComplete || isDailyQuestComplete()) {
+                    dailyFailStreak = 0;
+                } else if (++dailyFailStreak >= DAILY_PENALTY_STREAK) {
+                    dailyFailStreak = 0;
+                    dailyPenaltyDue = true;
+                }
             }
             dailyDay = day;
             dailyPushUps = 0;
@@ -2702,6 +2727,8 @@ public final class SystemData implements INBTSerializable<CompoundTag> {
         tag.putInt("daily_running", dailyRunning);
         tag.putBoolean("daily_complete", dailyComplete);
         tag.putBoolean("daily_failed", dailyFailed);
+        tag.putInt("daily_fail_streak", dailyFailStreak);
+        tag.putBoolean("daily_penalty_due", dailyPenaltyDue);
         tag.putLong("daily_penalty_until", dailyPenaltyUntil);
         tag.putInt("emergency_survival", emergencySurvival);
         tag.putBoolean("emergency_complete", emergencyComplete);
@@ -3031,6 +3058,8 @@ public final class SystemData implements INBTSerializable<CompoundTag> {
         dailyRunning = Math.max(0, tag.getInt("daily_running"));
         dailyComplete = tag.getBoolean("daily_complete");
         dailyFailed = tag.getBoolean("daily_failed");
+        dailyFailStreak = tag.getInt("daily_fail_streak");
+        dailyPenaltyDue = tag.getBoolean("daily_penalty_due");
         dailyPenaltyUntil = Math.max(0L, tag.getLong("daily_penalty_until"));
         emergencySurvival = tag.getInt("emergency_survival");
         emergencyComplete = tag.getBoolean("emergency_complete");

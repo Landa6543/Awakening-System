@@ -5394,6 +5394,7 @@
     "awakening_system.penalty.failed_chat": "§c[Система] Вы не выжили в Штрафной зоне. Система сохранила ваши вещи, но вас ждёт Сильное истощение.",
     "awakening_system.penalty.failed_subtitle": "Вы пали от зверей пустыни. Наступает крайнее истощение.",
     "awakening_system.penalty.failed_title": "⚠ ШТРАФНОЕ ЗАДАНИЕ: ПРОВАЛ ⚠",
+    "awakening_system.penalty.streak_warning": "§c[Система] %s дн. подряд без выполнения ежедневных заданий. На %s-й день вы попадёте в Зону наказания.",
     "awakening_system.penalty.subtitle": "Выживите 5 минут или уничтожьте %d гигантских песчаных червей!",
     "awakening_system.penalty.teleported": "§c[Система] Вы перемещены в Зону Наказания.",
     "awakening_system.penalty.title": "⚠ ЗОНА НАКАЗАНИЯ ⚠",

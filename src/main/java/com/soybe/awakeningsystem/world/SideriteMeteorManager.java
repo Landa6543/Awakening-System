@@ -40,8 +40,8 @@ public final class SideriteMeteorManager {
 
     // Lejos: hay que ir a buscarlo y no deja cráteres junto a la casa. Cada cliente lo dibuja en su sitio
     // real del mundo (MeteorSkyRenderer), así que se ve caer aunque esté fuera del terreno cargado
-    private static final int MIN_IMPACT_DISTANCE = 180;
-    private static final int MAX_IMPACT_DISTANCE = 320;   // the explosion is game particles: past the render distance it would not show
+    private static final int MIN_IMPACT_DISTANCE = 200;
+    private static final int MAX_IMPACT_DISTANCE = 450;   // the explosion is game particles: past the render distance it does not show
     private static final int MIN_DISTANCE_TO_PLAYERS = 150;
     // Desde dónde entra: muy alto y desplazado de lado respecto al jugador, para que se vea caer en diagonal
     private static final int ENTRY_HEIGHT = 230;

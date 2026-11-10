@@ -198,9 +198,9 @@ public final class PenaltyZoneManager {
             } else {
                 AABB checkArea = player.getBoundingBox().inflate(200.0D);
                 int totalWorms = penaltyLevel.getEntitiesOfClass(GiantSandwormEntity.class, checkArea).size();
-                if (totalWorms < 2 && session.wormsKilled < WORMS_REQUIRED_FOR_EARLY_ESCAPE) {
+                if (totalWorms < 3 && session.wormsKilled < WORMS_REQUIRED_FOR_EARLY_ESCAPE) {
                     double angle = player.getRandom().nextDouble() * Math.PI * 2.0D;
-                    double dist = 45.0D + player.getRandom().nextDouble() * 25.0D;
+                    double dist = 55.0D + player.getRandom().nextDouble() * 15.0D;
                     SystemData pData = SystemEvents.data(player);
                     spawnWormAtOffset(penaltyLevel, player, angle, dist, pData != null ? pData.level() : 1);
                     session.wormSpawnCooldown = 400; // 20s cooldown before checking again
@@ -244,9 +244,10 @@ public final class PenaltyZoneManager {
         int playerLevel = pData != null ? pData.level() : 1;
 
         // Deploy exactly 2 worms flanking the player within loaded distance (40 to 55 blocks away)
-        for (int i = 0; i < 2; i++) {
-            double angle = baseAngle + (i * Math.PI) + (player.getRandom().nextDouble() * 0.35D - 0.175D);
-            double dist = 42.0D + (player.getRandom().nextDouble() * 10.0D);
+        for (int i = 0; i < 3; i++) {
+            // three worms spread evenly around the player, so they come from different sides
+            double angle = baseAngle + (i * Math.PI * 2.0D / 3.0D) + (player.getRandom().nextDouble() * 0.35D - 0.175D);
+            double dist = 50.0D + (player.getRandom().nextDouble() * 15.0D);
             spawnWormAtOffset(level, player, angle, dist, playerLevel);
         }
     }

@@ -5394,6 +5394,7 @@
     "awakening_system.penalty.failed_chat": "§c[Sistema] Você não sobreviveu à Zona de Penalidade. Seus itens foram preservados pelo Sistema, mas você sofre Exaustão Severa.",
     "awakening_system.penalty.failed_subtitle": "Você sucumbiu às feras do deserto. A exaustão extrema toma conta.",
     "awakening_system.penalty.failed_title": "⚠ MISSÃO DE PENALIDADE: FRACASSADA ⚠",
+    "awakening_system.penalty.streak_warning": "§c[Sistema] %s dias seguidos sem completar as missões diárias. Ao chegar a %s você será enviado à Zona de Penalidade.",
     "awakening_system.penalty.subtitle": "Sobreviva 5 minutos ou elimine os %d vermes da areia gigantes!",
     "awakening_system.penalty.teleported": "§c[Sistema] Transportado para a Zona de Penalidade.",
     "awakening_system.penalty.title": "⚠ ZONA DE PENALIDADE ⚠",

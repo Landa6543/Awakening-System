@@ -5394,6 +5394,7 @@
     "awakening_system.penalty.failed_chat": "§c[System] You failed to survive the Penalty Zone. Your items were preserved by the System, but you suffer Severe Exhaustion.",
     "awakening_system.penalty.failed_subtitle": "You succumbed to the desert beasts. Extreme exhaustion sets in.",
     "awakening_system.penalty.failed_title": "⚠ PENALTY QUEST: FAILED ⚠",
+    "awakening_system.penalty.streak_warning": "§c[System] %s days in a row without finishing the daily missions. At %s you will be sent to the Penalty Zone.",
     "awakening_system.penalty.subtitle": "Survive 5 minutes or eliminate the %d giant sandworms!",
     "awakening_system.penalty.teleported": "§c[System] Transported to the Penalty Zone.",
     "awakening_system.penalty.title": "⚠ PENALTY ZONE ⚠",

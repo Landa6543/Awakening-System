@@ -5394,6 +5394,7 @@
     "awakening_system.penalty.failed_chat": "§c[Sistema] No lograste sobrevivir en el Desierto del Castigo. Tus pertenencias han sido protegidas por el Sistema, pero sufres el castigo del Agotamiento Severo.",
     "awakening_system.penalty.failed_subtitle": "Has sucumbido a las bestias del desierto. Tu cuerpo sufre agotamiento extremo.",
     "awakening_system.penalty.failed_title": "⚠ MISIÓN DE CASTIGO: FALLIDA ⚠",
+    "awakening_system.penalty.streak_warning": "§c[Sistema] Llevas %s días seguidos sin completar las misiones diarias. Al llegar a %s serás enviado a la Zona de Penalización.",
     "awakening_system.penalty.subtitle": "¡Sobrevive 5 minutos o elimina a los %d gusanos gigantes!",
     "awakening_system.penalty.teleported": "§c[Sistema] Transportado a la Zona de Castigo.",
     "awakening_system.penalty.title": "⚠ ZONA DE CASTIGO ⚠",
