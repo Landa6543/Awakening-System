@@ -775,6 +775,8 @@ public final class SeriesStructureWorldGen {
                 placeSeriesNbtStructure(level, grottoPos, "ancestral_immortal_grotto", -1, 14, 15, 34, () -> {
                     SeriesStructureBuilder.buildAncestralImmortalGrotto(level, grottoPos);
                 });
+                // domed caverns of living rock instead of a rectangular hole, and a way down from the surface
+                ImmortalGrottoShell.reshape(level, grottoPos);
                 SeriesStructureBuilder.populateAncestralImmortalGrotto(level, grottoPos);
                 recordPlaced(level, "ancestral_immortal_grotto", grottoPos);
                 return true;
@@ -785,6 +787,8 @@ public final class SeriesStructureWorldGen {
                 placeSeriesNbtStructure(level, airPos, "elemental_floating_castles", -12, 64, 70, 64, () -> {
                     SeriesStructureBuilder.buildElementalFloatingCastles(level, airPos);
                 });
+                // the Demon King's castle in the middle is rebuilt as a proper gothic castle
+                ElementalCastleKeep.build(level, airPos);
                 SeriesStructureBuilder.populateElementalFloatingCastles(level, airPos);
                 recordPlaced(level, "elemental_floating_castles", airPos);
                 return true;

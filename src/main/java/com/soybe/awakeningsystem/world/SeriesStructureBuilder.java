@@ -4443,7 +4443,7 @@ public final class SeriesStructureBuilder {
         int cy = Math.max(180, center.getY());
         int cz = center.getZ();
 
-        spawnElementalDemonKing(level, new BlockPos(cx, cy + 36, cz + 10));
+        spawnElementalDemonKing(level, ElementalCastleKeep.throne(level, new BlockPos(cx, cy, cz)));
         spawnElementalLord(level, new BlockPos(cx, cy + 2, cz - 42), ElementalType.WIND);
         spawnElementalLord(level, new BlockPos(cx, cy + 2, cz + 42), ElementalType.FROST);
         spawnElementalLord(level, new BlockPos(cx + 42, cy + 2, cz), ElementalType.FIRE);

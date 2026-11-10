@@ -81,6 +81,17 @@ final class GreatTowerSnapshot {
             }
         }
         ImageIO.write(scale(top, Math.max(1, 600 / w)), "png", dir.resolve(name + "_top.png").toFile());
+        // a cut straight through the middle from north to south, air in black: shows what is underground
+        BufferedImage cut = new BufferedImage(w, h, BufferedImage.TYPE_INT_RGB);
+        for (int z = -half; z <= half; z++) {
+            for (int y = -below; y <= above; y++) {
+                BlockPos p = c.offset(0, y, z);
+                BlockState s = level.getBlockState(p);
+                cut.setRGB(z + half, above - y, s.isAir() ? 0x101010 : s.getMapColor(level, p).col);
+            }
+        }
+        ImageIO.write(scale(cut, Math.max(1, 600 / Math.max(w, h))), "png", dir.resolve(name + "_cut.png").toFile());
+        plan(level, c, half, new int[]{1, 4, 8}, dir, name + "_plan");
     }
 
     /** Plain north-up plans around a point; villagers and NPCs show as red dots. */
