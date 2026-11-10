@@ -1,11 +1,8 @@
 {
   "type": "awakening_system:tower_floor_2",
   "generator": {
-    "type": "minecraft:noise",
-    "settings": "minecraft:overworld",
-    "biome_source": {
-      "type": "minecraft:fixed",
-      "biome": "minecraft:dark_forest"
-    }
+    "type": "awakening_system:tower_floor",
+    "floor": 2,
+    "biome_source": { "type": "minecraft:fixed", "biome": "awakening_system:tower_spectral_mist" }
   }
 }

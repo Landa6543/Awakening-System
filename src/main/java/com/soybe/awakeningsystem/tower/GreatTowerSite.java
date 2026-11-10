@@ -334,6 +334,27 @@ public final class GreatTowerSite {
                     ctx.getSource().sendSuccess(() -> Component.literal("Great Tower rebuilt"), false);
                     return 1;
                 }))
+                .then(Commands.literal("viewfloor").then(Commands.argument("floor", IntegerArgumentType.integer(1, 20))
+                        .then(Commands.argument("half", IntegerArgumentType.integer(8, 120)).executes(ctx -> {
+                    // debug: pictures of a tower floor's terrain around its arrival point
+                    MinecraftServer server = ctx.getSource().getServer();
+                    int fl = IntegerArgumentType.getInteger(ctx, "floor"), half = IntegerArgumentType.getInteger(ctx, "half");
+                    ServerLevel lvl = server.getLevel(com.soybe.awakeningsystem.tower.GreatTowerWorldManager.getDimensionForFloor(fl));
+                    if (lvl == null) return 0;
+                    var layout = com.soybe.awakeningsystem.tower.GreatTowerWorldManager.getLayout(fl);
+                    int x = layout.returnX() / 2, z = layout.returnZ() / 2;
+                    lvl.getChunk(x >> 4, z >> 4);
+                    BlockPos at = new BlockPos(x, lvl.getHeight(Heightmap.Types.MOTION_BLOCKING_NO_LEAVES, x, z), z);
+                    try {
+                        java.nio.file.Path dir = server.getServerDirectory().resolve("tower_snapshot");
+                        java.nio.file.Files.createDirectories(dir);
+                        GreatTowerSnapshot.view(lvl, at, half, 40, 90, dir, "floor" + fl);
+                        ctx.getSource().sendSuccess(() -> Component.literal("Viewed floor " + fl + " at " + at.toShortString()), false);
+                    } catch (java.io.IOException e) {
+                        ctx.getSource().sendFailure(Component.literal(e.toString()));
+                    }
+                    return 1;
+                }))))
                 .then(Commands.literal("altar").executes(ctx -> {
                     Data d = Data.get(ctx.getSource().getServer());
                     if (!d.built) return 0;

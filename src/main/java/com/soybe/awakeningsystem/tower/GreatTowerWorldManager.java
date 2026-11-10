@@ -775,6 +775,8 @@ public final class GreatTowerWorldManager {
       if (floor == 5 || floor == 10 || floor == 15 || floor == 20) {
          processSectorChunk(level, chunk);
       }
+      // the crystal cavern's own formations, once per chunk
+      if (floor == 5) com.soybe.awakeningsystem.tower.terrain.TowerCaveCrystals.decorate(level, chunk);
 
       // 2. Generación estática única de decoraciones de terreno (escombros, matorrales, cristales, minerales)
       decorateSectorChunk(level, chunk, floor);
@@ -794,15 +796,15 @@ public final class GreatTowerWorldManager {
          int rubbleAttempts = floor == 13 ? 3 : 2;
          Direction[] horiz = Direction.Plane.HORIZONTAL.stream().toArray(Direction[]::new);
          for (int i = 0; i < rubbleAttempts; i++) {
-            int cx = minX + rand.nextInt(16);
-            int cz = minZ + rand.nextInt(16);
+            int cx = minX + 1 + rand.nextInt(14);
+            int cz = minZ + 1 + rand.nextInt(14);
             int cy = level.getHeight(Types.MOTION_BLOCKING_NO_LEAVES, cx, cz);
             BlockPos targetPos = new BlockPos(cx, cy, cz);
             if (level.getBlockState(targetPos).isAir()) {
                BlockState rubbleState = SystemBlocks.MOUNTAIN_STONE_RUBBLE.get().defaultBlockState()
                      .setValue(MountainStoneRubbleBlock.FACING, horiz[rand.nextInt(horiz.length)]);
                if (rubbleState.canSurvive(level, targetPos)) {
-                  level.setBlock(targetPos, rubbleState, 2);
+                  level.setBlock(targetPos, rubbleState, 2 | 16);   // no neighbour updates: the neighbours may still be loading
                }
             }
          }
@@ -812,14 +814,14 @@ public final class GreatTowerWorldManager {
       if (floor == 2 || floor == 4 || floor == 9 || floor == 11 || floor == 14 || floor == 17) {
          int shrubAttempts = 2 + rand.nextInt(2);
          for (int i = 0; i < shrubAttempts; i++) {
-            int cx = minX + rand.nextInt(16);
-            int cz = minZ + rand.nextInt(16);
+            int cx = minX + 1 + rand.nextInt(14);
+            int cz = minZ + 1 + rand.nextInt(14);
             int cy = level.getHeight(Types.MOTION_BLOCKING_NO_LEAVES, cx, cz);
             BlockPos targetPos = new BlockPos(cx, cy, cz);
             if (level.getBlockState(targetPos).isAir()) {
                BlockState shrubState = SystemBlocks.FOREST_WILD_SHRUB.get().defaultBlockState();
                if (shrubState.canSurvive(level, targetPos)) {
-                  level.setBlock(targetPos, shrubState, 2);
+                  level.setBlock(targetPos, shrubState, 2 | 16);   // no neighbour updates: the neighbours may still be loading
                }
             }
          }
@@ -829,8 +831,8 @@ public final class GreatTowerWorldManager {
       if (floor == 5 || floor == 13 || floor == 15 || floor == 19 || floor == 20) {
          int crystalCount = floor == 15 ? 3 : 1;
          for (int i = 0; i < crystalCount; i++) {
-            int cx = minX + rand.nextInt(16);
-            int cz = minZ + rand.nextInt(16);
+            int cx = minX + 1 + rand.nextInt(14);
+            int cz = minZ + 1 + rand.nextInt(14);
             int cy = 12 + rand.nextInt(floor == 5 || floor == 10 || floor == 15 || floor == 20 ? 80 : 40);
             BlockPos checkPos = new BlockPos(cx, cy, cz);
             if (level.getBlockState(checkPos).isAir()) {
@@ -851,8 +853,8 @@ public final class GreatTowerWorldManager {
          };
          int oreCount = floor == 15 ? 2 : 1;
          for (int i = 0; i < oreCount; i++) {
-            int cx = minX + rand.nextInt(16);
-            int cz = minZ + rand.nextInt(16);
+            int cx = minX + 1 + rand.nextInt(14);
+            int cz = minZ + 1 + rand.nextInt(14);
             int cy = 14 + rand.nextInt(40);
             BlockPos orePos = new BlockPos(cx, cy, cz);
             if (level.getBlockState(orePos).isAir()) {
@@ -890,7 +892,18 @@ public final class GreatTowerWorldManager {
       }
    }
 
-   public static void processSectorChunk(ServerLevel level, ChunkAccess chunk) {
+      /**
+    * Lava and water placed while a chunk loads must not look at their neighbours: those may be chunks that are
+    * still loading, and asking for them there hangs the server. Written straight into the section; lava's light
+    * is then worked out.
+    */
+   private static void quietFluid(ServerLevel level, ChunkAccess chunk, BlockPos pos, BlockState state) {
+      int idx = chunk.getSectionIndex(pos.getY());
+      if (idx < 0 || idx >= chunk.getSections().length) return;
+      chunk.getSection(idx).setBlockState(pos.getX() & 15, pos.getY() & 15, pos.getZ() & 15, state, false);
+      if (state.getLightEmission() > 0) level.getChunkSource().getLightEngine().checkBlock(pos.immutable());
+   }
+public static void processSectorChunk(ServerLevel level, ChunkAccess chunk) {
       if (isGreatTowerDimension(level)) {
          ensureWorldBorder(level);
          int floor = getFloorForPos(level, new BlockPos(chunk.getPos().getMinBlockX(), 64, chunk.getPos().getMinBlockZ()));
@@ -941,10 +954,10 @@ public final class GreatTowerWorldManager {
 
                      if (floorY <= 11) {
                         mPos.set(x, floorY + 1, z);
-                        chunk.setBlockState(mPos, lava, false);
+                        quietFluid(level, chunk, mPos, lava);
                      } else if (floorY >= 12 && floorY <= 14 && (x + z) % 2 == 0) {
                         mPos.set(x, floorY + 1, z);
-                        chunk.setBlockState(mPos, water, false);
+                        quietFluid(level, chunk, mPos, water);
                      }
 
                      for (int yx = floorY + 2; yx < ceilY; yx++) {
@@ -1016,7 +1029,7 @@ public final class GreatTowerWorldManager {
 
                   for (int yxx = fFloorY + 1; yxx <= fCeilY; yxx++) {
                      mPos.set(fx, yxx, fz);
-                     chunk.setBlockState(mPos, fluid, false);
+                     quietFluid(level, chunk, mPos, fluid);
                   }
                }
 
@@ -1987,20 +2000,20 @@ public final class GreatTowerWorldManager {
          BlockPos below = pos.below();
          BlockState belowState = level.getBlockState(below);
          if (belowState.isFaceSturdy(level, below, Direction.UP) && !belowState.liquid()) {
-            level.setBlock(pos, (BlockState)crystalBase.setValue(TeyvatCrystalBlock.FACING, Direction.UP), 2);
+            level.setBlock(pos, (BlockState)crystalBase.setValue(TeyvatCrystalBlock.FACING, Direction.UP), 2 | 16);
             return true;
          } else {
             BlockPos above = pos.above();
             BlockState aboveState = level.getBlockState(above);
             if (aboveState.isFaceSturdy(level, above, Direction.DOWN) && !aboveState.liquid()) {
-               level.setBlock(pos, (BlockState)crystalBase.setValue(TeyvatCrystalBlock.FACING, Direction.DOWN), 2);
+               level.setBlock(pos, (BlockState)crystalBase.setValue(TeyvatCrystalBlock.FACING, Direction.DOWN), 2 | 16);
                return true;
             } else {
                for (Direction dir : Direction.Plane.HORIZONTAL) {
                   BlockPos wall = pos.relative(dir.getOpposite());
                   BlockState wallState = level.getBlockState(wall);
                   if (wallState.isFaceSturdy(level, wall, dir) && !wallState.liquid()) {
-                     level.setBlock(pos, (BlockState)crystalBase.setValue(TeyvatCrystalBlock.FACING, dir), 2);
+                     level.setBlock(pos, (BlockState)crystalBase.setValue(TeyvatCrystalBlock.FACING, dir), 2 | 16);
                      return true;
                   }
                }
