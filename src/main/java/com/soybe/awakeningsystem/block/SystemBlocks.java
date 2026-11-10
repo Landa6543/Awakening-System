@@ -355,6 +355,10 @@ public final class SystemBlocks {
                             .lightLevel(s -> s.getValue(PotentialCrystalBlock.RANK) == 0 ? 6 : 7 + s.getValue(PotentialCrystalBlock.RANK))
             ));
 
+    public static final DeferredHolder<net.minecraft.world.item.Item, net.minecraft.world.item.BlockItem> POTENTIAL_CRYSTAL_ITEM =
+            AwakeningSystemMod.ITEMS.register("potential_crystal",
+                    () -> new net.minecraft.world.item.BlockItem(POTENTIAL_CRYSTAL.get(), new net.minecraft.world.item.Item.Properties()));
+
     public static final DeferredHolder<Block, AscensionPortalBlock> ASCENSION_PORTAL = BLOCKS.register(
             "tower_portal", () -> new AscensionPortalBlock(
                     BlockBehaviour.Properties.of()

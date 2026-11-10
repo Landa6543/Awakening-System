@@ -131,7 +131,7 @@ public final class AltarOfOrigin {
     private static boolean tick(Measurement m, ServerPlayer player) {
         m.tick++;
         ServerLevel level = m.level;
-        double cx = m.pos.getX() + 0.5D, cy = m.pos.getY() + 0.45D, cz = m.pos.getZ() + 0.5D;
+        double cx = m.pos.getX() + 0.5D, cy = m.pos.getY() + 1.22D, cz = m.pos.getZ() + 0.5D;
         boolean ex = m.target == 7;
         int climbEnd = CHARGE_TICKS + STEP_TICKS * (Math.min(m.target, 6) + 1);
         int revealAt = climbEnd + (ex ? OVERLOAD_TICKS : 10);
@@ -177,7 +177,7 @@ public final class AltarOfOrigin {
 
     private static void reveal(Measurement m, ServerPlayer player) {
         ServerLevel level = m.level;
-        double cx = m.pos.getX() + 0.5D, cy = m.pos.getY() + 0.45D, cz = m.pos.getZ() + 0.5D;
+        double cx = m.pos.getX() + 0.5D, cy = m.pos.getY() + 1.22D, cz = m.pos.getZ() + 0.5D;
         String rank = SystemData.POTENTIAL_RANKS[m.target];
         boolean ex = m.target == 7;
         setShown(m, ex ? 8 : m.target + 1);

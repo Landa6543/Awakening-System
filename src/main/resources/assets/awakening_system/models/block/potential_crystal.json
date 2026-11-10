@@ -5,171 +5,391 @@
                      "particle":  "awakening_system:block/potential_crystal",
                      "crystal":  "awakening_system:block/potential_crystal",
                      "core":  "awakening_system:block/potential_crystal_core",
-                     "cracks":  "awakening_system:block/potential_crystal_cracks"
+                     "cracks":  "awakening_system:block/potential_crystal_cracks",
+                     "base":  "minecraft:block/polished_blackstone",
+                     "trim":  "minecraft:block/chiseled_polished_blackstone",
+                     "column":  "minecraft:block/polished_blackstone_bricks",
+                     "gold":  "minecraft:block/gold_block"
                  },
     "elements":  [
                      {
                          "from":  [
-                                      4,
+                                      2,
+                                      0,
+                                      2
+                                  ],
+                         "to":  [
+                                    14,
+                                    2,
+                                    14
+                                ],
+                         "faces":  {
+                                       "north":  {
+                                                     "texture":  "#base"
+                                                 },
+                                       "south":  {
+                                                     "texture":  "#base"
+                                                 },
+                                       "east":  {
+                                                    "texture":  "#base"
+                                                },
+                                       "west":  {
+                                                    "texture":  "#base"
+                                                },
+                                       "up":  {
+                                                  "texture":  "#base"
+                                              },
+                                       "down":  {
+                                                    "texture":  "#base"
+                                                }
+                                   }
+                     },
+                     {
+                         "from":  [
+                                      3,
+                                      2,
+                                      3
+                                  ],
+                         "to":  [
+                                    13,
+                                    3,
+                                    13
+                                ],
+                         "faces":  {
+                                       "north":  {
+                                                     "texture":  "#trim"
+                                                 },
+                                       "south":  {
+                                                     "texture":  "#trim"
+                                                 },
+                                       "east":  {
+                                                    "texture":  "#trim"
+                                                },
+                                       "west":  {
+                                                    "texture":  "#trim"
+                                                },
+                                       "up":  {
+                                                  "texture":  "#trim"
+                                              },
+                                       "down":  {
+                                                    "texture":  "#trim"
+                                                }
+                                   }
+                     },
+                     {
+                         "from":  [
                                       6,
+                                      3,
+                                      6
+                                  ],
+                         "to":  [
+                                    10,
+                                    11,
+                                    10
+                                ],
+                         "faces":  {
+                                       "north":  {
+                                                     "texture":  "#column"
+                                                 },
+                                       "south":  {
+                                                     "texture":  "#column"
+                                                 },
+                                       "east":  {
+                                                    "texture":  "#column"
+                                                },
+                                       "west":  {
+                                                    "texture":  "#column"
+                                                },
+                                       "up":  {
+                                                  "texture":  "#column"
+                                              },
+                                       "down":  {
+                                                    "texture":  "#column"
+                                                }
+                                   }
+                     },
+                     {
+                         "from":  [
+                                      5,
+                                      11,
+                                      5
+                                  ],
+                         "to":  [
+                                    11,
+                                    12,
+                                    11
+                                ],
+                         "faces":  {
+                                       "north":  {
+                                                     "texture":  "#trim"
+                                                 },
+                                       "south":  {
+                                                     "texture":  "#trim"
+                                                 },
+                                       "east":  {
+                                                    "texture":  "#trim"
+                                                },
+                                       "west":  {
+                                                    "texture":  "#trim"
+                                                },
+                                       "up":  {
+                                                  "texture":  "#trim"
+                                              },
+                                       "down":  {
+                                                    "texture":  "#trim"
+                                                }
+                                   }
+                     },
+                     {
+                         "from":  [
+                                      4,
+                                      12,
                                       4
                                   ],
                          "to":  [
                                     12,
-                                    14,
+                                    13,
                                     12
+                                ],
+                         "faces":  {
+                                       "north":  {
+                                                     "texture":  "#gold"
+                                                 },
+                                       "south":  {
+                                                     "texture":  "#gold"
+                                                 },
+                                       "east":  {
+                                                    "texture":  "#gold"
+                                                },
+                                       "west":  {
+                                                    "texture":  "#gold"
+                                                },
+                                       "up":  {
+                                                  "texture":  "#gold"
+                                              },
+                                       "down":  {
+                                                    "texture":  "#gold"
+                                                }
+                                   }
+                     },
+                     {
+                         "from":  [
+                                      4,
+                                      13,
+                                      4
+                                  ],
+                         "to":  [
+                                    5,
+                                    17,
+                                    5
+                                ],
+                         "faces":  {
+                                       "north":  {
+                                                     "texture":  "#gold"
+                                                 },
+                                       "south":  {
+                                                     "texture":  "#gold"
+                                                 },
+                                       "east":  {
+                                                    "texture":  "#gold"
+                                                },
+                                       "west":  {
+                                                    "texture":  "#gold"
+                                                },
+                                       "up":  {
+                                                  "texture":  "#gold"
+                                              },
+                                       "down":  {
+                                                    "texture":  "#gold"
+                                                }
+                                   }
+                     },
+                     {
+                         "from":  [
+                                      11,
+                                      13,
+                                      4
+                                  ],
+                         "to":  [
+                                    12,
+                                    17,
+                                    5
+                                ],
+                         "faces":  {
+                                       "north":  {
+                                                     "texture":  "#gold"
+                                                 },
+                                       "south":  {
+                                                     "texture":  "#gold"
+                                                 },
+                                       "east":  {
+                                                    "texture":  "#gold"
+                                                },
+                                       "west":  {
+                                                    "texture":  "#gold"
+                                                },
+                                       "up":  {
+                                                  "texture":  "#gold"
+                                              },
+                                       "down":  {
+                                                    "texture":  "#gold"
+                                                }
+                                   }
+                     },
+                     {
+                         "from":  [
+                                      4,
+                                      13,
+                                      11
+                                  ],
+                         "to":  [
+                                    5,
+                                    17,
+                                    12
+                                ],
+                         "faces":  {
+                                       "north":  {
+                                                     "texture":  "#gold"
+                                                 },
+                                       "south":  {
+                                                     "texture":  "#gold"
+                                                 },
+                                       "east":  {
+                                                    "texture":  "#gold"
+                                                },
+                                       "west":  {
+                                                    "texture":  "#gold"
+                                                },
+                                       "up":  {
+                                                  "texture":  "#gold"
+                                              },
+                                       "down":  {
+                                                    "texture":  "#gold"
+                                                }
+                                   }
+                     },
+                     {
+                         "from":  [
+                                      11,
+                                      13,
+                                      11
+                                  ],
+                         "to":  [
+                                    12,
+                                    17,
+                                    12
+                                ],
+                         "faces":  {
+                                       "north":  {
+                                                     "texture":  "#gold"
+                                                 },
+                                       "south":  {
+                                                     "texture":  "#gold"
+                                                 },
+                                       "east":  {
+                                                    "texture":  "#gold"
+                                                },
+                                       "west":  {
+                                                    "texture":  "#gold"
+                                                },
+                                       "up":  {
+                                                  "texture":  "#gold"
+                                              },
+                                       "down":  {
+                                                    "texture":  "#gold"
+                                                }
+                                   }
+                     },
+                     {
+                         "from":  [
+                                      6,
+                                      17,
+                                      6
+                                  ],
+                         "to":  [
+                                    10,
+                                    22,
+                                    10
                                 ],
                          "rotation":  {
                                           "angle":  45,
                                           "axis":  "y",
                                           "origin":  [
                                                          8,
-                                                         8,
+                                                         19.5,
                                                          8
                                                      ]
                                       },
                          "faces":  {
                                        "north":  {
                                                      "texture":  "#core",
-                                                     "uv":  [
-                                                                0,
-                                                                0,
-                                                                16,
-                                                                16
-                                                            ],
                                                      "tintindex":  0
                                                  },
                                        "south":  {
                                                      "texture":  "#core",
-                                                     "uv":  [
-                                                                0,
-                                                                0,
-                                                                16,
-                                                                16
-                                                            ],
                                                      "tintindex":  0
                                                  },
                                        "east":  {
                                                     "texture":  "#core",
-                                                    "uv":  [
-                                                               0,
-                                                               0,
-                                                               16,
-                                                               16
-                                                           ],
                                                     "tintindex":  0
                                                 },
                                        "west":  {
                                                     "texture":  "#core",
-                                                    "uv":  [
-                                                               0,
-                                                               0,
-                                                               16,
-                                                               16
-                                                           ],
                                                     "tintindex":  0
                                                 },
                                        "up":  {
                                                   "texture":  "#core",
-                                                  "uv":  [
-                                                             0,
-                                                             0,
-                                                             16,
-                                                             16
-                                                         ],
                                                   "tintindex":  0
                                               },
                                        "down":  {
                                                     "texture":  "#core",
-                                                    "uv":  [
-                                                               0,
-                                                               0,
-                                                               16,
-                                                               16
-                                                           ],
                                                     "tintindex":  0
                                                 }
                                    }
                      },
                      {
                          "from":  [
-                                      -1,
-                                      2,
-                                      -1
+                                      4.5,
+                                      15.5,
+                                      4.5
                                   ],
                          "to":  [
-                                    17,
-                                    20,
-                                    17
+                                    11.5,
+                                    23.5,
+                                    11.5
                                 ],
                          "rotation":  {
                                           "angle":  45,
                                           "axis":  "y",
                                           "origin":  [
                                                          8,
-                                                         8,
+                                                         19.5,
                                                          8
                                                      ]
                                       },
                          "faces":  {
                                        "north":  {
                                                      "texture":  "#crystal",
-                                                     "uv":  [
-                                                                0,
-                                                                0,
-                                                                16,
-                                                                16
-                                                            ],
                                                      "tintindex":  0
                                                  },
                                        "south":  {
                                                      "texture":  "#crystal",
-                                                     "uv":  [
-                                                                0,
-                                                                0,
-                                                                16,
-                                                                16
-                                                            ],
                                                      "tintindex":  0
                                                  },
                                        "east":  {
                                                     "texture":  "#crystal",
-                                                    "uv":  [
-                                                               0,
-                                                               0,
-                                                               16,
-                                                               16
-                                                           ],
                                                     "tintindex":  0
                                                 },
                                        "west":  {
                                                     "texture":  "#crystal",
-                                                    "uv":  [
-                                                               0,
-                                                               0,
-                                                               16,
-                                                               16
-                                                           ],
                                                     "tintindex":  0
                                                 },
                                        "up":  {
                                                   "texture":  "#crystal",
-                                                  "uv":  [
-                                                             0,
-                                                             0,
-                                                             16,
-                                                             16
-                                                         ],
                                                   "tintindex":  0
                                               },
                                        "down":  {
                                                     "texture":  "#crystal",
-                                                    "uv":  [
-                                                               0,
-                                                               0,
-                                                               16,
-                                                               16
-                                                           ],
                                                     "tintindex":  0
                                                 }
                                    }

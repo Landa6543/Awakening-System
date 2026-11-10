@@ -350,9 +350,9 @@ public final class GreatTowerBuilder {
                 set(x, 0, z, f);
             }
         }
-        set(0, 1, 0, Blocks.POLISHED_BLACKSTONE_WALL.defaultBlockState());
-        set(0, 2, 0, SystemBlocks.POTENTIAL_CRYSTAL.get().defaultBlockState());
-        return w(0, 2, 0);
+        // the crystal brings its own stand in its model
+        set(0, 1, 0, SystemBlocks.POTENTIAL_CRYSTAL.get().defaultBlockState());
+        return w(0, 1, 0);
     }
 
     /** The round gate at the back of the vestibule, facing the door. */
@@ -386,16 +386,19 @@ public final class GreatTowerBuilder {
         // outside, beside the road to the door, on a framed stone panel so it does not hang in the air
         int x = -7, z = TIER_RADIUS[0] + 5;
         for (int dx = -3; dx <= 3; dx++) {
-            for (int y = 1; y <= 4; y++) {
-                boolean frame = Math.abs(dx) == 3 || y == 4;
+            for (int y = 1; y <= 5; y++) {
+                boolean frame = Math.abs(dx) == 3 || y == 5;
                 set(x + dx, y, z - 1, frame ? TRIM : WALL_DARK);
             }
-            set(x + dx, 5, z - 1, Blocks.POLISHED_BLACKSTONE_BRICK_SLAB.defaultBlockState());
+            set(x + dx, 6, z - 1, Blocks.POLISHED_BLACKSTONE_BRICK_SLAB.defaultBlockState());
             set(x + dx, 0, z, TILES);
+            // the ledge the board rests on, one block up from the ground
+            if (Math.abs(dx) <= 2) set(x + dx, 1, z, Blocks.POLISHED_BLACKSTONE_BRICK_SLAB.defaultBlockState()
+                    .setValue(SlabBlock.TYPE, SlabType.TOP));
         }
         set(x - 3, 1, z, Blocks.SOUL_LANTERN.defaultBlockState());
         set(x + 3, 1, z, Blocks.SOUL_LANTERN.defaultBlockState());
-        BlockPos p = w(x, 1, z);
+        BlockPos p = w(x, 2, z);
         level.setBlock(p, SystemBlocks.TOWER_MISSION_BOARD.get().defaultBlockState()
                 .setValue(TowerMissionBoardBlock.FACING, Direction.SOUTH).rotate(rot), 3);
         return p;
