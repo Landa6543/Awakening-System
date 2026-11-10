@@ -43,12 +43,12 @@ public class TowerMissionBoardRenderer implements BlockEntityRenderer<TowerMissi
         // 2. Rotación: Invertida 180° para que la cara frontal (con carteles de misiones, recompensas y pines)
         // mire directamente hacia el jugador y la habitación, y la espalda quede pegada a la pared.
         float rotY = switch (facing) {
-            case NORTH -> 180.0F;
-            case SOUTH -> 0.0F;
-            // a +90 turn about Y points the front (+Z) east, so west is 270 (these were swapped: boards facing
-            // east or west were drawn back to front)
-            case WEST  -> 270.0F;
-            case EAST  -> 90.0F;
+            // the model's front is its -Z side: north needs no turn and south a half turn (these two were
+            // swapped, so boards facing north or south were drawn back to front); a +90 turn sends -Z west
+            case NORTH -> 0.0F;
+            case SOUTH -> 180.0F;
+            case WEST  -> 90.0F;
+            case EAST  -> 270.0F;
             default    -> 180.0F;
         };
         poseStack.mulPose(Axis.YP.rotationDegrees(rotY));

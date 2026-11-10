@@ -102,8 +102,8 @@ public final class GreatTowerBuilder {
             case EAST -> Rotation.COUNTERCLOCKWISE_90;
             default -> Rotation.NONE;
         };
-        for (int x = -3; x <= 3; x++)
-            for (int z = -3; z <= 3; z++)
+        for (int x = -4; x <= 4; x++)
+            for (int z = -4; z <= 4; z++)
                 for (int y = 1; y <= 6; y++) set(x, y, z, Blocks.AIR.defaultBlockState());
         BlockPos crystal = altar();
         level = null;
@@ -333,30 +333,26 @@ public final class GreatTowerBuilder {
      * The Altar of Origin: a stepped dais, four rune pillars with amethyst on top around it, and in the
      * middle a pedestal holding the floating crystal of measurement.
      */
+    /**
+     * The Altar of Origin, kept open and flat: a circle of quartz set into the floor with lights flush in it,
+     * and in the middle a single slender stand holding the crystal at eye height. Nothing else stands there.
+     */
     private static BlockPos altar() {
-        // two-step dais
-        for (int x = -3; x <= 3; x++) {
-            for (int z = -3; z <= 3; z++) {
-                boolean outer = Math.abs(x) == 3 || Math.abs(z) == 3;
-                set(x, 1, z, outer ? Blocks.POLISHED_BLACKSTONE_BRICK_SLAB.defaultBlockState() : WALL_DARK);
-                if (Math.abs(x) <= 1 && Math.abs(z) <= 1) set(x, 2, z, Blocks.POLISHED_BLACKSTONE_BRICK_SLAB.defaultBlockState());
+        for (int x = -4; x <= 4; x++) {
+            for (int z = -4; z <= 4; z++) {
+                double d = Math.sqrt(x * x + z * z);
+                if (d > 4.4D) continue;
+                BlockState f;
+                if (d < 1.5D) f = Blocks.CHISELED_QUARTZ_BLOCK.defaultBlockState();
+                else if (Math.abs(d - 3.0D) < 0.55D) f = (((int) Math.round(Math.toDegrees(Math.atan2(z, x)) + 360)) % 60 < 20) ? GLOW : Blocks.SMOOTH_QUARTZ.defaultBlockState();
+                else if (d > 3.9D) f = TRIM;
+                else f = Blocks.POLISHED_DEEPSLATE.defaultBlockState();
+                set(x, 0, z, f);
             }
         }
-        // the rune ring: quartz slabs over lights set in the floor
-        for (int x = -2; x <= 2; x++)
-            for (int z = -2; z <= 2; z++)
-                if (Math.abs(x) == 2 || Math.abs(z) == 2) {
-                    set(x, 1, z, Blocks.SMOOTH_QUARTZ_SLAB.defaultBlockState());
-                    if ((x + z) % 2 == 0) set(x, 0, z, GLOW);
-                }
-        // the corners of the dais as slabs too
-        for (int sx = -1; sx <= 1; sx += 2)
-            for (int sz = -1; sz <= 1; sz += 2) set(sx * 3, 1, sz * 3, Blocks.SMOOTH_QUARTZ_SLAB.defaultBlockState());
-        // central pedestal and the crystal
-        set(0, 2, 0, Blocks.CHISELED_POLISHED_BLACKSTONE.defaultBlockState());
-        set(0, 3, 0, Blocks.CHISELED_QUARTZ_BLOCK.defaultBlockState());
-        set(0, 4, 0, SystemBlocks.POTENTIAL_CRYSTAL.get().defaultBlockState());
-        return w(0, 4, 0);
+        set(0, 1, 0, Blocks.POLISHED_BLACKSTONE_WALL.defaultBlockState());
+        set(0, 2, 0, SystemBlocks.POTENTIAL_CRYSTAL.get().defaultBlockState());
+        return w(0, 2, 0);
     }
 
     /** The round gate at the back of the vestibule, facing the door. */
@@ -387,22 +383,21 @@ public final class GreatTowerBuilder {
      * wall built for it (the board is drawn against the block behind it, so it needs a straight wall).
      */
     private static BlockPos board() {
-        // on the wall left of the door: a flat framed stretch of wall built out to meet the curve
-        int x = -15, zc = 7;
-        for (int z = zc - 3; z <= zc + 3; z++) {
+        // outside, beside the road to the door, on a framed stone panel so it does not hang in the air
+        int x = -7, z = TIER_RADIUS[0] + 5;
+        for (int dx = -3; dx <= 3; dx++) {
             for (int y = 1; y <= 4; y++) {
-                boolean frame = z == zc - 3 || z == zc + 3 || y == 4;
-                set(x - 1, y, z, frame ? TRIM : WALL_DARK);
-                for (int bx = x - 4; bx <= x - 2; bx++) set(bx, y, z, WALL);
+                boolean frame = Math.abs(dx) == 3 || y == 4;
+                set(x + dx, y, z - 1, frame ? TRIM : WALL_DARK);
             }
-            set(x - 1, 5, z, Blocks.POLISHED_BLACKSTONE_BRICK_SLAB.defaultBlockState());
+            set(x + dx, 5, z - 1, Blocks.POLISHED_BLACKSTONE_BRICK_SLAB.defaultBlockState());
+            set(x + dx, 0, z, TILES);
         }
-        for (int z = zc - 3; z <= zc + 3; z++) set(x, 0, z, TILES);
-        set(x, 1, zc - 3, Blocks.SOUL_LANTERN.defaultBlockState());
-        set(x, 1, zc + 3, Blocks.SOUL_LANTERN.defaultBlockState());
-        BlockPos p = w(x, 1, zc);
+        set(x - 3, 1, z, Blocks.SOUL_LANTERN.defaultBlockState());
+        set(x + 3, 1, z, Blocks.SOUL_LANTERN.defaultBlockState());
+        BlockPos p = w(x, 1, z);
         level.setBlock(p, SystemBlocks.TOWER_MISSION_BOARD.get().defaultBlockState()
-                .setValue(TowerMissionBoardBlock.FACING, Direction.EAST).rotate(rot), 3);
+                .setValue(TowerMissionBoardBlock.FACING, Direction.SOUTH).rotate(rot), 3);
         return p;
     }
 }
