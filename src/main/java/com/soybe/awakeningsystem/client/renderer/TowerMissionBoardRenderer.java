@@ -45,8 +45,10 @@ public class TowerMissionBoardRenderer implements BlockEntityRenderer<TowerMissi
         float rotY = switch (facing) {
             case NORTH -> 180.0F;
             case SOUTH -> 0.0F;
-            case WEST  -> 90.0F;
-            case EAST  -> 270.0F;
+            // a +90 turn about Y points the front (+Z) east, so west is 270 (these were swapped: boards facing
+            // east or west were drawn back to front)
+            case WEST  -> 270.0F;
+            case EAST  -> 90.0F;
             default    -> 180.0F;
         };
         poseStack.mulPose(Axis.YP.rotationDegrees(rotY));

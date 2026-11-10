@@ -342,13 +342,16 @@ public final class GreatTowerBuilder {
                 if (Math.abs(x) <= 1 && Math.abs(z) <= 1) set(x, 2, z, Blocks.POLISHED_BLACKSTONE_BRICK_SLAB.defaultBlockState());
             }
         }
-        // the rune ring inlaid in the dais
+        // the rune ring: quartz slabs over lights set in the floor
         for (int x = -2; x <= 2; x++)
             for (int z = -2; z <= 2; z++)
-                if (Math.abs(x) == 2 || Math.abs(z) == 2) set(x, 1, z, (x + z) % 2 == 0 ? GLOW : TRIM);
-        // the corners of the dais, left open
+                if (Math.abs(x) == 2 || Math.abs(z) == 2) {
+                    set(x, 1, z, Blocks.SMOOTH_QUARTZ_SLAB.defaultBlockState());
+                    if ((x + z) % 2 == 0) set(x, 0, z, GLOW);
+                }
+        // the corners of the dais as slabs too
         for (int sx = -1; sx <= 1; sx += 2)
-            for (int sz = -1; sz <= 1; sz += 2) set(sx * 3, 1, sz * 3, TRIM);
+            for (int sz = -1; sz <= 1; sz += 2) set(sx * 3, 1, sz * 3, Blocks.SMOOTH_QUARTZ_SLAB.defaultBlockState());
         // central pedestal and the crystal
         set(0, 2, 0, Blocks.CHISELED_POLISHED_BLACKSTONE.defaultBlockState());
         set(0, 3, 0, Blocks.CHISELED_QUARTZ_BLOCK.defaultBlockState());
@@ -384,12 +387,13 @@ public final class GreatTowerBuilder {
      * wall built for it (the board is drawn against the block behind it, so it needs a straight wall).
      */
     private static BlockPos board() {
-        // a free-standing framed panel in the vestibule, clear of the curved wall and its windows
-        int x = -11, zc = 6;
+        // on the wall left of the door: a flat framed stretch of wall built out to meet the curve
+        int x = -15, zc = 7;
         for (int z = zc - 3; z <= zc + 3; z++) {
             for (int y = 1; y <= 4; y++) {
                 boolean frame = z == zc - 3 || z == zc + 3 || y == 4;
                 set(x - 1, y, z, frame ? TRIM : WALL_DARK);
+                for (int bx = x - 4; bx <= x - 2; bx++) set(bx, y, z, WALL);
             }
             set(x - 1, 5, z, Blocks.POLISHED_BLACKSTONE_BRICK_SLAB.defaultBlockState());
         }
