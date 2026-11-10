@@ -92,6 +92,24 @@ public final class GreatTowerBuilder {
         return layout;
     }
 
+    /** Rebuilds only the Altar of Origin (for towers raised before the altar changed); returns the crystal. */
+    public static synchronized BlockPos rebuildAltar(ServerLevel lvl, BlockPos origin, Direction front) {
+        level = lvl;
+        o = origin;
+        rot = switch (front) {
+            case NORTH -> Rotation.CLOCKWISE_180;
+            case WEST -> Rotation.CLOCKWISE_90;
+            case EAST -> Rotation.COUNTERCLOCKWISE_90;
+            default -> Rotation.NONE;
+        };
+        for (int x = -3; x <= 3; x++)
+            for (int z = -3; z <= 3; z++)
+                for (int y = 1; y <= 6; y++) set(x, y, z, Blocks.AIR.defaultBlockState());
+        BlockPos crystal = altar();
+        level = null;
+        return crystal;
+    }
+
     // ── helpers ──────────────────────────────────────────────────────────────
 
     private static BlockPos w(int x, int y, int z) {
@@ -331,14 +349,38 @@ public final class GreatTowerBuilder {
         for (int x = -2; x <= 2; x++) for (int z = rr - 3; z <= rr + 2; z++) set(x, 0, z, TILES);
     }
 
+    /**
+     * The Altar of Origin: a stepped dais, four rune pillars with amethyst on top around it, and in the
+     * middle a pedestal holding the floating crystal of measurement.
+     */
     private static BlockPos altar() {
-        for (int x = -1; x <= 1; x++)
-            for (int z = -1; z <= 1; z++)
-                set(x, 1, z, (x == 0 && z == 0) ? Blocks.CHISELED_POLISHED_BLACKSTONE.defaultBlockState()
-                        : Blocks.POLISHED_BLACKSTONE_SLAB.defaultBlockState());
-        set(0, 2, 0, Blocks.CHISELED_QUARTZ_BLOCK.defaultBlockState());
-        set(0, 3, 0, SystemBlocks.POTENTIAL_CRYSTAL.get().defaultBlockState());
-        return w(0, 3, 0);
+        // two-step dais
+        for (int x = -3; x <= 3; x++) {
+            for (int z = -3; z <= 3; z++) {
+                boolean outer = Math.abs(x) == 3 || Math.abs(z) == 3;
+                set(x, 1, z, outer ? Blocks.POLISHED_BLACKSTONE_BRICK_SLAB.defaultBlockState() : WALL_DARK);
+                if (Math.abs(x) <= 1 && Math.abs(z) <= 1) set(x, 2, z, Blocks.POLISHED_BLACKSTONE_BRICK_SLAB.defaultBlockState());
+            }
+        }
+        // the rune ring inlaid in the dais
+        for (int x = -2; x <= 2; x++)
+            for (int z = -2; z <= 2; z++)
+                if (Math.abs(x) == 2 || Math.abs(z) == 2) set(x, 1, z, (x + z) % 2 == 0 ? GLOW : TRIM);
+        // four rune pillars on the corners
+        for (int sx = -1; sx <= 1; sx += 2) {
+            for (int sz = -1; sz <= 1; sz += 2) {
+                int x = sx * 3, z = sz * 3;
+                set(x, 1, z, TRIM);
+                for (int y = 2; y <= 4; y++) set(x, y, z, y == 3 ? Blocks.CHISELED_QUARTZ_BLOCK.defaultBlockState() : Blocks.QUARTZ_PILLAR.defaultBlockState());
+                set(x, 5, z, Blocks.AMETHYST_BLOCK.defaultBlockState());
+                set(x, 6, z, Blocks.AMETHYST_CLUSTER.defaultBlockState());
+            }
+        }
+        // central pedestal and the crystal
+        set(0, 2, 0, Blocks.CHISELED_POLISHED_BLACKSTONE.defaultBlockState());
+        set(0, 3, 0, Blocks.CHISELED_QUARTZ_BLOCK.defaultBlockState());
+        set(0, 4, 0, SystemBlocks.POTENTIAL_CRYSTAL.get().defaultBlockState());
+        return w(0, 4, 0);
     }
 
     /** The round gate at the back of the vestibule, facing the door. */

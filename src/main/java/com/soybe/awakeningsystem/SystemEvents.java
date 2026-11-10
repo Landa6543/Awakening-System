@@ -5215,7 +5215,8 @@ public final class SystemEvents {
          }
 
          SystemData tickData = data(player);
-         if (tickData != null && tickData.isPendingWelcomePacket() && player.tickCount >= 5) {
+         // "Welcome, Player" waits until the Great Tower has awakened the System
+         if (tickData != null && tickData.isPendingWelcomePacket() && tickData.isAwakened() && player.tickCount >= 5) {
             tickData.setPendingWelcomePacket(false);
             PacketDistributor.sendToPlayer(player, new OpenWelcomeScreenPayload());
          }

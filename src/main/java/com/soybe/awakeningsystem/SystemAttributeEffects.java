@@ -17,6 +17,11 @@ public final class SystemAttributeEffects {
         apply(player, Attributes.MAX_HEALTH, "vitality", vitPoints * 2.0D);
         int strPoints = Math.max(0, data.strength() - SystemData.ATTR_BASE);
         apply(player, Attributes.ATTACK_DAMAGE, "strength", strPoints * 0.5D);
+        // the potential measured at the Altar of Origin: a quiet, permanent push to everything
+        String potential = data.potentialRank();
+        apply(player, Attributes.ATTACK_DAMAGE, "potential_damage", SystemData.potentialDamageBonus(potential));
+        apply(player, Attributes.MAX_HEALTH, "potential_health", SystemData.potentialHealthBonus(potential));
+        apply(player, Attributes.ARMOR, "potential_armor", SystemData.potentialArmorBonus(potential));
         apply(player, Attributes.ATTACK_SPEED, "agility", diminishing(data.agility(), SystemData.ATTR_BASE, 0.015D));
         // Velocidad por Agilidad: se nota desde los primeros puntos y se acerca a +50% sin pasarlo
         // (5 puntos ≈ +6%, 10 ≈ +11%, 20 ≈ +20%, 40 ≈ +32%, 100 ≈ +46% sobre la velocidad base 0.1).

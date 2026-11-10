@@ -2740,6 +2740,29 @@ public final class SystemScreen extends Screen {
 
         if (player != null) {
             drawClipped(g, player.getName(), left + 24, top + 74, 0xFFFFFFFF, 135);
+            // the potential measured at the Altar of Origin, next to the name (not the same thing as the rank)
+            int potX = left + 24 + Math.min(font.width(player.getName()), 80) + 8;
+            Component potComp = d.potentialMeasured()
+                    ? Component.translatable("awakening_system.screen.profile.potential", d.potentialRank())
+                    : Component.translatable("awakening_system.screen.profile.potential_none");
+            int potIdx = SystemData.potentialIndex(d.potentialRank());
+            int potCol = potIdx < 0 ? 0xFF777777 : (0xFF000000 | com.soybe.awakeningsystem.block.PotentialCrystalBlock.COLORS[potIdx == 7 ? 8 : potIdx + 1]);
+            drawClipped(g, potComp, potX, top + 74, potCol, left + 160 - potX);
+            if (mouseX >= potX && mouseX < left + 160 && mouseY >= top + 72 && mouseY < top + 84) {
+                List<Component> tip = new ArrayList<>();
+                tip.add(potComp.copy().withStyle(ChatFormatting.BOLD));
+                if (d.potentialMeasured()) {
+                    String r = d.potentialRank();
+                    tip.add(Component.translatable("awakening_system.screen.profile.potential_tip",
+                            String.valueOf((int) SystemData.potentialDamageBonus(r) == SystemData.potentialDamageBonus(r) ? (int) SystemData.potentialDamageBonus(r) : SystemData.potentialDamageBonus(r)),
+                            String.valueOf((int) SystemData.potentialHealthBonus(r)),
+                            String.valueOf(Math.round((SystemData.potentialExpMultiplier(r) - 1.0D) * 100.0D)),
+                            String.valueOf(SystemData.potentialPointsPerLevel(r))).withStyle(ChatFormatting.GRAY));
+                } else {
+                    tip.add(Component.translatable("awakening_system.screen.missions.dormant.line2").withStyle(ChatFormatting.GRAY));
+                }
+                g.renderComponentTooltip(font, tip, mouseX, mouseY);
+            }
             drawClipped(g, Component.translatable("awakening_system.screen.profile.points", d.attributePoints()), left + 220, top + 74,
                     d.attributePoints() > 0 ? (sys40 ? 0xFFFFE082 : 0xFFFFD700) : (sys40 ? 0xFF90CAF9 : (sys30 ? 0xFF88C999 : (sys20 ? 0xFFD1B3E0 : MUTED))), 175);
 

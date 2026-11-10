@@ -63,11 +63,8 @@ public final class PhysicalRouletteManager {
 
     public static ItemStack getCandidate(int index) {
         List<ItemStack> pool = new ArrayList<>();
-        if (SystemItems.PLUM_BLOSSOM_SWORD.isBound()) pool.add(new ItemStack(SystemItems.PLUM_BLOSSOM_SWORD.get()));
         if (SystemItems.IMMORTAL_DRAGON_SCALE.isBound()) pool.add(new ItemStack(SystemItems.IMMORTAL_DRAGON_SCALE.get(), 2));
         if (SystemItems.CELESTIAL_DRAGON_PEARL.isBound()) pool.add(new ItemStack(SystemItems.CELESTIAL_DRAGON_PEARL.get()));
-        if (SystemItems.SHADOW_DAGGERS.isBound()) pool.add(new ItemStack(SystemItems.SHADOW_DAGGERS.get()));
-        if (SystemItems.SKY_DEMON_SWORD.isBound()) pool.add(new ItemStack(SystemItems.SKY_DEMON_SWORD.get()));
         if (SystemItems.THOUSAND_YEAR_GINSENG.isBound()) pool.add(new ItemStack(SystemItems.THOUSAND_YEAR_GINSENG.get(), 2));
         if (SystemItems.SNOW_LOTUS.isBound()) pool.add(new ItemStack(SystemItems.SNOW_LOTUS.get(), 2));
         if (SystemItems.AWAKENING_COIN.isBound()) pool.add(new ItemStack(SystemItems.AWAKENING_COIN.get(), 64));
@@ -229,7 +226,7 @@ public final class PhysicalRouletteManager {
         int roll = player.getRandom().nextInt(100);
 
         if (roll < 2) {
-            if (SystemItems.PLUM_BLOSSOM_SWORD.isBound()) return new ItemStack(SystemItems.PLUM_BLOSSOM_SWORD.get());
+            // gacha weapons stay in the gacha: a purchasable roulette must not hand them out
             return new ItemStack(Items.NETHERITE_INGOT, 2);
         } else if (roll < 4) {
             if (SystemItems.CELESTIAL_DRAGON_PEARL.isBound()) return new ItemStack(SystemItems.CELESTIAL_DRAGON_PEARL.get());
@@ -238,10 +235,10 @@ public final class PhysicalRouletteManager {
             if (SystemItems.IMMORTAL_DRAGON_SCALE.isBound()) return new ItemStack(SystemItems.IMMORTAL_DRAGON_SCALE.get(), 2);
             return new ItemStack(Items.NETHERITE_BLOCK, 1);
         } else if (roll < 8) {
-            if (SystemItems.SHADOW_DAGGERS.isBound()) return new ItemStack(SystemItems.SHADOW_DAGGERS.get());
+
             return new ItemStack(Items.TOTEM_OF_UNDYING, 1);
         } else if (roll < 10) {
-            if (SystemItems.SKY_DEMON_SWORD.isBound()) return new ItemStack(SystemItems.SKY_DEMON_SWORD.get());
+
             return new ItemStack(Items.NETHERITE_INGOT, 2);
         }
         else if (roll < 14) {

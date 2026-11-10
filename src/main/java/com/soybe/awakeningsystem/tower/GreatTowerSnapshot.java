@@ -49,6 +49,40 @@ final class GreatTowerSnapshot {
         }
     }
 
+    /** Elevations from the south and from the east, and a top view, of a box around a point. */
+    static void view(ServerLevel level, BlockPos c, int half, int below, int above, Path dir, String name) throws IOException {
+        for (int x = -half; x <= half; x += 16) for (int z = -half; z <= half; z += 16) level.getChunk((c.getX() + x) >> 4, (c.getZ() + z) >> 4);
+        int h = below + above + 1, w = half * 2 + 1;
+        for (int side = 0; side < 2; side++) {
+            BufferedImage img = new BufferedImage(w, h, BufferedImage.TYPE_INT_RGB);
+            for (int u = -half; u <= half; u++) {
+                for (int y = -below; y <= above; y++) {
+                    int rgb = 0x9BC4FF;
+                    for (int d = half; d >= -half; d--) {
+                        BlockPos p = side == 0 ? c.offset(u, y, d) : c.offset(d, y, -u);
+                        BlockState s = level.getBlockState(p);
+                        if (!s.isAir()) { rgb = shade(s.getMapColor(level, p), d * 40 / Math.max(1, half)); break; }
+                    }
+                    img.setRGB(u + half, above - y, rgb);
+                }
+            }
+            ImageIO.write(scale(img, Math.max(1, 600 / Math.max(w, h))), "png", dir.resolve(name + (side == 0 ? "_south.png" : "_east.png")).toFile());
+        }
+        BufferedImage top = new BufferedImage(w, w, BufferedImage.TYPE_INT_RGB);
+        for (int x = -half; x <= half; x++) {
+            for (int z = -half; z <= half; z++) {
+                int rgb = 0x101010;
+                for (int y = above; y >= -below; y--) {
+                    BlockPos p = c.offset(x, y, z);
+                    BlockState s = level.getBlockState(p);
+                    if (!s.isAir()) { rgb = shade(s.getMapColor(level, p), (y + below) * 80 / Math.max(1, h) - 40); break; }
+                }
+                top.setRGB(x + half, z + half, rgb);
+            }
+        }
+        ImageIO.write(scale(top, Math.max(1, 600 / w)), "png", dir.resolve(name + "_top.png").toFile());
+    }
+
     /** Plain north-up plans around a point; villagers and NPCs show as red dots. */
     static void plan(ServerLevel level, BlockPos c, int half, int[] ys, Path dir, String name) throws IOException {
         for (int x = -half; x <= half; x++) for (int z = -half; z <= half; z++) level.getChunk((c.getX() + x) >> 4, (c.getZ() + z) >> 4);

@@ -98,7 +98,7 @@ public class RouletteAltarBlockEntity extends BlockEntity implements GeoBlockEnt
 
     public static ItemStack getDefaultFallbackItem(int slot) {
         return switch (Math.floorMod(slot, 8)) {
-            case 0 -> SystemItems.PLUM_BLOSSOM_SWORD.isBound() ? new ItemStack(SystemItems.PLUM_BLOSSOM_SWORD.get()) : new ItemStack(Items.NETHERITE_SWORD);
+            case 0 -> new ItemStack(Items.NETHERITE_INGOT, 2);   // gacha weapons stay in the gacha
             case 1 -> SystemItems.CELESTIAL_INGOT.isBound() ? new ItemStack(SystemItems.CELESTIAL_INGOT.get(), 2) : new ItemStack(Items.NETHER_STAR, 2);
             case 2 -> SystemItems.MITHRIL_INGOT.isBound() ? new ItemStack(SystemItems.MITHRIL_INGOT.get(), 4) : new ItemStack(Items.NETHERITE_INGOT, 4);
             case 3 -> SystemItems.SHADOW_APPLE.isBound() ? new ItemStack(SystemItems.SHADOW_APPLE.get(), 2) : new ItemStack(Items.ENCHANTED_GOLDEN_APPLE, 2);

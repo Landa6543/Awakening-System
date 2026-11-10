@@ -141,19 +141,93 @@ public final class GreatTowerSite {
         data.portal = layout.portal();
         SeriesStructureWorldGen.SeriesStructureData.get(level.getServer()).recordStructure("great_tower", origin, Level.OVERWORLD);
 
-        // the Hunter Association office stands a little way off the road to spawn
+        raiseAgency(level, data);
+        data.setDirty();
+        AwakeningSystemMod.LOGGER.info("Great Tower raised at {} facing {} in {} ms; Hunter Association at {}",
+                origin, front, System.currentTimeMillis() - t0, data.office);
+    }
+
+    /** The Hunter Association agency stands a little way off the road to spawn, its door towards the tower. */
+    private static void raiseAgency(ServerLevel level, Data data) {
+        BlockPos origin = data.origin;
+        Direction front = data.front;
         Direction right = front.getClockWise();
-        BlockPos guess = origin.relative(front, 52).relative(right, 26);
-        for (int cx = -1; cx <= 1; cx++)
-            for (int cz = -1; cz <= 1; cz++) level.getChunk((guess.getX() >> 4) + cx, (guess.getZ() >> 4) + cz);
+        BlockPos guess = origin.relative(front, 54).relative(right, 30);
+        for (int cx = -2; cx <= 2; cx++)
+            for (int cz = -2; cz <= 2; cz++) level.getChunk((guess.getX() >> 4) + cx, (guess.getZ() >> 4) + cz);
         int gy = surface(level, guess.getX(), guess.getZ());
         BlockPos office = new BlockPos(guess.getX(), gy, guess.getZ());
-        SeriesStructureWorldGen.generateStructure(level, office, "hunter_office");
+        placeAgency(level, office, origin);
         SeriesStructureWorldGen.SeriesStructureData.get(level.getServer()).recordStructure("hunter_association", office, Level.OVERWORLD);
         data.office = office;
         data.setDirty();
-        AwakeningSystemMod.LOGGER.info("Great Tower raised at {} facing {} in {} ms; Hunter Association at {}",
-                origin, front, System.currentTimeMillis() - t0, office);
+    }
+
+    /**
+     * The Hunter Association agency (the user's own hunter_agency structure: a reception hall with the desk
+     * at the back and the door on its +Z side), turned so its door faces the tower, with the inspector
+     * behind the desk and a dirt path to the plaza.
+     */
+    private static void placeAgency(ServerLevel level, BlockPos center, BlockPos tower) {
+        var template = level.getStructureManager().get(net.minecraft.resources.ResourceLocation.fromNamespaceAndPath(
+                AwakeningSystemMod.MOD_ID, "hunter_agency")).orElse(null);
+        if (template == null) {
+            SeriesStructureWorldGen.generateStructure(level, center, "hunter_office");
+            return;
+        }
+        int dx = tower.getX() - center.getX(), dz = tower.getZ() - center.getZ();
+        Direction door = Math.abs(dx) > Math.abs(dz) ? (dx > 0 ? Direction.EAST : Direction.WEST) : (dz > 0 ? Direction.SOUTH : Direction.NORTH);
+        net.minecraft.world.level.block.Rotation rotation = switch (door) {
+            case WEST -> net.minecraft.world.level.block.Rotation.CLOCKWISE_90;
+            case NORTH -> net.minecraft.world.level.block.Rotation.CLOCKWISE_180;
+            case EAST -> net.minecraft.world.level.block.Rotation.COUNTERCLOCKWISE_90;
+            default -> net.minecraft.world.level.block.Rotation.NONE;
+        };
+        var size = template.getSize();
+        BlockPos pivot = new BlockPos(size.getX() / 2, 0, size.getZ() / 2);
+        var settings = new net.minecraft.world.level.levelgen.structure.templatesystem.StructurePlaceSettings()
+                .setRotation(rotation).setRotationPivot(pivot);
+        BlockPos corner = center.subtract(pivot);
+        // footing under the floor and a clear space above it
+        for (int x = -1; x <= size.getX(); x++) {
+            for (int z = -1; z <= size.getZ(); z++) {
+                BlockPos col = net.minecraft.world.level.levelgen.structure.templatesystem.StructureTemplate
+                        .calculateRelativePosition(settings, new BlockPos(x, 0, z)).offset(corner);
+                for (int y = -1; y >= -10; y--) {
+                    BlockPos p = col.above(y);
+                    if (level.getBlockState(p).isSolid() && y < -1) break;
+                    level.setBlock(p, Blocks.DEEPSLATE_BRICKS.defaultBlockState(), 2);
+                }
+                for (int y = 0; y <= size.getY() + 4; y++) {
+                    BlockPos p = col.above(y);
+                    if (!level.getBlockState(p).isAir()) level.setBlock(p, Blocks.AIR.defaultBlockState(), 2);
+                }
+            }
+        }
+        template.placeInWorld(level, corner, corner, settings, level.getRandom(), 2);
+        // the inspector waits inside the U of the reception desk
+        BlockPos desk = net.minecraft.world.level.levelgen.structure.templatesystem.StructureTemplate
+                .calculateRelativePosition(settings, new BlockPos(8, 1, 3)).offset(corner);
+        com.soybe.awakeningsystem.world.SeriesStructureBuilder.spawnNpcIfAbsent(level, desk,
+                com.soybe.awakeningsystem.entity.ModEntities.HUNTER_EVALUATOR.get(), com.soybe.awakeningsystem.entity.NpcProfile.HUNTER_EVALUATOR);
+        // a dirt path from the door to the tower plaza
+        BlockPos doorPos = net.minecraft.world.level.levelgen.structure.templatesystem.StructureTemplate
+                .calculateRelativePosition(settings, new BlockPos(8, 0, size.getZ())).offset(corner);
+        double len = Math.sqrt(doorPos.distSqr(new BlockPos(tower.getX(), doorPos.getY(), tower.getZ())));
+        for (int i = 0; i < len - 30; i++) {
+            double t = i / len;
+            int px = (int) Math.round(doorPos.getX() + (tower.getX() - doorPos.getX()) * t);
+            int pz = (int) Math.round(doorPos.getZ() + (tower.getZ() - doorPos.getZ()) * t);
+            for (int w = -1; w <= 1; w++) {
+                int qx = px + (Math.abs(dz) > Math.abs(dx) ? w : 0), qz = pz + (Math.abs(dz) > Math.abs(dx) ? 0 : w);
+                BlockPos top = new BlockPos(qx, surface(level, qx, qz), qz);
+                BlockState s = level.getBlockState(top);
+                if (s.is(Blocks.GRASS_BLOCK) || s.is(Blocks.DIRT) || s.is(Blocks.PODZOL) || s.is(Blocks.COARSE_DIRT)) {
+                    level.setBlock(top, Blocks.DIRT_PATH.defaultBlockState(), 2);
+                    if (!level.getBlockState(top.above()).isAir()) level.setBlock(top.above(), Blocks.AIR.defaultBlockState(), 2);
+                }
+            }
+        }
     }
 
     // ── the System's call ────────────────────────────────────────────────────
@@ -223,6 +297,46 @@ public final class GreatTowerSite {
                     } catch (java.io.IOException e) {
                         ctx.getSource().sendFailure(Component.literal(e.toString()));
                     }
+                    return 1;
+                }))
+                .then(Commands.literal("view").then(Commands.argument("structure", com.mojang.brigadier.arguments.StringArgumentType.word())
+                        .then(Commands.argument("half", IntegerArgumentType.integer(4, 120)).executes(ctx -> {
+                    // debug: raise a structure far away and take pictures of it
+                    MinecraftServer server = ctx.getSource().getServer();
+                    ServerLevel lvl = server.overworld();
+                    String name = com.mojang.brigadier.arguments.StringArgumentType.getString(ctx, "structure");
+                    int half = IntegerArgumentType.getInteger(ctx, "half");
+                    int x = 3000 + (name.hashCode() & 1023), z = 3000;
+                    BlockPos at = new BlockPos(x, surface(lvl, x, z), z);
+                    SeriesStructureWorldGen.generateStructure(lvl, at, name);
+                    BlockPos seen = at;
+                    for (var e : SeriesStructureWorldGen.SeriesStructureData.get(server).getAll().entrySet())
+                        if (e.getValue().getX() == x && e.getValue().getZ() == z) seen = e.getValue();
+                    try {
+                        java.nio.file.Path dir = server.getServerDirectory().resolve("tower_snapshot");
+                        java.nio.file.Files.createDirectories(dir);
+                        GreatTowerSnapshot.view(lvl, seen, half, half / 2 + 10, half + 20, dir, name);
+                        BlockPos fs = seen;
+                        ctx.getSource().sendSuccess(() -> Component.literal("Viewed " + name + " at " + fs.toShortString()), false);
+                    } catch (java.io.IOException e) {
+                        ctx.getSource().sendFailure(Component.literal(e.toString()));
+                    }
+                    return 1;
+                }))))
+                .then(Commands.literal("altar").executes(ctx -> {
+                    Data d = Data.get(ctx.getSource().getServer());
+                    if (!d.built) return 0;
+                    d.altar = GreatTowerBuilder.rebuildAltar(ctx.getSource().getServer().overworld(), d.origin, d.front);
+                    d.setDirty();
+                    ctx.getSource().sendSuccess(() -> Component.literal("Altar of Origin rebuilt"), false);
+                    return 1;
+                }))
+                .then(Commands.literal("agency").executes(ctx -> {
+                    // for worlds whose tower was raised before the agency existed
+                    Data d = Data.get(ctx.getSource().getServer());
+                    if (!d.built) return 0;
+                    raiseAgency(ctx.getSource().getServer().overworld(), d);
+                    ctx.getSource().sendSuccess(() -> Component.literal("Hunter Association agency raised at " + d.office.toShortString()), false);
                     return 1;
                 }))
                 .then(Commands.literal("tp").executes(ctx -> {

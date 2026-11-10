@@ -1235,6 +1235,19 @@ public final class SystemData implements INBTSerializable<CompoundTag> {
         return switch (rank) { case "E" -> 1.05; case "D" -> 1.10; case "C" -> 1.15; case "B" -> 1.25; case "A" -> 1.35; case "S" -> 1.5; case "EX" -> 2.0; default -> 1.0; };
     }
 
+    /** Passive bonuses from the potential: attack damage, max health, armour. */
+    public static double potentialDamageBonus(String rank) {
+        return switch (rank) { case "E" -> 1.0; case "D" -> 2.0; case "C" -> 3.0; case "B" -> 4.5; case "A" -> 6.0; case "S" -> 8.0; case "EX" -> 12.0; default -> 0.0; };
+    }
+
+    public static double potentialHealthBonus(String rank) {
+        return potentialDamageBonus(rank) * 2.0;
+    }
+
+    public static double potentialArmorBonus(String rank) {
+        return potentialDamageBonus(rank) * 0.5;
+    }
+
     /** Extra attribute points per level from the potential. */
     public static int potentialPointsPerLevel(String rank) {
         return switch (rank) { case "A" -> 1; case "S" -> 1; case "EX" -> 2; default -> 0; };

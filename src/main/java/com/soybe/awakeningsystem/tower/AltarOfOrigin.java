@@ -119,6 +119,8 @@ public final class AltarOfOrigin {
                 continue;
             }
             if (tick(m, player)) {
+                // once the ritual is over, the System greets its new Player
+                if (!m.replay && player != null) SystemEvents.data(player).setPendingWelcomePacket(true);
                 setShown(m, 0);
                 it.remove();
             }
@@ -208,6 +210,7 @@ public final class AltarOfOrigin {
                 String.valueOf(SystemData.potentialPointsPerLevel(rank))));
         AwakeningSystemMod.notify(player, "awakening_system.notification.awakening_complete.title",
                 "awakening_system.altar.awakened", 0xFF70E8FF);
+        SystemEvents.refreshPlayer(player);    // the potential's passive bonuses take hold now
         AwakeningSystemMod.sync(player);
         if (m.target >= 6) {
             // S and EX are news for everyone on the server
