@@ -25,6 +25,20 @@ public record TowerMissionTemplate(
         return targetType != null && targetType.startsWith("collect_");
     }
 
+    /** How much more the higher floors pay: x1 up to floor 10, then growing, about x49 on floor 100. */
+    private double payScale() {
+        double k = 1.0D + Math.max(0, floor - 10) / 15.0D;
+        return k * k;
+    }
+
+    public int coins() {
+        return (int) Math.min(Integer.MAX_VALUE, Math.round(rewardCoins * payScale()));
+    }
+
+    public int exp() {
+        return (int) Math.min(Integer.MAX_VALUE, Math.round(rewardExp * payScale()));
+    }
+
     /** The mana crystal shards of the floor's rank, paid in place of primogems (those belong to Teyvat). */
     public ItemStack crystalReward() {
         String rank = floor <= 10 ? "e" : floor <= 20 ? "d" : floor <= 40 ? "c" : floor <= 60 ? "b" : floor <= 80 ? "a" : floor < 100 ? "s" : "ex";

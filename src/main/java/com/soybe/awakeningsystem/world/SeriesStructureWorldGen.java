@@ -782,12 +782,8 @@ public final class SeriesStructureWorldGen {
             case "elemental_floating_castles", "elemental_castles", "castillos_elementales", "elemental_castle", "castillo_elemental", "reyes_elementales" -> {
                 int airY = Math.max(180, pos.getY());
                 BlockPos airPos = new BlockPos(pos.getX(), airY, pos.getZ());
-                placeSeriesNbtStructure(level, airPos, "elemental_floating_castles", -12, 64, 70, 64, () -> {
-                    SeriesStructureBuilder.buildElementalFloatingCastles(level, airPos);
-                });
-                // the Demon King's castle in the middle is rebuilt as a proper gothic castle
-                ElementalCastleKeep.build(level, airPos);
-                ElementalCastleKeep.decorateIslands(level, airPos);
+                // the whole sky citadel is built from scratch (the old template looked awful)
+                ElementalSkyCitadel.build(level, airPos);
                 SeriesStructureBuilder.populateElementalFloatingCastles(level, airPos);
                 recordPlaced(level, "elemental_floating_castles", airPos);
                 return true;

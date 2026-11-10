@@ -46,8 +46,10 @@ public class AscensionPortalRenderer extends GeoBlockRenderer<AscensionPortalBlo
     }
 
     private static boolean isTowerGate(AscensionPortalBlockEntity be) {
-        return be.getLevel() != null && (be.getLevel().dimension().equals(Level.OVERWORLD)
-                || com.soybe.awakeningsystem.tower.GreatTowerWorldManager.isGreatTowerDimension(be.getLevel()));
+        // only the Great Tower's own entrance (a BASE portal in the Overworld); every other portal keeps its gate
+        return be.getLevel() != null && be.getLevel().dimension().equals(Level.OVERWORLD)
+                && be.getBlockState().hasProperty(AscensionPortalBlock.PORTAL_TYPE)
+                && be.getBlockState().getValue(AscensionPortalBlock.PORTAL_TYPE) == AscensionPortalBlock.PortalType.BASE;
     }
 
     @Override

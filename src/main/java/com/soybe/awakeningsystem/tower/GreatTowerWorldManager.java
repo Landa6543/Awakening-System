@@ -477,6 +477,16 @@ public final class GreatTowerWorldManager {
     * The shrine around a floor's portal: a round platform edged with light on a solid footing, four lantern
     * posts, and a round gate whose vortex (drawn by the portal's renderer) fills it.
     */
+   /** A slab of the floor's material for the edge steps, or a stone brick slab when it has none. */
+   private static BlockState stepFor(BlockState floor) {
+      ResourceLocation id = BuiltInRegistries.BLOCK.getKey(floor.getBlock());
+      for (String name : new String[]{id.getPath() + "_slab", id.getPath().replace("_bricks", "_brick") + "_slab", id.getPath().replace("polished_", "polished_") + "_slab"}) {
+         var b = BuiltInRegistries.BLOCK.get(ResourceLocation.fromNamespaceAndPath(id.getNamespace(), name));
+         if (b != Blocks.AIR) return b.defaultBlockState();
+      }
+      return Blocks.STONE_BRICK_SLAB.defaultBlockState();
+   }
+
    private static void buildShrineGate(ServerLevel level, int floor, int x, int groundY, int z, Direction facing, PortalType type) {
       BlockState floorBlock = getThemedFloorBlock(floor);
       BlockState pillarBlock = getThemedPillarBlock(floor);
@@ -504,21 +514,31 @@ public final class GreatTowerWorldManager {
             }
          }
       }
-      // four lantern posts on the diagonals
-      for (int[] c : new int[][]{{-4, -4}, {4, -4}, {-4, 4}, {4, 4}}) {
-         for (int h = 0; h <= 2; h++) level.setBlock(new BlockPos(x + c[0], groundY + h, z + c[1]), pillarBlock, 2);
-         level.setBlock(new BlockPos(x + c[0], groundY + 3, z + c[1]), lightBlock, 2);
+      // a ring of steps around the platform edge
+      BlockState step = stepFor(floorBlock);
+      for (int dx = -7; dx <= 7; dx++) {
+         for (int dz = -7; dz <= 7; dz++) {
+            double d = Math.sqrt(dx * dx + dz * dz);
+            if (d > 6.2 && d <= 7.2) {
+               BlockPos p = new BlockPos(x + dx, groundY - 1, z + dz);
+               if (level.getBlockState(p).isAir() || level.getBlockState(p).canBeReplaced()) level.setBlock(p, step, 2);
+            }
+         }
       }
-      // the round gate, standing across the facing axis, two blocks behind the centre
+      // six slender pillars around the platform, each crowned with light (none in front of or behind the gate)
+      for (int i = 0; i < 6; i++) {
+         double a = i * Math.PI / 3.0D + Math.PI / 6.0D;
+         int px = (int) Math.round(Math.sin(a) * 5.0D), pz = (int) Math.round(Math.cos(a) * 5.0D);
+         for (int h = 0; h <= 3; h++) level.setBlock(new BlockPos(x + px, groundY + h, z + pz), pillarBlock, 2);
+         level.setBlock(new BlockPos(x + px, groundY + 4, z + pz), lightBlock, 2);
+      }
+      // the gate (drawn by the portal itself) two blocks behind the centre, between two braziers
       int gx = x - facing.getStepX() * 2, gz = z - facing.getStepZ() * 2;
       int ux = facing.getAxis() == Axis.X ? 0 : 1, uz = facing.getAxis() == Axis.X ? 1 : 0;
-      for (int u = -4; u <= 4; u++) {
-         for (int v = -1; v <= 6; v++) {
-            double d = Math.sqrt(u * u + (v - 2) * (v - 2));
-            BlockPos p = new BlockPos(gx + u * ux, groundY + v, gz + u * uz);
-            if (d <= 2.45) level.setBlock(p, air, 2);
-            else if (d <= 3.5 && v >= 0) level.setBlock(p, (Math.abs(u) + v) % 3 == 0 ? lightBlock : pillarBlock, 2);
-         }
+      for (int side = -1; side <= 1; side += 2) {
+         BlockPos b = new BlockPos(gx + side * 3 * ux, groundY, gz + side * 3 * uz);
+         level.setBlock(b, pillarBlock, 2);
+         level.setBlock(b.above(), Blocks.CAMPFIRE.defaultBlockState(), 2);
       }
       BlockState portal = SystemBlocks.ASCENSION_PORTAL.get().defaultBlockState()
          .setValue(AscensionPortalBlock.FACING, facing)

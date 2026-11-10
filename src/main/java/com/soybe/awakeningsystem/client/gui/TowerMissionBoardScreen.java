@@ -252,7 +252,7 @@ public final class TowerMissionBoardScreen extends Screen {
         drawCleanCentered(g, target, cx, y + 43, 0xFF443322);
 
         // Recompensas garantizadas
-        String rew1 = formatRewardAmount(item.rewardCoins()) + " C | " + formatRewardAmount(item.rewardExp()) + " XP";
+        String rew1 = formatRewardAmount(item.coins()) + " C | " + formatRewardAmount(item.exp()) + " XP";
         drawCleanCentered(g, rew1, cx, y + 56, 0xFF8A5A10);
 
         String rew2 = "+" + item.crystalReward().getCount() + " Cristales de Mana";
@@ -390,15 +390,18 @@ public final class TowerMissionBoardScreen extends Screen {
         curY += 44;
         g.fill(dosX + 20, curY, dosX + dosW - 20, curY + 44, 0x222E5E28);
         drawCleanCentered(g, "RECOMPENSAS GARANTIZADAS", cx, curY + 4, 0xFF1E5E28);
-        drawCleanCentered(g, "Monedas: " + item.rewardCoins() + "  |  EXP: +" + item.rewardExp(), cx, curY + 16, 0xFF4A3515);
+        drawCleanCentered(g, "Monedas: " + item.coins() + "  |  EXP: +" + item.exp(), cx, curY + 16, 0xFF4A3515);
         net.minecraft.world.item.ItemStack crystals = item.crystalReward();
         net.minecraft.world.item.ItemStack material = item.materialReward();
-        String line2 = crystals.getHoverName().getString() + " x" + crystals.getCount()
+        // each reward on its own short line, so nothing runs past the parchment
+        String rank = net.minecraft.core.registries.BuiltInRegistries.ITEM.getKey(crystals.getItem()).getPath().replace("mana_crystal_shard_", "").toUpperCase(java.util.Locale.ROOT);
+        String line2 = "Cristales de Mana " + rank + " x" + crystals.getCount()
                 + (material.isEmpty() ? "" : "  |  " + item.rewardMaterialName() + " x" + material.getCount());
+        if (this.font.width(line2) > dosW - 70) line2 = "Cristales " + rank + " x" + crystals.getCount() + (material.isEmpty() ? "" : "  |  +" + material.getCount() + " material");
         drawCleanCentered(g, line2, cx, curY + 28, 0xFF1F4430);
 
-        g.renderItem(crystals, dosX + 26, curY + 16);
-        if (!material.isEmpty()) g.renderItem(material, dosX + dosW - 40, curY + 16);
+        g.renderItem(crystals, dosX + 24, curY + 14);
+        if (!material.isEmpty()) g.renderItem(material, dosX + dosW - 40, curY + 14);
 
         // Botón de acción
         int btnW = 230;

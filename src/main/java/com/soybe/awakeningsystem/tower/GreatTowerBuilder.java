@@ -384,15 +384,14 @@ public final class GreatTowerBuilder {
      * wall built for it (the board is drawn against the block behind it, so it needs a straight wall).
      */
     private static BlockPos board() {
-        int x = -15, zc = 7;
-        // a flat backing wall, framed, filling the curve behind it
-        for (int z = zc - 4; z <= zc + 4; z++) {
-            for (int y = 1; y <= 6; y++) {
-                for (int bx = x - 3; bx <= x - 1; bx++) {
-                    boolean frame = z == zc - 4 || z == zc + 4 || y == 6;
-                    set(bx, y, z, bx == x - 1 ? (frame ? TRIM : WALL_DARK) : WALL);
-                }
+        // a free-standing framed panel in the vestibule, clear of the curved wall and its windows
+        int x = -11, zc = 6;
+        for (int z = zc - 3; z <= zc + 3; z++) {
+            for (int y = 1; y <= 4; y++) {
+                boolean frame = z == zc - 3 || z == zc + 3 || y == 4;
+                set(x - 1, y, z, frame ? TRIM : WALL_DARK);
             }
+            set(x - 1, 5, z, Blocks.POLISHED_BLACKSTONE_BRICK_SLAB.defaultBlockState());
         }
         for (int z = zc - 3; z <= zc + 3; z++) set(x, 0, z, TILES);
         set(x, 1, zc - 3, Blocks.SOUL_LANTERN.defaultBlockState());

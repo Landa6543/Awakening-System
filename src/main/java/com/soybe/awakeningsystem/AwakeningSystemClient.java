@@ -2766,33 +2766,47 @@ public final class AwakeningSystemClient {
         }
     }
 
+    private static final ThreadLocal<Boolean> RENDERING_GHOST = ThreadLocal.withInitial(() -> false);
+
+    /** Passes the body's vertices on, tinted pale blue and about half see-through. */
+    private record GhostConsumer(com.mojang.blaze3d.vertex.VertexConsumer inner) implements com.mojang.blaze3d.vertex.VertexConsumer {
+        public com.mojang.blaze3d.vertex.VertexConsumer addVertex(float x, float y, float z) { inner.addVertex(x, y, z); return this; }
+        public com.mojang.blaze3d.vertex.VertexConsumer setColor(int r, int g, int b, int a) { inner.setColor(r * 140 / 255, g * 170 / 255, b * 221 / 255, a * 123 / 255); return this; }
+        public com.mojang.blaze3d.vertex.VertexConsumer setUv(float u, float v) { inner.setUv(u, v); return this; }
+        public com.mojang.blaze3d.vertex.VertexConsumer setUv1(int u, int v) { inner.setUv1(u, v); return this; }
+        public com.mojang.blaze3d.vertex.VertexConsumer setUv2(int u, int v) { inner.setUv2(u, v); return this; }
+        public com.mojang.blaze3d.vertex.VertexConsumer setNormal(float x, float y, float z) { inner.setNormal(x, y, z); return this; }
+    }
+
+    /** Swallows what a ghost does not show. */
+    private static final com.mojang.blaze3d.vertex.VertexConsumer NO_VERTICES = new com.mojang.blaze3d.vertex.VertexConsumer() {
+        public com.mojang.blaze3d.vertex.VertexConsumer addVertex(float x, float y, float z) { return this; }
+        public com.mojang.blaze3d.vertex.VertexConsumer setColor(int r, int g, int b, int a) { return this; }
+        public com.mojang.blaze3d.vertex.VertexConsumer setUv(float u, float v) { return this; }
+        public com.mojang.blaze3d.vertex.VertexConsumer setUv1(int u, int v) { return this; }
+        public com.mojang.blaze3d.vertex.VertexConsumer setUv2(int u, int v) { return this; }
+        public com.mojang.blaze3d.vertex.VertexConsumer setNormal(float x, float y, float z) { return this; }
+    };
+
     public static void onRenderPlayerPre(net.neoforged.neoforge.client.event.RenderPlayerEvent.Pre event) {
         var player = event.getEntity();
-        if (com.soybe.awakeningsystem.tombstone.TombstoneManager.isGhostMode(player)) {
-            var renderer = event.getRenderer();
-            var model = renderer.getModel();
+        if (com.soybe.awakeningsystem.tombstone.TombstoneManager.isGhostMode(player) && !RENDERING_GHOST.get()) {
+            // Modo Fantasma: the player renderer draws the body as usual (pose, size, animation), but its skin goes
+            // to a translucent pale-blue buffer and everything else it carries (armour, items) is left out
             var texture = ((net.minecraft.client.player.AbstractClientPlayer) player).getSkin().texture();
-            var buffer = event.getMultiBufferSource().getBuffer(net.minecraft.client.renderer.RenderType.entityTranslucent(texture));
-            // Renderizado translúcido espectral del jugador en Modo Fantasma (alfa ~48%)
-            int ghostColor = 0x7B8CDDFF;
-            // the body's own turn, flip and offset, as the player renderer does (without them the ghost
-            // was drawn upside down and sideways)
-            var pose = event.getPoseStack();
-            float pt = event.getPartialTick();
-            float bodyYaw = net.minecraft.util.Mth.rotLerp(pt, player.yBodyRotO, player.yBodyRot);
-            float headYaw = net.minecraft.util.Mth.rotLerp(pt, player.yHeadRotO, player.yHeadRot) - bodyYaw;
-            float headPitch = net.minecraft.util.Mth.lerp(pt, player.xRotO, player.getXRot());
-            float age = player.tickCount + pt;
-            float swing = player.walkAnimation.position(pt), swingAmount = Math.min(1.0F, player.walkAnimation.speed(pt));
-            pose.pushPose();
-            pose.mulPose(com.mojang.math.Axis.YP.rotationDegrees(180.0F - bodyYaw));
-            pose.scale(-0.9375F, -0.9375F, 0.9375F);
-            pose.translate(0.0F, -1.501F, 0.0F);
-            model.attackTime = player.getAttackAnim(pt);
-            model.prepareMobModel((net.minecraft.client.player.AbstractClientPlayer) player, swing, swingAmount, pt);
-            model.setupAnim((net.minecraft.client.player.AbstractClientPlayer) player, swing, swingAmount, age, headYaw, headPitch);
-            model.renderToBuffer(pose, buffer, event.getPackedLight(), net.minecraft.client.renderer.texture.OverlayTexture.NO_OVERLAY, ghostColor);
-            pose.popPose();
+            var source = event.getMultiBufferSource();
+            net.minecraft.client.renderer.MultiBufferSource ghost = type -> {
+                String name = type.toString();
+                if (name.contains(texture.toString())) return new GhostConsumer(source.getBuffer(net.minecraft.client.renderer.RenderType.entityTranslucent(texture)));
+                return NO_VERTICES;
+            };
+            RENDERING_GHOST.set(true);
+            try {
+                event.getRenderer().render((net.minecraft.client.player.AbstractClientPlayer) player, player.getYRot(), event.getPartialTick(),
+                        event.getPoseStack(), ghost, event.getPackedLight());
+            } finally {
+                RENDERING_GHOST.set(false);
+            }
             event.setCanceled(true);
             return;
         }

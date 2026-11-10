@@ -520,8 +520,8 @@ public final class TowerDailyMissionManager {
 
         // Otorgar Recompensas: Monedas, EXP, Gemas y Materiales
         SystemData data = SystemEvents.data(player);
-        data.addCoins(template.rewardCoins());
-        data.addExperience(template.rewardExp());
+        data.addCoins(template.coins());
+        data.addExperience(template.exp());
 
         // mana crystal shards of the floor's rank (no primogems: those are Teyvat's)
         ItemStack crystals = template.crystalReward();
@@ -544,7 +544,7 @@ public final class TowerDailyMissionManager {
         player.sendSystemMessage(Component.translatable("awakening_system.msg.mision_de_la_torre_completada", String.valueOf(template.title()))
                 .withStyle(ChatFormatting.GOLD, ChatFormatting.BOLD));
         player.sendSystemMessage(Component.literal(String.format("§aRecompensas: §e+%d Monedas §7| §b+%d EXP §7| §d+%d %s",
-                template.rewardCoins(), template.rewardExp(), crystals.getCount(), crystals.getHoverName().getString()))
+                template.coins(), template.exp(), crystals.getCount(), crystals.getHoverName().getString()))
                 .append(template.materialReward().isEmpty() ? Component.empty()
                         : Component.literal(" §7| §f+" + template.materialReward().getCount() + " " + template.rewardMaterialName())));
         player.displayClientMessage(Component.translatable("awakening_system.msg.recompensa_del_tablon_reclamada_con_exito"), true);
