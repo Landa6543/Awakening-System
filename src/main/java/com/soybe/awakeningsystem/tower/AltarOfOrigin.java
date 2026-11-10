@@ -131,14 +131,14 @@ public final class AltarOfOrigin {
     private static boolean tick(Measurement m, ServerPlayer player) {
         m.tick++;
         ServerLevel level = m.level;
-        double cx = m.pos.getX() + 0.5D, cy = m.pos.getY() + 1.22D, cz = m.pos.getZ() + 0.5D;
+        double cx = m.pos.getX() + 0.5D, cy = m.pos.getY() + 1.62D, cz = m.pos.getZ() + 0.5D;
         boolean ex = m.target == 7;
         int climbEnd = CHARGE_TICKS + STEP_TICKS * (Math.min(m.target, 6) + 1);
         int revealAt = climbEnd + (ex ? OVERLOAD_TICKS : 10);
 
         if (m.tick <= CHARGE_TICKS) {
             // mana gathering into the cube
-            if (m.tick % 2 == 0) level.sendParticles(ParticleTypes.ENCHANT, cx, cy + 0.6D, cz, 12, 1.2D, 0.8D, 1.2D, 0.6D);
+            if (m.tick % 4 == 0) level.sendParticles(ParticleTypes.ENCHANT, cx, cy + 0.6D, cz, 5, 1.2D, 0.8D, 1.2D, 0.6D);
             if (m.tick == CHARGE_TICKS / 2) level.playSound(null, m.pos, SoundEvents.AMETHYST_BLOCK_RESONATE, SoundSource.BLOCKS, 1.4F, 0.6F);
             return false;
         }
@@ -152,7 +152,7 @@ public final class AltarOfOrigin {
                 level.playSound(null, m.pos, SoundEvents.NOTE_BLOCK_CHIME.value(), SoundSource.BLOCKS, 1.0F, pitch);
                 burst(level, cx, cy, cz, PotentialCrystalBlock.COLORS[rank], 14 + step * 4, 0.5D + step * 0.08D);
             }
-            if (m.tick % 3 == 0) ring(level, cx, cy, cz, PotentialCrystalBlock.COLORS[m.shown], 0.8D + (m.tick % 30) / 30.0D);
+            if (m.tick % 8 == 0) ring(level, cx, cy, cz, PotentialCrystalBlock.COLORS[m.shown], 0.8D + (m.tick % 30) / 30.0D);
             return false;
         }
         if (!m.revealed && ex && m.tick < revealAt) {
@@ -160,8 +160,8 @@ public final class AltarOfOrigin {
             int t = m.tick - climbEnd;
             if (t % 4 == 0) setShown(m, t % 8 == 0 ? 7 : 8);
             if (t % 5 == 0) level.playSound(null, m.pos, SoundEvents.AMETHYST_BLOCK_BREAK, SoundSource.BLOCKS, 1.5F, 0.5F + t * 0.02F);
-            level.sendParticles(ParticleTypes.END_ROD, cx, cy, cz, 3, 0.3D, 0.3D, 0.3D, 0.15D);
-            level.sendParticles(ParticleTypes.ELECTRIC_SPARK, cx, cy, cz, 4, 0.4D, 0.4D, 0.4D, 0.3D);
+            if (t % 3 == 0) level.sendParticles(ParticleTypes.END_ROD, cx, cy, cz, 1, 0.3D, 0.3D, 0.3D, 0.15D);
+            if (t % 2 == 0) level.sendParticles(ParticleTypes.ELECTRIC_SPARK, cx, cy, cz, 2, 0.4D, 0.4D, 0.4D, 0.3D);
             return false;
         }
         if (!m.revealed && m.tick >= revealAt) {
@@ -170,14 +170,14 @@ public final class AltarOfOrigin {
             return false;
         }
         // hold the final colour a while, then the cube goes dormant again
-        if (m.tick % 4 == 0) ring(level, cx, cy, cz, PotentialCrystalBlock.COLORS[m.shown], 1.0D);
+        if (m.tick % 12 == 0) ring(level, cx, cy, cz, PotentialCrystalBlock.COLORS[m.shown], 1.0D);
         if (ex && m.tick % 6 == 0) level.sendParticles(ParticleTypes.ELECTRIC_SPARK, cx, cy, cz, 2, 0.3D, 0.3D, 0.3D, 0.1D);
         return m.tick > revealAt + HOLD_TICKS + (ex ? 100 : 0);
     }
 
     private static void reveal(Measurement m, ServerPlayer player) {
         ServerLevel level = m.level;
-        double cx = m.pos.getX() + 0.5D, cy = m.pos.getY() + 1.22D, cz = m.pos.getZ() + 0.5D;
+        double cx = m.pos.getX() + 0.5D, cy = m.pos.getY() + 1.62D, cz = m.pos.getZ() + 0.5D;
         String rank = SystemData.POTENTIAL_RANKS[m.target];
         boolean ex = m.target == 7;
         setShown(m, ex ? 8 : m.target + 1);
@@ -231,13 +231,13 @@ public final class AltarOfOrigin {
     }
 
     private static void burst(ServerLevel level, double x, double y, double z, int color, int count, double speed) {
-        level.sendParticles(dust(color, 1.6F), x, y, z, count, 0.4D, 0.4D, 0.4D, speed);
-        level.sendParticles(ParticleTypes.END_ROD, x, y, z, count / 3, 0.2D, 0.2D, 0.2D, speed * 0.3D);
+        level.sendParticles(dust(color, 1.6F), x, y, z, Math.max(3, count / 3), 0.4D, 0.4D, 0.4D, speed);
+        level.sendParticles(ParticleTypes.END_ROD, x, y, z, Math.max(1, count / 10), 0.2D, 0.2D, 0.2D, speed * 0.3D);
     }
 
     private static void ring(ServerLevel level, double x, double y, double z, int color, double r) {
-        for (int i = 0; i < 12; i++) {
-            double a = i * Math.PI / 6.0D + level.getGameTime() * 0.15D;
+        for (int i = 0; i < 8; i++) {
+            double a = i * Math.PI / 4.0D + level.getGameTime() * 0.15D;
             level.sendParticles(dust(color, 1.0F), x + Math.cos(a) * r, y - 0.3D, z + Math.sin(a) * r, 1, 0, 0.05D, 0, 0.0D);
         }
     }

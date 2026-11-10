@@ -23,7 +23,7 @@ import net.minecraft.world.phys.shapes.VoxelShape;
 public class PotentialCrystalBlock extends Block {
     public static final MapCodec<PotentialCrystalBlock> CODEC = simpleCodec(PotentialCrystalBlock::new);
     public static final IntegerProperty RANK = IntegerProperty.create("rank", 0, 8);
-    private static final VoxelShape SHAPE = Block.box(2.0D, 0.0D, 2.0D, 14.0D, 24.0D, 14.0D);
+    private static final VoxelShape SHAPE = Block.box(0.0D, 0.0D, 0.0D, 16.0D, 32.0D, 16.0D);
 
     /** Tint for each RANK value: dormant, F, E, D, C, B, A, S, EX. */
     public static final int[] COLORS = {0x7FD8FF,0x9A9A9A, 0x6FE3FF, 0x3D7BFF, 0x3CE070, 0xB050FF, 0xFF3A4A, 0xFFC93A, 0xFFFFFF};
