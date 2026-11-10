@@ -1,5 +1,6 @@
 package com.soybe.awakeningsystem.world;
 
+import com.soybe.awakeningsystem.MeteorStreakPayload;
 import com.soybe.awakeningsystem.entity.FallingSideriteMeteorEntity;
 import net.minecraft.world.phys.Vec3;
 import net.minecraft.core.BlockPos;
@@ -37,18 +38,21 @@ public final class SideriteMeteorManager {
     // Se comprueba cada 10 segundos: cerca de 1 noche de cada 5 una vez pasado el cooldown
     private static final float CHANCE_PER_CHECK = 0.005F;
 
-    // Cerca para que el juego tenga cargada la zona y se vea caer el bloque de verdad; lejos para tener que ir a buscarlo
-    private static final int MIN_IMPACT_DISTANCE = 70;
-    private static final int MAX_IMPACT_DISTANCE = 130;
-    private static final int MIN_DISTANCE_TO_PLAYERS = 48;
-    // Desde dónde entra: muy alto y algo apartado del punto de impacto, hacia el lado del jugador
-    private static final int ENTRY_HEIGHT = 130;
-    private static final int ENTRY_OFFSET = 45;
-    private static final int SITE_ATTEMPTS = 6;
+    // Lejos: hay que ir a buscarlo y no deja cráteres junto a la casa. Cada cliente lo dibuja en su sitio
+    // real del mundo (MeteorSkyRenderer), así que se ve caer aunque esté fuera del terreno cargado
+    private static final int MIN_IMPACT_DISTANCE = 200;
+    private static final int MAX_IMPACT_DISTANCE = 450;
+    private static final int MIN_DISTANCE_TO_PLAYERS = 150;
+    // Desde dónde entra: muy alto y desplazado de lado respecto al jugador, para que se vea caer en diagonal
+    private static final int ENTRY_HEIGHT = 230;
+    private static final int ENTRY_OFFSET = 150;
+    // Los jugadores a esta distancia lo ven caer
+    private static final double VIEW_DISTANCE = 1500.0D;
+    private static final int SITE_ATTEMPTS = 12;
     private static final int CRATER_CLEARANCE = 10;
     private static final int MAX_TERRAIN_STEP = 6;
 
-    private static final int FALL_TICKS = 90;
+    private static final int FALL_TICKS = 140;
     // El cráter humea un minuto: una columna alta que sirve de pista para encontrarlo
     private static final int SMOKE_TICKS = 1200;
     private static final double SMOKE_VIEW_DISTANCE = 640.0D;
@@ -69,21 +73,11 @@ public final class SideriteMeteorManager {
     private static final class FallingMeteor {
         final ServerLevel level;
         final BlockPos target;
-        final Vec3 start, end;
-        FallingSideriteMeteorEntity entity;
         int age = 0;
 
-        FallingMeteor(ServerLevel level, BlockPos target, Vec3 start) {
+        FallingMeteor(ServerLevel level, BlockPos target) {
             this.level = level;
             this.target = target;
-            this.start = start;
-            this.end = Vec3.atBottomCenterOf(target.above());
-        }
-
-        /** Where it is after {@code age} ticks: a straight line, starting slow and speeding up. */
-        Vec3 at(int age) {
-            double t = Math.min(1.0D, age / (double) FALL_TICKS);
-            return start.lerp(end, Math.pow(t, 1.4D));
         }
     }
 
@@ -145,7 +139,7 @@ public final class SideriteMeteorManager {
         BlockPos spawn = sl.getSharedSpawnPos();
         for (int attempt = 0; attempt < 40; attempt++) {
             double angle = RANDOM.nextDouble() * Math.PI * 2.0D;
-            int dist = 70 + RANDOM.nextInt(150);
+            int dist = MIN_IMPACT_DISTANCE + RANDOM.nextInt(MAX_IMPACT_DISTANCE - MIN_IMPACT_DISTANCE);
             int x = spawn.getX() + (int) Math.round(Math.cos(angle) * dist), z = spawn.getZ() + (int) Math.round(Math.sin(angle) * dist);
             // the ground check looks 10 blocks around: those chunks must be loaded too
             for (int cx = (x - CRATER_CLEARANCE) >> 4; cx <= (x + CRATER_CLEARANCE) >> 4; cx++)
@@ -159,23 +153,22 @@ public final class SideriteMeteorManager {
         return null;
     }
 
-    /** Lanza el meteorito hacia {@code impactSite}, entrando por el lado de {@code viewer}. */
+    /** Lanza el meteorito hacia {@code impactSite}; quien lo ve desde {@code viewer} lo ve cruzar en diagonal. */
     private static void launch(ServerLevel sl, BlockPos impactSite, Vec3 viewer) {
-        // Entra por el cielo desde el lado del jugador, así lo ve caer en diagonal hacia el impacto
+        // Entra muy alto y desplazado de lado respecto a la línea jugador-impacto, algo hacia el jugador
         Vec3 toPlayer = new Vec3(viewer.x - impactSite.getX(), 0, viewer.z - impactSite.getZ());
         toPlayer = toPlayer.lengthSqr() < 1.0E-4 ? new Vec3(1, 0, 0) : toPlayer.normalize();
-        double sideways = (RANDOM.nextDouble() - 0.5D) * 0.8D;
-        Vec3 offset = new Vec3(toPlayer.x - toPlayer.z * sideways, 0, toPlayer.z + toPlayer.x * sideways).normalize().scale(ENTRY_OFFSET);
-        double startY = Math.min(sl.getMaxBuildHeight() + 40, impactSite.getY() + ENTRY_HEIGHT);
-        Vec3 start = new Vec3(impactSite.getX() + 0.5D + offset.x, startY, impactSite.getZ() + 0.5D + offset.z);
-        FallingMeteor meteor = new FallingMeteor(sl, impactSite, start);
-        meteor.entity = new FallingSideriteMeteorEntity(sl, start, impactSite);
-        sl.addFreshEntity(meteor.entity);
-        FALLING.add(meteor);
+        Vec3 across = new Vec3(-toPlayer.z, 0, toPlayer.x).scale(RANDOM.nextBoolean() ? 1 : -1);
+        Vec3 offset = across.scale(ENTRY_OFFSET).add(toPlayer.scale(ENTRY_OFFSET * 0.35D));
+        Vec3 start = new Vec3(impactSite.getX() + 0.5D + offset.x, impactSite.getY() + ENTRY_HEIGHT, impactSite.getZ() + 0.5D + offset.z);
+        Vec3 end = Vec3.atBottomCenterOf(impactSite.above());
+        FALLING.add(new FallingMeteor(sl, impactSite));
+        MeteorStreakPayload fall = new MeteorStreakPayload(start.x, start.y, start.z, end.x, end.y, end.z, FALL_TICKS, RANDOM.nextLong());
 
         Component skyAnnouncement = Component.translatable("awakening_system.announcement.meteor_entry");
         for (ServerPlayer sp : sl.players()) {
             sp.sendSystemMessage(skyAnnouncement);
+            if (sp.distanceToSqr(end) < VIEW_DISTANCE * VIEW_DISTANCE) PacketDistributor.sendToPlayer(sp, fall);
             // Rugido grave de aire al cruzar la atmósfera, con un siseo de fuego; se corta al impactar
             sp.playNotifySound(SoundEvents.ELYTRA_FLYING, SoundSource.WEATHER, 0.55F, 0.45F);
             sp.playNotifySound(SoundEvents.FIRECHARGE_USE, SoundSource.WEATHER, 0.35F, 0.5F);
@@ -194,19 +187,8 @@ public final class SideriteMeteorManager {
             }
 
             meteor.age++;
-            // Lo lleva por su recta tick a tick (así cae aunque su chunk no esté activo); la velocidad es
-            // para que el cliente lo dibuje suave entre un tick y otro
-            if (meteor.entity != null && meteor.entity.isAlive()) {
-                Vec3 now = meteor.at(meteor.age), next = meteor.at(meteor.age + 1);
-                meteor.entity.setPos(now.x, now.y, now.z);
-                meteor.entity.setDeltaMovement(next.subtract(now));
-            }
+            // the fall itself is drawn by each client; here only the impact happens, on time
             if (meteor.age >= FALL_TICKS) {
-                if (meteor.entity != null) {
-                    com.soybe.awakeningsystem.AwakeningSystemMod.LOGGER.info("[Meteor] reached {} (aimed at {})",
-                            meteor.entity.blockPosition().toShortString(), meteor.target.toShortString());
-                    meteor.entity.discard();
-                }
                 FallingSideriteMeteorEntity.createImpact(meteor.level, meteor.target);
                 int ores = 0, blocks = 0;
                 for (BlockPos p : BlockPos.betweenClosed(meteor.target.offset(-9, -6, -9), meteor.target.offset(9, 3, 9))) {
@@ -286,6 +268,9 @@ public final class SideriteMeteorManager {
             double distance = MIN_IMPACT_DISTANCE + RANDOM.nextDouble() * (MAX_IMPACT_DISTANCE - MIN_IMPACT_DISTANCE);
             int x = (int) Math.round(player.getX() + Math.cos(angle) * distance);
             int z = (int) Math.round(player.getZ() + Math.sin(angle) * distance);
+            // that far out the chunks may not be loaded yet, and the ground check needs their heightmaps
+            for (int cx = (x - CRATER_CLEARANCE) >> 4; cx <= (x + CRATER_CLEARANCE) >> 4; cx++)
+                for (int cz = (z - CRATER_CLEARANCE) >> 4; cz <= (z + CRATER_CLEARANCE) >> 4; cz++) level.getChunk(cx, cz);
             BlockPos pos = new BlockPos(x, level.getHeight(Heightmap.Types.MOTION_BLOCKING_NO_LEAVES, x, z) - 1, z);
 
             if (level.getWorldBorder().isWithinBounds(pos)

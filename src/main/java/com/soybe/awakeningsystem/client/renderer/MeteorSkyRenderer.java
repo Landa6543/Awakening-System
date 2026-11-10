@@ -9,286 +9,283 @@ import com.mojang.blaze3d.vertex.Tesselator;
 import com.mojang.blaze3d.vertex.VertexFormat;
 import com.soybe.awakeningsystem.AwakeningSystemMod;
 import com.soybe.awakeningsystem.MeteorStreakPayload;
+import net.minecraft.client.Camera;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.renderer.GameRenderer;
+import net.minecraft.resources.ResourceLocation;
+import net.minecraft.world.phys.Vec3;
 import net.neoforged.api.distmarker.Dist;
 import net.neoforged.bus.api.SubscribeEvent;
 import net.neoforged.fml.common.EventBusSubscriber;
 import net.neoforged.neoforge.client.event.RenderLevelStageEvent;
 import org.joml.Matrix4f;
+import org.joml.Quaternionf;
 import org.joml.Vector3f;
 
+import java.util.ArrayList;
+import java.util.Iterator;
+import java.util.List;
+import java.util.Random;
+
 /**
- * Estrella fugaz dibujada en la bóveda del cielo, igual que el sol y la luna: no tiene paralaje,
- * así que siempre parece lejana, y el terreno la tapa al llegar al horizonte.
+ * The falling meteorite, drawn by each client at its real place in the world, however far away it is (a real
+ * entity would only be sent to players within a few chunks). A tumbling rock with glowing cracks, a trail of
+ * fire, smoke that hangs in the sky behind it, and on impact a flash, a fireball, a shock wave along the
+ * ground and a column of smoke. None of it is fogged out, so it can be seen far beyond the loaded terrain.
  */
 @EventBusSubscriber(modid = AwakeningSystemMod.MOD_ID, value = Dist.CLIENT)
 public final class MeteorSkyRenderer {
+    private static final ResourceLocation ROCK = ResourceLocation.fromNamespaceAndPath(AwakeningSystemMod.MOD_ID, "textures/misc/meteor_rock.png");
+    private static final float EXPLOSION_TICKS = 260.0F;
+    private static final float SMOKE_LIFE = 220.0F;
+    private static final int DISC_SEGMENTS = 16;
 
-    private static final float SKY_RADIUS = 80.0F;
-    // Aparece alto en el cielo y cae casi en vertical, en línea recta, hacia el lugar del impacto
-    private static final float START_ELEVATION = 62.0F;
-    // Termina justo bajo la línea del horizonte: el centro del estallido queda a ras de suelo y solo
-    // asoma la cúpula de fuego, como si estallara al tocar tierra a lo lejos
-    private static final float END_ELEVATION = -0.6F;
-    // Apenas una leve inclinación lateral, para que no parezca una línea dibujada con regla
-    private static final float AZIMUTH_SWEEP = 8.0F;
-    private static final float TAIL_LENGTH = 0.34F;
-    private static final float TAIL_FADE_TICKS = 10.0F;
-    private static final float IMPACT_TICKS = 120.0F;
-    private static final int TAIL_SEGMENTS = 22;
-    private static final int GLOW_SEGMENTS = 18;
-    private static final int SMOKE_PUFFS = 8;
+    private record Box(Vector3f centre, float half) {}
 
-    private static boolean active = false;
-    private static long startTick;
-    private static float bearing;
-    private static float driftSign;
-    private static int duration;
+    private static final class Meteor {
+        Vec3 start, end;
+        int duration;
+        long startTick;
+        final List<Box> rock = new ArrayList<>();
+        Vector3f spinAxis;
+
+        Vec3 at(float t) {
+            double f = Math.pow(Math.max(0.0F, Math.min(1.0F, t / duration)), 1.4D);
+            return start.lerp(end, f);
+        }
+    }
+
+    private static final List<Meteor> METEORS = new ArrayList<>();
 
     private MeteorSkyRenderer() {}
 
-    public static void start(MeteorStreakPayload payload) {
+    public static void start(MeteorStreakPayload p) {
         Minecraft mc = Minecraft.getInstance();
         if (mc.level == null) return;
-        startTick = mc.level.getGameTime();
-        bearing = payload.bearingDegrees();
-        driftSign = payload.driftSign();
-        duration = Math.max(1, payload.durationTicks());
-        active = true;
+        Meteor m = new Meteor();
+        m.start = new Vec3(p.sx(), p.sy(), p.sz());
+        m.end = new Vec3(p.ex(), p.ey(), p.ez());
+        m.duration = Math.max(1, p.durationTicks());
+        m.startTick = mc.level.getGameTime();
+        // a lumpy rock: a core with a few smaller blocks pushed out of it
+        Random r = new Random(p.seed());
+        m.rock.add(new Box(new Vector3f(), 1.35F));
+        for (int i = 0; i < 7; i++) {
+            Vector3f d = new Vector3f(r.nextFloat() - 0.5F, r.nextFloat() - 0.5F, r.nextFloat() - 0.5F).normalize().mul(1.0F + r.nextFloat() * 0.4F);
+            m.rock.add(new Box(d, 0.6F + r.nextFloat() * 0.45F));
+        }
+        m.spinAxis = new Vector3f(r.nextFloat() - 0.5F, r.nextFloat() - 0.5F, r.nextFloat() - 0.5F).normalize();
+        METEORS.add(m);
     }
 
     @SubscribeEvent
     public static void onRenderLevelStage(RenderLevelStageEvent event) {
-        if (!active || event.getStage() != RenderLevelStageEvent.Stage.AFTER_SKY) return;
+        if (METEORS.isEmpty() || event.getStage() != RenderLevelStageEvent.Stage.AFTER_TRANSLUCENT_BLOCKS) return;
         Minecraft mc = Minecraft.getInstance();
         if (mc.level == null) {
-            active = false;
+            METEORS.clear();
             return;
         }
-
-        float age = (mc.level.getGameTime() - startTick) + event.getPartialTick().getGameTimeDeltaPartialTick(true);
-        if (age < 0.0F || age > duration + IMPACT_TICKS) {
-            active = false;
-            return;
-        }
-
-        float progress = Math.min(1.0F, age / duration);
-        float fade = age <= duration ? 1.0F : Math.max(0.0F, 1.0F - (age - duration) / TAIL_FADE_TICKS);
-        // En AFTER_SKY la PoseStack llega vacía: sin la rotación de la cámara, la estrella seguiría la vista
-        Matrix4f pose = event.getModelViewMatrix();
+        Camera camera = event.getCamera();
+        Vec3 cam = camera.getPosition();
+        Vector3f right = new Vector3f(camera.getLeftVector()).negate(), up = new Vector3f(camera.getUpVector());
+        Matrix4f pose = new Matrix4f(event.getModelViewMatrix());
+        float partial = event.getPartialTick().getGameTimeDeltaPartialTick(true);
 
         RenderSystem.enableBlend();
-        RenderSystem.disableDepthTest();
-        RenderSystem.depthMask(false);
-        RenderSystem.disableCull();
-        RenderSystem.setShader(GameRenderer::getPositionColorShader);
-
-        // El humo va primero y con mezcla normal: oscurece el cielo en vez de sumarle luz
-        if (age > duration) {
-            RenderSystem.defaultBlendFunc();
-            BufferBuilder smoke = Tesselator.getInstance().begin(VertexFormat.Mode.TRIANGLES, DefaultVertexFormat.POSITION_COLOR);
-            drawSmoke(smoke, pose, age - duration);
-            drawIfAny(smoke);
-        }
-
-        // Todo lo que brilla se suma a la luz del cielo
-        RenderSystem.blendFunc(GlStateManager.SourceFactor.SRC_ALPHA, GlStateManager.DestFactor.ONE);
-        BufferBuilder builder = Tesselator.getInstance().begin(VertexFormat.Mode.TRIANGLES, DefaultVertexFormat.POSITION_COLOR);
-        if (fade > 0.0F) drawTail(builder, pose, progress, fade);
-        if (age <= duration) {
-            Vector3f head = skyPoint(progress);
-            drawGlow(builder, pose, head, 3.0F, 1.0F, 0.55F, 0.2F, 0.30F);
-            drawGlow(builder, pose, head, 1.0F, 1.0F, 0.95F, 0.85F, 1.0F);
-        } else {
-            drawImpact(builder, pose, age - duration);
-        }
-        drawIfAny(builder);
-
-        RenderSystem.enableCull();
-        RenderSystem.depthMask(true);
         RenderSystem.enableDepthTest();
+        RenderSystem.disableCull();
+        Iterator<Meteor> it = METEORS.iterator();
+        while (it.hasNext()) {
+            Meteor m = it.next();
+            float t = (mc.level.getGameTime() - m.startTick) + partial;
+            if (t < 0 || t > m.duration + EXPLOSION_TICKS) {
+                it.remove();
+                continue;
+            }
+            // 1. smoke: darkens what is behind it, so normal blending and no depth writes
+            RenderSystem.depthMask(false);
+            RenderSystem.defaultBlendFunc();
+            RenderSystem.setShader(GameRenderer::getPositionColorShader);
+            BufferBuilder smoke = Tesselator.getInstance().begin(VertexFormat.Mode.TRIANGLES, DefaultVertexFormat.POSITION_COLOR);
+            drawTrailSmoke(smoke, pose, cam, right, up, m, t);
+            if (t > m.duration) drawExplosionSmoke(smoke, pose, cam, right, up, m, t - m.duration);
+            draw(smoke);
+
+            // 2. everything that glows adds to the light behind it
+            RenderSystem.blendFunc(GlStateManager.SourceFactor.SRC_ALPHA, GlStateManager.DestFactor.ONE);
+            BufferBuilder glow = Tesselator.getInstance().begin(VertexFormat.Mode.TRIANGLES, DefaultVertexFormat.POSITION_COLOR);
+            if (t <= m.duration) drawFall(glow, pose, cam, right, up, m, t);
+            else drawExplosion(glow, pose, cam, right, up, m, t - m.duration);
+            draw(glow);
+
+            // 3. the rock itself, solid, hidden by terrain in front of it
+            if (t <= m.duration) {
+                RenderSystem.depthMask(true);
+                RenderSystem.disableBlend();
+                RenderSystem.setShader(GameRenderer::getPositionTexColorShader);
+                RenderSystem.setShaderTexture(0, ROCK);
+                BufferBuilder rock = Tesselator.getInstance().begin(VertexFormat.Mode.QUADS, DefaultVertexFormat.POSITION_TEX_COLOR);
+                drawRock(rock, pose, cam, m, t);
+                draw(rock);
+                RenderSystem.enableBlend();
+            }
+        }
+        RenderSystem.depthMask(true);
         RenderSystem.defaultBlendFunc();
         RenderSystem.disableBlend();
+        RenderSystem.enableCull();
     }
 
-    /**
-     * Punto del cielo en un momento de la caída, que empieza lenta y va acelerando. Recorre la recta
-     * entre el punto de entrada y el del impacto (proyectada sobre la bóveda), así que se ve como una
-     * caída derecha y no como un arco que se va doblando.
-     */
-    private static Vector3f skyPoint(float progress) {
-        float eased = (float) Math.pow(progress, 1.5D);
-        Vector3f from = direction(bearing + driftSign * AZIMUTH_SWEEP, START_ELEVATION);
-        Vector3f to = direction(bearing, END_ELEVATION);
-        return from.lerp(to, eased).normalize().mul(SKY_RADIUS);
+    // ---------------------------------------------------------------- the fall
+    private static void drawFall(BufferBuilder b, Matrix4f pose, Vec3 cam, Vector3f right, Vector3f up, Meteor m, float t) {
+        Vector3f head = rel(m.at(t), cam);
+        // the fiery tail: a ribbon along the path just travelled, white-hot at the rock, red at the end
+        int segments = 20;
+        float span = Math.min(t, 22.0F);
+        for (int i = 0; i < segments; i++) {
+            float a = (float) i / segments, c = (float) (i + 1) / segments;
+            Vector3f p0 = rel(m.at(t - a * span), cam), p1 = rel(m.at(t - c * span), cam);
+            if (p0.distanceSquared(p1) < 1.0E-4F) continue;
+            Vector3f dir = new Vector3f(p1).sub(p0);
+            Vector3f side0 = new Vector3f(dir).cross(p0).normalize().mul(2.6F * (1 - a));
+            Vector3f side1 = new Vector3f(dir).cross(p1).normalize().mul(2.6F * (1 - c));
+            float[] col0 = {1.0F, 0.85F - 0.55F * a, 0.5F - 0.45F * a}, col1 = {1.0F, 0.85F - 0.55F * c, 0.5F - 0.45F * c};
+            float al0 = 0.9F * (1 - a), al1 = 0.9F * (1 - c);
+            tri(b, pose, new Vector3f(p0).add(side0), col0, al0, new Vector3f(p0).sub(side0), col0, al0, new Vector3f(p1).add(side1), col1, al1);
+            tri(b, pose, new Vector3f(p0).sub(side0), col0, al0, new Vector3f(p1).sub(side1), col1, al1, new Vector3f(p1).add(side1), col1, al1);
+        }
+        // heat around the rock
+        disc(b, pose, head, right, up, 7.0F, new float[]{1.0F, 0.45F, 0.12F}, 0.55F);
+        disc(b, pose, head, right, up, 3.4F, new float[]{1.0F, 0.9F, 0.6F}, 0.8F);
     }
 
-    private static Vector3f direction(float azimuthDegrees, float elevationDegrees) {
-        double azimuth = Math.toRadians(azimuthDegrees);
-        double elevation = Math.toRadians(elevationDegrees);
-        float horizontal = (float) Math.cos(elevation);
-        return new Vector3f((float) -Math.sin(azimuth) * horizontal, (float) Math.sin(elevation), (float) Math.cos(azimuth) * horizontal);
-    }
-
-    private static void drawTail(BufferBuilder builder, Matrix4f pose, float progress, float fade) {
-        for (int i = 0; i < TAIL_SEGMENTS; i++) {
-            float nearT = (float) i / TAIL_SEGMENTS;
-            float farT = (float) (i + 1) / TAIL_SEGMENTS;
-            Vector3f near = skyPoint(Math.max(0.0F, progress - nearT * TAIL_LENGTH));
-            Vector3f far = skyPoint(Math.max(0.0F, progress - farT * TAIL_LENGTH));
-            if (near.distanceSquared(far) < 1.0E-4F) continue;
-
-            Vector3f side = new Vector3f(far).sub(near).cross(near).normalize();
-            Vector3f nearSide = new Vector3f(side).mul(0.45F * (1.0F - nearT));
-            Vector3f farSide = new Vector3f(side).mul(0.45F * (1.0F - farT));
-            float nearAlpha = (1.0F - nearT) * (1.0F - nearT) * fade;
-            float farAlpha = (1.0F - farT) * (1.0F - farT) * fade;
-
-            float[] a = tailColor(nearT);
-            float[] b = tailColor(farT);
-            Vector3f a1 = new Vector3f(near).add(nearSide);
-            Vector3f a2 = new Vector3f(near).sub(nearSide);
-            Vector3f b1 = new Vector3f(far).add(farSide);
-            Vector3f b2 = new Vector3f(far).sub(farSide);
-
-            vertex(builder, pose, a1, a, nearAlpha);
-            vertex(builder, pose, a2, a, nearAlpha);
-            vertex(builder, pose, b1, b, farAlpha);
-            vertex(builder, pose, a2, a, nearAlpha);
-            vertex(builder, pose, b2, b, farAlpha);
-            vertex(builder, pose, b1, b, farAlpha);
+    /** Smoke left in the sky along the path: puffs that drift up, swell and fade. */
+    private static void drawTrailSmoke(BufferBuilder b, Matrix4f pose, Vec3 cam, Vector3f right, Vector3f up, Meteor m, float t) {
+        int last = (int) Math.min(t, m.duration);
+        for (int k = 0; k <= last; k += 2) {
+            float age = t - k;
+            if (age < 3 || age > SMOKE_LIFE) continue;
+            Vec3 p = m.at(k).add(0, age * 0.025D, 0);
+            float fade = Math.min(1.0F, (age - 3) / 8.0F) * (1.0F - age / SMOKE_LIFE);
+            float radius = 1.6F + age * 0.06F;
+            float g = 0.16F + 0.08F * Math.max(0, 1 - age / 30.0F);   // still warm right behind the rock
+            disc(b, pose, rel(p, cam), right, up, radius, new float[]{g + 0.06F, g, g - 0.02F}, 0.5F * fade);
         }
     }
 
-    /**
-     * Estallido en el horizonte: un destello blanco, una cúpula de fuego que se hincha sobre el suelo,
-     * una onda de choque que corre a lo largo del horizonte y brasas que siguen brillando un rato.
-     */
-    private static void drawImpact(BufferBuilder builder, Matrix4f pose, float t) {
-        Vector3f ground = skyPoint(1.0F);
-        Vector3f side = horizontalSide(ground);
-        Vector3f up = new Vector3f(0.0F, 1.0F, 0.0F);
-        float life = Math.max(0.0F, 1.0F - t / IMPACT_TICKS);
-
-        // Destello: blanco y breve
-        float burst = easeOut(Math.min(1.0F, t / 4.0F));
-        float flash = t < 2.0F ? 1.0F : Math.max(0.0F, 1.0F - (t - 2.0F) / 14.0F);
-        if (flash > 0.0F) {
-            drawGlow(builder, pose, ground, 3.0F + 9.0F * burst, 1.0F, 0.97F, 0.9F, flash);
-        }
-
-        // Cúpula de fuego: media esfera que crece sobre el horizonte y se enfría de amarillo a rojo
-        float domeGrow = easeOut(Math.min(1.0F, t / 16.0F));
-        float domeLife = Math.max(0.0F, 1.0F - t / 60.0F);
-        if (domeLife > 0.0F) {
-            float heat = Math.min(1.0F, t / 50.0F);
-            drawHalfGlow(builder, pose, ground, side, up, 3.0F + 6.0F * domeGrow,
-                    1.0F, 0.75F - 0.4F * heat, 0.35F - 0.25F * heat, 0.85F * domeLife * domeLife);
-        }
-
-        // Onda de choque: una franja de luz que se abre a lo largo del horizonte
-        float waveLife = Math.max(0.0F, 1.0F - t / 32.0F);
-        if (waveLife > 0.0F) {
-            float width = 4.0F + 30.0F * easeOut(Math.min(1.0F, t / 32.0F));
-            drawHorizonBand(builder, pose, ground, side, width, 0.7F, new float[]{1.0F, 0.8F, 0.55F}, 0.7F * waveLife);
-        }
-
-        // Brasas: el resplandor rojizo del cráter, que dura hasta el final
-        drawHalfGlow(builder, pose, ground, side, up, 5.0F, 1.0F, 0.35F, 0.12F, 0.4F * life);
-    }
-
-    /** Humo oscuro que sube despacio y se ensancha; abajo lo tiñe el fuego del cráter. */
-    private static void drawSmoke(BufferBuilder builder, Matrix4f pose, float t) {
-        Vector3f ground = skyPoint(1.0F);
-        Vector3f side = horizontalSide(ground);
-        float life = Math.max(0.0F, 1.0F - t / IMPACT_TICKS);
-        for (int i = 0; i < SMOKE_PUFFS; i++) {
-            float puffAge = t - 6.0F - i * 7.0F;
-            if (puffAge <= 0.0F) continue;
-            float rise = Math.min(11.0F, puffAge * 0.1F);
-            float drift = (float) Math.sin(i * 1.7F) * (1.0F + puffAge * 0.03F);
-            Vector3f center = new Vector3f(ground).add(0.0F, 1.2F + rise, 0.0F).add(new Vector3f(side).mul(drift));
-            float radius = 2.2F + puffAge * 0.045F;
-            float fadeIn = Math.min(1.0F, puffAge / 8.0F);
-            // Recién salido, el humo refleja el fuego; al subir se vuelve gris oscuro
-            float warm = Math.max(0.0F, 1.0F - rise / 5.0F);
-            float r = 0.16F + 0.4F * warm, g = 0.13F + 0.16F * warm, b = 0.14F + 0.04F * warm;
-            drawGlow(builder, pose, center, radius, r, g, b, 0.6F * fadeIn * life);
+    private static void drawRock(BufferBuilder b, Matrix4f pose, Vec3 cam, Meteor m, float t) {
+        Vector3f head = rel(m.at(t), cam);
+        Quaternionf spin = new Quaternionf().rotateAxis(t * 0.12F, m.spinAxis);
+        for (Box box : m.rock) {
+            Vector3f c = new Vector3f(box.centre()).rotate(spin).add(head);
+            float h = box.half();
+            Vector3f[] corner = new Vector3f[8];
+            for (int i = 0; i < 8; i++) {
+                Vector3f v = new Vector3f((i & 1) == 0 ? -h : h, (i & 2) == 0 ? -h : h, (i & 4) == 0 ? -h : h);
+                corner[i] = v.rotate(spin).add(c);
+            }
+            // each face: four corners and a little shading, so the shape reads even though it is lit by itself
+            face(b, pose, corner[0], corner[1], corner[3], corner[2], 0.75F);
+            face(b, pose, corner[4], corner[6], corner[7], corner[5], 0.85F);
+            face(b, pose, corner[0], corner[4], corner[5], corner[1], 0.65F);
+            face(b, pose, corner[2], corner[3], corner[7], corner[6], 1.0F);
+            face(b, pose, corner[0], corner[2], corner[6], corner[4], 0.8F);
+            face(b, pose, corner[1], corner[5], corner[7], corner[3], 0.9F);
         }
     }
 
-    /** Un BufferBuilder sin vértices no se puede dibujar: el juego se cierra si se intenta. */
-    private static void drawIfAny(BufferBuilder builder) {
-        var mesh = builder.build();
-        if (mesh != null) BufferUploader.drawWithShader(mesh);
+    // ---------------------------------------------------------------- the impact
+    private static void drawExplosion(BufferBuilder b, Matrix4f pose, Vec3 cam, Vector3f right, Vector3f up, Meteor m, float u) {
+        Vector3f ground = rel(m.end, cam);
+        Vector3f above = rel(m.end.add(0, 4, 0), cam);
+        // flash
+        if (u < 14) disc(b, pose, above, right, up, 20.0F + 45.0F * ease(Math.min(1, u / 6.0F)), new float[]{1.0F, 0.97F, 0.88F}, 1.0F - u / 14.0F);
+        // fireball that swells and cools from yellow to red
+        if (u < 70) {
+            float heat = Math.min(1.0F, u / 60.0F);
+            float grow = ease(Math.min(1.0F, u / 18.0F));
+            disc(b, pose, rel(m.end.add(0, 4 + 8 * grow, 0), cam), right, up, 8.0F + 16.0F * grow,
+                    new float[]{1.0F, 0.75F - 0.45F * heat, 0.3F - 0.25F * heat}, 0.9F * (1.0F - u / 70.0F));
+        }
+        // shock wave racing out along the ground
+        if (u < 45) {
+            float radius = 4.0F + 75.0F * ease(u / 45.0F);
+            ring(b, pose, rel(m.end.add(0, 0.6, 0), cam), radius, 3.5F, new float[]{1.0F, 0.85F, 0.6F}, 0.55F * (1.0F - u / 45.0F));
+        }
+        // glowing crater
+        disc(b, pose, ground, right, up, 9.0F, new float[]{1.0F, 0.35F, 0.1F}, 0.45F * (1.0F - u / EXPLOSION_TICKS));
     }
 
-    private static Vector3f horizontalSide(Vector3f point) {
-        return new Vector3f(point).cross(0.0F, 1.0F, 0.0F).normalize();
+    /** The column of smoke rising from the crater, warm at the bottom, grey higher up. */
+    private static void drawExplosionSmoke(BufferBuilder b, Matrix4f pose, Vec3 cam, Vector3f right, Vector3f up, Meteor m, float u) {
+        float life = 1.0F - u / EXPLOSION_TICKS;
+        for (int i = 0; i < 18; i++) {
+            float age = u - i * 4.0F;
+            if (age <= 0) continue;
+            double rise = Math.min(75.0D, age * 0.32D);
+            double drift = Math.sin(i * 1.9D) * (1.0D + age * 0.03D);
+            Vec3 p = m.end.add(drift, 3 + rise, Math.cos(i * 1.3D) * (1.0D + age * 0.02D));
+            float radius = 4.0F + age * 0.07F + (float) rise * 0.08F;
+            float warm = (float) Math.max(0, 1 - rise / 14.0D);
+            disc(b, pose, rel(p, cam), right, up, radius, new float[]{0.2F + 0.45F * warm, 0.17F + 0.2F * warm, 0.16F + 0.05F * warm},
+                    0.65F * Math.min(1.0F, age / 10.0F) * life);
+        }
     }
 
-    private static float easeOut(float x) {
+    // ---------------------------------------------------------------- drawing helpers
+    private static Vector3f rel(Vec3 p, Vec3 cam) {
+        return new Vector3f((float) (p.x - cam.x), (float) (p.y - cam.y), (float) (p.z - cam.z));
+    }
+
+    private static float ease(float x) {
         return 1.0F - (1.0F - x) * (1.0F - x) * (1.0F - x);
     }
 
-    /** Del blanco caliente junto a la cabeza al azul y violeta de la cola. */
-    private static float[] tailColor(float t) {
-        return new float[]{1.0F - 0.65F * t, 0.95F - 0.65F * t, 1.0F - 0.1F * t};
-    }
-
-    /** Disco suave orientado hacia la cámara: opaco en el centro y transparente en el borde. */
-    private static void drawGlow(BufferBuilder builder, Matrix4f pose, Vector3f center, float radius, float r, float g, float b, float alpha) {
-        Vector3f toCamera = new Vector3f(center).normalize();
-        Vector3f right = new Vector3f(toCamera).cross(0.0F, 1.0F, 0.0F).normalize();
-        Vector3f up = new Vector3f(right).cross(toCamera).normalize();
-        float[] color = {r, g, b};
-
-        for (int i = 0; i < GLOW_SEGMENTS; i++) {
-            double start = Math.PI * 2.0D * i / GLOW_SEGMENTS;
-            double end = Math.PI * 2.0D * (i + 1) / GLOW_SEGMENTS;
-            vertex(builder, pose, center, color, alpha);
-            vertex(builder, pose, onCircle(center, right, up, radius, start), color, 0.0F);
-            vertex(builder, pose, onCircle(center, right, up, radius, end), color, 0.0F);
+    /** A soft disc facing the camera: solid in the middle, clear at the edge. */
+    private static void disc(BufferBuilder b, Matrix4f pose, Vector3f centre, Vector3f right, Vector3f up, float radius, float[] col, float alpha) {
+        if (alpha <= 0.0F) return;
+        for (int i = 0; i < DISC_SEGMENTS; i++) {
+            double a0 = Math.PI * 2 * i / DISC_SEGMENTS, a1 = Math.PI * 2 * (i + 1) / DISC_SEGMENTS;
+            Vector3f e0 = new Vector3f(centre).add(new Vector3f(right).mul((float) Math.cos(a0) * radius)).add(new Vector3f(up).mul((float) Math.sin(a0) * radius));
+            Vector3f e1 = new Vector3f(centre).add(new Vector3f(right).mul((float) Math.cos(a1) * radius)).add(new Vector3f(up).mul((float) Math.sin(a1) * radius));
+            tri(b, pose, centre, col, alpha, e0, col, 0.0F, e1, col, 0.0F);
         }
     }
 
-    /** Medio disco suave apoyado en el horizonte, como una cúpula que sale del suelo. */
-    private static void drawHalfGlow(BufferBuilder builder, Matrix4f pose, Vector3f center, Vector3f side, Vector3f up,
-                                     float radius, float r, float g, float b, float alpha) {
-        float[] color = {r, g, b};
-        for (int i = 0; i < GLOW_SEGMENTS; i++) {
-            double start = Math.PI * i / GLOW_SEGMENTS;
-            double end = Math.PI * (i + 1) / GLOW_SEGMENTS;
-            vertex(builder, pose, center, color, alpha);
-            vertex(builder, pose, onCircle(center, side, up, radius, start), color, 0.0F);
-            vertex(builder, pose, onCircle(center, side, up, radius, end), color, 0.0F);
+    /** A flat ring lying on the ground, bright on its middle line and fading to both edges. */
+    private static void ring(BufferBuilder b, Matrix4f pose, Vector3f centre, float radius, float width, float[] col, float alpha) {
+        int n = 48;
+        for (int i = 0; i < n; i++) {
+            double a0 = Math.PI * 2 * i / n, a1 = Math.PI * 2 * (i + 1) / n;
+            for (int side = -1; side <= 1; side += 2) {
+                float rMid = radius, rEdge = radius + side * width;
+                Vector3f m0 = new Vector3f(centre).add((float) Math.cos(a0) * rMid, 0, (float) Math.sin(a0) * rMid);
+                Vector3f m1 = new Vector3f(centre).add((float) Math.cos(a1) * rMid, 0, (float) Math.sin(a1) * rMid);
+                Vector3f o0 = new Vector3f(centre).add((float) Math.cos(a0) * rEdge, 0, (float) Math.sin(a0) * rEdge);
+                Vector3f o1 = new Vector3f(centre).add((float) Math.cos(a1) * rEdge, 0, (float) Math.sin(a1) * rEdge);
+                tri(b, pose, m0, col, alpha, o0, col, 0.0F, o1, col, 0.0F);
+                tri(b, pose, m0, col, alpha, o1, col, 0.0F, m1, col, alpha);
+            }
         }
     }
 
-    /** Franja horizontal que se desvanece hacia los extremos y hacia arriba y abajo. */
-    private static void drawHorizonBand(BufferBuilder builder, Matrix4f pose, Vector3f center, Vector3f side,
-                                        float halfWidth, float halfHeight, float[] color, float alpha) {
-        Vector3f top = new Vector3f(center).add(0.0F, halfHeight, 0.0F);
-        Vector3f bottom = new Vector3f(center).add(0.0F, -halfHeight, 0.0F);
-        for (int dir = -1; dir <= 1; dir += 2) {
-            Vector3f end = new Vector3f(center).add(new Vector3f(side).mul(halfWidth * dir));
-            vertex(builder, pose, center, color, alpha);
-            vertex(builder, pose, top, color, 0.0F);
-            vertex(builder, pose, end, color, 0.0F);
-            vertex(builder, pose, center, color, alpha);
-            vertex(builder, pose, bottom, color, 0.0F);
-            vertex(builder, pose, end, color, 0.0F);
-        }
+    private static void tri(BufferBuilder b, Matrix4f pose, Vector3f p0, float[] c0, float a0, Vector3f p1, float[] c1, float a1, Vector3f p2, float[] c2, float a2) {
+        b.addVertex(pose, p0.x, p0.y, p0.z).setColor(c0[0], c0[1], c0[2], a0);
+        b.addVertex(pose, p1.x, p1.y, p1.z).setColor(c1[0], c1[1], c1[2], a1);
+        b.addVertex(pose, p2.x, p2.y, p2.z).setColor(c2[0], c2[1], c2[2], a2);
     }
 
-    private static Vector3f onCircle(Vector3f center, Vector3f right, Vector3f up, float radius, double angle) {
-        return new Vector3f(center)
-                .add(new Vector3f(right).mul((float) Math.cos(angle) * radius))
-                .add(new Vector3f(up).mul((float) Math.sin(angle) * radius));
+    private static void face(BufferBuilder b, Matrix4f pose, Vector3f p0, Vector3f p1, Vector3f p2, Vector3f p3, float shade) {
+        b.addVertex(pose, p0.x, p0.y, p0.z).setUv(0, 0).setColor(shade, shade, shade, 1.0F);
+        b.addVertex(pose, p1.x, p1.y, p1.z).setUv(1, 0).setColor(shade, shade, shade, 1.0F);
+        b.addVertex(pose, p2.x, p2.y, p2.z).setUv(1, 1).setColor(shade, shade, shade, 1.0F);
+        b.addVertex(pose, p3.x, p3.y, p3.z).setUv(0, 1).setColor(shade, shade, shade, 1.0F);
     }
 
-    private static void vertex(BufferBuilder builder, Matrix4f pose, Vector3f point, float[] color, float alpha) {
-        builder.addVertex(pose, point.x, point.y, point.z).setColor(color[0], color[1], color[2], alpha);
+    /** A BufferBuilder with no vertices cannot be drawn: the game crashes if it tries. */
+    private static void draw(BufferBuilder builder) {
+        var mesh = builder.build();
+        if (mesh != null) BufferUploader.drawWithShader(mesh);
     }
 }

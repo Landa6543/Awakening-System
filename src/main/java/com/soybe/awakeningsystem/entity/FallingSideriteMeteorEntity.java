@@ -185,16 +185,15 @@ public class FallingSideriteMeteorEntity extends Entity {
                         BlockState currentFloorState = sl.getBlockState(floorPos);
                         if (canTransform(sl, currentFloorState)) {
                             if (dx == 0 && dz == 0) {
-                                // El meteorito en sí: una sola roca de mineral de siderita en el fondo del cráter
-                                // (antes había 9 bloques de siderita y mineral debajo: regalaba demasiada)
-                                sl.setBlockAndUpdate(floorPos, SystemBlocks.SIDERITE_ORE.get().defaultBlockState());
+                                // El corazón del meteorito: un solo bloque de siderita meteórica (antes eran 9)
+                                sl.setBlockAndUpdate(floorPos, SystemBlocks.SIDERITE_BLOCK.get().defaultBlockState());
                             } else if (dist <= 1.5D) {
-                                // la roca fundida que lo rodea
-                                sl.setBlockAndUpdate(floorPos, sl.random.nextBoolean() ? Blocks.MAGMA_BLOCK.defaultBlockState() : Blocks.BLACKSTONE.defaultBlockState());
+                                // y a su alrededor, el meteorito partido: mineral de siderita meteórica
+                                sl.setBlockAndUpdate(floorPos, SystemBlocks.SIDERITE_ORE.get().defaultBlockState());
                             } else if (dist <= 3.2D) {
-                                // Capa interior fundida: magma, obsidiana llorosa, basalto y, muy rara vez, una veta de siderita
+                                // Capa interior fundida: magma, obsidiana llorosa, basalto y vetas de siderita
                                 float roll = sl.random.nextFloat();
-                                if (roll < 0.03F) {
+                                if (roll < 0.20F) {
                                     sl.setBlockAndUpdate(floorPos, SystemBlocks.SIDERITE_ORE.get().defaultBlockState());
                                 } else if (roll < 0.50F) {
                                     sl.setBlockAndUpdate(floorPos, Blocks.MAGMA_BLOCK.defaultBlockState());
@@ -208,7 +207,9 @@ public class FallingSideriteMeteorEntity extends Entity {
                             } else {
                                 // Paredes y pendiente exterior: Basalto, piedra negra, tierra calcinada y piedra agrietada
                                 float roll = sl.random.nextFloat();
-                                if (roll < 0.40F) {
+                                if (roll < 0.10F) {
+                                    sl.setBlockAndUpdate(floorPos, SystemBlocks.SIDERITE_ORE.get().defaultBlockState());
+                                } else if (roll < 0.40F) {
                                     sl.setBlockAndUpdate(floorPos, Blocks.BASALT.defaultBlockState());
                                 } else if (roll < 0.65F) {
                                     sl.setBlockAndUpdate(floorPos, Blocks.BLACKSTONE.defaultBlockState());
