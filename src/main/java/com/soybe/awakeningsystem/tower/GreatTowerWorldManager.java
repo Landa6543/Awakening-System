@@ -506,8 +506,8 @@ public final class GreatTowerWorldManager {
                if (cur.isAir() || cur.liquid()) level.setBlock(m, rock, 2);
             }
             m.set(x + dx, groundY - 1, z + dz);
-            level.setBlock(m, d > 5.3 ? lightBlock : (Math.abs(d - 3.5) < 0.5 ? pillarBlock : floorBlock), 2);
-            for (int h = 0; h <= 8; h++) {
+            level.setBlock(m, d > 5.3 ? pillarBlock : floorBlock, 2);
+            for (int h = 0; h <= 12; h++) {
                m.set(x + dx, groundY + h, z + dz);
                BlockState cur = level.getBlockState(m);
                if (!cur.isAir()) level.setBlock(m, air, 2);
@@ -525,21 +525,24 @@ public final class GreatTowerWorldManager {
             }
          }
       }
-      // six slender pillars around the platform, each crowned with light (none in front of or behind the gate)
-      for (int i = 0; i < 6; i++) {
-         double a = i * Math.PI / 3.0D + Math.PI / 6.0D;
-         int px = (int) Math.round(Math.sin(a) * 5.0D), pz = (int) Math.round(Math.cos(a) * 5.0D);
-         for (int h = 0; h <= 3; h++) level.setBlock(new BlockPos(x + px, groundY + h, z + pz), pillarBlock, 2);
-         level.setBlock(new BlockPos(x + px, groundY + 4, z + pz), lightBlock, 2);
+      // no columns: a mosaic in the floor, with lights set flush into it
+      for (int dx = -6; dx <= 6; dx++) {
+         for (int dz = -6; dz <= 6; dz++) {
+            double d = Math.sqrt(dx * dx + dz * dz);
+            if (d > 6.2) continue;
+            int a = (int) Math.round(Math.toDegrees(Math.atan2(dz, dx)) + 360.0) % 360;
+            BlockState f = null;
+            if (d < 1.6) f = pillarBlock;                                               // the centre stone
+            else if (Math.abs(d - 4.5) < 0.5 && a % 45 < 12) f = Blocks.SEA_LANTERN.defaultBlockState();
+            else if (d > 2.2 && d < 4.0 && (a + 22) % 90 < 8) f = pillarBlock;          // four rays
+            if (f != null) level.setBlock(new BlockPos(x + dx, groundY - 1, z + dz), f, 2);
+         }
       }
-      // the gate (drawn by the portal itself) two blocks behind the centre, between two braziers
+      // the gate (drawn by the portal itself) two blocks behind the centre, with a low fire on each side
       int gx = x - facing.getStepX() * 2, gz = z - facing.getStepZ() * 2;
       int ux = facing.getAxis() == Axis.X ? 0 : 1, uz = facing.getAxis() == Axis.X ? 1 : 0;
-      for (int side = -1; side <= 1; side += 2) {
-         BlockPos b = new BlockPos(gx + side * 3 * ux, groundY, gz + side * 3 * uz);
-         level.setBlock(b, pillarBlock, 2);
-         level.setBlock(b.above(), Blocks.CAMPFIRE.defaultBlockState(), 2);
-      }
+      for (int side = -1; side <= 1; side += 2)
+         level.setBlock(new BlockPos(gx + side * 3 * ux, groundY, gz + side * 3 * uz), Blocks.CAMPFIRE.defaultBlockState(), 2);
       BlockState portal = SystemBlocks.ASCENSION_PORTAL.get().defaultBlockState()
          .setValue(AscensionPortalBlock.FACING, facing)
          .setValue(AscensionPortalBlock.AXIS, facing.getAxis() == Axis.X ? Axis.Z : Axis.X)
