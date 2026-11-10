@@ -34,4 +34,8 @@ public final class ModParticles {
 
     public static final Supplier<SimpleParticleType> STRIKE_CELESTIAL =
             PARTICLE_TYPES.register("strike_celestial", () -> new SimpleParticleType(false));
+
+    /** The meteorite's fiery trail (always shown, however far). */
+    public static final Supplier<SimpleParticleType> METEOR_TRAIL =
+            PARTICLE_TYPES.register("meteor_trail", () -> new SimpleParticleType(true));
 }

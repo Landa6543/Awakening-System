@@ -733,6 +733,8 @@ public final class AwakeningSystemClient {
     public static void registerParticleProviders(net.neoforged.neoforge.client.event.RegisterParticleProvidersEvent event) {
         event.registerSpriteSet(com.soybe.awakeningsystem.particle.ModParticles.SPIRIT_FOXFIRE.get(),
                 com.soybe.awakeningsystem.particle.client.SpiritFoxfireParticle.Provider::new);
+        event.registerSpriteSet(com.soybe.awakeningsystem.particle.ModParticles.METEOR_TRAIL.get(),
+                com.soybe.awakeningsystem.particle.client.MeteorTrailParticle.Provider::new);
         event.registerSpriteSet(com.soybe.awakeningsystem.particle.ModParticles.MANA_AURA.get(),
                 com.soybe.awakeningsystem.particle.client.ManaAuraParticle.Provider::new);
         event.registerSpriteSet(com.soybe.awakeningsystem.particle.ModParticles.SHADOW_AURA.get(),

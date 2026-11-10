@@ -89,18 +89,18 @@ public final class MeteorSkyRenderer {
         METEORS.removeIf(m -> level.getGameTime() - m.startTick > m.duration);
         for (Meteor m : METEORS) {
             float t = level.getGameTime() - m.startTick;
-            Vec3 p = m.at(t), back = p.subtract(m.at(t + 1)).normalize();
-            for (int i = 0; i < 8; i++) {
-                level.addAlwaysVisibleParticle(ParticleTypes.FLAME, true, p.x + rnd.nextGaussian() * 0.8, p.y + rnd.nextGaussian() * 0.8,
-                        p.z + rnd.nextGaussian() * 0.8, back.x * 0.25, back.y * 0.25, back.z * 0.25);
+            Vec3 p = m.at(t), prev = m.at(Math.max(0, t - 1)), back = prev.subtract(p);
+            Vec3 drift = back.lengthSqr() < 1.0E-6 ? Vec3.ZERO : back.normalize().scale(0.08);
+            // the meteor's own fire trail, spread along the whole stretch it covered this tick so it reads as
+            // one continuous streak however fast it falls
+            int puffs = 6 + (int) Math.min(18, back.length() * 2);
+            for (int i = 0; i < puffs; i++) {
+                Vec3 q = p.add(back.scale(rnd.nextDouble()));
+                level.addAlwaysVisibleParticle(com.soybe.awakeningsystem.particle.ModParticles.METEOR_TRAIL.get(), true,
+                        q.x + rnd.nextGaussian() * 0.5, q.y + rnd.nextGaussian() * 0.5, q.z + rnd.nextGaussian() * 0.5, drift.x, drift.y, drift.z);
             }
-            for (int i = 0; i < 2; i++) level.addAlwaysVisibleParticle(ParticleTypes.LAVA, true, p.x, p.y, p.z, 0, 0, 0);
-            for (int i = 0; i < 3; i++) {
-                level.addAlwaysVisibleParticle(ParticleTypes.LARGE_SMOKE, true, p.x + rnd.nextGaussian() * 0.6, p.y + rnd.nextGaussian() * 0.6,
-                        p.z + rnd.nextGaussian() * 0.6, back.x * 0.1, 0.02, back.z * 0.1);
-            }
-            // the trail of smoke that hangs in the sky for a while
-            level.addAlwaysVisibleParticle(ParticleTypes.CAMPFIRE_COSY_SMOKE, true, p.x, p.y, p.z, 0, 0.01, 0);
+            // drops of molten rock falling off it
+            if (rnd.nextInt(2) == 0) level.addAlwaysVisibleParticle(ParticleTypes.LAVA, true, p.x, p.y, p.z, 0, 0, 0);
         }
     }
 

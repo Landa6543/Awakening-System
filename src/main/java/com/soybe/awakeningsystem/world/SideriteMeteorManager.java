@@ -63,7 +63,7 @@ public final class SideriteMeteorManager {
     private record SmokingCrater(ServerLevel level, BlockPos center, long startTime) {}
 
     /** Estruendo que todavía viaja hacia un jugador: el sonido llega después del destello. */
-    private record PendingBoom(ServerPlayer player, long arrivalTime, float volume, boolean echo) {}
+    private record PendingBoom(ServerPlayer player, long arrivalTime, float volume, boolean echo, Vec3 from) {}
     private static final List<PendingBoom> BOOMS = new ArrayList<>();
     // El sonido recorre unos 17 bloques por tick (343 m/s); a 300 bloques llega casi un segundo tarde
     private static final double SOUND_BLOCKS_PER_TICK = 17.0D;
@@ -153,14 +153,25 @@ public final class SideriteMeteorManager {
         return null;
     }
 
-    /** Lanza el meteorito hacia {@code impactSite}; quien lo ve desde {@code viewer} lo ve cruzar en diagonal. */
+    /**
+     * Lanza el meteorito hacia {@code impactSite}. Cada uno entra distinto: casi recto desde arriba, en diagonal
+     * o rasante (casi de lado), y desde cualquier lado, aunque nunca por detrás del jugador que lo mira.
+     */
     private static void launch(ServerLevel sl, BlockPos impactSite, Vec3 viewer) {
-        // Entra muy alto y desplazado de lado respecto a la línea jugador-impacto, algo hacia el jugador
         Vec3 toPlayer = new Vec3(viewer.x - impactSite.getX(), 0, viewer.z - impactSite.getZ());
         toPlayer = toPlayer.lengthSqr() < 1.0E-4 ? new Vec3(1, 0, 0) : toPlayer.normalize();
-        Vec3 across = new Vec3(-toPlayer.z, 0, toPlayer.x).scale(RANDOM.nextBoolean() ? 1 : -1);
-        Vec3 offset = across.scale(ENTRY_OFFSET).add(toPlayer.scale(ENTRY_OFFSET * 0.35D));
-        Vec3 start = new Vec3(impactSite.getX() + 0.5D + offset.x, impactSite.getY() + ENTRY_HEIGHT, impactSite.getZ() + 0.5D + offset.z);
+        // horizontal distance per block of height: 0.1 almost vertical, 0.7 diagonal, 1.6 grazing
+        double slope = switch (RANDOM.nextInt(3)) {
+            case 0 -> 0.05D + RANDOM.nextDouble() * 0.15D;
+            case 1 -> 0.5D + RANDOM.nextDouble() * 0.4D;
+            default -> 1.3D + RANDOM.nextDouble() * 0.6D;
+        };
+        double height = ENTRY_HEIGHT * (slope > 1.0D ? 0.6D : 1.0D);   // grazing ones come in lower
+        // the side it comes from: anywhere from across the player's view to towards the player
+        double angle = (RANDOM.nextDouble() - 0.5D) * Math.PI * 1.4D;
+        Vec3 from = new Vec3(toPlayer.x * Math.cos(angle) - toPlayer.z * Math.sin(angle), 0, toPlayer.x * Math.sin(angle) + toPlayer.z * Math.cos(angle));
+        Vec3 offset = from.scale(height * slope);
+        Vec3 start = new Vec3(impactSite.getX() + 0.5D + offset.x, impactSite.getY() + height, impactSite.getZ() + 0.5D + offset.z);
         Vec3 end = Vec3.atBottomCenterOf(impactSite.above());
         FALLING.add(new FallingMeteor(sl, impactSite));
         MeteorStreakPayload fall = new MeteorStreakPayload(start.x, start.y, start.z, end.x, end.y, end.z, FALL_TICKS, RANDOM.nextLong());
@@ -170,8 +181,8 @@ public final class SideriteMeteorManager {
             sp.sendSystemMessage(skyAnnouncement);
             if (sp.distanceToSqr(end) < VIEW_DISTANCE * VIEW_DISTANCE) PacketDistributor.sendToPlayer(sp, fall);
             // Rugido grave de aire al cruzar la atmósfera, con un siseo de fuego; se corta al impactar
-            sp.playNotifySound(SoundEvents.ELYTRA_FLYING, SoundSource.WEATHER, 0.55F, 0.45F);
-            sp.playNotifySound(SoundEvents.FIRECHARGE_USE, SoundSource.WEATHER, 0.35F, 0.5F);
+            soundFrom(sp, start, SoundEvents.ELYTRA_FLYING, 0.55F, 0.45F);
+            soundFrom(sp, start, SoundEvents.FIRECHARGE_USE, 0.35F, 0.5F);
         }
 
         lastMeteorTime = sl.getGameTime();
@@ -206,13 +217,29 @@ public final class SideriteMeteorManager {
                     double distance = Math.sqrt(player.distanceToSqr(meteor.target.getCenter()));
                     long delay = Math.min(60L, Math.round(distance / SOUND_BLOCKS_PER_TICK));
                     float volume = (float) Math.max(0.45D, Math.min(1.0D, 1.25D - distance / 600.0D));
-                    BOOMS.add(new PendingBoom(player, now + delay, volume, false));
+                    BOOMS.add(new PendingBoom(player, now + delay, volume, false, meteor.target.getCenter()));
                     // eco que rueda por el paisaje un poco después
-                    BOOMS.add(new PendingBoom(player, now + delay + 14, volume * 0.6F, true));
+                    BOOMS.add(new PendingBoom(player, now + delay + 14, volume * 0.6F, true, meteor.target.getCenter()));
                 }
                 iterator.remove();
             }
         }
+    }
+
+    /**
+     * Plays a sound for one player as coming from {@code source}. The real spot is hundreds of blocks off,
+     * beyond hearing range, so the sound is placed 20 blocks from the player in that direction: the game then
+     * pans it left, right or ahead as it should, and it is still loud.
+     */
+    private static void soundFrom(ServerPlayer player, Vec3 source, net.minecraft.sounds.SoundEvent sound, float volume, float pitch) {
+        Vec3 eye = player.getEyePosition();
+        Vec3 dir = source.subtract(eye);
+        Vec3 at = dir.lengthSqr() < 1.0E-4 ? eye : eye.add(dir.normalize().scale(Math.min(20.0D, dir.length())));
+        // range is 16 blocks per point of volume: at least 2 so it carries over those 20 blocks
+        float vol = Math.max(2.0F, volume * 3.0F);
+        player.connection.send(new net.minecraft.network.protocol.game.ClientboundSoundPacket(
+                net.minecraft.core.registries.BuiltInRegistries.SOUND_EVENT.wrapAsHolder(sound), SoundSource.WEATHER,
+                at.x, at.y, at.z, vol, pitch, player.getRandom().nextLong()));
     }
 
     private static void tickBooms(MinecraftServer server) {
@@ -226,12 +253,12 @@ public final class SideriteMeteorManager {
             }
             if (player.level().getGameTime() < boom.arrivalTime()) continue;
             if (boom.echo()) {
-                player.playNotifySound(SoundEvents.LIGHTNING_BOLT_THUNDER, SoundSource.WEATHER, boom.volume(), 0.42F);
+                soundFrom(player, boom.from(), SoundEvents.LIGHTNING_BOLT_THUNDER, boom.volume(), 0.42F);
             } else {
                 // golpe seco, retumbo profundo y desgarro de fuego, todo a la vez
-                player.playNotifySound(SoundEvents.GENERIC_EXPLODE.value(), SoundSource.WEATHER, boom.volume(), 0.5F);
-                player.playNotifySound(SoundEvents.DRAGON_FIREBALL_EXPLODE, SoundSource.WEATHER, boom.volume() * 0.8F, 0.55F);
-                player.playNotifySound(SoundEvents.LIGHTNING_BOLT_THUNDER, SoundSource.WEATHER, boom.volume() * 0.7F, 0.6F);
+                soundFrom(player, boom.from(), SoundEvents.GENERIC_EXPLODE.value(), boom.volume(), 0.5F);
+                soundFrom(player, boom.from(), SoundEvents.DRAGON_FIREBALL_EXPLODE, boom.volume() * 0.8F, 0.55F);
+                soundFrom(player, boom.from(), SoundEvents.LIGHTNING_BOLT_THUNDER, boom.volume() * 0.7F, 0.6F);
             }
             iterator.remove();
         }
