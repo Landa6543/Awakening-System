@@ -104,7 +104,7 @@ public class ColossalSculkWardenEntity extends Monster implements GeoEntity {
     private final ServerBossEvent bossEvent = (ServerBossEvent) new ServerBossEvent(
             Component.translatableWithFallback("entity.awakening_system.colossal_sculk_warden", "Titán Colosal de Sculk")
                     .withStyle(ChatFormatting.DARK_AQUA, ChatFormatting.BOLD),
-            BossEvent.BossBarColor.BLUE, BossEvent.BossBarOverlay.NOTCHED_20).setDarkenScreen(true);
+            BossEvent.BossBarColor.BLUE, BossEvent.BossBarOverlay.NOTCHED_20).setDarkenScreen(false);
 
     private Attack current;
     private Attack last;
@@ -112,7 +112,6 @@ public class ColossalSculkWardenEntity extends Monster implements GeoEntity {
     private int cooldown = 40;
     private boolean roared;
     private boolean enraged;
-    private int darknessTimer;
 
     /** What the current attack aimed at, fixed when it was announced so the player can move out of it. */
     private Vec3 aim = Vec3.ZERO;
@@ -249,15 +248,6 @@ public class ColossalSculkWardenEntity extends Monster implements GeoEntity {
             target = nearest;
         }
 
-        if (++darknessTimer >= 100) {
-            darknessTimer = 0;
-            for (Player p : level.getEntitiesOfClass(Player.class, getBoundingBox().inflate(30.0D))) {
-                if (!p.isCreative() && !p.isSpectator()) {
-                    p.addEffect(new MobEffectInstance(MobEffects.DARKNESS, 140, 0, false, false, true));
-                }
-            }
-        }
-
         if (!enraged && getHealth() <= getMaxHealth() * 0.5F && current == null) {
             enraged = true;
             setEnragedLook();
@@ -374,7 +364,7 @@ public class ColossalSculkWardenEntity extends Monster implements GeoEntity {
                 Vec3 push = horizontal(e.position().subtract(position())).scale(1.6);
                 e.push(push.x, 0.4, push.z);
                 e.hurtMarked = true;
-                e.addEffect(new MobEffectInstance(MobEffects.DARKNESS, 160, 0));
+                e.addEffect(new MobEffectInstance(MobEffects.DARKNESS, 50, 0));
                 e.addEffect(new MobEffectInstance(MobEffects.MOVEMENT_SLOWDOWN, 60, 1));
             }
             if (enraged) summonGolems(level);

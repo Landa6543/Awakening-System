@@ -37,7 +37,7 @@ public class ColossalWardenRenderer extends GeoEntityRenderer<ColossalSculkWarde
         public void render(PoseStack poseStack, ColossalSculkWardenEntity animatable, BakedGeoModel bakedModel, RenderType renderType,
                            MultiBufferSource bufferSource, VertexConsumer buffer, float partialTick, int packedLight, int packedOverlay) {
             float wave = (Mth.sin((animatable.tickCount + partialTick) * 0.07F) + 1.0F) * 0.5F;
-            float strength = 0.35F + 0.65F * wave * wave;
+            float strength = 0.08F + 0.92F * wave * wave;   // nearly dark when it breathes out, bright when it breathes in
             int c = (int) (255 * strength);
             int color = 0xFF000000 | (c << 16) | (c << 8) | c;
             RenderType glow = RenderType.eyes(GLOW);
