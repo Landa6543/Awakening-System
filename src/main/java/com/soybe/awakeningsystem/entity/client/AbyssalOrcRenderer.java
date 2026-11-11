@@ -41,6 +41,6 @@ public class AbyssalOrcRenderer extends MobRenderer<AbyssalOrcEntity, AbyssalOrc
     @Override
     /** Each orc is red (cream stripes) or green (dark-red stripes), fixed by its id so it never changes. */
     public ResourceLocation getTextureLocation(AbyssalOrcEntity entity) {
-        return (entity.getUUID().getLeastSignificantBits() & 1L) == 0L ? RED : GREEN;
+        return entity.isGreen() ? GREEN : RED;
     }
 }

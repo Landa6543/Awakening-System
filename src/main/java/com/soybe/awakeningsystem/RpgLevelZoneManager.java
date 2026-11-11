@@ -372,7 +372,7 @@ public final class RpgLevelZoneManager {
         }
         ChatFormatting color = mobLevel >= 80 ? ChatFormatting.DARK_RED : (mobLevel >= 50 ? ChatFormatting.RED : (mobLevel >= 25 ? ChatFormatting.GOLD : (mobLevel >= 15 ? ChatFormatting.YELLOW : ChatFormatting.GREEN)));
         mob.setCustomName(Component.literal("[Nv. " + mobLevel + "] ").withStyle(color)
-                .append(Component.translatable(mob.getType().getDescriptionId()).withStyle(ChatFormatting.WHITE)));
+                .append(com.soybe.awakeningsystem.entity.AbyssalOrcEntity.speciesName(mob).copy().withStyle(ChatFormatting.WHITE)));
         mob.setCustomNameVisible(false);
     }
 

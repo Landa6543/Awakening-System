@@ -2582,11 +2582,11 @@ public final class AwakeningSystemClient {
                     int curHp = (int) Math.ceil(mob.getHealth());
                     int maxHp = (int) Math.ceil(mob.getMaxHealth());
                     content = Component.literal("[Nv. " + perceivedLevel + "] ").withStyle(color)
-                            .append(mob.getType().getDescription().copy().withStyle(ChatFormatting.WHITE))
+                            .append(com.soybe.awakeningsystem.entity.AbyssalOrcEntity.speciesName(mob).copy().withStyle(ChatFormatting.WHITE))
                             .append(Component.literal(" [❤ " + curHp + "/" + maxHp + "]").withStyle(ChatFormatting.RED));
                 } else {
                     content = Component.literal("[Nv. " + perceivedLevel + "] ").withStyle(color)
-                            .append(mob.getType().getDescription().copy().withStyle(ChatFormatting.WHITE));
+                            .append(com.soybe.awakeningsystem.entity.AbyssalOrcEntity.speciesName(mob).copy().withStyle(ChatFormatting.WHITE));
                 }
                 event.setContent(content);
                 event.setCanRender(net.neoforged.neoforge.common.util.TriState.TRUE);

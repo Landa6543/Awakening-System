@@ -135,6 +135,7 @@ public class AbyssalOrcEntity extends Monster {
         if (this.level().isClientSide) {
             if (smashAnimationTimeout > 0) smashAnimationTimeout--;
             if (roarAnimationTimeout > 0) roarAnimationTimeout--;
+            if (bloodFrenzyTicks > 0) bloodFrenzyTicks--;          // the client counts the frenzy down too, or the orc stays hunched and burning for ever
 
             if (bloodFrenzyTicks > 0 && this.random.nextInt(2) == 0) {
                 this.level().addParticle(ParticleTypes.CRIMSON_SPORE,
@@ -180,6 +181,23 @@ public class AbyssalOrcEntity extends Monster {
         } else {
             super.handleEntityEvent(id);
         }
+    }
+
+    /** The species name shown over any mob: green orcs get their own, everything else its type's name. */
+    public static net.minecraft.network.chat.Component speciesName(Entity e) {
+        return e instanceof AbyssalOrcEntity orc && orc.isGreen()
+                ? net.minecraft.network.chat.Component.translatable("entity.awakening_system.abyssal_orc.green")
+                : e.getType().getDescription();
+    }
+
+    /** Green orcs are a different breed from the red blood orcs and carry their own name. */
+    public boolean isGreen() {
+        return (this.getUUID().getLeastSignificantBits() & 1L) != 0L;
+    }
+
+    @Override
+    protected net.minecraft.network.chat.Component getTypeName() {
+        return isGreen() ? net.minecraft.network.chat.Component.translatable("entity.awakening_system.abyssal_orc.green") : super.getTypeName();
     }
 
     @Override
