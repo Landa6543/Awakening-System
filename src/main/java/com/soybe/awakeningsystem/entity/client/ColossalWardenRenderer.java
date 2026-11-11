@@ -25,14 +25,9 @@ public class ColossalWardenRenderer extends GeoEntityRenderer<ColossalSculkWarde
         addRenderLayer(new BreathingGlow(this));
     }
 
-    @Override
-    protected float getDeathMaxRotation(ColossalSculkWardenEntity animatable) {
-        return 0.0F;
-    }
-
     /** The glow texture drawn again on top at full brightness, fading in and out with the breathing. */
     static final class BreathingGlow extends GeoRenderLayer<ColossalSculkWardenEntity> {
-        private static final ResourceLocation GLOW = ResourceLocation.fromNamespaceAndPath(AwakeningSystemMod.MOD_ID, "textures/entity/mutant_warden_emissive.png");
+        private static final ResourceLocation GLOW = ResourceLocation.fromNamespaceAndPath(AwakeningSystemMod.MOD_ID, "textures/entity/sculk_titan_glow.png");
 
         BreathingGlow(GeoRenderer<ColossalSculkWardenEntity> renderer) {
             super(renderer);

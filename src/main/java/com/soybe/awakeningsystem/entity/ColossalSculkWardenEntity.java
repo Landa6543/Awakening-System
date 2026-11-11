@@ -54,7 +54,7 @@ import java.util.UUID;
 /**
  * Titán Colosal de Sculk, the boss of floor 10 of the Great Tower.
  *
- * <p>Uses the mod's own "mutant warden" GeckoLib model and its animations. Every attack plays its own
+ * <p>Has its own GeckoLib model (a hunched giant of deepslate and sculk with a glowing heart, bone horns and four back\n * tentacles) and its own animations. Every attack plays its own
  * animation and is announced before it lands, so the player can read it and dodge:
  * <ul>
  *   <li><b>Zarpazo</b> (close): a heavy swipe in front of it.</li>
@@ -69,7 +69,7 @@ import java.util.UUID;
  */
 public class ColossalSculkWardenEntity extends Monster implements GeoEntity {
 
-    private static final String PREFIX = "animation.mutant_warden.";
+    private static final String PREFIX = "animation.sculk_titan.";
     private static final RawAnimation IDLE = RawAnimation.begin().thenLoop(PREFIX + "idle");
     private static final RawAnimation WALK = RawAnimation.begin().thenLoop(PREFIX + "walk");
 
