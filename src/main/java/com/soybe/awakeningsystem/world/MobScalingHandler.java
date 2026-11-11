@@ -157,7 +157,7 @@ public final class MobScalingHandler {
             }
 
             Component nameTag = Component.literal(color + "[" + rankLetter + " - Nv. " + tier + "] ")
-                    .append(Component.translatable(mob.getType().getDescriptionId()).withStyle(ChatFormatting.WHITE));
+                    .append(com.soybe.awakeningsystem.entity.AbyssalOrcEntity.speciesName(mob).copy().withStyle(ChatFormatting.WHITE));
             mob.setCustomName(nameTag);
             mob.setCustomNameVisible(false);
         }

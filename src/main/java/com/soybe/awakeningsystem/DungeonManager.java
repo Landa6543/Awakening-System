@@ -611,7 +611,7 @@ public final class DungeonManager {
          String color = getRankLevelColor(mobLevel);
          Component currentName = mob.getCustomName();
          if (currentName == null) {
-            currentName = mob.getType().getDescription();
+            currentName = com.soybe.awakeningsystem.entity.AbyssalOrcEntity.speciesName(mob);
          }
 
          String nameStr = currentName.getString();

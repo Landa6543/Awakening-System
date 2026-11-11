@@ -699,7 +699,7 @@ public final class SystemHudOverlay {
                 int perceived = AwakeningSystemClient.getPerceivedMobLevel(living, clientLevel);
                 net.minecraft.ChatFormatting color = perceived >= 80 ? net.minecraft.ChatFormatting.DARK_RED : (perceived >= 50 ? net.minecraft.ChatFormatting.RED : (perceived >= 25 ? net.minecraft.ChatFormatting.GOLD : (perceived >= 15 ? net.minecraft.ChatFormatting.YELLOW : net.minecraft.ChatFormatting.GREEN)));
                 name = Component.literal("[Nv. " + perceived + "] ").withStyle(color)
-                        .append(living.getType().getDescription().copy().withStyle(net.minecraft.ChatFormatting.WHITE));
+                        .append(com.soybe.awakeningsystem.entity.AbyssalOrcEntity.speciesName(living).copy().withStyle(net.minecraft.ChatFormatting.WHITE));
             }
 
             boolean isBoss = com.soybe.awakeningsystem.config.BossCompatibilityManager.isBoss(living);

@@ -307,7 +307,7 @@ public final class RpgLevelZoneManager {
             mob.getPersistentData().putDouble("rpg_orig_dmg", atk != null ? atk.getBaseValue() : 3.0);
         }
         if (!mob.getPersistentData().contains("rpg_orig_name")) {
-            String name = mob.getType().getDescription().getString();
+            String name = com.soybe.awakeningsystem.entity.AbyssalOrcEntity.speciesName(mob).getString();
             mob.getPersistentData().putString("rpg_orig_name", name);
         }
         double baseHp = mob.getPersistentData().getDouble("rpg_orig_hp");
