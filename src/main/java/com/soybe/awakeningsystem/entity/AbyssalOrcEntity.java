@@ -36,6 +36,13 @@ public class AbyssalOrcEntity extends Monster {
     public AbyssalOrcEntity(EntityType<? extends Monster> entityType, Level level) {
         super(entityType, level);
         this.xpReward = 45;
+        this.refreshDimensions();
+    }
+
+    /** The hitbox matches the bigger model (drawn 1.4 times the old size, about three blocks tall). */
+    @Override
+    public net.minecraft.world.entity.EntityDimensions getDefaultDimensions(net.minecraft.world.entity.Pose pose) {
+        return net.minecraft.world.entity.EntityDimensions.scalable(1.2F, 3.05F).withEyeHeight(2.6F);
     }
 
     public static AttributeSupplier.Builder createAttributes() {
