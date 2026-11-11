@@ -1,11 +1,8 @@
 {
   "type": "awakening_system:tower_floor_7",
   "generator": {
-    "type": "minecraft:noise",
-    "settings": "minecraft:overworld",
-    "biome_source": {
-      "type": "minecraft:fixed",
-      "biome": "minecraft:desert"
-    }
+    "type": "awakening_system:tower_floor",
+    "floor": 7,
+    "biome_source": { "type": "minecraft:fixed", "biome": "awakening_system:tower_arcane_dunes" }
   }
 }

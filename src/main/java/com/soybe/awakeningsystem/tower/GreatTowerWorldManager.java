@@ -224,6 +224,10 @@ public final class GreatTowerWorldManager {
 
    public static int findSafeGroundY(ServerLevel level, int x, int z, int defaultY) {
       int floor = getFloorForPos(level, new BlockPos(x, 64, z));
+      // floors with the mod's own terrain know their ground exactly (searching hit tree tops on the forest floors)
+      if (com.soybe.awakeningsystem.tower.terrain.TowerFloorTerrain.isCustom(floor)) {
+         return com.soybe.awakeningsystem.tower.terrain.TowerFloorTerrain.height(floor, x, z) + 1;
+      }
       if (!level.dimensionType().hasCeiling()) {
          int height = level.getHeight(Types.MOTION_BLOCKING_NO_LEAVES, x, z);
          if (height > level.getMinBuildHeight() + 5 && height < level.getMaxBuildHeight() - 5) {
@@ -514,6 +518,20 @@ public final class GreatTowerWorldManager {
             }
          }
       }
+      // trees overhanging the shrine are cleared too, so it is never hidden in a canopy
+      int ceiling = level.dimensionType().hasCeiling() ? 8 : 34;
+      for (int dx = -9; dx <= 9; dx++) {
+         for (int dz = -9; dz <= 9; dz++) {
+            if (dx * dx + dz * dz > 81) continue;
+            for (int h = 0; h <= ceiling; h++) {
+               m.set(x + dx, groundY + h, z + dz);
+               BlockState cur = level.getBlockState(m);
+               if (cur.is(net.minecraft.tags.BlockTags.LEAVES) || cur.is(net.minecraft.tags.BlockTags.LOGS) || cur.is(Blocks.VINE)
+                     || cur.is(Blocks.MUSHROOM_STEM) || cur.is(Blocks.WARPED_WART_BLOCK) || cur.is(Blocks.SHROOMLIGHT)
+                     || cur.is(Blocks.WEEPING_VINES) || cur.is(Blocks.WEEPING_VINES_PLANT)) level.setBlock(m, air, 2);
+            }
+         }
+      }
       // a ring of steps around the platform edge
       BlockState step = stepFor(floorBlock);
       for (int dx = -7; dx <= 7; dx++) {
@@ -772,11 +790,10 @@ public final class GreatTowerWorldManager {
       int floor = getFloorForPos(level, new BlockPos(minX, 64, minZ));
 
       // 1. Esculpido de cavernas para pisos subterráneos
-      if (floor == 5 || floor == 10 || floor == 15 || floor == 20) {
+      // floor 5 has the mod's own cavern now; the old carving still makes floors 10, 15 and 20
+      if (floor == 10 || floor == 15 || floor == 20) {
          processSectorChunk(level, chunk);
       }
-      // the crystal cavern's own formations, once per chunk
-      if (floor == 5) com.soybe.awakeningsystem.tower.terrain.TowerCaveCrystals.decorate(level, chunk);
 
       // 2. Generación estática única de decoraciones de terreno (escombros, matorrales, cristales, minerales)
       decorateSectorChunk(level, chunk, floor);
@@ -907,7 +924,7 @@ public static void processSectorChunk(ServerLevel level, ChunkAccess chunk) {
       if (isGreatTowerDimension(level)) {
          ensureWorldBorder(level);
          int floor = getFloorForPos(level, new BlockPos(chunk.getPos().getMinBlockX(), 64, chunk.getPos().getMinBlockZ()));
-         if (floor == 5 || floor == 10 || floor == 15 || floor == 20) {
+         if (floor == 10 || floor == 15 || floor == 20) {
             ChunkPos cPos = chunk.getPos();
             int minX = cPos.getMinBlockX();
             int maxX = cPos.getMaxBlockX();

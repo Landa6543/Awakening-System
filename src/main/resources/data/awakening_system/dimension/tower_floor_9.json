@@ -1,11 +1,8 @@
 {
   "type": "awakening_system:tower_floor_9",
   "generator": {
-    "type": "minecraft:noise",
-    "settings": "minecraft:overworld",
-    "biome_source": {
-      "type": "minecraft:fixed",
-      "biome": "minecraft:cherry_grove"
-    }
+    "type": "awakening_system:tower_floor",
+    "floor": 9,
+    "biome_source": { "type": "minecraft:fixed", "biome": "awakening_system:tower_plum_sanctuary" }
   }
 }

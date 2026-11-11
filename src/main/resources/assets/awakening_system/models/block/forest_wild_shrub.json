@@ -1,8 +1,9 @@
 {
   "ambientocclusion": false,
+  "render_type": "minecraft:cutout",
   "textures": {
-    "particle": "awakening_system:block/yajna_grass",
-    "shrub": "awakening_system:block/yajna_grass",
+    "particle": "minecraft:block/sweet_berry_bush_stage2",
+    "shrub": "minecraft:block/sweet_berry_bush_stage2",
     "leaves": "awakening_system:block/cuihua_leaves"
   },
   "elements": [

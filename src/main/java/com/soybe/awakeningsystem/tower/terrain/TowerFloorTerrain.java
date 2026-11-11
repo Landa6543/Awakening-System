@@ -32,12 +32,12 @@ public final class TowerFloorTerrain {
         for (int i = 0; i < NOISE.length; i++) NOISE[i] = new TowerSimplexNoise(918273645L * (i + 7) + 31L);
     }
 
-    private static double n(int floor, double x, double z, double scale, int octaves) {
+    static double n(int floor, double x, double z, double scale, int octaves) {
         return NOISE[floor % NOISE.length].fbm2D(x * scale, z * scale, octaves, 2.0D, 0.5D);
     }
 
     /** A stable 0..1 value for a cell and a salt. */
-    private static double hash(int floor, int cx, int cz, int salt) {
+    static double hash(int floor, int cx, int cz, int salt) {
         long h = cx * 341873128712L ^ cz * 132897987541L ^ (floor * 2654435761L + salt * 40503L);
         h ^= h >>> 33;
         h *= 0xff51afd7ed558ccdL;
@@ -47,7 +47,18 @@ public final class TowerFloorTerrain {
 
     // ── heights ──────────────────────────────────────────────────────────────
 
+    /** Floors whose land this generator makes (10 keeps its boss arena). */
+    public static boolean isCustom(int floor) {
+        return floor >= 1 && floor <= 9;
+    }
+
+    /** Floors that are caverns under a rock ceiling (their world is 128 blocks tall, from 0). */
+    public static boolean isCave(int floor) {
+        return floor == 5 || floor == 6;
+    }
+
     public static int height(int floor, int x, int z) {
+        if (floor >= 5) return TowerFloorTerrainDeep.height(floor, x, z);
         return switch (floor) {
             case 1 -> 72 + (int) Math.round(5 * n(1, x, z, 0.006, 3) + 3 * n(1, x + 500, z, 0.02, 2) + 1.2 * n(1, x, z + 900, 0.07, 1));
             case 2 -> {
@@ -92,6 +103,10 @@ public final class TowerFloorTerrain {
     // ── filling a chunk ──────────────────────────────────────────────────────
 
     public static void fill(int floor, ChunkAccess chunk) {
+        if (floor >= 5) {
+            TowerFloorTerrainDeep.fill(floor, chunk);
+            return;
+        }
         Writer w = new Writer(chunk);
         int x0 = chunk.getPos().getMinBlockX(), z0 = chunk.getPos().getMinBlockZ();
         BlockPos.MutableBlockPos p = new BlockPos.MutableBlockPos();
@@ -221,7 +236,7 @@ public final class TowerFloorTerrain {
         }
     }
 
-    private static BlockState leaves(net.minecraft.world.level.block.Block b) {
+    static BlockState leaves(net.minecraft.world.level.block.Block b) {
         return b.defaultBlockState().setValue(LeavesBlock.PERSISTENT, true);
     }
 
@@ -249,7 +264,7 @@ public final class TowerFloorTerrain {
         }
     }
 
-    private static void boulder(Writer w, int x, int y, int z, double r, BlockState a, BlockState b) {
+    static void boulder(Writer w, int x, int y, int z, double r, BlockState a, BlockState b) {
         int rad = 1 + (int) (r * 2.5);
         for (int dx = -rad; dx <= rad; dx++)
             for (int dy = 0; dy <= rad; dy++)
@@ -307,7 +322,7 @@ public final class TowerFloorTerrain {
     }
 
     /** A cloud of leaves; with vines, some strands hang from its underside. */
-    private static void blob(Writer w, int cx, int cy, int cz, double rad, BlockState leaf, boolean vines) {
+    static void blob(Writer w, int cx, int cy, int cz, double rad, BlockState leaf, boolean vines) {
         int ri = (int) Math.ceil(rad);
         for (int dx = -ri; dx <= ri; dx++)
             for (int dy = -ri; dy <= ri; dy++)
@@ -394,7 +409,7 @@ public final class TowerFloorTerrain {
         }
 
         boolean inside(int x, int y, int z) {
-            return x >= x0 && x < x0 + 16 && z >= z0 && z < z0 + 16 && y > -64 && y < 319;
+            return x >= x0 && x < x0 + 16 && z >= z0 && z < z0 + 16 && y > chunk.getMinBuildHeight() && y < chunk.getMaxBuildHeight() - 1;
         }
 
         BlockState get(int x, int y, int z) {

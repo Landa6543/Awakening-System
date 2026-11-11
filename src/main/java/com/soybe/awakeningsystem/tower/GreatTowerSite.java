@@ -344,7 +344,8 @@ public final class GreatTowerSite {
                     var layout = com.soybe.awakeningsystem.tower.GreatTowerWorldManager.getLayout(fl);
                     int x = layout.returnX() / 2, z = layout.returnZ() / 2;
                     lvl.getChunk(x >> 4, z >> 4);
-                    BlockPos at = new BlockPos(x, lvl.getHeight(Heightmap.Types.MOTION_BLOCKING_NO_LEAVES, x, z), z);
+                    BlockPos at = new BlockPos(x, com.soybe.awakeningsystem.tower.terrain.TowerFloorTerrain.isCustom(fl)
+                            ? com.soybe.awakeningsystem.tower.terrain.TowerFloorTerrain.height(fl, x, z) + 1 : lvl.getHeight(Heightmap.Types.MOTION_BLOCKING_NO_LEAVES, x, z), z);
                     try {
                         java.nio.file.Path dir = server.getServerDirectory().resolve("tower_snapshot");
                         java.nio.file.Files.createDirectories(dir);

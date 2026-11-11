@@ -78,7 +78,7 @@ public final class TowerFloorChunkGenerator extends ChunkGenerator {
 
     @Override
     public int getGenDepth() {
-        return 384;
+        return TowerFloorTerrain.isCave(floor) ? 128 : 384;
     }
 
     @Override
@@ -88,7 +88,7 @@ public final class TowerFloorChunkGenerator extends ChunkGenerator {
 
     @Override
     public int getMinY() {
-        return -64;
+        return TowerFloorTerrain.isCave(floor) ? 0 : -64;
     }
 
     @Override

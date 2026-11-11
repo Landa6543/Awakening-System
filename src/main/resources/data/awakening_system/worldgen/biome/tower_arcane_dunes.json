@@ -1,0 +1,10 @@
+{
+  "has_precipitation": false,
+  "temperature": 2,
+  "downfall": 0.0,
+  "effects": { "sky_color": 6965432, "fog_color": 12034783, "water_color": 8019920, "water_fog_color": 8019920, "grass_color": 12563818, "foliage_color": 11445082, "particle": { "options": { "type": "minecraft:portal" }, "probability": 0.004 } },
+  "spawners": {},
+  "spawn_costs": {},
+  "carvers": {},
+  "features": []
+}
