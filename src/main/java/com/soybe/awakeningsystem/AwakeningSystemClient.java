@@ -633,7 +633,6 @@ public final class AwakeningSystemClient {
         event.registerLayerDefinition(com.soybe.awakeningsystem.entity.client.RaidenPuppetModel.LAYER_LOCATION, com.soybe.awakeningsystem.entity.client.RaidenPuppetModel::createBodyLayer);
         event.registerLayerDefinition(com.soybe.awakeningsystem.entity.client.GoldenWolflordModel.LAYER_LOCATION, com.soybe.awakeningsystem.entity.client.GoldenWolflordModel::createBodyLayer);
         event.registerLayerDefinition(com.soybe.awakeningsystem.entity.client.SculkGolemModel.LAYER_LOCATION, com.soybe.awakeningsystem.entity.client.SculkGolemModel::createBodyLayer);
-        event.registerLayerDefinition(com.soybe.awakeningsystem.entity.client.ColossalSculkWardenModel.LAYER_LOCATION, com.soybe.awakeningsystem.entity.client.ColossalSculkWardenModel::createBodyLayer);
         event.registerLayerDefinition(com.soybe.awakeningsystem.entity.client.RuinGuardRenderer.LAYER_LOCATION, com.soybe.awakeningsystem.entity.client.RuinGuardModel::createBodyLayer);
         event.registerLayerDefinition(com.soybe.awakeningsystem.entity.client.RuinHunterRenderer.LAYER_LOCATION, com.soybe.awakeningsystem.entity.client.RuinHunterModel::createBodyLayer);
         event.registerLayerDefinition(com.soybe.awakeningsystem.entity.client.GlareModel.LAYER_LOCATION, com.soybe.awakeningsystem.entity.client.GlareModel::createBodyLayer);

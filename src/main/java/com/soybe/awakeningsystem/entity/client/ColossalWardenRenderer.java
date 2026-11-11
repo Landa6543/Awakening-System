@@ -1,34 +1,53 @@
 package com.soybe.awakeningsystem.entity.client;
 
 import com.mojang.blaze3d.vertex.PoseStack;
+import com.mojang.blaze3d.vertex.VertexConsumer;
 import com.soybe.awakeningsystem.AwakeningSystemMod;
 import com.soybe.awakeningsystem.entity.ColossalSculkWardenEntity;
+import net.minecraft.client.renderer.MultiBufferSource;
+import net.minecraft.client.renderer.RenderType;
 import net.minecraft.client.renderer.entity.EntityRendererProvider;
-import net.minecraft.client.renderer.entity.MobRenderer;
+import net.minecraft.client.renderer.texture.OverlayTexture;
 import net.minecraft.resources.ResourceLocation;
+import net.minecraft.util.Mth;
+import software.bernie.geckolib.cache.object.BakedGeoModel;
+import software.bernie.geckolib.renderer.GeoEntityRenderer;
+import software.bernie.geckolib.renderer.GeoRenderer;
+import software.bernie.geckolib.renderer.layer.GeoRenderLayer;
 
-/**
- * Renderer colosal para el Titán Colosal de Sculk (Piso 10).
- * Renderiza el modelo 3D con textura nativa y sin capas superpuestas para evitar Z-fighting / parpadeos.
- */
-public class ColossalWardenRenderer extends MobRenderer<ColossalSculkWardenEntity, ColossalSculkWardenModel> {
-
-    private static final ResourceLocation TEXTURE =
-            ResourceLocation.fromNamespaceAndPath(AwakeningSystemMod.MOD_ID, "textures/entity/colossal_sculk_warden.png");
+/** Draws the Titán Colosal de Sculk at titan size, with its soul core and spines glowing as it breathes. */
+public class ColossalWardenRenderer extends GeoEntityRenderer<ColossalSculkWardenEntity> {
 
     public ColossalWardenRenderer(EntityRendererProvider.Context context) {
-        super(context, new ColossalSculkWardenModel(context.bakeLayer(ColossalSculkWardenModel.LAYER_LOCATION)), 2.2F);
+        super(context, new ColossalSculkWardenModel());
+        this.shadowRadius = 2.4F;
+        withScale(1.55F);
+        addRenderLayer(new BreathingGlow(this));
     }
 
     @Override
-    protected void scale(ColossalSculkWardenEntity livingEntity, PoseStack poseStack, float partialTickTime) {
-        // Escala monumental del Titán (1.8x)
-        poseStack.scale(1.8F, 1.8F, 1.8F);
-        super.scale(livingEntity, poseStack, partialTickTime);
+    protected float getDeathMaxRotation(ColossalSculkWardenEntity animatable) {
+        return 0.0F;
     }
 
-    @Override
-    public ResourceLocation getTextureLocation(ColossalSculkWardenEntity entity) {
-        return TEXTURE;
+    /** The glow texture drawn again on top at full brightness, fading in and out with the breathing. */
+    static final class BreathingGlow extends GeoRenderLayer<ColossalSculkWardenEntity> {
+        private static final ResourceLocation GLOW = ResourceLocation.fromNamespaceAndPath(AwakeningSystemMod.MOD_ID, "textures/entity/mutant_warden_emissive.png");
+
+        BreathingGlow(GeoRenderer<ColossalSculkWardenEntity> renderer) {
+            super(renderer);
+        }
+
+        @Override
+        public void render(PoseStack poseStack, ColossalSculkWardenEntity animatable, BakedGeoModel bakedModel, RenderType renderType,
+                           MultiBufferSource bufferSource, VertexConsumer buffer, float partialTick, int packedLight, int packedOverlay) {
+            float wave = (Mth.sin((animatable.tickCount + partialTick) * 0.07F) + 1.0F) * 0.5F;
+            float strength = 0.35F + 0.65F * wave * wave;
+            int c = (int) (255 * strength);
+            int color = 0xFF000000 | (c << 16) | (c << 8) | c;
+            RenderType glow = RenderType.eyes(GLOW);
+            getRenderer().reRender(bakedModel, poseStack, bufferSource, animatable, glow, bufferSource.getBuffer(glow), partialTick,
+                    0xF000F0, OverlayTexture.NO_OVERLAY, color);
+        }
     }
 }
