@@ -325,7 +325,7 @@ public final class GreatTowerWorldManager {
             int spawnZ = layout.returnZ();
             int advX = layout.advanceX();
             int advZ = layout.advanceZ();
-            if (targetFloor != 10 && targetFloor != 20) {
+            if (targetFloor != 20) {
                // never arrive (or find the way up) in the middle of the sea
                int[] r = landNear(targetLevel, targetFloor * 2, spawnX, spawnZ);
                int[] a = landNear(targetLevel, targetFloor * 2 + 1, advX, advZ);
@@ -367,10 +367,10 @@ public final class GreatTowerWorldManager {
                }
             }
 
-            int groundY = targetFloor != 10 && targetFloor != 20
+            int groundY = targetFloor != 20
                ? findSafeGroundY(targetLevel, spawnX, spawnZ, targetFloor == 6 ? 64 : (targetFloor != 5 && targetFloor != 15 ? 64 : 32))
                : 28;
-            int groundYAdv = targetFloor != 10 && targetFloor != 20
+            int groundYAdv = targetFloor != 20
                ? findSafeGroundY(targetLevel, advX, advZ, targetFloor == 6 ? 64 : (targetFloor != 5 && targetFloor != 15 ? 64 : 32))
                : 28;
             buildThemedReturnPavilion(targetLevel, targetFloor, spawnX, groundY, spawnZ, layout.returnFacing());
@@ -790,8 +790,8 @@ public final class GreatTowerWorldManager {
       int floor = getFloorForPos(level, new BlockPos(minX, 64, minZ));
 
       // 1. Esculpido de cavernas para pisos subterráneos
-      // floor 5 has the mod's own cavern now; the old carving still makes floors 10, 15 and 20
-      if (floor == 10 || floor == 15 || floor == 20) {
+      // floors 5 and 10 have the mod's own terrain now; the old carving still makes floors 15 and 20
+      if (floor == 15 || floor == 20) {
          processSectorChunk(level, chunk);
       }
 
@@ -924,7 +924,7 @@ public static void processSectorChunk(ServerLevel level, ChunkAccess chunk) {
       if (isGreatTowerDimension(level)) {
          ensureWorldBorder(level);
          int floor = getFloorForPos(level, new BlockPos(chunk.getPos().getMinBlockX(), 64, chunk.getPos().getMinBlockZ()));
-         if (floor == 10 || floor == 15 || floor == 20) {
+         if (floor == 15 || floor == 20) {
             ChunkPos cPos = chunk.getPos();
             int minX = cPos.getMinBlockX();
             int maxX = cPos.getMaxBlockX();
@@ -1140,7 +1140,7 @@ public static void processSectorChunk(ServerLevel level, ChunkAccess chunk) {
          if (inVoid || aboveCeiling) {
             GreatTowerWorldManager.FloorLayout layout = getLayout(floor);
             int groundY = floor == 10
-               ? 28
+               ? 31
                : findSafeGroundY(player.serverLevel(), landNear(player.serverLevel(), floor * 2, layout.returnX(), layout.returnZ())[0], landNear(player.serverLevel(), floor * 2, layout.returnX(), layout.returnZ())[1], floor == 6 ? 64 : (floor == 5 ? 32 : 64));
             int[] land = floor == 10 ? new int[]{layout.returnX(), layout.returnZ()} : landNear(player.serverLevel(), floor * 2, layout.returnX(), layout.returnZ());
             player.teleportTo((double)land[0] + 0.5, (double)groundY, (double)land[1] + 0.5);
@@ -1401,6 +1401,8 @@ public static void processSectorChunk(ServerLevel level, ChunkAccess chunk) {
    }
 
    public static int buildFloor10ArenaAndBridges(ServerLevel level) {
+      // the titan's vault, arena and causeways are made by the floor's own terrain generator now
+      if (level != null) return 30;
       int arenaY = 28;
       BlockPos checkPos = new BlockPos(0, arenaY, 0);
       if (level.getBlockState(checkPos).is(Blocks.SCULK_CATALYST)) {

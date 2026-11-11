@@ -342,7 +342,7 @@ public final class GreatTowerSite {
                     ServerLevel lvl = server.getLevel(com.soybe.awakeningsystem.tower.GreatTowerWorldManager.getDimensionForFloor(fl));
                     if (lvl == null) return 0;
                     var layout = com.soybe.awakeningsystem.tower.GreatTowerWorldManager.getLayout(fl);
-                    int x = layout.returnX() / 2, z = layout.returnZ() / 2;
+                    int x = fl == 10 ? 0 : layout.returnX() / 2, z = fl == 10 ? 0 : layout.returnZ() / 2;
                     lvl.getChunk(x >> 4, z >> 4);
                     BlockPos at = new BlockPos(x, com.soybe.awakeningsystem.tower.terrain.TowerFloorTerrain.isCustom(fl)
                             ? com.soybe.awakeningsystem.tower.terrain.TowerFloorTerrain.height(fl, x, z) + 1 : lvl.getHeight(Heightmap.Types.MOTION_BLOCKING_NO_LEAVES, x, z), z);

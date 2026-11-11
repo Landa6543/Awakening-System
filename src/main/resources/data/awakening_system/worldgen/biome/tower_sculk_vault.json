@@ -1,0 +1,10 @@
+{
+  "has_precipitation": false,
+  "temperature": 0.8,
+  "downfall": 0.0,
+  "effects": { "sky_color": 1052688, "fog_color": 1316380, "water_color": 2108480, "water_fog_color": 2108480, "grass_color": 4013373, "foliage_color": 3289650, "particle": { "options": { "type": "minecraft:sculk_soul" }, "probability": 0.002 } },
+  "spawners": {},
+  "spawn_costs": {},
+  "carvers": {},
+  "features": []
+}
