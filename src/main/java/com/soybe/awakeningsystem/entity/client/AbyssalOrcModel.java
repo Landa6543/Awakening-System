@@ -40,33 +40,41 @@ public class AbyssalOrcModel extends HierarchicalModel<AbyssalOrcEntity> {
         MeshDefinition mesh = new MeshDefinition();
         PartDefinition root = mesh.getRoot();
 
-        PartDefinition head = root.addOrReplaceChild("head", CubeListBuilder.create()
-                .texOffs(0, 0).addBox(-4.5F, -8.0F, -4.0F, 9.0F, 8.0F, 8.0F, new CubeDeformation(0.0F))
-                .texOffs(36, 0).addBox(-3.5F, -3.0F, -4.5F, 2.0F, 3.0F, 2.0F, new CubeDeformation(0.0F))
-                .texOffs(36, 0).mirror().addBox(1.5F, -3.0F, -4.5F, 2.0F, 3.0F, 2.0F, new CubeDeformation(0.0F)),
+        // head: heavy skull, pointed ears, a wild black mane and two tusks rising from the lower jaw
+        root.addOrReplaceChild("head", CubeListBuilder.create()
+                .texOffs(0, 0).addBox(-4.5F, -8.0F, -4.0F, 9.0F, 8.0F, 8.0F)
+                .texOffs(34, 0).addBox(-5.5F, -9.5F, -1.5F, 11.0F, 9.0F, 6.0F)
+                .texOffs(68, 0).addBox(-3.5F, -4.0F, -4.8F, 1.0F, 3.0F, 1.0F)
+                .texOffs(68, 0).mirror().addBox(2.5F, -4.0F, -4.8F, 1.0F, 3.0F, 1.0F)
+                .texOffs(72, 0).addBox(-6.5F, -6.5F, -1.0F, 2.0F, 3.0F, 1.0F)
+                .texOffs(72, 0).mirror().addBox(4.5F, -6.5F, -1.0F, 2.0F, 3.0F, 1.0F),
                 PartPose.offset(0.0F, -2.0F, -1.0F));
 
+        // body: broad bare chest, a skull on a cord and a dark loincloth
         root.addOrReplaceChild("body", CubeListBuilder.create()
-                .texOffs(0, 20).addBox(-5.5F, 0.0F, -3.0F, 11.0F, 13.0F, 6.0F, new CubeDeformation(0.3F)),
+                .texOffs(0, 16).addBox(-6.5F, 0.0F, -3.5F, 13.0F, 13.0F, 7.0F)
+                .texOffs(80, 0).addBox(-1.5F, 1.5F, -4.5F, 3.0F, 3.0F, 1.0F)
+                .texOffs(88, 0).addBox(-3.0F, 12.0F, -4.0F, 6.0F, 7.0F, 1.0F),
                 PartPose.offset(0.0F, -2.0F, 0.0F));
 
+        // arms: thick, bandaged forearms, a fur mantle over each shoulder
         root.addOrReplaceChild("right_arm", CubeListBuilder.create()
-                .texOffs(38, 20).addBox(-4.0F, -2.5F, -2.5F, 5.0F, 13.0F, 5.0F, new CubeDeformation(0.0F))
-                .texOffs(82, 0).addBox(-5.5F, -4.0F, -3.0F, 6.0F, 5.0F, 6.0F, new CubeDeformation(0.2F)),
-                PartPose.offset(-6.5F, 0.0F, 0.0F));
+                .texOffs(40, 16).addBox(-4.5F, -2.5F, -3.0F, 6.0F, 14.0F, 6.0F)
+                .texOffs(88, 16).addBox(-5.5F, -4.0F, -3.5F, 7.0F, 4.0F, 7.0F, new CubeDeformation(0.3F)),
+                PartPose.offset(-7.5F, 0.0F, 0.0F));
 
         root.addOrReplaceChild("left_arm", CubeListBuilder.create()
-                .texOffs(60, 20).addBox(-1.0F, -2.5F, -2.5F, 5.0F, 13.0F, 5.0F, new CubeDeformation(0.0F))
-                .texOffs(82, 14).mirror().addBox(-0.5F, -4.0F, -3.0F, 6.0F, 5.0F, 6.0F, new CubeDeformation(0.2F)),
-                PartPose.offset(6.5F, 0.0F, 0.0F));
+                .texOffs(64, 16).addBox(-1.5F, -2.5F, -3.0F, 6.0F, 14.0F, 6.0F)
+                .texOffs(88, 28).addBox(-1.5F, -4.0F, -3.5F, 7.0F, 4.0F, 7.0F, new CubeDeformation(0.3F)),
+                PartPose.offset(7.5F, 0.0F, 0.0F));
 
         root.addOrReplaceChild("right_leg", CubeListBuilder.create()
-                .texOffs(0, 42).addBox(-2.5F, 0.0F, -2.5F, 5.0F, 13.0F, 5.0F, new CubeDeformation(0.0F)),
-                PartPose.offset(-2.8F, 11.0F, 0.0F));
+                .texOffs(0, 40).addBox(-3.0F, 0.0F, -3.0F, 6.0F, 13.0F, 6.0F),
+                PartPose.offset(-3.2F, 11.0F, 0.0F));
 
         root.addOrReplaceChild("left_leg", CubeListBuilder.create()
-                .texOffs(22, 42).addBox(-2.5F, 0.0F, -2.5F, 5.0F, 13.0F, 5.0F, new CubeDeformation(0.0F)),
-                PartPose.offset(2.8F, 11.0F, 0.0F));
+                .texOffs(24, 40).addBox(-3.0F, 0.0F, -3.0F, 6.0F, 13.0F, 6.0F),
+                PartPose.offset(3.2F, 11.0F, 0.0F));
 
         return LayerDefinition.create(mesh, 128, 128);
     }
