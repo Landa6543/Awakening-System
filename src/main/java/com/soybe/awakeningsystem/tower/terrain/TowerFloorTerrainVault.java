@@ -1,46 +1,59 @@
 package com.soybe.awakeningsystem.tower.terrain;
 
+import com.soybe.awakeningsystem.block.SystemBlocks;
+import com.soybe.awakeningsystem.block.TeyvatCrystalBlock;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
 import net.minecraft.world.level.block.Blocks;
 import net.minecraft.world.level.block.LanternBlock;
+import net.minecraft.world.level.block.PointedDripstoneBlock;
 import net.minecraft.world.level.block.RotatedPillarBlock;
 import net.minecraft.world.level.block.state.BlockState;
+import net.minecraft.world.level.block.state.properties.DripstoneThickness;
 import net.minecraft.world.level.chunk.ChunkAccess;
 
 import static com.soybe.awakeningsystem.tower.terrain.TowerFloorTerrain.hash;
 import static com.soybe.awakeningsystem.tower.terrain.TowerFloorTerrain.n;
 
 /**
- * Floor 10, the Monumental Vault of the Colossal Sculk Titan (boss floor): a vast dark vault with sculk
- * creeping over its deepslate floor and colossal brick columns holding up the roof. In the middle stands
- * the titan's arena, a raised round platform ringed by a low wall and soul lanterns, under giant bone ribs
- * arching across it; two raised causeways on piers lead from it over the chasm to the entrance (x -140)
- * and the way up (x +140).
+ * Floor 10, the Monumental Vault of the Colossal Sculk Titan (boss floor): a vast cave to explore, its
+ * rolling floor patched with sculk, moss and soul soil, colossal brick columns holding up the roof, giant
+ * stalactites and stalagmites and mana crystals on floor and roof. The player arrives in one corner and the
+ * way up is in the opposite one; in the middle rises the titan's arena, a round platform reached by four
+ * ramps, with a low parapet and soul lanterns, under giant bone ribs arching across it.
  */
 final class TowerFloorTerrainVault {
     private TowerFloorTerrainVault() {}
 
-    static final int DECK = 30;                       // the arena and causeways' walking level
-    private static final int ARENA_R = 30, WAY_HALF = 3, WAY_END = 150, END_R = 11;
+    static final int DECK = 30;                       // the arena's floor
+    private static final int ARENA_R = 30, RAMP_HALF = 2;
 
     static boolean onArena(int x, int z) {
         return x * x + z * z <= ARENA_R * ARENA_R;
     }
 
-    static boolean onWay(int x, int z) {
-        boolean causeway = Math.abs(z) <= WAY_HALF && Math.abs(x) <= WAY_END;
-        boolean landing = (x + 140) * (x + 140) + z * z <= END_R * END_R || (x - 140) * (x - 140) + z * z <= END_R * END_R;
-        return causeway || landing;
+    private static int caveGround(int x, int z) {
+        return 14 + (int) Math.round(7 * n(10, x, z, 0.01, 3) + 3 * n(10, x + 40, z, 0.06, 1));
+    }
+
+    /** Height of a ramp running out from the arena along an axis, or -1 off the ramps. */
+    private static int ramp(int x, int z) {
+        int along, across;
+        if (Math.abs(z) <= RAMP_HALF && Math.abs(x) > ARENA_R - 1) { along = Math.abs(x); across = z; }
+        else if (Math.abs(x) <= RAMP_HALF && Math.abs(z) > ARENA_R - 1) { along = Math.abs(z); across = x; }
+        else return -1;
+        return DECK - (along - ARENA_R + 1) / 2;
     }
 
     static int height(int x, int z) {
-        if (onArena(x, z) || onWay(x, z)) return DECK;
-        return 18 + (int) Math.round(6 * n(10, x, z, 0.01, 3) + 2 * n(10, x + 40, z, 0.06, 1));
+        if (onArena(x, z)) return DECK;
+        int g = caveGround(x, z);
+        int r = ramp(x, z);
+        return Math.max(g, r);
     }
 
     private static int roof(int x, int z) {
-        return 112 + (int) Math.round(6 * n(10, x + 900, z, 0.008, 2));
+        return 104 + (int) Math.round(8 * n(10, x + 900, z, 0.008, 2));
     }
 
     static void fill(ChunkAccess chunk) {
@@ -50,36 +63,50 @@ final class TowerFloorTerrainVault {
         for (int dx = 0; dx < 16; dx++) {
             for (int dz = 0; dz < 16; dz++) {
                 int x = x0 + dx, z = z0 + dz;
-                int ground = 18 + (int) Math.round(6 * n(10, x, z, 0.01, 3) + 2 * n(10, x + 40, z, 0.06, 1));
+                int ground = caveGround(x, z);
                 int top = roof(x, z);
                 for (int y = 0; y <= 127; y++) {
                     BlockState s;
                     if (y <= 1 || y >= 126) s = Blocks.BEDROCK.defaultBlockState();
                     else if (y <= ground) s = y == ground ? groundTop(x, z) : (y > ground - 3 ? Blocks.DEEPSLATE.defaultBlockState() : Blocks.COBBLED_DEEPSLATE.defaultBlockState());
-                    else if (y >= top) s = hash(10, x, z, y) < 0.006 ? Blocks.SCULK_CATALYST.defaultBlockState() : Blocks.DEEPSLATE.defaultBlockState();
+                    else if (y >= top) s = hash(10, x, z, y) < 0.008 ? Blocks.SCULK_CATALYST.defaultBlockState() : Blocks.DEEPSLATE.defaultBlockState();
                     else s = Blocks.AIR.defaultBlockState();
                     chunk.setBlockState(p.set(x, y, z), s, false);
                 }
                 if (onArena(x, z)) arenaColumn(w, x, z, ground);
-                else if (onWay(x, z)) wayColumn(w, x, z, ground);
+                else {
+                    int r = ramp(x, z);
+                    if (r > ground) rampColumn(w, x, z, ground, r);
+                }
             }
         }
-        // colossal columns holding up the vault, kept clear of the arena and the causeways
-        scatter(w, x0, z0, 34, 8, 0.6, 10, (wr, x, z, r) -> {
-            if (x * x + z * z < 46 * 46 || Math.abs(z) < 12) return;
+        // colossal columns, kept clear of the arena and its ramps
+        scatter(w, x0, z0, 36, 8, 0.55, 10, (wr, x, z, r) -> {
+            if (x * x + z * z < 44 * 44 || Math.abs(x) < 9 || Math.abs(z) < 9) return;
             column(wr, x, z, r);
         });
+        scatter(w, x0, z0, 10, 3, 0.45, 20, (wr, x, z, r) -> { if (!near(x, z)) drip(wr, x, roof(x, z) - 1, z, r, true); });
+        scatter(w, x0, z0, 12, 3, 0.35, 30, (wr, x, z, r) -> { if (!near(x, z)) drip(wr, x, height(x, z) + 1, z, r, false); });
+        scatter(w, x0, z0, 4, 0, 0.3, 40, (wr, x, z, r) -> { if (!onArena(x, z)) crystal(wr, x, height(x, z) + 1, z, r, Direction.UP); });
+        scatter(w, x0, z0, 5, 0, 0.22, 50, (wr, x, z, r) -> crystal(wr, x, roof(x, z) - 1, z, r, Direction.DOWN));
         ribs(w);
+    }
+
+    /** Keeps big rock out of the arena, its ramps and the corners where the portals stand. */
+    private static boolean near(int x, int z) {
+        return x * x + z * z < 40 * 40 || ramp(x, z) >= 0
+                || (x + 250) * (x + 250) + (z + 250) * (z + 250) < 14 * 14 || (x - 250) * (x - 250) + (z - 250) * (z - 250) < 14 * 14;
     }
 
     private static BlockState groundTop(int x, int z) {
         double v = n(10, x, z, 0.05, 2);
-        if (v > 0.25) return Blocks.SCULK.defaultBlockState();
-        if (v < -0.5) return Blocks.SOUL_SOIL.defaultBlockState();
+        if (v > 0.3) return Blocks.SCULK.defaultBlockState();
+        if (v < -0.55) return Blocks.SOUL_SOIL.defaultBlockState();
+        if (v < -0.3) return Blocks.MOSS_BLOCK.defaultBlockState();
         return Blocks.DEEPSLATE_TILES.defaultBlockState();
     }
 
-    /** The arena: solid down to the ground, rings in its floor, the titan's seal, a low wall and lanterns. */
+    /** The arena: solid down to the ground, rings in its floor, the titan's seal, a low parapet and lanterns. */
     private static void arenaColumn(TowerFloorTerrain.Writer w, int x, int z, int ground) {
         double d = Math.sqrt(x * x + z * z);
         for (int y = ground + 1; y < DECK; y++) w.force(x, y, z, d > ARENA_R - 1.5 ? Blocks.DEEPSLATE_BRICKS.defaultBlockState() : Blocks.COBBLED_DEEPSLATE.defaultBlockState());
@@ -90,29 +117,24 @@ final class TowerFloorTerrainVault {
         else if (d > ARENA_R - 1.5) f = Blocks.REINFORCED_DEEPSLATE.defaultBlockState();
         else f = ((int) d) % 2 == 0 ? Blocks.POLISHED_DEEPSLATE.defaultBlockState() : Blocks.DEEPSLATE_TILES.defaultBlockState();
         w.force(x, DECK, z, f);
-        if (d > ARENA_R - 1.5 && Math.abs(z) > WAY_HALF + 1) {
+        // a solid parapet (no wall posts), open where the ramps arrive
+        boolean rampGap = Math.abs(x) <= RAMP_HALF + 1 || Math.abs(z) <= RAMP_HALF + 1;
+        if (d > ARENA_R - 1.5 && !rampGap) {
             double a = Math.toDegrees(Math.atan2(z, x)) + 360;
             boolean post = ((int) a) % 30 < 4;
-            w.force(x, DECK + 1, z, post ? Blocks.DEEPSLATE_BRICKS.defaultBlockState() : Blocks.DEEPSLATE_BRICK_WALL.defaultBlockState());
+            w.force(x, DECK + 1, z, Blocks.DEEPSLATE_BRICKS.defaultBlockState());
             if (post) {
-                w.force(x, DECK + 2, z, Blocks.DEEPSLATE_BRICKS.defaultBlockState());
+                w.force(x, DECK + 2, z, Blocks.CHISELED_DEEPSLATE.defaultBlockState());
                 w.force(x, DECK + 3, z, Blocks.SOUL_LANTERN.defaultBlockState());
             }
         }
     }
 
-    /** A causeway: a deck on piers every twelve blocks, with railings and lanterns. */
-    private static void wayColumn(TowerFloorTerrain.Writer w, int x, int z, int ground) {
-        boolean landing = Math.abs(z) > WAY_HALF || Math.abs(Math.abs(x) - 140) <= END_R;
-        boolean pier = landing || Math.floorMod(x, 12) <= 1;
-        for (int y = ground + 1; y < DECK - 1; y++) if (pier) w.force(x, y, z, Blocks.DEEPSLATE_BRICKS.defaultBlockState());
-        w.force(x, DECK - 1, z, Blocks.DEEPSLATE_BRICKS.defaultBlockState());
-        w.force(x, DECK, z, Math.abs(z) == WAY_HALF && !landing ? Blocks.POLISHED_DEEPSLATE.defaultBlockState() : Blocks.DEEPSLATE_TILES.defaultBlockState());
-        if (!landing && Math.abs(z) == WAY_HALF) {
-            boolean post = Math.floorMod(x, 12) == 0;
-            w.force(x, DECK + 1, z, post ? Blocks.DEEPSLATE_BRICKS.defaultBlockState() : Blocks.DEEPSLATE_BRICK_WALL.defaultBlockState());
-            if (post) w.force(x, DECK + 2, z, Blocks.SOUL_LANTERN.defaultBlockState());
-        }
+    /** A ramp of deepslate bricks sloping from the arena down to the cave floor. */
+    private static void rampColumn(TowerFloorTerrain.Writer w, int x, int z, int ground, int top) {
+        boolean edge = (Math.abs(z) <= RAMP_HALF ? Math.abs(z) : Math.abs(x)) == RAMP_HALF;
+        for (int y = ground + 1; y <= top; y++)
+            w.force(x, y, z, y == top ? (edge ? Blocks.POLISHED_DEEPSLATE.defaultBlockState() : Blocks.DEEPSLATE_TILES.defaultBlockState()) : Blocks.DEEPSLATE_BRICKS.defaultBlockState());
     }
 
     private interface Feature { void place(TowerFloorTerrain.Writer w, int x, int z, double r); }
@@ -123,14 +145,16 @@ final class TowerFloorTerrainVault {
         for (int a = c0; a <= c1; a++)
             for (int b = d0; b <= d1; b++) {
                 if (hash(10, a, b, salt) > chance) continue;
-                f.place(w, a * cell + 6 + (int) (hash(10, a, b, salt + 1) * (cell - 12)), b * cell + 6 + (int) (hash(10, a, b, salt + 2) * (cell - 12)), hash(10, a, b, salt + 3));
+                int span = Math.max(1, cell - 2);
+                f.place(w, a * cell + 1 + (int) (hash(10, a, b, salt + 1) * span), b * cell + 1 + (int) (hash(10, a, b, salt + 2) * span), hash(10, a, b, salt + 3));
             }
     }
 
     /** A colossal column of deepslate bricks from floor to roof, banded, with sculk creeping up its foot. */
     private static void column(TowerFloorTerrain.Writer w, int x, int z, double r) {
+        if (near(x, z)) return;
         int half = 2 + (r > 0.5 ? 1 : 0);
-        int bottom = height(x, z) - 1, top = roof(x, z) + 1;
+        int bottom = caveGround(x, z) - 1, top = roof(x, z) + 1;
         for (int y = bottom; y <= top; y++) {
             for (int dx = -half - 1; dx <= half + 1; dx++)
                 for (int dz = -half - 1; dz <= half + 1; dz++) {
@@ -143,13 +167,41 @@ final class TowerFloorTerrainVault {
                     w.force(x + dx, y, z + dz, s);
                 }
         }
-        w.put(x + half + 1, bottom + 6, z, Blocks.SOUL_LANTERN.defaultBlockState().setValue(LanternBlock.HANGING, false));
+        w.put(x + half + 1, bottom + 7, z, Blocks.SOUL_LANTERN.defaultBlockState().setValue(LanternBlock.HANGING, false));
     }
 
-    /** Three giant bone ribs arching over the arena from rim to rim: the titan's ribcage. */
+    /** A giant stalactite (from the roof) or stalagmite (from the floor) of deepslate and dripstone. */
+    private static void drip(TowerFloorTerrain.Writer w, int x, int y, int z, double r, boolean down) {
+        int len = 5 + (int) (r * 14);
+        double rad = 1.0 + r * 2.0;
+        int step = down ? -1 : 1;
+        for (int k = 0; k < len; k++) {
+            double rr = rad * (1.0 - (double) k / len);
+            int ri = (int) Math.ceil(rr);
+            for (int dx = -ri; dx <= ri; dx++)
+                for (int dz = -ri; dz <= ri; dz++)
+                    if (dx * dx + dz * dz <= rr * rr)
+                        w.put(x + dx, y + k * step, z + dz, k < len / 3 ? Blocks.DEEPSLATE.defaultBlockState() : Blocks.DRIPSTONE_BLOCK.defaultBlockState());
+        }
+        Direction tip = down ? Direction.DOWN : Direction.UP;
+        w.put(x, y + len * step, z, Blocks.POINTED_DRIPSTONE.defaultBlockState().setValue(PointedDripstoneBlock.TIP_DIRECTION, tip)
+                .setValue(PointedDripstoneBlock.THICKNESS, DripstoneThickness.TIP));
+    }
+
+    /** Mana crystals of the vault: rank C to A. */
+    private static void crystal(TowerFloorTerrain.Writer w, int x, int y, int z, double r, Direction facing) {
+        BlockState c;
+        if (r < 0.55) c = SystemBlocks.MANA_CRYSTAL_CLUSTER_C.get().defaultBlockState();
+        else if (r < 0.88) c = SystemBlocks.MANA_CRYSTAL_CLUSTER_B.get().defaultBlockState();
+        else c = SystemBlocks.MANA_CRYSTAL_CLUSTER_A.get().defaultBlockState();
+        if (c.hasProperty(TeyvatCrystalBlock.FACING)) c = c.setValue(TeyvatCrystalBlock.FACING, facing);
+        w.put(x, y, z, c);
+    }
+
+    /** Three giant bone ribs arching over the arena from rim to rim, joined by a spine: the titan's ribcage. */
     private static void ribs(TowerFloorTerrain.Writer w) {
         for (int k = -1; k <= 1; k++) {
-            int zOff = k * 11;
+            int zOff = k * 11 + 5;                 // off the ramp running along z = 0
             double span = Math.sqrt(ARENA_R * ARENA_R - zOff * zOff) - 2;
             for (int i = 0; i <= 180; i++) {
                 double t = Math.toRadians(i);
@@ -160,7 +212,6 @@ final class TowerFloorTerrainVault {
                         w.force(x, y + ty, zOff + tz, Blocks.BONE_BLOCK.defaultBlockState().setValue(RotatedPillarBlock.AXIS, Direction.Axis.X));
             }
         }
-        // the spine running along the top of the ribs
-        for (int z = -11; z <= 12; z++) w.force(0, DECK + 37, z, Blocks.BONE_BLOCK.defaultBlockState().setValue(RotatedPillarBlock.AXIS, Direction.Axis.Z));
+        for (int z = -6; z <= 17; z++) w.force(0, DECK + 37, z, Blocks.BONE_BLOCK.defaultBlockState().setValue(RotatedPillarBlock.AXIS, Direction.Axis.Z));
     }
 }

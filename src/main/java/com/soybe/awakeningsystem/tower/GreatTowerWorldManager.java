@@ -556,11 +556,9 @@ public final class GreatTowerWorldManager {
             if (f != null) level.setBlock(new BlockPos(x + dx, groundY - 1, z + dz), f, 2);
          }
       }
-      // the gate (drawn by the portal itself) two blocks behind the centre, with a low fire on each side
+      // the gate (drawn by the portal itself) two blocks behind the centre
       int gx = x - facing.getStepX() * 2, gz = z - facing.getStepZ() * 2;
       int ux = facing.getAxis() == Axis.X ? 0 : 1, uz = facing.getAxis() == Axis.X ? 1 : 0;
-      for (int side = -1; side <= 1; side += 2)
-         level.setBlock(new BlockPos(gx + side * 3 * ux, groundY, gz + side * 3 * uz), Blocks.CAMPFIRE.defaultBlockState(), 2);
       BlockState portal = SystemBlocks.ASCENSION_PORTAL.get().defaultBlockState()
          .setValue(AscensionPortalBlock.FACING, facing)
          .setValue(AscensionPortalBlock.AXIS, facing.getAxis() == Axis.X ? Axis.Z : Axis.X)
@@ -882,7 +880,7 @@ public final class GreatTowerWorldManager {
    }
 
    private static void populateChunkMobs(ServerLevel level, ChunkAccess chunk, int floor) {
-      if (floor == 10 || floor == 11 || floor == 20) return;
+      if (floor == 11 || floor == 20) return;
       ChunkPos cPos = chunk.getPos();
       int cx = cPos.getMiddleBlockX();
       int cz = cPos.getMiddleBlockZ();
@@ -1316,6 +1314,8 @@ public static void processSectorChunk(ServerLevel level, ChunkAccess chunk) {
                      )
                );
          }
+         // floor 10: sculk golems roam the titan's vault
+         case 10 -> new SculkGolemEntity((EntityType)ModEntities.SCULK_GOLEM.get(), level);
          default -> null;
          case 11 -> null;
          case 12 -> {
@@ -1958,7 +1958,7 @@ public static void processSectorChunk(ServerLevel level, ChunkAccess chunk) {
          new GreatTowerWorldManager.FloorLayout(220, 40, Direction.WEST, -220, -40, Direction.EAST, "Meseta de la Tormenta Astral y Dunas Arcanas"),
          new GreatTowerWorldManager.FloorLayout(30, 220, Direction.SOUTH, -30, -220, Direction.NORTH, "Picos Glaciares de la Escarcha y Nieve Boreal"),
          new GreatTowerWorldManager.FloorLayout(-180, -180, Direction.SOUTH, 190, 190, Direction.NORTH, "Santuario Sagrado del Flor de Ciruelo y Cerezos"),
-         new GreatTowerWorldManager.FloorLayout(-140, 0, Direction.EAST, 140, 0, Direction.WEST, "Bóveda Monumental del Titán Colosal de Sculk [PISO DE JEFE]"),
+         new GreatTowerWorldManager.FloorLayout(-250, -250, Direction.SOUTH, 250, 250, Direction.NORTH, "Bóveda Monumental del Titán Colosal de Sculk [PISO DE JEFE]"),
          new GreatTowerWorldManager.FloorLayout(
             -180, -180, Direction.SOUTH, 180, 180, Direction.NORTH, "Aldea Serena de los Primeros Ascendidos [PISO PACIFICO]"
          ),
