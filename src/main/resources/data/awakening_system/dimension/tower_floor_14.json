@@ -1,11 +1,8 @@
 {
   "type": "awakening_system:tower_floor_14",
   "generator": {
-    "type": "minecraft:noise",
-    "settings": "minecraft:overworld",
-    "biome_source": {
-      "type": "minecraft:fixed",
-      "biome": "minecraft:dark_forest"
-    }
+    "type": "awakening_system:tower_floor",
+    "floor": 14,
+    "biome_source": { "type": "minecraft:fixed", "biome": "awakening_system:tower_shadow_forest" }
   }
 }

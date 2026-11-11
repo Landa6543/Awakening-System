@@ -47,17 +47,18 @@ public final class TowerFloorTerrain {
 
     // ── heights ──────────────────────────────────────────────────────────────
 
-    /** Floors whose land this generator makes (1-10; floor 10 is the titan's vault with its arena). */
+    /** Floors whose land this generator makes (1-15; floor 10 is the titan's vault with its arena). */
     public static boolean isCustom(int floor) {
-        return floor >= 1 && floor <= 10;
+        return floor >= 1 && floor <= 15;
     }
 
     /** Floors that are caverns under a rock ceiling (their world is 128 blocks tall, from 0). */
     public static boolean isCave(int floor) {
-        return floor == 5 || floor == 6 || floor == 10;
+        return floor == 5 || floor == 6 || floor == 10 || floor == 15;
     }
 
     public static int height(int floor, int x, int z) {
+        if (floor >= 11) return TowerFloorTerrainHigh.height(floor, x, z);
         if (floor == 10) return TowerFloorTerrainVault.height(x, z);
         if (floor >= 5) return TowerFloorTerrainDeep.height(floor, x, z);
         return switch (floor) {
@@ -104,6 +105,10 @@ public final class TowerFloorTerrain {
     // ── filling a chunk ──────────────────────────────────────────────────────
 
     public static void fill(int floor, ChunkAccess chunk) {
+        if (floor >= 11) {
+            TowerFloorTerrainHigh.fill(floor, chunk);
+            return;
+        }
         if (floor == 10) {
             TowerFloorTerrainVault.fill(chunk);
             return;

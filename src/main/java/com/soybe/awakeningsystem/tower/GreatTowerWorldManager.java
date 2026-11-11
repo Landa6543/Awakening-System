@@ -788,8 +788,8 @@ public final class GreatTowerWorldManager {
       int floor = getFloorForPos(level, new BlockPos(minX, 64, minZ));
 
       // 1. Esculpido de cavernas para pisos subterráneos
-      // floors 5 and 10 have the mod's own terrain now; the old carving still makes floors 15 and 20
-      if (floor == 15 || floor == 20) {
+      // floors 1-15 have the mod's own terrain now; the old carving only makes floor 20
+      if (floor == 20) {
          processSectorChunk(level, chunk);
       }
 
@@ -922,7 +922,7 @@ public static void processSectorChunk(ServerLevel level, ChunkAccess chunk) {
       if (isGreatTowerDimension(level)) {
          ensureWorldBorder(level);
          int floor = getFloorForPos(level, new BlockPos(chunk.getPos().getMinBlockX(), 64, chunk.getPos().getMinBlockZ()));
-         if (floor == 15 || floor == 20) {
+         if (floor == 20) {
             ChunkPos cPos = chunk.getPos();
             int minX = cPos.getMinBlockX();
             int maxX = cPos.getMaxBlockX();

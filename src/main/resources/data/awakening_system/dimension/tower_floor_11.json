@@ -1,11 +1,8 @@
 {
   "type": "awakening_system:tower_floor_11",
   "generator": {
-    "type": "minecraft:noise",
-    "settings": "minecraft:overworld",
-    "biome_source": {
-      "type": "minecraft:fixed",
-      "biome": "minecraft:meadow"
-    }
+    "type": "awakening_system:tower_floor",
+    "floor": 11,
+    "biome_source": { "type": "minecraft:fixed", "biome": "awakening_system:tower_serene_meadow" }
   }
 }
