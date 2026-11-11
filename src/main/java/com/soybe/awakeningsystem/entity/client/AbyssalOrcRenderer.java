@@ -7,8 +7,10 @@ import net.minecraft.client.renderer.entity.MobRenderer;
 import net.minecraft.resources.ResourceLocation;
 
 public class AbyssalOrcRenderer extends MobRenderer<AbyssalOrcEntity, AbyssalOrcModel> {
-    private static final ResourceLocation TEXTURE =
+    private static final ResourceLocation RED =
             ResourceLocation.fromNamespaceAndPath(AwakeningSystemMod.MOD_ID, "textures/entity/abyssal_orc.png");
+    private static final ResourceLocation GREEN =
+            ResourceLocation.fromNamespaceAndPath(AwakeningSystemMod.MOD_ID, "textures/entity/abyssal_orc_green.png");
 
     public AbyssalOrcRenderer(EntityRendererProvider.Context context) {
         super(context, new AbyssalOrcModel(context.bakeLayer(AbyssalOrcModel.LAYER_LOCATION)), 0.95F);
@@ -30,14 +32,15 @@ public class AbyssalOrcRenderer extends MobRenderer<AbyssalOrcEntity, AbyssalOrc
         }
     }
 
-    /** Blood orcs tower over a player: about three blocks tall. */
+    /** The model itself is a hulking brute; a little extra size makes it about three blocks tall. */
     @Override
     protected void scale(AbyssalOrcEntity entity, com.mojang.blaze3d.vertex.PoseStack poseStack, float partialTick) {
-        poseStack.scale(1.4F, 1.4F, 1.4F);
+        poseStack.scale(1.08F, 1.08F, 1.08F);
     }
 
     @Override
+    /** Each orc is red (cream stripes) or green (dark-red stripes), fixed by its id so it never changes. */
     public ResourceLocation getTextureLocation(AbyssalOrcEntity entity) {
-        return TEXTURE;
+        return (entity.getUUID().getLeastSignificantBits() & 1L) == 0L ? RED : GREEN;
     }
 }
