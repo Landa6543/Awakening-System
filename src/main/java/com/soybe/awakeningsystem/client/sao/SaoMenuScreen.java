@@ -58,16 +58,16 @@ public class SaoMenuScreen extends Screen {
         categories.add(new Category(PERSON, List.of(
                 new Entry(tab("status"), BARS, () -> minecraft.setScreen(new SaoPanelScreen(this, SaoPanelScreen.Section.STATUS))),
                 new Entry(tab("skills"), SWORD, () -> minecraft.setScreen(new SaoPanelScreen(this, SaoPanelScreen.Section.SKILLS))),
-                new Entry(tab("artifacts"), SHIELD, () -> openTab(7)),
+                new Entry(tab("artifacts"), SHIELD, () -> minecraft.setScreen(new SaoPanelScreen(this, SaoPanelScreen.Section.ARTIFACTS))),
                 new Entry(tab("titles"), STAR, () -> minecraft.setScreen(new SaoPanelScreen(this, SaoPanelScreen.Section.TITLES))))));
         categories.add(new Category(PEOPLE, List.of(
-                new Entry(tab("ranking"), TROPHY, () -> openTab(6)),
+                new Entry(tab("ranking"), TROPHY, () -> minecraft.setScreen(new SaoPanelScreen(this, SaoPanelScreen.Section.RANKING))),
                 new Entry(tr("constellations", "Constellations"), CHAT, () -> minecraft.setScreen(new ConstellationChannelScreen(this))))));
         categories.add(new Category(SCROLL, List.of(
                 new Entry(tab("missions"), SCROLL, () -> minecraft.setScreen(new SaoPanelScreen(this, SaoPanelScreen.Section.MISSIONS))),
-                new Entry(tab("progress"), BARS, () -> openTab(5)))));
+                new Entry(tab("progress"), BARS, () -> minecraft.setScreen(new SaoPanelScreen(this, SaoPanelScreen.Section.PROGRESS))))));
         categories.add(new Category(COIN, List.of(
-                new Entry(tab("shop"), COIN, () -> openTab(4)))));
+                new Entry(tab("shop"), COIN, () -> minecraft.setScreen(new SaoPanelScreen(this, SaoPanelScreen.Section.SHOP))))));
         categories.add(new Category(GEAR, List.of(
                 new Entry(tr("interface", "Interface"), GEAR, () -> minecraft.setScreen(new GuiConfigScreen(this))),
                 new Entry(tr("options", "Options"), GEAR, () -> minecraft.setScreen(new OptionsScreen(this, minecraft.options))),

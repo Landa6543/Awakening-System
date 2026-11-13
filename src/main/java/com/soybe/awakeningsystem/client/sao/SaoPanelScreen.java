@@ -27,7 +27,7 @@ import static com.soybe.awakeningsystem.client.sao.SaoDraw.*;
  * (daily training and the guild commission). They use the same actions as the normal windows.
  */
 public class SaoPanelScreen extends Screen {
-    public enum Section { STATUS, SKILLS, TITLES, MISSIONS }
+    public enum Section { STATUS, SKILLS, TITLES, MISSIONS, ARTIFACTS, RANKING, PROGRESS, SHOP }
 
     private static final String[] ATTRS = {"strength", "vitality", "agility", "perception", "intelligence", "willpower"};
     private static final String[] ATTR_NAMES = {"Strength", "Vitality", "Agility", "Perception", "Intelligence", "Willpower"};
@@ -90,6 +90,10 @@ public class SaoPanelScreen extends Screen {
             case SKILLS -> SWORD;
             case TITLES -> STAR;
             case MISSIONS -> SCROLL;
+            case ARTIFACTS -> SHIELD;
+            case RANKING -> TROPHY;
+            case PROGRESS -> BARS;
+            case SHOP -> COIN;
         };
         shinyDisc(g, x + 12, y + 11, 7.5F, ORANGE, a);
         icon(g, icon, x + 7, y + 6, alpha(WHITE, a));
@@ -104,6 +108,10 @@ public class SaoPanelScreen extends Screen {
             case SKILLS -> renderSkills(g, x, y, mouseX, mouseY, a);
             case TITLES -> renderTitles(g, x, y, mouseX, mouseY, a);
             case MISSIONS -> renderMissions(g, x, y, mouseX, mouseY, a);
+            case ARTIFACTS -> renderArtifacts(g, x, y, mouseX, mouseY, a);
+            case RANKING -> renderRanking(g, x, y, mouseX, mouseY, a);
+            case PROGRESS -> renderProgress(g, x, y, mouseX, mouseY, a);
+            case SHOP -> renderShop(g, x, y, mouseX, mouseY, a);
         }
     }
 
@@ -113,6 +121,10 @@ public class SaoPanelScreen extends Screen {
             case SKILLS -> "skills";
             case TITLES -> "titles";
             case MISSIONS -> "missions";
+            case ARTIFACTS -> "artifacts";
+            case RANKING -> "ranking";
+            case PROGRESS -> "progress";
+            case SHOP -> "shop";
         };
         String s = Component.translatable("awakening_system.screen.tab." + key).getString();
         return Component.literal(s.isEmpty() ? s : s.charAt(0) + s.substring(1).toLowerCase(Locale.ROOT));
@@ -355,6 +367,327 @@ public class SaoPanelScreen extends Screen {
         else if (d.isDailyHunterComplete()) claimButton(g, x + PW - 112, hy + 30, mouseX, mouseY, a);
     }
 
+    // ── Artifacts ────────────────────────────────────────────────────────────
+
+    private static final int ART_ROW = 22;
+
+    private List<int[]> equipmentInInventory() {
+        List<int[]> out = new ArrayList<>();
+        var p = Minecraft.getInstance().player;
+        if (p == null) return out;
+        for (int i = 0; i < p.getInventory().items.size(); i++) {
+            net.minecraft.world.item.ItemStack st = p.getInventory().getItem(i);
+            if (st.isEmpty()) continue;
+            boolean art = st.getItem() instanceof com.soybe.awakeningsystem.artifact.GenshinArtifactItem;
+            boolean cone = com.soybe.awakeningsystem.item.EquipmentSystemManager.isLightCone(st);
+            if (art || cone) out.add(new int[]{i, art ? 1 : 0});
+        }
+        return out;
+    }
+
+    private void renderArtifacts(GuiGraphics g, int x, int y, int mouseX, int mouseY, float a) {
+        SystemData d = data();
+        int ry0 = y + HEADER + 6;
+        for (int i = 0; i < 6; i++) {
+            int ry = ry0 + i * ART_ROW;
+            boolean cone = i == 5;
+            net.minecraft.world.item.ItemStack st = cone ? d.getEquippedLightCone() : d.getArtifact(i);
+            boolean hot = in(mouseX, mouseY, x + 10, ry, PW - 50, ART_ROW - 2);
+            Component label;
+            if (cone) label = st.isEmpty() ? tr("cone_empty", "Light cone: empty") : st.getHoverName();
+            else {
+                var type = com.soybe.awakeningsystem.artifact.ArtifactType.fromSlot(i);
+                label = st.isEmpty() ? type.getDisplayNameComponent().copy().append(Component.literal(" — ")).append(tr("empty", "empty")) : st.getHoverName();
+            }
+            row(g, this.font, x + 10, ry, PW - 50, ART_ROW - 2, Component.empty(), null, hot && !st.isEmpty(), a);
+            if (!st.isEmpty()) g.renderItem(st, x + 15, ry + 1);
+            else icon(g, cone ? STAR : SHIELD, x + 18, ry + 4, alpha(GREY_LIGHT, a));
+            Component shown = label;
+            String txt = this.font.plainSubstrByWidth(shown.getString(), PW - 130);
+            g.drawString(this.font, txt, x + 36, ry + 6, alpha(st.isEmpty() ? GREY_LIGHT : (hot ? WHITE : 0xFF4A4A52), a), false);
+            if (!st.isEmpty() && !cone) {
+                int lvl = com.soybe.awakeningsystem.artifact.GenshinArtifactItem.getLevel(st);
+                String lv = "+" + lvl;
+                g.drawString(this.font, lv, x + PW - 46 - this.font.width(lv), ry + 6, alpha(hot ? WHITE : ORANGE_DARK, a), false);
+                if (lvl < 20) roundButton(g, x + PW - 26, ry + 9, 8, UP, 0xFF4FA84A, true, mouseX, mouseY, a);
+            }
+        }
+        // what can be put on, straight from the inventory
+        int iy = ry0 + 6 * ART_ROW + 4;
+        g.drawString(this.font, tr("bag", "In your bag:"), x + 12, iy + 5, alpha(GREY, a), false);
+        List<int[]> inv = equipmentInInventory();
+        int ix0 = x + 16 + this.font.width(tr("bag", "In your bag:"));
+        var p = Minecraft.getInstance().player;
+        for (int k = 0; k < inv.size() && ix0 + k * 19 < x + PW - 16; k++) {
+            int ix = ix0 + k * 19;
+            boolean hov = in(mouseX, mouseY, ix, iy, 18, 18);
+            ring(g, ix + 9, iy + 9, 9.5F, 1.0F, alpha(hov ? ORANGE : 0xFFC9C9CE, a));
+            g.renderItem(p.getInventory().getItem(inv.get(k)[0]), ix + 1, iy + 1);
+        }
+        if (inv.isEmpty()) g.drawString(this.font, tr("bag_empty", "nothing to equip"), ix0, iy + 5, alpha(GREY_LIGHT, a), false);
+        String totals = "HP +" + (int) d.getArtifactBonusHp() + "   ATK +" + String.format(Locale.ROOT, "%.1f", d.getArtifactBonusAttack())
+                + "   CRIT +" + String.format(Locale.ROOT, "%.1f", d.getArtifactBonusCritRate()) + "%   CDMG +" + String.format(Locale.ROOT, "%.1f", d.getArtifactBonusCritDmg()) + "%";
+        g.fill(x + 10, y + PH - 18, x + PW - 10, y + PH - 17, alpha(0xFFC9C9CE, a));
+        g.drawString(this.font, totals, x + PW / 2 - this.font.width(totals) / 2, y + PH - 12, alpha(ORANGE_DARK, a), false);
+    }
+
+    private boolean clickArtifacts(double mx, double my) {
+        int x = left(), y = top();
+        SystemData d = data();
+        int ry0 = y + HEADER + 6;
+        for (int i = 0; i < 6; i++) {
+            int ry = ry0 + i * ART_ROW;
+            boolean cone = i == 5;
+            net.minecraft.world.item.ItemStack st = cone ? d.getEquippedLightCone() : d.getArtifact(i);
+            if (st.isEmpty()) continue;
+            if (!cone && com.soybe.awakeningsystem.artifact.GenshinArtifactItem.getLevel(st) < 20 && inCircle(mx, my, x + PW - 26, ry + 9, 9)) {
+                net.neoforged.neoforge.network.PacketDistributor.sendToServer(new com.soybe.awakeningsystem.network.UpgradeArtifactPayload(false, 0, i));
+                Minecraft.getInstance().getSoundManager().play(SimpleSoundInstance.forUI(SoundEvents.ANVIL_USE, 1.2F));
+                return true;
+            }
+            if (in(mx, my, x + 10, ry, PW - 50, ART_ROW - 2)) {
+                click();
+                if (cone) net.neoforged.neoforge.network.PacketDistributor.sendToServer(new com.soybe.awakeningsystem.network.EquipLightConePayload(-1));
+                else net.neoforged.neoforge.network.PacketDistributor.sendToServer(new com.soybe.awakeningsystem.network.EquipArtifactPayload(false, 0, i, -1));
+                return true;
+            }
+        }
+        int iy = ry0 + 6 * ART_ROW + 4;
+        List<int[]> inv = equipmentInInventory();
+        int ix0 = x + 16 + this.font.width(tr("bag", "In your bag:"));
+        var p = Minecraft.getInstance().player;
+        for (int k = 0; k < inv.size() && ix0 + k * 19 < x + PW - 16; k++) {
+            int ix = ix0 + k * 19;
+            if (!in(mx, my, ix, iy, 18, 18)) continue;
+            click();
+            int slot = inv.get(k)[0];
+            if (inv.get(k)[1] == 1) {
+                var art = (com.soybe.awakeningsystem.artifact.GenshinArtifactItem) p.getInventory().getItem(slot).getItem();
+                net.neoforged.neoforge.network.PacketDistributor.sendToServer(new com.soybe.awakeningsystem.network.EquipArtifactPayload(false, 0, art.getArtifactType().getSlotIndex(), slot));
+            } else {
+                net.neoforged.neoforge.network.PacketDistributor.sendToServer(new com.soybe.awakeningsystem.network.EquipLightConePayload(slot));
+            }
+            return true;
+        }
+        return false;
+    }
+
+    // ── Ranking ──────────────────────────────────────────────────────────────
+
+    @Override
+    protected void init() {
+        super.init();
+        if (section == Section.RANKING) AwakeningSystemClient.requestLeaderboard();
+    }
+
+    private void renderRanking(GuiGraphics g, int x, int y, int mouseX, int mouseY, float a) {
+        var list = AwakeningSystemClient.LEADERBOARD;
+        int hy = y + HEADER + 8;
+        g.drawString(this.font, "#", x + 16, hy, alpha(GREY, a), false);
+        g.drawString(this.font, tr("col.name", "Hunter"), x + 40, hy, alpha(GREY, a), false);
+        g.drawString(this.font, tr("col.level", "Lv."), x + 170, hy, alpha(GREY, a), false);
+        g.drawString(this.font, tr("col.kills", "Kills"), x + 214, hy, alpha(GREY, a), false);
+        g.drawString(this.font, "G", x + 274, hy, alpha(GREY, a), false);
+        if (list.isEmpty()) {
+            g.drawString(this.font, tr("ranking_empty", "No hunters ranked yet."), x + 16, hy + 20, alpha(GREY_LIGHT, a), false);
+            return;
+        }
+        var me = Minecraft.getInstance().player;
+        String myName = me == null ? "" : me.getGameProfile().getName();
+        int rows = 7;
+        scroll = Mth.clamp(scroll, 0, Math.max(0, list.size() - rows));
+        for (int i = 0; i < rows && i + scroll < list.size(); i++) {
+            var e = list.get(i + scroll);
+            int idx = i + scroll;
+            int ry = hy + 12 + i * (ROW + 2);
+            boolean mine = myName.equalsIgnoreCase(e.name());
+            row(g, this.font, x + 10, ry, PW - 24, ROW, Component.empty(), null, mine, a);
+            int medal = idx == 0 ? 0xFFE8B83A : idx == 1 ? 0xFFB9BCC4 : idx == 2 ? 0xFFC07A3E : 0xFF5E5E66;
+            shinyDisc(g, x + 23, ry + ROW / 2.0F, 7.2F, mine ? WHITE : medal, a);
+            String num = String.valueOf(idx + 1);
+            g.drawString(this.font, num, x + 23 - this.font.width(num) / 2, ry + 6, alpha(mine ? ORANGE : WHITE, a), false);
+            int c = alpha(mine ? WHITE : 0xFF4A4A52, a);
+            g.drawString(this.font, this.font.plainSubstrByWidth(e.name(), 120), x + 40, ry + 6, c, false);
+            g.drawString(this.font, String.valueOf(e.level()), x + 170, ry + 6, c, false);
+            g.drawString(this.font, String.valueOf(e.kills()), x + 214, ry + 6, c, false);
+            g.drawString(this.font, String.valueOf(e.coins()), x + 274, ry + 6, alpha(mine ? WHITE : ORANGE_DARK, a), false);
+        }
+    }
+
+    // ── Progress ─────────────────────────────────────────────────────────────
+
+    private void renderProgress(GuiGraphics g, int x, int y, int mouseX, int mouseY, float a) {
+        SystemData d = data();
+        int py = y + HEADER + 8;
+        g.drawString(this.font, tr("prestige", "Prestige %s", d.prestigeLevel()), x + 14, py, alpha(GREY_DARK, a), false);
+        if (d.canPrestige()) claimButtonText(g, x + PW - 112, py - 3, tr("prestige_btn", "Prestige"), mouseX, mouseY, a);
+        String line1 = tr("kills", "Kills %s", d.creaturesDefeated()).getString() + "   " + tr("bosses", "Bosses %s", d.bossKills()).getString()
+                + "   " + tr("deaths", "Deaths %s", d.deaths()).getString();
+        String line2 = tr("mined", "Blocks %s", d.blocksMined()).getString() + "   " + tr("ores", "Ores %s", d.oresMined()).getString()
+                + "   " + tr("missions_done", "Missions %s", d.missionsCompleted()).getString();
+        g.drawString(this.font, line1, x + 14, py + 16, alpha(GREY, a), false);
+        g.drawString(this.font, line2, x + 14, py + 27, alpha(GREY, a), false);
+
+        var list = com.soybe.awakeningsystem.AchievementDefinitions.definitions();
+        int lt = py + 42;
+        int rows = 4;
+        scroll = Mth.clamp(scroll, 0, Math.max(0, list.size() - rows));
+        for (int i = 0; i < rows && i + scroll < list.size(); i++) {
+            var ach = list.get(i + scroll);
+            int ry = lt + i * (ROW + 2);
+            boolean done = d.hasAchievement(ach.id());
+            boolean hot = ach.id().equals(selected);
+            row(g, this.font, x + 10, ry, PW - 24, ROW, Component.translatable(ach.nameKey()), done ? CHECK : TROPHY, hot, a);
+            String st = done ? "✔" : com.soybe.awakeningsystem.AchievementDefinitions.statValue(d, ach.statRequired()) + "/" + ach.target();
+            g.drawString(this.font, st, x + PW - 22 - this.font.width(st), ry + 6, alpha(done ? 0xFF4FA84A : (hot ? WHITE : ORANGE_DARK), a), false);
+        }
+        Component desc = null;
+        for (var ach : list) if (ach.id().equals(selected)) desc = Component.translatable(ach.descriptionKey());
+        footer(g, x, y, desc, a);
+    }
+
+    private boolean clickProgress(double mx, double my) {
+        SystemData d = data();
+        int x = left(), py = top() + HEADER + 8;
+        if (d.canPrestige() && in(mx, my, x + PW - 112, py - 3, 100, 15)) {
+            click();
+            AwakeningSystemClient.prestige();
+            return true;
+        }
+        var list = com.soybe.awakeningsystem.AchievementDefinitions.definitions();
+        int lt = py + 42;
+        for (int i = 0; i < 4 && i + scroll < list.size(); i++) {
+            if (in(mx, my, x + 10, lt + i * (ROW + 2), PW - 24, ROW)) {
+                click();
+                String id = list.get(i + scroll).id();
+                selected = id.equals(selected) ? "" : id;
+                return true;
+            }
+        }
+        return false;
+    }
+
+    // ── Shop ─────────────────────────────────────────────────────────────────
+
+    private static final String[] SHOP_CATS = {"all", "boxes", "gear", "consumables", "materials"};
+    private String shopCat = "all";
+
+    private List<com.soybe.awakeningsystem.ShopDefinitions.Entry> shopEntries() {
+        try {
+            return com.soybe.awakeningsystem.ShopDefinitions.availableEntries(shopCat);
+        } catch (Throwable t) {
+            return List.of();
+        }
+    }
+
+    private int catX(int c) {
+        int cx = left() + 12;
+        for (int i = 0; i < c; i++) cx += this.font.width(Component.translatable("awakening_system.screen.shop.cat." + SHOP_CATS[i])) + 14;
+        return cx;
+    }
+
+    private void renderShop(GuiGraphics g, int x, int y, int mouseX, int mouseY, float a) {
+        SystemData d = data();
+        int cy = y + HEADER + 6;
+        for (int c = 0; c < SHOP_CATS.length; c++) {
+            Component lbl = Component.translatable("awakening_system.screen.shop.cat." + SHOP_CATS[c]);
+            int cx = catX(c), w = this.font.width(lbl) + 10;
+            boolean on = SHOP_CATS[c].equals(shopCat);
+            g.fillGradient(cx, cy, cx + w, cy + 14, alpha(on ? 0xFFF7B52A : 0xFFF4F4F6, a), alpha(on ? 0xFFE29400 : 0xFFDCDCE0, a));
+            g.drawString(this.font, lbl, cx + 5, cy + 3, alpha(on ? WHITE : GREY, a), false);
+        }
+        String coins = d.coins() + " G";
+        g.drawString(this.font, coins, x + PW - 12 - this.font.width(coins), cy + 3, alpha(ORANGE_DARK, a), false);
+
+        var list = shopEntries();
+        int lt = cy + 20, rows = 5;
+        scroll = Mth.clamp(scroll, 0, Math.max(0, list.size() - rows));
+        com.soybe.awakeningsystem.ShopDefinitions.Entry sel = null;
+        for (var e : list) if (e.id().equals(selected)) sel = e;
+        for (int i = 0; i < rows && i + scroll < list.size(); i++) {
+            var e = list.get(i + scroll);
+            int ry = lt + i * (ROW + 2);
+            boolean hot = e.id().equals(selected);
+            boolean ok = com.soybe.awakeningsystem.ShopDefinitions.isUnlocked(e, d);
+            row(g, this.font, x + 10, ry, PW - 24, ROW, Component.empty(), null, hot, a);
+            g.renderItem(com.soybe.awakeningsystem.ShopDefinitions.createStack(e), x + 15, ry + 2);
+            String name = this.font.plainSubstrByWidth(Component.translatable(e.nameKey()).getString(), 170);
+            g.drawString(this.font, name, x + 36, ry + 6, alpha(!ok ? GREY_LIGHT : (hot ? WHITE : 0xFF4A4A52), a), false);
+            String price = ok ? e.cost() + " G" : tr("rank", "Rank %s").getString().replace("%s", com.soybe.awakeningsystem.ShopDefinitions.requiredRank(e));
+            g.drawString(this.font, price, x + PW - 22 - this.font.width(price), ry + 6, alpha(!ok ? 0xFFD6473E : (hot ? WHITE : ORANGE_DARK), a), false);
+        }
+        int fy = y + PH - 40;
+        g.fill(x + 10, fy - 4, x + PW - 10, fy - 3, alpha(0xFFC9C9CE, a));
+        if (sel == null) {
+            g.drawString(this.font, tr("shop_hint", "Choose something to buy."), x + 14, fy + 4, alpha(GREY_LIGHT, a), false);
+            return;
+        }
+        g.renderItem(com.soybe.awakeningsystem.ShopDefinitions.createStack(sel), x + 14, fy + 4);
+        g.drawString(this.font, Component.translatable(sel.nameKey()), x + 36, fy + 4, alpha(GREY_DARK, a), false);
+        g.drawString(this.font, (sel.amount() > 1 ? "x" + sel.amount() + "  " : "") + sel.cost() + " G", x + 36, fy + 15, alpha(ORANGE_DARK, a), false);
+        boolean ok = com.soybe.awakeningsystem.ShopDefinitions.isUnlocked(sel, d);
+        boolean afford = d.coins() >= sel.cost();
+        if (ok) claimButtonText(g, x + PW - 112, fy + 6, afford ? tr("buy", "Buy") : tr("no_coins", "Not enough G"), mouseX, mouseY, afford ? a : a * 0.5F);
+        else g.drawString(this.font, tr("needs_rank", "Needs rank %s", com.soybe.awakeningsystem.ShopDefinitions.requiredRank(sel)), x + PW - 112, fy + 10, alpha(0xFFD6473E, a), false);
+    }
+
+    private boolean clickShop(double mx, double my) {
+        int x = left(), y = top();
+        int cy = y + HEADER + 6;
+        for (int c = 0; c < SHOP_CATS.length; c++) {
+            int w = this.font.width(Component.translatable("awakening_system.screen.shop.cat." + SHOP_CATS[c])) + 10;
+            if (in(mx, my, catX(c), cy, w, 14)) {
+                click();
+                shopCat = SHOP_CATS[c];
+                scroll = 0;
+                selected = "";
+                return true;
+            }
+        }
+        var list = shopEntries();
+        int lt = cy + 20;
+        for (int i = 0; i < 5 && i + scroll < list.size(); i++) {
+            if (in(mx, my, x + 10, lt + i * (ROW + 2), PW - 24, ROW)) {
+                click();
+                selected = list.get(i + scroll).id();
+                return true;
+            }
+        }
+        SystemData d = data();
+        int fy = y + PH - 40;
+        for (var e : list) {
+            if (!e.id().equals(selected)) continue;
+            if (!com.soybe.awakeningsystem.ShopDefinitions.isUnlocked(e, d) || !in(mx, my, x + PW - 112, fy + 6, 100, 15)) return false;
+            if (d.coins() < e.cost()) {
+                Minecraft.getInstance().getSoundManager().play(SimpleSoundInstance.forUI(SoundEvents.VILLAGER_NO, 1.0F));
+                return true;
+            }
+            if (com.soybe.awakeningsystem.ShopDefinitions.isBoxId(e.id())) {
+                int tier = switch (e.id()) {
+                    case "box_rare" -> 2;
+                    case "box_epic" -> 3;
+                    case "box_legendary" -> 4;
+                    case "box_mythic" -> 5;
+                    case "box_primordial" -> 6;
+                    default -> 1;
+                };
+                AwakeningSystemClient.buyShopItem(e.id());
+                Minecraft.getInstance().setScreen(new com.soybe.awakeningsystem.ChestOpeningScreen(this, e.id(), e.nameKey(), tier, e.cost()));
+                return true;
+            }
+            AwakeningSystemClient.buyShopItem(e.id());
+            Minecraft.getInstance().getSoundManager().play(SimpleSoundInstance.forUI(SoundEvents.EXPERIENCE_ORB_PICKUP, 1.2F));
+            return true;
+        }
+        return false;
+    }
+
+    private void claimButtonText(GuiGraphics g, int x, int y, Component text, int mouseX, int mouseY, float a) {
+        boolean hover = mouseX >= x && mouseX < x + 100 && mouseY >= y && mouseY < y + 15;
+        g.fillGradient(x, y, x + 100, y + 15, alpha(hover ? 0xFFFFC44A : 0xFFF7B52A, a), alpha(0xFFE29400, a));
+        g.drawString(this.font, text, x + 50 - this.font.width(text) / 2, y + 4, alpha(WHITE, a), false);
+    }
+
     private void claimButton(GuiGraphics g, int x, int y, int mouseX, int mouseY, float a) {
         boolean hover = mouseX >= x && mouseX < x + 100 && mouseY >= y && mouseY < y + 15;
         g.fillGradient(x, y, x + 100, y + 15, alpha(hover ? 0xFFFFC44A : 0xFFF7B52A, a), alpha(0xFFE29400, a));
@@ -478,6 +811,10 @@ public class SaoPanelScreen extends Screen {
                     return true;
                 }
             }
+            case ARTIFACTS -> { if (clickArtifacts(mx, my)) return true; }
+            case PROGRESS -> { if (clickProgress(mx, my)) return true; }
+            case SHOP -> { if (clickShop(mx, my)) return true; }
+            case RANKING -> {}
         }
         return super.mouseClicked(mx, my, button);
     }
