@@ -27,7 +27,7 @@ import static com.soybe.awakeningsystem.client.sao.SaoDraw.*;
  * (daily training and the guild commission). They use the same actions as the normal windows.
  */
 public class SaoPanelScreen extends Screen {
-    public enum Section { STATUS, SKILLS, TITLES, MISSIONS, ARTIFACTS, RANKING, PROGRESS, SHOP }
+    public enum Section { STATUS, SKILLS, TITLES, MISSIONS, ARTIFACTS, RANKING, PROGRESS, SHOP, SELL, TRAVEL }
 
     private static final String[] ATTRS = {"strength", "vitality", "agility", "perception", "intelligence", "willpower"};
     private static final String[] ATTR_NAMES = {"Strength", "Vitality", "Agility", "Perception", "Intelligence", "Willpower"};
@@ -93,12 +93,14 @@ public class SaoPanelScreen extends Screen {
             case ARTIFACTS -> SHIELD;
             case RANKING -> TROPHY;
             case PROGRESS -> BARS;
-            case SHOP -> COIN;
+            case SHOP, SELL -> COIN;
+            case TRAVEL -> DOOR;
         };
         shinyDisc(g, x + 12, y + 11, 7.5F, ORANGE, a);
         icon(g, icon, x + 7, y + 6, alpha(WHITE, a));
         g.drawString(this.font, title(), x + 25, y + 7, alpha(GREY_DARK, a), false);
-        String lv = tr("level", "Lv. %s").getString().replace("%s", String.valueOf(data().level()));
+        String lv = section == Section.SHOP || section == Section.SELL ? data().coins() + " G"
+                : tr("level", "Lv. %s").getString().replace("%s", String.valueOf(data().level()));
         g.drawString(this.font, lv, x + PW - 10 - this.font.width(lv), y + 7, alpha(ORANGE_DARK, a), false);
 
         roundButton(g, backX(), backY(), 10, BACK, ORANGE, true, mouseX, mouseY, a);
@@ -112,6 +114,8 @@ public class SaoPanelScreen extends Screen {
             case RANKING -> renderRanking(g, x, y, mouseX, mouseY, a);
             case PROGRESS -> renderProgress(g, x, y, mouseX, mouseY, a);
             case SHOP -> renderShop(g, x, y, mouseX, mouseY, a);
+            case SELL -> renderSell(g, x, y, mouseX, mouseY, a);
+            case TRAVEL -> renderTravel(g, x, y, mouseX, mouseY, a);
         }
     }
 
@@ -124,8 +128,11 @@ public class SaoPanelScreen extends Screen {
             case ARTIFACTS -> "artifacts";
             case RANKING -> "ranking";
             case PROGRESS -> "progress";
-            case SHOP -> "shop";
+            case SHOP, SELL -> "shop";
+            case TRAVEL -> "travel";
         };
+        if (section == Section.SELL) return tr("sell_title", "Sell");
+        if (section == Section.TRAVEL) return tr("travel_title", "Worlds");
         String s = Component.translatable("awakening_system.screen.tab." + key).getString();
         return Component.literal(s.isEmpty() ? s : s.charAt(0) + s.substring(1).toLowerCase(Locale.ROOT));
     }
@@ -349,7 +356,7 @@ public class SaoPanelScreen extends Screen {
             int ry = cy + 14 + i * 18;
             g.drawString(this.font, tr("train." + keys[i], names[i]), x + 14, ry + 2, alpha(GREY, a), false);
             String num = vals[i] + "/" + tgts[i] + (i == 3 ? " m" : "");
-            bar(g, x + 96, ry + 2, PW - 190, 8, vals[i] / (float) tgts[i], vals[i] >= tgts[i] ? 0xFF4FA84A : ORANGE, a);
+            bar(g, x + 96, ry + 2, PW - 206, 8, vals[i] / (float) tgts[i], vals[i] >= tgts[i] ? 0xFF4FA84A : ORANGE, a);
             g.drawString(this.font, num, x + PW - 88 - this.font.width(num) + 50, ry + 2, alpha(GREY, a), false);
             if (i < 3 && vals[i] < tgts[i]) roundButton(g, x + PW - 22, ry + 6, 7, FIST, ORANGE, true, mouseX, mouseY, a);
         }
@@ -359,8 +366,8 @@ public class SaoPanelScreen extends Screen {
         g.fill(x + 10, hy - 6, x + PW - 10, hy - 5, alpha(0xFFC9C9CE, a));
         g.drawString(this.font, tr("guild", "Guild commission"), x + 14, hy, alpha(GREY_DARK, a), false);
         int target = Math.max(1, d.dailyHunterTarget());
-        g.drawString(this.font, tr("hunts", "Monsters hunted"), x + 14, hy + 16, alpha(GREY, a), false);
-        bar(g, x + 96, hy + 16, PW - 190, 8, d.dailyHunterKills() / (float) target, d.isDailyHunterComplete() ? 0xFF4FA84A : ORANGE, a);
+        g.drawString(this.font, this.font.plainSubstrByWidth(tr("hunts", "Monsters hunted").getString(), 112), x + 14, hy + 16, alpha(GREY, a), false);
+        bar(g, x + 130, hy + 16, PW - 224, 8, d.dailyHunterKills() / (float) target, d.isDailyHunterComplete() ? 0xFF4FA84A : ORANGE, a);
         String num = d.dailyHunterKills() + "/" + target;
         g.drawString(this.font, num, x + PW - 38 - this.font.width(num), hy + 16, alpha(GREY, a), false);
         if (d.isDailyHunterClaimed()) g.drawString(this.font, tr("done", "Completed today"), x + 14, hy + 32, alpha(0xFF4FA84A, a), false);
@@ -596,9 +603,6 @@ public class SaoPanelScreen extends Screen {
             g.fillGradient(cx, cy, cx + w, cy + 14, alpha(on ? 0xFFF7B52A : 0xFFF4F4F6, a), alpha(on ? 0xFFE29400 : 0xFFDCDCE0, a));
             g.drawString(this.font, lbl, cx + 5, cy + 3, alpha(on ? WHITE : GREY, a), false);
         }
-        String coins = d.coins() + " G";
-        g.drawString(this.font, coins, x + PW - 12 - this.font.width(coins), cy + 3, alpha(ORANGE_DARK, a), false);
-
         var list = shopEntries();
         int lt = cy + 20, rows = 5;
         scroll = Mth.clamp(scroll, 0, Math.max(0, list.size() - rows));
@@ -610,7 +614,7 @@ public class SaoPanelScreen extends Screen {
             boolean hot = e.id().equals(selected);
             boolean ok = com.soybe.awakeningsystem.ShopDefinitions.isUnlocked(e, d);
             row(g, this.font, x + 10, ry, PW - 24, ROW, Component.empty(), null, hot, a);
-            g.renderItem(com.soybe.awakeningsystem.ShopDefinitions.createStack(e), x + 15, ry + 2);
+            shopIcon(g, e, x + 15, ry + 2);
             String name = this.font.plainSubstrByWidth(Component.translatable(e.nameKey()).getString(), 170);
             g.drawString(this.font, name, x + 36, ry + 6, alpha(!ok ? GREY_LIGHT : (hot ? WHITE : 0xFF4A4A52), a), false);
             String price = ok ? e.cost() + " G" : tr("rank", "Rank %s").getString().replace("%s", com.soybe.awakeningsystem.ShopDefinitions.requiredRank(e));
@@ -622,7 +626,7 @@ public class SaoPanelScreen extends Screen {
             g.drawString(this.font, tr("shop_hint", "Choose something to buy."), x + 14, fy + 4, alpha(GREY_LIGHT, a), false);
             return;
         }
-        g.renderItem(com.soybe.awakeningsystem.ShopDefinitions.createStack(sel), x + 14, fy + 4);
+        shopIcon(g, sel, x + 14, fy + 4);
         g.drawString(this.font, Component.translatable(sel.nameKey()), x + 36, fy + 4, alpha(GREY_DARK, a), false);
         g.drawString(this.font, (sel.amount() > 1 ? "x" + sel.amount() + "  " : "") + sel.cost() + " G", x + 36, fy + 15, alpha(ORANGE_DARK, a), false);
         boolean ok = com.soybe.awakeningsystem.ShopDefinitions.isUnlocked(sel, d);
@@ -682,8 +686,178 @@ public class SaoPanelScreen extends Screen {
         return false;
     }
 
-    private void claimButtonText(GuiGraphics g, int x, int y, Component text, int mouseX, int mouseY, float a) {
-        boolean hover = mouseX >= x && mouseX < x + 100 && mouseY >= y && mouseY < y + 15;
+    // ── Shop icons, Sell and Travel ──────────────────────────────────────────
+
+    private void shopIcon(GuiGraphics g, com.soybe.awakeningsystem.ShopDefinitions.Entry e, int x, int y) {
+        net.minecraft.resources.ResourceLocation box = com.soybe.awakeningsystem.SystemScreen.getShopBoxTexture(e.id());
+        if (box != null) {
+            com.mojang.blaze3d.systems.RenderSystem.enableBlend();
+            g.blit(box, x, y, 0.0F, 0.0F, 16, 16, 16, 16);
+        } else g.renderItem(com.soybe.awakeningsystem.ShopDefinitions.createStack(e), x, y);
+    }
+
+    private static final String[] SELL_CATS = {"all", "gear", "ores", "drops", "farming", "blocks"};
+    private String sellCat = "all";
+
+    private List<com.soybe.awakeningsystem.SellDefinitions.SellEntry> sellEntries() {
+        try {
+            var p = Minecraft.getInstance().player;
+            List<com.soybe.awakeningsystem.SellDefinitions.SellEntry> out = new ArrayList<>();
+            for (var e : com.soybe.awakeningsystem.SellDefinitions.availableEntries(sellCat))
+                if (p == null || com.soybe.awakeningsystem.SellDefinitions.countInInventory(p, e) > 0) out.add(e);
+            return out;
+        } catch (Throwable t) {
+            return List.of();
+        }
+    }
+
+    private int pillX(String[] cats, String prefix, int c) {
+        int cx = left() + 12;
+        for (int i = 0; i < c; i++) cx += this.font.width(Component.translatable(prefix + cats[i])) + 12;
+        return cx;
+    }
+
+    private void pills(GuiGraphics g, String[] cats, String prefix, String current, int y, float a) {
+        for (int c = 0; c < cats.length; c++) {
+            Component lbl = Component.translatable(prefix + cats[c]);
+            int cx = pillX(cats, prefix, c), w = this.font.width(lbl) + 8;
+            boolean on = cats[c].equals(current);
+            g.fillGradient(cx, y, cx + w, y + 14, alpha(on ? 0xFFF7B52A : 0xFFF4F4F6, a), alpha(on ? 0xFFE29400 : 0xFFDCDCE0, a));
+            g.drawString(this.font, lbl, cx + 4, y + 3, alpha(on ? WHITE : GREY, a), false);
+        }
+    }
+
+    private void renderSell(GuiGraphics g, int x, int y, int mouseX, int mouseY, float a) {
+        int cy = y + HEADER + 6;
+        pills(g, SELL_CATS, "awakening_system.screen.shop.sell_cat.", sellCat, cy, a);
+        var list = sellEntries();
+        var p = Minecraft.getInstance().player;
+        int lt = cy + 20, rows = 5;
+        scroll = Mth.clamp(scroll, 0, Math.max(0, list.size() - rows));
+        if (list.isEmpty()) g.drawString(this.font, tr("sell_nothing", "Nothing in your bag to sell here."), x + 14, lt + 6, alpha(GREY_LIGHT, a), false);
+        for (int i = 0; i < rows && i + scroll < list.size(); i++) {
+            var e = list.get(i + scroll);
+            int ry = lt + i * (ROW + 2);
+            boolean hot = e.id().equals(selected);
+            row(g, this.font, x + 10, ry, PW - 24, ROW, Component.empty(), null, hot, a);
+            g.renderItem(com.soybe.awakeningsystem.SellDefinitions.createStack(e), x + 15, ry + 2);
+            int have = p == null ? 0 : com.soybe.awakeningsystem.SellDefinitions.countInInventory(p, e);
+            String name = this.font.plainSubstrByWidth(Component.translatable(e.nameKey()).getString(), 150) + "  x" + have;
+            g.drawString(this.font, name, x + 36, ry + 6, alpha(hot ? WHITE : 0xFF4A4A52, a), false);
+            String price = "+" + e.unitPrice() + " G" + (e.amount() > 1 ? " / " + e.amount() : "");
+            g.drawString(this.font, price, x + PW - 22 - this.font.width(price), ry + 6, alpha(hot ? WHITE : 0xFF4FA84A, a), false);
+        }
+        int fy = y + PH - 40;
+        g.fill(x + 10, fy - 4, x + PW - 10, fy - 3, alpha(0xFFC9C9CE, a));
+        if (selected.isEmpty() || list.stream().noneMatch(e -> e.id().equals(selected))) {
+            g.drawString(this.font, tr("sell_hint", "Choose something to sell."), x + 14, fy + 4, alpha(GREY_LIGHT, a), false);
+            return;
+        }
+        claimButtonText(g, x + PW - 222, fy + 6, tr("sell_one", "Sell some"), mouseX, mouseY, a);
+        claimButtonText(g, x + PW - 112, fy + 6, tr("sell_all", "Sell all"), mouseX, mouseY, a);
+    }
+
+    private boolean clickSell(double mx, double my) {
+        int x = left(), y = top(), cy = y + HEADER + 6;
+        for (int c = 0; c < SELL_CATS.length; c++) {
+            int w = this.font.width(Component.translatable("awakening_system.screen.shop.sell_cat." + SELL_CATS[c])) + 8;
+            if (in(mx, my, pillX(SELL_CATS, "awakening_system.screen.shop.sell_cat.", c), cy, w, 14)) {
+                click();
+                sellCat = SELL_CATS[c];
+                scroll = 0;
+                selected = "";
+                return true;
+            }
+        }
+        var list = sellEntries();
+        int lt = cy + 20;
+        for (int i = 0; i < 5 && i + scroll < list.size(); i++) {
+            if (in(mx, my, x + 10, lt + i * (ROW + 2), PW - 24, ROW)) {
+                click();
+                selected = list.get(i + scroll).id();
+                return true;
+            }
+        }
+        int fy = y + PH - 40;
+        if (!selected.isEmpty()) {
+            boolean one = in(mx, my, x + PW - 222, fy + 6, 100, 15), all = in(mx, my, x + PW - 112, fy + 6, 100, 15);
+            if (one || all) {
+                AwakeningSystemClient.sellShopItem(selected, all);
+                Minecraft.getInstance().getSoundManager().play(SimpleSoundInstance.forUI(SoundEvents.EXPERIENCE_ORB_PICKUP, 1.0F));
+                return true;
+            }
+        }
+        return false;
+    }
+
+    private record World(String id, String key, net.minecraft.resources.ResourceLocation tex) {}
+
+    private List<World> worlds() {
+        SystemData d = data();
+        boolean s40 = d.system40Updated() || d.isSystem40Updating() || d.teyvatUnlocked();
+        boolean s30 = s40 || d.system30Updated() || d.isSystem30Updating() || d.murimUnlocked();
+        boolean s20 = s30 || d.systemUpdated() || d.isSystemUpdating() || d.isekaiUnlocked();
+        var mc = Minecraft.getInstance();
+        boolean away = mc.level != null && !mc.level.dimension().equals(net.minecraft.world.level.Level.OVERWORLD);
+        List<World> out = new ArrayList<>();
+        String root = "textures/gui/tab_";
+        if (away || s20) out.add(new World("overworld", "earth", net.minecraft.resources.ResourceLocation.fromNamespaceAndPath(AwakeningSystemMod.MOD_ID, root + "overworld.png")));
+        if (s20) out.add(new World("isekai", "isekai", net.minecraft.resources.ResourceLocation.fromNamespaceAndPath(AwakeningSystemMod.MOD_ID, root + "isekai.png")));
+        if (s30) out.add(new World("murim", "murim", net.minecraft.resources.ResourceLocation.fromNamespaceAndPath(AwakeningSystemMod.MOD_ID, root + "murim.png")));
+        if (s40) out.add(new World("teyvat", "teyvat", net.minecraft.resources.ResourceLocation.fromNamespaceAndPath(AwakeningSystemMod.MOD_ID, root + "teyvat.png")));
+        out.add(new World("subspace", "subspace", null));
+        out.add(new World("archive", "archive", null));
+        return out;
+    }
+
+    private void renderTravel(GuiGraphics g, int x, int y, int mouseX, int mouseY, float a) {
+        var list = worlds();
+        int lt = y + HEADER + 8;
+        for (int i = 0; i < list.size(); i++) {
+            World w = list.get(i);
+            int ry = lt + i * (ROW + 6);
+            boolean hot = in(mouseX, mouseY, x + 10, ry, PW - 24, ROW + 2);
+            Component name = switch (w.id) {
+                case "subspace" -> tr("subspace", "Personal subspace");
+                case "archive" -> Component.translatable("awakening_system.world_archive.tab_title");
+                default -> Component.translatable("awakening_system.screen.dim." + w.key + ".title");
+            };
+            row(g, this.font, x + 10, ry, PW - 24, ROW + 2, Component.empty(), null, hot, a);
+            if (w.tex != null) {
+                com.mojang.blaze3d.systems.RenderSystem.enableBlend();
+                g.blit(w.tex, x + 15, ry + 3, 0.0F, 0.0F, 16, 16, 16, 16);
+            } else icon(g, w.id.equals("archive") ? SCROLL : DOOR, x + 18, ry + 6, alpha(hot ? WHITE : GREY, a));
+            g.drawString(this.font, name, x + 38, ry + 7, alpha(hot ? WHITE : 0xFF4A4A52, a), false);
+        }
+    }
+
+    private boolean clickTravel(double mx, double my) {
+        var list = worlds();
+        int x = left(), lt = top() + HEADER + 8;
+        for (int i = 0; i < list.size(); i++) {
+            if (!in(mx, my, x + 10, lt + i * (ROW + 6), PW - 24, ROW + 2)) continue;
+            click();
+            World w = list.get(i);
+            Minecraft mc = Minecraft.getInstance();
+            if (w.id.equals("archive")) {
+                mc.setScreen(new com.soybe.awakeningsystem.worldarchive.WorldArchiveScreen(this));
+                return true;
+            }
+            boolean sealed = mc.level != null && (com.soybe.awakeningsystem.penalty.PenaltyZoneManager.isPenaltyDimension(mc.level)
+                    || com.soybe.awakeningsystem.limbo.LimboWorldManager.isLimboDimension(mc.level));
+            if (sealed && !w.id.equals("subspace")) {
+                if (mc.player != null) mc.player.displayClientMessage(Component.translatable("awakening_system.screen.dim.sealed_desc"), true);
+                return true;
+            }
+            mc.setScreen(null);
+            if (w.id.equals("subspace")) net.neoforged.neoforge.network.PacketDistributor.sendToServer(new com.soybe.awakeningsystem.OpenSubspaceC2SPayload());
+            else net.neoforged.neoforge.network.PacketDistributor.sendToServer(new com.soybe.awakeningsystem.TravelDimensionPayload(w.id));
+            return true;
+        }
+        return false;
+    }
+
+    private void claimButtonText(GuiGraphics g, int x, int y, Component text, int mouseX, int mouseY, float a) {        boolean hover = mouseX >= x && mouseX < x + 100 && mouseY >= y && mouseY < y + 15;
         g.fillGradient(x, y, x + 100, y + 15, alpha(hover ? 0xFFFFC44A : 0xFFF7B52A, a), alpha(0xFFE29400, a));
         g.drawString(this.font, text, x + 50 - this.font.width(text) / 2, y + 4, alpha(WHITE, a), false);
     }
@@ -814,6 +988,8 @@ public class SaoPanelScreen extends Screen {
             case ARTIFACTS -> { if (clickArtifacts(mx, my)) return true; }
             case PROGRESS -> { if (clickProgress(mx, my)) return true; }
             case SHOP -> { if (clickShop(mx, my)) return true; }
+            case SELL -> { if (clickSell(mx, my)) return true; }
+            case TRAVEL -> { if (clickTravel(mx, my)) return true; }
             case RANKING -> {}
         }
         return super.mouseClicked(mx, my, button);

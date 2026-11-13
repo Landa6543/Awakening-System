@@ -45,7 +45,9 @@ public class WalkingJurelEntity extends PathfinderMob {
     public static AttributeSupplier.Builder createAttributes() {
         return PathfinderMob.createMobAttributes()
                 .add(Attributes.MAX_HEALTH, 8.0D)
-                .add(Attributes.MOVEMENT_SPEED, 0.27D);
+                .add(Attributes.MOVEMENT_SPEED, 0.27D)
+                .add(Attributes.ATTACK_DAMAGE, 2.0D)
+                .add(Attributes.FOLLOW_RANGE, 16.0D);
     }
 
     @Override
@@ -65,7 +67,10 @@ public class WalkingJurelEntity extends PathfinderMob {
     @Override
     protected void registerGoals() {
         this.goalSelector.addGoal(0, new FloatGoal(this));
-        this.goalSelector.addGoal(1, new PanicGoal(this, 1.6D));
+        this.goalSelector.addGoal(2, new net.minecraft.world.entity.ai.goal.LeapAtTargetGoal(this, 0.45F));
+        this.goalSelector.addGoal(3, new net.minecraft.world.entity.ai.goal.MeleeAttackGoal(this, 1.25D, false));
+        this.targetSelector.addGoal(1, new net.minecraft.world.entity.ai.goal.target.HurtByTargetGoal(this));
+        this.targetSelector.addGoal(2, new net.minecraft.world.entity.ai.goal.target.NearestAttackableTargetGoal<>(this, Player.class, true));
         this.goalSelector.addGoal(5, new WaterAvoidingRandomStrollGoal(this, 0.8D));
         this.goalSelector.addGoal(6, new LookAtPlayerGoal(this, Player.class, 8.0F));
         this.goalSelector.addGoal(7, new RandomLookAroundGoal(this));
@@ -83,6 +88,7 @@ public class WalkingJurelEntity extends PathfinderMob {
         boolean dance = ritualTime() && this.getLastHurtByMob() == null;
         if (dance != isDancing()) this.entityData.set(DANCING, dance);
         if (!dance) return;
+        this.setTarget(null);                                   // nothing interrupts the ritual
 
         // a place on the ring, turning round the centre of the can's roof
         long t = this.level().getGameTime();
@@ -115,6 +121,18 @@ public class WalkingJurelEntity extends PathfinderMob {
     public void readAdditionalSaveData(CompoundTag tag) {
         super.readAdditionalSaveData(tag);
         home = NbtUtils.readBlockPos(tag, "Home").orElse(null);
+    }
+
+    /** The attack: a flying kick, with a slap of the tail on landing. */
+    @Override
+    public boolean doHurtTarget(net.minecraft.world.entity.Entity target) {
+        boolean hit = super.doHurtTarget(target);
+        if (hit) {
+            this.playSound(SoundEvents.COD_FLOP, 1.2F, 0.8F);
+            net.minecraft.world.phys.Vec3 push = target.position().subtract(this.position()).normalize().scale(0.6);
+            target.push(push.x, 0.25, push.z);
+        }
+        return hit;
     }
 
     @Override

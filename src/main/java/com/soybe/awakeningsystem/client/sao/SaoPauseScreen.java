@@ -33,7 +33,13 @@ public class SaoPauseScreen extends Screen {
     private int ticks;
 
     public SaoPauseScreen() {
+        this(false);
+    }
+
+    /** @param askLeave open straight on the "leave this world?" question */
+    public SaoPauseScreen(boolean askLeave) {
         super(Component.translatable("menu.game"));
+        this.confirmLeave = askLeave;
     }
 
     private static Component tr(String key, String fallback) {
@@ -81,21 +87,14 @@ public class SaoPauseScreen extends Screen {
         float a = open * open * (3 - 2 * open);
 
         if (confirmLeave) {
-            int w = 190, h = 78, x = this.width / 2 - w / 2, y = this.height / 2 - h / 2 - Math.round((1 - a) * 8);
+            int w = 200, h = 92, x = this.width / 2 - w / 2, y = this.height / 2 - h / 2;
             panel(g, x, y, w, h, 20, a);
             Component title = tr("logout", "Log out");
-            g.drawString(this.font, title, x + (w - this.font.width(title)) / 2, y + 7, alpha(GREY_DARK, a), false);
-            g.fill(x + 16, y + 20, x + w - 16, y + 21, alpha(GREY, a));
+            g.drawString(this.font, title, x + (w - this.font.width(title)) / 2, y + 6, alpha(GREY_DARK, a), false);
             Component ask = tr("logout_confirm", "Leave this world?");
-            g.drawString(this.font, ask, x + (w - this.font.width(ask)) / 2, y + 38, alpha(GREY_DARK, a), false);
-            for (int i = 0; i < 2; i++) {
-                float bx = x + w / 2.0F + (i == 0 ? -34 : 34), by = y + 62;
-                boolean hover = (mouseX - bx) * (mouseX - bx) + (mouseY - by) * (mouseY - by) <= 121;
-                int col = i == 0 ? 0xFF3E9BD6 : 0xFFD6473E;
-                disc(g, bx, by, 11, alpha(hover ? col : WHITE, a));
-                ring(g, bx, by, 11, 1.2F, alpha(col, a));
-                icon(g, i == 0 ? CHECK : CROSS, Math.round(bx) - 5, Math.round(by) - 5, alpha(hover ? WHITE : col, a));
-            }
+            g.drawString(this.font, ask, x + (w - this.font.width(ask)) / 2, y + 28, alpha(GREY_DARK, a), false);
+            row(g, this.font, x + 14, y + 44, w - 28, 18, tr("logout_yes", "Yes, leave"), DOOR, inYes(mouseX, mouseY), a);
+            row(g, this.font, x + 14, y + 66, w - 28, 18, Component.translatable("gui.cancel"), BACK, inNo(mouseX, mouseY), a);
             return;
         }
 
@@ -122,18 +121,13 @@ public class SaoPauseScreen extends Screen {
     public boolean mouseClicked(double mouseX, double mouseY, int button) {
         if (button != 0) return super.mouseClicked(mouseX, mouseY, button);
         if (confirmLeave) {
-            int w = 190, h = 78, x = this.width / 2 - w / 2, y = this.height / 2 - h / 2;
-            for (int i = 0; i < 2; i++) {
-                double bx = x + w / 2.0 + (i == 0 ? -34 : 34), by = y + 62;
-                if ((mouseX - bx) * (mouseX - bx) + (mouseY - by) * (mouseY - by) <= 144) {
-                    click();
-                    if (i == 0) leaveWorld();
-                    else {
-                        confirmLeave = false;
-                        ticks = 0;
-                    }
-                    return true;
-                }
+            if (inYes(mouseX, mouseY)) {
+                click();
+                leaveWorld();
+            } else if (inNo(mouseX, mouseY)) {
+                click();
+                confirmLeave = false;
+                ticks = 0;
             }
             return true;
         }
@@ -159,8 +153,18 @@ public class SaoPauseScreen extends Screen {
         return super.keyPressed(keyCode, scanCode, modifiers);
     }
 
+    private boolean inYes(double mx, double my) {
+        int w = 200, x = this.width / 2 - w / 2, y = this.height / 2 - 46;
+        return mx >= x + 14 && mx < x + w - 14 && my >= y + 44 && my < y + 62;
+    }
+
+    private boolean inNo(double mx, double my) {
+        int w = 200, x = this.width / 2 - w / 2, y = this.height / 2 - 46;
+        return mx >= x + 14 && mx < x + w - 14 && my >= y + 66 && my < y + 84;
+    }
+
     /** Leaves the world the way the game's own pause menu does. */
-    private void leaveWorld() {
+    static void leaveWorld() {
         Minecraft mc = Minecraft.getInstance();
         boolean local = mc.isLocalServer();
         if (mc.level != null) mc.level.disconnect();

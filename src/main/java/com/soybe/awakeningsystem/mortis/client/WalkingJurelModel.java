@@ -79,6 +79,18 @@ public class WalkingJurelModel extends HierarchicalModel<WalkingJurelEntity> {
         rightFin.zRot = 0.35F + Mth.sin(ageInTicks * 0.3F) * 0.25F;
         leftFin.zRot = -0.35F - Mth.sin(ageInTicks * 0.3F) * 0.25F;
 
+        if (this.attackTime > 0.0F) {
+            // flying kick: the right leg snaps forward and up, the body leans back, fins flung out
+            float k = Mth.sin(this.attackTime * Mth.PI);
+            rightLeg.xRot = -1.9F * k;
+            leftLeg.xRot = 0.5F * k;
+            body.xRot = -0.35F * k;
+            body.y -= 1.5F * k;
+            rightFin.zRot = 1.2F * k + 0.35F;
+            leftFin.zRot = -1.2F * k - 0.35F;
+            tail.yRot = Mth.sin(ageInTicks * 1.2F) * 0.7F;
+        }
+
         if (entity.isDancing()) {
             // the ritual: high kicks, fins wide open, tail beating hard, body bouncing
             float d = ageInTicks * 0.6F;
