@@ -110,6 +110,7 @@ public class SaoMenuScreen extends Screen {
 
     @Override
     public void render(GuiGraphics g, int mouseX, int mouseY, float partialTick) {
+        frame(mouseX, mouseY, ticks + partialTick);
         super.render(g, mouseX, mouseY, partialTick);
         float open = Mth.clamp((ticks + partialTick) / 6.0F, 0.0F, 1.0F);
         float a = open * open * (3 - 2 * open);
@@ -186,6 +187,7 @@ public class SaoMenuScreen extends Screen {
                 g.drawString(this.font, ini, Math.round(px) - this.font.width(ini) / 2, Math.round(py) - 4, alpha(WHITE, a), false);
                 if ((mouseX - px) * (mouseX - px) + (mouseY - py) * (mouseY - py) <= 81) hoverName = nm;
             } else if (!open) icon(g, CROSS, Math.round(px) - 5, Math.round(py) - 5, alpha(0xFFA0A0A6, a));
+            else icon(g, PLUS, Math.round(px) - 5, Math.round(py) - 5, alpha(0xFFC4C4CA, a));
         }
         g.drawString(this.font, tr("actives", "Active"), x + 8, y + 140, alpha(ORANGE_DARK, a), false);
         Component pv = tr("passives", "Passive");

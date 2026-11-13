@@ -79,6 +79,7 @@ public class SaoPanelScreen extends Screen {
 
     @Override
     public void render(GuiGraphics g, int mouseX, int mouseY, float partialTick) {
+        frame(mouseX, mouseY, ticks + partialTick);
         super.render(g, mouseX, mouseY, partialTick);
         float open = Mth.clamp((ticks + partialTick) / 5.0F, 0.0F, 1.0F);
         float a = open * open * (3 - 2 * open);
@@ -245,6 +246,7 @@ public class SaoPanelScreen extends Screen {
             ring(g, sx, sy, 12, 1.0F, alpha(eq.isEmpty() ? 0xFFB8B8BE : ORANGE, a));
             shinyDisc(g, sx, sy, 10.5F, !open ? 0xFFCACACF : eq.isEmpty() ? 0xFFF2F2F4 : 0xFF5E5E66, a);
             if (!open) icon(g, CROSS, Math.round(sx) - 5, Math.round(sy) - 5, alpha(0xFFA0A0A6, a));
+            else if (eq.isEmpty()) icon(g, PLUS, Math.round(sx) - 5, Math.round(sy) - 5, alpha(0xFFC4C4CA, a));
             else if (!eq.isEmpty()) {
                 String ini = skillName(eq).getString();
                 ini = ini.isEmpty() ? "?" : ini.substring(0, 1).toUpperCase(Locale.ROOT);
@@ -703,8 +705,12 @@ public class SaoPanelScreen extends Screen {
         try {
             var p = Minecraft.getInstance().player;
             List<com.soybe.awakeningsystem.SellDefinitions.SellEntry> out = new ArrayList<>();
-            for (var e : com.soybe.awakeningsystem.SellDefinitions.availableEntries(sellCat))
-                if (p == null || com.soybe.awakeningsystem.SellDefinitions.countInInventory(p, e) > 0) out.add(e);
+            List<com.soybe.awakeningsystem.SellDefinitions.SellEntry> none = new ArrayList<>();
+            for (var e : com.soybe.awakeningsystem.SellDefinitions.availableEntries(sellCat)) {
+                if (p != null && com.soybe.awakeningsystem.SellDefinitions.countInInventory(p, e) > 0) out.add(e);
+                else none.add(e);
+            }
+            out.addAll(none);                                    // everything the System buys; what you carry first
             return out;
         } catch (Throwable t) {
             return List.of();
@@ -735,6 +741,7 @@ public class SaoPanelScreen extends Screen {
         int lt = cy + 20, rows = 5;
         scroll = Mth.clamp(scroll, 0, Math.max(0, list.size() - rows));
         if (list.isEmpty()) g.drawString(this.font, tr("sell_nothing", "Nothing in your bag to sell here."), x + 14, lt + 6, alpha(GREY_LIGHT, a), false);
+        scrollMarks(g, x + PW - 8, lt, rows * (ROW + 2), list.size(), a);
         for (int i = 0; i < rows && i + scroll < list.size(); i++) {
             var e = list.get(i + scroll);
             int ry = lt + i * (ROW + 2);
@@ -743,7 +750,7 @@ public class SaoPanelScreen extends Screen {
             g.renderItem(com.soybe.awakeningsystem.SellDefinitions.createStack(e), x + 15, ry + 2);
             int have = p == null ? 0 : com.soybe.awakeningsystem.SellDefinitions.countInInventory(p, e);
             String name = this.font.plainSubstrByWidth(Component.translatable(e.nameKey()).getString(), 150) + "  x" + have;
-            g.drawString(this.font, name, x + 36, ry + 6, alpha(hot ? WHITE : 0xFF4A4A52, a), false);
+            g.drawString(this.font, name, x + 36, ry + 6, alpha(hot ? WHITE : (have > 0 ? 0xFF4A4A52 : GREY_LIGHT), a), false);
             String price = "+" + e.unitPrice() + " G" + (e.amount() > 1 ? " / " + e.amount() : "");
             g.drawString(this.font, price, x + PW - 22 - this.font.width(price), ry + 6, alpha(hot ? WHITE : 0xFF4FA84A, a), false);
         }
@@ -806,7 +813,7 @@ public class SaoPanelScreen extends Screen {
         if (s30) out.add(new World("murim", "murim", net.minecraft.resources.ResourceLocation.fromNamespaceAndPath(AwakeningSystemMod.MOD_ID, root + "murim.png")));
         if (s40) out.add(new World("teyvat", "teyvat", net.minecraft.resources.ResourceLocation.fromNamespaceAndPath(AwakeningSystemMod.MOD_ID, root + "teyvat.png")));
         out.add(new World("subspace", "subspace", null));
-        out.add(new World("archive", "archive", null));
+        out.add(new World("archive", "archive", net.minecraft.resources.ResourceLocation.fromNamespaceAndPath(AwakeningSystemMod.MOD_ID, root + "world_archive.png")));
         return out;
     }
 
@@ -826,7 +833,7 @@ public class SaoPanelScreen extends Screen {
             if (w.tex != null) {
                 com.mojang.blaze3d.systems.RenderSystem.enableBlend();
                 g.blit(w.tex, x + 15, ry + 3, 0.0F, 0.0F, 16, 16, 16, 16);
-            } else icon(g, w.id.equals("archive") ? SCROLL : DOOR, x + 18, ry + 6, alpha(hot ? WHITE : GREY, a));
+            } else icon(g, DOOR, x + 18, ry + 6, alpha(hot ? ORANGE : WHITE, a));
             g.drawString(this.font, name, x + 38, ry + 7, alpha(hot ? WHITE : 0xFF4A4A52, a), false);
         }
     }

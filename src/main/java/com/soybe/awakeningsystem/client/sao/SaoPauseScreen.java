@@ -82,6 +82,7 @@ public class SaoPauseScreen extends Screen {
 
     @Override
     public void render(GuiGraphics g, int mouseX, int mouseY, float partialTick) {
+        frame(mouseX, mouseY, ticks + partialTick);
         super.render(g, mouseX, mouseY, partialTick);
         float open = Mth.clamp((ticks + partialTick) / 5.0F, 0.0F, 1.0F);
         float a = open * open * (3 - 2 * open);

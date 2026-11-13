@@ -8,6 +8,16 @@ import net.minecraft.network.chat.Component;
 final class SaoDraw {
     private SaoDraw() {}
 
+    /** Where the mouse is and the time, set by each full-dive screen before it draws, for hover and shine. */
+    static int mx = -1, my = -1;
+    static float time;
+
+    static void frame(int mouseX, int mouseY, float t) {
+        mx = mouseX;
+        my = mouseY;
+        time = t;
+    }
+
     static final int ORANGE = 0xFFEDA500;
     static final int ORANGE_DARK = 0xFFC98700;
     static final int WHITE = 0xFFF7F7F7;
@@ -65,8 +75,19 @@ final class SaoDraw {
     /** One row of a list: a soft white plate, or orange when chosen, with a ringed badge and its pictogram. */
     static void row(GuiGraphics g, Font font, int x, int y, int w, int h, Component label, String[] icon, boolean hot, float a) {
         g.fill(x + 1, y + 2, x + w + 1, y + h + 2, alpha(0x40000000, a));                       // drop shadow
+        boolean over = !hot && mx >= x && mx < x + w && my >= y && my < y + h;
+        if (over) x += 2;                                                                          // nudges toward the mouse
         if (hot) g.fillGradient(x, y, x + w, y + h, alpha(0xFFF7B52A, a), alpha(0xFFE29400, a));
+        else if (over) g.fillGradient(x, y, x + w, y + h, alpha(0xFFFFFFFF, a), alpha(0xFFFFF3DC, a));
         else g.fillGradient(x, y, x + w, y + h, alpha(0xFAFFFFFF, a), alpha(0xF2E9E9EC, a));
+        if (hot) {                                                                                  // a band of light sweeping across
+            int sweep = (int) ((time * 4) % (w + 40)) - 20;
+            for (int i = 0; i < 14; i++) {
+                int sx = x + sweep + i;
+                if (sx >= x && sx < x + w) g.fill(sx, y + 1, sx + 1, y + h - 1, alpha(0x40FFFFFF, a * (1 - Math.abs(i - 7) / 7.0F)));
+            }
+        }
+        if (over) g.fill(x, y + h - 1, x + w, y + h, alpha(ORANGE, a));
         g.fill(x, y, x + w, y + 1, alpha(hot ? 0xFFFFD27A : 0xFFFFFFFF, a));                    // top light edge
         g.fill(x, y + h - 1, x + w, y + h, alpha(hot ? ORANGE_DARK : 0xFFC9C9CE, a));
         g.fill(x, y, x + 2, y + h, alpha(hot ? 0xFFFFFFFF : ORANGE, a * (hot ? 0.8F : 0.55F)));   // accent bar
@@ -76,7 +97,7 @@ final class SaoDraw {
         ring(g, x + 13, cy, 8.5F, 1.0F, alpha(hot ? 0xFFFFE2A8 : 0xFFB8B8BE, a));
         shinyDisc(g, x + 13, cy, 7.2F, hot ? WHITE : 0xFF5E5E66, a);
         icon(g, icon, x + 13 - 5, Math.round(cy) - 5, alpha(hot ? ORANGE : WHITE, a));
-        g.drawString(font, label, x + 27, y + (h - 8) / 2, alpha(hot ? WHITE : 0xFF4A4A52, a), false);
+        g.drawString(font, label, x + 27, y + (h - 8) / 2, alpha(hot ? WHITE : (over ? 0xFF2E2E34 : 0xFF4A4A52), a), false);
         if (hot) pointerRight(g, x + w - 6, Math.round(cy), 4, alpha(WHITE, a));
     }
 
