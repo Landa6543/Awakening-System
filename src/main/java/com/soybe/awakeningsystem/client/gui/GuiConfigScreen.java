@@ -158,6 +158,7 @@ public class GuiConfigScreen extends Screen {
         renderToggle(g, col2X, top + 59, colW, Component.translatable("awakening_system.gui_config.system.toggle_sfx"), GuiConfig.uiSoundsEnabled, mouseX, mouseY);
 
         renderToggle(g, col1X, top + 78, colW, Component.translatable("awakening_system.gui_config.system.toggle_font"), GuiConfig.useSystemFont, mouseX, mouseY);
+        renderToggle(g, col2X, top + 78, colW, Component.translatableWithFallback("awakening_system.sao.style_toggle", "Full-dive menu style"), com.soybe.awakeningsystem.client.sao.UiStyle.fullDive(), mouseX, mouseY);
 
         g.fill(left + 16, top + 98, left + GUI_WIDTH - 16, top + 99, 0x443D566E);
 
@@ -453,6 +454,11 @@ public class GuiConfigScreen extends Screen {
                     if (mouseX >= col1X && mouseX < col1X + colW) {
                         GuiConfig.useSystemFont = !GuiConfig.useSystemFont;
                         GuiConfig.save();
+                        AwakeningSystemClient.playUiSound(ModSounds.SYSTEM_CLICK.value(), 1.0F, 1.1F);
+                        return true;
+                    }
+                    if (mouseX >= col2X && mouseX < col2X + colW) {
+                        com.soybe.awakeningsystem.client.sao.UiStyle.setFullDive(!com.soybe.awakeningsystem.client.sao.UiStyle.fullDive());
                         AwakeningSystemClient.playUiSound(ModSounds.SYSTEM_CLICK.value(), 1.0F, 1.1F);
                         return true;
                     }

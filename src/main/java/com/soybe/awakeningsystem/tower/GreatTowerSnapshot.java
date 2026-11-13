@@ -12,7 +12,7 @@ import java.io.IOException;
 import java.nio.file.Path;
 
 /** Debug pictures of the Great Tower (front view and floor plans), for checking the design without a client. */
-final class GreatTowerSnapshot {
+public final class GreatTowerSnapshot {
     private GreatTowerSnapshot() {}
 
     static void write(ServerLevel level, BlockPos origin, Direction front, Path dir) throws IOException {
@@ -50,7 +50,7 @@ final class GreatTowerSnapshot {
     }
 
     /** Elevations from the south and from the east, and a top view, of a box around a point. */
-    static void view(ServerLevel level, BlockPos c, int half, int below, int above, Path dir, String name) throws IOException {
+    public static void view(ServerLevel level, BlockPos c, int half, int below, int above, Path dir, String name) throws IOException {
         for (int x = -half; x <= half; x += 16) for (int z = -half; z <= half; z += 16) level.getChunk((c.getX() + x) >> 4, (c.getZ() + z) >> 4);
         int h = below + above + 1, w = half * 2 + 1;
         for (int side = 0; side < 2; side++) {
