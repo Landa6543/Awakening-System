@@ -56,15 +56,15 @@ public class SaoMenuScreen extends Screen {
     protected void init() {
         categories.clear();
         categories.add(new Category(PERSON, List.of(
-                new Entry(tab("status"), BARS, () -> openTab(0)),
-                new Entry(tab("skills"), SWORD, () -> openTab(1)),
+                new Entry(tab("status"), BARS, () -> minecraft.setScreen(new SaoPanelScreen(this, SaoPanelScreen.Section.STATUS))),
+                new Entry(tab("skills"), SWORD, () -> minecraft.setScreen(new SaoPanelScreen(this, SaoPanelScreen.Section.SKILLS))),
                 new Entry(tab("artifacts"), SHIELD, () -> openTab(7)),
-                new Entry(tab("titles"), STAR, () -> openTab(3)))));
+                new Entry(tab("titles"), STAR, () -> minecraft.setScreen(new SaoPanelScreen(this, SaoPanelScreen.Section.TITLES))))));
         categories.add(new Category(PEOPLE, List.of(
                 new Entry(tab("ranking"), TROPHY, () -> openTab(6)),
                 new Entry(tr("constellations", "Constellations"), CHAT, () -> minecraft.setScreen(new ConstellationChannelScreen(this))))));
         categories.add(new Category(SCROLL, List.of(
-                new Entry(tab("missions"), SCROLL, () -> openTab(2)),
+                new Entry(tab("missions"), SCROLL, () -> minecraft.setScreen(new SaoPanelScreen(this, SaoPanelScreen.Section.MISSIONS))),
                 new Entry(tab("progress"), BARS, () -> openTab(5)))));
         categories.add(new Category(COIN, List.of(
                 new Entry(tab("shop"), COIN, () -> openTab(4)))));
@@ -95,7 +95,7 @@ public class SaoMenuScreen extends Screen {
 
     @Override
     public void renderBackground(GuiGraphics g, int mouseX, int mouseY, float partialTick) {
-        g.fillGradient(0, 0, this.width, this.height, 0x55101014, 0x77101014);
+        backdrop(g, this.width, this.height, 1.0F);
     }
 
     @Override
@@ -111,9 +111,12 @@ public class SaoMenuScreen extends Screen {
             float cy = top + i * STEP - (1.0F - mine) * 10.0F;
             boolean sel = i == selected;
             boolean hover = (mouseX - cx) * (mouseX - cx) + (mouseY - cy) * (mouseY - cy) <= R * R;
-            if (sel) ring(g, cx, cy, R + 4, 1.2F, alpha(ORANGE, mine));
-            disc(g, cx, cy, R, alpha(sel ? ORANGE : (hover ? WHITE : PANEL_SOFT), mine));
-            if (!sel) ring(g, cx, cy, R, 1.0F, alpha(GREY_LIGHT, mine));
+            if (sel) {
+                float pulse = 0.5F + 0.5F * Mth.sin((ticks + partialTick) * 0.25F);
+                ring(g, cx, cy, R + 4 + pulse, 1.2F, alpha(ORANGE, mine * (0.6F + 0.4F * pulse)));
+            }
+            ring(g, cx, cy, R + 1.5F, 1.0F, alpha(sel ? 0xFFFFD27A : 0xFFB8B8BE, mine));
+            shinyDisc(g, cx, cy, R, sel ? ORANGE : (hover ? WHITE : 0xFFE4E4E8), mine);
             icon(g, categories.get(i).icon, cx - 5, Math.round(cy) - 5, alpha(sel ? WHITE : GREY, mine));
         }
 
@@ -138,11 +141,13 @@ public class SaoMenuScreen extends Screen {
         SystemData d = mc.player.getData(AwakeningSystemMod.PLAYER_SYSTEM);
         int w = 150;
         x -= Math.round((1.0F - a) * 14);
-        g.fill(x, y, x + w, y + 132, alpha(PANEL, a));
+        panel(g, x, y, w, 208, 20, a);
         pointerRight(g, x + w + 7, y + 66, 7, alpha(PANEL, a));
         String name = mc.player.getName().getString();
-        g.drawString(this.font, name, x + (w - this.font.width(name)) / 2, y + 8, alpha(GREY_DARK, a), false);
-        g.fill(x + 14, y + 21, x + w - 14, y + 22, alpha(GREY, a));
+        g.drawString(this.font, name, x + (w - this.font.width(name)) / 2, y + 6, alpha(GREY_DARK, a), false);
+        // a faint hexagon lattice behind the figure
+        for (int hy = y + 26; hy < y + 128; hy += 8)
+            for (int hx = x + 8 + ((hy / 8) % 2) * 5; hx < x + w - 8; hx += 10) g.fill(hx, hy, hx + 3, hy + 1, alpha(0x10000000, a));
 
         int fx = x + w / 2, fy = y + 34;
         int body = alpha(GREY_DARK, a);
@@ -159,12 +164,12 @@ public class SaoMenuScreen extends Screen {
         for (int i = 0; i < 10; i++) {
             double ang = -Math.PI / 2 + i * Math.PI * 2 / 10;
             float px = fx + (float) Math.cos(ang) * 52, py = fy + 42 + (float) Math.sin(ang) * 44;
-            disc(g, px, py, 5.0F, alpha(GREY_LIGHT, a));
-            disc(g, px, py, 3.8F, alpha(i == lit ? ORANGE : GREY_DARK, a));
+            ring(g, px, py, 6.0F, 1.0F, alpha(i == lit ? ORANGE : GREY_LIGHT, a));
+            shinyDisc(g, px, py, 4.2F, i == lit ? ORANGE : GREY_DARK, a);
         }
 
         int by = y + 132;
-        g.fill(x, by, x + w, by + 76, alpha(PANEL_SOFT, a));
+        g.fill(x + 6, by, x + w - 6, by + 1, alpha(0xFFC9C9CE, a));
         int text = alpha(GREY_DARK, a), soft = alpha(GREY, a);
         g.drawString(this.font, tr("level", "Lv. %s").getString().replace("%s", String.valueOf(d.level())), x + 10, by + 7, text, false);
         String rank = tr("rank", "Rank %s").getString().replace("%s", d.evaluatedRank());
@@ -195,8 +200,7 @@ public class SaoMenuScreen extends Screen {
         g.drawString(this.font, num, Math.round(w / 0.75F) - this.font.width(num), 0, alpha(GREY, a), false);
         g.pose().popPose();
         int bx = x + 22, bw = w - 22 - Math.round(this.font.width(num) * 0.75F) - 4;
-        g.fill(bx, y + 2, bx + bw, y + 6, alpha(0xFFFFFFFF, a));
-        g.fill(bx, y + 2, bx + Math.round(bw * Mth.clamp(value / (float) max, 0.0F, 1.0F)), y + 6, alpha(color, a));
+        SaoDraw.bar(g, bx, y + 1, bw, 6, value / (float) max, color, a);
     }
 
     private void click() {

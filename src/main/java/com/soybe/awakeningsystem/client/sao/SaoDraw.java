@@ -62,15 +62,96 @@ final class SaoDraw {
         for (int i = 0; i < size; i++) g.fill(x - i - 1, y - i, x - i, y + i + 1, color);
     }
 
-    /** One row of a list: white, or orange when chosen, with a round badge and its pictogram on the left. */
+    /** One row of a list: a soft white plate, or orange when chosen, with a ringed badge and its pictogram. */
     static void row(GuiGraphics g, Font font, int x, int y, int w, int h, Component label, String[] icon, boolean hot, float a) {
-        g.fill(x, y, x + w, y + h, alpha(hot ? ORANGE : PANEL, a));
-        g.fill(x, y + h - 1, x + w, y + h, alpha(hot ? ORANGE_DARK : 0xFFCFCFCF, a));
+        g.fill(x + 1, y + 2, x + w + 1, y + h + 2, alpha(0x40000000, a));                       // drop shadow
+        if (hot) g.fillGradient(x, y, x + w, y + h, alpha(0xFFF7B52A, a), alpha(0xFFE29400, a));
+        else g.fillGradient(x, y, x + w, y + h, alpha(0xFAFFFFFF, a), alpha(0xF2E9E9EC, a));
+        g.fill(x, y, x + w, y + 1, alpha(hot ? 0xFFFFD27A : 0xFFFFFFFF, a));                    // top light edge
+        g.fill(x, y + h - 1, x + w, y + h, alpha(hot ? ORANGE_DARK : 0xFFC9C9CE, a));
+        g.fill(x, y, x + 2, y + h, alpha(hot ? 0xFFFFFFFF : ORANGE, a * (hot ? 0.8F : 0.55F)));   // accent bar
+        // faint diagonal grain across the plate
+        for (int i = 8; i < w; i += 6) g.fill(x + i, y + 2, x + i + 1, y + h - 2, alpha(hot ? 0x14FFFFFF : 0x0A000000, a));
         float cy = y + h / 2.0F;
-        disc(g, x + 12, cy, 7.5F, alpha(hot ? WHITE : GREY, a));
-        icon(g, icon, x + 12 - 5, Math.round(cy) - 5, alpha(hot ? ORANGE : WHITE, a));
-        g.drawString(font, label, x + 25, y + (h - 8) / 2, alpha(hot ? WHITE : GREY, a), false);
+        ring(g, x + 13, cy, 8.5F, 1.0F, alpha(hot ? 0xFFFFE2A8 : 0xFFB8B8BE, a));
+        shinyDisc(g, x + 13, cy, 7.2F, hot ? WHITE : 0xFF5E5E66, a);
+        icon(g, icon, x + 13 - 5, Math.round(cy) - 5, alpha(hot ? ORANGE : WHITE, a));
+        g.drawString(font, label, x + 27, y + (h - 8) / 2, alpha(hot ? WHITE : 0xFF4A4A52, a), false);
+        if (hot) pointerRight(g, x + w - 6, Math.round(cy), 4, alpha(WHITE, a));
     }
+
+    /** A disc with depth: soft shadow under it, the colour, a lighter cap and a small glint. */
+    static void shinyDisc(GuiGraphics g, float cx, float cy, float r, int color, float a) {
+        disc(g, cx + 0.6F, cy + 1.2F, r, alpha(0x50000000, a));
+        disc(g, cx, cy, r, alpha(color, a));
+        disc(g, cx, cy - r * 0.28F, r * 0.72F, alpha(0x30FFFFFF, a));
+        disc(g, cx - r * 0.35F, cy - r * 0.45F, Math.max(1.0F, r * 0.18F), alpha(0x90FFFFFF, a));
+    }
+
+    /**
+     * A floating panel: shadow, white body fading to light grey, a darker title strip with a thin orange
+     * line under it, faint horizontal grain and corner ticks.
+     */
+    static void panel(GuiGraphics g, int x, int y, int w, int h, int headerH, float a) {
+        g.fill(x + 2, y + 3, x + w + 2, y + h + 3, alpha(0x55000000, a));
+        g.fillGradient(x, y, x + w, y + h, alpha(0xF8FFFFFF, a), alpha(0xF0E4E4E8, a));
+        for (int yy = y + headerH + 3; yy < y + h - 2; yy += 3) g.fill(x + 3, yy, x + w - 3, yy + 1, alpha(0x07000000, a));
+        if (headerH > 0) {
+            g.fillGradient(x, y, x + w, y + headerH, alpha(0xFFFDFDFD, a), alpha(0xFFE6E6EA, a));
+            g.fill(x, y + headerH, x + w, y + headerH + 1, alpha(ORANGE, a));
+            g.fill(x + w / 2 - 18, y + headerH, x + w / 2 + 18, y + headerH + 2, alpha(ORANGE, a));
+        }
+        g.fill(x, y, x + w, y + 1, alpha(0xFFFFFFFF, a));
+        g.fill(x, y + h - 1, x + w, y + h, alpha(0xFFBDBDC3, a));
+        int t = 0xFF8A8A92;
+        g.fill(x, y, x + 6, y + 1, alpha(t, a)); g.fill(x, y, x + 1, y + 6, alpha(t, a));
+        g.fill(x + w - 6, y, x + w, y + 1, alpha(t, a)); g.fill(x + w - 1, y, x + w, y + 6, alpha(t, a));
+        g.fill(x, y + h - 1, x + 6, y + h, alpha(t, a)); g.fill(x, y + h - 6, x + 1, y + h, alpha(t, a));
+        g.fill(x + w - 6, y + h - 1, x + w, y + h, alpha(t, a)); g.fill(x + w - 1, y + h - 6, x + w, y + h, alpha(t, a));
+    }
+
+    /** A progress bar with a groove, a glossy fill and tick marks every tenth. */
+    static void bar(GuiGraphics g, int x, int y, int w, int h, float frac, int color, float a) {
+        g.fill(x, y, x + w, y + h, alpha(0xFFCACACF, a));
+        g.fill(x + 1, y + 1, x + w - 1, y + h - 1, alpha(0xFFF4F4F6, a));
+        int fw = Math.round((w - 2) * Math.max(0.0F, Math.min(1.0F, frac)));
+        if (fw > 0) {
+            g.fill(x + 1, y + 1, x + 1 + fw, y + h - 1, alpha(color, a));
+            g.fill(x + 1, y + 1, x + 1 + fw, y + 1 + Math.max(1, (h - 2) / 2), alpha(0x40FFFFFF, a));
+        }
+        for (int i = 1; i < 10; i++) g.fill(x + w * i / 10, y + 1, x + w * i / 10 + 1, y + h - 1, alpha(0x18000000, a));
+    }
+
+    /** A small round button with a label under or inside it. */
+    static boolean roundButton(GuiGraphics g, float cx, float cy, float r, String[] icon, int color, boolean enabled, int mouseX, int mouseY, float a) {
+        boolean hover = enabled && (mouseX - cx) * (mouseX - cx) + (mouseY - cy) * (mouseY - cy) <= r * r;
+        ring(g, cx, cy, r + 2, 1.0F, alpha(hover ? color : 0xFFB8B8BE, a));
+        shinyDisc(g, cx, cy, r, enabled ? (hover ? color : WHITE) : 0xFFD2D2D6, a);
+        icon(g, icon, Math.round(cx) - 5, Math.round(cy) - 5, alpha(enabled ? (hover ? WHITE : color) : 0xFFA0A0A6, a));
+        return hover;
+    }
+
+    /** The dim world behind the menus: darker towards the edges, with a faint grid of light. */
+    static void backdrop(GuiGraphics g, int w, int h, float a) {
+        g.fillGradient(0, 0, w, h, alpha(0x40101018, a), alpha(0x70101018, a));
+        g.fillGradient(0, 0, w, h / 5, alpha(0x50000000, a), 0);
+        g.fillGradient(0, h - h / 5, w, h, 0, alpha(0x50000000, a));
+        for (int x = 0; x < w; x += 24) g.fill(x, 0, x + 1, h, alpha(0x06FFFFFF, a));
+        for (int y = 0; y < h; y += 24) g.fill(0, y, w, y + 1, alpha(0x06FFFFFF, a));
+    }
+
+    static final String[] PLUS = {
+            "...........", "....###....", "....###....", "....###....", ".#########.", ".#########.",
+            ".#########.", "....###....", "....###....", "....###....", "..........."};
+    static final String[] MINUS = {
+            "...........", "...........", "...........", "...........", ".#########.", ".#########.",
+            ".#########.", "...........", "...........", "...........", "..........."};
+    static final String[] UP = {
+            ".....#.....", "....###....", "...#####...", "..#######..", ".#########.", "....###....",
+            "....###....", "....###....", "....###....", "....###....", "..........."};
+    static final String[] FIST = {
+            "...........", "..#.#.#.#..", ".#########.", ".#########.", ".#########.", ".#########.",
+            "..#######..", "..#######..", "...#####...", "...#####...", "..........."};
 
     /** Draws an 11x11 pictogram written as rows of '#'. */
     static void icon(GuiGraphics g, String[] rows, int x, int y, int color) {

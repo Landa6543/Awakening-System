@@ -71,7 +71,7 @@ public class SaoPauseScreen extends Screen {
 
     @Override
     public void renderBackground(GuiGraphics g, int mouseX, int mouseY, float partialTick) {
-        g.fillGradient(0, 0, this.width, this.height, 0x66101014, 0x88101014);
+        backdrop(g, this.width, this.height, 1.0F);
     }
 
     @Override
@@ -82,8 +82,7 @@ public class SaoPauseScreen extends Screen {
 
         if (confirmLeave) {
             int w = 190, h = 78, x = this.width / 2 - w / 2, y = this.height / 2 - h / 2 - Math.round((1 - a) * 8);
-            g.fill(x, y, x + w, y + 30, alpha(PANEL, a));
-            g.fill(x, y + 30, x + w, y + h, alpha(PANEL_SOFT, a));
+            panel(g, x, y, w, h, 20, a);
             Component title = tr("logout", "Log out");
             g.drawString(this.font, title, x + (w - this.font.width(title)) / 2, y + 7, alpha(GREY_DARK, a), false);
             g.fill(x + 16, y + 20, x + w - 16, y + 21, alpha(GREY, a));
@@ -102,7 +101,7 @@ public class SaoPauseScreen extends Screen {
 
         int lx = listX(), ly = listTop();
         float cyc = ly + (entries.size() * (ROW_H + 2)) / 2.0F;
-        disc(g, lx - 30, cyc, 14, alpha(ORANGE, a));
+        shinyDisc(g, lx - 30, cyc, 14, ORANGE, a);
         ring(g, lx - 30, cyc, 18, 1.2F, alpha(ORANGE, a));
         icon(g, GEAR, lx - 35, Math.round(cyc) - 5, alpha(WHITE, a));
         pointerLeft(g, lx - 10, Math.round(cyc), 6, alpha(ORANGE, a));
