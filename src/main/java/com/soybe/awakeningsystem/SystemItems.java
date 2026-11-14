@@ -92,6 +92,9 @@ public final class SystemItems {
     public static final DeferredHolder<Item, Item> DUNGEON_KEY = AwakeningSystemMod.ITEMS.register(
             "dungeon_key", () -> new Item(new Item.Properties().stacksTo(16).rarity(net.minecraft.world.item.Rarity.RARE)));
 
+    public static final DeferredHolder<Item, Item> GUILD_LOOT_BAG = AwakeningSystemMod.ITEMS.register(
+            "guild_loot_bag", () -> new LootBagItem(new Item.Properties().stacksTo(16)));
+
     public static final DeferredHolder<Item, Item> HUNTER_GUIDE = AwakeningSystemMod.ITEMS.register(
             "hunter_guide", () -> new Item(new Item.Properties().stacksTo(1).rarity(net.minecraft.world.item.Rarity.EPIC)));
 

@@ -202,6 +202,9 @@ public final class AltarOfOrigin {
         if (m.replay) return;
 
         SystemData data = SystemEvents.data(player);
+        // a greeting may already be waiting since the player first joined; it must not cover the rank
+        // the cube is showing now. The greeting is asked for again once the cube has gone quiet.
+        data.setPendingWelcomePacket(false);
         data.awakenWithPotential(rank);
         player.sendSystemMessage(Component.translatable("awakening_system.altar.result." + rank.toLowerCase(java.util.Locale.ROOT)).withColor(color));
         player.sendSystemMessage(Component.translatable("awakening_system.altar.bonus",

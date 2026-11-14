@@ -384,6 +384,13 @@ public final class GreatTowerWorldManager {
             player.teleportTo(targetLevel, targetX, targetY, targetZ, yaw, 0.0F);
             player.setPortalCooldown();
             syncBorderToPlayer(player);
+            // remember the highest floor reached: the mission board and floor travel go by it
+            com.soybe.awakeningsystem.SystemData reached = com.soybe.awakeningsystem.SystemEvents.data(player);
+            if (reached != null && targetFloor > reached.savedTowerFloor()) {
+               reached.setSavedTowerFloor(targetFloor);
+               player.getPersistentData().putBoolean("tower_has_entered", true);
+               com.soybe.awakeningsystem.AwakeningSystemMod.sync(player);
+            }
             ensureFloorSpawns(targetLevel, new BlockPos(spawnX, groundY, spawnZ), targetFloor);
             player.playNotifySound((SoundEvent)ModSounds.GATE_TRAVEL.value(), SoundSource.PLAYERS, 0.9F, 1.0F);
             player.displayClientMessage(

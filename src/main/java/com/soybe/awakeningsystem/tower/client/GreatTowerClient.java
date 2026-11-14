@@ -26,10 +26,17 @@ public final class GreatTowerClient {
     public static void onItemColors(RegisterColorHandlersEvent.Item event) {
         event.register((stack, tintIndex) -> tintIndex == 0 ? 0xFF000000 | PotentialCrystalBlock.COLORS[0] : -1,
                 SystemBlocks.POTENTIAL_CRYSTAL_ITEM.get());
+        // the guild loot bag: layer 0 (the sack) takes the colour of its tier, the rope stays as drawn
+        event.register((stack, tintIndex) -> tintIndex == 0
+                        ? 0xFF000000 | com.soybe.awakeningsystem.LootBagItem.COLORS[com.soybe.awakeningsystem.LootBagItem.tier(stack) - 1] : -1,
+                com.soybe.awakeningsystem.SystemItems.GUILD_LOOT_BAG.get());
     }
 
     @SubscribeEvent
     public static void onCreativeTabs(BuildCreativeModeTabContentsEvent event) {
         if (event.getTabKey() == ModCreativeTabs.MAGIC_ENTITIES_TAB.getKey()) event.accept(SystemBlocks.POTENTIAL_CRYSTAL_ITEM.get());
+        if (event.getTabKey() == ModCreativeTabs.MAGIC_ENTITIES_TAB.getKey()) {
+            for (int t = 1; t <= 6; t++) event.accept(com.soybe.awakeningsystem.LootBagItem.of(t));
+        }
     }
 }

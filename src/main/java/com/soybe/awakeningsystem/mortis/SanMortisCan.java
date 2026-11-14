@@ -103,21 +103,31 @@ public final class SanMortisCan {
             }
         String label = "SAN MORTIS";
         int labelWidth = textWidth(label);
+        // The paint is laid along the outer skin of the tin one column at a time, in order round the
+        // circle, so no column of a letter is skipped or doubled where the circle steps diagonally.
+        java.util.List<int[]> skin = new java.util.ArrayList<>();
+        for (int dx = -R; dx <= R; dx++)
+            for (int dz = -R; dz <= R; dz++)
+                if (inside(dx, dz) && (!inside(dx + 1, dz) || !inside(dx - 1, dz) || !inside(dx, dz + 1) || !inside(dx, dz - 1)))
+                    skin.add(new int[]{dx, dz});
+        skin.sort(java.util.Comparator.comparingDouble(c -> relAngle(c[0], c[1], frontAngle)));
+        int n = skin.size(), mid = 0;
+        for (int i = 1; i < n; i++)
+            if (Math.abs(relAngle(skin.get(i)[0], skin.get(i)[1], frontAngle)) < Math.abs(relAngle(skin.get(mid)[0], skin.get(mid)[1], frontAngle))) mid = i;
+        java.util.Map<Long, Integer> alongOf = new java.util.HashMap<>();
+        for (int i = 0; i < n; i++) {
+            int a = Math.floorMod(mid - i + n / 2, n) - n / 2;            // + to the viewer's right
+            alongOf.put(key(skin.get(i)[0], skin.get(i)[1]), a);
+        }
         for (int dx = -R; dx <= R; dx++)
             for (int dz = -R; dz <= R; dz++) {
-                double dist = Math.sqrt(dx * dx + dz * dz);
-                if (dist > R + 0.5) continue;
-                boolean wall = dist > R - 0.7;
-                // where this column sits along the label, counted from the middle of the front
-                double ang = Math.atan2(dz, dx) - frontAngle;
-                while (ang > Math.PI) ang -= Math.PI * 2;
-                while (ang < -Math.PI) ang += Math.PI * 2;
-                int along = (int) Math.round(-ang * R);                 // + to the viewer's right
+                if (!inside(dx, dz)) continue;
+                Integer along = alongOf.get(key(dx, dz));
+                boolean wall = along != null;
                 for (int y = 0; y < HEIGHT; y++) {
                     p.set(base.getX() + dx, base.getY() + y, base.getZ() + dz);
-                    BlockState s;
-                    if (!wall) s = y == 0 ? Blocks.SMOOTH_STONE.defaultBlockState() : Blocks.AIR.defaultBlockState();
-                    else s = paint(y, along, labelWidth, label);
+                    // the tin is solid metal inside
+                    BlockState s = wall ? paint(y, along, labelWidth, label) : Blocks.LIGHT_GRAY_CONCRETE.defaultBlockState();
                     level.setBlock(p, s, 2);
                 }
                 // the lid: a ribbed metal top, slightly domed
@@ -153,6 +163,22 @@ public final class SanMortisCan {
             j.finalizeSpawn(level, level.getCurrentDifficultyAt(roof), MobSpawnType.STRUCTURE, null);
             level.addFreshEntity(j);
         }
+    }
+
+    private static boolean inside(int dx, int dz) {
+        return dx * dx + dz * dz <= (R + 0.5) * (R + 0.5);
+    }
+
+    private static long key(int dx, int dz) {
+        return ((long) dx << 32) ^ (dz & 0xffffffffL);
+    }
+
+    /** Angle of a column round the tin, 0 at the middle of the front, in (-pi, pi]. */
+    private static double relAngle(int dx, int dz, double frontAngle) {
+        double ang = Math.atan2(dz, dx) - frontAngle;
+        while (ang > Math.PI) ang -= Math.PI * 2;
+        while (ang <= -Math.PI) ang += Math.PI * 2;
+        return ang;
     }
 
     private static int textWidth(String s) {

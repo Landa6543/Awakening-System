@@ -5168,9 +5168,7 @@ public final class SystemEvents {
                // Si acaba de completar los 1000m
                if (now >= SystemData.DAILY_RUNNING_TARGET && before < SystemData.DAILY_RUNNING_TARGET) {
                   AwakeningSystemMod.sync(player);
-                  player.level().playSound(null, player.getX(), player.getY(), player.getZ(),
-                     SoundEvents.UI_TOAST_CHALLENGE_COMPLETE, SoundSource.PLAYERS, 1.0F, 1.0F
-                  );
+                  player.playNotifySound((SoundEvent)ModSounds.SYSTEM_QUEST_COMPLETE.value(), SoundSource.PLAYERS, 0.6F, 1.0F);
                   player.displayClientMessage(
                      Component.translatable("awakening_system.msg.mision_diaria_has_completado_los_1000m"),
                      false
@@ -7153,6 +7151,29 @@ public final class SystemEvents {
          default -> "box_common";
       };
       return CustomLootConfigManager.rollBoxLoot(boxId, player, player.getRandom());
+   }
+
+   /** Opens a guild loot bag: rolls the box loot of that tier straight into the inventory and shows the reward card. */
+   public static void openLootBag(ServerPlayer player, int tier) {
+      SystemData data = data(player);
+      if (data == null) return;
+      tier = Math.max(1, Math.min(6, tier));
+      String boxId = switch (tier) {
+         case 2 -> "box_rare";
+         case 3 -> "box_epic";
+         case 4 -> "box_legendary";
+         case 5 -> "box_mythic";
+         case 6 -> "box_primordial";
+         default -> "box_common";
+      };
+      SystemEvents.BoxLootResult lootResult = giveBoxLoot(player, data, tier);
+      spawnBoxFx(player, tier);
+      PacketDistributor.sendToPlayer(
+         player,
+         new ChestRewardPayload(boxId, tier, lootResult.summary(), lootResult.coins(), lootResult.itemIds(), lootResult.itemCounts()),
+         new CustomPacketPayload[0]
+      );
+      AwakeningSystemMod.sync(player);
    }
 
    private static SystemEvents.BoxLootResult giveRandomLoot(ServerPlayer player, SystemData data) {
@@ -12880,7 +12901,9 @@ public final class SystemEvents {
    }
 
    private static boolean updateDailyProgress(ServerPlayer player, SystemData data, long day, int type, int amount) {
-      return !SystemConfig.DAILY_MISSIONS_ENABLED.get() ? false : data.recordDailyProgress(day, type, amount);
+      // The old hidden dailies (mine, hunt, sprint, go deep...) were replaced by the Monarch's training and the
+      // guild commission shown in Missions. They no longer count, so nothing completes behind the player's back.
+      return false;
    }
 
    private static int learnAndAnnounce(ServerPlayer player, SystemData data, String affinity, int amount, String skillId) {

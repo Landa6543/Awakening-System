@@ -177,7 +177,7 @@ public final class NpcDialogueManager {
                 int reqKills = getRequiredAscensionKills(nextRank);
 
                 if (data.isAscensionQuestActive()) {
-                    if (data.isAscensionCompleted() || player.isCreative()) {
+                    if (data.isAscensionCompleted()) {
                         String text = "awakening_system.dialogue.hunter_evaluator.ascension_ready|"
                                 + data.ascensionProgress() + "|" + data.ascensionTarget() + "|" + nextRank;
 

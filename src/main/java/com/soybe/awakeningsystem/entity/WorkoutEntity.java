@@ -227,10 +227,9 @@ public class WorkoutEntity extends Entity implements GeoEntity {
         // Si se alcanzan las 100 repeticiones
         if (current >= target) {
             this.setComplete(true);
-            player.level().playSound(null, player.getX(), player.getY(), player.getZ(),
-                    SoundEvents.UI_TOAST_CHALLENGE_COMPLETE, SoundSource.PLAYERS, 1.0F, 1.0F);
-            player.level().playSound(null, player.getX(), player.getY(), player.getZ(),
-                    SoundEvents.PLAYER_LEVELUP, SoundSource.PLAYERS, 0.85F, 1.1F);
+            if (player instanceof net.minecraft.server.level.ServerPlayer sp) {
+                sp.playNotifySound(com.soybe.awakeningsystem.ModSounds.SYSTEM_QUEST_COMPLETE.value(), SoundSource.PLAYERS, 0.6F, 1.0F);
+            }
 
             if (player.level() instanceof ServerLevel sl) {
                 sl.sendParticles(ParticleTypes.TOTEM_OF_UNDYING, player.getX(), player.getY() + 0.6, player.getZ(), 24, 0.4, 0.4, 0.4, 0.1);

@@ -45,6 +45,27 @@ public final class GreatTowerSite {
     private static BlockPos best;
     private static int bestSpread = Integer.MAX_VALUE;
 
+    /**
+     * The tower is raised while the world is still being created, before anyone can join, so it is never
+     * seen popping in (nor lit half-way) in front of the player. The per-tick search below stays only as a
+     * fallback.
+     */
+    @SubscribeEvent
+    public static void onServerStarted(net.neoforged.neoforge.event.server.ServerStartedEvent event) {
+        MinecraftServer server = event.getServer();
+        Data data = Data.get(server);
+        if (data.built) return;
+        ServerLevel overworld = server.overworld();
+        candidate = -1;
+        quick = true;
+        int guard = DISTANCES.length * ANGLES + 4;
+        while (!data.built && guard-- > 0) searchStep(overworld, data);
+        quick = false;
+    }
+
+    /** True while the site is chosen at world creation from the terrain noise alone. */
+    private static boolean quick;
+
     @SubscribeEvent
     public static void onServerTick(ServerTickEvent.Post event) {
         MinecraftServer server = event.getServer();
@@ -88,6 +109,7 @@ public final class GreatTowerSite {
             int x = spawn.getX() + DISTANCES[0];
             best = new BlockPos(x, Math.max(level.getSeaLevel() + 1, surface(level, x, spawn.getZ())), spawn.getZ());
         }
+        quick = false;
         build(level, data, best);
         candidate = -1;
     }
@@ -103,7 +125,9 @@ public final class GreatTowerSite {
                 sz += (int) Math.round(Math.sin(a) * 22.0D);
             }
             int y = surface(level, sx, sz);
-            BlockState top = level.getBlockState(new BlockPos(sx, y, sz));
+            BlockState top = quick
+                    ? level.getChunkSource().getGenerator().getBaseColumn(sx, sz, level, level.getChunkSource().randomState()).getBlock(y)
+                    : level.getBlockState(new BlockPos(sx, y, sz));
             if (!top.getFluidState().isEmpty() || top.is(Blocks.ICE)) return null;
             if (looksBuilt(top)) return null;
             min = Math.min(min, y);
@@ -116,6 +140,11 @@ public final class GreatTowerSite {
     }
 
     private static int surface(ServerLevel level, int x, int z) {
+        if (quick) {
+            // world creation: ask the terrain noise instead of generating every candidate chunk
+            var gen = level.getChunkSource().getGenerator();
+            return gen.getBaseHeight(x, z, Heightmap.Types.WORLD_SURFACE_WG, level, level.getChunkSource().randomState()) - 1;
+        }
         // getHeight reads nothing from a chunk that is not loaded yet, so generate it first
         level.getChunk(x >> 4, z >> 4);
         return level.getHeight(Heightmap.Types.MOTION_BLOCKING_NO_LEAVES, x, z) - 1;
