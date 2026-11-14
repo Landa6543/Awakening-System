@@ -51,7 +51,7 @@ public final class SaoShatter {
     private static final class Shard {
         double x, y, z, ox, oy, oz, vx, vy, vz;
         float size, rx, ry, rz, sx, sy, sz;
-        int age, life, tint;
+        int age, life, tint, hold;
     }
 
     private record Flash(double x, double y, double z, float radius, int born) {}
@@ -77,7 +77,7 @@ public final class SaoShatter {
             AABB around = mc.player.getBoundingBox().inflate(64.0D);
             for (Entity e : mc.level.entitiesForRendering()) {
                 if (!(e instanceof LivingEntity le) || e instanceof ArmorStand) continue;
-                if (le.deathTime >= 1 && !burst.contains(e.getId()) && around.intersects(e.getBoundingBox())) {
+                if (le.isDeadOrDying() && !burst.contains(e.getId()) && around.intersects(e.getBoundingBox())) {
                     burst.add(e.getId());
                     shatter(mc, le);
                 }
@@ -87,11 +87,15 @@ public final class SaoShatter {
         for (Iterator<Shard> it = shards.iterator(); it.hasNext(); ) {
             Shard s = it.next();
             s.ox = s.x; s.oy = s.y; s.oz = s.z;
+            if (++s.age >= s.life) {
+                it.remove();
+                continue;
+            }
+            if (s.age <= s.hold) continue;                  // the body stands as glass for a moment, then bursts
             s.x += s.vx; s.y += s.vy; s.z += s.vz;
             s.vx *= 0.9; s.vz *= 0.9;
             s.vy = s.vy * 0.9 - 0.012;
             s.rx += s.sx; s.ry += s.sy; s.rz += s.sz;
-            if (++s.age >= s.life) it.remove();
         }
         flashes.removeIf(f -> clock - f.born() > 8);
     }
@@ -102,7 +106,7 @@ public final class SaoShatter {
         double w = box.getXsize(), h = box.getYsize(), d = box.getZsize();
         Vec3 c = box.getCenter();
         float big = (float) Math.cbrt(w * h * d);
-        int count = Mth.clamp((int) (60 * w * h * d) + 24, 24, 220);
+        int count = Mth.clamp((int) (110 * w * h * d) + 40, 40, 320);
         for (int i = 0; i < count; i++) {
             Shard s = new Shard();
             s.x = s.ox = box.minX + RANDOM.nextDouble() * w;
@@ -110,14 +114,16 @@ public final class SaoShatter {
             s.z = s.oz = box.minZ + RANDOM.nextDouble() * d;
             double dx = s.x - c.x, dy = s.y - c.y, dz = s.z - c.z;
             double len = Math.max(0.05, Math.sqrt(dx * dx + dy * dy + dz * dz));
-            double push = 0.08 + RANDOM.nextDouble() * 0.16;
-            s.vx = dx / len * push + (RANDOM.nextDouble() - 0.5) * 0.06;
-            s.vy = dy / len * push * 0.6 + 0.06 + RANDOM.nextDouble() * 0.1;
-            s.vz = dz / len * push + (RANDOM.nextDouble() - 0.5) * 0.06;
-            s.size = (0.05F + RANDOM.nextFloat() * 0.11F) * Mth.clamp(big, 0.6F, 2.2F);
+            // outward from the middle in every direction, the same on all sides (no shove backwards)
+            double push = 0.07 + RANDOM.nextDouble() * 0.14;
+            s.vx = dx / len * push + (RANDOM.nextDouble() - 0.5) * 0.04;
+            s.vy = dy / len * push * 0.7 + 0.03 + RANDOM.nextDouble() * 0.06;
+            s.vz = dz / len * push + (RANDOM.nextDouble() - 0.5) * 0.04;
+            s.size = (0.06F + RANDOM.nextFloat() * 0.1F) * Mth.clamp(big, 0.6F, 2.2F);
+            s.hold = 2 + RANDOM.nextInt(3);
             s.rx = RANDOM.nextFloat() * 360; s.ry = RANDOM.nextFloat() * 360; s.rz = RANDOM.nextFloat() * 360;
             s.sx = (RANDOM.nextFloat() - 0.5F) * 30; s.sy = (RANDOM.nextFloat() - 0.5F) * 30; s.sz = (RANDOM.nextFloat() - 0.5F) * 30;
-            s.life = 22 + RANDOM.nextInt(20);
+            s.life = s.hold + 22 + RANDOM.nextInt(18);
             // pale glass, a few shards caught bluer or whiter
             int pick = RANDOM.nextInt(10);
             s.tint = pick < 5 ? 0xBFE9FF : pick < 8 ? 0xE8F7FF : 0x8FD0FF;
@@ -127,10 +133,17 @@ public final class SaoShatter {
         mc.level.playLocalSound(c.x, c.y, c.z, DEATH, SoundSource.NEUTRAL, 1.0F, 0.95F + RANDOM.nextFloat() * 0.1F, false);
     }
 
-    /** A burst body is not drawn any more (no falling over, no red tint). */
+    /**
+     * The very frame a creature is seen dying, it turns to glass: it bursts here (if the tick has not caught
+     * it yet) and its body is never drawn again, so it neither falls over nor flies back.
+     */
     @SubscribeEvent
     public static void onRenderLiving(RenderLivingEvent.Pre<?, ?> event) {
-        if (on() && event.getEntity().deathTime >= 1 && burst.contains(event.getEntity().getId())) event.setCanceled(true);
+        if (!on()) return;
+        LivingEntity e = event.getEntity();
+        if (!e.isDeadOrDying() || e instanceof ArmorStand) return;
+        if (burst.add(e.getId())) shatter(Minecraft.getInstance(), e);
+        event.setCanceled(true);
     }
 
     @SubscribeEvent

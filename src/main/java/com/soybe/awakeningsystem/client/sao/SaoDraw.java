@@ -16,7 +16,6 @@ final class SaoDraw {
     static int hoverKey, lastHoverKey;
 
     static void frame(int mouseX, int mouseY, float t) {
-        if (hoverKey != lastHoverKey && hoverKey != 0) SaoSounds.hover();
         lastHoverKey = hoverKey;
         hoverKey = 0;
         mx = mouseX;
@@ -123,6 +122,27 @@ final class SaoDraw {
         vc.addVertex(m, cx + c0 * b, cy + s0 * b, 0).setColor(cb);
     }
 
+    /**
+     * A slanted plate (a parallelogram leaning right by {@code skew}), with its colour running from
+     * {@code top} to {@code bottom}: the shape of the bars in the series.
+     */
+    static void slant(GuiGraphics g, float x, float y, float w, float h, float skew, int top, int bottom) {
+        if (w <= 0 || h <= 0) return;
+        var vc = buf(g);
+        var m = g.pose().last().pose();
+        vc.addVertex(m, x + skew, y, 0).setColor(top);
+        vc.addVertex(m, x, y + h, 0).setColor(bottom);
+        vc.addVertex(m, x + w, y + h, 0).setColor(bottom);
+        vc.addVertex(m, x + w + skew, y, 0).setColor(top);
+    }
+
+    /** Health colour: green, turning yellow below half and red below a fifth. */
+    static int hpColor(float frac) {
+        if (frac > 0.5F) return 0xFF7CD23A;
+        if (frac > 0.2F) return 0xFFE8C21E;
+        return 0xFFE0402E;
+    }
+
     /** Mixes a colour toward white (k > 0) or black (k < 0), keeping its alpha. */
     static int shade(int argb, float k) {
         int a = argb >>> 24, r = (argb >> 16) & 255, gg = (argb >> 8) & 255, b = argb & 255;
@@ -163,8 +183,6 @@ final class SaoDraw {
         g.fill(x, y, x + w, y + 1, alpha(hot ? 0xFFFFD27A : 0xFFFFFFFF, a));                    // top light edge
         g.fill(x, y + h - 1, x + w, y + h, alpha(hot ? ORANGE_DARK : 0xFFC9C9CE, a));
         g.fill(x, y, x + 2, y + h, alpha(hot ? 0xFFFFFFFF : ORANGE, a * (hot ? 0.8F : 0.55F)));   // accent bar
-        // faint diagonal grain across the plate
-        for (int i = 8; i < w; i += 6) g.fill(x + i, y + 2, x + i + 1, y + h - 2, alpha(hot ? 0x14FFFFFF : 0x0A000000, a));
         float cy = y + h / 2.0F;
         ring(g, x + 13, cy, 8.5F, 1.0F, alpha(hot ? 0xFFFFE2A8 : 0xFFB8B8BE, a));
         shinyDisc(g, x + 13, cy, 7.2F, hot ? WHITE : 0xFF5E5E66, a);
@@ -194,7 +212,6 @@ final class SaoDraw {
     static void panel(GuiGraphics g, int x, int y, int w, int h, int headerH, float a) {
         g.fill(x + 2, y + 3, x + w + 2, y + h + 3, alpha(0x55000000, a));
         g.fillGradient(x, y, x + w, y + h, alpha(0xF8FFFFFF, a), alpha(0xF0E4E4E8, a));
-        for (int yy = y + headerH + 3; yy < y + h - 2; yy += 3) g.fill(x + 3, yy, x + w - 3, yy + 1, alpha(0x07000000, a));
         if (headerH > 0) {
             g.fillGradient(x, y, x + w, y + headerH, alpha(0xFFFDFDFD, a), alpha(0xFFE6E6EA, a));
             g.fill(x, y + headerH, x + w, y + headerH + 1, alpha(ORANGE, a));
@@ -236,8 +253,6 @@ final class SaoDraw {
         g.fillGradient(0, 0, w, h, alpha(0x40101018, a), alpha(0x70101018, a));
         g.fillGradient(0, 0, w, h / 5, alpha(0x50000000, a), 0);
         g.fillGradient(0, h - h / 5, w, h, 0, alpha(0x50000000, a));
-        for (int x = 0; x < w; x += 24) g.fill(x, 0, x + 1, h, alpha(0x06FFFFFF, a));
-        for (int y = 0; y < h; y += 24) g.fill(0, y, w, y + 1, alpha(0x06FFFFFF, a));
     }
 
     static final String[] PLUS = {

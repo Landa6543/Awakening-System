@@ -210,8 +210,6 @@ public class SaoMenuScreen extends Screen {
         pointerRight(g, x + w + 7, y + 70, 7, alpha(PANEL, a));
         String name = mc.player.getName().getString();
         g.drawString(this.font, name, x + (w - this.font.width(name)) / 2, y + 6, alpha(GREY_DARK, a), false);
-        for (int hy = y + 26; hy < y + 150; hy += 8)
-            for (int hx = x + 8 + ((hy / 8) % 2) * 5; hx < x + w - 8; hx += 10) g.fill(hx, hy, hx + 3, hy + 1, alpha(0x10000000, a));
 
         int fx = x + w / 2, fy = y + 28;
         // a soft floor disc and the player themself, turning to follow the mouse

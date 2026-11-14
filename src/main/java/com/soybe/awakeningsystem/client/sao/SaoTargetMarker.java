@@ -61,7 +61,7 @@ public final class SaoTargetMarker {
 
         PoseStack ps = event.getPoseStack();
         ps.pushPose();
-        ps.translate(x, y + target.getBbHeight() + 0.45F * scale + bob, z);
+        ps.translate(x, y + target.getBbHeight() + 0.85F + 0.3F * scale + bob, z);
         ps.mulPose(com.mojang.math.Axis.YP.rotationDegrees(age * 3.0F));
         ps.scale(scale, scale, scale);
         Matrix4f m = ps.last().pose();

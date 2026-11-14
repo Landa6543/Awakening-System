@@ -76,7 +76,10 @@ public final class SystemHudOverlay {
             renderWorkoutDashboard(mc, graphics, workout, width, height, isSys40, isSys30, isSys20);
         }
 
-        if (com.soybe.awakeningsystem.client.gui.GuiConfig.showHudStatusCard) {
+        boolean saoStyle = com.soybe.awakeningsystem.client.sao.UiStyle.fullDive();
+        if (com.soybe.awakeningsystem.client.gui.GuiConfig.showHudStatusCard && saoStyle) {
+            com.soybe.awakeningsystem.client.sao.SaoHud.render(graphics, mc, data);
+        } else if (com.soybe.awakeningsystem.client.gui.GuiConfig.showHudStatusCard) {
             switch (com.soybe.awakeningsystem.client.gui.GuiConfig.healthDisplayMode) {
                 case CARD -> renderHunterStatusCard(mc, graphics, data, width, height, isSys40, isSys30, isSys20, hasCultivation);
                 case VANILLA -> renderCompactManaBar(mc, graphics, data, width, height, isSys40, isSys30, isSys20, hasCultivation);
@@ -88,7 +91,8 @@ public final class SystemHudOverlay {
             renderSkillHotbar(mc, graphics, data, width, height, isSys40, isSys30, isSys20);
         }
 
-        if (com.soybe.awakeningsystem.client.gui.GuiConfig.showHudAppraisal) {
+        // in the full-dive look the creature's name and health float over it instead
+        if (com.soybe.awakeningsystem.client.gui.GuiConfig.showHudAppraisal && !saoStyle) {
             renderEntityAppraisal(mc, graphics, data, width, isSys40, isSys30, isSys20);
         }
 
