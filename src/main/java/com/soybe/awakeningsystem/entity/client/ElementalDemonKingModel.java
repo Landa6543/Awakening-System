@@ -6,6 +6,7 @@ import net.minecraft.client.model.HierarchicalModel;
 import net.minecraft.client.model.geom.ModelLayerLocation;
 import net.minecraft.client.model.geom.ModelPart;
 import net.minecraft.client.model.geom.PartPose;
+import net.minecraft.client.model.geom.builders.CubeDeformation;
 import net.minecraft.client.model.geom.builders.CubeListBuilder;
 import net.minecraft.client.model.geom.builders.LayerDefinition;
 import net.minecraft.client.model.geom.builders.MeshDefinition;
@@ -14,101 +15,158 @@ import net.minecraft.resources.ResourceLocation;
 import net.minecraft.util.Mth;
 
 /**
- * The Elemental Demon King: obsidian armour veined with lava, a glowing heart-gem, a crown set with a gem
- * for each element, great curved horns, bat wings, a long cape and clawed gauntlets. Four elemental orbs
- * (fire, frost, earth, storm) circle him slowly.
+ * The Elemental Demon King, drawn from scratch: a demon monarch in black plate split by glowing cracks. A
+ * horned helm with a crown of spikes and burning eyes; a core gem in the chest; spiked pauldrons; a long cape
+ * in two pieces and a skirt of plates over the legs; a sceptre crowned with an orb in the right hand and a
+ * sigil burning in the left palm. Behind his head hangs an octagonal halo carrying four elemental crystals
+ * (fire, frost, storm, wind) that turns slowly. The glow (cracks, core, eyes, orb, sigil) takes the colour of
+ * his phase, see {@link ElementalDemonKingGlowLayer}.
  */
 public class ElementalDemonKingModel extends HierarchicalModel<ElementalDemonKingBossEntity> {
     public static final ModelLayerLocation LAYER_LOCATION = new ModelLayerLocation(
             ResourceLocation.fromNamespaceAndPath(AwakeningSystemMod.MOD_ID, "elemental_demon_king"), "main");
 
-    private final ModelPart root, body, head, jaw, cape, rWing, lWing, rArm, lArm, rFore, lFore, rLeg, lLeg, rShin, lShin;
-    private final ModelPart[] orbs = new ModelPart[4];
+    private final ModelPart root, body, torso, head, cape, cape2, halo, rArm, lArm, rFore, lFore, rHand, lHand, orb;
+    private final ModelPart rLeg, lLeg, rShin, lShin, tassetF, tassetB, tassetR, tassetL;
+    private final ModelPart[] crystals = new ModelPart[4];
 
     public ElementalDemonKingModel(ModelPart root) {
         this.root = root;
         this.body = root.getChild("body");
-        this.head = body.getChild("head");
-        this.jaw = head.getChild("jaw");
-        this.cape = body.getChild("cape");
-        this.rWing = body.getChild("right_wing");
-        this.lWing = body.getChild("left_wing");
-        this.rArm = body.getChild("right_arm");
-        this.lArm = body.getChild("left_arm");
+        this.torso = body.getChild("torso");
+        this.head = torso.getChild("head");
+        this.cape = torso.getChild("cape");
+        this.cape2 = cape.getChild("cape2");
+        this.halo = torso.getChild("halo");
+        for (int i = 0; i < 4; i++) crystals[i] = halo.getChild("crystal_" + i);
+        this.rArm = torso.getChild("right_arm");
+        this.lArm = torso.getChild("left_arm");
         this.rFore = rArm.getChild("right_forearm");
         this.lFore = lArm.getChild("left_forearm");
+        this.rHand = rFore.getChild("right_hand");
+        this.lHand = lFore.getChild("left_hand");
+        this.orb = rHand.getChild("sceptre").getChild("orb");
         this.rLeg = root.getChild("right_leg");
         this.lLeg = root.getChild("left_leg");
         this.rShin = rLeg.getChild("right_shin");
         this.lShin = lLeg.getChild("left_shin");
-        for (int i = 0; i < 4; i++) orbs[i] = root.getChild("orb_" + i);
+        this.tassetF = body.getChild("tasset_front");
+        this.tassetB = body.getChild("tasset_back");
+        this.tassetR = body.getChild("tasset_right");
+        this.tassetL = body.getChild("tasset_left");
     }
 
     public static LayerDefinition createBodyLayer() {
         MeshDefinition mesh = new MeshDefinition();
         PartDefinition root = mesh.getRoot();
 
+        // ── waist and the skirt of plates ──
         PartDefinition body = root.addOrReplaceChild("body", CubeListBuilder.create()
-                .texOffs(40, 16).addBox(-4.5F, -5.0F, -2.5F, 9.0F, 6.0F, 5.0F)                 // waist
-                .texOffs(0, 16).addBox(-6.5F, -16.0F, -3.5F, 13.0F, 11.0F, 7.0F)               // breastplate
-                .texOffs(68, 16).addBox(-2.0F, -12.5F, -4.3F, 4.0F, 4.0F, 1.0F)                // heart-gem
-                .texOffs(78, 16).addBox(-5.0F, 0.0F, -3.2F, 10.0F, 7.0F, 1.0F)                 // front tasset
-                .texOffs(78, 16).addBox(-5.0F, 0.0F, 2.2F, 10.0F, 7.0F, 1.0F),                 // back tasset
+                        .texOffs(78, 0).addBox(-5.0F, -3.0F, -3.0F, 10.0F, 4.0F, 6.0F),
                 PartPose.offset(0.0F, 2.0F, 0.0F));
-        body.addOrReplaceChild("cape", CubeListBuilder.create().texOffs(100, 16).addBox(-6.0F, 0.0F, 0.0F, 12.0F, 26.0F, 1.0F),
-                PartPose.offsetAndRotation(0.0F, -16.0F, 3.6F, 0.08F, 0.0F, 0.0F));
+        body.addOrReplaceChild("tasset_front", CubeListBuilder.create().texOffs(48, 47).addBox(-4.5F, 0.0F, -0.5F, 9.0F, 11.0F, 1.0F),
+                PartPose.offsetAndRotation(0.0F, 0.0F, -3.4F, -0.08F, 0.0F, 0.0F));
+        body.addOrReplaceChild("tasset_back", CubeListBuilder.create().texOffs(68, 47).addBox(-5.0F, 0.0F, -0.5F, 10.0F, 12.0F, 1.0F),
+                PartPose.offsetAndRotation(0.0F, 0.0F, 3.4F, 0.1F, 0.0F, 0.0F));
+        body.addOrReplaceChild("tasset_right", CubeListBuilder.create().texOffs(90, 47).addBox(-0.5F, 0.0F, -3.0F, 1.0F, 10.0F, 6.0F),
+                PartPose.offsetAndRotation(-5.4F, 0.0F, 0.0F, 0.0F, 0.0F, 0.12F));
+        body.addOrReplaceChild("tasset_left", CubeListBuilder.create().texOffs(90, 47).mirror().addBox(-0.5F, 0.0F, -3.0F, 1.0F, 10.0F, 6.0F),
+                PartPose.offsetAndRotation(5.4F, 0.0F, 0.0F, 0.0F, 0.0F, -0.12F));
 
-        PartDefinition head = body.addOrReplaceChild("head", CubeListBuilder.create()
-                .texOffs(0, 0).addBox(-4.0F, -8.0F, -4.0F, 8.0F, 8.0F, 8.0F)
-                .texOffs(52, 0).addBox(-4.5F, -9.0F, -4.5F, 9.0F, 2.0F, 9.0F)                  // crown band
-                .texOffs(88, 0).addBox(-0.5F, -11.0F, -5.0F, 1.0F, 2.0F, 1.0F)                 // four gem prongs
-                .texOffs(88, 0).addBox(-0.5F, -11.0F, 4.0F, 1.0F, 2.0F, 1.0F)
-                .texOffs(88, 0).addBox(-5.0F, -11.0F, -0.5F, 1.0F, 2.0F, 1.0F)
-                .texOffs(88, 0).addBox(4.0F, -11.0F, -0.5F, 1.0F, 2.0F, 1.0F),
+        // ── torso: abdomen, chest with its core, gorget ──
+        PartDefinition torso = body.addOrReplaceChild("torso", CubeListBuilder.create()
+                        .texOffs(0, 16).addBox(-4.5F, -6.0F, -3.0F, 9.0F, 6.0F, 6.0F)
+                        .texOffs(0, 0).addBox(-7.0F, -14.0F, -4.0F, 14.0F, 8.0F, 8.0F)
+                        .texOffs(110, 0).addBox(-1.5F, -12.0F, -4.6F, 3.0F, 3.0F, 1.0F)
+                        .texOffs(30, 16).addBox(-4.5F, -16.0F, -3.5F, 9.0F, 3.0F, 7.0F),
+                PartPose.offset(0.0F, -3.0F, 0.0F));
+
+        // ── the cape, from behind the shoulders to near the ground, in two pieces ──
+        PartDefinition cape = torso.addOrReplaceChild("cape", CubeListBuilder.create()
+                        .texOffs(0, 31).addBox(-7.0F, 0.0F, 0.0F, 14.0F, 13.0F, 1.0F),
+                PartPose.offsetAndRotation(0.0F, -14.5F, 4.2F, 0.08F, 0.0F, 0.0F));
+        cape.addOrReplaceChild("cape2", CubeListBuilder.create()
+                        .texOffs(30, 31).addBox(-7.0F, 0.0F, 0.0F, 14.0F, 12.0F, 1.0F),
+                PartPose.offsetAndRotation(0.0F, 13.0F, 0.0F, 0.05F, 0.0F, 0.0F));
+
+        // ── head: helm, mask, crown with spikes, two great horns sweeping back ──
+        PartDefinition head = torso.addOrReplaceChild("head", CubeListBuilder.create()
+                        .texOffs(94, 16).addBox(-3.5F, -7.0F, -3.5F, 7.0F, 7.0F, 7.0F)
+                        .texOffs(110, 5).addBox(-3.0F, -3.0F, -4.0F, 6.0F, 3.0F, 1.0F)
+                        .texOffs(62, 16).addBox(-4.0F, -7.5F, -4.0F, 8.0F, 2.0F, 8.0F, new CubeDeformation(0.1F))
+                        .texOffs(90, 64).addBox(-0.5F, -12.0F, -4.2F, 1.0F, 5.0F, 1.0F),
                 PartPose.offset(0.0F, -16.0F, -0.5F));
-        head.addOrReplaceChild("jaw", CubeListBuilder.create().texOffs(32, 0).addBox(-3.0F, 0.0F, -4.0F, 6.0F, 2.0F, 4.0F),
-                PartPose.offset(0.0F, -1.0F, 0.2F));
         for (int side = -1; side <= 1; side += 2) {
-            boolean m = side > 0;
-            PartDefinition h1 = head.addOrReplaceChild(side < 0 ? "horn_right" : "horn_left", CubeListBuilder.create().mirror(m)
-                    .texOffs(92, 0).addBox(-1.5F, -5.0F, -1.5F, 3.0F, 5.0F, 3.0F),
-                    PartPose.offsetAndRotation(side * 3.6F, -6.5F, -0.5F, -0.2F, 0.0F, side * 1.0F));
-            PartDefinition h2 = h1.addOrReplaceChild("mid", CubeListBuilder.create().mirror(m)
-                    .texOffs(104, 0).addBox(-1.0F, -5.0F, -1.0F, 2.0F, 5.0F, 2.0F),
-                    PartPose.offsetAndRotation(0.0F, -4.6F, 0.0F, -0.2F, 0.0F, -side * 0.75F));
-            h2.addOrReplaceChild("tip", CubeListBuilder.create().mirror(m)
-                    .texOffs(112, 0).addBox(-0.5F, -4.0F, -0.5F, 1.0F, 4.0F, 1.0F),
-                    PartPose.offsetAndRotation(0.0F, -4.6F, 0.0F, -0.25F, 0.0F, -side * 0.6F));
-        }
-
-        for (int side = -1; side <= 1; side += 2) {
-            boolean m = side > 0;
             String s = side < 0 ? "right" : "left";
-            body.addOrReplaceChild(s + "_wing", CubeListBuilder.create().mirror(m)
-                    .texOffs(0, 64).addBox(m ? 0.0F : -18.0F, -16.0F, 0.0F, 18.0F, 20.0F, 0.0F),
-                    PartPose.offsetAndRotation(side * 2.5F, -13.0F, 3.8F, 0.0F, side * -0.5F, side * -0.15F));
-            PartDefinition arm = body.addOrReplaceChild(s + "_arm", CubeListBuilder.create().mirror(m)
-                    .texOffs(34, 34).addBox(-2.0F, 0.0F, -2.0F, 4.0F, 8.0F, 4.0F)
-                    .texOffs(0, 34).addBox(-3.5F, -3.0F, -4.0F, 7.0F, 5.0F, 8.0F)               // pauldron
-                    .texOffs(30, 34).addBox(-0.5F + side * 1.5F, -7.0F, -0.5F, 1.0F, 4.0F, 1.0F),   // its spike
-                    PartPose.offsetAndRotation(side * 8.5F, -14.0F, 0.0F, 0.0F, 0.0F, side * 0.1F));
-            arm.addOrReplaceChild(s + "_forearm", CubeListBuilder.create().mirror(m)
-                    .texOffs(50, 34).addBox(-2.0F, 0.0F, -2.0F, 4.0F, 8.0F, 4.0F)
-                    .texOffs(66, 34).addBox(-2.5F, 7.5F, -2.5F, 5.0F, 3.0F, 5.0F),            // clawed gauntlet
-                    PartPose.offsetAndRotation(0.0F, 8.0F, 0.0F, -0.2F, 0.0F, 0.0F));
-
-            PartDefinition leg = root.addOrReplaceChild(s + "_leg", CubeListBuilder.create().mirror(m)
-                    .texOffs(0, 47).addBox(-2.0F, 0.0F, -2.0F, 4.0F, 9.0F, 4.0F),
-                    PartPose.offset(side * 3.0F, 2.0F, 0.0F));
-            leg.addOrReplaceChild(s + "_shin", CubeListBuilder.create().mirror(m)
-                    .texOffs(16, 47).addBox(-2.0F, 0.0F, -2.0F, 4.0F, 10.0F, 4.0F)
-                    .texOffs(32, 47).addBox(-2.5F, 0.0F, -2.7F, 5.0F, 7.0F, 1.0F)               // greave
-                    .texOffs(44, 47).addBox(-2.5F, 10.0F, -4.0F, 5.0F, 3.0F, 6.0F),            // armoured boot
-                    PartPose.offset(0.0F, 9.0F, 0.0F));
+            head.addOrReplaceChild(s + "_spike", CubeListBuilder.create().texOffs(90, 64).addBox(-0.5F, -5.0F, -0.5F, 1.0F, 5.0F, 1.0F),
+                    PartPose.offsetAndRotation(side * 2.2F, -7.0F, -3.6F, -0.1F, 0.0F, side * 0.3F));
+            PartDefinition horn = head.addOrReplaceChild(s + "_horn", CubeListBuilder.create().texOffs(0, 73).addBox(-1.5F, -5.0F, -1.5F, 3.0F, 5.0F, 3.0F),
+                    PartPose.offsetAndRotation(side * 3.3F, -6.0F, 0.5F, 0.3F, 0.0F, side * 0.85F));
+            PartDefinition mid = horn.addOrReplaceChild(s + "_horn_mid", CubeListBuilder.create().texOffs(12, 73).addBox(-1.0F, -5.0F, -1.0F, 2.0F, 5.0F, 2.0F),
+                    PartPose.offsetAndRotation(0.0F, -4.6F, 0.0F, 0.6F, 0.0F, side * -0.4F));
+            mid.addOrReplaceChild(s + "_horn_tip", CubeListBuilder.create().texOffs(20, 73).addBox(-0.5F, -5.0F, -0.5F, 1.0F, 5.0F, 1.0F),
+                    PartPose.offsetAndRotation(0.0F, -4.6F, 0.0F, 0.7F, 0.0F, side * -0.25F));
         }
+
+        // ── the elemental halo behind the head: eight bars in an octagon, four crystals on it ──
+        PartDefinition halo = torso.addOrReplaceChild("halo", CubeListBuilder.create(),
+                PartPose.offset(0.0F, -21.0F, 7.0F));
+        for (int i = 0; i < 8; i++)
+            halo.addOrReplaceChild("halo_bar_" + i, CubeListBuilder.create().texOffs(34, 70).addBox(-3.5F, -9.5F, -0.5F, 7.0F, 1.0F, 1.0F),
+                    PartPose.offsetAndRotation(0.0F, 0.0F, 0.0F, 0.0F, 0.0F, i * Mth.PI / 4.0F));
+        int[] crystalU = {78, 62, 70, 78}, crystalV = {64, 71, 71, 71};
         for (int i = 0; i < 4; i++) {
-            root.addOrReplaceChild("orb_" + i, CubeListBuilder.create().texOffs(i * 12, 86).addBox(-1.5F, -1.5F, -1.5F, 3.0F, 3.0F, 3.0F),
-                    PartPose.offset(0.0F, -8.0F, 0.0F));
+            float a = i * Mth.HALF_PI + Mth.PI / 4.0F;
+            halo.addOrReplaceChild("crystal_" + i, CubeListBuilder.create().texOffs(crystalU[i], crystalV[i]).addBox(-1.0F, -2.0F, -1.0F, 2.0F, 4.0F, 2.0F),
+                    PartPose.offsetAndRotation(Mth.sin(a) * 9.6F, -Mth.cos(a) * 9.6F, 0.0F, 0.0F, 0.0F, -a));
+        }
+
+        // ── arms: spiked pauldron, upper arm, gauntlet, clawed hand ──
+        for (int side = -1; side <= 1; side += 2) {
+            String s = side < 0 ? "right" : "left";
+            boolean m = side > 0;
+            PartDefinition arm = torso.addOrReplaceChild(s + "_arm", CubeListBuilder.create().mirror(m)
+                            .texOffs(100, 31).addBox(-2.5F, -1.0F, -2.5F, 5.0F, 9.0F, 5.0F)
+                            .texOffs(44, 0).addBox(-4.0F, -3.5F, -4.5F, 8.0F, 5.0F, 9.0F),
+                    PartPose.offsetAndRotation(side * 9.0F, -12.5F, 0.0F, 0.0F, 0.0F, side * -0.08F));
+            for (int k = 0; k < 3; k++)
+                arm.addOrReplaceChild(s + "_spike_" + k, CubeListBuilder.create().texOffs(98, 64).addBox(-0.5F, -4.0F, -0.5F, 1.0F, 4.0F, 1.0F),
+                        PartPose.offsetAndRotation(side * 1.5F, -3.3F, -2.5F + k * 2.5F, 0.0F, 0.0F, side * (0.45F + k * 0.08F)));
+            PartDefinition fore = arm.addOrReplaceChild(s + "_forearm", CubeListBuilder.create().mirror(m)
+                            .texOffs(0, 47).addBox(-3.0F, 0.0F, -3.0F, 6.0F, 8.0F, 6.0F),
+                    PartPose.offsetAndRotation(0.0F, 8.0F, 0.0F, -0.2F, 0.0F, 0.0F));
+            CubeListBuilder hand = CubeListBuilder.create().mirror(m).texOffs(0, 64).addBox(-2.5F, 0.0F, -2.0F, 5.0F, 3.0F, 4.0F);
+            for (int c = 0; c < 4; c++) hand.texOffs(112, 47).addBox(-2.3F + c * 1.3F, 2.6F, -1.8F, 1.0F, 3.0F, 1.0F);
+            PartDefinition handPart = fore.addOrReplaceChild(s + "_hand", hand, PartPose.offset(0.0F, 7.8F, 0.0F));
+            if (side < 0) {
+                // the sceptre, upright through the fist, an orb held in a cage of prongs at the top
+                PartDefinition sceptre = handPart.addOrReplaceChild("sceptre", CubeListBuilder.create()
+                                .texOffs(104, 47).addBox(-1.0F, -18.0F, -1.0F, 2.0F, 30.0F, 2.0F)
+                                .texOffs(50, 64).addBox(-1.5F, -19.0F, -1.5F, 3.0F, 2.0F, 3.0F)
+                                .texOffs(120, 47).addBox(-0.5F, 12.0F, -0.5F, 1.0F, 4.0F, 1.0F),
+                        PartPose.offsetAndRotation(0.0F, 1.8F, -0.5F, 0.0F, 0.0F, 0.0F));
+                for (int k = 0; k < 4; k++) {
+                    float a = k * Mth.HALF_PI + Mth.PI / 4.0F;
+                    sceptre.addOrReplaceChild("prong_" + k, CubeListBuilder.create().texOffs(116, 47).addBox(-0.5F, -5.0F, -0.5F, 1.0F, 5.0F, 1.0F),
+                            PartPose.offsetAndRotation(Mth.sin(a) * 1.6F, -18.5F, Mth.cos(a) * 1.6F, Mth.cos(a) * 0.35F, 0.0F, -Mth.sin(a) * 0.35F));
+                }
+                sceptre.addOrReplaceChild("orb", CubeListBuilder.create().texOffs(18, 64).addBox(-2.0F, -2.0F, -2.0F, 4.0F, 4.0F, 4.0F),
+                        PartPose.offset(0.0F, -22.0F, 0.0F));
+            }
+        }
+
+        // ── legs: armoured thigh, shin with a knee guard and a pointed sabaton ──
+        for (int side = -1; side <= 1; side += 2) {
+            String s = side < 0 ? "right" : "left";
+            boolean m = side > 0;
+            PartDefinition leg = root.addOrReplaceChild(s + "_leg", CubeListBuilder.create().mirror(m)
+                            .texOffs(60, 31).addBox(-2.5F, 0.0F, -2.5F, 5.0F, 10.0F, 5.0F),
+                    PartPose.offset(side * 2.8F, 2.0F, 0.0F));
+            leg.addOrReplaceChild(s + "_shin", CubeListBuilder.create().mirror(m)
+                            .texOffs(80, 31).addBox(-2.5F, 0.0F, -2.5F, 5.0F, 10.0F, 5.0F, new CubeDeformation(0.1F))
+                            .texOffs(34, 64).addBox(-3.0F, -1.0F, -3.4F, 6.0F, 3.0F, 2.0F)
+                            .texOffs(24, 47).addBox(-2.5F, 8.0F, -5.0F, 5.0F, 2.0F, 7.0F),
+                    PartPose.offset(0.0F, 10.0F, 0.0F));
         }
         return LayerDefinition.create(mesh, 128, 128);
     }
@@ -122,53 +180,79 @@ public class ElementalDemonKingModel extends HierarchicalModel<ElementalDemonKin
     public void setupAnim(ElementalDemonKingBossEntity entity, float limbSwing, float limbSwingAmount, float ageInTicks, float netHeadYaw, float headPitch) {
         root.getAllParts().forEach(ModelPart::resetPose);
         float amt = Math.min(1.0F, limbSwingAmount);
-        float w = limbSwing * 0.5F;
-        float breath = Mth.sin(ageInTicks * 0.07F);
+        float idle = 1.0F - amt;
+        float w = limbSwing * 0.45F;
+        float breath = Mth.sin(ageInTicks * 0.06F);
 
-        // a heavy, deliberate stride
-        rLeg.xRot = Mth.cos(w) * 0.7F * amt;
-        lLeg.xRot = Mth.cos(w + Mth.PI) * 0.7F * amt;
-        rShin.xRot = Math.max(0.0F, Mth.sin(w)) * 0.6F * amt;
-        lShin.xRot = Math.max(0.0F, Mth.sin(w + Mth.PI)) * 0.6F * amt;
-        body.y += -Math.abs(Mth.cos(w)) * 0.8F * amt + 0.8F * amt + breath * 0.3F * (1 - amt);
-        body.yRot = Mth.cos(w) * 0.08F * amt;
-        rArm.xRot = Mth.cos(w + Mth.PI) * 0.45F * amt;
-        lArm.xRot = Mth.cos(w) * 0.45F * amt;
-        rArm.zRot += 0.05F * breath;
-        lArm.zRot -= 0.05F * breath;
+        // a king's bearing: a slow breath, the head turning to whoever he looks at
+        torso.xRot = breath * 0.02F;
+        torso.y += breath * 0.3F * idle;
+        head.yRot = netHeadYaw * Mth.DEG_TO_RAD;
+        head.xRot = headPitch * Mth.DEG_TO_RAD * 0.7F;
 
-        head.yRot = netHeadYaw * Mth.DEG_TO_RAD - body.yRot;
-        head.xRot = headPitch * Mth.DEG_TO_RAD;
-        jaw.xRot = Math.max(0.0F, breath) * 0.08F;
-
-        // wings rise and fold slowly, the cape stirs
-        float flap = Mth.sin(ageInTicks * 0.06F);
-        rWing.yRot += flap * 0.18F;
-        lWing.yRot -= flap * 0.18F;
-        rWing.zRot += flap * 0.08F;
-        lWing.zRot -= flap * 0.08F;
-        cape.xRot += 0.06F * amt + Mth.sin(ageInTicks * 0.05F) * 0.04F + 0.25F * amt * Math.abs(Mth.sin(w));
-
-        // four elemental orbs circling at chest height, each bobbing on its own
+        // the halo turns, its crystals spin on themselves and bob
+        halo.zRot = ageInTicks * 0.015F;
+        halo.y += Mth.sin(ageInTicks * 0.05F) * 0.4F;
         for (int i = 0; i < 4; i++) {
-            float a = ageInTicks * 0.045F + i * Mth.HALF_PI;
-            orbs[i].x = Mth.cos(a) * 15.0F;
-            orbs[i].z = Mth.sin(a) * 15.0F;
-            orbs[i].y = -6.0F + Mth.sin(ageInTicks * 0.1F + i * 1.7F) * 2.0F + body.y - 2.0F;
-            orbs[i].yRot = ageInTicks * 0.1F;
-            orbs[i].xRot = ageInTicks * 0.07F;
+            crystals[i].yRot = ageInTicks * 0.08F + i;
+            crystals[i].zRot += Mth.sin(ageInTicks * 0.1F + i * 1.7F) * 0.15F;
         }
+        // the orb breathes
+        float pulse = 1.0F + Mth.sin(ageInTicks * 0.15F) * 0.08F;
+        orb.xScale = pulse;
+        orb.yScale = pulse;
+        orb.zScale = pulse;
+        orb.yRot = ageInTicks * 0.05F;
+
+        // a measured stride; the plates of the skirt ride on the legs
+        float swing = Mth.cos(w) * 0.5F * amt;
+        rLeg.xRot = swing;
+        lLeg.xRot = -swing;
+        rShin.xRot = Math.max(0.0F, Mth.sin(w)) * 0.45F * amt;
+        lShin.xRot = Math.max(0.0F, -Mth.sin(w)) * 0.45F * amt;
+        body.y += (1.0F - Math.abs(Mth.cos(w))) * 0.8F * amt;
+        body.yRot = Mth.sin(w) * 0.05F * amt;
+        tassetF.xRot += -Math.max(Math.abs(swing), 0.0F) * 0.6F;
+        tassetB.xRot += Math.abs(swing) * 0.5F;
+        tassetR.zRot += Math.max(0.0F, -swing) * 0.2F;
+        tassetL.zRot -= Math.max(0.0F, swing) * 0.2F;
+
+        // arms: the sceptre arm held steady, the free arm swinging a little, the sigil hand half open
+        rArm.xRot = -0.15F - swing * 0.2F;
+        rFore.xRot = -0.35F;
+        lArm.xRot = -swing * 0.6F;
+        lArm.zRot += Mth.sin(ageInTicks * 0.05F) * 0.03F;
+        lFore.xRot = -0.25F;
+        lHand.xRot = -0.3F;
+
+        // the cape sways and lifts behind him as he walks
+        cape.xRot += 0.06F + amt * 0.35F + Mth.sin(ageInTicks * 0.07F) * 0.04F;
+        cape2.xRot += amt * 0.2F + Mth.sin(ageInTicks * 0.07F - 0.8F) * 0.06F;
+        cape.zRot = Mth.sin(ageInTicks * 0.05F) * 0.03F;
 
         if (this.attackTime > 0.0F) {
-            // a raking claw: the right gauntlet sweeps across, the body twisting into it
+            // the sceptre is raised high and brought down like a judgement, the free hand thrown forward
+            // with the sigil blazing; the body leans into it
             float p = this.attackTime;
-            float wind = p < 0.3F ? p / 0.3F : 1.0F - (p - 0.3F) / 0.7F;
-            float rake = p < 0.3F ? 0.0F : Mth.sin((p - 0.3F) / 0.7F * Mth.PI);
-            rArm.xRot = -2.2F * wind - 1.2F * rake;
-            rArm.yRot = 0.6F * rake;
-            rFore.xRot = -0.8F * wind;
-            body.yRot += 0.3F * wind - 0.45F * rake;
-            jaw.xRot = 0.4F * Math.max(wind, rake);
+            float wind = phase(p, 0.0F, 0.4F), strike = phase(p, 0.4F, 0.62F), back = phase(p, 0.62F, 1.0F);
+            float arm = p < 0.4F ? Mth.lerp(wind, -0.15F, -2.9F) : p < 0.62F ? Mth.lerp(strike, -2.9F, -0.7F) : Mth.lerp(back, -0.7F, -0.15F);
+            float lean = p < 0.4F ? Mth.lerp(wind, 0.0F, -0.15F) : p < 0.62F ? Mth.lerp(strike, -0.15F, 0.3F) : Mth.lerp(back, 0.3F, 0.0F);
+            float thrust = p < 0.62F ? Math.max(wind * 0.4F, strike) : 1.0F - back;
+            rArm.xRot = arm;
+            rFore.xRot = -0.35F + (p < 0.4F ? -0.5F * wind : -0.5F * (1.0F - strike));
+            lArm.xRot = -1.4F * thrust;
+            lArm.zRot = 0.1F * thrust;
+            lFore.xRot = -0.25F + 0.2F * thrust;
+            lHand.xRot = -0.3F - 0.9F * thrust;
+            torso.xRot += lean;
+            torso.yRot = -0.15F * thrust;
+            cape.xRot += -lean * 0.6F;
         }
+    }
+
+    /** 0 before {@code a}, 1 after {@code b}, eased in between. */
+    private static float phase(float p, float a, float b) {
+        float x = Mth.clamp((p - a) / (b - a), 0.0F, 1.0F);
+        return x * x * (3.0F - 2.0F * x);
     }
 }

@@ -23,7 +23,8 @@ public class ElementalDemonKingRenderer extends MobRenderer<ElementalDemonKingBo
 
     @Override
     protected void scale(ElementalDemonKingBossEntity entity, PoseStack poseStack, float partialTickTime) {
-        poseStack.scale(1.4F, 1.4F, 1.4F);
+        // the model is about 3.5 blocks tall at full size, horns included; he stands about 4 blocks
+        poseStack.scale(1.15F, 1.15F, 1.15F);
         super.scale(entity, poseStack, partialTickTime);
     }
 }
