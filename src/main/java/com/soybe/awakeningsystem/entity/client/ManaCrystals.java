@@ -38,13 +38,18 @@ public final class ManaCrystals {
      */
     public static void shard(PartDefinition parent, float x, float y, float z, int h, float rx, float rz) {
         boolean big = h >= 5;
+        // every crystal reaches ROOT pixels down into the hide: a leaning crystal never shows a gap under one side,
+        // and its foot is not drawn on the very surface of the body (that made it flicker)
         CubeListBuilder c = CubeListBuilder.create();
-        if (big) c.texOffs(0, 32).addBox(-1.5F, -h, -1.5F, 3.0F, h, 3.0F);
-        else c.texOffs(16, 32).addBox(-1.0F, -h, -1.0F, 2.0F, h, 2.0F);
+        if (big) c.texOffs(0, 32).addBox(-1.5F, -h, -1.5F, 3.0F, h + ROOT, 3.0F);
+        else c.texOffs(16, 32).addBox(-1.0F, -h, -1.0F, 2.0F, h + ROOT, 2.0F);
         PartDefinition p = parent.addOrReplaceChild("mana_crystal_" + (n++), c, PartPose.offsetAndRotation(x, y, z, rx, 0.0F, rz));
-        if (big) p.addOrReplaceChild("mana_crystal_" + (n++), CubeListBuilder.create().texOffs(28, 32).addBox(-0.5F, -3.0F, -0.5F, 1.0F, 3.0F, 1.0F),
-                PartPose.offsetAndRotation(1.5F, 0.0F, 0.5F, 0.3F, 0.0F, -0.6F));
+        if (big) p.addOrReplaceChild("mana_crystal_" + (n++), CubeListBuilder.create().texOffs(28, 32).addBox(-0.5F, -3.0F, -0.5F, 1.0F, 3.0F + ROOT, 1.0F),
+                PartPose.offsetAndRotation(1.0F, 0.0F, 0.5F, 0.25F, 0.0F, -0.45F));
     }
+
+    /** How deep (pixels) each crystal is sunk into the body it grows from. */
+    private static final int ROOT = 2;
 
     /**
      * A shard on the animal's back. The vanilla animal models only draw their known parts (head, body, legs),
@@ -58,13 +63,16 @@ public final class ManaCrystals {
         shard(mount, 0.0F, 0.0F, 0.0F, h, rx, rz);
     }
 
-    /** A curling horn of crystal: three shrinking segments, each bending a little more. */
+    /**
+     * A curling horn of crystal: three shrinking segments, each bending a little more. Each segment starts a
+     * pixel inside the one before, so the bends never open a gap between them.
+     */
     public static void horn(PartDefinition parent, float x, float y, float z, int side) {
-        PartDefinition a = parent.addOrReplaceChild("mana_horn_" + (n++), CubeListBuilder.create().texOffs(16, 32).addBox(-1.0F, -3.0F, -1.0F, 2.0F, 3.0F, 2.0F),
-                PartPose.offsetAndRotation(x, y, z, -0.6F, 0.0F, side * 0.7F));
-        PartDefinition b = a.addOrReplaceChild("mana_horn_" + (n++), CubeListBuilder.create().texOffs(16, 32).addBox(-1.0F, -3.0F, -1.0F, 2.0F, 3.0F, 2.0F),
-                PartPose.offsetAndRotation(0.0F, -2.6F, 0.0F, -0.9F, 0.0F, 0.0F));
-        b.addOrReplaceChild("mana_horn_" + (n++), CubeListBuilder.create().texOffs(28, 32).addBox(-0.5F, -3.0F, -0.5F, 1.0F, 3.0F, 1.0F),
-                PartPose.offsetAndRotation(0.0F, -2.6F, 0.0F, -1.0F, 0.0F, 0.0F));
+        PartDefinition a = parent.addOrReplaceChild("mana_horn_" + (n++), CubeListBuilder.create().texOffs(16, 32).addBox(-1.0F, -3.0F, -1.0F, 2.0F, 3.0F + ROOT, 2.0F),
+                PartPose.offsetAndRotation(x, y, z, -0.5F, 0.0F, side * 0.7F));
+        PartDefinition b = a.addOrReplaceChild("mana_horn_" + (n++), CubeListBuilder.create().texOffs(16, 32).addBox(-1.0F, -3.0F, -1.0F, 2.0F, 4.0F, 2.0F),
+                PartPose.offsetAndRotation(0.0F, -2.0F, 0.0F, -0.6F, 0.0F, 0.0F));
+        b.addOrReplaceChild("mana_horn_" + (n++), CubeListBuilder.create().texOffs(28, 32).addBox(-0.5F, -3.0F, -0.5F, 1.0F, 4.0F, 1.0F),
+                PartPose.offsetAndRotation(0.0F, -2.0F, 0.0F, -0.7F, 0.0F, 0.0F));
     }
 }
