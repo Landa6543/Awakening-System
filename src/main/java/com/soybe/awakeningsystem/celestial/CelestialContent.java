@@ -49,7 +49,17 @@ public final class CelestialContent {
 
     @SubscribeEvent
     public static void creativeTabs(BuildCreativeModeTabContentsEvent event) {
-        if (event.getTabKey() == ModCreativeTabs.COMBAT_TAB.getKey())
-            for (Item item : ITEMS.values()) event.accept(item);
+        if (event.getTabKey() != ModCreativeTabs.COMBAT_TAB.getKey()) return;
+        // right after the other unique weapons, not at the very end of the tab
+        net.minecraft.world.item.ItemStack prev = new net.minecraft.world.item.ItemStack(com.soybe.awakeningsystem.SystemItems.PHANTOMBLADE.get());
+        for (Item item : ITEMS.values()) {
+            net.minecraft.world.item.ItemStack next = new net.minecraft.world.item.ItemStack(item);
+            try {
+                event.insertAfter(prev, next, net.minecraft.world.item.CreativeModeTab.TabVisibility.PARENT_AND_SEARCH_TABS);
+            } catch (RuntimeException e) {
+                event.accept(item);                    // the anchor is missing: fall back to the end
+            }
+            prev = next;
+        }
     }
 }
