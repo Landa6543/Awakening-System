@@ -3419,30 +3419,30 @@
   },
   "sao.open": {
     "category": "master",
-    "sounds": [ { "name": "minecraft:block/amethyst/shimmer", "volume": 0.7, "pitch": 1.35 } ]
-  },
-  "sao.open_swoosh": {
-    "category": "master",
-    "sounds": [ { "name": "minecraft:ui/toast/in", "volume": 0.5, "pitch": 1.6 } ]
+    "sounds": [ { "name": "awakening_system:sao/sao_menu", "volume": 0.9 } ]
   },
   "sao.click": {
     "category": "master",
-    "sounds": [ { "name": "minecraft:block/amethyst/place1", "volume": 0.8, "pitch": 1.7 }, { "name": "minecraft:block/amethyst/place2", "volume": 0.8, "pitch": 1.7 }, { "name": "minecraft:block/amethyst/place3", "volume": 0.8, "pitch": 1.7 }, { "name": "minecraft:block/amethyst/place4", "volume": 0.8, "pitch": 1.7 } ]
+    "sounds": [ { "name": "awakening_system:sao/confirmsound", "volume": 0.8 } ]
   },
   "sao.hover": {
     "category": "master",
-    "sounds": [ { "name": "minecraft:block/amethyst/step1", "volume": 0.35, "pitch": 1.9 }, { "name": "minecraft:block/amethyst/step2", "volume": 0.35, "pitch": 1.9 }, { "name": "minecraft:block/amethyst/step3", "volume": 0.35, "pitch": 1.9 }, { "name": "minecraft:block/amethyst/step4", "volume": 0.35, "pitch": 1.9 }, { "name": "minecraft:block/amethyst/step5", "volume": 0.35, "pitch": 1.9 }, { "name": "minecraft:block/amethyst/step6", "volume": 0.35, "pitch": 1.9 } ]
+    "sounds": [ { "name": "minecraft:block/amethyst/step1", "volume": 0.3, "pitch": 1.9 }, { "name": "minecraft:block/amethyst/step2", "volume": 0.3, "pitch": 1.9 }, { "name": "minecraft:block/amethyst/step3", "volume": 0.3, "pitch": 1.9 }, { "name": "minecraft:block/amethyst/step4", "volume": 0.3, "pitch": 1.9 } ]
   },
   "sao.back": {
     "category": "master",
-    "sounds": [ { "name": "minecraft:ui/toast/out", "volume": 0.55, "pitch": 1.45 } ]
+    "sounds": [ { "name": "awakening_system:sao/backsound", "volume": 0.85 } ]
   },
   "sao.close": {
     "category": "master",
-    "sounds": [ { "name": "minecraft:ui/toast/out", "volume": 0.6, "pitch": 1.1 } ]
+    "sounds": [ { "name": "awakening_system:sao/exitmenu", "volume": 0.9 } ]
   },
   "sao.confirm": {
     "category": "master",
-    "sounds": [ { "name": "minecraft:block/amethyst/resonate1", "volume": 0.6, "pitch": 1.5 }, { "name": "minecraft:block/amethyst/resonate2", "volume": 0.6, "pitch": 1.5 } ]
+    "sounds": [ { "name": "awakening_system:sao/link", "volume": 0.9 } ]
+  },
+  "sao.death": {
+    "category": "neutral",
+    "sounds": [ { "name": "awakening_system:sao/particles_death", "volume": 0.9, "attenuation_distance": 24 } ]
   }
 }

@@ -9,9 +9,8 @@ import net.minecraft.sounds.SoundSource;
 import net.minecraft.util.RandomSource;
 
 /**
- * The full-dive menu's own sounds (sounds.json "sao.*"): glassy chimes for opening, clicks, hovering and
- * going back. They point at vanilla amethyst and toast sounds for now; replacing the files under those
- * names changes them everywhere.
+ * The full-dive menu's sounds (sounds.json "sao.*"): the series' menu sounds for opening, confirming, going
+ * back and closing (sounds/sao/), and a soft amethyst tick for hovering.
  */
 public final class SaoSounds {
     private SaoSounds() {}
@@ -28,11 +27,10 @@ public final class SaoSounds {
 
     public static void open() {
         play("sao.open", 1.0F);
-        play("sao.open_swoosh", 1.0F);
     }
 
     public static void click() {
-        play("sao.click", 0.95F + RANDOM.nextFloat() * 0.1F);
+        play("sao.click", 1.0F);
     }
 
     /** A soft tick when the mouse moves onto something new; never more than one every 60 ms. */
