@@ -224,7 +224,7 @@ public class SaoPanelScreen extends Screen {
     }
 
     private int listTop() { return top() + HEADER + 66; }
-    private int visibleRows() { return 4; }
+    private int visibleRows() { return 3; }                 // a fourth row would run into the description
 
     private float slotX(int s) { return left() + PW / 2.0F - (maxSlots() - 1) * 15 + s * 30; }
     private float slotY() { return top() + HEADER + 44; }
@@ -317,10 +317,10 @@ public class SaoPanelScreen extends Screen {
         Component wearing = tr("wearing", "Wearing: %s", wornDef == null ? tr("none", "nothing") : Component.translatable(wornDef.translationKey()));
         g.drawString(this.font, wearing, x + 14, y + HEADER + 10, alpha(GREY, a), false);
 
-        scroll = Mth.clamp(scroll, 0, Math.max(0, list.size() - visibleRows() - 1));
+        scroll = Mth.clamp(scroll, 0, Math.max(0, list.size() - 5));
         int lt = top() + HEADER + 28;
         if (list.isEmpty()) g.drawString(this.font, tr("no_titles", "No titles yet."), x + 14, lt + 6, alpha(GREY, a), false);
-        for (int i = 0; i < visibleRows() + 1 && i + scroll < list.size(); i++) {
+        for (int i = 0; i < 5 && i + scroll < list.size(); i++) {
             TitleDefinitions.Definition t = list.get(i + scroll);
             int ry = lt + i * (ROW + 2);
             boolean hot = t.id().equals(selected);
@@ -328,8 +328,8 @@ public class SaoPanelScreen extends Screen {
             disc(g, x + PW - 52, ry + ROW / 2.0F, 3.0F, alpha(rarityColor(t.rarity()), a));
             if (t.id().equals(worn)) roundButton(g, x + PW - 24, ry + ROW / 2.0F, 8, CHECK, 0xFF4FA84A, true, -99, -99, a);
         }
-        if (list.size() > visibleRows() + 1) {
-            g.fill(x + PW - 8, lt, x + PW - 6, lt + (visibleRows() + 1) * (ROW + 2), alpha(0xFFDCDCE0, a));
+        if (list.size() > 5) {
+            g.fill(x + PW - 8, lt, x + PW - 6, lt + (5) * (ROW + 2), alpha(0xFFDCDCE0, a));
         }
         TitleDefinitions.Definition sel = null;
         for (TitleDefinitions.Definition t : list) if (t.id().equals(selected)) sel = t;
@@ -1065,7 +1065,7 @@ public class SaoPanelScreen extends Screen {
             case TITLES -> {
                 List<TitleDefinitions.Definition> list = TitleDefinitions.availableDefinitions(d);
                 int lt = top() + HEADER + 28;
-                for (int i = 0; i < visibleRows() + 1 && i + scroll < list.size(); i++) {
+                for (int i = 0; i < 5 && i + scroll < list.size(); i++) {
                     TitleDefinitions.Definition t = list.get(i + scroll);
                     int ry = lt + i * (ROW + 2);
                     if (in(mx, my, x + 10, ry, PW - 46, ROW)) {

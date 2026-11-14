@@ -192,15 +192,17 @@ public final class SystemNotificationOverlay {
 
     @SubscribeEvent
     public static void onRenderGuiLayerPre(net.neoforged.neoforge.client.event.RenderGuiLayerEvent.Pre event) {
-        boolean shouldHide = com.soybe.awakeningsystem.client.gui.GuiConfig.shouldHideVanillaHearts();
+        // full-dive style: its own health bar replaces the hearts; armour and food stay as in vanilla
+        boolean sao = com.soybe.awakeningsystem.client.sao.UiStyle.fullDive() && com.soybe.awakeningsystem.client.gui.GuiConfig.showHudStatusCard;
+        boolean shouldHide = sao || com.soybe.awakeningsystem.client.gui.GuiConfig.shouldHideVanillaHearts();
         if (shouldHide && (VanillaGuiLayers.PLAYER_HEALTH.equals(event.getName())
-                || VanillaGuiLayers.ARMOR_LEVEL.equals(event.getName()))) {
+                || (!sao && VanillaGuiLayers.ARMOR_LEVEL.equals(event.getName())))) {
             var mc = Minecraft.getInstance();
             if (mc.player != null && !mc.player.isCreative() && !mc.player.isSpectator()) {
                 event.setCanceled(true);
             }
         }
-        if (com.soybe.awakeningsystem.client.gui.GuiConfig.shouldHideVanillaFood() && VanillaGuiLayers.FOOD_LEVEL.equals(event.getName())) {
+        if (!sao && com.soybe.awakeningsystem.client.gui.GuiConfig.shouldHideVanillaFood() && VanillaGuiLayers.FOOD_LEVEL.equals(event.getName())) {
             var mc = Minecraft.getInstance();
             if (mc.player != null && !mc.player.isCreative() && !mc.player.isSpectator()) {
                 event.setCanceled(true);

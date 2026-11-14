@@ -10,6 +10,7 @@ import net.minecraft.util.Mth;
 import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.LivingEntity;
 import net.minecraft.world.entity.monster.Enemy;
+import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.phys.Vec3;
 import net.neoforged.api.distmarker.Dist;
 import net.neoforged.bus.api.SubscribeEvent;
@@ -36,7 +37,21 @@ public final class SaoTargetMarker {
         Minecraft mc = Minecraft.getInstance();
         if (mc.player == null || mc.level == null || !UiStyle.fullDive() || mc.options.hideGui) return;
 
+        float partial = event.getPartialTick().getGameTimeDeltaPartialTick(false);
+        Vec3 cam = event.getCamera().getPosition();
+        PoseStack ps = event.getPoseStack();
+        MultiBufferSource.BufferSource buffers = mc.renderBuffers().bufferSource();
+        float age = mc.player.tickCount + partial;
+
+        // every other player carries a cursor: green, or red for a player killer
+        for (Player p : mc.level.players()) {
+            if (p == mc.player || !p.isAlive() || p.isInvisibleTo(mc.player) || p.distanceToSqr(mc.player) > 48 * 48) continue;
+            boolean red = com.soybe.awakeningsystem.PlayerKillerTracker.RED.contains(p.getUUID());
+            cursor(ps, buffers, p, partial, cam, age, red ? 0xE8341F : 0x3FD15A, 1.0F);
+        }
+
         Entity now = pick(mc);
+        if (now instanceof Player) now = null;              // players already have theirs
         long t = System.currentTimeMillis();
         float dt = lastFrame == 0 ? 0.016F : Math.min(0.1F, (t - lastFrame) / 1000.0F);
         lastFrame = t;
@@ -49,26 +64,21 @@ public final class SaoTargetMarker {
             if (fade <= 0.0F) target = null;
             return;
         }
+        cursor(ps, buffers, target, partial, cam, age, target instanceof Enemy ? 0xE8341F : 0x3FD15A, fade);
+    }
 
-        float partial = event.getPartialTick().getGameTimeDeltaPartialTick(false);
-        Vec3 cam = event.getCamera().getPosition();
-        double x = Mth.lerp(partial, target.xOld, target.getX()) - cam.x;
-        double y = Mth.lerp(partial, target.yOld, target.getY()) - cam.y;
-        double z = Mth.lerp(partial, target.zOld, target.getZ()) - cam.z;
-        float age = (mc.player.tickCount + partial);
-        float bob = Mth.sin(age * 0.12F) * 0.06F;
-        float scale = Mth.clamp(target.getBbWidth() * 0.6F, 0.6F, 2.2F);
-
-        PoseStack ps = event.getPoseStack();
+    /** The turning, bobbing crystal over one creature. */
+    private static void cursor(PoseStack ps, MultiBufferSource.BufferSource buffers, Entity e, float partial, Vec3 cam, float age, int base, float fade) {
+        double x = Mth.lerp(partial, e.xOld, e.getX()) - cam.x;
+        double y = Mth.lerp(partial, e.yOld, e.getY()) - cam.y;
+        double z = Mth.lerp(partial, e.zOld, e.getZ()) - cam.z;
+        float bob = Mth.sin(age * 0.12F + e.getId()) * 0.06F;
+        float scale = Mth.clamp(e.getBbWidth() * 0.6F, 0.6F, 2.2F);
         ps.pushPose();
-        ps.translate(x, y + target.getBbHeight() + 0.85F + 0.3F * scale + bob, z);
-        ps.mulPose(com.mojang.math.Axis.YP.rotationDegrees(age * 3.0F));
+        ps.translate(x, y + e.getBbHeight() + 0.85F + 0.3F * scale + bob, z);
+        ps.mulPose(com.mojang.math.Axis.YP.rotationDegrees(age * 3.0F + e.getId() * 37));
         ps.scale(scale, scale, scale);
         Matrix4f m = ps.last().pose();
-
-        boolean enemy = target instanceof Enemy;
-        int base = enemy ? 0xE8341F : 0x3FD15A;
-        MultiBufferSource.BufferSource buffers = mc.renderBuffers().bufferSource();
         VertexConsumer solid = buffers.getBuffer(RenderType.debugQuads());
         diamond(solid, m, 0.15F, 0.11F, 0.30F, base, (int) (235 * fade), true);
         buffers.endBatch(RenderType.debugQuads());
@@ -77,7 +87,6 @@ public final class SaoTargetMarker {
         buffers.endBatch(RenderType.lightning());
         ps.popPose();
     }
-
     /** What the player is aiming at, or what they hit in the last five seconds, within 32 blocks. */
     private static Entity pick(Minecraft mc) {
         Entity aim = mc.crosshairPickEntity;

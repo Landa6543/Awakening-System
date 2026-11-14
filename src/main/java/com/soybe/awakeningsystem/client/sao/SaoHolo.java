@@ -59,7 +59,12 @@ final class SaoHolo {
 
     /** A panel turned by yaw / pitch (degrees) around the pivot (px, py) on the screen plane. */
     static Matrix4f plane(float px, float py, float yaw, float pitch) {
-        return new Matrix4f().translate(px, py, 0.0F)
+        return plane(px, py, 0.0F, yaw, pitch);
+    }
+
+    /** As above, pushed {@code depth} away from (negative) or toward the player. */
+    static Matrix4f plane(float px, float py, float depth, float yaw, float pitch) {
+        return new Matrix4f().translate(px, py, depth)
                 .rotateY((float) Math.toRadians(yaw))
                 .rotateX((float) Math.toRadians(pitch))
                 .translate(-px, -py, 0.0F);

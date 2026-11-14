@@ -146,8 +146,31 @@ public final class SaoShatter {
         event.setCanceled(true);
     }
 
+    /**
+     * Before any creature is drawn this frame, the ones that just died burst and leave the world on this
+     * screen (not on the server, which still kills them, drops their loot and removes them). Many of the mod's
+     * creatures are drawn by GeckoLib, which never asks whether a body should be hidden, so removing it is the
+     * only way to be sure it is never seen falling over. Players are hidden instead (see onRenderLiving).
+     */
+    private static void burstTheDead(Minecraft mc) {
+        if (!on() || mc.level == null || mc.player == null) return;
+        List<Entity> gone = new ArrayList<>();
+        AABB around = mc.player.getBoundingBox().inflate(96.0D);
+        for (Entity e : mc.level.entitiesForRendering()) {
+            if (!(e instanceof LivingEntity le) || e instanceof ArmorStand || !le.isDeadOrDying()) continue;
+            if (!around.intersects(e.getBoundingBox())) continue;
+            if (burst.add(e.getId())) shatter(mc, le);
+            if (!(e instanceof net.minecraft.world.entity.player.Player)) gone.add(e);
+        }
+        for (Entity e : gone) mc.level.removeEntity(e.getId(), Entity.RemovalReason.KILLED);
+    }
+
     @SubscribeEvent
     public static void onRender(RenderLevelStageEvent event) {
+        if (event.getStage() == RenderLevelStageEvent.Stage.AFTER_SKY) {
+            burstTheDead(Minecraft.getInstance());
+            return;
+        }
         if (event.getStage() != RenderLevelStageEvent.Stage.AFTER_TRANSLUCENT_BLOCKS) return;
         if (shards.isEmpty() && flashes.isEmpty()) return;
         Minecraft mc = Minecraft.getInstance();

@@ -8,6 +8,8 @@ import net.minecraft.client.gui.Font;
 import net.minecraft.client.renderer.MultiBufferSource;
 import net.minecraft.client.renderer.RenderType;
 import net.minecraft.network.chat.Component;
+import net.minecraft.network.chat.MutableComponent;
+import net.minecraft.world.entity.monster.Enemy;
 import net.minecraft.util.Mth;
 import net.minecraft.world.entity.LivingEntity;
 import net.minecraft.world.entity.Mob;
@@ -47,10 +49,23 @@ public final class SaoEntityBars {
         boolean hurtNear = le instanceof Mob && le.getHealth() < le.getMaxHealth() && le.distanceToSqr(mc.player) < 24 * 24;
         if (!labelled && !hurtNear) return;
         event.setCanRender(TriState.FALSE);
-        draw(mc, le, labelled ? event.getContent() : le.getDisplayName(), event.getPoseStack(), event.getMultiBufferSource(), event.getPackedLight());
+        // townsfolk and other peaceful people only show their name; fighters show their health too
+        boolean fighter = le instanceof Enemy || hurtNear
+                || (le instanceof Mob mob && mob.getTarget() == mc.player);
+        draw(mc, le, cleanName(le, labelled ? event.getContent() : le.getDisplayName()), fighter,
+                event.getPoseStack(), event.getMultiBufferSource(), event.getPackedLight());
     }
 
-    private static void draw(Minecraft mc, LivingEntity le, Component name, PoseStack ps, MultiBufferSource buffers, int light) {
+    /** The label without the "[♥ hp/max]" numbers a skill may add: the bar shows health in this style. */
+    private static Component cleanName(LivingEntity le, Component content) {
+        if (!content.getString().contains("❤")) return content;
+        if (le.hasCustomName()) return le.getCustomName();
+        MutableComponent out = content.plainCopy().setStyle(content.getStyle());
+        for (Component part : content.getSiblings()) if (!part.getString().contains("❤")) out.append(part);
+        return out;
+    }
+
+    private static void draw(Minecraft mc, LivingEntity le, Component name, boolean fighter, PoseStack ps, MultiBufferSource buffers, int light) {
         long now = System.currentTimeMillis();
         float hp = le.getHealth(), max = Math.max(1.0F, le.getMaxHealth());
         if (bars.size() > 512) bars.clear();
@@ -65,29 +80,46 @@ public final class SaoEntityBars {
         ps.translate(0.0F, le.getBbHeight() + 0.5F, 0.0F);
         ps.mulPose(mc.getEntityRenderDispatcher().cameraOrientation());
         ps.scale(0.025F, -0.025F, 0.025F);
-        Matrix4f m = ps.last().pose();
 
         Font font = mc.font;
+        ps.pushPose();
+        ps.scale(0.8F, 0.8F, 0.8F);
         float tw = font.width(name);
-        font.drawInBatch(name, -tw / 2.0F, -10.0F, 0xFFFFFFFF, false, m, buffers, Font.DisplayMode.NORMAL, 0x50000000, light);
+        font.drawInBatch(name, -tw / 2.0F, fighter ? -11.0F : 0.0F, 0xFFFFFFFF, false, ps.last().pose(), buffers, Font.DisplayMode.NORMAL, 0x40000000, light);
+        ps.popPose();
 
-        float w = Math.max(48.0F, Math.min(80.0F, tw)), h = 5.0F, skew = 2.5F, x = -w / 2.0F, y = 1.0F;
-        VertexConsumer vc = buffers.getBuffer(RenderType.textBackground());
-        float frac = Mth.clamp(b[0] / max, 0.0F, 1.0F), trail = Mth.clamp(b[1] / max, 0.0F, 1.0F);
-        slant(vc, m, x - 1.5F, y - 1.0F, w + 3.0F, h + 2.0F, skew, 0.0F, 0xC0202028, light);
-        slant(vc, m, x, y, w, h, skew, -0.01F, 0xE0101014, light);
-        if (trail > frac) slant(vc, m, x, y, w * trail, h, skew, -0.02F, 0xFFEDEDED, light);
-        int c = SaoDraw.hpColor(frac);
-        slant(vc, m, x, y, w * frac, h, skew, -0.03F, c, light);
-        slant(vc, m, x + 1.0F, y, Math.max(0.0F, (w - 2.0F) * frac), 1.2F, 0.6F, -0.04F, 0x60FFFFFF, light);
+        if (fighter) {
+            Matrix4f m = ps.last().pose();
+            VertexConsumer vc = buffers.getBuffer(RenderType.textBackground());
+            float w = 56.0F, h = 4.0F, k = 2.0F, x = -w / 2.0F, y = 0.0F;
+            float frac = Mth.clamp(b[0] / max, 0.0F, 1.0F), trail = Math.max(frac, Mth.clamp(b[1] / max, 0.0F, 1.0F));
+            int c = SaoDraw.hpColor(frac), frame = 0xD0202028;
+            // the frame as four strips around the bar, and inside it three pieces side by side, so nothing
+            // overlaps (overlapping flat pieces flicker or hide each other in the world)
+            piece(vc, m, x - 1.5F, y - 1.0F, w + 3.0F, 1.0F, 0, frame, light);                       // top
+            piece(vc, m, x - 1.5F, y + h, w + 3.0F, 1.0F, 0, frame, light);                          // bottom
+            piece(vc, m, x - 1.5F, y, 1.5F, h, k, frame, light);                                     // left
+            piece(vc, m, x + w, y, 1.5F, h, k, frame, light);                                        // right
+            float fw = w * frac, tw2 = w * trail;
+            piece(vc, m, x, y, fw, 1.2F * 1.0F, 0, SaoDraw.shade(c, 0.35F), light);                 // lit top of the fill
+            piece(vc, m, x, y + 1.2F, fw, h - 1.2F, 0, c, light);
+            piece(vc, m, x + fw, y, tw2 - fw, h, 0, 0xFFEDEDED, light);                              // the damage trail
+            piece(vc, m, x + tw2, y, w - tw2, h, 0, 0xE0101014, light);                              // the empty groove
+        }
         ps.popPose();
     }
 
-    private static void slant(VertexConsumer vc, Matrix4f m, float x, float y, float w, float h, float skew, float z, int argb, int light) {
-        if (w <= 0) return;
-        vc.addVertex(m, x + skew, y, z).setColor(argb).setLight(light);
-        vc.addVertex(m, x, y + h, z).setColor(argb).setLight(light);
-        vc.addVertex(m, x + w, y + h, z).setColor(argb).setLight(light);
-        vc.addVertex(m, x + w + skew, y, z).setColor(argb).setLight(light);
+    /**
+     * One flat piece of the bar between x and x + w, leaning with the bar: the bar's slant is {@code k} over
+     * its full height, so every piece takes the share of it that its own rows cover.
+     */
+    private static void piece(VertexConsumer vc, Matrix4f m, float x, float y, float w, float h, float ignored, int argb, int light) {
+        if (w <= 0.0F || h <= 0.0F) return;
+        float k = 2.0F, top = 0.0F, bh = 4.0F;
+        float sTop = k * (1.0F - (y - top) / bh), sBot = k * (1.0F - (y + h - top) / bh);
+        vc.addVertex(m, x + sTop, y, 0).setColor(argb).setLight(light);
+        vc.addVertex(m, x + sBot, y + h, 0).setColor(argb).setLight(light);
+        vc.addVertex(m, x + w + sBot, y + h, 0).setColor(argb).setLight(light);
+        vc.addVertex(m, x + w + sTop, y, 0).setColor(argb).setLight(light);
     }
 }

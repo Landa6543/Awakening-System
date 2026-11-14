@@ -962,7 +962,8 @@ public final class HunterMinimapRenderer {
             float maxHp = living.getMaxHealth();
             boolean isTargetingMe = (living instanceof net.minecraft.world.entity.Mob mob && mob.getTarget() == mc.player);
             boolean isEnemyMob = !isFriendly && ((living instanceof net.minecraft.world.entity.monster.Enemy) || isTargetingMe || com.soybe.awakeningsystem.RpgLevelZoneManager.isEligibleForRpgScaling(living));
-            boolean isApex = !isFriendly && (isBoss || (maxHp >= 150.0F && isEnemyMob));
+            // only real bosses are called bosses; a mob made tough by its level is a threat, not a boss
+            boolean isApex = !isFriendly && isBoss;
             boolean isHostileElite = !isFriendly && (isEnemyMob && (maxHp >= 60.0F || isTargetingMe));
 
             if (isApex) {
@@ -1094,7 +1095,8 @@ public final class HunterMinimapRenderer {
             float maxHp = living.getMaxHealth();
             boolean isTargetingMe = (living instanceof net.minecraft.world.entity.Mob mob && mob.getTarget() == mc.player);
             boolean isEnemyMob = !isFriendly && ((living instanceof net.minecraft.world.entity.monster.Enemy) || isTargetingMe || com.soybe.awakeningsystem.RpgLevelZoneManager.isEligibleForRpgScaling(living));
-            boolean isApex = !isFriendly && (isBoss || (maxHp >= 150.0F && isEnemyMob));
+            // only real bosses are called bosses; a mob made tough by its level is a threat, not a boss
+            boolean isApex = !isFriendly && isBoss;
             boolean isHostileElite = !isFriendly && (isEnemyMob && (maxHp >= 60.0F || isTargetingMe));
 
             if (isApex) {

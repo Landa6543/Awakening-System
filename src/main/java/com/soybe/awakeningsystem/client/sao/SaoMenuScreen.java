@@ -95,6 +95,24 @@ public class SaoMenuScreen extends Screen {
     public void tick() {
         ticks++;
         listTicks++;
+        if (closing && ticks - closeStart >= CLOSE_TICKS) minecraft.setScreen(null);
+    }
+
+    // ── opening and closing: the panels come forward out of the distance, swinging round to face the
+    // player, and go back the same way when the menu closes ──
+    private static final float OPEN_TICKS = 8.0F, CLOSE_TICKS = 5.0F;
+    private boolean closing;
+    private int closeStart;
+    private float shown = 0.0F;
+
+    /** How far the menu is in front of the player: 0 gone, 1 fully there. */
+    private float visibility(float partialTick) {
+        float t = ticks + partialTick;
+        float o = Mth.clamp(t / OPEN_TICKS, 0.0F, 1.0F);
+        float in = 1.0F - (1.0F - o) * (1.0F - o) * (1.0F - o);          // ease out: quick, then settling
+        if (!closing) return in;
+        float c = Mth.clamp((t - closeStart) / CLOSE_TICKS, 0.0F, 1.0F);
+        return Math.min(in, 1.0F - c * c);                              // ease in: lingers, then goes
     }
 
     private int columnX() { return this.width / 2 - 6; }
@@ -108,7 +126,7 @@ public class SaoMenuScreen extends Screen {
 
     @Override
     public void renderBackground(GuiGraphics g, int mouseX, int mouseY, float partialTick) {
-        backdrop(g, this.width, this.height, 1.0F);
+        backdrop(g, this.width, this.height, shown);
     }
 
     // the two halves of the menu hang in the air, each turned a little toward the player
@@ -122,8 +140,9 @@ public class SaoMenuScreen extends Screen {
     private void updatePlanes(int mouseX, int mouseY, float open) {
         float[] par = SaoHolo.parallax(mouseX, mouseY, this.width, this.height);
         float settle = 1.0F - open;                                     // swings in while opening
-        rightPlane = SaoHolo.plane(columnX(), this.height / 2.0F, 10.0F + par[0] * 4.0F + settle * 25.0F, -par[1] * 3.0F);
-        cardPlane = SaoHolo.plane(cardX() + 88, cardY() + 120, -12.0F + par[0] * 4.0F - settle * 25.0F, -par[1] * 3.0F);
+        float depth = -settle * 160.0F;                                 // and comes forward from the distance
+        rightPlane = SaoHolo.plane(columnX(), this.height / 2.0F, depth, 10.0F + par[0] * 4.0F + settle * 32.0F, -par[1] * 3.0F + settle * 6.0F);
+        cardPlane = SaoHolo.plane(cardX() + 88, cardY() + 120, depth * 1.15F, -12.0F + par[0] * 4.0F - settle * 32.0F, -par[1] * 3.0F + settle * 6.0F);
     }
 
     private int[] onPlane(org.joml.Matrix4f plane, double mouseX, double mouseY) {
@@ -137,20 +156,21 @@ public class SaoMenuScreen extends Screen {
             opened = true;
             SaoSounds.open();
         }
-        float open = Mth.clamp((ticks + partialTick) / 6.0F, 0.0F, 1.0F);
-        updatePlanes(realX, realY, open * open * (3 - 2 * open));
+        float open = visibility(partialTick);
+        shown = open;
+        updatePlanes(realX, realY, open);
         int[] rm = onPlane(rightPlane, realX, realY);
         int mouseX = rm[0], mouseY = rm[1];
         frame(mouseX, mouseY, ticks + partialTick);
         super.render(g, realX, realY, partialTick);
         SaoHolo.begin(g, this.width, this.height);
         SaoHolo.push(g, rightPlane);
-        float a = open * open * (3 - 2 * open);
+        float a = open;
         int cx = columnX(), top = columnTop();
 
         // the column of round buttons, dropping into place one after another
         for (int i = 0; i < categories.size(); i++) {
-            float mine = Mth.clamp((ticks + partialTick - i * 1.2F) / 5.0F, 0.0F, 1.0F);
+            float mine = Math.min(a, Mth.clamp((ticks + partialTick - i * 1.2F) / 5.0F, 0.0F, 1.0F));
             float cy = top + i * STEP - (1.0F - mine) * 10.0F;
             boolean sel = i == selected;
             boolean hover = (mouseX - cx) * (mouseX - cx) + (mouseY - cy) * (mouseY - cy) <= R * R;
@@ -195,8 +215,10 @@ public class SaoMenuScreen extends Screen {
 
     @Override
     public void onClose() {
+        if (closing) return;
+        closing = true;
+        closeStart = ticks;
         SaoSounds.close();
-        super.onClose();
     }
 
     /** The player's card: name, the player in 3D ringed by the skills they have equipped, and the main numbers. */
@@ -292,6 +314,7 @@ public class SaoMenuScreen extends Screen {
 
     @Override
     public boolean mouseClicked(double realX, double realY, int button) {
+        if (closing) return true;
         int[] rm = onPlane(rightPlane, realX, realY);
         double mouseX = rm[0], mouseY = rm[1];
         if (button == 0) {
