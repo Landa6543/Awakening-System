@@ -346,7 +346,7 @@ public final class ModEntities {
     public static final Supplier<EntityType<BeastmanWarriorEntity>> BEASTMAN_WARRIOR =
             ENTITY_TYPES.register("beastman_warrior", () ->
                     EntityType.Builder.<BeastmanWarriorEntity>of(BeastmanWarriorEntity::new, MobCategory.MONSTER)
-                            .sized(0.9F, 2.2F)
+                            .sized(1.0F, 2.4F)
                             .clientTrackingRange(48)
                             .updateInterval(2)
                             .build("beastman_warrior"));
