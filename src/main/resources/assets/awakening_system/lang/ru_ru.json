@@ -4248,6 +4248,7 @@
     "awakening_system.limbo.welcome": "§7[СИСТЕМА: Вы вошли в Лимб. Призрачная атмосфера искажает пространство и время.]",
     "awakening_system.locked_chest.unlocked_desc": "§aТысячелетние цепи разбились перед ключом Энта! Древние сокровища ваши.",
     "awakening_system.locked_chest.unlocked_title": "§2§l✦ РОДОВОЙ СУНДУК РАЗБЛОКИРОВАН! ✦",
+    "awakening_system.loot_bag.opened": "Мешок открыт: %s и %s монет.",
     "awakening_system.maintenance.close": "Закрыть диагностику",
     "awakening_system.maintenance.desc_1": "Администратор Multiverse переписывает системные реестры.",
     "awakening_system.maintenance.desc_2": "Синхронизация космических законов с Измерением Исэкай.",

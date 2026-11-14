@@ -441,6 +441,26 @@ public final class CustomLootConfigManager {
         return new BoxLootResult("Hierro x4", 0, ids, counts);
     }
 
+    /**
+     * Several rolls from one box's pool without handing anything out (the guild loot bag gives a handful of
+     * these at once). Bonus coins of every roll are added to {@code coinsOut[0]}.
+     */
+    public static List<ItemStack> rollStacks(String boxId, int rolls, RandomSource rand, int[] coinsOut) {
+        init();
+        List<ItemStack> out = new ArrayList<>();
+        List<LootItem> items = CHEST_BOXES.get(boxId);
+        if (items == null || items.isEmpty()) return out;
+        for (int i = 0; i < rolls; i++) {
+            LootItem chosen = pickWeighted(items, rand);
+            if (chosen == null) continue;
+            ItemStack stack = resolveStack(chosen, rand);
+            if (stack.isEmpty()) continue;
+            out.add(stack);
+            coinsOut[0] += Math.max(0, chosen.bonusCoins());
+        }
+        return out;
+    }
+
     private static LootItem pickWeighted(List<LootItem> items, RandomSource rand) {
         int totalWeight = 0;
         for (LootItem it : items) {

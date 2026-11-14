@@ -15,7 +15,8 @@ public class ManaChickenRenderer extends MobRenderer<ManaChickenEntity, ChickenM
             ResourceLocation.fromNamespaceAndPath(AwakeningSystemMod.MOD_ID, "textures/entity/animal/mana_chicken.png");
 
     public ManaChickenRenderer(EntityRendererProvider.Context context) {
-        super(context, new ChickenModel<>(context.bakeLayer(ModelLayers.CHICKEN)), 0.3F);
+        super(context, new ManaChickenModel(context.bakeLayer(ManaChickenModel.LAYER)), 0.3F);
+        this.addLayer(new ManaAnimalsClient.Glow<>(this, "mana_chicken"));
     }
 
     @Override

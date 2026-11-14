@@ -4248,6 +4248,7 @@
     "awakening_system.limbo.welcome": "§7[SYSTEM: You have entered Limbo. The spectral atmosphere distorts space-time.]",
     "awakening_system.locked_chest.unlocked_desc": "§aThe millenary chains have shattered before the Treant's key! The ancient treasures are yours.",
     "awakening_system.locked_chest.unlocked_title": "§2§l✦ ANCESTRAL CHEST UNLOCKED! ✦",
+    "awakening_system.loot_bag.opened": "Loot bag opened: %s and %s coins.",
     "awakening_system.maintenance.close": "Close Diagnostics",
     "awakening_system.maintenance.desc_1": "The Multiverse Administrator is rewriting System registries.",
     "awakening_system.maintenance.desc_2": "Synchronizing cosmic laws with the Isekai Dimension.",

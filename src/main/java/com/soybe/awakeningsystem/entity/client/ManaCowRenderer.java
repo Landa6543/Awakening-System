@@ -14,7 +14,8 @@ public class ManaCowRenderer extends MobRenderer<ManaCowEntity, CowModel<ManaCow
             ResourceLocation.fromNamespaceAndPath(AwakeningSystemMod.MOD_ID, "textures/entity/animal/mana_cow.png");
 
     public ManaCowRenderer(EntityRendererProvider.Context context) {
-        super(context, new CowModel<>(context.bakeLayer(ModelLayers.COW)), 0.7F);
+        super(context, new ManaCowModel(context.bakeLayer(ManaCowModel.LAYER)), 0.7F);
+        this.addLayer(new ManaAnimalsClient.Glow<>(this, "mana_cow"));
     }
 
     @Override

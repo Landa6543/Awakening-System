@@ -7153,26 +7153,62 @@ public final class SystemEvents {
       return CustomLootConfigManager.rollBoxLoot(boxId, player, player.getRandom());
    }
 
-   /** Opens a guild loot bag: rolls the box loot of that tier straight into the inventory and shows the reward card. */
+   /**
+    * Opens a guild loot bag, Terraria style: no reward screen, a handful of loot of the bag's tier (and a couple
+    * of rolls from the tier below) goes straight into the inventory, with coins, and a line in chat says what fell out.
+    */
    public static void openLootBag(ServerPlayer player, int tier) {
       SystemData data = data(player);
       if (data == null) return;
       tier = Math.max(1, Math.min(6, tier));
-      String boxId = switch (tier) {
-         case 2 -> "box_rare";
-         case 3 -> "box_epic";
-         case 4 -> "box_legendary";
-         case 5 -> "box_mythic";
-         case 6 -> "box_primordial";
-         default -> "box_common";
-      };
-      SystemEvents.BoxLootResult lootResult = giveBoxLoot(player, data, tier);
-      spawnBoxFx(player, tier);
-      PacketDistributor.sendToPlayer(
-         player,
-         new ChestRewardPayload(boxId, tier, lootResult.summary(), lootResult.coins(), lootResult.itemIds(), lootResult.itemCounts()),
-         new CustomPacketPayload[0]
+      String[] boxes = {"box_common", "box_rare", "box_epic", "box_legendary", "box_mythic", "box_primordial"};
+      int[] coins = {0};
+      List<ItemStack> rolled = new ArrayList<>(
+         com.soybe.awakeningsystem.config.CustomLootConfigManager.rollStacks(boxes[tier - 1], 2 + tier, player.getRandom(), coins)
       );
+      if (tier > 1) {
+         rolled.addAll(com.soybe.awakeningsystem.config.CustomLootConfigManager.rollStacks(boxes[tier - 2], 2, player.getRandom(), coins));
+      }
+      // same items fall out as one pile
+      List<ItemStack> piles = new ArrayList<>();
+      for (ItemStack s : rolled) {
+         boolean merged = false;
+         for (ItemStack p : piles) {
+            if (ItemStack.isSameItemSameComponents(p, s)) {
+               p.grow(s.getCount());
+               merged = true;
+               break;
+            }
+         }
+         if (!merged) piles.add(s.copy());
+      }
+      net.minecraft.network.chat.MutableComponent list = Component.empty();
+      boolean first = true;
+      for (ItemStack p : piles) {
+         if (!first) list.append(Component.literal(", ").withStyle(ChatFormatting.GRAY));
+         first = false;
+         list.append(p.getHoverName().copy().withStyle(ChatFormatting.WHITE)).append(Component.literal(" x" + p.getCount()).withStyle(ChatFormatting.GRAY));
+         // big piles are split into stacks the inventory can hold
+         int left = p.getCount();
+         while (left > 0) {
+            ItemStack give = p.copyWithCount(Math.min(left, p.getMaxStackSize()));
+            left -= give.getCount();
+            if (!player.getInventory().add(give)) player.drop(give, false);
+         }
+      }
+      int totalCoins = 250 * tier * tier + coins[0];
+      data.addCoins(totalCoins);
+      player.sendSystemMessage(
+         Component.translatable("awakening_system.loot_bag.opened", list, Component.literal(String.valueOf(totalCoins)).withStyle(ChatFormatting.GOLD))
+      );
+      // a puff of the bag's colour, no fanfare (the bag itself makes the sound)
+      if (player.level() instanceof ServerLevel sl) {
+         int c = LootBagItem.COLORS[tier - 1];
+         sl.sendParticles(new net.minecraft.core.particles.DustParticleOptions(
+            new org.joml.Vector3f(((c >> 16) & 255) / 255.0F, ((c >> 8) & 255) / 255.0F, (c & 255) / 255.0F), 1.4F),
+            player.getX(), player.getY() + 1.0, player.getZ(), 30, 0.45, 0.45, 0.45, 0.02);
+         sl.sendParticles(ParticleTypes.HAPPY_VILLAGER, player.getX(), player.getY() + 1.0, player.getZ(), 6 + tier * 2, 0.5, 0.5, 0.5, 0.0);
+      }
       AwakeningSystemMod.sync(player);
    }
 

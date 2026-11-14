@@ -14,7 +14,8 @@ public class ManaPigRenderer extends MobRenderer<ManaPigEntity, ManaPigModel> {
             ResourceLocation.fromNamespaceAndPath(AwakeningSystemMod.MOD_ID, "textures/entity/animal/mana_pig.png");
 
     public ManaPigRenderer(EntityRendererProvider.Context context) {
-        super(context, new ManaPigModel(context.bakeLayer(ManaPigModel.LAYER_LOCATION)), 0.7F);
+        super(context, new ManaPigModel(context.bakeLayer(ManaAnimalsClient.PIG_CRYSTALS)), 0.7F);
+        this.addLayer(new ManaAnimalsClient.Glow<>(this, "mana_pig"));
     }
 
     @Override

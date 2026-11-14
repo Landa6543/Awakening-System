@@ -4248,6 +4248,7 @@
     "awakening_system.limbo.welcome": "§7[SISTEMA: Você entrou no Limbo. A atmosfera espectral distorce o espaço-tempo.]",
     "awakening_system.locked_chest.unlocked_desc": "§aAs correntes milenares se partiram diante da chave do Treant! Os tesouros antigos são seus.",
     "awakening_system.locked_chest.unlocked_title": "§2§l✦ BAÚ ANCESTRAL DESBLOQUEADO! ✦",
+    "awakening_system.loot_bag.opened": "Bolsa aberta: %s e %s moedas.",
     "awakening_system.maintenance.close": "Fechar Diagnóstico",
     "awakening_system.maintenance.desc_1": "O Administrador do Multiverso está reescrevendo os registros do Sistema.",
     "awakening_system.maintenance.desc_2": "Sincronizando leis cósmicas com a Dimensão Isekai.",

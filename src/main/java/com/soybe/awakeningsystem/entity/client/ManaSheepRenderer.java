@@ -14,8 +14,9 @@ public class ManaSheepRenderer extends MobRenderer<ManaSheepEntity, SheepModel<M
             ResourceLocation.fromNamespaceAndPath(AwakeningSystemMod.MOD_ID, "textures/entity/animal/mana_sheep.png");
 
     public ManaSheepRenderer(EntityRendererProvider.Context context) {
-        super(context, new SheepModel<>(context.bakeLayer(ModelLayers.SHEEP)), 0.7F);
+        super(context, new ManaSheepModel(context.bakeLayer(ManaSheepModel.LAYER)), 0.7F);
         this.addLayer(new ManaSheepFurLayer(this, context.getModelSet()));
+        this.addLayer(new ManaAnimalsClient.Glow<>(this, "mana_sheep"));
     }
 
     @Override
