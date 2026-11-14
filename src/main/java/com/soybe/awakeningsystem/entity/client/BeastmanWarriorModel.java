@@ -14,121 +14,136 @@ import net.minecraft.client.model.geom.builders.PartDefinition;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.util.Mth;
 
+/**
+ * Beastman warrior: a wolf-headed brute. Muzzle with fangs, tall ears, a mane over the shoulders, a deep
+ * furred chest under leather straps and a bone pauldron, a bushy tail, and digitigrade legs (the knee bends
+ * back) ending in clawed paws. Swings a heavy war axe two-handed from overhead.
+ */
 public class BeastmanWarriorModel extends HierarchicalModel<BeastmanWarriorEntity> {
     public static final ModelLayerLocation LAYER_LOCATION = new ModelLayerLocation(
             ResourceLocation.fromNamespaceAndPath(AwakeningSystemMod.MOD_ID, "beastman_warrior"), "main");
 
-    private final ModelPart root;
-    private final ModelPart head;
-    private final ModelPart body;
-    private final ModelPart rightArm;
-    private final ModelPart leftArm;
-    private final ModelPart rightLeg;
-    private final ModelPart leftLeg;
-
-    private final ModelPart tail;
+    private final ModelPart root, body, head, jaw, earR, earL, tail, rArm, lArm, rFore, lFore, rLeg, lLeg, rShin, lShin, rFoot, lFoot;
 
     public BeastmanWarriorModel(ModelPart root) {
         this.root = root;
-        this.head = root.getChild("head");
         this.body = root.getChild("body");
-        this.tail = this.body.getChild("tail");
-        this.rightArm = root.getChild("right_arm");
-        this.leftArm = root.getChild("left_arm");
-        this.rightLeg = root.getChild("right_leg");
-        this.leftLeg = root.getChild("left_leg");
+        this.head = body.getChild("head");
+        this.jaw = head.getChild("jaw");
+        this.earR = head.getChild("ear_right");
+        this.earL = head.getChild("ear_left");
+        this.tail = body.getChild("tail");
+        this.rArm = body.getChild("right_arm");
+        this.lArm = body.getChild("left_arm");
+        this.rFore = rArm.getChild("right_forearm");
+        this.lFore = lArm.getChild("left_forearm");
+        this.rLeg = root.getChild("right_leg");
+        this.lLeg = root.getChild("left_leg");
+        this.rShin = rLeg.getChild("right_shin");
+        this.lShin = lLeg.getChild("left_shin");
+        this.rFoot = rShin.getChild("right_foot");
+        this.lFoot = lShin.getChild("left_foot");
     }
 
     public static LayerDefinition createBodyLayer() {
         MeshDefinition mesh = new MeshDefinition();
         PartDefinition root = mesh.getRoot();
 
-        PartDefinition head = root.addOrReplaceChild("head", CubeListBuilder.create()
-                .texOffs(0, 0).addBox(-3.5F, -6.5F, -3.5F, 7.0F, 7.0F, 7.0F, new CubeDeformation(0.0F))
-                .texOffs(28, 0).addBox(-2.5F, -3.0F, -6.5F, 5.0F, 3.5F, 3.0F, new CubeDeformation(0.0F))
-                .texOffs(44, 0).addBox(-2.0F, 0.5F, -6.0F, 4.0F, 1.5F, 3.0F, new CubeDeformation(0.0F))
-                .texOffs(58, 0).addBox(-2.2F, -0.5F, -5.5F, 0.8F, 1.5F, 0.8F, new CubeDeformation(0.0F))
-                .texOffs(58, 0).mirror().addBox(1.4F, -0.5F, -5.5F, 0.8F, 1.5F, 0.8F, new CubeDeformation(0.0F))
-                .texOffs(64, 0).addBox(-2.5F, -6.0F, 2.5F, 5.0F, 8.0F, 4.0F, new CubeDeformation(0.0F)),
-                PartPose.offset(0.0F, -2.0F, -1.0F));
-
-        head.addOrReplaceChild("ear_right", CubeListBuilder.create()
-                .texOffs(28, 7).addBox(-1.5F, -3.5F, -0.5F, 3.0F, 4.0F, 1.0F, new CubeDeformation(0.0F)),
-                PartPose.offsetAndRotation(-3.0F, -6.5F, 0.5F, 0.0F, 0.0F, -0.35F));
-
-        head.addOrReplaceChild("ear_left", CubeListBuilder.create()
-                .texOffs(28, 7).mirror().addBox(-1.5F, -3.5F, -0.5F, 3.0F, 4.0F, 1.0F, new CubeDeformation(0.0F)),
-                PartPose.offsetAndRotation(3.0F, -6.5F, 0.5F, 0.0F, 0.0F, 0.35F));
-
         PartDefinition body = root.addOrReplaceChild("body", CubeListBuilder.create()
-                .texOffs(0, 14).addBox(-5.0F, 0.0F, -3.0F, 10.0F, 13.0F, 6.0F, new CubeDeformation(0.2F))
-                .texOffs(32, 14).addBox(-5.5F, 0.5F, -3.5F, 11.0F, 5.0F, 7.0F, new CubeDeformation(0.1F))
-                .texOffs(0, 33).addBox(-5.5F, 10.5F, -3.5F, 11.0F, 4.0F, 7.0F, new CubeDeformation(0.0F)),
-                PartPose.offset(0.0F, -2.0F, 0.0F));
+                .texOffs(32, 13).addBox(-4.0F, -5.0F, -2.5F, 8.0F, 5.0F, 5.0F)                     // hips
+                .texOffs(0, 13).addBox(-5.0F, -16.0F, -3.0F, 10.0F, 11.0F, 6.0F)                   // chest
+                .texOffs(58, 13).addBox(-5.5F, -17.0F, -3.5F, 11.0F, 4.0F, 7.0F, new CubeDeformation(0.2F))   // mane
+                .texOffs(62, 0).addBox(-3.0F, -1.0F, -3.2F, 6.0F, 7.0F, 1.0F),                     // loincloth
+                PartPose.offsetAndRotation(0.0F, 6.0F, 0.0F, 0.12F, 0.0F, 0.0F));
+
+        PartDefinition head = body.addOrReplaceChild("head", CubeListBuilder.create()
+                .texOffs(0, 0).addBox(-3.5F, -6.0F, -4.0F, 7.0F, 6.0F, 7.0F)
+                .texOffs(28, 0).addBox(-2.0F, -3.5F, -8.0F, 4.0F, 3.0F, 4.0F),                     // muzzle
+                PartPose.offsetAndRotation(0.0F, -16.0F, -1.0F, -0.12F, 0.0F, 0.0F));
+        head.addOrReplaceChild("jaw", CubeListBuilder.create().texOffs(44, 0).addBox(-1.5F, 0.0F, -3.5F, 3.0F, 1.0F, 3.0F),
+                PartPose.offset(0.0F, -0.5F, -4.3F));
+        head.addOrReplaceChild("ear_right", CubeListBuilder.create().texOffs(56, 0).addBox(-1.0F, -4.0F, -0.5F, 2.0F, 4.0F, 1.0F),
+                PartPose.offsetAndRotation(-2.3F, -5.6F, -0.5F, -0.15F, 0.0F, -0.25F));
+        head.addOrReplaceChild("ear_left", CubeListBuilder.create().texOffs(56, 0).mirror().addBox(-1.0F, -4.0F, -0.5F, 2.0F, 4.0F, 1.0F),
+                PartPose.offsetAndRotation(2.3F, -5.6F, -0.5F, -0.15F, 0.0F, 0.25F));
 
         body.addOrReplaceChild("tail", CubeListBuilder.create()
-                .texOffs(36, 26).addBox(-1.5F, 0.0F, 0.0F, 3.0F, 3.0F, 6.0F, new CubeDeformation(0.0F))
-                .texOffs(54, 26).addBox(-2.0F, 0.5F, 5.0F, 4.0F, 4.0F, 4.0F, new CubeDeformation(0.0F)),
-                PartPose.offset(0.0F, 10.0F, 2.5F));
+                .texOffs(76, 0).addBox(-1.0F, -1.0F, 0.0F, 2.0F, 2.0F, 9.0F)
+                .texOffs(98, 0).addBox(-1.5F, -1.5F, 7.0F, 3.0F, 3.0F, 4.0F),
+                PartPose.offsetAndRotation(0.0F, -3.0F, 2.3F, -0.65F, 0.0F, 0.0F));
 
-        PartDefinition rightArm = root.addOrReplaceChild("right_arm", CubeListBuilder.create()
-                .texOffs(68, 14).addBox(-3.5F, -2.0F, -2.0F, 4.0F, 14.0F, 4.0F, new CubeDeformation(0.0F))
-                .texOffs(84, 14).addBox(-4.0F, 6.0F, -2.5F, 5.0F, 4.0F, 5.0F, new CubeDeformation(0.0F)),
-                PartPose.offset(-6.0F, 0.0F, 0.0F));
+        for (int side = -1; side <= 1; side += 2) {
+            String s = side < 0 ? "right" : "left";
+            boolean m = side > 0;
+            CubeListBuilder upper = CubeListBuilder.create().mirror(m).texOffs(0, 30).addBox(-1.5F, -1.0F, -1.5F, 3.0F, 7.0F, 3.0F);
+            if (side < 0) upper.texOffs(12, 30).addBox(-2.5F, -2.5F, -2.5F, 5.0F, 3.0F, 5.0F);              // bone pauldron on the axe arm
+            PartDefinition arm = body.addOrReplaceChild(s + "_arm", upper,
+                    PartPose.offsetAndRotation(side * 6.3F, -14.0F, 0.0F, -0.12F, 0.0F, side * 0.08F));
+            CubeListBuilder fore = CubeListBuilder.create().mirror(m)
+                    .texOffs(32, 30).addBox(-1.5F, 0.0F, -1.5F, 3.0F, 6.0F, 3.0F)
+                    .texOffs(44, 30).addBox(-2.0F, 5.5F, -2.0F, 4.0F, 2.0F, 4.0F);
+            if (side < 0) fore.texOffs(0, 45).addBox(-0.5F, 6.0F, -11.0F, 1.0F, 1.0F, 14.0F)               // the axe haft
+                    .texOffs(30, 45).addBox(-0.5F, 3.0F, -13.0F, 1.0F, 6.0F, 5.0F);                         // and its blade
+            arm.addOrReplaceChild(s + "_forearm", fore, PartPose.offsetAndRotation(0.0F, 6.0F, 0.0F, -0.25F, 0.0F, 0.0F));
 
-        // Brutal Barbarian Battleaxe: Centered naturally in the right hand palm
-        rightArm.addOrReplaceChild("battleaxe", CubeListBuilder.create()
-                .texOffs(64, 64).addBox(-0.9F, -15.0F, -0.9F, 1.8F, 21.0F, 1.8F, new CubeDeformation(0.0F))
-                .texOffs(74, 64).addBox(-1.4F, 5.5F, -1.4F, 2.8F, 2.5F, 2.8F, new CubeDeformation(0.0F))
-                .texOffs(88, 64).addBox(-1.4F, -15.5F, -2.0F, 2.8F, 4.0F, 4.0F, new CubeDeformation(0.0F))
-                .texOffs(64, 88).addBox(-0.9F, -17.5F, -7.5F, 1.8F, 9.0F, 6.0F, new CubeDeformation(0.0F))
-                .texOffs(84, 88).addBox(-0.8F, -14.5F, 1.5F, 1.6F, 2.0F, 3.0F, new CubeDeformation(0.0F))
-                .texOffs(96, 88).addBox(-0.8F, -18.5F, -0.8F, 1.6F, 3.0F, 1.6F, new CubeDeformation(0.0F)),
-                PartPose.offset(-1.5F, 9.5F, 0.0F));
-
-        root.addOrReplaceChild("left_arm", CubeListBuilder.create()
-                .texOffs(68, 32).mirror().addBox(-0.5F, -2.0F, -2.0F, 4.0F, 14.0F, 4.0F, new CubeDeformation(0.0F))
-                .texOffs(84, 14).mirror().addBox(-1.0F, 6.0F, -2.5F, 5.0F, 4.0F, 5.0F, new CubeDeformation(0.0F)),
-                PartPose.offset(6.0F, 0.0F, 0.0F));
-
-        // Right leg has its own dedicated UV island at (0, 64)
-        root.addOrReplaceChild("right_leg", CubeListBuilder.create()
-                .texOffs(0, 64).addBox(-2.5F, 0.0F, -2.5F, 5.0F, 13.0F, 5.0F, new CubeDeformation(0.0F))
-                .texOffs(0, 84).addBox(-2.5F, 11.0F, -4.5F, 5.0F, 2.0F, 2.0F, new CubeDeformation(0.0F)),
-                PartPose.offset(-2.8F, 11.0F, 0.0F));
-
-        // Left leg has its own dedicated UV island at (24, 64) - eliminates mirroring and missing textures
-        root.addOrReplaceChild("left_leg", CubeListBuilder.create()
-                .texOffs(24, 64).addBox(-2.5F, 0.0F, -2.5F, 5.0F, 13.0F, 5.0F, new CubeDeformation(0.0F))
-                .texOffs(20, 84).addBox(-2.5F, 11.0F, -4.5F, 5.0F, 2.0F, 2.0F, new CubeDeformation(0.0F)),
-                PartPose.offset(2.8F, 11.0F, 0.0F));
-
-        return LayerDefinition.create(mesh, 128, 128);
+            PartDefinition leg = root.addOrReplaceChild(s + "_leg", CubeListBuilder.create().mirror(m)
+                    .texOffs(60, 30).addBox(-1.5F, 0.0F, -2.0F, 3.0F, 8.0F, 4.0F),
+                    PartPose.offsetAndRotation(side * 2.6F, 6.0F, 0.0F, -0.35F, 0.0F, 0.0F));
+            PartDefinition shin = leg.addOrReplaceChild(s + "_shin", CubeListBuilder.create().mirror(m)
+                    .texOffs(74, 30).addBox(-1.0F, 0.0F, -1.0F, 2.0F, 8.0F, 2.0F),
+                    PartPose.offsetAndRotation(0.0F, 7.5F, 0.5F, 0.85F, 0.0F, 0.0F));                        // knee bends back
+            shin.addOrReplaceChild(s + "_foot", CubeListBuilder.create().mirror(m)
+                    .texOffs(82, 30).addBox(-1.5F, 0.0F, -4.0F, 3.0F, 2.0F, 5.0F),
+                    PartPose.offsetAndRotation(0.0F, 7.5F, 0.0F, -0.5F, 0.0F, 0.0F));
+        }
+        return LayerDefinition.create(mesh, 128, 64);
     }
 
     @Override
     public ModelPart root() {
-        return this.root;
+        return root;
     }
 
     @Override
     public void setupAnim(BeastmanWarriorEntity entity, float limbSwing, float limbSwingAmount, float ageInTicks, float netHeadYaw, float headPitch) {
-        this.root().getAllParts().forEach(ModelPart::resetPose);
-        this.head.yRot = netHeadYaw * (Mth.PI / 180F);
-        this.head.xRot = headPitch * (Mth.PI / 180F) + Mth.sin(ageInTicks * 0.08F) * 0.03F;
+        root.getAllParts().forEach(ModelPart::resetPose);
+        float amt = Math.min(1.0F, limbSwingAmount);
+        float w = limbSwing * 0.6F;
+        float breath = Mth.sin(ageInTicks * 0.09F);
 
-        this.rightLeg.xRot = Mth.cos(limbSwing * 0.65F) * 1.0F * limbSwingAmount;
-        this.leftLeg.xRot = Mth.cos(limbSwing * 0.65F + Mth.PI) * 1.0F * limbSwingAmount;
+        // loping stride: thighs swing, the bent-back shins fold further as each paw lifts
+        rLeg.xRot += Mth.cos(w) * 0.75F * amt;
+        lLeg.xRot += Mth.cos(w + Mth.PI) * 0.75F * amt;
+        rShin.xRot += Math.max(0.0F, Mth.sin(w)) * 0.6F * amt;
+        lShin.xRot += Math.max(0.0F, Mth.sin(w + Mth.PI)) * 0.6F * amt;
+        body.y += -Math.abs(Mth.cos(w)) * 1.0F * amt + 1.0F * amt;
+        rLeg.y += -Math.abs(Mth.cos(w)) * 1.0F * amt + 1.0F * amt;
+        lLeg.y += -Math.abs(Mth.cos(w)) * 1.0F * amt + 1.0F * amt;
+        body.xRot += 0.12F * amt - breath * 0.02F * (1 - amt);
+        body.yRot = Mth.cos(w) * 0.1F * amt;
+        lArm.xRot += Mth.cos(w) * 0.6F * amt;
+        rArm.xRot += Mth.cos(w + Mth.PI) * 0.25F * amt - 0.35F;            // axe held ready
+        lFore.xRot += -0.2F - 0.2F * amt;
 
-        // Feral battle stance: Axe held firmly forward with controlled weapon weight
-        this.rightArm.xRot = -0.52F + Mth.cos(limbSwing * 0.65F + Mth.PI) * 0.25F * limbSwingAmount;
-        this.rightArm.yRot = -0.15F;
-        this.rightArm.zRot = 0.05F;
+        head.yRot = netHeadYaw * Mth.DEG_TO_RAD - body.yRot;
+        head.xRot += headPitch * Mth.DEG_TO_RAD;
+        jaw.xRot = 0.08F + Math.max(0.0F, breath) * 0.12F;                  // panting
+        earR.zRot += Mth.sin(ageInTicks * 0.05F) * 0.05F;
+        earL.zRot -= Mth.sin(ageInTicks * 0.05F) * 0.05F;
+        tail.yRot = Mth.sin(ageInTicks * 0.16F) * 0.35F + Mth.sin(w) * 0.2F * amt;
+        tail.xRot += Mth.sin(ageInTicks * 0.08F) * 0.06F;
 
-        this.leftArm.xRot = Mth.cos(limbSwing * 0.65F) * 0.6F * limbSwingAmount;
-        this.leftArm.zRot = 0.08F;
-
-        // Tail wagging
-        this.tail.yRot = Mth.cos(ageInTicks * 0.18F) * 0.28F;
+        if (this.attackTime > 0.0F) {
+            // two-handed chop: axe raised over the shoulder, then brought down hard, body following
+            float p = this.attackTime;
+            float up = p < 0.35F ? p / 0.35F : 1.0F - (p - 0.35F) / 0.65F;
+            float down = p < 0.35F ? 0.0F : Mth.sin((p - 0.35F) / 0.65F * Mth.PI);
+            rArm.xRot = -2.8F * up - 0.6F * down;
+            rFore.xRot = -0.9F * up + 0.2F * down;
+            lArm.xRot = -2.2F * up - 0.5F * down;
+            lArm.zRot = -0.3F * up;
+            body.xRot += -0.25F * up + 0.4F * down;
+            jaw.xRot = 0.5F * Math.max(up, down);
+        }
     }
 }
