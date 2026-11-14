@@ -1036,6 +1036,58 @@ public final class SystemHudOverlay {
             graphics.pose().scale(skillScale, skillScale, 1.0F);
         }
 
+        // full-dive style: the same slots as glass beads (see SaoHud.skillBeads)
+        if (com.soybe.awakeningsystem.client.sao.UiStyle.fullDive()) {
+            java.util.List<com.soybe.awakeningsystem.client.sao.SaoHud.Bead> beads = new java.util.ArrayList<>();
+            for (int i = 0; i < 5; i++) {
+                String skillId = data.getEquippedActiveSkill(i);
+                boolean hasSkill = skillId != null && !skillId.isEmpty() && SkillDefinitions.isAvailable(skillId);
+                String keyLabel = defaultKeys[i];
+                if (mappings[i] != null && !mappings[i].isUnbound()) {
+                    String k = mappings[i].getTranslatedKeyMessage().getString().toUpperCase(java.util.Locale.ROOT);
+                    if (!k.isEmpty()) keyLabel = k.length() > 2 ? k.substring(0, 2) : k;
+                }
+                String symbol = "";
+                if (hasSkill) {
+                    ClassSkillTree.SkillNode node = ClassSkillTree.getNode(skillId);
+                    symbol = (node != null && node.iconSymbol() != null && !node.iconSymbol().isEmpty()) ? node.iconSymbol() : null;
+                    if (symbol == null) {
+                        SkillDefinitions.Definition def = SkillDefinitions.get(skillId);
+                        String name = def != null ? def.name().getString() : skillId;
+                        symbol = name.length() > 2 ? name.substring(0, 2) : name;
+                    }
+                }
+                beads.add(new com.soybe.awakeningsystem.client.sao.SaoHud.Bead(keyLabel, symbol, null, hasSkill,
+                        hasSkill ? data.activeCooldownSeconds(skillId, gameTime) : 0, 0));
+            }
+            if (hasStigma) {
+                String stigmaKey = "Y";
+                if (AwakeningSystemClient.ACTIVATE_STIGMA != null && !AwakeningSystemClient.ACTIVATE_STIGMA.isUnbound()) {
+                    String k = AwakeningSystemClient.ACTIVATE_STIGMA.getTranslatedKeyMessage().getString().toUpperCase(java.util.Locale.ROOT);
+                    if (!k.isEmpty()) stigmaKey = k.length() > 2 ? k.substring(0, 2) : k;
+                }
+                beads.add(new com.soybe.awakeningsystem.client.sao.SaoHud.Bead(stigmaKey, "✨", null, true,
+                        (int) Math.max(0, (data.stigmaCooldownUntil() - gameTime + 19) / 20), 1));
+            }
+            if (hasAnyActiveRune) {
+                net.minecraft.client.KeyMapping[] runeMappings = {AwakeningSystemClient.ACTIVATE_RUNE_1, AwakeningSystemClient.ACTIVATE_RUNE_2};
+                String[] defaultRuneKeys = {"N", "M"};
+                for (int r = 0; r < 2; r++) {
+                    ItemStack runeStack = data.getActiveRune(r);
+                    String keyLabel = defaultRuneKeys[r];
+                    if (runeMappings[r] != null && !runeMappings[r].isUnbound()) {
+                        String k = runeMappings[r].getTranslatedKeyMessage().getString().toUpperCase(java.util.Locale.ROOT);
+                        if (!k.isEmpty()) keyLabel = k.length() > 2 ? k.substring(0, 2) : k;
+                    }
+                    beads.add(new com.soybe.awakeningsystem.client.sao.SaoHud.Bead(keyLabel, "", runeStack, !runeStack.isEmpty(),
+                            runeStack.isEmpty() ? 0 : data.getActiveRuneCooldownSeconds(r, gameTime), 2));
+                }
+            }
+            com.soybe.awakeningsystem.client.sao.SaoHud.skillBeads(graphics, mc, beads, data.isSystemUpdating() || data.isSystem30Updating());
+            graphics.pose().popPose();
+            return;
+        }
+
         for (int i = 0; i < 5; i++) {
             int sx = i * (slotW + gap);
             String skillId = data.getEquippedActiveSkill(i);

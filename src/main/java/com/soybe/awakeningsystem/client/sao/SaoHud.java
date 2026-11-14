@@ -15,6 +15,60 @@ import static com.soybe.awakeningsystem.client.sao.SaoDraw.*;
 public final class SaoHud {
     private SaoHud() {}
 
+    /**
+     * One slot of the skill row: its key, what is in it (a short symbol or an item), whether anything is,
+     * the seconds left on its cooldown, and its kind (0 skill, 1 stigma, 2 rune) for the colour.
+     */
+    public record Bead(String key, String symbol, net.minecraft.world.item.ItemStack item, boolean filled, int cooldown, int kind) {}
+
+    /**
+     * The skill row as glass beads, drawn at the row's origin in the same 20 + 3 pixel steps as the classic
+     * slots: each bead carries its skill (or item), its key on a small slanted tag underneath, and while
+     * cooling down it darkens and shows the seconds left.
+     */
+    public static void skillBeads(GuiGraphics g, Minecraft mc, java.util.List<Bead> beads, boolean locked) {
+        var font = mc.font;
+        float t = (System.nanoTime() % 100_000_000_000L) / 1.0E9F;
+        for (int i = 0; i < beads.size(); i++) {
+            Bead b = beads.get(i);
+            float cx = i * 23 + 10, cy = 9;
+            int accent = b.kind() == 1 ? 0xFFFFC94A : b.kind() == 2 ? 0xFFA45BFF : ORANGE;
+            boolean ready = b.filled() && b.cooldown() <= 0 && !locked;
+            if (ready) ring(g, cx, cy, 10.8F, 1.0F, alpha(accent, 0.55F + 0.25F * (float) Math.sin(t * 3.0 + i)));
+            else ring(g, cx, cy, 10.8F, 1.0F, 0xFFB8B8BE);
+            shinyDisc(g, cx, cy, 9.2F, b.filled() ? 0xFFF7F7F7 : 0xFFCFCFD4, 1.0F);
+            if (b.item() != null && !b.item().isEmpty()) {
+                g.pose().pushPose();
+                g.pose().translate(cx - 6, cy - 6, 0);
+                g.pose().scale(0.75F, 0.75F, 1.0F);
+                g.renderItem(b.item(), 0, 0);
+                g.pose().popPose();
+            } else if (b.filled()) {
+                String s = b.symbol() == null ? "" : b.symbol();
+                g.drawString(font, s, Math.round(cx) - font.width(s) / 2, Math.round(cy) - 4, b.kind() == 0 ? 0xFF3A3A42 : accent, false);
+            } else icon(g, PLUS, Math.round(cx) - 5, Math.round(cy) - 5, 0xFFB0B0B6);
+            if (b.filled() && b.cooldown() > 0) {
+                g.pose().pushPose();
+                g.pose().translate(0, 0, 150);
+                disc(g, cx, cy, 9.2F, 0xA0101014);
+                String cd = b.cooldown() >= 60 ? (b.cooldown() / 60) + "m" : b.cooldown() + "s";
+                g.drawString(font, cd, Math.round(cx) - font.width(cd) / 2, Math.round(cy) - 4, 0xFFFF8A7A, false);
+                g.pose().popPose();
+            }
+            if (locked) disc(g, cx, cy, 9.2F, 0x90303038);
+            // the key on a little slanted tag under the bead
+            g.pose().pushPose();
+            g.pose().translate(0, 0, 160);
+            int kw = font.width(b.key());
+            float tx = cx - kw * 0.35F - 3;
+            slant(g, tx, cy + 8, kw * 0.7F + 6, 6, 1.5F, 0xF0FFFFFF, 0xF0DCDCE2);
+            g.pose().translate(cx - kw * 0.35F, cy + 8.6F, 0);
+            g.pose().scale(0.7F, 0.7F, 1.0F);
+            g.drawString(font, b.key(), 0, 0, ready ? 0xFFC98700 : 0xFF4A4A52, false);
+            g.pose().popPose();
+        }
+    }
+
     private static float hpShown = -1, hpTrail = -1, mpShown = -1;
     private static long last;
     private static float appear;

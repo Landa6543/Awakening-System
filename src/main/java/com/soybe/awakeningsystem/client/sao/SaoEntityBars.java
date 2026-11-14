@@ -38,6 +38,7 @@ public final class SaoEntityBars {
 
     /** Per creature: shown health, trailing health, last update time. */
     private static final Map<Integer, float[]> bars = new HashMap<>();
+    private static final long START = System.nanoTime();
 
     @SubscribeEvent(priority = EventPriority.LOW)
     public static void onNameTag(RenderNameTagEvent event) {
@@ -66,11 +67,13 @@ public final class SaoEntityBars {
     }
 
     private static void draw(Minecraft mc, LivingEntity le, Component name, boolean fighter, PoseStack ps, MultiBufferSource buffers, int light) {
-        long now = System.currentTimeMillis();
+        // seconds since the game started, small enough to keep its precision in a float (the wall clock in
+        // milliseconds is not: stored in a float it rounds to minutes and the bar never moved)
+        float now = (System.nanoTime() - START) / 1.0E9F;
         float hp = le.getHealth(), max = Math.max(1.0F, le.getMaxHealth());
         if (bars.size() > 512) bars.clear();
         float[] b = bars.computeIfAbsent(le.getId(), k -> new float[]{hp, hp, now});
-        float dt = Math.min(0.1F, (now - b[2]) / 1000.0F);
+        float dt = Mth.clamp(now - b[2], 0.0F, 0.1F);
         b[2] = now;
         b[0] += (hp - b[0]) * Math.min(1.0F, dt * 14.0F);
         if (hp >= b[1]) b[1] = hp;
