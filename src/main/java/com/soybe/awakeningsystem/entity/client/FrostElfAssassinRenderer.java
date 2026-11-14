@@ -10,9 +10,18 @@ import net.minecraft.resources.ResourceLocation;
 public class FrostElfAssassinRenderer extends MobRenderer<FrostElfAssassinEntity, FrostElfAssassinModel> {
     private static final ResourceLocation TEXTURE = ResourceLocation.fromNamespaceAndPath(
             AwakeningSystemMod.MOD_ID, "textures/entity/frost_elf_assassin.png");
+    private static final net.minecraft.client.renderer.RenderType GLOW = net.minecraft.client.renderer.RenderType.eyes(ResourceLocation.fromNamespaceAndPath(
+            AwakeningSystemMod.MOD_ID, "textures/entity/frost_elf_assassin_glow.png"));
 
     public FrostElfAssassinRenderer(EntityRendererProvider.Context context) {
         super(context, new FrostElfAssassinModel(context.bakeLayer(FrostElfAssassinModel.LAYER_LOCATION)), 0.5F);
+        // the ice eyes and blades glow in the dark
+        this.addLayer(new net.minecraft.client.renderer.entity.layers.EyesLayer<>(this) {
+            @Override
+            public net.minecraft.client.renderer.RenderType renderType() {
+                return GLOW;
+            }
+        });
     }
 
     @Override
