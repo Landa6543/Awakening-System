@@ -1,0 +1,28 @@
+{
+  "parent": "minecraft:item/handheld",
+  "textures": {
+    "layer0": "awakening_system:item/celestial/last_mourning"
+  },
+  "display": {
+    "thirdperson_righthand": {
+      "rotation": [0, -90, 55],
+      "translation": [-0.00, 19.06, -2.15],
+      "scale": [2.40, 2.40, 2.40]
+    },
+    "thirdperson_lefthand": {
+      "rotation": [0, 90, -55],
+      "translation": [-0.00, 19.06, -2.15],
+      "scale": [2.40, 2.40, 2.40]
+    },
+    "firstperson_righthand": {
+      "rotation": [0, -90, 25],
+      "translation": [1.13, 11.61, 4.19],
+      "scale": [1.55, 1.55, 1.55]
+    },
+    "firstperson_lefthand": {
+      "rotation": [0, 90, -25],
+      "translation": [1.13, 11.61, 4.19],
+      "scale": [1.55, 1.55, 1.55]
+    }
+  }
+}

@@ -8,6 +8,16 @@
                    "awakening_system:domain_of_sanction",
                    "awakening_system:black_dragon_scythe",
                    "awakening_system:dread_scythe",
-                   "awakening_system:crimson_moons_semblance"
-               ]
+                   "awakening_system:crimson_moons_semblance",
+                   "awakening_system:anarchy_blade",
+                   "awakening_system:darklight_greatsword",
+                   "awakening_system:defiled_greatsword",
+                   "awakening_system:entropic_claymore",
+                   "awakening_system:greatsword_of_judgement",
+                   "awakening_system:noctalgia",
+                   "awakening_system:last_mourning",
+                   "awakening_system:deaths_ascension",
+                   "awakening_system:soul_harvester",
+                   "awakening_system:old_reaper"
+    ]
 }

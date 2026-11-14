@@ -1,0 +1,28 @@
+{
+  "parent": "minecraft:item/handheld",
+  "textures": {
+    "layer0": "awakening_system:item/celestial/deaths_ascension"
+  },
+  "display": {
+    "thirdperson_righthand": {
+      "rotation": [0, -90, 55],
+      "translation": [-0.00, 18.18, -2.00],
+      "scale": [2.30, 2.30, 2.30]
+    },
+    "thirdperson_lefthand": {
+      "rotation": [0, 90, -55],
+      "translation": [-0.00, 18.18, -2.00],
+      "scale": [2.30, 2.30, 2.30]
+    },
+    "firstperson_righthand": {
+      "rotation": [0, -90, 25],
+      "translation": [1.13, 11.19, 4.04],
+      "scale": [1.50, 1.50, 1.50]
+    },
+    "firstperson_lefthand": {
+      "rotation": [0, 90, -25],
+      "translation": [1.13, 11.19, 4.04],
+      "scale": [1.50, 1.50, 1.50]
+    }
+  }
+}

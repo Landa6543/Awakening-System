@@ -1,0 +1,28 @@
+{
+  "parent": "minecraft:item/handheld",
+  "textures": {
+    "layer0": "awakening_system:item/celestial/soul_harvester"
+  },
+  "display": {
+    "thirdperson_righthand": {
+      "rotation": [0, -90, 55],
+      "translation": [-0.00, 17.85, -1.53],
+      "scale": [2.30, 2.30, 2.30]
+    },
+    "thirdperson_lefthand": {
+      "rotation": [0, 90, -55],
+      "translation": [-0.00, 17.85, -1.53],
+      "scale": [2.30, 2.30, 2.30]
+    },
+    "firstperson_righthand": {
+      "rotation": [0, -90, 25],
+      "translation": [1.13, 10.85, 4.20],
+      "scale": [1.50, 1.50, 1.50]
+    },
+    "firstperson_lefthand": {
+      "rotation": [0, 90, -25],
+      "translation": [1.13, 10.85, 4.20],
+      "scale": [1.50, 1.50, 1.50]
+    }
+  }
+}

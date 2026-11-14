@@ -26,6 +26,19 @@
                    "awakening_system:astral_sword",
                    "awakening_system:celestial_sword",
                    "awakening_system:primordial_sword",
-                   "awakening_system:primogem_sword"
-               ]
+                   "awakening_system:primogem_sword",
+                   "awakening_system:ark_of_the_cosmos",
+                   "awakening_system:devils_devastation",
+                   "awakening_system:durandal",
+                   "awakening_system:earth_sword",
+                   "awakening_system:exoblade",
+                   "awakening_system:galactus_blade",
+                   "awakening_system:galaxia",
+                   "awakening_system:mirror_blade",
+                   "awakening_system:nucleosynthesis",
+                   "awakening_system:omniblade",
+                   "awakening_system:orderbringer",
+                   "awakening_system:void_edge",
+                   "awakening_system:aurora_tempest"
+    ]
 }

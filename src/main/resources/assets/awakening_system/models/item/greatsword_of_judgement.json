@@ -1,0 +1,28 @@
+{
+  "parent": "minecraft:item/handheld",
+  "textures": {
+    "layer0": "awakening_system:item/celestial/greatsword_of_judgement"
+  },
+  "display": {
+    "thirdperson_righthand": {
+      "rotation": [0, -90, 55],
+      "translation": [-0.00, 18.71, -1.66],
+      "scale": [2.40, 2.40, 2.40]
+    },
+    "thirdperson_lefthand": {
+      "rotation": [0, 90, -55],
+      "translation": [-0.00, 18.71, -1.66],
+      "scale": [2.40, 2.40, 2.40]
+    },
+    "firstperson_righthand": {
+      "rotation": [0, -90, 25],
+      "translation": [1.13, 11.26, 4.35],
+      "scale": [1.55, 1.55, 1.55]
+    },
+    "firstperson_lefthand": {
+      "rotation": [0, 90, -25],
+      "translation": [1.13, 11.26, 4.35],
+      "scale": [1.55, 1.55, 1.55]
+    }
+  }
+}

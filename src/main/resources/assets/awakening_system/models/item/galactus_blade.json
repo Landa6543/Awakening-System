@@ -1,0 +1,28 @@
+{
+  "parent": "minecraft:item/handheld",
+  "textures": {
+    "layer0": "awakening_system:item/celestial/galactus_blade"
+  },
+  "display": {
+    "thirdperson_righthand": {
+      "rotation": [0, -90, 55],
+      "translation": [-0.00, 15.63, -1.55],
+      "scale": [2.00, 2.00, 2.00]
+    },
+    "thirdperson_lefthand": {
+      "rotation": [0, 90, -55],
+      "translation": [-0.00, 15.63, -1.55],
+      "scale": [2.00, 2.00, 2.00]
+    },
+    "firstperson_righthand": {
+      "rotation": [0, -90, 25],
+      "translation": [1.13, 9.98, 3.60],
+      "scale": [1.35, 1.35, 1.35]
+    },
+    "firstperson_lefthand": {
+      "rotation": [0, 90, -25],
+      "translation": [1.13, 9.98, 3.60],
+      "scale": [1.35, 1.35, 1.35]
+    }
+  }
+}

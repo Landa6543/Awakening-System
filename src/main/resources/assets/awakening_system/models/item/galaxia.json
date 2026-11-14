@@ -1,0 +1,31 @@
+{
+  "parent": "minecraft:item/handheld",
+  "textures": {
+    "layer0": "awakening_system:item/celestial/galaxia"
+  },
+  "overrides": [
+    { "predicate": { "awakening_system:capricorn": 1 }, "model": "awakening_system:item/galaxia_capricorn" }
+  ],
+  "display": {
+    "thirdperson_righthand": {
+      "rotation": [0, -90, 55],
+      "translation": [-0.00, 15.56, -1.54],
+      "scale": [2.00, 2.00, 2.00]
+    },
+    "thirdperson_lefthand": {
+      "rotation": [0, 90, -55],
+      "translation": [-0.00, 15.56, -1.54],
+      "scale": [2.00, 2.00, 2.00]
+    },
+    "firstperson_righthand": {
+      "rotation": [0, -90, 25],
+      "translation": [1.13, 9.94, 3.58],
+      "scale": [1.35, 1.35, 1.35]
+    },
+    "firstperson_lefthand": {
+      "rotation": [0, 90, -25],
+      "translation": [1.13, 9.94, 3.58],
+      "scale": [1.35, 1.35, 1.35]
+    }
+  }
+}
