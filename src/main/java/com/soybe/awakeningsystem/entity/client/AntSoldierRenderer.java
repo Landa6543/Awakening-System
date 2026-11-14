@@ -23,6 +23,6 @@ public class AntSoldierRenderer extends MobRenderer<AntSoldierEntity, AntSoldier
 
     @Override
     protected void scale(AntSoldierEntity entity, PoseStack poseStack, float partialTickTime) {
-        poseStack.scale(1.15F, 1.15F, 1.15F);
+        poseStack.scale(0.95F, 0.95F, 0.95F);                 // the model is about 2.4 blocks tall at full size, antennae aside
     }
 }

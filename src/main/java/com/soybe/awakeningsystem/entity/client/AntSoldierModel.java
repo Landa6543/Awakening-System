@@ -6,213 +6,258 @@ import net.minecraft.client.model.HierarchicalModel;
 import net.minecraft.client.model.geom.ModelLayerLocation;
 import net.minecraft.client.model.geom.ModelPart;
 import net.minecraft.client.model.geom.PartPose;
-import net.minecraft.client.model.geom.builders.*;
+import net.minecraft.client.model.geom.builders.CubeListBuilder;
+import net.minecraft.client.model.geom.builders.LayerDefinition;
+import net.minecraft.client.model.geom.builders.MeshDefinition;
+import net.minecraft.client.model.geom.builders.PartDefinition;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.util.Mth;
 
 /**
- * Modelo 3D para el Soldado Hormiga Gigante (Ant Soldier / Beru).
- * Cuenta con postura bípeda ágil, mandíbulas articuladas, antenas dinámicas,
- * brazos de guadaña desgarradores, patas digitígradas y alas membranosas desplegables.
+ * The ant soldier, drawn from scratch as a slender ant knight. A long insect head with great compound eyes,
+ * crests swept back, two jointed mandibles hooked at the tips and long antennae in two segments; a thin neck
+ * and a wasp waist between a carapace chest and an ant's gaster hanging behind, with a stinger; two small arms
+ * folded at the waist; long arms with spiked carapace pauldrons, a curved scythe along each forearm and
+ * three talons; insect legs that bend back; and two pairs of wings folded down the back that spread when it
+ * pounces. Rears up with its mandibles wide and its arms out when it screeches.
  */
 public class AntSoldierModel extends HierarchicalModel<AntSoldierEntity> {
     public static final ModelLayerLocation LAYER_LOCATION = new ModelLayerLocation(
             ResourceLocation.fromNamespaceAndPath(AwakeningSystemMod.MOD_ID, "ant_soldier"), "main");
 
-    private final ModelPart root;
-    private final ModelPart head;
-    private final ModelPart leftAntenna;
-    private final ModelPart rightAntenna;
-    private final ModelPart leftMandible;
-    private final ModelPart rightMandible;
-    private final ModelPart thorax;
-    private final ModelPart abdomen;
-    private final ModelPart leftWing;
-    private final ModelPart rightWing;
-    private final ModelPart rightArm;
-    private final ModelPart leftArm;
-    private final ModelPart rightLeg;
-    private final ModelPart leftLeg;
+    private final ModelPart root, hips, gaster, gaster2, waist, thorax, neck, head, mandR, mandL, antR, antL, antR2, antL2;
+    private final ModelPart rArm, lArm, rFore, lFore, rMid, lMid, rLeg, lLeg, rShin, lShin, rTar, lTar;
+    private final ModelPart wingR, wingL, wingR2, wingL2;
 
     public AntSoldierModel(ModelPart root) {
         this.root = root;
-        this.thorax = root.getChild("thorax");
-        this.head = this.thorax.getChild("head");
-        this.leftAntenna = this.head.getChild("left_antenna");
-        this.rightAntenna = this.head.getChild("right_antenna");
-        this.leftMandible = this.head.getChild("left_mandible");
-        this.rightMandible = this.head.getChild("right_mandible");
-        this.abdomen = this.thorax.getChild("abdomen");
-        this.leftWing = this.thorax.getChild("left_wing");
-        this.rightWing = this.thorax.getChild("right_wing");
-        this.rightArm = this.thorax.getChild("right_arm");
-        this.leftArm = this.thorax.getChild("left_arm");
-        this.rightLeg = root.getChild("right_leg");
-        this.leftLeg = root.getChild("left_leg");
+        this.hips = root.getChild("hips");
+        this.gaster = hips.getChild("gaster");
+        this.gaster2 = gaster.getChild("gaster2");
+        this.waist = hips.getChild("waist");
+        this.thorax = waist.getChild("thorax");
+        this.neck = thorax.getChild("neck");
+        this.head = neck.getChild("head");
+        this.mandR = head.getChild("mandible_right");
+        this.mandL = head.getChild("mandible_left");
+        this.antR = head.getChild("antenna_right");
+        this.antL = head.getChild("antenna_left");
+        this.antR2 = antR.getChild("antenna_right_tip");
+        this.antL2 = antL.getChild("antenna_left_tip");
+        this.rArm = thorax.getChild("right_arm");
+        this.lArm = thorax.getChild("left_arm");
+        this.rFore = rArm.getChild("right_forearm");
+        this.lFore = lArm.getChild("left_forearm");
+        this.rMid = thorax.getChild("right_small_arm");
+        this.lMid = thorax.getChild("left_small_arm");
+        this.wingR = thorax.getChild("right_wing");
+        this.wingL = thorax.getChild("left_wing");
+        this.wingR2 = thorax.getChild("right_hind_wing");
+        this.wingL2 = thorax.getChild("left_hind_wing");
+        this.rLeg = hips.getChild("right_leg");
+        this.lLeg = hips.getChild("left_leg");
+        this.rShin = rLeg.getChild("right_shin");
+        this.lShin = lLeg.getChild("left_shin");
+        this.rTar = rShin.getChild("right_tarsus");
+        this.lTar = lShin.getChild("left_tarsus");
     }
 
     public static LayerDefinition createBodyLayer() {
         MeshDefinition mesh = new MeshDefinition();
         PartDefinition root = mesh.getRoot();
 
-        PartDefinition thorax = root.addOrReplaceChild("thorax", CubeListBuilder.create()
-                .texOffs(0, 0).addBox(-4.5F, -14.0F, -3.5F, 9.0F, 14.0F, 8.0F, new CubeDeformation(0.0F))
-                .texOffs(36, 0).addBox(-1.5F, -15.0F, -2.0F, 3.0F, 12.0F, 7.0F, new CubeDeformation(0.0F))
-                .texOffs(58, 0).addBox(-3.5F, -16.5F, -3.5F, 7.0F, 5.0F, 7.0F, new CubeDeformation(0.0F)),
-                PartPose.offsetAndRotation(0.0F, 12.0F, 0.0F, 0.22F, 0.0F, 0.0F));
+        PartDefinition hips = root.addOrReplaceChild("hips", CubeListBuilder.create()
+                        .texOffs(0, 0).addBox(-3.0F, -2.0F, -2.5F, 6.0F, 4.0F, 5.0F),
+                PartPose.offsetAndRotation(0.0F, 4.6F, 1.0F, 0.15F, 0.0F, 0.0F));
 
-        thorax.addOrReplaceChild("sub_leg_right", CubeListBuilder.create()
-                .texOffs(88, 0).addBox(-4.0F, -1.0F, -1.0F, 4.0F, 2.0F, 2.0F)
-                .texOffs(88, 4).addBox(-6.0F, -1.0F, 1.0F, 2.0F, 5.0F, 2.0F),
-                PartPose.offsetAndRotation(-4.0F, -6.0F, 1.0F, 0.2F, 0.3F, -0.4F));
+        // ── the gaster hanging behind, two segments and a stinger ──
+        PartDefinition gaster = hips.addOrReplaceChild("gaster", CubeListBuilder.create()
+                        .texOffs(22, 0).addBox(-3.0F, -2.5F, 0.0F, 6.0F, 5.0F, 5.0F),
+                PartPose.offsetAndRotation(0.0F, 0.0F, 2.2F, 0.75F, 0.0F, 0.0F));
+        PartDefinition gaster2 = gaster.addOrReplaceChild("gaster2", CubeListBuilder.create()
+                        .texOffs(44, 0).addBox(-3.5F, -3.0F, 0.0F, 7.0F, 6.0F, 6.0F),
+                PartPose.offsetAndRotation(0.0F, 0.0F, 4.5F, 0.3F, 0.0F, 0.0F));
+        gaster2.addOrReplaceChild("stinger", CubeListBuilder.create().texOffs(70, 0).addBox(-1.0F, -1.0F, 0.0F, 2.0F, 2.0F, 3.0F),
+                PartPose.offsetAndRotation(0.0F, 0.5F, 5.8F, 0.35F, 0.0F, 0.0F));
 
-        thorax.addOrReplaceChild("sub_leg_left", CubeListBuilder.create()
-                .texOffs(88, 0).mirror().addBox(0.0F, -1.0F, -1.0F, 4.0F, 2.0F, 2.0F)
-                .texOffs(88, 4).mirror().addBox(4.0F, -1.0F, 1.0F, 2.0F, 5.0F, 2.0F),
-                PartPose.offsetAndRotation(4.0F, -6.0F, 1.0F, 0.2F, -0.3F, 0.4F));
+        // ── wasp waist and the carapace chest ──
+        PartDefinition waist = hips.addOrReplaceChild("waist", CubeListBuilder.create()
+                        .texOffs(80, 0).addBox(-1.5F, -3.0F, -1.5F, 3.0F, 3.0F, 3.0F),
+                PartPose.offsetAndRotation(0.0F, -2.0F, 0.0F, 0.2F, 0.0F, 0.0F));
+        PartDefinition thorax = waist.addOrReplaceChild("thorax", CubeListBuilder.create()
+                        .texOffs(0, 12).addBox(-5.0F, -10.0F, -3.0F, 10.0F, 10.0F, 6.0F)
+                        .texOffs(32, 12).addBox(-5.5F, -10.5F, 1.0F, 11.0F, 8.0F, 3.0F),
+                PartPose.offsetAndRotation(0.0F, -2.8F, 0.0F, 0.15F, 0.0F, 0.0F));
 
-        PartDefinition head = thorax.addOrReplaceChild("head", CubeListBuilder.create()
-                .texOffs(0, 24).addBox(-3.5F, -6.5F, -4.5F, 7.0F, 7.0F, 7.0F, new CubeDeformation(0.0F))
-                .texOffs(30, 24).addBox(-1.0F, -8.5F, -3.5F, 2.0F, 3.0F, 5.0F, new CubeDeformation(0.0F))
-                .texOffs(46, 24).addBox(-4.2F, -5.0F, -3.5F, 1.0F, 4.0F, 4.0F, new CubeDeformation(0.0F))
-                .texOffs(46, 24).mirror().addBox(3.2F, -5.0F, -3.5F, 1.0F, 4.0F, 4.0F, new CubeDeformation(0.0F)),
-                PartPose.offset(0.0F, -14.5F, -1.5F));
+        // ── neck and head ──
+        PartDefinition neck = thorax.addOrReplaceChild("neck", CubeListBuilder.create()
+                        .texOffs(92, 0).addBox(-1.5F, -3.0F, -1.5F, 3.0F, 4.0F, 3.0F),
+                PartPose.offsetAndRotation(0.0F, -10.0F, -1.5F, -0.45F, 0.0F, 0.0F));
+        PartDefinition head = neck.addOrReplaceChild("head", CubeListBuilder.create()
+                        .texOffs(60, 12).addBox(-3.0F, -5.0F, -4.0F, 6.0F, 5.0F, 7.0F)
+                        .texOffs(86, 12).addBox(-2.0F, -4.0F, -5.6F, 4.0F, 4.0F, 2.0F)
+                        .texOffs(98, 12).addBox(-3.6F, -4.6F, -3.2F, 1.0F, 3.0F, 3.0F)
+                        .texOffs(98, 12).mirror().addBox(2.6F, -4.6F, -3.2F, 1.0F, 3.0F, 3.0F).mirror(false),
+                PartPose.offsetAndRotation(0.0F, -2.6F, 0.0F, 0.42F, 0.0F, 0.0F));
+        for (int side = -1; side <= 1; side += 2) {
+            String s = side < 0 ? "right" : "left";
+            boolean m = side > 0;
+            head.addOrReplaceChild(s + "_crest", CubeListBuilder.create().mirror(m).texOffs(106, 12).addBox(-0.5F, -2.0F, 0.0F, 1.0F, 2.0F, 6.0F),
+                    PartPose.offsetAndRotation(side * 1.6F, -4.6F, -1.0F, 0.45F, side * 0.15F, 0.0F));
+            PartDefinition mand = head.addOrReplaceChild("mandible_" + s, CubeListBuilder.create().mirror(m)
+                            .texOffs(0, 29).addBox(-0.5F, -0.5F, -5.0F, 1.0F, 1.0F, 5.0F),
+                    PartPose.offsetAndRotation(side * 1.6F, -0.8F, -4.6F, 0.25F, side * -0.3F, 0.0F));
+            mand.addOrReplaceChild("mandible_" + s + "_tip", CubeListBuilder.create().mirror(m)
+                            .texOffs(12, 29).addBox(-0.5F, -0.5F, -3.0F, 1.0F, 1.0F, 3.0F),
+                    PartPose.offsetAndRotation(0.0F, 0.0F, -4.6F, 0.0F, side * 0.85F, 0.0F));
+            PartDefinition ant = head.addOrReplaceChild("antenna_" + s, CubeListBuilder.create()
+                            .texOffs(20, 29).addBox(-0.5F, -6.0F, -0.5F, 1.0F, 6.0F, 1.0F),
+                    PartPose.offsetAndRotation(side * 1.2F, -4.8F, -3.4F, -0.35F, 0.0F, side * -0.35F));
+            ant.addOrReplaceChild("antenna_" + s + "_tip", CubeListBuilder.create()
+                            .texOffs(24, 29).addBox(-0.5F, -6.0F, -0.5F, 1.0F, 6.0F, 1.0F),
+                    PartPose.offsetAndRotation(0.0F, -5.6F, 0.0F, 0.9F, 0.0F, 0.0F));
 
-        head.addOrReplaceChild("left_antenna", CubeListBuilder.create()
-                .texOffs(58, 24).addBox(-0.5F, -12.0F, -0.5F, 1.0F, 12.0F, 1.0F, new CubeDeformation(0.0F)),
-                PartPose.offsetAndRotation(2.0F, -6.5F, -2.5F, 0.4F, 0.2F, 0.25F));
+            // ── long arms: spiked carapace pauldron, scythe along the forearm, three talons ──
+            PartDefinition arm = thorax.addOrReplaceChild(s + "_arm", CubeListBuilder.create().mirror(m)
+                            .texOffs(56, 29).addBox(-1.5F, -1.0F, -1.5F, 3.0F, 8.0F, 3.0F)
+                            .texOffs(28, 29).addBox(-3.0F, -2.5F, -3.0F, 6.0F, 4.0F, 6.0F),
+                    PartPose.offsetAndRotation(side * 6.6F, -8.5F, 0.0F, -0.2F, 0.0F, side * -0.12F));
+            arm.addOrReplaceChild(s + "_spike", CubeListBuilder.create().texOffs(52, 29).addBox(-0.5F, -3.0F, -0.5F, 1.0F, 3.0F, 1.0F),
+                    PartPose.offsetAndRotation(side * 2.0F, -2.3F, 0.5F, -0.3F, 0.0F, side * 0.55F));
+            PartDefinition fore = arm.addOrReplaceChild(s + "_forearm", CubeListBuilder.create().mirror(m)
+                            .texOffs(68, 29).addBox(-2.0F, 0.0F, -2.0F, 4.0F, 8.0F, 4.0F),
+                    PartPose.offsetAndRotation(0.0F, 7.5F, 0.0F, -0.65F, 0.0F, 0.0F));
+            PartDefinition blade = fore.addOrReplaceChild(s + "_scythe", CubeListBuilder.create()
+                            .texOffs(84, 29).addBox(-0.5F, 0.0F, -0.5F, 1.0F, 12.0F, 2.0F),
+                    PartPose.offsetAndRotation(side * 1.2F, 1.0F, 1.8F, 0.12F, 0.0F, 0.0F));
+            blade.addOrReplaceChild(s + "_scythe_tip", CubeListBuilder.create().texOffs(90, 29).addBox(-0.5F, 0.0F, -0.5F, 1.0F, 5.0F, 1.0F),
+                    PartPose.offsetAndRotation(0.0F, 11.6F, 0.2F, -0.9F, 0.0F, 0.0F));
+            CubeListBuilder hand = CubeListBuilder.create().mirror(m).texOffs(94, 29).addBox(-1.5F, 0.0F, -1.5F, 3.0F, 2.0F, 3.0F);
+            for (int c = 0; c < 3; c++) hand.texOffs(106, 29).addBox(-1.5F + c * 1.0F, 1.6F, -1.4F, 1.0F, 3.0F, 1.0F);
+            fore.addOrReplaceChild(s + "_hand", hand, PartPose.offsetAndRotation(0.0F, 7.8F, 0.0F, -0.2F, 0.0F, 0.0F));
 
-        head.addOrReplaceChild("right_antenna", CubeListBuilder.create()
-                .texOffs(58, 24).mirror().addBox(-0.5F, -12.0F, -0.5F, 1.0F, 12.0F, 1.0F, new CubeDeformation(0.0F)),
-                PartPose.offsetAndRotation(-2.0F, -6.5F, -2.5F, 0.4F, -0.2F, -0.25F));
+            // ── the small middle arms, folded at the waist ──
+            PartDefinition mid = thorax.addOrReplaceChild(s + "_small_arm", CubeListBuilder.create()
+                            .texOffs(110, 29).addBox(-0.5F, 0.0F, -0.5F, 1.0F, 5.0F, 1.0F),
+                    PartPose.offsetAndRotation(side * 4.2F, -2.0F, -1.6F, -0.9F, 0.0F, side * -0.25F));
+            mid.addOrReplaceChild(s + "_small_claw", CubeListBuilder.create().texOffs(114, 29).addBox(-0.5F, 0.0F, -0.5F, 1.0F, 3.0F, 1.0F),
+                    PartPose.offsetAndRotation(0.0F, 4.6F, 0.0F, 1.3F, 0.0F, 0.0F));
 
-        head.addOrReplaceChild("left_mandible", CubeListBuilder.create()
-                .texOffs(66, 24).addBox(0.0F, -1.0F, -4.5F, 2.0F, 3.0F, 5.0F, new CubeDeformation(0.0F))
-                .texOffs(82, 24).addBox(-1.5F, 0.0F, -6.5F, 2.0F, 2.0F, 3.0F, new CubeDeformation(0.0F)),
-                PartPose.offsetAndRotation(2.0F, -0.5F, -3.5F, 0.1F, -0.3F, 0.0F));
+            // ── wings folded down the back: a long fore wing and a shorter hind wing each side ──
+            thorax.addOrReplaceChild(s + "_wing", CubeListBuilder.create().mirror(m)
+                            .texOffs(48, 44).addBox(m ? 0.0F : -7.0F, 0.0F, 0.0F, 7.0F, 16.0F, 0.0F),
+                    PartPose.offsetAndRotation(side * 1.0F, -9.5F, 4.2F, 0.18F, 0.0F, side * 0.1F));
+            thorax.addOrReplaceChild(s + "_hind_wing", CubeListBuilder.create().mirror(m)
+                            .texOffs(62, 44).addBox(m ? 0.0F : -6.0F, 0.0F, 0.0F, 6.0F, 13.0F, 0.0F),
+                    PartPose.offsetAndRotation(side * 1.5F, -7.0F, 4.4F, 0.24F, 0.0F, side * 0.3F));
 
-        head.addOrReplaceChild("right_mandible", CubeListBuilder.create()
-                .texOffs(66, 24).mirror().addBox(-2.0F, -1.0F, -4.5F, 2.0F, 3.0F, 5.0F, new CubeDeformation(0.0F))
-                .texOffs(82, 24).mirror().addBox(-0.5F, 0.0F, -6.5F, 2.0F, 2.0F, 3.0F, new CubeDeformation(0.0F)),
-                PartPose.offsetAndRotation(-2.0F, -0.5F, -3.5F, 0.1F, 0.3F, 0.0F));
-
-        PartDefinition abdomen = thorax.addOrReplaceChild("abdomen", CubeListBuilder.create()
-                .texOffs(0, 42).addBox(-2.5F, -1.0F, 0.0F, 5.0F, 4.0F, 3.0F, new CubeDeformation(0.0F))
-                .texOffs(18, 42).addBox(-4.5F, -2.5F, 3.0F, 9.0F, 9.0F, 14.0F, new CubeDeformation(0.0F))
-                .texOffs(66, 42).addBox(-2.0F, 0.0F, 17.0F, 4.0F, 4.0F, 5.0F, new CubeDeformation(0.0F))
-                .texOffs(86, 42).addBox(-0.5F, 1.0F, 22.0F, 1.0F, 2.0F, 3.0F, new CubeDeformation(0.0F)),
-                PartPose.offsetAndRotation(0.0F, -2.0F, 3.5F, -0.45F, 0.0F, 0.0F));
-
-        thorax.addOrReplaceChild("left_wing", CubeListBuilder.create()
-                .texOffs(78, 68).addBox(0.0F, 0.0F, 0.0F, 8.0F, 20.0F, 1.0F, new CubeDeformation(0.0F)),
-                PartPose.offsetAndRotation(1.5F, -12.5F, 4.5F, 0.35F, 0.1F, 0.05F));
-
-        thorax.addOrReplaceChild("right_wing", CubeListBuilder.create()
-                .texOffs(78, 68).mirror().addBox(-8.0F, 0.0F, 0.0F, 8.0F, 20.0F, 1.0F, new CubeDeformation(0.0F)),
-                PartPose.offsetAndRotation(-1.5F, -12.5F, 4.5F, 0.35F, -0.1F, -0.05F));
-
-        PartDefinition rightArm = thorax.addOrReplaceChild("right_arm", CubeListBuilder.create()
-                .texOffs(0, 68).addBox(-4.0F, -2.5F, -2.5F, 4.0F, 6.0F, 5.0F, new CubeDeformation(0.0F))
-                .texOffs(20, 68).addBox(-3.5F, 3.5F, -2.0F, 3.0F, 8.0F, 4.0F, new CubeDeformation(0.0F))
-                .texOffs(36, 68).addBox(-3.0F, 11.5F, -8.0F, 2.0F, 4.0F, 10.0F, new CubeDeformation(0.0F))
-                .texOffs(62, 68).addBox(-2.5F, 12.0F, -14.0F, 1.0F, 3.0F, 6.0F, new CubeDeformation(0.0F)),
-                PartPose.offsetAndRotation(-5.0F, -12.0F, 0.0F, 0.4F, -0.15F, 0.25F));
-
-        PartDefinition leftArm = thorax.addOrReplaceChild("left_arm", CubeListBuilder.create()
-                .texOffs(0, 68).mirror().addBox(0.0F, -2.5F, -2.5F, 4.0F, 6.0F, 5.0F, new CubeDeformation(0.0F))
-                .texOffs(20, 68).mirror().addBox(0.5F, 3.5F, -2.0F, 3.0F, 8.0F, 4.0F, new CubeDeformation(0.0F))
-                .texOffs(36, 68).mirror().addBox(1.0F, 11.5F, -8.0F, 2.0F, 4.0F, 10.0F, new CubeDeformation(0.0F))
-                .texOffs(62, 68).mirror().addBox(1.5F, 12.0F, -14.0F, 1.0F, 3.0F, 6.0F, new CubeDeformation(0.0F)),
-                PartPose.offsetAndRotation(5.0F, -12.0F, 0.0F, 0.4F, 0.15F, -0.25F));
-
-        root.addOrReplaceChild("right_leg", CubeListBuilder.create()
-                .texOffs(0, 84).addBox(-2.5F, -1.0F, -3.0F, 4.0F, 8.0F, 5.0F, new CubeDeformation(0.0F))
-                .texOffs(20, 84).addBox(-2.0F, 6.0F, 0.0F, 3.0F, 9.0F, 4.0F, new CubeDeformation(0.0F))
-                .texOffs(36, 84).addBox(-2.5F, 14.0F, -4.0F, 4.0F, 2.0F, 6.0F, new CubeDeformation(0.0F)),
-                PartPose.offset(-3.8F, 8.0F, 2.0F));
-
-        root.addOrReplaceChild("left_leg", CubeListBuilder.create()
-                .texOffs(0, 84).mirror().addBox(-1.5F, -1.0F, -3.0F, 4.0F, 8.0F, 5.0F, new CubeDeformation(0.0F))
-                .texOffs(20, 84).mirror().addBox(-1.0F, 6.0F, 0.0F, 3.0F, 9.0F, 4.0F, new CubeDeformation(0.0F))
-                .texOffs(36, 84).mirror().addBox(-1.5F, 14.0F, -4.0F, 4.0F, 2.0F, 6.0F, new CubeDeformation(0.0F)),
-                PartPose.offset(3.8F, 8.0F, 2.0F));
-
-        return LayerDefinition.create(mesh, 128, 128);
+            // ── legs: thigh forward, shin back, tarsus forward, clawed foot ──
+            PartDefinition leg = hips.addOrReplaceChild(s + "_leg", CubeListBuilder.create().mirror(m)
+                            .texOffs(0, 44).addBox(-1.5F, 0.0F, -1.5F, 3.0F, 8.0F, 3.0F),
+                    PartPose.offsetAndRotation(side * 2.6F, 1.0F, 0.0F, -0.6F, 0.0F, side * -0.06F));
+            PartDefinition shin = leg.addOrReplaceChild(s + "_shin", CubeListBuilder.create().mirror(m)
+                            .texOffs(12, 44).addBox(-1.0F, 0.0F, -1.0F, 2.0F, 8.0F, 2.0F),
+                    PartPose.offsetAndRotation(0.0F, 7.5F, 0.0F, 1.2F, 0.0F, 0.0F));
+            PartDefinition tar = shin.addOrReplaceChild(s + "_tarsus", CubeListBuilder.create().mirror(m)
+                            .texOffs(20, 44).addBox(-1.0F, 0.0F, -1.0F, 2.0F, 6.0F, 2.0F),
+                    PartPose.offsetAndRotation(0.0F, 7.5F, 0.0F, -0.75F, 0.0F, 0.0F));
+            CubeListBuilder foot = CubeListBuilder.create().mirror(m).texOffs(28, 44).addBox(-1.5F, 0.0F, -3.0F, 3.0F, 1.0F, 4.0F);
+            foot.texOffs(42, 44).addBox(-1.6F, 0.2F, -4.6F, 1.0F, 1.0F, 2.0F).texOffs(42, 44).addBox(0.6F, 0.2F, -4.6F, 1.0F, 1.0F, 2.0F);
+            tar.addOrReplaceChild(s + "_foot", foot, PartPose.offsetAndRotation(0.0F, 5.6F, 0.0F, 0.0F, 0.0F, 0.0F));
+        }
+        return LayerDefinition.create(mesh, 128, 64);
     }
 
     @Override
     public ModelPart root() {
-        return this.root;
+        return root;
     }
 
     @Override
     public void setupAnim(AntSoldierEntity entity, float limbSwing, float limbSwingAmount, float ageInTicks, float netHeadYaw, float headPitch) {
-        this.root().getAllParts().forEach(ModelPart::resetPose);
+        root.getAllParts().forEach(ModelPart::resetPose);
+        float amt = Math.min(1.0F, limbSwingAmount);
+        float idle = 1.0F - amt;
+        float w = limbSwing * 0.7F;
+        boolean pounce = entity != null && entity.isPouncing();
+        boolean screech = entity != null && entity.isScreeching();
 
-        this.head.yRot = netHeadYaw * (Mth.PI / 180.0F);
-        this.head.xRot = headPitch * (Mth.PI / 180.0F) - 0.22F;
+        // the head jerks like an insect's; antennae feel the air; mandibles work
+        head.yRot = netHeadYaw * Mth.DEG_TO_RAD;
+        head.xRot += headPitch * Mth.DEG_TO_RAD + (Mth.sin(ageInTicks * 0.9F) > 0.92F ? 0.08F : 0.0F);
+        antR.xRot += Mth.sin(ageInTicks * 0.2F) * 0.12F;
+        antL.xRot += Mth.sin(ageInTicks * 0.2F + 1.3F) * 0.12F;
+        antR2.xRot += Mth.sin(ageInTicks * 0.27F) * 0.15F;
+        antL2.xRot += Mth.sin(ageInTicks * 0.27F + 0.8F) * 0.15F;
+        float chew = Math.max(0.0F, Mth.sin(ageInTicks * 0.35F)) * 0.15F;
+        mandR.yRot -= chew;
+        mandL.yRot += chew;
 
-        float antennaWave = Mth.sin(ageInTicks * 0.25F) * 0.08F;
-        this.leftAntenna.xRot = 0.4F + antennaWave;
-        this.rightAntenna.xRot = 0.4F - antennaWave;
-        this.leftAntenna.yRot = 0.2F + Mth.cos(ageInTicks * 0.2F) * 0.06F;
-        this.rightAntenna.yRot = -0.2F - Mth.cos(ageInTicks * 0.2F) * 0.06F;
+        // a quick, springy gait: legs swing far, shins fold, the gaster bobs behind
+        float swing = Mth.cos(w) * 0.8F * amt;
+        rLeg.xRot += swing;
+        lLeg.xRot -= swing;
+        rShin.xRot += Math.max(0.0F, Mth.sin(w)) * 0.8F * amt;
+        lShin.xRot += Math.max(0.0F, -Mth.sin(w)) * 0.8F * amt;
+        rTar.xRot -= Math.max(0.0F, Mth.sin(w)) * 0.4F * amt;
+        lTar.xRot -= Math.max(0.0F, -Mth.sin(w)) * 0.4F * amt;
+        hips.y += (1.0F - Math.abs(Mth.cos(w))) * 0.9F * amt;
+        thorax.xRot += 0.18F * amt + Mth.sin(ageInTicks * 0.08F) * 0.02F * idle;
+        gaster.xRot += Mth.sin(ageInTicks * 0.1F) * 0.05F - Math.abs(Mth.cos(w)) * 0.12F * amt;
+        gaster2.xRot += Mth.sin(ageInTicks * 0.1F - 0.6F) * 0.05F;
+        rArm.xRot += -Mth.cos(w) * 0.45F * amt;
+        lArm.xRot += Mth.cos(w) * 0.45F * amt;
+        rMid.xRot += Mth.sin(ageInTicks * 0.3F) * 0.08F;
+        lMid.xRot += Mth.sin(ageInTicks * 0.3F + 1.5F) * 0.08F;
 
-        float mandibleSpread = Mth.sin(ageInTicks * 0.15F) * 0.06F;
-        this.leftMandible.yRot = -0.3F - mandibleSpread;
-        this.rightMandible.yRot = 0.3F + mandibleSpread;
-
-        this.abdomen.xRot = -0.45F + Mth.sin(ageInTicks * 0.08F) * 0.04F;
-
-        this.rightLeg.xRot = Mth.cos(limbSwing * 0.7F) * 1.3F * limbSwingAmount;
-        this.leftLeg.xRot = Mth.cos(limbSwing * 0.7F + Mth.PI) * 1.3F * limbSwingAmount;
-
-        this.rightArm.xRot = 0.4F + Mth.cos(limbSwing * 0.7F + Mth.PI) * 0.4F * limbSwingAmount;
-        this.leftArm.xRot = 0.4F + Mth.cos(limbSwing * 0.7F) * 0.4F * limbSwingAmount;
-
-        if (entity.isPouncing()) {
-            float wingFlutter = Mth.sin(ageInTicks * 1.8F) * 0.75F;
-            this.leftWing.yRot = 0.65F + wingFlutter;
-            this.rightWing.yRot = -0.65F - wingFlutter;
-            this.leftWing.xRot = 0.8F;
-            this.rightWing.xRot = 0.8F;
-
-            this.thorax.xRot = 0.65F;
-            this.rightArm.xRot = -0.5F;
-            this.leftArm.xRot = -0.5F;
-            this.rightLeg.xRot = 0.6F;
-            this.leftLeg.xRot = 0.6F;
-        } else {
-            if (limbSwingAmount > 0.1F) {
-                float runFlutter = Mth.sin(ageInTicks * 0.9F) * 0.2F;
-                this.leftWing.yRot = 0.25F + runFlutter;
-                this.rightWing.yRot = -0.25F - runFlutter;
-            } else {
-                this.leftWing.yRot = 0.1F;
-                this.rightWing.yRot = -0.1F;
-            }
+        // wings: a faint shiver at rest, buzzing open when it pounces
+        float shiver = Mth.sin(ageInTicks * 1.7F) * 0.02F;
+        wingR.zRot += shiver;
+        wingL.zRot -= shiver;
+        if (pounce) {
+            float buzz = Mth.sin(ageInTicks * 3.1F) * 0.25F;
+            wingR.zRot = -1.25F + buzz;
+            wingL.zRot = 1.25F - buzz;
+            wingR.xRot = 0.9F;
+            wingL.xRot = 0.9F;
+            wingR2.zRot = -1.0F - buzz;
+            wingL2.zRot = 1.0F + buzz;
+            wingR2.xRot = 1.0F;
+            wingL2.xRot = 1.0F;
+            rArm.xRot = -1.6F;
+            lArm.xRot = -1.6F;
+            rFore.xRot = -0.3F;
+            lFore.xRot = -0.3F;
+            rLeg.xRot = 0.6F;
+            lLeg.xRot = 0.6F;
+        }
+        if (screech) {
+            // rears back, mandibles wide, arms thrown out
+            head.xRot -= 0.6F;
+            neck.xRot -= 0.3F;
+            thorax.xRot -= 0.25F;
+            mandR.yRot -= 0.6F;
+            mandL.yRot += 0.6F;
+            rArm.zRot = 1.1F;
+            lArm.zRot = -1.1F;
+            rArm.xRot = -0.6F;
+            lArm.xRot = -0.6F;
+            wingR.zRot = -0.5F;
+            wingL.zRot = 0.5F;
         }
 
-        if (entity.attackAnimationState.isStarted()) {
-            float attackProg = Mth.sin(ageInTicks * 0.7F);
-            this.rightArm.xRot = -0.9F + attackProg * 0.9F;
-            this.leftArm.xRot = -0.9F - attackProg * 0.9F;
-            this.rightArm.yRot = -0.4F;
-            this.leftArm.yRot = 0.4F;
-            this.leftMandible.yRot = -0.6F;
-            this.rightMandible.yRot = 0.6F;
-        }
-
-        if (entity.isScreeching()) {
-            this.head.xRot = -0.6F + Mth.sin(ageInTicks * 0.6F) * 0.08F;
-            this.leftMandible.yRot = -0.8F;
-            this.rightMandible.yRot = 0.8F;
-            this.rightArm.xRot = -1.2F;
-            this.leftArm.xRot = -1.2F;
-            this.leftArm.zRot = -0.6F;
-            this.rightArm.zRot = 0.6F;
-            this.leftWing.yRot = 0.9F;
-            this.rightWing.yRot = -0.9F;
+        if (this.attackTime > 0.0F) {
+            // a scissor cut: both scythes swing in and cross in front of it, the mandibles snapping
+            float s = Mth.sin(this.attackTime * Mth.PI);
+            rArm.xRot = -0.2F - 1.6F * s;
+            lArm.xRot = -0.2F - 1.6F * s;
+            rArm.yRot = 0.7F * s;
+            lArm.yRot = -0.7F * s;
+            rFore.xRot = -0.65F + 0.35F * s;
+            lFore.xRot = -0.65F + 0.35F * s;
+            thorax.xRot += 0.25F * s;
+            mandR.yRot = -0.3F + 0.5F * s;
+            mandL.yRot = 0.3F - 0.5F * s;
         }
     }
 }
