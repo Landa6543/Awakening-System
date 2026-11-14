@@ -1191,7 +1191,9 @@ public static void processSectorChunk(ServerLevel level, ChunkAccess chunk) {
                         int sy = findSafeGroundY(level, sx, sz, centerPos.getY());
                         BlockPos spawnPos = new BlockPos(sx, sy, sz);
                         if (!level.getBlockState(spawnPos.below()).liquid() && !level.getBlockState(spawnPos).liquid()) {
-                           LivingEntity mob = createFloorMob(level, floor, rand);
+                           // now and then the Mutant Warden takes a spawn on the upper floors
+                           LivingEntity mob = com.soybe.awakeningsystem.entity.mutant.MutantWardenContent.maybeTowerWarden(level, floor, rand, centerPos);
+                           if (mob == null) mob = createFloorMob(level, floor, rand);
                            if (mob != null) {
                               mob.moveTo((double)sx + 0.5, (double)sy, (double)sz + 0.5, rand.nextFloat() * 360.0F, 0.0F);
                               level.addFreshEntity(mob);
