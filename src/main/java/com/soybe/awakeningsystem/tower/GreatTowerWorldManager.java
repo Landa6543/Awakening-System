@@ -407,6 +407,7 @@ public final class GreatTowerWorldManager {
                ensureFloor10Boss(targetLevel);
                ensureFloor10Spawns(targetLevel, player.blockPosition());
             } else if (targetFloor == 11) {
+               com.soybe.awakeningsystem.world.village.MedievalVillage.ensureOnFloor(targetLevel);
                player.displayClientMessage(
                   Component.translatable("awakening_system.msg.aldea_serena_has_llegado_un_pacifico"), false
                );
