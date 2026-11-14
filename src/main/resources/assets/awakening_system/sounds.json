@@ -104,6 +104,18 @@
       "awakening_system:ant_soldier_screech"
     ]
   },
+  "ant_soldier_attack": {
+    "category": "hostile",
+    "sounds": [
+      "awakening_system:ant_soldier_attack"
+    ]
+  },
+  "white_tiger_attack": {
+    "category": "hostile",
+    "sounds": [
+      "awakening_system:white_tiger_attack"
+    ]
+  },
   "abyssal_beholder_ambient": {
     "category": "hostile",
     "subtitle": "subtitles.awakening_system.abyssal_beholder_ambient",

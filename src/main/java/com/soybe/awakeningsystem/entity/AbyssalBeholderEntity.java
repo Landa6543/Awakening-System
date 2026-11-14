@@ -200,17 +200,17 @@ public class AbyssalBeholderEntity extends Monster {
 
     @Override
     protected SoundEvent getAmbientSound() {
-        return SoundEvents.ELDER_GUARDIAN_AMBIENT;
+        return ModSounds.ABYSSAL_BEHOLDER_AMBIENT.get();
     }
 
     @Override
     protected SoundEvent getHurtSound(DamageSource damageSource) {
-        return SoundEvents.ELDER_GUARDIAN_HURT;
+        return ModSounds.ABYSSAL_BEHOLDER_HURT.get();
     }
 
     @Override
     protected SoundEvent getDeathSound() {
-        return SoundEvents.ELDER_GUARDIAN_DEATH;
+        return ModSounds.ABYSSAL_BEHOLDER_DEATH.get();
     }
 
     @Override

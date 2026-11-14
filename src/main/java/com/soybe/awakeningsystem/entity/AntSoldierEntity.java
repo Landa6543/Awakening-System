@@ -212,6 +212,7 @@ public class AntSoldierEntity extends Monster {
     @Override
     public boolean doHurtTarget(net.minecraft.world.entity.Entity target) {
         boolean hurt = super.doHurtTarget(target);
+        if (hurt) this.playSound(com.soybe.awakeningsystem.ModSounds.ANT_SOLDIER_ATTACK.get(), 1.0F, 0.9F + this.random.nextFloat() * 0.2F);
         if (hurt && target instanceof LivingEntity living) {
             living.addEffect(new MobEffectInstance(MobEffects.POISON, 60, 1));
             living.addEffect(new MobEffectInstance(MobEffects.WEAKNESS, 80, 0));

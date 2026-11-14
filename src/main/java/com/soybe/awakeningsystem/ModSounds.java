@@ -85,6 +85,14 @@ public final class ModSounds {
             SOUND_EVENTS.register("ant_soldier_screech",
                     () -> SoundEvent.createVariableRangeEvent(ResourceLocation.fromNamespaceAndPath(AwakeningSystemMod.MOD_ID, "ant_soldier_screech")));
 
+    public static final DeferredHolder<SoundEvent, SoundEvent> ANT_SOLDIER_ATTACK =
+            SOUND_EVENTS.register("ant_soldier_attack",
+                    () -> SoundEvent.createVariableRangeEvent(ResourceLocation.fromNamespaceAndPath(AwakeningSystemMod.MOD_ID, "ant_soldier_attack")));
+
+    public static final DeferredHolder<SoundEvent, SoundEvent> WHITE_TIGER_ATTACK =
+            SOUND_EVENTS.register("white_tiger_attack",
+                    () -> SoundEvent.createVariableRangeEvent(ResourceLocation.fromNamespaceAndPath(AwakeningSystemMod.MOD_ID, "white_tiger_attack")));
+
     public static final DeferredHolder<SoundEvent, SoundEvent> ABYSSAL_BEHOLDER_AMBIENT =
             SOUND_EVENTS.register("abyssal_beholder_ambient",
                     () -> SoundEvent.createVariableRangeEvent(ResourceLocation.fromNamespaceAndPath(AwakeningSystemMod.MOD_ID, "abyssal_beholder_ambient")));

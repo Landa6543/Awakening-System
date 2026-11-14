@@ -2089,6 +2089,8 @@ public final class AwakeningSystemClient {
     public static void syncStarStream(java.util.List<SyncStarStreamPayload.IncarnationEntry> entries) {
         if (Minecraft.getInstance().screen instanceof ConstellationChannelScreen ccs) {
             ccs.updateIncarnations(entries);
+        } else if (Minecraft.getInstance().screen instanceof com.soybe.awakeningsystem.client.sao.SaoPanelScreen sao) {
+            sao.updateIncarnations(entries);
         }
     }
 

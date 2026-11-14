@@ -72,13 +72,16 @@ public class SaoMenuScreen extends Screen {
                 new Entry(tab("ranking"), TROPHY, () -> minecraft.setScreen(new SaoPanelScreen(this, SaoPanelScreen.Section.RANKING))),
                 new Entry(tr("guild_menu", "Guild"), PEOPLE,
                         com.soybe.awakeningsystem.AwakeningSystemClient::requestOpenGuild),
-                new Entry(tr("constellations", "Constellations"), CHAT, () -> minecraft.setScreen(new ConstellationChannelScreen(this))))));
+                new Entry(tr("constellations", "Constellations"), CHAT, () -> minecraft.setScreen(new SaoPanelScreen(this, SaoPanelScreen.Section.STARS))))));
         categories.add(new Category(SCROLL, List.of(
                 new Entry(tab("missions"), SCROLL, () -> minecraft.setScreen(new SaoPanelScreen(this, SaoPanelScreen.Section.MISSIONS))),
                 new Entry(tab("progress"), BARS, () -> minecraft.setScreen(new SaoPanelScreen(this, SaoPanelScreen.Section.PROGRESS))))));
         categories.add(new Category(COIN, List.of(
                 new Entry(tr("buy", "Buy"), COIN, () -> minecraft.setScreen(new SaoPanelScreen(this, SaoPanelScreen.Section.SHOP))),
-                new Entry(tr("sell_title", "Sell"), SWAP, () -> minecraft.setScreen(new SaoPanelScreen(this, SaoPanelScreen.Section.SELL))))));
+                new Entry(tr("sell_title", "Sell"), SWAP, () -> minecraft.setScreen(new SaoPanelScreen(this, SaoPanelScreen.Section.SELL))),
+                new Entry(tr("market_title", "Hunters' market"), PEOPLE, () -> minecraft.setScreen(new SaoPanelScreen(this, SaoPanelScreen.Section.MARKET))),
+                new Entry(tr("bank_title", "Bank"), COIN, () -> minecraft.setScreen(new SaoPanelScreen(this, SaoPanelScreen.Section.BANK))),
+                new Entry(tr("roulette_title", "Roulette"), STAR, () -> minecraft.setScreen(new SaoPanelScreen(this, SaoPanelScreen.Section.ROULETTE))))));
         categories.add(new Category(DOOR, List.of(
                 new Entry(tr("travel_title", "Worlds"), DOOR, () -> minecraft.setScreen(new SaoPanelScreen(this, SaoPanelScreen.Section.TRAVEL))))));
         categories.add(new Category(GEAR, List.of(

@@ -27,7 +27,7 @@ import static com.soybe.awakeningsystem.client.sao.SaoDraw.*;
  * (daily training and the guild commission). They use the same actions as the normal windows.
  */
 public class SaoPanelScreen extends Screen {
-    public enum Section { STATUS, SKILLS, TITLES, MISSIONS, ARTIFACTS, RANKING, PROGRESS, SHOP, SELL, TRAVEL }
+    public enum Section { STATUS, SKILLS, TITLES, MISSIONS, ARTIFACTS, RANKING, PROGRESS, SHOP, SELL, TRAVEL, BANK, ROULETTE, MARKET, STARS }
 
     private static final String[] ATTRS = {"strength", "vitality", "agility", "perception", "intelligence", "willpower"};
     private static final String[] ATTR_NAMES = {"Strength", "Vitality", "Agility", "Perception", "Intelligence", "Willpower"};
@@ -80,6 +80,7 @@ public class SaoPanelScreen extends Screen {
     @Override
     public void render(GuiGraphics g, int mouseX, int mouseY, float partialTick) {
         frame(mouseX, mouseY, ticks + partialTick);
+        this.partial = partialTick;
         super.render(g, mouseX, mouseY, partialTick);
         float open = Mth.clamp((ticks + partialTick) / 5.0F, 0.0F, 1.0F);
         float a = open * open * (3 - 2 * open);
@@ -94,13 +95,20 @@ public class SaoPanelScreen extends Screen {
             case ARTIFACTS -> SHIELD;
             case RANKING -> TROPHY;
             case PROGRESS -> BARS;
-            case SHOP, SELL -> COIN;
+            case SHOP, SELL, BANK -> COIN;
             case TRAVEL -> DOOR;
+            case ROULETTE -> STAR;
+            case MARKET -> PEOPLE;
+            case STARS -> CHAT;
         };
         shinyDisc(g, x + 12, y + 11, 7.5F, ORANGE, a);
         icon(g, icon, x + 7, y + 6, alpha(WHITE, a));
         g.drawString(this.font, title(), x + 25, y + 7, alpha(GREY_DARK, a), false);
-        String lv = section == Section.SHOP || section == Section.SELL ? data().coins() + " G"
+        boolean money = switch (section) {
+            case SHOP, SELL, BANK, ROULETTE, MARKET, STARS -> true;
+            default -> false;
+        };
+        String lv = money ? data().coins() + " G"
                 : tr("level", "Lv. %s").getString().replace("%s", String.valueOf(data().level()));
         g.drawString(this.font, lv, x + PW - 10 - this.font.width(lv), y + 7, alpha(ORANGE_DARK, a), false);
 
@@ -117,6 +125,10 @@ public class SaoPanelScreen extends Screen {
             case SHOP -> renderShop(g, x, y, mouseX, mouseY, a);
             case SELL -> renderSell(g, x, y, mouseX, mouseY, a);
             case TRAVEL -> renderTravel(g, x, y, mouseX, mouseY, a);
+            case BANK -> renderBank(g, x, y, mouseX, mouseY, a);
+            case ROULETTE -> renderRoulette(g, x, y, mouseX, mouseY, a);
+            case MARKET -> renderMarket(g, x, y, mouseX, mouseY, a);
+            case STARS -> renderStars(g, x, y, mouseX, mouseY, a);
         }
     }
 
@@ -131,7 +143,18 @@ public class SaoPanelScreen extends Screen {
             case PROGRESS -> "progress";
             case SHOP, SELL -> "shop";
             case TRAVEL -> "travel";
+            case BANK -> { yield "bank"; }
+            case ROULETTE -> { yield "roulette"; }
+            case MARKET -> { yield "market"; }
+            case STARS -> { yield "stars"; }
         };
+        switch (section) {
+            case BANK: return tr("bank_title", "Bank");
+            case ROULETTE: return tr("roulette_title", "Roulette");
+            case MARKET: return tr("market_title", "Hunters' market");
+            case STARS: return tr("stars_title", "Star Stream");
+            default: break;
+        }
         if (section == Section.SELL) return tr("sell_title", "Sell");
         if (section == Section.TRAVEL) return tr("travel_title", "Worlds");
         String s = Component.translatable("awakening_system.screen.tab." + key).getString();
@@ -487,6 +510,21 @@ public class SaoPanelScreen extends Screen {
     protected void init() {
         super.init();
         if (section == Section.RANKING) AwakeningSystemClient.requestLeaderboard();
+        if (section == Section.MARKET) {
+            net.neoforged.neoforge.network.PacketDistributor.sendToServer(new com.soybe.awakeningsystem.p2p.network.P2PShopActionPayload(
+                    com.soybe.awakeningsystem.p2p.network.P2PShopActionPayload.ACTION_REQUEST_SYNC, "", 0));
+            String keep = priceBox != null ? priceBox.getValue() : "";
+            priceBox = new net.minecraft.client.gui.components.EditBox(this.font, 0, 0, 120, 10, Component.empty());
+            priceBox.setBordered(false);
+            priceBox.setMaxLength(9);
+            priceBox.setTextColor(0xFF484848);
+            priceBox.setFilter(s -> s.chars().allMatch(Character::isDigit));
+            priceBox.setHint(Component.literal("500").withStyle(net.minecraft.ChatFormatting.GRAY));
+            priceBox.setValue(keep);
+            this.addWidget(priceBox);
+        }
+        if (section == Section.STARS)
+            net.neoforged.neoforge.network.PacketDistributor.sendToServer(new com.soybe.awakeningsystem.RequestStarStreamPayload());
     }
 
     private void renderRanking(GuiGraphics g, int x, int y, int mouseX, int mouseY, float a) {
@@ -976,6 +1014,604 @@ public class SaoPanelScreen extends Screen {
         return false;
     }
 
+    // ── Bank, Roulette, Market and the Star Stream ───────────────────────────
+
+    private float partial;
+
+    /** A flat orange button of any width; grey when it cannot be pressed. */
+    private void button(GuiGraphics g, int bx, int by, int w, int h, Component text, boolean enabled, int mouseX, int mouseY, float a) {
+        boolean hot = enabled && in(mouseX, mouseY, bx, by, w, h);
+        if (hot) hovering(5000 + bx * 7 + by);
+        int top = !enabled ? 0xFFE2E2E6 : hot ? 0xFFFFC44A : 0xFFF7B52A;
+        int bot = !enabled ? 0xFFD0D0D6 : 0xFFE29400;
+        g.fill(bx + 1, by + 2, bx + w + 1, by + h + 2, alpha(0x22000000, a));
+        g.fillGradient(bx, by, bx + w, by + h, alpha(top, a), alpha(bot, a));
+        String s = this.font.plainSubstrByWidth(text.getString(), w - 6);
+        g.drawString(this.font, s, bx + w / 2 - this.font.width(s) / 2, by + (h - 8) / 2 + 1, alpha(enabled ? WHITE : GREY, a), false);
+    }
+
+    /** A white button with grey text, for "back" and quiet choices. */
+    private void softButton(GuiGraphics g, int bx, int by, int w, int h, Component text, boolean on, int mouseX, int mouseY, float a) {
+        boolean hot = in(mouseX, mouseY, bx, by, w, h);
+        if (hot) hovering(6000 + bx * 7 + by);
+        g.fillGradient(bx, by, bx + w, by + h, alpha(on ? 0xFFF7B52A : hot ? 0xFFFFF3DC : 0xFFF4F4F6, a), alpha(on ? 0xFFE29400 : 0xFFDCDCE0, a));
+        String s = this.font.plainSubstrByWidth(text.getString(), w - 6);
+        g.drawString(this.font, s, bx + w / 2 - this.font.width(s) / 2, by + (h - 8) / 2 + 1, alpha(on ? WHITE : GREY, a), false);
+    }
+
+    private static String plain(Component c) {
+        String s = net.minecraft.ChatFormatting.stripFormatting(c.getString());
+        return s == null ? "" : s;
+    }
+
+    private static void deny() {
+        Minecraft.getInstance().getSoundManager().play(SimpleSoundInstance.forUI(SoundEvents.NOTE_BLOCK_BASS.value(), 0.7F));
+    }
+
+    private static void send(net.minecraft.network.protocol.common.custom.CustomPacketPayload p) {
+        net.neoforged.neoforge.network.PacketDistributor.sendToServer(p);
+    }
+
+    // Bank
+
+    private static final String[] BANK_ACT = {"deposit", "deposit", "deposit", "withdraw", "withdraw", "withdraw"};
+    private static final int[] BANK_AMT = {0, 64, 10, 64, 10, 1};
+
+    private static int bagCoins() {
+        var p = Minecraft.getInstance().player;
+        int n = 0;
+        if (p != null)
+            for (var st : p.getInventory().items)
+                if (!st.isEmpty() && st.is(com.soybe.awakeningsystem.SystemItems.AWAKENING_COIN.get())) n += st.getCount();
+        return n;
+    }
+
+    private int bankX(int i) { return left() + 16 + (i / 3) * 154; }
+    private int bankY(int i) { return top() + HEADER + 74 + (i % 3) * 22; }
+
+    private boolean bankOk(int i, SystemData d, int bag) {
+        return i < 3 ? bag > 0 : d.coins() >= BANK_AMT[i];
+    }
+
+    private Component bankLabel(int i, int bag) {
+        if (i == 0) return tr("bank_dep_all", "Put in all (%s)", bag);
+        return i < 3 ? tr("bank_dep", "Put in %s", BANK_AMT[i]) : tr("bank_take", "Take out %s", BANK_AMT[i]);
+    }
+
+    private void renderBank(GuiGraphics g, int x, int y, int mouseX, int mouseY, float a) {
+        SystemData d = data();
+        int bag = bagCoins();
+        for (int k = 0; k < 2; k++) {
+            int bx = x + 12 + k * 154, by = y + HEADER + 8;
+            g.fillGradient(bx, by, bx + 148, by + 36, alpha(0xFAFFFFFF, a), alpha(0xF0E6E6EA, a));
+            g.fill(bx, by + 35, bx + 148, by + 36, alpha(0xFFC9C9CE, a));
+            g.fill(bx, by, bx + 2, by + 36, alpha(k == 0 ? ORANGE : 0xFF3E9BD6, a * 0.8F));
+            g.drawString(this.font, k == 0 ? tr("bank_system", "In the System") : tr("bank_bag", "Coins in your bag"), bx + 8, by + 5, alpha(GREY, a), false);
+            g.pose().pushPose();
+            g.pose().translate(bx + 8, by + 17, 0);
+            g.pose().scale(1.4F, 1.4F, 1);
+            g.drawString(this.font, (k == 0 ? d.coins() : bag) + " G", 0, 0, alpha(GREY_DARK, a), false);
+            g.pose().popPose();
+        }
+        g.drawString(this.font, tr("bank_in", "Put in"), x + 16, y + HEADER + 62, alpha(0xFF4FA84A, a), false);
+        g.drawString(this.font, tr("bank_out", "Take out"), x + 170, y + HEADER + 62, alpha(ORANGE_DARK, a), false);
+        for (int i = 0; i < 6; i++)
+            button(g, bankX(i), bankY(i), 142, 18, bankLabel(i, bag), bankOk(i, d, bag), mouseX, mouseY, a);
+        int ty = y + PH - 26;
+        for (FormattedCharSequence line : this.font.split(tr("bank_hint", "Coins in the System are safe when you die. Right-click with a coin to put it in at once."), PW - 28)) {
+            g.drawString(this.font, line, x + 14, ty, alpha(GREY_LIGHT, a), false);
+            ty += 10;
+        }
+    }
+
+    private boolean clickBank(double mx, double my) {
+        SystemData d = data();
+        int bag = bagCoins();
+        for (int i = 0; i < 6; i++) {
+            if (!in(mx, my, bankX(i), bankY(i), 142, 18)) continue;
+            if (!bankOk(i, d, bag)) {
+                deny();
+                return true;
+            }
+            click();
+            send(new com.soybe.awakeningsystem.BankTransactionPayload(BANK_ACT[i], BANK_AMT[i]));
+            Minecraft.getInstance().getSoundManager().play(SimpleSoundInstance.forUI(SoundEvents.EXPERIENCE_ORB_PICKUP, i < 3 ? 1.2F : 0.9F));
+            return true;
+        }
+        return false;
+    }
+
+    // Roulette
+
+    private static final int SPIN_COST = 1000;
+
+    private boolean freeSpin() {
+        var mc = Minecraft.getInstance();
+        long day = mc.level != null ? mc.level.getDayTime() / 24000L : 0L;
+        return data().hasDailyFreeRoulette(day);
+    }
+
+    private int spinX() { return left() + 168; }
+    private int spinY() { return top() + PH - 40; }
+
+    private void renderRoulette(GuiGraphics g, int x, int y, int mouseX, int mouseY, float a) {
+        SystemData d = data();
+        boolean free = freeSpin();
+        float cx = x + 84, cy = y + HEADER + 90, r = 64;
+        disc(g, cx + 1.5F, cy + 2.5F, r + 5, alpha(0x30000000, a));
+        disc(g, cx, cy, r + 5, alpha(0xFFF4F4F6, a));
+        ring(g, cx, cy, r + 5, 1.5F, alpha(0xFFC9C9CE, a));
+        ring(g, cx, cy, r * 0.72F, 1.0F, alpha(0xFFDCDCE0, a));
+        float rot = (ticks + partial) * (free ? 0.022F : 0.012F);
+        for (int k = 0; k < 12; k++) {
+            double ang = rot + k * Math.PI * 2 / 12;
+            float px = cx + (float) Math.cos(ang) * r * 0.72F, py = cy + (float) Math.sin(ang) * r * 0.72F;
+            int col = k == 0 ? 0xFFB04CFF : k % 3 == 0 ? 0xFF3E9BD6 : k % 2 == 0 ? ORANGE : 0xFFE6E6EA;
+            disc(g, px + 0.6F, py + 1.2F, r * 0.16F, alpha(0x26000000, a));
+            disc(g, px, py, r * 0.16F, alpha(col, a));
+            disc(g, px - r * 0.04F, py - r * 0.05F, r * 0.06F, alpha(0x70FFFFFF, a));
+        }
+        shinyDisc(g, cx, cy, 15, ORANGE, a);
+        icon(g, STAR, (int) cx - 5, (int) cy - 5, alpha(WHITE, a));
+        pointerLeft(g, (int) (cx + r + 1), (int) cy, 7, alpha(ORANGE_DARK, a));
+
+        int rx = x + 168, ry = y + HEADER + 10;
+        g.drawString(this.font, tr("roulette_head", "Roulette of destiny"), rx, ry, alpha(GREY_DARK, a), false);
+        ry += 14;
+        for (FormattedCharSequence line : this.font.split(tr("roulette_desc", "Spin it and one unique prize goes straight into your bag."), PW - 182)) {
+            g.drawString(this.font, line, rx, ry, alpha(GREY, a), false);
+            ry += 10;
+        }
+        ry += 8;
+        if (free) {
+            g.fillGradient(rx, ry, rx + PW - 182, ry + 14, alpha(0xFF6FD06A, a), alpha(0xFF4FA84A, a));
+            g.drawString(this.font, tr("roulette_free", "Today's spin is free!"), rx + 5, ry + 3, alpha(WHITE, a), false);
+        } else g.drawString(this.font, tr("roulette_cost", "One spin: %s G", SPIN_COST), rx, ry + 3, alpha(ORANGE_DARK, a), false);
+        ry += 20;
+        g.drawString(this.font, tr("roulette_have", "You have %s G", d.coins()), rx, ry, alpha(GREY_LIGHT, a), false);
+        boolean ok = free || d.coins() >= SPIN_COST;
+        button(g, spinX(), spinY(), PW - 182, 20, free ? tr("roulette_spin_free", "Spin (free)") : tr("roulette_spin", "Spin"), ok, mouseX, mouseY, a);
+    }
+
+    private boolean clickRoulette(double mx, double my) {
+        if (!in(mx, my, spinX(), spinY(), PW - 182, 20)) return false;
+        boolean free = freeSpin();
+        if (!free && data().coins() < SPIN_COST) {
+            deny();
+            return true;
+        }
+        Minecraft mc = Minecraft.getInstance();
+        if (mc.player != null) mc.player.playSound(com.soybe.awakeningsystem.ModSounds.ROULETTE_SPIN.get(), 1.0F, 1.0F);
+        AwakeningSystemClient.buyShopItem("system_roulette");
+        mc.setScreen(new com.soybe.awakeningsystem.ChestOpeningScreen(this, "system_roulette", "awakening_system.screen.roulette.title", 5, free ? 0 : SPIN_COST));
+        return true;
+    }
+
+    // Hunters' market (players sell to players)
+
+    private net.minecraft.client.gui.components.EditBox priceBox;
+    private boolean marketMine, marketSell;
+    private int sellSlot = -1, sellCount = 1;
+
+    private java.util.UUID me() {
+        var p = Minecraft.getInstance().player;
+        return p == null ? null : p.getUUID();
+    }
+
+    private List<com.soybe.awakeningsystem.p2p.P2PListing> listings() {
+        java.util.UUID me = me();
+        List<com.soybe.awakeningsystem.p2p.P2PListing> out = new ArrayList<>();
+        for (var l : com.soybe.awakeningsystem.p2p.P2PClientData.getListings())
+            if (!marketMine || l.sellerUuid().equals(me)) out.add(l);
+        return out;
+    }
+
+    private int pillW(Component c) { return this.font.width(c) + 10; }
+
+    private Component claimLabel() {
+        return tr("market_claim", "Collect %s G", String.valueOf(com.soybe.awakeningsystem.p2p.P2PClientData.getUnclaimedEarnings()));
+    }
+
+    private void renderMarket(GuiGraphics g, int x, int y, int mouseX, int mouseY, float a) {
+        if (priceBox != null) priceBox.visible = marketSell;
+        if (marketSell) {
+            renderMarketSell(g, x, y, mouseX, mouseY, a);
+            return;
+        }
+        int cy = y + HEADER + 6;
+        Component all = Component.literal(plain(Component.translatable("awakening_system.p2p.filter.all")));
+        Component mine = Component.literal(plain(Component.translatable("awakening_system.p2p.filter.mine")));
+        softButton(g, x + 12, cy, pillW(all), 14, all, !marketMine, mouseX, mouseY, a);
+        softButton(g, x + 16 + pillW(all), cy, pillW(mine), 14, mine, marketMine, mouseX, mouseY, a);
+        Component sell = tr("market_sell", "Sell something");
+        int sw = pillW(sell);
+        button(g, x + PW - 12 - sw, cy, sw, 14, sell, true, mouseX, mouseY, a);
+        if (com.soybe.awakeningsystem.p2p.P2PClientData.getUnclaimedEarnings() > 0) {
+            Component cl = claimLabel();
+            int cw = pillW(cl);
+            int cx = x + PW - 16 - sw - cw;
+            g.fillGradient(cx, cy, cx + cw, cy + 14, alpha(in(mouseX, mouseY, cx, cy, cw, 14) ? 0xFF8BE086 : 0xFF6FD06A, a), alpha(0xFF4FA84A, a));
+            g.drawString(this.font, cl, cx + 5, cy + 3, alpha(WHITE, a), false);
+        }
+        var list = listings();
+        int lt = cy + 20, rows = 5;
+        scroll = Mth.clamp(scroll, 0, Math.max(0, list.size() - rows));
+        if (list.isEmpty()) {
+            String key = marketMine ? "awakening_system.p2p.no_my_listings" : "awakening_system.p2p.no_listings";
+            g.drawString(this.font, plain(Component.translatable(key)), x + 14, lt + 6, alpha(GREY_LIGHT, a), false);
+        }
+        scrollMarks(g, x + PW - 8, lt, rows * (ROW + 2), list.size(), a);
+        java.util.UUID me = me();
+        com.soybe.awakeningsystem.p2p.P2PListing sel = null;
+        for (var l : list) if (l.id().equals(selected)) sel = l;
+        for (int i = 0; i < rows && i + scroll < list.size(); i++) {
+            var l = list.get(i + scroll);
+            int ry = lt + i * (ROW + 2);
+            boolean hot = l.id().equals(selected);
+            row(g, this.font, x + 10, ry, PW - 24, ROW, Component.empty(), null, hot, a);
+            g.renderItem(l.item(), x + 15, ry + 2);
+            g.renderItemDecorations(this.font, l.item(), x + 15, ry + 2);
+            String price = l.price() + " G";
+            String who = l.sellerUuid().equals(me) ? tr("market_you", "you").getString() : l.sellerName();
+            who = this.font.plainSubstrByWidth(who, 70);
+            int pw = this.font.width(price), ww = this.font.width(who);
+            String name = this.font.plainSubstrByWidth(l.item().getHoverName().getString(), PW - 80 - pw - ww);
+            g.drawString(this.font, name, x + 36, ry + 6, alpha(hot ? WHITE : 0xFF4A4A52, a), false);
+            g.drawString(this.font, who, x + PW - 28 - pw - ww, ry + 6, alpha(hot ? WHITE : GREY_LIGHT, a), false);
+            g.drawString(this.font, price, x + PW - 22 - pw, ry + 6, alpha(hot ? WHITE : ORANGE_DARK, a), false);
+        }
+        int fy = y + PH - 40;
+        g.fill(x + 10, fy - 4, x + PW - 10, fy - 3, alpha(0xFFC9C9CE, a));
+        if (sel == null) {
+            g.drawString(this.font, tr("market_hint", "Hunters sell their things here. Choose one."), x + 14, fy + 4, alpha(GREY_LIGHT, a), false);
+            return;
+        }
+        g.renderItem(sel.item(), x + 14, fy + 4);
+        g.drawString(this.font, this.font.plainSubstrByWidth(sel.item().getHoverName().getString(), PW - 160), x + 36, fy + 4, alpha(GREY_DARK, a), false);
+        g.drawString(this.font, tr("market_from", "%s G · from %s", String.valueOf(sel.price()), sel.sellerName()), x + 36, fy + 15, alpha(ORANGE_DARK, a), false);
+        boolean mineSel = sel.sellerUuid().equals(me);
+        boolean afford = data().coins() >= sel.price();
+        button(g, x + PW - 112, fy + 6, 100, 15, mineSel ? tr("market_cancel", "Take it back") : afford ? tr("buy", "Buy") : tr("no_coins", "Not enough G"),
+                mineSel || afford, mouseX, mouseY, a);
+    }
+
+    private boolean clickMarket(double mx, double my) {
+        if (marketSell) return clickMarketSell(mx, my);
+        int x = left(), y = top(), cy = y + HEADER + 6;
+        Component all = Component.literal(plain(Component.translatable("awakening_system.p2p.filter.all")));
+        Component mine = Component.literal(plain(Component.translatable("awakening_system.p2p.filter.mine")));
+        if (in(mx, my, x + 12, cy, pillW(all), 14) || in(mx, my, x + 16 + pillW(all), cy, pillW(mine), 14)) {
+            click();
+            marketMine = in(mx, my, x + 16 + pillW(all), cy, pillW(mine), 14);
+            scroll = 0;
+            selected = "";
+            return true;
+        }
+        int sw = pillW(tr("market_sell", "Sell something"));
+        if (in(mx, my, x + PW - 12 - sw, cy, sw, 14)) {
+            click();
+            marketSell = true;
+            sellSlot = -1;
+            sellCount = 1;
+            return true;
+        }
+        if (com.soybe.awakeningsystem.p2p.P2PClientData.getUnclaimedEarnings() > 0) {
+            int cw = pillW(claimLabel());
+            if (in(mx, my, x + PW - 16 - sw - cw, cy, cw, 14)) {
+                SaoSounds.confirm();
+                send(new com.soybe.awakeningsystem.p2p.network.P2PShopActionPayload(
+                        com.soybe.awakeningsystem.p2p.network.P2PShopActionPayload.ACTION_CLAIM_EARNINGS, "", 0));
+                return true;
+            }
+        }
+        var list = listings();
+        int lt = cy + 20;
+        for (int i = 0; i < 5 && i + scroll < list.size(); i++) {
+            if (in(mx, my, x + 10, lt + i * (ROW + 2), PW - 24, ROW)) {
+                click();
+                selected = list.get(i + scroll).id();
+                return true;
+            }
+        }
+        int fy = y + PH - 40;
+        if (!in(mx, my, x + PW - 112, fy + 6, 100, 15)) return false;
+        for (var l : list) {
+            if (!l.id().equals(selected)) continue;
+            boolean mineSel = l.sellerUuid().equals(me());
+            if (!mineSel && data().coins() < l.price()) {
+                deny();
+                return true;
+            }
+            SaoSounds.confirm();
+            send(new com.soybe.awakeningsystem.p2p.network.P2PShopActionPayload(mineSel
+                    ? com.soybe.awakeningsystem.p2p.network.P2PShopActionPayload.ACTION_CANCEL
+                    : com.soybe.awakeningsystem.p2p.network.P2PShopActionPayload.ACTION_BUY, l.id(), 0));
+            selected = "";
+            return true;
+        }
+        return false;
+    }
+
+    /** Bag slot shown in grid cell {@code i}: the three inner rows first, the hotbar last, as in the inventory. */
+    private static int gridSlot(int i) { return i < 27 ? i + 9 : i - 27; }
+    private int cellX(int i) { return left() + 12 + (i % 9) * 18; }
+    private int cellY(int i) { return top() + HEADER + 28 + (i / 9) * 18 + (i >= 27 ? 4 : 0); }
+
+    private net.minecraft.world.item.ItemStack bagItem(int slot) {
+        var p = Minecraft.getInstance().player;
+        return p == null || slot < 0 ? net.minecraft.world.item.ItemStack.EMPTY : p.getInventory().getItem(slot);
+    }
+
+    private long price() {
+        try {
+            return priceBox == null || priceBox.getValue().isBlank() ? 0 : Long.parseLong(priceBox.getValue().trim());
+        } catch (NumberFormatException e) {
+            return 0;
+        }
+    }
+
+    private int sellRx() { return left() + 182; }
+    private int fieldY() { return top() + HEADER + 102; }
+
+    private void renderMarketSell(GuiGraphics g, int x, int y, int mouseX, int mouseY, float a) {
+        int by = y + HEADER + 6;
+        softButton(g, x + 10, by, 90, 16, Component.empty(), false, mouseX, mouseY, a);
+        icon(g, BACK, x + 13, by + 3, alpha(ORANGE, a));
+        g.drawString(this.font, tr("market_title", "Hunters' market"), x + 28, by + 4, alpha(GREY_DARK, a), false);
+        Component head = tr("market_pick", "Choose what to sell");
+        g.drawString(this.font, head, x + PW - 14 - this.font.width(head), by + 4, alpha(ORANGE_DARK, a), false);
+        for (int i = 0; i < 36; i++) {
+            int slot = gridSlot(i), cx = cellX(i), cy = cellY(i);
+            var st = bagItem(slot);
+            boolean on = slot == sellSlot, hot = !st.isEmpty() && in(mouseX, mouseY, cx, cy, 17, 17);
+            if (hot) hovering(7000 + i);
+            g.fillGradient(cx, cy, cx + 17, cy + 17, alpha(on ? 0xFFF7B52A : hot ? 0xFFFFF3DC : 0xFAFFFFFF, a), alpha(on ? 0xFFE29400 : 0xF0E2E2E6, a));
+            if (!st.isEmpty()) {
+                g.renderItem(st, cx, cy);
+                g.renderItemDecorations(this.font, st, cx, cy);
+            }
+        }
+        var st = bagItem(sellSlot);
+        if (st.isEmpty()) sellSlot = -1;
+        int rx = sellRx(), rw = PW - 194, ry = y + HEADER + 28;
+        if (sellSlot < 0) {
+            for (FormattedCharSequence line : this.font.split(tr("market_pick_hint", "Click something from your bag on the left."), rw)) {
+                g.drawString(this.font, line, rx, ry, alpha(GREY_LIGHT, a), false);
+                ry += 10;
+            }
+        } else {
+            g.renderItem(st, rx, ry);
+            g.drawString(this.font, this.font.plainSubstrByWidth(st.getHoverName().getString(), rw - 20), rx + 20, ry + 4, alpha(GREY_DARK, a), false);
+            sellCount = Mth.clamp(sellCount, 1, st.getCount());
+            int ay = ry + 26;
+            g.drawString(this.font, tr("market_amount", "Amount"), rx, ay, alpha(GREY, a), false);
+            roundButton(g, rx + rw - 46, ay + 4, 7, MINUS, ORANGE, sellCount > 1, mouseX, mouseY, a);
+            String n = String.valueOf(sellCount);
+            g.drawString(this.font, n, rx + rw - 27 - this.font.width(n) / 2, ay, alpha(GREY_DARK, a), false);
+            roundButton(g, rx + rw - 8, ay + 4, 7, PLUS, ORANGE, sellCount < st.getCount(), mouseX, mouseY, a);
+        }
+        int fy = fieldY();
+        g.drawString(this.font, tr("market_price", "Price in G"), rx, fy - 12, alpha(GREY, a), false);
+        boolean focus = priceBox != null && priceBox.isFocused();
+        g.fill(rx, fy, rx + rw, fy + 14, alpha(focus ? ORANGE : 0xFFC9C9CE, a));
+        g.fill(rx + 1, fy + 1, rx + rw - 1, fy + 13, alpha(0xFFFFFFFF, a));
+        if (priceBox != null) {
+            priceBox.setX(rx + 4);
+            priceBox.setY(fy + 3);
+            priceBox.setWidth(rw - 8);
+            priceBox.render(g, mouseX, mouseY, partial);
+        }
+        boolean ok = sellSlot >= 0 && price() > 0;
+        button(g, rx, y + PH - 40, rw, 18, tr("market_confirm", "Put it up for sale"), ok, mouseX, mouseY, a);
+    }
+
+    private boolean clickMarketSell(double mx, double my) {
+        int x = left(), y = top(), by = y + HEADER + 6;
+        if (priceBox != null) priceBox.setFocused(false);
+        if (in(mx, my, x + 10, by, 90, 16)) {
+            SaoSounds.back();
+            marketSell = false;
+            return true;
+        }
+        for (int i = 0; i < 36; i++) {
+            if (!in(mx, my, cellX(i), cellY(i), 17, 17)) continue;
+            int slot = gridSlot(i);
+            var st = bagItem(slot);
+            if (st.isEmpty()) return true;
+            click();
+            sellSlot = slot;
+            sellCount = st.getCount();
+            return true;
+        }
+        int rx = sellRx(), rw = PW - 194, fy = fieldY();
+        if (in(mx, my, rx, fy, rw, 14) && priceBox != null) {
+            priceBox.setFocused(true);
+            this.setFocused(priceBox);
+            priceBox.mouseClicked(mx, my, 0);
+            return true;
+        }
+        if (sellSlot >= 0) {
+            int ay = y + HEADER + 54;
+            int step = hasShiftDown() ? 10 : 1;
+            var st = bagItem(sellSlot);
+            if (inCircle(mx, my, rx + rw - 46, ay + 4, 8)) {
+                click();
+                sellCount = Math.max(1, sellCount - step);
+                return true;
+            }
+            if (inCircle(mx, my, rx + rw - 8, ay + 4, 8)) {
+                click();
+                sellCount = Math.min(st.getCount(), sellCount + step);
+                return true;
+            }
+        }
+        if (in(mx, my, rx, y + PH - 40, rw, 18)) {
+            if (sellSlot < 0 || price() <= 0) {
+                deny();
+                return true;
+            }
+            SaoSounds.confirm();
+            send(new com.soybe.awakeningsystem.p2p.network.P2PShopActionPayload(
+                    com.soybe.awakeningsystem.p2p.network.P2PShopActionPayload.ACTION_CREATE, "", price(), sellSlot, sellCount));
+            marketSell = false;
+            marketMine = true;
+            sellSlot = -1;
+            if (priceBox != null) priceBox.setValue("");
+            return true;
+        }
+        return false;
+    }
+
+    // Star Stream: constellations watch the hunters and send them coins
+
+    private static final int[] STAR_AMOUNTS = {50, 100, 250, 500, 1000, 5000};
+    private static final String[] STAR_COMMENTS = {"SATISFIED", "ENCOURAGING", "PROUD", "FASCINATED", "AMUSED", "RELIEVED", "MYTHIC", "SILENT"};
+    private List<com.soybe.awakeningsystem.SyncStarStreamPayload.IncarnationEntry> incarnations = new ArrayList<>();
+    private int starSel, starAmount = 1, starComment;
+
+    /** The server's answer: the hunters a constellation can watch right now. */
+    public void updateIncarnations(List<com.soybe.awakeningsystem.SyncStarStreamPayload.IncarnationEntry> list) {
+        incarnations = new ArrayList<>(list);
+        starSel = Mth.clamp(starSel, 0, Math.max(0, incarnations.size() - 1));
+    }
+
+    private String myConstellation() {
+        String raw = data().constellationModifier();
+        return raw == null || raw.isEmpty()
+                ? plain(Component.translatable("awakening_system.screen.constellation.anonymous"))
+                : plain(com.soybe.awakeningsystem.ConstellationAscension.getTranslatedTitleComponent(raw));
+    }
+
+    private static String rankName(String rank) {
+        if ("ABSOLUTE_GOD".equalsIgnoreCase(rank)) return plain(Component.translatable("awakening_system.screen.constellation.rank.absolute_god"));
+        if ("NATIONAL_LEVEL".equalsIgnoreCase(rank)) return plain(Component.translatable("awakening_system.screen.constellation.rank.national"));
+        return rank;
+    }
+
+    private static String activity(String raw) {
+        if (raw == null) return "";
+        String key = switch (raw) {
+            case "In Dungeon" -> "dungeon";
+            case "Critically Wounded!" -> "critical";
+            case "Trance Mode!" -> "trance";
+            case "Night Hunting" -> "night";
+            case "Exploring" -> "exploring";
+            case "Naval Combat" -> "naval";
+            case "Channeling Threads" -> "threads";
+            case "Guarding Territory" -> "shadow";
+            default -> null;
+        };
+        return key == null ? raw : plain(Component.translatable("awakening_system.constellation.activity." + key));
+    }
+
+    private int starRowY(int i) { return top() + HEADER + 20 + i * (ROW + 2); }
+    private int starRx() { return left() + 160; }
+    private static final int STAR_RW = PW - 170;
+    private int amountX(int b) { return starRx() + b * ((STAR_RW + 2) / 6); }
+    private int amountY() { return top() + HEADER + 82; }
+    private int commentY() { return top() + HEADER + 112; }
+    private int starBtnY() { return top() + PH - 24; }
+
+    private void renderStars(GuiGraphics g, int x, int y, int mouseX, int mouseY, float a) {
+        g.drawString(this.font, tr("stars_you", "You are: %s", myConstellation()), x + 12, y + HEADER + 6, alpha(GREY, a), false);
+        float blink = 0.6F + 0.4F * Mth.sin((ticks + partial) * 0.25F);
+        disc(g, x + PW - 40, y + HEADER + 10, 3, alpha(0xFFE0453A, a * blink));
+        g.drawString(this.font, tr("stars_live", "LIVE"), x + PW - 34, y + HEADER + 6, alpha(0xFFE0453A, a), false);
+        if (incarnations.isEmpty()) {
+            g.drawString(this.font, plain(Component.translatable("awakening_system.screen.constellation.searching_incarnations")), x + 14, starRowY(0) + 6, alpha(GREY_LIGHT, a), false);
+            return;
+        }
+        int rows = 6;
+        scroll = Mth.clamp(scroll, 0, Math.max(0, incarnations.size() - rows));
+        scrollMarks(g, x + 152, starRowY(0), rows * (ROW + 2), incarnations.size(), a);
+        for (int i = 0; i < rows && i + scroll < incarnations.size(); i++) {
+            var e = incarnations.get(i + scroll);
+            int ry = starRowY(i);
+            boolean hot = i + scroll == starSel;
+            row(g, this.font, x + 10, ry, 140, ROW, Component.empty(), null, hot, a);
+            String lv = tr("level", "Lv. %s").getString().replace("%s", String.valueOf(e.level()));
+            g.drawString(this.font, this.font.plainSubstrByWidth(e.name(), 128 - this.font.width(lv)), x + 15, ry + 3, alpha(hot ? WHITE : 0xFF4A4A52, a), false);
+            g.drawString(this.font, lv, x + 145 - this.font.width(lv), ry + 3, alpha(hot ? WHITE : ORANGE_DARK, a), false);
+            float hp = e.hp() / (float) Math.max(1, e.maxHp());
+            bar(g, x + 15, ry + 14, 130, 3, hp, hpColor(hp), a);
+        }
+        var e = incarnations.get(Mth.clamp(starSel, 0, incarnations.size() - 1));
+        int rx = starRx(), ry = y + HEADER + 22;
+        g.pose().pushPose();
+        g.pose().translate(rx, ry, 0);
+        g.pose().scale(1.15F, 1.15F, 1);
+        g.drawString(this.font, this.font.plainSubstrByWidth(e.name(), (int) (STAR_RW / 1.15F)), 0, 0, alpha(GREY_DARK, a), false);
+        g.pose().popPose();
+        g.drawString(this.font, tr("stars_rank", "Rank %s · Lv. %s", rankName(e.rank()), String.valueOf(e.level())), rx, ry + 13, alpha(GREY, a), false);
+        String dim = e.dimension() == null ? "" : e.dimension().substring(e.dimension().indexOf(':') + 1).replace('_', ' ');
+        g.drawString(this.font, this.font.plainSubstrByWidth(activity(e.activity()) + (dim.isEmpty() ? "" : "  ·  " + dim), STAR_RW), rx, ry + 24, alpha(ORANGE_DARK, a), false);
+        g.drawString(this.font, tr("stars_send", "Coins to send"), rx, amountY() - 11, alpha(GREY, a), false);
+        int aw = (STAR_RW + 2) / 6 - 2;
+        for (int b = 0; b < STAR_AMOUNTS.length; b++)
+            softButton(g, amountX(b), amountY(), aw, 13, Component.literal(String.valueOf(STAR_AMOUNTS[b])), b == starAmount, mouseX, mouseY, a);
+        g.drawString(this.font, tr("stars_mood", "How you feel"), rx, commentY() - 11, alpha(GREY, a), false);
+        Component mood = Component.translatable("awakening_system.constellation.comment." + STAR_COMMENTS[starComment].toLowerCase(Locale.ROOT));
+        softButton(g, rx, commentY(), STAR_RW, 13, Component.literal("<   " + plain(mood) + "   >"), false, mouseX, mouseY, a);
+        int py = commentY() + 18;
+        var lines = this.font.split(Component.literal(plain(com.soybe.awakeningsystem.ConstellationChannelHandler.getCommentComponent(
+                STAR_COMMENTS[starComment], myConstellation(), STAR_AMOUNTS[starAmount]))), STAR_RW);
+        for (int i = 0; i < Math.min(3, lines.size()); i++) g.drawString(this.font, lines.get(i), rx, py + i * 9, alpha(GREY_LIGHT, a), false);
+        boolean self = e.uuid().equals(me());
+        int half = STAR_RW / 2 - 2;
+        button(g, rx, starBtnY(), half, 16, tr("stars_sponsor", "Send %s G", String.valueOf(STAR_AMOUNTS[starAmount])), data().coins() >= STAR_AMOUNTS[starAmount], mouseX, mouseY, a);
+        button(g, rx + half + 4, starBtnY(), half, 16, tr("stars_watch", "Watch"), !self, mouseX, mouseY, a);
+    }
+
+    private boolean clickStars(double mx, double my) {
+        if (incarnations.isEmpty()) return false;
+        int x = left();
+        for (int i = 0; i < 6 && i + scroll < incarnations.size(); i++) {
+            if (in(mx, my, x + 10, starRowY(i), 140, ROW)) {
+                click();
+                starSel = i + scroll;
+                return true;
+            }
+        }
+        int aw = (STAR_RW + 2) / 6 - 2;
+        for (int b = 0; b < STAR_AMOUNTS.length; b++) {
+            if (in(mx, my, amountX(b), amountY(), aw, 13)) {
+                click();
+                starAmount = b;
+                return true;
+            }
+        }
+        int rx = starRx();
+        if (in(mx, my, rx, commentY(), STAR_RW, 13)) {
+            click();
+            int n = STAR_COMMENTS.length;
+            starComment = (starComment + (mx < rx + STAR_RW / 2.0 ? n - 1 : 1)) % n;
+            return true;
+        }
+        var e = incarnations.get(Mth.clamp(starSel, 0, incarnations.size() - 1));
+        int half = STAR_RW / 2 - 2;
+        if (in(mx, my, rx, starBtnY(), half, 16)) {
+            if (data().coins() < STAR_AMOUNTS[starAmount]) {
+                deny();
+                return true;
+            }
+            send(new com.soybe.awakeningsystem.DonateConstellationPayload(e.uuid(), STAR_AMOUNTS[starAmount], STAR_COMMENTS[starComment]));
+            Minecraft.getInstance().getSoundManager().play(SimpleSoundInstance.forUI(SoundEvents.AMETHYST_BLOCK_CHIME, 1.4F));
+            SaoSounds.confirm();
+            return true;
+        }
+        if (in(mx, my, rx + half + 4, starBtnY(), half, 16)) {
+            if (e.uuid().equals(me())) {
+                deny();
+                return true;
+            }
+            SaoSounds.confirm();
+            send(new com.soybe.awakeningsystem.SpectateIncarnationPayload(e.uuid()));
+            Minecraft.getInstance().setScreen(null);
+            return true;
+        }
+        return false;
+    }
+
     private void claimButtonText(GuiGraphics g, int x, int y, Component text, int mouseX, int mouseY, float a) {        boolean hover = mouseX >= x && mouseX < x + 100 && mouseY >= y && mouseY < y + 15;
         g.fillGradient(x, y, x + 100, y + 15, alpha(hover ? 0xFFFFC44A : 0xFFF7B52A, a), alpha(0xFFE29400, a));
         g.drawString(this.font, text, x + 50 - this.font.width(text) / 2, y + 4, alpha(WHITE, a), false);
@@ -1109,6 +1745,10 @@ public class SaoPanelScreen extends Screen {
             case SHOP -> { if (clickShop(mx, my)) return true; }
             case SELL -> { if (clickSell(mx, my)) return true; }
             case TRAVEL -> { if (clickTravel(mx, my)) return true; }
+            case BANK -> { if (clickBank(mx, my)) return true; }
+            case ROULETTE -> { if (clickRoulette(mx, my)) return true; }
+            case MARKET -> { if (clickMarket(mx, my)) return true; }
+            case STARS -> { if (clickStars(mx, my)) return true; }
             case RANKING -> {}
         }
         return super.mouseClicked(mx, my, button);
@@ -1118,6 +1758,24 @@ public class SaoPanelScreen extends Screen {
     public boolean mouseScrolled(double mouseX, double mouseY, double scrollX, double scrollY) {
         scroll = Math.max(0, scroll + (scrollY < 0 ? 1 : -1));
         return true;
+    }
+
+    @Override
+    public boolean keyPressed(int key, int scan, int mods) {
+        if (section == Section.MARKET && marketSell && key == org.lwjgl.glfw.GLFW.GLFW_KEY_ESCAPE) {
+            SaoSounds.back();
+            marketSell = false;
+            if (priceBox != null) priceBox.setFocused(false);
+            return true;
+        }
+        if (priceBox != null && priceBox.isFocused() && priceBox.keyPressed(key, scan, mods)) return true;
+        return super.keyPressed(key, scan, mods);
+    }
+
+    @Override
+    public boolean charTyped(char c, int mods) {
+        if (priceBox != null && priceBox.isFocused() && priceBox.charTyped(c, mods)) return true;
+        return super.charTyped(c, mods);
     }
 
     @Override

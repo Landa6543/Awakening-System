@@ -291,7 +291,7 @@ public class ShadowDirewolfEntity extends TamableAnimal implements PlayerRideabl
 
     @Override
     public void handleStartJump(int jumpPower) {
-        this.playSound(SoundEvents.WOLF_GROWL, 0.8F, 1.2F);
+        this.playSound(com.soybe.awakeningsystem.ModSounds.SHADOW_WOLF_AMBIENT.get(), 0.8F, 1.2F);
     }
 
     @Override
@@ -314,19 +314,19 @@ public class ShadowDirewolfEntity extends TamableAnimal implements PlayerRideabl
     @Override
     protected SoundEvent getAmbientSound() {
         if (this.getTarget() != null) {
-            return SoundEvents.WOLF_GROWL;
+            return com.soybe.awakeningsystem.ModSounds.SHADOW_WOLF_AMBIENT.get();
         }
-        return this.random.nextInt(3) == 0 ? SoundEvents.WOLF_HOWL : SoundEvents.WOLF_AMBIENT;
+        return this.random.nextInt(4) == 0 ? com.soybe.awakeningsystem.ModSounds.SHADOW_WOLF_HOWL.get() : com.soybe.awakeningsystem.ModSounds.SHADOW_WOLF_AMBIENT.get();
     }
 
     @Override
     protected SoundEvent getHurtSound(DamageSource damageSource) {
-        return SoundEvents.WOLF_HURT;
+        return com.soybe.awakeningsystem.ModSounds.SHADOW_WOLF_HURT.get();
     }
 
     @Override
     protected SoundEvent getDeathSound() {
-        return SoundEvents.WOLF_DEATH;
+        return com.soybe.awakeningsystem.ModSounds.SHADOW_WOLF_DEATH.get();
     }
 
     @Override

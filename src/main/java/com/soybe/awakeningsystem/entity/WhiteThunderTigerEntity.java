@@ -148,7 +148,7 @@ public class WhiteThunderTigerEntity extends TamableAnimal implements PlayerRide
                 this.jumping = false;
                 this.navigation.stop();
                 this.setTarget(null);
-                this.playSound(wantsToSit ? SoundEvents.CAT_PURREOW : SoundEvents.CAT_AMBIENT, 1.0F, 0.7F);
+                this.playSound(com.soybe.awakeningsystem.ModSounds.WHITE_TIGER_AMBIENT.get(), 1.0F, wantsToSit ? 0.85F : 1.05F);
                 return InteractionResult.SUCCESS;
             }
 
@@ -201,6 +201,7 @@ public class WhiteThunderTigerEntity extends TamableAnimal implements PlayerRide
     @Override
     public boolean doHurtTarget(Entity target) {
         boolean hurt = super.doHurtTarget(target);
+        if (hurt) this.playSound(com.soybe.awakeningsystem.ModSounds.WHITE_TIGER_ATTACK.get(), 1.0F, 0.9F + this.random.nextFloat() * 0.2F);
         if (hurt && target instanceof LivingEntity living) {
             living.addEffect(new MobEffectInstance(MobEffects.MOVEMENT_SLOWDOWN, 40, 1));
             if (this.level() instanceof ServerLevel sl) {
@@ -309,7 +310,7 @@ public class WhiteThunderTigerEntity extends TamableAnimal implements PlayerRide
 
     @Override
     public void handleStartJump(int jumpPower) {
-        this.playSound(SoundEvents.CAT_BEG_FOR_FOOD, 0.9F, 0.6F);
+        this.playSound(com.soybe.awakeningsystem.ModSounds.WHITE_TIGER_AMBIENT.get(), 0.9F, 1.1F);
     }
 
     @Override
