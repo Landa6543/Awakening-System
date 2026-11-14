@@ -12,6 +12,7 @@ import net.minecraft.nbt.CompoundTag;
 import net.minecraft.network.chat.Component;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.server.level.ServerLevel;
+import net.minecraft.tags.BlockTags;
 import net.minecraft.world.entity.EntityType;
 import net.minecraft.world.entity.Mob;
 import net.minecraft.world.entity.MobSpawnType;
@@ -35,13 +36,17 @@ import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
+import java.util.Random;
 
 import static net.minecraft.core.Direction.*;
 
 /**
- * A medieval village built by the mod, every house furnished inside: a square with a well and market stalls,
- * two crossing streets, the tavern, the smithy, the chapel with its bell tower at the end of the high street,
- * the library, houses of one and two storeys, the barn with its paddock, fields and two watchtowers.
+ * A medieval town built by the mod, every house furnished inside. A grid of streets (a high street and a
+ * cross street through a square with a well and market stalls, and a ring road around the centre) lined on
+ * both sides with houses of four shapes and ten palettes, so neighbours differ in wood, walls, base and roof.
+ * Fixed landmarks: the chapel at the north end of the high street and the manor at its south end, the tavern,
+ * smithy, library and bakery round the square, the barn with its paddock and the fields outside, and
+ * watchtowers at the ends of the cross street.
  * It stands on floor 11 of the Great Tower (the "Serene Village") and can be raised anywhere with
  * {@code /medieval_village}.
  */
@@ -49,19 +54,20 @@ import static net.minecraft.core.Direction.*;
 public final class MedievalVillage {
     private MedievalVillage() {}
 
-    private enum Kind { SMALL, TALL, TAVERN, SMITHY, CHAPEL, LIBRARY, BARN, TOWER, WELL, STALL }
+    private enum Kind { SMALL, TALL, LONG, TAVERN, SMITHY, CHAPEL, LIBRARY, BARN, TOWER, WELL, STALL, BAKERY, MANOR }
 
-    /** A building: kind, its world footprint corner relative to the centre, which way its door faces, style, job. */
-    private record Site(Kind kind, int x, int z, Direction front, VillageBuildings.Style style, String job, Block work, Block wool, Block wool2) {
-        Site(Kind kind, int x, int z, Direction front) { this(kind, x, z, front, VillageBuildings.SPRUCE, "", null, null, null); }
-        Site(Kind kind, int x, int z, Direction front, VillageBuildings.Style style, String job, Block work) { this(kind, x, z, front, style, job, work, null, null); }
+    /** A building: kind, footprint corner relative to the centre, which way its door faces, style and options. */
+    private record Site(Kind kind, int x, int z, Direction front, VillageBuildings.Style style, String job, Block work,
+                        Block wool, Block wool2, boolean across, boolean gable) {
+        Site(Kind kind, int x, int z, Direction front) { this(kind, x, z, front, VillageBuildings.SPRUCE, "", null, null, null, false, false); }
     }
 
     private static int localW(Kind k) {
         return switch (k) {
-            case SMALL, TALL -> 9;
+            case SMALL, TALL, BAKERY -> 9;
+            case LONG, SMITHY, CHAPEL, LIBRARY -> 11;
             case TAVERN, BARN -> 13;
-            case SMITHY, CHAPEL, LIBRARY -> 11;
+            case MANOR -> 15;
             case TOWER, WELL -> 5;
             case STALL -> 4;
         };
@@ -69,9 +75,9 @@ public final class MedievalVillage {
 
     private static int localD(Kind k) {
         return switch (k) {
-            case SMALL -> 7;
+            case SMALL, LONG, BAKERY -> 7;
             case TALL, SMITHY, LIBRARY -> 9;
-            case TAVERN, BARN -> 11;
+            case TAVERN, BARN, MANOR -> 11;
             case CHAPEL -> 17;
             case TOWER, WELL -> 5;
             case STALL -> 3;
@@ -81,105 +87,183 @@ public final class MedievalVillage {
     /** Local x of the door, so a path can lead from it to the street. */
     private static int doorX(Kind k) {
         return switch (k) {
-            case SMALL, TALL -> 4;
+            case SMALL, TALL, BAKERY -> 4;
+            case LONG -> 3;
             case TAVERN, BARN -> 6;
             case SMITHY -> 3;
             case CHAPEL, LIBRARY -> 5;
+            case MANOR -> 7;
             case TOWER -> 2;
             default -> -1;
         };
     }
 
-    private static final List<Site> SITES = List.of(
+    /** A street: from (x0, z0) to (x1, z1), straight along x or z, three blocks wide. */
+    private record Street(int x0, int z0, int x1, int z1) {
+        boolean alongZ() { return x0 == x1; }
+        boolean covers(int x, int z, int margin) {
+            return x >= Math.min(x0, x1) - 1 - margin && x <= Math.max(x0, x1) + 1 + margin
+                    && z >= Math.min(z0, z1) - 1 - margin && z <= Math.max(z0, z1) + 1 + margin;
+        }
+    }
+
+    private static final List<Street> STREETS = List.of(
+            new Street(0, -101, 0, 96),      // the high street, chapel to manor
+            new Street(-96, 0, 95, 0),       // the cross street, tower to tower
+            new Street(-50, -45, 50, -45),   // the ring road
+            new Street(-50, 45, 50, 45),
+            new Street(-50, -45, -50, 45),
+            new Street(50, -45, 50, 45));
+
+    private static final int PLAZA = 10;
+
+    /** The landmarks: placed first, the houses fill in around them. */
+    private static final List<Site> LANDMARKS = List.of(
             new Site(Kind.WELL, -2, -2, NORTH),
-            new Site(Kind.STALL, 4, -7, SOUTH, VillageBuildings.SPRUCE, "butcher", Blocks.SMOKER, Blocks.RED_WOOL, Blocks.WHITE_WOOL),
-            new Site(Kind.STALL, -7, -7, SOUTH, VillageBuildings.SPRUCE, "fisherman", Blocks.BARREL, Blocks.BLUE_WOOL, Blocks.WHITE_WOOL),
-            new Site(Kind.STALL, 4, 5, NORTH, VillageBuildings.SPRUCE, "shepherd", Blocks.LOOM, Blocks.YELLOW_WOOL, Blocks.WHITE_WOOL),
-            new Site(Kind.STALL, -7, 5, NORTH, VillageBuildings.SPRUCE, "farmer", Blocks.COMPOSTER, Blocks.GREEN_WOOL, Blocks.WHITE_WOOL),
-            // the high street, north
+            new Site(Kind.STALL, 4, -7, SOUTH, VillageBuildings.SPRUCE, "butcher", Blocks.SMOKER, Blocks.RED_WOOL, Blocks.WHITE_WOOL, false, false),
+            new Site(Kind.STALL, -7, -7, SOUTH, VillageBuildings.SPRUCE, "fisherman", Blocks.BARREL, Blocks.BLUE_WOOL, Blocks.WHITE_WOOL, false, false),
+            new Site(Kind.STALL, 4, 5, NORTH, VillageBuildings.SPRUCE, "shepherd", Blocks.LOOM, Blocks.YELLOW_WOOL, Blocks.WHITE_WOOL, false, false),
+            new Site(Kind.STALL, -7, 5, NORTH, VillageBuildings.SPRUCE, "farmer", Blocks.COMPOSTER, Blocks.GREEN_WOOL, Blocks.WHITE_WOOL, false, false),
             new Site(Kind.TAVERN, 4, -26, WEST),
-            new Site(Kind.SMALL, -11, -22, EAST, VillageBuildings.SPRUCE, "", null),
-            new Site(Kind.TALL, -13, -36, EAST, VillageBuildings.DARK, "", null),
-            new Site(Kind.SMALL, 4, -38, WEST, VillageBuildings.BRICK, "", null),
-            new Site(Kind.CHAPEL, -5, -69, SOUTH),
-            // east street
             new Site(Kind.SMITHY, 16, -13, SOUTH),
             new Site(Kind.LIBRARY, 30, -13, SOUTH),
-            new Site(Kind.TALL, 16, 5, NORTH, VillageBuildings.BRICK, "", null),
-            new Site(Kind.SMALL, 29, 5, NORTH, VillageBuildings.SLATE, "", null),
-            new Site(Kind.TOWER, 46, -8, WEST),
-            // west street
-            new Site(Kind.SMALL, -22, -11, SOUTH, VillageBuildings.DARK, "", null),
-            new Site(Kind.TALL, -36, -13, SOUTH, VillageBuildings.SPRUCE, "", null),
-            new Site(Kind.BARN, -30, 5, NORTH),
-            new Site(Kind.TOWER, -51, 3, EAST),
-            // south street: the farmer's house by the fields
-            new Site(Kind.SMALL, 4, 14, WEST, VillageBuildings.SPRUCE, "farmer", Blocks.COMPOSTER),
-            new Site(Kind.TALL, -13, 44, EAST, VillageBuildings.DARK, "", null)
-    );
+            new Site(Kind.BAKERY, -20, -11, SOUTH),
+            new Site(Kind.CHAPEL, -5, -119, SOUTH),
+            new Site(Kind.MANOR, -7, 98, NORTH),
+            new Site(Kind.BARN, -86, 5, NORTH),
+            new Site(Kind.TOWER, 97, -8, WEST),
+            new Site(Kind.TOWER, -102, 3, EAST),
+            new Site(Kind.TOWER, 3, -96, WEST),
+            new Site(Kind.TOWER, -8, 90, EAST));
 
-    private static final int ROAD_N = -52, ROAD_S = 47, ROAD_W = -46, ROAD_E = 45;
+    /** Fields: x, z, width, depth, and the side their gate opens to. */
+    private static final int[][] FIELDS = {{58, 55, 16, 22}, {77, 55, 14, 22}, {-74, 55, 16, 22}, {-92, 55, 15, 22},
+            {58, -82, 16, 22}, {-74, -82, 16, 22}};
+
+    private static final int PADDOCK_X = -86, PADDOCK_Z = 17;
 
     // ── building ─────────────────────────────────────────────────────────────
 
-    /** Builds the whole village around (cx, cz). Returns how many villagers moved in. */
+    /** Builds the whole town around (cx, cz). Returns how many people and animals moved in. */
     public static int build(ServerLevel level, int cx, int cz) {
         VillageCanvas c = new VillageCanvas(level);
         clearTrees(c, cx, cz);
-        List<int[]> footprints = new ArrayList<>();
+        Random rng = new Random(cx * 341873128712L + cz * 132897987541L + 11);
+        List<int[]> taken = new ArrayList<>();       // footprints with room for the roof overhang, relative
+        for (int[] f : FIELDS) taken.add(new int[]{f[0] - 2, f[1] - 2, f[0] + f[2] + 1, f[1] + f[3] + 1});
+        taken.add(new int[]{PADDOCK_X - 2, PADDOCK_Z - 2, PADDOCK_X + 14, PADDOCK_Z + 11});
+        taken.add(new int[]{-PLAZA - 2, -PLAZA - 2, PLAZA + 2, PLAZA + 2});
         List<Runnable> settle = new ArrayList<>();
-        for (Site s : SITES) {
-            int lw = localW(s.kind()), ld = localD(s.kind());
-            int ww = Plot.worldW(lw, ld, s.front()), wd = Plot.worldD(lw, ld, s.front());
-            int x0 = cx + s.x(), z0 = cz + s.z();
-            int floor = medianGround(c, x0, z0, ww, wd);
-            Plot p = new Plot(c, x0, z0, floor, lw, ld, s.front());
-            footprints.add(new int[]{x0 - 1, z0 - 1, x0 + ww, z0 + wd});
-            List<VillageBuildings.Resident> people = switch (s.kind()) {
-                case SMALL -> VillageBuildings.smallHouse(p, s.style(), s.job(), s.work());
-                case TALL -> VillageBuildings.tallHouse(p, s.style(), s.job(), s.work());
-                case TAVERN -> VillageBuildings.tavern(p);
-                case SMITHY -> VillageBuildings.smithy(p);
-                case CHAPEL -> VillageBuildings.chapel(p);
-                case LIBRARY -> VillageBuildings.library(p);
-                case BARN -> VillageBuildings.barn(p);
-                case TOWER -> VillageBuildings.tower(p);
-                case WELL -> { VillageBuildings.well(p); yield List.of(); }
-                case STALL -> VillageBuildings.stall(p, s.wool(), s.wool2(), s.work(), s.job());
-            };
-            for (VillageBuildings.Resident r : people) {
-                BlockPos at = p.pos(r.pos().getX(), r.pos().getY(), r.pos().getZ());
-                settle.add(() -> spawn(level, at, r.job()));
-            }
-            int dx = doorX(s.kind());
-            if (dx >= 0) {
-                int dz = s.kind() == Kind.CHAPEL ? -2 : -1;
-                BlockPos step = p.pos(dx, 0, dz);
-                Direction out = p.dir(NORTH);
-                pathToStreet(c, step.relative(out), out, cx, cz);
-            }
-        }
-        square(c, cx, cz, footprints);
-        streets(c, cx, cz, footprints);
-        fields(c, cx, cz);
-        paddock(c, cx, cz, settle);
-        lamps(c, cx, cz, footprints);
+        for (Site s : LANDMARKS) place(c, cx, cz, s, taken, settle);
+        for (Site s : houses(rng, taken)) place(c, cx, cz, s, taken, settle);
+        square(c, cx, cz);
+        streets(c, cx, cz, taken);
+        for (int[] f : FIELDS) field(c, cx + f[0], cz + f[1], f[2], f[3], f[0] > 0 ? WEST : EAST);
+        paddock(c, cx + PADDOCK_X, cz + PADDOCK_Z, settle);
+        lamps(c, cx, cz, taken);
+        c.joinFences();
         c.fillLoot();
         settle.forEach(Runnable::run);
         return settle.size();
     }
 
-    /** Trees inside the village are felled (trunks and leaves), so streets and yards stay open; the woods around stay. */
+    private static void place(VillageCanvas c, int cx, int cz, Site s, List<int[]> taken, List<Runnable> settle) {
+        int lw = localW(s.kind()), ld = localD(s.kind());
+        int ww = Plot.worldW(lw, ld, s.front()), wd = Plot.worldD(lw, ld, s.front());
+        int x0 = cx + s.x(), z0 = cz + s.z();
+        int floor = medianGround(c, x0, z0, ww, wd);
+        Plot p = new Plot(c, x0, z0, floor, lw, ld, s.front());
+        if (s.kind() != Kind.WELL && s.kind() != Kind.STALL) taken.add(new int[]{s.x() - 2, s.z() - 2, s.x() + ww + 1, s.z() + wd + 1});
+        List<VillageBuildings.Resident> people = switch (s.kind()) {
+            case SMALL -> VillageBuildings.smallHouse(p, s.style(), s.job(), s.work(), s.across(), s.gable());
+            case TALL -> VillageBuildings.tallHouse(p, s.style(), s.job(), s.work(), s.across(), s.gable());
+            case LONG -> VillageBuildings.longHouse(p, s.style(), s.job(), s.across());
+            case TAVERN -> VillageBuildings.tavern(p);
+            case SMITHY -> VillageBuildings.smithy(p);
+            case CHAPEL -> VillageBuildings.chapel(p);
+            case LIBRARY -> VillageBuildings.library(p);
+            case BARN -> VillageBuildings.barn(p);
+            case TOWER -> VillageBuildings.tower(p);
+            case BAKERY -> VillageBuildings.bakery(p);
+            case MANOR -> VillageBuildings.manor(p);
+            case WELL -> { VillageBuildings.well(p); yield List.of(); }
+            case STALL -> VillageBuildings.stall(p, s.wool(), s.wool2(), s.work(), s.job());
+        };
+        for (VillageBuildings.Resident r : people) {
+            BlockPos at = p.pos(r.pos().getX(), r.pos().getY(), r.pos().getZ());
+            settle.add(() -> spawn(c.level, at, r.job()));
+        }
+        int dx = doorX(s.kind());
+        if (dx >= 0) {
+            int dz = s.kind() == Kind.CHAPEL ? -2 : -1;
+            Direction out = p.dir(NORTH);
+            pathToStreet(c, p.pos(dx, 0, dz).relative(out), out, cx, cz);
+        }
+    }
+
+    private static final String[] JOBS = {"", "", "", "farmer", "fisherman", "shepherd", "fletcher", "mason", "leatherworker", "cartographer", "butcher"};
+
+    /** Houses along both sides of every street, wherever there is room: shape, palette and roof picked at random. */
+    private static List<Site> houses(Random rng, List<int[]> taken) {
+        List<Site> out = new ArrayList<>();
+        for (Street st : STREETS)
+            for (int side = -1; side <= 1; side += 2) {
+                int from = st.alongZ() ? Math.min(st.z0(), st.z1()) : Math.min(st.x0(), st.x1());
+                int to = st.alongZ() ? Math.max(st.z0(), st.z1()) : Math.max(st.x0(), st.x1());
+                int at = from + 3;
+                while (at < to - 6) {
+                    int r = rng.nextInt(100);
+                    Kind kind = r < 38 ? Kind.SMALL : r < 70 ? Kind.TALL : Kind.LONG;
+                    int lw = localW(kind), ld = localD(kind);
+                    int yard = 3 + rng.nextInt(2);
+                    Direction front;
+                    int x, z, ww, wd;
+                    if (st.alongZ()) {
+                        front = side > 0 ? WEST : EAST;
+                        ww = ld; wd = lw;
+                        x = side > 0 ? st.x0() + 2 + yard : st.x0() - 2 - yard - ww + 1;
+                        z = at;
+                    } else {
+                        front = side > 0 ? NORTH : SOUTH;
+                        ww = lw; wd = ld;
+                        z = side > 0 ? st.z0() + 2 + yard : st.z0() - 2 - yard - wd + 1;
+                        x = at;
+                    }
+                    int[] rect = {x - 2, z - 2, x + ww + 1, z + wd + 1};
+                    boolean ok = rng.nextInt(100) < 80 && free(rect, taken);
+                    if (ok) {
+                        VillageBuildings.Style style = VillageBuildings.HOUSE_STYLES[rng.nextInt(VillageBuildings.HOUSE_STYLES.length)];
+                        boolean across = rng.nextBoolean();
+                        boolean gable = across && kind != Kind.LONG && rng.nextInt(100) < 55;
+                        String job = JOBS[rng.nextInt(JOBS.length)];
+                        out.add(new Site(kind, x, z, front, style, job, null, null, null, across, gable));
+                        taken.add(rect);
+                        at += (st.alongZ() ? wd : ww) + 2 + rng.nextInt(4);
+                    } else at += 2;
+                }
+            }
+        return out;
+    }
+
+    /** True when the rectangle touches no other building, field, square or street. */
+    private static boolean free(int[] r, List<int[]> taken) {
+        for (int[] t : taken) if (r[0] <= t[2] && r[2] >= t[0] && r[1] <= t[3] && r[3] >= t[1]) return false;
+        for (Street s : STREETS)
+            for (int x = r[0] + 1; x <= r[2] - 1; x++)
+                for (int z = r[1] + 1; z <= r[3] - 1; z++) if (s.covers(x, z, 0)) return false;
+        return true;
+    }
+
+    /** Trees inside the town are felled (trunks and leaves), so streets and yards stay open; the woods around stay. */
     private static void clearTrees(VillageCanvas c, int cx, int cz) {
         BlockPos.MutableBlockPos m = new BlockPos.MutableBlockPos();
-        for (int x = ROAD_W - 6; x <= ROAD_E + 6; x++)
-            for (int z = ROAD_N - 20; z <= ROAD_S + 6; z++) {
+        for (int x = -110; x <= 105; x++)
+            for (int z = -125; z <= 112; z++) {
                 int g = c.ground(cx + x, cz + z);
                 for (int y = g + 1; y <= g + 24; y++) {
                     m.set(cx + x, y, cz + z);
                     BlockState s = c.get(m);
-                    if (s.is(net.minecraft.tags.BlockTags.LOGS) || s.is(net.minecraft.tags.BlockTags.LEAVES) || s.is(Blocks.VINE))
-                        c.set(m, Blocks.AIR.defaultBlockState());
+                    if (s.is(BlockTags.LOGS) || s.is(BlockTags.LEAVES) || s.is(Blocks.VINE)) c.set(m, Blocks.AIR.defaultBlockState());
                 }
             }
     }
@@ -192,8 +276,8 @@ public final class MedievalVillage {
         return hs[hs.length / 2];
     }
 
-    private static boolean inside(List<int[]> fps, int x, int z) {
-        for (int[] f : fps) if (x >= f[0] && x <= f[2] && z >= f[1] && z <= f[3]) return true;
+    private static boolean onStreet(int rx, int rz) {
+        for (Street s : STREETS) if (s.covers(rx, rz, 0)) return true;
         return false;
     }
 
@@ -214,68 +298,66 @@ public final class MedievalVillage {
         }
     }
 
-    private static void streets(VillageCanvas c, int cx, int cz, List<int[]> fps) {
-        for (int z = ROAD_N; z <= ROAD_S; z++)
-            for (int x = -1; x <= 1; x++) if (!inside(fps, cx + x, cz + z) || Math.abs(z) < 10) {
-                if (x * x + z * z <= 81) continue;
-                road(c, cx + x, cz + z, roadBlock(cx + x, cz + z));
-            }
-        for (int x = ROAD_W; x <= ROAD_E; x++)
-            for (int z = -1; z <= 1; z++) if (!inside(fps, cx + x, cz + z)) {
-                if (x * x + z * z <= 81) continue;
-                road(c, cx + x, cz + z, roadBlock(cx + x, cz + z));
-            }
+    private static void streets(VillageCanvas c, int cx, int cz, List<int[]> taken) {
+        for (Street s : STREETS)
+            for (int x = Math.min(s.x0(), s.x1()) - 1; x <= Math.max(s.x0(), s.x1()) + 1; x++)
+                for (int z = Math.min(s.z0(), s.z1()) - 1; z <= Math.max(s.z0(), s.z1()) + 1; z++) {
+                    if (x * x + z * z <= PLAZA * PLAZA) continue;
+                    road(c, cx + x, cz + z, roadBlock(cx + x, cz + z));
+                }
     }
 
     /** The square: stone paving in a circle round the well. */
-    private static void square(VillageCanvas c, int cx, int cz, List<int[]> fps) {
-        for (int x = -9; x <= 9; x++)
-            for (int z = -9; z <= 9; z++) {
-                if (x * x + z * z > 85 || Math.abs(x) <= 3 && Math.abs(z) <= 3) continue;
+    private static void square(VillageCanvas c, int cx, int cz) {
+        for (int x = -PLAZA; x <= PLAZA; x++)
+            for (int z = -PLAZA; z <= PLAZA; z++) {
+                if (x * x + z * z > PLAZA * PLAZA + 4 || Math.abs(x) <= 3 && Math.abs(z) <= 3) continue;
                 int h = (x * 31 + z * 17 + x * z) & 7;
                 Block b = h < 3 ? Blocks.STONE_BRICKS : h < 5 ? Blocks.COBBLESTONE : h < 6 ? Blocks.ANDESITE : h < 7 ? Blocks.MOSSY_COBBLESTONE : Blocks.POLISHED_ANDESITE;
-                BlockPos at = new BlockPos(cx + x, c.ground(cx + x, cz + z), cz + z);
-                if (VillageCanvas.clearable(c.get(at)) || c.get(at).is(Blocks.GRASS_BLOCK)) road(c, at.getX(), at.getZ(), b.defaultBlockState());
+                road(c, cx + x, cz + z, b.defaultBlockState());
             }
     }
 
-    /** From a door step straight out until a street (at most 14 blocks). */
+    /** From a door step straight out until a street (at most 16 blocks). */
     private static void pathToStreet(VillageCanvas c, BlockPos from, Direction out, int cx, int cz) {
         BlockPos p = from;
-        for (int i = 0; i < 14; i++) {
-            int rx = p.getX() - cx, rz = p.getZ() - cz;
-            if ((Math.abs(rx) <= 1 && rz >= ROAD_N && rz <= ROAD_S) || (Math.abs(rz) <= 1 && rx >= ROAD_W && rx <= ROAD_E)) return;
+        for (int i = 0; i < 16; i++) {
+            if (onStreet(p.getX() - cx, p.getZ() - cz)) return;
             road(c, p.getX(), p.getZ(), Blocks.DIRT_PATH.defaultBlockState());
             p = p.relative(out);
         }
     }
 
-    /** Lamp posts along both streets, every nine blocks, alternating sides. */
-    private static void lamps(VillageCanvas c, int cx, int cz, List<int[]> fps) {
+    /** Lamp posts along every street, every ten blocks, alternating sides. */
+    private static void lamps(VillageCanvas c, int cx, int cz, List<int[]> taken) {
         int n = 0;
-        for (int z = ROAD_N + 4; z <= ROAD_S - 2; z += 9) if (Math.abs(z) > 10) lamp(c, cx + ((n++ % 2 == 0) ? 2 : -2), cz + z, fps);
-        for (int x = ROAD_W + 4; x <= ROAD_E - 2; x += 9) if (Math.abs(x) > 10) lamp(c, cx + x, cz + ((n++ % 2 == 0) ? 2 : -2), fps);
-        for (int[] o : new int[][]{{7, 0}, {-7, 0}, {0, 7}, {0, -7}}) lamp(c, cx + o[0] + (o[0] == 0 ? 2 : 0), cz + o[1] + (o[1] == 0 ? 2 : 0), fps);
+        for (Street s : STREETS) {
+            int from = s.alongZ() ? Math.min(s.z0(), s.z1()) : Math.min(s.x0(), s.x1());
+            int to = s.alongZ() ? Math.max(s.z0(), s.z1()) : Math.max(s.x0(), s.x1());
+            for (int a = from + 5; a <= to - 3; a += 10) {
+                int off = (n++ % 2 == 0) ? 2 : -2;
+                int x = s.alongZ() ? s.x0() + off : a, z = s.alongZ() ? a : s.z0() + off;
+                if (x * x + z * z <= (PLAZA + 1) * (PLAZA + 1)) continue;
+                lamp(c, cx + x, cz + z, cx, cz);
+            }
+        }
+        for (int[] o : new int[][]{{8, 2}, {-8, -2}, {2, 8}, {-2, -8}}) lamp(c, cx + o[0], cz + o[1], cx, cz);
     }
 
-    private static void lamp(VillageCanvas c, int x, int z, List<int[]> fps) {
-        if (inside(fps, x, z)) return;
+    private static void lamp(VillageCanvas c, int x, int z, int cx, int cz) {
+        if (onStreet(x - cx, z - cz)) return;
         int g = c.ground(x, z);
         BlockPos at = new BlockPos(x, g + 1, z);
         if (!c.get(at).isAir() && !VillageCanvas.clearable(c.get(at))) return;
+        if (!c.get(at.below()).isSolidRender(c.level, at.below()) && !c.get(at.below()).is(Blocks.DIRT_PATH)) return;
         c.set(at, Blocks.COBBLESTONE_WALL.defaultBlockState());
         c.set(at.above(), Blocks.DARK_OAK_FENCE.defaultBlockState());
         c.set(at.above(2), Blocks.DARK_OAK_FENCE.defaultBlockState());
         c.set(at.above(3), Blocks.LANTERN.defaultBlockState());
     }
 
-    /** Fenced fields either side of the south street, with water channels and a scarecrow. */
-    private static void fields(VillageCanvas c, int cx, int cz) {
-        field(c, cx - 16, cz + 14, 13, 26, EAST, cx, cz);
-        field(c, cx + 5, cz + 26, 16, 17, WEST, cx, cz);
-    }
-
-    private static void field(VillageCanvas c, int x0, int z0, int w, int d, Direction gateSide, int cx, int cz) {
+    /** A fenced field with water channels, four crops in bands and a scarecrow. */
+    private static void field(VillageCanvas c, int x0, int z0, int w, int d, Direction gateSide) {
         CropBlock[] crops = {(CropBlock) Blocks.WHEAT, (CropBlock) Blocks.CARROTS, (CropBlock) Blocks.POTATOES, (CropBlock) Blocks.BEETROOTS};
         for (int x = 0; x < w; x++)
             for (int z = 0; z < d; z++) {
@@ -285,11 +367,9 @@ public final class MedievalVillage {
                 boolean edge = x == 0 || z == 0 || x == w - 1 || z == d - 1;
                 if (edge) {
                     boolean gate = (gateSide == EAST ? x == w - 1 : x == 0) && z == d / 2;
-                    boolean ns = x == 0 || x == w - 1;
-                    BlockState f = gate ? Blocks.SPRUCE_FENCE_GATE.defaultBlockState().setValue(FenceGateBlock.FACING, gateSide)
-                            : VillageBuildings.fence(Blocks.SPRUCE_FENCE, ns && z > 0, !ns && x < w - 1, ns && z < d - 1, !ns && x > 0);
                     c.set(at, Blocks.GRASS_BLOCK.defaultBlockState());
-                    c.set(at.above(), f);
+                    c.set(at.above(), gate ? Blocks.SPRUCE_FENCE_GATE.defaultBlockState().setValue(FenceGateBlock.FACING, gateSide)
+                            : Blocks.SPRUCE_FENCE.defaultBlockState());
                     continue;
                 }
                 boolean water = (x % 5 == 3) && z > 1 && z < d - 2;
@@ -301,7 +381,6 @@ public final class MedievalVillage {
                 c.set(at, Blocks.FARMLAND.defaultBlockState().setValue(BlockStateProperties.MOISTURE, 7));
                 c.set(at.above(), crop.getStateForAge(crop.getMaxAge()));
             }
-        // a scarecrow in the middle
         int sx = x0 + w / 2, sz = z0 + d / 2, g = c.ground(sx, sz);
         BlockPos s = new BlockPos(sx, g, sz);
         c.set(s, Blocks.GRASS_BLOCK.defaultBlockState());
@@ -311,8 +390,8 @@ public final class MedievalVillage {
     }
 
     /** The fenced paddock behind the barn, with a few animals. */
-    private static void paddock(VillageCanvas c, int cx, int cz, List<Runnable> settle) {
-        int x0 = cx - 30, z0 = cz + 17, w = 13, d = 10;
+    private static void paddock(VillageCanvas c, int x0, int z0, List<Runnable> settle) {
+        int w = 13, d = 10;
         for (int x = 0; x < w; x++)
             for (int z = 0; z < d; z++) {
                 int wx = x0 + x, wz = z0 + z, g = c.ground(wx, wz);
@@ -320,8 +399,7 @@ public final class MedievalVillage {
                 for (int y = 1; y <= 6; y++) if (VillageCanvas.clearable(c.get(at.above(y)))) c.set(at.above(y), Blocks.AIR.defaultBlockState());
                 if (x == 0 || z == d - 1 || x == w - 1 || z == 0) {
                     if (z == 0 && x == 6) continue;          // the barn's back gate opens here
-                    boolean ns = x == 0 || x == w - 1;
-                    c.set(at.above(), VillageBuildings.fence(Blocks.OAK_FENCE, ns && z > 0, !ns && x < w - 1, ns && z < d - 1, !ns && x > 0));
+                    c.set(at.above(), Blocks.OAK_FENCE.defaultBlockState());
                 }
             }
         c.set(new BlockPos(x0 + 3, c.ground(x0 + 3, z0 + 6) + 1, z0 + 6), Blocks.WATER_CAULDRON.defaultBlockState()
@@ -334,7 +412,7 @@ public final class MedievalVillage {
             EntityType<? extends Mob> type = i < 3 ? EntityType.COW : EntityType.SHEEP;
             settle.add(() -> spawnAnimal(level, type, at));
         }
-        BlockPos horse = new BlockPos(cx - 24, 0, cz + 9);
+        BlockPos horse = new BlockPos(x0 + 6, 0, z0 - 8);
         settle.add(() -> spawnAnimal(level, EntityType.HORSE, horse.atY(c.ground(horse.getX(), horse.getZ()) + 1)));
     }
 
@@ -366,6 +444,7 @@ public final class MedievalVillage {
                 level.addFreshEntity(cat);
             }
             default -> {
+                // TODO: the town's own NPCs once their skins arrive; ordinary villagers stand in until then
                 Villager v = EntityType.VILLAGER.create(level);
                 if (v == null) return;
                 v.moveTo(at.getX() + 0.5, at.getY(), at.getZ() + 0.5, level.random.nextFloat() * 360F, 0);
@@ -397,14 +476,14 @@ public final class MedievalVillage {
         }
     }
 
-    /** Raises the village in the middle of floor 11 the first time anyone arrives there. */
+    /** Raises the town in the middle of floor 11 the first time anyone arrives there. */
     public static void ensureOnFloor(ServerLevel level) {
-        Built b = level.getDataStorage().computeIfAbsent(new SavedData.Factory<>(Built::new, Built::load, null), "awakening_medieval_village");
+        Built b = level.getDataStorage().computeIfAbsent(new SavedData.Factory<>(Built::new, Built::load, null), "awakening_medieval_town");
         if (b.built) return;
         b.built = true;
         b.setDirty();
         int people = build(level, 0, 0);
-        AwakeningSystemMod.LOGGER.info("Medieval village raised on floor 11 with {} inhabitants", people);
+        AwakeningSystemMod.LOGGER.info("Medieval town raised on floor 11 with {} inhabitants", people);
     }
 
     @SubscribeEvent
@@ -418,8 +497,10 @@ public final class MedievalVillage {
     private static int run(CommandSourceStack src, boolean dump) {
         ServerLevel level = src.getLevel();
         BlockPos at = BlockPos.containing(src.getPosition());
+        long t0 = System.currentTimeMillis();
         int people = build(level, at.getX(), at.getZ());
-        src.sendSuccess(() -> Component.literal("Medieval village built at " + at.getX() + ", " + at.getZ() + " (" + people + " inhabitants)"), true);
+        long ms = System.currentTimeMillis() - t0;
+        src.sendSuccess(() -> Component.literal("Medieval village built at " + at.getX() + ", " + at.getZ() + " (" + people + " inhabitants, " + ms + " ms)"), true);
         if (dump) {
             Path out = level.getServer().getServerDirectory().resolve("village_dump.txt");
             try {
@@ -432,22 +513,20 @@ public final class MedievalVillage {
         return people;
     }
 
-    /** Every non-air block of the village area, "x y z block", relative to the centre (for pictures outside the game). */
+    /** Every non-air block of the town area, "x y z block", relative to the centre (for pictures outside the game). */
     private static void dump(ServerLevel level, int cx, int cz, Path out) throws IOException {
         VillageCanvas c = new VillageCanvas(level);
         int minY = Integer.MAX_VALUE;
-        for (int x = -60; x <= 60; x += 6) for (int z = -75; z <= 55; z += 6) minY = Math.min(minY, c.ground(cx + x, cz + z));
+        for (int x = -110; x <= 105; x += 8) for (int z = -125; z <= 112; z += 8) minY = Math.min(minY, c.ground(cx + x, cz + z));
         StringBuilder sb = new StringBuilder();
         BlockPos.MutableBlockPos m = new BlockPos.MutableBlockPos();
-        for (int x = -60; x <= 60; x++)
-            for (int z = -75; z <= 55; z++)
-                for (int y = minY - 4; y <= minY + 45; y++) {
+        for (int x = -110; x <= 105; x++)
+            for (int z = -125; z <= 112; z++)
+                for (int y = minY - 2; y <= minY + 45; y++) {
                     m.set(cx + x, y, cz + z);
                     BlockState s = level.getBlockState(m);
                     if (s.isAir()) continue;
-                    sb.append(x).append(' ').append(y - minY).append(' ').append(z).append(' ').append(BuiltInRegistries.BLOCK.getKey(s.getBlock()).getPath());
-                    if (s.hasProperty(BlockStateProperties.HORIZONTAL_FACING)) sb.append(' ').append(s.getValue(BlockStateProperties.HORIZONTAL_FACING).getName());
-                    sb.append('\n');
+                    sb.append(x).append(' ').append(y - minY).append(' ').append(z).append(' ').append(BuiltInRegistries.BLOCK.getKey(s.getBlock()).getPath()).append('\n');
                 }
         Files.writeString(out, sb.toString());
     }

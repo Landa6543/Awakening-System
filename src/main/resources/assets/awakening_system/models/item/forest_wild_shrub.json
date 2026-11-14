@@ -1,3 +1,6 @@
 {
-  "parent": "awakening_system:block/forest_wild_shrub"
+  "parent": "minecraft:item/generated",
+  "textures": {
+    "layer0": "awakening_system:block/forest_wild_shrub"
+  }
 }

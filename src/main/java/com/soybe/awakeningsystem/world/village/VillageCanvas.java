@@ -31,6 +31,32 @@ final class VillageCanvas {
 
     void set(BlockPos p, BlockState s) {
         level.setBlock(p, s, FLAGS);
+        Block b = s.getBlock();
+        if (b instanceof net.minecraft.world.level.block.CrossCollisionBlock || b instanceof net.minecraft.world.level.block.WallBlock
+                || b instanceof net.minecraft.world.level.block.FenceGateBlock) joined.add(p.immutable());
+    }
+
+    /** Fences, panes, bars, walls and gates placed so far: they get joined to their neighbours at the end. */
+    private final java.util.Set<BlockPos> joined = new java.util.LinkedHashSet<>();
+
+    /**
+     * Joins every fence, pane, bar, wall and gate to what is around it, the way the game does when a player
+     * places them, once everything stands (placing them one by one without updates leaves them unjoined).
+     */
+    void joinFences() {
+        for (BlockPos p : joined) {
+            BlockState s = level.getBlockState(p);
+            Block b = s.getBlock();
+            if (!(b instanceof net.minecraft.world.level.block.CrossCollisionBlock || b instanceof net.minecraft.world.level.block.WallBlock
+                    || b instanceof net.minecraft.world.level.block.FenceGateBlock)) continue;
+            BlockState t = s;
+            for (net.minecraft.core.Direction d : net.minecraft.core.Direction.values()) {
+                if (d == net.minecraft.core.Direction.DOWN) continue;
+                BlockPos n = p.relative(d);
+                t = t.updateShape(d, level.getBlockState(n), level, p, n);
+            }
+            if (t != s) level.setBlock(p, t, FLAGS);
+        }
     }
 
     private final java.util.List<java.util.Map.Entry<BlockPos, String>> loot = new java.util.ArrayList<>();

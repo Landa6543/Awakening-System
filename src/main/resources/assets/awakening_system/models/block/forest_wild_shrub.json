@@ -1,44 +1,8 @@
 {
-  "ambientocclusion": false,
+  "parent": "minecraft:block/cross",
   "render_type": "minecraft:cutout",
   "textures": {
-    "particle": "minecraft:block/sweet_berry_bush_stage2",
-    "shrub": "minecraft:block/sweet_berry_bush_stage2",
-    "leaves": "awakening_system:block/cuihua_leaves"
-  },
-  "elements": [
-    {
-      "from": [1.8, 0, 1.8],
-      "to": [14.2, 10, 14.2],
-      "rotation": {"origin": [8, 0, 8], "axis": "y", "angle": 45, "rescale": true},
-      "shade": false,
-      "faces": {
-        "north": {"uv": [0, 6, 16, 16], "texture": "#shrub"},
-        "south": {"uv": [0, 6, 16, 16], "texture": "#shrub"}
-      }
-    },
-    {
-      "from": [1.8, 0, 1.8],
-      "to": [14.2, 10, 14.2],
-      "rotation": {"origin": [8, 0, 8], "axis": "y", "angle": -45, "rescale": true},
-      "shade": false,
-      "faces": {
-        "north": {"uv": [0, 6, 16, 16], "texture": "#shrub"},
-        "south": {"uv": [0, 6, 16, 16], "texture": "#shrub"}
-      }
-    },
-    {
-      "name": "bush_core",
-      "from": [3, 1, 3],
-      "to": [13, 8, 13],
-      "faces": {
-        "north": {"uv": [3, 8, 13, 15], "texture": "#leaves"},
-        "east": {"uv": [3, 8, 13, 15], "texture": "#leaves"},
-        "south": {"uv": [3, 8, 13, 15], "texture": "#leaves"},
-        "west": {"uv": [3, 8, 13, 15], "texture": "#leaves"},
-        "up": {"uv": [3, 3, 13, 13], "texture": "#leaves"},
-        "down": {"uv": [3, 3, 13, 13], "texture": "#leaves"}
-      }
-    }
-  ]
+    "cross": "awakening_system:block/forest_wild_shrub",
+    "particle": "awakening_system:block/forest_wild_shrub"
+  }
 }
