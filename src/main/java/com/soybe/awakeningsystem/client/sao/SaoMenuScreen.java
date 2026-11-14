@@ -64,6 +64,9 @@ public class SaoMenuScreen extends Screen {
         else if (dd.level() >= 50) me.add(new Entry(tr("class_pick", "Choose a class"), STAR, com.soybe.awakeningsystem.AwakeningSystemClient::openClassSelectionScreen));
         me.add(new Entry(tab("artifacts"), SHIELD, () -> minecraft.setScreen(new SaoPanelScreen(this, SaoPanelScreen.Section.ARTIFACTS))));
         me.add(new Entry(tab("titles"), TROPHY, () -> minecraft.setScreen(new SaoPanelScreen(this, SaoPanelScreen.Section.TITLES))));
+        // the same two doors the normal System screen has under the stats
+        me.add(new Entry(tr("cultivation", "Cultivation"), FIST, () -> minecraft.setScreen(new com.soybe.awakeningsystem.CultivationScreen(this))));
+        me.add(new Entry(tr("fables", "Fables"), SCROLL, () -> minecraft.setScreen(new com.soybe.awakeningsystem.fable.FablesScreen(this))));
         categories.add(new Category(PERSON, me));
         categories.add(new Category(PEOPLE, List.of(
                 new Entry(tab("ranking"), TROPHY, () -> minecraft.setScreen(new SaoPanelScreen(this, SaoPanelScreen.Section.RANKING))),

@@ -23,10 +23,10 @@ public class ManaCowModel extends CowModel<ManaCowEntity> {
             PartDefinition head = root.getChild("head");
             ManaCrystals.horn(head, -4.5F, -4.0F, -4.0F, -1);
             ManaCrystals.horn(head, 4.5F, -4.0F, -4.0F, 1);
-            ManaCrystals.shard(root, 0.0F, 2.5F, -5.0F, 5, -0.15F, 0.1F);
-            ManaCrystals.shard(root, -2.5F, 2.5F, -1.0F, 4, 0.1F, -0.35F);
-            ManaCrystals.shard(root, 1.5F, 2.5F, 2.0F, 7, -0.1F, 0.2F);
-            ManaCrystals.shard(root, -1.0F, 2.5F, 6.0F, 4, 0.3F, -0.1F);
+            ManaCrystals.backShard(root, 5.0F, 2.0F, 0.0F, 2.5F, -5.0F, 5, -0.15F, 0.1F);
+            ManaCrystals.backShard(root, 5.0F, 2.0F, -2.5F, 2.5F, -1.0F, 4, 0.1F, -0.35F);
+            ManaCrystals.backShard(root, 5.0F, 2.0F, 1.5F, 2.5F, 2.0F, 7, -0.1F, 0.2F);
+            ManaCrystals.backShard(root, 5.0F, 2.0F, -1.0F, 2.5F, 6.0F, 4, 0.3F, -0.1F);
         });
     }
 }

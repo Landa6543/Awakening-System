@@ -37,10 +37,10 @@ public final class ManaAnimalsClient {
             PartDefinition head = root.getChild("head");
             ManaCrystals.shard(head, -2.0F, -4.0F, -4.0F, 3, -0.2F, -0.35F);
             ManaCrystals.shard(head, 2.0F, -4.0F, -5.0F, 2, -0.2F, 0.35F);
-            ManaCrystals.shard(root, 0.0F, 10.5F, -4.0F, 5, -0.2F, 0.1F);
-            ManaCrystals.shard(root, -2.5F, 10.5F, 0.0F, 4, 0.1F, -0.4F);
-            ManaCrystals.shard(root, 2.0F, 10.5F, 3.0F, 6, 0.15F, 0.25F);
-            ManaCrystals.shard(root, -0.5F, 10.5F, 6.5F, 3, 0.4F, -0.1F);
+            ManaCrystals.backShard(root, 11.0F, 2.0F, 0.0F, 10.5F, -4.0F, 5, -0.2F, 0.1F);
+            ManaCrystals.backShard(root, 11.0F, 2.0F, -2.5F, 10.5F, 0.0F, 4, 0.1F, -0.4F);
+            ManaCrystals.backShard(root, 11.0F, 2.0F, 2.0F, 10.5F, 3.0F, 6, 0.15F, 0.25F);
+            ManaCrystals.backShard(root, 11.0F, 2.0F, -0.5F, 10.5F, 6.5F, 3, 0.4F, -0.1F);
         });
     }
 

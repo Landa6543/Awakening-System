@@ -46,6 +46,18 @@ public final class ManaCrystals {
                 PartPose.offsetAndRotation(1.5F, 0.0F, 0.5F, 0.3F, 0.0F, -0.6F));
     }
 
+    /**
+     * A shard on the animal's back. The vanilla animal models only draw their known parts (head, body, legs),
+     * never extra children of the root, so the shard hangs from the body. The body is turned 90 degrees on X
+     * with its pivot at (0, bodyY, bodyZ); a mount undoes that turn, so x/y/z and the lean stay in the usual
+     * upright model space.
+     */
+    public static void backShard(PartDefinition root, float bodyY, float bodyZ, float x, float y, float z, int h, float rx, float rz) {
+        PartDefinition mount = root.getChild("body").addOrReplaceChild("mana_mount_" + (n++), CubeListBuilder.create(),
+                PartPose.offsetAndRotation(x, z - bodyZ, -(y - bodyY), -(float) (Math.PI / 2), 0.0F, 0.0F));
+        shard(mount, 0.0F, 0.0F, 0.0F, h, rx, rz);
+    }
+
     /** A curling horn of crystal: three shrinking segments, each bending a little more. */
     public static void horn(PartDefinition parent, float x, float y, float z, int side) {
         PartDefinition a = parent.addOrReplaceChild("mana_horn_" + (n++), CubeListBuilder.create().texOffs(16, 32).addBox(-1.0F, -3.0F, -1.0F, 2.0F, 3.0F, 2.0F),

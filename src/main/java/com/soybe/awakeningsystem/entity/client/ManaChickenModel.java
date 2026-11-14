@@ -23,9 +23,9 @@ public class ManaChickenModel extends ChickenModel<ManaChickenEntity> {
             PartDefinition head = root.getChild("head");
             ManaCrystals.shard(head, 0.0F, -6.0F, -0.5F, 3, -0.15F, 0.0F);
             ManaCrystals.shard(head, 0.0F, -6.0F, 0.8F, 2, 0.35F, 0.0F);
-            ManaCrystals.shard(root, 0.0F, 13.5F, 3.5F, 5, 0.75F, 0.0F);
-            ManaCrystals.shard(root, -1.5F, 13.5F, 3.0F, 3, 0.6F, -0.4F);
-            ManaCrystals.shard(root, 1.5F, 13.5F, 3.0F, 3, 0.6F, 0.4F);
+            ManaCrystals.backShard(root, 16.0F, 0.0F, 0.0F, 13.5F, 3.5F, 5, 0.75F, 0.0F);
+            ManaCrystals.backShard(root, 16.0F, 0.0F, -1.5F, 13.5F, 3.0F, 3, 0.6F, -0.4F);
+            ManaCrystals.backShard(root, 16.0F, 0.0F, 1.5F, 13.5F, 3.0F, 3, 0.6F, 0.4F);
         });
     }
 }

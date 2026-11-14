@@ -23,9 +23,9 @@ public class ManaSheepModel extends SheepModel<ManaSheepEntity> {
             PartDefinition head = root.getChild("head");
             ManaCrystals.horn(head, -3.2F, -3.0F, -3.0F, -1);
             ManaCrystals.horn(head, 3.2F, -3.0F, -3.0F, 1);
-            ManaCrystals.shard(root, 0.0F, 5.0F, -3.0F, 5, -0.2F, 0.15F);
-            ManaCrystals.shard(root, 2.5F, 5.0F, 2.0F, 4, 0.15F, 0.45F);
-            ManaCrystals.shard(root, -2.5F, 5.0F, 4.0F, 4, 0.2F, -0.4F);
+            ManaCrystals.backShard(root, 5.0F, 2.0F, 0.0F, 5.0F, -3.0F, 5, -0.2F, 0.15F);
+            ManaCrystals.backShard(root, 5.0F, 2.0F, 2.5F, 5.0F, 2.0F, 4, 0.15F, 0.45F);
+            ManaCrystals.backShard(root, 5.0F, 2.0F, -2.5F, 5.0F, 4.0F, 4, 0.2F, -0.4F);
         });
     }
 }
