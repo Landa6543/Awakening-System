@@ -24,6 +24,6 @@ public class ThunderhelmLawachurlRenderer extends MobRenderer<ThunderhelmLawachu
 
     @Override
     public ResourceLocation getTextureLocation(ThunderhelmLawachurlEntity entity) {
-        return TEXTURE;
+        return ShadowSkins.pick(entity, TEXTURE);
     }
 }

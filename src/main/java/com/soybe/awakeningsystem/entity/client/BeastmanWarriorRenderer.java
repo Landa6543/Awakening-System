@@ -18,12 +18,8 @@ public class BeastmanWarriorRenderer extends MobRenderer<BeastmanWarriorEntity, 
     public BeastmanWarriorRenderer(EntityRendererProvider.Context context) {
         super(context, new BeastmanWarriorModel(context.bakeLayer(BeastmanWarriorModel.LAYER_LOCATION)), 0.75F);
         // the amber eyes glow in the dark
-        this.addLayer(new EyesLayer<>(this) {
-            @Override
-            public RenderType renderType() {
-                return EYES;
-            }
-        });
+        this.addLayer(new ShadowSkins.Eyes<>(this, ResourceLocation.fromNamespaceAndPath(AwakeningSystemMod.MOD_ID, "textures/entity/beastman/beastman_warrior_eyes.png")));
+
     }
 
     @Override
@@ -34,6 +30,6 @@ public class BeastmanWarriorRenderer extends MobRenderer<BeastmanWarriorEntity, 
 
     @Override
     public ResourceLocation getTextureLocation(BeastmanWarriorEntity entity) {
-        return TEXTURE;
+        return ShadowSkins.pick(entity, TEXTURE);
     }
 }

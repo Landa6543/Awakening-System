@@ -16,17 +16,13 @@ public class AbyssalNecromancerRenderer extends MobRenderer<AbyssalNecromancerEn
     public AbyssalNecromancerRenderer(EntityRendererProvider.Context context) {
         super(context, new AbyssalNecromancerModel(context.bakeLayer(AbyssalNecromancerModel.LAYER_LOCATION)), 0.6F);
         // the soul-lit eyes, staff flame and souls glow in the dark
-        this.addLayer(new net.minecraft.client.renderer.entity.layers.EyesLayer<>(this) {
-            @Override
-            public net.minecraft.client.renderer.RenderType renderType() {
-                return GLOW;
-            }
-        });
+        this.addLayer(new ShadowSkins.Eyes<>(this, ResourceLocation.fromNamespaceAndPath(AwakeningSystemMod.MOD_ID, "textures/entity/abyssal_necromancer_glow.png")));
+
     }
 
     @Override
     public ResourceLocation getTextureLocation(AbyssalNecromancerEntity entity) {
-        return TEXTURE;
+        return ShadowSkins.pick(entity, TEXTURE);
     }
 
     @Override

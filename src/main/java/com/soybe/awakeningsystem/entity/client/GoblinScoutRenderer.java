@@ -15,16 +15,12 @@ public class GoblinScoutRenderer extends MobRenderer<GoblinScoutEntity, GoblinSc
     public GoblinScoutRenderer(EntityRendererProvider.Context context) {
         super(context, new GoblinScoutModel(context.bakeLayer(GoblinScoutModel.LAYER_LOCATION)), 0.35F);
         // the eyes (and the shaman's orb) glow in the dark
-        this.addLayer(new net.minecraft.client.renderer.entity.layers.EyesLayer<>(this) {
-            @Override
-            public net.minecraft.client.renderer.RenderType renderType() {
-                return GLOW;
-            }
-        });
+        this.addLayer(new ShadowSkins.Eyes<>(this, ResourceLocation.fromNamespaceAndPath(AwakeningSystemMod.MOD_ID, "textures/entity/goblin/goblin_scout_glow.png")));
+
     }
 
     @Override
     public ResourceLocation getTextureLocation(GoblinScoutEntity entity) {
-        return TEXTURE;
+        return ShadowSkins.pick(entity, TEXTURE);
     }
 }

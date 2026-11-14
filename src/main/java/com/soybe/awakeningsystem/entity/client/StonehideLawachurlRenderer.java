@@ -28,6 +28,6 @@ public class StonehideLawachurlRenderer extends MobRenderer<StonehideLawachurlEn
 
     @Override
     public ResourceLocation getTextureLocation(StonehideLawachurlEntity entity) {
-        return TEXTURE;
+        return ShadowSkins.pick(entity, TEXTURE);
     }
 }

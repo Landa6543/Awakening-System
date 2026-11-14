@@ -24,6 +24,6 @@ public class FrostarmLawachurlRenderer extends MobRenderer<FrostarmLawachurlEnti
 
     @Override
     public ResourceLocation getTextureLocation(FrostarmLawachurlEntity entity) {
-        return TEXTURE;
+        return ShadowSkins.pick(entity, TEXTURE);
     }
 }

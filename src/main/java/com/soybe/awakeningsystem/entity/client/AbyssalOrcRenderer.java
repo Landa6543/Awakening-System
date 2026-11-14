@@ -14,7 +14,7 @@ public class AbyssalOrcRenderer extends MobRenderer<AbyssalOrcEntity, AbyssalOrc
 
     public AbyssalOrcRenderer(EntityRendererProvider.Context context) {
         super(context, new AbyssalOrcModel(context.bakeLayer(AbyssalOrcModel.LAYER_LOCATION)), 0.95F);
-        addLayer(new GlowingEyes(this));
+        addLayer(new ShadowSkins.Eyes<>(this, ResourceLocation.fromNamespaceAndPath(AwakeningSystemMod.MOD_ID, "textures/entity/abyssal_orc_eyes.png")));
     }
 
     /** The red eyes glow in the dark. */
@@ -41,6 +41,6 @@ public class AbyssalOrcRenderer extends MobRenderer<AbyssalOrcEntity, AbyssalOrc
     @Override
     /** Each orc is red (cream stripes) or green (dark-red stripes), fixed by its id so it never changes. */
     public ResourceLocation getTextureLocation(AbyssalOrcEntity entity) {
-        return entity.isGreen() ? GREEN : RED;
+        return ShadowSkins.pick(entity, entity.isGreen() ? GREEN : RED);
     }
 }

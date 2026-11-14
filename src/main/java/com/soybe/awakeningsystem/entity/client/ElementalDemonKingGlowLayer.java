@@ -32,11 +32,12 @@ public class ElementalDemonKingGlowLayer extends RenderLayer<ElementalDemonKingB
                        float netHeadYaw, float headPitch) {
         if (!entity.isAlive()) return;
         float hp = entity.getHealth() / Math.max(1.0F, entity.getMaxHealth());
-        int rgb = hp > 0.5F ? 0x5CD8FF : hp > 0.2F ? 0xFF7A2A : 0xB04CFF;
+        boolean shadow = ShadowSkins.isShadow(entity);
+        int rgb = shadow ? 0x9A7CFF : hp > 0.5F ? 0x5CD8FF : hp > 0.2F ? 0xFF7A2A : 0xB04CFF;    // a shadow burns violet
         float pulse = 0.75F + 0.25F * Mth.sin(ageInTicks * 0.12F);
         int r = (int) (((rgb >> 16) & 255) * pulse), g = (int) (((rgb >> 8) & 255) * pulse), b = (int) ((rgb & 255) * pulse);
         int color = 0xFF000000 | (r << 16) | (g << 8) | b;
         this.getParentModel().renderToBuffer(poseStack, buffer.getBuffer(PHASE_GLOW), 15728880, OverlayTexture.NO_OVERLAY, color);
-        this.getParentModel().renderToBuffer(poseStack, buffer.getBuffer(CRYSTAL_GLOW), 15728880, OverlayTexture.NO_OVERLAY, 0xFFFFFFFF);
+        this.getParentModel().renderToBuffer(poseStack, buffer.getBuffer(CRYSTAL_GLOW), 15728880, OverlayTexture.NO_OVERLAY, shadow ? 0xFF8A70FF : 0xFFFFFFFF);
     }
 }

@@ -18,7 +18,7 @@ public class ElementalDemonKingRenderer extends MobRenderer<ElementalDemonKingBo
 
     @Override
     public ResourceLocation getTextureLocation(ElementalDemonKingBossEntity entity) {
-        return TEXTURE;
+        return ShadowSkins.pick(entity, TEXTURE);
     }
 
     @Override

@@ -13,12 +13,12 @@ public class AntSoldierRenderer extends MobRenderer<AntSoldierEntity, AntSoldier
 
     public AntSoldierRenderer(EntityRendererProvider.Context context) {
         super(context, new AntSoldierModel(context.bakeLayer(AntSoldierModel.LAYER_LOCATION)), 0.65F);
-        this.addLayer(new AntSoldierGlowLayer(this));
+        this.addLayer(new ShadowSkins.Eyes<>(this, ResourceLocation.fromNamespaceAndPath(AwakeningSystemMod.MOD_ID, "textures/entity/ant_soldier/ant_soldier_glow.png")));
     }
 
     @Override
     public ResourceLocation getTextureLocation(AntSoldierEntity entity) {
-        return TEXTURE;
+        return ShadowSkins.pick(entity, TEXTURE);
     }
 
     @Override
