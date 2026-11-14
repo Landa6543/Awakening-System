@@ -14401,6 +14401,22 @@ public final class SystemEvents {
          SystemData data = data(player);
          MinecraftServer server = player.getServer();
          boolean isDevOrOp = player.hasPermissions(2) || player.isCreative();
+         // "tower_floor:N": back to a Great Tower floor the player has already reached
+         if (dimension != null && dimension.startsWith("tower_floor:")) {
+            int floor;
+            try {
+               floor = Integer.parseInt(dimension.substring("tower_floor:".length()));
+            } catch (NumberFormatException e) {
+               return;
+            }
+            if (floor < 1 || floor > 20 || (floor > data.savedTowerFloor() && !isDevOrOp)) {
+               player.displayClientMessage(Component.translatable("awakening_system.tower_travel.not_reached"), true);
+               player.playNotifySound((SoundEvent)SoundEvents.NOTE_BLOCK_BASS.value(), SoundSource.PLAYERS, 0.8F, 0.7F);
+               return;
+            }
+            com.soybe.awakeningsystem.tower.GreatTowerWorldManager.enterFloor(player, floor);
+            return;
+         }
          if (!"overworld".equalsIgnoreCase(dimension)
             && !"earth".equalsIgnoreCase(dimension)
             && !"leave".equalsIgnoreCase(dimension)

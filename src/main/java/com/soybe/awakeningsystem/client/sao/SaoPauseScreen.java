@@ -115,7 +115,7 @@ public class SaoPauseScreen extends Screen {
     }
 
     private void click() {
-        Minecraft.getInstance().getSoundManager().play(SimpleSoundInstance.forUI(SoundEvents.UI_BUTTON_CLICK, 1.35F));
+        SaoSounds.click();
     }
 
     @Override

@@ -12,10 +12,27 @@ final class SaoDraw {
     static int mx = -1, my = -1;
     static float time;
 
+    /** What the mouse was over this frame and the last one (0 = nothing), for the hover tick. */
+    static int hoverKey, lastHoverKey;
+
     static void frame(int mouseX, int mouseY, float t) {
+        if (hoverKey != lastHoverKey && hoverKey != 0) SaoSounds.hover();
+        lastHoverKey = hoverKey;
+        hoverKey = 0;
         mx = mouseX;
         my = mouseY;
         time = t;
+    }
+
+    /** Moves the hover point only (for a panel turned in 3D, the mouse traced onto that panel). */
+    static void mouse(int mouseX, int mouseY) {
+        mx = mouseX;
+        my = mouseY;
+    }
+
+    /** Marks the thing under the mouse (any number that tells it apart), so moving onto it ticks once. */
+    static void hovering(int key) {
+        hoverKey = key == 0 ? 1 : key;
     }
 
     static final int ORANGE = 0xFFEDA500;
@@ -32,35 +49,89 @@ final class SaoDraw {
         return (al << 24) | (argb & 0xFFFFFF);
     }
 
-    /** A filled circle, drawn as one-pixel rows. */
+    // ── smooth circles ──────────────────────────────────────────────────────
+    // Circles are real polygons in screen pixels (not GUI pixels), with a one-pixel soft edge, so they stay
+    // round and crisp at any GUI scale.
+
+    /** One real screen pixel in GUI units. */
+    private static float px() {
+        double s = net.minecraft.client.Minecraft.getInstance().getWindow().getGuiScale();
+        return (float) (1.0D / Math.max(1.0D, s));
+    }
+
+    private static int segments(float r) {
+        return Math.max(24, Math.min(180, (int) (r / px() * 0.9F)));
+    }
+
+    private static com.mojang.blaze3d.vertex.VertexConsumer buf(GuiGraphics g) {
+        return g.bufferSource().getBuffer(net.minecraft.client.renderer.RenderType.gui());
+    }
+
+    private static int clear(int argb) {
+        return argb & 0x00FFFFFF;
+    }
+
+    /** A filled circle. */
     static void disc(GuiGraphics g, float cx, float cy, float r, int color) {
-        int y0 = (int) Math.floor(cy - r), y1 = (int) Math.ceil(cy + r);
-        for (int y = y0; y <= y1; y++) {
-            float dy = y + 0.5F - cy;
-            float half = r * r - dy * dy;
-            if (half <= 0) continue;
-            float w = (float) Math.sqrt(half);
-            g.fill(Math.round(cx - w), y, Math.round(cx + w), y + 1, color);
+        radial(g, cx, cy, cx, cy, r, color, color);
+    }
+
+    /**
+     * A filled circle whose colour runs from {@code inner} at the point (gx, gy) to {@code outer} at the rim;
+     * putting (gx, gy) off centre gives the lit, rounded look of a glass bead.
+     */
+    static void radial(GuiGraphics g, float gx, float gy, float cx, float cy, float r, int inner, int outer) {
+        if (r <= 0) return;
+        var vc = buf(g);
+        var m = g.pose().last().pose();
+        int n = segments(r);
+        float f = px();
+        for (int i = 0; i < n; i++) {
+            double a0 = Math.PI * 2 * i / n, a1 = Math.PI * 2 * (i + 1) / n;
+            float c0 = (float) Math.cos(a0), s0 = (float) Math.sin(a0), c1 = (float) Math.cos(a1), s1 = (float) Math.sin(a1);
+            vc.addVertex(m, gx, gy, 0).setColor(inner);
+            vc.addVertex(m, cx + c1 * r, cy + s1 * r, 0).setColor(outer);
+            vc.addVertex(m, cx + c0 * r, cy + s0 * r, 0).setColor(outer);
+            vc.addVertex(m, gx, gy, 0).setColor(inner);
+            // the soft edge: one screen pixel fading out
+            band(vc, m, cx, cy, c0, s0, c1, s1, r, r + f, outer, clear(outer));
         }
     }
 
     static void ring(GuiGraphics g, float cx, float cy, float r, float thickness, int color) {
-        int y0 = (int) Math.floor(cy - r), y1 = (int) Math.ceil(cy + r);
-        float inner = r - thickness;
-        for (int y = y0; y <= y1; y++) {
-            float dy = y + 0.5F - cy;
-            float o = r * r - dy * dy;
-            if (o <= 0) continue;
-            float ow = (float) Math.sqrt(o);
-            float i = inner * inner - dy * dy;
-            if (i <= 0) {
-                g.fill(Math.round(cx - ow), y, Math.round(cx + ow), y + 1, color);
-            } else {
-                float iw = (float) Math.sqrt(i);
-                g.fill(Math.round(cx - ow), y, Math.round(cx - iw), y + 1, color);
-                g.fill(Math.round(cx + iw), y, Math.round(cx + ow), y + 1, color);
-            }
+        if (r <= 0) return;
+        var vc = buf(g);
+        var m = g.pose().last().pose();
+        int n = segments(r);
+        float f = px();
+        float in = Math.max(0.0F, r - thickness);
+        for (int i = 0; i < n; i++) {
+            double a0 = Math.PI * 2 * i / n, a1 = Math.PI * 2 * (i + 1) / n;
+            float c0 = (float) Math.cos(a0), s0 = (float) Math.sin(a0), c1 = (float) Math.cos(a1), s1 = (float) Math.sin(a1);
+            band(vc, m, cx, cy, c0, s0, c1, s1, in, r, color, color);
+            band(vc, m, cx, cy, c0, s0, c1, s1, r, r + f, color, clear(color));
+            if (in > f) band(vc, m, cx, cy, c0, s0, c1, s1, in - f, in, clear(color), color);
         }
+    }
+
+    /** One segment of an annulus between radii a (colour ca) and b (colour cb). */
+    private static void band(com.mojang.blaze3d.vertex.VertexConsumer vc, org.joml.Matrix4f m, float cx, float cy,
+                             float c0, float s0, float c1, float s1, float a, float b, int ca, int cb) {
+        vc.addVertex(m, cx + c0 * a, cy + s0 * a, 0).setColor(ca);
+        vc.addVertex(m, cx + c1 * a, cy + s1 * a, 0).setColor(ca);
+        vc.addVertex(m, cx + c1 * b, cy + s1 * b, 0).setColor(cb);
+        vc.addVertex(m, cx + c0 * b, cy + s0 * b, 0).setColor(cb);
+    }
+
+    /** Mixes a colour toward white (k > 0) or black (k < 0), keeping its alpha. */
+    static int shade(int argb, float k) {
+        int a = argb >>> 24, r = (argb >> 16) & 255, gg = (argb >> 8) & 255, b = argb & 255;
+        int t = k > 0 ? 255 : 0;
+        float q = Math.abs(k);
+        r = (int) (r + (t - r) * q);
+        gg = (int) (gg + (t - gg) * q);
+        b = (int) (b + (t - b) * q);
+        return (a << 24) | (r << 16) | (gg << 8) | b;
     }
 
     /** A small triangle pointing left (tip at x,y). */
@@ -76,6 +147,7 @@ final class SaoDraw {
     static void row(GuiGraphics g, Font font, int x, int y, int w, int h, Component label, String[] icon, boolean hot, float a) {
         g.fill(x + 1, y + 2, x + w + 1, y + h + 2, alpha(0x40000000, a));                       // drop shadow
         boolean over = !hot && mx >= x && mx < x + w && my >= y && my < y + h;
+        if (mx >= x && mx < x + w && my >= y && my < y + h) hovering(x * 7919 + y);
         if (over) x += 2;                                                                          // nudges toward the mouse
         if (hot) g.fillGradient(x, y, x + w, y + h, alpha(0xFFF7B52A, a), alpha(0xFFE29400, a));
         else if (over) g.fillGradient(x, y, x + w, y + h, alpha(0xFFFFFFFF, a), alpha(0xFFFFF3DC, a));
@@ -103,10 +175,16 @@ final class SaoDraw {
 
     /** A disc with depth: soft shadow under it, the colour, a lighter cap and a small glint. */
     static void shinyDisc(GuiGraphics g, float cx, float cy, float r, int color, float a) {
-        disc(g, cx + 0.6F, cy + 1.2F, r, alpha(0x50000000, a));
-        disc(g, cx, cy, r, alpha(color, a));
-        disc(g, cx, cy - r * 0.28F, r * 0.72F, alpha(0x30FFFFFF, a));
-        disc(g, cx - r * 0.35F, cy - r * 0.45F, Math.max(1.0F, r * 0.18F), alpha(0x90FFFFFF, a));
+        // a soft shadow, two layers so it fades out
+        disc(g, cx + 0.5F, cy + 1.4F, r + 0.6F, alpha(0x22000000, a));
+        disc(g, cx + 0.4F, cy + 1.0F, r, alpha(0x40000000, a));
+        // the bead: lit from the upper left, darker toward the lower rim
+        radial(g, cx - r * 0.3F, cy - r * 0.38F, cx, cy, r, alpha(shade(color, 0.38F), a), alpha(shade(color, -0.14F), a));
+        // a thin rim and a bright line along the top edge
+        ring(g, cx, cy, r, Math.max(px(), r * 0.07F), alpha(0x30000000, a));
+        ring(g, cx, cy - r * 0.04F, r * 0.9F, Math.max(px(), r * 0.05F), alpha(0x22FFFFFF, a));
+        // the glint
+        radial(g, cx - r * 0.36F, cy - r * 0.46F, cx - r * 0.36F, cy - r * 0.46F, Math.max(0.9F, r * 0.2F), alpha(0xC0FFFFFF, a), alpha(0x00FFFFFF, a));
     }
 
     /**
@@ -146,6 +224,7 @@ final class SaoDraw {
     /** A small round button with a label under or inside it. */
     static boolean roundButton(GuiGraphics g, float cx, float cy, float r, String[] icon, int color, boolean enabled, int mouseX, int mouseY, float a) {
         boolean hover = enabled && (mouseX - cx) * (mouseX - cx) + (mouseY - cy) * (mouseY - cy) <= r * r;
+        if (hover) hovering(Math.round(cx) * 7919 + Math.round(cy) + 1);
         ring(g, cx, cy, r + 2, 1.0F, alpha(hover ? color : 0xFFB8B8BE, a));
         shinyDisc(g, cx, cy, r, enabled ? (hover ? color : WHITE) : 0xFFD2D2D6, a);
         icon(g, icon, Math.round(cx) - 5, Math.round(cy) - 5, alpha(enabled ? (hover ? WHITE : color) : 0xFFA0A0A6, a));

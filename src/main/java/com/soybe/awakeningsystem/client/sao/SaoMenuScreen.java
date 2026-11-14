@@ -111,11 +111,40 @@ public class SaoMenuScreen extends Screen {
         backdrop(g, this.width, this.height, 1.0F);
     }
 
+    // the two halves of the menu hang in the air, each turned a little toward the player
+    private org.joml.Matrix4f rightPlane = new org.joml.Matrix4f(), cardPlane = new org.joml.Matrix4f();
+    private boolean entityPending;
+    private float entX1, entY1, entX2, entY2;
+
+    private int cardX() { return columnX() - R - 18 - 176; }
+    private int cardY() { return this.height / 2 - 120; }
+
+    private void updatePlanes(int mouseX, int mouseY, float open) {
+        float[] par = SaoHolo.parallax(mouseX, mouseY, this.width, this.height);
+        float settle = 1.0F - open;                                     // swings in while opening
+        rightPlane = SaoHolo.plane(columnX(), this.height / 2.0F, 10.0F + par[0] * 4.0F + settle * 25.0F, -par[1] * 3.0F);
+        cardPlane = SaoHolo.plane(cardX() + 88, cardY() + 120, -12.0F + par[0] * 4.0F - settle * 25.0F, -par[1] * 3.0F);
+    }
+
+    private int[] onPlane(org.joml.Matrix4f plane, double mouseX, double mouseY) {
+        float[] p = SaoHolo.unproject(plane, mouseX, mouseY, this.width, this.height);
+        return new int[]{Math.round(p[0]), Math.round(p[1])};
+    }
+
     @Override
-    public void render(GuiGraphics g, int mouseX, int mouseY, float partialTick) {
-        frame(mouseX, mouseY, ticks + partialTick);
-        super.render(g, mouseX, mouseY, partialTick);
+    public void render(GuiGraphics g, int realX, int realY, float partialTick) {
+        if (!opened) {
+            opened = true;
+            SaoSounds.open();
+        }
         float open = Mth.clamp((ticks + partialTick) / 6.0F, 0.0F, 1.0F);
+        updatePlanes(realX, realY, open * open * (3 - 2 * open));
+        int[] rm = onPlane(rightPlane, realX, realY);
+        int mouseX = rm[0], mouseY = rm[1];
+        frame(mouseX, mouseY, ticks + partialTick);
+        super.render(g, realX, realY, partialTick);
+        SaoHolo.begin(g, this.width, this.height);
+        SaoHolo.push(g, rightPlane);
         float a = open * open * (3 - 2 * open);
         int cx = columnX(), top = columnTop();
 
@@ -125,6 +154,7 @@ public class SaoMenuScreen extends Screen {
             float cy = top + i * STEP - (1.0F - mine) * 10.0F;
             boolean sel = i == selected;
             boolean hover = (mouseX - cx) * (mouseX - cx) + (mouseY - cy) * (mouseY - cy) <= R * R;
+            if (hover) hovering(500 + i);
             if (sel) ring(g, cx, cy, R + 4, 1.2F, alpha(ORANGE, mine));
             ring(g, cx, cy, R + 1.5F, 1.0F, alpha(sel ? 0xFFFFD27A : 0xFFB8B8BE, mine));
             shinyDisc(g, cx, cy, R, sel ? ORANGE : (hover ? WHITE : 0xFFE4E4E8), mine);
@@ -142,9 +172,31 @@ public class SaoMenuScreen extends Screen {
             row(g, this.font, lx, y, ROW_W, ROW_H, entries.get(i).label, entries.get(i).icon, hot, a * slide);
         }
 
+        SaoHolo.pop(g);
+
         hoverTip = null;
-        renderCard(g, cx - R - 18 - 176, this.height / 2 - 120, a, partialTick, mouseX, mouseY);
-        if (hoverTip != null) g.renderTooltip(this.font, hoverTip, mouseX, mouseY);
+        entityPending = false;
+        int[] cm = onPlane(cardPlane, realX, realY);
+        mouse(cm[0], cm[1]);
+        SaoHolo.push(g, cardPlane);
+        renderCard(g, cardX(), cardY(), a, partialTick, cm[0], cm[1]);
+        SaoHolo.pop(g);
+        SaoHolo.end(g);
+        // the player model is drawn flat, where its box on the turned card shows on screen
+        if (entityPending && minecraft.player != null) {
+            int x1 = Math.round(entX1), y1 = Math.round(entY1), x2 = Math.round(entX2), y2 = Math.round(entY2);
+            net.minecraft.client.gui.screens.inventory.InventoryScreen.renderEntityInInventoryFollowsMouse(
+                    g, x1, y1, x2, y2, Math.max(20, Math.round(46 * (y2 - y1) / 108.0F)), 0.0625F, realX, realY, minecraft.player);
+        }
+        if (hoverTip != null) g.renderTooltip(this.font, hoverTip, realX, realY);
+    }
+
+    private boolean opened;
+
+    @Override
+    public void onClose() {
+        SaoSounds.close();
+        super.onClose();
     }
 
     /** The player's card: name, the player in 3D ringed by the skills they have equipped, and the main numbers. */
@@ -164,8 +216,13 @@ public class SaoMenuScreen extends Screen {
         int fx = x + w / 2, fy = y + 28;
         // a soft floor disc and the player themself, turning to follow the mouse
         g.fillGradient(fx - 26, fy + 108, fx + 26, fy + 112, alpha(0x30000000, a), 0);
-        if (a > 0.6F) net.minecraft.client.gui.screens.inventory.InventoryScreen.renderEntityInInventoryFollowsMouse(
-                g, fx - 30, fy + 4, fx + 30, fy + 112, 46, 0.0625F, mouseX, mouseY, mc.player);
+        if (a > 0.6F) {
+            // drawn after the card, flat on top of it (a 3D model cannot sit on the turned plane)
+            float[] p1 = SaoHolo.project(cardPlane, fx - 30, fy + 4, this.width, this.height);
+            float[] p2 = SaoHolo.project(cardPlane, fx + 30, fy + 112, this.width, this.height);
+            entX1 = p1[0]; entY1 = p1[1]; entX2 = p2[0]; entY2 = p2[1];
+            entityPending = true;
+        }
 
         // equipped skills on an orbit: actives down the left, passives down the right
         Component hoverName = null;
@@ -232,11 +289,13 @@ public class SaoMenuScreen extends Screen {
     }
 
     private void click() {
-        Minecraft.getInstance().getSoundManager().play(SimpleSoundInstance.forUI(SoundEvents.UI_BUTTON_CLICK, 1.35F));
+        SaoSounds.click();
     }
 
     @Override
-    public boolean mouseClicked(double mouseX, double mouseY, int button) {
+    public boolean mouseClicked(double realX, double realY, int button) {
+        int[] rm = onPlane(rightPlane, realX, realY);
+        double mouseX = rm[0], mouseY = rm[1];
         if (button == 0) {
             int cx = columnX(), top = columnTop();
             for (int i = 0; i < categories.size(); i++) {

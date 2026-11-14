@@ -417,6 +417,13 @@ public final class SystemScreen extends Screen {
                         }
                         return true;
                     }
+                    if ("tower".equals(t.id)) {
+                        AwakeningSystemClient.playUiSound(ModSounds.SYSTEM_CLICK.value(), 1.0F, 1.2F);
+                        if (minecraft != null) {
+                            minecraft.setScreen(new com.soybe.awakeningsystem.tower.client.TowerFloorsScreen(this));
+                        }
+                        return true;
+                    }
                     if (isBlockedRealm && !"subspace".equals(t.id)) {
                         AwakeningSystemClient.playUiSound(net.minecraft.sounds.SoundEvents.NOTE_BLOCK_BASS.value(), 0.8F, 0.7F);
                         if (minecraft.player != null) {
@@ -2461,6 +2468,8 @@ public final class SystemScreen extends Screen {
             net.minecraft.resources.ResourceLocation.fromNamespaceAndPath(AwakeningSystemMod.MOD_ID, "textures/gui/tab_world_archive.png");
 
     private static final ItemStack SUBSPACE_TAB_ICON = new ItemStack(net.minecraft.world.item.Items.ENDER_CHEST);
+    private static final net.minecraft.resources.ResourceLocation TAB_TOWER_TEX =
+            net.minecraft.resources.ResourceLocation.fromNamespaceAndPath(AwakeningSystemMod.MOD_ID, "textures/gui/tab_tower.png");
 
     private static class DimTab {
         final String id;
@@ -2505,6 +2514,12 @@ public final class SystemScreen extends Screen {
                         Component.translatable("awakening_system.screen.dim.teyvat.desc")));
             }
         }
+        // la Gran Torre: volver a cualquier piso ya alcanzado
+        if (minecraft != null && minecraft.player != null && minecraft.player.getData(AwakeningSystemMod.PLAYER_SYSTEM).savedTowerFloor() >= 1) {
+            list.add(new DimTab("tower", TAB_TOWER_TEX,
+                    Component.translatable("awakening_system.sao.tower_row"),
+                    Component.translatable("awakening_system.sao.tower_floors")));
+        }
         // Subespacio Dimensional (Bóveda Personal del Cazador)
         list.add(new DimTab("subspace", null,
                 Component.translatable("awakening_system.screen.dim.subspace.title"),
@@ -2524,10 +2539,15 @@ public final class SystemScreen extends Screen {
         List<DimTab> all = getActiveSideTabs();
         if (all.size() <= MAX_SIDE_TABS) return all;
         DimTab subspace = all.get(all.size() - 1);
-        List<DimTab> shown = new ArrayList<>(all.subList(0, MAX_SIDE_TABS - 2));
+        DimTab tower = all.stream().filter(t -> "tower".equals(t.id)).findFirst().orElse(null);
+        List<DimTab> worlds = new ArrayList<>(all.subList(0, all.size() - 1));
+        if (tower != null) worlds.remove(tower);
+        int keep = MAX_SIDE_TABS - 2 - (tower != null ? 1 : 0);
+        List<DimTab> shown = new ArrayList<>(worlds.subList(0, Math.max(0, Math.min(keep, worlds.size()))));
         shown.add(new DimTab("archive", TAB_WORLD_ARCHIVE_TEX,
                 Component.translatable("awakening_system.world_archive.tab_title"),
                 Component.translatable("awakening_system.world_archive.tab_desc")));
+        if (tower != null) shown.add(tower);
         shown.add(subspace);
         return shown;
     }

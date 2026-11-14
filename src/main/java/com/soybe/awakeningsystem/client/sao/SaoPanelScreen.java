@@ -69,7 +69,7 @@ public class SaoPanelScreen extends Screen {
     }
 
     private void click() {
-        Minecraft.getInstance().getSoundManager().play(SimpleSoundInstance.forUI(SoundEvents.UI_BUTTON_CLICK, 1.35F));
+        SaoSounds.click();
     }
 
     // ── layout shared by drawing and clicking ────────────────────────────────
@@ -817,12 +817,116 @@ public class SaoPanelScreen extends Screen {
         return out;
     }
 
+    // ── Great Tower floors ──
+    /** True while the Worlds panel shows the tower's floors instead of the worlds. */
+    private boolean towerFloors;
+
+    private static int reachedFloor() {
+        var p = Minecraft.getInstance().player;
+        return p == null ? 0 : Math.min(20, p.getData(AwakeningSystemMod.PLAYER_SYSTEM).savedTowerFloor());
+    }
+
+    /** The tower floor the player is standing on, or 0. */
+    private static int currentFloor() {
+        var mc = Minecraft.getInstance();
+        if (mc.level == null) return 0;
+        for (int f = 1; f <= 20; f++)
+            if (mc.level.dimension().equals(com.soybe.awakeningsystem.tower.GreatTowerWorldManager.getDimensionForFloor(f))) return f;
+        return 0;
+    }
+
+    private int travelStep(int rows) {
+        return Math.min(ROW + 6, (PH - HEADER - 16) / Math.max(1, rows));
+    }
+
+    private static final int FLOOR_COLS = 5, FLOOR_W = 58, FLOOR_H = 30;
+
+    private int floorX(int i) { return left() + 12 + (i % FLOOR_COLS) * (FLOOR_W + 3); }
+    private int floorY(int i) { return top() + HEADER + 30 + (i / FLOOR_COLS) * (FLOOR_H + 3); }
+
+    private void renderFloors(GuiGraphics g, int x, int y, int mouseX, int mouseY, float a) {
+        int by = y + HEADER + 6;
+        boolean backHot = in(mouseX, mouseY, x + 10, by, 90, 16);
+        if (backHot) hovering(1001);
+        g.fillGradient(x + 10, by, x + 100, by + 16, alpha(backHot ? 0xFFFFF3DC : 0xFFF4F4F6, a), alpha(0xFFDCDCE0, a));
+        icon(g, BACK, x + 13, by + 3, alpha(ORANGE, a));
+        g.drawString(this.font, tr("travel_title", "Worlds"), x + 28, by + 4, alpha(GREY_DARK, a), false);
+        Component head = tr("tower_floors", "Great Tower: floors you reached");
+        g.drawString(this.font, head, x + PW - 14 - this.font.width(head), by + 4, alpha(ORANGE_DARK, a), false);
+        int reached = reachedFloor(), here = currentFloor();
+        for (int i = 0; i < 20; i++) {
+            int f = i + 1, fx = floorX(i), fy = floorY(i);
+            boolean open = f <= reached, cur = f == here;
+            boolean hot = open && !cur && in(mouseX, mouseY, fx, fy, FLOOR_W, FLOOR_H);
+            if (hot) hovering(2000 + f);
+            int top = cur ? 0xFFF7B52A : hot ? 0xFFFFFFFF : open ? 0xFAFFFFFF : 0x90D4D4D8;
+            int bot = cur ? 0xFFE29400 : hot ? 0xFFFFF3DC : open ? 0xF2E9E9EC : 0x90C4C4C8;
+            g.fill(fx + 1, fy + 2, fx + FLOOR_W + 1, fy + FLOOR_H + 2, alpha(0x30000000, a));
+            g.fillGradient(fx, fy, fx + FLOOR_W, fy + FLOOR_H, alpha(top, a), alpha(bot, a));
+            g.fill(fx, fy + FLOOR_H - 1, fx + FLOOR_W, fy + FLOOR_H, alpha(hot ? ORANGE : 0xFFC9C9CE, a));
+            if (f % 5 == 0) g.fill(fx, fy, fx + 2, fy + FLOOR_H, alpha(cur ? WHITE : ORANGE, a * (open ? 0.9F : 0.4F)));
+            String num = String.valueOf(f);
+            g.pose().pushPose();
+            g.pose().translate(fx + 6, fy + 4, 0);
+            g.pose().scale(1.5F, 1.5F, 1.0F);
+            g.drawString(this.font, num, 0, 0, alpha(cur ? WHITE : open ? 0xFF3A3A42 : 0xFF9A9AA2, a), false);
+            g.pose().popPose();
+            if (open) {
+                String theme = com.soybe.awakeningsystem.tower.GreatTowerWorldManager.getFloorTitle(f);
+                g.pose().pushPose();
+                g.pose().translate(fx + 4, fy + 20, 0);
+                g.pose().scale(0.6F, 0.6F, 1.0F);
+                g.drawString(this.font, this.font.plainSubstrByWidth(theme, (int) ((FLOOR_W - 6) / 0.6F)), 0, 0,
+                        alpha(cur ? WHITE : GREY, a), false);
+                g.pose().popPose();
+            } else icon(g, CROSS, fx + FLOOR_W - 15, fy + 9, alpha(0xFFA0A0A6, a));
+            if (cur) icon(g, PERSON, fx + FLOOR_W - 15, fy + 9, alpha(WHITE, a));
+        }
+    }
+
+    private boolean clickFloors(double mx, double my) {
+        int x = left(), by = top() + HEADER + 6;
+        if (in(mx, my, x + 10, by, 90, 16)) {
+            SaoSounds.back();
+            towerFloors = false;
+            return true;
+        }
+        int reached = reachedFloor(), here = currentFloor();
+        for (int i = 0; i < 20; i++) {
+            int f = i + 1;
+            if (!in(mx, my, floorX(i), floorY(i), FLOOR_W, FLOOR_H)) continue;
+            if (f > reached || f == here) {
+                Minecraft.getInstance().getSoundManager().play(SimpleSoundInstance.forUI(SoundEvents.NOTE_BLOCK_BASS.value(), 0.7F));
+                return true;
+            }
+            SaoSounds.confirm();
+            Minecraft.getInstance().setScreen(null);
+            net.neoforged.neoforge.network.PacketDistributor.sendToServer(new com.soybe.awakeningsystem.TravelDimensionPayload("tower_floor:" + f));
+            return true;
+        }
+        return false;
+    }
+
     private void renderTravel(GuiGraphics g, int x, int y, int mouseX, int mouseY, float a) {
+        if (towerFloors) {
+            renderFloors(g, x, y, mouseX, mouseY, a);
+            return;
+        }
         var list = worlds();
         int lt = y + HEADER + 8;
+        boolean tower = reachedFloor() >= 1;
+        int step = travelStep(list.size() + (tower ? 1 : 0));
+        if (tower) {
+            int ry = lt + list.size() * step;
+            boolean hot = in(mouseX, mouseY, x + 10, ry, PW - 24, ROW + 2);
+            row(g, this.font, x + 10, ry, PW - 24, ROW + 2, Component.empty(), null, hot, a);
+            icon(g, UP, x + 18, ry + 6, alpha(hot ? ORANGE : WHITE, a));
+            String label = tr("tower_row", "Great Tower").getString() + "  ·  1 - " + reachedFloor();
+            g.drawString(this.font, label, x + 38, ry + 7, alpha(hot ? WHITE : 0xFF4A4A52, a), false);
+        }
         for (int i = 0; i < list.size(); i++) {
             World w = list.get(i);
-            int ry = lt + i * (ROW + 6);
+            int ry = lt + i * step;
             boolean hot = in(mouseX, mouseY, x + 10, ry, PW - 24, ROW + 2);
             Component name = switch (w.id) {
                 case "subspace" -> tr("subspace", "Personal subspace");
@@ -839,10 +943,18 @@ public class SaoPanelScreen extends Screen {
     }
 
     private boolean clickTravel(double mx, double my) {
+        if (towerFloors) return clickFloors(mx, my);
         var list = worlds();
         int x = left(), lt = top() + HEADER + 8;
+        boolean tower = reachedFloor() >= 1;
+        int step = travelStep(list.size() + (tower ? 1 : 0));
+        if (tower && in(mx, my, x + 10, lt + list.size() * step, PW - 24, ROW + 2)) {
+            click();
+            towerFloors = true;
+            return true;
+        }
         for (int i = 0; i < list.size(); i++) {
-            if (!in(mx, my, x + 10, lt + i * (ROW + 6), PW - 24, ROW + 2)) continue;
+            if (!in(mx, my, x + 10, lt + i * step, PW - 24, ROW + 2)) continue;
             click();
             World w = list.get(i);
             Minecraft mc = Minecraft.getInstance();
@@ -1010,6 +1122,7 @@ public class SaoPanelScreen extends Screen {
 
     @Override
     public void onClose() {
+        SaoSounds.back();
         Minecraft.getInstance().setScreen(parent);
     }
 
