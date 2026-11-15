@@ -34,12 +34,13 @@ import net.minecraft.world.level.Level;
 public class TownNpcEntity extends PathfinderMob {
     /** The skins, by index: textures/entity/town_npc/<name>.png */
     public static final String[] SKINS = {"smith", "bearded", "farmer", "priest", "innkeeper_blonde", "innkeeper_fae", "innkeeper_alice",
-            "librarian", "baker", "baker_woman", "merchant", "townsman_green", "townswoman_emily", "townswoman_paula"};
+            "librarian", "baker", "baker_woman", "merchant", "townsman_green", "townswoman_emily", "townswoman_paula", "farmer2", "farmer_woman"};
     /** Skins drawn with the thin (Alex) arms. */
-    private static final java.util.Set<String> SLIM = java.util.Set.of("innkeeper_blonde", "innkeeper_fae", "townswoman_emily", "townswoman_paula");
+    private static final java.util.Set<String> SLIM = java.util.Set.of("innkeeper_blonde", "innkeeper_fae", "townswoman_emily", "townswoman_paula",
+            "farmer_woman");
     /** Skins of women, so their title reads "Tabernera", "Vecina"... */
     private static final java.util.Set<String> WOMEN = java.util.Set.of("innkeeper_blonde", "innkeeper_fae", "innkeeper_alice", "baker_woman",
-            "townswoman_emily", "townswoman_paula");
+            "townswoman_emily", "townswoman_paula", "farmer_woman");
 
     public static boolean slim(int skin) {
         return SLIM.contains(SKINS[Math.floorMod(skin, SKINS.length)]);
@@ -58,7 +59,7 @@ public class TownNpcEntity extends PathfinderMob {
         return switch (job == null ? "" : job) {
             case "weaponsmith", "toolsmith", "armorer", "mason", "leatherworker", "fletcher" -> 0;
             case "butcher", "fisherman" -> 10;
-            case "farmer", "shepherd" -> 2;
+            case "farmer", "shepherd" -> pick(seed, 2, 14, 15);
             case "innkeeper" -> 4;
             case "barmaid" -> pick(seed, 5, 6);
             case "baker" -> pick(seed, 8, 9);

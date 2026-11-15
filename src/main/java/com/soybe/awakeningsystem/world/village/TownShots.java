@@ -40,7 +40,7 @@ public final class TownShots {
             new View("square", -12, 12, -1, 4, -135, 15),
             new View("tavern_inside", 0, 0, 0, 0, 90, 5),
             new View("people", 6, 16, -1, 2, 160, 8),
-            new View("lineup", 0, 120, -1, 1, 0, 4),
+            new View("lineup", 0, 117, -1, 1, 0, 4),
             new View("talk_rpg", 0, 127, -1, 1, 0, 8),
             new View("talk_sao", 0, 127, -1, 1, 0, 8)};
 
