@@ -113,7 +113,7 @@ public final class TownShots {
             mc.options.hideGui = false;
             server.execute(() -> {
                 var sp = server.getPlayerList().getPlayer(mc.player.getUUID());
-                if (sp != null && LINEUP.size() > 4) com.soybe.awakeningsystem.dialogue.NpcDialogueManager.startDialogue(sp, LINEUP.get(4), "town_npc");
+                if (sp != null && LINEUP.size() > 15) com.soybe.awakeningsystem.dialogue.NpcDialogueManager.startDialogue(sp, LINEUP.get(15), "town_npc");
             });
         }
         if (k == 58 && v.name().startsWith("talk")) {

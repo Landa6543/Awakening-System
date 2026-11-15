@@ -50,6 +50,21 @@ public class TownNpcEntity extends PathfinderMob {
         return WOMEN.contains(SKINS[Math.floorMod(skin, SKINS.length)]);
     }
 
+    /** The trade a skin dresses for, for people with no trade of their own (spawn eggs, the plain houses). */
+    public static String roleOfSkin(int skin) {
+        String s = SKINS[Math.floorMod(skin, SKINS.length)];
+        if (s.startsWith("farmer")) return "farmer";
+        if (s.startsWith("innkeeper")) return "innkeeper";
+        if (s.startsWith("baker")) return "baker";
+        return switch (s) {
+            case "smith" -> "smith";
+            case "priest" -> "priest";
+            case "librarian" -> "librarian";
+            case "merchant" -> "merchant";
+            default -> "villager";
+        };
+    }
+
     private static int pick(int seed, int... skins) {
         return skins[Math.floorMod(seed, skins.length)];
     }

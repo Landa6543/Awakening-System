@@ -652,8 +652,17 @@ public final class NpcDialogueManager {
             case "baker" -> "baker";
             case "librarian", "cartographer" -> "librarian";
             case "cleric" -> "priest";
-            default -> "villager";
+            default -> com.soybe.awakeningsystem.world.village.TownNpcEntity.roleOfSkin(t.skin());
         };
+    }
+
+    /** Lines for a role: plain townsfolk have several, chosen per person, and women their own set. */
+    private static String townLines(Entity npc, String role) {
+        if (!role.equals("villager")) return role;
+        boolean woman = npc instanceof com.soybe.awakeningsystem.world.village.TownNpcEntity t
+                && com.soybe.awakeningsystem.world.village.TownNpcEntity.woman(t.skin());
+        int v = Math.floorMod(npc.getUUID().hashCode(), 4);
+        return (woman ? "villager_f" : "villager") + (v == 0 ? "" : "." + v);
     }
 
     /** The title over the talk box: the role, in its women's form for a woman ("Tabernera", "Vecina"). */
@@ -666,16 +675,17 @@ public final class NpcDialogueManager {
     private static void townNode(ServerPlayer player, Entity npc, String node) {
         String role = townRole(npc);
         String speaker = townTitle(npc, role);
+        String lines = townLines(npc, role);
         String base = "awakening_system.town.talk.";
         switch (node) {
-            case "root" -> sendNode(player, npc.getId(), "town_npc", "root", "DEFAULT", speaker, base + role + ".hello", List.of(
+            case "root" -> sendNode(player, npc.getId(), "town_npc", "root", "DEFAULT", speaker, base + lines + ".hello", List.of(
                     new DialogueChoice(0, base + "ask.work", "work", "NEXT"),
                     new DialogueChoice(1, base + "ask.tip", "tip", "NEXT"),
                     new DialogueChoice(2, base + "ask.town", "town", "NEXT"),
                     new DialogueChoice(3, base + "ask.bye", "goodbye", "CLOSE")));
             default -> {
                 String text = switch (node) {
-                    case "work" -> base + role + ".work";
+                    case "work" -> base + lines + ".work";
                     case "tip" -> base + "tip." + Math.floorMod(npc.getId() + (int) (player.level().getGameTime() / 400), 5);
                     default -> base + "town";
                 };
