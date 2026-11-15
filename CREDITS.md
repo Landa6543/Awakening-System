@@ -118,9 +118,7 @@ The people of the medieval town on floor 11 wear player skins shared on **[Minec
 ## 🌌 Celestial Armory Sprites
 
 * **Assets:** the 28 celestial weapons in `textures/item/celestial/` (Exoblade, Galaxia, Ark of the Cosmos, Omniblade, Death's Ascension, …).
-* **Source:** sprites from **[The Calamity Mod](https://calamitymod.wiki.gg/)** for Terraria, by **the Calamity Mod Team**.
-* **Changes:** cropped, enlarged by whole numbers and re-framed for Minecraft's item canvas; the in-hand models, skills and effects are the mod's own.
-* **Note:** these sprites belong to their creators; check their terms before any public release of the mod.
+* **Origin:** original 2D sprites recreated from scratch for Awakening System, **inspired by** weapons of Terraria and its Calamity Mod. They are not copies of those games' files.
 
 ---
 
