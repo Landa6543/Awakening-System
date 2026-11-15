@@ -45,6 +45,29 @@ public final class TowerFloorTerrain {
         return (h & 0xFFFFFFL) / (double) 0xFFFFFF;
     }
 
+    /**
+     * The tower's rank for a floor, 0 = E to 5 = S, the same bands the tower's ores use: E below floor 10,
+     * D 10-19, C 20-34, B 35-49, A 50-79, S from 80.
+     */
+    public static int floorRank(int floor) {
+        return floor < 10 ? 0 : floor < 20 ? 1 : floor < 35 ? 2 : floor < 50 ? 3 : floor < 80 ? 4 : 5;
+    }
+
+    /** A mana crystal for a floor: mostly the floor's rank, some a rank below, a very few a rank above. */
+    public static BlockState manaCrystal(int floor, double r) {
+        int rank = floorRank(floor);
+        if (r >= 0.8 && r < 0.97) rank = Math.max(0, rank - 1);
+        else if (r >= 0.97) rank = Math.min(5, rank + 1);
+        return (switch (rank) {
+            case 0 -> com.soybe.awakeningsystem.block.SystemBlocks.MANA_CRYSTAL_CLUSTER_E;
+            case 1 -> com.soybe.awakeningsystem.block.SystemBlocks.MANA_CRYSTAL_CLUSTER_D;
+            case 2 -> com.soybe.awakeningsystem.block.SystemBlocks.MANA_CRYSTAL_CLUSTER_C;
+            case 3 -> com.soybe.awakeningsystem.block.SystemBlocks.MANA_CRYSTAL_CLUSTER_B;
+            case 4 -> com.soybe.awakeningsystem.block.SystemBlocks.MANA_CRYSTAL_CLUSTER_A;
+            default -> com.soybe.awakeningsystem.block.SystemBlocks.MANA_CRYSTAL_CLUSTER_S;
+        }).get().defaultBlockState();
+    }
+
     // ── heights ──────────────────────────────────────────────────────────────
 
     /** Floors whose land this generator makes (1-15; floor 10 is the titan's vault with its arena). */

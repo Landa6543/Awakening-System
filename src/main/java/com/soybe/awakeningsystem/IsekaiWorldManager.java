@@ -83,7 +83,7 @@ public final class IsekaiWorldManager {
             player.displayClientMessage(Component.translatable("awakening_system.hud.system_update_protocol_started"), true);
         } else {
             isekaiLevel.sendParticles(ParticleTypes.PORTAL, 0.5D, YggdrasilTreeGenerator.BASE_Y + 1.5D, 26.0D, 30, 1.0D, 0.5D, 1.0D, 0.05D);
-            player.playNotifySound(ModSounds.GATE_TRAVEL.value(), SoundSource.PLAYERS, 0.8F, 0.85F);
+            // no gate sound when travelling between worlds (it sounded on every change of world)
             player.displayClientMessage(Component.translatable("awakening_system.dimension.isekai_welcome"), true);
         }
     }

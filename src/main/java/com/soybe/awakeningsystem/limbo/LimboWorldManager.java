@@ -186,7 +186,7 @@ public final class LimboWorldManager {
         overworld.sendParticles(ParticleTypes.PORTAL, targetPos.getX() + 0.5D, targetPos.getY() + 1.2D, targetPos.getZ() + 0.5D, 80, 1.2D, 1.2D, 1.2D, 0.08D);
         overworld.sendParticles(ParticleTypes.FLASH, targetPos.getX() + 0.5D, targetPos.getY() + 1.5D, targetPos.getZ() + 0.5D, 3, 0, 0, 0, 0);
 
-        player.playNotifySound(ModSounds.GATE_TRAVEL.value(), SoundSource.PLAYERS, 0.85F, 1.0F);
+        // no gate sound when travelling between worlds (it sounded on every change of world)
         player.displayClientMessage(Component.translatable("awakening_system.limbo.returned_to_overworld"), true);
     }
 

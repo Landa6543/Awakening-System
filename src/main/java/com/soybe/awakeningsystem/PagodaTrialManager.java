@@ -818,7 +818,7 @@ public final class PagodaTrialManager {
 
         level.sendParticles(ParticleTypes.FLASH, player.getX(), player.getY() + 1.0D, player.getZ(), 2, 0, 0, 0, 0);
         player.playNotifySound(SoundEvents.WOODEN_DOOR_OPEN, SoundSource.BLOCKS, 1.2F, 1.0F);
-        player.playNotifySound(ModSounds.GATE_TRAVEL.value(), SoundSource.PLAYERS, 0.8F, 0.85F);
+        // no gate sound when travelling between worlds (it sounded on every change of world)
 
         if (session.stage < MAX_STAGES) {
             int nextStage = session.stage + 1;
@@ -917,7 +917,7 @@ public final class PagodaTrialManager {
 
             player.getPersistentData().putLong("pagoda_exit_cooldown", returnLevel.getGameTime() + 100L);
             player.teleportTo(returnLevel, session.returnPos.x, session.returnPos.y, session.returnPos.z, session.returnYaw, session.returnPitch);
-            player.playNotifySound(ModSounds.GATE_TRAVEL.value(), SoundSource.PLAYERS, 0.8F, 0.85F);
+            // no gate sound when travelling between worlds (it sounded on every change of world)
             player.displayClientMessage(Component.translatable("awakening_system.pagoda.returned_safely"), true);
         }
     }

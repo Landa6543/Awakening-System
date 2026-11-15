@@ -281,10 +281,7 @@ final class TowerFloorTerrainHigh {
     }
 
     private static void manaCrystal(TowerFloorTerrain.Writer w, int x, int y, int z, double r, Direction facing) {
-        BlockState c;
-        if (r < 0.6) c = SystemBlocks.MANA_CRYSTAL_CLUSTER_E.get().defaultBlockState();
-        else if (r < 0.9) c = SystemBlocks.MANA_CRYSTAL_CLUSTER_D.get().defaultBlockState();
-        else c = SystemBlocks.MANA_CRYSTAL_CLUSTER_C.get().defaultBlockState();
+        BlockState c = TowerFloorTerrain.manaCrystal(15, r);   // only the cavern of floor 15 has them
         if (c.hasProperty(TeyvatCrystalBlock.FACING)) c = c.setValue(TeyvatCrystalBlock.FACING, facing);
         if (w.get(x, y, z).isAir()) w.put(x, y, z, c);
     }

@@ -4379,7 +4379,7 @@ public final class SystemEvents {
             event.getLevel().playSound(null, pos, (SoundEvent)ModSounds.DUNGEON_GATE_OPEN.value(), SoundSource.BLOCKS, 1.5F, 0.9F);
          }
 
-         player.playNotifySound((SoundEvent)ModSounds.GATE_TRAVEL.value(), SoundSource.PLAYERS, 0.8F, 1.0F);
+         // no gate sound when travelling between worlds (it sounded on every change of world)
          SpiralAbyssManager.openAbyssScreen(player);
          return true;
       }
@@ -5939,7 +5939,7 @@ public final class SystemEvents {
 
                      player.teleportTo(overworld, respawn.getX() + 0.5, respawn.getY() + 1.0, respawn.getZ() + 0.5, player.getYRot(), 0.0F);
                      overworld.sendParticles(ParticleTypes.PORTAL, respawn.getX() + 0.5, respawn.getY() + 1.5, respawn.getZ() + 0.5, 60, 1.0, 1.0, 1.0, 0.1);
-                     player.playNotifySound((SoundEvent)ModSounds.GATE_TRAVEL.value(), SoundSource.PLAYERS, 0.8F, 0.85F);
+                     // no gate sound when travelling between worlds (it sounded on every change of world)
                      player.displayClientMessage(Component.translatable("awakening_system.tower.returned_to_overworld"), true);
                   }
                }
@@ -5961,7 +5961,7 @@ public final class SystemEvents {
                   BlockPos target = YggdrasilTreeGenerator.ASCENSION_GATE_POS.offset(0, 0, 2);
                   player.teleportTo(isekai, target.getX() + 0.5, target.getY(), target.getZ() + 0.5, 180.0F, 0.0F);
                   player.addEffect(new MobEffectInstance(MobEffects.SLOW_FALLING, 200, 0, false, false));
-                  player.playNotifySound((SoundEvent)ModSounds.GATE_TRAVEL.value(), SoundSource.PLAYERS, 0.8F, 0.85F);
+                  // no gate sound when travelling between worlds (it sounded on every change of world)
                   player.displayClientMessage(Component.translatable("awakening_system.murim.returned_to_isekai"), true);
                }
             }
@@ -14469,7 +14469,7 @@ public final class SystemEvents {
 
             player.teleportTo(overworld, targetPos.getX() + 0.5, targetPos.getY() + 1.0, targetPos.getZ() + 0.5, player.getYRot(), 0.0F);
             overworld.sendParticles(ParticleTypes.PORTAL, targetPos.getX() + 0.5, targetPos.getY() + 1.2, targetPos.getZ() + 0.5, 60, 1.0, 1.0, 1.0, 0.1);
-            player.playNotifySound((SoundEvent)ModSounds.GATE_TRAVEL.value(), SoundSource.PLAYERS, 0.8F, 0.85F);
+            // no gate sound when travelling between worlds (it sounded on every change of world)
             player.displayClientMessage(Component.translatable("awakening_system.tower.returned_to_overworld"), true);
          }
       }

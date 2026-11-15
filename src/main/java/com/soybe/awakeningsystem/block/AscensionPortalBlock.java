@@ -158,7 +158,7 @@ public class AscensionPortalBlock extends Block implements EntityBlock {
             player.playNotifySound(net.minecraft.sounds.SoundEvents.RESPAWN_ANCHOR_SET_SPAWN, SoundSource.BLOCKS, 1.0F, 1.0F);
             return;
         }
-        player.playNotifySound(com.soybe.awakeningsystem.ModSounds.GATE_TRAVEL.value(), SoundSource.PLAYERS, 0.9F, 1.0F);
+        // no gate sound when travelling between worlds (it sounded on every change of world)
 
         if (level.dimension().equals(TeyvatWorldManager.TEYVAT_WORLD)) {
             com.soybe.awakeningsystem.abyss.SpiralAbyssManager.openAbyssScreen(player);
@@ -176,8 +176,8 @@ public class AscensionPortalBlock extends Block implements EntityBlock {
             PortalType pType = blockState.hasProperty(PORTAL_TYPE) ? blockState.getValue(PORTAL_TYPE) : PortalType.RETURN;
             int currentFloor = com.soybe.awakeningsystem.tower.GreatTowerWorldManager.getFloorForPos(level, pos);
             if (pType == PortalType.ASCEND) {
-                if (currentFloor >= 10) {
-                    player.displayClientMessage(Component.translatable("awakening_system.msg.gran_torre_has_alcanzado_la_cima"), true);
+                if (currentFloor >= 20) {   // the top floor of this version (it said floor 10, from when there were ten)
+                    player.displayClientMessage(Component.translatable("awakening_system.msg.gran_torre_has_alcanzado_la_cima_2"), true);
                     player.playNotifySound(SoundEvents.BEACON_DEACTIVATE, SoundSource.PLAYERS, 0.8F, 1.0F);
                 } else {
                     com.soybe.awakeningsystem.tower.GreatTowerWorldManager.enterFloor(player, currentFloor + 1);
@@ -232,7 +232,7 @@ public class AscensionPortalBlock extends Block implements EntityBlock {
                         BlockPos target = YggdrasilTreeGenerator.ASCENSION_GATE_POS.offset(0, 0, 2);
                         player.teleportTo(isekai, target.getX() + 0.5D, (double) target.getY(), target.getZ() + 0.5D, 180.0F, 0.0F);
                         player.addEffect(new net.minecraft.world.effect.MobEffectInstance(net.minecraft.world.effect.MobEffects.SLOW_FALLING, 200, 0, false, false));
-                        player.playNotifySound(com.soybe.awakeningsystem.ModSounds.GATE_TRAVEL.value(), SoundSource.PLAYERS, 0.8F, 0.85F);
+                        // no gate sound when travelling between worlds (it sounded on every change of world)
                     }
                 }
             } else if (level.dimension().equals(TeyvatWorldManager.TEYVAT_WORLD)) {

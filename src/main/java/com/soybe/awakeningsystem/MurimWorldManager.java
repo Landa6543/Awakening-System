@@ -76,7 +76,7 @@ public final class MurimWorldManager {
             player.displayClientMessage(Component.translatable("awakening_system.hud.system_30_update_protocol_started"), true);
         } else {
             murimLevel.sendParticles(ParticleTypes.END_ROD, 0.5D, SECT_ISLAND_Y + 2.0D, 0.5D, 40, 1.5D, 1.0D, 1.5D, 0.05D);
-            player.playNotifySound(ModSounds.GATE_TRAVEL.value(), SoundSource.PLAYERS, 0.8F, 0.85F);
+            // no gate sound when travelling between worlds (it sounded on every change of world)
             player.displayClientMessage(Component.translatable("awakening_system.dimension.murim_welcome"), true);
         }
     }

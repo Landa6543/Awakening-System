@@ -569,7 +569,7 @@ public final class SubspaceManager {
         reconcileSubspaceStorage(containers, data);
 
         subspaceLevel.sendParticles(ParticleTypes.PORTAL, originX + 0.5D, originY + 1.5D, originZ - 2.5D, 40, 0.5D, 0.8D, 0.5D, 0.1D);
-        player.playNotifySound(ModSounds.GATE_TRAVEL.value(), SoundSource.PLAYERS, 1.0F, 1.2F);
+        // no gate sound when travelling between worlds (it sounded on every change of world)
 
         int chests = data.subspaceChestCount();
         int slots = data.subspaceUnlockedSlots();

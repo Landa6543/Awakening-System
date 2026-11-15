@@ -343,7 +343,7 @@ public final class TeyvatWorldManager {
         teyvatLevel.sendParticles(ParticleTypes.TOTEM_OF_UNDYING, spawnPos.getX() + 0.5D, spawnPos.getY() + 2.0D, spawnPos.getZ() + 0.5D, 60, 1.2D, 1.0D, 1.2D, 0.2D);
 
         player.playNotifySound(SoundEvents.BEACON_ACTIVATE, SoundSource.PLAYERS, 1.0F, 1.3F);
-        player.playNotifySound(ModSounds.GATE_TRAVEL.value(), SoundSource.PLAYERS, 0.8F, 1.0F);
+        // no gate sound when travelling between worlds (it sounded on every change of world)
 
         SystemData data = SystemEvents.data(player);
         if (!data.system40Updated() && !data.isSystem40Updating()) {

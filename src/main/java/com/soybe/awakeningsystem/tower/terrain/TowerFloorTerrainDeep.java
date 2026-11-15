@@ -323,10 +323,7 @@ final class TowerFloorTerrainDeep {
 
     /** One of the mod's mana crystal clusters, rarer the stronger. */
     private static void manaCrystal(TowerFloorTerrain.Writer w, int x, int y, int z, double r, Direction facing) {
-        BlockState c;
-        if (r < 0.55) c = SystemBlocks.MANA_CRYSTAL_CLUSTER_E.get().defaultBlockState();
-        else if (r < 0.85) c = SystemBlocks.MANA_CRYSTAL_CLUSTER_D.get().defaultBlockState();
-        else c = SystemBlocks.MANA_CRYSTAL_CLUSTER_C.get().defaultBlockState();
+        BlockState c = TowerFloorTerrain.manaCrystal(5, r);   // only the crystal cave of floor 5 has them
         if (c.hasProperty(TeyvatCrystalBlock.FACING)) c = c.setValue(TeyvatCrystalBlock.FACING, facing);
         w.put(x, y, z, c);
     }

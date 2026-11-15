@@ -188,12 +188,9 @@ final class TowerFloorTerrainVault {
                 .setValue(PointedDripstoneBlock.THICKNESS, DripstoneThickness.TIP));
     }
 
-    /** Mana crystals of the vault: rank C to A. */
+    /** Mana crystals of the vault, of floor 10's rank (TowerFloorTerrain.manaCrystal). */
     private static void crystal(TowerFloorTerrain.Writer w, int x, int y, int z, double r, Direction facing) {
-        BlockState c;
-        if (r < 0.55) c = SystemBlocks.MANA_CRYSTAL_CLUSTER_C.get().defaultBlockState();
-        else if (r < 0.88) c = SystemBlocks.MANA_CRYSTAL_CLUSTER_B.get().defaultBlockState();
-        else c = SystemBlocks.MANA_CRYSTAL_CLUSTER_A.get().defaultBlockState();
+        BlockState c = TowerFloorTerrain.manaCrystal(10, r);
         if (c.hasProperty(TeyvatCrystalBlock.FACING)) c = c.setValue(TeyvatCrystalBlock.FACING, facing);
         w.put(x, y, z, c);
     }

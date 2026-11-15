@@ -95,16 +95,36 @@ final class TowerFloorTerrainBeyond {
         return daoHeight(x, z) > daoValley(x, z) + 5;
     }
 
-    // floor 20: the nest cavern, the arena and the causeway between the portals
+    // floor 20: the nest cavern and the queen's raised arena in its middle. The portals stand in the cavern's far
+    // corners, so the way to her is a long walk through the nest, past her brood, and then up a ramp that winds
+    // once round the arena's pillar to its one way in.
     static final int DECK = 28;                         // the arena's floor (the queen stands on it)
-    private static final int ARENA_R = 24, WALK = 2;
+    private static final int ARENA_R = 24;
+    private static final int RAMP_IN = ARENA_R + 1, RAMP_OUT = ARENA_R + 5, RAMP_FOOT = 13;
+    /** The angle where the ramp starts at the cave floor (toward the entry corner) and, a full turn on, meets the arena. */
+    private static final double RAMP_START = Math.atan2(-1, -1);
 
     static boolean onArena(int x, int z) {
         return x * x + z * z <= ARENA_R * ARENA_R;
     }
 
-    private static boolean onCauseway(int x, int z) {
-        return Math.abs(z) <= WALK && Math.abs(x) <= 150;
+    /** How far round the ramp a column is, 0 at its foot to 1 at the arena, or -1 when it is not on the ramp. */
+    private static double rampAt(int x, int z) {
+        double d = Math.hypot(x, z);
+        if (d < RAMP_IN || d >= RAMP_OUT) return -1;
+        double s = (Math.atan2(z, x) - RAMP_START) / (Math.PI * 2);
+        return s - Math.floor(s);
+    }
+
+    private static int rampY(double s) {
+        return RAMP_FOOT + (int) Math.round(s * (DECK - RAMP_FOOT));
+    }
+
+    /** The arena's way in: the part of its rim where the ramp arrives. */
+    private static boolean arenaEntry(int x, int z) {
+        double s = (Math.atan2(z, x) - RAMP_START) / (Math.PI * 2);
+        s -= Math.floor(s);
+        return s > 0.93;
     }
 
     private static int nestGround(int x, int z) {
@@ -116,7 +136,9 @@ final class TowerFloorTerrainBeyond {
     }
 
     private static int nestHeight(int x, int z) {
-        if (onArena(x, z) || onCauseway(x, z)) return DECK;
+        if (onArena(x, z)) return DECK;
+        double s = rampAt(x, z);
+        if (s >= 0) return Math.max(nestGround(x, z), rampY(s));
         return nestGround(x, z);
     }
 
@@ -442,7 +464,8 @@ final class TowerFloorTerrainBeyond {
             for (int dz = 0; dz < 16; dz++) {
                 int x = x0 + dx, z = z0 + dz;
                 int g = nestGround(x, z), roof = nestRoof(x, z);
-                boolean deck = onArena(x, z) || onCauseway(x, z);
+                boolean deck = onArena(x, z);
+                double ramp = rampAt(x, z);
                 for (int y = 0; y <= 127; y++) {
                     BlockState s;
                     if (y <= 1 || y >= 126) s = Blocks.BEDROCK.defaultBlockState();
@@ -452,6 +475,7 @@ final class TowerFloorTerrainBeyond {
                     chunk.setBlockState(p.set(x, y, z), s, false);
                 }
                 if (deck) deckColumn(w, x, z, g);
+                else if (ramp >= 0) rampColumn(w, x, z, g, ramp);
                 else {
                     double r = hash(20, x, z, 7);
                     if (r < 0.05) w.put(x, g + 1, z, Blocks.COBWEB.defaultBlockState());
@@ -465,9 +489,10 @@ final class TowerFloorTerrainBeyond {
         if (Math.abs(x0) < 80 && Math.abs(z0) < 80) strands(w);
     }
 
-    /** Keeps big things off the arena, the causeway and the portal ends. */
+    /** Keeps big things off the arena, its ramp and the portals in the far corners. */
     private static boolean clear(int x, int z, int arena) {
-        return x * x + z * z > arena * arena && Math.abs(z) > WALK + 5;
+        int r = Math.max(arena, RAMP_OUT + 6);
+        return x * x + z * z > r * r && Math.hypot(Math.abs(x) - 220, Math.abs(z) - 220) > 24;
     }
 
     private static BlockState nestFloor(int x, int z) {
@@ -481,9 +506,9 @@ final class TowerFloorTerrainBeyond {
     private static final BlockState EGG = Blocks.VERDANT_FROGLIGHT.defaultBlockState();
 
     /**
-     * The arena and the causeway. The arena is the queen's nest: a disc whose floor is drawn as a spider web, held up
+     * The arena. It is the queen's nest: a disc whose floor is drawn as a spider web, held up
      * by an upturned cone of silk-wrapped rock with webs hanging under its overhang, and ringed by a low silk rim with
-     * glowing eggs in it. The causeway is a bridge on piers, its edges wrapped in silk, lit by soul lanterns.
+     * glowing eggs in it, open only where the ramp arrives.
      */
     private static void deckColumn(TowerFloorTerrain.Writer w, int x, int z, int ground) {
         boolean arena = onArena(x, z);
@@ -496,7 +521,7 @@ final class TowerFloorTerrainBeyond {
                 else if (d <= rr + 1.5 && hash(20, x, z, y + 90) < 0.25) w.put(x, y, z, Blocks.COBWEB.defaultBlockState());
             }
             w.force(x, DECK, z, webFloor(x, z, d));
-            boolean entry = Math.abs(z) <= WALK + 1;
+            boolean entry = arenaEntry(x, z);
             if (d > ARENA_R - 1.5 && !entry) {
                 double h = hash(20, x, z, 1);
                 if (h < 0.08) w.force(x, DECK + 1, z, EGG);
@@ -506,17 +531,25 @@ final class TowerFloorTerrainBeyond {
             }
             return;
         }
-        // the causeway: piers every 12 blocks, a thin deck between them with webs hanging underneath
-        boolean pier = Math.floorMod(x, 12) == 0;
-        int bottom = pier ? ground : DECK - 2;
-        for (int y = bottom; y < DECK; y++) w.force(x, y, z, pier && hash(20, x, z, y) < 0.25 ? SILK : Blocks.POLISHED_DEEPSLATE.defaultBlockState());
-        if (!pier && hash(20, x, z, 5) < 0.2)
-            for (int k = 3; k <= 3 + (int) (hash(20, x, z, 6) * 4); k++) w.put(x, DECK - k, z, Blocks.COBWEB.defaultBlockState());
-        boolean edge = Math.abs(z) == WALK;
-        w.force(x, DECK, z, edge ? (hash(20, x, z, 2) < 0.6 ? SILK : Blocks.POLISHED_DEEPSLATE.defaultBlockState()) : Blocks.DEEPSLATE_BRICKS.defaultBlockState());
-        if (edge && Math.floorMod(x, 12) == 6) {
-            w.force(x, DECK + 1, z, Blocks.DEEPSLATE_TILE_WALL.defaultBlockState());
-            w.force(x, DECK + 2, z, Blocks.SOUL_LANTERN.defaultBlockState());
+    }
+
+    /**
+     * The ramp: a walk of rock four blocks thick that winds once round the arena's pillar, from the cave floor up
+     * to the arena's way in, its outer edge wrapped in silk, lit by soul lanterns, and webs hanging underneath.
+     */
+    private static void rampColumn(TowerFloorTerrain.Writer w, int x, int z, int ground, double s) {
+        int top = Math.max(ground, rampY(s));
+        double d = Math.hypot(x, z);
+        boolean outer = d >= RAMP_OUT - 1.2;
+        boolean pier = (int) (s * 40) % 5 == 0;                     // a rock pier down to the floor now and then
+        int bottom = pier ? ground : Math.max(ground, top - 4);
+        for (int y = bottom; y < top; y++) w.force(x, y, z, hash(20, x, z, y) < 0.2 ? SILK : Blocks.POLISHED_DEEPSLATE.defaultBlockState());
+        if (!pier && top - 4 > ground && hash(20, x, z, 5) < 0.2)
+            for (int k = 5; k <= 5 + (int) (hash(20, x, z, 6) * 4) && top - k > ground; k++) w.put(x, top - k, z, Blocks.COBWEB.defaultBlockState());
+        w.force(x, top, z, outer ? SILK : Blocks.DEEPSLATE_BRICKS.defaultBlockState());
+        if (outer && (int) (s * 120) % 9 == 0) {
+            w.force(x, top + 1, z, Blocks.DEEPSLATE_TILE_WALL.defaultBlockState());
+            w.force(x, top + 2, z, Blocks.SOUL_LANTERN.defaultBlockState());
         }
     }
 
@@ -534,7 +567,7 @@ final class TowerFloorTerrainBeyond {
     /** Thick silk strands from the arena's rim up to the roof, as if the nest hung from them. */
     private static void strands(TowerFloorTerrain.Writer w) {
         for (int i = 0; i < 6; i++) {
-            double a = Math.toRadians(30 + 60 * i);
+            double a = Math.toRadians(60 * i);   // none at the arena's way in
             double sx = Math.cos(a) * (ARENA_R - 1), sz = Math.sin(a) * (ARENA_R - 1);
             double ex = Math.cos(a) * (ARENA_R + 26), ez = Math.sin(a) * (ARENA_R + 26);
             int ey = nestRoof((int) ex, (int) ez) + 1;

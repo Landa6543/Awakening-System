@@ -367,12 +367,10 @@ public final class GreatTowerWorldManager {
                }
             }
 
-            int groundY = targetFloor != 20
-               ? findSafeGroundY(targetLevel, spawnX, spawnZ, targetFloor == 6 ? 64 : (targetFloor != 5 && targetFloor != 15 ? 64 : 32))
-               : 28;
-            int groundYAdv = targetFloor != 20
-               ? findSafeGroundY(targetLevel, advX, advZ, targetFloor == 6 ? 64 : (targetFloor != 5 && targetFloor != 15 ? 64 : 32))
-               : 28;
+            // floor 20's portals now stand on the cave floor in its far corners, not on the arena's causeway
+            int groundY = findSafeGroundY(targetLevel, spawnX, spawnZ, targetFloor == 6 ? 64 : (targetFloor != 5 && targetFloor != 15 && targetFloor != 20 ? 64 : 32));
+            // floor 20's portals now stand on the cave floor in its far corners, not on the arena's causeway
+            int groundYAdv = findSafeGroundY(targetLevel, advX, advZ, targetFloor == 6 ? 64 : (targetFloor != 5 && targetFloor != 15 && targetFloor != 20 ? 64 : 32));
             buildThemedReturnPavilion(targetLevel, targetFloor, spawnX, groundY, spawnZ, layout.returnFacing());
             buildThemedAdvancePavilion(targetLevel, targetFloor, advX, groundYAdv, advZ, layout.advanceFacing());
             double targetX = (double)spawnX + 0.5;
@@ -392,7 +390,7 @@ public final class GreatTowerWorldManager {
                com.soybe.awakeningsystem.AwakeningSystemMod.sync(player);
             }
             ensureFloorSpawns(targetLevel, new BlockPos(spawnX, groundY, spawnZ), targetFloor);
-            player.playNotifySound((SoundEvent)ModSounds.GATE_TRAVEL.value(), SoundSource.PLAYERS, 0.9F, 1.0F);
+            // no gate sound when travelling between worlds (it sounded on every change of world)
             player.displayClientMessage(
                Component.translatable("awakening_system.msg.gran_torre_has_ascendido_al_piso", String.valueOf(targetFloor), String.valueOf(layout.themeName())), false
             );
@@ -889,10 +887,11 @@ public final class GreatTowerWorldManager {
    }
 
    private static void populateChunkMobs(ServerLevel level, ChunkAccess chunk, int floor) {
-      if (floor == 11 || floor == 20) return;
+      if (floor == 11) return;
       ChunkPos cPos = chunk.getPos();
       int cx = cPos.getMiddleBlockX();
       int cz = cPos.getMiddleBlockZ();
+      if (floor == 20 && Math.hypot(cx, cz) < 48.0) return;   // the queen's arena stays hers
       FloorLayout layout = getLayout(floor);
       if (Math.hypot(cx - layout.returnX(), cz - layout.returnZ()) < 36.0) return;
       if (Math.hypot(cx - layout.advanceX(), cz - layout.advanceZ()) < 36.0) return;
@@ -1393,6 +1392,15 @@ public static void processSectorChunk(ServerLevel level, ChunkAccess chunk) {
                      ? new RuinGraderEntity((EntityType)ModEntities.RUIN_GRADER.get(), level)
                      : new AstralDragonEntity((EntityType)ModEntities.ASTRAL_DRAGON.get(), level)
                );
+         }
+         case 20 -> {
+            // the queen's brood along the way to her: young mother spiders, spiders and cave spiders
+            float r = rand.nextFloat();
+            yield r < 0.35F
+               ? new MotherSpiderEntity((EntityType)ModEntities.MOTHER_SPIDER.get(), level)
+               : (r < 0.7F
+                  ? new net.minecraft.world.entity.monster.Spider(EntityType.SPIDER, level)
+                  : new net.minecraft.world.entity.monster.CaveSpider(EntityType.CAVE_SPIDER, level));
          }
          case 19 -> {
             float r = rand.nextFloat();
@@ -1916,12 +1924,16 @@ public static void processSectorChunk(ServerLevel level, ChunkAccess chunk) {
                boss.moveTo(0.5, (double)arenaY + 1.0, 0.5, 0.0F, 0.0F);
                boss.setCustomName(Component.translatable("awakening_system.msg.jefe_reina_arana_madre_nvl_150"));
                boss.setCustomNameVisible(true);
+               // she waits in the middle of the arena, 140 blocks from the entry portal: a plain monster that far
+               // from the player despawns at once, which is why only her nearest brood was ever seen
+               boss.setPersistenceRequired();
                level.addFreshEntity(boss);
                int[][] nestOffsets = new int[][]{{-15, -15}, {15, -15}, {-15, 15}, {15, 15}};
 
                for (int[] off : nestOffsets) {
                   MotherSpiderEntity minion = new MotherSpiderEntity((EntityType)ModEntities.MOTHER_SPIDER.get(), level);
                   minion.moveTo((double)off[0] + 0.5, (double)arenaY + 1.0, (double)off[1] + 0.5, level.random.nextFloat() * 360.0F, 0.0F);
+                  minion.setPersistenceRequired();
                   level.addFreshEntity(minion);
                }
             }
@@ -1984,7 +1996,7 @@ public static void processSectorChunk(ServerLevel level, ChunkAccess chunk) {
          new GreatTowerWorldManager.FloorLayout(50, -240, Direction.NORTH, -50, 240, Direction.SOUTH, "Cumbres Celestiales del Dao Inmortal"),
          new GreatTowerWorldManager.FloorLayout(-210, -210, Direction.SOUTH, 210, 210, Direction.NORTH, "Templo Dorado de la Calamidad Solar"),
          new GreatTowerWorldManager.FloorLayout(-190, 190, Direction.SOUTH, 190, -190, Direction.NORTH, "Anticamara de las Telaranas Abisales"),
-         new GreatTowerWorldManager.FloorLayout(-140, 0, Direction.EAST, 140, 0, Direction.WEST, "Camara Real de la Reina de los Nidos [PISO DE JEFE]")
+         new GreatTowerWorldManager.FloorLayout(-220, -220, Direction.SOUTH, 220, 220, Direction.NORTH, "Camara Real de la Reina de los Nidos [PISO DE JEFE]")
       };
    }
 
@@ -2054,30 +2066,9 @@ public static void processSectorChunk(ServerLevel level, ChunkAccess chunk) {
       }
    }
 
+   /** One rule for the whole tower (TowerFloorTerrain.manaCrystal): the floor's rank, a few a rank below, very few above. */
    private static BlockState getRandomManaCrystalState(RandomSource rand, int floor) {
-      float r = rand.nextFloat();
-      if (floor == 15) {
-         // Piso 15: Minería de rango bajo/medio (E abundante, D común, C raro). NUNCA Rangos A ni S.
-         if (r < 0.60F) return ((TeyvatCrystalBlock)SystemBlocks.MANA_CRYSTAL_CLUSTER_E.get()).defaultBlockState();
-         if (r < 0.90F) return ((TeyvatCrystalBlock)SystemBlocks.MANA_CRYSTAL_CLUSTER_D.get()).defaultBlockState();
-         return ((TeyvatCrystalBlock)SystemBlocks.MANA_CRYSTAL_CLUSTER_C.get()).defaultBlockState();
-      } else if (floor >= 20) {
-         // Piso 20 (Cámara de la Reina / Calamidad): B común, A raro, S muy raro (1%)
-         if (r < 0.50F) return ((TeyvatCrystalBlock)SystemBlocks.MANA_CRYSTAL_CLUSTER_B.get()).defaultBlockState();
-         if (r < 0.85F) return ((TeyvatCrystalBlock)SystemBlocks.MANA_CRYSTAL_CLUSTER_A.get()).defaultBlockState();
-         if (r < 0.96F) return ((TeyvatCrystalBlock)SystemBlocks.MANA_CRYSTAL_CLUSTER_A.get()).defaultBlockState();
-         return ((TeyvatCrystalBlock)SystemBlocks.MANA_CRYSTAL_CLUSTER_S.get()).defaultBlockState();
-      } else if (floor >= 18) {
-         // Pisos 18-19: C común, B intermedio, A raro (3%), NUNCA Rango S.
-         if (r < 0.55F) return ((TeyvatCrystalBlock)SystemBlocks.MANA_CRYSTAL_CLUSTER_C.get()).defaultBlockState();
-         if (r < 0.92F) return ((TeyvatCrystalBlock)SystemBlocks.MANA_CRYSTAL_CLUSTER_B.get()).defaultBlockState();
-         return ((TeyvatCrystalBlock)SystemBlocks.MANA_CRYSTAL_CLUSTER_A.get()).defaultBlockState();
-      } else {
-         // Otros pisos inferiores
-         if (r < 0.65F) return ((TeyvatCrystalBlock)SystemBlocks.MANA_CRYSTAL_CLUSTER_E.get()).defaultBlockState();
-         if (r < 0.92F) return ((TeyvatCrystalBlock)SystemBlocks.MANA_CRYSTAL_CLUSTER_D.get()).defaultBlockState();
-         return ((TeyvatCrystalBlock)SystemBlocks.MANA_CRYSTAL_CLUSTER_C.get()).defaultBlockState();
-      }
+      return com.soybe.awakeningsystem.tower.terrain.TowerFloorTerrain.manaCrystal(floor, rand.nextDouble());
    }
 
    private static void populateTeyvatOres(ServerLevel level, BlockPos centerPos, int floor, RandomSource rand) {

@@ -993,7 +993,7 @@ public final class TowerManager {
             if (returnLevel == null || returnLevel.dimension().equals(RANKER_TOWER)) returnLevel = server.overworld();
 
             player.teleportTo(returnLevel, session.returnPos.x, session.returnPos.y, session.returnPos.z, session.returnYaw, session.returnPitch);
-            player.playNotifySound(ModSounds.GATE_TRAVEL.value(), SoundSource.PLAYERS, 0.8F, 0.85F);
+            // no gate sound when travelling between worlds (it sounded on every change of world)
             player.displayClientMessage(Component.translatable("awakening_system.tower.returned_safely"), true);
         }
     }
@@ -1028,7 +1028,7 @@ public final class TowerManager {
             }
 
             player.teleportTo(returnLevel, targetVec.x, targetVec.y, targetVec.z, yaw, 0.0F);
-            player.playNotifySound(ModSounds.GATE_TRAVEL.value(), SoundSource.PLAYERS, 0.8F, 0.85F);
+            // no gate sound when travelling between worlds (it sounded on every change of world)
             player.displayClientMessage(Component.translatable("awakening_system.tower.returned_to_spawn"), true);
         }
     }
