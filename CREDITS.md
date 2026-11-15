@@ -90,6 +90,40 @@ Various custom 3D weapons, greatswords, scythes, and equipment models in **Awake
 
 ---
 
+## 🧑‍🌾 Townsfolk Skins (Floor 11 Town NPCs)
+
+The people of the medieval town on floor 11 wear player skins shared on **[MinecraftSkins.com](https://www.minecraftskins.com/)** by their creators. The blonde innkeeper had her eyes painted in; the rest are used as uploaded. Files live in `textures/entity/town_npc/`.
+
+| In the mod | Skin | Creator |
+|---|---|---|
+| `innkeeper_blonde.png` (Greta) | [new skin](https://www.minecraftskins.com/skin/23915839/new-skin/) | **powergirl25** |
+| `innkeeper_fae.png` (Lyria) | [Fae Tavern Keep](https://www.minecraftskins.com/skin/23509082/fae-tavern-keep/) | **BlueBunniez26** |
+| `innkeeper_alice.png` (Maren) | [Alice the Tavern Keeper](https://www.minecraftskins.com/skin/23135420/alice-the-tavern-keeper/) | **LostIsMissing** |
+| `librarian.png` (Elandor) | [Elven Scholar](https://www.minecraftskins.com/skin/16338840/elven-scholar/) | **JomoArigoto** |
+| `baker.png` (Bram) | [Baker](https://www.minecraftskins.com/skin/22582542/baker/) | **Wawelski** |
+| `baker_woman.png` (Hilda) | [Baker](https://www.minecraftskins.com/skin/24371604/baker/) | **Matchalatte9** |
+| `merchant.png` (Dorian) | [Medieval Merchant](https://www.minecraftskins.com/skin/23528847/medieval-merchant/) | **Gsantos7** |
+| `townsman_green.png` (Cedric) | [Medieval Merchant](https://www.minecraftskins.com/skin/24161488/medieval-merchant/) | **vabigou** |
+| `townswoman_emily.png` (Elise) | [Emily Holt v2](https://www.minecraftskins.com/skin/24366215/emily-holt-v2/) | **CT9712Phase** |
+| `townswoman_paula.png` (Rosalind) | [Paula Boris](https://www.minecraftskins.com/skin/24070862/paula-boris/) | **Minhyukah** |
+| `farmer.png` (Godwin) | [Peasant fat ALT](https://www.minecraftskins.com/skin/24108478/peasant-fat-alt/) | **Wawelski** |
+| `farmer2.png` (Rowan) | [Ginger peasant](https://www.minecraftskins.com/skin/24102059/ginger-peasant/) | **jcolesandwich** |
+| `farmer_woman.png` (Brenna) | [Alex peasant maiden](https://www.minecraftskins.com/skin/24241287/alex-peasant-maiden/) | **AdrianDrago** |
+| `priest.png` (Anselm) | [Friar in Brown Carmelite Habit](https://www.minecraftskins.com/skin/24020041/friar-in-brown-carmelite-habit/) | **Mrcouchman** |
+
+`smith.png` and `bearded.png` are the mod author's own skins.
+
+---
+
+## 🌌 Celestial Armory Sprites
+
+* **Assets:** the 28 celestial weapons in `textures/item/celestial/` (Exoblade, Galaxia, Ark of the Cosmos, Omniblade, Death's Ascension, …).
+* **Source:** sprites from **[The Calamity Mod](https://calamitymod.wiki.gg/)** for Terraria, by **the Calamity Mod Team**.
+* **Changes:** cropped, enlarged by whole numbers and re-framed for Minecraft's item canvas; the in-hand models, skills and effects are the mod's own.
+* **Note:** these sprites belong to their creators; check their terms before any public release of the mod.
+
+---
+
 ## 🎨 Creative Partnerships & Content Permissions
 
 ### 1. Genshin Mod Asset Integration (`fapdos`)
