@@ -551,16 +551,17 @@ public final class MedievalVillage {
                 level.addFreshEntity(cat);
             }
             default -> {
-                // TODO: the town's own NPCs once their skins arrive; ordinary villagers stand in until then
-                Villager v = EntityType.VILLAGER.create(level);
-                if (v == null) return;
-                v.moveTo(at.getX() + 0.5, at.getY(), at.getZ() + 0.5, level.random.nextFloat() * 360F, 0);
-                VillagerProfession prof = job.isEmpty() ? VillagerProfession.NONE
-                        : BuiltInRegistries.VILLAGER_PROFESSION.getOptional(ResourceLocation.withDefaultNamespace(job)).orElse(VillagerProfession.NONE);
-                v.setVillagerData(v.getVillagerData().setType(VillagerType.PLAINS).setProfession(prof).setLevel(prof == VillagerProfession.NONE ? 1 : 2));
-                if (prof != VillagerProfession.NONE) v.setVillagerXp(10);
-                v.setPersistenceRequired();
-                level.addFreshEntity(v);
+                // the town's own people, not vanilla villagers: workshop trades wear the smith's skin, the rest either
+                TownNpcEntity npc = TownNpcContent.TOWN_NPC.create(level);
+                if (npc == null) return;
+                npc.moveTo(at.getX() + 0.5, at.getY(), at.getZ() + 0.5, level.random.nextFloat() * 360F, 0);
+                boolean workshop = switch (job) {
+                    case "weaponsmith", "toolsmith", "armorer", "mason", "butcher", "leatherworker", "fletcher" -> true;
+                    default -> false;
+                };
+                int skin = workshop ? 0 : Math.floorMod(at.getX() * 31 + at.getZ() * 17, TownNpcEntity.SKINS.length);
+                npc.settle(at, job, skin);
+                level.addFreshEntity(npc);
             }
         }
     }

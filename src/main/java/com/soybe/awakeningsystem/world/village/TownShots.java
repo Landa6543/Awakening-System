@@ -36,7 +36,8 @@ public final class TownShots {
             new View("ring_north", -20, -45, -1, 2, -90, 3),
             new View("fields", 50, 48, -1, 9, -45, 30),
             new View("square", -12, 12, -1, 4, -135, 15),
-            new View("tavern_inside", 0, 0, 0, 0, 90, 5)};
+            new View("tavern_inside", 0, 0, 0, 0, 90, 5),
+            new View("people", 6, 16, -1, 2, 160, 8)};
 
     @SubscribeEvent
     public static void tick(ClientTickEvent.Post event) {
