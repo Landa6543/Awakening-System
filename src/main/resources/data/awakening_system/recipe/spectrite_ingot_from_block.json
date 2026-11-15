@@ -1,0 +1,6 @@
+{
+  "type": "minecraft:crafting_shapeless",
+  "category": "misc",
+  "ingredients": [ { "item": "awakening_system:spectrite_block" } ],
+  "result": { "id": "awakening_system:spectrite_ingot", "count": 9 }
+}

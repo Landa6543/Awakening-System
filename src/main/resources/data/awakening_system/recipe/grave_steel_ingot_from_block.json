@@ -1,0 +1,6 @@
+{
+  "type": "minecraft:crafting_shapeless",
+  "category": "misc",
+  "ingredients": [ { "item": "awakening_system:grave_steel_block" } ],
+  "result": { "id": "awakening_system:grave_steel_ingot", "count": 9 }
+}

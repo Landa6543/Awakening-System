@@ -1,0 +1,6 @@
+{
+  "type": "minecraft:crafting_shapeless",
+  "category": "misc",
+  "ingredients": [ { "item": "awakening_system:perennite_block" } ],
+  "result": { "id": "awakening_system:perennite_ingot", "count": 9 }
+}

@@ -1,0 +1,7 @@
+{
+  "type": "minecraft:crafting_shaped",
+  "category": "building",
+  "pattern": ["###", "###", "###"],
+  "key": { "#": { "item": "awakening_system:exodite_ingot" } },
+  "result": { "id": "awakening_system:exodite_block", "count": 1 }
+}

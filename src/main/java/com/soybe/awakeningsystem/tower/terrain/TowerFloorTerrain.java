@@ -129,6 +129,13 @@ public final class TowerFloorTerrain {
     // ── filling a chunk ──────────────────────────────────────────────────────
 
     public static void fill(int floor, ChunkAccess chunk) {
+        fillTerrain(floor, chunk);
+        // the tower's ores, in the rock of the floors their band covers
+        if (isCave(floor)) com.soybe.awakeningsystem.ore.TowerOres.placeVeins(floor, chunk, 3, 124);
+        else com.soybe.awakeningsystem.ore.TowerOres.placeVeins(floor, chunk, -60, 96);
+    }
+
+    private static void fillTerrain(int floor, ChunkAccess chunk) {
         if (floor >= 16) {
             TowerFloorTerrainBeyond.fill(floor, chunk);
             return;

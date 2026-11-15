@@ -1,7 +1,17 @@
 {
   "replace": false,
   "values": [
-    "awakening_system:abyssal_stone_diamond_ore",
+        "awakening_system:ignite_ore",
+    "awakening_system:ignite_block",
+    "awakening_system:grave_steel_ore",
+    "awakening_system:grave_steel_block",
+    "awakening_system:orichalcum_ore",
+    "awakening_system:orichalcum_block",
+    "awakening_system:gelidite_ore",
+    "awakening_system:gelidite_block",
+    "awakening_system:frost_crystal_ore",
+    "awakening_system:frost_crystal_block",
+"awakening_system:abyssal_stone_diamond_ore",
     "awakening_system:refined_white_iron_block",
     "awakening_system:abyssal_stone_gold_ore",
     "awakening_system:abyssal_stone_redstone_ore",

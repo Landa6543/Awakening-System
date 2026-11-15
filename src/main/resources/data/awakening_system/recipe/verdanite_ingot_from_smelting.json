@@ -1,0 +1,8 @@
+{
+  "type": "minecraft:smelting",
+  "category": "misc",
+  "ingredient": { "item": "awakening_system:raw_verdanite" },
+  "result": { "id": "awakening_system:verdanite_ingot" },
+  "experience": 1.0,
+  "cookingtime": 200
+}

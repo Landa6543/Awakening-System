@@ -1,0 +1,7 @@
+{
+  "type": "minecraft:crafting_shaped",
+  "category": "building",
+  "pattern": ["###", "###", "###"],
+  "key": { "#": { "item": "awakening_system:spectrite_ingot" } },
+  "result": { "id": "awakening_system:spectrite_block", "count": 1 }
+}

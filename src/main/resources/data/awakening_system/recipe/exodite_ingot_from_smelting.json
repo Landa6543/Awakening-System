@@ -1,0 +1,8 @@
+{
+  "type": "minecraft:smelting",
+  "category": "misc",
+  "ingredient": { "item": "awakening_system:raw_exodite" },
+  "result": { "id": "awakening_system:exodite_ingot" },
+  "experience": 1.0,
+  "cookingtime": 200
+}

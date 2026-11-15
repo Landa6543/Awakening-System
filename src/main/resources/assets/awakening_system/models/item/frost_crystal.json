@@ -1,0 +1,4 @@
+{
+  "parent": "minecraft:item/generated",
+  "textures": { "layer0": "awakening_system:item/frost_crystal" }
+}

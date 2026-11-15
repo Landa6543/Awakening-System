@@ -1,0 +1,6 @@
+{
+  "type": "minecraft:crafting_shapeless",
+  "category": "misc",
+  "ingredients": [ { "item": "awakening_system:verdanite_ingot" }, { "item": "minecraft:echo_shard" }, { "item": "minecraft:echo_shard" } ],
+  "result": { "id": "awakening_system:spectrite_ingot", "count": 1 }
+}

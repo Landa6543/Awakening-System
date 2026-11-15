@@ -1,0 +1,6 @@
+{
+  "type": "minecraft:crafting_shapeless",
+  "category": "misc",
+  "ingredients": [ { "item": "awakening_system:verdanite_ingot" }, { "item": "minecraft:shroomlight" }, { "item": "minecraft:shroomlight" } ],
+  "result": { "id": "awakening_system:fungarite_ingot", "count": 1 }
+}

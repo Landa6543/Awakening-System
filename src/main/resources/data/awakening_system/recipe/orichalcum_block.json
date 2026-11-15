@@ -1,0 +1,7 @@
+{
+  "type": "minecraft:crafting_shaped",
+  "category": "building",
+  "pattern": ["###", "###", "###"],
+  "key": { "#": { "item": "awakening_system:orichalcum_ingot" } },
+  "result": { "id": "awakening_system:orichalcum_block", "count": 1 }
+}

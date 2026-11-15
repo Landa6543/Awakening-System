@@ -1,0 +1,8 @@
+{
+  "type": "minecraft:blasting",
+  "category": "misc",
+  "ingredient": { "item": "awakening_system:raw_lumenite" },
+  "result": { "id": "awakening_system:lumenite_ingot" },
+  "experience": 1.0,
+  "cookingtime": 100
+}

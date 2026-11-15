@@ -1,0 +1,8 @@
+{
+  "type": "minecraft:blasting",
+  "category": "misc",
+  "ingredient": { "item": "awakening_system:raw_dracolead" },
+  "result": { "id": "awakening_system:dracolead_ingot" },
+  "experience": 1.0,
+  "cookingtime": 100
+}

@@ -1,0 +1,6 @@
+{
+  "type": "minecraft:crafting_shapeless",
+  "category": "misc",
+  "ingredients": [ { "item": "awakening_system:exodite_block" } ],
+  "result": { "id": "awakening_system:exodite_ingot", "count": 9 }
+}

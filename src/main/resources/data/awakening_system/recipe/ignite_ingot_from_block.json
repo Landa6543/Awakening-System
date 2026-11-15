@@ -1,0 +1,6 @@
+{
+  "type": "minecraft:crafting_shapeless",
+  "category": "misc",
+  "ingredients": [ { "item": "awakening_system:ignite_block" } ],
+  "result": { "id": "awakening_system:ignite_ingot", "count": 9 }
+}

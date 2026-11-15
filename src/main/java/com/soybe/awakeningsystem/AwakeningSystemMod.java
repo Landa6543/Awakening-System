@@ -85,6 +85,7 @@ public final class AwakeningSystemMod {
     public AwakeningSystemMod(IEventBus modBus) {
         com.soybe.awakeningsystem.util.AttributeLimitFixer.fixLimits();
         SystemItems.register();
+        com.soybe.awakeningsystem.ore.TowerOres.init();   // the tower's ores join the block and item registers
         com.soybe.awakeningsystem.block.SystemBlocks.BLOCKS.register(modBus);
         com.soybe.awakeningsystem.block.entity.ModBlockEntities.BLOCK_ENTITY_TYPES.register(modBus);
         com.soybe.awakeningsystem.furnace.ModMenus.MENUS.register(modBus);
