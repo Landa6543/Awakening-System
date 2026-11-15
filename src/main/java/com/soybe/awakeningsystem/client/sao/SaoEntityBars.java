@@ -66,7 +66,9 @@ public final class SaoEntityBars {
         return out;
     }
 
-    private static void draw(Minecraft mc, LivingEntity le, Component name, boolean fighter, PoseStack ps, MultiBufferSource buffers, int light) {
+    private static void draw(Minecraft mc, LivingEntity le, Component name, boolean fighter, PoseStack ps, MultiBufferSource buffers, int worldLight) {
+        // full bright: lit by the world the label went grey and see-through in the dark and in shade
+        int light = 0xF000F0;
         // seconds since the game started, small enough to keep its precision in a float (the wall clock in
         // milliseconds is not: stored in a float it rounds to minutes and the bar never moved)
         float now = (System.nanoTime() - START) / 1.0E9F;
@@ -88,7 +90,10 @@ public final class SaoEntityBars {
         ps.pushPose();
         ps.scale(0.8F, 0.8F, 0.8F);
         float tw = font.width(name);
-        font.drawInBatch(name, -tw / 2.0F, fighter ? -11.0F : 0.0F, 0xFFFFFFFF, false, ps.last().pose(), buffers, Font.DisplayMode.NORMAL, 0x40000000, light);
+        // like the game's own labels: a faint pass that shows through whatever stands in front (a horn, a
+        // leaf, another creature), then the solid one, so no letters go missing
+        font.drawInBatch(name, -tw / 2.0F, fighter ? -11.0F : 0.0F, 0x40FFFFFF, false, ps.last().pose(), buffers, Font.DisplayMode.SEE_THROUGH, 0x40000000, light);
+        font.drawInBatch(name, -tw / 2.0F, fighter ? -11.0F : 0.0F, 0xFFFFFFFF, false, ps.last().pose(), buffers, Font.DisplayMode.NORMAL, 0, light);
         ps.popPose();
 
         if (fighter) {

@@ -66,6 +66,8 @@ public class RuinHunterEntity extends Monster {
     private int bombardCooldown = 220;
     private int dashCooldown = 140;
     private int stunTimer = 0;
+    /** The smoothed height of the ground under it, which it hovers over. */
+    private double hoverGround = Double.NaN;
 
     public RuinHunterEntity(EntityType<? extends RuinHunterEntity> type, Level level) {
         super(type, level);
@@ -215,22 +217,32 @@ public class RuinHunterEntity extends Monster {
             return;
         }
 
-        int surfaceY = this.level().getHeight(Heightmap.Types.MOTION_BLOCKING, this.getBlockX(), this.getBlockZ());
+        // the ground it hovers over, smoothed: the highest point round it (so it clears a spire or a chorus
+        // plant it passes) eased in over a second or so, so each one does not yank it up and down
+        int surfaceY = this.level().getHeight(Heightmap.Types.MOTION_BLOCKING_NO_LEAVES, this.getBlockX(), this.getBlockZ());
+        for (int dx = -2; dx <= 2; dx += 2)
+            for (int dz = -2; dz <= 2; dz += 2)
+                surfaceY = Math.max(surfaceY, this.level().getHeight(Heightmap.Types.MOTION_BLOCKING_NO_LEAVES, this.getBlockX() + dx, this.getBlockZ() + dz));
+        if (Double.isNaN(this.hoverGround)) this.hoverGround = surfaceY;
+        this.hoverGround += (surfaceY - this.hoverGround) * (surfaceY > this.hoverGround ? 0.2D : 0.05D);
         LivingEntity target = this.getTarget();
 
         double desiredHeight;
         if (this.isBombarding()) {
-            double baseTarget = target != null ? target.getY() + 6.0D : surfaceY + 7.5D;
-            desiredHeight = Math.max(surfaceY + 6.5D, baseTarget);
+            double baseTarget = target != null ? target.getY() + 6.0D : this.hoverGround + 7.5D;
+            desiredHeight = Math.max(this.hoverGround + 6.5D, baseTarget);
         } else {
-            desiredHeight = surfaceY + 2.0D;
+            desiredHeight = this.hoverGround + 2.0D;
         }
 
+        // ease the climb or descent toward the wanted height instead of pushing a fixed amount each tick (that
+        // overshot and bobbed it up and down without end)
         double diffY = desiredHeight - this.getY();
-        if (diffY > 0.4D) {
-            this.setDeltaMovement(this.getDeltaMovement().add(0.0D, 0.06D, 0.0D));
-        } else if (diffY < -0.4D && !this.isBombarding()) {
-            this.setDeltaMovement(this.getDeltaMovement().add(0.0D, -0.05D, 0.0D));
+        if (!(this.isBombarding() && diffY < 0)) {
+            Vec3 v = this.getDeltaMovement();
+            double wantVy = net.minecraft.util.Mth.clamp(diffY * 0.12D, -0.22D, 0.25D);
+            if (Math.abs(diffY) < 0.3D) wantVy = 0.0D;
+            this.setDeltaMovement(v.x, v.y + (wantVy - v.y) * 0.3D, v.z);
         }
 
         if (this.spinCooldown > 0) this.spinCooldown--;

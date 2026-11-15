@@ -30,6 +30,7 @@ public class AntSoldierModel extends HierarchicalModel<AntSoldierEntity> {
     private final ModelPart wingR, wingL, wingR2, wingL2;
 
     public AntSoldierModel(ModelPart root) {
+        super(net.minecraft.client.renderer.RenderType::entityTranslucent);   // the wing membrane is see-through
         this.root = root;
         this.hips = root.getChild("hips");
         this.gaster = hips.getChild("gaster");
@@ -110,12 +111,13 @@ public class AntSoldierModel extends HierarchicalModel<AntSoldierEntity> {
             mand.addOrReplaceChild("mandible_" + s + "_tip", CubeListBuilder.create().mirror(m)
                             .texOffs(12, 29).addBox(-0.5F, -0.5F, -3.0F, 1.0F, 1.0F, 3.0F),
                     PartPose.offsetAndRotation(0.0F, 0.0F, -4.6F, 0.0F, side * 0.85F, 0.0F));
+            // elbowed like an ant's: the base rises forward and outward, the long tip bends forward from the elbow
             PartDefinition ant = head.addOrReplaceChild("antenna_" + s, CubeListBuilder.create()
-                            .texOffs(20, 29).addBox(-0.5F, -6.0F, -0.5F, 1.0F, 6.0F, 1.0F),
-                    PartPose.offsetAndRotation(side * 1.2F, -4.8F, -3.4F, -0.35F, 0.0F, side * -0.35F));
+                            .texOffs(20, 29).addBox(-0.5F, -5.0F, -0.5F, 1.0F, 5.0F, 1.0F),
+                    PartPose.offsetAndRotation(side * 1.4F, -4.6F, -3.6F, 0.35F, 0.0F, side * 0.5F));
             ant.addOrReplaceChild("antenna_" + s + "_tip", CubeListBuilder.create()
-                            .texOffs(24, 29).addBox(-0.5F, -6.0F, -0.5F, 1.0F, 6.0F, 1.0F),
-                    PartPose.offsetAndRotation(0.0F, -5.6F, 0.0F, 0.9F, 0.0F, 0.0F));
+                            .texOffs(24, 29).addBox(-0.5F, -7.0F, -0.5F, 1.0F, 7.0F, 1.0F),
+                    PartPose.offsetAndRotation(0.0F, -4.7F, 0.0F, 1.25F, 0.0F, side * 0.15F));
 
             // ── long arms: spiked carapace pauldron, scythe along the forearm, three talons ──
             PartDefinition arm = thorax.addOrReplaceChild(s + "_arm", CubeListBuilder.create().mirror(m)
@@ -143,13 +145,14 @@ public class AntSoldierModel extends HierarchicalModel<AntSoldierEntity> {
             mid.addOrReplaceChild(s + "_small_claw", CubeListBuilder.create().texOffs(114, 29).addBox(-0.5F, 0.0F, -0.5F, 1.0F, 3.0F, 1.0F),
                     PartPose.offsetAndRotation(0.0F, 4.6F, 0.0F, 1.3F, 0.0F, 0.0F));
 
-            // ── wings folded down the back: a long fore wing and a shorter hind wing each side ──
+            // ── wings folded down the back in a shallow V, see-through and veined: a long fore wing and a
+            //    shorter hind wing under it each side ──
             thorax.addOrReplaceChild(s + "_wing", CubeListBuilder.create().mirror(m)
                             .texOffs(48, 44).addBox(m ? 0.0F : -7.0F, 0.0F, 0.0F, 7.0F, 16.0F, 0.0F),
-                    PartPose.offsetAndRotation(side * 1.0F, -9.5F, 4.2F, 0.18F, 0.0F, side * 0.1F));
+                    PartPose.offsetAndRotation(side * 0.8F, -9.8F, 4.6F, 0.32F, -side * 0.35F, side * 0.12F));
             thorax.addOrReplaceChild(s + "_hind_wing", CubeListBuilder.create().mirror(m)
                             .texOffs(62, 44).addBox(m ? 0.0F : -6.0F, 0.0F, 0.0F, 6.0F, 13.0F, 0.0F),
-                    PartPose.offsetAndRotation(side * 1.5F, -7.0F, 4.4F, 0.24F, 0.0F, side * 0.3F));
+                    PartPose.offsetAndRotation(side * 1.2F, -8.0F, 4.3F, 0.38F, -side * 0.55F, side * 0.3F));
 
             // ── legs: thigh forward, shin back, tarsus forward, clawed foot ──
             PartDefinition leg = hips.addOrReplaceChild(s + "_leg", CubeListBuilder.create().mirror(m)

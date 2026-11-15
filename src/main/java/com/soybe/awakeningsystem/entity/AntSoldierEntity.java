@@ -255,7 +255,7 @@ public class AntSoldierEntity extends Monster {
 
     @Override
     protected void playStepSound(net.minecraft.core.BlockPos pos, net.minecraft.world.level.block.state.BlockState state) {
-        this.playSound(com.soybe.awakeningsystem.ModSounds.ANT_SOLDIER_STEP.get(), 0.7F, 1.0F);
+        // silent steps: its own step sound sounded wrong (the user asked to take it out)
     }
 
     /**

@@ -87,7 +87,7 @@ public final class RpgLevelZoneManager {
         }
         if (com.soybe.awakeningsystem.tower.GreatTowerWorldManager.isGreatTowerDimension(level)) {
             int floor = com.soybe.awakeningsystem.tower.GreatTowerWorldManager.getFloorForPos(level, pos);
-            return Math.min(100, Math.max(5, floor * 10 - 5 + RNG.nextInt(6)));
+            return towerFloorLevel(floor, false);
         }
         if (level.dimension().equals(TowerManager.RANKER_TOWER)) {
             return 50;
@@ -224,9 +224,26 @@ public final class RpgLevelZoneManager {
         return false;
     }
 
+    /**
+     * A Great Tower monster's level comes from its floor, not from the player: five levels a floor
+     * (floor 1 about 5, floor 10 about 50, floor 20 about 100, floor 100 about 500), bosses ten above.
+     */
+    public static int towerFloorLevel(int floor, boolean boss) {
+        int base = Math.max(1, floor * 5);
+        return boss ? base + 10 : base + RNG.nextInt(5);
+    }
+
     public static void scaleMobOnSpawn(Mob mob, ServerLevel level) {
         int mobLevel;
         if (mob.getTags().contains("rpg_scaled") || mob.getTags().contains("shadow_soldier") || mob.getTags().contains("dungeon_mob") || mob.getTags().contains("tower_mob") || mob.getTags().contains("pagoda_trial_mob")) {
+            return;
+        }
+        if (com.soybe.awakeningsystem.tower.GreatTowerWorldManager.isGreatTowerDimension(level)) {
+            // the tower has its own scale: by floor, whatever the player's level
+            if (!isEligibleForRpgScaling(mob)) return;
+            mob.addTag("rpg_scaled");
+            int floor = com.soybe.awakeningsystem.tower.GreatTowerWorldManager.getFloorForPos(level, mob.blockPosition());
+            applyMobLevelAttributes(mob, towerFloorLevel(floor, com.soybe.awakeningsystem.config.BossCompatibilityManager.isBoss(mob)), false);
             return;
         }
         if (mob instanceof com.soybe.awakeningsystem.entity.LimboStalkerCreature || com.soybe.awakeningsystem.limbo.LimboWorldManager.isLimboDimension(level)) {
