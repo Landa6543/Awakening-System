@@ -2899,6 +2899,45 @@ public final class AwakeningSystemClient {
         return false;
     }
 
+    /**
+     * The name and rank floating over a Ruin Gate, like a sign the Association put up: the dungeon's name, and under
+     * it the rank letter large in the rank's colour. A sign, not a waypoint: only near the gate (it fades out
+     * between 20 and 28 blocks), at a fixed size, and hidden behind terrain like any block.
+     */
+    private static void drawRuinGateLabel(com.mojang.blaze3d.vertex.PoseStack poseStack, net.minecraft.client.renderer.MultiBufferSource.BufferSource buffers,
+                                          net.minecraft.world.phys.Vec3 camPos, SyncRiftsPayload.RiftEntry rift) {
+        double x = rift.pos().getX() + 0.5D, y = rift.pos().getY() + 6.5D, z = rift.pos().getZ() + 0.5D;
+        double dist = Math.sqrt(camPos.distanceToSqr(x, y, z));
+        if (dist > 28) return;
+        int alpha = (int) (255 * Math.max(0.0, Math.min(1.0, (28 - dist) / 8.0)));
+        if (alpha < 8) return;
+        String kind = switch (rift.beamTicks()) {
+            case 1 -> "dark";
+            case 2 -> "temple";
+            default -> null;
+        };
+        Component name = kind == null ? Component.literal("Gate") : Component.translatable("awakening_system.ruin_gate.name." + kind);
+        Component rank = Component.literal(rift.rank());
+        int color = (getGateColor(rift) & 0x00FFFFFF) | (alpha << 24);
+        int white = 0x00FFFFFF | (alpha << 24);
+        net.minecraft.client.gui.Font font = Minecraft.getInstance().font;
+        float s = 0.06F;
+        poseStack.pushPose();
+        poseStack.translate(x - camPos.x, y - camPos.y, z - camPos.z);
+        poseStack.mulPose(Minecraft.getInstance().getEntityRenderDispatcher().cameraOrientation());
+        poseStack.scale(s, -s, s);
+        org.joml.Matrix4f m = poseStack.last().pose();
+        int light = 0xF000F0;
+        float nx = -font.width(name) / 2.0F;
+        font.drawInBatch(name, nx, -12, white, false, m, buffers, net.minecraft.client.gui.Font.DisplayMode.NORMAL, (alpha * 80 / 255) << 24, light);
+        poseStack.scale(2.2F, 2.2F, 2.2F);
+        m = poseStack.last().pose();
+        float rx = -font.width(rank) / 2.0F;
+        font.drawInBatch(rank, rx, 0, color, true, m, buffers, net.minecraft.client.gui.Font.DisplayMode.NORMAL, 0, light);
+        poseStack.popPose();
+        buffers.endBatch();
+    }
+
     public static void onRenderLevelStage(net.neoforged.neoforge.client.event.RenderLevelStageEvent event) {
         boolean isShader = Minecraft.useShaderTransparency();
         var targetStage = isShader
@@ -2936,7 +2975,10 @@ public final class AwakeningSystemClient {
             boolean isRedGate = rift.isRedGate();
             boolean isDungeonExit = (rift.type() == 1);
             // Ruin Gates have real portal blocks in their entrance ruin; the entry is only for the maps
-            if (rift.type() == RUIN_GATE_TYPE) continue;
+            if (rift.type() == RUIN_GATE_TYPE) {
+                drawRuinGateLabel(poseStack, bufferSource, camPos, rift);
+                continue;
+            }
 
             float hw, hh;
             double ry;

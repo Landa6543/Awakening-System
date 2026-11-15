@@ -202,6 +202,14 @@ public final class RuinGateManager {
                     if (!leave(p)) ctx.getSource().sendFailure(Component.translatable("awakening_system.ruin_gate.not_inside"));
                     return 1;
                 }))
+                .then(Commands.literal("locate").executes(ctx -> {
+                    // the nearest fixed gate's spot (it is raised once its ground has been generated)
+                    ServerLevel world = ctx.getSource().getServer().overworld();
+                    Spot s = nearestSpot(world, BlockPos.containing(ctx.getSource().getPosition()));
+                    if (s == null) return 0;
+                    ctx.getSource().sendSuccess(() -> gateName(s.kind, s.rank).copy().append(": " + s.x + " ~ " + s.z), false);
+                    return 1;
+                }))
                 .then(Commands.literal("close").executes(ctx -> {
                     // closes the gates within 12 blocks
                     ServerPlayer p = ctx.getSource().getPlayerOrException();
@@ -341,6 +349,15 @@ public final class RuinGateManager {
         BoundingBox local = t.getBoundingBox(settings, BlockPos.ZERO);
         BlockPos corner = new BlockPos(pos.getX() - (local.minX() + local.maxX()) / 2, pos.getY() - 1, pos.getZ() - (local.minZ() + local.maxZ()) / 2);
         BoundingBox box = t.getBoundingBox(settings, corner);
+        // clear the trees and plants standing where the ruin goes (and a little round it), so it is not buried in a forest
+        for (int x = box.minX() - 4; x <= box.maxX() + 4; x++) for (int z = box.minZ() - 4; z <= box.maxZ() + 4; z++)
+            for (int y = box.minY(); y <= box.maxY() + 24; y++) {
+                BlockPos p = new BlockPos(x, y, z);
+                BlockState st = level.getBlockState(p);
+                if (st.is(net.minecraft.tags.BlockTags.LOGS) || st.is(net.minecraft.tags.BlockTags.LEAVES) || st.is(Blocks.VINE)
+                        || st.is(Blocks.BAMBOO) || st.is(Blocks.COCOA) || (st.canBeReplaced() && st.getFluidState().isEmpty() && !st.isAir()))
+                    level.setBlock(p, Blocks.AIR.defaultBlockState(), Block.UPDATE_CLIENTS);
+            }
         t.placeInWorld(level, corner, corner, settings, level.getRandom(), Block.UPDATE_CLIENTS);
         // footings: fill the gaps under the ruin's bottom layer so it does not float on a slope
         for (int x = box.minX(); x <= box.maxX(); x++) for (int z = box.minZ(); z <= box.maxZ(); z++) {
@@ -436,7 +453,8 @@ public final class RuinGateManager {
             data.setDirty();
             com.soybe.awakeningsystem.DungeonManager.syncRiftsToAll(server);
         }
-        if (server.getTickCount() % NATURAL_CHECK_TICKS != 0) return;
+        if (server.getTickCount() % 20 == 0) placeFixedGates(server, data);
+        if (!RANDOM_GATES || server.getTickCount() % NATURAL_CHECK_TICKS != 0) return;
         long open = data.gates.stream().filter(g -> g.expireTick > 0).count();
         List<ServerPlayer> players = new ArrayList<>(world.players());
         players.removeIf(p -> p.isSpectator() || SESSIONS.containsKey(p.getUUID()));
@@ -467,13 +485,126 @@ public final class RuinGateManager {
         }
     }
 
+    // ---------------------------------------------------------------- fixed gates
+    /*
+     * The gates are part of the world: the Overworld is cut into cells of CELL blocks and most cells hold one gate,
+     * at a spot, kind and rank fixed by the world seed. The gate's entrance ruin is raised the first time the chunk
+     * holding its spot is generated (once its neighbours are loaded too), and it stays open for good: every run
+     * through it builds a fresh copy of its dungeon. Its name and rank float over it (AwakeningSystemClient).
+     */
+    /** The old gates that opened at random near a player and closed after half an hour. Off: the gates are fixed now. */
+    private static final boolean RANDOM_GATES = false;
+    private static final int CELL = 576;
+    private static final float CELL_CHANCE = 0.6F;
+    /** No gates this close to the world spawn (the Great Tower and the Hunters' Association stand there). */
+    private static final int SPAWN_CLEARANCE = 320;
+
+    private record Spot(int x, int z, String kind, String rank) {}
+
+    /** The gate of a cell, or null when the cell has none. */
+    private static Spot fixedSpot(long seed, BlockPos worldSpawn, int cx, int cz) {
+        java.util.Random r = new java.util.Random(seed ^ (cx * 341873128712L + cz * 132897987541L) ^ 0x5EED6A7EL);
+        if (r.nextFloat() > CELL_CHANCE) return null;
+        int x = cx * CELL + 64 + r.nextInt(CELL - 128), z = cz * CELL + 64 + r.nextInt(CELL - 128);
+        if (Math.hypot(x - worldSpawn.getX(), z - worldSpawn.getZ()) < SPAWN_CLEARANCE) return null;
+        List<String> kinds = new ArrayList<>(new java.util.TreeSet<>(KINDS.keySet()));
+        String kind = kinds.get(r.nextInt(kinds.size()));
+        int total = 0;
+        for (int w : RANK_WEIGHTS) total += w;
+        int roll = r.nextInt(total);
+        String rank = "C";
+        for (int i = 0; i < RANK_WEIGHTS.length; i++) {
+            roll -= RANK_WEIGHTS[i];
+            if (roll < 0) { rank = RANKS.get(i); break; }
+        }
+        return new Spot(x, z, kind, rank);
+    }
+
+    /** A newly generated Overworld chunk that holds a cell's gate spot puts that cell in the queue. */
+    @SubscribeEvent
+    public static void onChunkLoad(net.neoforged.neoforge.event.level.ChunkEvent.Load event) {
+        if (!event.isNewChunk() || !(event.getLevel() instanceof ServerLevel level) || !level.dimension().equals(Level.OVERWORLD)) return;
+        ChunkPos cp = event.getChunk().getPos();
+        int cx = Math.floorDiv(cp.getMinBlockX(), CELL), cz = Math.floorDiv(cp.getMinBlockZ(), CELL);
+        Spot spot = fixedSpot(level.getSeed(), level.getSharedSpawnPos(), cx, cz);
+        if (spot == null || spot.x >> 4 != cp.x || spot.z >> 4 != cp.z) return;
+        Data data = Data.get(level.getServer());
+        long cell = ChunkPos.asLong(cx, cz);
+        if (!data.cells.contains(cell) && data.pending.add(cell)) data.setDirty();
+    }
+
+    /** Raises the queued gates whose ground is loaded all round. */
+    private static void placeFixedGates(MinecraftServer server, Data data) {
+        if (data.pending.isEmpty()) return;
+        ServerLevel world = server.overworld();
+        boolean changed = false;
+        for (long cell : new ArrayList<>(data.pending)) {
+            int cx = ChunkPos.getX(cell), cz = ChunkPos.getZ(cell);
+            Spot spot = fixedSpot(world.getSeed(), world.getSharedSpawnPos(), cx, cz);
+            if (spot == null || data.cells.contains(cell)) {
+                data.pending.remove(cell);
+                changed = true;
+                continue;
+            }
+            boolean loaded = true;
+            for (int dx = -1; dx <= 1 && loaded; dx++)
+                for (int dz = -1; dz <= 1 && loaded; dz++)
+                    loaded = world.hasChunk((spot.x >> 4) + dx, (spot.z >> 4) + dz);
+            if (!loaded) continue;
+            data.pending.remove(cell);
+            data.cells.add(cell);
+            changed = true;
+            // the spot itself, or a dry patch near it
+            for (int attempt = 0; attempt < 9; attempt++) {
+                int x = spot.x + (attempt == 0 ? 0 : (attempt % 3 - 1) * 8), z = spot.z + (attempt == 0 ? 0 : (attempt / 3 - 1) * 8);
+                int y = world.getHeight(Heightmap.Types.MOTION_BLOCKING_NO_LEAVES, x, z);
+                BlockState ground = world.getBlockState(new BlockPos(x, y - 1, z));
+                if (y < world.getSeaLevel() - 2 || !ground.getFluidState().isEmpty() || !ground.isSolid()) continue;
+                if (openGate(world, KINDS.get(spot.kind), spot.rank, new BlockPos(x, y, z), 0L))
+                    AwakeningSystemMod.LOGGER.info("[Ruin Gate] fixed {} gate of rank {} raised at {} {} {}", spot.kind, spot.rank, x, y, z);
+                break;
+            }
+        }
+        if (changed) data.setDirty();
+    }
+
+    /** The fixed gate nearest to a place (searching a few cells round it), for the locate command. */
+    private static Spot nearestSpot(ServerLevel world, BlockPos from) {
+        Spot best = null;
+        double bestD = Double.MAX_VALUE;
+        int cx = Math.floorDiv(from.getX(), CELL), cz = Math.floorDiv(from.getZ(), CELL);
+        for (int a = cx - 3; a <= cx + 3; a++)
+            for (int b = cz - 3; b <= cz + 3; b++) {
+                Spot s = fixedSpot(world.getSeed(), world.getSharedSpawnPos(), a, b);
+                if (s == null) continue;
+                double d = Math.hypot(s.x - from.getX(), s.z - from.getZ());
+                if (d < bestD) { bestD = d; best = s; }
+            }
+        return best;
+    }
+
+    /** The nearest fixed gate's spot as {x, z}, or null (used by the development photographer). */
+    public static int[] nearestFixedGate(ServerLevel world, BlockPos from) {
+        Spot s = nearestSpot(world, from);
+        return s == null ? null : new int[]{s.x, s.z};
+    }
+
+    /** Kind code sent to the client in the rift entry, so it can name the gate over it. */
+    private static int kindCode(String kind) {
+        return switch (kind) {
+            case "dark" -> 1;
+            case "temple" -> 2;
+            default -> 0;
+        };
+    }
+
     /** Called when the rift list is sent to a player: the Ruin Gates show on the maps, and the open exits as portals. */
     public static void addRiftEntries(ServerPlayer player, List<com.soybe.awakeningsystem.SyncRiftsPayload.RiftEntry> entries) {
         MinecraftServer server = player.getServer();
         if (server == null) return;
         for (Gate gate : Data.get(server).gates) {
             if (gate.dimension.equals(player.level().dimension()))
-                entries.add(new com.soybe.awakeningsystem.SyncRiftsPayload.RiftEntry(gate.pos, gate.rank, false, PORTAL_TYPE, gate.yaw, 0,
+                entries.add(new com.soybe.awakeningsystem.SyncRiftsPayload.RiftEntry(gate.pos, gate.rank, false, PORTAL_TYPE, gate.yaw, kindCode(gate.kind),
                         gate.expireTick <= 0 ? -1 : (int) Math.max(0, gate.expireTick - player.serverLevel().getGameTime())));
         }
         Session s = SESSIONS.get(player.getUUID());
@@ -809,6 +940,8 @@ public final class RuinGateManager {
 
     private static final class Data extends SavedData {
         final List<Gate> gates = new ArrayList<>();
+        /** Cells whose fixed gate was already raised (or found no dry ground), and cells waiting for their ground to load. */
+        final Set<Long> cells = new HashSet<>(), pending = new HashSet<>();
         int nextRun;
 
         static Data get(MinecraftServer server) {
@@ -818,6 +951,8 @@ public final class RuinGateManager {
         static Data load(CompoundTag tag, HolderLookup.Provider registries) {
             Data d = new Data();
             d.nextRun = tag.getInt("NextRun");
+            for (long l : tag.getLongArray("Cells")) d.cells.add(l);
+            for (long l : tag.getLongArray("Pending")) d.pending.add(l);
             ListTag list = tag.getList("Gates", Tag.TAG_COMPOUND);
             for (int i = 0; i < list.size(); i++) {
                 CompoundTag g = list.getCompound(i);
@@ -837,6 +972,8 @@ public final class RuinGateManager {
         @Override
         public CompoundTag save(CompoundTag tag, HolderLookup.Provider registries) {
             tag.putInt("NextRun", nextRun);
+            tag.putLongArray("Cells", cells.stream().mapToLong(Long::longValue).toArray());
+            tag.putLongArray("Pending", pending.stream().mapToLong(Long::longValue).toArray());
             ListTag list = new ListTag();
             for (Gate g : gates) {
                 CompoundTag c = new CompoundTag();
