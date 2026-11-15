@@ -45,6 +45,7 @@ public final class WeaponShots {
         if (t < 60) return;
         var list = new java.util.ArrayList<String>();
         list.add("minecraft:diamond_sword");                 // the reference: how a vanilla sword sits
+        list.add("awakening_system:elucidator");             // and one of the mod's own big flat swords that sits right
         for (CelestialWeapon w : CelestialWeapon.values()) if (ONLY.isEmpty() || ONLY.equals("1") || ONLY.contains(w.id)) list.add(w.id);
         int i = (t - 60) / 34, k = (t - 60) % 34;
         if (i >= list.size()) {
