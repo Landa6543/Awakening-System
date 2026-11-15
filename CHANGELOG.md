@@ -452,6 +452,7 @@ Sistema dinámico de eventos de temporada integrando consumibles gastronómicos 
 
 ## 🗼 Gran Torre
 * La torre se levanta al crear el mundo, en vez de aparecer de golpe mientras cargan los chunks.
+* **Pisos 16 al 20 con terreno propio:** el Bastión de Obsidiana del Vacío (mesetas de piedra del End, agujas de obsidiana, chorus e islotes flotantes), las Cumbres Celestiales del Dao (torres de roca con musgo y bosques de bambú), el Templo Dorado de la Calamidad Solar (cañones de arenisca roja con franjas de colores y columnas doradas caídas), la Antecámara de las Telarañas (bosque muerto de noche con costillas gigantes) y la Cámara Real de la Reina, una cueva de seda con la arena-nido colgando de hilos hasta el techo, suelo de telaraña, huevos que brillan y una calzada con faroles hacia los portales.
 * **Piso 4:** los hongos gigantes brillantes ya no tienen el sombrero flotando separado del tallo.
 
 ---

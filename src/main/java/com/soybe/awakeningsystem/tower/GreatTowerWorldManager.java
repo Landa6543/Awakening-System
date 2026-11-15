@@ -797,7 +797,8 @@ public final class GreatTowerWorldManager {
 
       // 1. Esculpido de cavernas para pisos subterráneos
       // floors 1-15 have the mod's own terrain now; the old carving only makes floor 20
-      if (floor == 20) {
+      // floor 20's nest, arena and causeway are now made by TowerFloorTerrainBeyond, so its old carving is off
+      if (floor == 20 && !com.soybe.awakeningsystem.tower.terrain.TowerFloorTerrain.isCustom(20)) {
          processSectorChunk(level, chunk);
       }
 
@@ -1771,6 +1772,7 @@ public static void processSectorChunk(ServerLevel level, ChunkAccess chunk) {
 
    public static int buildFloor20ArenaAndBridges(ServerLevel level) {
       int arenaY = 28;
+      if (com.soybe.awakeningsystem.tower.terrain.TowerFloorTerrain.isCustom(20)) return arenaY;   // the terrain generator already built the arena (its deck is at y=28)
       BlockPos checkPos = new BlockPos(0, arenaY, 0);
       if (level.getBlockState(checkPos).is(Blocks.BONE_BLOCK)) {
          return arenaY;

@@ -1,11 +1,8 @@
 {
   "type": "awakening_system:tower_floor_18",
   "generator": {
-    "type": "minecraft:noise",
-    "settings": "minecraft:overworld",
-    "biome_source": {
-      "type": "minecraft:fixed",
-      "biome": "minecraft:badlands"
-    }
+    "type": "awakening_system:tower_floor",
+    "floor": 18,
+    "biome_source": { "type": "minecraft:fixed", "biome": "awakening_system:tower_solar_canyon" }
   }
 }

@@ -1,11 +1,8 @@
 {
   "type": "awakening_system:tower_floor_16",
   "generator": {
-    "type": "minecraft:noise",
-    "settings": "minecraft:overworld",
-    "biome_source": {
-      "type": "minecraft:fixed",
-      "biome": "minecraft:end_highlands"
-    }
+    "type": "awakening_system:tower_floor",
+    "floor": 16,
+    "biome_source": { "type": "minecraft:fixed", "biome": "awakening_system:tower_void_bastion" }
   }
 }
