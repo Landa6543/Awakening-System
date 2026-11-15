@@ -75,6 +75,7 @@ public final class WeaponShots {
             EpicFight.battle(mc, true);
         }
         if (k == 12) shot(mc, name + "_1_battle");
+        if (k == 12 && net.neoforged.fml.ModList.get().isLoaded("epicfight")) EpicFight.logCategory(mc, name);
         if (k == 13) EpicFight.battle(mc, false);
         if (k == 22) shot(mc, name + "_2_plain");
         if (k == 23) { mc.options.setCameraType(CameraType.FIRST_PERSON); mc.options.hideGui = false; }
@@ -90,6 +91,11 @@ public final class WeaponShots {
         static void battle(Minecraft mc, boolean on) {
             if (!net.neoforged.fml.ModList.get().isLoaded("epicfight")) return;
             Impl.set(mc, on);
+        }
+
+        static void logCategory(Minecraft mc, String name) {
+            var cap = yesman.epicfight.world.capabilities.EpicFightCapabilities.getItemStackCapability(mc.player.getMainHandItem());
+            System.out.println("[WeaponShots] " + name + " epicfight category = " + (cap == null ? "none" : cap.getWeaponCategory()));
         }
 
         static void turn(Minecraft mc, float yaw) {
