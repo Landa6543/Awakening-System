@@ -54,11 +54,10 @@ public final class KaiselShots {
             if (sp == null) return;
             ServerLevel sl = sp.serverLevel();
             living.discard();
-            shadow = KaiselContent.KAISEL.create(sl);
-            shadow.moveTo(0.5, 200, 0, 20, 0);
-            shadow.addTag("shadow_soldier");
-            shadow.addTag("shadow_master_" + sp.getUUID());
-            com.soybe.awakeningsystem.SystemEvents.setupShadowMob(sl, sp, shadow);
+            // exactly what a player types: /kaisel sombra
+            server.getCommands().performPrefixedCommand(sp.createCommandSourceStack(), "kaisel sombra");
+            shadow = sl.getEntities(KaiselContent.KAISEL, KaiselEntity::isShadow).stream().findFirst().orElse(null);
+            System.out.println("[KaiselShots] /kaisel sombra -> " + (shadow == null ? "nothing" : shadow.getName().getString() + " master=" + shadow.masterId()));
         });
         if (t == 145) shot(mc, "ks_1_shadow");
         // ride the shadow and lift it into the air, flying
