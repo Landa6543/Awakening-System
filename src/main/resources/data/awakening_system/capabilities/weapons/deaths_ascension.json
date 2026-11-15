@@ -1,1 +1,1 @@
-{ "attributes": { "common": { "armor_negation": 12.0, "impact": 3.0, "max_strikes": 5 } }, "type": "epicfight:greatsword" }
+{ "attributes": { "one_hand": { "armor_negation": 12.0, "impact": 2.4, "max_strikes": 2 }, "two_hand": { "impact": 2.6, "max_strikes": 4 } }, "type": "epicfight:spear" }

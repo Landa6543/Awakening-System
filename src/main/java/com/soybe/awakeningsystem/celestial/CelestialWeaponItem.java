@@ -88,7 +88,14 @@ public class CelestialWeaponItem extends SwordItem implements AwakeningWeaponIte
                     .withStyle(next ? ChatFormatting.BLUE : ChatFormatting.LIGHT_PURPLE), true);
             return InteractionResultHolder.sidedSuccess(stack, level.isClientSide);
         }
+        // one skill per cooldown, also checked against the clock, so spamming right-click does nothing
+        if (player.getCooldowns().isOnCooldown(this)) return InteractionResultHolder.fail(stack);
         if (!(level instanceof ServerLevel sl)) return InteractionResultHolder.success(stack);
+        long now = sl.getGameTime();
+        var tag = player.getPersistentData();
+        String key = "celestial_skill_" + weapon.id;
+        if (now < tag.getLong(key)) return InteractionResultHolder.fail(stack);
+        tag.putLong(key, now + weapon.ability.cooldown);
         CelestialWeapon.Ability ability = weapon.ability;
         int count = weapon.count, spread = weapon.spread;
         if (weapon == CelestialWeapon.GALAXIA && capricorn(stack)) {
@@ -181,7 +188,8 @@ public class CelestialWeaponItem extends SwordItem implements AwakeningWeaponIte
 
     private void dash(ServerLevel sl, Player player, double length, float dmg) {
         Vec3 look = player.getLookAngle();
-        Vec3 flat = new Vec3(look.x, Math.max(-0.2, Math.min(0.35, look.y)), look.z).normalize();
+        // the dash runs along the ground: looking up does not launch the player into the sky
+        Vec3 flat = new Vec3(look.x, 0, look.z).normalize();
         Vec3 from = player.position().add(0, 0.9, 0);
         BlockHitResult wall = sl.clip(new ClipContext(from, from.add(flat.scale(length)), ClipContext.Block.COLLIDER, ClipContext.Fluid.NONE, player));
         double reach = wall.getType() == HitResult.Type.MISS ? length : Math.max(0, wall.getLocation().distanceTo(from) - 0.6);
@@ -192,7 +200,7 @@ public class CelestialWeaponItem extends SwordItem implements AwakeningWeaponIte
         }
         for (double d = 0; d < reach; d += 0.4)
             sl.sendParticles(dust(weapon.color, 1.6F), from.x + flat.x * d, from.y + flat.y * d, from.z + flat.z * d, 2, 0.2, 0.3, 0.2, 0);
-        player.setDeltaMovement(flat.scale(Math.min(2.4, reach * 0.33)).add(0, 0.15, 0));
+        player.setDeltaMovement(flat.scale(Math.min(1.8, reach * 0.25)).add(0, player.onGround() ? 0.1 : 0.0, 0));
         player.hurtMarked = true;
         player.fallDistance = 0;
         sl.playSound(null, player.blockPosition(), SoundEvents.PLAYER_ATTACK_SWEEP, SoundSource.PLAYERS, 1.2F, 1.6F);
