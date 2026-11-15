@@ -644,7 +644,8 @@ public final class RpgLevelZoneManager {
                 entity.spawnAtLocation(new ItemStack((ItemLike)SystemItems.MORA.get(), amount));
             }
         }
-        double equipChance = Math.min(0.18D, 0.03 + (double)mobLevel * 0.0006);
+        // a piece of gear is a real find now: about 1 in 200 kills at first, at most 1 in 40 (it was up to 1 in 6)
+        double equipChance = Math.min(0.025D, 0.005 + (double)mobLevel * 0.0001);
         if (RNG.nextDouble() < equipChance) {
             ItemStack dropStack = RpgLevelZoneManager.rollRandomRpgEquipment(level, mobLevel);
             RpgAffixManager.rollAffixes(dropStack, mobLevel);

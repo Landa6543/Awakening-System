@@ -55,7 +55,8 @@ public final class RpgAffixManager {
         RARE("Rare", ChatFormatting.BLUE),
         EPIC("Epic", ChatFormatting.DARK_PURPLE),
         LEGENDARY("Legendary", ChatFormatting.GOLD),
-        MYTHIC("Mythic", ChatFormatting.RED);
+        MYTHIC("Mythic", ChatFormatting.RED),
+        DIVINE("Divine", ChatFormatting.AQUA);   // above mythic
 
         public final String displayName;
         public final ChatFormatting format;
@@ -79,11 +80,7 @@ public final class RpgAffixManager {
         Prefix pre = prefixes[1 + RNG.nextInt(prefixes.length - 1)];
         Suffix suf = suffixes[1 + RNG.nextInt(suffixes.length - 1)];
 
-        Rarity rarity;
-        if (level >= 80) rarity = RNG.nextBoolean() ? Rarity.MYTHIC : Rarity.LEGENDARY;
-        else if (level >= 50) rarity = RNG.nextBoolean() ? Rarity.LEGENDARY : Rarity.EPIC;
-        else if (level >= 25) rarity = RNG.nextBoolean() ? Rarity.EPIC : Rarity.RARE;
-        else rarity = Rarity.RARE;
+        Rarity rarity = rollRarity(level);
 
         CompoundTag tag = stack.get(DataComponents.CUSTOM_DATA) != null
                 ? stack.get(DataComponents.CUSTOM_DATA).copyTag()
@@ -96,15 +93,29 @@ public final class RpgAffixManager {
 
         stack.set(DataComponents.CUSTOM_DATA, CustomData.of(tag));
 
-        String original = stack.getHoverName().getString();
-        // Limpiar cualquier prefijo previo malformado como "6[LEGENDARY] " o "§6[LEGENDARY] "
-        original = original.replaceAll("^[0-9a-fk-or§]?\\[.*?\\]\\s*", "").trim();
-
-        String affixTitle = (pre != Prefix.NONE ? pre.title + " " : "") + original + (suf != Suffix.NONE ? " " + suf.title : "");
-        Component nameComponent = Component.literal("[" + rarity.displayName.toUpperCase() + "] ")
+        // every part translated, and put in each language's own order (Spanish: "Espada Feroz del Destino")
+        Component item = stack.getItem().getName(stack);
+        Component prefix = pre != Prefix.NONE ? Component.translatable("awakening_system.affix.prefix." + pre.name().toLowerCase(java.util.Locale.ROOT)) : Component.empty();
+        Component suffix = suf != Suffix.NONE ? Component.translatable("awakening_system.affix.suffix." + suf.name().toLowerCase(java.util.Locale.ROOT)) : Component.empty();
+        Component nameComponent = Component.literal("[").append(Component.translatable("awakening_system.affix.rarity." + rarity.name().toLowerCase(java.util.Locale.ROOT))).append("] ")
                 .withStyle(rarity.format, ChatFormatting.BOLD)
-                .append(Component.literal(affixTitle).withStyle(ChatFormatting.WHITE));
+                .append(Component.translatable("awakening_system.affix.name", prefix, item, suffix).withStyle(ChatFormatting.WHITE));
         stack.set(DataComponents.CUSTOM_NAME, nameComponent);
+    }
+
+    /**
+     * How rare a dropped piece is. Most are common or rare; the better ones need stronger monsters and luck:
+     * epic from level 20 (one in five), legendary from 40 (one in twelve), mythic from 60 (one in thirty-five),
+     * divine from 90 (one in two hundred).
+     */
+    public static Rarity rollRarity(int level) {
+        double r = RNG.nextDouble();
+        if (level >= 90 && r < 0.005) return Rarity.DIVINE;
+        if (level >= 60 && r < 0.03) return Rarity.MYTHIC;
+        if (level >= 40 && r < 0.085) return Rarity.LEGENDARY;
+        if (level >= 20 && r < 0.2) return Rarity.EPIC;
+        if (r < 0.45) return Rarity.RARE;
+        return Rarity.COMMON;
     }
 
     public static boolean hasAffixes(ItemStack stack) {
