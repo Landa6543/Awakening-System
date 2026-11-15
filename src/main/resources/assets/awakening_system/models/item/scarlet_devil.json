@@ -4,12 +4,12 @@
     "layer0": "awakening_system:item/celestial/scarlet_devil"
   },
   "display": {
-    "thirdperson_righthand": {"rotation": [0, -90, 55], "translation": [0, 6.60, 0.00], "scale": [1.40, 1.40, 1.40]},
-    "thirdperson_lefthand": {"rotation": [0, 90, -55], "translation": [0, 6.60, 0.00], "scale": [1.40, 1.40, 1.40]},
-    "firstperson_righthand": {"rotation": [0, -90, 25], "translation": [1.13, 3.80, 1.13],"scale": [0.88, 0.88, 0.88]},
-    "firstperson_lefthand": {"rotation": [0, 90, -25], "translation": [1.13, 3.80, 1.13],"scale": [0.88, 0.88, 0.88]},
-    "ground": {"rotation": [0, 0, 0], "translation": [0, 3.00, 0], "scale": [0.80, 0.80, 0.80]},
+    "thirdperson_righthand": {"rotation": [34.46, 90.00, 0.00], "translation": [0.00, 12.37, -1.21], "scale": [2.03, 2.03, 2.03]},
+    "thirdperson_lefthand": {"rotation": [34.46, -90.00, 0.00], "translation": [0.00, 12.37, -1.21], "scale": [2.03, 2.03, 2.03]},
+    "firstperson_righthand": {"rotation": [64.46, 90.00, 0.00], "translation": [1.13, 6.23, 2.12], "scale": [1.04, 1.04, 1.04]},
+    "firstperson_lefthand": {"rotation": [64.46, -90.00, 0.00], "translation": [1.13, 6.23, 2.12], "scale": [1.04, 1.04, 1.04]},
+    "ground": {"rotation": [0, 0, 0], "translation": [0, 2, 0], "scale": [0.7, 0.7, 0.7]},
     "gui": {"rotation": [0, 0, 0], "translation": [0, 0, 0], "scale": [1, 1, 1]},
-    "fixed": {"rotation": [0, 180, 0], "translation": [0, 0, 0], "scale": [1.50, 1.50, 1.50]}
+    "fixed": {"rotation": [0, 180, 0], "translation": [0, 0, 0], "scale": [1.2, 1.2, 1.2]}
   }
 }

@@ -35,6 +35,9 @@ public final class WeaponShots {
         if (mc.level == null || mc.player == null || mc.getSingleplayerServer() == null) return;
         t++;
         var server = mc.getSingleplayerServer();
+        // never pause or show the menu when the window is behind another one
+        mc.options.pauseOnLostFocus = false;
+        if (mc.screen instanceof net.minecraft.client.gui.screens.PauseScreen) mc.setScreen(null);
         if (t == 40) {
             String n = mc.player.getGameProfile().getName();
             for (String c : new String[]{"time set noon", "weather clear", "gamerule doDaylightCycle false", "gamemode creative " + n,
@@ -45,7 +48,10 @@ public final class WeaponShots {
         if (t < 60) return;
         var list = new java.util.ArrayList<String>();
         list.add("minecraft:diamond_sword");                 // the reference: how a vanilla sword sits
-        list.add("awakening_system:elucidator");             // and one of the mod's own big flat swords that sits right
+        list.add("awakening_system:elucidator");             // and the mod's own weapons that sit right
+        list.add("awakening_system:siderite_pickaxe");
+        list.add("awakening_system:siderite_hamaxe");
+        list.add("awakening_system:black_dragon_scythe");
         for (CelestialWeapon w : CelestialWeapon.values()) if (ONLY.isEmpty() || ONLY.equals("1") || ONLY.contains(w.id)) list.add(w.id);
         int i = (t - 60) / 34, k = (t - 60) % 34;
         if (i >= list.size()) {
