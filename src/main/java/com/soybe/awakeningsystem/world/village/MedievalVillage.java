@@ -54,17 +54,20 @@ import static net.minecraft.core.Direction.*;
 public final class MedievalVillage {
     private MedievalVillage() {}
 
-    private enum Kind { SMALL, TALL, LONG, TAVERN, SMITHY, CHAPEL, LIBRARY, BARN, TOWER, WELL, STALL, BAKERY, MANOR }
+    private enum Kind { SMALL, TALL, LONG, LHOUSE, TAVERN, SMITHY, CHAPEL, LIBRARY, BARN, TOWER, WELL, STALL, BAKERY, MANOR }
 
     /** A building: kind, footprint corner relative to the centre, which way its door faces, style and options. */
     private record Site(Kind kind, int x, int z, Direction front, VillageBuildings.Style style, String job, Block work,
-                        Block wool, Block wool2, boolean across, boolean gable) {
-        Site(Kind kind, int x, int z, Direction front) { this(kind, x, z, front, VillageBuildings.SPRUCE, "", null, null, null, false, false); }
+                        Block wool, Block wool2, boolean across, boolean gable, int extras) {
+        Site(Kind kind, int x, int z, Direction front) { this(kind, x, z, front, VillageBuildings.SPRUCE, "", null, null, null, false, false, 0); }
+        Site(Kind kind, int x, int z, Direction front, VillageBuildings.Style style, String job, Block work, Block wool, Block wool2, boolean across, boolean gable) {
+            this(kind, x, z, front, style, job, work, wool, wool2, across, gable, 0);
+        }
     }
 
     private static int localW(Kind k) {
         return switch (k) {
-            case SMALL, TALL, BAKERY -> 9;
+            case SMALL, TALL, BAKERY, LHOUSE -> 9;
             case LONG, SMITHY, CHAPEL, LIBRARY -> 11;
             case TAVERN, BARN -> 13;
             case MANOR -> 15;
@@ -77,7 +80,7 @@ public final class MedievalVillage {
         return switch (k) {
             case SMALL, LONG, BAKERY -> 7;
             case TALL, SMITHY, LIBRARY -> 9;
-            case TAVERN, BARN, MANOR -> 11;
+            case TAVERN, BARN, MANOR, LHOUSE -> 11;
             case CHAPEL -> 17;
             case TOWER, WELL -> 5;
             case STALL -> 3;
@@ -88,6 +91,7 @@ public final class MedievalVillage {
     private static int doorX(Kind k) {
         return switch (k) {
             case SMALL, TALL, BAKERY -> 4;
+            case LHOUSE -> 5;
             case LONG -> 3;
             case TAVERN, BARN -> 6;
             case SMITHY -> 3;
@@ -146,6 +150,7 @@ public final class MedievalVillage {
 
     /** Builds the whole town around (cx, cz). Returns how many people and animals moved in. */
     public static int build(ServerLevel level, int cx, int cz) {
+        drain(level, cx, cz);
         VillageCanvas c = new VillageCanvas(level);
         clearTrees(c, cx, cz);
         Random rng = new Random(cx * 341873128712L + cz * 132897987541L + 11);
@@ -171,13 +176,15 @@ public final class MedievalVillage {
         int lw = localW(s.kind()), ld = localD(s.kind());
         int ww = Plot.worldW(lw, ld, s.front()), wd = Plot.worldD(lw, ld, s.front());
         int x0 = cx + s.x(), z0 = cz + s.z();
-        int floor = medianGround(c, x0, z0, ww, wd);
+        // the well and the stalls stand on the square's own level, not on mounds of their own
+        int floor = s.kind() == Kind.WELL || s.kind() == Kind.STALL ? plazaLevel(c, cx, cz) : medianGround(c, x0, z0, ww, wd);
         Plot p = new Plot(c, x0, z0, floor, lw, ld, s.front());
         if (s.kind() != Kind.WELL && s.kind() != Kind.STALL) taken.add(new int[]{s.x() - 2, s.z() - 2, s.x() + ww + 1, s.z() + wd + 1});
         List<VillageBuildings.Resident> people = switch (s.kind()) {
-            case SMALL -> VillageBuildings.smallHouse(p, s.style(), s.job(), s.work(), s.across(), s.gable());
-            case TALL -> VillageBuildings.tallHouse(p, s.style(), s.job(), s.work(), s.across(), s.gable());
-            case LONG -> VillageBuildings.longHouse(p, s.style(), s.job(), s.across());
+            case SMALL -> VillageBuildings.smallHouse(p, s.style(), s.job(), s.work(), s.across(), s.gable(), s.extras());
+            case TALL -> VillageBuildings.tallHouse(p, s.style(), s.job(), s.work(), s.across(), s.gable(), s.extras());
+            case LONG -> VillageBuildings.longHouse(p, s.style(), s.job(), s.across(), s.extras());
+            case LHOUSE -> VillageBuildings.lHouse(p, s.style(), s.job(), s.extras());
             case TAVERN -> VillageBuildings.tavern(p);
             case SMITHY -> VillageBuildings.smithy(p);
             case CHAPEL -> VillageBuildings.chapel(p);
@@ -213,7 +220,7 @@ public final class MedievalVillage {
                 int at = from + 3;
                 while (at < to - 6) {
                     int r = rng.nextInt(100);
-                    Kind kind = r < 38 ? Kind.SMALL : r < 70 ? Kind.TALL : Kind.LONG;
+                    Kind kind = r < 28 ? Kind.SMALL : r < 54 ? Kind.TALL : r < 74 ? Kind.LONG : Kind.LHOUSE;
                     int lw = localW(kind), ld = localD(kind);
                     int yard = 3 + rng.nextInt(2);
                     Direction front;
@@ -236,7 +243,11 @@ public final class MedievalVillage {
                         boolean across = rng.nextBoolean();
                         boolean gable = across && kind != Kind.LONG && rng.nextInt(100) < 55;
                         String job = JOBS[rng.nextInt(JOBS.length)];
-                        out.add(new Site(kind, x, z, front, style, job, null, null, null, across, gable));
+                        int extras = 0;
+                        if ((kind == Kind.SMALL || kind == Kind.LONG) && !gable && rng.nextInt(100) < 45) extras |= VillageBuildings.PORCH;
+                        if (rng.nextInt(100) < 55) extras |= VillageBuildings.CHIMNEY;
+                        if (kind == Kind.TALL && rng.nextInt(100) < 35) extras |= VillageBuildings.TOWER;
+                        out.add(new Site(kind, x, z, front, style, job, null, null, null, across, gable, extras));
                         taken.add(rect);
                         at += (st.alongZ() ? wd : ww) + 2 + rng.nextInt(4);
                     } else at += 2;
@@ -252,6 +263,25 @@ public final class MedievalVillage {
             for (int x = r[0] + 1; x <= r[2] - 1; x++)
                 for (int z = r[1] + 1; z <= r[3] - 1; z++) if (s.covers(x, z, 0)) return false;
         return true;
+    }
+
+    /** Ponds and puddles inside the town are filled with earth, so no street or house ends up under water. */
+    private static void drain(ServerLevel level, int cx, int cz) {
+        BlockPos.MutableBlockPos m = new BlockPos.MutableBlockPos();
+        int start = Math.min(level.getMaxBuildHeight() - 1, 200);
+        for (int x = -108; x <= 103; x++)
+            for (int z = -123; z <= 110; z++) {
+                int y = start;
+                m.set(cx + x, y, cz + z);
+                while (y > level.getMinBuildHeight() && level.getBlockState(m).isAir()) m.setY(--y);
+                if (level.getFluidState(m).isEmpty()) continue;
+                boolean top = true;
+                while (y > level.getMinBuildHeight() && !level.getFluidState(m).isEmpty()) {
+                    level.setBlock(m, (top ? Blocks.GRASS_BLOCK : Blocks.DIRT).defaultBlockState(), Block.UPDATE_CLIENTS | Block.UPDATE_KNOWN_SHAPE);
+                    top = false;
+                    m.setY(--y);
+                }
+            }
     }
 
     /** Trees inside the town are felled (trunks and leaves), so streets and yards stay open; the woods around stay. */
@@ -298,23 +328,84 @@ public final class MedievalVillage {
         }
     }
 
+    /**
+     * Lays a road block at a chosen height: earth filled in under it where the ground dips, the hillside cut
+     * away over it where the ground rises, so the street runs smooth instead of in steps between dirt walls.
+     */
+    private static void roadAt(VillageCanvas c, int x, int z, int y, BlockState s) {
+        int g = c.ground(x, z);
+        BlockPos at = new BlockPos(x, y, z);
+        BlockState here = c.get(at);
+        if (!here.isAir() && !VillageCanvas.clearable(here) && !here.is(Blocks.GRASS_BLOCK)) return;   // a building's step or wall
+        for (int k = g + 1; k < y; k++) {
+            BlockPos q = new BlockPos(x, k, z);
+            // stone under a raised street or square: its sides read as a retaining wall, not a heap of earth
+            if (c.get(q).isAir() || VillageCanvas.clearable(c.get(q)))
+                c.set(q, (((x * 31 + k * 7 + z) & 3) == 0 ? Blocks.MOSSY_COBBLESTONE : Blocks.COBBLESTONE).defaultBlockState());
+        }
+        c.set(at, s);
+        for (int k = 1; k <= Math.max(5, g - y + 2); k++) {
+            BlockPos up = at.above(k);
+            if (VillageCanvas.clearable(c.get(up))) c.set(up, Blocks.AIR.defaultBlockState());
+        }
+    }
+
+    /** The side of a yard higher than the street at {@code y}: its earth face from y + 1 up becomes stone. */
+    private static void retain(VillageCanvas c, int x, int z, int y) {
+        BlockPos.MutableBlockPos m = new BlockPos.MutableBlockPos(x, y + 1, z);
+        int top = y;
+        while (top < y + 6 && !c.get(m.setY(top + 1)).isAir() && c.get(m).blocksMotion()) top++;
+        for (int k = y + 1; k < top; k++) {
+            BlockState s = c.get(m.setY(k));
+            if (s.is(BlockTags.DIRT) || s.is(BlockTags.BASE_STONE_OVERWORLD))
+                c.set(m.immutable(), ((x * 31 + k * 7 + z) & 3) == 0 ? Blocks.MOSSY_COBBLESTONE.defaultBlockState() : Blocks.COBBLESTONE.defaultBlockState());
+        }
+    }
+
     private static void streets(VillageCanvas c, int cx, int cz, List<int[]> taken) {
-        for (Street s : STREETS)
-            for (int x = Math.min(s.x0(), s.x1()) - 1; x <= Math.max(s.x0(), s.x1()) + 1; x++)
-                for (int z = Math.min(s.z0(), s.z1()) - 1; z <= Math.max(s.z0(), s.z1()) + 1; z++) {
+        for (Street s : STREETS) {
+            int from = s.alongZ() ? Math.min(s.z0(), s.z1()) : Math.min(s.x0(), s.x1());
+            int to = s.alongZ() ? Math.max(s.z0(), s.z1()) : Math.max(s.x0(), s.x1());
+            // the street's height at each step: the ground averaged over nine blocks along it, so it rises and falls gently
+            int[] raw = new int[to - from + 1];
+            for (int a = from; a <= to; a++) {
+                int sum = 0;
+                for (int w = -1; w <= 1; w++) sum += s.alongZ() ? c.ground(cx + s.x0() + w, cz + a) : c.ground(cx + a, cz + s.z0() + w);
+                raw[a - from] = Math.round(sum / 3f);
+            }
+            for (int a = from; a <= to; a++) {
+                int sum = 0, n = 0;
+                for (int k = -4; k <= 4; k++) if (a + k >= from && a + k <= to) { sum += raw[a + k - from]; n++; }
+                int y = Math.round(sum / (float) n);
+                for (int w = -1; w <= 1; w++) {
+                    int x = s.alongZ() ? s.x0() + w : a, z = s.alongZ() ? a : s.z0() + w;
                     if (x * x + z * z <= PLAZA * PLAZA) continue;
-                    road(c, cx + x, cz + z, roadBlock(cx + x, cz + z));
+                    roadAt(c, cx + x, cz + z, y, roadBlock(cx + x, cz + z));
                 }
+                // where a yard stands higher than the street, its edge becomes a low stone retaining wall, not bare earth
+                for (int w : new int[]{-2, 2}) {
+                    int x = s.alongZ() ? s.x0() + w : a, z = s.alongZ() ? a : s.z0() + w;
+                    if (onStreet(x, z) || x * x + z * z <= (PLAZA + 1) * (PLAZA + 1)) continue;
+                    retain(c, cx + x, cz + z, y);
+                }
+            }
+        }
     }
 
     /** The square: stone paving in a circle round the well. */
+    private static int plazaLevel(VillageCanvas c, int cx, int cz) {
+        int y = c.ground(cx + PLAZA, cz) + c.ground(cx - PLAZA, cz) + c.ground(cx, cz + PLAZA) + c.ground(cx, cz - PLAZA);
+        return Math.round(y / 4f);
+    }
+
     private static void square(VillageCanvas c, int cx, int cz) {
+        int level = plazaLevel(c, cx, cz);
         for (int x = -PLAZA; x <= PLAZA; x++)
             for (int z = -PLAZA; z <= PLAZA; z++) {
                 if (x * x + z * z > PLAZA * PLAZA + 4 || Math.abs(x) <= 3 && Math.abs(z) <= 3) continue;
                 int h = (x * 31 + z * 17 + x * z) & 7;
                 Block b = h < 3 ? Blocks.STONE_BRICKS : h < 5 ? Blocks.COBBLESTONE : h < 6 ? Blocks.ANDESITE : h < 7 ? Blocks.MOSSY_COBBLESTONE : Blocks.POLISHED_ANDESITE;
-                road(c, cx + x, cz + z, b.defaultBlockState());
+                roadAt(c, cx + x, cz + z, level, b.defaultBlockState());
             }
     }
 
@@ -359,11 +450,27 @@ public final class MedievalVillage {
     /** A fenced field with water channels, four crops in bands and a scarecrow. */
     private static void field(VillageCanvas c, int x0, int z0, int w, int d, Direction gateSide) {
         CropBlock[] crops = {(CropBlock) Blocks.WHEAT, (CropBlock) Blocks.CARROTS, (CropBlock) Blocks.POTATOES, (CropBlock) Blocks.BEETROOTS};
+        // the whole field lies flat at one height: filled up where the ground dips, cut where it rises
+        int fy = medianGround(c, x0, z0, w, d);
+        for (int x = -1; x <= w; x++)
+            for (int z = -1; z <= d; z++) {
+                int wx = x0 + x, wz = z0 + z, g = c.ground(wx, wz);
+                boolean bank = x == -1 || z == -1 || x == w || z == d;
+                for (int y = Math.min(g, fy) - 3; y < fy; y++) {
+                    BlockPos q = new BlockPos(wx, y, wz);
+                    if (y > g || c.get(q).getFluidState().isSource() || c.get(q).isAir()) c.set(q, Blocks.DIRT.defaultBlockState());
+                }
+                for (int y = fy + 1; y <= Math.max(g, fy) + 8; y++) {
+                    BlockPos q = new BlockPos(wx, y, wz);
+                    if (VillageCanvas.clearable(c.get(q)) || !c.get(q).getFluidState().isEmpty()) c.set(q, Blocks.AIR.defaultBlockState());
+                }
+                // a grass bank all round, so a lake beside the field cannot spill into it
+                if (bank) c.set(new BlockPos(wx, fy, wz), Blocks.GRASS_BLOCK.defaultBlockState());
+            }
         for (int x = 0; x < w; x++)
             for (int z = 0; z < d; z++) {
-                int wx = x0 + x, wz = z0 + z, g = c.ground(wx, wz);
+                int wx = x0 + x, wz = z0 + z, g = fy;
                 BlockPos at = new BlockPos(wx, g, wz);
-                for (int y = 1; y <= 6; y++) if (VillageCanvas.clearable(c.get(at.above(y)))) c.set(at.above(y), Blocks.AIR.defaultBlockState());
                 boolean edge = x == 0 || z == 0 || x == w - 1 || z == d - 1;
                 if (edge) {
                     boolean gate = (gateSide == EAST ? x == w - 1 : x == 0) && z == d / 2;
@@ -373,7 +480,7 @@ public final class MedievalVillage {
                     continue;
                 }
                 boolean water = (x % 5 == 3) && z > 1 && z < d - 2;
-                if (water && c.ground(wx + 1, wz) >= g && c.ground(wx - 1, wz) >= g && c.ground(wx, wz + 1) >= g && c.ground(wx, wz - 1) >= g) {
+                if (water) {
                     c.set(at, Blocks.WATER.defaultBlockState());
                     continue;
                 }
@@ -381,7 +488,7 @@ public final class MedievalVillage {
                 c.set(at, Blocks.FARMLAND.defaultBlockState().setValue(BlockStateProperties.MOISTURE, 7));
                 c.set(at.above(), crop.getStateForAge(crop.getMaxAge()));
             }
-        int sx = x0 + w / 2, sz = z0 + d / 2, g = c.ground(sx, sz);
+        int sx = x0 + w / 2, sz = z0 + d / 2, g = fy;
         BlockPos s = new BlockPos(sx, g, sz);
         c.set(s, Blocks.GRASS_BLOCK.defaultBlockState());
         c.set(s.above(), Blocks.SPRUCE_FENCE.defaultBlockState());

@@ -54,8 +54,24 @@ final class TowerFloorTerrainHigh {
         return 100 + (int) Math.round(12 * n(15, x + 999, z, 0.007, 3));
     }
 
+    /** Floor 11's one water level: every lake and pond lies flat at it, so water never stands in steps on a slope. */
+    static final int WATER_LEVEL = 66;
+
     private static boolean pond(int x, int z) {
         return n(11, x + 5000, z - 2000, 0.01, 2) > 0.55;
+    }
+
+    /** Floor 11's ground top: ponds are dug below the water level where the land is low enough to hold them. */
+    private static int groundTop(int x, int z) {
+        int h = height(11, x, z);
+        if (!pond(x, z) || h > WATER_LEVEL + 3) return h;
+        double strength = n(11, x + 5000, z - 2000, 0.01, 2) - 0.55;
+        return Math.min(h, WATER_LEVEL) - 1 - (int) Math.min(2, strength * 12);
+    }
+
+    /** True where floor 11 has water over its ground. */
+    static boolean wet(int x, int z) {
+        return groundTop(x, z) < WATER_LEVEL;
     }
 
     // ── filling ──────────────────────────────────────────────────────────────
@@ -74,13 +90,15 @@ final class TowerFloorTerrainHigh {
                 int h = height(floor, x, z);
                 int slope = Math.abs(height(floor, x + 1, z) - height(floor, x - 1, z)) + Math.abs(height(floor, x, z + 1) - height(floor, x, z - 1));
                 boolean steep = slope > 4;
-                boolean water = floor == 11 && pond(x, z);
-                int top = water ? h - 2 : h;
-                for (int y = -64; y <= h; y++) {
+                int top = floor == 11 ? groundTop(x, z) : h;
+                boolean water = floor == 11 && top < WATER_LEVEL;
+                int last = water ? WATER_LEVEL : h;
+                for (int y = -64; y <= last; y++) {
                     BlockState s;
                     if (y == -64) s = Blocks.BEDROCK.defaultBlockState();
                     else if (y < 0) s = Blocks.DEEPSLATE.defaultBlockState();
                     else if (water && y > top) s = Blocks.WATER.defaultBlockState();
+                    else if (water && y == top) s = Blocks.DIRT.defaultBlockState();
                     else s = ground(floor, x, y, z, top, steep);
                     chunk.setBlockState(p.set(x, y, z), s, false);
                 }
@@ -89,8 +107,8 @@ final class TowerFloorTerrainHigh {
         }
         switch (floor) {
             case 11 -> {
-                scatter(11, w, x0, z0, 9, 4, 0.30, 10, (wr, x, y, z, a, b) -> { if (flat(11, x, z) && !pond(x, z)) broadleaf(wr, x, y, z, a, b); });
-                scatter(11, w, x0, z0, 40, 6, 0.35, 20, (wr, x, y, z, a, b) -> { if (flat(11, x, z) && !pond(x, z)) grove(wr, x, z, a); });
+                scatter(11, w, x0, z0, 9, 4, 0.30, 10, (wr, x, y, z, a, b) -> { if (flat(11, x, z) && !wet(x, z)) broadleaf(wr, x, y, z, a, b); });
+                scatter(11, w, x0, z0, 40, 6, 0.35, 20, (wr, x, y, z, a, b) -> { if (flat(11, x, z) && !wet(x, z)) grove(wr, x, z, a); });
             }
             case 12 -> {
                 scatter(12, w, x0, z0, 11, 6, 0.55, 10, (wr, x, y, z, a, b) -> { if (flat(12, x, z)) crimsonFungus(wr, x, y, z, a, b); });
@@ -302,7 +320,7 @@ final class TowerFloorTerrainHigh {
         for (int i = 0; i < 4; i++) {
             double a = r * 6.28 + i * 1.57;
             int tx = x + (int) Math.round(Math.cos(a) * 4), tz = z + (int) Math.round(Math.sin(a) * 4);
-            if (flat(11, tx, tz) && !pond(tx, tz)) broadleaf(w, tx, height(11, tx, tz) + 1, tz, hash(11, tx, tz, 3), 0.1);
+            if (flat(11, tx, tz) && !wet(tx, tz)) broadleaf(w, tx, height(11, tx, tz) + 1, tz, hash(11, tx, tz, 3), 0.1);
         }
     }
 

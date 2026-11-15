@@ -36,28 +36,31 @@ final class VillageBuildings {
     record Style(Block roofStairs, Block roofSlab, Block floor, Block frame, Block beam, Block plaster, Block footing, int footRows, Walls kind) {}
 
     // the house palettes: different wood, wall, base and roof, so no two neighbours look alike
+    // (no white terracotta, mud brick, packed mud or calcite: they looked wrong; no half-stone, half-wood walls)
     static final Style SPRUCE = new Style(Blocks.SPRUCE_STAIRS, Blocks.SPRUCE_SLAB, Blocks.SPRUCE_PLANKS,
-            Blocks.DARK_OAK_LOG, Blocks.STRIPPED_DARK_OAK_LOG, Blocks.WHITE_TERRACOTTA, Blocks.COBBLESTONE, 1, Walls.FRAMED);
+            Blocks.DARK_OAK_LOG, Blocks.STRIPPED_DARK_OAK_LOG, Blocks.OAK_PLANKS, Blocks.COBBLESTONE, 1, Walls.FRAMED);
     static final Style DARK = new Style(Blocks.DARK_OAK_STAIRS, Blocks.DARK_OAK_SLAB, Blocks.OAK_PLANKS,
-            Blocks.DARK_OAK_LOG, Blocks.STRIPPED_SPRUCE_LOG, Blocks.SPRUCE_PLANKS, Blocks.STONE_BRICKS, 2, Walls.FRAMED);
+            Blocks.OAK_LOG, Blocks.STRIPPED_OAK_LOG, Blocks.SPRUCE_PLANKS, Blocks.COBBLESTONE, 1, Walls.FRAMED);
     static final Style BRICK = new Style(Blocks.BRICK_STAIRS, Blocks.BRICK_SLAB, Blocks.SPRUCE_PLANKS,
-            Blocks.DARK_OAK_LOG, Blocks.STRIPPED_DARK_OAK_LOG, Blocks.WHITE_TERRACOTTA, Blocks.COBBLESTONE, 1, Walls.FRAMED);
+            Blocks.DARK_OAK_LOG, Blocks.STRIPPED_DARK_OAK_LOG, Blocks.SPRUCE_PLANKS, Blocks.COBBLESTONE, 1, Walls.FRAMED);
     static final Style SLATE = new Style(Blocks.DEEPSLATE_TILE_STAIRS, Blocks.DEEPSLATE_TILE_SLAB, Blocks.SPRUCE_PLANKS,
-            Blocks.SPRUCE_LOG, Blocks.STRIPPED_SPRUCE_LOG, Blocks.CALCITE, Blocks.STONE_BRICKS, 2, Walls.FRAMED);
-    static final Style MUD = new Style(Blocks.MANGROVE_STAIRS, Blocks.MANGROVE_SLAB, Blocks.OAK_PLANKS,
-            Blocks.OAK_LOG, Blocks.STRIPPED_OAK_LOG, Blocks.MUD_BRICKS, Blocks.COBBLESTONE, 1, Walls.FRAMED);
-    static final Style PACKED = new Style(Blocks.SPRUCE_STAIRS, Blocks.SPRUCE_SLAB, Blocks.BIRCH_PLANKS,
-            Blocks.DARK_OAK_LOG, Blocks.STRIPPED_DARK_OAK_LOG, Blocks.PACKED_MUD, Blocks.STONE_BRICKS, 1, Walls.FRAMED);
+            Blocks.SPRUCE_LOG, Blocks.SPRUCE_LOG, Blocks.STONE_BRICKS, Blocks.STONE_BRICKS, 1, Walls.SOLID);
+    static final Style BIRCH = new Style(Blocks.DARK_OAK_STAIRS, Blocks.DARK_OAK_SLAB, Blocks.SPRUCE_PLANKS,
+            Blocks.SPRUCE_LOG, Blocks.STRIPPED_SPRUCE_LOG, Blocks.BIRCH_PLANKS, Blocks.COBBLESTONE, 1, Walls.FRAMED);
+    static final Style OAK_CABIN = new Style(Blocks.SPRUCE_STAIRS, Blocks.SPRUCE_SLAB, Blocks.OAK_PLANKS,
+            Blocks.STRIPPED_OAK_LOG, Blocks.STRIPPED_OAK_LOG, Blocks.OAK_LOG, Blocks.COBBLESTONE, 1, Walls.LOGS);
+    // kept for the old names used by the landmarks
+    static final Style MUD = BRICK;
     static final Style COTTAGE = new Style(Blocks.SPRUCE_STAIRS, Blocks.SPRUCE_SLAB, Blocks.SPRUCE_PLANKS,
             Blocks.SPRUCE_LOG, Blocks.STRIPPED_SPRUCE_LOG, Blocks.COBBLESTONE, Blocks.MOSSY_COBBLESTONE, 1, Walls.SOLID);
     static final Style TOWNHOUSE = new Style(Blocks.DEEPSLATE_TILE_STAIRS, Blocks.DEEPSLATE_TILE_SLAB, Blocks.DARK_OAK_PLANKS,
             Blocks.STONE_BRICKS, Blocks.STONE_BRICKS, Blocks.BRICKS, Blocks.STONE_BRICKS, 1, Walls.SOLID);
     static final Style CABIN = new Style(Blocks.DARK_OAK_STAIRS, Blocks.DARK_OAK_SLAB, Blocks.SPRUCE_PLANKS,
             Blocks.STRIPPED_SPRUCE_LOG, Blocks.STRIPPED_SPRUCE_LOG, Blocks.SPRUCE_LOG, Blocks.COBBLESTONE, 1, Walls.LOGS);
-    static final Style STONE_HALF = new Style(Blocks.STONE_BRICK_STAIRS, Blocks.STONE_BRICK_SLAB, Blocks.OAK_PLANKS,
-            Blocks.SPRUCE_LOG, Blocks.STRIPPED_SPRUCE_LOG, Blocks.WHITE_TERRACOTTA, Blocks.STONE_BRICKS, 3, Walls.FRAMED);
+    static final Style STONE_HALF = new Style(Blocks.DEEPSLATE_TILE_STAIRS, Blocks.DEEPSLATE_TILE_SLAB, Blocks.DARK_OAK_PLANKS,
+            Blocks.DARK_OAK_LOG, Blocks.STONE_BRICKS, Blocks.STONE_BRICKS, Blocks.STONE_BRICKS, 1, Walls.SOLID);
 
-    static final Style[] HOUSE_STYLES = {SPRUCE, DARK, BRICK, SLATE, MUD, PACKED, COTTAGE, TOWNHOUSE, CABIN, STONE_HALF};
+    static final Style[] HOUSE_STYLES = {SPRUCE, DARK, BRICK, SLATE, BIRCH, OAK_CABIN, COTTAGE, TOWNHOUSE, CABIN};
 
     static BlockState stairs(Block b, Direction f) {
         return b.defaultBlockState().setValue(StairBlock.FACING, f);
@@ -109,6 +112,11 @@ final class VillageBuildings {
 
     /** Ground under the building filled down to the earth, the site cleared, a stone floor rim and a plank floor. */
     static void site(Plot p, int height, Block floor) {
+        site(p, height, floor, true);
+    }
+
+    /** {@code ring}: raise the ground round the building to its floor (not for stalls and the well on the square). */
+    static void site(Plot p, int height, Block floor, boolean ring) {
         for (int x = -2; x <= p.w + 1; x++)
             for (int z = -2; z <= p.d + 1; z++) {
                 BlockPos col = p.pos(x, 0, z);
@@ -119,6 +127,7 @@ final class VillageBuildings {
                     BlockState s = p.canvas.get(q);
                     if (inside ? !s.isAir() : VillageCanvas.clearable(s)) p.canvas.set(q, Blocks.AIR.defaultBlockState());
                 }
+                if (!inside && !ring) continue;
                 if (!inside) {
                     // a ring of grass at floor level so the house does not float above or sink in a ditch
                     int g = p.canvas.ground(col.getX(), col.getZ());
@@ -138,9 +147,14 @@ final class VillageBuildings {
      * a beam along the top. {@code storeys} lists the y of each beam row (floor levels inside).
      */
     static void walls(Plot p, int top, Style st, int... beams) {
-        for (int x = 0; x < p.w; x++)
-            for (int z = 0; z < p.d; z++) {
-                boolean edgeX = x == 0 || x == p.w - 1, edgeZ = z == 0 || z == p.d - 1;
+        walls(p, 0, p.w - 1, 0, p.d - 1, top, st, beams);
+    }
+
+    /** The same walls around the rectangle x0..x1, z0..z1 (for a wing). */
+    static void walls(Plot p, int x0, int x1, int z0, int z1, int top, Style st, int... beams) {
+        for (int x = x0; x <= x1; x++)
+            for (int z = z0; z <= z1; z++) {
+                boolean edgeX = x == x0 || x == x1, edgeZ = z == z0 || z == z1;
                 if (!edgeX && !edgeZ) continue;
                 boolean corner = edgeX && edgeZ;
                 boolean post = corner || (edgeZ && x % 4 == 0) || (edgeX && z % 4 == 0);
@@ -181,6 +195,10 @@ final class VillageBuildings {
     }
 
     /** A flat plank ceiling over the top storey, so the underside of the roof is never seen from inside. */
+    static void ceiling(Plot p, int x0, int x1, int z0, int z1, int top, Block b) {
+        p.fill(x0 + 1, top, z0 + 1, x1 - 1, top, z1 - 1, b);
+    }
+
     static void ceiling(Plot p, int top, Block b) {
         p.fill(1, top, 1, p.w - 2, top, p.d - 2, b);
     }
@@ -205,16 +223,21 @@ final class VillageBuildings {
      */
     static void roof(Plot p, int top, Style st, boolean ridgeAcross) {
         ceiling(p, top, st.floor());
-        if (!ridgeAcross) {
+        roof(p, 0, p.w - 1, 0, p.d - 1, top, st, ridgeAcross);
+    }
+
+    /** A gable roof over the rectangle x0..x1, z0..z1 (no ceiling), ridge along z or, with {@code across}, along x. */
+    static void roof(Plot p, int x0, int x1, int z0, int z1, int top, Style st, boolean across) {
+        if (!across) {
             for (int i = 0; ; i++) {
-                int l = -1 + i, r = p.w - i, y = top + 1 + i;
+                int l = x0 - 1 + i, r = x1 + 1 - i, y = top + 1 + i;
                 if (l > r) break;
-                for (int z = -1; z <= p.d; z++) {
+                for (int z = z0 - 1; z <= z1 + 1; z++) {
                     if (l == r) p.set(l, y, z, slab(st.roofSlab(), SlabType.BOTTOM));
                     else {
                         p.set(l, y, z, stairs(st.roofStairs(), EAST));
                         p.set(r, y, z, stairs(st.roofStairs(), WEST));
-                        if (i > 0 && (z == -1 || z == p.d)) {
+                        if (i > 0 && (z == z0 - 1 || z == z1 + 1)) {
                             p.set(l, y - 1, z, stairsTop(st.roofStairs(), WEST));
                             p.set(r, y - 1, z, stairsTop(st.roofStairs(), EAST));
                         }
@@ -222,19 +245,19 @@ final class VillageBuildings {
                 }
                 for (int x = l; x <= r; x++) {
                     if (y - 1 <= top) continue;
-                    for (int z : new int[]{0, p.d - 1}) p.set(x, y - 1, z, gable(st, x == p.w / 2));
+                    for (int z : new int[]{z0, z1}) p.set(x, y - 1, z, gable(st, x == (x0 + x1) / 2));
                 }
             }
         } else {
             for (int i = 0; ; i++) {
-                int f = -1 + i, b = p.d - i, y = top + 1 + i;
+                int f = z0 - 1 + i, b = z1 + 1 - i, y = top + 1 + i;
                 if (f > b) break;
-                for (int x = -1; x <= p.w; x++) {
+                for (int x = x0 - 1; x <= x1 + 1; x++) {
                     if (f == b) p.set(x, y, f, slab(st.roofSlab(), SlabType.BOTTOM));
                     else {
                         p.set(x, y, f, stairs(st.roofStairs(), SOUTH));
                         p.set(x, y, b, stairs(st.roofStairs(), NORTH));
-                        if (i > 0 && (x == -1 || x == p.w)) {
+                        if (i > 0 && (x == x0 - 1 || x == x1 + 1)) {
                             p.set(x, y - 1, f, stairsTop(st.roofStairs(), NORTH));
                             p.set(x, y - 1, b, stairsTop(st.roofStairs(), SOUTH));
                         }
@@ -242,10 +265,61 @@ final class VillageBuildings {
                 }
                 for (int z = f; z <= b; z++) {
                     if (y - 1 <= top) continue;
-                    for (int x : new int[]{0, p.w - 1}) p.set(x, y - 1, z, gable(st, z == p.d / 2));
+                    for (int x : new int[]{x0, x1}) p.set(x, y - 1, z, gable(st, z == (z0 + z1) / 2));
                 }
             }
         }
+    }
+
+    // ── features that make houses differ in shape, not only in colour ────────
+
+    /** A covered porch over the front door: two posts, a slab roof and a plank deck. */
+    static void porch(Plot p, Style st, int x0, int x1) {
+        for (int x = x0; x <= x1; x++)
+            for (int z = -2; z <= -1; z++) {
+                p.set(x, 0, z, st.floor());
+                p.set(x, 3, z, slab(st.roofSlab(), SlabType.BOTTOM));
+            }
+        for (int x : new int[]{x0, x1}) {
+            p.set(x, 1, -2, log(st.frame(), Direction.Axis.Y));
+            p.set(x, 2, -2, log(st.frame(), Direction.Axis.Y));
+        }
+        p.set(x0, 2, -1, lantern(false).setValue(LanternBlock.HANGING, false));
+        p.set(x1 - 1, 1, -2, Blocks.POTTED_RED_TULIP);
+    }
+
+    /** A brick chimney stack against the outside of the left wall, smoking at the top. */
+    static void chimney(Plot p, int z, int height) {
+        for (int y = 0; y <= height; y++) p.set(-1, y, z, Blocks.BRICKS);
+        p.set(-1, height + 1, z, Blocks.CAMPFIRE.defaultBlockState().setValue(CampfireBlock.LIT, true));
+    }
+
+    /** A little stone tower on the front right corner, rising above the roof with a pointed cap. */
+    static void cornerTower(Plot p, int top, Style st) {
+        int x0 = p.w - 3, z0 = 0, h = top + 5;
+        for (int x = x0; x <= x0 + 2; x++)
+            for (int z = z0; z <= z0 + 2; z++)
+                for (int y = 1; y <= h; y++) {
+                    boolean ring = x == x0 || x == x0 + 2 || z == z0 || z == z0 + 2;
+                    if (ring) p.set(x, y, z, stoneMix(p, x, y, z));
+                    else if (y > top) p.set(x, y, z, Blocks.AIR);
+                }
+        p.set(x0 + 1, h - 1, z0, pane(Blocks.GLASS_PANE, Direction.Axis.X));
+        p.set(x0 + 2, h - 1, z0 + 1, pane(Blocks.GLASS_PANE, Direction.Axis.Z));
+        for (int x = x0 - 1; x <= x0 + 3; x++)
+            for (int z = z0 - 1; z <= z0 + 3; z++) {
+                boolean ring = x == x0 - 1 || x == x0 + 3 || z == z0 - 1 || z == z0 + 3;
+                if (!ring) { p.set(x, h + 1, z, st.roofSlab() == Blocks.STONE_BRICK_SLAB ? Blocks.DEEPSLATE_TILES : Blocks.DEEPSLATE_TILES); continue; }
+                Direction f = x == x0 - 1 ? EAST : x == x0 + 3 ? WEST : z == z0 - 1 ? SOUTH : NORTH;
+                p.set(x, h + 1, z, stairs(Blocks.DEEPSLATE_TILE_STAIRS, f));
+            }
+        for (int x = x0; x <= x0 + 2; x++)
+            for (int z = z0; z <= z0 + 2; z++) {
+                boolean ring = x == x0 || x == x0 + 2 || z == z0 || z == z0 + 2;
+                Direction f = x == x0 ? EAST : x == x0 + 2 ? WEST : z == z0 ? SOUTH : NORTH;
+                p.set(x, h + 2, z, ring ? stairs(Blocks.DEEPSLATE_TILE_STAIRS, f) : Blocks.DEEPSLATE_TILES.defaultBlockState());
+            }
+        p.set(x0 + 1, h + 3, z0 + 1, Blocks.DEEPSLATE_TILE_WALL);
     }
 
     private static BlockState gable(Style st, boolean middle) {
@@ -300,6 +374,16 @@ final class VillageBuildings {
         p.set(ox, 0, oz, Blocks.STONE_BRICKS);
         p.set(ox, 1, oz, Blocks.AIR);
         p.set(ox, 2, oz, Blocks.AIR);
+        // a house standing above the ground gets steps down from its door
+        BlockPos step = p.pos(ox, 0, oz);
+        int drop = Math.min(8, p.floorY - p.canvas.ground(step.getX(), step.getZ()));
+        for (int y = -1; y >= -drop - 1; y--) p.set(ox, y, oz, Blocks.COBBLESTONE);
+        for (int k = 1; k <= drop; k++) {
+            int sx = ox + face.getStepX() * k, sz = oz + face.getStepZ() * k;
+            p.set(sx, -k, sz, stairs(Blocks.COBBLESTONE_STAIRS, face.getOpposite()));
+            for (int y = -k - 1; y >= -drop - 1; y--) p.set(sx, y, sz, Blocks.COBBLESTONE);
+            for (int y = -k + 1; y <= -k + 3; y++) p.set(sx, y, sz, Blocks.AIR);
+        }
     }
 
     static void bed(Plot p, int x, int y, int z, Direction toHead, Block bed) {
@@ -335,17 +419,22 @@ final class VillageBuildings {
         return from[(p.noise(salt, 7, salt * 3) >> 3) % from.length];
     }
 
+    /** Extra features a house may have, as bits. */
+    static final int PORCH = 1, CHIMNEY = 2, TOWER = 4;
+
     static List<Resident> smallHouse(Plot p, Style st, String job, Block workstation) {
-        return smallHouse(p, st, job, workstation, false, false);
+        return smallHouse(p, st, job, workstation, false, false, 0);
     }
 
     /** {@code across}: ridge along the front; {@code gable}: a little front gable over the door (with {@code across}). */
-    static List<Resident> smallHouse(Plot p, Style st, String job, Block workstation, boolean across, boolean gable) {
+    static List<Resident> smallHouse(Plot p, Style st, String job, Block workstation, boolean across, boolean gable, int extras) {
         int top = 4;
         site(p, top + 6, st.floor());
         walls(p, top, st);
         roof(p, top, st, across);
         if (across && gable) frontGable(p, top, st, 4, 2);
+        if ((extras & PORCH) != 0) porch(p, st, 2, 6);
+        if ((extras & CHIMNEY) != 0) chimney(p, 3, top + (across ? 4 : 5) + 1);
         door(p, 4, 0, NORTH, pick(p, DOORS, 1));
         // rug, bed and pots change from house to house
         Block rug = pick(p, RUGS, 2), bedColour = pick(p, BEDS, 3);
@@ -379,11 +468,13 @@ final class VillageBuildings {
 
     // ── the long house (11 x 7): kitchen and bedroom divided by a wall ────────
 
-    static List<Resident> longHouse(Plot p, Style st, String job, boolean across) {
+    static List<Resident> longHouse(Plot p, Style st, String job, boolean across, int extras) {
         int top = 4;
         site(p, top + 6, st.floor());
         walls(p, top, st);
         roof(p, top, st, across);
+        if ((extras & PORCH) != 0) porch(p, st, 1, 5);
+        if ((extras & CHIMNEY) != 0) chimney(p, 3, top + (across ? 4 : 6) + 1);
         door(p, 3, 0, NORTH, pick(p, DOORS, 1));
         window(p, 1, 2, 0, 2);
         window(p, 7, 2, 0, 2);
@@ -419,6 +510,66 @@ final class VillageBuildings {
         p.set(3, top - 1, 3, lantern(true));
         p.set(8, top - 1, 3, lantern(true));
         return List.of(new Resident(new BlockPos(3, 1, 2), job));
+    }
+
+    // ── the L house (9 x 11): a hall across the front, a bedroom wing behind, a garden in the corner ──
+
+    static List<Resident> lHouse(Plot p, Style st, String job, int extras) {
+        int top = 4;
+        site(p, top + 7, st.floor());
+        walls(p, 0, 8, 0, 6, top, st);
+        walls(p, 0, 4, 6, 10, top, st);
+        ceiling(p, 0, 8, 0, 6, top, st.floor());
+        ceiling(p, 0, 4, 6, 10, top, st.floor());
+        p.fill(1, top, 6, 3, top, 6, st.floor());
+        roof(p, 0, 8, 0, 6, top, st, true);
+        roof(p, 0, 4, 6, 10, top, st, false);
+        // the way through to the wing
+        for (int y = 1; y <= 2; y++) for (int x = 1; x <= 3; x++) p.set(x, y, 6, Blocks.AIR);
+        door(p, 5, 0, NORTH, pick(p, DOORS, 1));
+        if ((extras & CHIMNEY) != 0) chimney(p, 3, top + 5);
+        window(p, 2, 2, 0, 2);
+        window(p, 7, 2, 0, 2);
+        window(p, 8, 2, 3, 2);
+        window(p, 0, 2, 3, 2);
+        window(p, 0, 2, 8, 2);
+        window(p, 2, 2, 10, 2);
+        window(p, 4, 2, 8, 2);
+        // the garden in the corner: grass, flowers, a fence with a gate, a bench
+        for (int x = 5; x <= 8; x++)
+            for (int z = 7; z <= 10; z++) {
+                p.set(x, 0, z, Blocks.GRASS_BLOCK);
+                for (int y = 1; y <= 3; y++) p.set(x, y, z, Blocks.AIR);
+                boolean edge = x == 8 || z == 10;
+                if (edge) p.set(x, 1, z, x == 8 && z == 8 ? Blocks.SPRUCE_FENCE_GATE.defaultBlockState().setValue(FenceGateBlock.FACING, EAST)
+                        : Blocks.SPRUCE_FENCE.defaultBlockState());
+                else if ((x + z) % 2 == 0) p.set(x, 1, z, pick(p, new Block[]{Blocks.POPPY, Blocks.CORNFLOWER, Blocks.OXEYE_DAISY, Blocks.ALLIUM}, x * 7 + z));
+            }
+        p.set(6, 1, 7, stairs(Blocks.SPRUCE_STAIRS, SOUTH));
+        p.set(7, 1, 7, stairs(Blocks.SPRUCE_STAIRS, SOUTH));
+        p.set(5, 1, 9, Blocks.COMPOSTER);
+        // the hall: kitchen on the right, table in the middle
+        p.set(7, 1, 5, facing(Blocks.FURNACE, NORTH));
+        p.set(6, 1, 5, Blocks.CRAFTING_TABLE);
+        p.set(5, 1, 5, facing(Blocks.SMOKER, NORTH));
+        p.set(7, 1, 1, facing(Blocks.BARREL, UP));
+        p.set(7, 2, 1, pick(p, POTS, 4));
+        table(p, 4, 1, 3, Blocks.WHITE_CARPET);
+        chair(p, 3, 1, 3, EAST);
+        chair(p, 5, 1, 3, WEST);
+        p.fill(3, 1, 4, 5, 1, 4, pick(p, RUGS, 2));
+        p.set(1, 1, 1, Blocks.BOOKSHELF);
+        p.set(1, 2, 1, pick(p, POTS, 5));
+        // the wing: bedroom
+        Block bedColour = pick(p, BEDS, 3);
+        bed(p, 1, 1, 8, SOUTH, bedColour);
+        chest(p, 2, 1, 9, NORTH, "house");
+        p.set(3, 1, 9, facing(Blocks.BARREL, NORTH));
+        p.set(3, 1, 7, pick(p, RUGS, 6));
+        for (int x = 1; x <= 7; x++) p.set(x, top, 3, log(st.beam(), Direction.Axis.X));
+        p.set(4, top - 1, 3, lantern(true));
+        p.set(2, top - 1, 8, lantern(true));
+        return List.of(new Resident(new BlockPos(4, 1, 2), job));
     }
 
     // ── the bakery (9 x 7): brick oven, flour sacks, a counter for the bread ──
@@ -523,15 +674,17 @@ final class VillageBuildings {
     // ── the two-storey house (9 x 9) ─────────────────────────────────────────
 
     static List<Resident> tallHouse(Plot p, Style st, String job, Block workstation) {
-        return tallHouse(p, st, job, workstation, false, false);
+        return tallHouse(p, st, job, workstation, false, false, 0);
     }
 
-    static List<Resident> tallHouse(Plot p, Style st, String job, Block workstation, boolean across, boolean gable) {
+    static List<Resident> tallHouse(Plot p, Style st, String job, Block workstation, boolean across, boolean gable, int extras) {
         int mid = 4, top = 8;
-        site(p, top + 6, st.floor());
+        site(p, top + 10, st.floor());
         walls(p, top, st, mid);
         roof(p, top, st, across);
         if (across && gable) frontGable(p, top, st, 4, 2);
+        if ((extras & TOWER) != 0) cornerTower(p, top, st);
+        if ((extras & CHIMNEY) != 0) chimney(p, 4, top + 5 + 1);
         // upper floor with a hole for the ladder
         p.fill(1, mid, 1, p.w - 2, mid, p.d - 2, st.floor());
         p.set(7, mid, 7, Blocks.AIR);
@@ -733,7 +886,8 @@ final class VillageBuildings {
             for (int z = -1; z <= 3; z++)
                 for (int y = top + 1; y <= tTop; y++) {
                     boolean wall = x == 3 || x == 7 || z == -1 || z == 3;
-                    boolean belfry = y >= tTop - 3 && y <= tTop - 1 && (x == 5 || z == 1);
+                    // belfry openings to the front and the sides only: the back one looked into the nave's roof space
+                    boolean belfry = y >= tTop - 3 && y <= tTop - 1 && ((x == 5 && z == -1) || (z == 1 && (x == 3 || x == 7)));
                     p.set(x, y, z, wall && !belfry ? stoneMix(p, x, y, z).defaultBlockState() : Blocks.AIR.defaultBlockState());
                 }
         for (int x = 3; x <= 7; x++) for (int y = 1; y <= top; y++) p.set(x, y, -1, stoneMix(p, x, y, -1));
@@ -745,18 +899,35 @@ final class VillageBuildings {
         p.fill(4, top + 1, 0, 6, top + 1, 2, Blocks.STONE_BRICKS);   // belfry floor
         p.set(5, tTop - 1, 1, Blocks.BELL.defaultBlockState().setValue(BellBlock.ATTACHMENT, BellAttachType.CEILING).setValue(BellBlock.FACING, NORTH));
         p.fill(4, tTop, 0, 6, tTop, 2, Blocks.STONE_BRICKS);
-        for (int i = 0; i <= 2; i++) {
-            int y = tTop + 1 + i;
-            for (int x = 3 + i; x <= 7 - i; x++)
-                for (int z = -1 + i; z <= 3 - i; z++) {
-                    boolean edge = x == 3 + i || x == 7 - i || z == -1 + i || z == 3 - i;
-                    if (!edge) continue;
-                    Direction f = x == 3 + i ? EAST : x == 7 - i ? WEST : z == -1 + i ? SOUTH : NORTH;
-                    p.set(x, y, z, stairs(Blocks.DEEPSLATE_TILE_STAIRS, f));
+        // a cornice of upturned stairs, a pinnacle at each corner, and a tall solid spire in the middle
+        for (int x = 2; x <= 8; x++)
+            for (int z = -2; z <= 4; z++) {
+                boolean ring = x == 2 || x == 8 || z == -2 || z == 4;
+                if (!ring) continue;
+                Direction f = x == 2 ? EAST : x == 8 ? WEST : z == -2 ? SOUTH : NORTH;
+                p.set(x, tTop, z, stairsTop(Blocks.STONE_BRICK_STAIRS, f.getOpposite()));
+            }
+        for (int[] c : new int[][]{{3, -1}, {7, -1}, {3, 3}, {7, 3}}) {
+            p.set(c[0], tTop + 1, c[1], Blocks.STONE_BRICK_WALL);
+            p.set(c[0], tTop + 2, c[1], Blocks.STONE_BRICK_WALL);
+            p.set(c[0], tTop + 3, c[1], Blocks.LANTERN);
+        }
+        for (int i = 0; i <= 1; i++) {
+            int y = tTop + 1 + i * 2;
+            int r = 1 - i;                                            // a 3x3 then a 1x1 layer, each two blocks tall
+            for (int x = 5 - r; x <= 5 + r; x++)
+                for (int z = 1 - r; z <= 1 + r; z++) {
+                    boolean edge = x == 5 - r || x == 5 + r || z == 1 - r || z == 1 + r;
+                    p.set(x, y, z, Blocks.DEEPSLATE_TILES);
+                    if (edge && r > 0) {
+                        Direction f = x == 5 - r ? EAST : x == 5 + r ? WEST : z == 1 - r ? SOUTH : NORTH;
+                        p.set(x, y + 1, z, stairs(Blocks.DEEPSLATE_TILE_STAIRS, f));
+                    } else p.set(x, y + 1, z, Blocks.DEEPSLATE_TILES);
                 }
         }
-        p.set(5, tTop + 3, 1, Blocks.DEEPSLATE_TILE_WALL);
-        p.set(5, tTop + 4, 1, Blocks.LIGHTNING_ROD);
+        p.set(5, tTop + 5, 1, Blocks.DEEPSLATE_TILE_WALL);
+        p.set(5, tTop + 6, 1, Blocks.DEEPSLATE_TILE_WALL);
+        p.set(5, tTop + 7, 1, Blocks.LIGHTNING_ROD);
         return List.of(new Resident(new BlockPos(5, 1, 11), "cleric"), new Resident(new BlockPos(2, 1, 8), ""));
     }
 
@@ -866,7 +1037,7 @@ final class VillageBuildings {
 
     /** The well in the square: a stone basin of water under a little roof. */
     static void well(Plot p) {
-        site(p, 6, Blocks.STONE_BRICKS);
+        site(p, 6, Blocks.STONE_BRICKS, false);
         for (int x = 0; x < 5; x++) for (int z = 0; z < 5; z++) {
             boolean rim = x == 0 || z == 0 || x == 4 || z == 4;
             p.set(x, 0, z, Blocks.STONE_BRICKS);
@@ -884,7 +1055,7 @@ final class VillageBuildings {
 
     /** A market stall: four posts, a striped canopy, a counter with wares. */
     static List<Resident> stall(Plot p, Block wool, Block wool2, Block ware, String job) {
-        site(p, 5, Blocks.COBBLESTONE);
+        site(p, 5, Blocks.COBBLESTONE, false);
         for (int[] c : new int[][]{{0, 0}, {3, 0}, {0, 2}, {3, 2}})
             for (int y = 1; y <= 2; y++) p.set(c[0], y, c[1], fence(Blocks.SPRUCE_FENCE, false, false, false, false));
         for (int x = -1; x <= 4; x++) for (int z = -1; z <= 3; z++) p.set(x, 3, z, (x + 10) % 2 == 0 ? wool : wool2);
