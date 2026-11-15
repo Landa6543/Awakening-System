@@ -373,7 +373,8 @@ public final class TowerFloorTerrain {
         int h = 7 + (int) (r1 * 9);
         boolean big = r1 > 0.7;
         BlockState stem = Blocks.MUSHROOM_STEM.defaultBlockState();
-        for (int i = 0; i < h; i++) {
+        // the cap is a dome whose middle rises up to 3 blocks above `top`: the stem goes up into it so they join
+        for (int i = 0; i < h + 3; i++) {
             w.trunk(x, y + i, z, stem);
             if (big) { w.trunk(x + 1, y + i, z, stem); w.trunk(x, y + i, z + 1, stem); w.trunk(x + 1, y + i, z + 1, stem); }
         }

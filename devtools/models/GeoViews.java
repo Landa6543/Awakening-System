@@ -41,7 +41,19 @@ public class GeoViews {
                 JsonObject c = ce.getAsJsonObject();
                 double[] o = GeoPreview.d3(c, "origin"), s = GeoPreview.d3(c, "size"), cp = GeoPreview.d3(c, "pivot"), cr = GeoPreview.d3(c, "rotation");
                 double x0 = o[0], y0 = o[1], z0 = o[2], x1 = o[0] + s[0], y1 = o[1] + s[1], z1 = o[2] + s[2];
-                JsonObject uv = c.getAsJsonObject("uv");
+                JsonObject uv;
+                if (c.has("uv") && c.get("uv").isJsonArray()) {
+                    // box UV: the classic unwrap from one corner (u, v) of a w x h x d cube
+                    double bu = c.getAsJsonArray("uv").get(0).getAsDouble(), bv = c.getAsJsonArray("uv").get(1).getAsDouble();
+                    double w = Math.floor(s[0]), h = Math.floor(s[1]), d = Math.floor(s[2]);
+                    uv = new JsonObject();
+                    uv.add("north", face(bu + d, bv + d, w, h));
+                    uv.add("south", face(bu + 2 * d + w, bv + d, w, h));
+                    uv.add("east", face(bu, bv + d, d, h));
+                    uv.add("west", face(bu + d + w, bv + d, d, h));
+                    uv.add("up", face(bu + d, bv, w, d));
+                    uv.add("down", face(bu + d + w, bv, w, d));
+                } else uv = c.getAsJsonObject("uv");
                 Map<String, double[][]> f = new LinkedHashMap<>();
                 f.put("north", new double[][]{{x1, y1, z0}, {x0, y1, z0}, {x0, y0, z0}, {x1, y0, z0}});
                 f.put("south", new double[][]{{x0, y1, z1}, {x1, y1, z1}, {x1, y0, z1}, {x0, y0, z1}});
@@ -106,6 +118,14 @@ public class GeoViews {
     }
 
     static final Map<String, Double> OFFSET = new HashMap<>();
+
+    static JsonObject face(double u, double v, double w, double h) {
+        JsonObject o = new JsonObject();
+        JsonArray a = new JsonArray(); a.add(u); a.add(v);
+        JsonArray b = new JsonArray(); b.add(w); b.add(h);
+        o.add("uv", a); o.add("uv_size", b);
+        return o;
+    }
 
     /** Like GeoPreview.toModel, but each bone also moves by its animated position offset before turning. */
     static double[] toModel(double[] p, String bone) {
