@@ -75,7 +75,9 @@ public class NpcDialogueScreen extends Screen {
             String key = parts[0];
             Object[] args = new Object[parts.length - 1];
             for (int i = 1; i < parts.length; i++) {
-                args[i - 1] = parts[i];
+                // an argument that is itself a name key (an item, a block) is shown translated
+                String a = parts[i];
+                args[i - 1] = a.startsWith("item.") || a.startsWith("block.") ? Component.translatable(a) : a;
             }
             try {
                 return Component.translatable(key, args).getString();
@@ -131,7 +133,7 @@ public class NpcDialogueScreen extends Screen {
 
     private Look look() {
         // the town's people always talk in their own RPG look; everyone else follows the SAO style when it is on
-        if (payload != null && "town_npc".equalsIgnoreCase(payload.dialogueId())) return Look.RPG;
+        if (payload != null && ("town_npc".equalsIgnoreCase(payload.dialogueId()) || "town_smith".equalsIgnoreCase(payload.dialogueId()))) return Look.RPG;
         if (com.soybe.awakeningsystem.client.sao.UiStyle.fullDive()) return Look.SAO;
         return Look.SYSTEM;
     }

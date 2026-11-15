@@ -42,7 +42,9 @@ public final class TownShots {
             new View("people", 6, 16, -1, 2, 160, 8),
             new View("lineup", 0, 117, -1, 1, 0, 4),
             new View("talk_rpg", 0, 127, -1, 1, 0, 8),
-            new View("talk_sao", 0, 127, -1, 1, 0, 8)};
+            new View("talk_sao", 0, 127, -1, 1, 0, 8),
+            new View("talk_smith", 0, 127, -1, 1, 0, 8),
+            new View("talk_smith_order", 0, 127, -1, 1, 0, 8)};
 
     @SubscribeEvent
     public static void tick(ClientTickEvent.Post event) {
@@ -120,6 +122,16 @@ public final class TownShots {
                 if (sp != null && LINEUP.size() > 0) {
                     var who = LINEUP.get(Math.min(LINEUP.size() - 1, Integer.getInteger("awakening.talkIdx", 4)));
                     System.out.println("[TownShots] talking to id=" + who.getId() + " client=" + (mc.level.getEntity(who.getId()) != null) + " skin=" + TownNpcEntity.SKINS[who.skin()]);
+                    if (v.name().startsWith("talk_smith")) {
+                        // the smith's offers; then, with the metals and coins in hand, an order and its countdown bar
+                        var smith = LINEUP.get(0);
+                        if (v.name().equals("talk_smith_order")) {
+                            sp.getInventory().add(new net.minecraft.world.item.ItemStack(com.soybe.awakeningsystem.ore.TowerOres.ITEMS.get("ignite_ingot").get(), 6));
+                            sp.getInventory().add(new net.minecraft.world.item.ItemStack(com.soybe.awakeningsystem.ore.TowerOres.ITEMS.get("grave_steel_ingot").get(), 1));
+                            com.soybe.awakeningsystem.SystemEvents.data(sp).addCoins(5000);
+                            com.soybe.awakeningsystem.dialogue.SmithForge.choice(sp, smith, "order0", 0);
+                        } else com.soybe.awakeningsystem.dialogue.NpcDialogueManager.startDialogue(sp, smith, com.soybe.awakeningsystem.dialogue.SmithForge.DIALOGUE);
+                    } else
                     com.soybe.awakeningsystem.dialogue.NpcDialogueManager.startDialogue(sp, who, "town_npc");
                 }
             });

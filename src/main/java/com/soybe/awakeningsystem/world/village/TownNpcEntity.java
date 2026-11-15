@@ -188,7 +188,9 @@ public class TownNpcEntity extends PathfinderMob {
             // a talk in the RPG style: who they are, what they do, a tip, the town
             this.getNavigation().stop();
             this.playSound(SoundEvents.VILLAGER_AMBIENT, 0.6F, 1.1F);
-            com.soybe.awakeningsystem.dialogue.NpcDialogueManager.startDialogue(sp, this, "town_npc");
+            // the weaponsmith also sells weapons and forges them to order
+            com.soybe.awakeningsystem.dialogue.NpcDialogueManager.startDialogue(sp, this,
+                    "weaponsmith".equals(job) ? com.soybe.awakeningsystem.dialogue.SmithForge.DIALOGUE : "town_npc");
         }
         return InteractionResult.sidedSuccess(level().isClientSide);
     }

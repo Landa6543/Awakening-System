@@ -65,6 +65,8 @@ public final class NpcDialogueManager {
             startSeriesNpcDialogue(player, sne);
         } else if (dialogueId.equalsIgnoreCase("town_npc")) {
             townNode(player, npc, "root");
+        } else if (dialogueId.equalsIgnoreCase(SmithForge.DIALOGUE) && player instanceof ServerPlayer) {
+            SmithForge.node(player, npc, "root");
         } else {
             // Diálogo genérico de saludo si no está registrado
             List<DialogueChoice> choices = List.of(
@@ -93,6 +95,8 @@ public final class NpcDialogueManager {
             if (nodeId.equals("root")) townNode(player, npc, choiceId == 0 ? "work" : choiceId == 1 ? "tip" : "town");
             else if (choiceId == 0) townNode(player, npc, "root");
             else closeDialogue(player);
+        } else if (dialogueId.equalsIgnoreCase(SmithForge.DIALOGUE)) {
+            SmithForge.choice(player, npc, nodeId, choiceId);
         }
     }
 
@@ -689,6 +693,16 @@ public final class NpcDialogueManager {
                         new DialogueChoice(1, base + "ask.bye", "goodbye", "CLOSE")));
             }
         }
+    }
+
+    /** The title over a townsperson's talk box ("Borin · Herrero"), for the smith's own talk. */
+    static String townSpeaker(Entity npc) {
+        return townTitle(npc, townRole(npc));
+    }
+
+    static void sendNodePublic(ServerPlayer player, int entityId, String dialogueId, String nodeId, String nodeType,
+                               String speaker, String text, List<DialogueChoice> choices) {
+        sendNode(player, entityId, dialogueId, nodeId, nodeType, speaker, text, choices);
     }
 
     private static void sendNode(ServerPlayer player, int entityId, String dialogueId, String nodeId, String nodeType,
