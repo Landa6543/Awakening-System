@@ -603,7 +603,7 @@ final class VillageBuildings {
         p.set(5, 2, 2, candles(2));
         p.set(4, top - 1, 3, lantern(true));
         for (int x = 1; x <= 7; x++) p.set(x, top, 3, log(st.beam(), Direction.Axis.X));
-        return List.of(new Resident(new BlockPos(4, 1, 3), "farmer"), new Resident(new BlockPos(4, 1, 1), "cat"));
+        return List.of(new Resident(new BlockPos(4, 1, 3), "baker"), new Resident(new BlockPos(4, 1, 1), "cat"));
     }
 
     // ── the manor (15 x 11, two storeys) where the village head lives ───────
@@ -788,7 +788,7 @@ final class VillageBuildings {
         // a hanging sign board outside: a beam with a lantern
         p.set(6, 4, -1, log(Blocks.STRIPPED_DARK_OAK_LOG, Direction.Axis.Z));
         p.set(6, 3, -1, lantern(true));
-        return List.of(new Resident(new BlockPos(6, 1, 8), "innkeeper"), new Resident(new BlockPos(5, 1, 5), ""), new Resident(new BlockPos(9, 1, 5), ""),
+        return List.of(new Resident(new BlockPos(6, 1, 8), "innkeeper"), new Resident(new BlockPos(5, 1, 5), "barmaid"), new Resident(new BlockPos(9, 1, 5), ""),
                 new Resident(new BlockPos(4, mid + 1, 5), ""), new Resident(new BlockPos(6, 1, 2), "cat"));
     }
 

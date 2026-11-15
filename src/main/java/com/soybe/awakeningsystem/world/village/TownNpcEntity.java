@@ -33,17 +33,38 @@ import net.minecraft.world.level.Level;
  */
 public class TownNpcEntity extends PathfinderMob {
     /** The skins, by index: textures/entity/town_npc/<name>.png */
-    public static final String[] SKINS = {"smith", "bearded", "farmer", "innkeeper", "librarian", "priest", "townswoman", "townswoman2", "townsman", "elder"};
+    public static final String[] SKINS = {"smith", "bearded", "farmer", "priest", "innkeeper_blonde", "innkeeper_fae", "innkeeper_alice",
+            "librarian", "baker", "baker_woman", "merchant", "townsman_green", "townswoman_emily", "townswoman_paula"};
+    /** Skins drawn with the thin (Alex) arms. */
+    private static final java.util.Set<String> SLIM = java.util.Set.of("innkeeper_blonde", "innkeeper_fae", "townswoman_emily", "townswoman_paula");
+    /** Skins of women, so their title reads "Tabernera", "Vecina"... */
+    private static final java.util.Set<String> WOMEN = java.util.Set.of("innkeeper_blonde", "innkeeper_fae", "innkeeper_alice", "baker_woman",
+            "townswoman_emily", "townswoman_paula");
 
-    /** The skin for a trade: workshop trades wear the smith, farmers the farmer, and so on; anyone else a townsperson. */
+    public static boolean slim(int skin) {
+        return SLIM.contains(SKINS[Math.floorMod(skin, SKINS.length)]);
+    }
+
+    public static boolean woman(int skin) {
+        return WOMEN.contains(SKINS[Math.floorMod(skin, SKINS.length)]);
+    }
+
+    private static int pick(int seed, int... skins) {
+        return skins[Math.floorMod(seed, skins.length)];
+    }
+
+    /** The skin for a trade: workshop trades wear the smith, the tavern its barmaids, and so on; anyone else a townsperson. */
     public static int skinFor(String job, int seed) {
         return switch (job == null ? "" : job) {
-            case "weaponsmith", "toolsmith", "armorer", "mason", "leatherworker", "fletcher", "butcher" -> 0;
-            case "farmer", "shepherd", "fisherman" -> 2;
-            case "innkeeper" -> 3;
-            case "librarian", "cartographer" -> 4;
-            case "cleric" -> 5;
-            default -> new int[]{1, 6, 7, 8, 9}[Math.floorMod(seed, 5)];
+            case "weaponsmith", "toolsmith", "armorer", "mason", "leatherworker", "fletcher" -> 0;
+            case "butcher", "fisherman" -> 10;
+            case "farmer", "shepherd" -> 2;
+            case "innkeeper" -> 4;
+            case "barmaid" -> pick(seed, 5, 6);
+            case "baker" -> pick(seed, 8, 9);
+            case "librarian", "cartographer" -> 7;
+            case "cleric" -> 3;
+            default -> pick(seed, 1, 11, 12, 13);
         };
     }
     private static final int GREETINGS = 6;

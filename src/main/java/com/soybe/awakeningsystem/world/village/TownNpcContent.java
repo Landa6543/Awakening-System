@@ -71,8 +71,20 @@ public final class TownNpcContent {
                 TEXTURES[i] = ResourceLocation.fromNamespaceAndPath(AwakeningSystemMod.MOD_ID, "textures/entity/town_npc/" + TownNpcEntity.SKINS[i] + ".png");
         }
 
+        private final PlayerModel<TownNpcEntity> wide, thin;
+
         public Renderer(EntityRendererProvider.Context ctx) {
             super(ctx, new PlayerModel<>(ctx.bakeLayer(ModelLayers.PLAYER), false), 0.5F);
+            this.wide = this.model;
+            this.thin = new PlayerModel<>(ctx.bakeLayer(ModelLayers.PLAYER_SLIM), true);
+        }
+
+        @Override
+        public void render(TownNpcEntity e, float yaw, float partial, com.mojang.blaze3d.vertex.PoseStack pose,
+                           net.minecraft.client.renderer.MultiBufferSource buffers, int light) {
+            // skins drawn for the thin arms get the thin-armed body, the rest the wide one
+            this.model = TownNpcEntity.slim(e.skin()) ? thin : wide;
+            super.render(e, yaw, partial, pose, buffers, light);
         }
 
         @Override

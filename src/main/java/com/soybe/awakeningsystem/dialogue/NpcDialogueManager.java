@@ -645,18 +645,27 @@ public final class NpcDialogueManager {
     private static String townRole(Entity npc) {
         if (!(npc instanceof com.soybe.awakeningsystem.world.village.TownNpcEntity t)) return "villager";
         return switch (t.job()) {
-            case "weaponsmith", "toolsmith", "armorer", "mason", "leatherworker", "fletcher", "butcher" -> "smith";
-            case "farmer", "shepherd", "fisherman" -> "farmer";
-            case "innkeeper" -> "innkeeper";
+            case "weaponsmith", "toolsmith", "armorer", "mason", "leatherworker", "fletcher" -> "smith";
+            case "butcher", "fisherman" -> "merchant";
+            case "farmer", "shepherd" -> "farmer";
+            case "innkeeper", "barmaid" -> "innkeeper";
+            case "baker" -> "baker";
             case "librarian", "cartographer" -> "librarian";
             case "cleric" -> "priest";
-            default -> t.skin() == 6 || t.skin() == 7 ? "villager_f" : "villager";
+            default -> "villager";
         };
+    }
+
+    /** The title over the talk box: the role, in its women's form for a woman ("Tabernera", "Vecina"). */
+    private static String townTitle(Entity npc, String role) {
+        boolean woman = npc instanceof com.soybe.awakeningsystem.world.village.TownNpcEntity t
+                && com.soybe.awakeningsystem.world.village.TownNpcEntity.woman(t.skin());
+        return "awakening_system.town.role." + role + (woman && !role.equals("priest") && !role.equals("smith") ? "_f" : "");
     }
 
     private static void townNode(ServerPlayer player, Entity npc, String node) {
         String role = townRole(npc);
-        String speaker = "awakening_system.town.role." + role;
+        String speaker = townTitle(npc, role);
         String base = "awakening_system.town.talk.";
         switch (node) {
             case "root" -> sendNode(player, npc.getId(), "town_npc", "root", "DEFAULT", speaker, base + role + ".hello", List.of(
