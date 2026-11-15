@@ -415,6 +415,60 @@ Sistema dinámico de eventos de temporada integrando consumibles gastronómicos 
 
 ---
 
+## 🏘️ Pueblo Medieval del Piso 11 (Pradera Serena)
+* **Pueblo grande con interiores:** taberna, herrería, biblioteca, panadería, capilla con campanario, casa señorial, granero, torres de vigía, puestos en la plaza, pozo, campos de cultivo y casas por todas las calles. Se construye solo al llegar al piso; `/medieval_village` lo pone donde estés.
+* **Casas variadas de verdad:** 10 paletas de materiales, formas distintas (pequeñas, altas, alargadas, en L), porches, chimeneas, torrecillas y escalones en la puerta. Techos cerrados por dentro, puertas que abren hacia fuera, vallas unidas, calles lisas, campos planos y agua a un solo nivel.
+* **Gente propia en lugar de aldeanos:** cada vecino es una persona distinta con su skin y su nombre (Borin el herrero, Greta la tabernera, Anselm el sacerdote…). Nadie se repite y hay un solo herrero. Los que no tienen oficio toman el de su ropa.
+* **Conversaciones de RPG:** al hablar con ellos se abre un diálogo con su retrato y el título "Nombre · Oficio"; cuentan a qué se dedican, dan consejos sobre la Torre y explican el pueblo. Los vecinos tienen cuatro juegos de frases distintos (en español, inglés, portugués y ruso).
+* **Brazos finos:** las skins de brazos finos (estilo Alex) se dibujan con su cuerpo correcto.
+
+---
+
+## 🌌 Armería Celestial (28 Armas Nuevas)
+* **28 armas celestiales** con habilidad de clic derecho propia: rayos, lluvia de estrellas, guadaña giratoria, jabalinas, nube de nebulosa, golpe al suelo y embestida. Galaxia cambia de forma al agacharse y hacer clic derecho. Tempestad Aurora es el antiguo "Weapon 1".
+* **Bien sujetas:** el filo mira hacia fuera, se agarran por el mango (también en el modo combate de Epic Fight) y su tamaño va según el tipo: espada, mandoble, guadaña o lanza.
+* **Movimientos de Epic Fight** para cada una. Las guadañas atacan como guadañas con Better Combat y, si el jugador tiene el addon **Ascended Arts**, con sus combos de guadaña (paquete opcional: sin el addon todo sigue igual).
+* Sin abuso de habilidades: el tiempo de recarga se respeta y ya no se puede salir volando pulsando clic derecho sin parar.
+
+---
+
+## 🎮 Estilo SAO (Full Dive)
+* **Menú propio en el estilo SAO** para Estado, Habilidades, Títulos, Misiones, Artefactos, Ranking, Progreso y Tienda, con venta, banco, ruleta, mercado de cazadores y Star Stream.
+* **Menú flotando en 3D** delante del jugador, con entrada y salida animadas y sonidos de menú.
+* **Barras de vida estilo SAO** sobre las criaturas, **HUD del jugador** estilo SAO, **muerte en cristales** que estallan, **cursor sobre el objetivo** y **cursor rojo** para los jugadores asesinos (5 o más muertes de jugadores).
+* **Viajar a los pisos de la Torre** ya alcanzados desde Mundos.
+
+---
+
+## 👹 Criaturas Rehechas y Sombras
+* Rehechos desde cero: **Hombre Bestia** (león-lobo), **Rey Demonio de los Elementos** (monarca acorazado), **Nigromante Abisal**, **Elfo de Escarcha** y **Soldado Hormiga** (caballero-hormiga).
+* **Goblins** repintados con orejas caídas, colmillos y ojos que brillan.
+* **Animales de maná** (vaca, cerdo, oveja, gallina) con cristales brillantes en la piel.
+* **Pieles de sombra:** los soldados de sombra del Monarca usan una versión negra y violeta de su textura.
+* **Mutant Warden** como élite de los pisos 16 al 19.
+* Sonidos nuevos para el Hombre Bestia, el Contemplador, la hormiga, el lobo de sombra, el tigre y los goblins.
+
+---
+
+## 🗼 Gran Torre
+* La torre se levanta al crear el mundo, en vez de aparecer de golpe mientras cargan los chunks.
+* **Piso 4:** los hongos gigantes brillantes ya no tienen el sombrero flotando separado del tallo.
+
+---
+
+## 🔗 Anillo de Enlace, Tarro San Mortis y Jureles con Patas
+* **Anillo de Enlace:** se lleva en el cuello o como pulsera y llama a los portadores cercanos.
+* **Tarro San Mortis** (`/sanmortis`) con sus **jureles con patas**, que hacen un ritual de baile cada pocos minutos y dan patadas voladoras.
+
+---
+
+## 🧹 Otras Correcciones
+* La comisión diaria del Gremio da una **bolsa de botín** que se vacía en el inventario, en vez de un cofre con llave.
+* Sonidos de misión completada más suaves.
+* Créditos: se añadieron los autores de las 14 skins de los vecinos del pueblo (ver `CREDITS.md`).
+
+---
+
 # ⚡ Awakening System — Version 0.3.4
 ### *Tiered Apples, Penalty Zone, UI Overhaul & Community Credits*
 
