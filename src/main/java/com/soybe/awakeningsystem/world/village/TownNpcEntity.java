@@ -35,6 +35,12 @@ public class TownNpcEntity extends PathfinderMob {
     /** The skins, by index: textures/entity/town_npc/<name>.png */
     public static final String[] SKINS = {"smith", "bearded", "farmer", "priest", "innkeeper_blonde", "innkeeper_fae", "innkeeper_alice",
             "librarian", "baker", "baker_woman", "merchant", "townsman_green", "townswoman_emily", "townswoman_paula", "farmer2", "farmer_woman"};
+    /** Each skin is one person with their own name, so a town never has two of the same. Same order as SKINS. */
+    public static final String[] NAMES = {"Borin", "Aldric", "Godwin", "Anselm", "Greta", "Lyria", "Maren",
+            "Elandor", "Bram", "Hilda", "Dorian", "Cedric", "Elise", "Rosalind", "Rowan", "Brenna"};
+    /** Skins tied to one building (the forge, the tavern, the chapel, the library, the stall): never handed to a plain house. */
+    private static final java.util.Set<String> POSTED = java.util.Set.of("smith", "priest", "innkeeper_blonde", "innkeeper_fae",
+            "innkeeper_alice", "librarian", "merchant");
     /** Skins drawn with the thin (Alex) arms. */
     private static final java.util.Set<String> SLIM = java.util.Set.of("innkeeper_blonde", "innkeeper_fae", "townswoman_emily", "townswoman_paula",
             "farmer_woman");
@@ -48,6 +54,41 @@ public class TownNpcEntity extends PathfinderMob {
 
     public static boolean woman(int skin) {
         return WOMEN.contains(SKINS[Math.floorMod(skin, SKINS.length)]);
+    }
+
+    public static String nameOf(int skin) {
+        return NAMES[Math.floorMod(skin, NAMES.length)];
+    }
+
+    /** The role a trade talks as: the workshop trades are smiths, the stall trades merchants, and so on. */
+    public static String roleOfJob(String job) {
+        return switch (job == null ? "" : job) {
+            case "weaponsmith", "toolsmith", "armorer", "mason", "leatherworker", "fletcher" -> "smith";
+            case "butcher", "fisherman" -> "merchant";
+            case "farmer", "shepherd" -> "farmer";
+            case "innkeeper", "barmaid" -> "innkeeper";
+            case "baker" -> "baker";
+            case "librarian", "cartographer" -> "librarian";
+            case "cleric" -> "priest";
+            default -> "";
+        };
+    }
+
+    /**
+     * A skin for someone moving into a town where {@code used} skins are already taken: the trade's own skins
+     * first, then (for anyone) a plain townsperson's or a farm or bakery skin. Returns -1 when nobody is left,
+     * so the town never shows the same person twice.
+     */
+    public static int uniqueSkin(String job, int seed, java.util.Set<Integer> used) {
+        int own = skinFor(job, seed);
+        String role = roleOfJob(job);
+        java.util.List<Integer> order = new java.util.ArrayList<>();
+        order.add(own);
+        for (int i = 0; i < SKINS.length; i++) if (!role.isEmpty() && roleOfSkin(i).equals(role)) order.add(i);
+        for (int i : new int[]{1, 11, 12, 13}) order.add(i);
+        for (int i = 0; i < SKINS.length; i++) if (!POSTED.contains(SKINS[i])) order.add(i);
+        for (int i : order) if (!used.contains(i)) return i;
+        return -1;
     }
 
     /** The trade a skin dresses for, for people with no trade of their own (spawn eggs, the plain houses). */
@@ -136,6 +177,7 @@ public class TownNpcEntity extends PathfinderMob {
         this.home = home.immutable();
         this.job = job == null ? "" : job;
         this.entityData.set(SKIN, skin);
+        this.setCustomName(Component.literal(nameOf(skin)));
         this.restrictTo(this.home, 14);
     }
 

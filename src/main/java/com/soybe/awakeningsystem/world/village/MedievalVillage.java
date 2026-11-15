@@ -168,7 +168,10 @@ public final class MedievalVillage {
         lamps(c, cx, cz, taken);
         c.joinFences();
         c.fillLoot();
+        // every townsperson is a different person: the landmarks' trades choose first, then the houses
+        townsfolk = new java.util.HashSet<>();
         settle.forEach(Runnable::run);
+        townsfolk = null;
         return settle.size();
     }
 
@@ -533,6 +536,9 @@ public final class MedievalVillage {
         level.addFreshEntity(m);
     }
 
+    /** The skins already living in the town being built (each skin is one named person). */
+    private static java.util.Set<Integer> townsfolk;
+
     private static void spawn(ServerLevel level, BlockPos at, String job) {
         switch (job) {
             case "golem" -> {
@@ -552,11 +558,16 @@ public final class MedievalVillage {
             }
             default -> {
                 // the town's own people, not vanilla villagers: workshop trades wear the smith's skin, the rest either
+                int seed = at.getX() * 31 + at.getZ() * 17;
+                int skin = townsfolk == null ? TownNpcEntity.skinFor(job, seed) : TownNpcEntity.uniqueSkin(job, seed, townsfolk);
+                if (skin < 0) return;                          // everyone in town already lives here
+                if (townsfolk != null) townsfolk.add(skin);
+                // someone who got another trade's look takes that trade, so no role shows up twice
+                String trade = TownNpcEntity.roleOfSkin(skin).equals(TownNpcEntity.roleOfJob(job)) ? job : "";
                 TownNpcEntity npc = TownNpcContent.TOWN_NPC.create(level);
                 if (npc == null) return;
                 npc.moveTo(at.getX() + 0.5, at.getY(), at.getZ() + 0.5, level.random.nextFloat() * 360F, 0);
-                int skin = TownNpcEntity.skinFor(job, at.getX() * 31 + at.getZ() * 17);
-                npc.settle(at, job, skin);
+                npc.settle(at, trade, skin);
                 level.addFreshEntity(npc);
             }
         }

@@ -833,8 +833,8 @@ final class VillageBuildings {
         p.set(1, 1, -1, log(Blocks.OAK_LOG, Direction.Axis.X));
         p.set(2, 1, -1, log(Blocks.OAK_LOG, Direction.Axis.X));
         p.set(1, 2, -1, log(Blocks.OAK_LOG, Direction.Axis.X));
-        return List.of(new Resident(new BlockPos(4, 1, 4), "weaponsmith"), new Resident(new BlockPos(7, 1, 4), "toolsmith"),
-                new Resident(new BlockPos(5, 1, 2), "armorer"), new Resident(new BlockPos(8, 1, 2), "mason"), new Resident(new BlockPos(8, 1, -2), "fletcher"));
+        // one smith runs the forge
+        return List.of(new Resident(new BlockPos(4, 1, 4), "weaponsmith"));
     }
 
     // ── the chapel (11 x 17) with a bell tower over the front ─────────────────

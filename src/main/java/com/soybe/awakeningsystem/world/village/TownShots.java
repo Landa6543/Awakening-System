@@ -60,6 +60,10 @@ public final class TownShots {
                 // the test world keeps the people of earlier runs: clear them first
                 for (var old : floor.getEntities(TownNpcContent.TOWN_NPC, e -> true)) old.discard();
                 MedievalVillage.build(floor, 0, 0);
+                // who moved in: each name once, one smith
+                for (var npc : floor.getEntities(TownNpcContent.TOWN_NPC, e -> true))
+                    System.out.println("[TownShots] resident " + TownNpcEntity.nameOf(npc.skin()) + " skin=" + TownNpcEntity.SKINS[npc.skin()]
+                            + " job=" + npc.job() + " at " + npc.blockPosition());
                 // every skin in a row on a clear, flat lawn, standing still and facing the camera
                 int gy = floor.getHeight(Heightmap.Types.MOTION_BLOCKING_NO_LEAVES, 0, 130);
                 for (int px = -18; px <= 18; px++)
@@ -108,12 +112,16 @@ public final class TownShots {
             sp.getAbilities().mayfly = true;
             sp.onUpdateAbilities();
         });
-        if (k == 10 && v.name().startsWith("talk")) {
+        if (k == 35 && v.name().startsWith("talk")) {        // late enough for the client to have the people
             if (v.name().equals("talk_sao")) { wasSao = com.soybe.awakeningsystem.client.sao.UiStyle.fullDive(); com.soybe.awakeningsystem.client.sao.UiStyle.setFullDive(true); }
             mc.options.hideGui = false;
             server.execute(() -> {
                 var sp = server.getPlayerList().getPlayer(mc.player.getUUID());
-                if (sp != null && LINEUP.size() > 15) com.soybe.awakeningsystem.dialogue.NpcDialogueManager.startDialogue(sp, LINEUP.get(15), "town_npc");
+                if (sp != null && LINEUP.size() > 0) {
+                    var who = LINEUP.get(Math.min(LINEUP.size() - 1, Integer.getInteger("awakening.talkIdx", 4)));
+                    System.out.println("[TownShots] talking to id=" + who.getId() + " client=" + (mc.level.getEntity(who.getId()) != null) + " skin=" + TownNpcEntity.SKINS[who.skin()]);
+                    com.soybe.awakeningsystem.dialogue.NpcDialogueManager.startDialogue(sp, who, "town_npc");
+                }
             });
         }
         if (k == 58 && v.name().startsWith("talk")) {

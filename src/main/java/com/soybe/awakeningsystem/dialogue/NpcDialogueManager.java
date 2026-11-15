@@ -644,16 +644,8 @@ public final class NpcDialogueManager {
     /** The role a townsperson talks as, from their trade and skin. */
     private static String townRole(Entity npc) {
         if (!(npc instanceof com.soybe.awakeningsystem.world.village.TownNpcEntity t)) return "villager";
-        return switch (t.job()) {
-            case "weaponsmith", "toolsmith", "armorer", "mason", "leatherworker", "fletcher" -> "smith";
-            case "butcher", "fisherman" -> "merchant";
-            case "farmer", "shepherd" -> "farmer";
-            case "innkeeper", "barmaid" -> "innkeeper";
-            case "baker" -> "baker";
-            case "librarian", "cartographer" -> "librarian";
-            case "cleric" -> "priest";
-            default -> com.soybe.awakeningsystem.world.village.TownNpcEntity.roleOfSkin(t.skin());
-        };
+        String role = com.soybe.awakeningsystem.world.village.TownNpcEntity.roleOfJob(t.job());
+        return role.isEmpty() ? com.soybe.awakeningsystem.world.village.TownNpcEntity.roleOfSkin(t.skin()) : role;
     }
 
     /** Lines for a role: plain townsfolk have several, chosen per person, and women their own set. */
@@ -669,7 +661,10 @@ public final class NpcDialogueManager {
     private static String townTitle(Entity npc, String role) {
         boolean woman = npc instanceof com.soybe.awakeningsystem.world.village.TownNpcEntity t
                 && com.soybe.awakeningsystem.world.village.TownNpcEntity.woman(t.skin());
-        return "awakening_system.town.role." + role + (woman && !role.equals("priest") && !role.equals("smith") ? "_f" : "");
+        String name = npc instanceof com.soybe.awakeningsystem.world.village.TownNpcEntity t
+                ? com.soybe.awakeningsystem.world.village.TownNpcEntity.nameOf(t.skin()) : npc.getName().getString();
+        // "Borin · Herrero": the role's text carries a %s for the person's own name
+        return "awakening_system.town.role." + role + (woman && !role.equals("priest") && !role.equals("smith") ? "_f" : "") + "|" + name;
     }
 
     private static void townNode(ServerPlayer player, Entity npc, String node) {
