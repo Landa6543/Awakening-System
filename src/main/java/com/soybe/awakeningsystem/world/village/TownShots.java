@@ -22,6 +22,8 @@ public final class TownShots {
 
     private static final boolean ON = System.getProperty("awakening.townShots") != null;
     private static int t = -1;
+    private static final java.util.List<TownNpcEntity> LINEUP = new java.util.ArrayList<>();
+    private static boolean wasSao;
 
     /** name, x, z, absolute y (or -1 for "on the ground" plus the offset), y offset, yaw, pitch */
     private record View(String name, int x, int z, int y, int up, float yaw, float pitch) {}
@@ -37,7 +39,10 @@ public final class TownShots {
             new View("fields", 50, 48, -1, 9, -45, 30),
             new View("square", -12, 12, -1, 4, -135, 15),
             new View("tavern_inside", 0, 0, 0, 0, 90, 5),
-            new View("people", 6, 16, -1, 2, 160, 8)};
+            new View("people", 6, 16, -1, 2, 160, 8),
+            new View("lineup", 0, 125, -1, 1, 0, 8),
+            new View("talk_rpg", 0, 127, -1, 1, 0, 8),
+            new View("talk_sao", 0, 127, -1, 1, 0, 8)};
 
     @SubscribeEvent
     public static void tick(ClientTickEvent.Post event) {
@@ -53,6 +58,19 @@ public final class TownShots {
                 server.getCommands().performPrefixedCommand(server.createCommandSourceStack(), "gamerule doDaylightCycle false");
                 floor.setDayTime(6000);
                 MedievalVillage.build(floor, 0, 0);
+                // every skin in a row, standing still and facing the camera
+                for (int i = 0; i < TownNpcEntity.SKINS.length; i++) {
+                    int x = -9 + i * 2, z = 130, y = floor.getHeight(Heightmap.Types.MOTION_BLOCKING_NO_LEAVES, x, z);
+                    TownNpcEntity npc = TownNpcContent.TOWN_NPC.create(floor);
+                    if (npc == null) continue;
+                    npc.moveTo(x + 0.5, y, z + 0.5, 180, 0);
+                    npc.settle(new BlockPos(x, y, z), "", i);
+                    npc.setNoAi(true);
+                    npc.setYHeadRot(180);
+                    npc.setYBodyRot(180);
+                    floor.addFreshEntity(npc);
+                    LINEUP.add(npc);
+                }
             });
             mc.options.hideGui = true;
         }
@@ -63,6 +81,8 @@ public final class TownShots {
             return;
         }
         View v = VIEWS[i];
+        String only = System.getProperty("awakening.townShotsOnly", "");
+        if (!only.isEmpty() && !only.contains(v.name())) { if (k == 0) t += 59; return; }
         if (k == 0) server.execute(() -> {
             var sp = server.getPlayerList().getPlayer(mc.player.getUUID());
             if (sp == null) return;
@@ -79,6 +99,19 @@ public final class TownShots {
             sp.getAbilities().mayfly = true;
             sp.onUpdateAbilities();
         });
+        if (k == 10 && v.name().startsWith("talk")) {
+            if (v.name().equals("talk_sao")) { wasSao = com.soybe.awakeningsystem.client.sao.UiStyle.fullDive(); com.soybe.awakeningsystem.client.sao.UiStyle.setFullDive(true); }
+            mc.options.hideGui = false;
+            server.execute(() -> {
+                var sp = server.getPlayerList().getPlayer(mc.player.getUUID());
+                if (sp != null && LINEUP.size() > 3) com.soybe.awakeningsystem.dialogue.NpcDialogueManager.startDialogue(sp, LINEUP.get(3), "town_npc");
+            });
+        }
+        if (k == 58 && v.name().startsWith("talk")) {
+            if (mc.screen != null) mc.screen.onClose();
+            mc.options.hideGui = true;
+            if (v.name().equals("talk_sao")) com.soybe.awakeningsystem.client.sao.UiStyle.setFullDive(wasSao);
+        }
         if (k == 55) Screenshot.grab(mc.gameDirectory, "ts_" + (i < 10 ? "0" : "") + i + "_" + v.name() + ".png", mc.getMainRenderTarget(), msg -> {});
     }
 }

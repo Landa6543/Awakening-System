@@ -788,7 +788,7 @@ final class VillageBuildings {
         // a hanging sign board outside: a beam with a lantern
         p.set(6, 4, -1, log(Blocks.STRIPPED_DARK_OAK_LOG, Direction.Axis.Z));
         p.set(6, 3, -1, lantern(true));
-        return List.of(new Resident(new BlockPos(6, 1, 8), "cleric"), new Resident(new BlockPos(5, 1, 5), ""), new Resident(new BlockPos(9, 1, 5), ""),
+        return List.of(new Resident(new BlockPos(6, 1, 8), "innkeeper"), new Resident(new BlockPos(5, 1, 5), ""), new Resident(new BlockPos(9, 1, 5), ""),
                 new Resident(new BlockPos(4, mid + 1, 5), ""), new Resident(new BlockPos(6, 1, 2), "cat"));
     }
 

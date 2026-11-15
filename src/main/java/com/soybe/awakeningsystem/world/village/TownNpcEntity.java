@@ -33,7 +33,19 @@ import net.minecraft.world.level.Level;
  */
 public class TownNpcEntity extends PathfinderMob {
     /** The skins, by index: textures/entity/town_npc/<name>.png */
-    public static final String[] SKINS = {"smith", "maiden"};
+    public static final String[] SKINS = {"smith", "bearded", "farmer", "innkeeper", "librarian", "priest", "townswoman", "townswoman2", "townsman", "elder"};
+
+    /** The skin for a trade: workshop trades wear the smith, farmers the farmer, and so on; anyone else a townsperson. */
+    public static int skinFor(String job, int seed) {
+        return switch (job == null ? "" : job) {
+            case "weaponsmith", "toolsmith", "armorer", "mason", "leatherworker", "fletcher", "butcher" -> 0;
+            case "farmer", "shepherd", "fisherman" -> 2;
+            case "innkeeper" -> 3;
+            case "librarian", "cartographer" -> 4;
+            case "cleric" -> 5;
+            default -> new int[]{1, 6, 7, 8, 9}[Math.floorMod(seed, 5)];
+        };
+    }
     private static final int GREETINGS = 6;
 
     private static final EntityDataAccessor<Integer> SKIN = SynchedEntityData.defineId(TownNpcEntity.class, EntityDataSerializers.INT);
@@ -93,11 +105,11 @@ public class TownNpcEntity extends PathfinderMob {
     @Override
     protected InteractionResult mobInteract(Player player, InteractionHand hand) {
         if (hand != InteractionHand.MAIN_HAND) return InteractionResult.PASS;
-        if (!level().isClientSide) {
-            int line = Math.floorMod(this.getId() * 31 + (int) (level().getGameTime() / 200), GREETINGS);
-            player.sendSystemMessage(Component.translatable("entity.awakening_system.town_npc.greeting." + line, this.getDisplayName()));
-            this.getLookControl().setLookAt(player);
+        if (!level().isClientSide && player instanceof net.minecraft.server.level.ServerPlayer sp) {
+            // a talk in the RPG style: who they are, what they do, a tip, the town
+            this.getNavigation().stop();
             this.playSound(SoundEvents.VILLAGER_AMBIENT, 0.6F, 1.1F);
+            com.soybe.awakeningsystem.dialogue.NpcDialogueManager.startDialogue(sp, this, "town_npc");
         }
         return InteractionResult.sidedSuccess(level().isClientSide);
     }

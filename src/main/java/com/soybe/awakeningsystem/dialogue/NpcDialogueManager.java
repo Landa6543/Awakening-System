@@ -63,6 +63,8 @@ public final class NpcDialogueManager {
             startHunterEvaluatorDialogue(player, npc, "root");
         } else if (dialogueId.equalsIgnoreCase("series_npc") && npc instanceof SeriesNpcEntity sne) {
             startSeriesNpcDialogue(player, sne);
+        } else if (dialogueId.equalsIgnoreCase("town_npc")) {
+            townNode(player, npc, "root");
         } else {
             // Diálogo genérico de saludo si no está registrado
             List<DialogueChoice> choices = List.of(
@@ -87,6 +89,10 @@ public final class NpcDialogueManager {
             handleHunterEvaluatorChoice(player, npc, nodeId, choiceId);
         } else if (dialogueId.equalsIgnoreCase("series_npc")) {
             handleSeriesNpcChoice(player, npc, nodeId, choiceId);
+        } else if (dialogueId.equalsIgnoreCase("town_npc")) {
+            if (nodeId.equals("root")) townNode(player, npc, choiceId == 0 ? "work" : choiceId == 1 ? "tip" : "town");
+            else if (choiceId == 0) townNode(player, npc, "root");
+            else closeDialogue(player);
         }
     }
 
@@ -629,6 +635,46 @@ public final class NpcDialogueManager {
         }
 
         closeDialogue(player);
+    }
+
+    // ==========================================
+    // TOWN PEOPLE (floor 11): a short RPG-style talk
+    // ==========================================
+
+    /** The role a townsperson talks as, from their trade and skin. */
+    private static String townRole(Entity npc) {
+        if (!(npc instanceof com.soybe.awakeningsystem.world.village.TownNpcEntity t)) return "villager";
+        return switch (t.job()) {
+            case "weaponsmith", "toolsmith", "armorer", "mason", "leatherworker", "fletcher", "butcher" -> "smith";
+            case "farmer", "shepherd", "fisherman" -> "farmer";
+            case "innkeeper" -> "innkeeper";
+            case "librarian", "cartographer" -> "librarian";
+            case "cleric" -> "priest";
+            default -> t.skin() == 6 || t.skin() == 7 ? "villager_f" : "villager";
+        };
+    }
+
+    private static void townNode(ServerPlayer player, Entity npc, String node) {
+        String role = townRole(npc);
+        String speaker = "awakening_system.town.role." + role;
+        String base = "awakening_system.town.talk.";
+        switch (node) {
+            case "root" -> sendNode(player, npc.getId(), "town_npc", "root", "DEFAULT", speaker, base + role + ".hello", List.of(
+                    new DialogueChoice(0, base + "ask.work", "work", "NEXT"),
+                    new DialogueChoice(1, base + "ask.tip", "tip", "NEXT"),
+                    new DialogueChoice(2, base + "ask.town", "town", "NEXT"),
+                    new DialogueChoice(3, base + "ask.bye", "goodbye", "CLOSE")));
+            default -> {
+                String text = switch (node) {
+                    case "work" -> base + role + ".work";
+                    case "tip" -> base + "tip." + Math.floorMod(npc.getId() + (int) (player.level().getGameTime() / 400), 5);
+                    default -> base + "town";
+                };
+                sendNode(player, npc.getId(), "town_npc", node, "DEFAULT", speaker, text, List.of(
+                        new DialogueChoice(0, base + "ask.more", "root", "NEXT"),
+                        new DialogueChoice(1, base + "ask.bye", "goodbye", "CLOSE")));
+            }
+        }
     }
 
     private static void sendNode(ServerPlayer player, int entityId, String dialogueId, String nodeId, String nodeType,

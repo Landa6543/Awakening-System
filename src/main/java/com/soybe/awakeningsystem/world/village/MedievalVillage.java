@@ -555,11 +555,7 @@ public final class MedievalVillage {
                 TownNpcEntity npc = TownNpcContent.TOWN_NPC.create(level);
                 if (npc == null) return;
                 npc.moveTo(at.getX() + 0.5, at.getY(), at.getZ() + 0.5, level.random.nextFloat() * 360F, 0);
-                boolean workshop = switch (job) {
-                    case "weaponsmith", "toolsmith", "armorer", "mason", "butcher", "leatherworker", "fletcher" -> true;
-                    default -> false;
-                };
-                int skin = workshop ? 0 : Math.floorMod(at.getX() * 31 + at.getZ() * 17, TownNpcEntity.SKINS.length);
+                int skin = TownNpcEntity.skinFor(job, at.getX() * 31 + at.getZ() * 17);
                 npc.settle(at, job, skin);
                 level.addFreshEntity(npc);
             }

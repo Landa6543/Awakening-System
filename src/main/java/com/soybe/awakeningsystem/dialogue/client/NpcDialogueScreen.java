@@ -117,6 +117,112 @@ public class NpcDialogueScreen extends Screen {
                 this.resolvedChoices.add(resolveTranslatable(c.text()));
             }
         }
+        // the light looks (parchment, SAO) cannot show colour codes made for a dark box: plain text there
+        if (look() != Look.SYSTEM) {
+            this.resolvedSpeaker = plain(resolvedSpeaker);
+            this.resolvedText = plain(resolvedText);
+            this.resolvedChoices.replaceAll(NpcDialogueScreen::plain);
+        }
+    }
+
+    // ── looks: the System's dark glass, the town's parchment (RPG) and the SAO style ──
+
+    enum Look { SYSTEM, RPG, SAO }
+
+    private Look look() {
+        // the town's people always talk in their own RPG look; everyone else follows the SAO style when it is on
+        if (payload != null && "town_npc".equalsIgnoreCase(payload.dialogueId())) return Look.RPG;
+        if (com.soybe.awakeningsystem.client.sao.UiStyle.fullDive()) return Look.SAO;
+        return Look.SYSTEM;
+    }
+
+    private static String plain(String s) {
+        String p = net.minecraft.ChatFormatting.stripFormatting(s);
+        return p == null ? "" : p;
+    }
+
+    private int textColour() {
+        return switch (look()) {
+            case RPG -> 0xFF3A2814;
+            case SAO -> 0xFF484848;
+            default -> 0xFFF0F4F8;
+        };
+    }
+
+    /** The box behind the words, in the current look. */
+    private void drawBox(GuiGraphics g, int x, int y, int w, int h) {
+        switch (look()) {
+            case RPG -> {
+                g.fill(x - 3, y - 3, x + w + 3, y + h + 3, 0xFF2A1A0E);              // dark wood frame
+                g.fill(x - 2, y - 2, x + w + 2, y + h + 2, 0xFF6A4424);
+                g.fillGradient(x, y, x + w, y + h, 0xFFEEDDB0, 0xFFD8C08A);         // parchment
+                g.renderOutline(x + 3, y + 3, w - 6, h - 6, 0x608A6A3A);
+                for (int[] c : new int[][]{{x - 3, y - 3}, {x + w - 2, y - 3}, {x - 3, y + h - 2}, {x + w - 2, y + h - 2}})
+                    g.fill(c[0], c[1], c[0] + 5, c[1] + 5, 0xFFD8A840);               // brass corners
+            }
+            case SAO -> {
+                g.fill(x + 2, y + 3, x + w + 2, y + h + 3, 0x30000000);
+                g.fillGradient(x, y, x + w, y + h, 0xF6FFFFFF, 0xF0E8E8EC);
+                g.fill(x, y, x + w, y + 2, 0xFFEDA500);
+                g.fill(x, y + h - 1, x + w, y + h, 0xFFC9C9CE);
+            }
+            default -> {
+                g.fill(x, y, x + w, y + h, 0xEE07121E);
+                g.fill(x + 1, y + 1, x + w - 1, y + 4, 0x5000E5FF);
+                g.renderOutline(x, y, w, h, 0xA00099C0);
+                g.renderOutline(x + 1, y + 1, w - 2, h - 2, 0x4000E5FF);
+                int corn = 8;
+                g.fill(x, y, x + corn, y + 2, 0xFF00E5FF);
+                g.fill(x, y, x + 2, y + corn, 0xFF00E5FF);
+                g.fill(x + w - corn, y, x + w, y + 2, 0xFF00E5FF);
+                g.fill(x + w - 2, y, x + w, y + corn, 0xFF00E5FF);
+            }
+        }
+    }
+
+    /** The speaker's name plate above the box, in the current look. */
+    private void drawSpeaker(GuiGraphics g, int boxX, int boxY) {
+        if (resolvedSpeaker == null || resolvedSpeaker.isBlank()) return;
+        int bw = font.width(resolvedSpeaker) + 16, bh = 14, bx = boxX + (look() == Look.RPG ? 56 : 10), by = boxY - bh + 2;
+        switch (look()) {
+            case RPG -> {
+                g.fill(bx - 1, by - 1, bx + bw + 1, by + bh + 1, 0xFF2A1A0E);
+                g.fillGradient(bx, by, bx + bw, by + bh, 0xFF7A5030, 0xFF5A3A20);
+                g.drawString(font, resolvedSpeaker, bx + 8, by + 3, 0xFFFFDE90, false);
+            }
+            case SAO -> {
+                g.fillGradient(bx, by, bx + bw, by + bh, 0xFFF7B52A, 0xFFE29400);
+                g.drawString(font, resolvedSpeaker, bx + 8, by + 3, 0xFFFFFFFF, false);
+            }
+            default -> {
+                g.fill(bx, by, bx + bw, by + bh, 0xF005111B);
+                g.renderOutline(bx, by, bw, bh, 0xC000D0FF);
+                g.drawString(font, resolvedSpeaker, bx + 8, by + 3, 0xFFFFFFFF, false);
+            }
+        }
+    }
+
+    /** RPG look: a portrait of the speaker's face, cut from their skin, in a wooden frame at the box's left. */
+    private void drawPortrait(GuiGraphics g, int boxX, int boxY) {
+        if (look() != Look.RPG || minecraft == null || minecraft.level == null) return;
+        Entity e = minecraft.level.getEntity(payload.entityId());
+        int px = boxX + 8, py = boxY + 8, s = 40;
+        g.fill(px - 2, py - 2, px + s + 2, py + s + 2, 0xFF2A1A0E);
+        g.fill(px - 1, py - 1, px + s + 1, py + s + 1, 0xFF8A6034);
+        g.fill(px, py, px + s, py + s, 0xFF4A3A2A);
+        if (e != null) {
+            var renderer = minecraft.getEntityRenderDispatcher().getRenderer(e);
+            @SuppressWarnings("unchecked")
+            net.minecraft.resources.ResourceLocation tex = ((net.minecraft.client.renderer.entity.EntityRenderer<Entity>) renderer).getTextureLocation(e);
+            com.mojang.blaze3d.systems.RenderSystem.enableBlend();
+            // face (8,8)-(16,16) and the hat layer over it, from a 64x64 skin
+            g.blit(tex, px, py, s, s, 8, 8, 8, 8, 64, 64);
+            g.blit(tex, px, py, s, s, 40, 8, 8, 8, 64, 64);
+        }
+    }
+
+    private int textLeft(int boxX) {
+        return look() == Look.RPG ? boxX + 58 : boxX + 16;
     }
 
     private void resetTextAnimation(long now) {
@@ -155,44 +261,23 @@ public class NpcDialogueScreen extends Screen {
         // 1. Renderizar opciones de elección centradas arriba del cuadro de diálogo
         renderChoices(graphics, boxX, boxW, boxY, mouseX, mouseY);
 
-        // 2. Fondo del cuadro de diálogo (Cristal obsidiana oscuro con gradiente)
-        graphics.fill(boxX, boxY, boxX + boxW, boxY + boxH, 0xEE07121E);
-        graphics.fill(boxX + 1, boxY + 1, boxX + boxW - 1, boxY + 4, 0x5000E5FF); // Reflejo superior sutil
-
-        // Bordes de alta tecnología holográfica
-        graphics.renderOutline(boxX, boxY, boxW, boxH, 0xA00099C0);
-        graphics.renderOutline(boxX + 1, boxY + 1, boxW - 2, boxH - 2, 0x4000E5FF);
-
-        // Esquinas resaltadas
-        int corn = 8;
-        graphics.fill(boxX, boxY, boxX + corn, boxY + 2, 0xFF00E5FF);
-        graphics.fill(boxX, boxY, boxX + 2, boxY + corn, 0xFF00E5FF);
-        graphics.fill(boxX + boxW - corn, boxY, boxX + boxW, boxY + 2, 0xFF00E5FF);
-        graphics.fill(boxX + boxW - 2, boxY, boxX + boxW, boxY + corn, 0xFF00E5FF);
-
-        // 3. Placa del Hablante (Speaker Badge)
-        if (resolvedSpeaker != null && !resolvedSpeaker.isBlank()) {
-            int badgeW = font.width(resolvedSpeaker) + 16;
-            int badgeH = 14;
-            int badgeX = boxX + 10;
-            int badgeY = boxY - badgeH + 2;
-
-            graphics.fill(badgeX, badgeY, badgeX + badgeW, badgeY + badgeH, 0xF005111B);
-            graphics.renderOutline(badgeX, badgeY, badgeW, badgeH, 0xC000D0FF);
-            graphics.drawString(font, resolvedSpeaker, badgeX + 8, badgeY + 3, 0xFFFFFFFF, false);
-        }
+        // 2-3. The box and the speaker's plate, in the look of the moment (System, RPG parchment or SAO)
+        drawBox(graphics, boxX, boxY, boxW, boxH);
+        drawSpeaker(graphics, boxX, boxY);
+        drawPortrait(graphics, boxX, boxY);
 
         // 4. Máquina de escribir del texto del diálogo
         String visibleText = getVisibleText();
         playVoiceBlipForNewText(visibleText);
-        graphics.drawWordWrap(font, Component.literal(visibleText), boxX + 16, boxY + 14, boxW - 32, 0xFFF0F4F8);
+        int tx = textLeft(boxX);
+        graphics.drawWordWrap(font, Component.literal(visibleText), tx, boxY + 14, boxX + boxW - 16 - tx, textColour());
 
         // 5. Flecha pulsante de continuación o avance si el texto ya terminó
         if (isTextComplete()) {
             if (payload.choices().isEmpty()) {
                 float pulse = (float) Math.sin((System.currentTimeMillis() % 1000) / 1000.0 * Math.PI * 2) * 0.3F + 0.7F;
                 int alpha = (int) (pulse * 255);
-                int color = (alpha << 24) | 0x00E5FF;
+                int color = (alpha << 24) | (look() == Look.RPG ? 0x6A4424 : look() == Look.SAO ? 0xC98700 : 0x00E5FF);
                 String prompt = Component.translatable("awakening_system.dialogue.prompt_close").getString();
                 graphics.drawString(font, prompt, boxX + boxW - font.width(prompt) - 14, boxY + boxH - 12, color, false);
             } else if (payload.choices().size() == 1 && (isContinueChoice(payload.choices().get(0)) || (resolvedChoices.size() == 1 && resolvedChoices.get(0).toLowerCase().contains("continu")))) {
@@ -216,7 +301,7 @@ public class NpcDialogueScreen extends Screen {
 
     private int calculateBoxHeight(int boxW) {
         if (font == null || resolvedText == null || resolvedText.isEmpty()) return 82;
-        int maxTextWidth = boxW - 32;
+        int maxTextWidth = boxW - 32 - (look() == Look.RPG ? 42 : 0);
         var lines = font.split(Component.literal(resolvedText), maxTextWidth);
         int textLineHeight = font.lineHeight + 3;
         int textBlockH = lines.size() * textLineHeight;
@@ -274,18 +359,30 @@ public class NpcDialogueScreen extends Screen {
 
             boolean hovered = mouseX >= choiceX && mouseX <= choiceX + choiceW && mouseY >= y && mouseY <= y + CHOICE_MIN_H;
 
-            int bgColor = hovered ? 0xDD0E283D : 0xBB061320;
-            int borderColor = hovered ? 0xFF00E5FF : 0x700088A8;
-
-            graphics.fill(choiceX, y, choiceX + choiceW, y + CHOICE_MIN_H, bgColor);
-            graphics.renderOutline(choiceX, y, choiceW, CHOICE_MIN_H, borderColor);
+            if (look() == Look.SYSTEM) {
+                int bgColor = hovered ? 0xDD0E283D : 0xBB061320;
+                int borderColor = hovered ? 0xFF00E5FF : 0x700088A8;
+                graphics.fill(choiceX, y, choiceX + choiceW, y + CHOICE_MIN_H, bgColor);
+                graphics.renderOutline(choiceX, y, choiceW, CHOICE_MIN_H, borderColor);
+            }
 
             String rawTxt = (i < resolvedChoices.size()) ? resolvedChoices.get(i) : choice.text();
             String choiceTxt = rawTxt.replaceAll("^(\u00a7[0-9a-fk-or])*\\[[0-9<>A-Za-z_-]+\\]\\s*", "")
                     .replaceAll("^(\u00a7[0-9a-fk-or])*\\[[0-9<>A-Za-z_-]+\\]\\s*", "");
             String numberBadge = (count > 1) ? ("§6[" + (i + 1) + "] ") : "";
             String text = (hovered ? "§b▶ §f§l" : "§7› ") + numberBadge + choiceTxt;
-            graphics.drawString(font, text, choiceX + 10, y + 6, hovered ? 0xFFFFFFFF : 0xFFCCCCCC, false);
+            if (look() == Look.SYSTEM) graphics.drawString(font, text, choiceX + 10, y + 6, hovered ? 0xFFFFFFFF : 0xFFCCCCCC, false);
+            else if (look() == Look.RPG) {
+                graphics.fill(choiceX - 1, y - 1, choiceX + choiceW + 1, y + CHOICE_MIN_H + 1, hovered ? 0xFFD8A840 : 0xFF2A1A0E);
+                graphics.fillGradient(choiceX, y, choiceX + choiceW, y + CHOICE_MIN_H, hovered ? 0xFFF6E8C0 : 0xFFE6D2A0, hovered ? 0xFFE8D29A : 0xFFD2BA84);
+                String n = (count > 1 ? (i + 1) + ". " : "") + choiceTxt;
+                graphics.drawString(font, (hovered ? "» " : "") + n, choiceX + 10, y + 5, hovered ? 0xFF5A2A0A : 0xFF3A2814, false);
+            } else {
+                graphics.fill(choiceX + 1, y + 2, choiceX + choiceW + 1, y + CHOICE_MIN_H + 2, 0x26000000);
+                graphics.fillGradient(choiceX, y, choiceX + choiceW, y + CHOICE_MIN_H, hovered ? 0xFFF7B52A : 0xFAFFFFFF, hovered ? 0xFFE29400 : 0xF0E6E6EA);
+                if (!hovered) graphics.fill(choiceX, y, choiceX + 2, y + CHOICE_MIN_H, 0xFFEDA500);
+                graphics.drawString(font, choiceTxt, choiceX + 10, y + 5, hovered ? 0xFFFFFFFF : 0xFF484848, false);
+            }
         }
 
         graphics.disableScissor();
