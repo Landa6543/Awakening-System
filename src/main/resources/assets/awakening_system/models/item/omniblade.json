@@ -4,10 +4,10 @@
     "layer0": "awakening_system:item/celestial/omniblade"
   },
   "display": {
-    "thirdperson_righthand": {"rotation": [14.33, 90.00, 0.00], "translation": [0.00, 11.95, -9.68], "scale": [2.16, 2.16, 2.16]},
-    "thirdperson_lefthand": {"rotation": [14.33, -90.00, 0.00], "translation": [0.00, 11.95, -9.68], "scale": [2.16, 2.16, 2.16]},
-    "firstperson_righthand": {"rotation": [44.33, 90.00, 0.00], "translation": [1.13, 9.18, -1.82], "scale": [1.21, 1.21, 1.21]},
-    "firstperson_lefthand": {"rotation": [44.33, -90.00, 0.00], "translation": [1.13, 9.18, -1.82], "scale": [1.21, 1.21, 1.21]},
+    "thirdperson_righthand": {"rotation": [14.33, 90.00, 0.00], "translation": [0.00, 14.93, -10.21], "scale": [2.16, 2.16, 2.16]},
+    "thirdperson_lefthand": {"rotation": [14.33, -90.00, 0.00], "translation": [0.00, 14.93, -10.21], "scale": [2.16, 2.16, 2.16]},
+    "firstperson_righthand": {"rotation": [44.33, 90.00, 0.00], "translation": [1.13, 10.77, -1.25], "scale": [1.21, 1.21, 1.21]},
+    "firstperson_lefthand": {"rotation": [44.33, -90.00, 0.00], "translation": [1.13, 10.77, -1.25], "scale": [1.21, 1.21, 1.21]},
     "ground": {"rotation": [0, 0, 0], "translation": [0, 2, 0], "scale": [0.7, 0.7, 0.7]},
     "gui": {"rotation": [0, 0, 0], "translation": [0, 0, 0], "scale": [1, 1, 1]},
     "fixed": {"rotation": [0, 180, 0], "translation": [0, 0, 0], "scale": [1.2, 1.2, 1.2]}

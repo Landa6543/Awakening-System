@@ -4,10 +4,10 @@
     "layer0": "awakening_system:item/celestial/ark_of_the_cosmos"
   },
   "display": {
-    "thirdperson_righthand": {"rotation": [33.67, 90.00, 0.00], "translation": [0.00, 9.86, -1.01], "scale": [1.71, 1.71, 1.71]},
-    "thirdperson_lefthand": {"rotation": [33.67, -90.00, 0.00], "translation": [0.00, 9.86, -1.01], "scale": [1.71, 1.71, 1.71]},
-    "firstperson_righthand": {"rotation": [63.67, 90.00, 0.00], "translation": [1.13, 5.75, 1.79], "scale": [0.95, 0.95, 0.95]},
-    "firstperson_lefthand": {"rotation": [63.67, -90.00, 0.00], "translation": [1.13, 5.75, 1.79], "scale": [0.95, 0.95, 0.95]},
+    "thirdperson_righthand": {"rotation": [33.67, 90.00, 0.00], "translation": [0.00, 13.96, -1.73], "scale": [1.71, 1.71, 1.71]},
+    "thirdperson_lefthand": {"rotation": [33.67, -90.00, 0.00], "translation": [0.00, 13.96, -1.73], "scale": [1.71, 1.71, 1.71]},
+    "firstperson_righthand": {"rotation": [63.67, 90.00, 0.00], "translation": [1.13, 7.93, 2.59], "scale": [0.95, 0.95, 0.95]},
+    "firstperson_lefthand": {"rotation": [63.67, -90.00, 0.00], "translation": [1.13, 7.93, 2.59], "scale": [0.95, 0.95, 0.95]},
     "ground": {"rotation": [0, 0, 0], "translation": [0, 2, 0], "scale": [0.7, 0.7, 0.7]},
     "gui": {"rotation": [0, 0, 0], "translation": [0, 0, 0], "scale": [1, 1, 1]},
     "fixed": {"rotation": [0, 180, 0], "translation": [0, 0, 0], "scale": [1.2, 1.2, 1.2]}

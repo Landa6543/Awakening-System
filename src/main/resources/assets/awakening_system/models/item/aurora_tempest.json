@@ -4,10 +4,10 @@
     "layer0": "awakening_system:item/celestial/aurora_tempest"
   },
   "display": {
-    "thirdperson_righthand": {"rotation": [33.15, 90.00, 0.00], "translation": [0.00, 8.40, -0.88], "scale": [1.58, 1.58, 1.58]},
-    "thirdperson_lefthand": {"rotation": [33.15, -90.00, 0.00], "translation": [0.00, 8.40, -0.88], "scale": [1.58, 1.58, 1.58]},
-    "firstperson_righthand": {"rotation": [63.15, 90.00, 0.00], "translation": [1.13, 5.01, 1.45], "scale": [0.88, 0.88, 0.88]},
-    "firstperson_lefthand": {"rotation": [63.15, -90.00, 0.00], "translation": [1.13, 5.01, 1.45], "scale": [0.88, 0.88, 0.88]},
+    "thirdperson_righthand": {"rotation": [33.15, 90.00, 0.00], "translation": [0.00, 11.35, -1.40], "scale": [1.58, 1.58, 1.58]},
+    "thirdperson_lefthand": {"rotation": [33.15, -90.00, 0.00], "translation": [0.00, 11.35, -1.40], "scale": [1.58, 1.58, 1.58]},
+    "firstperson_righthand": {"rotation": [63.15, 90.00, 0.00], "translation": [1.13, 6.58, 2.02], "scale": [0.88, 0.88, 0.88]},
+    "firstperson_lefthand": {"rotation": [63.15, -90.00, 0.00], "translation": [1.13, 6.58, 2.02], "scale": [0.88, 0.88, 0.88]},
     "ground": {"rotation": [0, 0, 0], "translation": [0, 2, 0], "scale": [0.7, 0.7, 0.7]},
     "gui": {"rotation": [0, 0, 0], "translation": [0, 0, 0], "scale": [1, 1, 1]},
     "fixed": {"rotation": [0, 180, 0], "translation": [0, 0, 0], "scale": [1.2, 1.2, 1.2]}

@@ -4,10 +4,10 @@
     "layer0": "awakening_system:item/celestial/anarchy_blade"
   },
   "display": {
-    "thirdperson_righthand": {"rotation": [-53.06, -90.00, 0.00], "translation": [0.00, 12.06, -0.18], "scale": [1.95, 1.95, 1.95]},
-    "thirdperson_lefthand": {"rotation": [-53.06, 90.00, 0.00], "translation": [0.00, 12.06, -0.18], "scale": [1.95, 1.95, 1.95]},
-    "firstperson_righthand": {"rotation": [-23.06, -90.00, 0.00], "translation": [1.13, 6.05, 2.58], "scale": [1.02, 1.02, 1.02]},
-    "firstperson_lefthand": {"rotation": [-23.06, 90.00, 0.00], "translation": [1.13, 6.05, 2.58], "scale": [1.02, 1.02, 1.02]},
+    "thirdperson_righthand": {"rotation": [-53.06, -90.00, 0.00], "translation": [0.00, 15.01, -0.70], "scale": [1.95, 1.95, 1.95]},
+    "thirdperson_lefthand": {"rotation": [-53.06, 90.00, 0.00], "translation": [0.00, 15.01, -0.70], "scale": [1.95, 1.95, 1.95]},
+    "firstperson_righthand": {"rotation": [-23.06, -90.00, 0.00], "translation": [1.13, 7.52, 3.12], "scale": [1.02, 1.02, 1.02]},
+    "firstperson_lefthand": {"rotation": [-23.06, 90.00, 0.00], "translation": [1.13, 7.52, 3.12], "scale": [1.02, 1.02, 1.02]},
     "ground": {"rotation": [0, 0, 0], "translation": [0, 2, 0], "scale": [0.7, 0.7, 0.7]},
     "gui": {"rotation": [0, 0, 0], "translation": [0, 0, 0], "scale": [1, 1, 1]},
     "fixed": {"rotation": [0, 180, 0], "translation": [0, 0, 0], "scale": [1.2, 1.2, 1.2]}

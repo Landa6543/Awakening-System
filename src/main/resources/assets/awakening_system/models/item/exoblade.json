@@ -4,10 +4,10 @@
     "layer0": "awakening_system:item/celestial/exoblade"
   },
   "display": {
-    "thirdperson_righthand": {"rotation": [26.97, 90.00, 0.00], "translation": [0.00, 10.98, -3.74], "scale": [1.86, 1.86, 1.86]},
-    "thirdperson_lefthand": {"rotation": [26.97, -90.00, 0.00], "translation": [0.00, 10.98, -3.74], "scale": [1.86, 1.86, 1.86]},
-    "firstperson_righthand": {"rotation": [56.97, 90.00, 0.00], "translation": [1.13, 7.06, 0.78], "scale": [1.04, 1.04, 1.04]},
-    "firstperson_lefthand": {"rotation": [56.97, -90.00, 0.00], "translation": [1.13, 7.06, 0.78], "scale": [1.04, 1.04, 1.04]},
+    "thirdperson_righthand": {"rotation": [26.97, 90.00, 0.00], "translation": [0.00, 13.66, -4.21], "scale": [1.86, 1.86, 1.86]},
+    "thirdperson_lefthand": {"rotation": [26.97, -90.00, 0.00], "translation": [0.00, 13.66, -4.21], "scale": [1.86, 1.86, 1.86]},
+    "firstperson_righthand": {"rotation": [56.97, 90.00, 0.00], "translation": [1.13, 8.48, 1.30], "scale": [1.04, 1.04, 1.04]},
+    "firstperson_lefthand": {"rotation": [56.97, -90.00, 0.00], "translation": [1.13, 8.48, 1.30], "scale": [1.04, 1.04, 1.04]},
     "ground": {"rotation": [0, 0, 0], "translation": [0, 2, 0], "scale": [0.7, 0.7, 0.7]},
     "gui": {"rotation": [0, 0, 0], "translation": [0, 0, 0], "scale": [1, 1, 1]},
     "fixed": {"rotation": [0, 180, 0], "translation": [0, 0, 0], "scale": [1.2, 1.2, 1.2]}

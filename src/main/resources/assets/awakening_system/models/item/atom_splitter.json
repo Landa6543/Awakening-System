@@ -4,10 +4,10 @@
     "layer0": "awakening_system:item/celestial/atom_splitter"
   },
   "display": {
-    "thirdperson_righthand": {"rotation": [-55.00, -90.00, 0.00], "translation": [0.00, 11.40, -0.82], "scale": [1.94, 1.94, 1.94]},
-    "thirdperson_lefthand": {"rotation": [-55.00, 90.00, 0.00], "translation": [0.00, 11.40, -0.82], "scale": [1.94, 1.94, 1.94]},
-    "firstperson_righthand": {"rotation": [-25.00, -90.00, 0.00], "translation": [1.13, 5.70, 2.04], "scale": [0.99, 0.99, 0.99]},
-    "firstperson_lefthand": {"rotation": [-25.00, 90.00, 0.00], "translation": [1.13, 5.70, 2.04], "scale": [0.99, 0.99, 0.99]},
+    "thirdperson_righthand": {"rotation": [-55.00, -90.00, 0.00], "translation": [0.00, 16.57, -1.74], "scale": [1.94, 1.94, 1.94]},
+    "thirdperson_lefthand": {"rotation": [-55.00, 90.00, 0.00], "translation": [0.00, 16.57, -1.74], "scale": [1.94, 1.94, 1.94]},
+    "firstperson_righthand": {"rotation": [-25.00, -90.00, 0.00], "translation": [1.13, 8.23, 2.96], "scale": [0.99, 0.99, 0.99]},
+    "firstperson_lefthand": {"rotation": [-25.00, 90.00, 0.00], "translation": [1.13, 8.23, 2.96], "scale": [0.99, 0.99, 0.99]},
     "ground": {"rotation": [0, 0, 0], "translation": [0, 2, 0], "scale": [0.7, 0.7, 0.7]},
     "gui": {"rotation": [0, 0, 0], "translation": [0, 0, 0], "scale": [1, 1, 1]},
     "fixed": {"rotation": [0, 180, 0], "translation": [0, 0, 0], "scale": [1.2, 1.2, 1.2]}

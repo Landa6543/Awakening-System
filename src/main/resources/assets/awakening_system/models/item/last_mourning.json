@@ -4,10 +4,10 @@
     "layer0": "awakening_system:item/celestial/last_mourning"
   },
   "display": {
-    "thirdperson_righthand": {"rotation": [-55.00, -90.00, 0.00], "translation": [0.00, 10.68, -0.70], "scale": [1.84, 1.84, 1.84]},
-    "thirdperson_lefthand": {"rotation": [-55.00, 90.00, 0.00], "translation": [0.00, 10.68, -0.70], "scale": [1.84, 1.84, 1.84]},
-    "firstperson_righthand": {"rotation": [-25.00, -90.00, 0.00], "translation": [1.13, 5.55, 1.99], "scale": [0.97, 0.97, 0.97]},
-    "firstperson_lefthand": {"rotation": [-25.00, 90.00, 0.00], "translation": [1.13, 5.55, 1.99], "scale": [0.97, 0.97, 0.97]},
+    "thirdperson_righthand": {"rotation": [-55.00, -90.00, 0.00], "translation": [0.00, 12.93, -1.09], "scale": [1.84, 1.84, 1.84]},
+    "thirdperson_lefthand": {"rotation": [-55.00, 90.00, 0.00], "translation": [0.00, 12.93, -1.09], "scale": [1.84, 1.84, 1.84]},
+    "firstperson_righthand": {"rotation": [-25.00, -90.00, 0.00], "translation": [1.13, 6.68, 2.40], "scale": [0.97, 0.97, 0.97]},
+    "firstperson_lefthand": {"rotation": [-25.00, 90.00, 0.00], "translation": [1.13, 6.68, 2.40], "scale": [0.97, 0.97, 0.97]},
     "ground": {"rotation": [0, 0, 0], "translation": [0, 2, 0], "scale": [0.7, 0.7, 0.7]},
     "gui": {"rotation": [0, 0, 0], "translation": [0, 0, 0], "scale": [1, 1, 1]},
     "fixed": {"rotation": [0, 180, 0], "translation": [0, 0, 0], "scale": [1.2, 1.2, 1.2]}

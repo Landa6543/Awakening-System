@@ -4,10 +4,10 @@
     "layer0": "awakening_system:item/celestial/soul_harvester"
   },
   "display": {
-    "thirdperson_righthand": {"rotation": [35.86, 90.00, 0.00], "translation": [0.00, 12.61, -0.69], "scale": [2.01, 2.01, 2.01]},
-    "thirdperson_lefthand": {"rotation": [35.86, -90.00, 0.00], "translation": [0.00, 12.61, -0.69], "scale": [2.01, 2.01, 2.01]},
-    "firstperson_righthand": {"rotation": [65.86, 90.00, 0.00], "translation": [1.13, 6.43, 2.49], "scale": [1.05, 1.05, 1.05]},
-    "firstperson_lefthand": {"rotation": [65.86, -90.00, 0.00], "translation": [1.13, 6.43, 2.49], "scale": [1.05, 1.05, 1.05]},
+    "thirdperson_righthand": {"rotation": [35.86, 90.00, 0.00], "translation": [0.00, 17.42, -1.54], "scale": [2.01, 2.01, 2.01]},
+    "thirdperson_lefthand": {"rotation": [35.86, -90.00, 0.00], "translation": [0.00, 17.42, -1.54], "scale": [2.01, 2.01, 2.01]},
+    "firstperson_righthand": {"rotation": [65.86, 90.00, 0.00], "translation": [1.13, 8.84, 3.37], "scale": [1.05, 1.05, 1.05]},
+    "firstperson_lefthand": {"rotation": [65.86, -90.00, 0.00], "translation": [1.13, 8.84, 3.37], "scale": [1.05, 1.05, 1.05]},
     "ground": {"rotation": [0, 0, 0], "translation": [0, 2, 0], "scale": [0.7, 0.7, 0.7]},
     "gui": {"rotation": [0, 0, 0], "translation": [0, 0, 0], "scale": [1, 1, 1]},
     "fixed": {"rotation": [0, 180, 0], "translation": [0, 0, 0], "scale": [1.2, 1.2, 1.2]}

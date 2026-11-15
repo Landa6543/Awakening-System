@@ -4,10 +4,10 @@
     "layer0": "awakening_system:item/celestial/shard_of_antumbra"
   },
   "display": {
-    "thirdperson_righthand": {"rotation": [33.09, 90.00, 0.00], "translation": [0.00, 12.68, -1.84], "scale": [2.06, 2.06, 2.06]},
-    "thirdperson_lefthand": {"rotation": [33.09, -90.00, 0.00], "translation": [0.00, 12.68, -1.84], "scale": [2.06, 2.06, 2.06]},
-    "firstperson_righthand": {"rotation": [63.09, 90.00, 0.00], "translation": [1.13, 6.53, 1.92], "scale": [1.06, 1.06, 1.06]},
-    "firstperson_lefthand": {"rotation": [63.09, -90.00, 0.00], "translation": [1.13, 6.53, 1.92], "scale": [1.06, 1.06, 1.06]},
+    "thirdperson_righthand": {"rotation": [33.09, 90.00, 0.00], "translation": [0.00, 17.85, -2.75], "scale": [2.06, 2.06, 2.06]},
+    "thirdperson_lefthand": {"rotation": [33.09, -90.00, 0.00], "translation": [0.00, 17.85, -2.75], "scale": [2.06, 2.06, 2.06]},
+    "firstperson_righthand": {"rotation": [63.09, 90.00, 0.00], "translation": [1.13, 9.06, 2.84], "scale": [1.06, 1.06, 1.06]},
+    "firstperson_lefthand": {"rotation": [63.09, -90.00, 0.00], "translation": [1.13, 9.06, 2.84], "scale": [1.06, 1.06, 1.06]},
     "ground": {"rotation": [0, 0, 0], "translation": [0, 2, 0], "scale": [0.7, 0.7, 0.7]},
     "gui": {"rotation": [0, 0, 0], "translation": [0, 0, 0], "scale": [1, 1, 1]},
     "fixed": {"rotation": [0, 180, 0], "translation": [0, 0, 0], "scale": [1.2, 1.2, 1.2]}

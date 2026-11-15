@@ -4,10 +4,10 @@
     "layer0": "awakening_system:item/celestial/old_reaper"
   },
   "display": {
-    "thirdperson_righthand": {"rotation": [35.55, 90.00, 0.00], "translation": [0.00, 11.63, -0.65], "scale": [1.92, 1.92, 1.92]},
-    "thirdperson_lefthand": {"rotation": [35.55, -90.00, 0.00], "translation": [0.00, 11.63, -0.65], "scale": [1.92, 1.92, 1.92]},
-    "firstperson_righthand": {"rotation": [65.55, 90.00, 0.00], "translation": [1.13, 5.97, 2.25], "scale": [1.01, 1.01, 1.01]},
-    "firstperson_lefthand": {"rotation": [65.55, -90.00, 0.00], "translation": [1.13, 5.97, 2.25], "scale": [1.01, 1.01, 1.01]},
+    "thirdperson_righthand": {"rotation": [35.55, 90.00, 0.00], "translation": [0.00, 14.50, -1.16], "scale": [1.92, 1.92, 1.92]},
+    "thirdperson_lefthand": {"rotation": [35.55, -90.00, 0.00], "translation": [0.00, 14.50, -1.16], "scale": [1.92, 1.92, 1.92]},
+    "firstperson_righthand": {"rotation": [65.55, 90.00, 0.00], "translation": [1.13, 7.41, 2.78], "scale": [1.01, 1.01, 1.01]},
+    "firstperson_lefthand": {"rotation": [65.55, -90.00, 0.00], "translation": [1.13, 7.41, 2.78], "scale": [1.01, 1.01, 1.01]},
     "ground": {"rotation": [0, 0, 0], "translation": [0, 2, 0], "scale": [0.7, 0.7, 0.7]},
     "gui": {"rotation": [0, 0, 0], "translation": [0, 0, 0], "scale": [1, 1, 1]},
     "fixed": {"rotation": [0, 180, 0], "translation": [0, 0, 0], "scale": [1.2, 1.2, 1.2]}
