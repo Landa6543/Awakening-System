@@ -1,0 +1,8 @@
+{
+  "type": "awakening_system:tower_floor_21",
+  "generator": {
+    "type": "awakening_system:tower_floor",
+    "floor": 21,
+    "biome_source": { "type": "minecraft:fixed", "biome": "awakening_system:tower_autumn_valley" }
+  }
+}

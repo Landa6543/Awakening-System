@@ -38,7 +38,12 @@ public final class FloorShots {
                 case 17 -> new int[][]{{50, -240, 0}, {0, 0, 150}};
                 case 18 -> new int[][]{{-210, -210, -45}, {0, 0, 120}};
                 case 19 -> new int[][]{{-190, 190, -135}, {0, 0, 45}};
-                default -> new int[][]{{-220, -220, -45}, {-48, -30, -60}};
+                case 20 -> new int[][]{{-220, -220, -45}, {-48, -30, -60}};
+                case 21 -> new int[][]{{-180, -180, -45}, {-40, -60, -10}};
+                case 22 -> new int[][]{{-230, 40, -90}, {0, 0, 45}};
+                case 23 -> new int[][]{{0, -230, 0}, {0, 0, 120}};
+                case 24 -> new int[][]{{-200, 200, -135}, {0, 0, 45}};
+                default -> new int[][]{{-160, -160, -45}, {-60, -40, -60}};
             };
             boolean cave = TowerFloorTerrain.isCave(f);
             for (int[] sp : spots) {
@@ -79,6 +84,7 @@ public final class FloorShots {
         if (phase == 0 || phase == 60) server.execute(() -> {
             ServerPlayer sp = server.getPlayerList().getPlayer(mc.player.getUUID());
             ServerLevel lvl = server.getLevel(GreatTowerWorldManager.getDimensionForFloor((int) v[0]));
+            if (lvl != null && v[0] == 21) com.soybe.awakeningsystem.world.village.MedievalVillage.ensureOnFloor(lvl);   // the town, as on arrival
             if (sp != null && lvl != null) sp.teleportTo(lvl, v[1], v[2], v[3], (float) v[4], (float) v[5]);
         });
         if (phase == WAIT - 10) {

@@ -71,6 +71,7 @@ public final class TowerFloorChunkGenerator extends ChunkGenerator {
     public void applyBiomeDecoration(net.minecraft.world.level.WorldGenLevel level, ChunkAccess chunk, StructureManager structureManager) {
         super.applyBiomeDecoration(level, chunk, structureManager);
         if (floor == 9) TowerFloorTerrainDeep.cherryTrees(level, this, chunk);
+        TowerFloorTerrainAscent.vanillaTrees(floor, level, this, chunk);
     }
 
     @Override

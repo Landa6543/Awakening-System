@@ -1,0 +1,8 @@
+{
+  "type": "awakening_system:tower_floor_23",
+  "generator": {
+    "type": "awakening_system:tower_floor",
+    "floor": 23,
+    "biome_source": { "type": "minecraft:fixed", "biome": "awakening_system:tower_salt_flats" }
+  }
+}

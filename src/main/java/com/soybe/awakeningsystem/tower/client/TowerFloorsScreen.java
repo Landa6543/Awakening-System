@@ -19,7 +19,7 @@ import net.neoforged.neoforge.network.PacketDistributor;
  * to again from here; the rest are shown locked. Opened from the tower tab on the side of the System window.
  */
 public final class TowerFloorsScreen extends Screen {
-    private static final int W = 330, H = 200, COLS = 5, CW = 58, CH = 32;
+    private static final int W = 330, H = 222, COLS = 5, CW = 58, CH = 32;   // five rows of five floors
     private final Screen parent;
 
     public TowerFloorsScreen(Screen parent) {
@@ -38,12 +38,12 @@ public final class TowerFloorsScreen extends Screen {
 
     private int reached() {
         SystemData d = data();
-        return d == null ? 0 : Math.min(20, d.savedTowerFloor());
+        return d == null ? 0 : Math.min(GreatTowerWorldManager.TOWER_FLOORS.length, d.savedTowerFloor());
     }
 
     private int here() {
         if (minecraft == null || minecraft.level == null) return 0;
-        for (int f = 1; f <= 20; f++)
+        for (int f = 1; f <= GreatTowerWorldManager.TOWER_FLOORS.length; f++)
             if (minecraft.level.dimension().equals(GreatTowerWorldManager.getDimensionForFloor(f))) return f;
         return 0;
     }
@@ -67,7 +67,7 @@ public final class TowerFloorsScreen extends Screen {
         g.drawCenteredString(font, "✕", closeX + 7, closeY + 3, 0xFFFFFFFF);
 
         int reached = reached(), here = here();
-        for (int i = 0; i < 20; i++) {
+        for (int i = 0; i < GreatTowerWorldManager.TOWER_FLOORS.length; i++) {
             int f = i + 1, cx = cellX(i), cy = cellY(i);
             boolean open = f <= reached, cur = f == here;
             boolean hov = open && !cur && mouseX >= cx && mouseX < cx + CW && mouseY >= cy && mouseY < cy + CH;
@@ -96,7 +96,7 @@ public final class TowerFloorsScreen extends Screen {
             return true;
         }
         int reached = reached(), here = here();
-        for (int i = 0; i < 20; i++) {
+        for (int i = 0; i < GreatTowerWorldManager.TOWER_FLOORS.length; i++) {
             int f = i + 1, cx = cellX(i), cy = cellY(i);
             if (mouseX < cx || mouseX >= cx + CW || mouseY < cy || mouseY >= cy + CH) continue;
             if (f > reached || f == here) {

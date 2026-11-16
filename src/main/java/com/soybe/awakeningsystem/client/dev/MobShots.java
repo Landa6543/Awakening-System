@@ -63,6 +63,7 @@ public final class MobShots {
             sl.addFreshEntity(mob);
         });
         if (t == 40) mc.options.hideGui = true;
+        if (t == 70 && mob != null) AwakeningSystemMod.LOGGER.info("[MobShots] {} removed={} reason={} at {}", mob.getType(), mob.isRemoved(), mob.getRemovalReason(), mob.position());
         if (CLOSE) {
             int k = (t - 80) / 40, phase = (t - 80) % 40;
             if (t < 80) return;

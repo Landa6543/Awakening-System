@@ -1517,19 +1517,21 @@ public final class SystemEvents {
 
       if (!event.getLevel().isClientSide() && GreatTowerWorldManager.isGreatTowerDimension(event.getLevel()) && event.getEntity() instanceof Mob mob) {
          int floor = GreatTowerWorldManager.getFloorForPos(event.getLevel(), mob.blockPosition());
-         if (floor == 11) {
+         if (floor == 11 || floor == 21) {   // the towns
             if (mob instanceof Monster) {
                event.setCanceled(true);
                return;
             }
-         } else if (floor == 15) {
+         } else if (floor == 15 || floor == 25) {   // the mining caverns
             if (mob instanceof Monster) {
                event.setCanceled(true);
                return;
             }
          } else {
             String namespace = BuiltInRegistries.ENTITY_TYPE.getKey(mob.getType()).getNamespace();
-            if (!namespace.equals("awakening_system") && mob.getType() != EntityType.WARDEN) {
+            // the game's own spiders are the queen's brood on floor 20
+            boolean brood = floor == 20 && (mob.getType() == EntityType.SPIDER || mob.getType() == EntityType.CAVE_SPIDER);
+            if (!namespace.equals("awakening_system") && mob.getType() != EntityType.WARDEN && !brood) {
                event.setCanceled(true);
                return;
             }
@@ -14409,7 +14411,7 @@ public final class SystemEvents {
             } catch (NumberFormatException e) {
                return;
             }
-            if (floor < 1 || floor > 20 || (floor > data.savedTowerFloor() && !isDevOrOp)) {
+            if (floor < 1 || floor > GreatTowerWorldManager.TOWER_FLOORS.length || (floor > data.savedTowerFloor() && !isDevOrOp)) {
                player.displayClientMessage(Component.translatable("awakening_system.tower_travel.not_reached"), true);
                player.playNotifySound((SoundEvent)SoundEvents.NOTE_BLOCK_BASS.value(), SoundSource.PLAYERS, 0.8F, 0.7F);
                return;

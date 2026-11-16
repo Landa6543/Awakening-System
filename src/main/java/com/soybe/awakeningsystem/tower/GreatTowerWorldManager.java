@@ -83,8 +83,8 @@ import net.minecraft.world.level.levelgen.Heightmap.Types;
 import net.minecraft.world.phys.AABB;
 
 public final class GreatTowerWorldManager {
-   public static final ResourceKey<Level>[] TOWER_FLOORS = new ResourceKey[20];
-   public static final ResourceKey<DimensionType>[] TOWER_FLOOR_TYPES = new ResourceKey[20];
+   public static final ResourceKey<Level>[] TOWER_FLOORS = new ResourceKey[25];   // floors 1 to 25 so far
+   public static final ResourceKey<DimensionType>[] TOWER_FLOOR_TYPES = new ResourceKey[25];
    public static final ResourceKey<Level> TOWER_FLOOR_1;
    public static final ResourceKey<Level> TOWER_FLOOR_2;
    public static final ResourceKey<Level> TOWER_FLOOR_3;
@@ -136,6 +136,13 @@ public final class GreatTowerWorldManager {
 
          return false;
       }
+   }
+
+   /** Whether a floor's way up is open: on the boss floors (10, 20) only once their boss has fallen. */
+   public static boolean bossCleared(Level level, int floor) {
+      if (level.getServer() == null) return true;
+      DimensionGenSavedData d = DimensionGenSavedData.get(level.getServer());
+      return floor == 10 ? d.isTowerFloor10BossDefeated() : floor != 20 || d.isTowerFloor20BossDefeated();
    }
 
    public static ResourceKey<Level> getDimensionForFloor(int floor) {
@@ -302,7 +309,7 @@ public final class GreatTowerWorldManager {
       if (server == null) {
          return false;
       } else {
-         int targetFloor = Math.max(1, Math.min(20, floor));
+         int targetFloor = Math.max(1, Math.min(TOWER_FLOORS.length, floor));
          ResourceKey<Level> targetDim = getDimensionForFloor(targetFloor);
          ServerLevel targetLevel = server.getLevel(targetDim);
          if (targetLevel == null) {
@@ -404,7 +411,8 @@ public final class GreatTowerWorldManager {
                player.playNotifySound(SoundEvents.WITHER_SPAWN, SoundSource.PLAYERS, 0.8F, 0.9F);
                ensureFloor10Boss(targetLevel);
                ensureFloor10Spawns(targetLevel, player.blockPosition());
-            } else if (targetFloor == 11) {
+            } else if (targetFloor == 11 || targetFloor == 21) {
+               // floor 21 is the second town on the way up, as peaceful as floor 11
                com.soybe.awakeningsystem.world.village.MedievalVillage.ensureOnFloor(targetLevel);
                player.displayClientMessage(
                   Component.translatable("awakening_system.msg.aldea_serena_has_llegado_un_pacifico"), false
@@ -887,7 +895,7 @@ public final class GreatTowerWorldManager {
    }
 
    private static void populateChunkMobs(ServerLevel level, ChunkAccess chunk, int floor) {
-      if (floor == 11) return;
+      if (floor == 11 || floor == 21 || floor == 25) return;   // the towns and the mining cavern have no monsters
       ChunkPos cPos = chunk.getPos();
       int cx = cPos.getMiddleBlockX();
       int cz = cPos.getMiddleBlockZ();
@@ -1166,8 +1174,8 @@ public static void processSectorChunk(ServerLevel level, ChunkAccess chunk) {
       if (level != null && centerPos != null) {
          if (floor == 10) {
             ensureFloor10Spawns(level, centerPos);
-         } else if (floor != 11) {
-            if (floor != 15) {
+         } else if (floor != 11 && floor != 21) {
+            if (floor != 15 && floor != 25) {
                if (floor == 20) {
                   ensureFloor20Boss(level);
                } else {
@@ -1392,6 +1400,30 @@ public static void processSectorChunk(ServerLevel level, ChunkAccess chunk) {
                      ? new RuinGraderEntity((EntityType)ModEntities.RUIN_GRADER.get(), level)
                      : new AstralDragonEntity((EntityType)ModEntities.ASTRAL_DRAGON.get(), level)
                );
+         }
+         case 22 -> {
+            // the dry marshes: orcs and goblins in the roots, beastmen and wolves
+            float r = rand.nextFloat();
+            yield r < 0.3F ? new AbyssalOrcEntity((EntityType)ModEntities.ABYSSAL_ORC.get(), level)
+               : r < 0.55F ? new ShadowDirewolfEntity((EntityType)ModEntities.SHADOW_DIREWOLF.get(), level)
+               : r < 0.8F ? new AntSoldierEntity((EntityType)ModEntities.ANT_SOLDIER.get(), level)
+               : new MitachurlEntity((EntityType)ModEntities.MITACHURL.get(), level);
+         }
+         case 23 -> {
+            // the salt flats of dead titans: the mutated wither skeleton among the bones, frost elves, ruin hunters
+            float r = rand.nextFloat();
+            yield r < 0.18F ? com.soybe.awakeningsystem.entity.witherborn.MutatedWitherContent.MUTATED_WITHER_SKELETON.create(level)
+               : r < 0.5F ? new FrostElfAssassinEntity((EntityType)ModEntities.FROST_ELF_ASSASSIN.get(), level)
+               : r < 0.75F ? new RuinHunterEntity((EntityType)ModEntities.RUIN_HUNTER.get(), level)
+               : new AbyssalOrcEntity((EntityType)ModEntities.ABYSSAL_ORC.get(), level);
+         }
+         case 24 -> {
+            // the copper storm peaks: thunder beasts and the lawachurl of thunder
+            float r = rand.nextFloat();
+            yield r < 0.35F ? new ThunderhelmLawachurlEntity((EntityType)ModEntities.THUNDERHELM_LAWACHURL.get(), level)
+               : r < 0.6F ? new RuinHunterEntity((EntityType)ModEntities.RUIN_HUNTER.get(), level)
+               : r < 0.8F ? com.soybe.awakeningsystem.entity.witherborn.MutatedWitherContent.MUTATED_WITHER_SKELETON.create(level)
+               : new ShadowDirewolfEntity((EntityType)ModEntities.SHADOW_DIREWOLF.get(), level);
          }
          case 20 -> {
             // the queen's brood along the way to her: young mother spiders, spiders and cave spiders
@@ -1942,7 +1974,7 @@ public static void processSectorChunk(ServerLevel level, ChunkAccess chunk) {
    }
 
    static {
-      for (int i = 1; i <= 20; i++) {
+      for (int i = 1; i <= TOWER_FLOORS.length; i++) {
          TOWER_FLOORS[i - 1] = ResourceKey.create(Registries.DIMENSION, ResourceLocation.fromNamespaceAndPath("awakening_system", "tower_floor_" + i));
          TOWER_FLOOR_TYPES[i - 1] = ResourceKey.create(Registries.DIMENSION_TYPE, ResourceLocation.fromNamespaceAndPath("awakening_system", "tower_floor_" + i));
       }
@@ -1996,7 +2028,12 @@ public static void processSectorChunk(ServerLevel level, ChunkAccess chunk) {
          new GreatTowerWorldManager.FloorLayout(50, -240, Direction.NORTH, -50, 240, Direction.SOUTH, "Cumbres Celestiales del Dao Inmortal"),
          new GreatTowerWorldManager.FloorLayout(-210, -210, Direction.SOUTH, 210, 210, Direction.NORTH, "Templo Dorado de la Calamidad Solar"),
          new GreatTowerWorldManager.FloorLayout(-190, 190, Direction.SOUTH, 190, -190, Direction.NORTH, "Anticamara de las Telaranas Abisales"),
-         new GreatTowerWorldManager.FloorLayout(-220, -220, Direction.SOUTH, 220, 220, Direction.NORTH, "Camara Real de la Reina de los Nidos [PISO DE JEFE]")
+         new GreatTowerWorldManager.FloorLayout(-220, -220, Direction.SOUTH, 220, 220, Direction.NORTH, "Camara Real de la Reina de los Nidos [PISO DE JEFE]"),
+         new GreatTowerWorldManager.FloorLayout(-180, -180, Direction.SOUTH, 180, 180, Direction.NORTH, "Aldea del Valle Otonal de los Segundos Ascendidos [PISO PACIFICO]"),
+         new GreatTowerWorldManager.FloorLayout(-230, 40, Direction.EAST, 230, -40, Direction.WEST, "Marismas Secas de las Raices Ahogadas"),
+         new GreatTowerWorldManager.FloorLayout(0, -230, Direction.NORTH, 0, 230, Direction.SOUTH, "Salinas Blancas del Cementerio de Titanes"),
+         new GreatTowerWorldManager.FloorLayout(-200, 200, Direction.SOUTH, 200, -200, Direction.NORTH, "Cumbres de Cobre de la Tormenta Eterna"),
+         new GreatTowerWorldManager.FloorLayout(-160, -160, Direction.SOUTH, 160, 160, Direction.NORTH, "Caverna de los Cien Filones [MINERIA]")
       };
    }
 

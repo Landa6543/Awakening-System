@@ -176,9 +176,13 @@ public class AscensionPortalBlock extends Block implements EntityBlock {
             PortalType pType = blockState.hasProperty(PORTAL_TYPE) ? blockState.getValue(PORTAL_TYPE) : PortalType.RETURN;
             int currentFloor = com.soybe.awakeningsystem.tower.GreatTowerWorldManager.getFloorForPos(level, pos);
             if (pType == PortalType.ASCEND) {
-                if (currentFloor >= 20) {   // the top floor of this version (it said floor 10, from when there were ten)
-                    player.displayClientMessage(Component.translatable("awakening_system.msg.gran_torre_has_alcanzado_la_cima_2"), true);
+                if (currentFloor >= com.soybe.awakeningsystem.tower.GreatTowerWorldManager.TOWER_FLOORS.length) {   // the top floor of this version
+                    player.displayClientMessage(Component.translatable("awakening_system.msg.tower_top_floor", currentFloor), true);
                     player.playNotifySound(SoundEvents.BEACON_DEACTIVATE, SoundSource.PLAYERS, 0.8F, 1.0F);
+                } else if (!com.soybe.awakeningsystem.tower.GreatTowerWorldManager.bossCleared(level, currentFloor)) {
+                    // a boss floor's way up stays sealed until its boss falls
+                    player.displayClientMessage(Component.translatable("awakening_system.msg.tower_boss_seal"), true);
+                    player.playNotifySound(SoundEvents.BEACON_DEACTIVATE, SoundSource.PLAYERS, 0.8F, 0.7F);
                 } else {
                     com.soybe.awakeningsystem.tower.GreatTowerWorldManager.enterFloor(player, currentFloor + 1);
                 }
@@ -246,9 +250,12 @@ public class AscensionPortalBlock extends Block implements EntityBlock {
                 PortalType pType = state.hasProperty(PORTAL_TYPE) ? state.getValue(PORTAL_TYPE) : PortalType.RETURN;
                 int currentFloor = com.soybe.awakeningsystem.tower.GreatTowerWorldManager.getFloorForPos(level, pos);
                 if (pType == PortalType.ASCEND) {
-                    if (currentFloor >= 20) {
-                        player.displayClientMessage(Component.translatable("awakening_system.msg.gran_torre_has_alcanzado_la_cima_2"), true);
+                    if (currentFloor >= com.soybe.awakeningsystem.tower.GreatTowerWorldManager.TOWER_FLOORS.length) {
+                        player.displayClientMessage(Component.translatable("awakening_system.msg.tower_top_floor", currentFloor), true);
                         player.playNotifySound(SoundEvents.BEACON_DEACTIVATE, SoundSource.PLAYERS, 0.8F, 1.0F);
+                    } else if (!com.soybe.awakeningsystem.tower.GreatTowerWorldManager.bossCleared(level, currentFloor)) {
+                        player.displayClientMessage(Component.translatable("awakening_system.msg.tower_boss_seal"), true);
+                        player.playNotifySound(SoundEvents.BEACON_DEACTIVATE, SoundSource.PLAYERS, 0.8F, 0.7F);
                     } else {
                         com.soybe.awakeningsystem.tower.GreatTowerWorldManager.enterFloor(player, currentFloor + 1);
                     }

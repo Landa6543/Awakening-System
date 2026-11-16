@@ -363,7 +363,7 @@ public final class GreatTowerSite {
                     ctx.getSource().sendSuccess(() -> Component.literal("Great Tower rebuilt"), false);
                     return 1;
                 }))
-                .then(Commands.literal("viewfloor").then(Commands.argument("floor", IntegerArgumentType.integer(1, 20))
+                .then(Commands.literal("viewfloor").then(Commands.argument("floor", IntegerArgumentType.integer(1, GreatTowerWorldManager.TOWER_FLOORS.length))
                         .then(Commands.argument("half", IntegerArgumentType.integer(8, 120)).executes(ctx -> {
                     // debug: pictures of a tower floor's terrain around its arrival point
                     MinecraftServer server = ctx.getSource().getServer();

@@ -861,14 +861,14 @@ public class SaoPanelScreen extends Screen {
 
     private static int reachedFloor() {
         var p = Minecraft.getInstance().player;
-        return p == null ? 0 : Math.min(20, p.getData(AwakeningSystemMod.PLAYER_SYSTEM).savedTowerFloor());
+        return p == null ? 0 : Math.min(com.soybe.awakeningsystem.tower.GreatTowerWorldManager.TOWER_FLOORS.length, p.getData(AwakeningSystemMod.PLAYER_SYSTEM).savedTowerFloor());
     }
 
     /** The tower floor the player is standing on, or 0. */
     private static int currentFloor() {
         var mc = Minecraft.getInstance();
         if (mc.level == null) return 0;
-        for (int f = 1; f <= 20; f++)
+        for (int f = 1; f <= com.soybe.awakeningsystem.tower.GreatTowerWorldManager.TOWER_FLOORS.length; f++)
             if (mc.level.dimension().equals(com.soybe.awakeningsystem.tower.GreatTowerWorldManager.getDimensionForFloor(f))) return f;
         return 0;
     }
@@ -877,10 +877,10 @@ public class SaoPanelScreen extends Screen {
         return Math.min(ROW + 6, (PH - HEADER - 16) / Math.max(1, rows));
     }
 
-    private static final int FLOOR_COLS = 5, FLOOR_W = 58, FLOOR_H = 30;
+    private static final int FLOOR_COLS = 5, FLOOR_W = 58, FLOOR_H = 24;   // five rows of five floors
 
     private int floorX(int i) { return left() + 12 + (i % FLOOR_COLS) * (FLOOR_W + 3); }
-    private int floorY(int i) { return top() + HEADER + 30 + (i / FLOOR_COLS) * (FLOOR_H + 3); }
+    private int floorY(int i) { return top() + HEADER + 30 + (i / FLOOR_COLS) * (FLOOR_H + 2); }
 
     private void renderFloors(GuiGraphics g, int x, int y, int mouseX, int mouseY, float a) {
         int by = y + HEADER + 6;
@@ -892,7 +892,7 @@ public class SaoPanelScreen extends Screen {
         Component head = tr("tower_floors", "Great Tower: floors you reached");
         g.drawString(this.font, head, x + PW - 14 - this.font.width(head), by + 4, alpha(ORANGE_DARK, a), false);
         int reached = reachedFloor(), here = currentFloor();
-        for (int i = 0; i < 20; i++) {
+        for (int i = 0; i < com.soybe.awakeningsystem.tower.GreatTowerWorldManager.TOWER_FLOORS.length; i++) {
             int f = i + 1, fx = floorX(i), fy = floorY(i);
             boolean open = f <= reached, cur = f == here;
             boolean hot = open && !cur && in(mouseX, mouseY, fx, fy, FLOOR_W, FLOOR_H);
@@ -930,7 +930,7 @@ public class SaoPanelScreen extends Screen {
             return true;
         }
         int reached = reachedFloor(), here = currentFloor();
-        for (int i = 0; i < 20; i++) {
+        for (int i = 0; i < com.soybe.awakeningsystem.tower.GreatTowerWorldManager.TOWER_FLOORS.length; i++) {
             int f = i + 1;
             if (!in(mx, my, floorX(i), floorY(i), FLOOR_W, FLOOR_H)) continue;
             if (f > reached || f == here) {
