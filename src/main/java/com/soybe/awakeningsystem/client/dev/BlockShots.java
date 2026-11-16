@@ -54,6 +54,12 @@ public final class BlockShots {
             for (var st : com.soybe.awakeningsystem.ModCreativeTabs.MATERIALS_TAB.get().getDisplayItems())
                 sb.append(' ').append(net.minecraft.core.registries.BuiltInRegistries.ITEM.getKey(st.getItem()).getPath());
             AwakeningSystemMod.LOGGER.info(sb.toString());
+            // which tabs hold the spawn eggs of the newest creatures
+            for (var tab : net.minecraft.core.registries.BuiltInRegistries.CREATIVE_MODE_TAB)
+                for (var st : tab.getDisplayItems()) {
+                    String id = net.minecraft.core.registries.BuiltInRegistries.ITEM.getKey(st.getItem()).toString();
+                    if (id.contains("mutated_wither") || id.contains("mutant_warden_spawn")) AwakeningSystemMod.LOGGER.info("[BlockShots] {} in tab {}", id, tab.getDisplayName().getString());
+                }
         }
         if (t == 140) Screenshot.grab(mc.gameDirectory, "bs.png", mc.getMainRenderTarget(), msg -> {});
         if (t == 160) mc.stop();
