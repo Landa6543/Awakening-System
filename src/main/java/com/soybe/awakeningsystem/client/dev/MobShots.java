@@ -30,7 +30,8 @@ public final class MobShots {
     private static int t = -1;
     private static Entity mob;
     /** Close-up views: yaw of the camera round the creature, height, distance, pitch. */
-    private static final float[][] VIEWS = {{180, 1.4F, 3.6F, 8}, {90, 1.4F, 3.6F, 8}, {0, 1.4F, 3.6F, 8}, {135, 2.2F, 3.4F, 22}, {200, 4.2F, 2.4F, 60}};
+    private static final float[][] VIEWS = {{180, 1.4F, 3.6F, 8}, {90, 1.4F, 3.6F, 8}, {0, 1.4F, 3.6F, 8}, {135, 2.2F, 3.4F, 22}, {200, 4.2F, 2.4F, 60},
+            {0, 1.4F, 3.6F, 8}, {40, 2.2F, 3.4F, 18}};   // the last two, from the front, after the creature is roused
 
     @SubscribeEvent
     public static void tick(ClientTickEvent.Post event) {
@@ -76,6 +77,10 @@ public final class MobShots {
                 return;
             }
             float[] v = VIEWS[k];
+            if (k == 5 && phase == 0) server.execute(() -> {
+                if (mob instanceof com.soybe.awakeningsystem.entity.bestiary.PatchworkBearEntity b) b.burst();
+                if (mob instanceof com.soybe.awakeningsystem.entity.bestiary.SonrisaEntity s) s.wake();
+            });
             if (phase == 0) server.execute(() -> {
                 ServerPlayer sp = server.getPlayerList().getPlayer(mc.player.getUUID());
                 if (sp == null) return;

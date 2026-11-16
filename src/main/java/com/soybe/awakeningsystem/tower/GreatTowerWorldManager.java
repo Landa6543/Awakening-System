@@ -1217,6 +1217,8 @@ public static void processSectorChunk(ServerLevel level, ChunkAccess chunk) {
    }
 
    private static LivingEntity createFloorMob(ServerLevel level, int floor, RandomSource rand) {
+      LivingEntity bestiary = com.soybe.awakeningsystem.entity.bestiary.BestiaryContent.maybeFloorMob(level, floor, rand);
+      if (bestiary != null) return bestiary;
       return (LivingEntity)(switch (floor) {
          case 1 -> {
             float r = rand.nextFloat();
