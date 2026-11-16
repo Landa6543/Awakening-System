@@ -62,7 +62,11 @@ public final class MobShots {
             }
             sl.addFreshEntity(mob);
         });
-        if (t == 40) mc.options.hideGui = true;
+        if (t == 40) {
+            mc.options.hideGui = true;
+            // the SAO target marker outlines whatever the camera points at in red: off for clean pictures
+            com.soybe.awakeningsystem.client.sao.UiStyle.setFullDive(false);
+        }
         if (t == 70 && mob != null) AwakeningSystemMod.LOGGER.info("[MobShots] {} removed={} reason={} at {}", mob.getType(), mob.isRemoved(), mob.getRemovalReason(), mob.position());
         if (CLOSE) {
             int k = (t - 80) / 40, phase = (t - 80) % 40;
@@ -78,7 +82,7 @@ public final class MobShots {
                 double a = Math.toRadians(v[0]);
                 // the creature faces south (+z); a view's yaw is where the camera stands round it
                 double x = 0.5 - Math.sin(a) * v[2], z = 0.5 + Math.cos(a) * v[2];
-                float look = (float) Math.toDegrees(Math.atan2(-(0.5 - x), 0.5 - z));
+                float look = (float) Math.toDegrees(Math.atan2(-(0.5 - x), 0.5 - z)) + 16.0F;   // the crosshair just off the creature: a targeted creature is outlined in red
                 sp.teleportTo(sp.serverLevel(), x, 200 + v[1], z, look, v[3]);
             });
             if (phase == 30) Screenshot.grab(mc.gameDirectory, "ms_" + k + ".png", mc.getMainRenderTarget(), msg -> {});
