@@ -163,8 +163,8 @@ final class TowerFloorTerrainDeep {
                 scatter(8, w, x0, z0, 40, 4, 0.3, 20, (wr, x, y, z, a, b) -> iceSpire(wr, x, y, z, a));
             }
             default -> {
-                scatter(9, w, x0, z0, 14, 7, 0.55, 10, (wr, x, y, z, a, b) -> { if (flat(9, x, z)) cherryTree(wr, x, y, z, a, b); });
-                scatter(9, w, x0, z0, 34, 2, 0.3, 20, (wr, x, y, z, a, b) -> { if (flat(9, x, z)) stoneLantern(wr, x, y, z); });
+                // floor 9's cherry trees are Minecraft's own, grown in the decoration step (cherryTrees below);
+                // the hand-shaped ones and the stone lanterns looked wrong (the user asked them out)
             }
         }
     }
@@ -407,6 +407,27 @@ final class TowerFloorTerrainDeep {
             TowerFloorTerrain.blob(w, ex, ey + 1, ez, 3.0 + r1, leaf, false);
         }
         TowerFloorTerrain.blob(w, x, y + h + 2, z, 3.2, leaf, false);
+    }
+
+    /**
+     * Floor 9's cherry trees, grown by Minecraft's own cherry tree feature as in its cherry groves, scattered
+     * over the flat grass of this chunk. Runs in the decoration step, when the neighbouring chunks can be written.
+     */
+    static void cherryTrees(net.minecraft.world.level.WorldGenLevel level, net.minecraft.world.level.chunk.ChunkGenerator generator, ChunkAccess chunk) {
+        var features = level.registryAccess().registryOrThrow(net.minecraft.core.registries.Registries.CONFIGURED_FEATURE);
+        var tree = features.getHolder(net.minecraft.data.worldgen.features.TreeFeatures.CHERRY);
+        if (tree.isEmpty()) return;
+        int x0 = chunk.getPos().getMinBlockX(), z0 = chunk.getPos().getMinBlockZ();
+        int cell = 9;
+        for (int a = Math.floorDiv(x0, cell); a <= Math.floorDiv(x0 + 15, cell); a++)
+            for (int b = Math.floorDiv(z0, cell); b <= Math.floorDiv(z0 + 15, cell); b++) {
+                if (TowerFloorTerrain.hash(9, a, b, 10) > 0.5) continue;
+                int x = a * cell + (int) (TowerFloorTerrain.hash(9, a, b, 11) * cell), z = b * cell + (int) (TowerFloorTerrain.hash(9, a, b, 12) * cell);
+                if (x < x0 || x > x0 + 15 || z < z0 || z > z0 + 15 || !flat(9, x, z)) continue;
+                net.minecraft.core.BlockPos pos = new net.minecraft.core.BlockPos(x, height(9, x, z) + 1, z);
+                if (!level.getBlockState(pos.below()).is(Blocks.GRASS_BLOCK)) continue;
+                tree.get().value().place(level, generator, net.minecraft.util.RandomSource.create(((long) a << 32) ^ b ^ 9L), pos);
+            }
     }
 
     /** A small stone lantern: base, post, lit cap. */

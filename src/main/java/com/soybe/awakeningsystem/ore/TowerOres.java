@@ -103,9 +103,27 @@ public final class TowerOres {
     @SubscribeEvent
     public static void creativeTab(BuildCreativeModeTabContentsEvent event) {
         if (event.getTabKey() != ModCreativeTabs.MATERIALS_TAB.getKey()) return;
-        // at the top of the tab, each mineral together (ore, raw or gem, ingot, block), weakest first
-        for (int i = TAB.size() - 1; i >= 0; i--)
-            event.insertFirst(new net.minecraft.world.item.ItemStack(TAB.get(i).get()), net.minecraft.world.item.CreativeModeTab.TabVisibility.PARENT_AND_SEARCH_TABS);
+        // right after the mod's other metals (they end with Astralite), each mineral in their order:
+        // raw (or gem), ingot, ore, block; weakest first, then the alloys and the scrap
+        List<String> order = new ArrayList<>();
+        for (Kind k : KINDS) {
+            if (!k.gem) order.add("raw_" + k.id);
+            order.add(k.gem ? k.id : k.id + "_ingot");
+            order.add(k.id + "_ore");
+            order.add(k.id + "_block");
+        }
+        for (String alloy : new String[]{"fungarite", "spectrite"}) { order.add(alloy + "_ingot"); order.add(alloy + "_block"); }
+        order.add("molten_scrap");
+        var vis = net.minecraft.world.item.CreativeModeTab.TabVisibility.PARENT_AND_SEARCH_TABS;
+        net.minecraft.world.item.ItemStack prev = com.soybe.awakeningsystem.SystemItems.ASTRALITE_BLOCK.isBound()
+                ? new net.minecraft.world.item.ItemStack(com.soybe.awakeningsystem.SystemItems.ASTRALITE_BLOCK.get()) : null;
+        for (String id : order) {
+            Item it = net.minecraft.core.registries.BuiltInRegistries.ITEM.get(net.minecraft.resources.ResourceLocation.fromNamespaceAndPath(AwakeningSystemMod.MOD_ID, id));
+            net.minecraft.world.item.ItemStack st = new net.minecraft.world.item.ItemStack(it);
+            if (prev != null && event.getParentEntries().contains(prev)) event.insertAfter(prev, st, vis);
+            else event.accept(st, vis);
+            prev = st;
+        }
     }
 
     // ── veins in the tower's floors ─────────────────────────────────────────

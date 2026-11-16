@@ -47,6 +47,14 @@ public final class BlockShots {
             for (String c : cmds) server.getCommands().performPrefixedCommand(server.createCommandSourceStack(), c);
         });
         if (t == 40) mc.options.hideGui = true;
+        if (t == 100) {
+            // the Materials tab's order, to check where the tower's ores sit
+            net.minecraft.world.item.CreativeModeTabs.tryRebuildTabContents(mc.level.enabledFeatures(), true, mc.level.registryAccess());
+            StringBuilder sb = new StringBuilder("[BlockShots] materials tab:");
+            for (var st : com.soybe.awakeningsystem.ModCreativeTabs.MATERIALS_TAB.get().getDisplayItems())
+                sb.append(' ').append(net.minecraft.core.registries.BuiltInRegistries.ITEM.getKey(st.getItem()).getPath());
+            AwakeningSystemMod.LOGGER.info(sb.toString());
+        }
         if (t == 140) Screenshot.grab(mc.gameDirectory, "bs.png", mc.getMainRenderTarget(), msg -> {});
         if (t == 160) mc.stop();
     }

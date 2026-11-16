@@ -66,6 +66,13 @@ public final class TowerFloorChunkGenerator extends ChunkGenerator {
         return CompletableFuture.completedFuture(chunk);
     }
 
+    /** The biome's features (none on the tower's floors), then the floors that use Minecraft's own trees. */
+    @Override
+    public void applyBiomeDecoration(net.minecraft.world.level.WorldGenLevel level, ChunkAccess chunk, StructureManager structureManager) {
+        super.applyBiomeDecoration(level, chunk, structureManager);
+        if (floor == 9) TowerFloorTerrainDeep.cherryTrees(level, this, chunk);
+    }
+
     @Override
     public void applyCarvers(WorldGenRegion level, long seed, RandomState random, BiomeManager biomeManager,
                              StructureManager structureManager, ChunkAccess chunk, GenerationStep.Carving step) {}
