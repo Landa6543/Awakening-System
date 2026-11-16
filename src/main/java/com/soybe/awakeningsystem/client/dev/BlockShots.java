@@ -43,7 +43,7 @@ public final class BlockShots {
                 int x = (i % half) * 2, y = i < half ? 203 : 200;
                 cmds.add("setblock " + x + " " + y + " -2 " + ids[i].trim());
             }
-            cmds.add("tp " + n + " " + (half - 0.5) + " 202 " + (half * 1.15 + 1.5) + " 180 0");
+            cmds.add("tp " + n + " " + (half - 0.5) + " 202.5 " + (half * 0.75) + " 180 0");
             for (String c : cmds) server.getCommands().performPrefixedCommand(server.createCommandSourceStack(), c);
         });
         if (t == 40) mc.options.hideGui = true;

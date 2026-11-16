@@ -375,11 +375,8 @@ public final class TowerFloorTerrain {
                     double d = Math.sqrt(dx * dx + dy * dy * 1.8 + dz * dz);
                     if (d > rad || (d > rad - 0.9 && hash(5, cx + dx, cz + dz, cy + dy) < 0.3)) continue;
                     w.put(cx + dx, cy + dy, cz + dz, leaf);
-                    if (vines && dy < 0 && d > rad - 1.2 && hash(6, cx + dx, cz + dz, cy) < 0.18) {
-                        int len = 1 + (int) (hash(7, cx + dx, cz + dz, cy) * 5);
-                        for (int k = 1; k <= len; k++)
-                            w.put(cx + dx, cy + dy - k, cz + dz, Blocks.VINE.defaultBlockState().setValue(VineBlock.UP, true));
-                    }
+                    // no hanging vines any more: hung only from the leaf above, they were drawn lying flat
+                    // (the user asked them out of the floor 2 trees, and every crown had the same fault)
                 }
     }
 

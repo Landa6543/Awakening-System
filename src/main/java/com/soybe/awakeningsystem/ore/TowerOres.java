@@ -103,7 +103,9 @@ public final class TowerOres {
     @SubscribeEvent
     public static void creativeTab(BuildCreativeModeTabContentsEvent event) {
         if (event.getTabKey() != ModCreativeTabs.MATERIALS_TAB.getKey()) return;
-        for (DeferredHolder<Item, ? extends Item> h : TAB) event.accept(h.get());
+        // at the top of the tab, each mineral together (ore, raw or gem, ingot, block), weakest first
+        for (int i = TAB.size() - 1; i >= 0; i--)
+            event.insertFirst(new net.minecraft.world.item.ItemStack(TAB.get(i).get()), net.minecraft.world.item.CreativeModeTab.TabVisibility.PARENT_AND_SEARCH_TABS);
     }
 
     // ── veins in the tower's floors ─────────────────────────────────────────

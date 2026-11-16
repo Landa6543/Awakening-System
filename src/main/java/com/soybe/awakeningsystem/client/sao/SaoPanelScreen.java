@@ -937,7 +937,7 @@ public class SaoPanelScreen extends Screen {
                 Minecraft.getInstance().getSoundManager().play(SimpleSoundInstance.forUI(SoundEvents.NOTE_BLOCK_BASS.value(), 0.7F));
                 return true;
             }
-            SaoSounds.confirm();
+            // no "Link Start" sound when going to another floor (the user asked for it out)
             Minecraft.getInstance().setScreen(null);
             net.neoforged.neoforge.network.PacketDistributor.sendToServer(new com.soybe.awakeningsystem.TravelDimensionPayload("tower_floor:" + f));
             return true;
