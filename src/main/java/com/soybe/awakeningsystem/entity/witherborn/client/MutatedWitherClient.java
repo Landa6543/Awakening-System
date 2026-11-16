@@ -44,7 +44,7 @@ public final class MutatedWitherClient {
 
         @Override
         protected void scale(MutatedWitherSkeletonEntity entity, PoseStack poseStack, float partialTick) {
-            poseStack.scale(1.0F, 1.0F, 1.0F);
+            poseStack.scale(0.82F, 0.82F, 0.82F);   // the model stands about 4.4 blocks; drawn at about 3.6
         }
     }
 }
