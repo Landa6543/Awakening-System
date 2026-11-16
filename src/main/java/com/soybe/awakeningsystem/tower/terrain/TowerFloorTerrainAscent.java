@@ -287,6 +287,15 @@ final class TowerFloorTerrainAscent {
             }
         scatter(25, w, x0, z0, 28, 8, 0.55, 10, (wr, x, y, z, a, b) -> { if (Math.hypot(Math.abs(x) - 160, Math.abs(z) - 160) > 22) rockPillar(wr, x, z, a); });
         scatter(25, w, x0, z0, 46, 8, 0.4, 20, (wr, x, y, z, a, b) -> geode(wr, x, caveGround(x, z) + 4, z, a));
+        // mana crystals of the floor's rank on the floor and hanging from the roof, as in the floor 15 cavern
+        scatter(25, w, x0, z0, 6, 0, 0.3, 30, (wr, x, y, z, a, b) -> manaCrystal(wr, x, caveGround(x, z) + 1, z, a, Direction.UP));
+        scatter(25, w, x0, z0, 7, 0, 0.22, 40, (wr, x, y, z, a, b) -> manaCrystal(wr, x, caveRoof(x, z) - 1, z, a, Direction.DOWN));
+    }
+
+    private static void manaCrystal(TowerFloorTerrain.Writer w, int x, int y, int z, double r, Direction facing) {
+        BlockState c = TowerFloorTerrain.manaCrystal(25, r);
+        if (c.hasProperty(com.soybe.awakeningsystem.block.TeyvatCrystalBlock.FACING)) c = c.setValue(com.soybe.awakeningsystem.block.TeyvatCrystalBlock.FACING, facing);
+        if (w.get(x, y, z).isAir()) w.put(x, y, z, c);
     }
 
     /** A pillar from floor to roof, thick with ore. */
