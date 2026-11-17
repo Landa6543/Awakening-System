@@ -74,12 +74,12 @@ public final class BestiaryClient {
 
         @Override
         public ResourceLocation getTextureLocation(PatchworkBearEntity e) {
-            return ShadowSkins.pick(e, e.open(0) > 0.5F ? FERAL : TEXTURE);   // turned: dark, torn, stained
+            return ShadowSkins.pick(e, e.isHostile() ? FERAL : TEXTURE);   // turned: dark, torn, stained
         }
 
         @Override
         protected void scale(PatchworkBearEntity e, PoseStack pose, float partialTick) {
-            float s = 1.15F + 0.35F * e.open(partialTick);   // it swells as it turns
+            float s = 1.15F + 0.35F * e.open(partialTick);   // it swells as it turns (the hitbox grows with it)
             pose.scale(s, s, s);
         }
     }

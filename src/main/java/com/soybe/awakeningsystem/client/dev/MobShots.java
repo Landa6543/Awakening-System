@@ -31,7 +31,7 @@ public final class MobShots {
     private static Entity mob;
     /** Close-up views: yaw of the camera round the creature, height, distance, pitch. */
     private static final float[][] VIEWS = {{180, 1.4F, 3.6F, 8}, {90, 1.4F, 3.6F, 8}, {0, 1.4F, 3.6F, 8}, {135, 2.2F, 3.4F, 22}, {200, 4.2F, 2.4F, 60},
-            {0, 1.4F, 3.6F, 8}, {40, 2.2F, 3.4F, 18}};   // the last two, from the front, after the creature is roused
+            {0, 1.4F, 3.6F, 8}, {40, 2.2F, 3.4F, 18}, {60, 1.6F, 4.2F, 8}};   // the last one mid-swing   // the last two, from the front, after the creature is roused
 
     @SubscribeEvent
     public static void tick(ClientTickEvent.Post event) {
@@ -90,6 +90,7 @@ public final class MobShots {
                 float look = (float) Math.toDegrees(Math.atan2(-(0.5 - x), 0.5 - z)) + 16.0F;   // the crosshair just off the creature: a targeted creature is outlined in red
                 sp.teleportTo(sp.serverLevel(), x, 200 + v[1], z, look, v[3]);
             });
+            if (k == 7 && phase == 20) server.execute(() -> { if (mob instanceof Mob mm) mm.swing(net.minecraft.world.InteractionHand.MAIN_HAND); });
             if (phase == 30) Screenshot.grab(mc.gameDirectory, "ms_" + k + ".png", mc.getMainRenderTarget(), msg -> {});
             return;
         }

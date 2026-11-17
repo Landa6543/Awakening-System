@@ -60,6 +60,25 @@ public class PatchworkBearEntity extends Monster {
         b.define(HOSTILE, false);
     }
 
+    /** Turned, it stands bigger: the hitbox grows with it. */
+    @Override
+    public net.minecraft.world.entity.EntityDimensions getDefaultDimensions(net.minecraft.world.entity.Pose pose) {
+        net.minecraft.world.entity.EntityDimensions d = super.getDefaultDimensions(pose);
+        return isHostile() ? d.scale(1.3F) : d;
+    }
+
+    @Override
+    public void onSyncedDataUpdated(EntityDataAccessor<?> key) {
+        super.onSyncedDataUpdated(key);
+        if (HOSTILE.equals(key)) this.refreshDimensions();
+    }
+
+    /** A slower swing, so the lunge and bite can be seen. */
+    @Override
+    public int getCurrentSwingDuration() {
+        return 12;
+    }
+
     public boolean isHostile() {
         return this.entityData.get(HOSTILE);
     }
@@ -95,7 +114,7 @@ public class PatchworkBearEntity extends Monster {
             return;
         }
         if (prey && this.distanceToSqr(t) < 24 * 24) calmTimer = 0;
-        else if (++calmTimer > 120) {
+        else if (++calmTimer > 400) {   // twenty seconds without prey, not six: no flicking back and forth
             // lost its prey: the seams close again
             this.entityData.set(HOSTILE, false);
             calmTimer = 0;

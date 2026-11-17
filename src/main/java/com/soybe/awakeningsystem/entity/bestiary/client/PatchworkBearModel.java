@@ -119,36 +119,42 @@ public class PatchworkBearModel extends HierarchicalModel<PatchworkBearEntity> {
         armL.xRot += Mth.cos(w) * 0.3F * amt * plush;
         head.zRot += Mth.sin(age * 0.04F) * 0.1F * plush;
 
-        // the beast: crouched low and leaning forward, legs splayed, arms reaching out with the claws, the head
-        // raised at its prey and the jaw dropped open to the chest, working
-        float chomp = Mth.sin(age * 0.45F) * 0.12F * o;
-        body.y += 2.5F * o;
-        body.xRot += 0.55F * o;
-        legR.xRot -= 0.45F * o;
-        legL.xRot -= 0.45F * o;
-        legR.zRot += 0.25F * o;
-        legL.zRot -= 0.25F * o;
-        head.xRot -= 0.5F * o;
-        jaw.xRot = 0.95F * o + chomp;
-        armR.xRot += (-1.1F + Mth.cos(w) * 0.35F * amt) * o;
-        armL.xRot += (-1.1F - Mth.cos(w) * 0.35F * amt) * o;
-        armR.zRot += 0.45F * o + Mth.sin(age * 0.12F) * 0.06F * o;
-        armL.zRot -= 0.45F * o + Mth.sin(age * 0.12F) * 0.06F * o;
-        armR.yRot += 0.3F * o;
-        armL.yRot -= 0.3F * o;
+        // the beast: standing up big, only a little crouched, legs braced wide, arms out to the sides with the claws
+        // reaching forward; the head thrust forward over the chest and the jaw hanging open in front of it, working
+        float chomp = Mth.sin(age * 0.45F) * 0.1F * o;
+        body.y += 1.2F * o;
+        body.xRot += 0.15F * o;
+        legR.xRot -= 0.15F * o;
+        legL.xRot -= 0.15F * o;
+        legR.zRot += 0.22F * o;
+        legL.zRot -= 0.22F * o;
+        head.z -= 3.0F * o;
+        head.y -= 0.5F * o;
+        head.xRot -= 0.1F * o;
+        jaw.xRot = 0.7F * o + chomp;
+        armR.xRot += (-0.75F + Mth.cos(w) * 0.35F * amt) * o;
+        armL.xRot += (-0.75F - Mth.cos(w) * 0.35F * amt) * o;
+        armR.zRot += 0.65F * o + Mth.sin(age * 0.12F) * 0.06F * o;
+        armL.zRot -= 0.65F * o + Mth.sin(age * 0.12F) * 0.06F * o;
         earR.zRot += 0.35F * o;
         earL.zRot -= 0.35F * o;
         clawsAR.visible = clawsAL.visible = clawsLR.visible = clawsLL.visible = o > 0.3F;
 
         if (this.attackTime > 0.0F) {
-            // it lunges: the jaw snaps shut on its prey and both clawed arms rake in
-            float s = Mth.sin(this.attackTime * Mth.PI);
-            body.xRot += 0.3F * s;
-            jaw.xRot -= 0.8F * s;
-            armR.xRot -= 0.6F * s;
-            armL.xRot -= 0.6F * s;
-            armR.yRot -= 0.7F * s;
-            armL.yRot += 0.7F * s;
+            // the lunge: it rears back with the jaw wide, then throws itself forward, both clawed arms slashing in
+            // across its prey as the jaw snaps shut
+            float t = this.attackTime;
+            float rear = t < 0.35F ? t / 0.35F : Math.max(0.0F, 1.0F - (t - 0.35F) / 0.2F);
+            float strike = t < 0.35F ? 0.0F : Mth.sin((t - 0.35F) / 0.65F * Mth.PI);
+            body.xRot += -0.25F * rear + 0.4F * strike;
+            head.xRot += -0.3F * rear + 0.25F * strike;
+            jaw.xRot = 0.7F + 0.45F * rear - 0.75F * strike;
+            armR.xRot = -1.9F * rear - 0.5F * strike - 0.3F;
+            armL.xRot = -1.9F * rear - 0.5F * strike - 0.3F;
+            armR.yRot = -1.1F * strike;
+            armL.yRot = 1.1F * strike;
+            armR.zRot = 0.9F * rear + 0.2F;
+            armL.zRot = -0.9F * rear - 0.2F;
         }
     }
 }
