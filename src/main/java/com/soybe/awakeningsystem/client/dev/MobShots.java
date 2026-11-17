@@ -90,6 +90,23 @@ public final class MobShots {
                 float look = (float) Math.toDegrees(Math.atan2(-(0.5 - x), 0.5 - z)) + 16.0F;   // the crosshair just off the creature: a targeted creature is outlined in red
                 sp.teleportTo(sp.serverLevel(), x, 200 + v[1], z, look, v[3]);
             });
+            if (k == 6 && phase == 34 && mob != null) {   // after the pictures of the roused creature
+                // can a player hit it now? the client's box, the server's box, and a ray from the eye to its middle
+                var cm = mc.level.getEntity(mob.getId());
+                var eye = mc.player.getEyePosition();
+                boolean hit = cm != null && cm.getBoundingBox().clip(eye, cm.getBoundingBox().getCenter()).isPresent()
+                        || cm != null && cm.getBoundingBox().contains(eye);
+                AwakeningSystemMod.LOGGER.info("[MobShots] roused: client box {} server box {} ray hits {}", cm == null ? "-" : cm.getBoundingBox(), mob.getBoundingBox(), hit);
+                server.execute(() -> {
+                    var sp = server.getPlayerList().getPlayer(mc.player.getUUID());
+                    if (sp == null || !(mob instanceof net.minecraft.world.entity.LivingEntity le)) return;
+                    float before = le.getHealth();
+                    sp.setGameMode(net.minecraft.world.level.GameType.SURVIVAL);
+                    sp.attack(le);
+                    AwakeningSystemMod.LOGGER.info("[MobShots] survival hit: health {} -> {}", before, le.getHealth());
+                    sp.setGameMode(net.minecraft.world.level.GameType.SPECTATOR);
+                });
+            }
             if (k == 7 && phase == 20) server.execute(() -> { if (mob instanceof Mob mm) mm.swing(net.minecraft.world.InteractionHand.MAIN_HAND); });
             if (phase == 30) Screenshot.grab(mc.gameDirectory, "ms_" + k + ".png", mc.getMainRenderTarget(), msg -> {});
             return;

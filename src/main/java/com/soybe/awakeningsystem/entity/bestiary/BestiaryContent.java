@@ -30,7 +30,7 @@ public final class BestiaryContent {
     public static void register(RegisterEvent event) {
         event.register(Registries.ENTITY_TYPE, helper -> {
             PATCHWORK_BEAR = EntityType.Builder.of(PatchworkBearEntity::new, MobCategory.MONSTER)
-                    .sized(1.1F, 1.9F).eyeHeight(1.65F).clientTrackingRange(10).build("patchwork_bear");
+                    .sized(1.4F, 2.4F).eyeHeight(2.0F).clientTrackingRange(10).build("patchwork_bear");
             helper.register(id("patchwork_bear"), PATCHWORK_BEAR);
             SONRISA = EntityType.Builder.of(SonrisaEntity::new, MobCategory.MONSTER)
                     .sized(1.9F, 1.9F).eyeHeight(1.1F).clientTrackingRange(10).build("sonrisa");

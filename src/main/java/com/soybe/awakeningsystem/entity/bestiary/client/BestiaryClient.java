@@ -35,6 +35,7 @@ public final class BestiaryClient {
     @SubscribeEvent
     public static void layers(EntityRenderersEvent.RegisterLayerDefinitions event) {
         event.registerLayerDefinition(PatchworkBearModel.LAYER, PatchworkBearModel::createBodyLayer);
+        event.registerLayerDefinition(FeralBearModel.LAYER, FeralBearModel::createBodyLayer);
         event.registerLayerDefinition(SonrisaModel.LAYER, SonrisaModel::createBodyLayer);
     }
 
@@ -63,27 +64,37 @@ public final class BestiaryClient {
         }
     }
 
-    static final class BearRenderer extends MobRenderer<PatchworkBearEntity, PatchworkBearModel> {
+    /** The bear: the toy model, and once it has turned, a model of its own (FeralBearModel) with its own skin. */
+    static final class BearRenderer extends MobRenderer<PatchworkBearEntity, net.minecraft.client.model.EntityModel<PatchworkBearEntity>> {
         private static final ResourceLocation TEXTURE = tex("patchwork_bear/patchwork_bear");
         private static final ResourceLocation FERAL = tex("patchwork_bear/patchwork_bear_feral");
+        private final PatchworkBearModel plush;
+        private final FeralBearModel feral;
 
         BearRenderer(EntityRendererProvider.Context ctx) {
-            super(ctx, new PatchworkBearModel(ctx.bakeLayer(PatchworkBearModel.LAYER)), 0.6F);
-            this.addLayer(new WakeGlow<>(this, tex("patchwork_bear/patchwork_bear_glow"), PatchworkBearEntity::isHostile));
+            super(ctx, new PatchworkBearModel(ctx.bakeLayer(PatchworkBearModel.LAYER)), 0.7F);
+            this.plush = (PatchworkBearModel) this.model;
+            this.feral = new FeralBearModel(ctx.bakeLayer(FeralBearModel.LAYER));
+            this.addLayer(new WakeGlow<>(this, tex("patchwork_bear/patchwork_bear_feral_glow"), PatchworkBearEntity::isHostile));
+        }
+
+        @Override
+        public void render(PatchworkBearEntity e, float yaw, float partialTick, PoseStack pose, MultiBufferSource buffers, int light) {
+            this.model = e.isHostile() ? feral : plush;
+            super.render(e, yaw, partialTick, pose, buffers, light);
         }
 
         @Override
         public ResourceLocation getTextureLocation(PatchworkBearEntity e) {
-            return ShadowSkins.pick(e, e.isHostile() ? FERAL : TEXTURE);   // turned: dark, torn, stained
+            return ShadowSkins.pick(e, e.isHostile() ? FERAL : TEXTURE);
         }
 
         @Override
         protected void scale(PatchworkBearEntity e, PoseStack pose, float partialTick) {
-            float s = 1.15F + 0.35F * e.open(partialTick);   // it swells as it turns (the hitbox grows with it)
+            float s = e.isHostile() ? 1.12F : 1.15F;
             pose.scale(s, s, s);
         }
     }
-
     static final class SonrisaRenderer extends MobRenderer<SonrisaEntity, SonrisaModel> {
         private static final ResourceLocation TEXTURE = tex("sonrisa/sonrisa");
 

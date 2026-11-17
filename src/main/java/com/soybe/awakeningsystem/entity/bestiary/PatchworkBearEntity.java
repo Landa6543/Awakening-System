@@ -60,19 +60,6 @@ public class PatchworkBearEntity extends Monster {
         b.define(HOSTILE, false);
     }
 
-    /** Turned, it stands bigger: the hitbox grows with it. */
-    @Override
-    public net.minecraft.world.entity.EntityDimensions getDefaultDimensions(net.minecraft.world.entity.Pose pose) {
-        net.minecraft.world.entity.EntityDimensions d = super.getDefaultDimensions(pose);
-        return isHostile() ? d.scale(1.3F) : d;
-    }
-
-    @Override
-    public void onSyncedDataUpdated(EntityDataAccessor<?> key) {
-        super.onSyncedDataUpdated(key);
-        if (HOSTILE.equals(key)) this.refreshDimensions();
-    }
-
     /** A slower swing, so the lunge and bite can be seen. */
     @Override
     public int getCurrentSwingDuration() {

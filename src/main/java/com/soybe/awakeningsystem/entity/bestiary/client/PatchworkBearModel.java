@@ -103,7 +103,7 @@ public class PatchworkBearModel extends HierarchicalModel<PatchworkBearEntity> {
     public void setupAnim(PatchworkBearEntity e, float limbSwing, float limbSwingAmount, float age, float netHeadYaw, float headPitch) {
         root.getAllParts().forEach(ModelPart::resetPose);
         float pt = Minecraft.getInstance().getTimer().getGameTimeDeltaPartialTick(false);
-        float o = e == null ? 0 : e.open(pt);
+        float o = 0.0F;   // the toy only: once turned, the bear is drawn with FeralBearModel
         float plush = 1.0F - o;
         float amt = Math.min(1.0F, limbSwingAmount);
         float w = limbSwing * 0.9F;
