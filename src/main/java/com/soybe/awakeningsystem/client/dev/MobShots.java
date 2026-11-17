@@ -80,11 +80,11 @@ public final class MobShots {
                 sp.addEffect(new net.minecraft.world.effect.MobEffectInstance(net.minecraft.world.effect.MobEffects.REGENERATION, 2000, 9, false, false));
                 sp.teleportTo(sp.serverLevel(), -3.5, 200, -12.5, -20, 10);
             });
-            if (t > 60 && t % 20 == 0 && mob != null) {
+            if (t > 60 && t % 5 == 0 && mob != null) {
                 var cm = mc.level.getEntity(mob.getId());
                 String sh = mob instanceof com.soybe.awakeningsystem.entity.bestiary.PatchworkBearEntity b ? "server hostile=" + b.isHostile() : "";
                 String ch = cm instanceof com.soybe.awakeningsystem.entity.bestiary.PatchworkBearEntity b ? " client hostile=" + b.isHostile() : "";
-                AwakeningSystemMod.LOGGER.info("[MobFight] t={} {}{} dist={} target={} player hp={} goals={}", t, sh, ch, String.format("%.1f", mob.distanceTo(mc.player)),
+                AwakeningSystemMod.LOGGER.info("[MobFight] t={} swing={} speed={} {}{} dist={} target={} player hp={} goals={}", t, cm instanceof net.minecraft.world.entity.LivingEntity cl ? String.format("%.2f", cl.walkAnimation.speed()) : "-", String.format("%.3f", cm == null ? 0 : cm.getDeltaMovement().horizontalDistance()), sh, ch, String.format("%.1f", mob.distanceTo(mc.player)),
                         mob instanceof Mob m && m.getTarget() != null ? m.getTarget().getName().getString() : "none", mc.player.getHealth(),
                         mob instanceof Mob m2 ? m2.goalSelector.getAvailableGoals().stream().filter(g -> g.isRunning()).map(g -> g.getGoal().getClass().getSimpleName()).toList() : "");
             }
