@@ -15,16 +15,16 @@ import net.minecraft.resources.ResourceLocation;
 import net.minecraft.util.Mth;
 
 /**
- * The Patchwork Bear after the user's concept art. A plump teddy: round head with a snout, round ears, a button
- * for one eye; a body whose belly is two flaps sewn shut down the middle; stubby arms and legs. Turned, the flaps
- * tear apart (the upper swinging up, the lower down) into a maw of needle teeth with stuffing behind, the snout's
- * jaw drops, black claws come out of the paws, and it hunches forward with its arms spread.
+ * The Patchwork Bear after the user's concept art. As a toy: a big round head with a muzzle, round ears, a button
+ * for one eye; a plump body with a round belly; short arms with round paws; stubby legs. Turned: it crouches low and
+ * hunches forward, the arms reach out with long black claws, and the whole lower half of the head drops open as a
+ * jaw down to the chest, a maw of needle teeth above and below.
  */
 public class PatchworkBearModel extends HierarchicalModel<PatchworkBearEntity> {
     public static final ModelLayerLocation LAYER = new ModelLayerLocation(
             ResourceLocation.fromNamespaceAndPath(AwakeningSystemMod.MOD_ID, "patchwork_bear"), "main");
 
-    private final ModelPart root, body, head, jaw, earR, earL, bellyUp, bellyDown, armR, armL, legR, legL, clawsAR, clawsAL, clawsLR, clawsLL;
+    private final ModelPart root, body, head, jaw, earR, earL, armR, armL, legR, legL, clawsAR, clawsAL, clawsLR, clawsLL;
 
     public PatchworkBearModel(ModelPart root) {
         this.root = root;
@@ -33,8 +33,6 @@ public class PatchworkBearModel extends HierarchicalModel<PatchworkBearEntity> {
         this.jaw = head.getChild("jaw");
         this.earR = head.getChild("right_ear");
         this.earL = head.getChild("left_ear");
-        this.bellyUp = body.getChild("belly_upper");
-        this.bellyDown = body.getChild("belly_lower");
         this.armR = body.getChild("right_arm");
         this.armL = body.getChild("left_arm");
         this.legR = root.getChild("right_leg");
@@ -49,43 +47,49 @@ public class PatchworkBearModel extends HierarchicalModel<PatchworkBearEntity> {
         MeshDefinition mesh = new MeshDefinition();
         PartDefinition root = mesh.getRoot();
 
-        // body: the back half of the torso; its front face is the inside of the maw
-        PartDefinition body = root.addOrReplaceChild("body", CubeListBuilder.create().texOffs(0, 0).addBox(-5.5F, -13.0F, -1.0F, 11.0F, 13.0F, 4.0F),
-                PartPose.offset(0.0F, 13.0F, 0.0F));
-        // the belly: two flaps sewn together across the middle; teeth on their inner faces
-        CubeListBuilder up = CubeListBuilder.create().texOffs(32, 0).addBox(-5.0F, 0.0F, -3.0F, 10.0F, 6.0F, 3.0F);
-        for (int i = 0; i < 9; i++) up.texOffs(24, 44).addBox(-4.6F + i * 1.1F, 2.5F + (i % 2) * 0.8F, 0.0F, 1.0F, 4.0F, 1.0F);   // needle teeth
-        body.addOrReplaceChild("belly_upper", up, PartPose.offset(0.0F, -13.0F, -1.0F));
-        CubeListBuilder down = CubeListBuilder.create().texOffs(32, 9).addBox(-5.0F, -7.0F, -3.0F, 10.0F, 7.0F, 3.0F);
-        for (int i = 0; i < 8; i++) down.texOffs(24, 44).addBox(-4.1F + i * 1.15F, -7.0F + (i % 2) * 0.8F, 0.0F, 1.0F, 4.0F, 1.0F);
-        down.texOffs(80, 0).addBox(-2.0F, -3.0F, 0.0F, 4.0F, 1.0F, 3.0F);   // the tongue lolling out of the maw
-        body.addOrReplaceChild("belly_lower", down, PartPose.offset(0.0F, 0.0F, -1.0F));
+        // a plump body with a round belly on short legs (the hips at y=15)
+        PartDefinition body = root.addOrReplaceChild("body", CubeListBuilder.create()
+                        .texOffs(0, 0).addBox(-6.0F, -12.0F, -3.5F, 12.0F, 12.0F, 7.0F)
+                        .texOffs(38, 0).addBox(-5.0F, -10.0F, -4.5F, 10.0F, 9.0F, 1.0F),
+                PartPose.offset(0.0F, 15.0F, 0.0F));
 
-        // head: round, with a snout, a jaw that can drop, round ears, a button eye and a real one
-        PartDefinition head = body.addOrReplaceChild("head", CubeListBuilder.create()
-                        .texOffs(0, 24).addBox(-5.0F, -9.0F, -5.0F, 10.0F, 9.0F, 9.0F)
-                        .texOffs(40, 24).addBox(-2.5F, -4.0F, -7.0F, 5.0F, 3.0F, 2.0F)       // the snout
-                        .texOffs(68, 24).addBox(-3.6F, -6.8F, -5.6F, 2.0F, 2.0F, 1.0F)       // the button eye
-                        .texOffs(76, 24).addBox(1.6F, -6.4F, -5.3F, 1.0F, 1.0F, 1.0F),       // the real eye
-                PartPose.offset(0.0F, -13.0F, -0.5F));
-        head.addOrReplaceChild("jaw", CubeListBuilder.create().texOffs(40, 31).addBox(-2.5F, 0.0F, -3.0F, 5.0F, 2.0F, 3.0F),
-                PartPose.offset(0.0F, -1.0F, -4.0F));
+        // the head: the upper half (crown, eyes, upper muzzle, upper teeth) and the jaw (chin, lower muzzle,
+        // lower teeth), which closed makes the whole round head and open drops down to the chest
+        CubeListBuilder skull = CubeListBuilder.create()
+                .texOffs(0, 19).addBox(-6.0F, -9.0F, -6.0F, 12.0F, 8.0F, 11.0F)
+                .texOffs(46, 19).addBox(-3.0F, -5.0F, -9.0F, 6.0F, 4.0F, 3.0F)        // upper muzzle
+                .texOffs(92, 19).addBox(-4.4F, -7.2F, -6.6F, 2.0F, 2.0F, 1.0F)        // the button eye
+                .texOffs(98, 19).addBox(2.0F, -6.8F, -6.3F, 1.0F, 1.0F, 1.0F);        // the real eye
+        for (int i = 0; i < 10; i++) skull.texOffs(102, 19).addBox(-5.0F + i * 1.1F, -1.5F, -5.6F, 1.0F, 2.0F, 1.0F);   // upper teeth
+        for (int i = 0; i < 4; i++) skull.texOffs(102, 19).addBox(-2.3F + i * 1.3F, -1.5F, -8.6F, 1.0F, 2.0F, 1.0F);
+        for (int side = -1; side <= 1; side += 2)
+            for (int i = 0; i < 4; i++) skull.texOffs(102, 19).addBox(side * 5.0F - 0.5F, -1.5F, -4.5F + i * 2.0F, 1.0F, 2.0F, 1.0F);
+        PartDefinition head = body.addOrReplaceChild("head", skull, PartPose.offset(0.0F, -12.0F, -0.5F));
+        CubeListBuilder jawB = CubeListBuilder.create()
+                .texOffs(46, 25).addBox(-5.5F, 0.0F, -10.0F, 11.0F, 3.0F, 10.0F)      // chin
+                .texOffs(64, 19).addBox(-3.0F, 0.0F, -13.0F, 6.0F, 2.0F, 3.0F);       // lower muzzle
+        for (int i = 0; i < 9; i++) jawB.texOffs(102, 19).addBox(-4.6F + i * 1.1F, -1.5F, -9.5F, 1.0F, 2.0F, 1.0F);   // lower teeth
+        for (int i = 0; i < 3; i++) jawB.texOffs(102, 19).addBox(-1.8F + i * 1.3F, -1.5F, -12.6F, 1.0F, 2.0F, 1.0F);
+        head.addOrReplaceChild("jaw", jawB, PartPose.offset(0.0F, -1.0F, 4.0F));
+
         for (int side = -1; side <= 1; side += 2) {
             String s = side < 0 ? "right" : "left";
             boolean m = side > 0;
-            head.addOrReplaceChild(s + "_ear", CubeListBuilder.create().mirror(m).texOffs(56, 24).addBox(-1.5F, -3.0F, -1.0F, 3.0F, 3.0F, 2.0F),
-                    PartPose.offsetAndRotation(side * 3.8F, -8.0F, 0.0F, 0.0F, 0.0F, side * 0.3F));
-            // stubby arms with black claws hidden in the paws
-            PartDefinition arm = body.addOrReplaceChild(s + "_arm", CubeListBuilder.create().mirror(m).texOffs(0, 44).addBox(-2.0F, -1.0F, -2.0F, 4.0F, 10.0F, 4.0F),
-                    PartPose.offsetAndRotation(side * 7.5F, -11.0F, 0.5F, 0.0F, 0.0F, side * -0.15F));
+            head.addOrReplaceChild(s + "_ear", CubeListBuilder.create().mirror(m).texOffs(82, 19).addBox(-1.5F, -3.0F, -1.0F, 3.0F, 3.0F, 2.0F),
+                    PartPose.offsetAndRotation(side * 4.5F, -8.5F, 0.0F, 0.0F, 0.0F, side * 0.25F));
+            // short arms ending in round paws, long black claws hidden in them
+            PartDefinition arm = body.addOrReplaceChild(s + "_arm", CubeListBuilder.create().mirror(m)
+                            .texOffs(0, 38).addBox(-2.0F, -1.0F, -2.0F, 4.0F, 11.0F, 4.0F)
+                            .texOffs(16, 38).addBox(-2.5F, 8.0F, -2.5F, 5.0F, 3.0F, 5.0F),
+                    PartPose.offsetAndRotation(side * 7.5F, -10.0F, 0.0F, 0.0F, 0.0F, side * -0.12F));
             CubeListBuilder ac = CubeListBuilder.create();
-            for (int c = 0; c < 3; c++) ac.texOffs(16, 44).addBox(-1.5F + c * 1.2F, 0.0F, -0.5F, 1.0F, 6.0F, 1.0F);   // long black claws
-            arm.addOrReplaceChild(s + "_arm_claws", ac, PartPose.offsetAndRotation(0.0F, 8.5F, -1.5F, -0.4F, 0.0F, 0.0F));
-            PartDefinition leg = root.addOrReplaceChild(s + "_leg", CubeListBuilder.create().mirror(m).texOffs(32, 44).addBox(-2.5F, 0.0F, -2.5F, 5.0F, 11.0F, 5.0F),
-                    PartPose.offset(side * 3.0F, 13.0F, 0.5F));
+            for (int c = 0; c < 3; c++) ac.texOffs(56, 38).addBox(-1.6F + c * 1.3F, 0.0F, -0.5F, 1.0F, 6.0F, 1.0F);
+            arm.addOrReplaceChild(s + "_arm_claws", ac, PartPose.offsetAndRotation(0.0F, 10.5F, -1.8F, -0.5F, 0.0F, 0.0F));
+            PartDefinition leg = root.addOrReplaceChild(s + "_leg", CubeListBuilder.create().mirror(m).texOffs(36, 38).addBox(-2.5F, 0.0F, -2.5F, 5.0F, 9.0F, 5.0F),
+                    PartPose.offset(side * 3.5F, 15.0F, 0.5F));
             CubeListBuilder lc = CubeListBuilder.create();
-            for (int c = 0; c < 3; c++) lc.texOffs(16, 44).addBox(-1.6F + c * 1.3F, -0.5F, -3.0F, 1.0F, 1.0F, 3.0F);
-            leg.addOrReplaceChild(s + "_leg_claws", lc, PartPose.offset(0.0F, 10.5F, -2.5F));
+            for (int c = 0; c < 3; c++) lc.texOffs(60, 38).addBox(-1.6F + c * 1.3F, -0.5F, -3.0F, 1.0F, 1.0F, 3.0F);
+            leg.addOrReplaceChild(s + "_leg_claws", lc, PartPose.offset(0.0F, 8.5F, -2.5F));
         }
         return LayerDefinition.create(mesh, 128, 64);
     }
@@ -104,47 +108,47 @@ public class PatchworkBearModel extends HierarchicalModel<PatchworkBearEntity> {
         float amt = Math.min(1.0F, limbSwingAmount);
         float w = limbSwing * 0.9F;
 
-        head.yRot = netHeadYaw * Mth.DEG_TO_RAD;
+        head.yRot = netHeadYaw * Mth.DEG_TO_RAD * (0.4F + 0.6F * o);
         head.xRot = headPitch * Mth.DEG_TO_RAD;
 
-        // the toy: a stiff, tottering waddle, rocking side to side, the head lolling
+        // the toy: a stiff, tottering waddle, rocking side to side, the big head lolling
         body.zRot += Mth.sin(w) * 0.14F * amt * plush + Mth.sin(age * 0.05F) * 0.03F * plush;
         legR.xRot += Mth.cos(w) * 0.5F * amt;
         legL.xRot -= Mth.cos(w) * 0.5F * amt;
         armR.xRot += -Mth.cos(w) * 0.3F * amt * plush;
         armL.xRot += Mth.cos(w) * 0.3F * amt * plush;
-        head.zRot += Mth.sin(age * 0.04F) * 0.12F * plush;
-        earR.zRot += Mth.sin(age * 0.1F) * 0.04F;
-        earL.zRot -= Mth.sin(age * 0.1F) * 0.04F;
+        head.zRot += Mth.sin(age * 0.04F) * 0.1F * plush;
 
-        // the beast: it rears up big and hunched, legs bent, arms thrown wide with the claws out, the belly torn
-        // open from the chest down like a second, enormous mouth, the snout gaping too
-        float chomp = Mth.sin(age * 0.5F) * 0.18F * o;
-        body.xRot += 0.4F * o;
-        body.y += 1.5F * o;
-        head.xRot -= 0.55F * o;
-        legR.xRot -= 0.25F * o;
-        legL.xRot -= 0.25F * o;
-        legR.zRot += 0.18F * o;
-        legL.zRot -= 0.18F * o;
-        armR.zRot += 1.15F * o;
-        armL.zRot -= 1.15F * o;
-        armR.xRot += -1.1F * o + Mth.cos(w) * 0.4F * amt * o + Mth.sin(age * 0.15F) * 0.08F * o;
-        armL.xRot += -1.1F * o - Mth.cos(w) * 0.4F * amt * o - Mth.sin(age * 0.15F) * 0.08F * o;
-        bellyUp.xRot = -1.35F * o + chomp;
-        bellyDown.xRot = 1.15F * o - chomp;
-        jaw.xRot = 0.9F * o + chomp * 0.6F;
+        // the beast: crouched low and leaning forward, legs splayed, arms reaching out with the claws, the head
+        // raised at its prey and the jaw dropped open to the chest, working
+        float chomp = Mth.sin(age * 0.45F) * 0.12F * o;
+        body.y += 2.5F * o;
+        body.xRot += 0.55F * o;
+        legR.xRot -= 0.45F * o;
+        legL.xRot -= 0.45F * o;
+        legR.zRot += 0.25F * o;
+        legL.zRot -= 0.25F * o;
+        head.xRot -= 0.5F * o;
+        jaw.xRot = 0.95F * o + chomp;
+        armR.xRot += (-1.1F + Mth.cos(w) * 0.35F * amt) * o;
+        armL.xRot += (-1.1F - Mth.cos(w) * 0.35F * amt) * o;
+        armR.zRot += 0.45F * o + Mth.sin(age * 0.12F) * 0.06F * o;
+        armL.zRot -= 0.45F * o + Mth.sin(age * 0.12F) * 0.06F * o;
+        armR.yRot += 0.3F * o;
+        armL.yRot -= 0.3F * o;
+        earR.zRot += 0.35F * o;
+        earL.zRot -= 0.35F * o;
         clawsAR.visible = clawsAL.visible = clawsLR.visible = clawsLL.visible = o > 0.3F;
-        earR.zRot += 0.3F * o;
-        earL.zRot -= 0.3F * o;
+
         if (this.attackTime > 0.0F) {
-            // a lunging bite: the maw snaps shut on its prey, the arms rake in
+            // it lunges: the jaw snaps shut on its prey and both clawed arms rake in
             float s = Mth.sin(this.attackTime * Mth.PI);
-            body.xRot += 0.4F * s;
-            bellyUp.xRot += 1.2F * s;
-            bellyDown.xRot -= 1.0F * s;
-            armR.yRot = -0.8F * s;
-            armL.yRot = 0.8F * s;
+            body.xRot += 0.3F * s;
+            jaw.xRot -= 0.8F * s;
+            armR.xRot -= 0.6F * s;
+            armL.xRot -= 0.6F * s;
+            armR.yRot -= 0.7F * s;
+            armL.yRot += 0.7F * s;
         }
     }
 }
