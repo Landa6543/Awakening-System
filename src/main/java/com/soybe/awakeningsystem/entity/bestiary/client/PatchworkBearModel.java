@@ -54,10 +54,11 @@ public class PatchworkBearModel extends HierarchicalModel<PatchworkBearEntity> {
                 PartPose.offset(0.0F, 13.0F, 0.0F));
         // the belly: two flaps sewn together across the middle; teeth on their inner faces
         CubeListBuilder up = CubeListBuilder.create().texOffs(32, 0).addBox(-5.0F, 0.0F, -3.0F, 10.0F, 6.0F, 3.0F);
-        for (int i = 0; i < 7; i++) up.texOffs(24, 44).addBox(-4.4F + i * 1.4F, 3.5F, 0.0F, 1.0F, 3.0F, 1.0F);
+        for (int i = 0; i < 9; i++) up.texOffs(24, 44).addBox(-4.6F + i * 1.1F, 2.5F + (i % 2) * 0.8F, 0.0F, 1.0F, 4.0F, 1.0F);   // needle teeth
         body.addOrReplaceChild("belly_upper", up, PartPose.offset(0.0F, -13.0F, -1.0F));
         CubeListBuilder down = CubeListBuilder.create().texOffs(32, 9).addBox(-5.0F, -7.0F, -3.0F, 10.0F, 7.0F, 3.0F);
-        for (int i = 0; i < 6; i++) down.texOffs(24, 44).addBox(-3.7F + i * 1.4F, -6.5F, 0.0F, 1.0F, 3.0F, 1.0F);
+        for (int i = 0; i < 8; i++) down.texOffs(24, 44).addBox(-4.1F + i * 1.15F, -7.0F + (i % 2) * 0.8F, 0.0F, 1.0F, 4.0F, 1.0F);
+        down.texOffs(80, 0).addBox(-2.0F, -3.0F, 0.0F, 4.0F, 1.0F, 3.0F);   // the tongue lolling out of the maw
         body.addOrReplaceChild("belly_lower", down, PartPose.offset(0.0F, 0.0F, -1.0F));
 
         // head: round, with a snout, a jaw that can drop, round ears, a button eye and a real one
@@ -78,7 +79,7 @@ public class PatchworkBearModel extends HierarchicalModel<PatchworkBearEntity> {
             PartDefinition arm = body.addOrReplaceChild(s + "_arm", CubeListBuilder.create().mirror(m).texOffs(0, 44).addBox(-2.0F, -1.0F, -2.0F, 4.0F, 10.0F, 4.0F),
                     PartPose.offsetAndRotation(side * 7.5F, -11.0F, 0.5F, 0.0F, 0.0F, side * -0.15F));
             CubeListBuilder ac = CubeListBuilder.create();
-            for (int c = 0; c < 3; c++) ac.texOffs(16, 44).addBox(-1.5F + c * 1.2F, 0.0F, -0.5F, 1.0F, 3.0F, 1.0F);
+            for (int c = 0; c < 3; c++) ac.texOffs(16, 44).addBox(-1.5F + c * 1.2F, 0.0F, -0.5F, 1.0F, 6.0F, 1.0F);   // long black claws
             arm.addOrReplaceChild(s + "_arm_claws", ac, PartPose.offsetAndRotation(0.0F, 8.5F, -1.5F, -0.4F, 0.0F, 0.0F));
             PartDefinition leg = root.addOrReplaceChild(s + "_leg", CubeListBuilder.create().mirror(m).texOffs(32, 44).addBox(-2.5F, 0.0F, -2.5F, 5.0F, 11.0F, 5.0F),
                     PartPose.offset(side * 3.0F, 13.0F, 0.5F));
@@ -116,19 +117,26 @@ public class PatchworkBearModel extends HierarchicalModel<PatchworkBearEntity> {
         earR.zRot += Mth.sin(age * 0.1F) * 0.04F;
         earL.zRot -= Mth.sin(age * 0.1F) * 0.04F;
 
-        // the beast: hunched, arms spread with the claws out, the belly torn wide and chomping
-        float chomp = Mth.sin(age * 0.55F) * 0.22F * o;
-        body.xRot += 0.35F * o;
-        head.xRot -= 0.35F * o;
-        armR.zRot += 0.9F * o;
-        armL.zRot -= 0.9F * o;
-        armR.xRot += -0.9F * o + Mth.cos(w) * 0.4F * amt * o;
-        armL.xRot += -0.9F * o - Mth.cos(w) * 0.4F * amt * o;
-        bellyUp.xRot = -1.75F * o + chomp;
-        bellyDown.xRot = 1.5F * o - chomp;
-        jaw.xRot = 0.8F * o + chomp * 0.6F;
+        // the beast: it rears up big and hunched, legs bent, arms thrown wide with the claws out, the belly torn
+        // open from the chest down like a second, enormous mouth, the snout gaping too
+        float chomp = Mth.sin(age * 0.5F) * 0.18F * o;
+        body.xRot += 0.4F * o;
+        body.y += 1.5F * o;
+        head.xRot -= 0.55F * o;
+        legR.xRot -= 0.25F * o;
+        legL.xRot -= 0.25F * o;
+        legR.zRot += 0.18F * o;
+        legL.zRot -= 0.18F * o;
+        armR.zRot += 1.15F * o;
+        armL.zRot -= 1.15F * o;
+        armR.xRot += -1.1F * o + Mth.cos(w) * 0.4F * amt * o + Mth.sin(age * 0.15F) * 0.08F * o;
+        armL.xRot += -1.1F * o - Mth.cos(w) * 0.4F * amt * o - Mth.sin(age * 0.15F) * 0.08F * o;
+        bellyUp.xRot = -1.35F * o + chomp;
+        bellyDown.xRot = 1.15F * o - chomp;
+        jaw.xRot = 0.9F * o + chomp * 0.6F;
         clawsAR.visible = clawsAL.visible = clawsLR.visible = clawsLL.visible = o > 0.3F;
-
+        earR.zRot += 0.3F * o;
+        earL.zRot -= 0.3F * o;
         if (this.attackTime > 0.0F) {
             // a lunging bite: the maw snaps shut on its prey, the arms rake in
             float s = Mth.sin(this.attackTime * Mth.PI);

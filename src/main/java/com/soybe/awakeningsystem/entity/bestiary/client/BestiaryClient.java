@@ -65,6 +65,7 @@ public final class BestiaryClient {
 
     static final class BearRenderer extends MobRenderer<PatchworkBearEntity, PatchworkBearModel> {
         private static final ResourceLocation TEXTURE = tex("patchwork_bear/patchwork_bear");
+        private static final ResourceLocation FERAL = tex("patchwork_bear/patchwork_bear_feral");
 
         BearRenderer(EntityRendererProvider.Context ctx) {
             super(ctx, new PatchworkBearModel(ctx.bakeLayer(PatchworkBearModel.LAYER)), 0.6F);
@@ -73,12 +74,13 @@ public final class BestiaryClient {
 
         @Override
         public ResourceLocation getTextureLocation(PatchworkBearEntity e) {
-            return ShadowSkins.pick(e, TEXTURE);
+            return ShadowSkins.pick(e, e.open(0) > 0.5F ? FERAL : TEXTURE);   // turned: dark, torn, stained
         }
 
         @Override
         protected void scale(PatchworkBearEntity e, PoseStack pose, float partialTick) {
-            pose.scale(1.15F, 1.15F, 1.15F);
+            float s = 1.15F + 0.35F * e.open(partialTick);   // it swells as it turns
+            pose.scale(s, s, s);
         }
     }
 
