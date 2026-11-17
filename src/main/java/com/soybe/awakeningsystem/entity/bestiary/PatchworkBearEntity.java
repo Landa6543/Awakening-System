@@ -83,10 +83,19 @@ public class PatchworkBearEntity extends Monster {
             @Override
             public boolean canContinueToUse() { return isHostile() && super.canContinueToUse(); }
         });
-        // as a toy it only totters about, slowly
-        this.goalSelector.addGoal(5, new WaterAvoidingRandomStrollGoal(this, 0.35D));
-        this.goalSelector.addGoal(6, new LookAtPlayerGoal(this, Player.class, 10.0F));
-        this.goalSelector.addGoal(7, new RandomLookAroundGoal(this));
+        // as a toy it sits still like a forgotten plush, waiting (an ambush): it only wanders and looks round once turned
+        this.goalSelector.addGoal(5, new WaterAvoidingRandomStrollGoal(this, 0.8D) {
+            @Override
+            public boolean canUse() { return isHostile() && super.canUse(); }
+        });
+        this.goalSelector.addGoal(6, new LookAtPlayerGoal(this, Player.class, 10.0F) {
+            @Override
+            public boolean canUse() { return isHostile() && super.canUse(); }
+        });
+        this.goalSelector.addGoal(7, new RandomLookAroundGoal(this) {
+            @Override
+            public boolean canUse() { return isHostile() && super.canUse(); }
+        });
         this.targetSelector.addGoal(1, new HurtByTargetGoal(this));
         this.targetSelector.addGoal(2, new NearestAttackableTargetGoal<>(this, Player.class, true));
     }
@@ -97,6 +106,10 @@ public class PatchworkBearEntity extends Monster {
         LivingEntity t = this.getTarget();
         boolean prey = t != null && t.isAlive();
         if (!isHostile()) {
+            // a toy does not move: no walking, no turning to watch the player
+            this.getNavigation().stop();
+            this.setYRot(this.yRotO);
+            this.yHeadRot = this.yBodyRot = this.getYRot();
             if (prey && this.distanceToSqr(t) < WAKE_RANGE * WAKE_RANGE) burst();
             return;
         }

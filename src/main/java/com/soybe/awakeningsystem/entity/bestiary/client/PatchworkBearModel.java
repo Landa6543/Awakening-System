@@ -108,8 +108,8 @@ public class PatchworkBearModel extends HierarchicalModel<PatchworkBearEntity> {
         float amt = Math.min(1.0F, limbSwingAmount);
         float w = limbSwing * 0.9F;
 
-        head.yRot = netHeadYaw * Mth.DEG_TO_RAD * (0.4F + 0.6F * o);
-        head.xRot = headPitch * Mth.DEG_TO_RAD;
+        head.yRot = 0.0F;   // a toy's head does not follow anyone
+        head.xRot = 0.0F;
 
         // the toy: a stiff, tottering waddle, rocking side to side, the big head lolling
         body.zRot += Mth.sin(w) * 0.14F * amt * plush + Mth.sin(age * 0.05F) * 0.03F * plush;

@@ -59,7 +59,7 @@ public final class MobShots {
             if (mob instanceof Mob m) {
                 m.setPersistenceRequired();
                 if (CLOSE) m.setNoAi(true);
-                else m.getNavigation().moveTo(20, 201, 0, 0.8);
+                else if (System.getProperty("awakening.mobFight") == null) m.getNavigation().moveTo(20, 201, 0, 0.8);
             }
             sl.addFreshEntity(mob);
         });
@@ -69,6 +69,31 @@ public final class MobShots {
             com.soybe.awakeningsystem.client.sao.UiStyle.setFullDive(false);
         }
         if (t == 70 && mob != null) AwakeningSystemMod.LOGGER.info("[MobShots] {} removed={} reason={} at {}", mob.getType(), mob.isRemoved(), mob.getRemovalReason(), mob.position());
+        if (System.getProperty("awakening.mobFight") != null) {
+            // a real fight: the player in survival (unhurtable) a few blocks away, the creature with its AI; every
+            // second the server's and the client's view of it are logged and a picture taken
+            if (t == 60) server.execute(() -> {
+                ServerPlayer sp = server.getPlayerList().getPlayer(mc.player.getUUID());
+                if (sp == null) return;
+                sp.setGameMode(net.minecraft.world.level.GameType.SURVIVAL);
+                sp.addEffect(new net.minecraft.world.effect.MobEffectInstance(net.minecraft.world.effect.MobEffects.DAMAGE_RESISTANCE, 2000, 9, false, false));
+                sp.addEffect(new net.minecraft.world.effect.MobEffectInstance(net.minecraft.world.effect.MobEffects.REGENERATION, 2000, 9, false, false));
+                sp.teleportTo(sp.serverLevel(), -3.5, 200, -12.5, -20, 10);
+            });
+            if (t > 60 && t % 20 == 0 && mob != null) {
+                var cm = mc.level.getEntity(mob.getId());
+                String sh = mob instanceof com.soybe.awakeningsystem.entity.bestiary.PatchworkBearEntity b ? "server hostile=" + b.isHostile() : "";
+                String ch = cm instanceof com.soybe.awakeningsystem.entity.bestiary.PatchworkBearEntity b ? " client hostile=" + b.isHostile() : "";
+                AwakeningSystemMod.LOGGER.info("[MobFight] t={} {}{} dist={} target={} player hp={} goals={}", t, sh, ch, String.format("%.1f", mob.distanceTo(mc.player)),
+                        mob instanceof Mob m && m.getTarget() != null ? m.getTarget().getName().getString() : "none", mc.player.getHealth(),
+                        mob instanceof Mob m2 ? m2.goalSelector.getAvailableGoals().stream().filter(g -> g.isRunning()).map(g -> g.getGoal().getClass().getSimpleName()).toList() : "");
+            }
+            if (t == 200) server.execute(() -> { ServerPlayer sp = server.getPlayerList().getPlayer(mc.player.getUUID()); if (sp != null) sp.teleportTo(sp.serverLevel(), -4.5, 200, -5.0, -30, 15); });
+            if (t >= 100 && t % 40 == 0 && t <= 420)
+                Screenshot.grab(mc.gameDirectory, "mf_" + ((t - 100) / 40) + ".png", mc.getMainRenderTarget(), msg -> {});
+            if (t == 440) mc.stop();
+            return;
+        }
         if (CLOSE) {
             int k = (t - 80) / 40, phase = (t - 80) % 40;
             if (t < 80) return;
@@ -111,7 +136,7 @@ public final class MobShots {
             if (phase == 30) Screenshot.grab(mc.gameDirectory, "ms_" + k + ".png", mc.getMainRenderTarget(), msg -> {});
             return;
         }
-        if (t > 60 && mob instanceof Mob m && !m.level().isClientSide && t % 20 == 0) server.execute(() -> m.getNavigation().moveTo(20, 201, 0, 0.8));
+        if (t > 60 && System.getProperty("awakening.mobFight") == null && mob instanceof Mob m && !m.level().isClientSide && t % 20 == 0) server.execute(() -> m.getNavigation().moveTo(20, 201, 0, 0.8));
         if (t > 60 && mob != null && t % 5 == 0) AwakeningSystemMod.LOGGER.info("[MobShots] t={} x={} y={}", t, String.format("%.2f", mob.getX()), String.format("%.2f", mob.getY()));
         if (t >= 100 && t <= 280 && t % 30 == 10)
             Screenshot.grab(mc.gameDirectory, "ms_" + ((t - 100) / 30) + ".png", mc.getMainRenderTarget(), msg -> {});
