@@ -903,6 +903,9 @@ public final class GreatTowerWorldManager {
       FloorLayout layout = getLayout(floor);
       if (Math.hypot(cx - layout.returnX(), cz - layout.returnZ()) < 36.0) return;
       if (Math.hypot(cx - layout.advanceX(), cz - layout.advanceZ()) < 36.0) return;
+      // a monster put down further than 128 blocks from every player is wiped by the game on its first tick
+      // (hundreds of them flickered in and out as the floor's far chunks loaded), so only spawn within reach
+      if (level.getNearestPlayer(cx, 64, cz, 112.0, false) == null) return;
 
       int nearbyCount = level.getEntitiesOfClass(
             Mob.class,

@@ -62,6 +62,33 @@ public final class DungeonShots {
             server.getCommands().performPrefixedCommand(server.createCommandSourceStack(), "gamemode spectator " + sp.getGameProfile().getName());
             server.getCommands().performPrefixedCommand(server.createCommandSourceStack(), "effect give " + sp.getGameProfile().getName() + " minecraft:night_vision 600 0 true");
         });
+        if (t == 250) server.execute(() -> {
+            // loot check: how many gate monsters are Limbo stalkers, and what the first dozen drop when a player kills them
+            ServerPlayer sp = server.getPlayerList().getPlayer(mc.player.getUUID());
+            DungeonManager.DungeonSession s = sp == null ? null : DungeonManager.getSession(sp.getUUID());
+            if (s == null) return;
+            ServerLevel lvl = server.getLevel(s.dungeonDimension);
+            var mobs = new java.util.ArrayList<net.minecraft.world.entity.Mob>();
+            for (var e : lvl.getAllEntities()) if (e instanceof net.minecraft.world.entity.Mob m && m.getTags().contains("dungeon_mob")) mobs.add(m);
+            long limbo = mobs.stream().filter(m -> m instanceof com.soybe.awakeningsystem.entity.LimboStalkerCreature).count();
+            java.util.Map<String, Integer> drops = new java.util.TreeMap<>();
+            int killed = 0;
+            for (var e : lvl.getAllEntities()) if (e instanceof net.minecraft.world.entity.item.ItemEntity) e.addTag("ds_counted");
+            for (var m : mobs) {
+                if (killed >= 12) break;
+                var at = m.blockPosition();
+                m.hurt(sp.damageSources().playerAttack(sp), Float.MAX_VALUE);
+                if (!m.isDeadOrDying()) continue;
+                killed++;
+                AwakeningSystemMod.LOGGER.info("[DungeonShots] killed {} lvl {} hp {} tags {}", m.getType().getDescriptionId(), m.getPersistentData().getInt("rpg_mob_level"), m.getMaxHealth(), m.getTags());
+                for (var it : lvl.getEntitiesOfClass(net.minecraft.world.entity.item.ItemEntity.class, new net.minecraft.world.phys.AABB(at).inflate(3))) {
+                    if (it.getTags().contains("ds_counted")) continue;
+                    it.addTag("ds_counted");
+                    drops.merge(net.minecraft.core.registries.BuiltInRegistries.ITEM.getKey(it.getItem().getItem()).getPath(), it.getItem().getCount(), Integer::sum);
+                }
+            }
+            AwakeningSystemMod.LOGGER.info("[DungeonShots] dungeon mobs {} limbo {} killed {} drops {}", mobs.size(), limbo, killed, drops);
+        });
         int[] at = {300, 360, 420, 480};
         for (int i = 0; i < at.length; i++) {
             final int k = i;

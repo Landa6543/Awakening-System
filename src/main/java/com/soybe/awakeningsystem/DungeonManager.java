@@ -18,7 +18,6 @@ import com.soybe.awakeningsystem.entity.SculkGolemEntity;
 import com.soybe.awakeningsystem.entity.ShadowInfantryEntity;
 import com.soybe.awakeningsystem.entity.StonehideLawachurlEntity;
 import com.soybe.awakeningsystem.entity.MotherSpiderEntity;
-import com.soybe.awakeningsystem.entity.SpiderHeadEntity;
 import com.soybe.awakeningsystem.entity.BeastmanWarriorEntity;
 import com.soybe.awakeningsystem.entity.GoblinWarriorEntity;
 import com.soybe.awakeningsystem.entity.GoblinShamanEntity;
@@ -1297,10 +1296,11 @@ public final class DungeonManager {
             mob = spider;
          }
          case 4 -> {
-            SpiderHeadEntity spHead = new SpiderHeadEntity(ModEntities.SPIDER_HEAD.get(), level);
-            spHead.setCustomName(Component.translatable("awakening_system.dungeon.mob.spider_head"));
-            buffMob(spHead, 32.0 * totalHpMult, 4.2 * totalDmgMult, armor * 0.8, kbRes);
-            mob = spHead;
+            // Was a Spider Head, but that is an immortal Limbo stalker and has no place in a gate.
+            var wither = new com.soybe.awakeningsystem.entity.witherborn.MutatedWitherSkeletonEntity(
+                  com.soybe.awakeningsystem.entity.witherborn.MutatedWitherContent.MUTATED_WITHER_SKELETON, level);
+            buffMob(wither, 44.0 * totalHpMult, 5.4 * totalDmgMult, armor + 1.0, kbRes + 0.1);
+            mob = wither;
          }
          case 5 -> {
             AntSoldierEntity ant = new AntSoldierEntity(ModEntities.ANT_SOLDIER.get(), level);
