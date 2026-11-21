@@ -25,28 +25,40 @@ import net.neoforged.neoforge.event.entity.living.LivingDropsEvent;
 public final class MonsterLoot {
     private MonsterLoot() {}
 
-    @SubscribeEvent
+    // last, after every other drop handler, so the coins they added are counted in today's coins
+    @SubscribeEvent(priority = net.neoforged.bus.api.EventPriority.LOWEST)
     public static void drops(LivingDropsEvent event) {
         LivingEntity mob = event.getEntity();
         if (mob.level().isClientSide() || mob instanceof Player) return;
+        RandomSource r = mob.getRandom();
+
+        // a coin is worth 1000 now: purses written for the old worth (a goblin shaman's 100) become a few coins
+        boolean hadCoins = false;
+        if (bound(SystemItems.AWAKENING_COIN)) {
+            for (var it = event.getDrops().iterator(); it.hasNext(); ) {
+                ItemEntity e = it.next();
+                if (!e.getItem().is(SystemItems.AWAKENING_COIN.get())) continue;
+                int n = com.soybe.awakeningsystem.item.AwakeningCoinItem.fromOldAmount(e.getItem().getCount(), r);
+                if (n <= 0) it.remove();
+                else { e.getItem().setCount(n); hadCoins = true; }
+            }
+        }
+
         if (!(mob instanceof Enemy) && !mob.getTags().contains("dungeon_mob") && !mob.getTags().contains("tower_mob")) return;
         if (mob instanceof com.soybe.awakeningsystem.entity.LimboStalkerCreature) return;
         if (mob.getTags().contains("shadow_soldier") || mob.getTags().contains("no_loot")) return;
         if (!killedByPlayer(event)) return;
 
-        RandomSource r = mob.getRandom();
         int level = level(mob);
         boolean boss = isBoss(mob);
         boolean elite = !boss && isElite(mob);
 
-        // coins: most kills give a few, more the stronger the creature (creatures with a purse of their own keep theirs)
-        boolean ownCoins = bound(SystemItems.AWAKENING_COIN)
-                && event.getDrops().stream().anyMatch(i -> i.getItem().is(SystemItems.AWAKENING_COIN.get()));
+        // coins (1000 each): a chance of one from common monsters, rising with level; a few from elites and bosses
         int coins = 0;
-        if (ownCoins) coins = 0;
-        else if (boss) coins = 16 + level / 2 + r.nextInt(8 + level / 4);
-        else if (elite) coins = 6 + level / 5 + r.nextInt(4 + level / 8);
-        else if (r.nextFloat() < 0.7f) coins = 2 + r.nextInt(2 + level / 5);
+        if (hadCoins) coins = 0;
+        else if (boss) coins = 2 + level / 20 + r.nextInt(2);
+        else if (elite) coins = 1 + level / 50 + (r.nextBoolean() ? 1 : 0);
+        else if (r.nextFloat() < Math.min(0.3f, 0.05f + level * 0.002f)) coins = 1;
         if (coins > 0 && bound(SystemItems.AWAKENING_COIN)) add(event, new ItemStack(SystemItems.AWAKENING_COIN.get(), Math.min(64, coins)));
 
         // a Monster Core of the creature's rank: rare from common monsters, likely from elites, sure from bosses

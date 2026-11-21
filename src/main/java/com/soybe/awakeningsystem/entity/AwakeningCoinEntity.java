@@ -141,7 +141,7 @@ public class AwakeningCoinEntity extends ThrowableItemProjectile {
 
             if (!target.isAlive()) {
                 ItemEntity bonus = new ItemEntity(level(), target.getX(), target.getY() + 0.5, target.getZ(),
-                        new ItemStack(SystemItems.AWAKENING_COIN.get(), 1 + random.nextInt(2)));
+                        new ItemStack(SystemItems.AWAKENING_COIN.get(), 1));   // the coin thrown comes back, no more (a coin is worth 1000 now)
                 level().addFreshEntity(bonus);
             }
             discard();

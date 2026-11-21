@@ -403,7 +403,7 @@ public class LockedTreasureChestBlock extends BaseEntityBlock implements SimpleW
             if (rand.nextFloat() < 0.20F) rolledLoot.add(new ItemStack(Items.WITHER_SKELETON_SKULL, 1));
             if (rand.nextFloat() < 0.15F) rolledLoot.add(new ItemStack(Items.ANCIENT_DEBRIS, 1 + rand.nextInt(2)));
             if (rand.nextFloat() < 0.20F) rolledLoot.add(new ItemStack(Items.NETHERITE_SCRAP, 1 + rand.nextInt(2)));
-            rolledLoot.add(new ItemStack(SystemItems.AWAKENING_COIN.get(), 15 + rand.nextInt(25)));
+            rolledLoot.add(new ItemStack(SystemItems.AWAKENING_COIN.get(), Math.max(1, (15 + rand.nextInt(25)) / 10)));
         } else if (dim.contains("end")) {
             if (rand.nextFloat() < 0.70F) rolledLoot.add(new ItemStack(SystemItems.END_VOID_KEY.get(), 1));
             if (rand.nextFloat() < 0.35F) rolledLoot.add(new ItemStack(Items.DIAMOND, 2 + rand.nextInt(3)));
@@ -414,7 +414,7 @@ public class LockedTreasureChestBlock extends BaseEntityBlock implements SimpleW
             if (rand.nextFloat() < 0.25F) rolledLoot.add(new ItemStack(Items.END_CRYSTAL, 1));
             if (rand.nextFloat() < 0.30F) rolledLoot.add(new ItemStack(Items.DIAMOND, 2 + rand.nextInt(4)));
             if (rand.nextFloat() < 0.15F) rolledLoot.add(new ItemStack(Items.TOTEM_OF_UNDYING, 1));
-            rolledLoot.add(new ItemStack(SystemItems.AWAKENING_COIN.get(), 20 + rand.nextInt(30)));
+            rolledLoot.add(new ItemStack(SystemItems.AWAKENING_COIN.get(), Math.max(1, (20 + rand.nextInt(30)) / 10)));
         } else if (dim.contains("teyvat")) {
             if (rand.nextFloat() < 0.70F) rolledLoot.add(new ItemStack(SystemItems.TEYVAT_SHRINE_KEY.get(), 1));
             boolean isPrimordial = rand.nextFloat() < 0.40F;
@@ -426,7 +426,7 @@ public class LockedTreasureChestBlock extends BaseEntityBlock implements SimpleW
                 rolledLoot.add(new ItemStack(SystemItems.EXPANDED_ARTIFACTS.get(rand.nextInt(SystemItems.EXPANDED_ARTIFACTS.size())).get(), 1));
             }
             if (rand.nextFloat() < 0.35F) rolledLoot.add(new ItemStack(Items.GOLDEN_APPLE, 1 + rand.nextInt(2)));
-            rolledLoot.add(new ItemStack(SystemItems.AWAKENING_COIN.get(), 20 + rand.nextInt(30)));
+            rolledLoot.add(new ItemStack(SystemItems.AWAKENING_COIN.get(), Math.max(1, (20 + rand.nextInt(30)) / 10)));
         } else if (dim.contains("isekai")) {
             if (rand.nextFloat() < 0.70F) rolledLoot.add(new ItemStack(SystemItems.ISEKAI_MANA_KEY.get(), 1));
             boolean isAstral = rand.nextFloat() < 0.35F;
@@ -437,7 +437,7 @@ public class LockedTreasureChestBlock extends BaseEntityBlock implements SimpleW
             if (rand.nextFloat() < 0.25F) rolledLoot.add(new ItemStack(SystemItems.MANA_CRYSTAL_SHARD_B.get(), 1 + rand.nextInt(2)));
             if (rand.nextFloat() < 0.35F) rolledLoot.add(new ItemStack(Items.LAPIS_LAZULI, 8 + rand.nextInt(12)));
             if (rand.nextFloat() < 0.30F) rolledLoot.add(new ItemStack(Items.AMETHYST_SHARD, 4 + rand.nextInt(6)));
-            rolledLoot.add(new ItemStack(SystemItems.AWAKENING_COIN.get(), 20 + rand.nextInt(30)));
+            rolledLoot.add(new ItemStack(SystemItems.AWAKENING_COIN.get(), Math.max(1, (20 + rand.nextInt(30)) / 10)));
         } else if (dim.contains("murim")) {
             if (rand.nextFloat() < 0.70F) rolledLoot.add(new ItemStack(SystemItems.MURIM_DAO_KEY.get(), 1));
             boolean isJade = rand.nextFloat() < 0.50F;
@@ -447,7 +447,7 @@ public class LockedTreasureChestBlock extends BaseEntityBlock implements SimpleW
             if (rand.nextFloat() < 0.20F) rolledLoot.add(new ItemStack(SystemItems.THOUSAND_YEAR_GINSENG.get(), 1));
             if (rand.nextFloat() < 0.40F) rolledLoot.add(new ItemStack(Items.GOLD_INGOT, 6 + rand.nextInt(8)));
             if (rand.nextFloat() < 0.35F) rolledLoot.add(new ItemStack(Items.EMERALD, 4 + rand.nextInt(6)));
-            rolledLoot.add(new ItemStack(SystemItems.AWAKENING_COIN.get(), 20 + rand.nextInt(30)));
+            rolledLoot.add(new ItemStack(SystemItems.AWAKENING_COIN.get(), Math.max(1, (20 + rand.nextInt(30)) / 10)));
         } else {
             // Standard Dungeon / Overworld - Tiered by Dungeon Rank!
             if (rand.nextFloat() < 0.65F) rolledLoot.add(new ItemStack(SystemItems.OVERWORLD_DUNGEON_KEY.get(), 1));
@@ -466,7 +466,7 @@ public class LockedTreasureChestBlock extends BaseEntityBlock implements SimpleW
                 if (rand.nextFloat() < 0.40F) rolledLoot.add(new ItemStack(SystemItems.MANA_CRYSTAL_SHARD_A.get(), 2 + rand.nextInt(3)));
                 if (rand.nextFloat() < 0.25F) rolledLoot.add(new ItemStack(SystemItems.MANA_CRYSTAL_SHARD_S.get(), 1));
                 rolledLoot.add(new ItemStack(Items.ENDER_PEARL, 4 + rand.nextInt(6)));
-                rolledLoot.add(new ItemStack(SystemItems.AWAKENING_COIN.get(), 80 + rand.nextInt(70)));
+                rolledLoot.add(new ItemStack(SystemItems.AWAKENING_COIN.get(), Math.max(1, (80 + rand.nextInt(70)) / 10)));
             } else if (r.contains("A")) {
                 // RANK A: Legendary Hunter tier
                 rolledLoot.add(new ItemStack(Items.DIAMOND, 3 + rand.nextInt(4)));
@@ -478,7 +478,7 @@ public class LockedTreasureChestBlock extends BaseEntityBlock implements SimpleW
                 if (rand.nextFloat() < 0.45F) rolledLoot.add(new ItemStack(SystemItems.MANA_CRYSTAL_SHARD_B.get(), 2 + rand.nextInt(3)));
                 if (rand.nextFloat() < 0.20F) rolledLoot.add(new ItemStack(SystemItems.MANA_CRYSTAL_SHARD_A.get(), 1));
                 rolledLoot.add(new ItemStack(Items.ENDER_PEARL, 3 + rand.nextInt(4)));
-                rolledLoot.add(new ItemStack(SystemItems.AWAKENING_COIN.get(), 50 + rand.nextInt(45)));
+                rolledLoot.add(new ItemStack(SystemItems.AWAKENING_COIN.get(), Math.max(1, (50 + rand.nextInt(45)) / 10)));
             } else if (r.contains("B")) {
                 // RANK B: Epic tier
                 rolledLoot.add(new ItemStack(Items.DIAMOND, 1 + rand.nextInt(3)));
@@ -490,7 +490,7 @@ public class LockedTreasureChestBlock extends BaseEntityBlock implements SimpleW
                 if (rand.nextFloat() < 0.20F) rolledLoot.add(new ItemStack(SystemItems.MANA_CRYSTAL_SHARD_B.get(), 1));
                 rolledLoot.add(new ItemStack(Items.LAPIS_LAZULI, 8 + rand.nextInt(10)));
                 rolledLoot.add(new ItemStack(Items.EXPERIENCE_BOTTLE, 6 + rand.nextInt(6)));
-                rolledLoot.add(new ItemStack(SystemItems.AWAKENING_COIN.get(), 30 + rand.nextInt(30)));
+                rolledLoot.add(new ItemStack(SystemItems.AWAKENING_COIN.get(), Math.max(1, (30 + rand.nextInt(30)) / 10)));
             } else if (r.contains("C")) {
                 // RANK C: Rare tier
                 rolledLoot.add(new ItemStack(Items.GOLD_INGOT, 4 + rand.nextInt(6)));
@@ -500,7 +500,7 @@ public class LockedTreasureChestBlock extends BaseEntityBlock implements SimpleW
                 rolledLoot.add(new ItemStack(Items.LAPIS_LAZULI, 6 + rand.nextInt(8)));
                 rolledLoot.add(new ItemStack(Items.REDSTONE, 8 + rand.nextInt(12)));
                 rolledLoot.add(new ItemStack(Items.EXPERIENCE_BOTTLE, 4 + rand.nextInt(5)));
-                rolledLoot.add(new ItemStack(SystemItems.AWAKENING_COIN.get(), 20 + rand.nextInt(25)));
+                rolledLoot.add(new ItemStack(SystemItems.AWAKENING_COIN.get(), Math.max(1, (20 + rand.nextInt(25)) / 10)));
             } else {
                 // RANK D & E: Common / Novice tier
                 rolledLoot.add(new ItemStack(Items.IRON_INGOT, 4 + rand.nextInt(6)));
@@ -510,7 +510,7 @@ public class LockedTreasureChestBlock extends BaseEntityBlock implements SimpleW
                 rolledLoot.add(new ItemStack(Items.TORCH, 8 + rand.nextInt(10)));
                 if (rand.nextFloat() < 0.50F) rolledLoot.add(new ItemStack(SystemItems.MANA_CRYSTAL_SHARD_E.get(), 2 + rand.nextInt(3)));
                 rolledLoot.add(new ItemStack(Items.EXPERIENCE_BOTTLE, 2 + rand.nextInt(4)));
-                rolledLoot.add(new ItemStack(SystemItems.AWAKENING_COIN.get(), 10 + rand.nextInt(15)));
+                rolledLoot.add(new ItemStack(SystemItems.AWAKENING_COIN.get(), Math.max(1, (10 + rand.nextInt(15)) / 10)));
             }
         }
 

@@ -133,8 +133,63 @@ public final class TowerMobCheck {
         if (t == 110) mc.stop();
     }
 
+    private static final String SCAN = System.getProperty("awakening.portalScan");
+
+    /** With -Dawakening.portalScan=7,8,13: without entering, looks for every portal block on those floors near the planned spots. */
+    private static void portalScan(Minecraft mc) {
+        var server = mc.getSingleplayerServer();
+        String[] fl = SCAN.split(",");
+        if (t >= 140) {   // then a picture of each floor's way up from 14 blocks off
+            int k = (t - 140) / 100, ph = (t - 140) % 100;
+            if (k >= fl.length) { if (ph == 5) mc.stop(); return; }
+            int f = Integer.parseInt(fl[k].trim());
+            if (ph == 0) server.execute(() -> {
+                ServerPlayer sp = server.getPlayerList().getPlayer(mc.player.getUUID());
+                var lay = GreatTowerWorldManager.getLayout(f);
+                ServerLevel lvl = server.getLevel(GreatTowerWorldManager.getDimensionForFloor(f));
+                int y = TowerFloorTerrain.height(f, lay.advanceX(), lay.advanceZ());
+                server.getCommands().performPrefixedCommand(server.createCommandSourceStack(), "gamemode spectator " + sp.getGameProfile().getName());
+                sp.teleportTo(lvl, lay.advanceX() + 0.5, y + 6, lay.advanceZ() + 16.5, 180, 12);
+                mc.options.hideGui = true;
+            });
+            if (ph == 90) net.minecraft.client.Screenshot.grab(mc.gameDirectory, "scan_" + f + ".png", mc.getMainRenderTarget(), msg -> {});
+            return;
+        }
+        if (t != 60) return;
+        server.execute(() -> {
+            for (String s : SCAN.split(",")) {
+                int f = Integer.parseInt(s.trim());
+                ServerLevel lvl = server.getLevel(GreatTowerWorldManager.getDimensionForFloor(f));
+                var lay = GreatTowerWorldManager.getLayout(f);
+                var mp = new BlockPos.MutableBlockPos();
+                java.util.List<String> found = new java.util.ArrayList<>();
+                for (int[] spot : new int[][]{{lay.advanceX(), lay.advanceZ()}, {lay.returnX(), lay.returnZ()}}) {
+                    for (int cx = (spot[0] >> 4) - 4; cx <= (spot[0] >> 4) + 4; cx++) for (int cz = (spot[1] >> 4) - 4; cz <= (spot[1] >> 4) + 4; cz++) {
+                        var ch = lvl.getChunk(cx, cz);
+                        for (int x = 0; x < 16; x++) for (int z = 0; z < 16; z++) for (int y = lvl.getMinBuildHeight(); y < 200; y++) {
+                            var st = ch.getBlockState(mp.set((cx << 4) + x, y, (cz << 4) + z));
+                            if (st.getBlock() instanceof com.soybe.awakeningsystem.block.AscensionPortalBlock)
+                                found.add(st.getValue(com.soybe.awakeningsystem.block.AscensionPortalBlock.PORTAL_TYPE) + "@" + mp.toShortString());
+                        }
+                    }
+                }
+                AwakeningSystemMod.LOGGER.info("[PortalScan] floor {} adv {},{} ret {},{} terrain-adv {} found {}", f, lay.advanceX(), lay.advanceZ(), lay.returnX(), lay.returnZ(),
+                        TowerFloorTerrain.height(f, lay.advanceX(), lay.advanceZ()), found.stream().distinct().limit(12).toList());
+            }
+        });
+    }
+
     @SubscribeEvent
     public static void tick(ClientTickEvent.Post event) {
+        if (SCAN != null) {
+            Minecraft mc = Minecraft.getInstance();
+            if (mc.level == null || mc.player == null || mc.getSingleplayerServer() == null) return;
+            mc.options.pauseOnLostFocus = false;
+            if (mc.screen != null) mc.setScreen(null);
+            t++;
+            portalScan(mc);
+            return;
+        }
         if (BOSSES) {
             Minecraft mc = Minecraft.getInstance();
             if (mc.level == null || mc.player == null || mc.getSingleplayerServer() == null) return;

@@ -19,6 +19,19 @@ import net.minecraft.world.level.Level;
 import java.util.List;
 
 public class AwakeningCoinItem extends Item {
+    /** What one physical coin is worth in the System's balance (bank, Shift + right click). */
+    public static final int VALUE = 1000;
+
+    /**
+     * A coin reward written for the old worth (1 a coin) in today's coins: one coin for every 40 of them, and the rest
+     * as a chance of one more, so a mob that dropped 100 now drops 2 or 3.
+     */
+    public static int fromOldAmount(int old, net.minecraft.util.RandomSource r) {
+        if (old <= 0) return 0;
+        int n = old / 40;
+        if (r.nextInt(40) < old % 40) n++;
+        return n;
+    }
     public AwakeningCoinItem(Properties properties) {
         super(properties.stacksTo(64).rarity(Rarity.UNCOMMON));
     }
@@ -32,7 +45,7 @@ public class AwakeningCoinItem extends Item {
                 int count = stack.getCount();
                 stack.shrink(count);
 
-                int coinsAwarded = count * 2;
+                int coinsAwarded = count * VALUE;
                 SystemData data = SystemEvents.data(sp);
                 data.addCoins(coinsAwarded);
                 AwakeningSystemMod.sync(sp);
@@ -81,6 +94,7 @@ public class AwakeningCoinItem extends Item {
 
     @Override
     public void appendHoverText(ItemStack stack, TooltipContext context, List<Component> tooltip, TooltipFlag flag) {
+        tooltip.add(Component.translatable("item.awakening_system.awakening_coin.value", VALUE));
         tooltip.add(Component.translatable("item.awakening_system.awakening_coin.desc"));
         tooltip.add(Component.translatable("item.awakening_system.awakening_coin.right_click"));
         tooltip.add(Component.translatable("item.awakening_system.awakening_coin.flip"));

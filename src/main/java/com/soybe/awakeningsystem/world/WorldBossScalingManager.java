@@ -29,7 +29,9 @@ public final class WorldBossScalingManager {
 
         if (level.dimension().equals(DungeonManager.DUNGEON_REALM)
                 || level.dimension().equals(TowerManager.RANKER_TOWER)
-                || level.dimension().equals(PagodaTrialManager.PAGODA_REALM)) {
+                || level.dimension().equals(PagodaTrialManager.PAGODA_REALM)
+                // the Great Tower's bosses have their floor's level and their own bar, not a world boss title
+                || com.soybe.awakeningsystem.tower.GreatTowerWorldManager.isGreatTowerDimension(level)) {
             return false;
         }
 

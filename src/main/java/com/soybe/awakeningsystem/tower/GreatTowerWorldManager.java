@@ -400,7 +400,7 @@ public final class GreatTowerWorldManager {
             ensureFloorSpawns(targetLevel, new BlockPos(spawnX, groundY, spawnZ), targetFloor);
             // no gate sound when travelling between worlds (it sounded on every change of world)
             player.displayClientMessage(
-               Component.translatable("awakening_system.msg.gran_torre_has_ascendido_al_piso", String.valueOf(targetFloor), String.valueOf(layout.themeName())), false
+               Component.translatable("awakening_system.msg.gran_torre_has_ascendido_al_piso", String.valueOf(targetFloor), floorName(targetFloor)), false
             );
             player.displayClientMessage(Component.translatable("awakening_system.msg.el_portal_de_avance_se_encuentra", String.valueOf(advX), String.valueOf(advZ)), false);
             if (targetFloor == 5) {
@@ -1168,6 +1168,11 @@ public static void processSectorChunk(ServerLevel level, ChunkAccess chunk) {
             player.playNotifySound(SoundEvents.CHORUS_FRUIT_TELEPORT, SoundSource.PLAYERS, 0.8F, 1.0F);
          }
       }
+   }
+
+   /** The floor's name in the player's language (the layout's Spanish name when a language has none). */
+   public static Component floorName(int floor) {
+      return Component.translatableWithFallback("awakening_system.tower.floor_name." + floor, getLayout(floor).themeName());
    }
 
    public static String getFloorTitle(int floor) {

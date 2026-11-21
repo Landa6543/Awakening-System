@@ -910,7 +910,7 @@ public class SaoPanelScreen extends Screen {
             g.drawString(this.font, num, 0, 0, alpha(cur ? WHITE : open ? 0xFF3A3A42 : 0xFF9A9AA2, a), false);
             g.pose().popPose();
             if (open) {
-                String theme = com.soybe.awakeningsystem.tower.GreatTowerWorldManager.getFloorTitle(f);
+                String theme = com.soybe.awakeningsystem.tower.GreatTowerWorldManager.floorName(f).getString();
                 g.pose().pushPose();
                 g.pose().translate(fx + 4, fy + 20, 0);
                 g.pose().scale(0.6F, 0.6F, 1.0F);
@@ -1070,7 +1070,7 @@ public class SaoPanelScreen extends Screen {
     private int bankY(int i) { return top() + HEADER + 74 + (i % 3) * 22; }
 
     private boolean bankOk(int i, SystemData d, int bag) {
-        return i < 3 ? bag > 0 : d.coins() >= BANK_AMT[i];
+        return i < 3 ? bag > 0 : (long) d.coins() >= (long) BANK_AMT[i] * com.soybe.awakeningsystem.item.AwakeningCoinItem.VALUE;
     }
 
     private Component bankLabel(int i, int bag) {
@@ -1090,7 +1090,7 @@ public class SaoPanelScreen extends Screen {
             g.pose().pushPose();
             g.pose().translate(bx + 8, by + 17, 0);
             g.pose().scale(1.4F, 1.4F, 1);
-            g.drawString(this.font, (k == 0 ? d.coins() : bag) + " ⛃", 0, 0, alpha(GREY_DARK, a), false);
+            g.drawString(this.font, (k == 0 ? d.coins() : (long) bag * com.soybe.awakeningsystem.item.AwakeningCoinItem.VALUE) + " ⛃", 0, 0, alpha(GREY_DARK, a), false);
             g.pose().popPose();
         }
         g.drawString(this.font, tr("bank_in", "Put in"), x + 16, y + HEADER + 62, alpha(0xFF4FA84A, a), false);

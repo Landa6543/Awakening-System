@@ -6972,12 +6972,12 @@ public final class SystemEvents {
             if ("withdraw".equalsIgnoreCase(action)) {
                if (amount <= 0) {
                   return false;
-               } else if (data.coins() < amount) {
+               } else if ((long) data.coins() < (long) amount * com.soybe.awakeningsystem.item.AwakeningCoinItem.VALUE) {   // amount is in coins, each worth VALUE
                   AwakeningSystemMod.notify(
                      player, "awakening_system.notification.bank.title_error", "awakening_system.notification.bank.insufficient", -35226, new Object[]{amount}
                   );
                   return false;
-               } else if (!data.spendCoins(amount)) {
+               } else if (!data.spendCoins(amount * com.soybe.awakeningsystem.item.AwakeningCoinItem.VALUE)) {
                   return false;
                } else {
                   int toGive = amount;
@@ -7032,7 +7032,7 @@ public final class SystemEvents {
                   }
                }
 
-               data.addCoins(toDeposit);
+               data.addCoins(toDeposit * com.soybe.awakeningsystem.item.AwakeningCoinItem.VALUE);
                AwakeningSystemMod.sync(player);
                player.playNotifySound(SoundEvents.AMETHYST_BLOCK_CHIME, SoundSource.PLAYERS, 1.0F, 1.4F);
                AwakeningSystemMod.notify(
@@ -7040,7 +7040,7 @@ public final class SystemEvents {
                   "awakening_system.notification.bank.title",
                   "awakening_system.notification.bank.deposited",
                   -11470213,
-                  new Object[]{toDeposit, data.coins()}
+                  new Object[]{toDeposit * com.soybe.awakeningsystem.item.AwakeningCoinItem.VALUE, data.coins()}
                );
                return true;
             }
