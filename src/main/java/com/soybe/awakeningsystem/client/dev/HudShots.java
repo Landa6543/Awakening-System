@@ -56,9 +56,22 @@ public final class HudShots {
                     case "shadow" -> new com.soybe.awakeningsystem.client.gui.ShadowCommandScreen();
                     case "fables" -> new com.soybe.awakeningsystem.fable.FablesScreen(null);
                     case "config" -> new com.soybe.awakeningsystem.client.gui.GuiConfigScreen(null);
+                    case "classpick" -> new com.soybe.awakeningsystem.ClassSelectionScreen(null);
+                    case "classtree" -> {
+                        // the class set on the server and synced, as the tree asks the server for its data on opening
+                        var server = mc.getSingleplayerServer();
+                        server.execute(() -> {
+                            var sp = server.getPlayerList().getPlayer(mc.player.getUUID());
+                            com.soybe.awakeningsystem.SystemEvents.data(sp).setHunterClass("sword_saint");
+                            AwakeningSystemMod.sync(sp);
+                        });
+                        yield null;
+                    }
                     default -> null;
                 });
             }
+            if (t == 70 && which.equals("classtree")) mc.setScreen(new com.soybe.awakeningsystem.ClassSkillTreeScreen(null));
+            if (t == 78 && which.equals("classtree")) mc.getWindow().setWindowed(1280, 720);
             if (t == 90) Screenshot.grab(mc.gameDirectory, "hs_sao_" + which + ".png", mc.getMainRenderTarget(), msg -> {});
             if (t == 95) com.soybe.awakeningsystem.client.sao.UiStyle.setFullDive(false);
             if (t == 100) mc.stop();

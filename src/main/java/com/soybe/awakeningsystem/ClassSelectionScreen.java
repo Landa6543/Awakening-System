@@ -89,6 +89,11 @@ public final class ClassSelectionScreen extends Screen {
             new ClassOption("spiritual_healer", "The S-Classes That I Raised", "S-Classes", 0xFF69F0AE, "sh_caregiver_blessing", 2)
     );
 
+    /** Every class one can choose, for the full-dive class choice. */
+    public static List<ClassOption> classes() {
+        return ALL_CLASSES;
+    }
+
     public ClassSelectionScreen(Screen parentScreen) {
         super(Component.translatable("awakening_system.screen.class_select.title"));
         this.parentScreen = parentScreen;

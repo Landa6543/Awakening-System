@@ -53,6 +53,15 @@ public abstract class SaoWindow extends Screen {
         return mc.player == null ? new SystemData() : mc.player.getData(AwakeningSystemMod.PLAYER_SYSTEM);
     }
 
+    /** How much the window shrinks to fit a small screen (1 = full size). */
+    protected float fitScale() {
+        return Math.min(1.0F, Math.min((this.width - 56.0F) / (pw + 8), (this.height - 10.0F) / ph));
+    }
+
+    /** A point on screen as the unshrunk window sees it. */
+    protected double unX(double mx) { float s = fitScale(); return s >= 1 ? mx : this.width / 2.0 + (mx - this.width / 2.0) / s; }
+    protected double unY(double my) { float s = fitScale(); return s >= 1 ? my : this.height / 2.0 + (my - this.height / 2.0) / s; }
+
     protected int left() { return this.width / 2 - pw / 2 + 16; }
     protected int top() { return this.height / 2 - ph / 2; }
     private float backX() { return left() - 24; }
@@ -69,9 +78,22 @@ public abstract class SaoWindow extends Screen {
     }
 
     @Override
-    public void render(GuiGraphics g, int mouseX, int mouseY, float partialTick) {
+    public void render(GuiGraphics g, int rawX, int rawY, float partialTick) {
+        super.render(g, rawX, rawY, partialTick);
+        float s = fitScale();
+        int mouseX = (int) Math.round(unX(rawX)), mouseY = (int) Math.round(unY(rawY));
         frame(mouseX, mouseY, ticks + partialTick);
-        super.render(g, mouseX, mouseY, partialTick);
+        g.pose().pushPose();
+        if (s < 1) {
+            g.pose().translate(this.width / 2.0F, this.height / 2.0F, 0);
+            g.pose().scale(s, s, 1);
+            g.pose().translate(-this.width / 2.0F, -this.height / 2.0F, 0);
+        }
+        drawWindow(g, mouseX, mouseY, partialTick);
+        g.pose().popPose();
+    }
+
+    private void drawWindow(GuiGraphics g, int mouseX, int mouseY, float partialTick) {
         float open = Mth.clamp((ticks + partialTick) / 5.0F, 0.0F, 1.0F);
         float a = open * open * (3 - 2 * open);
         int x = left(), y = top() + Math.round((1 - a) * 8);
@@ -86,14 +108,15 @@ public abstract class SaoWindow extends Screen {
     }
 
     @Override
-    public boolean mouseClicked(double mx, double my, int button) {
+    public boolean mouseClicked(double rx, double ry, int button) {
+        double mx = unX(rx), my = unY(ry);
         if (button == 0 && inCircle(mx, my, backX(), backY(), 11)) {
             SaoSounds.click();
             onClose();
             return true;
         }
         if (button == 0 && clickBody(mx, my, left(), top())) return true;
-        return super.mouseClicked(mx, my, button);
+        return super.mouseClicked(rx, ry, button);
     }
 
     @Override

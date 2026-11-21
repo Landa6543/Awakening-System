@@ -68,6 +68,10 @@ public final class UiStyle {
             event.setNewScreen(new SaoFablesScreen(event.getCurrentScreen()));
         } else if (event.getNewScreen() instanceof com.soybe.awakeningsystem.client.gui.GuiConfigScreen) {
             event.setNewScreen(new SaoSettingsScreen(event.getCurrentScreen()));
+        } else if (event.getNewScreen() instanceof com.soybe.awakeningsystem.ClassSkillTreeScreen) {
+            event.setNewScreen(new SaoClassTreeScreen(event.getCurrentScreen()));
+        } else if (event.getNewScreen() instanceof com.soybe.awakeningsystem.ClassSelectionScreen) {
+            event.setNewScreen(new SaoClassChoiceScreen(event.getCurrentScreen()));
         }
     }
 }
