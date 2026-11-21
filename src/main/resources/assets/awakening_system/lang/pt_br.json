@@ -3874,6 +3874,7 @@
     "awakening_system.gui_config.hud.toggle_constellation_popups": "Constelações",
     "awakening_system.gui_config.hud.toggle_dokkaebi_scenario": "Rastreador de Missões",
     "awakening_system.gui_config.hud.toggle_food": "Mostrar Barra de Comida no HUD",
+    "awakening_system.gui_config.hud.toggle_minimap": "Minimapa",
     "awakening_system.gui_config.hud.toggle_hide_vanilla_food": "Ocultar Barra de Fome Vanilla",
     "awakening_system.gui_config.hud.toggle_skill_bar": "Barra de Habilidades Ativas",
     "awakening_system.gui_config.hud.toggle_status_card": "Cartão de Status (Vida/PM)",

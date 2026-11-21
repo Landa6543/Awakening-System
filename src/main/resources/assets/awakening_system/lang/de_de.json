@@ -3874,6 +3874,7 @@
     "awakening_system.gui_config.hud.toggle_constellation_popups": "Constellations",
     "awakening_system.gui_config.hud.toggle_dokkaebi_scenario": "Quest Tracker",
     "awakening_system.gui_config.hud.toggle_food": "Show Food Bar in HUD",
+    "awakening_system.gui_config.hud.toggle_minimap": "Minikarte",
     "awakening_system.gui_config.hud.toggle_hide_vanilla_food": "Hide Vanilla Hunger Bar",
     "awakening_system.gui_config.hud.toggle_skill_bar": "Active Fertigkeit Bar",
     "awakening_system.gui_config.hud.toggle_status_card": "Status Card (HP/MP)",

@@ -3874,6 +3874,7 @@
     "awakening_system.gui_config.hud.toggle_constellation_popups": "Созвездия",
     "awakening_system.gui_config.hud.toggle_dokkaebi_scenario": "Трекер квестов",
     "awakening_system.gui_config.hud.toggle_food": "Показывать шкалу еды в интерфейсе",
+    "awakening_system.gui_config.hud.toggle_minimap": "Миникарта",
     "awakening_system.gui_config.hud.toggle_hide_vanilla_food": "Скрыть ванильную шкалу голода",
     "awakening_system.gui_config.hud.toggle_skill_bar": "Панель навыков",
     "awakening_system.gui_config.hud.toggle_status_card": "Карта статуса (HP/MP)",

@@ -293,6 +293,7 @@ public class GuiConfigScreen extends Screen {
         renderToggle(g, col2X, top + 116, colW, Component.translatable("awakening_system.gui_config.hud.toggle_vanilla_drumsticks"), !GuiConfig.shouldHideVanillaFood(), mouseX, mouseY);
 
         renderToggle(g, col1X, top + 130, colW, Component.translatable("awakening_system.gui_config.hud.toggle_food"), GuiConfig.isHudFoodBarVisible(), mouseX, mouseY);
+        renderToggle(g, col2X, top + 130, colW, Component.translatable("awakening_system.gui_config.hud.toggle_minimap"), dev.diorama.Settings.get().minimap, mouseX, mouseY);
 
         g.fill(left + 16, top + 145, left + GUI_WIDTH - 16, top + 146, 0x443D566E);
 
@@ -691,6 +692,14 @@ public class GuiConfigScreen extends Screen {
                         }
                         GuiConfig.showHudFood = GuiConfig.isHudFoodBarVisible();
                         GuiConfig.save();
+                        AwakeningSystemClient.playUiSound(ModSounds.SYSTEM_CLICK.value(), 1.0F, 1.1F);
+                        return true;
+                    }
+                    if (mouseX >= col2X && mouseX < col2X + colW) {
+                        // the minimap on screen is Diorama's: this is its own on/off switch
+                        dev.diorama.Settings ds = dev.diorama.Settings.get();
+                        ds.minimap = !ds.minimap;
+                        ds.save();
                         AwakeningSystemClient.playUiSound(ModSounds.SYSTEM_CLICK.value(), 1.0F, 1.1F);
                         return true;
                     }
