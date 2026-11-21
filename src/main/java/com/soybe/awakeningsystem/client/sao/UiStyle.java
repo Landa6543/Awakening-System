@@ -58,6 +58,12 @@ public final class UiStyle {
             return;
         }
         if (!fullDive() || Minecraft.getInstance().level == null) return;
+        // the vanilla inventory (only that exact window: the creative one and other mods' stay as they are)
+        if (event.getNewScreen() != null && event.getNewScreen().getClass() == net.minecraft.client.gui.screens.inventory.InventoryScreen.class
+                && Minecraft.getInstance().player != null) {
+            event.setNewScreen(new SaoInventoryScreen(Minecraft.getInstance().player));
+            return;
+        }
         if (event.getNewScreen() instanceof SystemScreen && !(event.getCurrentScreen() instanceof SystemScreen)) {
             event.setNewScreen(new SaoMenuScreen());
         } else if (event.getNewScreen() instanceof PauseScreen) {

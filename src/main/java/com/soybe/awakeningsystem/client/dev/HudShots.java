@@ -79,6 +79,29 @@ public final class HudShots {
             if (t == 100) mc.stop();
             return;
         }
+        if (System.getProperty("awakening.hudShots").equals("inv")) {
+            // the vanilla inventory in the full-dive look, with a few items in it
+            var server = mc.getSingleplayerServer();
+            if (t == 40 && server != null) server.execute(() -> {
+                var sp = server.getPlayerList().getPlayer(mc.player.getUUID());
+                sp.setGameMode(net.minecraft.world.level.GameType.SURVIVAL);
+                sp.setItemSlot(net.minecraft.world.entity.EquipmentSlot.HEAD, new net.minecraft.world.item.ItemStack(net.minecraft.world.item.Items.IRON_HELMET));
+                sp.setItemSlot(net.minecraft.world.entity.EquipmentSlot.CHEST, new net.minecraft.world.item.ItemStack(net.minecraft.world.item.Items.DIAMOND_CHESTPLATE));
+                sp.setItemSlot(net.minecraft.world.entity.EquipmentSlot.OFFHAND, new net.minecraft.world.item.ItemStack(net.minecraft.world.item.Items.SHIELD));
+                sp.getInventory().add(new net.minecraft.world.item.ItemStack(net.minecraft.world.item.Items.OAK_LOG, 32));
+                sp.getInventory().add(new net.minecraft.world.item.ItemStack(net.minecraft.world.item.Items.BREAD, 12));
+            });
+            if (t == 50) mc.getWindow().setWindowed(1280, 720);
+            if (t == 60) {
+                com.soybe.awakeningsystem.client.sao.UiStyle.setFullDive(true);
+                mc.setScreen(new net.minecraft.client.gui.screens.inventory.InventoryScreen(mc.player));
+                AwakeningSystemMod.LOGGER.info("[HudShots] inv: window is {}", mc.screen == null ? "none" : mc.screen.getClass().getSimpleName());
+            }
+            if (t == 85) Screenshot.grab(mc.gameDirectory, "hs_inv_sao.png", mc.getMainRenderTarget(), msg -> {});
+            if (t == 90) com.soybe.awakeningsystem.client.sao.UiStyle.setFullDive(false);
+            if (t == 95) mc.stop();
+            return;
+        }
         if (System.getProperty("awakening.hudShots").equals("evo")) {
             // base class → trial → evolution, with photos of the windows on the way
             var server = mc.getSingleplayerServer();
