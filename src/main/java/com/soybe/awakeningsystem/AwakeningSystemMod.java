@@ -316,18 +316,6 @@ public final class AwakeningSystemMod {
                         SystemEvents.prestigePlayer(player);
                     }
                 }));
-        registrar.playToServer(com.soybe.awakeningsystem.combat.AceToggleModePayload.TYPE, com.soybe.awakeningsystem.combat.AceToggleModePayload.STREAM_CODEC,
-                (payload, context) -> context.enqueueWork(() -> {
-                    if (context.player() instanceof net.minecraft.server.level.ServerPlayer player) {
-                        com.soybe.awakeningsystem.combat.AceCombatState.setServerPlayerMode(player, payload.getMode());
-                    }
-                }));
-        registrar.playToServer(com.soybe.awakeningsystem.combat.AceAttackPacket.TYPE, com.soybe.awakeningsystem.combat.AceAttackPacket.STREAM_CODEC,
-                (payload, context) -> context.enqueueWork(() -> {
-                    if (context.player() instanceof net.minecraft.server.level.ServerPlayer player) {
-                        com.soybe.awakeningsystem.combat.AceServerCombatHandler.handleAttackPacket(player, payload);
-                    }
-                }));
         registrar.playToServer(EvolveSkillPayload.TYPE, EvolveSkillPayload.STREAM_CODEC,
                 (payload, context) -> context.enqueueWork(() -> {
                     if (context.player() instanceof net.minecraft.server.level.ServerPlayer player) {

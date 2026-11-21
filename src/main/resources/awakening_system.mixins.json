@@ -7,8 +7,7 @@
   "client": [
     "PlayerModelMixin",
     "ConfirmExperimentalFeaturesScreenMixin",
-    "WorldOpenFlowsMixin",
-    "AceMinecraftClientMixin"
+    "WorldOpenFlowsMixin"
   ],
   "injectors": {
     "defaultRequire": 1
