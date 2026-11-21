@@ -89,9 +89,25 @@ public final class ClassSelectionScreen extends Screen {
             new ClassOption("spiritual_healer", "The S-Classes That I Raised", "S-Classes", 0xFF69F0AE, "sh_caregiver_blessing", 2)
     );
 
-    /** Every class one can choose, for the full-dive class choice. */
+    /** The six base classes, the ones chosen at level 50 (the classes above are reached by evolving them). */
+    private static final List<ClassOption> BASE_CLASSES = List.of(
+            new ClassOption("base_warrior", "Awakening System", "Base class", 0xFFFF7043, "wa_power_slash", 0),
+            new ClassOption("base_assassin", "Awakening System", "Base class", 0xFF26C6DA, "as_shadow_dash", 0),
+            new ClassOption("base_tank", "Awakening System", "Base class", 0xFF90A4AE, "ta_provoke", 0),
+            new ClassOption("base_mage", "Awakening System", "Base class", 0xFF7C4DFF, "ma_mana_bolt", 1),
+            new ClassOption("base_healer", "Awakening System", "Base class", 0xFF69F0AE, "he_mend", 1),
+            new ClassOption("base_cultivator", "Awakening System", "Base class", 0xFFE040FB, "cu_qi_palm", 2)
+    );
+
+    /** Every class one can choose at level 50, for the full-dive class choice: the base classes. */
     public static List<ClassOption> classes() {
-        return ALL_CLASSES;
+        return BASE_CLASSES;
+    }
+
+    /** An advanced class (an evolution), or null. */
+    public static ClassOption advanced(String id) {
+        for (ClassOption c : ALL_CLASSES) if (c.id().equals(id)) return c;
+        return null;
     }
 
     public ClassSelectionScreen(Screen parentScreen) {
@@ -101,14 +117,14 @@ public final class ClassSelectionScreen extends Screen {
 
     public List<ClassOption> getVisibleClasses() {
         if (currentCategory >= 0 && currentCategory <= 2) {
-            return ALL_CLASSES.stream().filter(c -> c.category() == currentCategory).toList();
+            return BASE_CLASSES.stream().filter(c -> c.category() == currentCategory).toList();
         }
-        return ALL_CLASSES;
+        return BASE_CLASSES;
     }
 
     public ClassOption getSelectedClass() {
         List<ClassOption> visible = getVisibleClasses();
-        if (visible.isEmpty()) return ALL_CLASSES.get(0);
+        if (visible.isEmpty()) return BASE_CLASSES.get(0);
         int idx = Math.max(0, Math.min(selectedIndex, visible.size() - 1));
         return visible.get(idx);
     }

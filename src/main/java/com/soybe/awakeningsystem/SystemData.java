@@ -260,6 +260,8 @@ public final class SystemData implements INBTSerializable<CompoundTag> {
     private final java.util.Set<String> treeNodes = new java.util.LinkedHashSet<>();
     /** The web version the player's points were spent on; below {@link ClassSkillTree#TREE_VERSION} they are given back. */
     private int treeVersion = 0;
+    /** The base class's evolution trial was won (the player may now evolve). */
+    private boolean evolutionTrialPassed = false;
 
     private int gachaPity5Star = 0;
     private int gachaPity4Star = 0;
@@ -611,15 +613,14 @@ public final class SystemData implements INBTSerializable<CompoundTag> {
     public int refundSkillTree() {
         int before = skillPoints();
         int back = spentSkillPoints;
-        // only the player's own web: a skill of another class's web may have come from elsewhere
-        String start = null;
-        ClassSkillTree.Tree tree = hasHunterClass() ? ClassSkillTree.getTree(hunterClass) : null;
-        if (tree != null) {
-            if (skills.containsKey(tree.start())) start = tree.start();
+        // only the player's own webs: a skill of another class's web may have come from elsewhere
+        java.util.List<String> starts = new java.util.ArrayList<>();
+        for (ClassSkillTree.Tree tree : ClassSkillTree.treesOf(this)) {
+            if (skills.containsKey(tree.start())) starts.add(tree.start());
             skills.keySet().removeIf(tree.byId()::containsKey);
         }
         treeNodes.clear();
-        if (start != null) skills.put(start, 1);
+        for (String start : starts) skills.put(start, 1);
         skillPoints = before + back;
         spentSkillPoints = 0;
         treeVersion = ClassSkillTree.TREE_VERSION;
@@ -631,6 +632,10 @@ public final class SystemData implements INBTSerializable<CompoundTag> {
         }
         return back;
     }
+
+    public boolean evolutionTrialPassed() { return evolutionTrialPassed; }
+
+    public void setEvolutionTrialPassed(boolean passed) { this.evolutionTrialPassed = passed; }
 
     public boolean needsTreeRefund() {
         return treeVersion < ClassSkillTree.TREE_VERSION;
@@ -780,14 +785,14 @@ public final class SystemData implements INBTSerializable<CompoundTag> {
     public void resetHunterClass() {
         String cls = hunterClass();
         if (cls != null && !cls.isEmpty() && !"none".equalsIgnoreCase(cls)) {
-            java.util.List<ClassSkillTree.SkillNode> nodes = ClassSkillTree.getNodesForClass(cls);
-            if (nodes != null) {
-                for (ClassSkillTree.SkillNode node : nodes) {
+            for (ClassSkillTree.Tree tree : ClassSkillTree.treesOf(this)) {
+                for (ClassSkillTree.SkillNode node : tree.nodes()) {
                     skills.remove(node.skillId());
                 }
             }
         }
         treeNodes.clear();
+        evolutionTrialPassed = false;
         this.hunterClass = "";
         ensureEquippedActiveSlots();
         for (int i = 0; i < equippedActiveSkills.size(); i++) {
@@ -2176,11 +2181,12 @@ public final class SystemData implements INBTSerializable<CompoundTag> {
     public int getUnlockedTreeSkillsCount() {
         String cls = hunterClass();
         if (cls == null || cls.isEmpty() || "none".equals(cls)) return 0;
-        java.util.List<ClassSkillTree.SkillNode> nodes = ClassSkillTree.getNodesForClass(cls);
         int count = 0;
-        for (ClassSkillTree.SkillNode node : nodes) {
-            if (skills.containsKey(node.skillId())) {
-                count++;
+        for (ClassSkillTree.Tree tree : ClassSkillTree.treesOf(this)) {
+            for (ClassSkillTree.SkillNode node : tree.nodes()) {
+                if (skills.containsKey(node.skillId())) {
+                    count++;
+                }
             }
         }
         return count;
@@ -2897,6 +2903,7 @@ public final class SystemData implements INBTSerializable<CompoundTag> {
         for (String id : treeNodes) treeNodeTag.add(net.minecraft.nbt.StringTag.valueOf(id));
         tag.put("tree_nodes", treeNodeTag);
         tag.putInt("tree_version", treeVersion);
+        tag.putBoolean("evolution_trial_passed", evolutionTrialPassed);
         int meridianBits = 0;
         for (int i = 0; i < 12; i++) {
             if (meridians[i]) meridianBits |= (1 << i);
@@ -3248,6 +3255,7 @@ public final class SystemData implements INBTSerializable<CompoundTag> {
         net.minecraft.nbt.ListTag treeNodeTag = tag.getList("tree_nodes", net.minecraft.nbt.Tag.TAG_STRING);
         for (int i = 0; i < treeNodeTag.size(); i++) treeNodes.add(treeNodeTag.getString(i));
         treeVersion = tag.getInt("tree_version");
+        evolutionTrialPassed = tag.getBoolean("evolution_trial_passed");
         int meridianBits = tag.getInt("meridians_mask");
         for (int i = 0; i < 12; i++) {
             meridians[i] = (meridianBits & (1 << i)) != 0;

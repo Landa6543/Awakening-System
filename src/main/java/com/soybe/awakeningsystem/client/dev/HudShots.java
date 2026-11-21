@@ -79,6 +79,90 @@ public final class HudShots {
             if (t == 100) mc.stop();
             return;
         }
+        if (System.getProperty("awakening.hudShots").equals("evo")) {
+            // base class → trial → evolution, with photos of the windows on the way
+            var server = mc.getSingleplayerServer();
+            Runnable none = () -> {};
+            java.util.function.Consumer<java.util.function.Consumer<net.minecraft.server.level.ServerPlayer>> onServer = job -> {
+                if (server != null) server.execute(() -> job.accept(server.getPlayerList().getPlayer(mc.player.getUUID())));
+            };
+            if (t == 40) onServer.accept(sp -> {
+                var d = com.soybe.awakeningsystem.SystemEvents.data(sp);
+                d.resetHunterClass();
+                d.setLevel(160);
+                boolean advanced = com.soybe.awakeningsystem.SystemEvents.selectHunterClass(sp, "sword_saint");
+                boolean picked = com.soybe.awakeningsystem.SystemEvents.selectHunterClass(sp, "base_warrior");
+                AwakeningSystemMod.LOGGER.info("[HudShots] evo: pick advanced directly {}, pick base {}, class {}, has start {}, webs {}",
+                        advanced, picked, d.hunterClass(), d.skills().containsKey("wa_power_slash"), com.soybe.awakeningsystem.ClassSkillTree.treesOf(d).size());
+                var tree = com.soybe.awakeningsystem.ClassSkillTree.getTree("base_warrior");
+                for (int i = 0; i < 6 && tree != null; i++) {
+                    var next = tree.nodes().stream().filter(n -> com.soybe.awakeningsystem.ClassSkillTree.canUnlock(d, n.skillId()))
+                            .min(java.util.Comparator.comparingInt(com.soybe.awakeningsystem.ClassSkillTree.SkillNode::gridY)).orElse(null);
+                    if (next == null) break;
+                    com.soybe.awakeningsystem.SystemEvents.unlockSkillTreeNode(sp, next.skillId());
+                }
+                boolean slash = com.soybe.awakeningsystem.SystemEvents.activateSkill(sp, "wa_power_slash");
+                AwakeningSystemMod.LOGGER.info("[HudShots] evo: base nodes {}, skills from web {}, power slash used {}, evolve before trial {}",
+                        d.treeNodes().size(), d.getUnlockedTreeSkillsCount(), slash, com.soybe.awakeningsystem.ClassEvolution.canEvolve(d));
+                boolean started = com.soybe.awakeningsystem.ClassEvolution.startTrial(sp);
+                var bosses = sp.serverLevel().getEntitiesOfClass(net.minecraft.world.entity.Mob.class, sp.getBoundingBox().inflate(30),
+                        m -> m.getTags().contains("evolution_trial"));
+                AwakeningSystemMod.LOGGER.info("[HudShots] evo: trial started {}, bosses {} {}", started, bosses.size(),
+                        bosses.isEmpty() ? "" : bosses.get(0).getName().getString());
+                // bosses cap the damage of one hit, so the death itself is played out
+                bosses.forEach(b -> {
+                    b.setHealth(0);
+                    b.die(sp.damageSources().playerAttack(sp));
+                    b.discard();
+                });
+                AwakeningSystemMod.LOGGER.info("[HudShots] evo: after the boss died, trial won {}, can evolve {}", d.evolutionTrialPassed(),
+                        com.soybe.awakeningsystem.ClassEvolution.canEvolve(d));
+                AwakeningSystemMod.sync(sp);
+            });
+            if (t == 50) mc.getWindow().setWindowed(1280, 720);
+            if (t == 60) mc.setScreen(new com.soybe.awakeningsystem.ClassEvolutionScreen(null));
+            if (t == 80) Screenshot.grab(mc.gameDirectory, "hs_evo_classic.png", mc.getMainRenderTarget(), msg -> {});
+            if (t == 85) {
+                com.soybe.awakeningsystem.client.sao.UiStyle.setFullDive(true);
+                mc.setScreen(new com.soybe.awakeningsystem.ClassEvolutionScreen(null));
+            }
+            if (t == 105) Screenshot.grab(mc.gameDirectory, "hs_evo_sao.png", mc.getMainRenderTarget(), msg -> {});
+            if (t == 108) com.soybe.awakeningsystem.client.sao.UiStyle.setFullDive(false);
+            if (t == 110) mc.setScreen(new com.soybe.awakeningsystem.ClassSelectionScreen(null));
+            if (t == 130) Screenshot.grab(mc.gameDirectory, "hs_evo_pick.png", mc.getMainRenderTarget(), msg -> {});
+            if (t == 135) onServer.accept(sp -> {
+                var d = com.soybe.awakeningsystem.SystemEvents.data(sp);
+                int before = d.treeNodes().size();
+                boolean wrong = com.soybe.awakeningsystem.ClassEvolution.evolve(sp, "grand_archmage");
+                boolean ok = com.soybe.awakeningsystem.ClassEvolution.evolve(sp, "sword_saint");
+                AwakeningSystemMod.LOGGER.info("[HudShots] evo: evolve to another base's class {}, to sword saint {}, class {}, signature {}, webs {}, base nodes kept {}/{}, attack bonus {}",
+                        wrong, ok, d.hunterClass(), d.skills().containsKey("asrahan_mana_blade"), com.soybe.awakeningsystem.ClassSkillTree.treesOf(d).size(),
+                        d.treeNodes().size(), before,
+                        com.soybe.awakeningsystem.ClassSkillTree.getTotalAttributeBonus(d, com.soybe.awakeningsystem.ClassSkillTree.StatType.ATTACK_DAMAGE));
+                boolean baseNode = com.soybe.awakeningsystem.ClassSkillTree.canUnlock(d, "base_warrior_n4");
+                AwakeningSystemMod.LOGGER.info("[HudShots] evo: base web still learnable when evolved {}", baseNode);
+            });
+            if (t == 150) mc.setScreen(new com.soybe.awakeningsystem.ClassSkillTreeScreen(null));
+            if (t == 170) Screenshot.grab(mc.gameDirectory, "hs_evo_tree.png", mc.getMainRenderTarget(), msg -> {});
+            if (t == 175) {
+                com.soybe.awakeningsystem.client.sao.UiStyle.setFullDive(true);
+                mc.setScreen(new com.soybe.awakeningsystem.ClassSkillTreeScreen(null));
+            }
+            if (t == 180 && mc.screen != null) {
+                try {
+                    var f = mc.screen.getClass().getDeclaredField("viewBase");
+                    f.setAccessible(true);
+                    f.setBoolean(mc.screen, true);
+                } catch (ReflectiveOperationException e) {
+                    AwakeningSystemMod.LOGGER.info("[HudShots] evo: no base tab: {}", e.toString());
+                }
+            }
+            if (t == 200) Screenshot.grab(mc.gameDirectory, "hs_evo_base_sao.png", mc.getMainRenderTarget(), msg -> {});
+            if (t == 205) com.soybe.awakeningsystem.client.sao.UiStyle.setFullDive(false);
+            if (t == 210) mc.stop();
+            none.run();
+            return;
+        }
         if (System.getProperty("awakening.hudShots").equals("web")) {
             // the class web: a Sword Saint at level 120 learns a path of nodes, then both tree windows are photographed
             var server = mc.getSingleplayerServer();

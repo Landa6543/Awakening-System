@@ -9374,6 +9374,9 @@ public final class SystemEvents {
                int will = data.willpower();
                int per = data.perception();
                switch (skillId) {
+                  case "wa_power_slash", "as_shadow_dash", "ta_provoke", "ma_mana_bolt", "he_mend", "cu_qi_palm":
+                     BaseClassSkills.activate(player, data, skillId, treeSkillMult);
+                     break;
                   case "pocket_dimension_doorway": {
                      com.soybe.awakeningsystem.sanctuary.PocketSanctuaryManager.handleSkillActivation(player);
                      break;
@@ -13221,49 +13224,12 @@ public final class SystemEvents {
          AwakeningSystemMod.notify(player, "awakening_system.class.already_chosen_title", "awakening_system.class.already_chosen_locked", -43691, new Object[0]);
          return false;
       } else {
-         data.setHunterClass(hunterClass);
-
-         String signatureSkill = switch (hunterClass) {
-            case "shadow_monarch" -> "shadow_monarch";
-            case "sword_saint" -> "asrahan_mana_blade";
-            case "star_apostle" -> "fourth_wall";
-            case "colossal_berserker" -> "cb_valterian_instinct";
-            case "demonic_cultivator" -> "black_fire_wave";
-            case "void_assassin" -> "nano_blade_overdrive";
-            case "grand_archmage" -> "isekai_mana_burst";
-            case "dragon_monarch" -> "isekai_dragon_roar";
-            case "beast_monarch" -> "bm_seismic_roar";
-            case "blood_emperor" -> "be_bloodthirst";
-            case "lightning_emperor" -> "le_electrification";
-            case "spiritual_healer" -> "sh_caregiver_blessing";
-            case "iron_bastion" -> "ib_taunt_roar";
-            default -> null;
-         };
-         if (signatureSkill != null) {
-            data.skills().put(signatureSkill, 1);
-            switch (hunterClass) {
-               case "beast_monarch":
-                  data.skills().put("seismic_roar", 1);
-                  break;
-               case "blood_emperor":
-                  data.skills().put("bloodthirst", 1);
-                  break;
-               case "lightning_emperor":
-                  data.skills().put("electrification", 1);
-                  break;
-               case "spiritual_healer":
-                  data.skills().put("caregiver_blessing", 1);
-                  break;
-               case "colossal_berserker":
-                  data.skills().put("dragon_dive", 1);
-                  break;
-               case "iron_bastion":
-                  data.skills().put("ib_iron_fortress", 1);
-                  break;
-            }
-
-            data.setEquippedActiveSkill(0, signatureSkill);
+         if (!ClassEvolution.isBase(hunterClass)) {
+            // the advanced classes are reached by evolving a base class
+            return false;
          }
+         data.setHunterClass(hunterClass);
+         grantClassStart(data, hunterClass);
          String className = switch (hunterClass) {
             case "shadow_monarch" -> "§9Shadow Monarch";
             case "sword_saint" -> "§aSword Saint";
@@ -13278,6 +13244,12 @@ public final class SystemEvents {
             case "lightning_emperor" -> "§bLightning Emperor";
             case "spiritual_healer" -> "§aCelestial Healer";
             case "iron_bastion" -> "§7Iron Bastion";
+            case "base_warrior" -> "Warrior";
+            case "base_assassin" -> "Assassin";
+            case "base_tank" -> "Tank";
+            case "base_mage" -> "Mage";
+            case "base_healer" -> "Healer";
+            case "base_cultivator" -> "Cultivator";
             default -> hunterClass;
          };
          AwakeningSystemMod.notify(
@@ -13294,6 +13266,57 @@ public final class SystemEvents {
          SystemAttributeEffects.apply(player);
          AwakeningSystemMod.sync(player);
          return true;
+      }
+   }
+
+   /** Gives a class's starting skills (the start of its web) and puts the main one in the first skill slot. */
+   public static void grantClassStart(SystemData data, String hunterClass) {
+      ClassEvolution.Base base = ClassEvolution.base(hunterClass);
+      if (base != null) {
+         data.skills().put(base.startSkill(), 1);
+         data.setEquippedActiveSkill(0, base.startSkill());
+         return;
+      }
+      String signatureSkill = switch (hunterClass) {
+         case "shadow_monarch" -> "shadow_monarch";
+         case "sword_saint" -> "asrahan_mana_blade";
+         case "star_apostle" -> "fourth_wall";
+         case "colossal_berserker" -> "cb_valterian_instinct";
+         case "demonic_cultivator" -> "black_fire_wave";
+         case "void_assassin" -> "nano_blade_overdrive";
+         case "grand_archmage" -> "isekai_mana_burst";
+         case "dragon_monarch" -> "isekai_dragon_roar";
+         case "beast_monarch" -> "bm_seismic_roar";
+         case "blood_emperor" -> "be_bloodthirst";
+         case "lightning_emperor" -> "le_electrification";
+         case "spiritual_healer" -> "sh_caregiver_blessing";
+         case "iron_bastion" -> "ib_taunt_roar";
+         default -> null;
+      };
+      if (signatureSkill != null) {
+         data.skills().put(signatureSkill, 1);
+         switch (hunterClass) {
+            case "beast_monarch":
+               data.skills().put("seismic_roar", 1);
+               break;
+            case "blood_emperor":
+               data.skills().put("bloodthirst", 1);
+               break;
+            case "lightning_emperor":
+               data.skills().put("electrification", 1);
+               break;
+            case "spiritual_healer":
+               data.skills().put("caregiver_blessing", 1);
+               break;
+            case "colossal_berserker":
+               data.skills().put("dragon_dive", 1);
+               break;
+            case "iron_bastion":
+               data.skills().put("ib_iron_fortress", 1);
+               break;
+         }
+
+         data.setEquippedActiveSkill(0, signatureSkill);
       }
    }
 

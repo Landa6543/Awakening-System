@@ -268,7 +268,7 @@ public final class ClassSkillTreeScreen extends Screen {
         pose.translate(x + camX, y + camY, 0);
         pose.scale(zoom, zoom, 1.0f);
 
-        ClassSkillTree.Tree tree = ClassSkillTree.getTree(data.hunterClass());
+        ClassSkillTree.Tree tree = shownTree(data);
         if (tree == null) {
             pose.popPose();
             graphics.disableScissor();
@@ -287,7 +287,7 @@ public final class ClassSkillTreeScreen extends Screen {
             ClassSkillTree.Branch b = tree.branches().get(i);
             int[] col = branchColors[i % branchColors.length];
             String label = Component.translatable("awakening_system.skill_tree.branch." + b.name()).getString() + ": "
-                    + ClassSkillTree.getPointsInBranch(data, data.hunterClass(), b.id());
+                    + ClassSkillTree.getPointsInBranch(data, tree.hunterClass(), b.id());
             pose.pushPose();
             pose.translate(b.x(), b.y(), 0);
             pose.scale(2.0F, 2.0F, 1.0F);
@@ -366,6 +366,40 @@ public final class ClassSkillTreeScreen extends Screen {
         graphics.fill(resetBtnX, resetBtnY, resetBtnX + 18, resetBtnY + 18, resetHov ? 0xFF1C382E : 0xFF0A1822);
         drawBorder(graphics, resetBtnX, resetBtnY, 18, 18, resetHov ? 0xFFFFD700 : 0xFF2D7691);
         graphics.drawCenteredString(font, Component.literal("⌖"), resetBtnX + 9, resetBtnY + 5, resetHov ? 0xFFFFD700 : 0xFF88AABB);
+
+        // the tabs (an evolved player) or the way to evolve (a base class)
+        if (evolved(data)) {
+            tab(graphics, x + 6, y + 6, TAB_W, Component.translatable("awakening_system.sao.tree_base"), viewBase, mouseX, mouseY);
+            tab(graphics, x + 10 + TAB_W, y + 6, TAB_W, Component.translatable("awakening_system.sao.tree_evolved"), !viewBase, mouseX, mouseY);
+        } else if (ClassEvolution.isBase(data.hunterClass())) {
+            tab(graphics, x + 6, y + 6, TAB_W + 20, Component.literal("★ ").append(Component.translatable("awakening_system.sao.evolve")), true, mouseX, mouseY);
+        }
+    }
+
+    private static final int TAB_W = 70;
+
+    private void tab(GuiGraphics g, int tx, int ty, int w, Component text, boolean on, int mouseX, int mouseY) {
+        boolean hov = mouseX >= tx && mouseX < tx + w && mouseY >= ty && mouseY < ty + 18;
+        g.fill(tx, ty, tx + w, ty + 18, on ? 0xFF3A2E08 : hov ? 0xFF1C382E : 0xFF0A1822);
+        drawBorder(g, tx, ty, w, 18, on || hov ? 0xFFFFD700 : 0xFF2D7691);
+        String s = font.plainSubstrByWidth(text.getString(), w - 6);
+        g.drawString(font, s, tx + w / 2 - font.width(s) / 2, ty + 5, on ? 0xFFFFD700 : 0xFFCCE3EC);
+    }
+
+    /** An evolved player can look at the base class's web too. */
+    private boolean viewBase;
+
+    private static boolean evolved(SystemData d) {
+        String base = ClassEvolution.baseOf(d.hunterClass());
+        return base != null && !base.equals(ClassSkillTree.normalizeClassId(d.hunterClass()));
+    }
+
+    /** The web shown: the class's own, or its base class's when that tab is on. */
+    private ClassSkillTree.Tree shownTree(SystemData d) {
+        if (d == null || !d.hasHunterClass()) return null;
+        String base = ClassEvolution.baseOf(d.hunterClass());
+        if (viewBase && base != null) return ClassSkillTree.getTree(base);
+        return ClassSkillTree.getTree(d.hunterClass());
     }
 
     private void renderBranchHeader(GuiGraphics g, int cx, int cy, String text, int bg, int textColor) {
@@ -620,6 +654,24 @@ public final class ClassSkillTreeScreen extends Screen {
             centered = false;
             return true;
         }
+        SystemData tabData = Minecraft.getInstance().player == null ? null : Minecraft.getInstance().player.getData(AwakeningSystemMod.PLAYER_SYSTEM);
+        if (tabData != null && tabData.hasHunterClass() && mouseY >= canvasY + 6 && mouseY < canvasY + 24) {
+            if (evolved(tabData) && mouseX >= canvasX + 6 && mouseX < canvasX + 6 + 2 * TAB_W + 4) {
+                boolean base = mouseX < canvasX + 6 + TAB_W;
+                if (base != viewBase) {
+                    viewBase = base;
+                    selectedSkillId = null;
+                    centered = false;
+                    playClickSound();
+                }
+                return true;
+            }
+            if (!evolved(tabData) && ClassEvolution.isBase(tabData.hunterClass()) && mouseX >= canvasX + 6 && mouseX < canvasX + 6 + TAB_W + 20) {
+                playClickSound();
+                Minecraft.getInstance().setScreen(new ClassEvolutionScreen(this));
+                return true;
+            }
+        }
 
         int inspX = L.inspX();
         int inspY = L.inspY();
@@ -651,7 +703,8 @@ public final class ClassSkillTreeScreen extends Screen {
 
             SystemData data = Minecraft.getInstance().player == null ? null : Minecraft.getInstance().player.getData(AwakeningSystemMod.PLAYER_SYSTEM);
             if (data != null && data.hasHunterClass()) {
-                List<ClassSkillTree.SkillNode> nodes = ClassSkillTree.getNodesForClass(data.hunterClass());
+                ClassSkillTree.Tree shown = shownTree(data);
+                List<ClassSkillTree.SkillNode> nodes = shown == null ? List.of() : shown.nodes();
                 for (ClassSkillTree.SkillNode node : nodes) {
                     int nx = node.gridX();
                     int ny = node.gridY();
@@ -732,7 +785,7 @@ public final class ClassSkillTreeScreen extends Screen {
     /** Keeps some of the web on the canvas. */
     private void clampCamera() {
         SystemData data = Minecraft.getInstance().player == null ? null : Minecraft.getInstance().player.getData(AwakeningSystemMod.PLAYER_SYSTEM);
-        ClassSkillTree.Tree t = data == null ? null : ClassSkillTree.getTree(data.hunterClass());
+        ClassSkillTree.Tree t = shownTree(data);
         if (t == null) return;
         Layout L = layout();
         double w = L.canvasW(), h = L.canvasH();

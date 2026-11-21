@@ -74,6 +74,8 @@ public final class UiStyle {
             event.setNewScreen(new SaoCultivationScreen(event.getCurrentScreen()));
         } else if (event.getNewScreen() instanceof com.soybe.awakeningsystem.guild.GuildScreen gs) {
             event.setNewScreen(new SaoGuildScreen(event.getCurrentScreen(), gs.rawData()));
+        } else if (event.getNewScreen() instanceof com.soybe.awakeningsystem.ClassEvolutionScreen) {
+            event.setNewScreen(new SaoEvolutionScreen(event.getCurrentScreen()));
         } else if (event.getNewScreen() instanceof com.soybe.awakeningsystem.ClassSelectionScreen) {
             event.setNewScreen(new SaoClassChoiceScreen(event.getCurrentScreen()));
         }

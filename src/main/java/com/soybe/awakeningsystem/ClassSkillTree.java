@@ -59,6 +59,7 @@ public final class ClassSkillTree {
             StatType statType,
             double statValue,
             boolean minor,
+            boolean activeSkill,
             String iconSymbol
     ) {
         public boolean isRoot() {
@@ -69,8 +70,9 @@ public final class ClassSkillTree {
             return nodeType == NodeType.ATTRIBUTE_NODE;
         }
 
+        /** An active skill: the active notables, and a start node marked "active" (the base classes start with one). */
         public boolean isActive() {
-            return nodeType == NodeType.MAJOR_ACTIVE;
+            return nodeType == NodeType.MAJOR_ACTIVE || activeSkill;
         }
 
         /** A node learnt once and kept in the tree nodes, not the skills: the stat nodes. */
@@ -215,7 +217,7 @@ public final class ClassSkillTree {
             SkillNode node = new SkillNode(id, cls, str(n, "branch", "root"), n.has("tier") ? n.get("tier").getAsInt() : 0, x, y,
                     n.has("level") ? n.get("level").getAsInt() : 0, n.has("cost") ? n.get("cost").getAsInt() : 1,
                     List.copyOf(nb.getOrDefault(id, List.of())), type, stat, n.has("value") ? n.get("value").getAsDouble() : 0,
-                    "minor".equals(kind), str(n, "icon", "•"));
+                    "minor".equals(kind), n.has("active") && n.get("active").getAsBoolean(), str(n, "icon", "•"));
             nodes.add(node);
             byId.put(id, node);
             minX = Math.min(minX, x); minY = Math.min(minY, y); maxX = Math.max(maxX, x); maxY = Math.max(maxY, y);
@@ -332,12 +334,40 @@ public final class ClassSkillTree {
         return node != null;
     }
 
+    /**
+     * The webs the player spends points in: the base class's web, and once evolved the evolution's web too (an
+     * evolved player keeps what was learnt as a base class).
+     */
+    public static List<Tree> treesOf(SystemData data) {
+        if (data == null || !data.hasHunterClass()) return List.of();
+        String cls = normalizeClassId(data.hunterClass());
+        List<Tree> out = new ArrayList<>(2);
+        String base = ClassEvolution.baseOf(cls);
+        if (base != null && !base.equals(cls)) {
+            Tree b = getTree(base);
+            if (b != null) out.add(b);
+        }
+        Tree t = getTree(cls);
+        if (t != null) out.add(t);
+        return out;
+    }
+
+    /** Whether the node belongs to one of the player's webs. */
+    public static boolean isOwnNode(SystemData data, SkillNode node) {
+        if (node == null) return false;
+        for (Tree t : treesOf(data)) {
+            if (t.hunterClass().equals(node.hunterClass())) return true;
+        }
+        return false;
+    }
+
     /** Whether a learnt node is linked to this one (the start needs none). */
     public static boolean isReachable(SystemData data, SkillNode node) {
         if (node.isRoot()) return true;
-        String cls = data.hunterClass();
+        Tree t = getTree(node.hunterClass());
+        if (t == null) return false;
         for (String id : node.prerequisiteIds()) {
-            SkillNode p = getNode(cls, id);
+            SkillNode p = t.byId().get(id);
             if (p != null && has(data, p)) return true;
         }
         return false;
@@ -347,7 +377,7 @@ public final class ClassSkillTree {
         if (data == null || !data.hasHunterClass()) return false;
         SkillNode node = getNode(data.hunterClass(), skillId);
         if (node == null) return false;
-        if (!node.hunterClass().equals(normalizeClassId(data.hunterClass()))) return false;
+        if (!isOwnNode(data, node)) return false;
         if (has(data, node)) return false;
         if (!isReachable(data, node)) return false;
         if (data.level() < node.requiredLevel()) return false;
@@ -359,7 +389,7 @@ public final class ClassSkillTree {
         SkillNode node = getNode(data.hunterClass(), skillId);
         if (node == null) return false;
         if (node.isAttribute() || node.isRoot()) return false;
-        if (!node.hunterClass().equals(normalizeClassId(data.hunterClass()))) return false;
+        if (!isOwnNode(data, node)) return false;
         int curLvl = data.skills().getOrDefault(skillId, 0);
         if (curLvl < 1 || curLvl >= MAX_SKILL_LEVEL) return false;
         int nextRank = curLvl + 1;
@@ -369,12 +399,12 @@ public final class ClassSkillTree {
 
     public static double getTotalAttributeBonus(SystemData data, StatType type) {
         if (data == null || !data.hasHunterClass()) return 0.0D;
-        Tree t = getTree(data.hunterClass());
-        if (t == null) return 0.0D;
         double total = 0.0D;
-        for (String id : data.treeNodes()) {
-            SkillNode node = t.byId().get(id);
-            if (node != null && node.isAttribute() && node.statType() == type) total += node.statValue();
+        for (Tree t : treesOf(data)) {
+            for (String id : data.treeNodes()) {
+                SkillNode node = t.byId().get(id);
+                if (node != null && node.isAttribute() && node.statType() == type) total += node.statValue();
+            }
         }
         return total;
     }

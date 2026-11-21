@@ -26,6 +26,8 @@ public class SaoClassTreeScreen extends SaoWindow {
     private boolean dragging;
     private double lastX, lastY;
     private String chosen;
+    /** An evolved player can look at the base class's web too. */
+    private boolean viewBase;
 
     public SaoClassTreeScreen(Screen parent) {
         super(parent, 430, 244);
@@ -71,6 +73,19 @@ public class SaoClassTreeScreen extends SaoWindow {
         camY = ch() / 2.0F;
     }
 
+    /** The web shown: the class's own, or its base class's when that tab is on. */
+    private ClassSkillTree.Tree shownTree(SystemData d) {
+        if (!d.hasHunterClass()) return null;
+        String base = com.soybe.awakeningsystem.ClassEvolution.baseOf(d.hunterClass());
+        if (viewBase && base != null) return ClassSkillTree.getTree(base);
+        return ClassSkillTree.getTree(d.hunterClass());
+    }
+
+    private boolean evolved(SystemData d) {
+        String base = com.soybe.awakeningsystem.ClassEvolution.baseOf(d.hunterClass());
+        return base != null && !base.equals(ClassSkillTree.normalizeClassId(d.hunterClass()));
+    }
+
     private float sx(int gx) { return cx() + camX + gx * zoom; }
     private float sy(int gy) { return cy() + camY + gy * zoom; }
 
@@ -91,7 +106,7 @@ public class SaoClassTreeScreen extends SaoWindow {
         fit();
         int cx = cx(), cy = cy(), cw = cw(), ch = ch();
         g.fillGradient(cx, cy, cx + cw, cy + ch, alpha(0xFAFFFFFF, a), alpha(0xF0ECECF0, a));
-        ClassSkillTree.Tree tree = d.hasHunterClass() ? ClassSkillTree.getTree(d.hunterClass()) : null;
+        ClassSkillTree.Tree tree = shownTree(d);
         if (tree == null) {
             g.drawCenteredString(this.font, d.hasHunterClass() ? tr("tree_loading", "Loading the web…") : tr("class_pick", "Choose a class"),
                     cx + cw / 2, cy + ch / 2, alpha(GREY, a));
@@ -103,7 +118,7 @@ public class SaoClassTreeScreen extends SaoWindow {
                 Math.round(this.width / 2.0F + (cx + cw - this.width / 2.0F) * fs), Math.round(this.height / 2.0F + (cy + ch - this.height / 2.0F) * fs));
         // branch names, out past the end of each branch
         for (ClassSkillTree.Branch b : tree.branches()) {
-            String s = key("branch." + b.name()).getString() + " · " + ClassSkillTree.getPointsInBranch(d, d.hunterClass(), b.id());
+            String s = key("branch." + b.name()).getString() + " · " + ClassSkillTree.getPointsInBranch(d, tree.hunterClass(), b.id());
             g.pose().pushPose();
             g.pose().translate(sx(b.x()), sy(b.y()) - 4, 0);
             float ts = Math.max(0.7F, zoom * 1.6F);
@@ -154,6 +169,13 @@ public class SaoClassTreeScreen extends SaoWindow {
             }
         }
         g.disableScissor();
+        // the tabs (an evolved player) or the way to evolve (a base class)
+        if (evolved(d)) {
+            softButton(g, cx + 4, cy + 4, 62, 14, tr("tree_base", "Base"), viewBase, mouseX, mouseY, a);
+            softButton(g, cx + 70, cy + 4, 62, 14, tr("tree_evolved", "Evolution"), !viewBase, mouseX, mouseY, a);
+        } else if (com.soybe.awakeningsystem.ClassEvolution.isBase(d.hunterClass())) {
+            button(g, cx + 4, cy + 4, 80, 14, tr("evolve", "Evolve"), true, mouseX, mouseY, a);
+        }
         g.fill(cx, cy + ch - 12, cx + cw, cy + ch, alpha(0xE6FFFFFF, a));
         g.drawString(this.font, this.font.plainSubstrByWidth(key("web_hint").getString(), cw - 8), cx + 4, cy + ch - 10, alpha(GREY_LIGHT, a), false);
 
@@ -260,8 +282,24 @@ public class SaoClassTreeScreen extends SaoWindow {
             if (ClassSkillTree.canUnlock(d, chosen)) { PacketDistributor.sendToServer(new UnlockSkillTreeNodePayload(chosen)); SaoSounds.confirm(); return true; }
             return true;
         }
-        if (in(mx, my, cx(), cy(), cw(), ch())) {
-            for (ClassSkillTree.SkillNode n : ClassSkillTree.getNodesForClass(d.hunterClass())) {
+        if (evolved(d) && in(mx, my, cx() + 4, cy() + 4, 128, 14)) {
+            boolean base = mx < cx() + 68;
+            if (base != viewBase) {
+                viewBase = base;
+                chosen = null;
+                camX = Float.NaN;
+                SaoSounds.click();
+            }
+            return true;
+        }
+        if (!evolved(d) && com.soybe.awakeningsystem.ClassEvolution.isBase(d.hunterClass()) && in(mx, my, cx() + 4, cy() + 4, 80, 14)) {
+            SaoSounds.click();
+            this.minecraft.setScreen(new SaoEvolutionScreen(this));
+            return true;
+        }
+        ClassSkillTree.Tree shown = shownTree(d);
+        if (shown != null && in(mx, my, cx(), cy(), cw(), ch())) {
+            for (ClassSkillTree.SkillNode n : shown.nodes()) {
                 float nx = sx(n.gridX()), ny = sy(n.gridY()), r = screenRadius(n) + 1;
                 if ((mx - nx) * (mx - nx) + (my - ny) * (my - ny) <= r * r) {
                     // a second click on a chosen node that can be learnt learns it, as on the web of a passive tree
@@ -299,7 +337,7 @@ public class SaoClassTreeScreen extends SaoWindow {
 
     /** Keeps some of the web on the canvas. */
     private void clampCamera() {
-        ClassSkillTree.Tree t = ClassSkillTree.getTree(data().hunterClass());
+        ClassSkillTree.Tree t = shownTree(data());
         if (t == null) return;
         camX = Math.max(cw() * 0.5F - t.maxX() * zoom, Math.min(cw() * 0.5F - t.minX() * zoom, camX));
         camY = Math.max(ch() * 0.5F - t.maxY() * zoom, Math.min(ch() * 0.5F - t.minY() * zoom, camY));
