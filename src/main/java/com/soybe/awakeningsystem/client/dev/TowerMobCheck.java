@@ -5,6 +5,7 @@ import com.soybe.awakeningsystem.tower.GreatTowerWorldManager;
 import com.soybe.awakeningsystem.tower.terrain.TowerFloorTerrain;
 import net.minecraft.client.Minecraft;
 import net.minecraft.core.BlockPos;
+import net.minecraft.network.chat.Component;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.world.entity.Mob;
@@ -125,6 +126,10 @@ public final class TowerMobCheck {
         if (t == 100) for (var e : mc.level.entitiesForRendering())
             if (SUMMONED.contains(e.getUUID()) && e.getCustomName() != null)
                 AwakeningSystemMod.LOGGER.info("[BossCheck] client sees name '{}'", e.getCustomName().getString());
+        if (t == 100) AwakeningSystemMod.LOGGER.info("[BossCheck] untranslated '{}' / known '{}' / other key '{}'",
+                Component.translatable("entity.block_factorys_bosses.cinematic_kraken").getString(),
+                Component.translatable("entity.minecraft.zombie").getString(),
+                Component.translatable("item.fake_mod.thing").getString());
         if (t == 110) mc.stop();
     }
 
