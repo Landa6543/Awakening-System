@@ -104,6 +104,29 @@ public final class ToolShots {
             }
             log("hoe lv50: ripe left {}, replanted {} of 9", ripe, young);
 
+            // fortune: Fortune III on a plain pickaxe and on a level 75 one, 30 diamond ores each (Shift: one block at a time)
+            var fortune = lvl.registryAccess().lookupOrThrow(net.minecraft.core.registries.Registries.ENCHANTMENT)
+                    .getOrThrow(net.minecraft.world.item.enchantment.Enchantments.FORTUNE);
+            sp.setShiftKeyDown(true);
+            for (int lv : new int[]{1, 75}) {
+                ItemStack p = leveled(Items.DIAMOND_PICKAXE, lv);
+                p.enchant(fortune, 3);
+                sp.setItemInHand(net.minecraft.world.InteractionHand.MAIN_HAND, p);
+                int read = net.minecraft.world.item.enchantment.EnchantmentHelper.getItemEnchantmentLevel(fortune, p);
+                BlockPos d = o.offset(0, 2, 0);
+                int got = 0;
+                for (int i = 0; i < 30; i++) {
+                    lvl.setBlock(d, Blocks.DIAMOND_ORE.defaultBlockState(), 2);
+                    sp.gameMode.destroyBlock(d);
+                    for (var it : lvl.getEntitiesOfClass(net.minecraft.world.entity.item.ItemEntity.class, new net.minecraft.world.phys.AABB(d).inflate(2))) {
+                        if (it.getItem().is(Items.DIAMOND)) got += it.getItem().getCount();
+                        it.discard();
+                    }
+                }
+                log("fortune III pickaxe lv{}: fortune read as {}, 30 ores gave {} diamonds", lv, read, got);
+            }
+            sp.setShiftKeyDown(false);
+
             // tooltips: a pickaxe shows its trade, no damage
             var tip = new ArrayList<Component>();
             WeaponLevelManager.appendWeaponLevelTooltip(leveled(Items.DIAMOND_PICKAXE, 30), tip);
