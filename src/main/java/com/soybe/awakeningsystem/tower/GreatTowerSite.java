@@ -38,7 +38,7 @@ public final class GreatTowerSite {
 
     private static final int[] DISTANCES = {190, 230, 270, 320};
     private static final int ANGLES = 12;
-    private static final int CALL_EVERY = 20 * 150;     // the System's reminder, every 2.5 minutes
+    private static final int CALL_EVERY = 20 * 30;      // the System's reminder, every 30 seconds, held for 6
 
     // site search state (one candidate a tick, so the first start does not freeze)
     private static int candidate = -1;
@@ -277,7 +277,7 @@ public final class GreatTowerSite {
             return;
         }
         boolean firstCall = age >= 100 && age < 120;
-        if (!firstCall && age % CALL_EVERY >= 20) return;
+        if (!firstCall && age % CALL_EVERY >= 120) return;
         Component dir = Component.translatable("awakening_system.direction." + direction(dx, dz));
         if (firstCall) {
             player.sendSystemMessage(Component.translatable("awakening_system.tower.call_chat", String.valueOf(dist), dir));

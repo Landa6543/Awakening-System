@@ -380,6 +380,7 @@ public final class GreatTowerWorldManager {
             int groundYAdv = findSafeGroundY(targetLevel, advX, advZ, targetFloor == 6 ? 64 : (targetFloor != 5 && targetFloor != 15 && targetFloor != 20 ? 64 : 32));
             buildThemedReturnPavilion(targetLevel, targetFloor, spawnX, groundY, spawnZ, layout.returnFacing());
             buildThemedAdvancePavilion(targetLevel, targetFloor, advX, groundYAdv, advZ, layout.advanceFacing());
+            com.soybe.awakeningsystem.tower.TowerPortalBeacon.remember(targetFloor, new BlockPos(advX, groundYAdv, advZ));
             double targetX = (double)spawnX + 0.5;
             double targetY = (double)groundY;
             double targetZ = (double)spawnZ + 0.5;
