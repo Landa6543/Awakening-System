@@ -485,6 +485,8 @@ public final class NpcDialogueManager {
         }
         choices.add(new DialogueChoice(cId++, "Consultar consejos de combate y sabiduría", "lore", "LORE"));
         choices.add(new DialogueChoice(cId++, "Entendido, muchas gracias.", "goodbye", "CLOSE"));
+        // last, so the choices before it keep their places (the dialogue answers with a choice's place): index 4
+        if (isGuildMember) choices.add(new DialogueChoice(cId++, "awakening_system.routine.dialogue_choice", "routine", "ROUTINE"));
 
         sendNode(player, npc.getId(), "series_npc", "root", "DEFAULT", speaker, text, choices);
     }
@@ -603,6 +605,14 @@ public final class NpcDialogueManager {
                         new DialogueChoice(0, "¡Bienvenido al Gremio!", "goodbye", "CLOSE")
                 );
                 sendNode(player, npc.getId(), "series_npc", "guild_recruited", "DEFAULT", speaker, text, choices);
+                return;
+            }
+
+            // Caso: rutina diaria (miembros del gremio): abre el editor de la rutina
+            if (isGuildMember && choiceId == 4) {
+                closeDialogue(player);
+                if (sne.getOwnerUuid() == null) sne.setOwnerUuid(player.getUUID());
+                if (player.getUUID().equals(sne.getOwnerUuid())) com.soybe.awakeningsystem.routine.NpcRoutine.open(player, sne);
                 return;
             }
 

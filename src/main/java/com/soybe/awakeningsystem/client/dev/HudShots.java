@@ -20,6 +20,7 @@ public final class HudShots {
     private static final int[][] SIZES = {{854, 480}, {1280, 720}, {1920, 1080}};
     private static int t = -1;
     private static boolean userFullDive;
+    private static int routineNpc, routineHusk, routineCreeper;
 
     @SubscribeEvent
     public static void tick(ClientTickEvent.Post event) {
@@ -78,6 +79,104 @@ public final class HudShots {
             if (t == 90) Screenshot.grab(mc.gameDirectory, "hs_sao_" + which + ".png", mc.getMainRenderTarget(), msg -> {});
             if (t == 95) com.soybe.awakeningsystem.client.sao.UiStyle.setFullDive(false);
             if (t == 100) mc.stop();
+            return;
+        }
+        if (System.getProperty("awakening.hudShots").equals("routine")) {
+            // a guild NPC on a two-stop routine, then a husk and a creeper next to it
+            var server = mc.getSingleplayerServer();
+            java.util.function.Consumer<java.util.function.Consumer<net.minecraft.server.level.ServerPlayer>> onServer = job -> {
+                if (server != null) server.execute(() -> job.accept(server.getPlayerList().getPlayer(mc.player.getUUID())));
+            };
+            if (t == 40) onServer.accept(sp -> {
+                sp.setGameMode(net.minecraft.world.level.GameType.CREATIVE);
+                var lvl = sp.serverLevel();
+                var npc = com.soybe.awakeningsystem.entity.ModEntities.CHA_HAEIN.get().create(lvl);
+                npc.moveTo(sp.getX() - 2, sp.getY(), sp.getZ() - 2, 0, 0);
+                lvl.addFreshEntity(npc);
+                // a real guild member: a guild of the player's, with the NPC recruited into it
+                var guilds = com.soybe.awakeningsystem.guild.GuildSavedData.get(server);
+                if (guilds.getGuildByPlayer(sp.getUUID()) == null) guilds.createGuild(sp, "Routine Test", "RT");
+                var guild = guilds.getGuildByPlayer(sp.getUUID());
+                guilds.recruitNpcToGuild(guild, server, npc.getNpcProfile().id(), npc.getNpcProfile().displayName(),
+                        com.soybe.awakeningsystem.guild.GuildRole.MEMBER);
+                npc.setOwnerUuid(sp.getUUID());
+                npc.setFollowing(false);
+                var a = sp.blockPosition().offset(3, 0, -2);   // the test platform is 7 blocks wide
+                var b = sp.blockPosition().offset(-3, 0, 2);
+                npc.setRoutine(java.util.List.of(new com.soybe.awakeningsystem.routine.NpcRoutine.Stop(a, 1000),
+                        new com.soybe.awakeningsystem.routine.NpcRoutine.Stop(b, 7000)), true);
+                lvl.setDayTime(1500);
+                routineNpc = npc.getId();
+                AwakeningSystemMod.LOGGER.info("[HudShots] routine: npc at {}, stop A {} (7:00), stop B {} (13:00), on {}", npc.blockPosition(), a, b, npc.isRoutineOn());
+            });
+            if (t > 40 && t % 40 == 0 && t <= 520) onServer.accept(sp -> {
+                var found = sp.serverLevel().getEntity(routineNpc);
+                if (found == null) AwakeningSystemMod.LOGGER.info("[HudShots] routine: t{} npc gone; series npcs near: {}", t,
+                        sp.serverLevel().getEntitiesOfClass(com.soybe.awakeningsystem.entity.SeriesNpcEntity.class, sp.getBoundingBox().inflate(40)).size());
+                if (found instanceof com.soybe.awakeningsystem.entity.SeriesNpcEntity npc) {
+                    AwakeningSystemMod.LOGGER.info("[HudShots] routine: t{} time {} npc at {} stop {} target {}", t,
+                            com.soybe.awakeningsystem.routine.NpcRoutine.clock((int) sp.level().getDayTime()), npc.blockPosition(), npc.routineStop(),
+                            npc.getTarget() == null ? "none" : npc.getTarget().getType().toShortString());
+                    var path = npc.getNavigation().getPath();
+                    AwakeningSystemMod.LOGGER.info("[HudShots] routine:   nav done {} path {} restrict {} r{} goals {}", npc.getNavigation().isDone(),
+                            path == null ? "none" : (path.getEndNode() + " reach " + path.canReach()), npc.getRestrictCenter(), npc.getRestrictRadius(),
+                            npc.goalSelectorRunning());
+                }
+            });
+            if (t == 60) onServer.accept(sp -> {
+                StringBuilder floor = new StringBuilder(), feet = new StringBuilder();
+                for (int x = -10; x <= 10; x++) {
+                    var below = sp.serverLevel().getBlockState(new net.minecraft.core.BlockPos(x, 199, 0));
+                    var at = sp.serverLevel().getBlockState(new net.minecraft.core.BlockPos(x, 200, 0));
+                    floor.append(below.isAir() ? '.' : below.isSolid() ? '#' : '~');
+                    feet.append(at.isAir() ? '.' : at.isSolid() ? '#' : '~');
+                }
+                AwakeningSystemMod.LOGGER.info("[HudShots] routine: floor y199 x-10..10 {} | y200 {}", floor, feet);
+            });
+            if (t == 200) onServer.accept(sp -> sp.serverLevel().setDayTime(7500));
+            if (t == 360) onServer.accept(sp -> {
+                if (!(sp.serverLevel().getEntity(routineNpc) instanceof com.soybe.awakeningsystem.entity.SeriesNpcEntity npc)) return;
+                var lvl = sp.serverLevel();
+                var husk = net.minecraft.world.entity.EntityType.HUSK.create(lvl);
+                husk.moveTo(npc.getX() + 3, npc.getY(), npc.getZ() + 1, 0, 0);
+                husk.setNoAi(true);
+                lvl.addFreshEntity(husk);
+                var creeper = net.minecraft.world.entity.EntityType.CREEPER.create(lvl);
+                creeper.moveTo(npc.getX() - 3, npc.getY(), npc.getZ() - 1, 0, 0);
+                creeper.setNoAi(true);
+                lvl.addFreshEntity(creeper);
+                routineHusk = husk.getId();
+                routineCreeper = creeper.getId();
+            });
+            if (t == 560) onServer.accept(sp -> {
+                var husk = sp.serverLevel().getEntity(routineHusk);
+                var creeper = sp.serverLevel().getEntity(routineCreeper);
+                AwakeningSystemMod.LOGGER.info("[HudShots] routine: husk alive {}, creeper alive {}",
+                        husk != null && husk.isAlive(), creeper != null && creeper.isAlive());
+            });
+            if (t == 570) {
+                mc.getWindow().setWindowed(1280, 720);
+                userFullDive = com.soybe.awakeningsystem.client.sao.UiStyle.fullDive();
+                com.soybe.awakeningsystem.client.sao.UiStyle.setFullDive(false);
+            }
+            if (t == 580 && mc.level.getEntity(routineNpc) instanceof com.soybe.awakeningsystem.entity.SeriesNpcEntity npc) {
+                var stops = java.util.List.of(new com.soybe.awakeningsystem.routine.NpcRoutine.Stop(npc.blockPosition().offset(9, 0, 0), 1000),
+                        new com.soybe.awakeningsystem.routine.NpcRoutine.Stop(npc.blockPosition().offset(-9, 0, 0), 7000),
+                        new com.soybe.awakeningsystem.routine.NpcRoutine.Stop(npc.blockPosition().offset(0, 0, 12), 13000));
+                com.soybe.awakeningsystem.routine.client.RoutineClient.open(
+                        new com.soybe.awakeningsystem.routine.NpcRoutine.OpenPayload(routineNpc, "Cha Hae-In", true, stops));
+            }
+            if (t == 600) Screenshot.grab(mc.gameDirectory, "hs_routine.png", mc.getMainRenderTarget(), msg -> {});
+            if (t == 605) {
+                com.soybe.awakeningsystem.client.sao.UiStyle.setFullDive(true);
+                var stops = java.util.List.of(new com.soybe.awakeningsystem.routine.NpcRoutine.Stop(mc.player.blockPosition(), 1000),
+                        new com.soybe.awakeningsystem.routine.NpcRoutine.Stop(mc.player.blockPosition().offset(5, 0, 5), 13000));
+                com.soybe.awakeningsystem.routine.client.RoutineClient.open(
+                        new com.soybe.awakeningsystem.routine.NpcRoutine.OpenPayload(routineNpc, "Cha Hae-In", false, stops));
+            }
+            if (t == 625) Screenshot.grab(mc.gameDirectory, "hs_routine_sao.png", mc.getMainRenderTarget(), msg -> {});
+            if (t == 630) com.soybe.awakeningsystem.client.sao.UiStyle.setFullDive(userFullDive);
+            if (t == 640) mc.stop();
             return;
         }
         if (System.getProperty("awakening.hudShots").equals("orc")) {

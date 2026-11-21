@@ -109,6 +109,7 @@ public class SeriesNpcEntity extends PathfinderMob {
         this.goalSelector.addGoal(1, new FloatGoal(this));
         this.goalSelector.addGoal(2, new CompanionMeleeAttackGoal(this, 1.35D, true));
         this.goalSelector.addGoal(3, new FollowCompanionOwnerGoal(this));
+        this.goalSelector.addGoal(3, new RoutineGoal());
         this.goalSelector.addGoal(4, new net.minecraft.world.entity.ai.goal.MoveTowardsRestrictionGoal(this, 0.6D));
         this.goalSelector.addGoal(5, new LookAtPlayerGoal(this, Player.class, 8.0F));
         this.goalSelector.addGoal(6, new WaterAvoidingRandomStrollGoal(this, 0.35D) {
@@ -164,10 +165,11 @@ public class SeriesNpcEntity extends PathfinderMob {
                 return false;
             }
         });
-        this.targetSelector.addGoal(3, new NearestAttackableTargetGoal<>(this, Monster.class, true) {
+        // every monster that means harm, but never one that explodes (creepers), nor a calm neutral one
+        this.targetSelector.addGoal(3, new NearestAttackableTargetGoal<>(this, Monster.class, 10, true, false, SeriesNpcEntity::isFoe) {
             @Override
             public boolean canUse() {
-                if (!SeriesNpcEntity.this.isFollowing() || SeriesNpcEntity.this.isInDialogue()) return false;
+                if (!SeriesNpcEntity.this.fightsMonsters() || SeriesNpcEntity.this.isInDialogue()) return false;
                 return super.canUse();
             }
         });
@@ -295,13 +297,16 @@ public class SeriesNpcEntity extends PathfinderMob {
 
         @Override
         public boolean canUse() {
-            if (SeriesNpcEntity.this.isInDialogue() || !SeriesNpcEntity.this.isFollowing()) return false;
+            if (SeriesNpcEntity.this.isInDialogue() || !SeriesNpcEntity.this.fightsMonsters()) return false;
             return super.canUse();
         }
 
         @Override
         public boolean canContinueToUse() {
-            if (SeriesNpcEntity.this.isInDialogue() || !SeriesNpcEntity.this.isFollowing()) return false;
+            if (SeriesNpcEntity.this.isInDialogue() || !SeriesNpcEntity.this.fightsMonsters()) return false;
+            // one standing guard or on its routine doesn't chase a monster far from where it should be
+            if (!SeriesNpcEntity.this.isFollowing() && SeriesNpcEntity.this.anchor() != null
+                    && SeriesNpcEntity.this.distanceToSqr(net.minecraft.world.phys.Vec3.atCenterOf(SeriesNpcEntity.this.anchor())) > 24 * 24) return false;
             return super.canContinueToUse();
         }
 
@@ -341,6 +346,119 @@ public class SeriesNpcEntity extends PathfinderMob {
 
     public void setFollowing(boolean following) {
         this.entityData.set(FOLLOWING, following);
+        if (following) this.routineOn = false;   // following the leader replaces the routine
+    }
+
+    // ---- the daily routine (see NpcRoutine)
+
+    private java.util.List<com.soybe.awakeningsystem.routine.NpcRoutine.Stop> routine = new java.util.ArrayList<>();
+    private boolean routineOn;
+
+    public java.util.List<com.soybe.awakeningsystem.routine.NpcRoutine.Stop> getRoutine() {
+        return java.util.List.copyOf(routine);
+    }
+
+    public boolean isRoutineOn() {
+        return routineOn;
+    }
+
+    public void setRoutine(java.util.List<com.soybe.awakeningsystem.routine.NpcRoutine.Stop> stops, boolean on) {
+        this.routine = new java.util.ArrayList<>(stops);
+        this.routineOn = on && !stops.isEmpty();
+        if (this.routineOn) {
+            this.entityData.set(FOLLOWING, false);
+            this.homePos = null;
+            this.clearRestriction();
+            this.getNavigation().stop();
+        }
+    }
+
+    /** For checks: the goals running now. */
+    public String goalSelectorRunning() {
+        return this.goalSelector.getAvailableGoals().stream().filter(net.minecraft.world.entity.ai.goal.WrappedGoal::isRunning)
+                .map(w -> w.getGoal().getClass().getSimpleName()).toList().toString();
+    }
+
+    /** The stop the routine has the NPC at now, or null. */
+    public BlockPos routineStop() {
+        if (!routineOn) return null;
+        var s = com.soybe.awakeningsystem.routine.NpcRoutine.current(routine, this.level().getDayTime());
+        return s == null ? null : s.pos();
+    }
+
+    /** Where the NPC belongs when it isn't following: its routine's stop, or the place it guards. */
+    public BlockPos anchor() {
+        BlockPos stop = routineStop();
+        return stop != null ? stop : this.homePos;
+    }
+
+    /** Guild NPCs (those with a leader) fight monsters, whether following, guarding or on their routine. */
+    public boolean fightsMonsters() {
+        return getOwnerUuid() != null;
+    }
+
+    /** A monster worth fighting: never one that explodes, nor a neutral one that is calm. */
+    public static boolean isFoe(LivingEntity e) {
+        if (e instanceof net.minecraft.world.entity.monster.Creeper) return false;
+        if (e instanceof net.minecraft.world.entity.NeutralMob n && !n.isAngry()) return false;
+        return !e.getTags().contains("shadow_soldier");
+    }
+
+    /** Walks to the routine's stop for the time of day and stays near it. */
+    private class RoutineGoal extends net.minecraft.world.entity.ai.goal.Goal {
+        private BlockPos goal;
+        private int recalc;
+        private int stuck;
+
+        RoutineGoal() {
+            this.setFlags(java.util.EnumSet.of(Flag.MOVE));
+        }
+
+        private boolean active() {
+            return routineOn && !isFollowing() && !isInDialogue() && getTarget() == null;
+        }
+
+        @Override
+        public boolean canUse() {
+            if (!active()) return false;
+            BlockPos stop = routineStop();
+            if (stop == null) return false;
+            if (!stop.equals(getRestrictCenter()) || getRestrictRadius() != 5) restrictTo(stop, 5);
+            if (distanceToSqr(net.minecraft.world.phys.Vec3.atBottomCenterOf(stop)) <= 9) return false;
+            this.goal = stop;
+            return true;
+        }
+
+        @Override
+        public boolean canContinueToUse() {
+            return active() && goal.equals(routineStop()) && distanceToSqr(net.minecraft.world.phys.Vec3.atBottomCenterOf(goal)) > 4;
+        }
+
+        @Override
+        public void start() {
+            recalc = 0;
+            stuck = 0;
+        }
+
+        @Override
+        public void stop() {
+            getNavigation().stop();
+        }
+
+        @Override
+        public void tick() {
+            if (--recalc <= 0) {
+                recalc = 20;
+                getNavigation().moveTo(goal.getX() + 0.5, goal.getY(), goal.getZ() + 0.5, 0.9);
+            }
+            // no way there for 15 seconds (a wall, a closed door, a gap): it takes the shortcut
+            stuck = getNavigation().isDone() ? stuck + 1 : 0;
+            if (stuck > 300 && level().isLoaded(goal) && level().getBlockState(goal.below()).isSolid()) {
+                teleportTo(goal.getX() + 0.5, goal.getY(), goal.getZ() + 0.5);
+                getNavigation().stop();
+                stuck = 0;
+            }
+        }
     }
 
     public Player getOwner() {
@@ -422,6 +540,8 @@ public class SeriesNpcEntity extends PathfinderMob {
             compound.putUUID("OwnerUUID", getOwnerUuid());
         }
         compound.putBoolean("Following", isFollowing());
+        compound.put("Routine", com.soybe.awakeningsystem.routine.NpcRoutine.write(routine));
+        compound.putBoolean("RoutineOn", routineOn);
         if (this.homePos != null) {
             compound.putInt("HomeX", this.homePos.getX());
             compound.putInt("HomeY", this.homePos.getY());
@@ -441,6 +561,8 @@ public class SeriesNpcEntity extends PathfinderMob {
         if (compound.contains("Following")) {
             setFollowing(compound.getBoolean("Following"));
         }
+        this.routine = com.soybe.awakeningsystem.routine.NpcRoutine.read(compound, "Routine");
+        this.routineOn = compound.getBoolean("RoutineOn") && !this.routine.isEmpty();
         if (compound.contains("HomeX")) {
             this.homePos = new BlockPos(compound.getInt("HomeX"), compound.getInt("HomeY"), compound.getInt("HomeZ"));
             this.restrictTo(this.homePos, 6);
