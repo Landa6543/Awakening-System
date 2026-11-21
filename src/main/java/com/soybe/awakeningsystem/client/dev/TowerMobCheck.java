@@ -100,8 +100,45 @@ public final class TowerMobCheck {
         if (t == 290) mc.stop();
     }
 
+    private static final boolean BOSSES = System.getProperty("awakening.bossCheck") != null;
+    private static final java.util.List<java.util.UUID> SUMMONED = new java.util.ArrayList<>();
+
+    /** With -Dawakening.bossCheck: summons a common creature and a boss and logs which counts as a world boss. */
+    private static void bossCheck(Minecraft mc) {
+        var server = mc.getSingleplayerServer();
+        if (t == 60) server.execute(() -> {
+            ServerPlayer sp = server.getPlayerList().getPlayer(mc.player.getUUID());
+            server.getCommands().performPrefixedCommand(server.createCommandSourceStack(), "gamemode survival " + sp.getGameProfile().getName());
+            for (String id : new String[]{"awakening_system:goblin_scout", "awakening_system:igris_boss", "awakening_system:mother_spider", "minecraft:zombie"}) {
+                var type = net.minecraft.core.registries.BuiltInRegistries.ENTITY_TYPE.get(net.minecraft.resources.ResourceLocation.parse(id));
+                var e = type.create(sp.serverLevel());
+                if (!(e instanceof Mob m)) continue;
+                m.moveTo(sp.getX() + 4, sp.getY(), sp.getZ() + SUMMONED.size() * 3, 0, 0);
+                m.setNoAi(true);
+                sp.serverLevel().addFreshEntity(m);
+                SUMMONED.add(m.getUUID());
+                boolean wb = com.soybe.awakeningsystem.world.WorldBossScalingManager.isWorldBoss(m);
+                if (wb) com.soybe.awakeningsystem.world.WorldBossScalingManager.scaleWorldBossToPlayer(m, sp);
+                AwakeningSystemMod.LOGGER.info("[BossCheck] {} worldBoss {} hp {}", id, wb, m.getMaxHealth());
+            }
+        });
+        if (t == 100) for (var e : mc.level.entitiesForRendering())
+            if (SUMMONED.contains(e.getUUID()) && e.getCustomName() != null)
+                AwakeningSystemMod.LOGGER.info("[BossCheck] client sees name '{}'", e.getCustomName().getString());
+        if (t == 110) mc.stop();
+    }
+
     @SubscribeEvent
     public static void tick(ClientTickEvent.Post event) {
+        if (BOSSES) {
+            Minecraft mc = Minecraft.getInstance();
+            if (mc.level == null || mc.player == null || mc.getSingleplayerServer() == null) return;
+            mc.options.pauseOnLostFocus = false;
+            if (mc.screen != null) mc.setScreen(null);
+            t++;
+            bossCheck(mc);
+            return;
+        }
         if (BEACON != null) {
             Minecraft mc = Minecraft.getInstance();
             if (mc.level == null || mc.player == null || mc.getSingleplayerServer() == null) return;

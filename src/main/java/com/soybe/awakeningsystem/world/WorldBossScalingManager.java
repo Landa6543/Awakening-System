@@ -131,7 +131,8 @@ public final class WorldBossScalingManager {
 
         int diff = targetLevel - baseLevel;
         double hpMult = 1.0D + (diff * 0.065D);
-        double newMaxHp = baseHp * hpMult;
+        // a boss has at least the health of its level, whatever its mod gave it (a level 50 boss with 20 health)
+        double newMaxHp = Math.max(baseHp * hpMult, 8.0D * targetLevel);
 
         double dmgMult = 1.0D + (diff * 0.015D);
         double newDmg = baseDmg * dmgMult;
@@ -162,14 +163,14 @@ public final class WorldBossScalingManager {
             toughAttr.setBaseValue(toughAttr.getBaseValue() + bonusToughness);
         }
 
+        // the creature's name goes as a translatable part: worked out here on the server it came out as the bare key
+        // (entity.block_factorys_bosses.cinematic_kraken), the server having no translations
         String originalName = boss.getPersistentData().getString("rpg_boss_original_name");
-        if (originalName.isEmpty()) {
-            originalName = boss.getType().getDescription().getString();
-            boss.getPersistentData().putString("rpg_boss_original_name", originalName);
-        }
+        Component shownName = originalName.isEmpty() || originalName.startsWith("entity.")
+                ? boss.getType().getDescription() : Component.literal(originalName);
 
         String titleColor = targetLevel >= 500 ? "§5§l" : (targetLevel >= 250 ? "§4§l" : (targetLevel >= 100 ? "§c§l" : "§6§l"));
-        boss.setCustomName(Component.translatable("awakening_system.boss.world_boss_title", titleColor, targetLevel, originalName));
+        boss.setCustomName(Component.translatable("awakening_system.boss.world_boss_title", titleColor, targetLevel, shownName));
         boss.setCustomNameVisible(true);
 
         boss.getPersistentData().putInt("world_boss_scaled_level", targetLevel);
