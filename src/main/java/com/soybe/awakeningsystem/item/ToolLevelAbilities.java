@@ -263,12 +263,7 @@ public final class ToolLevelAbilities {
         switch (kind) {
             case PICKAXE -> {
                 if (!s.is(Tags.Blocks.ORES) || silk) return;
-                // fortune: a chance of each drop once more (1/3 from level 10, 2/3 from level 75)
-                float extra = lvl >= 75 ? 0.66F : lvl >= 10 ? 0.33F : 0.0F;
-                List<ItemEntity> add = new ArrayList<>();
-                for (ItemEntity e : event.getDrops())
-                    if (r.nextFloat() < extra) add.add(copy(e, e.getItem().copy()));
-                event.getDrops().addAll(add);
+                // (fortune is added to the enchantment itself, see fortune() below)
                 // level 100: raw ores come out smelted
                 if (lvl >= 100) for (ItemEntity e : event.getDrops()) {
                     var in = new SingleRecipeInput(e.getItem());
@@ -299,6 +294,28 @@ public final class ToolLevelAbilities {
                     for (ItemEntity e : new ArrayList<>(event.getDrops())) event.getDrops().add(copy(e, e.getItem().copy()));
             }
         }
+    }
+
+    /** Fortune levels a pickaxe's level adds to its Fortune enchantment: +1 from level 10, +2 from 75, +3 at 100. */
+    public static int fortuneBonus(ItemStack stack) {
+        if (kind(stack) != Kind.PICKAXE) return 0;
+        int lvl = level(stack);
+        return lvl >= 100 ? 3 : lvl >= 75 ? 2 : lvl >= 10 ? 1 : 0;
+    }
+
+    /**
+     * The pickaxe's level counts as more Fortune: Fortune III on a level 75 pickaxe mines as Fortune V. The
+     * enchantment on the item stays as it is; only the level the game reads while mining goes up. Silk Touch wins.
+     */
+    @SubscribeEvent
+    public static void fortune(net.neoforged.neoforge.event.enchanting.GetEnchantmentLevelEvent event) {
+        if (!event.isTargetting(net.minecraft.world.item.enchantment.Enchantments.FORTUNE)) return;
+        int bonus = fortuneBonus(event.getStack());
+        if (bonus <= 0) return;
+        var ench = event.getEnchantments();
+        var silk = event.getHolder(net.minecraft.world.item.enchantment.Enchantments.SILK_TOUCH);
+        if (silk.isPresent() && ench.getLevel(silk.get()) > 0) return;
+        event.getHolder(net.minecraft.world.item.enchantment.Enchantments.FORTUNE).ifPresent(h -> ench.set(h, ench.getLevel(h) + bonus));
     }
 
     private static ItemEntity copy(ItemEntity like, ItemStack stack) {
