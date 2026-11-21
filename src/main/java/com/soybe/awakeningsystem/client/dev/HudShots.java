@@ -79,6 +79,25 @@ public final class HudShots {
             if (t == 100) mc.stop();
             return;
         }
+        if (System.getProperty("awakening.hudShots").equals("goggles")) {
+            // with Create installed: does Create see the goggles on a player wearing the Creator title?
+            var server = mc.getSingleplayerServer();
+            java.util.function.Supplier<Object> ask = () -> {
+                try {
+                    return Class.forName("com.simibubi.create.content.equipment.goggles.GogglesItem")
+                            .getMethod("isWearingGoggles", net.minecraft.world.entity.player.Player.class).invoke(null, mc.player);
+                } catch (Throwable e) { return e.toString(); }
+            };
+            if (t == 40) AwakeningSystemMod.LOGGER.info("[HudShots] goggles before title: {}", ask.get());
+            if (t == 45 && server != null) server.execute(() -> {
+                var sp = server.getPlayerList().getPlayer(mc.player.getUUID());
+                com.soybe.awakeningsystem.SystemEvents.data(sp).setEquippedTitle("creator");
+                AwakeningSystemMod.sync(sp);
+            });
+            if (t == 80) AwakeningSystemMod.LOGGER.info("[HudShots] goggles with Creator title: {}", ask.get());
+            if (t == 85) mc.stop();
+            return;
+        }
         if (System.getProperty("awakening.hudShots").equals("ring")) {
             // the Link Ring in hand and in the hotbar
             var server = mc.getSingleplayerServer();
