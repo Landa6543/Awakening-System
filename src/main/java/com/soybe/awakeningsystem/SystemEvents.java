@@ -556,6 +556,18 @@ public final class SystemEvents {
             }
          }
 
+         if (data.needsTreeRefund() && !ClassSkillTree.trees().isEmpty()) {
+            // the class trees were remade as big webs: every point spent comes back to be spent again
+            int back = data.refundSkillTree();
+            if (back > 0) {
+               AwakeningSystemMod.notify(
+                  player, "awakening_system.notification.tree_refund.title", "awakening_system.notification.tree_refund.desc", -10496, new Object[]{back}
+               );
+            }
+            SystemAttributeEffects.apply(player);
+            AwakeningSystemMod.sync(player);
+         }
+
          if (SystemItems.HUNTER_GUIDE != null && SystemItems.HUNTER_GUIDE.isBound()) {
             int guideCount = 0;
 
@@ -13009,8 +13021,8 @@ public final class SystemEvents {
             );
          }
 
-         if (data.level() >= 50 && (data.level() - 50) % 5 == 0) {
-            data.addSkillPoints(1);
+         if (SystemData.earnedSkillPoints(data.level()) > SystemData.earnedSkillPoints(data.level() - 1)) {
+            // the point itself comes from the level (SystemData.skillPoints); this only tells the player
             AwakeningSystemMod.notify(
                player, "awakening_system.notification.sp_gained.title", "awakening_system.notification.sp_gained.desc", -10496, new Object[0]
             );
@@ -13544,7 +13556,8 @@ public final class SystemEvents {
             );
             return false;
          } else {
-            data.skills().put(skillId, 1);
+            if (node.isStatNode()) data.treeNodes().add(skillId);
+            else data.skills().put(skillId, 1);
             String sName = node.getName().getString();
             AwakeningSystemMod.notify(
                player, "awakening_system.notification.skill_learned.title", "awakening_system.notification.skill_learned.desc", -10496, new Object[]{sName}

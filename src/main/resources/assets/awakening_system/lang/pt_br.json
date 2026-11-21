@@ -1,4 +1,13 @@
 {
+    "awakening_system.notification.tree_refund.desc": "As árvores de classe agora são redes grandes. Seus %s pontos de habilidade voltaram: gaste-os de novo.",
+    "awakening_system.notification.tree_refund.title": "Árvore de habilidades refeita",
+    "awakening_system.sao.tree_loading": "Carregando a rede…",
+    "awakening_system.skill_tree.web_hint": "Arraste para mover · Roda para zoom · Clique duas vezes para aprender",
+    "awakening_system.skill_tree.not_linked": "Aprenda antes um nó ligado",
+    "awakening_system.skill_tree.node.minor": "• NÓ DE ATRIBUTO",
+    "awakening_system.skill_tree.major_name": "%s maior",
+    "awakening_system.skill_tree.major_desc": "Um bônus grande, onde caminhos da rede se cruzam.",
+    "awakening_system.skill_tree.minor_desc": "Um bônus pequeno. Aprenda para avançar pela rede até as habilidades mais distantes.",
     "awakening_system.sao.all": "Tudo",
     "awakening_system.sao.guild_unclaim": "Liberar chunk",
     "awakening_system.sao.guild_claim": "Reivindicar chunk",

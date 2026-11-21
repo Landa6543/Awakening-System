@@ -1,4 +1,13 @@
 {
+    "awakening_system.notification.tree_refund.desc": "Древа классов теперь большие сети. Вам вернули %s очков навыков: распределите их заново.",
+    "awakening_system.notification.tree_refund.title": "Древо навыков переделано",
+    "awakening_system.sao.tree_loading": "Загрузка сети…",
+    "awakening_system.skill_tree.web_hint": "Тяните — сдвиг · Колесо — масштаб · Двойной клик — изучить",
+    "awakening_system.skill_tree.not_linked": "Сначала изучите соседний узел",
+    "awakening_system.skill_tree.node.minor": "• УЗЕЛ ХАРАКТЕРИСТИКИ",
+    "awakening_system.skill_tree.major_name": "Высшее: %s",
+    "awakening_system.skill_tree.major_desc": "Большой бонус там, где сходятся пути сети.",
+    "awakening_system.skill_tree.minor_desc": "Небольшой бонус. Изучите его, чтобы пройти по сети к дальним навыкам.",
     "awakening_system.sao.all": "Всё",
     "awakening_system.sao.guild_unclaim": "Освободить чанк",
     "awakening_system.sao.guild_claim": "Занять чанк",

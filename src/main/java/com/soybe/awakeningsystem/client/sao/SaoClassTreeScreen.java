@@ -10,14 +10,15 @@ import net.minecraft.network.chat.Component;
 import net.minecraft.util.FormattedCharSequence;
 import net.neoforged.neoforge.network.PacketDistributor;
 
+import java.util.ArrayList;
 import java.util.List;
 
 import static com.soybe.awakeningsystem.client.sao.SaoDraw.*;
 
 /**
- * The class skill tree in the full-dive look: the tree as round nodes joined by lines (orange learnt, ringed
- * learnable, grey locked) that can be dragged and zoomed, and the chosen node on the right with its button to
- * learn or upgrade it. The same actions as the normal tree window.
+ * The class web in the full-dive look: the web as round nodes joined by lines (orange learnt, ringed learnable,
+ * grey locked) that can be dragged and zoomed, a tooltip on the node under the mouse, and the chosen node on the
+ * right with its button to learn or upgrade it. The same actions as the normal tree window.
  */
 public class SaoClassTreeScreen extends SaoWindow {
     private static final int DETAIL_W = 150;
@@ -62,18 +63,26 @@ public class SaoClassTreeScreen extends SaoWindow {
     private int cw() { return pw - DETAIL_W - 30; }
     private int ch() { return ph - HEADER - 16; }
 
+    /** Opens on the start node, close enough to read the first rings. */
     private void fit() {
         if (!Float.isNaN(camX)) return;
-        zoom = Math.min(cw() / 520.0F, ch() / 330.0F);
-        camX = (cw() - 510 * zoom) / 2.0F;
-        camY = (ch() - 330 * zoom) / 2.0F - 40 * zoom;
+        zoom = 0.26F;
+        camX = cw() / 2.0F;
+        camY = ch() / 2.0F;
     }
 
     private float sx(int gx) { return cx() + camX + gx * zoom; }
     private float sy(int gy) { return cy() + camY + gy * zoom; }
 
     private static float radius(ClassSkillTree.SkillNode n) {
-        return n.isRoot() ? 14 : n.isAttribute() ? 9 : 11;
+        if (n.isRoot()) return 16;
+        if (!n.isAttribute()) return 12;
+        return n.minor() ? 6 : 9;
+    }
+
+    /** Nodes shrink slower than the web, so a zoomed-out web still shows them. */
+    private float screenRadius(ClassSkillTree.SkillNode n) {
+        return radius(n) * (0.5F + zoom * 0.75F);
     }
 
     @Override
@@ -82,70 +91,89 @@ public class SaoClassTreeScreen extends SaoWindow {
         fit();
         int cx = cx(), cy = cy(), cw = cw(), ch = ch();
         g.fillGradient(cx, cy, cx + cw, cy + ch, alpha(0xFAFFFFFF, a), alpha(0xF0ECECF0, a));
-        if (!d.hasHunterClass()) {
-            g.drawCenteredString(this.font, tr("class_pick", "Choose a class"), cx + cw / 2, cy + ch / 2, alpha(GREY, a));
+        ClassSkillTree.Tree tree = d.hasHunterClass() ? ClassSkillTree.getTree(d.hunterClass()) : null;
+        if (tree == null) {
+            g.drawCenteredString(this.font, d.hasHunterClass() ? tr("tree_loading", "Loading the web…") : tr("class_pick", "Choose a class"),
+                    cx + cw / 2, cy + ch / 2, alpha(GREY, a));
             return;
         }
-        List<ClassSkillTree.SkillNode> nodes = ClassSkillTree.getNodesForClass(d.hunterClass());
         // the clip is in screen pixels, so it follows the window when it is shrunk to fit
         float fs = fitScale();
         g.enableScissor(Math.round(this.width / 2.0F + (cx - this.width / 2.0F) * fs), Math.round(this.height / 2.0F + (cy - this.height / 2.0F) * fs),
                 Math.round(this.width / 2.0F + (cx + cw - this.width / 2.0F) * fs), Math.round(this.height / 2.0F + (cy + ch - this.height / 2.0F) * fs));
-        // branch names
-        String[][] branches = {{"solidity", "branch_c"}, {"fighting_spirit", "branch_a"}, {"ultimatum", "branch_b"}};
-        int[] bx = {85, 255, 425};
-        for (int i = 0; i < 3; i++) {
-            String s = key("branch." + branches[i][0]).getString() + " · " + ClassSkillTree.getPointsInBranch(d, d.hunterClass(), branches[i][1]);
-            // pinned to the top of the canvas, above the column it names, so it never sits on a node
-            float tx = sx(bx[i]);
+        // branch names, out past the end of each branch
+        for (ClassSkillTree.Branch b : tree.branches()) {
+            String s = key("branch." + b.name()).getString() + " · " + ClassSkillTree.getPointsInBranch(d, d.hunterClass(), b.id());
             g.pose().pushPose();
-            g.pose().translate(tx, cy + 4, 0);
-            g.pose().scale(0.75F, 0.75F, 1);
+            g.pose().translate(sx(b.x()), sy(b.y()) - 4, 0);
+            float ts = Math.max(0.7F, zoom * 1.6F);
+            g.pose().scale(ts, ts, 1);
             g.drawString(this.font, s, -this.font.width(s) / 2, 0, alpha(ORANGE_DARK, a), false);
             g.pose().popPose();
         }
         // links
-        for (ClassSkillTree.SkillNode n : nodes) {
-            if (!ClassSkillTree.isRevealed(d, n)) continue;
-            for (String pid : n.prerequisiteIds()) {
-                ClassSkillTree.SkillNode p = ClassSkillTree.getNode(d.hunterClass(), pid);
-                if (p == null || !ClassSkillTree.isRevealed(d, p)) continue;
-                boolean both = d.skills().containsKey(n.skillId()) && d.skills().containsKey(p.skillId());
-                boolean parent = d.skills().containsKey(p.skillId());
-                line(g, sx(p.gridX()), sy(p.gridY()), sx(n.gridX()), sy(n.gridY()), both ? 2.0F : 1.0F,
-                        alpha(both ? ORANGE : parent ? 0xFFB4B4BA : 0xFFDADADE, a));
-            }
+        for (String[] l : tree.links()) {
+            ClassSkillTree.SkillNode p = tree.byId().get(l[0]), n = tree.byId().get(l[1]);
+            boolean hp = ClassSkillTree.has(d, p), hn = ClassSkillTree.has(d, n);
+            boolean both = hp && hn, one = hp || hn;
+            line(g, sx(p.gridX()), sy(p.gridY()), sx(n.gridX()), sy(n.gridY()), both ? 2.2F : one ? 1.4F : 1.0F,
+                    alpha(both ? ORANGE : one ? 0xFFB4B4BA : 0xFFDADADE, a));
         }
         // nodes
-        for (ClassSkillTree.SkillNode n : nodes) {
-            if (!ClassSkillTree.isRevealed(d, n)) continue;
-            float nx = sx(n.gridX()), ny = sy(n.gridY()), r = radius(n) * zoom * 1.25F;
-            boolean have = d.skills().containsKey(n.skillId());
+        ClassSkillTree.SkillNode hover = null;
+        for (ClassSkillTree.SkillNode n : tree.nodes()) {
+            float nx = sx(n.gridX()), ny = sy(n.gridY()), r = screenRadius(n);
+            if (nx < cx - r || nx > cx + cw + r || ny < cy - r || ny > cy + ch + r) continue;
+            boolean have = ClassSkillTree.has(d, n);
             boolean can = !have && ClassSkillTree.canUnlock(d, n.skillId());
-            boolean hot = (mouseX - nx) * (mouseX - nx) + (mouseY - ny) * (mouseY - ny) <= r * r && in(mouseX, mouseY, cx, cy, cw, ch);
-            if (hot) hovering(9000 + n.skillId().hashCode());
+            boolean hot = (mouseX - nx) * (mouseX - nx) + (mouseY - ny) * (mouseY - ny) <= (r + 1) * (r + 1) && in(mouseX, mouseY, cx, cy, cw, ch);
+            if (hot) {
+                hovering(9000 + n.skillId().hashCode());
+                hover = n;
+            }
             if (n.skillId().equals(chosen)) ring(g, nx, ny, r + 2.5F, 1.2F, alpha(GREY_DARK, a));
             if (have) shinyDisc(g, nx, ny, r, ORANGE, a);
             else {
                 disc(g, nx, ny, r, alpha(hot ? 0xFFFFF3DC : can ? 0xFFFFFFFF : 0xFFE6E6EA, a));
                 ring(g, nx, ny, r, can ? 1.4F : 0.8F, alpha(can ? ORANGE : 0xFFC4C4CA, a));
             }
-            String glyph = n.iconSymbol();
-            g.pose().pushPose();
-            g.pose().translate(nx, ny - 3.5F * Math.max(0.6F, zoom * 1.3F), 0);
-            float s = Math.max(0.6F, zoom * 1.3F);
-            g.pose().scale(s, s, 1);
-            g.drawString(this.font, glyph, -this.font.width(glyph) / 2, 0, alpha(have ? WHITE : can ? ORANGE_DARK : GREY_LIGHT, a), false);
-            g.pose().popPose();
+            // skills are ringed twice, so they stand out among the stat nodes
+            if (!n.isAttribute()) ring(g, nx, ny, r + 1.6F, 0.8F, alpha(have ? ORANGE_DARK : 0xFFC4C4CA, a));
+            if (!n.minor() || zoom >= 0.75F) {
+                String glyph = n.iconSymbol();
+                float s = Math.max(0.5F, r / 9.0F);
+                g.pose().pushPose();
+                g.pose().translate(nx, ny - 3.5F * s, 0);
+                g.pose().scale(s, s, 1);
+                g.drawString(this.font, glyph, -this.font.width(glyph) / 2, 0, alpha(have ? WHITE : can ? ORANGE_DARK : GREY_LIGHT, a), false);
+                g.pose().popPose();
+            }
             if (have && !n.isRoot() && !n.isAttribute()) {
-                String rk = String.valueOf(d.skills().getOrDefault(n.skillId(), 0));
+                String rk = String.valueOf(ClassSkillTree.rank(d, n));
                 g.drawString(this.font, rk, Math.round(nx + r - 2), Math.round(ny - r - 2), alpha(ORANGE_DARK, a), false);
             }
         }
         g.disableScissor();
+        g.fill(cx, cy + ch - 12, cx + cw, cy + ch, alpha(0xE6FFFFFF, a));
+        g.drawString(this.font, this.font.plainSubstrByWidth(key("web_hint").getString(), cw - 8), cx + 4, cy + ch - 10, alpha(GREY_LIGHT, a), false);
 
-        // the chosen node
-        int dx = cx + cw + 8, dy = cy, dw = DETAIL_W, dh = ch;
+        detail(g, d, mouseX, mouseY, a);
+
+        if (hover != null) {
+            List<Component> tip = new ArrayList<>();
+            tip.add(hover.getName());
+            Component eff = hover.getEffect();
+            if (!eff.getString().isEmpty() && hover.isAttribute()) tip.add(eff.copy().withStyle(net.minecraft.ChatFormatting.GREEN));
+            if (!hover.isAttribute()) tip.add((hover.isRoot() ? key("node.master") : hover.isActive() ? key("node.active") : key("node.passive")).copy()
+                    .withStyle(net.minecraft.ChatFormatting.GOLD));
+            if (!ClassSkillTree.has(d, hover) && d.level() < hover.requiredLevel())
+                tip.add(key("req_lvl", hover.requiredLevel()).copy().withStyle(net.minecraft.ChatFormatting.RED));
+            g.renderComponentTooltip(this.font, tip, mouseX, mouseY);
+        }
+    }
+
+    private void detail(GuiGraphics g, SystemData d, int mouseX, int mouseY, float a) {
+        int dx = cx() + cw() + 8, dy = cy(), dw = DETAIL_W, dh = ch();
         g.fillGradient(dx, dy, dx + dw, dy + dh, alpha(0xFAFFFFFF, a), alpha(0xF0ECECF0, a));
         ClassSkillTree.SkillNode n = chosen == null ? null : ClassSkillTree.getNode(d.hunterClass(), chosen);
         if (n == null) {
@@ -162,10 +190,11 @@ public class SaoClassTreeScreen extends SaoWindow {
             g.drawString(this.font, l, dx + 8, ty, alpha(GREY_DARK, a), false);
             ty += 10;
         }
-        Component type = n.isRoot() ? key("node.master") : n.isAttribute() ? key("node.attribute") : n.isActive() ? key("node.active") : key("node.passive");
+        Component type = n.isRoot() ? key("node.master") : n.isAttribute() ? key(n.minor() ? "node.minor" : "node.attribute")
+                : n.isActive() ? key("node.active") : key("node.passive");
         g.drawString(this.font, type, dx + 8, ty + 1, alpha(ORANGE_DARK, a), false);
         ty += 13;
-        int lvl = d.skills().getOrDefault(n.skillId(), 0);
+        int lvl = ClassSkillTree.rank(d, n);
         if (!n.isRoot() && !n.isAttribute()) {
             Component rank = lvl > 0 ? key("rank_format", ClassSkillTree.getRankTitle(lvl), ClassSkillTree.getRankStars(lvl)) : key("not_learned");
             g.drawString(this.font, this.font.plainSubstrByWidth(rank.getString(), dw - 16), dx + 8, ty, alpha(GREY, a), false);
@@ -188,9 +217,9 @@ public class SaoClassTreeScreen extends SaoWindow {
             }
         }
         // the button: learn, upgrade, or why not
-        boolean have = d.skills().containsKey(n.skillId());
+        boolean have = ClassSkillTree.has(d, n);
         int by = dy + dh - 24;
-        if (n.isRoot() || (n.isAttribute() && have) || lvl >= ClassSkillTree.MAX_SKILL_LEVEL) {
+        if ((n.isRoot() && have) || (n.isAttribute() && have) || lvl >= ClassSkillTree.MAX_SKILL_LEVEL) {
             softButton(g, dx + 8, by, dw - 16, 18, key("mastered"), true, mouseX, mouseY, a);
         } else if (have && ClassSkillTree.canUpgrade(d, n.skillId())) {
             button(g, dx + 8, by, dw - 16, 18, key("upgrade_btn", lvl + 1 == 2 ? "II" : "III"), true, mouseX, mouseY, a);
@@ -199,7 +228,8 @@ public class SaoClassTreeScreen extends SaoWindow {
         } else if (ClassSkillTree.canUnlock(d, n.skillId())) {
             button(g, dx + 8, by, dw - 16, 18, key("unlock_btn"), true, mouseX, mouseY, a);
         } else {
-            Component why = d.level() < n.requiredLevel() ? key("req_lvl", n.requiredLevel()) : key("insufficient_sp");
+            Component why = d.level() < n.requiredLevel() ? key("req_lvl", n.requiredLevel())
+                    : !ClassSkillTree.isReachable(d, n) ? key("not_linked") : key("insufficient_sp");
             button(g, dx + 8, by, dw - 16, 18, why, false, mouseX, mouseY, a);
         }
     }
@@ -232,9 +262,14 @@ public class SaoClassTreeScreen extends SaoWindow {
         }
         if (in(mx, my, cx(), cy(), cw(), ch())) {
             for (ClassSkillTree.SkillNode n : ClassSkillTree.getNodesForClass(d.hunterClass())) {
-                if (!ClassSkillTree.isRevealed(d, n)) continue;
-                float nx = sx(n.gridX()), ny = sy(n.gridY()), r = radius(n) * zoom * 1.25F + 1;
+                float nx = sx(n.gridX()), ny = sy(n.gridY()), r = screenRadius(n) + 1;
                 if ((mx - nx) * (mx - nx) + (my - ny) * (my - ny) <= r * r) {
+                    // a second click on a chosen node that can be learnt learns it, as on the web of a passive tree
+                    if (n.skillId().equals(chosen) && ClassSkillTree.canUnlock(d, chosen)) {
+                        PacketDistributor.sendToServer(new UnlockSkillTreeNodePayload(chosen));
+                        SaoSounds.confirm();
+                        return true;
+                    }
                     chosen = n.skillId();
                     SaoSounds.click();
                     return true;
@@ -254,11 +289,20 @@ public class SaoClassTreeScreen extends SaoWindow {
         if (dragging) {
             camX += (float) (mx - lastX);
             camY += (float) (my - lastY);
+            clampCamera();
             lastX = mx;
             lastY = my;
             return true;
         }
         return super.mouseDragged(rx, ry, button, ddx, ddy);
+    }
+
+    /** Keeps some of the web on the canvas. */
+    private void clampCamera() {
+        ClassSkillTree.Tree t = ClassSkillTree.getTree(data().hunterClass());
+        if (t == null) return;
+        camX = Math.max(cw() * 0.5F - t.maxX() * zoom, Math.min(cw() * 0.5F - t.minX() * zoom, camX));
+        camY = Math.max(ch() * 0.5F - t.maxY() * zoom, Math.min(ch() * 0.5F - t.minY() * zoom, camY));
     }
 
     @Override
@@ -272,10 +316,11 @@ public class SaoClassTreeScreen extends SaoWindow {
         double mx = unX(rx), my = unY(ry);
         if (!in(mx, my, cx(), cy(), cw(), ch())) return true;
         float old = zoom;
-        zoom = Math.max(0.3F, Math.min(1.6F, zoom * (syv > 0 ? 1.12F : 1 / 1.12F)));
+        zoom = Math.max(0.15F, Math.min(1.6F, zoom * (syv > 0 ? 1.12F : 1 / 1.12F)));
         // zoom around the mouse
         camX = (float) (mx - cx() - (mx - cx() - camX) * zoom / old);
         camY = (float) (my - cy() - (my - cy() - camY) * zoom / old);
+        clampCamera();
         return true;
     }
 }

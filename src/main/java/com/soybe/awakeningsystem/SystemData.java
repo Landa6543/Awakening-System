@@ -256,6 +256,10 @@ public final class SystemData implements INBTSerializable<CompoundTag> {
 
     private int skillPoints = 0;
     private int spentSkillPoints = 0;
+    /** The stat nodes learnt in the class web (the skills of the web are in the skills). */
+    private final java.util.Set<String> treeNodes = new java.util.LinkedHashSet<>();
+    /** The web version the player's points were spent on; below {@link ClassSkillTree#TREE_VERSION} they are given back. */
+    private int treeVersion = 0;
 
     private int gachaPity5Star = 0;
     private int gachaPity4Star = 0;
@@ -589,9 +593,51 @@ public final class SystemData implements INBTSerializable<CompoundTag> {
         }
     }
 
+    /** Skill points the level gives: 1 at level 30 and 1 more every 3 levels (the class web has about 100 nodes). */
+    public static int earnedSkillPoints(int level) {
+        return level < 30 ? 0 : 1 + (level - 30) / 3;
+    }
+
     public int skillPoints() {
-        int totalEarned = level >= 30 ? Math.max(0, (level - 25) / 5) : 0;
-        return Math.max(skillPoints, totalEarned - spentSkillPoints);
+        return Math.max(skillPoints, earnedSkillPoints(level) - spentSkillPoints);
+    }
+
+    public java.util.Set<String> treeNodes() { return treeNodes; }
+
+    /**
+     * Gives back every point spent in the class web and forgets the web (skills of the web included), keeping the
+     * start node. Used when the webs are remade. Returns how many points came back.
+     */
+    public int refundSkillTree() {
+        int before = skillPoints();
+        int back = spentSkillPoints;
+        // only the player's own web: a skill of another class's web may have come from elsewhere
+        String start = null;
+        ClassSkillTree.Tree tree = hasHunterClass() ? ClassSkillTree.getTree(hunterClass) : null;
+        if (tree != null) {
+            if (skills.containsKey(tree.start())) start = tree.start();
+            skills.keySet().removeIf(tree.byId()::containsKey);
+        }
+        treeNodes.clear();
+        if (start != null) skills.put(start, 1);
+        skillPoints = before + back;
+        spentSkillPoints = 0;
+        treeVersion = ClassSkillTree.TREE_VERSION;
+        for (int i = 0; i < equippedActiveSkills.size(); i++) {
+            if (!equippedActiveSkills.get(i).isEmpty() && !skills.containsKey(equippedActiveSkills.get(i))) equippedActiveSkills.set(i, "");
+        }
+        for (int i = 0; i < equippedPassiveSkills.size(); i++) {
+            if (!equippedPassiveSkills.get(i).isEmpty() && !skills.containsKey(equippedPassiveSkills.get(i))) equippedPassiveSkills.set(i, "");
+        }
+        return back;
+    }
+
+    public boolean needsTreeRefund() {
+        return treeVersion < ClassSkillTree.TREE_VERSION;
+    }
+
+    public void markTreeVersion() {
+        treeVersion = ClassSkillTree.TREE_VERSION;
     }
     public void setSkillPoints(int sp) { this.skillPoints = Math.max(0, sp); }
     public void addSkillPoints(int sp) { this.skillPoints = Math.max(0, this.skillPoints + sp); }
@@ -741,6 +787,7 @@ public final class SystemData implements INBTSerializable<CompoundTag> {
                 }
             }
         }
+        treeNodes.clear();
         this.hunterClass = "";
         ensureEquippedActiveSlots();
         for (int i = 0; i < equippedActiveSkills.size(); i++) {
@@ -2846,6 +2893,10 @@ public final class SystemData implements INBTSerializable<CompoundTag> {
         tag.putInt("dao_skill_cooldown", daoSkillCooldown);
         tag.putInt("skill_points", skillPoints);
         tag.putInt("spent_skill_points", spentSkillPoints);
+        net.minecraft.nbt.ListTag treeNodeTag = new net.minecraft.nbt.ListTag();
+        for (String id : treeNodes) treeNodeTag.add(net.minecraft.nbt.StringTag.valueOf(id));
+        tag.put("tree_nodes", treeNodeTag);
+        tag.putInt("tree_version", treeVersion);
         int meridianBits = 0;
         for (int i = 0; i < 12; i++) {
             if (meridians[i]) meridianBits |= (1 << i);
@@ -3193,6 +3244,10 @@ public final class SystemData implements INBTSerializable<CompoundTag> {
         daoSkillCooldown = tag.getInt("dao_skill_cooldown");
         skillPoints = tag.getInt("skill_points");
         spentSkillPoints = tag.getInt("spent_skill_points");
+        treeNodes.clear();
+        net.minecraft.nbt.ListTag treeNodeTag = tag.getList("tree_nodes", net.minecraft.nbt.Tag.TAG_STRING);
+        for (int i = 0; i < treeNodeTag.size(); i++) treeNodes.add(treeNodeTag.getString(i));
+        treeVersion = tag.getInt("tree_version");
         int meridianBits = tag.getInt("meridians_mask");
         for (int i = 0; i < 12; i++) {
             meridians[i] = (meridianBits & (1 << i)) != 0;

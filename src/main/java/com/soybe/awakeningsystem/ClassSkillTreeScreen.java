@@ -25,6 +25,8 @@ public final class ClassSkillTreeScreen extends Screen {
     private double lastMouseX = 0.0;
     private double lastMouseY = 0.0;
     private int tickCount = 0;
+    private boolean centered = false;
+    private ClassSkillTree.SkillNode hoveredNode;
 
     public ClassSkillTreeScreen(Screen parentScreen) {
         super(Component.translatable("awakening_system.screen.skill_tree.title"));
@@ -193,11 +195,50 @@ public final class ClassSkillTreeScreen extends Screen {
 
         graphics.pose().popPose();
         super.render(graphics, mouseX, mouseY, partialTick);
+        if (hoveredNode != null) {
+            java.util.List<Component> tip = new java.util.ArrayList<>();
+            tip.add(hoveredNode.getName().copy().withStyle(ChatFormatting.BOLD));
+            if (hoveredNode.isAttribute()) tip.add(hoveredNode.getEffect().copy().withStyle(ChatFormatting.GREEN));
+            else tip.add(Component.translatable(hoveredNode.isRoot() ? "awakening_system.skill_tree.node.master"
+                    : hoveredNode.isActive() ? "awakening_system.skill_tree.node.active" : "awakening_system.skill_tree.node.passive").withStyle(ChatFormatting.AQUA));
+            if (!ClassSkillTree.has(data, hoveredNode) && data.level() < hoveredNode.requiredLevel())
+                tip.add(Component.translatable("awakening_system.skill_tree.req_lvl", hoveredNode.requiredLevel()).withStyle(ChatFormatting.RED));
+            graphics.renderComponentTooltip(font, tip, mouseX, mouseY);
+        }
+    }
+
+    private static int nodeHalf(ClassSkillTree.SkillNode node) {
+        if (node.isRoot()) return 20;
+        if (!node.isAttribute()) return 16;
+        return node.minor() ? 8 : 12;
+    }
+
+    /** A straight line of the given width between two points (a thin rotated quad), in the current pose. */
+    private static void quadLine(GuiGraphics g, float x1, float y1, float x2, float y2, float w, int color) {
+        float dx = x2 - x1, dy = y2 - y1, len = (float) Math.sqrt(dx * dx + dy * dy);
+        if (len < 0.5F) return;
+        g.pose().pushPose();
+        g.pose().translate(x1, y1, 0);
+        g.pose().mulPose(com.mojang.math.Axis.ZP.rotation((float) Math.atan2(dy, dx)));
+        var m = g.pose().last().pose();
+        var vc = g.bufferSource().getBuffer(net.minecraft.client.renderer.RenderType.gui());
+        vc.addVertex(m, 0, -w / 2, 0).setColor(color);
+        vc.addVertex(m, 0, w / 2, 0).setColor(color);
+        vc.addVertex(m, len, w / 2, 0).setColor(color);
+        vc.addVertex(m, len, -w / 2, 0).setColor(color);
+        g.pose().popPose();
     }
 
     private void renderTreeCanvas(GuiGraphics graphics, SystemData data, int x, int y, int w, int h, int mouseX, int mouseY) {
         graphics.fill(x, y, x + w, y + h, 0xFF060B10);
         drawBorder(graphics, x, y, w, h, 0xFF153344);
+        if (!centered) {
+            // open on the start node, close enough to read the first rings
+            centered = true;
+            zoom = 0.3f;
+            camX = w / 2.0;
+            camY = h / 2.0;
+        }
 
         enableScissorScaled(graphics, x + 1, y + 1, x + w - 1, y + h - 1);
 
@@ -206,64 +247,55 @@ public final class ClassSkillTreeScreen extends Screen {
         pose.translate(x + camX, y + camY, 0);
         pose.scale(zoom, zoom, 1.0f);
 
-        int gridSpacing = 24;
-        for (int gx = -100; gx < 620; gx += gridSpacing) {
-            for (int gy = -50; gy < 420; gy += gridSpacing) {
-                graphics.fill(gx, gy, gx + 1, gy + 1, 0x221E4258);
+        ClassSkillTree.Tree tree = ClassSkillTree.getTree(data.hunterClass());
+        if (tree == null) {
+            pose.popPose();
+            graphics.disableScissor();
+            return;
+        }
+        int gridSpacing = 48;
+        for (int gx = (tree.minX() - 96) / gridSpacing * gridSpacing; gx < tree.maxX() + 96; gx += gridSpacing) {
+            for (int gy = (tree.minY() - 96) / gridSpacing * gridSpacing; gy < tree.maxY() + 96; gy += gridSpacing) {
+                graphics.fill(gx, gy, gx + 2, gy + 2, 0x221E4258);
             }
         }
 
-        graphics.fill(170, 48, 171, 360, 0x503A4E5C);
-        graphics.fill(340, 48, 341, 360, 0x503A4E5C);
-
-        int ptsSolidity = ClassSkillTree.getPointsInBranch(data, data.hunterClass(), "branch_c");
-        int ptsFighting = ClassSkillTree.getPointsInBranch(data, data.hunterClass(), "branch_a");
-        int ptsUltimatum = ClassSkillTree.getPointsInBranch(data, data.hunterClass(), "branch_b");
-
-        renderBranchHeader(graphics, 85, 52, Component.translatable("awakening_system.skill_tree.branch.solidity").getString() + ": " + ptsSolidity, 0xFF2A5060, 0xFF50FA7B);
-        renderBranchHeader(graphics, 255, 52, Component.translatable("awakening_system.skill_tree.branch.fighting_spirit").getString() + ": " + ptsFighting, 0xFF602A2A, 0xFFFF7666);
-        renderBranchHeader(graphics, 425, 52, Component.translatable("awakening_system.skill_tree.branch.ultimatum").getString() + ": " + ptsUltimatum, 0xFF502A60, 0xFFE056FD);
+        // branch names, out past the end of each branch
+        int[][] branchColors = {{0xFF602A2A, 0xFFFF7666}, {0xFF502A60, 0xFFE056FD}, {0xFF2A5060, 0xFF50FA7B}};
+        for (int i = 0; i < tree.branches().size(); i++) {
+            ClassSkillTree.Branch b = tree.branches().get(i);
+            int[] col = branchColors[i % branchColors.length];
+            String label = Component.translatable("awakening_system.skill_tree.branch." + b.name()).getString() + ": "
+                    + ClassSkillTree.getPointsInBranch(data, data.hunterClass(), b.id());
+            pose.pushPose();
+            pose.translate(b.x(), b.y(), 0);
+            pose.scale(2.0F, 2.0F, 1.0F);
+            renderBranchHeader(graphics, 0, 0, label, col[0], col[1]);
+            pose.popPose();
+        }
 
         float worldMouseX = (float) ((mouseX - (x + camX)) / zoom);
         float worldMouseY = (float) ((mouseY - (y + camY)) / zoom);
+        boolean mouseInCanvas = mouseX >= x && mouseX < x + w && mouseY >= y && mouseY < y + h;
 
-        List<ClassSkillTree.SkillNode> nodes = ClassSkillTree.getNodesForClass(data.hunterClass());
-
-        for (ClassSkillTree.SkillNode node : nodes) {
-            if (!ClassSkillTree.isRevealed(data, node)) continue;
-
-            int nx = node.gridX();
-            int ny = node.gridY();
-
-            for (String prereqId : node.prerequisiteIds()) {
-                ClassSkillTree.SkillNode parent = ClassSkillTree.getNode(data.hunterClass(), prereqId);
-                if (parent == null || !ClassSkillTree.isRevealed(data, parent)) continue;
-
-                int px = parent.gridX();
-                int py = parent.gridY();
-
-                boolean bothUnlocked = data.skills().containsKey(node.skillId()) && data.skills().containsKey(parent.skillId());
-                boolean parentUnlocked = data.skills().containsKey(parent.skillId());
-
-                if (bothUnlocked) {
-                    drawThickLine(graphics, px, py, nx, ny, 2, 0xFFFFD700);
-                    drawDownwardArrow(graphics, nx, ny, 14, 0xFFFFD700);
-                } else if (parentUnlocked) {
-                    drawThickLine(graphics, px, py, nx, ny, 1, 0x9000E5FF);
-                    drawDownwardArrow(graphics, nx, ny, 14, 0x9000E5FF);
-                }
-            }
+        for (String[] l : tree.links()) {
+            ClassSkillTree.SkillNode p = tree.byId().get(l[0]), n = tree.byId().get(l[1]);
+            boolean hp = ClassSkillTree.has(data, p), hn = ClassSkillTree.has(data, n);
+            int color = hp && hn ? 0xFFFFD700 : (hp || hn) ? 0xB000E5FF : 0x60607A8A;
+            // at least about a pixel wide on screen, or zoomed-out lines break up
+            float lw = hp && hn ? Math.max(5.0F, 2.2F / zoom) : (hp || hn) ? Math.max(3.0F, 1.6F / zoom) : Math.max(2.0F, 1.1F / zoom);
+            quadLine(graphics, p.gridX(), p.gridY(), n.gridX(), n.gridY(), lw, color);
         }
 
-        for (ClassSkillTree.SkillNode node : nodes) {
-            if (!ClassSkillTree.isRevealed(data, node)) continue;
-
+        hoveredNode = null;
+        for (ClassSkillTree.SkillNode node : tree.nodes()) {
             int nx = node.gridX();
             int ny = node.gridY();
-            int half = node.isRoot() ? 14 : (node.isAttribute() ? 10 : 12);
+            int half = nodeHalf(node);
 
-            boolean hovered = worldMouseX >= nx - half - 1 && worldMouseX <= nx + half + 1 && worldMouseY >= ny - half - 1 && worldMouseY <= ny + half + 1;
-            boolean isUnlocked = data.skills().containsKey(node.skillId());
+            boolean hovered = mouseInCanvas && worldMouseX >= nx - half - 1 && worldMouseX <= nx + half + 1 && worldMouseY >= ny - half - 1 && worldMouseY <= ny + half + 1;
+            if (hovered) hoveredNode = node;
+            boolean isUnlocked = ClassSkillTree.has(data, node);
             boolean canUnlock = !isUnlocked && ClassSkillTree.canUnlock(data, node.skillId());
             boolean isSelected = node.skillId().equals(selectedSkillId);
 
@@ -275,29 +307,32 @@ public final class ClassSkillTreeScreen extends Screen {
                 borderColor = (alpha << 24) | 0x00E5FF;
             }
 
-            drawSquareSlot(graphics, nx, ny, half, slotBg, borderColor, node.isRoot());
+            drawSquareSlot(graphics, nx, ny, half, slotBg, borderColor, node.isRoot() || !node.isAttribute());
 
-            String glyph = node.iconSymbol();
-            int glyphColor = isUnlocked ? 0xFFFFD700 : (canUnlock ? 0xFF50FA7B : 0xFF88A0B0);
-            graphics.drawCenteredString(font, Component.literal(glyph), nx, ny - 4, glyphColor);
-
-            int rankNum;
-            if (node.isRoot()) {
-                rankNum = isUnlocked ? 1 : 0;
-            } else if (node.isAttribute()) {
-                rankNum = isUnlocked ? 1 : 0;
-            } else {
-                rankNum = data.skills().getOrDefault(node.skillId(), 0);
+            if (!node.minor() || zoom >= 0.8F) {
+                String glyph = node.iconSymbol();
+                int glyphColor = isUnlocked ? 0xFFFFD700 : (canUnlock ? 0xFF50FA7B : 0xFF88A0B0);
+                float gs = node.minor() ? 1.0F : node.isAttribute() ? 1.4F : 2.0F;
+                pose.pushPose();
+                pose.translate(nx, ny, 0);
+                pose.scale(gs, gs, 1.0F);
+                graphics.drawCenteredString(font, Component.literal(glyph), 0, -4, glyphColor);
+                pose.popPose();
             }
 
-            int rankColor = isUnlocked ? 0xFFFFD700 : (canUnlock ? 0xFF00E5FF : 0xFF667788);
-            graphics.drawString(font, Component.literal(String.valueOf(rankNum)), nx + half + 3, ny - 4, rankColor);
-
-            if (!node.isAttribute() && !node.isRoot() && isUnlocked && ClassSkillTree.canUpgrade(data, node.skillId())) {
-                graphics.drawCenteredString(font, Component.literal("▲").withStyle(ChatFormatting.GREEN, ChatFormatting.BOLD), nx, ny - half - 8, 0xFF50FA7B);
+            if (!node.isAttribute() && !node.isRoot()) {
+                int rankNum = ClassSkillTree.rank(data, node);
+                int rankColor = isUnlocked ? 0xFFFFD700 : (canUnlock ? 0xFF00E5FF : 0xFF667788);
+                pose.pushPose();
+                pose.translate(nx + half + 4, ny - half, 0);
+                pose.scale(1.6F, 1.6F, 1.0F);
+                graphics.drawString(font, Component.literal(String.valueOf(rankNum)), 0, 0, rankColor);
+                pose.popPose();
+                if (isUnlocked && ClassSkillTree.canUpgrade(data, node.skillId())) {
+                    graphics.drawCenteredString(font, Component.literal("▲").withStyle(ChatFormatting.GREEN, ChatFormatting.BOLD), nx, ny - half - 10, 0xFF50FA7B);
+                }
             }
         }
-
         pose.popPose();
         graphics.disableScissor();
 
@@ -367,7 +402,7 @@ public final class ClassSkillTreeScreen extends Screen {
         Component typeStr = node.isRoot()
                 ? Component.translatable("awakening_system.skill_tree.node.master")
                 : (node.isAttribute()
-                ? Component.translatable("awakening_system.skill_tree.node.attribute")
+                ? Component.translatable(node.minor() ? "awakening_system.skill_tree.node.minor" : "awakening_system.skill_tree.node.attribute")
                 : (node.isActive()
                 ? Component.translatable("awakening_system.skill_tree.node.active")
                 : Component.translatable("awakening_system.skill_tree.node.passive")));
@@ -437,10 +472,10 @@ public final class ClassSkillTreeScreen extends Screen {
         int btnH = 22;
 
         boolean btnHovered = mouseX >= btnX && mouseX < btnX + btnW && mouseY >= btnY && mouseY < btnY + btnH;
-        boolean isUnlocked = data.skills().containsKey(node.skillId());
-        int curLvl = data.skills().getOrDefault(node.skillId(), 0);
+        boolean isUnlocked = ClassSkillTree.has(data, node);
+        int curLvl = ClassSkillTree.rank(data, node);
 
-        if (node.isRoot() || (node.isAttribute() && isUnlocked) || curLvl >= ClassSkillTree.MAX_SKILL_LEVEL) {
+        if ((node.isRoot() && isUnlocked) || (node.isAttribute() && isUnlocked) || curLvl >= ClassSkillTree.MAX_SKILL_LEVEL) {
             graphics.fill(btnX, btnY, btnX + btnW, btnY + btnH, 0xFF14241C);
             drawBorder(graphics, btnX, btnY, btnW, btnH, 0xFF50FA7B);
             graphics.drawCenteredString(font, Component.translatable("awakening_system.skill_tree.mastered").withStyle(ChatFormatting.GOLD, ChatFormatting.BOLD), btnX + btnW / 2, btnY + 7, 0xFFFFD700);
@@ -465,6 +500,8 @@ public final class ClassSkillTreeScreen extends Screen {
             drawBorder(graphics, btnX, btnY, btnW, btnH, 0xFF333333);
             Component reason = data.level() < node.requiredLevel()
                     ? Component.translatable("awakening_system.skill_tree.req_lvl", node.requiredLevel())
+                    : !ClassSkillTree.isReachable(data, node)
+                    ? Component.translatable("awakening_system.skill_tree.not_linked")
                     : Component.translatable("awakening_system.skill_tree.insufficient_sp");
             graphics.drawCenteredString(font, Component.literal("🔒 ").append(reason).withStyle(ChatFormatting.GRAY, ChatFormatting.BOLD), btnX + btnW / 2, btnY + 7, 0xFF888888);
         }
@@ -550,9 +587,7 @@ public final class ClassSkillTreeScreen extends Screen {
         int resetBtnY = canvasY + 6;
         if (mouseX >= resetBtnX && mouseX < resetBtnX + 18 && mouseY >= resetBtnY && mouseY < resetBtnY + 18) {
             playClickSound();
-            camX = 0;
-            camY = 0;
-            zoom = 1.0f;
+            centered = false;
             return true;
         }
 
@@ -588,13 +623,17 @@ public final class ClassSkillTreeScreen extends Screen {
             if (data != null && data.hasHunterClass()) {
                 List<ClassSkillTree.SkillNode> nodes = ClassSkillTree.getNodesForClass(data.hunterClass());
                 for (ClassSkillTree.SkillNode node : nodes) {
-                    if (!ClassSkillTree.isRevealed(data, node)) continue;
-
                     int nx = node.gridX();
                     int ny = node.gridY();
-                    int half = node.isRoot() ? 14 : (node.isAttribute() ? 10 : 12);
+                    int half = nodeHalf(node);
 
                     if (worldMouseX >= nx - half - 1 && worldMouseX <= nx + half + 1 && worldMouseY >= ny - half - 1 && worldMouseY <= ny + half + 1) {
+                        // a second click on a chosen node that can be learnt learns it
+                        if (node.skillId().equals(selectedSkillId) && ClassSkillTree.canUnlock(data, selectedSkillId)) {
+                            playUpgradeSound();
+                            PacketDistributor.sendToServer(new UnlockSkillTreeNodePayload(selectedSkillId));
+                            return true;
+                        }
                         playClickSound();
                         selectedSkillId = node.skillId();
                         return true;
@@ -624,8 +663,7 @@ public final class ClassSkillTreeScreen extends Screen {
             camX += dragX / scale;
             camY += dragY / scale;
 
-            camX = Math.max(-500.0 * zoom, Math.min(300.0, camX));
-            camY = Math.max(-400.0 * zoom, Math.min(250.0, camY));
+            clampCamera();
             return true;
         }
         return super.mouseDragged(mouseX, mouseY, button, dragX, dragY);
@@ -647,9 +685,9 @@ public final class ClassSkillTreeScreen extends Screen {
         if (mouseX >= canvasX && mouseX < canvasX + canvasW && mouseY >= canvasY && mouseY < canvasY + canvasH) {
             float oldZoom = zoom;
             if (scrollY > 0) {
-                zoom = Math.min(2.2f, zoom + 0.15f);
+                zoom = Math.min(2.2f, zoom * 1.15f);
             } else if (scrollY < 0) {
-                zoom = Math.max(0.55f, zoom - 0.15f);
+                zoom = Math.max(0.15f, zoom / 1.15f);
             }
 
             if (zoom != oldZoom) {
@@ -657,10 +695,21 @@ public final class ClassSkillTreeScreen extends Screen {
                 double relY = mouseY - canvasY;
                 camX = relX - (relX - camX) * (zoom / oldZoom);
                 camY = relY - (relY - camY) * (zoom / oldZoom);
+                clampCamera();
             }
             return true;
         }
         return super.mouseScrolled(mouseX, mouseY, scrollX, scrollY);
+    }
+
+    /** Keeps some of the web on the canvas (canvas 388 x 286). */
+    private void clampCamera() {
+        SystemData data = Minecraft.getInstance().player == null ? null : Minecraft.getInstance().player.getData(AwakeningSystemMod.PLAYER_SYSTEM);
+        ClassSkillTree.Tree t = data == null ? null : ClassSkillTree.getTree(data.hunterClass());
+        if (t == null) return;
+        double w = 388, h = 286;
+        camX = Math.max(w * 0.5 - t.maxX() * zoom, Math.min(w * 0.5 - t.minX() * zoom, camX));
+        camY = Math.max(h * 0.5 - t.maxY() * zoom, Math.min(h * 0.5 - t.minY() * zoom, camY));
     }
 
     private void drawThickLine(GuiGraphics g, int x1, int y1, int x2, int y2, int thickness, int color) {

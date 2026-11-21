@@ -79,6 +79,63 @@ public final class HudShots {
             if (t == 100) mc.stop();
             return;
         }
+        if (System.getProperty("awakening.hudShots").equals("web")) {
+            // the class web: a Sword Saint at level 120 learns a path of nodes, then both tree windows are photographed
+            var server = mc.getSingleplayerServer();
+            if (t == 40 && server != null) server.execute(() -> {
+                var sp = server.getPlayerList().getPlayer(mc.player.getUUID());
+                var d = com.soybe.awakeningsystem.SystemEvents.data(sp);
+                d.setHunterClass("sword_saint");
+                d.setLevel(120);
+                var tree = com.soybe.awakeningsystem.ClassSkillTree.getTree("sword_saint");
+                AwakeningSystemMod.LOGGER.info("[HudShots] web: {} trees, sword_saint nodes {}, links {}, points {}",
+                        com.soybe.awakeningsystem.ClassSkillTree.trees().size(), tree == null ? -1 : tree.nodes().size(),
+                        tree == null ? -1 : tree.links().size(), d.skillPoints());
+                if (tree == null) return;
+                // learn the start, then walk up branch a (the nodes nearest the top first)
+                com.soybe.awakeningsystem.SystemEvents.unlockSkillTreeNode(sp, tree.start());
+                for (int step = 0; step < 9; step++) {
+                    var next = tree.nodes().stream().filter(n -> com.soybe.awakeningsystem.ClassSkillTree.canUnlock(d, n.skillId()))
+                            .min(java.util.Comparator.comparingInt(com.soybe.awakeningsystem.ClassSkillTree.SkillNode::gridY)).orElse(null);
+                    if (next == null) break;
+                    boolean ok = com.soybe.awakeningsystem.SystemEvents.unlockSkillTreeNode(sp, next.skillId());
+                    AwakeningSystemMod.LOGGER.info("[HudShots] web: learn {} ({}) -> {}", next.skillId(), next.nodeType(), ok);
+                }
+                boolean notLinked = com.soybe.awakeningsystem.ClassSkillTree.canUnlock(d, "sword_heart_awakening");
+                AwakeningSystemMod.LOGGER.info("[HudShots] web: points left {}, spent {}, stat nodes {}, skills from web {}, far node learnable {}, attack bonus {}, attack speed bonus {}",
+                        d.skillPoints(), d.spentSkillPoints(), d.treeNodes().size(), d.getUnlockedTreeSkillsCount(), notLinked,
+                        com.soybe.awakeningsystem.ClassSkillTree.getTotalAttributeBonus(d, com.soybe.awakeningsystem.ClassSkillTree.StatType.ATTACK_DAMAGE),
+                        com.soybe.awakeningsystem.ClassSkillTree.getTotalAttributeBonus(d, com.soybe.awakeningsystem.ClassSkillTree.StatType.ATTACK_SPEED));
+                // a refund gives every point back
+                var copy = new com.soybe.awakeningsystem.SystemData();
+                copy.deserializeNBT(sp.registryAccess(), d.serializeNBT(sp.registryAccess()));
+                int back = copy.refundSkillTree();
+                AwakeningSystemMod.LOGGER.info("[HudShots] web: refund gives back {}, points then {}, stat nodes then {}", back, copy.skillPoints(), copy.treeNodes().size());
+                AwakeningSystemMod.sync(sp);
+            });
+            if (t == 70) mc.getWindow().setWindowed(1280, 720);
+            java.util.function.BiConsumer<String, String> choose = (field, id) -> {
+                try {
+                    var f = mc.screen.getClass().getDeclaredField(field);
+                    f.setAccessible(true);
+                    f.set(mc.screen, id);
+                } catch (ReflectiveOperationException | NullPointerException e) {
+                    AwakeningSystemMod.LOGGER.info("[HudShots] web: cannot choose a node: {}", e.toString());
+                }
+            };
+            if (t == 80) mc.setScreen(new com.soybe.awakeningsystem.ClassSkillTreeScreen(null));
+            if (t == 90) choose.accept("selectedSkillId", "sword_saint_n4");
+            if (t == 110) Screenshot.grab(mc.gameDirectory, "hs_web_classic.png", mc.getMainRenderTarget(), msg -> {});
+            if (t == 120) {
+                com.soybe.awakeningsystem.client.sao.UiStyle.setFullDive(true);
+                mc.setScreen(new com.soybe.awakeningsystem.ClassSkillTreeScreen(null));
+            }
+            if (t == 130) choose.accept("chosen", "plum_blossom_rain");
+            if (t == 150) Screenshot.grab(mc.gameDirectory, "hs_web_sao.png", mc.getMainRenderTarget(), msg -> {});
+            if (t == 155) com.soybe.awakeningsystem.client.sao.UiStyle.setFullDive(false);
+            if (t == 160) mc.stop();
+            return;
+        }
         if (System.getProperty("awakening.hudShots").equals("goggles")) {
             // with Create installed: does Create see the goggles on a player wearing the Creator title?
             var server = mc.getSingleplayerServer();

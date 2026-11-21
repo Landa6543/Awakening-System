@@ -1,4 +1,13 @@
 {
+    "awakening_system.notification.tree_refund.desc": "The class trees are now big webs. Your %s skill points are back: spend them again.",
+    "awakening_system.notification.tree_refund.title": "Skill tree remade",
+    "awakening_system.sao.tree_loading": "Loading the web…",
+    "awakening_system.skill_tree.web_hint": "Drag to move · Wheel to zoom · Click twice to learn",
+    "awakening_system.skill_tree.not_linked": "Learn a linked node first",
+    "awakening_system.skill_tree.node.minor": "• STAT NODE",
+    "awakening_system.skill_tree.major_name": "Greater %s",
+    "awakening_system.skill_tree.major_desc": "A big bonus, where paths of the web meet.",
+    "awakening_system.skill_tree.minor_desc": "A small bonus. Learn it to walk the web toward the skills further out.",
     "awakening_system.sao.all": "All",
     "awakening_system.sao.guild_unclaim": "Free chunk",
     "awakening_system.sao.guild_claim": "Claim chunk",
