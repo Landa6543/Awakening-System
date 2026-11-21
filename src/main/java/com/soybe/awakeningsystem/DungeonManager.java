@@ -6566,9 +6566,12 @@ public final class DungeonManager {
 
          this.activeRooms.clear();
          this.activeCorridors.clear();
-         this.layoutType = rng.nextInt(4);
+         // the big classic layout (the one of v0.3.4) for every gate, varied per gate: see classicLayout
+         this.layoutType = 4;
 
-         if (this.layoutType == 0) {
+         if (this.layoutType == 4) {
+            classicLayout(rng, ox, oy, oz);
+         } else if (this.layoutType == 0) {
             // Layout 0: Bifurcated Wings of the Abyss (Twin Wings)
             BlockPos rP = new BlockPos(ox, oy, oz);
             BlockPos rHub = new BlockPos(ox + j(rng, 2), oy + j(rng, 1), oz - 32);
@@ -6777,6 +6780,57 @@ public final class DungeonManager {
          this.calculateBunkerBounds();
       }
 
+      /**
+       * The classic gate layout of v0.3.4: a grid five rooms wide and six deep, 32 blocks apart, all on one level,
+       * joined by long cave tunnels - the portal room, a central spine, two wings and an outer ring, two miniboss
+       * halls and three boss-candidate halls. So that no two gates are alike: the whole map may be mirrored, every
+       * room shifts a few blocks, a few extra tunnels open or not, and the boss sits in one of the three candidate
+       * halls (the other two become treasure sanctums).
+       */
+      private void classicLayout(Random rng, int ox, int oy, int oz) {
+         final int S = 32;
+         final int m = rng.nextBoolean() ? 1 : -1;
+         java.util.Map<String, BlockPos> at = new java.util.HashMap<>();
+         // name, column (-2..2), row (0..6), radius, height, stage, type (0 normal, 1 portal, 2 miniboss, 3 boss candidate)
+         Object[][] rooms = {
+               {"P", 0, 0, 10, 8, 0, 1}, {"C1", 0, 1, 12, 9, 1, 0}, {"C2", 0, 2, 12, 9, 2, 0}, {"C3", 0, 3, 14, 10, 2, 0},
+               {"MBc", 0, 4, 16, 12, 3, 2}, {"C5", 0, 5, 12, 9, 3, 0},
+               {"L2_1", -1, 1, 12, 9, 1, 0}, {"L2_2", -1, 2, 12, 9, 2, 0}, {"B_Mid", -1, 3, 18, 13, 4, 3}, {"L2_4", -1, 4, 14, 10, 3, 0},
+               {"B_Top", -1, 5, 18, 13, 4, 3}, {"L2_6", -1, 6, 11, 8, 3, 0},
+               {"MBl", -2, 1, 16, 12, 2, 2}, {"L1_2", -2, 2, 12, 9, 2, 0}, {"L1_3", -2, 3, 12, 9, 2, 0}, {"L1_4", -2, 4, 13, 10, 3, 0}, {"L1_5", -2, 5, 12, 9, 3, 0},
+               {"R4_1", 1, 1, 12, 9, 1, 0}, {"R4_2", 1, 2, 12, 9, 2, 0}, {"R4_3", 1, 3, 12, 9, 2, 0}, {"R4_4", 1, 4, 13, 10, 3, 0}, {"R4_5", 1, 5, 12, 9, 3, 0},
+               {"B_Right", 2, 1, 18, 13, 4, 3}, {"R5_2", 2, 2, 12, 9, 2, 0}, {"R5_3", 2, 3, 12, 9, 2, 0}, {"R5_4", 2, 4, 13, 10, 3, 0}, {"R5_5", 2, 5, 12, 9, 3, 0}};
+         DungeonRoomType[] types = {DungeonRoomType.NORMAL, DungeonRoomType.PORTAL, DungeonRoomType.MINIBOSS, DungeonRoomType.BOSS_CANDIDATE};
+         for (Object[] r : rooms) {
+            int col = (Integer) r[1], row = (Integer) r[2];
+            boolean portal = row == 0;
+            int jx = portal ? 0 : rng.nextInt(7) - 3, jz = portal ? 0 : rng.nextInt(7) - 3;
+            BlockPos pos = new BlockPos(ox + m * col * S + jx, oy, oz - row * S + jz);   // all on one level: no steps between rooms
+            at.put((String) r[0], pos);
+            activeRooms.add(new ProceduralRoom(pos, (Integer) r[3], (Integer) r[3], (Integer) r[4], types[(Integer) r[6]], (Integer) r[5], (String) r[0]));
+         }
+         String[][] links = {
+               {"P", "C1"}, {"C1", "L2_1"}, {"C1", "C2"}, {"C1", "R4_1"}, {"L2_1", "L2_2"}, {"L2_2", "L1_2"}, {"L1_2", "MBl"}, {"L2_2", "L1_3"},
+               {"L1_3", "L1_4"}, {"L1_4", "L2_4"}, {"L2_4", "B_Mid"}, {"C5", "L2_6"}, {"L2_6", "L1_5"}, {"L1_5", "B_Top"}, {"MBc", "C5"},
+               {"C2", "R4_2"}, {"R4_1", "R4_2"}, {"R4_2", "R4_3"}, {"R4_3", "C3"}, {"C3", "MBc"}, {"MBc", "R4_4"}, {"R4_4", "R5_4"},
+               {"R5_4", "R5_5"}, {"R5_5", "R4_5"}, {"R5_3", "R5_2"}, {"R5_2", "B_Right"}, {"MBc", "L2_4"}, {"C5", "R4_5"},
+               {"R5_3", "R5_4"}};   // the last one joins the east boss hall, which the old map had cut off
+         for (String[] l : links) activeCorridors.add(new ProceduralCorridor(at.get(l[0]), at.get(l[1])));
+         String[][] shortcuts = {{"C2", "L2_2"}, {"R4_3", "R5_3"}, {"L1_4", "L1_5"}, {"C3", "B_Mid"}, {"R4_1", "B_Right"}};
+         for (String[] l : shortcuts) if (rng.nextBoolean()) activeCorridors.add(new ProceduralCorridor(at.get(l[0]), at.get(l[1])));
+
+         BlockPos[] candidates = {at.get("B_Mid"), at.get("B_Top"), at.get("B_Right")};
+         int boss = rng.nextInt(3);
+         this.thronePos = candidates[boss];
+         this.eliteSanctum1Pos = candidates[(boss + 1) % 3];
+         this.eliteSanctum2Pos = candidates[(boss + 2) % 3];
+         this.miniboss1Pos = at.get("MBl");
+         this.miniboss2Pos = at.get("MBc");
+         this.room2Center = at.get("L2_1");
+         this.room3Center = this.miniboss1Pos;
+         this.room4Center = at.get("C2");
+         this.room5Center = this.thronePos;
+      }
       public void calculateBunkerBounds() {
          int minX = this.arenaCenter.getX();
          int maxX = this.arenaCenter.getX();
