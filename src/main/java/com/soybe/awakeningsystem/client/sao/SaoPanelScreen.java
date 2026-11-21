@@ -108,8 +108,8 @@ public class SaoPanelScreen extends Screen {
             case SHOP, SELL, BANK, ROULETTE, MARKET, STARS -> true;
             default -> false;
         };
-        String lv = money ? data().coins() + " G"
-                : tr("level", "Lv. %s").getString().replace("%s", String.valueOf(data().level()));
+        String lv = money ? data().coins() + " ⛃"
+                : tr("level", "Lv. %s", String.valueOf(data().level())).getString();
         g.drawString(this.font, lv, x + PW - 10 - this.font.width(lv), y + 7, alpha(ORANGE_DARK, a), false);
 
         roundButton(g, backX(), backY(), 10, BACK, ORANGE, true, mouseX, mouseY, a);
@@ -184,7 +184,7 @@ public class SaoPanelScreen extends Screen {
         int pw = this.font.width(ptsText) + 18;
         g.fillGradient(x + 12, y + HEADER + 7, x + 12 + pw, y + HEADER + 21, alpha(pts > 0 ? 0xFFF7B52A : 0xFFE2E2E6, a), alpha(pts > 0 ? 0xFFE29400 : 0xFFD0D0D6, a));
         g.drawString(this.font, ptsText, x + 21, y + HEADER + 10, alpha(pts > 0 ? WHITE : GREY, a), false);
-        String rank = tr("rank", "Rank %s").getString().replace("%s", data().evaluatedRank());
+        String rank = tr("rank", "Rank %s", data().evaluatedRank()).getString();
         g.drawString(this.font, rank, x + PW - 12 - this.font.width(rank), y + HEADER + 10, alpha(ORANGE_DARK, a), false);
 
         for (int i = 0; i < 6; i++) {
@@ -208,7 +208,7 @@ public class SaoPanelScreen extends Screen {
         statBar(g, x + 12, by, PW - 24, "HP", (int) Math.ceil(mc.player.getHealth()), (int) Math.ceil(mc.player.getMaxHealth()), 0xFF74C23E, a);
         statBar(g, x + 12, by + 14, PW - 24, "MP", d.mana(), Math.max(1, d.maxMana()), 0xFF3E9BD6, a);
         statBar(g, x + 12, by + 28, PW - 24, "EXP", d.experience(), Math.max(1, d.nextLevelExperience()), ORANGE, a);
-        String coins = d.coins() + " G";
+        String coins = d.coins() + " ⛃";
         g.drawString(this.font, coins, x + PW - 12 - this.font.width(coins), by + 44, alpha(ORANGE_DARK, a), false);
     }
 
@@ -285,7 +285,7 @@ public class SaoPanelScreen extends Screen {
             int ry = lt + i * (ROW + 2);
             boolean hot = e.getKey().equals(selected);
             row(g, this.font, x + 10, ry, PW - 74, ROW, skillName(e.getKey()), passives ? SHIELD : SWORD, hot, a);
-            String lv = tr("level", "Lv. %s").getString().replace("%s", String.valueOf(e.getValue()));
+            String lv = tr("level", "Lv. %s", String.valueOf(e.getValue())).getString();
             g.drawString(this.font, lv, x + PW - 70 - this.font.width(lv), ry + 6, alpha(hot ? WHITE : ORANGE_DARK, a), false);
             boolean habit = passives && SkillDefinitions.isHabitSkill(e.getKey());
             if (!habit) roundButton(g, x + PW - 50, ry + ROW / 2.0F, 8, equippedSlotOf(e.getKey()) >= 0 ? MINUS : PLUS, ORANGE, true, mouseX, mouseY, a);
@@ -657,7 +657,7 @@ public class SaoPanelScreen extends Screen {
             shopIcon(g, e, x + 15, ry + 2);
             String name = this.font.plainSubstrByWidth(Component.translatable(e.nameKey()).getString(), 170);
             g.drawString(this.font, name, x + 36, ry + 6, alpha(!ok ? GREY_LIGHT : (hot ? WHITE : 0xFF4A4A52), a), false);
-            String price = ok ? e.cost() + " G" : tr("rank", "Rank %s").getString().replace("%s", com.soybe.awakeningsystem.ShopDefinitions.requiredRank(e));
+            String price = ok ? e.cost() + " ⛃" : tr("rank", "Rank %s", com.soybe.awakeningsystem.ShopDefinitions.requiredRank(e)).getString();
             g.drawString(this.font, price, x + PW - 22 - this.font.width(price), ry + 6, alpha(!ok ? 0xFFD6473E : (hot ? WHITE : ORANGE_DARK), a), false);
         }
         int fy = y + PH - 40;
@@ -668,7 +668,7 @@ public class SaoPanelScreen extends Screen {
         }
         shopIcon(g, sel, x + 14, fy + 4);
         g.drawString(this.font, Component.translatable(sel.nameKey()), x + 36, fy + 4, alpha(GREY_DARK, a), false);
-        g.drawString(this.font, (sel.amount() > 1 ? "x" + sel.amount() + "  " : "") + sel.cost() + " G", x + 36, fy + 15, alpha(ORANGE_DARK, a), false);
+        g.drawString(this.font, (sel.amount() > 1 ? "x" + sel.amount() + "  " : "") + sel.cost() + " ⛃", x + 36, fy + 15, alpha(ORANGE_DARK, a), false);
         boolean ok = com.soybe.awakeningsystem.ShopDefinitions.isUnlocked(sel, d);
         boolean afford = d.coins() >= sel.cost();
         if (ok) claimButtonText(g, x + PW - 112, fy + 6, afford ? tr("buy", "Buy") : tr("no_coins", "Not enough G"), mouseX, mouseY, afford ? a : a * 0.5F);
@@ -789,7 +789,7 @@ public class SaoPanelScreen extends Screen {
             int have = p == null ? 0 : com.soybe.awakeningsystem.SellDefinitions.countInInventory(p, e);
             String name = this.font.plainSubstrByWidth(Component.translatable(e.nameKey()).getString(), 150) + "  x" + have;
             g.drawString(this.font, name, x + 36, ry + 6, alpha(hot ? WHITE : (have > 0 ? 0xFF4A4A52 : GREY_LIGHT), a), false);
-            String price = "+" + e.unitPrice() + " G" + (e.amount() > 1 ? " / " + e.amount() : "");
+            String price = "+" + e.unitPrice() + " ⛃" + (e.amount() > 1 ? " / " + e.amount() : "");
             g.drawString(this.font, price, x + PW - 22 - this.font.width(price), ry + 6, alpha(hot ? WHITE : 0xFF4FA84A, a), false);
         }
         int fy = y + PH - 40;
@@ -1090,7 +1090,7 @@ public class SaoPanelScreen extends Screen {
             g.pose().pushPose();
             g.pose().translate(bx + 8, by + 17, 0);
             g.pose().scale(1.4F, 1.4F, 1);
-            g.drawString(this.font, (k == 0 ? d.coins() : bag) + " G", 0, 0, alpha(GREY_DARK, a), false);
+            g.drawString(this.font, (k == 0 ? d.coins() : bag) + " ⛃", 0, 0, alpha(GREY_DARK, a), false);
             g.pose().popPose();
         }
         g.drawString(this.font, tr("bank_in", "Put in"), x + 16, y + HEADER + 62, alpha(0xFF4FA84A, a), false);
@@ -1251,7 +1251,7 @@ public class SaoPanelScreen extends Screen {
             row(g, this.font, x + 10, ry, PW - 24, ROW, Component.empty(), null, hot, a);
             g.renderItem(l.item(), x + 15, ry + 2);
             g.renderItemDecorations(this.font, l.item(), x + 15, ry + 2);
-            String price = l.price() + " G";
+            String price = l.price() + " ⛃";
             String who = l.sellerUuid().equals(me) ? tr("market_you", "you").getString() : l.sellerName();
             who = this.font.plainSubstrByWidth(who, 70);
             int pw = this.font.width(price), ww = this.font.width(who);
@@ -1529,7 +1529,7 @@ public class SaoPanelScreen extends Screen {
             int ry = starRowY(i);
             boolean hot = i + scroll == starSel;
             row(g, this.font, x + 10, ry, 140, ROW, Component.empty(), null, hot, a);
-            String lv = tr("level", "Lv. %s").getString().replace("%s", String.valueOf(e.level()));
+            String lv = tr("level", "Lv. %s", String.valueOf(e.level())).getString();
             g.drawString(this.font, this.font.plainSubstrByWidth(e.name(), 128 - this.font.width(lv)), x + 15, ry + 3, alpha(hot ? WHITE : 0xFF4A4A52, a), false);
             g.drawString(this.font, lv, x + 145 - this.font.width(lv), ry + 3, alpha(hot ? WHITE : ORANGE_DARK, a), false);
             float hp = e.hp() / (float) Math.max(1, e.maxHp());

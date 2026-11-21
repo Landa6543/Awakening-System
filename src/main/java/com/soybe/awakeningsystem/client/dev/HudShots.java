@@ -29,6 +29,20 @@ public final class HudShots {
         t++;
         if (t < 120 && mc.screen != null) mc.setScreen(null);
         if (System.getProperty("awakening.hudShots").equals("click") && t < 320 && t > 5) t = 319;   // straight to the settings
+        if (System.getProperty("awakening.hudShots").equals("notif")) {
+            // a boss bar and the habit notice at once: the notice must sit under the bar
+            var server = mc.getSingleplayerServer();
+            if (t == 60 && server != null) server.execute(() -> {
+                var src = server.createCommandSourceStack();
+                server.getCommands().performPrefixedCommand(src, "bossbar add awakening_system:test \"Igris, Blood-Red Commander\"");
+                server.getCommands().performPrefixedCommand(src, "bossbar set awakening_system:test players @a");
+            });
+            if (t == 90) com.soybe.awakeningsystem.AwakeningSystemClient.showNotification("awakening_system.notification.habit_upgrade.title",
+                    "awakening_system.notification.habit_upgrade.message", "Ojo de Halcón:::3", 0xFF50C878);
+            if (t == 110) Screenshot.grab(mc.gameDirectory, "hs_notif.png", mc.getMainRenderTarget(), msg -> {});
+            if (t == 130) mc.stop();
+            return;
+        }
         for (int i = 0; i < SIZES.length; i++) {
             int at = 120 + i * 80;
             if (t == at) mc.getWindow().setWindowed(SIZES[i][0], SIZES[i][1]);

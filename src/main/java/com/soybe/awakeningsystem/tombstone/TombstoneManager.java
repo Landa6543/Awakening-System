@@ -130,7 +130,9 @@ public final class TombstoneManager {
 
         if (hasTombstone) {
             player.getPersistentData().remove("awakening_has_tombstone");
-            setGhostMode(player, true);
+            // a player who turned ghosts off in their settings comes back as themself; the tombstone still keeps their things
+            boolean ghost = GhostPreference.ghostOnDeath(player);
+            if (ghost) setGhostMode(player, true);
             BlockPos tPos = data.getTombstonePos();
             if (tPos == null || tPos.equals(BlockPos.ZERO)) {
                 if (player.getPersistentData().contains("awakening_tombstone_pos")) {
@@ -145,12 +147,12 @@ public final class TombstoneManager {
             }
 
             // Mensajes inmersivos del Sistema
-            player.sendSystemMessage(Component.translatable("awakening_system.tombstone.ghost_enter"));
+            if (ghost) player.sendSystemMessage(Component.translatable("awakening_system.tombstone.ghost_enter"));
             if (tPos != null && !tPos.equals(BlockPos.ZERO)) {
                 player.sendSystemMessage(Component.translatable("awakening_system.tombstone.ghost_coords",
                         tPos.getX(), tPos.getY(), tPos.getZ(), dim.isEmpty() ? "Mundo" : dim));
             }
-            player.sendSystemMessage(Component.translatable("awakening_system.tombstone.ghost_instructions"));
+            if (ghost) player.sendSystemMessage(Component.translatable("awakening_system.tombstone.ghost_instructions"));
         }
     }
 

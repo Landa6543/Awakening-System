@@ -2719,15 +2719,15 @@ public final class AwakeningSystemClient {
                 boolean isPokemonTitle = "pokemon_master".equals(badge.equippedTitle());
                 int titleCol = isNandaTitle ? 0xFFFF77DD : (isCaffeineTitle ? 0xFFD27D2D : (isSchvisTitle ? 0xFFFF69B4 : (isPokemonTitle ? 0xFFFF3333 : switch (titleDef.rarity()) {
                     case UNIQUE -> 0xFFD700;
-                    case MYTHIC -> 0xFF55FF;
+                    case MYTHIC -> 0xFF4A4A;
                     case LEGENDARY -> 0xFFAA00;
                     case EPIC -> 0xAA00AA;
                     case RARE -> 0x5555FF;
                     case UNCOMMON -> 0x55FF55;
                     default -> 0x55FFFF;
                 })));
-                String prefix = isCreatorTitle ? "§6👑 «" : (isNandaTitle ? "§d🐱 «" : (isCaffeineTitle ? "§6☕ «" : (isSchvisTitle ? "§d💖 «" : (isPokemonTitle ? "§c⚡ «" : (titleDef.rarity() == SkillDefinitions.Rarity.UNIQUE ? "§6★ «" : (titleDef.rarity() == SkillDefinitions.Rarity.MYTHIC ? "§d✦ «" : "§b«"))))));
-                String suffix = isCreatorTitle ? "§6»" : (isNandaTitle ? "§d» §e🐾" : (isCaffeineTitle ? "§6» §e☕" : (isSchvisTitle ? "§d» §e💖" : (isPokemonTitle ? "§c» §e⚡" : (titleDef.rarity() == SkillDefinitions.Rarity.UNIQUE ? "§6»" : (titleDef.rarity() == SkillDefinitions.Rarity.MYTHIC ? "§d»" : "§b»"))))));
+                String prefix = isCreatorTitle ? "§6👑 «" : (isNandaTitle ? "§d🐱 «" : (isCaffeineTitle ? "§6☕ «" : (isSchvisTitle ? "§d💖 «" : (isPokemonTitle ? "§c⚡ «" : (titleDef.rarity() == SkillDefinitions.Rarity.UNIQUE ? "§6★ «" : (titleDef.rarity() == SkillDefinitions.Rarity.MYTHIC ? "§c✦ «" : "§b«"))))));
+                String suffix = isCreatorTitle ? "§6»" : (isNandaTitle ? "§d» §e🐾" : (isCaffeineTitle ? "§6» §e☕" : (isSchvisTitle ? "§d» §e💖" : (isPokemonTitle ? "§c» §e⚡" : (titleDef.rarity() == SkillDefinitions.Rarity.UNIQUE ? "§6»" : (titleDef.rarity() == SkillDefinitions.Rarity.MYTHIC ? "§c»" : "§b»"))))));
                 Component titleComp = Component.literal(prefix)
                         .append(Component.translatable(titleDef.translationKey()).withStyle(s -> s.withColor(titleCol)))
                         .append(Component.literal(suffix));

@@ -1,4 +1,6 @@
 {
+    "awakening_system.gui_config.system.toggle_ghost": "Призрак после смерти",
+    "awakening_system.screen.profile.potential_tip_nopoints": "+%1$s урона, +%2$s здоровья, +%3$s%% опыта. Навсегда.",
     "abyss.awakening_system.advance_or_menu_prompt": "§fХотите перейти на §b§lЭтаж %s§f или открыть меню выбора уровня?",
     "abyss.awakening_system.advancing_next_floor": "§a§l✦ [ПЕРЕХОД] §fВход на §b§lЭтаж %s§f (Зал 1)...",
     "abyss.awakening_system.barrier_contained": "§5§l✦ [БАРЬЕР БЕЗДНЫ] §fВы находитесь на платформе испытания.",

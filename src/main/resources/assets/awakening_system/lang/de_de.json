@@ -1,4 +1,5 @@
 {
+    "awakening_system.gui_config.system.toggle_ghost": "Geist nach dem Tod",
     "abyss.awakening_system.advance_or_menu_prompt": "§fDo you wish to advance directly to §b§lFloor %s§f or open the menu to choose another level?",
     "abyss.awakening_system.advancing_next_floor": "§a§l✦ [ADVANCING] §fEntering directly into §b§lFloor %s§f (Chamber 1)...",
     "abyss.awakening_system.barrier_contained": "§5§l✦ [ABYSS BARRIER] §fYou have been contained within the challenge platform.",

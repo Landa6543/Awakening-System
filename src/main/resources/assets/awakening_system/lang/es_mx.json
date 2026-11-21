@@ -1,4 +1,6 @@
 {
+    "awakening_system.gui_config.system.toggle_ghost": "Fantasma al morir",
+    "awakening_system.screen.profile.potential_tip_nopoints": "+%1$s de daño, +%2$s de vida, +%3$s%% de experiencia. Permanente.",
     "abyss.awakening_system.advance_or_menu_prompt": "§f¿Deseas avanzar directamente al §b§lPiso %s§f o abrir el menú para elegir otro nivel?",
     "abyss.awakening_system.advancing_next_floor": "§a§l✦ [AVANZANDO] §fEntrando directamente al §b§lPiso %s§f (Sala 1)...",
     "abyss.awakening_system.barrier_contained": "§5§l✦ [BARRERA DEL ABISMO] §fHas sido contenido dentro de la plataforma del desafío.",
@@ -6572,7 +6574,7 @@
     "awakening_system.screen.status.cultivation_btn_full": "§a§l[ ☯ CULTIVO MURIM: MERIDIANOS Y DANTIAN ☯ ]",
     "awakening_system.screen.status.cultivation_desc": "§7Reino: §f%s §8| §b%s Qi Almacenado",
     "awakening_system.screen.status.cultivation_summary": "§7%s §8| §b%s Qi",
-    "awakening_system.screen.status.no_vision": "Sin Visión Elemental",
+    "awakening_system.screen.status.no_vision": "Sin Visión",
     "awakening_system.screen.status.vision_active_desc": "Canaliza resonancia elemental para percibir energía y minerales ocultos (%s).",
     "awakening_system.screen.status.vision_none_desc": "No has sintonizado con la autoridad elemental de ningún arconte.",
     "awakening_system.screen.status.vision_statue_active_hint": "[Click Izquierdo] Alternar modo de visión elemental.",

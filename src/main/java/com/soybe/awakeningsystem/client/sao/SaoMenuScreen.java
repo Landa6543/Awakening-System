@@ -39,8 +39,8 @@ public class SaoMenuScreen extends Screen {
         super(Component.translatableWithFallback("awakening_system.sao.title", "System"));
     }
 
-    private static Component tr(String key, String fallback) {
-        return Component.translatableWithFallback("awakening_system.sao." + key, fallback);
+    private static Component tr(String key, String fallback, Object... args) {
+        return Component.translatableWithFallback("awakening_system.sao." + key, fallback, args);
     }
 
     private static Component tab(String name) {
@@ -278,8 +278,8 @@ public class SaoMenuScreen extends Screen {
         y += 22;        int by = y + 132;
         g.fill(x + 6, by, x + w - 6, by + 1, alpha(0xFFC9C9CE, a));
         int text = alpha(GREY_DARK, a), soft = alpha(GREY, a);
-        g.drawString(this.font, tr("level", "Lv. %s").getString().replace("%s", String.valueOf(d.level())), x + 10, by + 7, text, false);
-        String rank = tr("rank", "Rank %s").getString().replace("%s", d.evaluatedRank());
+        g.drawString(this.font, tr("level", "Lv. %s", String.valueOf(d.level())).getString(), x + 10, by + 7, text, false);
+        String rank = tr("rank", "Rank %s", d.evaluatedRank()).getString();
         g.drawString(this.font, rank, x + w - 10 - this.font.width(rank), by + 7, alpha(ORANGE_DARK, a), false);
 
         if (hoverName != null) hoverTip = hoverName;
@@ -294,7 +294,7 @@ public class SaoMenuScreen extends Screen {
         g.pose().scale(0.75F, 0.75F, 1.0F);
         g.drawString(this.font, stats, 0, 0, soft, false);
         g.drawString(this.font, stats2, 0, 11, soft, false);
-        String coins = d.coins() + " G";
+        String coins = "⛃ " + d.coins();   // "831 G" at this size read as "831 6"
         g.drawString(this.font, coins, Math.round((w - 20) / 0.75F) - this.font.width(coins), 11, alpha(ORANGE_DARK, a), false);
         g.pose().popPose();
     }

@@ -160,10 +160,12 @@ public class GuiConfigScreen extends Screen {
         renderToggle(g, col1X, top + 78, colW, Component.translatable("awakening_system.gui_config.system.toggle_font"), GuiConfig.useSystemFont, mouseX, mouseY);
         renderToggle(g, col2X, top + 78, colW, Component.translatableWithFallback("awakening_system.sao.style_toggle", "Full-dive menu style"), com.soybe.awakeningsystem.client.sao.UiStyle.fullDive(), mouseX, mouseY);
 
-        g.fill(left + 16, top + 98, left + GUI_WIDTH - 16, top + 99, 0x443D566E);
+        renderToggle(g, col1X, top + 97, colW, Component.translatable("awakening_system.gui_config.system.toggle_ghost"), com.soybe.awakeningsystem.client.GhostPreferenceClient.ghostOnDeath(), mouseX, mouseY);
+
+        g.fill(left + 16, top + 117, left + GUI_WIDTH - 16, top + 118, 0x443D566E);
 
         var tipLines = font.split(Component.translatable("awakening_system.gui_config.system.tip"), GUI_WIDTH - 36);
-        int ty = top + 104;
+        int ty = top + 123;
         for (var line : tipLines) {
             g.drawCenteredString(font, line, left + GUI_WIDTH / 2, ty, 0x888888);
             ty += 10;
@@ -463,6 +465,12 @@ public class GuiConfigScreen extends Screen {
                         AwakeningSystemClient.playUiSound(ModSounds.SYSTEM_CLICK.value(), 1.0F, 1.1F);
                         return true;
                     }
+                }
+                // Row 3: become a ghost on death (each player's own choice)
+                if (mouseY >= contentY + 97 && mouseY < contentY + 111 && mouseX >= col1X && mouseX < col1X + colW) {
+                    com.soybe.awakeningsystem.client.GhostPreferenceClient.toggle();
+                    AwakeningSystemClient.playUiSound(ModSounds.SYSTEM_CLICK.value(), 1.0F, 1.1F);
+                    return true;
                 }
             } else if (currentTab == 1) {
                 // System Tabs toggles

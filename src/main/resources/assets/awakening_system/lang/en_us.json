@@ -1,4 +1,6 @@
 {
+    "awakening_system.gui_config.system.toggle_ghost": "Ghost on death",
+    "awakening_system.screen.profile.potential_tip_nopoints": "+%1$s damage, +%2$s health, +%3$s%% experience. Permanent.",
     "abyss.awakening_system.advance_or_menu_prompt": "§fDo you wish to advance directly to §b§lFloor %s§f or open the menu to choose another level?",
     "abyss.awakening_system.advancing_next_floor": "§a§l✦ [ADVANCING] §fEntering directly into §b§lFloor %s§f (Chamber 1)...",
     "abyss.awakening_system.barrier_contained": "§5§l✦ [ABYSS BARRIER] §fYou have been contained within the challenge platform.",
@@ -6572,7 +6574,7 @@
     "awakening_system.screen.status.cultivation_btn_full": "§a§l[ ☯ MURIM CULTIVATION: MERIDIANS & DANTIAN ☯ ]",
     "awakening_system.screen.status.cultivation_desc": "§7Realm: §f%s §8| §b%s Stored Qi",
     "awakening_system.screen.status.cultivation_summary": "§7%s §8| §b%s Qi",
-    "awakening_system.screen.status.no_vision": "No Elemental Vision",
+    "awakening_system.screen.status.no_vision": "No Vision",
     "awakening_system.screen.status.vision_active_desc": "Channels elemental resonance to perceive hidden energy and ores (%s).",
     "awakening_system.screen.status.vision_none_desc": "You have not harmonized with an archon's elemental authority.",
     "awakening_system.screen.status.vision_statue_active_hint": "[Left Click] Toggle Elemental Sight highlight mode.",

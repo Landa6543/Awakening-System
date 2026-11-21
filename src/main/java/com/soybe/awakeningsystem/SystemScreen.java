@@ -2773,7 +2773,8 @@ public final class SystemScreen extends Screen {
                 tip.add(potComp.copy().withStyle(ChatFormatting.BOLD));
                 if (d.potentialMeasured()) {
                     String r = d.potentialRank();
-                    tip.add(Component.translatable("awakening_system.screen.profile.potential_tip",
+                    // a potential that gives no points a level says nothing about points (it read "+0 points per level")
+                    tip.add(Component.translatable(SystemData.potentialPointsPerLevel(r) > 0 ? "awakening_system.screen.profile.potential_tip" : "awakening_system.screen.profile.potential_tip_nopoints",
                             String.valueOf((int) SystemData.potentialDamageBonus(r) == SystemData.potentialDamageBonus(r) ? (int) SystemData.potentialDamageBonus(r) : SystemData.potentialDamageBonus(r)),
                             String.valueOf((int) SystemData.potentialHealthBonus(r)),
                             String.valueOf(Math.round((SystemData.potentialExpMultiplier(r) - 1.0D) * 100.0D)),
@@ -3159,7 +3160,7 @@ public final class SystemScreen extends Screen {
         }
 
         String label = "NONE".equals(actVis) ? "§8" + Component.translatable("awakening_system.screen.status.no_vision").getString() : ("§f" + actVis.substring(0, 1) + actVis.substring(1).toLowerCase());
-        g.drawString(font, label, btnVx + 19, btnVy + 4, visColor);
+        drawClipped(g, Component.literal(label), btnVx + 19, btnVy + 4, visColor, btnVw - 21);   // kept inside its button
 
         if (visHovered) {
             List<Component> tooltip = new ArrayList<>();
@@ -5337,7 +5338,7 @@ public final class SystemScreen extends Screen {
             case RARE -> 0xFF55AAFF;
             case EPIC -> 0xFFD055FF;
             case LEGENDARY -> 0xFFFFAA00;
-            case MYTHIC -> 0xFFFF55FF;
+            case MYTHIC -> 0xFFFF4A4A;   // red, as in the SAO panel: the old pink read as Epic
             case UNIQUE -> 0xFFFFD700;
         };
     }
