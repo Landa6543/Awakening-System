@@ -78,6 +78,23 @@ public final class ClassSkillTreeScreen extends Screen {
         AwakeningSystemClient.playUiSound(ModSounds.SYSTEM_SKILL_UNLOCK.value(), 1.0F, 1.0F);
     }
 
+    /** Where everything goes: the window fills the screen (at least 620 x 360, shrunk to fit on small screens). */
+    private record Layout(int left, int top, int pw, int ph, int canvasX, int canvasY, int canvasW, int canvasH,
+                          int inspX, int inspY, int inspW, int inspH, int slotY) {}
+
+    private Layout layout() {
+        float scale = getGuiScale();
+        int pw = Math.max(620, Math.round(this.width / scale) - 16);
+        int ph = Math.max(360, Math.round(this.height / scale) - 16);
+        int left = (this.width - pw) / 2;
+        int top = (this.height - ph) / 2;
+        int inspW = Math.min(260, Math.max(212, pw / 4));
+        int bodyY = top + 42;
+        int bodyH = ph - 42 - 46;
+        return new Layout(left, top, pw, ph, left + 10, bodyY, pw - inspW - 28, bodyH,
+                left + pw - inspW - 10, bodyY, inspW, bodyH, top + ph - 42);
+    }
+
     public float getGuiScale() {
         float scaleX = (float) this.width / 640.0F;
         float scaleY = (float) this.height / 380.0F;
@@ -135,16 +152,18 @@ public final class ClassSkillTreeScreen extends Screen {
             graphics.pose().translate(-cx, -cy, 0.0F);
         }
 
-        int panelW = 620;
-        int panelH = 360;
-        int left = (width - panelW) / 2;
-        int top = (height - panelH) / 2;
+        Layout L = layout();
+        int panelW = L.pw();
+        int panelH = L.ph();
+        int left = L.left();
+        int top = L.top();
 
         SystemData data = Minecraft.getInstance().player == null ? null : Minecraft.getInstance().player.getData(AwakeningSystemMod.PLAYER_SYSTEM);
         if (data == null || !data.hasHunterClass()) {
             graphics.fill(left, top, left + panelW, top + panelH, 0xF008121A);
             graphics.drawCenteredString(font, Component.translatable("awakening_system.screen.skill_tree.no_class"), left + panelW / 2, top + panelH / 2 - 10, 0xFFFF5555);
             graphics.drawCenteredString(font, Component.translatable("awakening_system.screen.skill_tree.reach_level30"), left + panelW / 2, top + panelH / 2 + 6, 0xFFAAAAAA);
+            graphics.pose().popPose();
             return;
         }
 
@@ -153,48 +172,47 @@ public final class ClassSkillTreeScreen extends Screen {
 
         ModernGuiHelper.GuiTheme theme = ModernGuiHelper.getTheme(data);
         ModernGuiHelper.drawModernWindow(graphics, left, top, panelW, panelH, theme);
-        ModernGuiHelper.drawModernHeader(graphics, left + 10, top + 6, panelW - 20, 24, null, 0, theme, font);
+        ModernGuiHelper.drawModernHeader(graphics, left + 10, top + 6, panelW - 20, 32, null, 0, theme, font);
 
+        // title and points inside the header, clear of the window's corner marks
         Component className = Component.translatable("awakening_system.class." + data.hunterClass() + ".name");
         Component headerTitle = Component.translatable("awakening_system.skill_tree.header", className).withStyle(ChatFormatting.BOLD);
-        graphics.drawString(font, headerTitle, left + 14, top + 8, 0xFFFFD700);
+        graphics.drawString(font, headerTitle, left + 20, top + 11, 0xFFFFD700);
 
         int sp = data.skillPoints();
         int treeCount = data.getUnlockedTreeSkillsCount();
         Component subHeader = Component.translatable("awakening_system.skill_tree.subheader", sp, treeCount);
-        graphics.drawString(font, subHeader, left + 14, top + 20, 0xFFCCE3EC);
+        graphics.drawString(font, subHeader, left + 20, top + 24, 0xFFCCE3EC);
 
         int closeBtnW = 60;
         int closeBtnH = 18;
-        int closeBtnX = left + panelW - closeBtnW - 10;
-        int closeBtnY = top + 8;
+        int closeBtnX = left + panelW - closeBtnW - 16;
+        int closeBtnY = top + 13;
         boolean closeHov = mX >= closeBtnX && mX < closeBtnX + closeBtnW && mY >= closeBtnY && mY < closeBtnY + closeBtnH;
         graphics.fill(closeBtnX, closeBtnY, closeBtnX + closeBtnW, closeBtnY + closeBtnH, closeHov ? 0xFF882222 : 0xFF142430);
         drawBorder(graphics, closeBtnX, closeBtnY, closeBtnW, closeBtnH, closeHov ? 0xFFFF5555 : 0xFF2D7691);
         graphics.drawCenteredString(font, Component.translatable("awakening_system.screen.close_x"), closeBtnX + closeBtnW / 2, closeBtnY + 5, closeHov ? 0xFFFFFFFF : 0xFFCCE3EC);
 
-        int canvasX = left + 8;
-        int canvasY = top + 32;
-        int canvasW = panelW - 232;
-        int canvasH = panelH - 74;
+        int canvasX = L.canvasX();
+        int canvasY = L.canvasY();
+        int canvasW = L.canvasW();
+        int canvasH = L.canvasH();
 
-        int inspX = left + panelW - 220;
-        int inspY = top + 32;
-        int inspW = 212;
-        int inspH = panelH - 74;
+        int inspX = L.inspX();
+        int inspY = L.inspY();
+        int inspW = L.inspW();
+        int inspH = L.inspH();
 
         renderTreeCanvas(graphics, data, canvasX, canvasY, canvasW, canvasH, mX, mY);
 
         renderInspectionPanel(graphics, data, inspX, inspY, inspW, inspH, mX, mY);
 
-        int slotBarX = left + 8;
-        int slotBarY = top + panelH - 38;
-        int slotBarW = panelW - 16;
-        int slotBarH = 32;
+        int slotBarX = left + 10;
+        int slotBarY = L.slotY();
+        int slotBarW = panelW - 20;
+        int slotBarH = 34;
         renderSlotProgressTracker(graphics, data, slotBarX, slotBarY, slotBarW, slotBarH);
 
-        graphics.pose().popPose();
-        super.render(graphics, mouseX, mouseY, partialTick);
         if (hoveredNode != null) {
             java.util.List<Component> tip = new java.util.ArrayList<>();
             tip.add(hoveredNode.getName().copy().withStyle(ChatFormatting.BOLD));
@@ -203,8 +221,11 @@ public final class ClassSkillTreeScreen extends Screen {
                     : hoveredNode.isActive() ? "awakening_system.skill_tree.node.active" : "awakening_system.skill_tree.node.passive").withStyle(ChatFormatting.AQUA));
             if (!ClassSkillTree.has(data, hoveredNode) && data.level() < hoveredNode.requiredLevel())
                 tip.add(Component.translatable("awakening_system.skill_tree.req_lvl", hoveredNode.requiredLevel()).withStyle(ChatFormatting.RED));
-            graphics.renderComponentTooltip(font, tip, mouseX, mouseY);
+            // inside the window's scale, so it is the same size as the window's text
+            graphics.renderComponentTooltip(font, tip, mX, mY);
         }
+        graphics.pose().popPose();
+        super.render(graphics, mouseX, mouseY, partialTick);
     }
 
     private static int nodeHalf(ClassSkillTree.SkillNode node) {
@@ -520,8 +541,11 @@ public final class ClassSkillTreeScreen extends Screen {
         String[] actKeys = {"V", "R", "G", "B", "X"};
         int[] actReqs = {0, 0, 1, 3, 5};
         int actStartX = x + 8;
-        int actY = y + 16;
+        int actY = y + 17;
         int activeBoxW = 44;
+        for (int i = 0; i < 5; i++) {
+            activeBoxW = Math.max(activeBoxW, font.width(Component.translatable("awakening_system.skill_tree.slot_req", actReqs[i])) + 8);
+        }
 
         for (int i = 0; i < 5; i++) {
             int sx = actStartX + i * (activeBoxW + 4);
@@ -543,6 +567,12 @@ public final class ClassSkillTreeScreen extends Screen {
         int[] pasReqs = {0, 2, 4};
         int pasStartX = sepX + 8;
         int passiveBoxW = 54;
+        for (int i = 0; i < 3; i++) {
+            passiveBoxW = Math.max(passiveBoxW, font.width(Component.translatable("awakening_system.skill_tree.passive_slot", (i + 1))) + 8);
+            passiveBoxW = Math.max(passiveBoxW, font.width(Component.translatable("awakening_system.skill_tree.slot_req", pasReqs[i])) + 8);
+        }
+        // never past the bar's right edge
+        passiveBoxW = Math.min(passiveBoxW, (x + w - 8 - pasStartX) / 3 - 4);
 
         for (int i = 0; i < 3; i++) {
             int sx = pasStartX + i * (passiveBoxW + 4);
@@ -563,25 +593,25 @@ public final class ClassSkillTreeScreen extends Screen {
     public boolean mouseClicked(double mouseX, double mouseY, int button) {
         mouseX = transformMouseX(mouseX);
         mouseY = transformMouseY(mouseY);
-        int panelW = 620;
-        int panelH = 360;
-        int left = (width - panelW) / 2;
-        int top = (height - panelH) / 2;
+        Layout L = layout();
+        int panelW = L.pw();
+        int left = L.left();
+        int top = L.top();
 
         int closeBtnW = 60;
         int closeBtnH = 18;
-        int closeBtnX = left + panelW - closeBtnW - 10;
-        int closeBtnY = top + 8;
+        int closeBtnX = left + panelW - closeBtnW - 16;
+        int closeBtnY = top + 13;
         if (mouseX >= closeBtnX && mouseX < closeBtnX + closeBtnW && mouseY >= closeBtnY && mouseY < closeBtnY + closeBtnH) {
             playClickSound();
             onClose();
             return true;
         }
 
-        int canvasX = left + 8;
-        int canvasY = top + 32;
-        int canvasW = panelW - 232;
-        int canvasH = panelH - 74;
+        int canvasX = L.canvasX();
+        int canvasY = L.canvasY();
+        int canvasW = L.canvasW();
+        int canvasH = L.canvasH();
 
         int resetBtnX = canvasX + canvasW - 24;
         int resetBtnY = canvasY + 6;
@@ -591,10 +621,10 @@ public final class ClassSkillTreeScreen extends Screen {
             return true;
         }
 
-        int inspX = left + panelW - 220;
-        int inspY = top + 32;
-        int inspW = 212;
-        int inspH = panelH - 74;
+        int inspX = L.inspX();
+        int inspY = L.inspY();
+        int inspW = L.inspW();
+        int inspH = L.inspH();
         int btnX = inspX + 8;
         int btnY = inspY + inspH - 28;
         int btnW = inspW - 16;
@@ -673,14 +703,11 @@ public final class ClassSkillTreeScreen extends Screen {
     public boolean mouseScrolled(double mouseX, double mouseY, double scrollX, double scrollY) {
         mouseX = transformMouseX(mouseX);
         mouseY = transformMouseY(mouseY);
-        int panelW = 620;
-        int panelH = 360;
-        int left = (width - panelW) / 2;
-        int top = (height - panelH) / 2;
-        int canvasX = left + 8;
-        int canvasY = top + 32;
-        int canvasW = panelW - 232;
-        int canvasH = panelH - 74;
+        Layout L = layout();
+        int canvasX = L.canvasX();
+        int canvasY = L.canvasY();
+        int canvasW = L.canvasW();
+        int canvasH = L.canvasH();
 
         if (mouseX >= canvasX && mouseX < canvasX + canvasW && mouseY >= canvasY && mouseY < canvasY + canvasH) {
             float oldZoom = zoom;
@@ -702,12 +729,13 @@ public final class ClassSkillTreeScreen extends Screen {
         return super.mouseScrolled(mouseX, mouseY, scrollX, scrollY);
     }
 
-    /** Keeps some of the web on the canvas (canvas 388 x 286). */
+    /** Keeps some of the web on the canvas. */
     private void clampCamera() {
         SystemData data = Minecraft.getInstance().player == null ? null : Minecraft.getInstance().player.getData(AwakeningSystemMod.PLAYER_SYSTEM);
         ClassSkillTree.Tree t = data == null ? null : ClassSkillTree.getTree(data.hunterClass());
         if (t == null) return;
-        double w = 388, h = 286;
+        Layout L = layout();
+        double w = L.canvasW(), h = L.canvasH();
         camX = Math.max(w * 0.5 - t.maxX() * zoom, Math.min(w * 0.5 - t.minX() * zoom, camX));
         camY = Math.max(h * 0.5 - t.maxY() * zoom, Math.min(h * 0.5 - t.minY() * zoom, camY));
     }
