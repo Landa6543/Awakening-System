@@ -27,8 +27,43 @@ public final class HudShots {
         if (mc.level == null || mc.player == null) return;
         mc.options.pauseOnLostFocus = false;
         t++;
-        if (t < 120 && mc.screen != null) mc.setScreen(null);
+        if (t < 120 && t < 60 && mc.screen != null) mc.setScreen(null);
         if (System.getProperty("awakening.hudShots").equals("click") && t < 320 && t > 5) t = 319;   // straight to the settings
+        if (System.getProperty("awakening.hudShots").startsWith("sao_")) {
+            // a full-dive window, with a few test shadows in the army for the shadow command
+            String which = System.getProperty("awakening.hudShots").substring(4);
+            if (t == 60) {
+                com.soybe.awakeningsystem.client.sao.UiStyle.setFullDive(true);
+                var d = mc.player.getData(AwakeningSystemMod.PLAYER_SYSTEM);
+                try {
+                    var army = d.getStoredShadowArmy();
+                    String[] names = {"Igris", "Iron", "Tank", "Beru", "Kaisel", "Greed"};
+                    for (int i = 0; i < names.length; i++) {
+                        var tag = new net.minecraft.nbt.CompoundTag();
+                        tag.putString("ShadowBaseName", names[i]);
+                        tag.putInt("RpgMobLevel", 20 + i * 15);
+                        tag.putInt("ShadowRank", i % 4);
+                        tag.putInt("SquadId", i % 3);
+                        tag.putInt("ShadowKills", i * 7);
+                        tag.putFloat("Health", 30 + i * 10);
+                        tag.putFloat("MaxHealth", 90);
+                        army.add(tag);
+                    }
+                } catch (Exception e) {
+                    AwakeningSystemMod.LOGGER.info("[HudShots] army is read-only: {}", e.toString());
+                }
+                mc.setScreen(switch (which) {
+                    case "shadow" -> new com.soybe.awakeningsystem.client.gui.ShadowCommandScreen();
+                    case "fables" -> new com.soybe.awakeningsystem.fable.FablesScreen(null);
+                    case "config" -> new com.soybe.awakeningsystem.client.gui.GuiConfigScreen(null);
+                    default -> null;
+                });
+            }
+            if (t == 90) Screenshot.grab(mc.gameDirectory, "hs_sao_" + which + ".png", mc.getMainRenderTarget(), msg -> {});
+            if (t == 95) com.soybe.awakeningsystem.client.sao.UiStyle.setFullDive(false);
+            if (t == 100) mc.stop();
+            return;
+        }
         if (System.getProperty("awakening.hudShots").equals("ring")) {
             // the Link Ring in hand and in the hotbar
             var server = mc.getSingleplayerServer();
