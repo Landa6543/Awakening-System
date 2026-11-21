@@ -178,7 +178,17 @@ public class TownNpcEntity extends PathfinderMob {
         this.job = job == null ? "" : job;
         this.entityData.set(SKIN, skin);
         this.setCustomName(Component.literal(nameOf(skin)));
-        this.restrictTo(this.home, 14);
+        this.restrictTo(this.home, reach());
+    }
+
+    /**
+     * How far they go from home: the smith, the innkeepers, the priest, the librarian and the merchant keep to
+     * their workplace (a few blocks); everyone else strolls around their part of town.
+     */
+    private int reach() {
+        boolean posted = POSTED.contains(SKINS[skin()]) || job.contains("smith") || job.contains("inn") || job.contains("cleric")
+                || job.contains("librarian") || job.contains("priest") || job.contains("barmaid");
+        return posted ? 4 : 14;
     }
 
     @Override
@@ -224,6 +234,6 @@ public class TownNpcEntity extends PathfinderMob {
         this.entityData.set(SKIN, tag.getInt("Skin"));
         this.job = tag.getString("Job");
         this.home = BlockPos.of(tag.getLong("Home"));
-        if (!home.equals(BlockPos.ZERO)) this.restrictTo(home, 14);
+        if (!home.equals(BlockPos.ZERO)) this.restrictTo(home, reach());
     }
 }

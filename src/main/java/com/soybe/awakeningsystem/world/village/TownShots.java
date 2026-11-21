@@ -38,7 +38,10 @@ public final class TownShots {
             new View("ring_north", -20, -45, -1, 2, -90, 3),
             new View("fields", 50, 48, -1, 9, -45, 30),
             new View("square", -12, 12, -1, 4, -135, 15),
-            new View("tavern_inside", 0, 0, 0, 0, 90, 5),
+            new View("tavern_inside", 0, 0, 0, 0, 90, 10),
+            new View("tavern_up", 0, 0, 0, 0, 0, 10),
+            new View("tavern_back", 0, 0, 0, 0, 180, 10),
+            new View("tavern_left", 0, 0, 0, 0, -90, 10),
             new View("people", 6, 16, -1, 2, 160, 8),
             new View("lineup", 0, 117, -1, 1, 0, 4),
             new View("talk_rpg", 0, 127, -1, 1, 0, 8),
@@ -102,11 +105,14 @@ public final class TownShots {
             var sp = server.getPlayerList().getPlayer(mc.player.getUUID());
             if (sp == null) return;
             double x = v.x() + 0.5, z = v.z() + 0.5, y;
-            if (v.name().equals("tavern_inside")) {
-                // the tavern's door faces the high street at (4, ?, -20): stand inside, looking across the room
-                int dy = 60;
-                while (dy < 200 && !(floor.getBlockState(new BlockPos(4, dy, -20)).getBlock() instanceof DoorBlock)) dy++;
-                x = 12.5; y = dy; z = -19.5;
+            if (v.name().startsWith("tavern_")) {
+                // the tavern is found by its brewing stand on the bar; stand in the room beside it
+                BlockPos bar = null;
+                for (BlockPos q : BlockPos.betweenClosed(-20, 60, -45, 25, 100, -5))
+                    if (floor.getBlockState(q).is(net.minecraft.world.level.block.Blocks.BREWING_STAND)) { bar = q.immutable(); break; }
+                if (bar == null) bar = new BlockPos(4, 75, -20);
+                System.out.println("[TownShots] tavern bar at " + bar);
+                x = bar.getX() + 0.5; y = bar.getY() - 0.5; z = bar.getZ() + 0.5;
             } else if (v.y() >= 0) y = v.y();
             else y = floor.getHeight(Heightmap.Types.MOTION_BLOCKING_NO_LEAVES, v.x(), v.z()) + v.up();
             sp.teleportTo(floor, x, y, z, v.yaw(), v.pitch());

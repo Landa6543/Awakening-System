@@ -37,7 +37,7 @@ public enum CelestialWeapon {
 
     /** How a weapon is held and swung. */
     public enum Kind {
-        SWORD(8, -2.2F), GREATSWORD(12, -2.8F), SCYTHE(10, -2.6F), SPEAR(9, -2.5F);
+        SWORD(16, -2.2F), GREATSWORD(24, -2.8F), SCYTHE(20, -2.6F), SPEAR(18, -2.5F);   // over Primordial (24) and up with the special weapons
 
         public final int bonus;
         public final float speed;
@@ -89,7 +89,7 @@ public enum CelestialWeapon {
 
     /** Attack damage bonus over netherite. */
     public int bonus() {
-        return kind.bonus + tier * 2;
+        return kind.bonus + tier * 4;
     }
 
     /** Roughly the damage of one swing (netherite 4 + bonus + 1). */

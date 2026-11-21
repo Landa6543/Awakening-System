@@ -29,6 +29,24 @@ public final class HudShots {
         t++;
         if (t < 120 && mc.screen != null) mc.setScreen(null);
         if (System.getProperty("awakening.hudShots").equals("click") && t < 320 && t > 5) t = 319;   // straight to the settings
+        if (System.getProperty("awakening.hudShots").equals("ring")) {
+            // the Link Ring in hand and in the hotbar
+            var server = mc.getSingleplayerServer();
+            if (t == 60 && server != null) server.execute(() -> {
+                var sp = server.getPlayerList().getPlayer(mc.player.getUUID());
+                sp.getInventory().selected = 0;
+                sp.getInventory().setItem(0, new net.minecraft.world.item.ItemStack(net.minecraft.core.registries.BuiltInRegistries.ITEM.get(
+                        net.minecraft.resources.ResourceLocation.fromNamespaceAndPath(AwakeningSystemMod.MOD_ID, "link_ring"))));
+                sp.setXRot(10);
+            });
+            if (t == 90) mc.player.getInventory().selected = 0;
+            if (t == 110) Screenshot.grab(mc.gameDirectory, "hs_ring.png", mc.getMainRenderTarget(), msg -> {});
+            if (t == 115) mc.options.setCameraType(net.minecraft.client.CameraType.THIRD_PERSON_FRONT);
+            if (t == 150) Screenshot.grab(mc.gameDirectory, "hs_ring3.png", mc.getMainRenderTarget(), msg -> {});
+            if (t == 155) mc.options.setCameraType(net.minecraft.client.CameraType.FIRST_PERSON);
+            if (t == 170) mc.stop();
+            return;
+        }
         if (System.getProperty("awakening.hudShots").equals("notif")) {
             // a boss bar and the habit notice at once: the notice must sit under the bar
             var server = mc.getSingleplayerServer();

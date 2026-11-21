@@ -736,7 +736,8 @@ final class VillageBuildings {
         p.fill(1, mid, 1, 11, mid, 9, Blocks.SPRUCE_PLANKS);
         door(p, 6, 0, NORTH, Blocks.SPRUCE_DOOR);
         for (int x : new int[]{2, 3, 9, 10}) { window(p, x, 2, 0, 2); window(p, x, 7, 0, 2); window(p, x, 7, 10, 2); }
-        for (int z : new int[]{3, 7}) { window(p, 12, 2, z, 2); window(p, 0, 7, z, 2); window(p, 12, 7, z, 2); }
+        for (int z : new int[]{3, 7}) { window(p, 0, 7, z, 2); window(p, 12, 7, z, 2); }
+        window(p, 12, 2, 7, 2);   // not at z 3: the stairs to the rooms climb along that wall and would cover it
         // fireplace and chimney in the left wall
         for (int y = 1; y <= top + 7; y++) for (int z = 3; z <= 5; z++) p.set(0, y, z, Blocks.BRICKS);
         p.fill(1, 1, 3, 1, 3, 5, Blocks.BRICKS);
