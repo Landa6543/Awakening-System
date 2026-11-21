@@ -2742,7 +2742,8 @@ public final class SystemEvents {
          completeAwakening(player, data);
          completeClassMission(player, data);
          ItemStack heldWp = player.getMainHandItem();
-         if (WeaponLevelManager.isLevelableWeapon(heldWp)) {
+         // a pickaxe, shovel or hoe levels by its own work, not by kills (ToolLevelAbilities)
+         if (WeaponLevelManager.isLevelableWeapon(heldWp) && !com.soybe.awakeningsystem.item.ToolLevelAbilities.isPureTool(heldWp)) {
             WeaponLevelManager.recordKill(heldWp);
             int mobExp = isBoss ? 1500 : 45;
             WeaponLevelManager.addExp(heldWp, mobExp, player);
@@ -3219,7 +3220,7 @@ public final class SystemEvents {
             }
 
             ItemStack weaponHeld = player.getMainHandItem();
-            if (WeaponLevelManager.isLevelableWeapon(weaponHeld)) {
+            if (WeaponLevelManager.isLevelableWeapon(weaponHeld) && !com.soybe.awakeningsystem.item.ToolLevelAbilities.isPureTool(weaponHeld)) {
                double wMult = WeaponLevelManager.getDamageMultiplier(weaponHeld);
                if (wMult > 1.0) {
                   event.setNewDamage((float)(event.getNewDamage() * wMult));

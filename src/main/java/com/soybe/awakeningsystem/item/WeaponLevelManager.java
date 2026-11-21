@@ -268,6 +268,7 @@ public final class WeaponLevelManager {
      * Multiplicador de Daño de Ataque según el nivel del arma (+1.2% por nivel, hasta +118.8% a Lv. 100).
      */
     public static double getDamageMultiplier(ItemStack stack) {
+        if (ToolLevelAbilities.isPureTool(stack)) return 1.0D;   // a pickaxe, shovel or hoe levels for its trade, not for combat
         int lvl = getLevel(stack);
         return 1.0D + ((lvl - 1) * 0.012D);
     }
@@ -276,6 +277,7 @@ public final class WeaponLevelManager {
      * Probabilidad de Golpe Crítico adicional (+0.1% por nivel, hasta +10% a Lv. 100).
      */
     public static float getBonusCritChance(ItemStack stack) {
+        if (ToolLevelAbilities.isPureTool(stack)) return 0.0F;
         int lvl = getLevel(stack);
         return (lvl - 1) * 0.001F;
     }
@@ -284,6 +286,7 @@ public final class WeaponLevelManager {
      * Penetración de Armadura (a partir de nivel 30, hasta 15%).
      */
     public static float getArmorPenetration(ItemStack stack) {
+        if (ToolLevelAbilities.isPureTool(stack)) return 0.0F;
         int lvl = getLevel(stack);
         if (lvl < 30) return 0.0F;
         return Math.min(0.15F, (lvl - 30) * 0.002F);
@@ -334,6 +337,13 @@ public final class WeaponLevelManager {
             tooltip.add(Component.translatable("awakening_system.weapon_level.exp", String.format("%,d", exp), String.format("%,d", maxExp)).withStyle(ChatFormatting.GRAY));
         }
 
+        // a pickaxe, shovel or hoe shows its trade's abilities instead of combat bonuses
+        if (ToolLevelAbilities.isPureTool(stack)) {
+            tooltip.add(Component.literal("§8────────────────────────"));
+            ToolLevelAbilities.appendTooltip(stack, tooltip);
+            return;
+        }
+
         double bonusDmgPct = (lvl - 1) * 1.2D;
         tooltip.add(Component.translatable("awakening_system.weapon_level.bonus_dmg", String.format("%.1f", bonusDmgPct)).withStyle(ChatFormatting.RED));
 
@@ -357,5 +367,9 @@ public final class WeaponLevelManager {
         tooltip.add(Component.translatable(lvl >= 50 ? "awakening_system.weapon_level.m50.unlocked" : "awakening_system.weapon_level.m50.locked"));
         tooltip.add(Component.translatable(lvl >= 75 ? "awakening_system.weapon_level.m75.unlocked" : "awakening_system.weapon_level.m75.locked"));
         tooltip.add(Component.translatable(lvl >= 100 ? "awakening_system.weapon_level.m100.unlocked" : "awakening_system.weapon_level.m100.locked"));
+        if (ToolLevelAbilities.kind(stack) != null) {   // an axe: a weapon that also fells trees
+            tooltip.add(Component.literal("§8────────────────────────"));
+            ToolLevelAbilities.appendTooltip(stack, tooltip);
+        }
     }
 }
