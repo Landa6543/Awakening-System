@@ -113,7 +113,38 @@ public final class ModernGuiHelper {
 
         // Render the official Manhwa System Window Frame (translucent frosted cobalt glass & filigree)
         ResourceLocation frame = getFrameForTheme(theme);
-        g.blit(frame, x, y, w, h, 0.0F, 0.0F, 880, 620, 880, 620);
+        drawFrameNineSlice(g, frame, x, y, w, h);
+    }
+
+    /**
+     * The 880 x 620 frame drawn in pieces: the corners and the ornament on top keep their shape at one size, and
+     * only the straight edges and the glass stretch, so a wide or tall window does not blow up the filigree.
+     */
+    private static void drawFrameNineSlice(GuiGraphics g, ResourceLocation tex, int x, int y, int w, int h) {
+        final int TW = 880, TH = 620, C = 64, ORN_L = 352, ORN_R = 528;
+        float k = Math.max(0.3F, Math.min(0.5F, Math.min(w / (float) TW, h / (float) TH)));
+        int c = Math.round(C * k);
+        int ornW = Math.round((ORN_R - ORN_L) * k);
+        int midW = w - 2 * c, midH = h - 2 * c;
+        if (midW <= ornW + 2 || midH <= 0) {
+            g.blit(tex, x, y, w, h, 0.0F, 0.0F, TW, TH, TW, TH);
+            return;
+        }
+        // corners
+        g.blit(tex, x, y, c, c, 0, 0, C, C, TW, TH);
+        g.blit(tex, x + w - c, y, c, c, TW - C, 0, C, C, TW, TH);
+        g.blit(tex, x, y + h - c, c, c, 0, TH - C, C, C, TW, TH);
+        g.blit(tex, x + w - c, y + h - c, c, c, TW - C, TH - C, C, C, TW, TH);
+        // top edge: stretched on both sides of the ornament, which keeps its shape in the middle
+        int ornX = x + w / 2 - ornW / 2;
+        g.blit(tex, x + c, y, ornX - (x + c), c, C, 0, ORN_L - C, C, TW, TH);
+        g.blit(tex, ornX, y, ornW, c, ORN_L, 0, ORN_R - ORN_L, C, TW, TH);
+        g.blit(tex, ornX + ornW, y, x + w - c - (ornX + ornW), c, ORN_R, 0, TW - C - ORN_R, C, TW, TH);
+        // bottom, left and right edges, and the glass
+        g.blit(tex, x + c, y + h - c, midW, c, C, TH - C, TW - 2 * C, C, TW, TH);
+        g.blit(tex, x, y + c, c, midH, 0, C, C, TH - 2 * C, TW, TH);
+        g.blit(tex, x + w - c, y + c, c, midH, TW - C, C, C, TH - 2 * C, TW, TH);
+        g.blit(tex, x + c, y + c, midW, midH, C, C, TW - 2 * C, TH - 2 * C, TW, TH);
     }
 
     /**

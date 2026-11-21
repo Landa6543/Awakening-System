@@ -25,7 +25,7 @@ public class SaoCultivationScreen extends SaoWindow {
     private int meridian = 0;
 
     public SaoCultivationScreen(Screen parent) {
-        super(parent, 420, 244);
+        super(parent, 450, 244);
     }
 
     private static Component key(String k, Object... args) {
@@ -54,7 +54,7 @@ public class SaoCultivationScreen extends SaoWindow {
 
     // layout
     private int cardY() { return top() + HEADER + 6; }
-    private int actW() { return 118; }
+    private int actW() { return 128; }
     private int actX() { return left() + pw - 12 - actW(); }
     private int tabY() { return top() + HEADER + 54; }
     private int bodyY() { return top() + HEADER + 74; }
@@ -85,7 +85,8 @@ public class SaoCultivationScreen extends SaoWindow {
         int qi = d.cultivationQi(), max = Math.max(1, d.maxCultivationQi());
         float density = this.minecraft != null && this.minecraft.player != null ? SystemEvents.getZoneQiDensity(this.minecraft.player) : 1;
         g.drawString(this.font, "Qi  " + qi + " / " + max, x + 14, cy + 2, alpha(GREY_DARK, a), false);
-        bar(g, x + 14, cy + 13, 200, 6, qi / (float) max, 0xFF3E9BD6, a);
+        // the bar ends before the Meditate button
+        bar(g, x + 14, cy + 13, actX() - actW() - 4 - 10 - (x + 14), 6, qi / (float) max, 0xFF3E9BD6, a);
         String info = String.format(Locale.US, "%.1fx", density) + "  ·  " + tr("impurities", "Impurities %s%%", d.bodyImpurities()).getString();
         g.drawString(this.font, info, x + 14, cy + 24, alpha(GREY, a), false);
         String phys = d.murimPhysique();

@@ -19,6 +19,7 @@ public final class HudShots {
     private static final boolean ON = System.getProperty("awakening.hudShots") != null;
     private static final int[][] SIZES = {{854, 480}, {1280, 720}, {1920, 1080}};
     private static int t = -1;
+    private static boolean userFullDive;
 
     @SubscribeEvent
     public static void tick(ClientTickEvent.Post event) {
@@ -77,6 +78,43 @@ public final class HudShots {
             if (t == 90) Screenshot.grab(mc.gameDirectory, "hs_sao_" + which + ".png", mc.getMainRenderTarget(), msg -> {});
             if (t == 95) com.soybe.awakeningsystem.client.sao.UiStyle.setFullDive(false);
             if (t == 100) mc.stop();
+            return;
+        }
+        if (System.getProperty("awakening.hudShots").equals("fix")) {
+            // a base class at level 60: both trees, cultivation and the inventory in full-dive, and the K menu opening
+            var server = mc.getSingleplayerServer();
+            if (t == 40 && server != null) server.execute(() -> {
+                var sp = server.getPlayerList().getPlayer(mc.player.getUUID());
+                sp.setGameMode(net.minecraft.world.level.GameType.SURVIVAL);
+                var d = com.soybe.awakeningsystem.SystemEvents.data(sp);
+                d.resetHunterClass();
+                d.setLevel(60);
+                com.soybe.awakeningsystem.SystemEvents.selectHunterClass(sp, "base_assassin");
+                AwakeningSystemMod.sync(sp);
+            });
+            if (t == 45) {
+                userFullDive = com.soybe.awakeningsystem.client.sao.UiStyle.fullDive();
+                com.soybe.awakeningsystem.client.sao.UiStyle.setFullDive(false);
+            }
+            if (t == 50) mc.getWindow().setWindowed(1600, 640);   // a wide window, as in the user's photo
+            if (t == 60) mc.setScreen(new com.soybe.awakeningsystem.ClassSkillTreeScreen(null));
+            if (t == 80) Screenshot.grab(mc.gameDirectory, "hs_fix_tree.png", mc.getMainRenderTarget(), msg -> {});
+            if (t == 85) mc.getWindow().setWindowed(1280, 720);
+            if (t == 90) {
+                com.soybe.awakeningsystem.client.sao.UiStyle.setFullDive(true);
+                mc.setScreen(new com.soybe.awakeningsystem.ClassSkillTreeScreen(null));
+            }
+            if (t == 110) Screenshot.grab(mc.gameDirectory, "hs_fix_tree_sao.png", mc.getMainRenderTarget(), msg -> {});
+            if (t == 115) mc.setScreen(new com.soybe.awakeningsystem.CultivationScreen(null));
+            if (t == 135) Screenshot.grab(mc.gameDirectory, "hs_fix_cult.png", mc.getMainRenderTarget(), msg -> {});
+            if (t == 140) mc.setScreen(new net.minecraft.client.gui.screens.inventory.InventoryScreen(mc.player));
+            if (t == 160) Screenshot.grab(mc.gameDirectory, "hs_fix_inv.png", mc.getMainRenderTarget(), msg -> {});
+            if (t == 165) mc.setScreen(null);
+            if (t == 170) mc.setScreen(new com.soybe.awakeningsystem.SystemScreen());
+            if (t == 176) Screenshot.grab(mc.gameDirectory, "hs_fix_menu_early.png", mc.getMainRenderTarget(), msg -> {});
+            if (t == 200) Screenshot.grab(mc.gameDirectory, "hs_fix_menu.png", mc.getMainRenderTarget(), msg -> {});
+            if (t == 205) com.soybe.awakeningsystem.client.sao.UiStyle.setFullDive(userFullDive);   // the player's own choice back
+            if (t == 210) mc.stop();
             return;
         }
         if (System.getProperty("awakening.hudShots").equals("inv")) {

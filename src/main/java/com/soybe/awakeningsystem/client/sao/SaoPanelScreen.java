@@ -672,6 +672,14 @@ public class SaoPanelScreen extends Screen {
         boolean ok = com.soybe.awakeningsystem.ShopDefinitions.isUnlocked(sel, d);
         boolean afford = d.coins() >= sel.cost();
         if (ok) claimButtonText(g, x + PW - 112, fy + 6, afford ? tr("buy", "Buy") : tr("no_coins", "Not enough G"), mouseX, mouseY, afford ? a : a * 0.5F);
+        else if (com.soybe.awakeningsystem.ShopDefinitions.requiresEnd(sel.id())) {
+            // the Ranker Tower's ticket and return scroll open up on reaching the End
+            int ty = fy + 4;
+            for (var l : this.font.split(Component.translatable("awakening_system.shop.locked_end"), 108)) {
+                g.drawString(this.font, l, x + PW - 112, ty, alpha(0xFFD6473E, a), false);
+                ty += 9;
+            }
+        }
         else g.drawString(this.font, tr("needs_rank", "Needs rank %s", com.soybe.awakeningsystem.ShopDefinitions.requiredRank(sel)), x + PW - 112, fy + 10, alpha(0xFFD6473E, a), false);
     }
 

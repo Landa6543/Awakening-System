@@ -560,6 +560,9 @@ public class SeriesNpcEntity extends PathfinderMob {
 
     @Override
     public boolean hurt(DamageSource source, float amount) {
+        if (isUnkillable() && !(source.getEntity() instanceof Player p && p.isCreative() && p.isShiftKeyDown())) {
+            return false;
+        }
         if (source.getEntity() instanceof Player player) {
             if (player.isCreative()) {
                 return super.hurt(source, amount);
@@ -602,6 +605,11 @@ public class SeriesNpcEntity extends PathfinderMob {
         return success;
     }
 
+    /** The Hunter Association's inspector (the rank evaluator): players need it, so nothing may kill it by accident. */
+    private boolean isUnkillable() {
+        return getNpcProfile() == NpcProfile.HUNTER_EVALUATOR;
+    }
+
     @Override
     public boolean isPushable() {
         return getNpcProfile() != NpcProfile.ELENA_RECEPTIONIST
@@ -614,6 +622,10 @@ public class SeriesNpcEntity extends PathfinderMob {
     public void tick() {
         super.tick();
         if (!this.level().isClientSide) {
+            // anything that lowers the inspector's health some other way is undone at once
+            if (isUnkillable() && this.getHealth() < this.getMaxHealth()) {
+                this.setHealth(this.getMaxHealth());
+            }
             if (isFollowing() && this.tickCount % 40 == 0 && this.getHealth() < this.getMaxHealth()) {
                 this.heal(2.0F);
             }
@@ -631,6 +643,10 @@ public class SeriesNpcEntity extends PathfinderMob {
 
     @Override
     public boolean isInvulnerableTo(DamageSource source) {
+        if (isUnkillable()) {
+            // the Association's inspector can only be removed on purpose: a creative player crouching
+            return !(source.getEntity() instanceof Player p && p.isCreative() && p.isShiftKeyDown());
+        }
         if (source.getEntity() instanceof Player player && player.isCreative()) {
             return false;
         }

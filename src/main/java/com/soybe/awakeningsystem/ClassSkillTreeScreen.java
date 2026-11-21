@@ -84,15 +84,16 @@ public final class ClassSkillTreeScreen extends Screen {
 
     private Layout layout() {
         float scale = getGuiScale();
-        int pw = Math.max(620, Math.round(this.width / scale) - 16);
-        int ph = Math.max(360, Math.round(this.height / scale) - 16);
+        int pw = Math.max(620, Math.round(this.width / scale) - 48);
+        int ph = Math.max(360, Math.round(this.height / scale) - 28);
         int left = (this.width - pw) / 2;
         int top = (this.height - ph) / 2;
         int inspW = Math.min(260, Math.max(212, pw / 4));
-        int bodyY = top + 42;
-        int bodyH = ph - 42 - 46;
-        return new Layout(left, top, pw, ph, left + 10, bodyY, pw - inspW - 28, bodyH,
-                left + pw - inspW - 10, bodyY, inspW, bodyH, top + ph - 42);
+        // inside the frame's corners (about 20 px at the edges)
+        int bodyY = top + 48;
+        int bodyH = ph - 48 - 58;
+        return new Layout(left, top, pw, ph, left + 20, bodyY, pw - inspW - 48, bodyH,
+                left + pw - inspW - 20, bodyY, inspW, bodyH, top + ph - 54);
     }
 
     public float getGuiScale() {
@@ -172,22 +173,22 @@ public final class ClassSkillTreeScreen extends Screen {
 
         ModernGuiHelper.GuiTheme theme = ModernGuiHelper.getTheme(data);
         ModernGuiHelper.drawModernWindow(graphics, left, top, panelW, panelH, theme);
-        ModernGuiHelper.drawModernHeader(graphics, left + 10, top + 6, panelW - 20, 32, null, 0, theme, font);
+        ModernGuiHelper.drawModernHeader(graphics, left + 24, top + 10, panelW - 48, 32, null, 0, theme, font);
 
         // title and points inside the header, clear of the window's corner marks
         Component className = Component.translatable("awakening_system.class." + data.hunterClass() + ".name");
         Component headerTitle = Component.translatable("awakening_system.skill_tree.header", className).withStyle(ChatFormatting.BOLD);
-        graphics.drawString(font, headerTitle, left + 20, top + 11, 0xFFFFD700);
+        graphics.drawString(font, headerTitle, left + 34, top + 15, 0xFFFFD700);
 
         int sp = data.skillPoints();
         int treeCount = data.getUnlockedTreeSkillsCount();
         Component subHeader = Component.translatable("awakening_system.skill_tree.subheader", sp, treeCount);
-        graphics.drawString(font, subHeader, left + 20, top + 24, 0xFFCCE3EC);
+        graphics.drawString(font, subHeader, left + 34, top + 28, 0xFFCCE3EC);
 
         int closeBtnW = 60;
         int closeBtnH = 18;
-        int closeBtnX = left + panelW - closeBtnW - 16;
-        int closeBtnY = top + 13;
+        int closeBtnX = left + panelW - closeBtnW - 30;
+        int closeBtnY = top + 17;
         boolean closeHov = mX >= closeBtnX && mX < closeBtnX + closeBtnW && mY >= closeBtnY && mY < closeBtnY + closeBtnH;
         graphics.fill(closeBtnX, closeBtnY, closeBtnX + closeBtnW, closeBtnY + closeBtnH, closeHov ? 0xFF882222 : 0xFF142430);
         drawBorder(graphics, closeBtnX, closeBtnY, closeBtnW, closeBtnH, closeHov ? 0xFFFF5555 : 0xFF2D7691);
@@ -207,9 +208,9 @@ public final class ClassSkillTreeScreen extends Screen {
 
         renderInspectionPanel(graphics, data, inspX, inspY, inspW, inspH, mX, mY);
 
-        int slotBarX = left + 10;
+        int slotBarX = left + 20;
         int slotBarY = L.slotY();
-        int slotBarW = panelW - 20;
+        int slotBarW = panelW - 40;
         int slotBarH = 34;
         renderSlotProgressTracker(graphics, data, slotBarX, slotBarY, slotBarW, slotBarH);
 
@@ -634,8 +635,8 @@ public final class ClassSkillTreeScreen extends Screen {
 
         int closeBtnW = 60;
         int closeBtnH = 18;
-        int closeBtnX = left + panelW - closeBtnW - 16;
-        int closeBtnY = top + 13;
+        int closeBtnX = left + panelW - closeBtnW - 30;
+        int closeBtnY = top + 17;
         if (mouseX >= closeBtnX && mouseX < closeBtnX + closeBtnW && mouseY >= closeBtnY && mouseY < closeBtnY + closeBtnH) {
             playClickSound();
             onClose();

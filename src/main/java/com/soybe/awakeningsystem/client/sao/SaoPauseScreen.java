@@ -31,6 +31,7 @@ public class SaoPauseScreen extends Screen {
     private final List<Entry> entries = new ArrayList<>();
     private boolean confirmLeave;
     private int ticks;
+    private boolean openSound;
 
     public SaoPauseScreen() {
         this(false);
@@ -82,6 +83,10 @@ public class SaoPauseScreen extends Screen {
 
     @Override
     public void render(GuiGraphics g, int mouseX, int mouseY, float partialTick) {
+        if (!openSound) {
+            openSound = true;
+            SaoSounds.open();   // the same sound as the main menu (K)
+        }
         frame(mouseX, mouseY, ticks + partialTick);
         super.render(g, mouseX, mouseY, partialTick);
         float open = Mth.clamp((ticks + partialTick) / 5.0F, 0.0F, 1.0F);

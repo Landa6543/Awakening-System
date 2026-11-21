@@ -45,6 +45,9 @@ final class SaoDraw {
 
     static int alpha(int argb, float a) {
         int al = (int) (((argb >>> 24) & 255) * Math.max(0.0F, Math.min(1.0F, a)));
+        // the game draws text whose alpha is under 4 fully opaque, so a fading text never goes below 4
+        // (all but invisible) and a fading-in window doesn't flash its words at the start
+        if ((argb >>> 24) >= 4 && a > 0.0F) al = Math.max(4, al);
         return (al << 24) | (argb & 0xFFFFFF);
     }
 

@@ -978,13 +978,13 @@ public final class AwakeningSystemClient {
                     dev.diorama.waypoint.WaypointStore store = dev.diorama.waypoint.WaypointStore.get();
                     if (store != null) {
                         store.all().stream()
-                                .filter(w -> w.kind == dev.diorama.waypoint.Waypoint.Kind.TEMPORARY && "Salón de Evaluación".equals(w.name))
+                                .filter(w -> w.kind == dev.diorama.waypoint.Waypoint.Kind.TEMPORARY && isTrackerWaypoint(w.name))
                                 .toList()
                                 .forEach(store::remove);
                     }
                     // Remover de WaypointManager interno si existe
                     com.soybe.awakeningsystem.client.map.Waypoint existingWp = com.soybe.awakeningsystem.client.map.WaypointManager.getAllWaypoints().stream()
-                            .filter(w -> "Salón de Evaluación".equals(w.getName()))
+                            .filter(w -> isTrackerWaypoint(w.getName()))
                             .findFirst()
                             .orElse(null);
                     if (existingWp != null) {
@@ -3814,12 +3814,12 @@ public final class AwakeningSystemClient {
         dev.diorama.waypoint.WaypointStore dioramaStore = dev.diorama.waypoint.WaypointStore.get();
         if (dioramaStore != null) {
             dioramaStore.all().stream()
-                    .filter(w -> w.kind == dev.diorama.waypoint.Waypoint.Kind.TEMPORARY && "Salón de Evaluación".equals(w.name))
+                    .filter(w -> w.kind == dev.diorama.waypoint.Waypoint.Kind.TEMPORARY && isTrackerWaypoint(w.name))
                     .toList()
                     .forEach(dioramaStore::remove);
 
             dev.diorama.waypoint.Waypoint tempWp = new dev.diorama.waypoint.Waypoint(
-                    "Salón de Evaluación", payload.x(), payload.y(), payload.z(), "minecraft:overworld", 0xFF00E5FF
+                    trackerWaypointName(), payload.x(), payload.y(), payload.z(), "minecraft:overworld", 0xFF00E5FF
             );
             tempWp.kind = dev.diorama.waypoint.Waypoint.Kind.TEMPORARY;
             dioramaStore.add(tempWp);
@@ -3827,7 +3827,7 @@ public final class AwakeningSystemClient {
 
         // 2. Compatibilidad con WaypointManager interno
         com.soybe.awakeningsystem.client.map.WaypointManager.ensureCurrentWorld();
-        String name = "Salón de Evaluación";
+        String name = trackerWaypointName();
         com.soybe.awakeningsystem.client.map.Waypoint existing = com.soybe.awakeningsystem.client.map.WaypointManager.getAllWaypoints().stream()
                 .filter(w -> name.equals(w.getName()))
                 .findFirst()
@@ -3850,5 +3850,15 @@ public final class AwakeningSystemClient {
             com.soybe.awakeningsystem.client.map.WaypointManager.addWaypoint(wp);
         }
     }
+
+    /** The tracker's waypoint name, in the player's language (the name the old Spanish-only waypoints had is recognised too). */
+    private static String trackerWaypointName() {
+        return net.minecraft.network.chat.Component.translatable("item.awakening_system.hunter_association_tracker.waypoint").getString();
+    }
+
+    private static boolean isTrackerWaypoint(String name) {
+        return name != null && (name.equals(trackerWaypointName()) || name.equals("Sal\u00f3n de Evaluaci\u00f3n"));
+    }
+
 }
 

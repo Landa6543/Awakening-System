@@ -30,7 +30,7 @@ public class SaoClassTreeScreen extends SaoWindow {
     private boolean viewBase;
 
     public SaoClassTreeScreen(Screen parent) {
-        super(parent, 430, 244);
+        super(parent, 540, 310);   // a big window for the web (it shrinks on small screens)
     }
 
     @Override

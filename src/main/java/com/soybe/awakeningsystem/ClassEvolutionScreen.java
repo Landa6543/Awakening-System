@@ -88,11 +88,11 @@ public final class ClassEvolutionScreen extends Screen {
         int x = left(), y = top();
         ModernGuiHelper.GuiTheme theme = ModernGuiHelper.getTheme(d);
         ModernGuiHelper.drawModernWindow(g, x, y, PW, PH, theme);
-        ModernGuiHelper.drawModernHeader(g, x + 10, y + 6, PW - 20, 26, null, 0, theme, this.font);
-        g.drawString(this.font, key("title").copy().withStyle(ChatFormatting.BOLD), x + 20, y + 15, 0xFFFFD700);
+        ModernGuiHelper.drawModernHeader(g, x + 24, y + 10, PW - 48, 26, null, 0, theme, this.font);
+        g.drawString(this.font, key("title").copy().withStyle(ChatFormatting.BOLD), x + 34, y + 19, 0xFFFFD700);
         if (d.hasHunterClass()) {
             String cls = Component.translatable("awakening_system.class." + d.hunterClass() + ".name").getString();
-            g.drawString(this.font, cls, x + PW - 20 - this.font.width(cls), y + 15, 0xFFCCE3EC);
+            g.drawString(this.font, cls, x + PW - 34 - this.font.width(cls), y + 19, 0xFFCCE3EC);
         }
 
         ClassEvolution.Base base = ClassEvolution.base(d.hunterClass());
@@ -106,19 +106,19 @@ public final class ClassEvolutionScreen extends Screen {
             return;
         }
         // what is still needed
-        int ry = y + 42;
-        g.fill(x + 12, ry, x + PW - 12, ry + 40, 0xF5060D14);
+        int ry = y + 44;
+        g.fill(x + 20, ry, x + PW - 20, ry + 40, 0xF5060D14);
         boolean lvlOk = d.level() >= ClassEvolution.EVOLVE_LEVEL, won = d.evolutionTrialPassed();
-        g.drawString(this.font, (lvlOk ? "✔ " : "✘ ") + key("req_level", d.level(), ClassEvolution.EVOLVE_LEVEL).getString(), x + 22, ry + 8,
+        g.drawString(this.font, (lvlOk ? "✔ " : "✘ ") + key("req_level", d.level(), ClassEvolution.EVOLVE_LEVEL).getString(), x + 30, ry + 8,
                 lvlOk ? 0xFF50FA7B : 0xFFFF5555);
-        g.drawString(this.font, (won ? "✔ " : "✘ ") + key(won ? "req_trial_won" : "req_trial").getString(), x + 22, ry + 23,
+        g.drawString(this.font, (won ? "✔ " : "✘ ") + key(won ? "req_trial_won" : "req_trial").getString(), x + 30, ry + 23,
                 won ? 0xFF50FA7B : 0xFFFF5555);
-        if (!won) button(g, x + PW - 150, ry + 10, 130, 20, key("trial_button"), lvlOk, mx, my);
+        if (!won) button(g, x + PW - 158, ry + 10, 130, 20, key("trial_button"), lvlOk, mx, my);
 
         // the evolutions
         List<String> evo = base.evolutions();
-        int gap = 10, n = evo.size(), cx = x + 12, cw = PW - 24;
-        int w = (cw - gap * (n - 1)) / n, top = ry + 50, h = y + PH - 12 - top;
+        int gap = 10, n = evo.size(), cx = x + 20, cw = PW - 40;
+        int w = (cw - gap * (n - 1)) / n, top = ry + 50, h = y + PH - 22 - top;
         boolean can = ClassEvolution.canEvolve(d);
         for (int i = 0; i < n; i++) {
             int bx = cx + i * (w + gap);
@@ -151,8 +151,8 @@ public final class ClassEvolutionScreen extends Screen {
         SystemData d = data();
         ClassEvolution.Base base = ClassEvolution.base(d.hunterClass());
         if (b != 0 || base == null) return super.mouseClicked(rawX, rawY, b);
-        int x = left(), y = top(), ry = y + 42;
-        if (!d.evolutionTrialPassed() && d.level() >= ClassEvolution.EVOLVE_LEVEL && in(mx, my, x + PW - 150, ry + 10, 130, 20)) {
+        int x = left(), y = top(), ry = y + 44;
+        if (!d.evolutionTrialPassed() && d.level() >= ClassEvolution.EVOLVE_LEVEL && in(mx, my, x + PW - 158, ry + 10, 130, 20)) {
             PacketDistributor.sendToServer(new ClassEvolution.Payload("trial", ""));
             AwakeningSystemClient.playButtonClick();
             onClose();
@@ -160,8 +160,8 @@ public final class ClassEvolutionScreen extends Screen {
         }
         if (ClassEvolution.canEvolve(d)) {
             List<String> evo = base.evolutions();
-            int gap = 10, n = evo.size(), cx = x + 12, cw = PW - 24;
-            int w = (cw - gap * (n - 1)) / n, top = ry + 50, h = y + PH - 12 - top;
+            int gap = 10, n = evo.size(), cx = x + 20, cw = PW - 40;
+            int w = (cw - gap * (n - 1)) / n, top = ry + 50, h = y + PH - 22 - top;
             for (int i = 0; i < n; i++) {
                 int bx = cx + i * (w + gap);
                 if (in(mx, my, bx + 8, top + h - 28, w - 16, 20)) {
