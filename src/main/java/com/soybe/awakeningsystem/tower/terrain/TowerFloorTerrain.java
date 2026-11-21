@@ -27,9 +27,28 @@ import net.minecraft.world.level.chunk.ChunkAccess;
 public final class TowerFloorTerrain {
     private TowerFloorTerrain() {}
 
-    private static final TowerSimplexNoise[] NOISE = new TowerSimplexNoise[8];
-    static {
-        for (int i = 0; i < NOISE.length; i++) NOISE[i] = new TowerSimplexNoise(918273645L * (i + 7) + 31L);
+    private static volatile TowerSimplexNoise[] NOISE = noises(0L);
+    /**
+     * The world's own twist on the floors: the same style of land, but hills, trees and spots elsewhere in each world.
+     * 0 gives the land the floors had before worlds differed (kept for worlds whose floors were already made).
+     */
+    private static volatile long worldSalt = 0L;
+
+    private static TowerSimplexNoise[] noises(long salt) {
+        TowerSimplexNoise[] a = new TowerSimplexNoise[8];
+        for (int i = 0; i < a.length; i++) a[i] = new TowerSimplexNoise((918273645L * (i + 7) + 31L) ^ salt);
+        return a;
+    }
+
+    /** Sets the world's twist; called as a server starts, before any floor generates. */
+    public static void setWorldSalt(long salt) {
+        if (salt == worldSalt) return;
+        worldSalt = salt;
+        NOISE = noises(salt);
+    }
+
+    public static long worldSalt() {
+        return worldSalt;
     }
 
     static double n(int floor, double x, double z, double scale, int octaves) {
@@ -38,7 +57,7 @@ public final class TowerFloorTerrain {
 
     /** A stable 0..1 value for a cell and a salt. */
     static double hash(int floor, int cx, int cz, int salt) {
-        long h = cx * 341873128712L ^ cz * 132897987541L ^ (floor * 2654435761L + salt * 40503L);
+        long h = cx * 341873128712L ^ cz * 132897987541L ^ (floor * 2654435761L + salt * 40503L) ^ worldSalt;
         h ^= h >>> 33;
         h *= 0xff51afd7ed558ccdL;
         h ^= h >>> 33;
@@ -133,7 +152,7 @@ public final class TowerFloorTerrain {
         fillTerrain(floor, chunk);
         // the tower's ores, in the rock of the floors their band covers
         if (isCave(floor)) com.soybe.awakeningsystem.ore.TowerOres.placeVeins(floor, chunk, 3, 124);
-        else com.soybe.awakeningsystem.ore.TowerOres.placeVeins(floor, chunk, -60, 96);
+        else com.soybe.awakeningsystem.ore.TowerOres.placeVeins(floor, chunk, -16, 80);   // where a player digs, not deep down
     }
 
     private static void fillTerrain(int floor, ChunkAccess chunk) {

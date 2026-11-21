@@ -77,6 +77,19 @@ public final class TowerMobCheck {
             for (int i = 0; i < 3; i++) GreatTowerWorldManager.ensureFloorSpawns(lvl, sp.blockPosition(), f);
             long n = lvl.getEntitiesOfClass(Mob.class, sp.getBoundingBox().inflate(128)).size();
             AwakeningSystemMod.LOGGER.info("[TowerMobs] floor {} at {} mobs near {}", f, sp.blockPosition(), n);
+            // ores in the 5x5 chunks around: what a player would find digging here
+            java.util.Map<String, Integer> ores = new java.util.TreeMap<>();
+            var c = sp.chunkPosition();
+            for (int cx = c.x - 2; cx <= c.x + 2; cx++) for (int cz = c.z - 2; cz <= c.z + 2; cz++) {
+                var ch = lvl.getChunk(cx, cz);
+                var mp = new BlockPos.MutableBlockPos();
+                for (int x = 0; x < 16; x++) for (int z = 0; z < 16; z++) for (int y = lvl.getMinBuildHeight(); y < lvl.getMaxBuildHeight(); y++) {
+                    var st = ch.getBlockState(mp.set(c.getMinBlockX() + (cx - c.x) * 16 + x, y, c.getMinBlockZ() + (cz - c.z) * 16 + z));
+                    String id = net.minecraft.core.registries.BuiltInRegistries.BLOCK.getKey(st.getBlock()).getPath();
+                    if (id.endsWith("_ore")) ores.merge(id, 1, Integer::sum);
+                }
+            }
+            AwakeningSystemMod.LOGGER.info("[TowerMobs] floor {} ores in 80x80 {}", f, ores);
         });
         if (phase == WAIT - 5) server.execute(() -> {
             ServerPlayer sp = server.getPlayerList().getPlayer(mc.player.getUUID());

@@ -147,25 +147,49 @@ public final class TowerOres {
      * blobs per chunk, anywhere in the rock between the bottom and a little under the surface (so the cave floors
      * show them in their walls and roofs).
      */
+    /** The game's own ores on the tower floors: id, first floor, last floor, veins per chunk, vein size. */
+    private record Plain(Block stone, Block deep, int minFloor, int maxFloor, int veins, int size) {}
+
+    private static final List<Plain> PLAIN = List.of(
+            new Plain(Blocks.COAL_ORE, Blocks.DEEPSLATE_COAL_ORE, 1, 25, 5, 9),
+            new Plain(Blocks.IRON_ORE, Blocks.DEEPSLATE_IRON_ORE, 1, 25, 4, 7),
+            new Plain(Blocks.COPPER_ORE, Blocks.DEEPSLATE_COPPER_ORE, 1, 15, 3, 8),
+            new Plain(Blocks.GOLD_ORE, Blocks.DEEPSLATE_GOLD_ORE, 4, 25, 2, 6),
+            new Plain(Blocks.REDSTONE_ORE, Blocks.DEEPSLATE_REDSTONE_ORE, 5, 25, 2, 6),
+            new Plain(Blocks.LAPIS_ORE, Blocks.DEEPSLATE_LAPIS_ORE, 5, 25, 1, 6),
+            new Plain(Blocks.DIAMOND_ORE, Blocks.DEEPSLATE_DIAMOND_ORE, 8, 25, 1, 4),
+            new Plain(Blocks.EMERALD_ORE, Blocks.DEEPSLATE_EMERALD_ORE, 15, 25, 1, 2));
+
     public static void placeVeins(int floor, ChunkAccess chunk, int bottom, int top) {
-        int x0 = chunk.getPos().getMinBlockX(), z0 = chunk.getPos().getMinBlockZ();
         BlockPos.MutableBlockPos p = new BlockPos.MutableBlockPos();
+        // the cave floors and the mining caverns are where ore is meant to be found: twice the veins there
+        int mult = com.soybe.awakeningsystem.tower.terrain.TowerFloorTerrain.isCave(floor) ? 2 : 1;
         for (Kind k : KINDS) {
             if (floor < k.minFloor || floor > k.maxFloor) continue;
             BlockState ore = ORE_BLOCKS.get(k.id).get().defaultBlockState();
-            int veins = 5 - Math.min(3, k.rank / 2);
-            for (int v = 0; v < veins; v++) {
-                long seed = (long) floor * 31 + k.id.hashCode() * 7L + v;
-                int cx = x0 + 2 + (int) (hash(chunk.getPos().x, chunk.getPos().z, seed) * 12);
-                int cz = z0 + 2 + (int) (hash(chunk.getPos().z, chunk.getPos().x, seed + 99) * 12);
-                int cy = bottom + (int) (hash(chunk.getPos().x + seed, chunk.getPos().z, 7) * Math.max(1, top - bottom));
-                int size = 2 + (int) (hash(cx, cz, cy) * 5);
-                for (int i = 0; i < size; i++) {
-                    int x = cx + (int) ((hash(cx, i, 1) - 0.5) * 3), y = cy + (int) ((hash(cy, i, 2) - 0.5) * 3), z = cz + (int) ((hash(cz, i, 3) - 0.5) * 3);
-                    if (x < x0 || x > x0 + 15 || z < z0 || z > z0 + 15 || y <= chunk.getMinBuildHeight() || y >= chunk.getMaxBuildHeight()) continue;
-                    if (host(chunk.getBlockState(p.set(x, y, z)))) chunk.setBlockState(p, ore, false);
-                }
-            }
+            int veins = (7 - Math.min(4, k.rank)) * mult;
+            int size = 4 + Math.max(0, 3 - k.rank);
+            for (int v = 0; v < veins; v++) vein(chunk, p, (long) floor * 31 + k.id.hashCode() * 7L + v, bottom, top, size, ore, ore);
+        }
+        for (Plain o : PLAIN) {
+            if (floor < o.minFloor || floor > o.maxFloor) continue;
+            for (int v = 0; v < o.veins * mult; v++)
+                vein(chunk, p, (long) floor * 53 + o.stone.hashCode() * 11L + v, bottom, top, o.size, o.stone.defaultBlockState(), o.deep.defaultBlockState());
+        }
+    }
+
+    /** One blob of ore around a spot picked from the seed, written only into rock (deepslate gets the deep kind). */
+    private static void vein(ChunkAccess chunk, BlockPos.MutableBlockPos p, long seed, int bottom, int top, int size, BlockState ore, BlockState deepOre) {
+        int x0 = chunk.getPos().getMinBlockX(), z0 = chunk.getPos().getMinBlockZ();
+        int cx = x0 + 2 + (int) (hash(chunk.getPos().x, chunk.getPos().z, seed) * 12);
+        int cz = z0 + 2 + (int) (hash(chunk.getPos().z, chunk.getPos().x, seed + 99) * 12);
+        int cy = bottom + (int) (hash(chunk.getPos().x + seed, chunk.getPos().z, 7) * Math.max(1, top - bottom));
+        int n = size + (int) (hash(cx, cz, cy) * size);
+        for (int i = 0; i < n; i++) {
+            int x = cx + (int) ((hash(cx, i, 1) - 0.5) * 4), y = cy + (int) ((hash(cy, i, 2) - 0.5) * 4), z = cz + (int) ((hash(cz, i, 3) - 0.5) * 4);
+            if (x < x0 || x > x0 + 15 || z < z0 || z > z0 + 15 || y <= chunk.getMinBuildHeight() || y >= chunk.getMaxBuildHeight()) continue;
+            BlockState here = chunk.getBlockState(p.set(x, y, z));
+            if (host(here)) chunk.setBlockState(p, here.is(Blocks.DEEPSLATE) || here.is(Blocks.COBBLED_DEEPSLATE) || here.is(Blocks.TUFF) ? deepOre : ore, false);
         }
     }
 }
