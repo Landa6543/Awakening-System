@@ -106,6 +106,18 @@ public class GuildScreen extends Screen {
         }
     }
 
+    /** The data this window was opened with, for the full-dive guild window. */
+    public CompoundTag rawData() {
+        return rawData;
+    }
+
+    /** Opens this window at a page (0 members ... 5 alliances). */
+    public GuildScreen atTab(int tab) {
+        this.currentTab = tab;
+        lastTab = tab;
+        return this;
+    }
+
     public static void open(CompoundTag data) {
         Minecraft.getInstance().setScreen(new GuildScreen(data));
     }

@@ -382,6 +382,10 @@ public final class AwakeningSystemClient {
             guildScreen.updateData(data);
             return;
         }
+        if (mc.screen instanceof com.soybe.awakeningsystem.client.sao.SaoGuildScreen saoGuild) {   // the full-dive guild window
+            saoGuild.updateData(data);
+            return;
+        }
         if (mc.screen instanceof com.soybe.awakeningsystem.guild.GuildChunkMapScreen mapScreen) {
             mapScreen.updateData(cachedClientGuild, cachedClientClaims);
             return;

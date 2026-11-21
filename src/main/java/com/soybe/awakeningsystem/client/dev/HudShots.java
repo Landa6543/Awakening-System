@@ -57,6 +57,8 @@ public final class HudShots {
                     case "fables" -> new com.soybe.awakeningsystem.fable.FablesScreen(null);
                     case "config" -> new com.soybe.awakeningsystem.client.gui.GuiConfigScreen(null);
                     case "classpick" -> new com.soybe.awakeningsystem.ClassSelectionScreen(null);
+                    case "cultivation" -> new com.soybe.awakeningsystem.CultivationScreen(null);
+                    case "guild" -> new com.soybe.awakeningsystem.guild.GuildScreen(new net.minecraft.nbt.CompoundTag());
                     case "classtree" -> {
                         // the class set on the server and synced, as the tree asks the server for its data on opening
                         var server = mc.getSingleplayerServer();
