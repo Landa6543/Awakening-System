@@ -66,8 +66,9 @@ public class AbyssalOrcModel extends HierarchicalModel<AbyssalOrcEntity> {
         body.addOrReplaceChild("head", CubeListBuilder.create()
                 .texOffs(0, 0).addBox(-4.0F, -8.0F, -4.5F, 8.0F, 8.0F, 8.0F)
                 .texOffs(32, 0).addBox(-4.5F, -3.2F, -5.3F, 9.0F, 3.0F, 6.0F)
-                .texOffs(62, 0).addBox(-3.5F, -5.5F, -5.8F, 1.0F, 3.0F, 1.0F)
-                .texOffs(62, 0).mirror().addBox(2.5F, -5.5F, -5.8F, 1.0F, 3.0F, 1.0F)
+                // tusks stop below the eyes (the eyes sit higher and wider apart since 21 Nov)
+                .texOffs(62, 0).addBox(-3.5F, -4.6F, -5.8F, 1.0F, 2.1F, 1.0F)
+                .texOffs(62, 0).mirror().addBox(2.5F, -4.6F, -5.8F, 1.0F, 2.1F, 1.0F)
                 .texOffs(66, 0).mirror(false).addBox(-5.8F, -6.0F, -1.5F, 2.0F, 2.0F, 1.0F)
                 .texOffs(66, 0).mirror().addBox(3.8F, -6.0F, -1.5F, 2.0F, 2.0F, 1.0F)
                 .texOffs(72, 0).mirror(false).addBox(-1.5F, -11.0F, -4.0F, 3.0F, 3.5F, 8.0F),

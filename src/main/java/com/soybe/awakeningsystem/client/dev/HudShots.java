@@ -80,6 +80,34 @@ public final class HudShots {
             if (t == 100) mc.stop();
             return;
         }
+        if (System.getProperty("awakening.hudShots").equals("orc")) {
+            // the orcs' faces up close, and whether the game knows the jureles' dance music
+            var server = mc.getSingleplayerServer();
+            if (t == 40 && server != null) {
+                // in front of where the camera looks, turned to face it
+                mc.player.setXRot(8);
+                float yaw = mc.player.getYRot();
+                double fx = -Math.sin(Math.toRadians(yaw)), fz = Math.cos(Math.toRadians(yaw));
+                double px = mc.player.getX(), py = mc.player.getY(), pz = mc.player.getZ();
+                server.execute(() -> {
+                    var src = server.createCommandSourceStack().withSuppressedOutput();
+                    for (int i = 0; i < 2; i++) {
+                        double side = -1.3 + i * 2.6;
+                        server.getCommands().performPrefixedCommand(src, String.format(java.util.Locale.ROOT,
+                                "summon awakening_system:abyssal_orc %.2f %.2f %.2f {NoAI:1b,Rotation:[%.1ff,0f],PersistenceRequired:1b}",
+                                px + fx * 4.5 - fz * side, py, pz + fz * 4.5 + fx * side, yaw + 180));
+                    }
+                });
+            }
+            if (t == 45) mc.getWindow().setWindowed(1280, 720);
+            if (t == 60) {
+                var ev = mc.getSoundManager().getSoundEvent(net.minecraft.resources.ResourceLocation.fromNamespaceAndPath(AwakeningSystemMod.MOD_ID, "jurel_dance"));
+                AwakeningSystemMod.LOGGER.info("[HudShots] orc: jurel_dance sound known {}", ev != null);
+            }
+            if (t == 90) Screenshot.grab(mc.gameDirectory, "hs_orc.png", mc.getMainRenderTarget(), msg -> {});
+            if (t == 95) mc.stop();
+            return;
+        }
         if (System.getProperty("awakening.hudShots").equals("fix")) {
             // a base class at level 60: both trees, cultivation and the inventory in full-dive, and the K menu opening
             var server = mc.getSingleplayerServer();

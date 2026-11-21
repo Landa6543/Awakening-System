@@ -1,4 +1,15 @@
 {
+  "jurel_dance": {
+    "category": "record",
+    "subtitle": "subtitles.awakening_system.jurel_dance",
+    "sounds": [
+      {
+        "name": "awakening_system:jurel_dance",
+        "stream": true,
+        "volume": 0.6
+      }
+    ]
+  },
   "arise_voice": {
     "category": "voice",
     "subtitle": "subtitles.awakening_system.arise_voice",

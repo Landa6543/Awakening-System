@@ -33,8 +33,10 @@ import net.minecraft.world.phys.Vec3;
 public class WalkingJurelEntity extends PathfinderMob {
     private static final EntityDataAccessor<Boolean> DANCING = SynchedEntityData.defineId(WalkingJurelEntity.class, EntityDataSerializers.BOOLEAN);
 
-    /** One ritual every 4 minutes, lasting 20 seconds; the phase depends on the can, so all its jurels agree. */
-    private static final int CYCLE = 4800, RITUAL = 400;
+    /** One ritual every 4 minutes, lasting the minute of its music; the phase depends on the can, so all its jurels agree. */
+    private static final int CYCLE = 4800, RITUAL = 1200;
+    /** When each can's music last started (by the can's position), so the jurels of one can play it once. */
+    private static final java.util.Map<Long, Long> MUSIC_STARTED = new java.util.concurrent.ConcurrentHashMap<>();
 
     private BlockPos home;
 
@@ -89,6 +91,19 @@ public class WalkingJurelEntity extends PathfinderMob {
         if (dance != isDancing()) this.entityData.set(DANCING, dance);
         if (!dance) return;
         this.setTarget(null);                                   // nothing interrupts the ritual
+
+        // the music, once per ritual, from the middle of the can's roof
+        long now = this.level().getGameTime();
+        long phase = Math.floorMod(home.asLong() * 31L, CYCLE);
+        long start = now - Math.floorMod(now + phase, CYCLE);
+        Long played = MUSIC_STARTED.get(home.asLong());
+        if (played == null || played != start) {
+            MUSIC_STARTED.put(home.asLong(), start);
+            if (now - start < 40) {   // only at the very start, not when a jurel loads in halfway through
+                this.level().playSound(null, home.getX() + 0.5, home.getY() + 1.0, home.getZ() + 0.5,
+                        com.soybe.awakeningsystem.ModSounds.JUREL_DANCE.value(), net.minecraft.sounds.SoundSource.RECORDS, 1.0F, 1.0F);
+            }
+        }
 
         // a place on the ring, turning round the centre of the can's roof
         long t = this.level().getGameTime();

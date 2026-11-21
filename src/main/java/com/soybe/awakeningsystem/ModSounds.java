@@ -10,6 +10,11 @@ public final class ModSounds {
     public static final DeferredRegister<SoundEvent> SOUND_EVENTS =
             DeferredRegister.create(BuiltInRegistries.SOUND_EVENT, AwakeningSystemMod.MOD_ID);
 
+    /** The jureles' dance on the San Mortis can (a minute of music, quiet, heard near the can). */
+    public static final DeferredHolder<SoundEvent, SoundEvent> JUREL_DANCE =
+            SOUND_EVENTS.register("jurel_dance",
+                    () -> SoundEvent.createFixedRangeEvent(ResourceLocation.fromNamespaceAndPath(AwakeningSystemMod.MOD_ID, "jurel_dance"), 32.0F));
+
     public static final DeferredHolder<SoundEvent, SoundEvent> DART_ANNOUNCER_GAMEON =
             SOUND_EVENTS.register("dart_announcer_gameon",
                     () -> SoundEvent.createVariableRangeEvent(ResourceLocation.fromNamespaceAndPath(AwakeningSystemMod.MOD_ID, "dart_announcer_gameon")));
