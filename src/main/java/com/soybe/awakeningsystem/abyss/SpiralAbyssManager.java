@@ -98,9 +98,55 @@ public final class SpiralAbyssManager {
         }
     }
 
+    /** How long a cycle of the Spire lasts: when it ends, the stars and rewards of floors 9 to 12 start again. */
+    public static final long CYCLE_MS = 14L * 24 * 60 * 60 * 1000;
+    /** How many clears each floor's history keeps (the latest). */
+    public static final int HISTORY_PER_FLOOR = 5;
+
+    /** A clear of a floor: who, when, with how many stars, and who fought beside them ("#" + a creature's name key, or a given name). */
+    public record ClearRecord(int floor, String player, int stars, long timeMs, List<String> team) {}
+
     public static class SpiralAbyssSavedData extends SavedData {
         public static final String DATA_NAME = "awakening_spiral_abyss_data";
         private final Map<UUID, PlayerAbyssData> players = new HashMap<>();
+        /** When the running cycle of the Spire began (real time), 0 until the first look. */
+        public long cycleStart;
+        public final List<ClearRecord> history = new ArrayList<>();
+
+        /** Starts a new cycle of the Spire if the running one is over: floors 9 to 12 lose their stars, rewards and clears. */
+        public void checkCycle() {
+            long now = System.currentTimeMillis();
+            if (cycleStart <= 0) {
+                cycleStart = now;
+                setDirty();
+                return;
+            }
+            if (now - cycleStart < CYCLE_MS) return;
+            cycleStart += ((now - cycleStart) / CYCLE_MS) * CYCLE_MS;
+            for (PlayerAbyssData p : players.values()) {
+                for (int f = 8; f < TOTAL_FLOORS; f++) {
+                    p.starsPerFloor[f] = 0;
+                    p.claimedRewards[f] = false;
+                }
+                if (p.unlockedFloor > 9) p.unlockedFloor = 9;
+            }
+            history.removeIf(r -> r.floor() >= 9);
+            setDirty();
+        }
+
+        public long cycleEndsIn() {
+            return Math.max(0, cycleStart + CYCLE_MS - System.currentTimeMillis());
+        }
+
+        public void addClear(ClearRecord r) {
+            history.add(r);
+            int seen = 0;
+            for (int i = history.size() - 1; i >= 0; i--) {
+                if (history.get(i).floor() != r.floor()) continue;
+                if (++seen > HISTORY_PER_FLOOR) history.remove(i);
+            }
+            setDirty();
+        }
 
         public static SpiralAbyssSavedData get(MinecraftServer server) {
             return server.overworld().getDataStorage().computeIfAbsent(
@@ -133,6 +179,15 @@ public final class SpiralAbyssManager {
                 }
                 data.players.put(uuid, pData);
             }
+            data.cycleStart = tag.getLong("CycleStart");
+            ListTag hist = tag.getList("History", Tag.TAG_COMPOUND);
+            for (int i = 0; i < hist.size(); i++) {
+                CompoundTag h = hist.getCompound(i);
+                List<String> team = new ArrayList<>();
+                ListTag t = h.getList("Team", Tag.TAG_STRING);
+                for (int k = 0; k < t.size(); k++) team.add(t.getString(k));
+                data.history.add(new ClearRecord(h.getInt("Floor"), h.getString("Player"), h.getInt("Stars"), h.getLong("Time"), team));
+            }
             return data;
         }
 
@@ -153,6 +208,20 @@ public final class SpiralAbyssManager {
                 list.add(pTag);
             }
             tag.put("Players", list);
+            tag.putLong("CycleStart", cycleStart);
+            ListTag hist = new ListTag();
+            for (ClearRecord r : history) {
+                CompoundTag h = new CompoundTag();
+                h.putInt("Floor", r.floor());
+                h.putString("Player", r.player());
+                h.putInt("Stars", r.stars());
+                h.putLong("Time", r.timeMs());
+                ListTag t = new ListTag();
+                for (String s : r.team()) t.add(net.minecraft.nbt.StringTag.valueOf(s));
+                h.put("Team", t);
+                hist.add(h);
+            }
+            tag.put("History", hist);
             return tag;
         }
     }
@@ -255,6 +324,7 @@ public final class SpiralAbyssManager {
         if (server == null) return;
 
         SpiralAbyssSavedData savedData = SpiralAbyssSavedData.get(server);
+        savedData.checkCycle();
         PlayerAbyssData pData = savedData.getOrCreate(player.getUUID());
         SystemData sysData = SystemEvents.data(player);
 
@@ -266,7 +336,9 @@ public final class SpiralAbyssManager {
                 sysData.level(),
                 sysData.primogems(),
                 sysData.coins(),
-                sysData.intertwinedFates()
+                sysData.intertwinedFates(),
+                savedData.cycleEndsIn(),
+                new ArrayList<>(savedData.history)
         ));
     }
 
@@ -896,13 +968,16 @@ public final class SpiralAbyssManager {
                 // a fixed level for the floor and chamber (the window shows the same), not the player's
                 mob.getPersistentData().putInt("abyss_level", abyssMobLevel(floor, chamber, half));
 
+                // another mod's boss is strong enough as it is made: only the Abyss's own creatures are scaled
+                String ns = net.minecraft.core.registries.BuiltInRegistries.ENTITY_TYPE.getKey(mob.getType()).getNamespace();
+                boolean foreign = !ns.equals("minecraft") && !ns.equals(AwakeningSystemMod.MOD_ID);
                 double hpScale = 1.0 + (floor - 1) * 0.35 + (chamber - 1) * 0.15 + (half == 2 ? 0.20 : 0.0);
-                if (mob.getAttribute(Attributes.MAX_HEALTH) != null) {
+                if (!foreign && mob.getAttribute(Attributes.MAX_HEALTH) != null) {
                     double newHp = mob.getAttribute(Attributes.MAX_HEALTH).getBaseValue() * hpScale;
                     mob.getAttribute(Attributes.MAX_HEALTH).setBaseValue(newHp);
                     mob.setHealth((float) newHp);
                 }
-                if (mob.getAttribute(Attributes.ATTACK_DAMAGE) != null) {
+                if (!foreign && mob.getAttribute(Attributes.ATTACK_DAMAGE) != null) {
                     double newDmg = mob.getAttribute(Attributes.ATTACK_DAMAGE).getBaseValue() * (1.0 + (floor - 1) * 0.20);
                     mob.getAttribute(Attributes.ATTACK_DAMAGE).setBaseValue(newDmg);
                 }
@@ -1015,6 +1090,19 @@ public final class SpiralAbyssManager {
 
     /** The creature at a place of a chamber's wave; also used by the window to show who waits in each chamber. */
     public static Mob createAbyssMob(net.minecraft.world.level.Level level, int floor, int chamber, int half, int index) {
+        // the Spire's last chamber: a boss of another installed mod leads the second half, the same one each time
+        if (floor >= 9 && chamber == 3 && half == 2 && index == 0) {
+            var bosses = com.soybe.awakeningsystem.config.BossCompatibilityManager.abyssBossTypes();
+            if (!bosses.isEmpty()) {
+                try {
+                    var e = bosses.get((floor - 9) % bosses.size()).create(level);
+                    if (e instanceof Mob m) return m;
+                    if (e != null) e.discard();
+                } catch (Throwable ignored) {
+                    // a mob that cannot be made here: the floor's own creature takes its place
+                }
+            }
+        }
         if (floor <= 2) {
             if (index == 0 && chamber == 3 && floor == 2) {
                 return createMitachurl(level, false);
@@ -1356,8 +1444,15 @@ public final class SpiralAbyssManager {
                 if (session.descentPortalPos != null) {
                     BlockPos pp = session.descentPortalPos;
                     if (server.getTickCount() % 3 == 0) {
-                        abyssLevel.sendParticles(ParticleTypes.PORTAL, pp.getX() + 0.5, pp.getY() + 1.2, pp.getZ() + 0.5, 6, 0.4, 0.8, 0.4, 0.05);
-                        abyssLevel.sendParticles(ParticleTypes.REVERSE_PORTAL, pp.getX() + 0.5, pp.getY() + 1.2, pp.getZ() + 0.5, 3, 0.3, 0.6, 0.3, 0.02);
+                        // light swirling inside the ring, and its heart shining
+                        double turn = server.getTickCount() * 0.15;
+                        for (int k = 0; k < 6; k++) {
+                            double a = turn + k * Math.PI / 3;
+                            abyssLevel.sendParticles(ParticleTypes.END_ROD, pp.getX() + 0.5 + Math.cos(a) * 2.4, pp.getY() + 4.5 + Math.sin(a) * 2.4, pp.getZ() + 0.5, 1, 0, 0, 0, 0);
+                        }
+                        abyssLevel.sendParticles(new net.minecraft.core.particles.DustParticleOptions(new org.joml.Vector3f(0.7F, 0.45F, 1.0F), 1.6F),
+                                pp.getX() + 0.5, pp.getY() + 4.5, pp.getZ() + 0.5, 6, 1.2, 1.2, 0.15, 0);
+                        abyssLevel.sendParticles(ParticleTypes.REVERSE_PORTAL, pp.getX() + 0.5, pp.getY() + 4.5, pp.getZ() + 0.5, 3, 0.4, 0.4, 0.1, 0.02);
                     }
 
                     double distToPortal = player.position().distanceTo(new Vec3(pp.getX() + 0.5, pp.getY(), pp.getZ() + 0.5));
@@ -1454,6 +1549,8 @@ public final class SpiralAbyssManager {
                 }
                 canAdvance = true;
             }
+            savedData.addClear(new ClearRecord(session.floorNumber, player.getGameProfile().getName(), totalStarsInFloor,
+                    System.currentTimeMillis(), teamOf(player)));
             savedData.setDirty();
         }
 
@@ -1541,29 +1638,46 @@ public final class SpiralAbyssManager {
         }
     }
 
+    /**
+     * The way on to the next chamber: an upright ring of dark stone with crying obsidian at its four points,
+     * open at the bottom to walk into, over a little dais of quartz set with amethyst; light swirls inside it
+     * (see the tick). Every block is recorded so the chamber's clean-up takes it away again.
+     */
     private static void buildDescentPortalArch(ServerLevel level, AbyssSession session, BlockPos base) {
         session.descentPortalBlocks.clear();
-        for (int dy = 0; dy <= 3; dy++) {
-            for (int dx : new int[]{-2, 2}) {
-                BlockPos p = base.offset(dx, dy, 0);
-                level.setBlock(p, Blocks.POLISHED_BLACKSTONE_BRICK_WALL.defaultBlockState(), 2);
-                session.descentPortalBlocks.add(p);
-            }
-        }
-        for (int dx = -2; dx <= 2; dx++) {
-            BlockPos p = base.offset(dx, 4, 0);
-            level.setBlock(p, (dx == 0) ? Blocks.CRYING_OBSIDIAN.defaultBlockState() : Blocks.POLISHED_BLACKSTONE_BRICKS.defaultBlockState(), 2);
+        java.util.function.BiConsumer<BlockPos, net.minecraft.world.level.block.state.BlockState> put = (p, s) -> {
+            level.setBlock(p, s, 2);
             session.descentPortalBlocks.add(p);
-        }
-        for (int dx = -1; dx <= 1; dx++) {
-            for (int dy = 0; dy <= 3; dy++) {
-                BlockPos p = base.offset(dx, dy, 0);
-                level.setBlock(p, Blocks.AIR.defaultBlockState(), 2);
-                session.descentPortalBlocks.add(p);
+        };
+        // the dais: a round step of quartz on the floor, purpur in a ring
+        for (int dx = -3; dx <= 3; dx++)
+            for (int dz = -3; dz <= 3; dz++) {
+                double d = Math.sqrt(dx * dx + dz * dz);
+                if (d > 3.2) continue;
+                // slabs only, so the dais is walked onto, not climbed
+                put.accept(base.offset(dx, 0, dz), (d > 1.6 && d < 2.6) ? Blocks.PURPUR_SLAB.defaultBlockState()
+                        : Blocks.SMOOTH_QUARTZ_SLAB.defaultBlockState());
             }
+        // the ring, standing across the dais, its centre four blocks up
+        BlockPos c = base.above(4);
+        java.util.Set<Long> done = new java.util.HashSet<>();
+        for (int a = 0; a < 360; a += 4) {
+            double rad = Math.toRadians(a);
+            // open at the bottom, where one walks in
+            if (Math.abs(a - 90) < 40) continue;
+            int dx = (int) Math.round(Math.cos(rad) * 3.6), dy = (int) Math.round(-Math.sin(rad) * 3.6);
+            BlockPos p = c.offset(dx, -dy, 0);
+            if (!done.add(p.asLong()) || p.getY() <= base.getY()) continue;
+            boolean point = a % 90 == 0;
+            put.accept(p, point ? Blocks.CRYING_OBSIDIAN.defaultBlockState() : Blocks.POLISHED_BLACKSTONE_BRICKS.defaultBlockState());
         }
+        // the space inside the ring is kept clear
+        for (int dx = -2; dx <= 2; dx++)
+            for (int dy = 1; dy <= 6; dy++) {
+                BlockPos p = base.offset(dx, dy, 0);
+                if (!done.contains(p.asLong()) && !level.getBlockState(p).isAir()) put.accept(p, Blocks.AIR.defaultBlockState());
+            }
     }
-
     private static void advanceToNextChamber(ServerPlayer player, AbyssSession session, ServerLevel level) {
         cleanUpChamberDecorations(level, session);
         session.currentChamber++;
@@ -1636,6 +1750,28 @@ public final class SpiralAbyssManager {
             return true;
         }
         return false;
+    }
+
+    /**
+     * Who fought beside the player: their own creatures (tamed, summoned, shadows) near them, up to four kinds,
+     * each as "#" + its name key so every player reads it in their language, or its given name.
+     */
+    private static List<String> teamOf(ServerPlayer player) {
+        LinkedHashSet<String> team = new LinkedHashSet<>();
+        for (var e : player.serverLevel().getEntitiesOfClass(LivingEntity.class, player.getBoundingBox().inflate(40))) {
+            if (e == player || !e.isAlive()) continue;
+            boolean shadow = e.getTags().contains("shadow_master_" + player.getUUID());
+            boolean mine = shadow || (e instanceof net.minecraft.world.entity.OwnableEntity o && player.getUUID().equals(o.getOwnerUUID()));
+            if (!mine) continue;
+            // "@" a shadow of that creature, "#" the creature, or the name a player gave it
+            String kind = e.getType().getDescriptionId();
+            if (shadow) team.add("@" + kind);
+            else if (e.hasCustomName() && !(e.getCustomName().getContents() instanceof net.minecraft.network.chat.contents.TranslatableContents))
+                team.add(e.getCustomName().getString());
+            else team.add("#" + kind);
+            if (team.size() >= 4) break;
+        }
+        return new ArrayList<>(team);
     }
 
     public static void handleFloorCompletion(ServerPlayer player, AbyssSession session, MinecraftServer server) {

@@ -60,6 +60,27 @@ public final class SpiralAbyssScreen extends Screen {
         this.primogems = payload.primogems();
         this.coins = payload.coins();
         this.intertwinedFates = payload.intertwinedFates();
+        this.spireResetAt = System.currentTimeMillis() + payload.spireResetMs();
+        this.history = List.copyOf(payload.history());
+    }
+
+    /** When (this computer's clock) the Spire's floors start again. */
+    private long spireResetAt;
+    /** The latest clears of every floor, oldest first. */
+    private List<SpiralAbyssManager.ClearRecord> history = List.of();
+    /** The floor's record of clears is open over its view. */
+    private boolean historyOpen;
+
+    /** "13d 4h", or "5h 20m" in the last day. */
+    private static String timeLeft(long ms) {
+        long min = Math.max(0, ms) / 60000L;
+        long d = min / 1440, hr = (min % 1440) / 60, m = min % 60;
+        return d > 0 ? Component.translatable("gui.awakening_system.spiral_abyss.days_hours", d, hr).getString()
+                : Component.translatable("gui.awakening_system.spiral_abyss.hours_minutes", hr, m).getString();
+    }
+
+    private String resetLine() {
+        return "⟳ " + Component.translatable("gui.awakening_system.spiral_abyss.reset_in", timeLeft(spireResetAt - System.currentTimeMillis())).getString();
     }
 
     @Override
@@ -191,6 +212,9 @@ public final class SpiralAbyssScreen extends Screen {
         graphics.drawString(this.font, place, 34, y, 0xFFE8D29A, true);
         if (detailView)
             graphics.drawString(this.font, Component.translatable("gui.awakening_system.spiral_abyss.floor_title", selectedFloor).getString(), 34, y + 11, 0xFFB8C4D0, false);
+        // the Spire starts again every cycle: how long is left of this one
+        if (selectedTab == 1 && (!detailView || selectedFloor >= 9))
+            graphics.drawString(this.font, resetLine(), 34, y + (detailView ? 22 : 11), 0xFFC8B8FF, false);
         int x = w - 14;
         String fates = "✦ " + this.intertwinedFates;
         x -= this.font.width(fates);
@@ -361,7 +385,8 @@ public final class SpiralAbyssScreen extends Screen {
     private String[] detailLabels() {
         int idx = selectedFloor - 1;
         boolean canClaim = starsPerFloor[idx] >= 3 && !claimedRewards[idx];
-        return new String[]{Component.translatable("gui.awakening_system.spiral_abyss.chamber_treasure").getString(),
+        return new String[]{Component.translatable("gui.awakening_system.spiral_abyss.history").getString(),
+                Component.translatable("gui.awakening_system.spiral_abyss.chamber_treasure").getString(),
                 Component.translatable(claimedRewards[idx] ? "gui.awakening_system.spiral_abyss.rewards_claimed"
                         : (canClaim ? "gui.awakening_system.spiral_abyss.collect" : "gui.awakening_system.spiral_abyss.collect_locked")).getString(),
                 Component.translatable(selectedFloor > unlockedFloor ? "gui.awakening_system.spiral_abyss.challenge_locked" : "gui.awakening_system.spiral_abyss.start").getString(),
@@ -508,11 +533,57 @@ public final class SpiralAbyssScreen extends Screen {
                 px, y + 12, 0xFF9AA6B8, false);
         String[] labels = detailLabels();
         int[] bxs = buttonXs(labels);
-        actionButton(graphics, mouseX, mouseY, bxs[0], h - 34, "❖", labels[0]);
-        actionButton(graphics, mouseX, mouseY, bxs[1], h - 34, "□", labels[1]);
-        actionButton(graphics, mouseX, mouseY, bxs[2], h - 34, "▷", labels[2]);
-        actionButton(graphics, mouseX, mouseY, bxs[3], h - 34, "✕", labels[3]);
+        actionButton(graphics, mouseX, mouseY, bxs[0], h - 34, "≡", labels[0]);
+        actionButton(graphics, mouseX, mouseY, bxs[1], h - 34, "❖", labels[1]);
+        actionButton(graphics, mouseX, mouseY, bxs[2], h - 34, "□", labels[2]);
+        actionButton(graphics, mouseX, mouseY, bxs[3], h - 34, "▷", labels[3]);
+        actionButton(graphics, mouseX, mouseY, bxs[4], h - 34, "✕", labels[4]);
         if (treasureOpen) renderTreasure(graphics, mouseX, mouseY, w, h);
+        if (historyOpen) renderHistory(graphics, mouseX, mouseY, w, h);
+    }
+
+    /** A team member as written in a record: "@" a shadow of a creature, "#" a creature, else a given name. */
+    private static String memberName(String s) {
+        if (s.startsWith("@"))
+            return Component.translatable("awakening_system.msg.sombra", Component.translatable(s.substring(1)).getString()).getString();
+        if (s.startsWith("#")) return Component.translatable(s.substring(1)).getString();
+        return s;
+    }
+
+    /** The floor's record: its latest clears, newest first, each with its stars, date and team. */
+    private void renderHistory(GuiGraphics g, int mouseX, int mouseY, int w, int h) {
+        g.fill(0, 0, w, h, 0x99000000);
+        int ww = Math.min(w - 60, 440), wh = Math.min(h - 60, 250);
+        int x = (w - ww) / 2, y = (h - wh) / 2;
+        g.fill(x, y, x + ww, y + wh, 0xF0303A52);
+        g.renderOutline(x, y, ww, wh, 0xFF9AA8C0);
+        g.renderOutline(x + 3, y + 3, ww - 6, wh - 6, 0x66C8D0E0);
+        for (int[] cn : new int[][]{{x, y}, {x + ww - 6, y}, {x, y + wh - 6}, {x + ww - 6, y + wh - 6}}) g.fill(cn[0], cn[1], cn[0] + 6, cn[1] + 6, 0xFFE8D29A);
+        g.drawCenteredString(this.font, Component.translatable("gui.awakening_system.spiral_abyss.history_title", selectedFloor).getString(), x + ww / 2, y + 10, 0xFFE8D29A);
+        g.drawString(this.font, "✕", x + ww - 16, y + 9, over(mouseX, mouseY, x + ww - 20, y + 5, 14, 14) ? 0xFFFFFFFF : 0xFFB8C0D0, false);
+        List<SpiralAbyssManager.ClearRecord> mine = new java.util.ArrayList<>();
+        for (var r : history) if (r.floor() == selectedFloor) mine.add(0, r);
+        int rowY = y + 28;
+        if (mine.isEmpty()) {
+            g.drawCenteredString(this.font, Component.translatable("gui.awakening_system.spiral_abyss.history_empty").getString(), x + ww / 2, y + wh / 2 - 4, 0xFFB8C4D0);
+            return;
+        }
+        java.text.DateFormat df = java.text.DateFormat.getDateTimeInstance(java.text.DateFormat.SHORT, java.text.DateFormat.SHORT);
+        int rowH = Math.min(40, (wh - 36) / Math.max(1, mine.size()));
+        for (var r : mine) {
+            g.fill(x + 12, rowY, x + ww - 12, rowY + rowH - 4, 0xCC404C66);
+            g.drawString(this.font, r.player(), x + 20, rowY + 5, 0xFFFFFFFF, false);
+            String st = "✹ " + r.stars() + "/9";
+            g.drawString(this.font, st, x + ww - 20 - this.font.width(st), rowY + 5, r.stars() >= 9 ? 0xFFFFE08A : 0xFFFFF2C8, false);
+            String date = df.format(new java.util.Date(r.timeMs()));
+            g.drawString(this.font, date, x + ww - 30 - this.font.width(st) - this.font.width(date), rowY + 5, 0xFF9AA6B8, false);
+            StringBuilder team = new StringBuilder();
+            for (String s : r.team()) team.append(team.isEmpty() ? "" : ", ").append(memberName(s));
+            String line = Component.translatable("gui.awakening_system.spiral_abyss.history_team",
+                    team.isEmpty() ? Component.translatable("gui.awakening_system.spiral_abyss.history_alone").getString() : team.toString()).getString();
+            if (rowH >= 30) g.drawString(this.font, this.font.plainSubstrByWidth(line, ww - 40), x + 20, rowY + 18, 0xFFC8D0E0, false);
+            rowY += rowH;
+        }
     }
 
     /** The rewards of one star step of a floor, as the server gives them (SpiralAbyssManager.handleClaimReward). */
@@ -568,9 +639,10 @@ public final class SpiralAbyssScreen extends Screen {
     public boolean mouseClicked(double mouseX, double mouseY, int button) {
         if (button != 0) return super.mouseClicked(mouseX, mouseY, button);
         int w = this.width, h = this.height;
-        if (detailView && treasureOpen) {
-            // any click closes the treasure window
+        if (detailView && (treasureOpen || historyOpen)) {
+            // any click closes the treasure window or the record
             treasureOpen = false;
+            historyOpen = false;
             playClickSound();
             return true;
         }
@@ -591,18 +663,23 @@ public final class SpiralAbyssScreen extends Screen {
             String[] labels = detailLabels();
             int[] bxs = buttonXs(labels);
             if (over(mouseX, mouseY, bxs[0], h - 34, buttonWidth(labels[0]), 18)) {
-                treasureOpen = true;
+                historyOpen = true;
                 playClickSound();
                 return true;
             }
             if (over(mouseX, mouseY, bxs[1], h - 34, buttonWidth(labels[1]), 18)) {
+                treasureOpen = true;
+                playClickSound();
+                return true;
+            }
+            if (over(mouseX, mouseY, bxs[2], h - 34, buttonWidth(labels[2]), 18)) {
                 if (starsPerFloor[idx] >= 3 && !claimedRewards[idx]) {
                     PacketDistributor.sendToServer(new ClaimAbyssRewardPayload(this.selectedFloor));
                     if (this.minecraft != null && this.minecraft.player != null) this.minecraft.player.playSound(SoundEvents.PLAYER_LEVELUP, 1.0F, 1.2F);
                 } else playClickSound();
                 return true;
             }
-            if (over(mouseX, mouseY, bxs[2], h - 34, buttonWidth(labels[2]), 18)) {
+            if (over(mouseX, mouseY, bxs[3], h - 34, buttonWidth(labels[3]), 18)) {
                 if (this.selectedFloor <= this.unlockedFloor) {
                     PacketDistributor.sendToServer(new StartAbyssFloorPayload(this.selectedFloor));
                     if (this.minecraft != null && this.minecraft.player != null) this.minecraft.player.playSound(ModSounds.ABYSS_ENTER.value(), 0.9F, 1.0F);
@@ -612,7 +689,7 @@ public final class SpiralAbyssScreen extends Screen {
                 }
                 return true;
             }
-            if (over(mouseX, mouseY, bxs[3], h - 34, buttonWidth(labels[3]), 18)) {
+            if (over(mouseX, mouseY, bxs[4], h - 34, buttonWidth(labels[4]), 18)) {
                 detailView = false;
                 playClickSound();
                 return true;
@@ -674,8 +751,10 @@ public final class SpiralAbyssScreen extends Screen {
     public boolean keyPressed(int keyCode, int scanCode, int modifiers) {
         // Escape in a floor's view goes back to the row first
         if (keyCode == org.lwjgl.glfw.GLFW.GLFW_KEY_ESCAPE && detailView) {
-            if (treasureOpen) treasureOpen = false;
-            else detailView = false;
+            if (treasureOpen || historyOpen) {
+                treasureOpen = false;
+                historyOpen = false;
+            } else detailView = false;
             return true;
         }
         return super.keyPressed(keyCode, scanCode, modifiers);

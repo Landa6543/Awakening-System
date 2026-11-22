@@ -76,6 +76,34 @@ public final class BossCompatibilityManager {
 
     private BossCompatibilityManager() {}
 
+    /** Bosses of other mods may wait in the last chamber of the Spire's floors (config "abyss_modded_bosses"). */
+    private static boolean abyssModdedBosses = true;
+
+    /** Bosses that swim or fill the sky: no good in a round arena. */
+    private static final Set<String> ABYSS_UNFIT = new HashSet<>(List.of(
+            "iceandfire:sea_serpent", "cataclysm:the_leviathan", "twilightforest:ur_ghast"
+    ));
+
+    /**
+     * The installed bosses of other mods (whitelisted or tagged as bosses), sorted by id so that the server
+     * and the window pick the same one. Empty when none is installed or the config turns it off.
+     */
+    public static List<EntityType<?>> abyssBossTypes() {
+        init();
+        List<EntityType<?>> out = new ArrayList<>();
+        if (!abyssModdedBosses) return out;
+        for (EntityType<?> type : BuiltInRegistries.ENTITY_TYPE) {
+            ResourceLocation id = BuiltInRegistries.ENTITY_TYPE.getKey(type);
+            String ns = id.getNamespace();
+            if (ns.equals("minecraft") || ns.equals(AwakeningSystemMod.MOD_ID)) continue;
+            String idStr = id.toString();
+            if (BLACKLIST_ENTITIES.contains(idStr) || BLACKLIST_ENTITIES.contains(id.getPath()) || ABYSS_UNFIT.contains(idStr)) continue;
+            if (WHITELIST_BOSSES.containsKey(idStr) || type.is(C_BOSSES) || type.is(FORGE_BOSSES)) out.add(type);
+        }
+        out.sort(Comparator.comparing(t -> BuiltInRegistries.ENTITY_TYPE.getKey(t).toString()));
+        return out;
+    }
+
     public static Path getConfigDir() {
         try {
             return FMLPaths.CONFIGDIR.get().resolve("awakening_system");
@@ -112,6 +140,7 @@ public final class BossCompatibilityManager {
                 if (root.has("boss_min_health")) {
                     minHealth = root.get("boss_min_health").getAsFloat();
                 }
+                abyssModdedBosses = !root.has("abyss_modded_bosses") || root.get("abyss_modded_bosses").getAsBoolean();
                 if (root.has("boss_whitelist")) {
                     JsonArray arr = root.getAsJsonArray("boss_whitelist");
                     for (JsonElement el : arr) {
@@ -142,6 +171,7 @@ public final class BossCompatibilityManager {
             root.addProperty("_comment", "Awakening System - Configuración de Compatibilidad Universal de Jefes. Permite registrar cualquier jefe de mods externos (ej: Cataclysm, Mowzie's, Twilight Forest, Iron's Spells).");
             root.addProperty("auto_detect_modded_bosses", true);
             root.addProperty("boss_min_health", 80.0);
+            root.addProperty("abyss_modded_bosses", true);
 
             JsonArray whitelist = new JsonArray();
             addBoss(whitelist, "minecraft:ender_dragon", 500, 300, "solo_dragon_slayer");
