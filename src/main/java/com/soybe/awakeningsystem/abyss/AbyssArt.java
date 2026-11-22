@@ -19,7 +19,7 @@ import java.util.Random;
 public final class AbyssArt {
     private AbyssArt() {}
 
-    public static final int BG_W = 320, BG_H = 180;
+    public static final int BG_W = 480, BG_H = 270;
     public static final int BANNER_W = 50, BANNER_H = 150;
     /** Where the number's disc sits on a banner (its centre), and the diamond with the chest. */
     public static final int DISC_Y = 24, DIAMOND_Y = 112;
@@ -64,55 +64,145 @@ public final class AbyssArt {
         }
     }
 
+    // ---- smooth strokes for the halls (each pixel takes as much of the colour as the line covers it)
+
+    private static double cover(double dist, double w) {
+        return Math.max(0, Math.min(1, w / 2 + 0.5 - dist));
+    }
+
+    /** Part of an ellipse (angles in radians, y downwards: PI to 2 PI is its upper half), w pixels thick. */
+    private static void strokeArc(NativeImage img, double cx, double cy, double rx, double ry, double a0, double a1, double w, int rgb, double alpha) {
+        int x0 = (int) Math.max(0, cx - rx - w), x1 = (int) Math.min(img.getWidth() - 1, cx + rx + w);
+        int y0 = (int) Math.max(0, cy - ry - w), y1 = (int) Math.min(img.getHeight() - 1, cy + ry + w);
+        for (int y = y0; y <= y1; y++)
+            for (int x = x0; x <= x1; x++) {
+                double dx = x + 0.5 - cx, dy = (y + 0.5 - cy) * rx / ry;
+                double ang = Math.atan2(dy, dx);
+                if (ang < 0) ang += Math.PI * 2;
+                if (ang < a0 || ang > a1) continue;
+                double c = cover(Math.abs(Math.hypot(dx, dy) - rx) * Math.min(1, ry / rx + 0.35), w);
+                if (c > 0) blend(img, x, y, rgb, c * alpha);
+            }
+    }
+
+    private static void strokeLine(NativeImage img, double xa, double ya, double xb, double yb, double w, int rgb, double alpha) {
+        int x0 = (int) Math.max(0, Math.min(xa, xb) - w), x1 = (int) Math.min(img.getWidth() - 1, Math.max(xa, xb) + w);
+        int y0 = (int) Math.max(0, Math.min(ya, yb) - w), y1 = (int) Math.min(img.getHeight() - 1, Math.max(ya, yb) + w);
+        double vx = xb - xa, vy = yb - ya, len2 = vx * vx + vy * vy;
+        for (int y = y0; y <= y1; y++)
+            for (int x = x0; x <= x1; x++) {
+                double px = x + 0.5 - xa, py = y + 0.5 - ya;
+                double t = len2 == 0 ? 0 : Math.max(0, Math.min(1, (px * vx + py * vy) / len2));
+                double c = cover(Math.hypot(px - vx * t, py - vy * t), w);
+                if (c > 0) blend(img, x, y, rgb, c * alpha);
+            }
+    }
+
+    private static void glow(NativeImage img, double cx, double cy, double r, int rgb, double alpha) {
+        for (int y = (int) Math.max(0, cy - r); y < Math.min(img.getHeight(), cy + r); y++)
+            for (int x = (int) Math.max(0, cx - r); x < Math.min(img.getWidth(), cx + r); x++) {
+                double d = Math.hypot(x + 0.5 - cx, y + 0.5 - cy) / r;
+                if (d < 1) blend(img, x, y, rgb, alpha * (1 - d) * (1 - d));
+            }
+    }
+
+    /** A thick band of the arch: a dark body, pale edges, and a braid of two lines crossing along it. */
+    private static void band(NativeImage img, double cx, double cy, double rx, double ry, double floorY, double w, boolean braid) {
+        int body = 0x123248, edge = 0x5E9FB4, cord = 0x8CCAD4;
+        strokeArc(img, cx, cy, rx, ry, Math.PI, Math.PI * 2, w, body, 0.95);
+        strokeLine(img, cx - rx, cy, cx - rx, floorY, w, body, 0.95);
+        strokeLine(img, cx + rx, cy, cx + rx, floorY, w, body, 0.95);
+        for (int s = -1; s <= 1; s += 2) {
+            double o = s * w / 2;
+            strokeArc(img, cx, cy, rx + o, ry + o, Math.PI, Math.PI * 2, 1.3, edge, 0.85);
+            strokeLine(img, cx - rx - o, cy, cx - rx - o, floorY, 1.3, edge, 0.85);
+            strokeLine(img, cx + rx + o, cy, cx + rx + o, floorY, 1.3, edge, 0.85);
+        }
+        if (!braid) return;
+        // the braid: two cords weaving round each other along the band's middle
+        int n = (int) (Math.PI * (rx + ry) * 1.2);
+        for (int k = 0; k <= n; k++) {
+            double a = Math.PI + Math.PI * k / n;
+            for (int c = 0; c < 2; c++) {
+                double off = Math.sin(k * 0.22 + c * Math.PI) * (w * 0.32);
+                double px = cx + Math.cos(a) * (rx + off), py = cy + Math.sin(a) * (ry + off);
+                blend(img, (int) px, (int) py, cord, 0.75);
+            }
+        }
+        for (double y = cy; y < floorY; y += 0.5)
+            for (int s = -1; s <= 1; s += 2)
+                for (int c = 0; c < 2; c++) {
+                    double off = Math.sin(y * 0.4 + c * Math.PI) * (w * 0.32);
+                    blend(img, (int) (cx + s * (rx + off)), (int) y, cord, 0.6);
+                }
+    }
+
     // ---- the Corridor's hall
 
     public static ResourceLocation corridor() {
         if (corridor != null) return corridor;
         NativeImage img = new NativeImage(BG_W, BG_H, true);
-        int cx = BG_W / 2, cy = 98;
+        double cx = BG_W / 2.0, cy = BG_H * 0.61, floorY = BG_H - 22;
+        // deep blue round a teal heart
         for (int y = 0; y < BG_H; y++)
             for (int x = 0; x < BG_W; x++) {
-                // deep blue, lighter towards the middle where a teal glow sits behind the arch
-                double d = Math.hypot(x - cx, (y - cy) * 1.1);
-                int base = mix(0x0B1A33, 0x13304A, y / (double) BG_H);
-                base = mix(base, 0x2F8C88, Math.max(0, 1 - d / 95) * 0.75);
-                base = mix(base, 0x6FD0C2, Math.max(0, 1 - d / 34) * 0.55);
-                img.setPixelRGBA(x, y, c(base));
+                double d = Math.hypot((x - cx) / (BG_W * 0.62), (y - cy) / (BG_H * 0.75));
+                int col = mix(0x235F6C, 0x10283E, Math.min(1, d * 1.15));
+                col = mix(col, 0x081324, Math.max(0, d - 0.75) * 1.6);
+                img.setPixelRGBA(x, y, c(col));
             }
-        int line = 0x4E8FA6;
-        // the great arch: rings round the glow, broken here and there as interlaced bands are
-        for (int k = 0; k < 6; k++) {
-            double r = 40 + k * 13;
-            for (int seg = 0; seg < 9; seg++) {
-                double a0 = Math.PI + seg * Math.PI / 9 + 0.05, a1 = a0 + Math.PI / 9 - 0.12;
-                arc(img, cx, cy, r, a0, a1, line, 0.55 - k * 0.06);
-            }
-            // the arch's sides come down to the floor
-            for (int y = cy; y < BG_H; y++) {
-                blend(img, (int) (cx - r), y, line, 0.45 - k * 0.05);
-                blend(img, (int) (cx + r), y, line, 0.45 - k * 0.05);
-            }
+        // the side arches, half out of sight, darker
+        for (int s = -1; s <= 1; s += 2) {
+            band(img, cx + s * BG_W * 0.47, cy + 10, 62, 92, floorY, 7, false);
+            strokeArc(img, cx + s * BG_W * 0.47, cy + 10, 48, 76, Math.PI, Math.PI * 2, 2, 0x2E6378, 0.6);
         }
-        // the knotwork crowning the arch: loops interlaced above the centre
-        for (int i = -3; i <= 3; i++) {
-            arc(img, cx + i * 14, cy - 92, 12, 0, Math.PI * 2, line, 0.5);
-            arc(img, cx + i * 14 + 7, cy - 80, 9, Math.PI, Math.PI * 2, line, 0.45);
+        // the mullions of the great window, behind the light
+        for (int k = -3; k <= 3; k++) {
+            if (k == 0) continue;
+            double x = cx + k * 26;
+            strokeLine(img, x, cy - Math.sqrt(Math.max(0, 1 - Math.pow(k * 26 / 128.0, 2))) * 112, x, floorY, 1.4, 0x3A7E92, 0.45);
         }
-        for (int i = -1; i <= 1; i += 2) {
-            arc(img, cx + i * 70, cy - 40, 26, 0, Math.PI * 2, line, 0.35);
-            arc(img, cx + i * 70, cy - 40, 18, Math.PI * 0.2, Math.PI * 1.6, line, 0.35);
-        }
-        // the round window of light in the middle and the floor it shines on
-        arc(img, cx, cy, 30, 0, Math.PI * 2, 0xBFF3EA, 0.5);
-        arc(img, cx, cy, 34, 0, Math.PI * 2, 0x8FD8CC, 0.35);
-        for (int y = 150; y < BG_H; y++)
-            for (int x = 0; x < BG_W; x++)
-                blend(img, x, y, 0x0A1428, (y - 150) / 40.0);
-        // dark tall frames at both sides, as if seen from inside the hall
+        // the round window of light at the heart of the hall
+        glow(img, cx, cy - 6, 150, 0x5FD2C6, 0.45);
+        glow(img, cx, cy - 6, 64, 0xCFFAF2, 0.55);
         for (int y = 0; y < BG_H; y++)
-            for (int x = 0; x < 34; x++) {
-                blend(img, x, y, 0x081325, 0.55 * (1 - x / 34.0));
-                blend(img, BG_W - 1 - x, y, 0x081325, 0.55 * (1 - x / 34.0));
+            for (int x = 0; x < BG_W; x++) {
+                double d = Math.hypot(x + 0.5 - cx, y + 0.5 - (cy - 6));
+                if (d < 54) blend(img, x, y, 0x8EE6DA, 0.35 * (1 - d / 54));
+            }
+        strokeArc(img, cx, cy - 6, 56, 56, 0, Math.PI * 2, 3.2, 0xD9FBF4, 0.85);
+        strokeArc(img, cx, cy - 6, 64, 64, 0, Math.PI * 2, 1.6, 0x8ACFC8, 0.7);
+        strokeArc(img, cx, cy - 6, 47, 47, 0, Math.PI * 2, 1.0, 0xEFFFFC, 0.45);
+        // the great arch: two bands, the outer one braided
+        band(img, cx, cy, 170, 138, floorY, 13, true);
+        band(img, cx, cy, 140, 113, floorY, 7, false);
+        // knotwork crowning the arch: three interlaced rings and a pointed leaf between them
+        double topY = cy - 138;
+        for (int k = -1; k <= 1; k++) {
+            strokeArc(img, cx + k * 22, topY + (k == 0 ? -2 : 8), 13, 13, 0, Math.PI * 2, 2.4, 0x123248, 0.95);
+            strokeArc(img, cx + k * 22, topY + (k == 0 ? -2 : 8), 13, 13, 0, Math.PI * 2, 1.1, 0x8CCAD4, 0.8);
+        }
+        strokeArc(img, cx - 9, topY + 24, 14, 22, Math.PI * 1.2, Math.PI * 1.95, 1.6, 0x8CCAD4, 0.7);
+        strokeArc(img, cx + 9, topY + 24, 14, 22, Math.PI * 1.05, Math.PI * 1.8, 1.6, 0x8CCAD4, 0.7);
+        // tracery inside the arch, above the window: arcs joining the window to the bands
+        for (int k = -1; k <= 1; k += 2) {
+            strokeArc(img, cx + k * 70, cy - 70, 48, 48, Math.PI * 1.05, Math.PI * 1.95, 1.4, 0x4E92A6, 0.6);
+            strokeArc(img, cx + k * 96, cy - 20, 30, 40, Math.PI * 0.9, Math.PI * 2.0, 1.2, 0x4E92A6, 0.45);
+        }
+        // the floor, with the window's light lying on it
+        for (int y = (int) floorY; y < BG_H; y++)
+            for (int x = 0; x < BG_W; x++) {
+                blend(img, x, y, 0x0A1828, 0.55 + (y - floorY) / 40.0);
+                double e = Math.hypot((x - cx) / 120.0, (y - floorY - 6) / 7.0);
+                if (e < 1) blend(img, x, y, 0x6FD8CC, 0.3 * (1 - e));
+            }
+        strokeLine(img, 0, floorY, BG_W, floorY, 1.2, 0x4E92A6, 0.5);
+        // the edges of the picture in shade
+        for (int y = 0; y < BG_H; y++)
+            for (int x = 0; x < BG_W; x++) {
+                double vx = Math.abs(x - cx) / cx, vy = Math.abs(y - BG_H / 2.0) / (BG_H / 2.0);
+                double v = Math.max(0, Math.max(vx, vy * 0.9) - 0.72) / 0.28;
+                if (v > 0) blend(img, x, y, 0x050B16, v * 0.7);
             }
         corridor = upload("corridor", img);
         return corridor;

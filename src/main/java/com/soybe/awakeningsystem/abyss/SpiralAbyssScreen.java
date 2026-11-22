@@ -150,7 +150,7 @@ public final class SpiralAbyssScreen extends Screen {
         int gr = (int) (Math.min(w, h) * (0.16F + breath * 0.03F));
         for (int k = 5; k >= 1; k--) {
             int rr = gr * k / 5;
-            int a = (int) ((10 + breath * 14) * (6 - k) / 5.0F);
+            int a = (int) ((14 + breath * 26) * (6 - k) / 5.0F);
             for (int dy = -rr; dy <= rr; dy += 2) {
                 int half = (int) Math.sqrt((double) rr * rr - (double) dy * dy);
                 graphics.fill(cx - half, cy + dy, cx + half, cy + dy + 2, (a << 24) | glowCol);
@@ -176,7 +176,7 @@ public final class SpiralAbyssScreen extends Screen {
             int px = (int) (rnd.nextFloat() * w + Math.sin(now / 1500.0 + i) * 8);
             int py = (int) (h - ph * (h + 20));
             int a = (int) (Math.sin(ph * Math.PI) * (90 + rnd.nextInt(120)));
-            int size = rnd.nextInt(5) == 0 ? 2 : 1;
+            int size = rnd.nextInt(4) == 0 ? 3 : 2;
             graphics.fill(px, py, px + size, py + size, (a << 24) | glowCol);
         }
         graphics.fillGradient(0, 0, w, 50, 0x99060C1C, 0x00060C1C);
@@ -293,13 +293,25 @@ public final class SpiralAbyssScreen extends Screen {
                 graphics.enableScissor(x + g[2] / 8, ry + g[3] / 10, x + g[2] - g[2] / 8, ry + g[3] - g[3] / 10);
                 long tnow = System.currentTimeMillis();
                 int rcx = x + g[2] / 2, rcy = ry + g[3] / 2;
-                for (int sp = 0; sp < 40; sp++) {
-                    float ph = ((tnow / 2600.0F) + sp / 40.0F) % 1.0F;
-                    double ang = sp * 2.4 + ph * 7.0;
-                    double rad = (1.0 - ph) * g[3] * 0.48;
-                    int px = (int) (rcx + Math.cos(ang) * rad * 0.42), py = (int) (rcy + Math.sin(ang) * rad);
-                    int a = (int) (Math.sin(ph * Math.PI) * (open ? 230 : 110));
-                    graphics.fill(px, py, px + 2, py + 2, (a << 24) | (sp % 3 == 0 ? 0xFFFFFF : 0xC890FF));
+                // a slow pulse of light in its heart, and streaks of sparks spiralling into it
+                float beat = (float) (Math.sin(tnow / 500.0) * 0.5 + 0.5);
+                for (int k = 6; k >= 1; k--) {
+                    int rr = (int) (g[2] * 0.09F * k * (0.9F + beat * 0.25F));
+                    graphics.fill(rcx - rr, rcy - rr * 2, rcx + rr, rcy + rr * 2, ((int) ((open ? 18 : 8) + beat * 10) << 24) | 0xB070FF);
+                }
+                for (int sp = 0; sp < 70; sp++) {
+                    float ph = ((tnow / 2200.0F) + sp / 70.0F) % 1.0F;
+                    double ang = sp * 2.4 + ph * 9.0;
+                    double rad = (1.0 - ph) * g[3] * 0.5;
+                    int a = (int) (Math.sin(ph * Math.PI) * (open ? 255 : 120));
+                    int col = sp % 4 == 0 ? 0xFFFFFF : (sp % 4 == 1 ? 0xE0B8FF : 0xA060FF);
+                    // each spark leaves a short tail behind it along its curve
+                    for (int tail = 0; tail < 4; tail++) {
+                        double ta = ang - tail * 0.12, tr = rad + tail * 2.5;
+                        int px = (int) (rcx + Math.cos(ta) * tr * 0.42), py = (int) (rcy + Math.sin(ta) * tr);
+                        int ta2 = Math.max(0, a - tail * 60);
+                        graphics.fill(px, py, px + (tail == 0 ? 3 : 2), py + (tail == 0 ? 3 : 2), (ta2 << 24) | col);
+                    }
                 }
                 graphics.disableScissor();
                 com.mojang.blaze3d.systems.RenderSystem.disableBlend();
