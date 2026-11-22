@@ -124,9 +124,11 @@ The people of the medieval town on floor 11 wear player skins shared on **[Minec
 
 ## 🎨 Creative Partnerships & Content Permissions
 
-### 1. Genshin Mod Asset Integration (`fapdos`)
-* **Creator:** **[fapdos](https://www.curseforge.com/members/fapdos/projects)**
-* **Terms:** Official creator permission granted to use, adapt, and integrate signature weapon designs, textures, and assets for Awakening System.
+### 1. Genshin Nature Revived (`genshin_nature`) — `fapdos` & team
+* **Creator:** **[fapdos](https://www.curseforge.com/members/fapdos/projects)** and team
+* **Original mod:** *Genshin Nature Revived* (NeoForge 1.21.1). Its own license is All Rights Reserved.
+* **Terms:** direct permission from the creator to use, adapt and integrate its creature models, textures and weapon designs in Awakening System.
+* **Usage in Awakening System:** the Genshin creatures of Teyvat and the Spiral Abyss (Hilichurls, Lawachurls, elemental slimes and others) and some signature weapon designs. The Mitachurl now uses a model and texture made for Awakening System.
 
 ---
 

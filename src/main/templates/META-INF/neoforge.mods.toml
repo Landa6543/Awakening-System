@@ -46,17 +46,20 @@ authors="LanderAlo"
 
 # The description text for the mod (multi line!) (#mandatory)
 description='''
-Awakening System is an immersive RPG progression, dungeon, and combat mod inspired by Solo Leveling, Omniscient Reader's Viewpoint, and classic Murim manhwa.
+Awakening System is an RPG progression, dungeon and combat mod inspired by Solo Leveling, Omniscient Reader's Viewpoint, Murim manhwa and Genshin Impact.
 
 Key Features:
-- Hunter Awakening & Qi Cultivation: An omniscient System evaluates your actions in real time, unlocking hunter ranks (Rank E through Rank S, Monarch, and EX), free attribute stat allocation (Strength, Agility, Vitality, Intelligence, Perception, Dexterity), and specialized class trees.
-- Class Skill Trees & Dynamic RPG HUD: Comprehensive in-game interface (default key K) with Status, Skills, Quests, Classes, Constellations, and Dokkaebi Shop. Responsive combat active skill bar ([V], [R], [G], [B], [X], [Y]) with health, mana, and Qi damage lag animations.
-- Custom Realms & Dimensions:
-  * Isekai World: Ancient realm beneath the great Yggdrasil World Tree, home to mana livestock and 10 elemental fantasy slimes (tameable and rideable).
-  * Murim Realm: Floating celestial martial sect island with Qi cultivation, tantric cauldron alchemy, and martial arts scriptures.
-- Dimensional Gates & Raid Dungeons: Tiered rift gates with 100-frame dual counter-rotating vortex shaders, mob wave arenas, and monumental multi-phase bosses.
-- Legendary Mounts & Companions: 12-segment flying Eastern Celestial Dragons with dragon breath attacks, loyal Dokkaebi familiars, and constellation sponsors.
-- Hunter Guild Reception, Bounty Board, Guidebook, and complete 11-language localization.
+- The System: it wakes at the Altar of Origin in the Great Tower. Levels up to 2000, hunter ranks from E to S and beyond, evaluated by the Hunter Association, free stats, titles, fables, daily training and Dokkaebi scenario missions.
+- Classes: six base classes that evolve into advanced ones at level 150, each with a large skill web. Tools level up by their own work.
+- Two interface styles: the classic System windows (key K) and a full-dive SAO style, with HUD, health bars and menus to match.
+- The Great Tower: 25 floors with their own land, towns with their own people, ores ranked by floor, a smith who forges to order, and floor bosses.
+- Gates and dungeons: ranked Ruin Gates, the Forgotten Catacombs, Abyssal Grottos and the Limbo.
+- Worlds: Isekai beneath the World Tree, the floating Murim sect with Qi cultivation through 14 realms, and Teyvat with its cities, bosses and the Spiral Abyss (12 floors, a reset every 14 days, records and chamber treasure).
+- Shadows and companions: raise shadow soldiers into squads, Kaisel the wyvern, Paimon, celestial dragons, and Uma Musume racers with their own racetrack.
+- Wishes and shop: a wish system with banners and pity, the System shop, bank, roulette and hunters' market.
+- Weapons: the celestial armory, Solo Leveling weapons, 3D shields and armour, with Epic Fight and Better Combat support.
+- Map: the Diorama 3D map is built in (it turns itself off if another map mod is installed).
+- Languages: English, Spanish, Portuguese and Russian (German and French in progress).
 '''
 
 # The [[mixins]] block allows you to declare your mixin config to FML so that it gets loaded.
