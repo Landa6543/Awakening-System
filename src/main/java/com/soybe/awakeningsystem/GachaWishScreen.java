@@ -2631,7 +2631,16 @@ public final class GachaWishScreen extends Screen {
                         : (SystemItems.ACQUAINT_FATE.isBound() ? new ItemStack(SystemItems.ACQUAINT_FATE.get()) : ItemStack.EMPTY);
                 if (!icon.isEmpty()) graphics.renderItem(icon, r[0] + 4, r[1] + 6);
                 graphics.drawString(this.font, "x" + amount, r[0] + 22, r[1] + 5, 0xFFFFFFFF, false);
-                graphics.drawString(this.font, (amount * 160) + " ✦", r[0] + 22, r[1] + 16, can ? 0xFFFFE082 : 0xFF886666, false);
+                // the price with the primogem itself drawn small after it (the "✦" glyph showed as something else)
+                String price = String.valueOf(amount * 160);
+                graphics.drawString(this.font, price, r[0] + 22, r[1] + 16, can ? 0xFFFFE082 : 0xFFB07070, false);
+                if (SystemItems.PRIMOGEM.isBound()) {
+                    graphics.pose().pushPose();
+                    graphics.pose().translate(r[0] + 24 + this.font.width(price), r[1] + 14.5F, 0);
+                    graphics.pose().scale(0.6F, 0.6F, 1);
+                    graphics.renderItem(new ItemStack(SystemItems.PRIMOGEM.get()), 0, 0);
+                    graphics.pose().popPose();
+                }
             }
         }
 
@@ -3110,15 +3119,32 @@ public final class GachaWishScreen extends Screen {
                 }
             }
         }
-        // the frame: posts between the stalls, the green beam with its white trim, the numbered plates
+        // as in the series, the gate's own colour tells the rarity before it opens: silver, gold or rainbow;
+        // now and then it shows one step lower and "upgrades" with a flash just before the doors fly open
+        boolean upgrade = highestWonRarity >= 4 && (this.meteorStartTime / 7) % 10 < 4;
+        int shown = (upgrade && elapsed < 820L) ? highestWonRarity - 1 : highestWonRarity;
+        int frameCol;
+        if (shown >= 5) frameCol = java.awt.Color.HSBtoRGB((float) ((System.currentTimeMillis() % 1600L) / 1600.0), 0.7F, 1.0F);
+        else if (shown == 4) frameCol = 0xFFF2C94C;
+        else frameCol = 0xFFDDE3EA;
+        int frameDark = 0xFF000000 | ((frameCol & 0xFEFEFE) >> 1);
+        // the closed gate trembles a little while it waits
+        if (elapsed < 900L && elapsed > 300L) gateX += (int) (Math.sin(elapsed * 0.09) * 1.5);
+        // the frame: posts between the stalls, the beam in the gate's colour, the numbered plates
         for (int s = 0; s <= stalls; s++) {
             int px = gateX + s * stallW;
-            graphics.fill(px - 2, gateY, px + 2, doorBottom + 4, 0xFFE8EBEE);
-            graphics.fill(px + 1, gateY, px + 2, doorBottom + 4, 0xFF9AA5AE);
+            graphics.fill(px - 2, gateY, px + 2, doorBottom + 4, frameCol);
+            graphics.fill(px + 1, gateY, px + 2, doorBottom + 4, frameDark);
         }
-        graphics.fill(gateX - 8, gateY, gateX + gateW + 8, gateY + beamH, 0xFF1B5E20);
-        graphics.fill(gateX - 8, gateY, gateX + gateW + 8, gateY + 2, 0xFFFFFFFF);
-        graphics.fill(gateX - 8, gateY + beamH - 2, gateX + gateW + 8, gateY + beamH, 0xFFE0E0E0);
+        graphics.fill(gateX - 8, gateY, gateX + gateW + 8, gateY + beamH, frameDark);
+        graphics.fill(gateX - 8, gateY, gateX + gateW + 8, gateY + 2, frameCol);
+        graphics.fill(gateX - 8, gateY + beamH - 2, gateX + gateW + 8, gateY + beamH, frameCol);
+        // a glow of the gate's colour round it while it is closed
+        if (gateOpenProgress <= 0) {
+            int pulse = (int) (40 + Math.sin(elapsed * 0.012) * 25);
+            graphics.fill(gateX - 12, gateY - 4, gateX + gateW + 12, gateY, (pulse << 24) | (frameCol & 0xFFFFFF));
+            graphics.fill(gateX - 12, doorBottom + 4, gateX + gateW + 12, doorBottom + 8, (pulse << 24) | (frameCol & 0xFFFFFF));
+        }
         for (int s = 0; s < stalls; s++) {
             int cx = gateX + s * stallW + stallW / 2;
             graphics.fill(cx - 6, gateY + 3, cx + 6, gateY + beamH - 3, numberBg[s]);
@@ -3140,6 +3166,11 @@ public final class GachaWishScreen extends Screen {
                     for (int m = top + 6; m < bottom - 2; m += 7) graphics.fill(dx0 + 1, m, dx1 - 1, m + 1, 0xAAE0E0E0);
                 graphics.fill(dx0, top + (bottom - top) / 2 - 1, dx1, top + (bottom - top) / 2 + 1, 0xFFE0E0E0);
             }
+        }
+        // the upgrade: a white flash as the gate changes colour
+        if (upgrade && elapsed >= 780L && elapsed < 1000L) {
+            int fa = (int) (200 * (1 - Math.abs(elapsed - 840L) / 160.0));
+            if (fa > 0) graphics.fill(0, 0, w, h, (Math.min(220, fa) << 24) | 0xFFFFFF);
         }
         // dust kicked up as the doors burst open
         if (gateOpenProgress > 0 && elapsed < 2200L) {
