@@ -335,6 +335,99 @@ public final class SanMortisCan {
         }
     }
 
+    // ---- cans by the sea: one now and then on a beach of the Overworld (any terrain mod: by biome tags)
+
+    /** Each cell of this many blocks has at most one can, and only half of the cells have one. */
+    private static final int CELL = 1024;
+
+    /** Where a can is waiting to be built (its land not all loaded yet), and the cells already decided. */
+    public static final class Coast extends net.minecraft.world.level.saveddata.SavedData {
+        final java.util.Set<Long> cells = new java.util.HashSet<>();
+        final java.util.Map<Long, Integer> pending = new java.util.HashMap<>();   // place -> front (2D value)
+
+        static Coast of(ServerLevel level) {
+            return level.getDataStorage().computeIfAbsent(new Factory<>(Coast::new, Coast::load, null), "awakening_san_mortis_coast");
+        }
+
+        static Coast load(net.minecraft.nbt.CompoundTag tag, net.minecraft.core.HolderLookup.Provider r) {
+            Coast c = new Coast();
+            for (long l : tag.getLongArray("Cells")) c.cells.add(l);
+            long[] p = tag.getLongArray("Pending");
+            int[] f = tag.getIntArray("Fronts");
+            for (int i = 0; i < p.length && i < f.length; i++) c.pending.put(p[i], f[i]);
+            return c;
+        }
+
+        @Override
+        public net.minecraft.nbt.CompoundTag save(net.minecraft.nbt.CompoundTag tag, net.minecraft.core.HolderLookup.Provider r) {
+            tag.putLongArray("Cells", cells.stream().mapToLong(Long::longValue).toArray());
+            tag.putLongArray("Pending", pending.keySet().stream().mapToLong(Long::longValue).toArray());
+            tag.putIntArray("Fronts", pending.values().stream().mapToInt(Integer::intValue).toArray());
+            return tag;
+        }
+    }
+
+    private static boolean isSea(ServerLevel level, BlockPos p) {
+        var b = level.getBiome(p);
+        return b.is(net.minecraft.tags.BiomeTags.IS_OCEAN) || b.is(net.neoforged.neoforge.common.Tags.Biomes.IS_OCEAN);
+    }
+
+    private static boolean isBeach(ServerLevel level, BlockPos p) {
+        var b = level.getBiome(p);
+        return b.is(net.minecraft.tags.BiomeTags.IS_BEACH) || b.is(net.neoforged.neoforge.common.Tags.Biomes.IS_BEACH);
+    }
+
+    /** A newly made chunk of the Overworld on the coast may be chosen for its cell's can. */
+    @SubscribeEvent
+    public static void onChunk(net.neoforged.neoforge.event.level.ChunkEvent.Load event) {
+        if (!event.isNewChunk() || !(event.getLevel() instanceof ServerLevel level) || !level.dimension().equals(net.minecraft.world.level.Level.OVERWORLD)) return;
+        var cp = event.getChunk().getPos();
+        int cellX = Math.floorDiv(cp.getMinBlockX(), CELL), cellZ = Math.floorDiv(cp.getMinBlockZ(), CELL);
+        long cell = net.minecraft.world.level.ChunkPos.asLong(cellX, cellZ);
+        Coast coast = Coast.of(level);
+        if (coast.cells.contains(cell)) return;
+        // half the cells have no can at all (decided by the seed, so the same in every run)
+        if (new java.util.Random(level.getSeed() ^ cell * 0x9E3779B97F4A7C15L).nextBoolean()) {
+            coast.cells.add(cell);
+            coast.setDirty();
+            return;
+        }
+        int y = event.getChunk().getHeight(Heightmap.Types.MOTION_BLOCKING_NO_LEAVES, 8, 8);
+        BlockPos mid = new BlockPos(cp.getMinBlockX() + 8, y, cp.getMinBlockZ() + 8);
+        if (y <= level.getSeaLevel() || isSea(level, mid) || !event.getChunk().getFluidState(mid.below()).isEmpty()) return;
+        // on the coast: a beach, or land with the sea a few blocks off; the label faces inland
+        Direction toSea = null;
+        for (Direction d : Direction.Plane.HORIZONTAL)
+            if (isSea(level, mid.relative(d, 24))) toSea = d;
+        if (toSea == null && !isBeach(level, mid)) return;
+        if (toSea == null) toSea = Direction.from2DDataValue(new java.util.Random(cell).nextInt(4));
+        coast.cells.add(cell);
+        coast.pending.put(mid.asLong(), toSea.getOpposite().get2DDataValue());
+        coast.setDirty();
+    }
+
+    /** Builds the waiting cans whose land round them has loaded. */
+    @SubscribeEvent
+    public static void onTick(net.neoforged.neoforge.event.tick.ServerTickEvent.Post event) {
+        if (event.getServer().getTickCount() % 40 != 0) return;
+        ServerLevel level = event.getServer().overworld();
+        Coast coast = Coast.of(level);
+        if (coast.pending.isEmpty()) return;
+        for (var e : new java.util.ArrayList<>(coast.pending.entrySet())) {
+            BlockPos at = BlockPos.of(e.getKey());
+            boolean loaded = true;
+            for (int dx = -1; dx <= 1 && loaded; dx++)
+                for (int dz = -1; dz <= 1 && loaded; dz++)
+                    loaded = level.hasChunk((at.getX() >> 4) + dx, (at.getZ() >> 4) + dz);
+            if (!loaded) continue;
+            coast.pending.remove(e.getKey());
+            coast.setDirty();
+            BlockPos ground = level.getHeightmapPos(Heightmap.Types.MOTION_BLOCKING_NO_LEAVES, at);
+            build(level, ground, Direction.from2DDataValue(e.getValue()));
+            AwakeningSystemMod.LOGGER.info("San Mortis can raised on the coast at {}", ground);
+        }
+    }
+
     @SubscribeEvent
     public static void onBreak(net.neoforged.neoforge.event.level.BlockEvent.BreakEvent event) {
         if (event.getLevel() instanceof ServerLevel level && Cans.of(level).protects(event.getPos())) event.setCanceled(true);

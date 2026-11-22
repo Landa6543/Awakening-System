@@ -122,47 +122,13 @@ public final class SpiralAbyssScreen extends Screen {
     }
 
     private void renderCosmicAbyssSky(GuiGraphics graphics, int w, int h) {
-        long time = System.currentTimeMillis();
-
-        graphics.fillGradient(0, 0, w, h, 0xFF02050E, 0xFF0B1124);
-
-        int rayCenterX = w / 2;
-        for (int r = 0; r < 5; r++) {
-            int rayOffset = (r - 2) * (w / 4);
-            int x1 = rayCenterX + rayOffset - 50;
-            int x2 = rayCenterX + rayOffset + 50;
-            graphics.fillGradient(x1, 0, x2, h, 0x087DD3FC, 0x00000000);
-        }
-
-        float wave = (time % 40000L) / 40000.0F * w;
-        for (int i = -1; i <= 1; i++) {
-            int cloudX = (int) (wave + i * w);
-            graphics.fillGradient(cloudX, h - 160, cloudX + w, h, 0x121E3A8A, 0x00000000);
-            graphics.fillGradient(w - cloudX, h - 120, w - cloudX + w, h, 0x10581C87, 0x00000000);
-        }
-
-        int[][] constStars = {
-                {w / 10, 50}, {w / 7, 30}, {w / 5, 65}, {w / 4, 38},
-                {w * 3 / 4, 40}, {w * 4 / 5, 70}, {w * 9 / 10, 35}
-        };
-        for (int i = 0; i < constStars.length - 1; i++) {
-            int x1 = constStars[i][0];
-            int y1 = constStars[i][1];
-            int x2 = constStars[i + 1][0];
-            int y2 = constStars[i + 1][1];
-            if (Math.abs(x1 - x2) < w / 3) {
-                drawThinLine(graphics, x1, y1, x2, y2, 0x187DD3FC);
-            }
-        }
-
-        for (int i = 0; i < constStars.length; i++) {
-            int sx = constStars[i][0];
-            int sy = constStars[i][1];
-            float twinkle = (float) Math.sin((time / 300.0) + i) * 0.5F + 0.5F;
-            int alpha = (int) (100 + twinkle * 155);
-            graphics.fill(sx - 1, sy, sx + 2, sy + 1, (alpha << 24) | 0x00BAE6FD);
-            graphics.fill(sx, sy - 1, sx + 1, sy + 2, (alpha << 24) | 0x00BAE6FD);
-        }
+        // the hall of arches, scaled to cover the window (cut at the sides or the top as needed)
+        float scale = Math.max(w / (float) AbyssArt.BG_W, h / (float) AbyssArt.BG_H);
+        int dw = Math.round(AbyssArt.BG_W * scale), dh = Math.round(AbyssArt.BG_H * scale);
+        graphics.blit(AbyssArt.background(), (w - dw) / 2, h - dh, dw, dh, 0, 0, AbyssArt.BG_W, AbyssArt.BG_H, AbyssArt.BG_W, AbyssArt.BG_H);
+        // a soft shade at the top and bottom, so the bars and the panel read well
+        graphics.fillGradient(0, 0, w, 70, 0xCC050B1C, 0x00050B1C);
+        graphics.fillGradient(0, h - 150, w, h, 0x00050B1C, 0xAA050B1C);
     }
 
     private void drawThinLine(GuiGraphics graphics, int x1, int y1, int x2, int y2, int color) {
@@ -322,180 +288,43 @@ public final class SpiralAbyssScreen extends Screen {
      * Renderiza una auténtica PUERTA DE DOMINIO CELESTIAL inspirada fielmente en Genshin Impact.
      */
     private void renderSingleDomainDoor(GuiGraphics graphics, int x, int y, int w, int h, int floor, boolean isSelected, boolean isHover, boolean isLocked) {
-        long time = System.currentTimeMillis();
         int floorIdx = floor - 1;
         int stars = starsPerFloor[floorIdx];
         int recLevel = getRecommendedLevel(floor);
-
-        int drawY = isSelected ? (y - 5) : (isHover ? (y - 2) : y);
-        int curH = isSelected ? (h + 5) : (isHover ? (h + 2) : h);
-
+        // the floor's banner, as tall as fits above its caption, lifted a little when chosen or under the mouse
+        int captionH = 30;
+        int bh = Math.min(h - captionH, (w * AbyssArt.BANNER_H) / AbyssArt.BANNER_W);
+        int bw = (bh * AbyssArt.BANNER_W) / AbyssArt.BANNER_H;
+        int bx = x + (w - bw) / 2;
+        int by = y + (isSelected ? -4 : (isHover ? -2 : 0));
         if (isSelected) {
-            graphics.fillGradient(x - 6, drawY - 6, x + w + 6, drawY + curH + 6, 0x44FFE082, 0x00FFE082);
-            graphics.fill(x - 3, drawY - 3, x + w + 3, drawY + curH + 3, 0x332563EB);
-
-            int cg = 6;
-            graphics.fill(x - 4, drawY - 4, x - 4 + cg, drawY - 2, 0xFFFFD700);
-            graphics.fill(x - 4, drawY - 4, x - 2, drawY - 4 + cg, 0xFFFFD700);
-            graphics.fill(x + w + 4 - cg, drawY - 4, x + w + 4, drawY - 2, 0xFFFFD700);
-            graphics.fill(x + w + 2, drawY - 4, x + w + 4, drawY - 4 + cg, 0xFFFFD700);
-            graphics.fill(x - 4, drawY + curH + 2, x - 4 + cg, drawY + curH + 4, 0xFFFFD700);
-            graphics.fill(x - 4, drawY + curH + 4 - cg, x - 2, drawY + curH + 4, 0xFFFFD700);
-            graphics.fill(x + w + 4 - cg, drawY + curH + 2, x + w + 4, drawY + curH + 4, 0xFFFFD700);
-            graphics.fill(x + w + 2, drawY + curH + 4 - cg, x + w + 4, drawY + curH + 4, 0xFFFFD700);
+            graphics.fillGradient(bx - 8, by - 6, bx + bw + 8, by + bh + 6, 0x557FFFF4, 0x007FFFF4);
         }
-
-        int archH = Math.max(34, (int) (curH * 0.22));
-        int stoneBg = isSelected ? 0xFF2D3748 : 0xFF1A202C;
-        int stoneBorder = isSelected ? 0xFFFFD700 : (isHover ? 0xFF93C5FD : 0xFF4A5568);
-
-        graphics.fill(x - 2, drawY + archH - 6, x + w + 2, drawY + archH, 0xFF334155);
-        graphics.renderOutline(x - 2, drawY + archH - 6, w + 4, 6, stoneBorder);
-
-        graphics.fill(x, drawY + 8, x + w, drawY + archH - 6, stoneBg);
-        graphics.renderOutline(x, drawY + 8, w, archH - 14, stoneBorder);
-
-        for (int d = x + 4; d < x + w - 4; d += 6) {
-            graphics.fill(d, drawY + archH - 10, d + 3, drawY + archH - 7, isSelected ? 0xFF64748B : 0xFF334155);
-        }
-
-        graphics.fill(x + 10, drawY, x + w - 10, drawY + 8, 0xFF242E3D);
-        graphics.renderOutline(x + 10, drawY, w - 20, 8, stoneBorder);
-
-        graphics.fill(x + 11, drawY + 1, x + w - 11, drawY + 2, 0xFF94A3B8);
-
-        int medW = 30;
-        int medH = 18;
-        int medX = x + (w - medW) / 2;
-        int medY = drawY + 5;
-        graphics.fill(medX, medY, medX + medW, medY + medH, isSelected ? 0xFF92400E : 0xFF1E1B4B);
-        graphics.renderOutline(medX, medY, medW, medH, isSelected ? 0xFFFFD700 : 0xFF818CF8);
-
-        graphics.fill(medX - 4, medY + 6, medX, medY + 12, isSelected ? 0xFFFFD700 : 0xFF64748B);
-        graphics.fill(medX + medW, medY + 6, medX + medW + 4, medY + 12, isSelected ? 0xFFFFD700 : 0xFF64748B);
-
+        int state = isLocked ? 1 : (claimedRewards[floorIdx] ? 2 : 0);
+        com.mojang.blaze3d.systems.RenderSystem.enableBlend();
+        graphics.blit(AbyssArt.banner(floor, state), bx, by, bw, bh, 0, 0, AbyssArt.BANNER_W, AbyssArt.BANNER_H, AbyssArt.BANNER_W, AbyssArt.BANNER_H);
+        com.mojang.blaze3d.systems.RenderSystem.disableBlend();
+        // the numeral in the disc at the top
         String roman = (floor >= 1 && floor <= 12) ? ROMAN_NUMERALS[floor - 1] : String.valueOf(floor);
-        graphics.drawCenteredString(this.font, roman, medX + medW / 2, medY + 5, isSelected ? 0xFFFFDF88 : 0xFFF1F5F9);
-
-        int pillarW = Math.max(10, (int) (w * 0.13));
-        int bodyY = drawY + archH;
-        int bodyH = curH - archH - 36;
-
-        renderFlutedPillar(graphics, x, bodyY, pillarW, bodyH, stoneBorder, isSelected, floor, time);
-        renderFlutedPillar(graphics, x + w - pillarW, bodyY, pillarW, bodyH, stoneBorder, isSelected, floor, time);
-
-        int coreX = x + pillarW;
-        int coreW = w - pillarW * 2;
-        int coreY = bodyY;
-        int coreH = bodyH;
-
-        if (!isLocked) {
-            int topCol = (floor >= 9) ? 0xFF0A021C : 0xFF02071A;
-            int botCol = (floor >= 9) ? 0xFF4A044E : 0xFF1D4ED8;
-            graphics.fillGradient(coreX, coreY, coreX + coreW, coreY + coreH, topCol, botCol);
-
-            graphics.fill(coreX, coreY, coreX + 4, coreY + 4, 0xFF1E293B);
-            graphics.fill(coreX + coreW - 4, coreY, coreX + coreW, coreY + 4, 0xFF1E293B);
-            graphics.fill(coreX, coreY, coreX + 2, coreY + 6, 0xFF1E293B);
-            graphics.fill(coreX + coreW - 2, coreY, coreX + coreW, coreY + 6, 0xFF1E293B);
-
-            int centerX = coreX + coreW / 2;
-            int centerY = coreY + coreH / 2;
-
-            double pulse = Math.sin(time / 400.0 + floor);
-            int ringAlpha = (int) (50 + pulse * 25);
-            int ringCol = (ringAlpha << 24) | ((floor >= 9) ? 0x00C084FC : 0x007DD3FC);
-
-            drawDottedEllipse(graphics, centerX, centerY, (int) (coreW * 0.40), (int) (coreH * 0.28), ringCol);
-            drawDottedEllipse(graphics, centerX, centerY, (int) (coreW * 0.22), (int) (coreH * 0.16), ringCol);
-
-            int triAlpha = (int) (70 + Math.sin(time / 500.0 + floor) * 35);
-            int triColor = (triAlpha << 24) | ((floor >= 9) ? 0x00E879F9 : 0x00FDE047);
-            drawTriquetraSymbol(graphics, centerX, centerY, (int) (coreW * 0.44), triColor);
-
-            for (int s = 0; s < 5; s++) {
-                double angle = (time / 700.0) + (s * (Math.PI * 2 / 5)) + floor;
-                double radX = (coreW * 0.32);
-                double radY = (coreH * 0.22);
-                int px = centerX + (int) (Math.cos(angle) * radX);
-                int py = centerY + (int) (Math.sin(angle) * radY);
-                int sCol = (s % 2 == 0) ? 0xFFFFFFFF : ((floor >= 9) ? 0xFFF0ABFC : 0xFFBAE6FD);
-                graphics.fill(px, py, px + 2, py + 2, sCol);
-            }
-
-            graphics.fill(centerX - 8, centerY, centerX + 9, centerY + 1, 0x88FFFFFF);
-            graphics.fill(centerX, centerY - 6, centerX + 1, centerY + 7, 0x88FFFFFF);
-            graphics.fill(centerX - 1, centerY - 1, centerX + 2, centerY + 2, 0xFFFFFFFF);
-        } else {
-            graphics.fill(coreX, coreY, coreX + coreW, coreY + coreH, 0xFF080D18);
-
-            graphics.fill(coreX, coreY, coreX + 4, coreY + 4, 0xFF1E293B);
-            graphics.fill(coreX + coreW - 4, coreY, coreX + coreW, coreY + 4, 0xFF1E293B);
-
-            int midX = coreX + coreW / 2;
-            graphics.fill(midX - 1, coreY, midX, coreY + coreH, 0xFF020408);
-            graphics.fill(midX, coreY, midX + 1, coreY + coreH, 0xFF1E293B);
-
-            int centerY = coreY + coreH / 2;
-            drawTriquetraSymbol(graphics, midX, centerY, (int) (coreW * 0.46), 0x3364748B);
-            drawDottedEllipse(graphics, midX, centerY, (int) (coreW * 0.38), (int) (coreH * 0.28), 0x2264748B);
-
-            drawChainDiagonal(graphics, coreX, coreY, coreX + coreW, coreY + coreH);
-            drawChainDiagonal(graphics, coreX + coreW, coreY, coreX, coreY + coreH);
-
-            int lockW = 20;
-            int lockH = 16;
-            int lockX = midX - lockW / 2;
-            int lockY = centerY - lockH / 2 - 2;
-
-            graphics.fill(lockX + 5, lockY - 5, lockX + lockW - 5, lockY, 0xFF64748B);
-            graphics.fill(lockX + 7, lockY - 3, lockX + lockW - 7, lockY, 0xFF080D18);
-
-            graphics.fill(lockX, lockY, lockX + lockW, lockY + lockH, 0xFF7F1D1D);
-            graphics.renderOutline(lockX, lockY, lockW, lockH, 0xFFDC2626);
-
-            int eyeAlpha = (int) (180 + Math.sin(time / 250.0 + floor) * 75);
-            graphics.fill(lockX + lockW / 2 - 2, lockY + lockH / 2 - 2, lockX + lockW / 2 + 2, lockY + lockH / 2 + 2, (eyeAlpha << 24) | 0x00F87171);
-
-            graphics.drawCenteredString(this.font, Component.translatable("gui.awakening_system.spiral_abyss.locked").getString(), midX, lockY + lockH + 3, 0xFFEF4444);
-            graphics.drawCenteredString(this.font, Component.translatable("gui.awakening_system.spiral_abyss.floor_req", floor - 1).getString(), midX, lockY + lockH + 13, 0xFF64748B);
+        int discY = by + (13 * bh) / AbyssArt.BANNER_H - 4;
+        graphics.drawCenteredString(this.font, roman, bx + bw / 2, discY, isLocked ? 0xFF4A5462 : 0xFF0E2E5C);
+        if (isLocked) {
+            int my = by + bh / 2 - 8;
+            graphics.drawCenteredString(this.font, "🔒", bx + bw / 2, my, 0xFFCBD5E1);
+            graphics.drawCenteredString(this.font, Component.translatable("gui.awakening_system.spiral_abyss.floor_req", floor - 1).getString(), bx + bw / 2, my + 12, 0xFFCBD5E1);
         }
-
-        int baseH = 36;
-        int baseY = drawY + curH - baseH;
-
-        graphics.fill(x - 1, baseY, x + w + 1, baseY + 4, 0xFF334155);
-        graphics.renderOutline(x - 1, baseY, w + 2, 4, stoneBorder);
-
-        graphics.fill(x, baseY + 4, x + w, baseY + baseH, 0xFF0F172A);
-        graphics.renderOutline(x, baseY + 4, w, baseH - 4, stoneBorder);
-
-        String floorTitle = Component.translatable("gui.awakening_system.spiral_abyss.floor_title", floor).getString();
-        graphics.drawCenteredString(this.font, floorTitle, x + w / 2, baseY + 6, isLocked ? 0xFF64748B : (isSelected ? 0xFFFFDF88 : 0xFFE2E8F0));
-
+        // the caption under the banner: the floor and its stars
+        int capY = by + bh + 4;
+        graphics.drawCenteredString(this.font, Component.translatable("gui.awakening_system.spiral_abyss.floor_title", floor).getString(), x + w / 2, capY,
+                isLocked ? 0xFF94A3B8 : (isSelected ? 0xFFFFF3C4 : 0xFFE6FAFF));
         if (!isLocked) {
-            int gemY = baseY + 16;
-            int gemSpacing = 16;
-            int g1X = x + w / 2 - gemSpacing;
-            int g2X = x + w / 2;
-            int g3X = x + w / 2 + gemSpacing;
-
-            renderChamberStarGem(graphics, g1X, gemY, stars >= 1);
-            renderChamberStarGem(graphics, g2X, gemY, stars >= 4);
-            renderChamberStarGem(graphics, g3X, gemY, stars >= 7);
-
-            String starStr = "⭐ " + stars + " / 9";
-            int starCol = (stars >= 9) ? 0xFFFFD700 : ((stars > 0) ? 0xFF38BDF8 : 0xFF94A3B8);
-            graphics.drawCenteredString(this.font, starStr, x + w / 2, baseY + 26, starCol);
+            String starStr = "★ " + stars + " / 9";
+            graphics.drawCenteredString(this.font, starStr, x + w / 2, capY + 11, stars >= 9 ? 0xFFFFD86B : (stars > 0 ? 0xFF9FE7FF : 0xFFB0BEC9));
         } else {
-            graphics.drawCenteredString(this.font, Component.translatable("gui.awakening_system.spiral_abyss.rec_level", recLevel).getString(), x + w / 2, baseY + 18, 0xFF475569);
+            graphics.drawCenteredString(this.font, Component.translatable("gui.awakening_system.spiral_abyss.rec_level", recLevel).getString(), x + w / 2, capY + 11, 0xFF94A3B8);
         }
-
         if (!isLocked && stars >= 3 && !claimedRewards[floorIdx]) {
-            int tagW = 42;
-            int tagH = 11;
-            int tagX = x + (w - tagW) / 2;
-            int tagY = drawY - 6;
+            int tagW = 42, tagH = 11, tagX = x + (w - tagW) / 2, tagY = by - 7;
             graphics.fill(tagX, tagY, tagX + tagW, tagY + tagH, 0xFFB45309);
             graphics.renderOutline(tagX, tagY, tagW, tagH, 0xFFFFD700);
             graphics.drawCenteredString(this.font, Component.translatable("gui.awakening_system.spiral_abyss.reward_tag").getString(), tagX + tagW / 2, tagY + 2, 0xFFFFFFFF);

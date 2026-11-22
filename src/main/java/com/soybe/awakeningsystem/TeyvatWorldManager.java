@@ -529,6 +529,7 @@ public final class TeyvatWorldManager {
             if (lvl == null) continue;
 
             TeyvatAbyssPortalBuilder.tickParticles(lvl, portal.centerPos, portal.facing, portal.active);
+            if (lvl.isLoaded(portal.centerPos)) TeyvatAbyssPortalBuilder.fixDaisSteps(lvl, portal.centerPos, portal.facing);
 
             for (ServerPlayer player : lvl.players()) {
                 checkPlayerAbyssPortal(player);

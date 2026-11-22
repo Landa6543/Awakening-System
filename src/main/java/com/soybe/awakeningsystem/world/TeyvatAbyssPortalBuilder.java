@@ -386,6 +386,30 @@ public final class TeyvatAbyssPortalBuilder {
         }
     }
 
+    private static final java.util.Set<Long> STEPS_CHECKED = java.util.concurrent.ConcurrentHashMap.newKeySet();
+
+    /**
+     * Portals built before the fix had their dais steps turned the wrong way (the high side away from the dais):
+     * they are turned round in place, once per portal and session, leaving everything else as it is.
+     */
+    public static void fixDaisSteps(ServerLevel level, BlockPos baseCenterPos, Direction facing) {
+        if (!STEPS_CHECKED.add(baseCenterPos.asLong())) return;
+        Direction backDir = facing.getOpposite();
+        Direction rightDir = facing.getOpposite().getClockWise();
+        for (int step = 1; step <= 2; step++) {
+            int stepY = 2 - step;
+            for (int[] side : new int[][]{{-1 - step, 0}, {1 + step, 1}}) {
+                Direction want = side[1] == 0 ? backDir : facing;
+                for (int dx = -4; dx <= 4; dx++) {
+                    BlockPos p = baseCenterPos.relative(rightDir, dx).above(stepY).relative(backDir, side[0]);
+                    BlockState s = level.getBlockState(p);
+                    if (s.is(Blocks.SANDSTONE_STAIRS) && s.getValue(StairBlock.FACING) != want)
+                        level.setBlock(p, s.setValue(StairBlock.FACING, want), 3);
+                }
+            }
+        }
+    }
+
     /**
      * Construye la plataforma escalonada (dais) y las gradas frontales de acceso de 7 bloques de ancho.
      */

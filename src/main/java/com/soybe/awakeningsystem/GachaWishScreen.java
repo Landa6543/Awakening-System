@@ -2772,68 +2772,65 @@ public final class GachaWishScreen extends Screen {
     private void renderMeteorAnimation(GuiGraphics graphics, int mouseX, int mouseY) {
         long elapsed = System.currentTimeMillis() - this.meteorStartTime;
         float progress = Math.min(1.0F, (float) elapsed / (float) METEOR_DURATION_MS);
+        int vw = getVirtW(), vh = getVirtH();
+        long now = System.currentTimeMillis();
+
+        // a night sky: deep blue with twinkling stars, the scene the meteor crosses
+        graphics.fillGradient(0, 0, vw, vh, 0xF0060A1E, 0xF0141C3C);
+        java.util.Random stars = new java.util.Random(4242L);
+        for (int i = 0; i < 140; i++) {
+            int sx = stars.nextInt(Math.max(1, vw)), sy = stars.nextInt(Math.max(1, vh));
+            float tw = (float) (Math.sin(now / 300.0 + i * 1.7) * 0.5 + 0.5);
+            int a = (int) (60 + tw * 160);
+            int size = stars.nextInt(9) == 0 ? 2 : 1;
+            graphics.fill(sx, sy, sx + size, sy + size, (a << 24) | 0xDDEEFF);
+        }
 
         renderSkipButton(graphics, mouseX, mouseY);
 
-        float flightProgress = Math.min(1.0F, progress / 0.85F);
-        float ease = flightProgress * flightProgress * (3.0F - 2.0F * flightProgress);
-        int startX = (int) (getVirtW() * 0.94F);
-        int startY = (int) (getVirtH() * 0.06F);
-        int targetX = (int) (getVirtW() * 0.22F);
-        int targetY = (int) (getVirtH() * 0.70F);
+        float flight = Math.min(1.0F, progress / 0.82F);
+        float ease = flight * flight * (3.0F - 2.0F * flight);
+        float startX = vw * 0.92F, startY = vh * 0.04F, targetX = vw * 0.30F, targetY = vh * 0.72F;
+        float cometX = startX - ease * (startX - targetX);
+        float cometY = startY + ease * (targetY - startY);
+        float dirX = startX - targetX, dirY = startY - targetY;   // back along the path, towards where it came from
+        float dirLen = (float) Math.sqrt(dirX * dirX + dirY * dirY);
+        dirX /= dirLen;
+        dirY /= dirLen;
 
-        int cometX = (int) (startX - ease * (startX - targetX));
-        int cometY = (int) (startY + ease * (targetY - startY));
+        // the colour: it falls white and blue, and halfway shows what it brings (purple or gold), as in the game
+        int finalColor = highestWonRarity == 5 ? 0xFFD54A : (highestWonRarity == 4 ? 0xC07CFF : 0x6FB6FF);
+        float reveal = Math.max(0.0F, Math.min(1.0F, (flight - 0.45F) / 0.25F));
+        int color = lerpColor(0x9FD4FF, finalColor, reveal);
 
-        int cometColor = highestWonRarity == 5 ? 0xFFFFD700 : (highestWonRarity == 4 ? 0xFFA044FF : 0xFF4499FF);
-        int coreColor = 0xFFFFFFFF;
-        int glowColor = highestWonRarity == 5 ? 0x55FFD700 : (highestWonRarity == 4 ? 0x55A044FF : 0x554499FF);
-
+        // the other pulls of a ten-pull: smaller stars falling alongside
         if (lastPullCount > 1) {
             for (int sub = 1; sub <= 9; sub++) {
-                double wave = Math.sin(sub * 0.9D + progress * 14.0D) * 14.0D;
-                int sx = cometX + (int)(sub * 16 + wave);
-                int sy = cometY - (int)(sub * 11 - wave * 0.6D);
+                float lag = sub * 0.035F;
+                float f2 = Math.max(0.0F, Math.min(1.0F, (progress - lag) / 0.82F));
+                float e2 = f2 * f2 * (3.0F - 2.0F * f2);
+                float ox = (float) Math.sin(sub * 2.1) * vw * 0.10F, oy = (float) Math.cos(sub * 1.3) * vh * 0.08F;
+                float sx = startX + ox - e2 * (startX - targetX), sy = startY + oy * 0.4F + e2 * (targetY - startY + oy);
                 int subRarity = (sub < itemRarities.size()) ? itemRarities.get(sub) : 3;
-                int subColor = subRarity == 5 ? 0xFFFFD700 : (subRarity == 4 ? 0xFFBA68C8 : 0xFF64B5F6);
-
-                for (int st = 1; st <= 6; st++) {
-                    int stx = sx + st * 5;
-                    int sty = sy - st * 3;
-                    graphics.fill(stx - 1, sty - 1, stx + 1, sty + 1, (subColor & 0x00FFFFFF) | (Math.max(10, 180 - st * 28) << 24));
-                }
-                graphics.fill(sx - 2, sy - 2, sx + 2, sy + 2, subColor);
+                int subColor = lerpColor(0x9FD4FF, subRarity == 5 ? 0xFFD54A : (subRarity == 4 ? 0xC07CFF : 0x6FB6FF), reveal);
+                trail(graphics, sx, sy, dirX, dirY, 70, 3.0F, subColor, 0.55F);
+                glowDisc(graphics, sx, sy, 4.0F, subColor, 0.9F);
             }
         }
 
-        for (int trail = 1; trail <= 26; trail++) {
-            float trailRatio = (float) trail / 26.0F;
-            int tx = cometX + (int)(trail * 13.5F * (0.8F + trailRatio * 0.4F));
-            int ty = cometY - (int)(trail * 9.5F * (0.8F + trailRatio * 0.4F));
-            int trailSize = Math.max(1, (int)((1.0F - trailRatio) * 12.0F));
-            int alpha = (int)((1.0F - trailRatio) * 210.0F);
-            int segColor = (trail < 4) ? coreColor : cometColor;
-            graphics.fill(tx - trailSize, ty - trailSize, tx + trailSize, ty + trailSize, (segColor & 0x00FFFFFF) | (alpha << 24));
-        }
-
-        int pulse = (int) (Math.sin(System.currentTimeMillis() * 0.02D) * 8);
-        graphics.fill(cometX - 32 - pulse, cometY - 32 - pulse, cometX + 32 + pulse, cometY + 32 + pulse, glowColor);
-        graphics.fill(cometX - 18, cometY - 18, cometX + 18, cometY + 18, (cometColor & 0x00FFFFFF) | 0x88000000);
-        graphics.fill(cometX - 10, cometY - 10, cometX + 10, cometY + 10, cometColor);
-        graphics.fill(cometX - 4, cometY - 4, cometX + 4, cometY + 4, coreColor);
+        // the meteor: a long tapering trail, a soft halo and a white-hot core
+        trail(graphics, cometX, cometY, dirX, dirY, 220, 9.0F, color, 0.85F);
+        float pulse = (float) Math.sin(now * 0.018) * 2.0F;
+        glowDisc(graphics, cometX, cometY, 30.0F + pulse, color, 0.30F);
+        glowDisc(graphics, cometX, cometY, 16.0F, color, 0.75F);
+        glowDisc(graphics, cometX, cometY, 7.0F, 0xFFFFFF, 1.0F);
 
         if (activeBanner == BANNER_UMA) {
             ItemStack caratItem = SystemItems.CARAT.isBound() ? new ItemStack(SystemItems.CARAT.get()) : new ItemStack(Items.CARROT);
             graphics.pose().pushPose();
             graphics.pose().translate(cometX, cometY, 80);
-            graphics.pose().scale(2.2F, 2.2F, 2.2F);
+            graphics.pose().scale(1.6F, 1.6F, 1.6F);
             graphics.renderItem(caratItem, -8, -8);
-            graphics.pose().popPose();
-        } else if (SystemItems.PRIMOGEM.isBound()) {
-            graphics.pose().pushPose();
-            graphics.pose().translate(cometX, cometY, 80);
-            graphics.pose().scale(2.0F, 2.0F, 2.0F);
-            graphics.renderItem(new ItemStack(SystemItems.PRIMOGEM.get()), -8, -8);
             graphics.pose().popPose();
         }
 
@@ -2850,14 +2847,30 @@ public final class GachaWishScreen extends Screen {
                     : (highestWonRarity == 4 ? Component.translatable("gui.awakening_system.gacha.anim.purple_4star").getString() : Component.translatable("gui.awakening_system.gacha.anim.astral_3star").getString());
             subNotice = Component.translatable("gui.awakening_system.gacha.anim.comet_descend").getString();
         }
-        graphics.drawCenteredString(this.font, splash, getVirtW() / 2, 28, 0xFFFFFF);
-        graphics.drawCenteredString(this.font, subNotice, getVirtW() / 2, 42, 0xCCCCCC);
+        // the words appear only once the colour is known
+        int textA = (int) (Math.max(0.0F, Math.min(1.0F, (flight - 0.55F) / 0.2F)) * 255);
+        if (textA > 8) {
+            graphics.drawCenteredString(this.font, splash, vw / 2, 28, (textA << 24) | 0xFFFFFF);
+            graphics.drawCenteredString(this.font, subNotice, vw / 2, 42, (textA << 24) | 0xCCCCCC);
+        }
 
-        if (progress >= 0.85F) {
-            float impactRatio = (progress - 0.85F) / 0.15F;
-            int ringRadius = (int) (impactRatio * Math.max(getVirtW(), getVirtH()) * 1.2F);
-            int ringAlpha = (int) ((1.0F - impactRatio) * 220.0F);
-            graphics.renderOutline(cometX - ringRadius, cometY - ringRadius, ringRadius * 2, ringRadius * 2, (cometColor & 0x00FFFFFF) | (ringAlpha << 24));
+        // the landing: a flash over the whole screen, a ring of light spreading out and sparks
+        if (progress >= 0.82F) {
+            float t = (progress - 0.82F) / 0.18F;
+            int flashA = (int) (Math.max(0.0F, 1.0F - t * 1.6F) * 230);
+            if (flashA > 0) graphics.fill(0, 0, vw, vh, (flashA << 24) | lerpColor(0xFFFFFF, finalColor, 0.35F));
+            float ringR = t * Math.max(vw, vh) * 0.9F;
+            int ringA = (int) ((1.0F - t) * 220);
+            ring(graphics, targetX, targetY, ringR, 3.0F, finalColor, ringA);
+            ring(graphics, targetX, targetY, ringR * 0.6F, 2.0F, 0xFFFFFF, ringA / 2);
+            java.util.Random sp = new java.util.Random(77L);
+            for (int i = 0; i < 40; i++) {
+                double ang = sp.nextDouble() * Math.PI * 2;
+                float dist = t * (60 + sp.nextInt(160));
+                float px = targetX + (float) Math.cos(ang) * dist, py = targetY + (float) Math.sin(ang) * dist * 0.7F;
+                int a = (int) ((1.0F - t) * 255);
+                graphics.fill((int) px, (int) py, (int) px + 2, (int) py + 2, (a << 24) | finalColor);
+            }
         }
 
         if (elapsed >= METEOR_DURATION_MS) {
@@ -2867,6 +2880,52 @@ public final class GachaWishScreen extends Screen {
             if (!resultItems.isEmpty()) {
                 playRevealSound(resultItems.get(0), (0 < itemRarities.size()) ? itemRarities.get(0) : getItemStarRarity(resultItems.get(0)));
             }
+        }
+    }
+
+    private static int lerpColor(int a, int b, float t) {
+        int ar = (a >> 16) & 255, ag = (a >> 8) & 255, ab = a & 255;
+        int br = (b >> 16) & 255, bg = (b >> 8) & 255, bb = b & 255;
+        return ((int) (ar + (br - ar) * t) << 16) | ((int) (ag + (bg - ag) * t) << 8) | (int) (ab + (bb - ab) * t);
+    }
+
+    /** A round soft glow: filled rows, fading towards its edge. */
+    private static void glowDisc(GuiGraphics g, float cx, float cy, float r, int rgb, float strength) {
+        int steps = Math.max(2, (int) (r / 2));
+        for (int s = steps; s >= 1; s--) {
+            float rr = r * s / steps;
+            int a = (int) (strength * 255 * (1.0F - (s - 1) / (float) steps) * 0.55F);
+            if (a <= 0) continue;
+            int col = (Math.min(255, a) << 24) | rgb;
+            for (int dy = -(int) rr; dy <= (int) rr; dy++) {
+                int half = (int) Math.sqrt(Math.max(0, rr * rr - dy * dy));
+                g.fill((int) cx - half, (int) cy + dy, (int) cx + half + 1, (int) cy + dy + 1, col);
+            }
+        }
+    }
+
+    /** A trail behind a falling star: small discs along its path, thinner and fainter towards the end. */
+    private static void trail(GuiGraphics g, float x, float y, float dx, float dy, int length, float width, int rgb, float strength) {
+        for (int i = 2; i < length; i += 3) {
+            float k = i / (float) length;
+            float w = width * (1.0F - k);
+            int a = (int) (strength * 200 * (1.0F - k) * (1.0F - k));
+            if (a <= 2 || w < 0.5F) continue;
+            int col = (a << 24) | (k < 0.08F ? 0xFFFFFF : rgb);
+            int px = (int) (x + dx * i), py = (int) (y + dy * i), hw = Math.max(1, (int) w);
+            g.fill(px - hw, py - hw / 2, px + hw, py + hw / 2 + 1, col);
+        }
+    }
+
+    /** A thin circle of light. */
+    private static void ring(GuiGraphics g, float cx, float cy, float r, float thick, int rgb, int alpha) {
+        if (alpha <= 0 || r < 1) return;
+        int n = Math.max(24, (int) (r * 1.2F));
+        int col = (Math.min(255, alpha) << 24) | rgb;
+        for (int i = 0; i < n; i++) {
+            double a = i * Math.PI * 2 / n;
+            int px = (int) (cx + Math.cos(a) * r), py = (int) (cy + Math.sin(a) * r * 0.7F);
+            g.fill(px, py, px + (int) thick, py + (int) thick, col);
         }
     }
 

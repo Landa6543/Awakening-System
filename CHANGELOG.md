@@ -535,12 +535,14 @@ Sistema dinámico de eventos de temporada integrando consumibles gastronómicos 
 * Nueve armas nuevas: **Daga de Baruka, Monzón Azul, Sombra Carmesí, Dagas del Rey Demonio, Rugido de Ennio, Asesina de Caballeros, Sombra Lunar, Hoja Fantasma y Colmillo Venenoso Verdadero de Kasaka**, cada una con su pasiva (escarcha, ola, fuego, rayo en cadena, rompearmaduras, eclipse, purificación, neurotoxina; las dagas hacen más daño por la espalda). Traducidas en todos los idiomas.
 * Las armas celestiales pegan más fuerte (espada 25-33, mandoble 33-41, guadaña 29-37, lanza 27-35).
 * Nuevo Anillo de Enlace: banda redonda con una línea blanca y una gema pequeña.
+* **Deseos (gacha):** animación nueva del meteoro: cielo estrellado, una estela que se afina, el color que se descubre a mitad de la caída (morado o dorado), y al aterrizar un destello, un anillo de luz y chispas.
 
 ---
 
 ## 🐉 Kaisel
 * **Kaisel vivo y Kaisel de sombra**, montables, con su modelo y sus animaciones (quieto, caminar, volar, planear, vuelo rápido y dos ataques), del mod Solo Craft: Reawakening (licencia Apache 2.0).
 * En vuelo montado sube y baja según hacia dónde mires; espacio para despegar.
+* Ya no se desliza al caminar: los pasos son más amplios y siguen su velocidad; quieto respira y mueve cuello, alas y cola.
 
 ---
 
@@ -555,6 +557,7 @@ Sistema dinámico de eventos de temporada integrando consumibles gastronómicos 
 
 ## 👹 Criaturas
 * **Baran:** textura nueva hecha para su modelo (antes salía con bloques cian rotos), también en su versión de sombra.
+* **Bestia Acorazada de Jade Espiritual** rehecha desde cero: un qilin acorazado con cuatro placas de jade sobre el lomo, cresta de púas, cuernos, melena y barba, mandíbula que muerde, cola con maza de púas, y ojos y vetas que brillan.
 * **Sonrisa (Grin):** dormido es una roca sin boca y despierto muestra la sonrisa (ya no tiene una losa tapándole la boca); rueda hacia delante al moverse y ataca rodando hacia delante.
 * **Lawachurls y Guardián de las Ruinas** corregidos: texturas completas, piernas y brazos que se mueven bien, salto con golpe en los tres Lawachurls, ataque y misiles del Guardián, y su tamaño ajustado a su caja de golpe.
 * El huevo del jefe de pelo rojo ahora se llama **Huevo generador del Monarca del Abismo**.
@@ -567,6 +570,7 @@ Sistema dinámico de eventos de temporada integrando consumibles gastronómicos 
 * Ahora viven y bailan **abajo, en círculo alrededor de la lata**, y el primer baile llega dos minutos después de construirla.
 * **La lata es irrompible** (ni a mano ni con explosiones); `/sanmortis remove` la libera.
 * Los jureles sueltan **Jurel**, que se puede cocinar (horno, ahumador o fogata) en **Jurel cocinado**.
+* **Las latas aparecen solas en la costa** del Overworld (playas o tierra junto al mar, también con mods de terreno), como mucho una cada 1024 bloques.
 * La barandilla del techo queda unida, sin postes sueltos.
 
 ---
@@ -587,6 +591,7 @@ Sistema dinámico de eventos de temporada integrando consumibles gastronómicos 
 * **World Boss:** criaturas comunes salían como "WORLD BOSS" porque su nombre contenía una palabra de jefe (hi**lich**url contiene "lich", man**drake** contiene "drake"). Ahora se comparan palabras enteras, y las criaturas que ya tenían el título lo pierden al cargar y recuperan su vida normal. Los World Boss de otros mods tienen al menos la vida de su nivel y su nombre traducido.
 * **Hipódromo Uma:** las corredoras salen dentro de los cajones de salida, la carrera se gana en la línea de meta real, no se quedan atascadas en el bordillo y las vallas blancas quedan unidas. Las estructuras ya no colocan su bloque de estructura.
 * **Abismo:** las gradas de acceso a la plataforma están bien orientadas (en estructuras nuevas).
+* **Abismo:** las gradas de acceso a la plataforma están bien orientadas, también en los portales ya construidos. La ventana del Abismo tiene nuevo fondo (una sala de arcos abierta a un cielo nocturno con un anillo de luz) y un estandarte por piso con su numeral, una escalera hacia una puerta y su cofre.
 * Se quitó el motor de combate ACE abandonado.
 
 ---
