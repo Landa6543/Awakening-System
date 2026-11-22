@@ -50,6 +50,7 @@ public final class AethergardGate {
 
     public static final class Data extends SavedData {
         boolean landingBuilt, onSurface;
+        int style;
         Direction facing = Direction.NORTH;
         BlockPos base = BlockPos.ZERO;
 
@@ -57,6 +58,7 @@ public final class AethergardGate {
             Data d = new Data();
             d.landingBuilt = tag.getBoolean("Built");
             d.onSurface = tag.getBoolean("OnSurface");
+            d.style = tag.getInt("Style");
             d.base = net.minecraft.nbt.NbtUtils.readBlockPos(tag, "Base").orElse(BlockPos.ZERO);
             d.facing = Direction.from2DDataValue(tag.getInt("Facing"));
             return d;
@@ -66,6 +68,7 @@ public final class AethergardGate {
         public CompoundTag save(CompoundTag tag, HolderLookup.Provider registries) {
             tag.putBoolean("Built", landingBuilt);
             tag.putBoolean("OnSurface", onSurface);
+            tag.putInt("Style", style);
             tag.put("Base", net.minecraft.nbt.NbtUtils.writeBlockPos(base));
             tag.putInt("Facing", facing.get2DDataValue());
             return tag;
@@ -79,13 +82,17 @@ public final class AethergardGate {
     /** Builds the twin ring on dry land near the realm's centre, facing like Teyvat's, the first time it is needed. */
     private static void ensureLanding(ServerLevel aether, Direction facing) {
         Data d = data(aether);
-        if (d.landingBuilt && d.onSurface) return;
+        if (d.landingBuilt && d.onSurface && d.style >= GiantRingSite.STYLE) return;
         BlockPos ground = null;
         if (d.landingBuilt) {
             // built before the ground was read right: it stays unless it stands buried
             BlockPos here = GiantPortalRing.siteGround(aether, d.base, d.facing);
+            GiantPortalRing.removeOld(aether, d.base, d.facing);
             if (here.getY() <= d.base.getY() + 6) {
+                // standing right, but built in an older look: rebuilt where it is
+                GiantPortalRing.build(aether, d.base, d.facing, true);
                 d.onSurface = true;
+                d.style = GiantRingSite.STYLE;
                 d.setDirty();
                 return;
             }
@@ -103,6 +110,7 @@ public final class AethergardGate {
         GiantPortalRing.build(aether, ground, facing, true);
         d.landingBuilt = true;
         d.onSurface = true;
+        d.style = GiantRingSite.STYLE;
         d.facing = facing;
         d.base = ground;
         d.setDirty();

@@ -216,10 +216,9 @@ public final class AethergardWindow {
     /** Right after crossing the ring, the new world comes in round the player with no loading screen. */
     @SubscribeEvent
     public static void onScreen(ScreenEvent.Opening event) {
-        if (event.getNewScreen() instanceof ReceivingLevelScreen && System.currentTimeMillis() - crossedAt < CROSS_WINDOW_MS) {
+        // the game opens it more than once while changing worlds: every one of them is skipped
+        if (event.getNewScreen() instanceof ReceivingLevelScreen && System.currentTimeMillis() - crossedAt < CROSS_WINDOW_MS)
             event.setCanceled(true);
-            crossedAt = 0;
-        }
     }
 
     private static void clear() {
@@ -456,12 +455,21 @@ public final class AethergardWindow {
         try {
             // 3. the other world's blocks and water, only inside the hole
             BlockPos origin = centre.offset(-hx, -hy, -hz);
+            // only the sections with something in them that the camera can see
+            net.minecraft.client.renderer.culling.Frustum frustum = event.getFrustum();
+            List<Integer> visible = new ArrayList<>();
+            for (int s = 0; s < meshes.length; s++) {
+                if (meshes[s] == null || meshes[s][side].isEmpty()) continue;
+                int cx = s % nx, cz = (s / nx) % nz, cy = s / (nx * nz);
+                double x0 = origin.getX() + cx * 16, y0 = origin.getY() + cy * 16, z0 = origin.getZ() + cz * 16;
+                if (frustum != null && !frustum.isVisible(new net.minecraft.world.phys.AABB(x0, y0, z0, x0 + 16, y0 + 16, z0 + 16))) continue;
+                visible.add(s);
+            }
             for (RenderType rt : RenderType.chunkBufferLayers()) {
                 rt.setupRenderState();
                 var shader = RenderSystem.getShader();
                 if (shader != null) {
-                    for (int s = 0; s < meshes.length; s++) {
-                        if (meshes[s] == null) continue;
+                    for (int s : visible) {
                         VertexBuffer vb = meshes[s][side].get(rt);
                         if (vb == null) continue;
                         int cx = s % nx, cz = (s / nx) % nz, cy = s / (nx * nz);

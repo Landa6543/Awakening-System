@@ -52,6 +52,8 @@ public final class GiantRingSite {
         boolean built, repaired;
         /** False for rings raised before the ground was read right (they may stand buried in a cave). */
         boolean onSurface;
+        /** Which look the ring was built with; older ones are rebuilt in the current one (see {@link #STYLE}). */
+        int style;
         /** What has been given to the altar so far, by item id. */
         final java.util.Map<String, Integer> given = new java.util.HashMap<>();
 
@@ -62,6 +64,7 @@ public final class GiantRingSite {
             d.built = tag.getBoolean("Built");
             d.repaired = tag.getBoolean("Repaired");
             d.onSurface = tag.getBoolean("OnSurface");
+            d.style = tag.getInt("Style");
             CompoundTag g = tag.getCompound("Given");
             for (String k : g.getAllKeys()) d.given.put(k, g.getInt(k));
             return d;
@@ -74,6 +77,7 @@ public final class GiantRingSite {
             tag.putBoolean("Built", built);
             tag.putBoolean("Repaired", repaired);
             tag.putBoolean("OnSurface", onSurface);
+            tag.putInt("Style", style);
             CompoundTag g = new CompoundTag();
             given.forEach(g::putInt);
             tag.put("Given", g);
@@ -116,28 +120,42 @@ public final class GiantRingSite {
         ServerLevel teyvat = event.getServer().getLevel(TeyvatWorldManager.TEYVAT_WORLD);
         if (teyvat == null || teyvat.players().isEmpty()) return;
         Data d = site(teyvat);
-        if (d.built && d.onSurface) return;
+        if (d.built && d.onSurface && d.style >= STYLE) return;
         for (ServerPlayer p : teyvat.players()) {
             double dx = p.getX() - d.base.getX(), dz = p.getZ() - d.base.getZ();
             if (dx * dx + dz * dz > (double) SIGHT * SIGHT) continue;
             if (d.built) {
                 // raised before the ground was read right: if it stands buried, it rises again on the surface
                 BlockPos ground = GiantPortalRing.siteGround(teyvat, d.base, d.facing);
+                // and one built in an older look is rebuilt in the current one, where it stands
                 if (ground.getY() > d.base.getY() + 6) raise(teyvat, d);
-                else {
-                    d.onSurface = true;
-                    d.setDirty();
-                }
+                else rebuild(teyvat, d);
             } else raise(teyvat, d);
             return;
         }
     }
 
+    /** The ring's current look: 2 = half sunk in the ground with pillars, no plinth or fallen pieces. */
+    static final int STYLE = 2;
+
+    /** Rebuilds the ring where it stands, in the current look, clearing what the older one left. */
+    private static void rebuild(ServerLevel teyvat, Data d) {
+        GiantPortalRing.removeOld(teyvat, d.base, d.facing);
+        GiantPortalRing.build(teyvat, d.base, d.facing, d.repaired);
+        placeAltar(teyvat, d.base, d.facing);
+        d.onSurface = true;
+        d.style = STYLE;
+        d.setDirty();
+        AwakeningSystemMod.LOGGER.info("Giant ring in Teyvat rebuilt in its new look at {}", d.base);
+    }
+
     /** Raises the ruin on the ground at its site, with its altar. */
     private static void raise(ServerLevel teyvat, Data d) {
         BlockPos ground = GiantPortalRing.siteGround(teyvat, d.base, d.facing);
+        if (d.built) GiantPortalRing.removeOld(teyvat, d.base, d.facing);
         d.base = ground;
         d.onSurface = true;
+        d.style = STYLE;
         GiantPortalRing.clearSite(teyvat, ground, d.facing);
         GiantPortalRing.build(teyvat, ground, d.facing, d.repaired);
         placeAltar(teyvat, ground, d.facing);
@@ -206,7 +224,11 @@ public final class GiantRingSite {
             level.playSound(null, altar, gaveSome ? SoundEvents.AMETHYST_BLOCK_CHIME : SoundEvents.NOTE_BLOCK_BASS.value(), SoundSource.BLOCKS, 1.0F, gaveSome ? 1.0F : 0.6F);
             if (gaveSome) level.sendParticles(ParticleTypes.ENCHANT, altar.getX() + 0.5, altar.getY() + 1.2, altar.getZ() + 0.5, 40, 0.4, 0.4, 0.4, 0.5);
             return;
-        }        GiantPortalRing.build(level, d.base, d.facing, true);
+        }
+        GiantPortalRing.removeOld(level, d.base, d.facing);
+        GiantPortalRing.build(level, d.base, d.facing, true);
+        placeAltar(level, d.base, d.facing);
+        d.style = STYLE;
         d.repaired = true;
         d.setDirty();
         var c = GiantPortalRing.centre(d.base);
@@ -222,7 +244,11 @@ public final class GiantRingSite {
         if (teyvat == null) return Component.translatable("awakening_system.giant_portal.no_teyvat");
         Data d = site(teyvat);
         if (!d.built || !d.onSurface) raise(teyvat, d);
+        // the ruin gives way to the whole ring
+        GiantPortalRing.removeOld(teyvat, d.base, d.facing);
         GiantPortalRing.build(teyvat, d.base, d.facing, true);
+        placeAltar(teyvat, d.base, d.facing);
+        d.style = STYLE;
         d.repaired = true;
         d.setDirty();
         return Component.translatable("awakening_system.giant_portal.locate_repaired", d.base.getX(), d.base.getZ());

@@ -97,6 +97,8 @@ public final class BestiaryClient {
     }
     static final class SonrisaRenderer extends MobRenderer<SonrisaEntity, SonrisaModel> {
         private static final ResourceLocation TEXTURE = tex("sonrisa/sonrisa");
+        /** Asleep it is just a rock: the same face with no mouth. */
+        private static final ResourceLocation CLOSED = tex("sonrisa/sonrisa_closed");
 
         SonrisaRenderer(EntityRendererProvider.Context ctx) {
             super(ctx, new SonrisaModel(ctx.bakeLayer(SonrisaModel.LAYER)), 1.0F);
@@ -105,7 +107,7 @@ public final class BestiaryClient {
 
         @Override
         public ResourceLocation getTextureLocation(SonrisaEntity e) {
-            return ShadowSkins.pick(e, TEXTURE);
+            return ShadowSkins.pick(e, e.mouth(1.0F) > 0.5F ? TEXTURE : CLOSED);
         }
 
         @Override

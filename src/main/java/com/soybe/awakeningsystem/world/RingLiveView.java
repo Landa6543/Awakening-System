@@ -45,7 +45,7 @@ public final class RingLiveView {
     private static final int MAX_ENTITIES = 80;
     /** The ring's surroundings, out to this distance, are looked at again more often than the far land. */
     private static final int NEAR = 64;
-    private static final int NEAR_PER_TICK = 4, FAR_PER_TICK = 3, FIRST_PASS_PER_TICK = 12;
+    private static final int NEAR_PER_TICK = 3, FAR_PER_TICK = 2, FIRST_PASS_PER_TICK = 8;
     /** Keeps the far ring's land loaded (and its creatures moving) for a while after each renewal. */
     private static final net.minecraft.server.level.TicketType<Long> VIEW_TICKET =
             net.minecraft.server.level.TicketType.create("awakening_ring_view", Long::compare, 300);
@@ -92,9 +92,13 @@ public final class RingLiveView {
             return there.centre().offset(-hx, -hy, -hz);
         }
 
+        /** How far round the far ring its land is kept loaded; it grows a step at a time, so loading never floods the server. */
+        int ticketRadius = 3;
+
         void keepLoaded() {
             there.level().getChunkSource().addRegionTicket(VIEW_TICKET, new net.minecraft.world.level.ChunkPos(there.centre()),
-                    Math.max(hx, hz) / 16 + 1, there.centre().asLong());
+                    ticketRadius, there.centre().asLong());
+            ticketRadius = Math.min(Math.max(hx, hz) / 16 + 1, ticketRadius + 1);
         }
     }
 
@@ -167,7 +171,7 @@ public final class RingLiveView {
             Remote r = REMOTES.get(e.getKey());
             if (r == null) continue;
             // the other side stays awake while someone looks at it, so its creatures move and its water flows
-            if (t % 100 == 0) r.keepLoaded();
+            if (t % 60 == 0) r.keepLoaded();
             scan(r);
             if (t % 20 == 0) sendChanges(r, e.getValue());
             if (t % 2 == 0) sendEntities(r, e.getValue());
