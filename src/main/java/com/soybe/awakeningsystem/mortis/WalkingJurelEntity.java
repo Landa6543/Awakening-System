@@ -107,6 +107,9 @@ public class WalkingJurelEntity extends PathfinderMob {
     @Override
     protected void customServerAiStep() {
         super.customServerAiStep();
+        // its can is unbreakable, also one built before cans were kept track of
+        if (home != null && this.tickCount % 100 == 1 && this.level() instanceof net.minecraft.server.level.ServerLevel sl)
+            SanMortisCan.Cans.adopt(sl, home);
         boolean dance = ritualTime() && this.getLastHurtByMob() == null;
         if (dance != isDancing()) this.entityData.set(DANCING, dance);
         if (!dance) return;

@@ -90,13 +90,15 @@ public final class DioramaNeoForge {
 		modBus.addListener(RegisterGuiLayersEvent.class, event -> {
 			WaypointHud waypoints = new WaypointHud();
 			MinimapHud minimap = new MinimapHud();
-			event.registerBelowAll(Diorama.id("waypoints"), (graphics, deltaTracker) -> waypoints.render(graphics, deltaTracker));
-			event.registerAboveAll(Diorama.id("minimap"), (graphics, deltaTracker) -> minimap.render(graphics, deltaTracker));
+			// nothing drawn when another map mod is the map (dev.diorama.OtherMaps)
+			event.registerBelowAll(Diorama.id("waypoints"), (graphics, deltaTracker) -> { if (!dev.diorama.OtherMaps.present()) waypoints.render(graphics, deltaTracker); });
+			event.registerAboveAll(Diorama.id("minimap"), (graphics, deltaTracker) -> { if (!dev.diorama.OtherMaps.present()) minimap.render(graphics, deltaTracker); });
 		});
 
 		// Fired for the integrated server's chunks too, on its own thread.
 		NeoForge.EVENT_BUS.addListener(ChunkEvent.Load.class, event -> {
-			if (event.getLevel() instanceof ClientLevel level && event.getChunk() instanceof LevelChunk chunk && Minecraft.getInstance().isRunning()) {
+			if (event.getLevel() instanceof ClientLevel level && event.getChunk() instanceof LevelChunk chunk && Minecraft.getInstance().isRunning()
+					&& !dev.diorama.OtherMaps.present()) {
 				MapSession.chunkLoaded(level, chunk);
 			}
 		});

@@ -165,7 +165,7 @@ public final class HunterMinimapRenderer {
 
     public static boolean isDioramaMinimapActive() {
         try {
-            return dev.diorama.Settings.get().minimap;
+            return !dev.diorama.OtherMaps.present() && dev.diorama.Settings.get().minimap;
         } catch (Throwable ignored) {
             return false;
         }

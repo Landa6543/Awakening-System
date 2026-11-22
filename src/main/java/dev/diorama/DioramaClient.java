@@ -99,6 +99,12 @@ public final class DioramaClient {
 
 	/** Called at the end of every client tick. */
 	public static void tick(Minecraft mc) {
+		// another map mod is the map: Diorama does nothing at all (its keys are left to that mod)
+		if (OtherMaps.present()) {
+			while (OPEN_MAP.consumeClick()) { }
+			while (NEW_WAYPOINT.consumeClick()) { }
+			return;
+		}
 		// On the first tick every mod is set up, Waystones and its event library included.
 		Waystones.start();
 		MapSession.tick(mc);

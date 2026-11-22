@@ -706,6 +706,13 @@ Sistema dinámico de eventos de temporada integrando consumibles gastronómicos 
 * **Espiral Lunar (pisos 9-12):** se reinicia cada 14 días (estrellas y recompensas de esos pisos), con la cuenta atrás en la ventana. Cada piso tiene un **Registro** de quién lo superó, cuándo, con cuántas estrellas y con qué equipo (sus sombras e invocaciones). En la última sala de esos pisos puede aparecer un **jefe de otro mod instalado** (Cataclysm, Twilight Forest, Ice and Fire...); se desactiva con `abyss_modded_bosses` en `custom_bosses.json`.
 * **Arreglos:** el juego ya no se cierra al terminar el último piso; volver del Abismo o viajar a Teyvat ya no te deja enterrado, y la plaza de llegada antigua que flotaba tiene columnas; las armas celestiales (como el Mandoble del Juicio) ya no caen de los monstruos; el mensaje de Protogemas depositadas ya no muestra "%s"; el panel de misiones SAO muestra la misión del escenario.
 * Se quitó el motor de combate ACE abandonado.
+* **Zona de Penalización:** al acabar el reloj el juego ya no se cierra. Los gusanos de arena mueren de verdad: estallan en arena a lo largo de todo el cuerpo, y su barra de vida ya no queda vacía en pantalla hasta reiniciar el servidor.
+* **Tienda:** los objetos que piden una versión del Sistema (por ejemplo, la Biblioteca de Encantamientos de Apotheosis, que pide Sistema 4.0) lo dicen, en vez de mostrar solo el rango.
+* **Tarro San Mortis:** ahora sí es irrompible, también las latas construidas antes de la protección (las reconocen sus jureles). `/sanmortis remove` sigue liberando una.
+* **Jurel y Jurel cocinado** con texturas nuevas al estilo de los peces de Minecraft (en diagonal, con borde, aletas, cola en V, línea lateral y marcas de parrilla en el cocinado). El jurel con patas tiene la piel con el moteado del juego.
+* **Abismo:** el fondo ya no "respira" con franjas cuadradas; ahora gira de verdad, como en el juego: un gran anillo con su esfera de marcas y runas, y una estrella dentro que gira al revés (violeta en la Espiral, aguamarina en el Corredor).
+* **Mapa Diorama:** si tienes otro mod de mapa (JourneyMap, Xaero's Minimap o World Map, FTB Chunks, VoxelMap, Antique Atlas, Map Atlases…), el mapa incluido se apaga solo, para que no haya dos mapas a la vez.
+* **Anillo gigante, más fluido:** la vista del otro lado se construye con un tiempo fijo por fotograma y ya no rehace lo que llega sin cambios (eso causaba los bajones de FPS cerca del anillo). Al cruzar, lo que mostraba el anillo se queda como el terreno alrededor hasta que el juego dibuja el suyo, así el otro mundo ya está ahí al llegar en vez de cargarse a tu alrededor.
 
 ---
 

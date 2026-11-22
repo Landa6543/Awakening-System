@@ -1409,7 +1409,9 @@ public final class AwakeningSystemClient {
             PacketDistributor.sendToServer(new com.soybe.awakeningsystem.network.ActivateRunePayload(1));
         }
         while (OPEN_WORLD_MAP.consumeClick()) {
-            if (minecraft.screen == null && minecraft.level != null) {
+            if (dev.diorama.OtherMaps.present()) {
+                // another map mod is the map: its own key opens it
+            } else if (minecraft.screen == null && minecraft.level != null) {
                 minecraft.setScreen(new dev.diorama.MapScreen());
             } else if (minecraft.screen instanceof dev.diorama.MapScreen || minecraft.screen instanceof com.soybe.awakeningsystem.client.map.HunterWorldMapScreen) {
                 minecraft.setScreen(null);

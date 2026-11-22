@@ -208,6 +208,121 @@ public final class AbyssArt {
         return corridor;
     }
 
+    // ---- the turning halos: rings of light drawn over the hall that the window turns slowly, as in the game
+
+    public static final int HALO = 256;
+    private static final Map<String, ResourceLocation> HALOS = new HashMap<>();
+
+    /** Paints over a picture that may be see-through (its own alpha kept right, unlike {@link #blend}). */
+    private static void over(NativeImage img, int x, int y, int rgb, double a) {
+        if (x < 0 || y < 0 || x >= img.getWidth() || y >= img.getHeight() || a <= 0) return;
+        a = Math.min(1, a);
+        int d = img.getPixelRGBA(x, y);
+        double da = ((d >>> 24) & 255) / 255.0;
+        int dr = rgbOf(d);
+        double oa = a + da * (1 - a);
+        if (oa <= 0) return;
+        int r = (int) ((((rgb >> 16) & 255) * a + ((dr >> 16) & 255) * da * (1 - a)) / oa);
+        int g = (int) ((((rgb >> 8) & 255) * a + ((dr >> 8) & 255) * da * (1 - a)) / oa);
+        int b = (int) (((rgb & 255) * a + (dr & 255) * da * (1 - a)) / oa);
+        img.setPixelRGBA(x, y, ca((r << 16) | (g << 8) | b, (int) Math.round(oa * 255)));
+    }
+
+    /** A smooth ring (or the part of it from a0 to a1, radians), w pixels thick, on a see-through picture. */
+    private static void ringOver(NativeImage img, double cx, double cy, double r, double w, double a0, double a1, int rgb, double alpha) {
+        int x0 = (int) Math.max(0, cx - r - w - 1), x1 = (int) Math.min(img.getWidth() - 1, cx + r + w + 1);
+        int y0 = (int) Math.max(0, cy - r - w - 1), y1 = (int) Math.min(img.getHeight() - 1, cy + r + w + 1);
+        boolean full = a1 - a0 >= Math.PI * 2 - 1e-6;
+        for (int y = y0; y <= y1; y++)
+            for (int x = x0; x <= x1; x++) {
+                double dx = x + 0.5 - cx, dy = y + 0.5 - cy;
+                double cv = cover(Math.abs(Math.hypot(dx, dy) - r), w);
+                if (cv <= 0) continue;
+                if (!full) {
+                    double ang = Math.atan2(dy, dx);
+                    if (ang < 0) ang += Math.PI * 2;
+                    double t = ang;
+                    while (t < a0) t += Math.PI * 2;
+                    if (t > a1) continue;
+                }
+                over(img, x, y, rgb, cv * alpha);
+            }
+    }
+
+    private static void lineOver(NativeImage img, double xa, double ya, double xb, double yb, double w, int rgb, double alpha) {
+        int x0 = (int) Math.max(0, Math.min(xa, xb) - w - 1), x1 = (int) Math.min(img.getWidth() - 1, Math.max(xa, xb) + w + 1);
+        int y0 = (int) Math.max(0, Math.min(ya, yb) - w - 1), y1 = (int) Math.min(img.getHeight() - 1, Math.max(ya, yb) + w + 1);
+        double vx = xb - xa, vy = yb - ya, len2 = vx * vx + vy * vy;
+        for (int y = y0; y <= y1; y++)
+            for (int x = x0; x <= x1; x++) {
+                double px = x + 0.5 - xa, py = y + 0.5 - ya;
+                double t = len2 == 0 ? 0 : Math.max(0, Math.min(1, (px * vx + py * vy) / len2));
+                double cv = cover(Math.hypot(px - vx * t, py - vy * t), w);
+                if (cv > 0) over(img, x, y, rgb, cv * alpha);
+            }
+    }
+
+    /**
+     * One of the two turning halos of a hall ({@code spire}: the Spire's violet eye, else the Corridor's pale
+     * teal window); {@code outer} the big dial with its ticks and runes, else the inner star that turns the
+     * other way. See-through, {@link #HALO} square.
+     */
+    public static ResourceLocation halo(boolean spire, boolean outer) {
+        String key = (spire ? "s" : "c") + (outer ? "o" : "i");
+        ResourceLocation done = HALOS.get(key);
+        if (done != null) return done;
+        NativeImage img = new NativeImage(HALO, HALO, true);
+        for (int y = 0; y < HALO; y++) for (int x = 0; x < HALO; x++) img.setPixelRGBA(x, y, 0);
+        double c = HALO / 2.0;
+        int main = spire ? 0xCDBEFF : 0xC6F7EE, soft = spire ? 0x8E74D8 : 0x6FC9BE, gold = spire ? 0xF2D9A0 : 0xEAF7C8;
+        if (outer) {
+            ringOver(img, c, c, 122, 1.8, 0, Math.PI * 2, main, 0.85);
+            ringOver(img, c, c, 116, 1.0, 0, Math.PI * 2, soft, 0.6);
+            // the dial's ticks, a long one every sixth
+            for (int t = 0; t < 120; t++) {
+                double a = t * Math.PI * 2 / 120;
+                double from = t % 10 == 0 ? 104 : (t % 5 == 0 ? 109 : 112);
+                lineOver(img, c + Math.cos(a) * from, c + Math.sin(a) * from, c + Math.cos(a) * 116, c + Math.sin(a) * 116, 0.9, main, t % 10 == 0 ? 0.85 : 0.5);
+            }
+            // four long arcs with gaps, the band that catches the eye as it turns
+            for (int q = 0; q < 4; q++) {
+                double a0 = q * Math.PI / 2 + 0.18, a1 = a0 + Math.PI / 2 - 0.36;
+                ringOver(img, c, c, 96, 2.6, a0, a1, soft, 0.7);
+                ringOver(img, c, c, 96, 1.0, a0, a1, main, 0.9);
+                // a rune diamond in each gap
+                double g = q * Math.PI / 2, gx = c + Math.cos(g) * 96, gy = c + Math.sin(g) * 96;
+                for (int s = 0; s < 4; s++) {
+                    double p0 = g + s * Math.PI / 2, p1 = p0 + Math.PI / 2;
+                    lineOver(img, gx + Math.cos(p0) * 6, gy + Math.sin(p0) * 6, gx + Math.cos(p1) * 6, gy + Math.sin(p1) * 6, 1.1, gold, 0.95);
+                }
+            }
+            // little runes between, dots and dashes
+            for (int k = 0; k < 24; k++) {
+                double a = (k + 0.5) * Math.PI * 2 / 24;
+                double rx = c + Math.cos(a) * 108, ry = c + Math.sin(a) * 108;
+                if (k % 3 == 0) ringOver(img, rx, ry, 2.2, 1.0, 0, Math.PI * 2, gold, 0.8);
+                else lineOver(img, rx - Math.sin(a) * 2.5, ry + Math.cos(a) * 2.5, rx + Math.sin(a) * 2.5, ry - Math.cos(a) * 2.5, 0.9, main, 0.6);
+            }
+        } else {
+            ringOver(img, c, c, 82, 1.3, 0, Math.PI * 2, main, 0.8);
+            ringOver(img, c, c, 76, 0.8, 0, Math.PI * 2, soft, 0.55);
+            // an eight-pointed star drawn in one line ({8/3}), a small ring at each point
+            for (int k = 0; k < 8; k++) {
+                double a = k * Math.PI / 4 - Math.PI / 2, b = (k + 3) * Math.PI / 4 - Math.PI / 2;
+                lineOver(img, c + Math.cos(a) * 76, c + Math.sin(a) * 76, c + Math.cos(b) * 76, c + Math.sin(b) * 76, 0.9, main, 0.55);
+                ringOver(img, c + Math.cos(a) * 76, c + Math.sin(a) * 76, 4.5, 1.0, 0, Math.PI * 2, gold, 0.85);
+            }
+            ringOver(img, c, c, 44, 1.1, 0, Math.PI * 2, main, 0.7);
+            for (int t = 0; t < 36; t++) {
+                double a = t * Math.PI * 2 / 36;
+                lineOver(img, c + Math.cos(a) * 44, c + Math.sin(a) * 44, c + Math.cos(a) * (t % 3 == 0 ? 52 : 48), c + Math.sin(a) * (t % 3 == 0 ? 52 : 48), 0.8, soft, 0.6);
+            }
+        }
+        ResourceLocation id = upload("halo_" + key, img);
+        HALOS.put(key, id);
+        return id;
+    }
+
     // ---- the Spire's great eye
 
     public static ResourceLocation spire() {
@@ -221,18 +336,8 @@ public final class AbyssArt {
                 if (d < 26) base = mix(0x05040C, 0x120C24, d / 26);         // the dark pupil
                 img.setPixelRGBA(x, y, c(base));
             }
-        // the eye's rings, with ticks round them like a dial
-        for (int k = 0; k < 5; k++) {
-            double r = 34 + k * 20;
-            arc(img, cx, cy, r, 0, Math.PI * 2, 0x7A64B8, 0.45 - k * 0.06);
-            int ticks = 48 + k * 12;
-            for (int t = 0; t < ticks; t++) {
-                double a = t * Math.PI * 2 / ticks;
-                int len = (t % 4 == 0) ? 7 : 3;
-                for (int s = 0; s < len; s++)
-                    blend(img, (int) (cx + Math.cos(a) * (r + 2 + s)), (int) (cy + Math.sin(a) * (r + 2 + s)), 0x9A86D8, 0.3);
-            }
-        }
+        // the eye's dial rings turn on the window (halo()); here only a faint ring keeps the pupil framed
+        arc(img, cx, cy, 30, 0, Math.PI * 2, 0x7A64B8, 0.4);
         // light streaks spreading out of the pupil
         Random r = new Random(5);
         for (int i = 0; i < 60; i++) {

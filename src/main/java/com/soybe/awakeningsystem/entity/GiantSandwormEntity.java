@@ -205,6 +205,13 @@ public class GiantSandwormEntity extends Monster {
             this.head.xRotO = this.head.getXRot();
         }
 
+        if (!level().isClientSide && this.isDeadOrDying()) {
+            // dead: no more hunting, no parts brought back, and its health bar gone for good
+            // (it used to be shown again, empty, to everyone near while the death played out)
+            this.bossEvent.removeAllPlayers();
+            this.setDeltaMovement(Vec3.ZERO);
+            return;
+        }
         if (!level().isClientSide) {
             if (this.head == null || this.bodyParts.isEmpty()) {
                 this.rebuildParts();
@@ -531,6 +538,13 @@ public class GiantSandwormEntity extends Monster {
         if (level() instanceof ServerLevel serverLevel) {
             serverLevel.sendParticles(ParticleTypes.EXPLOSION_EMITTER, this.getX(), this.getY() + 2.0D, this.getZ(), 4, 2.0D, 2.0D, 2.0D, 0.1D);
             serverLevel.playSound(null, blockPosition(), ModSounds.SANDWORM_BOOM.get(), SoundSource.HOSTILE, 4.0F, 0.6F);
+            // the whole body bursts into sand along its length, so the death is seen, not just a vanishing
+            BlockParticleOption sand = new BlockParticleOption(ParticleTypes.BLOCK, Blocks.SAND.defaultBlockState());
+            for (int i = 0; i < this.bodyParts.size(); i += 2) {
+                GiantSandwormBodyPart p = this.bodyParts.get(i);
+                if (p != null) serverLevel.sendParticles(sand, p.getX(), p.getY() + 1.0D, p.getZ(), 30, 1.5D, 1.5D, 1.5D, 0.2D);
+                if (p != null && i % 8 == 0) serverLevel.sendParticles(ParticleTypes.EXPLOSION, p.getX(), p.getY() + 1.0D, p.getZ(), 1, 0, 0, 0, 0);
+            }
 
             if (damageSource.getEntity() instanceof ServerPlayer sp) {
                 PenaltyZoneManager.onSandwormKilled(serverLevel, sp);
@@ -548,6 +562,13 @@ public class GiantSandwormEntity extends Monster {
         this.cleanupParts();
     }
 
+    /** Also when it leaves the world without being killed (its land unloaded, the server stopping): no bar left behind. */
+    @Override
+    public void onRemovedFromLevel() {
+        super.onRemovedFromLevel();
+        this.cleanupParts();
+    }
+
     private void cleanupParts() {
         if (this.head != null) {
             this.head.discard();
@@ -561,7 +582,7 @@ public class GiantSandwormEntity extends Monster {
     @Override
     public void startSeenByPlayer(ServerPlayer player) {
         super.startSeenByPlayer(player);
-        this.bossEvent.addPlayer(player);
+        if (this.isAlive()) this.bossEvent.addPlayer(player);
     }
 
     @Override

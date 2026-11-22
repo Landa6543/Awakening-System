@@ -133,8 +133,12 @@ public final class PenaltyZoneManager {
                 updateBossBarTitle(session);
             }
 
-            if (session.wormsKilled >= WORMS_REQUIRED_FOR_EARLY_ESCAPE) {
-                completePenaltyZone(player, true);
+            if (session.wormsKilled >= WORMS_REQUIRED_FOR_EARLY_ESCAPE && player.getServer() != null) {
+                // after this tick: the worm may have been killed while the world was moving its creatures,
+                // and taking the player to another world right then breaks that
+                player.getServer().execute(() -> {
+                    if (ACTIVE_SESSIONS.containsKey(player.getUUID()) && isInPenaltyZone(player)) completePenaltyZone(player, true);
+                });
             }
         }
     }
@@ -162,7 +166,10 @@ public final class PenaltyZoneManager {
             }
         }
 
-        for (ServerPlayer player : penaltyLevel.players()) {
+        // the players whose time ran out leave after the loop: taking them to another world while going
+        // through this world's own list of players changed the list under the loop and crashed the game
+        java.util.List<ServerPlayer> survived = new java.util.ArrayList<>();
+        for (ServerPlayer player : new java.util.ArrayList<>(penaltyLevel.players())) {
             if (player.isCreative() || player.isSpectator()) {
                 PenaltySession s = ACTIVE_SESSIONS.remove(player.getUUID());
                 if (s != null && s.bossBar != null) {
@@ -209,8 +216,11 @@ public final class PenaltyZoneManager {
 
             // Victory condition: Timer reached 0!
             if (session.ticksRemaining <= 0) {
-                completePenaltyZone(player, false);
+                survived.add(player);
             }
+        }
+        for (ServerPlayer player : survived) {
+            if (ACTIVE_SESSIONS.containsKey(player.getUUID())) completePenaltyZone(player, false);
         }
     }
 

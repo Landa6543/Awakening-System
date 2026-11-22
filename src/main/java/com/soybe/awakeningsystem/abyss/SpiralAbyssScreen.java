@@ -166,29 +166,24 @@ public final class SpiralAbyssScreen extends Screen {
         long now = System.currentTimeMillis();
         int cx = w / 2, cy = (int) (h * (selectedTab == 0 ? 0.545F : 0.5F));
         int glowCol = selectedTab == 0 ? 0x7FE6D8 : 0xA88CF0;
-        // the light at the heart of the hall breathes
-        float breath = (float) (Math.sin(now / 1400.0) * 0.5 + 0.5);
-        int gr = (int) (Math.min(w, h) * (0.16F + breath * 0.03F));
-        for (int k = 5; k >= 1; k--) {
-            int rr = gr * k / 5;
-            int a = (int) ((14 + breath * 26) * (6 - k) / 5.0F);
-            for (int dy = -rr; dy <= rr; dy += 2) {
-                int half = (int) Math.sqrt((double) rr * rr - (double) dy * dy);
-                graphics.fill(cx - half, cy + dy, cx + half, cy + dy + 2, (a << 24) | glowCol);
-            }
+        // the hall's dial turns, as in the game: a big ring one way and the star inside it the other way
+        // (in place of the old "breathing" light, drawn as blocky stripes)
+        boolean spireHall = selectedTab == 1;
+        int size = (int) (Math.min(w, h) * (spireHall ? 0.92F : 0.5F));
+        com.mojang.blaze3d.systems.RenderSystem.enableBlend();
+        for (int layer = 0; layer < 2; layer++) {
+            boolean outer = layer == 0;
+            float turn = (float) ((now % 1800000L) / (outer ? 90000.0 : -60000.0) * Math.PI * 2);
+            int s = outer ? size : (int) (size * 0.62F);
+            graphics.pose().pushPose();
+            graphics.pose().translate(cx, cy, 0);
+            graphics.pose().mulPose(com.mojang.math.Axis.ZP.rotation(turn));
+            graphics.setColor(1, 1, 1, spireHall ? 0.85F : 0.7F);
+            graphics.blit(AbyssArt.halo(spireHall, outer), -s / 2, -s / 2, s, s, 0, 0, AbyssArt.HALO, AbyssArt.HALO, AbyssArt.HALO, AbyssArt.HALO);
+            graphics.setColor(1, 1, 1, 1);
+            graphics.pose().popPose();
         }
-        // the Spire's eye turns slowly: spokes of light sweeping round it
-        if (selectedTab == 1) {
-            double turn = now / 9000.0;
-            for (int i = 0; i < 24; i++) {
-                double a = turn + i * Math.PI * 2 / 24;
-                for (int d = gr + 10; d < gr + 10 + Math.min(w, h) / 3; d += 3) {
-                    int px = (int) (cx + Math.cos(a) * d), py = (int) (cy + Math.sin(a) * d * 0.85);
-                    int al = (int) (40 * (1 - (d - gr) / (double) (Math.min(w, h) / 3 + 10)));
-                    if (al > 0) graphics.fill(px, py, px + 2, py + 2, (al << 24) | 0xC8B8FF);
-                }
-            }
-        }
+        com.mojang.blaze3d.systems.RenderSystem.disableBlend();
         // motes of light drifting upwards through the hall
         java.util.Random rnd = new java.util.Random(77);
         for (int i = 0; i < 46; i++) {
@@ -196,9 +191,16 @@ public final class SpiralAbyssScreen extends Screen {
             float ph = ((now / 1000.0F) * speed + rnd.nextFloat()) % 1.0F;
             int px = (int) (rnd.nextFloat() * w + Math.sin(now / 1500.0 + i) * 8);
             int py = (int) (h - ph * (h + 20));
-            int a = (int) (Math.sin(ph * Math.PI) * (90 + rnd.nextInt(120)));
-            int size = rnd.nextInt(4) == 0 ? 3 : 2;
-            graphics.fill(px, py, px + size, py + size, (a << 24) | glowCol);
+            int a = (int) (Math.sin(ph * Math.PI) * (60 + rnd.nextInt(90)));
+            // tiny specks, not squares: one pixel with a fainter cross round it
+            graphics.fill(px, py, px + 1, py + 1, (a << 24) | glowCol);
+            if (rnd.nextInt(3) == 0) {
+                int fa = (a / 3) << 24;
+                graphics.fill(px - 1, py, px, py + 1, fa | glowCol);
+                graphics.fill(px + 1, py, px + 2, py + 1, fa | glowCol);
+                graphics.fill(px, py - 1, px + 1, py, fa | glowCol);
+                graphics.fill(px, py + 1, px + 1, py + 2, fa | glowCol);
+            }
         }
         graphics.fillGradient(0, 0, w, 50, 0x99060C1C, 0x00060C1C);
         graphics.fillGradient(0, h - 70, w, h, 0x00060C1C, 0xAA060C1C);

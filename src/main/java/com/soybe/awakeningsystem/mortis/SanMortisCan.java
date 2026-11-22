@@ -83,6 +83,7 @@ public final class SanMortisCan {
                 return 0;
             }
             cans.bases.remove(nearest);
+            cans.freed.add(nearest);
             cans.setDirty();
             ctx.getSource().sendSuccess(() -> Component.translatable("awakening_system.sanmortis.removed"), true);
             return 1;
@@ -303,6 +304,8 @@ public final class SanMortisCan {
     /** The cans standing in a level, by the middle of their foot. */
     public static final class Cans extends net.minecraft.world.level.saveddata.SavedData {
         final java.util.Set<Long> bases = new java.util.HashSet<>();
+        /** Cans set free with /sanmortis remove: their jurels must not make them unbreakable again. */
+        final java.util.Set<Long> freed = new java.util.HashSet<>();
 
         static Cans of(ServerLevel level) {
             return level.getDataStorage().computeIfAbsent(new Factory<>(Cans::new, Cans::load, null), "awakening_san_mortis_cans");
@@ -311,17 +314,29 @@ public final class SanMortisCan {
         static Cans load(net.minecraft.nbt.CompoundTag tag, net.minecraft.core.HolderLookup.Provider r) {
             Cans c = new Cans();
             for (long l : tag.getLongArray("Bases")) c.bases.add(l);
+            for (long l : tag.getLongArray("Freed")) c.freed.add(l);
             return c;
         }
 
         @Override
         public net.minecraft.nbt.CompoundTag save(net.minecraft.nbt.CompoundTag tag, net.minecraft.core.HolderLookup.Provider r) {
             tag.putLongArray("Bases", bases.stream().mapToLong(Long::longValue).toArray());
+            tag.putLongArray("Freed", freed.stream().mapToLong(Long::longValue).toArray());
             return tag;
         }
 
         void add(BlockPos base) {
-            if (bases.add(base.asLong())) setDirty();
+            boolean changed = bases.add(base.asLong()) | freed.remove(base.asLong());
+            if (changed) setDirty();
+        }
+
+        /**
+         * A can told about by one of its jurels (their home is the middle of its foot): cans built before the
+         * list existed were never on it, so a pickaxe could break them.
+         */
+        public static void adopt(ServerLevel level, BlockPos base) {
+            Cans c = of(level);
+            if (!c.freed.contains(base.asLong()) && c.bases.add(base.asLong())) c.setDirty();
         }
 
         /** Whether a block is part of a can (its wall, inside, lid, railing, ladder or foundation). */

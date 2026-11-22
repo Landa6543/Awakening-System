@@ -67,6 +67,8 @@ public final class AethergardWindow {
     private AethergardWindow() {}
 
     private static final int SECTIONS_PER_FRAME = 12;
+    /** At most this much of a frame (2.5 ms) goes to building the view's sections. */
+    private static final long BUILD_BUDGET_NS = 2_500_000L;
     /** How long after a crossing the loading screen is skipped. */
     private static final long CROSS_WINDOW_MS = 6000;
 
@@ -88,6 +90,11 @@ public final class AethergardWindow {
     public static void receive(RingLiveView.FullPayload p) {
         clear();
         if (!p.on()) return;
+        // the first ring seen after crossing is the one arrived at: the kept land sits round it
+        if (arrival != null && arrivalOrigin == null && Minecraft.getInstance().level != null) {
+            arrivalOrigin = p.centre().offset(-arrHx, -arrHy, -arrHz);
+            arrivalLevel = Minecraft.getInstance().level;
+        }
         on = true;
         centre = p.centre();
         facing = p.facing();
@@ -122,21 +129,35 @@ public final class AethergardWindow {
         for (RingLiveView.SectionPayload.Section s : p.sections()) {
             if (s.cx() >= nx || s.cy() >= ny || s.cz() >= nz) continue;
             int[] part = RingLiveView.unpack(s.data(), 16 * 16 * 16);
+            // what really changed: a section sent again as it was is not rebuilt (that rebuilding, many times a
+            // second, was the drop in frames near the ring), and a neighbour only when the change touches it
+            boolean changed = false;
+            boolean[] edge = new boolean[6];   // -x, +x, -y, +y, -z, +z
             for (int y = 0; y < 16; y++)
                 for (int z = 0; z < 16; z++)
                     for (int x = 0; x < 16; x++) {
                         int gx = s.cx() * 16 + x, gy = s.cy() * 16 + y, gz = s.cz() * 16 + z;
-                        if (gx < sx && gy < sy && gz < sz) cells[(gy * sz + gz) * sx + gx] = part[(y * 16 + z) * 16 + x];
+                        if (gx >= sx || gy >= sy || gz >= sz) continue;
+                        int i = (gy * sz + gz) * sx + gx, v = part[(y * 16 + z) * 16 + x];
+                        if (cells[i] == v) continue;
+                        cells[i] = v;
+                        changed = true;
+                        if (x == 0) edge[0] = true;
+                        if (x == 15) edge[1] = true;
+                        if (y == 0) edge[2] = true;
+                        if (y == 15) edge[3] = true;
+                        if (z == 0) edge[4] = true;
+                        if (z == 15) edge[5] = true;
                     }
-            // this section and the ones touching it (their faces and shading at the edge may change)
-            for (int dy = -1; dy <= 1; dy++)
-                for (int dz = -1; dz <= 1; dz++)
-                    for (int dx = -1; dx <= 1; dx++) {
-                        int cx = s.cx() + dx, cy = s.cy() + dy, cz = s.cz() + dz;
-                        if (cx < 0 || cy < 0 || cz < 0 || cx >= nx || cy >= ny || cz >= nz) continue;
-                        if (Math.abs(dx) + Math.abs(dy) + Math.abs(dz) > 1) continue;
-                        DIRTY.add((cy * nz + cz) * nx + cx);
-                    }
+            if (!changed) continue;
+            int[][] steps = {{-1, 0, 0}, {1, 0, 0}, {0, -1, 0}, {0, 1, 0}, {0, 0, -1}, {0, 0, 1}};
+            DIRTY.add((s.cy() * nz + s.cz()) * nx + s.cx());
+            for (int k = 0; k < 6; k++) {
+                if (!edge[k]) continue;
+                int cx = s.cx() + steps[k][0], cy = s.cy() + steps[k][1], cz = s.cz() + steps[k][2];
+                if (cx < 0 || cy < 0 || cz < 0 || cx >= nx || cy >= ny || cz >= nz) continue;
+                DIRTY.add((cy * nz + cz) * nx + cx);
+            }
         }
     }
 
@@ -211,6 +232,117 @@ public final class AethergardWindow {
     /** Sent by the server just before this player goes through the ring. */
     public static void crossing() {
         crossedAt = System.currentTimeMillis();
+        // what the ring was showing is the land the player is about to stand in: keep it, and draw it over
+        // there until the game's own sections of that land are ready, so the new world is simply there on
+        // arrival instead of loading in round the player (the way the portal mods do it: the other side is
+        // already on this computer when you step through)
+        dropArrival();
+        if (on && meshes.length > 0) {
+            arrival = meshes;
+            arrNx = nx;
+            arrNy = ny;
+            arrNz = nz;
+            arrHx = hx;
+            arrHy = hy;
+            arrHz = hz;
+            arrivalOrigin = null;
+            arrivalLevel = null;
+            arrivalSince = crossedAt;
+            meshes = new Map[0][];   // so clearing the view does not close them
+        }
+    }
+
+    // ---- after crossing: the land over there, as the ring showed it, until the game's own is drawn
+
+    private static Map<RenderType, VertexBuffer>[][] arrival;
+    private static int arrNx, arrNy, arrNz, arrHx, arrHy, arrHz;
+    /** Where the kept land sits in the new world (the ring arrived at, less the box's half), once known. */
+    private static BlockPos arrivalOrigin;
+    private static net.minecraft.client.multiplayer.ClientLevel arrivalLevel;
+    private static long arrivalSince;
+    private static final long ARRIVAL_WAIT_MS = 10000, ARRIVAL_MAX_MS = 45000;
+
+    private static void dropArrival() {
+        if (arrival != null)
+            for (Map<RenderType, VertexBuffer>[] sides : arrival)
+                if (sides != null)
+                    for (Map<RenderType, VertexBuffer> m : sides) m.values().forEach(VertexBuffer::close);
+        arrival = null;
+        arrivalOrigin = null;
+        arrivalLevel = null;
+    }
+
+    /** True when the game has its own sections drawn all over this box (so the kept copy is not needed there). */
+    private static boolean covered(Minecraft mc, double x0, double y0, double z0) {
+        for (int k = 0; k < 8; k++) {
+            BlockPos p = BlockPos.containing(x0 + ((k & 1) == 0 ? 0.5 : 15.5), y0 + ((k & 2) == 0 ? 0.5 : 15.5), z0 + ((k & 4) == 0 ? 0.5 : 15.5));
+            if (mc.level.isOutsideBuildHeight(p.getY())) continue;
+            if (!mc.levelRenderer.isSectionCompiled(p)) return false;
+        }
+        return true;
+    }
+
+    private static void drawArrival(Minecraft mc, RenderLevelStageEvent event) {
+        if (arrival == null) return;
+        long now = System.currentTimeMillis();
+        if (arrivalOrigin == null) {
+            if (now - arrivalSince > ARRIVAL_WAIT_MS) dropArrival();
+            return;
+        }
+        if (mc.level != arrivalLevel || now - arrivalSince > ARRIVAL_MAX_MS) {
+            dropArrival();
+            return;
+        }
+        Vec3 cam = event.getCamera().getPosition();
+        var frustum = event.getFrustum();
+        List<Integer> draw = new ArrayList<>();
+        boolean anyLeft = false;
+        for (int s = 0; s < arrival.length; s++) {
+            if (arrival[s] == null || (arrival[s][0].isEmpty() && arrival[s][1].isEmpty())) continue;
+            int cx = s % arrNx, cz = (s / arrNx) % arrNz, cy = s / (arrNx * arrNz);
+            double x0 = arrivalOrigin.getX() + cx * 16, y0 = arrivalOrigin.getY() + cy * 16, z0 = arrivalOrigin.getZ() + cz * 16;
+            if (covered(mc, x0, y0, z0)) continue;
+            anyLeft = true;
+            if (frustum != null && !frustum.isVisible(new net.minecraft.world.phys.AABB(x0, y0, z0, x0 + 16, y0 + 16, z0 + 16))) continue;
+            draw.add(s);
+        }
+        // the game has drawn all of it: the copy has done its job
+        if (!anyLeft) {
+            dropArrival();
+            return;
+        }
+        Matrix4f modelView = event.getModelViewMatrix();
+        Matrix4f projection = event.getProjectionMatrix();
+        RenderSystem.enableDepthTest();
+        RenderSystem.depthMask(true);
+        for (RenderType rt : RenderType.chunkBufferLayers()) {
+            rt.setupRenderState();
+            var shader = RenderSystem.getShader();
+            if (shader != null) {
+                shader.setDefaultUniforms(VertexFormat.Mode.QUADS, modelView, projection, mc.getWindow());
+                shader.apply();
+                var offset = shader.CHUNK_OFFSET;
+                for (int s : draw) {
+                    int cx = s % arrNx, cz = (s / arrNx) % arrNz, cy = s / (arrNx * arrNz);
+                    if (offset != null) {
+                        offset.set((float) (arrivalOrigin.getX() + cx * 16 - cam.x), (float) (arrivalOrigin.getY() + cy * 16 - cam.y),
+                                (float) (arrivalOrigin.getZ() + cz * 16 - cam.z));
+                        offset.upload();
+                    }
+                    // both halves: in front of the ring and behind it
+                    for (int side = 0; side < 2; side++) {
+                        VertexBuffer vb = arrival[s][side].get(rt);
+                        if (vb == null) continue;
+                        vb.bind();
+                        vb.draw();
+                    }
+                }
+                if (offset != null) offset.set(0.0F, 0.0F, 0.0F);
+                shader.clear();
+                VertexBuffer.unbind();
+            }
+            rt.clearRenderState();
+        }
     }
 
     /** Right after crossing the ring, the new world comes in round the player with no loading screen. */
@@ -235,6 +367,7 @@ public final class AethergardWindow {
     @SubscribeEvent
     public static void onLogout(ClientPlayerNetworkEvent.LoggingOut event) {
         clear();
+        dropArrival();
     }
 
     /** The creatures' legs and arms move as they walk. */
@@ -389,15 +522,24 @@ public final class AethergardWindow {
 
     @SubscribeEvent
     public static void onRender(RenderLevelStageEvent event) {
-        if (event.getStage() != RenderLevelStageEvent.Stage.AFTER_TRANSLUCENT_BLOCKS || !on) return;
+        if (event.getStage() != RenderLevelStageEvent.Stage.AFTER_TRANSLUCENT_BLOCKS) return;
         Minecraft mc = Minecraft.getInstance();
         if (mc.level == null) return;
+        try {
+            drawArrival(mc, event);
+        } catch (Throwable t) {
+            AwakeningSystemMod.LOGGER.warn("Kept ring land could not be drawn: {}", t.toString());
+            dropArrival();
+        }
+        if (!on) return;
         if (biome == null) {
             biome = mc.level.registryAccess().registryOrThrow(Registries.BIOME).get(ResourceLocation.parse(biomeId));
             if (biome == null) biome = mc.level.getBiome(mc.player.blockPosition()).value();
         }
         try {
-            for (int i = 0; i < SECTIONS_PER_FRAME && !DIRTY.isEmpty(); i++) {
+            // a little of this frame's time, not a fixed count: a frame never waits long for the ring's view
+            long until = System.nanoTime() + BUILD_BUDGET_NS;
+            for (int i = 0; i < SECTIONS_PER_FRAME && !DIRTY.isEmpty() && (i == 0 || System.nanoTime() < until); i++) {
                 Iterator<Integer> it = DIRTY.iterator();
                 int s = it.next();
                 it.remove();
