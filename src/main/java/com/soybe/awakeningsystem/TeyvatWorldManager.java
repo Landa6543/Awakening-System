@@ -37,8 +37,38 @@ public final class TeyvatWorldManager {
             ResourceLocation.fromNamespaceAndPath(AwakeningSystemMod.MOD_ID, "teyvat_world")
     );
 
-    /** Posición central del Arrecife de Musk (Musk Reef) en la dimensión de Teyvat */
-    public static final BlockPos MUSK_REEF_ISLAND_POS = new BlockPos(160, 64, 160);
+    /**
+     * Where the Musk Reef (the Spiral Abyss's island) stands in Teyvat. Worlds made before it looked for the sea
+     * keep it at 160, 64, 160; a new world puts it out at sea (see {@link #findSeaForReef}), as in the game.
+     */
+    public static final BlockPos OLD_MUSK_REEF_POS = new BlockPos(160, 64, 160);
+    public static BlockPos MUSK_REEF_ISLAND_POS = OLD_MUSK_REEF_POS;
+
+    /**
+     * Open sea for the reef: its whole round (the island and the water about it, 48 blocks) in ocean biomes,
+     * at least 300 blocks from the spawn, the arrival plaza and the racetrack; searched outwards in rings.
+     * Read from the world's biome layout alone, so nothing has to be loaded. Null if there is no sea near.
+     */
+    public static BlockPos findSeaForReef(ServerLevel level) {
+        var source = level.getChunkSource().getGenerator().getBiomeSource();
+        var sampler = level.getChunkSource().randomState().sampler();
+        java.util.function.BiPredicate<Integer, Integer> sea = (x, z) ->
+                source.getNoiseBiome(x >> 2, 62 >> 2, z >> 2, sampler).is(net.minecraft.tags.BiomeTags.IS_OCEAN);
+        for (int ring = 300; ring <= 3000; ring += 96) {
+            int steps = Math.max(12, (int) (ring * 2 * Math.PI / 96));
+            for (int i = 0; i < steps; i++) {
+                double a = i * Math.PI * 2 / steps;
+                int x = (int) (Math.cos(a) * ring), z = (int) (Math.sin(a) * ring);
+                boolean ok = true;
+                for (int k = 0; k < 9 && ok; k++) {
+                    int ox = k == 0 ? 0 : (int) (Math.cos(k * Math.PI / 4) * 48), oz = k == 0 ? 0 : (int) (Math.sin(k * Math.PI / 4) * 48);
+                    ok = sea.test(x + ox, z + oz);
+                }
+                if (ok) return new BlockPos(x, 64, z);
+            }
+        }
+        return null;
+    }
     public static final Direction ABYSS_FACING = Direction.SOUTH;
 
     public static final BlockPos GOLDEN_HOUSE_POS = new BlockPos(500, 75, 500);
@@ -86,6 +116,10 @@ public final class TeyvatWorldManager {
             data.racetrackTerrainCleaned = tag.getBoolean("RacetrackTerrainCleaned");
             data.casinoBuilt = tag.getBoolean("CasinoBuilt");
             memoryAbyssActive = data.active;
+            // where this world's reef is: saved, or the old fixed place for a world that built it there
+            if (tag.contains("ReefX")) data.reefPos = new BlockPos(tag.getInt("ReefX"), tag.getInt("ReefY"), tag.getInt("ReefZ"));
+            else if (data.muskReefBuilt) data.reefPos = OLD_MUSK_REEF_POS;
+            MUSK_REEF_ISLAND_POS = data.reefPos != null ? data.reefPos : OLD_MUSK_REEF_POS;
 
             if (tag.contains("Portals", net.minecraft.nbt.Tag.TAG_LIST)) {
                 net.minecraft.nbt.ListTag list = tag.getList("Portals", net.minecraft.nbt.Tag.TAG_COMPOUND);
@@ -97,14 +131,34 @@ public final class TeyvatWorldManager {
                         Direction facing = Direction.byName(pTag.getString("Facing"));
                         if (facing == null) facing = Direction.SOUTH;
                         boolean pActive = pTag.contains("Active") ? pTag.getBoolean("Active") : data.active;
+                        // a saved entry at the old fixed place, in a world whose reef was never built there, is dropped
+                        if (dim.equals(TEYVAT_WORLD) && pos.equals(OLD_MUSK_REEF_POS) && !OLD_MUSK_REEF_POS.equals(data.reefPos)) continue;
                         registerAbyssPortalInternal(dim, pos, facing, pActive);
                     } catch (Exception e) {
                         AwakeningSystemMod.LOGGER.debug("Error deserializing abyss portal entry from NBT: ", e);
                     }
                 }
             }
-            registerAbyssPortalInternal(TEYVAT_WORLD, MUSK_REEF_ISLAND_POS, ABYSS_FACING, data.active);
+            if (data.reefPos != null) registerAbyssPortalInternal(TEYVAT_WORLD, data.reefPos, ABYSS_FACING, data.active);
             return data;
+        }
+
+        /** Where this world's reef is, once chosen (null before Teyvat was first visited). */
+        private BlockPos reefPos;
+
+        public TeyvatAbyssSavedData() {
+            // a world with no data yet: nothing left over from another world played before it
+            MUSK_REEF_ISLAND_POS = OLD_MUSK_REEF_POS;
+        }
+
+        public BlockPos reefPos() {
+            return reefPos;
+        }
+
+        public void setReefPos(BlockPos pos) {
+            this.reefPos = pos;
+            MUSK_REEF_ISLAND_POS = pos;
+            setDirty();
         }
 
         @Override
@@ -114,6 +168,11 @@ public final class TeyvatWorldManager {
             tag.putBoolean("RacetrackBuilt", racetrackBuilt);
             tag.putBoolean("RacetrackTerrainCleaned", racetrackTerrainCleaned);
             tag.putBoolean("CasinoBuilt", casinoBuilt);
+            if (reefPos != null) {
+                tag.putInt("ReefX", reefPos.getX());
+                tag.putInt("ReefY", reefPos.getY());
+                tag.putInt("ReefZ", reefPos.getZ());
+            }
             net.minecraft.nbt.ListTag list = new net.minecraft.nbt.ListTag();
             for (AbyssPortalEntry p : REGISTERED_PORTALS) {
                 CompoundTag pTag = new CompoundTag();
@@ -206,9 +265,7 @@ public final class TeyvatWorldManager {
 
     public static final java.util.List<AbyssPortalEntry> REGISTERED_PORTALS = new java.util.concurrent.CopyOnWriteArrayList<>();
 
-    static {
-        REGISTERED_PORTALS.add(new AbyssPortalEntry(TEYVAT_WORLD, MUSK_REEF_ISLAND_POS, ABYSS_FACING, true));
-    }
+    // the reef's own portal is registered once its place is known (loading the saved data, or building it)
 
     public static void registerAbyssPortal(ResourceKey<Level> dimension, BlockPos basePos, Direction facing, boolean active) {
         registerAbyssPortalInternal(dimension, basePos, facing, active);

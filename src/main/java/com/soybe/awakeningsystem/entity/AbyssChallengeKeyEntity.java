@@ -112,6 +112,12 @@ public class AbyssChallengeKeyEntity extends LivingEntity {
     public void tick() {
         super.tick();
         this.setDeltaMovement(Vec3.ZERO);
+        // it never turns or tilts: the model's own sword and dial do the turning
+        this.setYRot(0);
+        this.yRotO = 0;
+        this.yBodyRot = this.yBodyRotO = 0;
+        this.yHeadRot = this.yHeadRotO = 0;
+        this.hurtTime = 0;
 
         if (this.level().isClientSide) {
             double angle = (this.tickCount * 0.08D);

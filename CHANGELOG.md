@@ -712,6 +712,16 @@ Sistema dinámico de eventos de temporada integrando consumibles gastronómicos 
 * **Jurel y Jurel cocinado** con texturas nuevas al estilo de los peces de Minecraft (en diagonal, con borde, aletas, cola en V, línea lateral y marcas de parrilla en el cocinado). El jurel con patas tiene la piel con el moteado del juego.
 * **Abismo:** el fondo ya no "respira" con franjas cuadradas; ahora gira de verdad, como en el juego: un gran anillo con su esfera de marcas y runas, y una estrella dentro que gira al revés (violeta en la Espiral, aguamarina en el Corredor).
 * **Mapa Diorama:** si tienes otro mod de mapa (JourneyMap, Xaero's Minimap o World Map, FTB Chunks, VoxelMap, Antique Atlas, Map Atlases…), el mapa incluido se apaga solo, para que no haya dos mapas a la vez.
+* **Abismo, más cambios:**
+  * Se quitaron los pitidos raros que sonaban todo el rato dentro: eran los sonidos del bosque deformado, que seguía en arenas de mundos viejos.
+  * La grieta hacia la Espiral es un remolino que gira de verdad.
+  * Los enemigos van del nivel 120 al 480 según el piso, porque es la última dimensión.
+  * La Llave del Desafío tiene textura nueva: pedestal de piedra con runas, espada carmesí con guarda dorada y anillo de cristales. Ya no se gira al activarla.
+  * El Monolito es sólido como un bloque: los enemigos chocan con él y lo golpean, y ya no gira ni se tambalea con cada golpe.
+  * Al superar una sala sale la ventana **"Desafío completado"** con sus estrellas, el tiempo restante y los botones Siguiente sala / Siguiente piso, Salir del Abismo y Quedarse; el cofre se abre solo. Entrar en el anillo de descenso también sigue funcionando.
+  * En mundos nuevos, la isla del Abismo aparece **en el mar**, lejos del inicio, en vez de en tierra rompiendo lo que haya alrededor.
+* **Mitachurl nuevo, hecho para el mod:** máscara de hueso con cuernos curvos, collar de pelo, brazos largos, pantorrillas vendadas, y un hacha ardiente al costado o un muro de tablones delante. Ataca levantando el hacha y carga con el escudo por delante. Su modelo y textura son propios; el anterior venía de otro mod y se veía roto.
+* **Gacha:** el fondo de los deseos es un cielo nocturno pintado, con nebulosa, Vía Láctea, constelaciones, montañas y un mar de nubes, y de vez en cuando una estrella fugaz. El gacha de las Umas es ahora un **cajón de salida** de carreras: ocho puestos numerados con sus colores, puertas de rejilla que se abren de golpe, polvo, y la luz del puesto central que dice la rareza.
 * **Anillo gigante, más fluido:** la vista del otro lado se construye con un tiempo fijo por fotograma y ya no rehace lo que llega sin cambios (eso causaba los bajones de FPS cerca del anillo). Al cruzar, lo que mostraba el anillo se queda como el terreno alrededor hasta que el juego dibuja el suyo, así el otro mundo ya está ahí al llegar en vez de cargarse a tu alrededor.
 
 ---

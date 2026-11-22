@@ -315,29 +315,22 @@ public final class SpiralAbyssScreen extends Screen {
                 com.mojang.blaze3d.systems.RenderSystem.enableBlend();
                 int ry = g[1] - (hover ? 3 : 0);
                 graphics.blit(AbyssArt.rift(open), x, ry, g[2], g[3], 0, 0, AbyssArt.BANNER_W, AbyssArt.BANNER_H, AbyssArt.BANNER_W, AbyssArt.BANNER_H);
-                // the rift swirls: sparks spiralling into its dark heart
-                graphics.enableScissor(x + g[2] / 8, ry + g[3] / 10, x + g[2] - g[2] / 8, ry + g[3] - g[3] / 10);
+                // the rift's whirlpool really turns: the swirl picture spun round its heart, flattened to the
+                // banner's tall shape, inside the straight part of the frame (in place of the old pulsing boxes)
                 long tnow = System.currentTimeMillis();
                 int rcx = x + g[2] / 2, rcy = ry + g[3] / 2;
-                // a slow pulse of light in its heart, and streaks of sparks spiralling into it
-                float beat = (float) (Math.sin(tnow / 500.0) * 0.5 + 0.5);
-                for (int k = 6; k >= 1; k--) {
-                    int rr = (int) (g[2] * 0.09F * k * (0.9F + beat * 0.25F));
-                    graphics.fill(rcx - rr, rcy - rr * 2, rcx + rr, rcy + rr * 2, ((int) ((open ? 18 : 8) + beat * 10) << 24) | 0xB070FF);
-                }
-                for (int sp = 0; sp < 70; sp++) {
-                    float ph = ((tnow / 2200.0F) + sp / 70.0F) % 1.0F;
-                    double ang = sp * 2.4 + ph * 9.0;
-                    double rad = (1.0 - ph) * g[3] * 0.5;
-                    int a = (int) (Math.sin(ph * Math.PI) * (open ? 255 : 120));
-                    int col = sp % 4 == 0 ? 0xFFFFFF : (sp % 4 == 1 ? 0xE0B8FF : 0xA060FF);
-                    // each spark leaves a short tail behind it along its curve
-                    for (int tail = 0; tail < 4; tail++) {
-                        double ta = ang - tail * 0.12, tr = rad + tail * 2.5;
-                        int px = (int) (rcx + Math.cos(ta) * tr * 0.42), py = (int) (rcy + Math.sin(ta) * tr);
-                        int ta2 = Math.max(0, a - tail * 60);
-                        graphics.fill(px, py, px + (tail == 0 ? 3 : 2), py + (tail == 0 ? 3 : 2), (ta2 << 24) | col);
-                    }
+                graphics.enableScissor(x + (int) (g[2] * 0.07F), ry + (int) (g[3] * 0.1F), x + g[2] - (int) (g[2] * 0.07F), ry + g[3] - (int) (g[3] * 0.1F));
+                for (int layer = 0; layer < 2; layer++) {
+                    float turn = (float) ((tnow % 120000L) / (layer == 0 ? 6000.0 : 10000.0) * Math.PI * 2) * (layer == 0 ? 1 : -1);
+                    int s = (int) (g[3] * (layer == 0 ? 1.15F : 0.8F));
+                    graphics.pose().pushPose();
+                    graphics.pose().translate(rcx, rcy, 0);
+                    graphics.pose().scale(0.5F, 1.0F, 1.0F);
+                    graphics.pose().mulPose(com.mojang.math.Axis.ZP.rotation(turn));
+                    graphics.setColor(1, 1, 1, layer == 0 ? 1.0F : 0.55F);
+                    graphics.blit(AbyssArt.riftSwirl(open), -s / 2, -s / 2, s, s, 0, 0, AbyssArt.SWIRL, AbyssArt.SWIRL, AbyssArt.SWIRL, AbyssArt.SWIRL);
+                    graphics.setColor(1, 1, 1, 1);
+                    graphics.pose().popPose();
                 }
                 graphics.disableScissor();
                 com.mojang.blaze3d.systems.RenderSystem.disableBlend();
@@ -521,7 +514,7 @@ public final class SpiralAbyssScreen extends Screen {
             int hx = px + (half - 1) * (pw / 2 + 6);
             List<net.minecraft.world.entity.Mob> mobs = chamberMobs(selectedFloor, selectedChamber, half);
             for (int i = 0; i < mobs.size(); i++)
-                mobCard(graphics, mobs.get(i), hx + i * (card + 4), y, card, rec + (selectedChamber - 1) * 2 + (half - 1), mouseX, mouseY);
+                mobCard(graphics, mobs.get(i), hx + i * (card + 4), y, card, SpiralAbyssManager.abyssMobLevel(selectedFloor, selectedChamber, half), mouseX, mouseY);
             String label = Component.translatable(halves == 1 ? "gui.awakening_system.spiral_abyss.single_half" : (half == 1
                     ? "gui.awakening_system.spiral_abyss.half_first_short" : "gui.awakening_system.spiral_abyss.half_second_short")).getString();
             int span = Math.max(card, mobs.size() * (card + 4) - 4);
@@ -769,6 +762,8 @@ public final class SpiralAbyssScreen extends Screen {
     }
 
     private static int getRecommendedLevel(int floor) {
+        // the very level the floor's first creatures have (SpiralAbyssManager.abyssMobLevel)
+        if (floor >= 1 && floor <= 12) return SpiralAbyssManager.abyssMobLevel(floor, 1, 1);
         return switch (floor) {
             case 1 -> 25;
             case 2 -> 40;

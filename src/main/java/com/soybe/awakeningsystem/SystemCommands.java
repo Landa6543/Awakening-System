@@ -1688,7 +1688,13 @@ public final class SystemCommands {
         }
     }
 
-    record TeyvatLocateTarget(String id, String displayName, BlockPos canonicalPos, String cmd) {}
+    record TeyvatLocateTarget(String id, String displayName, BlockPos canonicalPos, String cmd) {
+        /** The reef moves out to sea in new worlds: its place is always read now, not when the list was made. */
+        @Override
+        public BlockPos canonicalPos() {
+            return "abyss".equals(id) ? TeyvatWorldManager.MUSK_REEF_ISLAND_POS : canonicalPos;
+        }
+    }
 
     private static final java.util.List<TeyvatLocateTarget> TEYVAT_CANONICAL_TARGETS = java.util.List.of(
             new TeyvatLocateTarget("golden_house", "The Golden House (Tartaglia / Childe Boss)", TeyvatWorldManager.GOLDEN_HOUSE_POS.offset(0, 7, 4), "golden_house"),

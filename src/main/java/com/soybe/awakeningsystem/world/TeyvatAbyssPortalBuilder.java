@@ -57,6 +57,12 @@ public final class TeyvatAbyssPortalBuilder {
         if (server != null) {
             try {
                 var data = TeyvatWorldManager.TeyvatAbyssSavedData.get(server);
+                // a new world: the reef goes out to sea, never on land where it would cut into everything
+                if (data.reefPos() == null && !data.isMuskReefBuilt()) {
+                    BlockPos sea = TeyvatWorldManager.findSeaForReef(level);
+                    data.setReefPos(sea != null ? sea : TeyvatWorldManager.OLD_MUSK_REEF_POS);
+                    AwakeningSystemMod.LOGGER.info("[Teyvat] The Musk Reef will stand at sea at {}", TeyvatWorldManager.MUSK_REEF_ISLAND_POS);
+                }
                 if (data.isMuskReefBuilt()) {
                     portalGeneratedInTeyvat = true;
                     TeyvatWorldManager.registerAbyssPortal(level.dimension(), TeyvatWorldManager.MUSK_REEF_ISLAND_POS, TeyvatWorldManager.ABYSS_FACING, TeyvatWorldManager.isAbyssActive());

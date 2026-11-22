@@ -535,6 +535,49 @@ public final class AbyssArt {
         return id;
     }
 
+    public static final int SWIRL = 128;
+
+    /**
+     * The rift's whirlpool: three arms of violet light winding into a dark heart, with stars caught in it.
+     * See-through; the window turns it (and flattens it to the banner's shape) so the rift really spins.
+     */
+    public static ResourceLocation riftSwirl(boolean open) {
+        String key = "swirl" + (open ? "o" : "c");
+        ResourceLocation done = CACHE.get(key);
+        if (done != null) return done;
+        NativeImage img = new NativeImage(SWIRL, SWIRL, true);
+        for (int y = 0; y < SWIRL; y++) for (int x = 0; x < SWIRL; x++) img.setPixelRGBA(x, y, 0);
+        double c = SWIRL / 2.0;
+        for (int y = 0; y < SWIRL; y++)
+            for (int x = 0; x < SWIRL; x++) {
+                double dx = x + 0.5 - c, dy = y + 0.5 - c, d = Math.hypot(dx, dy);
+                if (d > c) continue;
+                double a = Math.atan2(dy, dx);
+                // a logarithmic spiral: the arms wind tighter towards the middle
+                double phase = a * 3 - Math.log(Math.max(1.5, d)) * 4.2;
+                double arm = Math.pow(Math.max(0, Math.cos(phase)), 3);
+                double fade = Math.min(1, (c - d) / 14) * Math.min(1, d / 7);
+                double alpha = (arm * 0.85 + 0.12) * fade;
+                int col = mix(0x4A148C, 0xD7B4FF, arm * (1 - d / c * 0.5));
+                if (!open) {
+                    col = mix(col, 0x5A5070, 0.6);
+                    alpha *= 0.6;
+                }
+                over(img, x, y, col, alpha);
+            }
+        // the dark heart, and a bright rim round it
+        ringOver(img, c, c, 7, 2.2, 0, Math.PI * 2, open ? 0xF0E0FF : 0x9A90B0, 0.7);
+        Random r = new Random(21);
+        for (int i = 0; i < 70; i++) {
+            double a = r.nextDouble() * Math.PI * 2, d = 10 + r.nextDouble() * (c - 14);
+            int sx = (int) (c + Math.cos(a) * d), sy = (int) (c + Math.sin(a) * d);
+            over(img, sx, sy, 0xF4ECFF, open ? 0.9 : 0.4);
+        }
+        ResourceLocation id = upload(key, img);
+        CACHE.put(key, id);
+        return id;
+    }
+
     /** The way into the Spire at the end of the Corridor: a banner-shaped rift of purple light. */
     public static ResourceLocation rift(boolean open) {
         String key = "rift" + (open ? "o" : "c");
@@ -549,11 +592,9 @@ public final class AbyssArt {
                 int col;
                 if (!inside(x, y, 3)) col = open ? 0xB48CFF : 0x7A6A98;
                 else {
-                    double a = Math.atan2(y - cy, (x - cx) * 2.5), d = Math.hypot((x - cx) * 2.5, y - cy);
-                    double streak = Math.pow(Math.abs(Math.sin(a * 9 + d * 0.06)), 6);
-                    col = mix(0x14062E, 0x7A2CE0, Math.min(1, streak * 0.8 + (1 - d / 90) * 0.4));
-                    if (d < 10) col = mix(0x000000, col, d / 10);
-                    if (r.nextInt(70) == 0) col = 0xE8D8FF;
+                    // only the deep behind it here: the swirl itself is riftSwirl(), turned by the window
+                    double d = Math.hypot((x - cx) * 2.5, y - cy);
+                    col = mix(0x2A0E58, 0x0C0420, Math.min(1, d / 80));
                     if (!open) col = mix(col, 0x2A2438, 0.55);
                 }
                 img.setPixelRGBA(x, y, c(col));

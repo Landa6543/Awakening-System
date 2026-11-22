@@ -454,6 +454,10 @@ public final class SpiralAbyssManager {
                 .getHolder(ResourceKey.create(net.minecraft.core.registries.Registries.BIOME,
                         net.minecraft.resources.ResourceLocation.fromNamespaceAndPath(AwakeningSystemMod.MOD_ID, "spiral_abyss_hall")));
         if (biome.isEmpty()) return;
+        // the land has to be loaded first: on land not loaded the change did nothing, and said nothing
+        for (int cx = (center.getX() - 64) >> 4; cx <= (center.getX() + 64) >> 4; cx++)
+            for (int cz = (center.getZ() - 64) >> 4; cz <= (center.getZ() + 64) >> 4; cz++)
+                level.getChunk(cx, cz);
         for (int x = -64; x < 64; x += 32)
             for (int z = -64; z < 64; z += 32)
                 for (int y = -48; y < 64; y += 16) {
@@ -1084,8 +1088,9 @@ public final class SpiralAbyssManager {
 
     /** A creature's level in a floor's chamber and half: the floor's own level, two more per chamber, one more in the second half. */
     public static int abyssMobLevel(int floor, int chamber, int half) {
-        int[] base = {25, 40, 45, 50, 55, 60, 70, 70, 72, 80, 88, 95};
-        return base[Math.max(0, Math.min(11, floor - 1))] + (chamber - 1) * 2 + (half - 1);
+        // Teyvat is the last world a hunter reaches: its Abyss is fought from level 120 up to nearly 500
+        int[] base = {120, 140, 160, 180, 200, 230, 260, 290, 330, 370, 420, 480};
+        return base[Math.max(0, Math.min(11, floor - 1))] + (chamber - 1) * 4 + (half - 1) * 2;
     }
 
     /** The creature at a place of a chamber's wave; also used by the window to show who waits in each chamber. */
@@ -1635,6 +1640,30 @@ public final class SpiralAbyssManager {
             player.displayClientMessage(Component.translatable("abyss.awakening_system.claim_chest_astral_exit"), false);
         } else {
             player.displayClientMessage(Component.translatable("abyss.awakening_system.claim_chest_descent_portal"), false);
+        }
+        // the game's own window: this chamber's stars, the time left, and what next
+        PacketDistributor.sendToPlayer(player, new AbyssChamberResult.ResultPayload(session.floorNumber, session.currentChamber,
+                session.chamberStarsEarned[Math.max(0, Math.min(2, session.currentChamber - 1))], session.chamberStarsEarned.clone(),
+                Math.max(0, session.chamberSecondsRemaining), isFloorFinished, canAdvance));
+    }
+
+    /** What the player chose in the cleared-chamber window: the chest is opened for them either way. */
+    public static void handleChamberChoice(ServerPlayer player, int choice) {
+        AbyssSession session = ACTIVE_SESSIONS.get(player.getUUID());
+        MinecraftServer server = player.getServer();
+        if (session == null || server == null || session.state != SessionState.CHAMBER_CLEARED) return;
+        if (choice == AbyssChamberResult.STAY) return;
+        if (session.rewardChestPos != null && !session.rewardChestClaimed) handleChestInteraction(player, session.rewardChestPos);
+        if (choice == AbyssChamberResult.LEAVE) {
+            handleLeaveAbyss(player);
+            return;
+        }
+        ServerLevel abyssLevel = getAbyssLevel(server);
+        if (session.currentChamber < 3) {
+            advanceToNextChamber(player, session, abyssLevel);
+        } else {
+            // the floor is done: on to the next one if it is open, else back out with the floor's result
+            handleAdvanceOrNextFloor(player);
         }
     }
 

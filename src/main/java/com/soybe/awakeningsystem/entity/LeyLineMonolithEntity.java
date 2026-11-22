@@ -53,8 +53,30 @@ public class LeyLineMonolithEntity extends LivingEntity {
         return false;
     }
 
+    /**
+     * Solid as a block: creatures and players bump into it instead of walking through it, so the chamber's
+     * foes stand round it and strike it.
+     */
+    @Override
+    public boolean canBeCollidedWith() {
+        return true;
+    }
+
     @Override
     protected void doPush(net.minecraft.world.entity.Entity entity) {
+    }
+
+    /** The way it faces when placed; it never turns (it used to swing round, as a creature does, when struck). */
+    private float fixedYaw = Float.NaN;
+
+    private void holdStill() {
+        if (Float.isNaN(fixedYaw)) fixedYaw = this.getYRot();
+        this.setYRot(fixedYaw);
+        this.yRotO = fixedYaw;
+        this.yBodyRot = this.yBodyRotO = fixedYaw;
+        this.yHeadRot = this.yHeadRotO = fixedYaw;
+        this.setXRot(0);
+        this.xRotO = 0;
     }
 
     @Override
@@ -135,6 +157,8 @@ public class LeyLineMonolithEntity extends LivingEntity {
     public void tick() {
         super.tick();
         this.setDeltaMovement(Vec3.ZERO);
+        holdStill();
+        this.hurtTime = 0;   // no red flash and lurch at every blow: it is stone
 
         if (this.invulnTicks > 0) {
             this.invulnTicks--;

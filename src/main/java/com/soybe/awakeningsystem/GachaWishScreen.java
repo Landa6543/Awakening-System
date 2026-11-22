@@ -593,11 +593,24 @@ public final class GachaWishScreen extends Screen {
 
         long time = System.currentTimeMillis();
 
-        int topBg = highestWonRarity == 5 && screenState == STATE_METEOR ? 0xFF1C1303 : 0xFF080B1C;
-        int botBg = highestWonRarity == 5 && screenState == STATE_METEOR ? 0xFF352006 : 0xFF161432;
-        graphics.fillGradient(0, 0, w, h, topBg, botBg);
-
-        graphics.fillGradient(0, h - 90, w, h, 0x00000000, 0x2E100A24);
+        // the painted night sky (GachaArt), covering the window, drifting very slowly sideways
+        {
+            float sc = Math.max(w / (float) GachaArt.W, h / (float) GachaArt.H) * 1.06F;
+            int dw = Math.round(GachaArt.W * sc), dh = Math.round(GachaArt.H * sc);
+            int drift = (int) (Math.sin(time / 9000.0) * (dw - w) * 0.45);
+            graphics.blit(GachaArt.sky(), (w - dw) / 2 + drift, (h - dh) / 2, dw, dh, 0, 0, GachaArt.W, GachaArt.H, GachaArt.W, GachaArt.H);
+            if (highestWonRarity == 5 && screenState == STATE_METEOR) graphics.fill(0, 0, w, h, 0x40B07A10);   // golden for a 5-star
+            // now and then a shooting star crosses the sky
+            long cycle = time % 7000L;
+            if (cycle < 900L) {
+                float p = cycle / 900F;
+                int sx = (int) (w * (0.15F + 0.6F * p)), sy = (int) (h * (0.08F + 0.22F * p));
+                for (int k = 0; k < 40; k++) {
+                    int al = (int) (220 * (1 - k / 40F) * Math.sin(p * Math.PI));
+                    graphics.fill(sx - k * 3, sy - k, sx - k * 3 + 2, sy - k + 1, (al << 24) | 0xFFF4E0);
+                }
+            }
+        }
 
         for (int i = 0; i < 32; i++) {
             int sx = (i * 73 + 17) % Math.max(1, w);
@@ -2951,81 +2964,94 @@ public final class GachaWishScreen extends Screen {
         renderTracenAcademyBackground(graphics, w, h);
         int horizonY = (int) (h * 0.56F);
 
-        int centerX = w / 2;
-        int gateW = Math.min(380, w - 40);
-        int gateH = Math.min(220, h - 80);
-        int gateY = horizonY - (gateH * 2 / 3);
-
-        int auraPulse = (int) (10 + Math.sin(System.currentTimeMillis() * 0.01) * 6);
-        graphics.fill(centerX - gateW / 2 - auraPulse, gateY - auraPulse, centerX + gateW / 2 + auraPulse, gateY + gateH + auraPulse, (glowColor & 0x00FFFFFF) | 0x33000000);
-
-        int roofH = 34;
-        graphics.fill(centerX - gateW / 2, gateY, centerX + gateW / 2, gateY + roofH, 0xFF1B5E20);
-        graphics.renderOutline(centerX - gateW / 2, gateY, gateW, roofH, 0xFFFFD700);
-        graphics.drawCenteredString(this.font, Component.translatable("awakening_system.msg.establo_pista_de_salida").getString(), centerX, gateY + 6, 0xFFFFFF);
-        graphics.drawCenteredString(this.font, Component.translatable("awakening_system.msg.pretty_derby_recruitment").getString(), centerX, gateY + 18, 0xFFFFD700);
-
-        for (int l = 0; l < 9; l++) {
-            int lx = centerX - (gateW / 2 - 20) + l * ((gateW - 40) / 8);
-            int dotColor = (highestWonRarity >= 5) ? java.awt.Color.HSBtoRGB(((float) l / 9.0F + (float) ((System.currentTimeMillis() % 1200L) / 1200.0)) % 1.0F, 0.9F, 1.0F) : glowColor;
-            graphics.fill(lx - 4, gateY + roofH + 1, lx + 4, gateY + roofH + 5, dotColor);
-        }
-
-        int colW = 14;
-        graphics.fill(centerX - gateW / 2, gateY + roofH + 5, centerX - gateW / 2 + colW, gateY + gateH, 0xFFE0E0E0);
-        graphics.fill(centerX + gateW / 2 - colW, gateY + roofH + 5, centerX + gateW / 2, gateY + gateH, 0xFFE0E0E0);
-        graphics.renderOutline(centerX - gateW / 2, gateY + roofH + 5, colW, gateH - roofH - 5, 0xFF2E7D32);
-        graphics.renderOutline(centerX + gateW / 2 - colW, gateY + roofH + 5, colW, gateH - roofH - 5, 0xFF2E7D32);
+        // a racing starting gate, as in the series: a row of numbered stalls under a green beam, each closed by
+        // a pair of mesh doors; at the bell all the doors spring open together, and the light pouring out of the
+        // middle stall tells the rarity (white, gold, or every colour)
+        int stalls = 8;
+        int gateW = Math.min(w - 30, 560);
+        int stallW = gateW / stalls;
+        gateW = stallW * stalls;
+        int gateX = (w - gateW) / 2;
+        int beamH = 18;
+        int stallH = Math.min(150, (int) (h * 0.36F));
+        int gateY = horizonY - stallH + 18;
+        int doorTop = gateY + beamH + 4, doorBottom = gateY + beamH + stallH - 8;
+        int mid = stalls / 2 - 1;   // the stall the Uma comes out of
+        int centerX = gateX + mid * stallW + stallW / 2;
+        // the colours of the stall numbers, as on a real racecourse
+        int[] numberBg = {0xFFF5F5F5, 0xFF212121, 0xFFD32F2F, 0xFF1565C0, 0xFFFBC02D, 0xFF2E7D32, 0xFFEF6C00, 0xFFEC407A};
+        int[] numberFg = {0xFF212121, 0xFFFFFFFF, 0xFFFFFFFF, 0xFFFFFFFF, 0xFF212121, 0xFFFFFFFF, 0xFFFFFFFF, 0xFFFFFFFF};
 
         float gateOpenProgress = 0.0F;
         if (elapsed > 900L) {
-            gateOpenProgress = Math.min(1.0F, (elapsed - 900L) / 1100.0F);
+            // the doors fly open in a quarter of a second, then rattle to a stop
+            float t = Math.min(1.0F, (elapsed - 900L) / 260.0F);
+            gateOpenProgress = 1 - (1 - t) * (1 - t) * (1 - t);
         }
-
-        int totalOpenW = gateW - colW * 2;
-        int doorW = totalOpenW / 2;
-        int leftHingeX = centerX - doorW;
-        int rightHingeX = centerX + doorW;
-        int doorTop = gateY + roofH + 5;
-        int doorBottom = gateY + gateH;
-
-        double angleRad = gateOpenProgress * (Math.PI / 2.0);
-        int visibleW = Math.max(4, (int) (doorW * Math.cos(angleRad)));
-        int swingDepth = (int) (Math.sin(angleRad) * 16.0);
-
-        int openLeft = leftHingeX + visibleW;
-        int openRight = rightHingeX - visibleW;
-        graphics.fill(leftHingeX, doorTop, rightHingeX, doorBottom, 0xFF0A140D);
-        if (openRight > openLeft) {
-            int lightAlpha = (int) (gateOpenProgress * 190.0F);
-            graphics.fillGradient(openLeft, doorTop, openRight, doorBottom, (glowColor & 0x00FFFFFF) | (lightAlpha << 24), 0x22000000);
+        // dirt under the gate and a long shadow
+        graphics.fillGradient(gateX - 20, doorBottom - 2, gateX + gateW + 20, doorBottom + 14, 0xFF8D6E63, 0xFF6D4C41);
+        graphics.fill(gateX - 6, doorBottom + 14, gateX + gateW + 6, doorBottom + 18, 0x55000000);
+        // inside the stalls: dark, the middle one lit once open
+        for (int s = 0; s < stalls; s++) {
+            int x0 = gateX + s * stallW;
+            graphics.fillGradient(x0, doorTop, x0 + stallW, doorBottom, 0xFF1A2A1C, 0xFF0C140D);
         }
-
-        int lInnerX = leftHingeX + visibleW;
-        graphics.fill(leftHingeX, doorTop - swingDepth / 2, lInnerX, doorBottom + swingDepth / 2, 0xFF144D1B);
-        graphics.renderOutline(leftHingeX, doorTop - swingDepth / 2, visibleW, (doorBottom - doorTop) + swingDepth, 0xFFFFFFFF);
-        if (visibleW > 14) {
-            for (int b = 1; b <= 3; b++) {
-                int bx = leftHingeX + b * (visibleW / 4);
-                graphics.fill(bx, doorTop - swingDepth / 2, bx + 2, doorBottom + swingDepth / 2, 0xFF9E9E9E);
+        if (gateOpenProgress > 0) {
+            int a = (int) (gateOpenProgress * 220);
+            graphics.fillGradient(gateX + mid * stallW + 2, doorTop, gateX + (mid + 1) * stallW - 2, doorBottom, (glowColor & 0xFFFFFF) | (a << 24), (glowColor & 0xFFFFFF) | ((a / 3) << 24));
+            // beams of light fanning out of the open stall towards the viewer
+            for (int b = 0; b < 9; b++) {
+                double ang = -Math.PI / 2 + (b - 4) * 0.22 + Math.sin(elapsed * 0.004 + b) * 0.04;
+                int len = (int) (h * 0.9F * gateOpenProgress);
+                int col = highestWonRarity >= 5 ? java.awt.Color.HSBtoRGB((b / 9F + (elapsed % 2000L) / 2000F) % 1F, 0.75F, 1F) : glowColor;
+                for (int k = 0; k < len; k += 3) {
+                    int bx = centerX + (int) (Math.cos(ang + Math.PI) * k * 0.9), by = doorBottom - 20 + (int) (-Math.sin(ang + Math.PI) * k * 0.35);
+                    int al = (int) (90 * (1 - k / (double) len));
+                    graphics.fill(bx - 2, by, bx + 2, by + 2, (al << 24) | (col & 0xFFFFFF));
+                }
             }
-            graphics.fill(lInnerX - 5, doorTop - swingDepth / 2, lInnerX - 1, doorBottom + swingDepth / 2, 0xFFFFD700);
         }
-        graphics.fill(leftHingeX - 3, doorTop + 6, leftHingeX, doorTop + 20, 0xFFFFD700);
-        graphics.fill(leftHingeX - 3, doorBottom - 20, leftHingeX, doorBottom - 6, 0xFFFFD700);
-
-        int rInnerX = rightHingeX - visibleW;
-        graphics.fill(rInnerX, doorTop - swingDepth / 2, rightHingeX, doorBottom + swingDepth / 2, 0xFF144D1B);
-        graphics.renderOutline(rInnerX, doorTop - swingDepth / 2, visibleW, (doorBottom - doorTop) + swingDepth, 0xFFFFFFFF);
-        if (visibleW > 14) {
-            for (int b = 1; b <= 3; b++) {
-                int bx = rInnerX + b * (visibleW / 4);
-                graphics.fill(bx, doorTop - swingDepth / 2, bx + 2, doorBottom + swingDepth / 2, 0xFF9E9E9E);
+        // the frame: posts between the stalls, the green beam with its white trim, the numbered plates
+        for (int s = 0; s <= stalls; s++) {
+            int px = gateX + s * stallW;
+            graphics.fill(px - 2, gateY, px + 2, doorBottom + 4, 0xFFE8EBEE);
+            graphics.fill(px + 1, gateY, px + 2, doorBottom + 4, 0xFF9AA5AE);
+        }
+        graphics.fill(gateX - 8, gateY, gateX + gateW + 8, gateY + beamH, 0xFF1B5E20);
+        graphics.fill(gateX - 8, gateY, gateX + gateW + 8, gateY + 2, 0xFFFFFFFF);
+        graphics.fill(gateX - 8, gateY + beamH - 2, gateX + gateW + 8, gateY + beamH, 0xFFE0E0E0);
+        for (int s = 0; s < stalls; s++) {
+            int cx = gateX + s * stallW + stallW / 2;
+            graphics.fill(cx - 6, gateY + 3, cx + 6, gateY + beamH - 3, numberBg[s]);
+            graphics.drawCenteredString(this.font, String.valueOf(s + 1), cx, gateY + 5, numberFg[s]);
+        }
+        // the doors: each stall's pair swings outwards from its posts
+        double doorAngle = gateOpenProgress * (Math.PI * 0.5);
+        int halfW = stallW / 2 - 2;
+        int vis = Math.max(1, (int) (halfW * Math.cos(doorAngle)));
+        int lift = (int) (Math.sin(doorAngle) * 6);
+        for (int s = 0; s < stalls; s++) {
+            int x0 = gateX + s * stallW + 2, x1 = gateX + (s + 1) * stallW - 2;
+            for (int side = 0; side < 2; side++) {
+                int dx0 = side == 0 ? x0 : x1 - vis, dx1 = side == 0 ? x0 + vis : x1;
+                int top = doorTop + 6 - lift, bottom = doorBottom - 4 + lift;
+                graphics.fill(dx0, top, dx1, bottom, 0x66B0BEC5);           // the mesh, see-through
+                graphics.renderOutline(dx0, top, dx1 - dx0, bottom - top, 0xFFF5F5F5);
+                if (dx1 - dx0 > 4)
+                    for (int m = top + 6; m < bottom - 2; m += 7) graphics.fill(dx0 + 1, m, dx1 - 1, m + 1, 0xAAE0E0E0);
+                graphics.fill(dx0, top + (bottom - top) / 2 - 1, dx1, top + (bottom - top) / 2 + 1, 0xFFE0E0E0);
             }
-            graphics.fill(rInnerX + 1, doorTop - swingDepth / 2, rInnerX + 5, doorBottom + swingDepth / 2, 0xFFFFD700);
         }
-        graphics.fill(rightHingeX, doorTop + 6, rightHingeX + 3, doorTop + 20, 0xFFFFD700);
-        graphics.fill(rightHingeX, doorBottom - 20, rightHingeX + 3, doorBottom - 6, 0xFFFFD700);
+        // dust kicked up as the doors burst open
+        if (gateOpenProgress > 0 && elapsed < 2200L) {
+            float dust = (elapsed - 900L) / 1300F;
+            for (int p = 0; p < 30; p++) {
+                int px = gateX + (p * 53) % gateW;
+                int py = doorBottom - (int) (dust * 30 * ((p % 5) + 1) / 5F);
+                int al = (int) (150 * (1 - dust));
+                if (al > 0) graphics.fill(px, py, px + 3, py + 3, (al << 24) | 0xC8B49A);
+            }
+        }
 
         if (gateOpenProgress > 0.15F) {
             com.soybe.awakeningsystem.uma.UmaProfile bestProfile = null;
@@ -3045,8 +3071,16 @@ public final class GachaWishScreen extends Screen {
             int runnerScale = (int) (32 + runProg * 22);
             int runnerY = (int) (doorBottom - 12 + runProg * 18);
 
-            int auraSize = (int) (32 + Math.sin(elapsed * 0.02) * 10);
-            graphics.fill(centerX - auraSize, runnerY - auraSize - 20, centerX + auraSize, runnerY + auraSize, (glowColor & 0x00FFFFFF) | 0x88000000);
+            // a soft round glow behind her (rows of a circle, fading out), not a square
+            int auraSize = (int) (40 + Math.sin(elapsed * 0.02) * 8);
+            for (int k = 4; k >= 1; k--) {
+                int rr = auraSize * k / 4;
+                int al = 30 + (4 - k) * 22;
+                for (int dy = -rr; dy <= rr; dy += 2) {
+                    int half = (int) Math.sqrt((double) rr * rr - (double) dy * dy);
+                    graphics.fill(centerX - half, runnerY - 30 + dy, centerX + half, runnerY - 30 + dy + 2, (al << 24) | (glowColor & 0xFFFFFF));
+                }
+            }
 
             if (bestProfile != null) {
                 com.soybe.awakeningsystem.uma.UmaRacerEntity runner = getOrCreateDummyUma(bestProfile);
@@ -3073,7 +3107,13 @@ public final class GachaWishScreen extends Screen {
                 int sy1 = runnerY + (int) (Math.sin(angle) * r1 * 0.6);
                 int sx2 = centerX + (int) (Math.cos(angle) * r2 * 1.5);
                 int sy2 = runnerY + (int) (Math.sin(angle) * r2 * 0.6);
-                graphics.fill(Math.min(sx1, sx2), Math.min(sy1, sy2), Math.max(sx1, sx2) + 2, Math.max(sy1, sy2) + 2, glowColor);
+                // a thin speed line from one point to the other (it was a filled box between them)
+                int steps = Math.max(1, (int) Math.hypot(sx2 - sx1, sy2 - sy1) / 2);
+                for (int k = 0; k <= steps; k++) {
+                    int lx = sx1 + (sx2 - sx1) * k / steps, ly = sy1 + (sy2 - sy1) * k / steps;
+                    int al = (int) (200 * (1 - k / (double) steps));
+                    graphics.fill(lx, ly, lx + 2, ly + 1, (al << 24) | (glowColor & 0xFFFFFF));
+                }
             }
 
             for (int c = 0; c < 24; c++) {

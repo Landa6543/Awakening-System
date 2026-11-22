@@ -7,25 +7,24 @@ import net.minecraft.client.renderer.entity.EntityRendererProvider;
 import net.minecraft.client.renderer.entity.MobRenderer;
 import net.minecraft.resources.ResourceLocation;
 
+/** Draws our own Mitachurl: one texture for both kinds; the model shows the axe or the shieldwall. */
 public class MitachurlRenderer extends MobRenderer<MitachurlEntity, MitachurlModel> {
 
-    private static final ResourceLocation TEX_AXE =
-            ResourceLocation.fromNamespaceAndPath(AwakeningSystemMod.MOD_ID, "textures/entity/mitachurl/mitachurl_blazing_axe.png");
-    private static final ResourceLocation TEX_SHIELD =
-            ResourceLocation.fromNamespaceAndPath(AwakeningSystemMod.MOD_ID, "textures/entity/mitachurl/mitachurl_shield.png");
+    private static final ResourceLocation TEXTURE =
+            ResourceLocation.fromNamespaceAndPath(AwakeningSystemMod.MOD_ID, "textures/entity/mitachurl/mitachurl.png");
 
     public MitachurlRenderer(EntityRendererProvider.Context context) {
-        super(context, new MitachurlModel(context.bakeLayer(MitachurlModel.LAYER_LOCATION)), 0.75F);
+        super(context, new MitachurlModel(context.bakeLayer(MitachurlModel.LAYER_LOCATION)), 0.9F);
     }
 
     @Override
     public ResourceLocation getTextureLocation(MitachurlEntity entity) {
-        return (entity.getMitachurlType() == MitachurlEntity.MitachurlType.BLAZING_AXE) ? TEX_AXE : TEX_SHIELD;
+        return TEXTURE;
     }
 
     @Override
     protected void scale(MitachurlEntity entity, PoseStack poseStack, float partialTickTime) {
+        // the model stands about 52 pixels tall: scaled to fill its 3.7-block frame
         poseStack.scale(1.15F, 1.15F, 1.15F);
-        this.shadowRadius = 0.75F;
     }
 }
