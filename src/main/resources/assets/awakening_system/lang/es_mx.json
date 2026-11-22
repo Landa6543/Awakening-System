@@ -1,4 +1,7 @@
 {
+    "awakening_system.sao.no_scenario": "Ahora no hay ningún escenario en curso.",
+    "awakening_system.sao.tab_scenario": "Escenario",
+    "awakening_system.sao.tab_daily": "Diarias",
     "gui.awakening_system.spiral_abyss.leave_abyss": "Salir de la Espiral del Abismo",
     "gui.awakening_system.spiral_abyss.chamber_chest": "Cada sala superada deja además un cofre: %s Mora, %s Protogemas y %s Experiencia de Héroe.",
     "gui.awakening_system.spiral_abyss.treasure_step": "Piso %s - %s estrellas",

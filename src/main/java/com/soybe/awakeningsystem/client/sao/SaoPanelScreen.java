@@ -367,9 +367,57 @@ public class SaoPanelScreen extends Screen {
 
     // ── Missions ─────────────────────────────────────────────────────────────
 
-    private void renderMissions(GuiGraphics g, int x, int y, int mouseX, int mouseY, float a) {
+    /** The missions panel's page: 0 the daily ones (training and the guild's), 1 the Dokkaebi scenario. */
+    private int missionsPage;
+
+    private void missionTabs(GuiGraphics g, int x, int y, int mouseX, int mouseY, float a) {
+        String[] names = {tr("tab_daily", "Daily").getString(), tr("tab_scenario", "Scenario").getString()};
+        int tx = x + 14;
+        for (int i = 0; i < 2; i++) {
+            int tw = this.font.width(names[i]) + 12;
+            boolean on = missionsPage == i;
+            boolean hover = in(mouseX, mouseY, tx, y + HEADER + 4, tw, 12);
+            g.fill(tx, y + HEADER + 4, tx + tw, y + HEADER + 16, alpha(on ? ORANGE : (hover ? 0xFFE4E4E8 : 0xFFD4D4DA), a));
+            g.drawString(this.font, names[i], tx + 6, y + HEADER + 6, alpha(on ? 0xFFFFFFFF : GREY_DARK, a), false);
+            tx += tw + 4;
+        }
+    }
+
+    private void renderScenario(GuiGraphics g, int x, int y, int mouseX, int mouseY, float a) {
         SystemData d = data();
-        int cy = y + HEADER + 8;
+        int cy = y + HEADER + 22;
+        String id = d.activeScenario();
+        if (id == null || id.isEmpty() || !net.minecraft.client.resources.language.I18n.exists("awakening_system.scenario." + id + ".name")) {
+            g.drawString(this.font, tr("no_scenario", "No scenario is running now."), x + 14, cy, alpha(GREY, a), false);
+            return;
+        }
+        g.drawString(this.font, Component.translatable("awakening_system.scenario." + id + ".name"), x + 14, cy, alpha(GREY_DARK, a), false);
+        int ly = cy + 14;
+        for (var line : this.font.split(Component.translatable("awakening_system.scenario." + id + ".desc"), PW - 28)) {
+            g.drawString(this.font, line, x + 14, ly, alpha(GREY, a), false);
+            ly += 10;
+        }
+        ly += 6;
+        int target = Math.max(1, d.scenarioTarget());
+        bar(g, x + 14, ly, PW - 90, 8, d.scenarioProgress() / (float) target, d.isScenarioComplete() ? 0xFF4FA84A : ORANGE, a);
+        String num = d.scenarioProgress() + "/" + target;
+        g.drawString(this.font, num, x + PW - 14 - this.font.width(num), ly, alpha(GREY, a), false);
+        ly += 16;
+        for (var line : this.font.split(Component.translatable("awakening_system.screen.missions.scenario_reward_summary"), PW - 28)) {
+            g.drawString(this.font, line, x + 14, ly, alpha(ORANGE_DARK, a), false);
+            ly += 10;
+        }
+        if (d.isScenarioComplete()) claimButton(g, x + PW - 112, y + PH - 26, mouseX, mouseY, a);
+    }
+
+    private void renderMissions(GuiGraphics g, int x, int y, int mouseX, int mouseY, float a) {
+        missionTabs(g, x, y, mouseX, mouseY, a);
+        if (missionsPage == 1) {
+            renderScenario(g, x, y, mouseX, mouseY, a);
+            return;
+        }
+        SystemData d = data();
+        int cy = y + HEADER + 20;
         g.drawString(this.font, tr("daily", "Daily training"), x + 14, cy, alpha(GREY_DARK, a), false);
         Component state = d.isDailyClaimed() ? tr("done", "Completed today") : d.isDailyQuestComplete() ? tr("ready", "Reward ready") : tr("in_progress", "In progress");
         g.drawString(this.font, state, x + PW - 14 - this.font.width(state), cy, alpha(d.isDailyQuestComplete() ? 0xFF4FA84A : ORANGE_DARK, a), false);
@@ -1726,7 +1774,27 @@ public class SaoPanelScreen extends Screen {
                 }
             }
             case MISSIONS -> {
-                int cy = y + HEADER + 8;
+                // the two pages' tabs
+                int tx = x + 14;
+                String[] tabNames = {tr("tab_daily", "Daily").getString(), tr("tab_scenario", "Scenario").getString()};
+                for (int i = 0; i < 2; i++) {
+                    int tw = this.font.width(tabNames[i]) + 12;
+                    if (in(mx, my, tx, y + HEADER + 4, tw, 12)) {
+                        if (missionsPage != i) click();
+                        missionsPage = i;
+                        return true;
+                    }
+                    tx += tw + 4;
+                }
+                if (missionsPage == 1) {
+                    if (d.isScenarioComplete() && in(mx, my, x + PW - 112, y + PH - 26, 100, 15)) {
+                        click();
+                        AwakeningSystemClient.claimScenario();
+                        return true;
+                    }
+                    return false;
+                }
+                int cy = y + HEADER + 20;
                 int[] vals = {d.dailyPushUps(), d.dailySitUps(), d.dailySquats()};
                 for (int i = 0; i < 3; i++) {
                     if (vals[i] < 100 && inCircle(mx, my, x + PW - 22, cy + 14 + i * 18 + 6, 8)) {

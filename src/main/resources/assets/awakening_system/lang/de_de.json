@@ -1,4 +1,7 @@
 {
+    "awakening_system.sao.no_scenario": "No scenario is running now.",
+    "awakening_system.sao.tab_scenario": "Scenario",
+    "awakening_system.sao.tab_daily": "Daily",
     "gui.awakening_system.spiral_abyss.leave_abyss": "Leave the Spiral Abyss",
     "gui.awakening_system.spiral_abyss.chamber_chest": "Each cleared chamber also leaves a chest: %s Mora, %s Primogems and %s Hero's Wit.",
     "gui.awakening_system.spiral_abyss.treasure_step": "Floor %s - %s stars",

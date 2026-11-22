@@ -1,4 +1,7 @@
 {
+    "awakening_system.sao.no_scenario": "Nenhum cenário em andamento agora.",
+    "awakening_system.sao.tab_scenario": "Cenário",
+    "awakening_system.sao.tab_daily": "Diárias",
     "gui.awakening_system.spiral_abyss.leave_abyss": "Sair do Abismo Espiral",
     "gui.awakening_system.spiral_abyss.chamber_chest": "Cada sala concluída também deixa um baú: %s Mora, %s Protogemas e %s Sabedoria do Herói.",
     "gui.awakening_system.spiral_abyss.treasure_step": "Andar %s - %s estrelas",

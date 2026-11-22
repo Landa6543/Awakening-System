@@ -1,4 +1,7 @@
 {
+    "awakening_system.sao.no_scenario": "Сейчас нет активного сценария.",
+    "awakening_system.sao.tab_scenario": "Сценарий",
+    "awakening_system.sao.tab_daily": "Ежедневные",
     "gui.awakening_system.spiral_abyss.leave_abyss": "Покинуть Витую Бездну",
     "gui.awakening_system.spiral_abyss.chamber_chest": "Каждый пройденный зал также оставляет сундук: %s моры, %s примогемов и %s опыта героя.",
     "gui.awakening_system.spiral_abyss.treasure_step": "Этаж %s - %s звёзд",
