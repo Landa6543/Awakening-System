@@ -60,7 +60,7 @@ public final class RacetrackWandPreview {
         List<BlockPos> waypoints = TrackMarkerWandItem.getWaypoints(wand);
 
         float partialTick = event.getPartialTick().getGameTimeDeltaPartialTick(true);
-        float gameTime = mc.level.getGameTime() + partialTick;
+        float gameTime = (float) Math.floorMod(mc.level.getGameTime(), 240000L) + partialTick;
         Vec3 camPos = event.getCamera().getPosition();
         PoseStack poseStack = event.getPoseStack();
         MultiBufferSource bufferSource = mc.renderBuffers().bufferSource();

@@ -33,8 +33,11 @@ import net.minecraft.world.phys.Vec3;
 public class WalkingJurelEntity extends PathfinderMob {
     private static final EntityDataAccessor<Boolean> DANCING = SynchedEntityData.defineId(WalkingJurelEntity.class, EntityDataSerializers.BOOLEAN);
 
-    /** One ritual every 4 minutes, lasting the minute of its music; the phase depends on the can, so all its jurels agree. */
-    private static final int CYCLE = 4800, RITUAL = 1200;
+    /**
+     * One ritual every 4 minutes, lasting as long as its music is heard (the clip is 60 s and fades out over its
+     * last 3, so the dance stops as the music does); the phase depends on the can, so all its jurels agree.
+     */
+    private static final int CYCLE = 4800, RITUAL = 1150;
     /** When each can's music last started (by the can's position), so the jurels of one can play it once. */
     private static final java.util.Map<Long, Long> MUSIC_STARTED = new java.util.concurrent.ConcurrentHashMap<>();
 
@@ -78,8 +81,16 @@ public class WalkingJurelEntity extends PathfinderMob {
         this.goalSelector.addGoal(7, new RandomLookAroundGoal(this));
     }
 
+    /** When /sanmortis dance started a dance for every can (game time), or -1. */
+    public static long forcedStart = -1;
+
+    private static boolean forced(long now) {
+        return forcedStart >= 0 && now >= forcedStart && now - forcedStart < RITUAL;
+    }
+
     private boolean ritualTime() {
         if (home == null) return false;
+        if (forced(this.level().getGameTime())) return true;
         long phase = Math.floorMod(home.asLong() * 31L, CYCLE);
         return Math.floorMod(this.level().getGameTime() + phase, CYCLE) < RITUAL;
     }
@@ -95,7 +106,7 @@ public class WalkingJurelEntity extends PathfinderMob {
         // the music, once per ritual, from the middle of the can's roof
         long now = this.level().getGameTime();
         long phase = Math.floorMod(home.asLong() * 31L, CYCLE);
-        long start = now - Math.floorMod(now + phase, CYCLE);
+        long start = forced(now) ? forcedStart : now - Math.floorMod(now + phase, CYCLE);
         Long played = MUSIC_STARTED.get(home.asLong());
         if (played == null || played != start) {
             MUSIC_STARTED.put(home.asLong(), start);

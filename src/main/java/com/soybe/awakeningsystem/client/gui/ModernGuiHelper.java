@@ -166,13 +166,8 @@ public final class ModernGuiHelper {
      * Draws an integrated glowing header plate.
      */
     public static void drawModernHeader(GuiGraphics g, int x, int y, int w, int h, Component title, int titleColor, GuiTheme theme, Font font) {
-        // Frosted header plate
-        g.fillGradient(x, y, x + w, y + h, theme.headerPlate, 0x0500E5FF);
-        // Left glowing vertical neon stripe
-        g.fill(x, y, x + 3, y + h, theme.primary);
-        g.fill(x + 1, y, x + 2, y + h, theme.core);
-        // Horizontal glowing divider line
-        g.fill(x, y + h - 1, x + w, y + h, theme.primary);
+        // No plate, frame or side stripe around the header text (they looked cramped against the window's
+        // frame): only a thin glowing line under it.
         g.fill(x + 10, y + h - 1, x + w - 10, y + h, theme.core);
 
         if (title != null && font != null) {

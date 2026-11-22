@@ -77,7 +77,7 @@ public class NpcDialogueScreen extends Screen {
             for (int i = 1; i < parts.length; i++) {
                 // an argument that is itself a name key (an item, a block) is shown translated
                 String a = parts[i];
-                args[i - 1] = a.startsWith("item.") || a.startsWith("block.") ? Component.translatable(a) : a;
+                args[i - 1] = a.startsWith("item.") || a.startsWith("block.") || a.startsWith("awakening_system.") ? Component.translatable(a) : a;
             }
             try {
                 return Component.translatable(key, args).getString();

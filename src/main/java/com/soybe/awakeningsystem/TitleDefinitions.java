@@ -13,6 +13,16 @@ public final class TitleDefinitions {
     public static final UUID CREATOR_SOYBE_CAP_OFFLINE_UUID = UUID.nameUUIDFromBytes("OfflinePlayer:Soybe".getBytes(java.nio.charset.StandardCharsets.UTF_8));
     public static final String CREATOR_NAME = "LanderAlo";
 
+    /** The development test world where the owner counts as the Creator (see {@link #isCreator}). */
+    private static boolean isTestWorld(net.minecraft.server.MinecraftServer server) {
+        try {
+            var folder = server.getWorldPath(net.minecraft.world.level.storage.LevelResource.ROOT).toAbsolutePath().normalize().getFileName();
+            return (folder != null && folder.toString().equals("Tower2")) || "Tower2".equals(server.getWorldData().getLevelName());
+        } catch (Throwable t) {
+            return false;
+        }
+    }
+
     public static boolean isCreator(net.minecraft.world.entity.player.Player player) {
         if (player == null) return false;
         UUID uuid = player.getUUID();
@@ -25,6 +35,9 @@ public final class TitleDefinitions {
                 || !serverPlayer.getServer().isSingleplayerOwner(serverPlayer.getGameProfile())) {
             return false;
         }
+        // Testing aid: in a development run (never in the released mod), the owner of the "Tower2" world is the
+        // Creator, so titles can be tried there by hand
+        if (!net.neoforged.fml.loading.FMLEnvironment.production && isTestWorld(serverPlayer.getServer())) return true;
         if (CREATOR_OFFLINE_UUID.equals(uuid) || CREATOR_SOYBE_OFFLINE_UUID.equals(uuid) || CREATOR_SOYBE_CAP_OFFLINE_UUID.equals(uuid)) {
             return true;
         }

@@ -54,7 +54,7 @@ public final class WaypointBeaconRenderer {
         PoseStack poseStack = event.getPoseStack();
         MultiBufferSource.BufferSource bufferSource = mc.renderBuffers().bufferSource();
 
-        float gameTime = mc.level.getGameTime() + event.getPartialTick().getGameTimeDeltaPartialTick(true);
+        float gameTime = (float) Math.floorMod(mc.level.getGameTime(), 240000L) + event.getPartialTick().getGameTimeDeltaPartialTick(true);
         int minBuildY = mc.level.getMinBuildHeight();
         int maxBuildY = mc.level.getMaxBuildHeight();
 

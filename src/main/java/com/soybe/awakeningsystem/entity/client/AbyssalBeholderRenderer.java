@@ -50,7 +50,7 @@ public class AbyssalBeholderRenderer extends MobRenderer<AbyssalBeholderEntity, 
 
     private void renderVoidBeam(AbyssalBeholderEntity entity, LivingEntity target, float partialTicks,
                                 PoseStack poseStack, MultiBufferSource buffer) {
-        float gameTime = (float)entity.level().getGameTime() + partialTicks;
+        float gameTime = (float) Math.floorMod(entity.level().getGameTime(), 240000L) + partialTicks;
         float vScroll = gameTime * 0.5F % 1.0F;
         float eyeHeight = entity.getEyeHeight();
 

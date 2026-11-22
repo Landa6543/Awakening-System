@@ -46,7 +46,7 @@ public final class VolumetricAuraRenderer {
         if (mc.level == null || mc.player == null) return;
 
         float partialTick = event.getPartialTick().getGameTimeDeltaPartialTick(true);
-        float time = mc.level.getGameTime() + partialTick;
+        float time = (float) Math.floorMod(mc.level.getGameTime(), 240000L) + partialTick;
         Vec3 camPos = event.getCamera().getPosition();
         PoseStack poseStack = event.getPoseStack();
         var bufferSource = mc.renderBuffers().bufferSource();

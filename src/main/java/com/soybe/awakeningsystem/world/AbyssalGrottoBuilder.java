@@ -540,7 +540,10 @@ public final class AbyssalGrottoBuilder {
                     set(q, (y - r.fy) % 4 == 0 ? Blocks.CHISELED_TUFF.defaultBlockState() : Blocks.TUFF_BRICKS.defaultBlockState());
                 }
             }
-            set(px, r.fy + 3, pz + 2, Blocks.SOUL_LANTERN.defaultBlockState(), 2);
+            // a sconce on the pillar: a slab sticking out, and the lantern hanging under it (not floating)
+            set(px, r.fy + 4, pz + 2, Blocks.TUFF_BRICK_SLAB.defaultBlockState()
+                    .setValue(net.minecraft.world.level.block.SlabBlock.TYPE, net.minecraft.world.level.block.state.properties.SlabType.TOP), 2);
+            set(px, r.fy + 3, pz + 2, Blocks.SOUL_LANTERN.defaultBlockState().setValue(LanternBlock.HANGING, true), 2);
         }
         for (int i = 0; i < 12; i++) {
             double a = i * Math.PI * 2 / 12;
@@ -565,7 +568,30 @@ public final class AbyssalGrottoBuilder {
             if (isAir(l)) set(l, Blocks.SOUL_LANTERN.defaultBlockState());
             if (isAir(l2)) set(l2, Blocks.SOUL_LANTERN.defaultBlockState());
         }
-        SeriesStructureWorldGen.spawnOverworldMiniboss(level, new BlockPos(r.x, r.fy - 1, r.z));
+        spawnGrottoBoss(new BlockPos(r.x, r.fy - 1, r.z));
+    }
+
+    /**
+     * The grotto's keeper: a creature of the abyss from this world (not one of Teyvat's, which belong to the fourth
+     * dimension), held to the arena like the other overworld minibosses.
+     */
+    private void spawnGrottoBoss(BlockPos pos) {
+        net.minecraft.world.entity.EntityType<?>[] types = {
+                com.soybe.awakeningsystem.entity.ModEntities.ABYSSAL_BEHOLDER.get(),
+                com.soybe.awakeningsystem.entity.ModEntities.ABYSSAL_NECROMANCER.get(),
+                com.soybe.awakeningsystem.entity.ModEntities.SCULK_GOLEM.get()
+        };
+        var entity = types[rand.nextInt(types.length)].create(level);
+        if (!(entity instanceof net.minecraft.world.entity.Mob mob)) return;
+        mob.moveTo(pos.getX() + 0.5D, pos.getY() + 1.0D, pos.getZ() + 0.5D, rand.nextFloat() * 360.0F, 0.0F);
+        mob.setPersistenceRequired();
+        var tag = mob.getPersistentData();
+        tag.putDouble("arena_center_x", pos.getX() + 0.5D);
+        tag.putDouble("arena_center_y", pos.getY() + 1.0D);
+        tag.putDouble("arena_center_z", pos.getZ() + 0.5D);
+        tag.putDouble("arena_max_radius", 35.0D);
+        tag.putBoolean("is_overworld_miniboss", true);
+        level.addFreshEntity(mob);
     }
 
     /** Sinks the middle of a room into a pool; the tunnels crossing it stay as causeways. */

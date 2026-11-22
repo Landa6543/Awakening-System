@@ -898,7 +898,7 @@ public class HunterWorldMapScreen extends Screen {
         List<net.minecraft.world.entity.item.ItemEntity> items = mc.level.getEntitiesOfClass(net.minecraft.world.entity.item.ItemEntity.class, box, net.minecraft.world.entity.item.ItemEntity::isAlive);
         if (items.isEmpty()) return;
 
-        float gameTime = mc.level.getGameTime() + mc.getTimer().getGameTimeDeltaPartialTick(true);
+        float gameTime = (float) Math.floorMod(mc.level.getGameTime(), 240000L) + mc.getTimer().getGameTimeDeltaPartialTick(true);
         float pulse = (float) (Math.sin(gameTime * 0.35F) * 0.5F + 0.5F);
 
         int count = 0;
@@ -989,7 +989,7 @@ public class HunterWorldMapScreen extends Screen {
         if (mc.level == null) return;
         if (AwakeningSystemClient.ACTIVE_RIFTS.isEmpty()) return;
 
-        float gameTime = mc.level.getGameTime() + mc.getTimer().getGameTimeDeltaPartialTick(true);
+        float gameTime = (float) Math.floorMod(mc.level.getGameTime(), 240000L) + mc.getTimer().getGameTimeDeltaPartialTick(true);
         float pulse = (float) (Math.sin(gameTime * 0.25F) * 0.5F + 0.5F);
 
         for (com.soybe.awakeningsystem.SyncRiftsPayload.RiftEntry rift : AwakeningSystemClient.ACTIVE_RIFTS) {

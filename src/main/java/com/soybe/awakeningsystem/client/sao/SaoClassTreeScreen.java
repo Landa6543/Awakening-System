@@ -154,7 +154,7 @@ public class SaoClassTreeScreen extends SaoWindow {
             }
             // skills are ringed twice, so they stand out among the stat nodes
             if (!n.isAttribute()) ring(g, nx, ny, r + 1.6F, 0.8F, alpha(have ? ORANGE_DARK : 0xFFC4C4CA, a));
-            if (!n.minor() || zoom >= 0.75F) {
+            {   // every node shows its icon at any zoom
                 String glyph = n.iconSymbol();
                 float s = Math.max(0.5F, r / 9.0F);
                 g.pose().pushPose();

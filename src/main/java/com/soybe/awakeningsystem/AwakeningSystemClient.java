@@ -1893,6 +1893,9 @@ public final class AwakeningSystemClient {
         int boxWidth = Math.min(Math.max(250, maxTextW), width - 32);
         var lines = font.split(notificationMessageComp != null ? notificationMessageComp : net.minecraft.network.chat.Component.empty(), boxWidth - 16);
         int boxHeight = 32 + lines.size() * 12;
+        // never more than half the screen wide nor a quarter of it tall: on a small screen it shrinks to fit
+        float fit = Math.min(1.0F, Math.min(width * 0.5F / boxWidth, height * 0.25F / boxHeight));
+        sysScale = Math.max(0.35F, sysScale * fit);
         int left = (width - boxWidth) / 2;
         int top = calculateNotificationTop();
 
@@ -2956,7 +2959,9 @@ public final class AwakeningSystemClient {
         var poseStack = event.getPoseStack();
         var bufferSource = mc.renderBuffers().bufferSource();
 
-        float gameTime = mc.level.getGameTime() + event.getPartialTick().getGameTimeDeltaPartialTick(true);
+        // Kept small before it becomes a float: a world's tick count soon outgrows a float's precision, and the
+        // gates' animation (and their pulse and bob) then moved in jumps of several frames
+        float gameTime = (float) Math.floorMod(mc.level.getGameTime(), 240000L) + event.getPartialTick().getGameTimeDeltaPartialTick(true);
 
         com.soybe.awakeningsystem.client.renderer.VolumetricAuraRenderer.renderAuras(event);
 
@@ -3461,7 +3466,7 @@ public final class AwakeningSystemClient {
         mc.player.setYRot(finalYaw);
         mc.player.setXRot(finalPitch);
 
-        float time = (float) mc.level.getGameTime() + (float) event.getPartialTick();
+        float time = (float) Math.floorMod(mc.level.getGameTime(), 240000L) + (float) event.getPartialTick();
         float rumble = (float) Math.sin(time * 1.8D) * (1.2F * blendWeight);
         float rollRumble = (float) Math.cos(time * 1.4D) * (0.8F * blendWeight);
 

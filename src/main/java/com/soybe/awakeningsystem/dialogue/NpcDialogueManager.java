@@ -70,11 +70,11 @@ public final class NpcDialogueManager {
         } else {
             // Diálogo genérico de saludo si no está registrado
             List<DialogueChoice> choices = List.of(
-                    new DialogueChoice(0, "Entendido, muchas gracias.", "close", "CLOSE")
+                    new DialogueChoice(0, "awakening_system.npc_talk.choice.goodbye", "close", "CLOSE")
             );
             sendNode(player, npc.getId(), dialogueId, "greeting", "DEFAULT",
-                    "§b§l[SISTEMA] §fNPC",
-                    "Saludos, Cazador. Que tus cacerías en las mazmorras sean prósperas.",
+                    "awakening_system.npc_talk.generic_speaker",
+                    "awakening_system.npc_talk.generic_greeting",
                     choices);
         }
     }
@@ -453,9 +453,8 @@ public final class NpcDialogueManager {
         npc.getNavigation().stop();
         npc.lookAt(net.minecraft.commands.arguments.EntityAnchorArgument.Anchor.EYES, player.getEyePosition());
 
-        String speaker = profile.titleColor() + "[" + profile.displayName() + "] §f" + profile.title();
-        String quote = profile.dialogues().isEmpty() ? "La verdadera fuerza se demuestra en combate." : profile.dialogues().get(0);
-        String text = "§f«" + quote + "»\n\n¿En qué puedo ayudarte hoy, Cazador?";
+        String speaker = seriesSpeaker(profile);
+        String text = "awakening_system.npc_talk.greeting|awakening_system.npc." + profile.id() + ".dialogue.0";
 
         GuildSavedData guildData = GuildSavedData.get(player.server);
         Guild guild = (guildData != null && player.server != null) ? guildData.getGuildByPlayer(player.getUUID()) : null;
@@ -472,23 +471,28 @@ public final class NpcDialogueManager {
 
         List<DialogueChoice> choices = new ArrayList<>();
         int cId = 0;
-        choices.add(new DialogueChoice(cId++, "★ Recibir bendición diaria de cazador ★", "blessing", "BLESSING"));
+        choices.add(new DialogueChoice(cId++, "awakening_system.npc_talk.choice.blessing", "blessing", "BLESSING"));
         SeriesNpcEntity sne = (npc instanceof SeriesNpcEntity s) ? s : null;
         if (isGuildMember) {
             if (sne != null && sne.isFollowing()) {
-                choices.add(new DialogueChoice(cId++, "★ Orden de Guardia: Quédate aquí y vigila este lugar ★", "companion_stay", "COMPANION_STAY"));
+                choices.add(new DialogueChoice(cId++, "awakening_system.npc_talk.choice.stay", "companion_stay", "COMPANION_STAY"));
             } else {
-                choices.add(new DialogueChoice(cId++, "★ Orden de Combate: Sígueme y apóyame en la cacería ★", "companion_follow", "COMPANION_FOLLOW"));
+                choices.add(new DialogueChoice(cId++, "awakening_system.npc_talk.choice.follow", "companion_follow", "COMPANION_FOLLOW"));
             }
         } else if (canInviteGuild) {
-            choices.add(new DialogueChoice(cId++, "★ Invitar a unirse al Gremio [" + guild.getName() + "] ★", "invite_guild", "GUILD_INVITE"));
+            choices.add(new DialogueChoice(cId++, "awakening_system.npc_talk.choice.invite|" + guild.getName().replace('|', '/'), "invite_guild", "GUILD_INVITE"));
         }
-        choices.add(new DialogueChoice(cId++, "Consultar consejos de combate y sabiduría", "lore", "LORE"));
-        choices.add(new DialogueChoice(cId++, "Entendido, muchas gracias.", "goodbye", "CLOSE"));
+        choices.add(new DialogueChoice(cId++, "awakening_system.npc_talk.choice.lore", "lore", "LORE"));
+        choices.add(new DialogueChoice(cId++, "awakening_system.npc_talk.choice.goodbye", "goodbye", "CLOSE"));
         // last, so the choices before it keep their places (the dialogue answers with a choice's place): index 4
         if (isGuildMember) choices.add(new DialogueChoice(cId++, "awakening_system.routine.dialogue_choice", "routine", "ROUTINE"));
 
         sendNode(player, npc.getId(), "series_npc", "root", "DEFAULT", speaker, text, choices);
+    }
+
+    /** A series NPC's name plate: its colour, its name and its title, each translated on the player's side. */
+    private static String seriesSpeaker(NpcProfile profile) {
+        return "awakening_system.npc_talk.speaker|" + profile.titleColor() + "|awakening_system.npc." + profile.id() + ".name|awakening_system.npc." + profile.id() + ".title";
     }
 
     private static void handleSeriesNpcChoice(ServerPlayer player, Entity npc, String nodeId, int choiceId) {
@@ -497,7 +501,7 @@ public final class NpcDialogueManager {
             return;
         }
         NpcProfile profile = sne.getProfile();
-        String speaker = profile.titleColor() + "[" + profile.displayName() + "] §f" + profile.title();
+        String speaker = seriesSpeaker(profile);
 
         GuildSavedData guildData = GuildSavedData.get(player.server);
         Guild guild = (guildData != null && player.server != null) ? guildData.getGuildByPlayer(player.getUUID()) : null;
@@ -524,19 +528,16 @@ public final class NpcDialogueManager {
                     profile.applyBlessing(player);
                     player.playNotifySound(ModSounds.NPC_BLESSING.get(), SoundSource.PLAYERS, 1.0F, 1.0F);
 
-                    String text = "§a§l★ BENDICIÓN DE CAZADOR OTORGADA ★§r\n\n"
-                            + "§fHas recibido la bendición directa de §e" + profile.displayName() + "§f.\n"
-                            + "Tus capacidades físicas y espirituales han sido potenciadas por el Sistema.";
+                    String text = "awakening_system.npc_talk.blessing_given|awakening_system.npc." + profile.id() + ".name";
                     List<DialogueChoice> choices = List.of(
-                            new DialogueChoice(0, "¡Muchas gracias!", "goodbye", "CLOSE")
+                            new DialogueChoice(0, "awakening_system.npc_talk.choice.thanks", "goodbye", "CLOSE")
                     );
                     sendNode(player, npc.getId(), "series_npc", "blessing_given", "DEFAULT", speaker, text, choices);
                 } else {
-                    String text = "§eYa has recibido mi bendición el día de hoy, Cazador.§f\n\n"
-                            + "Regresa mañana cuando el flujo de maná cósmico se haya restablecido.";
+                    String text = "awakening_system.npc_talk.blessing_cooldown";
                     List<DialogueChoice> choices = List.of(
-                            new DialogueChoice(0, "« Volver", "root", ""),
-                            new DialogueChoice(1, "Entendido, hasta luego.", "goodbye", "CLOSE")
+                            new DialogueChoice(0, "awakening_system.npc_talk.choice.back", "root", ""),
+                            new DialogueChoice(1, "awakening_system.npc_talk.choice.bye", "goodbye", "CLOSE")
                     );
                     sendNode(player, npc.getId(), "series_npc", "blessing_cooldown", "DEFAULT", speaker, text, choices);
                 }
@@ -552,11 +553,9 @@ public final class NpcDialogueManager {
                     if (player.level() instanceof ServerLevel sl) {
                         sl.sendParticles(ParticleTypes.SMOKE, sne.getX(), sne.getY() + 1.0D, sne.getZ(), 25, 0.4D, 0.5D, 0.4D, 0.05D);
                     }
-                    String text = "§6§l★ ORDEN DE GUARDIA RECIBIDA ★§r\n\n"
-                            + profile.titleColor() + profile.displayName() + ":\n§f«Entendido. Montaré guardia en esta posición hasta que me des nuevas órdenes.»\n\n"
-                            + "§7El cazador permanecerá custodiando esta zona.";
+                    String text = "awakening_system.npc_talk.guard_set|" + profile.titleColor() + "|awakening_system.npc." + profile.id() + ".name";
                     List<DialogueChoice> choices = List.of(
-                            new DialogueChoice(0, "¡Excelente, mantén la vigilancia!", "goodbye", "CLOSE")
+                            new DialogueChoice(0, "awakening_system.npc_talk.choice.keep_watch", "goodbye", "CLOSE")
                     );
                     sendNode(player, npc.getId(), "series_npc", "companion_stayed", "DEFAULT", speaker, text, choices);
                 } else {
@@ -567,11 +566,9 @@ public final class NpcDialogueManager {
                     if (player.level() instanceof ServerLevel sl) {
                         sl.sendParticles(ParticleTypes.HAPPY_VILLAGER, sne.getX(), sne.getY() + 1.2D, sne.getZ(), 30, 0.5D, 0.6D, 0.5D, 0.1D);
                     }
-                    String text = "§a§l★ ORDEN DE COMBATE ASIGNADA ★§r\n\n"
-                            + profile.titleColor() + profile.displayName() + ":\n§f«A la orden, Líder. Te seguiré y lucharé a tu lado contra cualquier enemigo que amenace nuestra expedición.»\n\n"
-                            + "§7El cazador te seguirá, atacará a tus objetivos y te defenderá en combate.";
+                    String text = "awakening_system.npc_talk.follow_set|" + profile.titleColor() + "|awakening_system.npc." + profile.id() + ".name";
                     List<DialogueChoice> choices = List.of(
-                            new DialogueChoice(0, "¡En marcha!", "goodbye", "CLOSE")
+                            new DialogueChoice(0, "awakening_system.npc_talk.choice.lets_go", "goodbye", "CLOSE")
                     );
                     sendNode(player, npc.getId(), "series_npc", "companion_following", "DEFAULT", speaker, text, choices);
                 }
@@ -591,18 +588,13 @@ public final class NpcDialogueManager {
                 }
 
                 String reply = switch (profile) {
-                    case SUNG_JINWOO -> "«Un gremio con tu determinación... Muy bien. Acepto tu invitación. Las sombras respaldarán tu causa.»";
-                    case CHA_HAEIN -> "«Me parece una propuesta honorable. Mientras mantengamos la disciplina en las mazmorras, lucharé bajo tu estandarte.»";
-                    case KIM_DOKJA -> "«Interesante oferta. Un gremio fuerte nos dará una gran ventaja en los próximos escenarios del Star Stream. Cuenta conmigo.»";
-                    case YOO_JOONGHYUK -> "«Hmph... Más vale que no te conviertas en una carga en las regresiones futuras. Acepto por ahora.»";
-                    default -> "«Es un honor recibir tu invitación. Acepto unirme a tu gremio y lucharé por su prestigio.»";
+                    case SUNG_JINWOO, CHA_HAEIN, KIM_DOKJA, YOO_JOONGHYUK -> "awakening_system.npc_talk.invite_reply." + profile.id();
+                    default -> "awakening_system.npc_talk.invite_reply.default";
                 };
 
-                String text = "§a§l★ ¡INVITACIÓN DE GREMIO ACEPTADA! ★§r\n\n"
-                        + profile.titleColor() + profile.displayName() + ":\n§f" + reply + "\n\n"
-                        + "§7Ahora este cazador forma parte activa de tu gremio. Te seguirá automáticamente en combate o puedes ordenarle montar guardia cuando desees.";
+                String text = "awakening_system.npc_talk.invited|" + profile.titleColor() + "|awakening_system.npc." + profile.id() + ".name|" + reply;
                 List<DialogueChoice> choices = List.of(
-                        new DialogueChoice(0, "¡Bienvenido al Gremio!", "goodbye", "CLOSE")
+                        new DialogueChoice(0, "awakening_system.npc_talk.choice.welcome", "goodbye", "CLOSE")
                 );
                 sendNode(player, npc.getId(), "series_npc", "guild_recruited", "DEFAULT", speaker, text, choices);
                 return;
@@ -619,15 +611,13 @@ public final class NpcDialogueManager {
             // Caso: Consejos y sabiduría
             int loreChoiceIdx = (isGuildMember || canInviteGuild) ? 2 : 1;
             if (choiceId == loreChoiceIdx) {
-                StringBuilder sb = new StringBuilder("§6§l★ CONSEJOS Y EXPERIENCIA DE COMBATE ★§r\n\n");
-                for (String line : profile.dialogues()) {
-                    sb.append("§7• §f«").append(line).append("»\n");
-                }
+                String lines = "awakening_system.npc." + profile.id() + ".dialogue.";
+                String text = "awakening_system.npc_talk.lore|" + lines + "0|" + lines + "1|" + lines + "2|" + lines + "3";
                 List<DialogueChoice> choices = List.of(
-                        new DialogueChoice(0, "« Volver", "root", ""),
-                        new DialogueChoice(1, "Muchas gracias por tu sabiduría.", "goodbye", "CLOSE")
+                        new DialogueChoice(0, "awakening_system.npc_talk.choice.back", "root", ""),
+                        new DialogueChoice(1, "awakening_system.npc_talk.choice.thanks_wisdom", "goodbye", "CLOSE")
                 );
-                sendNode(player, npc.getId(), "series_npc", "lore_display", "DEFAULT", speaker, sb.toString(), choices);
+                sendNode(player, npc.getId(), "series_npc", "lore_display", "DEFAULT", speaker, text, choices);
                 return;
             }
 

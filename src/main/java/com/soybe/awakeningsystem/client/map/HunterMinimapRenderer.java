@@ -1185,7 +1185,7 @@ public final class HunterMinimapRenderer {
         }
         if (cachedRadarItems.isEmpty()) return;
 
-        float gameTime = mc.level.getGameTime() + mc.getTimer().getGameTimeDeltaPartialTick(true);
+        float gameTime = (float) Math.floorMod(mc.level.getGameTime(), 240000L) + mc.getTimer().getGameTimeDeltaPartialTick(true);
         float pulse = (float) (Math.sin(gameTime * 0.35F) * 0.5F + 0.5F);
 
         int count = 0;
@@ -1348,7 +1348,7 @@ public final class HunterMinimapRenderer {
         double pz = mc.player.getZ();
         float zoom = Math.max(0.5F, Math.min(3.0F, GuiConfig.minimapZoom));
 
-        float gameTime = mc.level.getGameTime() + mc.getTimer().getGameTimeDeltaPartialTick(true);
+        float gameTime = (float) Math.floorMod(mc.level.getGameTime(), 240000L) + mc.getTimer().getGameTimeDeltaPartialTick(true);
         float pulse = (float) (Math.sin(gameTime * 0.25F) * 0.5F + 0.5F);
 
         for (com.soybe.awakeningsystem.SyncRiftsPayload.RiftEntry rift : AwakeningSystemClient.ACTIVE_RIFTS) {

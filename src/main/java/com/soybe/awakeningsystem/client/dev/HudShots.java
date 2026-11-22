@@ -81,6 +81,43 @@ public final class HudShots {
             if (t == 100) mc.stop();
             return;
         }
+        if (System.getProperty("awakening.hudShots").equals("talk")) {
+            // a series NPC's dialogue (in the game's language), then the San Mortis can and its dance on command
+            var server = mc.getSingleplayerServer();
+            java.util.function.Consumer<java.util.function.Consumer<net.minecraft.server.level.ServerPlayer>> onServer = job -> {
+                if (server != null) server.execute(() -> job.accept(server.getPlayerList().getPlayer(mc.player.getUUID())));
+            };
+            if (t == 40) {
+                mc.getWindow().setWindowed(1280, 720);
+                AwakeningSystemMod.LOGGER.info("[HudShots] talk: language {}", mc.options.languageCode);
+            }
+            if (t == 50) onServer.accept(sp -> {
+                var lvl = sp.serverLevel();
+                var npc = com.soybe.awakeningsystem.entity.ModEntities.CHA_HAEIN.get().create(lvl);
+                npc.moveTo(sp.getX() + 2, sp.getY(), sp.getZ(), 0, 0);
+                lvl.addFreshEntity(npc);
+                routineNpc = npc.getId();
+                com.soybe.awakeningsystem.dialogue.NpcDialogueManager.startSeriesNpcDialogue(sp, npc);
+            });
+            if (t == 80) Screenshot.grab(mc.gameDirectory, "hs_talk.png", mc.getMainRenderTarget(), msg -> {});
+            if (t == 85) onServer.accept(sp -> com.soybe.awakeningsystem.dialogue.NpcDialogueManager.handleChoice(sp, routineNpc, "series_npc", "root", 1));   // no guild: blessing, advice, goodbye
+            if (t == 110) Screenshot.grab(mc.gameDirectory, "hs_talk_lore.png", mc.getMainRenderTarget(), msg -> {});
+            if (t == 115) {
+                mc.setScreen(null);
+                onServer.accept(sp -> {
+                    var src = sp.createCommandSourceStack().withPermission(4);
+                    server.getCommands().performPrefixedCommand(src, "sanmortis");
+                    server.getCommands().performPrefixedCommand(src, "sanmortis dance");
+                });
+            }
+            if (t == 200) onServer.accept(sp -> {
+                var jurels = sp.serverLevel().getEntitiesOfClass(com.soybe.awakeningsystem.mortis.WalkingJurelEntity.class, sp.getBoundingBox().inflate(80));
+                long dancing = jurels.stream().filter(com.soybe.awakeningsystem.mortis.WalkingJurelEntity::isDancing).count();
+                AwakeningSystemMod.LOGGER.info("[HudShots] talk: jurels {}, dancing {}", jurels.size(), dancing);
+            });
+            if (t == 210) mc.stop();
+            return;
+        }
         if (System.getProperty("awakening.hudShots").equals("routine")) {
             // a guild NPC on a two-stop routine, then a husk and a creeper next to it
             var server = mc.getSingleplayerServer();

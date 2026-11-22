@@ -70,7 +70,12 @@ public final class SanMortisCan {
             build(level, centre, facing.getOpposite());
             src.sendSuccess(() -> Component.translatable("awakening_system.sanmortis.built"), true);
             return 1;
-        }).then(Commands.literal("view").executes(ctx -> {
+        }).then(Commands.literal("dance").executes(ctx -> {
+            // the jurels of every can start their dance now (for trying it out; the usual one comes every 4 minutes)
+            WalkingJurelEntity.forcedStart = ctx.getSource().getLevel().getGameTime();
+            ctx.getSource().sendSuccess(() -> Component.translatable("awakening_system.sanmortis.dance"), true);
+            return 1;
+        })).then(Commands.literal("view").executes(ctx -> {
             // debug: builds one far away and writes pictures of it to tower_snapshot
             ServerLevel level = ctx.getSource().getServer().overworld();
             BlockPos centre = new BlockPos(5000, 0, 5000);
@@ -150,6 +155,38 @@ public final class SanMortisCan {
         level.setBlock(base.relative(back, R).above(HEIGHT + 1), Blocks.AIR.defaultBlockState(), 3);
         // a little stair landing at the top of the ladder
         level.setBlock(base.relative(back, R - 1).above(HEIGHT + 1), Blocks.AIR.defaultBlockState(), 3);
+        // where the edge of the circle steps diagonally, two bars only touch at a corner and can't join: a bar
+        // goes in the inner corner of each step, so the railing runs all the way round
+        int ry = base.getY() + HEIGHT + 1;
+        java.util.List<BlockPos> corners = new java.util.ArrayList<>();
+        for (int dx = -R; dx <= R; dx++)
+            for (int dz = -R; dz <= R; dz++) {
+                if (!level.getBlockState(new BlockPos(base.getX() + dx, ry, base.getZ() + dz)).is(Blocks.IRON_BARS)) continue;
+                for (int sx = -1; sx <= 1; sx += 2)
+                    for (int sz = -1; sz <= 1; sz += 2) {
+                        BlockPos diag = new BlockPos(base.getX() + dx + sx, ry, base.getZ() + dz + sz);
+                        if (!level.getBlockState(diag).is(Blocks.IRON_BARS)) continue;
+                        BlockPos a = new BlockPos(base.getX() + dx + sx, ry, base.getZ() + dz), b = new BlockPos(base.getX() + dx, ry, base.getZ() + dz + sz);
+                        if (level.getBlockState(a).is(Blocks.IRON_BARS) || level.getBlockState(b).is(Blocks.IRON_BARS)) continue;
+                        // the corner cell nearer the middle is on the lid
+                        BlockPos in = a.distSqr(base.atY(ry)) < b.distSqr(base.atY(ry)) ? a : b;
+                        corners.add(in);
+                    }
+            }
+        BlockPos gap1 = base.relative(back, R).above(HEIGHT + 1), gap2 = base.relative(back, R - 1).above(HEIGHT + 1);
+        for (BlockPos q : corners) {
+            if (q.distSqr(gap1) <= 2 || q.distSqr(gap2) <= 2) continue;   // keep the way in from the ladder open
+            if (level.getBlockState(q).isAir()) level.setBlock(q, Blocks.IRON_BARS.defaultBlockState(), 2);
+        }
+        // join the railing: each bar was placed before some of its neighbours, so it is set again with the
+        // shape its neighbours give it
+        for (int dx = -R; dx <= R; dx++)
+            for (int dz = -R; dz <= R; dz++) {
+                p.set(base.getX() + dx, base.getY() + HEIGHT + 1, base.getZ() + dz);
+                if (level.getBlockState(p).is(Blocks.IRON_BARS)) {
+                    level.setBlock(p, net.minecraft.world.level.block.Block.updateFromNeighbourShapes(Blocks.IRON_BARS.defaultBlockState(), level, p), 2);
+                }
+            }
 
         // the jurels that live on the roof
         BlockPos roof = base.above(HEIGHT + 1);
