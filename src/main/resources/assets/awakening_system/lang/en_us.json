@@ -1,4 +1,8 @@
 {
+    "awakening_system.sanmortis.none_near": "§cThere is no San Mortis can within 40 blocks.",
+    "awakening_system.sanmortis.removed": "§aThe nearest San Mortis can can be broken again.",
+    "item.awakening_system.cooked_jurel": "Cooked Jurel",
+    "item.awakening_system.jurel": "Jurel",
     "item.awakening_system.truth_kasakas_venom_fang.passive": "§7✦ Passive: §aTrue Neurotoxin. Hits have a 50% chance to inflict Poison III, Slowness III and Weakness II. Backstabs deal +50% damage.",
     "item.awakening_system.truth_kasakas_venom_fang.origin": "§8Solo Leveling: Arise",
     "item.awakening_system.truth_kasakas_venom_fang.lore": "§8§o\"The true, awakened form of Kasaka's fang, carrying a mutated serpent-dragon neurotoxin.\"",

@@ -408,6 +408,15 @@ public final class AethergardWindow {
             clear();
             return;
         }
+        // nothing to draw while the ring's opening is out of sight
+        {
+            Vec3 c0 = Vec3.atCenterOf(centre);
+            double r0 = GiantPortalRing.R;
+            boolean alongX = facing.getAxis() == Direction.Axis.X;
+            var openingBox = new net.minecraft.world.phys.AABB(c0.x - (alongX ? 2 : r0), c0.y - r0, c0.z - (alongX ? r0 : 2),
+                    c0.x + (alongX ? 2 : r0), c0.y + r0, c0.z + (alongX ? r0 : 2));
+            if (event.getFrustum() != null && !event.getFrustum().isVisible(openingBox)) return;
+        }
         var target = mc.getMainRenderTarget();
         if (!target.isStencilEnabled()) target.enableStencil();
 
@@ -469,15 +478,24 @@ public final class AethergardWindow {
                 rt.setupRenderState();
                 var shader = RenderSystem.getShader();
                 if (shader != null) {
+                    // as the game draws its own chunks: the shader set up once, then only each section's offset
+                    shader.setDefaultUniforms(VertexFormat.Mode.QUADS, modelView, projection, mc.getWindow());
+                    shader.apply();
+                    var offset = shader.CHUNK_OFFSET;
                     for (int s : visible) {
                         VertexBuffer vb = meshes[s][side].get(rt);
                         if (vb == null) continue;
                         int cx = s % nx, cz = (s / nx) % nz, cy = s / (nx * nz);
-                        Matrix4f mv = new Matrix4f(modelView).translate((float) (origin.getX() + cx * 16 - cam.x),
-                                (float) (origin.getY() + cy * 16 - cam.y), (float) (origin.getZ() + cz * 16 - cam.z));
+                        if (offset != null) {
+                            offset.set((float) (origin.getX() + cx * 16 - cam.x), (float) (origin.getY() + cy * 16 - cam.y),
+                                    (float) (origin.getZ() + cz * 16 - cam.z));
+                            offset.upload();
+                        }
                         vb.bind();
-                        vb.drawWithShader(mv, projection, shader);
+                        vb.draw();
                     }
+                    if (offset != null) offset.set(0.0F, 0.0F, 0.0F);
+                    shader.clear();
                     VertexBuffer.unbind();
                 }
                 rt.clearRenderState();

@@ -400,7 +400,7 @@ public final class TeyvatAbyssPortalBuilder {
                 BlockPos stairPos = baseCenterPos.relative(rightDir, dx).above(stepY).relative(backDir, dz);
                 level.setBlock(stairPos, Blocks.SANDSTONE_STAIRS.defaultBlockState()
                         .setValue(StairBlock.HALF, Half.BOTTOM)
-                        .setValue(StairBlock.FACING, facing), 3);
+                        .setValue(StairBlock.FACING, backDir), 3);   // the high side towards the dais, so it can be climbed
 
                 for (int y = stepY - 1; y >= 0; y--) {
                     BlockPos under = baseCenterPos.relative(rightDir, dx).above(y).relative(backDir, dz);
@@ -416,7 +416,7 @@ public final class TeyvatAbyssPortalBuilder {
                 BlockPos stairPos = baseCenterPos.relative(rightDir, dx).above(stepY).relative(backDir, dz);
                 level.setBlock(stairPos, Blocks.SANDSTONE_STAIRS.defaultBlockState()
                         .setValue(StairBlock.HALF, Half.BOTTOM)
-                        .setValue(StairBlock.FACING, backDir), 3);
+                        .setValue(StairBlock.FACING, facing), 3);   // the high side towards the dais
 
                 for (int y = stepY - 1; y >= 0; y--) {
                     BlockPos under = baseCenterPos.relative(rightDir, dx).above(y).relative(backDir, dz);

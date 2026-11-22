@@ -721,6 +721,20 @@ public final class TeyvatRacetrackBuilder {
                 }
             }
         }
+        // every fence was placed before some of its neighbours: each is set again with the shape its neighbours
+        // give it, so the white rails join all the way round
+        for (int x = minX; x <= maxX; x++)
+            for (int z = minZ; z <= maxZ; z++)
+                for (int y = minY; y <= maxY; y++) {
+                    BlockPos p = new BlockPos(x, y, z);
+                    BlockState st = level.getBlockState(p);
+                    if (st.getBlock() instanceof net.minecraft.world.level.block.FenceBlock
+                            || st.getBlock() instanceof net.minecraft.world.level.block.IronBarsBlock
+                            || st.getBlock() instanceof net.minecraft.world.level.block.WallBlock) {
+                        BlockState joined = net.minecraft.world.level.block.Block.updateFromNeighbourShapes(st, level, p);
+                        if (joined != st) level.setBlock(p, joined, 2);
+                    }
+                }
         AwakeningSystemMod.LOGGER.info("[Hipódromo] ¡Materiales actualizados en ({}, {}, {})! Vallas: {}, Césped: {}",
                 origin.getX(), origin.getY(), origin.getZ(), wallsCount, turfCount);
         return new int[]{wallsCount, turfCount};

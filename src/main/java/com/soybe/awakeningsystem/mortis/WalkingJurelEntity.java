@@ -26,9 +26,9 @@ import net.minecraft.world.level.Level;
 import net.minecraft.world.phys.Vec3;
 
 /**
- * A jurel (horse mackerel) on two legs. They live on top of a San Mortis can and, every few minutes and
- * without any warning, all of them gather in a ring on the roof and dance round it: hopping, spinning and
- * kicking their legs, then wander off again as if nothing happened.
+ * A jurel (horse mackerel) on two legs. They live round the foot of a San Mortis can and, every few minutes and
+ * without any warning, all of them gather in a ring on the ground and dance round the can: hopping, spinning
+ * and kicking their legs, then wander off again as if nothing happened. They drop a jurel when they die.
  */
 public class WalkingJurelEntity extends PathfinderMob {
     private static final EntityDataAccessor<Boolean> DANCING = SynchedEntityData.defineId(WalkingJurelEntity.class, EntityDataSerializers.BOOLEAN);
@@ -42,6 +42,8 @@ public class WalkingJurelEntity extends PathfinderMob {
     private static final java.util.Map<Long, Long> MUSIC_STARTED = new java.util.concurrent.ConcurrentHashMap<>();
 
     private BlockPos home;
+    /** When this can's dances began to count (game time): the first comes two minutes after the can is built. */
+    private long cycleStart = Long.MIN_VALUE;
 
     public WalkingJurelEntity(EntityType<? extends PathfinderMob> type, Level level) {
         super(type, level);
@@ -67,6 +69,12 @@ public class WalkingJurelEntity extends PathfinderMob {
 
     public void setHome(BlockPos home) {
         this.home = home;
+        if (home != null) this.restrictTo(home, SanMortisCan.R + 12);   // they wander round their can, not off into the world
+    }
+
+    /** The can's dance clock: all the jurels of one can are given the same start, so they dance together. */
+    public void setCycleStart(long start) {
+        this.cycleStart = start;
     }
 
     @Override
@@ -90,9 +98,10 @@ public class WalkingJurelEntity extends PathfinderMob {
 
     private boolean ritualTime() {
         if (home == null) return false;
-        if (forced(this.level().getGameTime())) return true;
-        long phase = Math.floorMod(home.asLong() * 31L, CYCLE);
-        return Math.floorMod(this.level().getGameTime() + phase, CYCLE) < RITUAL;
+        long now = this.level().getGameTime();
+        if (forced(now)) return true;
+        if (cycleStart == Long.MIN_VALUE) cycleStart = now - Math.floorMod(home.asLong() * 31L, CYCLE);   // jurels from before the clock
+        return now >= cycleStart && Math.floorMod(now - cycleStart, CYCLE) < RITUAL;
     }
 
     @Override
@@ -105,8 +114,7 @@ public class WalkingJurelEntity extends PathfinderMob {
 
         // the music, once per ritual, from the middle of the can's roof
         long now = this.level().getGameTime();
-        long phase = Math.floorMod(home.asLong() * 31L, CYCLE);
-        long start = forced(now) ? forcedStart : now - Math.floorMod(now + phase, CYCLE);
+        long start = forced(now) ? forcedStart : now - Math.floorMod(now - cycleStart, CYCLE);
         Long played = MUSIC_STARTED.get(home.asLong());
         if (played == null || played != start) {
             MUSIC_STARTED.put(home.asLong(), start);
@@ -116,11 +124,17 @@ public class WalkingJurelEntity extends PathfinderMob {
             }
         }
 
-        // a place on the ring, turning round the centre of the can's roof
+        // a place on the ring on the ground, turning round the can (home is the middle of its foot)
         long t = this.level().getGameTime();
         double slot = (this.getUUID().getLeastSignificantBits() & 0xFFFF) / 65536.0 * Math.PI * 2;
-        double ang = slot + t * 0.035;
-        Vec3 spot = new Vec3(home.getX() + 0.5 + Math.cos(ang) * 3.5, home.getY(), home.getZ() + 0.5 + Math.sin(ang) * 3.5);
+        double ang = slot + t * 0.02;
+        double ringR = SanMortisCan.R + 4.0;
+        Vec3 spot = new Vec3(home.getX() + 0.5 + Math.cos(ang) * ringR, this.getY(), home.getZ() + 0.5 + Math.sin(ang) * ringR);
+        // one that wandered off (or still stands on the roof) joins the ring at once
+        if (this.position().distanceToSqr(spot) > 100) {
+            BlockPos ground = this.level().getHeightmapPos(net.minecraft.world.level.levelgen.Heightmap.Types.MOTION_BLOCKING_NO_LEAVES, BlockPos.containing(spot));
+            this.teleportTo(spot.x, ground.getY(), spot.z);
+        }
         this.getNavigation().stop();
         Vec3 to = spot.subtract(this.position());
         Vec3 move = new Vec3(to.x, 0, to.z);
@@ -141,12 +155,14 @@ public class WalkingJurelEntity extends PathfinderMob {
     public void addAdditionalSaveData(CompoundTag tag) {
         super.addAdditionalSaveData(tag);
         if (home != null) tag.put("Home", NbtUtils.writeBlockPos(home));
+        if (cycleStart != Long.MIN_VALUE) tag.putLong("CycleStart", cycleStart);
     }
 
     @Override
     public void readAdditionalSaveData(CompoundTag tag) {
         super.readAdditionalSaveData(tag);
-        home = NbtUtils.readBlockPos(tag, "Home").orElse(null);
+        setHome(NbtUtils.readBlockPos(tag, "Home").orElse(null));
+        if (tag.contains("CycleStart")) cycleStart = tag.getLong("CycleStart");
     }
 
     /** The attack: a flying kick, with a slap of the tail on landing. */

@@ -22,9 +22,8 @@ import java.util.Set;
 
 /**
  * The giant stone ring: the gate to Aethelgard, standing in Teyvat. About 60 blocks across and half sunk in the
- * ground, pale stone overgrown with moss and vines, with old pillars rising from the ground on both sides. It
- * comes in two states: ruined (broken arcs, thick moss, pillars broken off) and repaired (whole, with a band of
- * glowing runes round its inner edge and crowned pillars). Also placed with {@code /giantportal ruined|repaired}.
+ * ground, pale stone overgrown with moss and vines. It comes in two states: ruined (broken arcs, thick moss,
+ * fallen pieces lying round it) and repaired (whole, with a band of glowing runes round its inner edge). Also placed with {@code /giantportal ruined|repaired}.
  */
 @EventBusSubscriber(modid = AwakeningSystemMod.MOD_ID)
 public final class GiantPortalRing {
@@ -153,8 +152,8 @@ public final class GiantPortalRing {
                     set(p, pick(u, v, w, d));
                 }
             }
-        pillars();
         if (repaired) runes();
+        else debris();
         overgrow();
     }
 
@@ -167,38 +166,23 @@ public final class GiantPortalRing {
         return Blocks.CALCITE.defaultBlockState();
     }
 
-    /**
-     * Old pillars rising out of the ground on both sides of the ring, two in front and two behind: whole and
-     * crowned in the repaired ring, broken off at different heights in the ruin. Their feet go down into the
-     * ground, so they look sunk with the ring, not set on top of it.
-     */
-    private void pillars() {
-        int[][] spots = {{-(R + 5), DEPTH / 2 + 4}, {R + 5, DEPTH / 2 + 4}, {-(R + 5), -(DEPTH / 2 + 4)}, {R + 5, -(DEPTH / 2 + 4)}};
-        for (int[] s : spots) {
-            BlockPos foot = ground(level, at(s[0], 0, s[1]));
-            int height = repaired ? 16 : 4 + rand.nextInt(9);
-            for (int y = -6; y < height; y++)
-                for (int x = -1; x <= 1; x++)
-                    for (int z = -1; z <= 1; z++) {
-                        boolean corner = x != 0 && z != 0;
-                        // the ruin's tops are ragged: corners give out first
-                        if (!repaired && y >= height - 2 && (corner || rand.nextInt(100) < 40)) continue;
-                        BlockState st = corner ? Blocks.POLISHED_DIORITE.defaultBlockState()
-                                : (y % 5 == 0 ? Blocks.CHISELED_STONE_BRICKS.defaultBlockState() : Blocks.CALCITE.defaultBlockState());
-                        if (!repaired && y >= 0 && rand.nextInt(100) < 14) st = Blocks.MOSSY_STONE_BRICKS.defaultBlockState();
-                        BlockPos p = foot.offset(x, y, z);
-                        ring.add(p.asLong());
-                        set(p, st);
+    /** The ruin's broken pieces, lying half sunk in the ground in front of and behind it. */
+    private void debris() {
+        for (int i = 0; i < 11; i++) {
+            int u = rand.nextInt(R * 2 + 1) - R;
+            int w = (rand.nextBoolean() ? 1 : -1) * (DEPTH + 2 + rand.nextInt(12));
+            BlockPos ground = ground(level, at(u, 0, w));
+            int sx = 2 + rand.nextInt(4), sy = 2 + rand.nextInt(3), sz = 2 + rand.nextInt(3);
+            for (int x = 0; x < sx; x++)
+                for (int y = 0; y < sy; y++)
+                    for (int z = 0; z < sz; z++) {
+                        if (rand.nextInt(100) < 15) continue;
+                        // the lowest layer goes into the ground, so the piece looks fallen, not set down
+                        BlockPos p = ground.offset(x, y - 2, z);
+                        set(p, y == sy - 1 && rand.nextBoolean() ? Blocks.MOSS_BLOCK.defaultBlockState() : pick(0, 0, 0, 0));
                     }
-            if (repaired) {
-                BlockPos top = foot.above(height);
-                for (int x = -1; x <= 1; x++)
-                    for (int z = -1; z <= 1; z++) set(top.offset(x, 0, z), Blocks.CHISELED_QUARTZ_BLOCK.defaultBlockState());
-                set(top.above(), Blocks.SEA_LANTERN.defaultBlockState());
-            }
         }
     }
-
     /** The repaired ring: a band of glowing runes round its inner edge, on both faces. */
     private void runes() {
         for (int a = 0; a < 360; a += 6) {
@@ -292,8 +276,16 @@ public final class GiantPortalRing {
         ServerLevel level = src.getLevel();
         Direction facing = src.getEntity() != null ? src.getEntity().getDirection() : Direction.NORTH;
         // in front of the player, far enough to see it whole, its foot on the ground
-        BlockPos at = ground(level, BlockPos.containing(src.getPosition()).relative(facing, R + 20));
-        build(level, at, facing, repaired);
+        BlockPos column = BlockPos.containing(src.getPosition()).relative(facing, R + 20);
+        BlockPos at;
+        if (level.dimension().equals(com.soybe.awakeningsystem.TeyvatWorldManager.TEYVAT_WORLD)) {
+            // in Teyvat it is the real gate: the world's ring moves here, its altar on the player's side
+            at = GiantRingSite.placeHere(level, column, facing.getOpposite(), repaired);
+        } else {
+            at = siteGround(level, column, facing);
+            clearSite(level, at, facing);
+            build(level, at, facing, repaired);
+        }
         src.sendSuccess(() -> Component.translatable(repaired ? "awakening_system.giant_portal.built_repaired" : "awakening_system.giant_portal.built_ruined",
                 at.getX(), at.getY(), at.getZ()), true);
         return 1;

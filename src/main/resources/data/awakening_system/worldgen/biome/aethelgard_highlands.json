@@ -169,7 +169,8 @@
       "minecraft:spring_lava"
     ],
     [
-      "minecraft:trees_windswept_hills",
+      "minecraft:trees_windswept_forest",
+      "minecraft:trees_taiga",
       "minecraft:patch_grass_plain"
     ],
     [

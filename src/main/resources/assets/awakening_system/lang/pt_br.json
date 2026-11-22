@@ -1,4 +1,8 @@
 {
+    "awakening_system.sanmortis.none_near": "§cNão há nenhuma lata de San Mortis a menos de 40 blocos.",
+    "awakening_system.sanmortis.removed": "§aA lata de San Mortis mais próxima já pode ser quebrada.",
+    "item.awakening_system.cooked_jurel": "Carapau cozido",
+    "item.awakening_system.jurel": "Carapau",
     "item.awakening_system.truth_kasakas_venom_fang.passive": "§7✦ Passiva: §aNeurotoxina Verdadeira. Golpes têm 50% de chance de causar Veneno III, Lentidão III e Fraqueza II. Ataques pelas costas causam +50% de dano.",
     "item.awakening_system.truth_kasakas_venom_fang.origin": "§8Solo Leveling: Arise",
     "item.awakening_system.truth_kasakas_venom_fang.lore": "§8§o\"A forma verdadeira e despertada da presa de Kasaka, carregada com uma neurotoxina mutada de dragão-serpente.\"",

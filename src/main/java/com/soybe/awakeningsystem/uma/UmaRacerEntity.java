@@ -109,7 +109,8 @@ public class UmaRacerEntity extends PathfinderMob {
                 .add(Attributes.MAX_HEALTH, 100.0)
                 .add(Attributes.MOVEMENT_SPEED, 0.38)
                 .add(Attributes.KNOCKBACK_RESISTANCE, 1.0)
-                .add(Attributes.FOLLOW_RANGE, 64.0);
+                .add(Attributes.FOLLOW_RANGE, 64.0)
+                .add(Attributes.STEP_HEIGHT, 1.0);   // over the curbs at the edge of the track, never caught on them
     }
 
     @Override
@@ -392,13 +393,14 @@ public class UmaRacerEntity extends PathfinderMob {
                 (this.getZ() - lastTrackZ) * (this.getZ() - lastTrackZ);
         if (movedDistSq < 0.08) {
             this.stuckTicks++;
-            if (this.stuckTicks > 80) {
+            // caught on a curb or a rail: after a second she is set free a little further on, a step up
+            if (this.stuckTicks > 20) {
                 this.stuckTicks = 0;
                 double tdx = targetWaypoint.x - this.getX();
                 double tdz = targetWaypoint.z - this.getZ();
                 double tdist = Math.sqrt(tdx * tdx + tdz * tdz);
                 if (tdist > 0.1) {
-                    this.teleportTo(this.getX() + (tdx / tdist) * 1.5, this.getY(), this.getZ() + (tdz / tdist) * 1.5);
+                    this.teleportTo(this.getX() + (tdx / tdist) * 2.5, Math.max(this.getY(), targetWaypoint.y) + 0.6, this.getZ() + (tdz / tdist) * 2.5);
                     this.setDeltaMovement((tdx / tdist) * 0.4, 0.1, (tdz / tdist) * 0.4);
                 }
             }

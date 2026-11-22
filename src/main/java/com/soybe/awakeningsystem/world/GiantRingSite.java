@@ -44,6 +44,8 @@ public final class GiantRingSite {
             {"minecraft:calcite", "4096"}, {"minecraft:nether_star", "8"}, {"minecraft:echo_shard", "128"},
             {"minecraft:heart_of_the_sea", "8"}, {"minecraft:dragon_breath", "64"}, {"minecraft:totem_of_undying", "16"}};
     private static final int DISTANCE = 700, SIGHT = 220;
+    /** Whether the ring rises by itself in new worlds. Off until Aethelgard is finished: /giantportal places it. */
+    static final boolean NATURAL = false;
 
     /** Where the ring is and in what state, kept with Teyvat's data. */
     public static final class Data extends SavedData {
@@ -120,6 +122,8 @@ public final class GiantRingSite {
         ServerLevel teyvat = event.getServer().getLevel(TeyvatWorldManager.TEYVAT_WORLD);
         if (teyvat == null || teyvat.players().isEmpty()) return;
         Data d = site(teyvat);
+        // the gate to Aethelgard is not finished: for now no ring rises by itself, only with /giantportal
+        if (!NATURAL && !d.built) return;
         if (d.built && d.onSurface && d.style >= STYLE) return;
         for (ServerPlayer p : teyvat.players()) {
             double dx = p.getX() - d.base.getX(), dz = p.getZ() - d.base.getZ();
@@ -135,8 +139,8 @@ public final class GiantRingSite {
         }
     }
 
-    /** The ring's current look: 2 = half sunk in the ground with pillars, no plinth or fallen pieces. */
-    static final int STYLE = 2;
+    /** The ring's current look: 3 = half sunk in the ground, fallen pieces round the ruin, no plinth or pillars. */
+    static final int STYLE = 3;
 
     /** Rebuilds the ring where it stands, in the current look, clearing what the older one left. */
     private static void rebuild(ServerLevel teyvat, Data d) {
@@ -261,5 +265,20 @@ public final class GiantRingSite {
         Data d = site(teyvat);
         return Component.translatable(d.repaired ? "awakening_system.giant_portal.locate_repaired" : d.built
                 ? "awakening_system.giant_portal.locate_ruined" : "awakening_system.giant_portal.locate_unbuilt", d.base.getX(), d.base.getZ());
+    }
+    /**
+     * For /giantportal ruined|repaired in Teyvat: the world's ring moves here, standing on the ground in front of
+     * the player and facing them, with its altar; a ruin is repaired at the altar as usual, and a repaired ring
+     * is the way to Aethelgard. (Elsewhere the command only builds the stone.)
+     */
+    public static BlockPos placeHere(ServerLevel teyvat, BlockPos column, Direction facing, boolean repaired) {
+        Data d = data(teyvat);
+        if (d.built && d.base != null) GiantPortalRing.removeOld(teyvat, d.base, d.facing);
+        d.base = column;
+        d.facing = facing;
+        d.repaired = repaired;
+        d.built = false;
+        raise(teyvat, d);
+        return d.base;
     }
 }

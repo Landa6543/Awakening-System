@@ -38,24 +38,24 @@ public class TeyvatRacetrackManager {
     public static final BlockPos TRACK_CENTER = new BlockPos(180, 68, 260);
 
     private static final List<Vec3> BASE_WAYPOINTS = List.of(
-            new Vec3(108.5, 68, 231.5),
-            new Vec3(135.5, 68, 231.5),
-            new Vec3(165.5, 68, 231.5),
-            new Vec3(195.5, 68, 231.5),
-            new Vec3(225.5, 68, 231.5),
-            new Vec3(245.5, 68, 246.5),
-            new Vec3(255.5, 68, 260.5),
-            new Vec3(245.5, 68, 275.5),
-            new Vec3(225.5, 68, 285.5),
-            new Vec3(195.5, 68, 285.5),
-            new Vec3(165.5, 68, 285.5),
-            new Vec3(135.5, 68, 285.5),
-            new Vec3(115.5, 68, 275.5),
-            new Vec3(105.5, 68, 260.5),
-            new Vec3(112.5, 68, 246.5),
-            new Vec3(120.5, 68, 231.5),
-            new Vec3(135.5, 68, 231.5),
-            new Vec3(148.5, 68, 231.5)
+            new Vec3(108.5, 67, 232.5),
+            new Vec3(135.5, 67, 232.5),
+            new Vec3(165.5, 67, 232.5),
+            new Vec3(195.5, 67, 232.5),
+            new Vec3(225.5, 67, 232.5),
+            new Vec3(245.5, 67, 246.5),
+            new Vec3(255.5, 67, 260.5),
+            new Vec3(245.5, 67, 275.5),
+            new Vec3(225.5, 67, 285.5),
+            new Vec3(195.5, 67, 285.5),
+            new Vec3(165.5, 67, 285.5),
+            new Vec3(135.5, 67, 285.5),
+            new Vec3(115.5, 67, 275.5),
+            new Vec3(105.5, 67, 260.5),
+            new Vec3(112.5, 67, 246.5),
+            new Vec3(120.5, 67, 232.5),
+            new Vec3(135.5, 67, 232.5),
+            new Vec3(148.5, 67, 232.5)
     );
 
     private final ServerLevel level;
@@ -145,7 +145,7 @@ public class TeyvatRacetrackManager {
         this.activeBets.clear();
 
         int gx = getGateX();
-        BlockPos gatePos = new BlockPos(gx, 68, 231);
+        BlockPos gatePos = new BlockPos(gx, GATE_Y, GATE_Z);
         if (this.level.hasChunkAt(gatePos)) {
             this.level.getChunk(gatePos);
         }
@@ -180,11 +180,12 @@ public class TeyvatRacetrackManager {
         lastRaceRunners.clear();
         lastRaceRunners.addAll(currentParticipants);
 
-        double stallX = gx - 0.5D;
+        // inside the stalls, between the back truss and the gate
+        double stallX = gx - 1.0D;
         for (int lane = 0; lane < currentParticipants.size(); lane++) {
             UmaProfile profile = currentParticipants.get(lane);
-            double stallY = 68.0D;
-            double stallZ = (231 - 4 + lane) + 0.5D;
+            double stallY = GATE_Y;
+            double stallZ = (GATE_Z - 4 + lane) + 0.5D;
             if (ModEntities.UMA_RACER != null) {
                 UmaRacerEntity runner = ModEntities.UMA_RACER.get().create(this.level);
                 if (runner != null) {
@@ -384,17 +385,23 @@ public class TeyvatRacetrackManager {
         }
     }
 
+    /**
+     * Where the built track really has its starting gate and finish line (uma_racetrack.nbt placed at
+     * TRACK_CENTER - (95, 3, 50)): the gates stand at local (12, 2, 18..26), the finish line at local x 56, y 1.
+     * The numbers used before (gate x 104 y 68, finish looked for at y 67) were off, so the racers waited
+     * outside the gates and the race was won past the line.
+     */
+    public static final int GATE_X = TRACK_CENTER.getX() - 95 + 12, GATE_Y = TRACK_CENTER.getY() - 3 + 2,
+            GATE_Z = TRACK_CENTER.getZ() - 50 + 22, FINISH_Y = TRACK_CENTER.getY() - 3 + 1;
+
     public int getGateX() {
-        if (this.level != null && this.level.getBlockState(new BlockPos(104, 68, 231)).getBlock() instanceof com.soybe.awakeningsystem.block.StartingGateBlock) {
-            return 104;
-        }
-        return 104;
+        return GATE_X;
     }
 
     public double getFinishX() {
         if (this.level != null) {
             for (int x = 140; x <= 160; x++) {
-                BlockState state = this.level.getBlockState(new BlockPos(x, 67, 231));
+                BlockState state = this.level.getBlockState(new BlockPos(x, FINISH_Y, GATE_Z));
                 if (state.is(Blocks.BLACK_CONCRETE) ||
                     state.is(Blocks.SMOOTH_QUARTZ) ||
                     state.is(Blocks.WHITE_CONCRETE)) {
@@ -407,7 +414,7 @@ public class TeyvatRacetrackManager {
 
     public void openStartingGates(boolean open) {
         if (this.level == null) return;
-        int gx = getGateX(), gy = 68, gz = 231;
+        int gx = getGateX(), gy = GATE_Y, gz = GATE_Z;
         for (int lane = 0; lane < 9; lane++) {
             BlockPos pos = new BlockPos(gx, gy, gz - 4 + lane);
             BlockState state = this.level.getBlockState(pos);

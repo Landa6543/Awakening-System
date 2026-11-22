@@ -221,6 +221,19 @@ public final class BossCompatibilityManager {
     /**
      * Determina si una entidad viva es considerada un Jefe por el Sistema.
      */
+    /**
+     * True if one of the words is a whole word of the name (words split at "_", "/", "." and capital letters),
+     * or, for a word that is itself two words ("demon_king"), appears as such.
+     */
+    public static boolean hasWord(String name, java.util.Collection<String> words) {
+        String spaced = name.replaceAll("([a-z0-9])([A-Z])", "$1_$2").toLowerCase(java.util.Locale.ROOT);
+        Set<String> parts = new HashSet<>(List.of(spaced.split("[_/.\\-]+")));
+        for (String w : words) {
+            if (w.contains("_") ? ("_" + spaced + "_").contains("_" + w + "_") : parts.contains(w)) return true;
+        }
+        return false;
+    }
+
     public static boolean isBoss(LivingEntity entity) {
         if (entity == null) return false;
         if (entity instanceof com.soybe.awakeningsystem.entity.SeriesNpcEntity
@@ -299,11 +312,8 @@ public final class BossCompatibilityManager {
                 return false;
             }
 
-            for (String kw : KEYWORDS) {
-                if (path.contains(kw)) {
-                    return true;
-                }
-            }
+            // whole words of the name only: "hilichurl" holds "lich" and "mandrake" holds "drake", neither is a boss
+            if (hasWord(path, KEYWORDS)) return true;
         }
 
         return false;

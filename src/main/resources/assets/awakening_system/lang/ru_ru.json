@@ -1,4 +1,8 @@
 {
+    "awakening_system.sanmortis.none_near": "§cВ радиусе 40 блоков нет банки San Mortis.",
+    "awakening_system.sanmortis.removed": "§aБлижайшую банку San Mortis снова можно сломать.",
+    "item.awakening_system.cooked_jurel": "Жареная ставрида",
+    "item.awakening_system.jurel": "Ставрида",
     "item.awakening_system.truth_kasakas_venom_fang.passive": "§7✦ Пассивно: §aИстинный нейротоксин. С шансом 50% удар накладывает Отравление III, Замедление III и Слабость II. Удар в спину наносит +50% урона.",
     "item.awakening_system.truth_kasakas_venom_fang.origin": "§8Solo Leveling: Arise",
     "item.awakening_system.truth_kasakas_venom_fang.lore": "§8§o\"Истинная, пробуждённая форма клыка Касаки с мутировавшим нейротоксином змея-дракона.\"",

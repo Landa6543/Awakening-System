@@ -66,11 +66,27 @@ public final class SanMortisCan {
             BlockPos at = BlockPos.containing(src.getPosition());
             Direction facing = src.getEntity() != null ? src.getEntity().getDirection() : Direction.NORTH;
             BlockPos centre = at.relative(facing, R + 4);
-            centre = level.getHeightmapPos(Heightmap.Types.WORLD_SURFACE_WG, centre);
+            level.getChunk(centre);
+            centre = level.getHeightmapPos(Heightmap.Types.MOTION_BLOCKING_NO_LEAVES, centre);
             build(level, centre, facing.getOpposite());
             src.sendSuccess(() -> Component.translatable("awakening_system.sanmortis.built"), true);
             return 1;
-        }).then(Commands.literal("dance").executes(ctx -> {
+        }).then(Commands.literal("remove").executes(ctx -> {
+            // frees the nearest can (within 40 blocks) so it can be broken again
+            ServerLevel level = ctx.getSource().getLevel();
+            Cans cans = Cans.of(level);
+            BlockPos at = BlockPos.containing(ctx.getSource().getPosition());
+            Long nearest = null;
+            for (long l : cans.bases) if (BlockPos.of(l).distSqr(at) < 40 * 40 && (nearest == null || BlockPos.of(l).distSqr(at) < BlockPos.of(nearest).distSqr(at))) nearest = l;
+            if (nearest == null) {
+                ctx.getSource().sendFailure(Component.translatable("awakening_system.sanmortis.none_near"));
+                return 0;
+            }
+            cans.bases.remove(nearest);
+            cans.setDirty();
+            ctx.getSource().sendSuccess(() -> Component.translatable("awakening_system.sanmortis.removed"), true);
+            return 1;
+        })).then(Commands.literal("dance").executes(ctx -> {
             // the jurels of every can start their dance now (for trying it out; the usual one comes every 4 minutes)
             WalkingJurelEntity.forcedStart = ctx.getSource().getLevel().getGameTime();
             ctx.getSource().sendSuccess(() -> Component.translatable("awakening_system.sanmortis.dance"), true);
@@ -95,6 +111,7 @@ public final class SanMortisCan {
 
     /** Builds the tin standing on {@code base}, its label facing {@code front}, and moves the jurels in. */
     public static void build(ServerLevel level, BlockPos base, Direction front) {
+        Cans.of(level).add(base);
         double frontAngle = Math.atan2(front.getStepZ(), front.getStepX());
         BlockPos.MutableBlockPos p = new BlockPos.MutableBlockPos();
         // a foundation so it never floats
@@ -188,16 +205,19 @@ public final class SanMortisCan {
                 }
             }
 
-        // the jurels that live on the roof
-        BlockPos roof = base.above(HEIGHT + 1);
+        // the jurels that live round its foot; their first dance comes two minutes from now
+        long firstDance = level.getGameTime() + 2400;
         for (int i = 0; i < 7; i++) {
             WalkingJurelEntity j = MortisContent.WALKING_JUREL.create(level);
             if (j == null) continue;
             double a = i * Math.PI * 2 / 7;
-            j.moveTo(roof.getX() + 0.5 + Math.cos(a) * 3, roof.getY(), roof.getZ() + 0.5 + Math.sin(a) * 3, (float) Math.toDegrees(a), 0);
-            j.setHome(roof);
+            BlockPos spot = level.getHeightmapPos(Heightmap.Types.MOTION_BLOCKING_NO_LEAVES,
+                    BlockPos.containing(base.getX() + 0.5 + Math.cos(a) * (R + 4), 0, base.getZ() + 0.5 + Math.sin(a) * (R + 4)));
+            j.moveTo(spot.getX() + 0.5, spot.getY(), spot.getZ() + 0.5, (float) Math.toDegrees(a), 0);
+            j.setHome(base);
+            j.setCycleStart(firstDance);
             j.setPersistenceRequired();
-            j.finalizeSpawn(level, level.getCurrentDifficultyAt(roof), MobSpawnType.STRUCTURE, null);
+            j.finalizeSpawn(level, level.getCurrentDifficultyAt(spot), MobSpawnType.STRUCTURE, null);
             level.addFreshEntity(j);
         }
     }
@@ -277,5 +297,53 @@ public final class SanMortisCan {
             }
         }
         return Blocks.YELLOW_CONCRETE.defaultBlockState();
+    }
+    // ---- no one can break a can: not by hand, not with explosions (/sanmortis remove frees the nearest one)
+
+    /** The cans standing in a level, by the middle of their foot. */
+    public static final class Cans extends net.minecraft.world.level.saveddata.SavedData {
+        final java.util.Set<Long> bases = new java.util.HashSet<>();
+
+        static Cans of(ServerLevel level) {
+            return level.getDataStorage().computeIfAbsent(new Factory<>(Cans::new, Cans::load, null), "awakening_san_mortis_cans");
+        }
+
+        static Cans load(net.minecraft.nbt.CompoundTag tag, net.minecraft.core.HolderLookup.Provider r) {
+            Cans c = new Cans();
+            for (long l : tag.getLongArray("Bases")) c.bases.add(l);
+            return c;
+        }
+
+        @Override
+        public net.minecraft.nbt.CompoundTag save(net.minecraft.nbt.CompoundTag tag, net.minecraft.core.HolderLookup.Provider r) {
+            tag.putLongArray("Bases", bases.stream().mapToLong(Long::longValue).toArray());
+            return tag;
+        }
+
+        void add(BlockPos base) {
+            if (bases.add(base.asLong())) setDirty();
+        }
+
+        /** Whether a block is part of a can (its wall, inside, lid, railing, ladder or foundation). */
+        boolean protects(BlockPos p) {
+            for (long l : bases) {
+                BlockPos b = BlockPos.of(l);
+                int dx = p.getX() - b.getX(), dz = p.getZ() - b.getZ(), dy = p.getY() - b.getY();
+                if (dy >= -6 && dy <= HEIGHT + 1 && dx * dx + dz * dz <= (R + 1.6) * (R + 1.6)) return true;
+            }
+            return false;
+        }
+    }
+
+    @SubscribeEvent
+    public static void onBreak(net.neoforged.neoforge.event.level.BlockEvent.BreakEvent event) {
+        if (event.getLevel() instanceof ServerLevel level && Cans.of(level).protects(event.getPos())) event.setCanceled(true);
+    }
+
+    @SubscribeEvent
+    public static void onExplosion(net.neoforged.neoforge.event.level.ExplosionEvent.Detonate event) {
+        if (!(event.getLevel() instanceof ServerLevel level)) return;
+        Cans cans = Cans.of(level);
+        if (!cans.bases.isEmpty()) event.getAffectedBlocks().removeIf(cans::protects);
     }
 }

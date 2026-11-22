@@ -1,4 +1,8 @@
 {
+    "awakening_system.sanmortis.none_near": "§cNo hay ninguna lata de San Mortis a menos de 40 bloques.",
+    "awakening_system.sanmortis.removed": "§aLa lata de San Mortis más cercana ya se puede romper.",
+    "item.awakening_system.cooked_jurel": "Jurel cocinado",
+    "item.awakening_system.jurel": "Jurel",
     "item.awakening_system.truth_kasakas_venom_fang.passive": "§7✦ Pasiva: §aNeurotoxina Verdadera. Los golpes tienen un 50% de probabilidad de causar Veneno III, Lentitud III y Debilidad II. Apuñalar por la espalda inflige +50% de daño.",
     "item.awakening_system.truth_kasakas_venom_fang.origin": "§8Solo Leveling: Arise",
     "item.awakening_system.truth_kasakas_venom_fang.lore": "§8§o\"La forma verdadera y despertada del colmillo de Kasaka, cargada con una neurotoxina mutada de dragón serpiente.\"",

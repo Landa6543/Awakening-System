@@ -89,7 +89,9 @@ public final class TeyvatStructureManager {
                         .setIgnoreEntities(false)
                         .setKnownShape(true)
                         .setMirror(Mirror.NONE)
-                        .setRotation(Rotation.NONE);
+                        .setRotation(Rotation.NONE)
+                        // the structure blocks the builder saved with the build are never placed in the world
+                        .addProcessor(net.minecraft.world.level.levelgen.structure.templatesystem.BlockIgnoreProcessor.STRUCTURE_BLOCK);
 
                 template.placeInWorld(level, origin, origin, settings, level.getRandom(), 2);
 

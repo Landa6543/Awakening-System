@@ -477,6 +477,123 @@ Sistema dinámico de eventos de temporada integrando consumibles gastronómicos 
 * Sonidos de misión completada más suaves.
 * Créditos: se añadieron los autores de las 14 skins de los vecinos del pueblo (ver `CREDITS.md`).
 
+
+---
+
+## ⚔️ Clases Base y Evolución
+* **Seis clases base** al nivel 50: Guerrero, Asesino, Tanque, Mago, Sanador y Cultivador, cada una con una habilidad activa y una pasiva.
+* **Evolución al nivel 150:** una prueba invoca a un jefe; al vencerlo evolucionas a una de las clases avanzadas de tu clase base y conservas su árbol. Quien ya tenía una clase avanzada la mantiene como evolucionada.
+* **Árboles de habilidades rehechos** como grandes redes de unos 100 nodos por clase (nodos de estadísticas pequeños y grandes, y las habilidades de la clase); las clases base tienen redes de unos 60. Se cargan desde archivos de datos. Un punto cada 3 niveles desde el nivel 30; a los jugadores se les devuelven una vez todos los puntos gastados.
+* Pestañas Base / Evolución, botón Evolucionar y ventana de evolución, en estilo clásico y Full Dive.
+
+---
+
+## 🛠️ Herramientas que Suben de Nivel por su Trabajo
+* Picos, palas y azadas ya no suben de nivel matando: ganan experiencia minando, cavando y cultivando, y desbloquean habilidades a los niveles 10, 25, 50, 75 y 100 (las hachas siguen siendo armas y también las ganan talando).
+* **Pico:** minado más rápido, fortuna en menas, minado de vetas, menas fundidas. Su nivel suma a la Fortuna (+1 desde el nivel 10, +2 desde el 75, +3 al 100): Fortuna III en un pico de nivel 75 mina como Fortuna V.
+* **Hacha:** talado más rápido, árbol entero de un golpe, replanta el brote, troncos extra.
+* **Pala:** cavado más rápido, 3x3 y luego 5x5, hallazgos en la tierra.
+* **Azada:** arado 3x3 y luego 5x5, cosecha 3x3 que replanta, cultivos extra.
+* Agachado se rompe un solo bloque. La descripción del objeto lista las habilidades.
+
+---
+
+## 🎮 Full Dive (SAO): Más Ventanas
+* Versiones Full Dive de: mando de sombras (escuadrones, rango, nivel, vida y bajas de cada sombra), fábulas, ajustes de interfaz, elección de clase, árbol de clase (nodos redondos, arrastrar y hacer zoom), cultivo (reino, Qi, meridianos, habilidades del Dao), gremio (miembros, bendiciones, tesorería) e inventario normal.
+* Las ventanas grandes se encogen para caber en pantallas pequeñas (854x480).
+* El menú de pausa suena como el menú principal. La tarjeta y el panel muestran bien el nivel y el rango, y las monedas con su símbolo.
+
+---
+
+## 🗼 Gran Torre y Puertas
+* **Menas en todos los pisos:** las del juego (carbón, hierro y cobre desde el piso 1; oro, redstone, lapislázuli, diamante y esmeralda más arriba) y las de la torre en más vetas y más grandes, a la altura donde se cava.
+* **Cada mundo tiene su propia tierra de la torre:** los pisos mantienen su estilo pero cambian con la semilla del mundo (los mundos con pisos ya generados no cambian).
+* **Columna de luz azul** que marca la subida de cada piso, visible aunque esté lejos. El aviso "Algo te llama" se repite cada 30 segundos.
+* Los jefes de la torre ya no son World Boss.
+* Cada piso tiene nombre traducido (en el chat al llegar, en la lista de pisos y en el mapa).
+* **Puertas:** vuelve el gran mapa clásico de mazmorra (27 salas), distinto en cada puerta: reflejado, salas desplazadas, atajos opcionales y el jefe en una de tres salas (las otras dos son santuarios de tesoro). Ya no aparecen acechadores del Limbo dentro de las puertas.
+* Las criaturas hostiles sueltan Monedas del Despertar y a veces un Núcleo de Monstruo de su rango.
+
+---
+
+## 💰 Economía
+* Una Moneda del Despertar vale 1000 en el saldo del Sistema. Las criaturas sueltan menos monedas pero valen mucho más; los cofres de tesoro, una décima parte de antes.
+* La comisión diaria del Gremio da una bolsa de botín.
+
+---
+
+## 🧑‍🤝‍🧑 NPCs y Gremios
+* **Rutina diaria para los NPC del gremio:** hasta 12 paradas, cada una con lugar y hora del día; el NPC camina a la parada que toca y se queda cerca, todos los días.
+* Los NPC del gremio luchan contra monstruos hostiles (siguiendo, de guardia o en su rutina), nunca contra creepers ni criaturas neutrales tranquilas.
+* Los vecinos con lugar de trabajo (herrero, taberneros, sacerdote, bibliotecario, comerciante) se quedan cerca de él.
+* Los diálogos de los NPC de las series ya están traducidos.
+* El inspector de la Asociación no se puede matar por accidente y sus tablas de rangos muestran los niveles reales de cada rango.
+
+---
+
+## 🗡️ Armas de Solo Leveling
+* Nueve armas nuevas: **Daga de Baruka, Monzón Azul, Sombra Carmesí, Dagas del Rey Demonio, Rugido de Ennio, Asesina de Caballeros, Sombra Lunar, Hoja Fantasma y Colmillo Venenoso Verdadero de Kasaka**, cada una con su pasiva (escarcha, ola, fuego, rayo en cadena, rompearmaduras, eclipse, purificación, neurotoxina; las dagas hacen más daño por la espalda). Traducidas en todos los idiomas.
+* Las armas celestiales pegan más fuerte (espada 25-33, mandoble 33-41, guadaña 29-37, lanza 27-35).
+* Nuevo Anillo de Enlace: banda redonda con una línea blanca y una gema pequeña.
+
+---
+
+## 🐉 Kaisel
+* **Kaisel vivo y Kaisel de sombra**, montables, con su modelo y sus animaciones (quieto, caminar, volar, planear, vuelo rápido y dos ataques), del mod Solo Craft: Reawakening (licencia Apache 2.0).
+* En vuelo montado sube y baja según hacia dónde mires; espacio para despegar.
+
+---
+
+## 🏪 Tienda, Misiones y Despertar
+* **Tienda del Sistema rediseñada** en dos paneles: catálogo con rango requerido y precio, e inspección del objeto (vista grande, historia, estadísticas, cantidad y botón de compra). Las compras piden el **Rango Evaluado** del cazador, no solo el nivel.
+* **Misiones en dos pestañas:** Diarias (Entrenamiento del Monarca: flexiones, abdominales, sentadillas y carrera, con reloj de medianoche y aviso de penalización; y la Comisión de la Asociación según tu rango) y Escenario (Canal Dokkaebi de Omniscient Reader).
+* **Despertar en la Gran Torre:** el Sistema se despierta en el Altar de Origen tocando el Cristal de Potencial (se quitó el método de picar 16 bloques y matar 5 monstruos). Mientras duermes, la pestaña Misiones indica dónde está la Gran Torre más cercana.
+* **Escuadrones de sombras a tu gusto:** cada sombra se puede mover a cualquier escuadrón (I a IV) con un clic, y mezclar voladoras y terrestres.
+* **Cinco físicos marciales nuevos** para el cultivo Murim: Cuerpo Indestructible de Vajra, Fénix Inmortal del Nirvana, Vacío Abisal, Cuerpo Sagrado de los Cinco Elementos y Rayo Celestial (11 en total).
+
+---
+
+## 👹 Criaturas
+* **Baran:** textura nueva hecha para su modelo (antes salía con bloques cian rotos), también en su versión de sombra.
+* **Sonrisa (Grin):** dormido es una roca sin boca y despierto muestra la sonrisa (ya no tiene una losa tapándole la boca); rueda hacia delante al moverse y ataca rodando hacia delante.
+* **Lawachurls y Guardián de las Ruinas** corregidos: texturas completas, piernas y brazos que se mueven bien, salto con golpe en los tres Lawachurls, ataque y misiles del Guardián, y su tamaño ajustado a su caja de golpe.
+* El huevo del jefe de pelo rojo ahora se llama **Huevo generador del Monarca del Abismo**.
+* Caras de los orcos: ojos más arriba y más separados.
+
+---
+
+## 🐟 San Mortis
+* Los jureles bailan con música: un minuto de canción, y el baile termina con ella. `/sanmortis dance` empieza uno ya.
+* Ahora viven y bailan **abajo, en círculo alrededor de la lata**, y el primer baile llega dos minutos después de construirla.
+* **La lata es irrompible** (ni a mano ni con explosiones); `/sanmortis remove` la libera.
+* Los jureles sueltan **Jurel**, que se puede cocinar (horno, ahumador o fogata) en **Jurel cocinado**.
+* La barandilla del techo queda unida, sin postes sueltos.
+
+---
+
+## 🖥️ Interfaz
+* Interruptor del minimapa en los ajustes de interfaz.
+* Interruptor de **fantasma al morir**: apagado, vuelves como tú mismo y la lápida sigue guardando tus cosas.
+* Las ventanas clásicas dibujan su marco por piezas, así las esquinas y el adorno no se deforman en pantallas anchas. El árbol de clase llena la pantalla sin solaparse.
+* La notificación del Sistema se encoge en pantallas pequeñas.
+* Las animaciones de las puertas, el minimapa, el mapa y las auras ya no van a saltos en mundos viejos.
+* El rastreador de la Asociación nombra su punto de ruta en tu idioma.
+* Descripciones de 18 títulos traducidas; las criaturas de otros mods sin traducción muestran un nombre limpio en vez de la clave.
+* Paimon y las corredoras Uma ya no salen como amenaza ni suben de nivel como enemigos.
+
+---
+
+## 🛠️ Correcciones
+* **World Boss:** criaturas comunes salían como "WORLD BOSS" porque su nombre contenía una palabra de jefe (hi**lich**url contiene "lich", man**drake** contiene "drake"). Ahora se comparan palabras enteras, y las criaturas que ya tenían el título lo pierden al cargar y recuperan su vida normal. Los World Boss de otros mods tienen al menos la vida de su nivel y su nombre traducido.
+* **Hipódromo Uma:** las corredoras salen dentro de los cajones de salida, la carrera se gana en la línea de meta real, no se quedan atascadas en el bordillo y las vallas blancas quedan unidas. Las estructuras ya no colocan su bloque de estructura.
+* **Abismo:** las gradas de acceso a la plataforma están bien orientadas (en estructuras nuevas).
+* Se quitó el motor de combate ACE abandonado.
+
+---
+
+## 🌍 En Preparación: Aethelgard (no aparece todavía en los mundos)
+* Base de la futura dimensión RPG **Aethelgard** (llanuras de Oakhaven, Elderwood, Tierras Altas, Mar Plateado y Niflheim) y del **anillo gigante** que lleva a ella, con vista en vivo del otro mundo a través del anillo y cruce sin pantalla de carga. De momento solo se coloca con `/giantportal`, mientras se termina.
+
 ---
 
 # ⚡ Awakening System — Version 0.3.4

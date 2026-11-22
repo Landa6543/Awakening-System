@@ -170,32 +170,26 @@ public class SaoMenuScreen extends Screen {
         SaoHolo.push(g, rightPlane);
         float a = open;
         int cx = columnX(), top = columnTop();
-        // the opening plays in order, as in SAO: the round buttons pop in one by one from the top, then the
-        // chosen button's list slides out, then the player's card appears
-        float t = ticks + partialTick;
-        float intro = 2.0F + categories.size() * 2.5F;
 
         // the column of round buttons, dropping into place one after another
         for (int i = 0; i < categories.size(); i++) {
-            float mine = Math.min(a, Mth.clamp((t - 1.0F - i * 2.5F) / 4.0F, 0.0F, 1.0F));
-            if (mine <= 0.0F) continue;
-            float pop = mine < 1.0F ? 0.6F + 0.4F * mine + (float) Math.sin(mine * Math.PI) * 0.15F : 1.0F;   // a little overshoot
-            float cy = top + i * STEP - (1.0F - mine) * 6.0F;
+            float mine = Math.min(a, Mth.clamp((ticks + partialTick - i * 1.2F) / 5.0F, 0.0F, 1.0F));
+            float cy = top + i * STEP - (1.0F - mine) * 10.0F;
             boolean sel = i == selected;
             boolean hover = (mouseX - cx) * (mouseX - cx) + (mouseY - cy) * (mouseY - cy) <= R * R;
             if (hover) hovering(500 + i);
-            if (sel) ring(g, cx, cy, (R + 4) * pop, 1.2F, alpha(ORANGE, mine));
-            ring(g, cx, cy, (R + 1.5F) * pop, 1.0F, alpha(sel ? 0xFFFFD27A : 0xFFB8B8BE, mine));
-            shinyDisc(g, cx, cy, R * pop, sel ? ORANGE : (hover ? WHITE : 0xFFE4E4E8), mine);
+            if (sel) ring(g, cx, cy, R + 4, 1.2F, alpha(ORANGE, mine));
+            ring(g, cx, cy, R + 1.5F, 1.0F, alpha(sel ? 0xFFFFD27A : 0xFFB8B8BE, mine));
+            shinyDisc(g, cx, cy, R, sel ? ORANGE : (hover ? WHITE : 0xFFE4E4E8), mine);
             icon(g, categories.get(i).icon, cx - 5, Math.round(cy) - 5, alpha(sel ? WHITE : GREY, mine));
         }
 
         // the chosen button's list, sliding out to the right
-        float slide = Math.min(Mth.clamp((listTicks + partialTick) / 4.0F, 0.0F, 1.0F), Mth.clamp((t - intro) / 4.0F, 0.0F, 1.0F));
+        float slide = Mth.clamp((listTicks + partialTick) / 4.0F, 0.0F, 1.0F);
         List<Entry> entries = categories.get(selected).entries;
         int lx = listX() - Math.round((1.0F - slide) * 12), ly = listTop();
         pointerLeft(g, cx + R + 6, top + selected * STEP, 6, alpha(ORANGE, a * slide));
-        for (int i = 0; i < entries.size() && a * slide > 0.03F; i++) {   // nothing at all until its turn
+        for (int i = 0; i < entries.size(); i++) {
             int y = ly + i * (ROW_H + 2);
             boolean hot = mouseX >= lx && mouseX < lx + ROW_W && mouseY >= y && mouseY < y + ROW_H;
             row(g, this.font, lx, y, ROW_W, ROW_H, entries.get(i).label, entries.get(i).icon, hot, a * slide);
@@ -208,8 +202,7 @@ public class SaoMenuScreen extends Screen {
         int[] cm = onPlane(cardPlane, realX, realY);
         mouse(cm[0], cm[1]);
         SaoHolo.push(g, cardPlane);
-        float cardA = Math.min(a, Mth.clamp((t - intro - 2.0F) / 5.0F, 0.0F, 1.0F));
-        if (cardA > 0.03F) renderCard(g, cardX(), cardY(), cardA, partialTick, cm[0], cm[1]);
+        renderCard(g, cardX(), cardY(), a, partialTick, cm[0], cm[1]);
         SaoHolo.pop(g);
         SaoHolo.end(g);
         // the player model is drawn flat, where its box on the turned card shows on screen

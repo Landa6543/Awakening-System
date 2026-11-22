@@ -1,0 +1,1 @@
+{ "type": "minecraft:campfire_cooking", "category": "food", "ingredient": { "item": "awakening_system:jurel" }, "result": { "id": "awakening_system:cooked_jurel" }, "experience": 0.35, "cookingtime": 600 }

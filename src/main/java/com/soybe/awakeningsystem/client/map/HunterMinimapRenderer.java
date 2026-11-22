@@ -951,6 +951,9 @@ public final class HunterMinimapRenderer {
             boolean isFriendly = (living instanceof com.soybe.awakeningsystem.entity.SeriesNpcEntity)
                     || (living instanceof net.minecraft.world.entity.npc.Npc)
                     || (living instanceof net.minecraft.world.entity.player.Player)
+                    || (living instanceof com.soybe.awakeningsystem.entity.PaimonEntity)
+                    || (living instanceof com.soybe.awakeningsystem.uma.UmaRacerEntity)
+                    || (living instanceof net.minecraft.world.entity.OwnableEntity own && own.getOwnerUUID() != null)
                     || com.soybe.awakeningsystem.AwakeningSystemClient.isFriendlyOrGuildShadow(living);
             if (isFriendly) continue;
 

@@ -25,6 +25,8 @@ public final class MortisContent {
     public static EntityType<WalkingJurelEntity> WALKING_JUREL;
     public static Item LINK_RING;
     public static Item WALKING_JUREL_EGG;
+    /** What a walking jurel leaves behind: a jurel, to cook and eat. */
+    public static Item JUREL, COOKED_JUREL;
 
     private static ResourceLocation id(String path) {
         return ResourceLocation.fromNamespaceAndPath(AwakeningSystemMod.MOD_ID, path);
@@ -42,6 +44,10 @@ public final class MortisContent {
             helper.register(id("link_ring"), LINK_RING);
             WALKING_JUREL_EGG = new DeferredSpawnEggItem(() -> WALKING_JUREL, 0x5B7FA6, 0xE9EEF2, new Item.Properties());
             helper.register(id("walking_jurel_spawn_egg"), WALKING_JUREL_EGG);
+            JUREL = new Item(new Item.Properties().food(new net.minecraft.world.food.FoodProperties.Builder().nutrition(2).saturationModifier(0.1F).build()));
+            helper.register(id("jurel"), JUREL);
+            COOKED_JUREL = new Item(new Item.Properties().food(new net.minecraft.world.food.FoodProperties.Builder().nutrition(6).saturationModifier(0.7F).build()));
+            helper.register(id("cooked_jurel"), COOKED_JUREL);
         });
     }
 
@@ -55,6 +61,8 @@ public final class MortisContent {
         if (event.getTabKey() == ModCreativeTabs.MAGIC_ENTITIES_TAB.getKey()) {
             event.accept(LINK_RING);
             event.accept(WALKING_JUREL_EGG);
+            event.accept(JUREL);
+            event.accept(COOKED_JUREL);
         }
     }
 }
