@@ -1,4 +1,12 @@
 {
+    "gui.awakening_system.spiral_abyss.challenge_target": "Challenge Target",
+    "gui.awakening_system.spiral_abyss.disorder_title": "Ley Line Disorder",
+    "gui.awakening_system.spiral_abyss.back": "Return",
+    "gui.awakening_system.spiral_abyss.start": "Start",
+    "gui.awakening_system.spiral_abyss.confirm": "Confirm",
+    "gui.awakening_system.spiral_abyss.leave": "Leave",
+    "gui.awakening_system.spiral_abyss.hint_spire": "The Abyssal Moon Spire resets with each new cycle.",
+    "gui.awakening_system.spiral_abyss.hint_corridor": "The Abyss Corridor's treasures can only be won once. Clear floor 8 to open the Abyssal Moon Spire.",
     "awakening_system.sanmortis.none_near": "§cThere is no San Mortis can within 40 blocks.",
     "awakening_system.sanmortis.removed": "§aThe nearest San Mortis can can be broken again.",
     "item.awakening_system.cooked_jurel": "Cooked Jurel",

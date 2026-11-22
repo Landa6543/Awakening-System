@@ -1,4 +1,12 @@
 {
+    "gui.awakening_system.spiral_abyss.challenge_target": "Objetivo do desafio",
+    "gui.awakening_system.spiral_abyss.disorder_title": "Distúrbio das Linhas Ley",
+    "gui.awakening_system.spiral_abyss.back": "Voltar",
+    "gui.awakening_system.spiral_abyss.start": "Iniciar",
+    "gui.awakening_system.spiral_abyss.confirm": "Confirmar",
+    "gui.awakening_system.spiral_abyss.leave": "Sair",
+    "gui.awakening_system.spiral_abyss.hint_spire": "A Espiral da Lua Abissal é reiniciada a cada ciclo.",
+    "gui.awakening_system.spiral_abyss.hint_corridor": "Os tesouros do Corredor do Abismo só podem ser obtidos uma vez. Conclua o andar 8 para abrir a Espiral da Lua Abissal.",
     "awakening_system.sanmortis.none_near": "§cNão há nenhuma lata de San Mortis a menos de 40 blocos.",
     "awakening_system.sanmortis.removed": "§aA lata de San Mortis mais próxima já pode ser quebrada.",
     "item.awakening_system.cooked_jurel": "Carapau cozido",

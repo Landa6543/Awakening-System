@@ -13,25 +13,10 @@ import net.neoforged.neoforge.network.PacketDistributor;
 import java.util.List;
 
 /**
- * Pantalla Monumental de la Espiral del Abismo (Spiral Abyss) con estética y proporciones auténticas de Genshin Impact:
- * - Cielo Cósmico Dinámico del Arrecife de Musk con nebulosas ondulantes, constelaciones y polvo estelar.
- * - Barra Superior con estilo de cristal ahumado celestial, divisas reales (Mora, Protogemas, Destinos) y estrellas globales.
- * - Pestañas de navegación con biseles dorados e indicador astral ("Corredor del Abismo 1-8" y "Espiral Lunar 9-12").
- * - VITRINA MONUMENTAL DE PUERTAS DE DOMINIO (Domain Doors):
- *   - Proporciones imponentes ocupando el 55% de la altura vertical de la pantalla.
- *   - Frontón ceremonial de 3 niveles con moldura denticulada de piedra labrada y biseles 3D.
- *   - Medallón cenital en forma de broche dorado con número romano esculpido (I..XII).
- *   - Columnas gemelas estriadas con capiteles decorados, plintos y canales rúnicos luminiscentes.
- *   - Vano abovedado en arco de medio punto romano.
- *   - Vórtice Cósmico Activo: singularidad estelar con órbitas elípticas, polvo cósmico y destello central animado.
- *   - Puerta Sellada Ancestral: hojas dobles de obsidiana con runas, cadenas diagonales de hierro y candado carmesí.
- *   - Pedestal inferior de piedra con placa del piso, gemas de las 3 cámaras (★ ★ ★) y nivel recomendado.
- *   - Elevación 3D, halo celestial y esquineros dorados al seleccionar o pasar el cursor.
- * - PANEL INFERIOR TÁCTICO INTEGRADO:
- *   - Tarjeta de Anomalía de las Líneas Ley con emblema elemental, bonificaciones detalladas, consejo táctico y medidor de nivel.
- *   - Selector de Cámaras (Sala 1, 2 y 3) con objetivos de tiempo para 1, 2 y 3 estrellas y lista de enemigos.
- *   - Escaparate de Recompensas del Piso con iconos reales de ítems y botón de reclamo brillante.
- *   - Botón monumental "⚔ DESAFIAR PISO X ⚔" con estilo Genshin Impact.
+ * The Spiral Abyss window, laid out after the game's own: the Corridor's eight floor banners in a row (and the
+ * rift into the Spire), the Spire's four, the place's name at the top left, a hint and Confirm / Leave at the
+ * bottom; Confirm (or a second click on a banner) opens the floor's view with its ley line disorder and its three
+ * chambers' stars, where the floor is started and its reward collected. Pictures: {@link AbyssArt}.
  */
 public final class SpiralAbyssScreen extends Screen {
 
@@ -94,574 +79,367 @@ public final class SpiralAbyssScreen extends Screen {
     public void renderBackground(GuiGraphics graphics, int mouseX, int mouseY, float partialTick) {
     }
 
+    // ---- layout, worked out the same way for drawing and for clicks
+
+    /** The floor's detail view is open (after Confirm), instead of the row of banners. */
+    private boolean detailView;
+
+    private int bannerH() {
+        return Math.max(90, Math.min((int) (this.height * 0.56), 300));
+    }
+
+    private int bannerW() {
+        return (bannerH() * AbyssArt.BANNER_W) / AbyssArt.BANNER_H;
+    }
+
+    /** How many banners the row shows, and the first floor: the Corridor's eight and its rift, or the Spire's four. */
+    private int rowCount() {
+        return selectedTab == 0 ? 9 : 4;
+    }
+
+    private int rowFirstFloor() {
+        return selectedTab == 0 ? 1 : 9;
+    }
+
+    /** The left edge of banner i of the row, with the banners spread to fit the window. */
+    private int[] rowGeometry() {
+        int n = rowCount();
+        int bw = bannerW(), bh = bannerH();
+        int gap = Math.max(4, bw / 3);
+        int total = n * bw + (n - 1) * gap;
+        float scale = 1.0F;
+        if (total > this.width - 40) {
+            scale = (this.width - 40) / (float) total;
+            bw = (int) (bw * scale);
+            bh = (int) (bh * scale);
+            gap = (int) (gap * scale);
+            total = n * bw + (n - 1) * gap;
+        }
+        int x0 = (this.width - total) / 2;
+        int y0 = (int) (this.height * 0.47F) - bh / 2;
+        return new int[]{x0, y0, bw, bh, gap};
+    }
+
+    private boolean over(double mx, double my, int x, int y, int w, int h) {
+        return mx >= x && mx < x + w && my >= y && my < y + h;
+    }
+
+    // ---- drawing
+
     @Override
     public void render(GuiGraphics graphics, int mouseX, int mouseY, float partialTick) {
-        int w = this.width;
-        int h = this.height;
-
-        renderCosmicAbyssSky(graphics, w, h);
-
-        renderTopBar(graphics, mouseX, mouseY, w);
-
-        int tabY = 36;
-        int tabH = 22;
-        renderTabs(graphics, mouseX, mouseY, tabY, tabH, w);
-
-        int bottomPad = 8;
-        int detailsH = Math.min(132, Math.max(108, (int) (h * 0.30)));
-        int detailsY = h - detailsH - bottomPad;
-
-        int doorsY = tabY + tabH + 8;
-        int doorH = detailsY - doorsY - 8;
-
-        renderDoorsShowcase(graphics, mouseX, mouseY, doorsY, doorH, w);
-
-        renderFloorDetailPanel(graphics, mouseX, mouseY, 16, detailsY, w - 32, detailsH);
-
+        int w = this.width, h = this.height;
+        renderHall(graphics, w, h);
+        renderHeader(graphics, mouseX, mouseY, w);
+        if (detailView) renderDetailView(graphics, mouseX, mouseY, w, h);
+        else renderRow(graphics, mouseX, mouseY, w, h);
         super.render(graphics, mouseX, mouseY, partialTick);
     }
 
-    private void renderCosmicAbyssSky(GuiGraphics graphics, int w, int h) {
-        // the hall of arches, scaled to cover the window (cut at the sides or the top as needed)
+    /** The Corridor's hall or the Spire's eye, covering the window, darkened at the edges. */
+    private void renderHall(GuiGraphics graphics, int w, int h) {
+        var tex = selectedTab == 0 ? AbyssArt.corridor() : AbyssArt.spire();
         float scale = Math.max(w / (float) AbyssArt.BG_W, h / (float) AbyssArt.BG_H);
         int dw = Math.round(AbyssArt.BG_W * scale), dh = Math.round(AbyssArt.BG_H * scale);
-        graphics.blit(AbyssArt.background(), (w - dw) / 2, h - dh, dw, dh, 0, 0, AbyssArt.BG_W, AbyssArt.BG_H, AbyssArt.BG_W, AbyssArt.BG_H);
-        // a soft shade at the top and bottom, so the bars and the panel read well
-        graphics.fillGradient(0, 0, w, 70, 0xCC050B1C, 0x00050B1C);
-        graphics.fillGradient(0, h - 150, w, h, 0x00050B1C, 0xAA050B1C);
+        graphics.blit(tex, (w - dw) / 2, (h - dh) / 2, dw, dh, 0, 0, AbyssArt.BG_W, AbyssArt.BG_H, AbyssArt.BG_W, AbyssArt.BG_H);
+        graphics.fillGradient(0, 0, w, 50, 0x99060C1C, 0x00060C1C);
+        graphics.fillGradient(0, h - 70, w, h, 0x00060C1C, 0xAA060C1C);
     }
 
-    private void drawThinLine(GuiGraphics graphics, int x1, int y1, int x2, int y2, int color) {
-        int steps = Math.max(Math.abs(x2 - x1), Math.abs(y2 - y1));
-        if (steps <= 0) return;
-        float dx = (x2 - x1) / (float) steps;
-        float dy = (y2 - y1) / (float) steps;
-        float cx = x1;
-        float cy = y1;
-        for (int s = 0; s <= steps; s += 2) {
-            graphics.fill((int) cx, (int) cy, (int) cx + 1, (int) cy + 1, color);
-            cx += dx * 2;
-            cy += dy * 2;
-        }
+    /** The place's name at the top left (with its diamond mark), the stars and currencies at the top right. */
+    private void renderHeader(GuiGraphics graphics, int mouseX, int mouseY, int w) {
+        int y = 14;
+        diamond(graphics, 22, y + 4, 6, 0xFFC9A55A, 0xFF5A4520);
+        String place = Component.translatable(selectedTab == 0 ? "gui.awakening_system.spiral_abyss.tab_corridor" : "gui.awakening_system.spiral_abyss.tab_spire").getString();
+        graphics.drawString(this.font, place, 34, y, 0xFFE8D29A, true);
+        if (detailView)
+            graphics.drawString(this.font, Component.translatable("gui.awakening_system.spiral_abyss.floor_title", selectedFloor).getString(), 34, y + 11, 0xFFB8C4D0, false);
+        int x = w - 14;
+        String fates = "✦ " + this.intertwinedFates;
+        x -= this.font.width(fates);
+        graphics.drawString(this.font, fates, x, y, 0xFF9FE0FF, true);
+        String primo = "◆ " + this.primogems;
+        x -= this.font.width(primo) + 14;
+        graphics.drawString(this.font, primo, x, y, 0xFFFFE08A, true);
+        String stars = "★ " + this.totalStars + " / 108";
+        x -= this.font.width(stars) + 14;
+        graphics.drawString(this.font, stars, x, y, 0xFFFFFFFF, true);
     }
 
-    private void renderTopBar(GuiGraphics graphics, int mouseX, int mouseY, int w) {
-        int barH = 34;
-        graphics.fill(0, 0, w, barH, 0xEE080C18);
-        graphics.fill(0, barH - 1, w, barH, 0x66C3A462);
-
-        int exitX = 12;
-        int exitY = 6;
-        int exitW = 56;
-        int exitH = 22;
-        boolean hoverExit = mouseX >= exitX && mouseX <= exitX + exitW && mouseY >= exitY && mouseY <= exitY + exitH;
-        graphics.fill(exitX, exitY, exitX + exitW, exitY + exitH, hoverExit ? 0xDD2D3748 : 0x99171923);
-        graphics.renderOutline(exitX, exitY, exitW, exitH, hoverExit ? 0xFFFFD700 : 0xFF4A5568);
-        graphics.drawCenteredString(this.font, Component.translatable("gui.awakening_system.spiral_abyss.exit").getString(), exitX + exitW / 2, exitY + 7, hoverExit ? 0xFFFFE082 : 0xFFCBD5E1);
-
-        int starBadgeX = exitX + exitW + 8;
-        int starBadgeW = 94;
-        graphics.fill(starBadgeX, exitY, starBadgeX + starBadgeW, exitY + exitH, 0xEE1E1B4B);
-        graphics.renderOutline(starBadgeX, exitY, starBadgeW, exitH, 0xFF818CF8);
-        graphics.drawCenteredString(this.font, "⭐ " + this.totalStars + " / 108", starBadgeX + starBadgeW / 2, exitY + 7, 0xFFFFD700);
-
-        String title = Component.translatable("gui.awakening_system.spiral_abyss.title").getString();
-        int titleW = this.font.width(title);
-        graphics.drawString(this.font, title, (w - titleW) / 2, 6, 0xFFFFDF88, true);
-
-        String sub = Component.translatable("gui.awakening_system.spiral_abyss.subtitle").getString();
-        int subW = this.font.width(sub);
-        graphics.drawString(this.font, sub, (w - subW) / 2, 18, 0xFF94A3B8, false);
-
-        int curX = w - 12;
-
-        int pillW = 60;
-        curX -= pillW;
-        ItemStack fateStack = SystemItems.INTERTWINED_FATE.isBound() ? new ItemStack(SystemItems.INTERTWINED_FATE.get()) : ItemStack.EMPTY;
-        renderCurrencyPill(graphics, curX, exitY, pillW, exitH, fateStack, "✦ " + this.intertwinedFates, 0xFF80D8FF);
-
-        curX -= (pillW + 6);
-        ItemStack primoStack = SystemItems.PRIMOGEM.isBound() ? new ItemStack(SystemItems.PRIMOGEM.get()) : ItemStack.EMPTY;
-        renderCurrencyPill(graphics, curX, exitY, pillW, exitH, primoStack, "" + this.primogems, 0xFFFFE082);
-
-        int moraPillW = 76;
-        curX -= (moraPillW + 6);
-        ItemStack moraStack = SystemItems.MORA.isBound() ? new ItemStack(SystemItems.MORA.get()) : ItemStack.EMPTY;
-        renderCurrencyPill(graphics, curX, exitY, moraPillW, exitH, moraStack, formatNumber(this.coins), 0xFFFFD700);
-
-        int lvlPillW = 56;
-        curX -= (lvlPillW + 6);
-        graphics.fill(curX, exitY, curX + lvlPillW, exitY + exitH, 0xEE0F172A);
-        graphics.renderOutline(curX, exitY, lvlPillW, exitH, 0xFF38BDF8);
-        graphics.drawCenteredString(this.font, Component.translatable("gui.awakening_system.spiral_abyss.level_short", this.playerLevel).getString(), curX + lvlPillW / 2, exitY + 7, 0xFF38BDF8);
-    }
-
-    private void renderCurrencyPill(GuiGraphics graphics, int x, int y, int w, int h, ItemStack iconStack, String text, int color) {
-        graphics.fill(x, y, x + w, y + h, 0xEE0B0F1A);
-        graphics.renderOutline(x, y, w, h, 0xFF334155);
-        if (!iconStack.isEmpty()) {
-            graphics.renderItem(iconStack, x + 2, y + 3);
-            graphics.drawString(this.font, text, x + 20, y + 7, color, false);
-        } else {
-            graphics.drawString(this.font, text, x + 6, y + 7, color, false);
+    /** A small diamond (a square on its point), used as marks and buttons. */
+    private void diamond(GuiGraphics g, int cx, int cy, int r, int fill, int edge) {
+        for (int dy = -r; dy <= r; dy++) {
+            int half = r - Math.abs(dy);
+            g.fill(cx - half, cy + dy, cx + half + 1, cy + dy + 1, (Math.abs(dy) == r || half == 0) ? edge : fill);
+            g.fill(cx - half, cy + dy, cx - half + 1, cy + dy + 1, edge);
+            g.fill(cx + half, cy + dy, cx + half + 1, cy + dy + 1, edge);
         }
     }
 
-    private void renderTabs(GuiGraphics graphics, int mouseX, int mouseY, int tabY, int tabH, int w) {
-        int tabW = 175;
-        int startX = (w - (tabW * 2 + 8)) / 2;
-
-        boolean hoverTab0 = mouseX >= startX && mouseX <= startX + tabW && mouseY >= tabY && mouseY <= tabY + tabH;
-        int bg0 = (selectedTab == 0) ? 0xEE1E3A8A : (hoverTab0 ? 0xAA1E293B : 0x770F172A);
-        int border0 = (selectedTab == 0) ? 0xFFFFD700 : 0x55475569;
-        graphics.fill(startX, tabY, startX + tabW, tabY + tabH, bg0);
-        graphics.renderOutline(startX, tabY, tabW, tabH, border0);
-        graphics.drawCenteredString(this.font, Component.translatable("gui.awakening_system.spiral_abyss.tab_corridor").getString(), startX + tabW / 2, tabY + 7, (selectedTab == 0) ? 0xFFFFFFFF : 0xFF94A3B8);
-
-        if (selectedTab == 0) {
-            graphics.fill(startX + tabW / 2 - 4, tabY + tabH, startX + tabW / 2 + 4, tabY + tabH + 2, 0xFFFFD700);
-        }
-
-        int tab1X = startX + tabW + 8;
-        boolean hoverTab1 = mouseX >= tab1X && mouseX <= tab1X + tabW && mouseY >= tabY && mouseY <= tabY + tabH;
-        int bg1 = (selectedTab == 1) ? 0xEE4C1D95 : (hoverTab1 ? 0xAA1E293B : 0x770F172A);
-        int border1 = (selectedTab == 1) ? 0xFFC084FC : 0x55475569;
-        graphics.fill(tab1X, tabY, tab1X + tabW, tabY + tabH, bg1);
-        graphics.renderOutline(tab1X, tabY, tabW, tabH, border1);
-        graphics.drawCenteredString(this.font, Component.translatable("gui.awakening_system.spiral_abyss.tab_spire").getString(), tab1X + tabW / 2, tabY + 7, (selectedTab == 1) ? 0xFFFFFFFF : 0xFF94A3B8);
-
-        if (selectedTab == 1) {
-            graphics.fill(tab1X + tabW / 2 - 4, tabY + tabH, tab1X + tabW / 2 + 4, tabY + tabH + 2, 0xFFC084FC);
-        }
-    }
-
-    private void renderDoorsShowcase(GuiGraphics graphics, int mouseX, int mouseY, int doorsY, int doorH, int w) {
-        int minFloor, maxFloor;
-        if (selectedTab == 0) {
-            minFloor = (corridorPage == 0) ? 1 : 5;
-            maxFloor = (corridorPage == 0) ? 4 : 8;
-        } else {
-            minFloor = 9;
-            maxFloor = 12;
-        }
-        int count = 4;
-
-        int maxDoorW = (w - 140) / count;
-        int doorW = Math.max(82, Math.min((int) (doorH * 0.54), maxDoorW));
-        int gap = Math.min(24, Math.max(10, (w - 90 - count * doorW) / (count + 1)));
-        int totalDoorsW = count * doorW + (count - 1) * gap;
-        int startX = (w - totalDoorsW) / 2;
-
-        if (selectedTab == 0) {
-            int arrowW = 24;
-            int arrowH = 46;
-            int leftArrowX = startX - arrowW - 12;
-            int arrowY = doorsY + (doorH - arrowH) / 2;
-            boolean canGoLeft = (corridorPage > 0);
-            boolean hoverLeft = canGoLeft && mouseX >= leftArrowX && mouseX <= leftArrowX + arrowW && mouseY >= arrowY && mouseY <= arrowY + arrowH;
-
-            graphics.fill(leftArrowX, arrowY, leftArrowX + arrowW, arrowY + arrowH, hoverLeft ? 0xDD334155 : 0x771E293B);
-            graphics.renderOutline(leftArrowX, arrowY, arrowW, arrowH, canGoLeft ? (hoverLeft ? 0xFFFFD700 : 0xFF64748B) : 0x33475569);
-            graphics.drawCenteredString(this.font, "◀", leftArrowX + arrowW / 2, arrowY + 19, canGoLeft ? (hoverLeft ? 0xFFFFE082 : 0xFFFFFFFF) : 0xFF475569);
-
-            int rightArrowX = startX + totalDoorsW + 12;
-            boolean canGoRight = (corridorPage < 1);
-            boolean hoverRight = canGoRight && mouseX >= rightArrowX && mouseX <= rightArrowX + arrowW && mouseY >= arrowY && mouseY <= arrowY + arrowH;
-
-            graphics.fill(rightArrowX, arrowY, rightArrowX + arrowW, arrowY + arrowH, hoverRight ? 0xDD334155 : 0x771E293B);
-            graphics.renderOutline(rightArrowX, arrowY, arrowW, arrowH, canGoRight ? (hoverRight ? 0xFFFFD700 : 0xFF64748B) : 0x33475569);
-            graphics.drawCenteredString(this.font, "▶", rightArrowX + arrowW / 2, arrowY + 19, canGoRight ? (hoverRight ? 0xFFFFE082 : 0xFFFFFFFF) : 0xFF475569);
-        }
-
-        for (int i = 0; i < count; i++) {
-            int floor = minFloor + i;
-            int dx = startX + i * (doorW + gap);
-            boolean isSelected = (floor == selectedFloor);
-            boolean isHover = mouseX >= dx && mouseX <= dx + doorW && mouseY >= doorsY && mouseY <= doorsY + doorH;
-            boolean isLocked = (floor > unlockedFloor);
-
-            renderSingleDomainDoor(graphics, dx, doorsY, doorW, doorH, floor, isSelected, isHover, isLocked);
-        }
-    }
-
-    /**
-     * Renderiza una auténtica PUERTA DE DOMINIO CELESTIAL inspirada fielmente en Genshin Impact.
-     */
-    private void renderSingleDomainDoor(GuiGraphics graphics, int x, int y, int w, int h, int floor, boolean isSelected, boolean isHover, boolean isLocked) {
-        int floorIdx = floor - 1;
-        int stars = starsPerFloor[floorIdx];
-        int recLevel = getRecommendedLevel(floor);
-        // the floor's banner, as tall as fits above its caption, lifted a little when chosen or under the mouse
-        int captionH = 30;
-        int bh = Math.min(h - captionH, (w * AbyssArt.BANNER_H) / AbyssArt.BANNER_W);
-        int bw = (bh * AbyssArt.BANNER_W) / AbyssArt.BANNER_H;
-        int bx = x + (w - bw) / 2;
-        int by = y + (isSelected ? -4 : (isHover ? -2 : 0));
-        if (isSelected) {
-            graphics.fillGradient(bx - 8, by - 6, bx + bw + 8, by + bh + 6, 0x557FFFF4, 0x007FFFF4);
-        }
-        int state = isLocked ? 1 : (claimedRewards[floorIdx] ? 2 : 0);
+    /** A banner and what is written on it: the number in its disc, the stars won (x/9), the difficulty marks. */
+    private void drawBanner(GuiGraphics graphics, int floor, int x, int y, int bw, int bh, boolean selected) {
+        int idx = floor - 1;
+        boolean locked = floor > unlockedFloor;
+        int state = locked ? 1 : (claimedRewards[idx] ? 2 : 0);
         com.mojang.blaze3d.systems.RenderSystem.enableBlend();
-        graphics.blit(AbyssArt.banner(floor, state), bx, by, bw, bh, 0, 0, AbyssArt.BANNER_W, AbyssArt.BANNER_H, AbyssArt.BANNER_W, AbyssArt.BANNER_H);
+        graphics.blit(AbyssArt.banner(floor, state, selected), x, y, bw, bh, 0, 0, AbyssArt.BANNER_W, AbyssArt.BANNER_H, AbyssArt.BANNER_W, AbyssArt.BANNER_H);
         com.mojang.blaze3d.systems.RenderSystem.disableBlend();
-        // the numeral in the disc at the top
-        String roman = (floor >= 1 && floor <= 12) ? ROMAN_NUMERALS[floor - 1] : String.valueOf(floor);
-        int discY = by + (13 * bh) / AbyssArt.BANNER_H - 4;
-        graphics.drawCenteredString(this.font, roman, bx + bw / 2, discY, isLocked ? 0xFF4A5462 : 0xFF0E2E5C);
-        if (isLocked) {
-            int my = by + bh / 2 - 8;
-            graphics.drawCenteredString(this.font, "🔒", bx + bw / 2, my, 0xFFCBD5E1);
-            graphics.drawCenteredString(this.font, Component.translatable("gui.awakening_system.spiral_abyss.floor_req", floor - 1).getString(), bx + bw / 2, my + 12, 0xFFCBD5E1);
+        float s = bh / (float) AbyssArt.BANNER_H;
+        int cx = x + bw / 2;
+        // the number, dark on the white disc
+        String num = String.valueOf(floor);
+        graphics.pose().pushPose();
+        float ts = Math.max(1.0F, s * 1.25F);
+        graphics.pose().translate(cx, y + AbyssArt.DISC_Y * s, 0);
+        graphics.pose().scale(ts, ts, 1);
+        graphics.drawString(this.font, num, -this.font.width(num) / 2, -4, 0xFF2A3A4C, false);
+        graphics.pose().popPose();
+        // under the diamond: progress if it is begun but not finished
+        int under = (int) (y + (AbyssArt.DIAMOND_Y + 13) * s);
+        int stars = starsPerFloor[idx];
+        if (!locked && state != 2) {
+            String prog = stars + "/9";
+            int pw = this.font.width(prog) + 6;
+            graphics.fill(cx - pw / 2, under - 1, cx + pw / 2, under + 9, 0xCC2E3E50);
+            graphics.drawString(this.font, prog, cx - this.font.width(prog) / 2, under, 0xFFE8EEF4, false);
+        } else if (locked) {
+            String lk = Component.translatable("gui.awakening_system.spiral_abyss.locked").getString();
+            int pw = this.font.width(lk) + 6;
+            graphics.fill(cx - pw / 2, under - 1, cx + pw / 2, under + 9, 0xCC3A4656);
+            graphics.drawString(this.font, lk, cx - this.font.width(lk) / 2, under, 0xFFCBD5E1, false);
         }
-        // the caption under the banner: the floor and its stars
-        int capY = by + bh + 4;
-        graphics.drawCenteredString(this.font, Component.translatable("gui.awakening_system.spiral_abyss.floor_title", floor).getString(), x + w / 2, capY,
-                isLocked ? 0xFF94A3B8 : (isSelected ? 0xFFFFF3C4 : 0xFFE6FAFF));
-        if (!isLocked) {
-            String starStr = "★ " + stars + " / 9";
-            graphics.drawCenteredString(this.font, starStr, x + w / 2, capY + 11, stars >= 9 ? 0xFFFFD86B : (stars > 0 ? 0xFF9FE7FF : 0xFFB0BEC9));
-        } else {
-            graphics.drawCenteredString(this.font, Component.translatable("gui.awakening_system.spiral_abyss.rec_level", recLevel).getString(), x + w / 2, capY + 11, 0xFF94A3B8);
+        // difficulty marks at the foot: one diamond on the first floors, two from floor 5
+        int marks = floor <= 4 ? 1 : 2;
+        int my = (int) (y + (AbyssArt.BANNER_H - 22) * s);
+        for (int m = 0; m < marks; m++) {
+            int mx = cx + (m - (marks - 1) / 2.0F > 0 ? 4 : (marks == 1 ? 0 : -4));
+            diamond(graphics, mx, my, 3, 0xFFFFFFFF, 0xFF8C9EAE);
         }
-        if (!isLocked && stars >= 3 && !claimedRewards[floorIdx]) {
-            int tagW = 42, tagH = 11, tagX = x + (w - tagW) / 2, tagY = by - 7;
-            graphics.fill(tagX, tagY, tagX + tagW, tagY + tagH, 0xFFB45309);
-            graphics.renderOutline(tagX, tagY, tagW, tagH, 0xFFFFD700);
-            graphics.drawCenteredString(this.font, Component.translatable("gui.awakening_system.spiral_abyss.reward_tag").getString(), tagX + tagW / 2, tagY + 2, 0xFFFFFFFF);
-        }
-    }
-
-    /**
-     * Renderiza una columna cilíndrica con acanaladuras estriadas y canal rúnico luminiscente.
-     */
-    private void renderFlutedPillar(GuiGraphics graphics, int px, int py, int pw, int ph, int outlineCol, boolean isSelected, int floor, long time) {
-        graphics.fill(px - 1, py, px + pw + 1, py + 5, 0xFF475569);
-        graphics.renderOutline(px - 1, py, pw + 2, 5, outlineCol);
-
-        graphics.fill(px, py + 5, px + pw, py + ph - 5, 0xFF1E293B);
-        graphics.fill(px + 1, py + 5, px + 2, py + ph - 5, 0xFF64748B);
-        graphics.fill(px + 3, py + 5, px + 4, py + ph - 5, 0xFF0F172A);
-        graphics.fill(px + pw - 2, py + 5, px + pw - 1, py + ph - 5, 0xFF0F172A);
-
-        int runeCol = (floor >= 9) ? 0x88C084FC : 0x8838BDF8;
-        for (int ry = py + 8; ry < py + ph - 10; ry += 8) {
-            graphics.fill(px + pw / 2, ry, px + pw / 2 + 1, ry + 3, runeCol);
-        }
-
-        graphics.fill(px - 1, py + ph - 5, px + pw + 1, py + ph, 0xFF475569);
-        graphics.renderOutline(px - 1, py + ph - 5, pw + 2, 5, outlineCol);
-    }
-
-    /**
-     * Renderiza una gema de estrella con relieve de oro si está conseguida, o un hueco oscuro si no.
-     */
-    private void renderChamberStarGem(GuiGraphics graphics, int cx, int cy, boolean lit) {
-        if (lit) {
-            graphics.fill(cx - 3, cy, cx + 4, cy + 1, 0xFFFFD700);
-            graphics.fill(cx, cy - 3, cx + 1, cy + 4, 0xFFFFD700);
-            graphics.fill(cx - 1, cy - 1, cx + 2, cy + 2, 0xFFFFFFFF);
-        } else {
-            graphics.fill(cx - 2, cy - 2, cx + 3, cy + 3, 0xFF1E293B);
-            graphics.renderOutline(cx - 2, cy - 2, 5, 5, 0xFF475569);
+        // a reward ready to collect shines on the disc
+        if (!locked && stars >= 3 && !claimedRewards[idx]) {
+            float pulse = (float) (Math.sin(System.currentTimeMillis() / 300.0) * 0.5 + 0.5);
+            graphics.fill(cx + (int) (8 * s), y + (int) (14 * s), cx + (int) (12 * s), y + (int) (18 * s), ((int) (120 + pulse * 135) << 24) | 0xFFD84A);
         }
     }
 
-    private void drawTriquetraSymbol(GuiGraphics graphics, int cx, int cy, int size, int color) {
-        int r = Math.max(6, size / 2);
-        int topY = cy - (int) (r * 0.45);
-        int blX = cx - (int) (r * 0.42);
-        int brX = cx + (int) (r * 0.42);
-        int botY = cy + (int) (r * 0.30);
-
-        drawDottedEllipse(graphics, cx, topY, (int) (r * 0.55), (int) (r * 0.55), color);
-        drawDottedEllipse(graphics, blX, botY, (int) (r * 0.55), (int) (r * 0.55), color);
-        drawDottedEllipse(graphics, brX, botY, (int) (r * 0.55), (int) (r * 0.55), color);
-        drawDottedEllipse(graphics, cx, cy, (int) (r * 0.85), (int) (r * 0.85), color);
-    }
-
-    private void drawDottedEllipse(GuiGraphics graphics, int cx, int cy, int rx, int ry, int color) {
-        int steps = 18;
-        for (int i = 0; i < steps; i++) {
-            double angle = (i * Math.PI * 2) / steps;
-            int px = cx + (int) (Math.cos(angle) * rx);
-            int py = cy + (int) (Math.sin(angle) * ry);
-            graphics.fill(px, py, px + 1, py + 1, color);
-        }
-    }
-
-    private void drawChainDiagonal(GuiGraphics graphics, int x1, int y1, int x2, int y2) {
-        int steps = 16;
-        for (int i = 0; i <= steps; i++) {
-            float t = i / (float) steps;
-            int px = (int) (x1 + (x2 - x1) * t);
-            int py = (int) (y1 + (y2 - y1) * t);
-            graphics.fill(px - 1, py - 1, px + 2, py + 2, 0xFF475569);
-            graphics.fill(px, py, px + 1, py + 1, 0xFF94A3B8);
-        }
-    }
-
-    private void renderFloorDetailPanel(GuiGraphics graphics, int mouseX, int mouseY, int x, int y, int w, int h) {
-        graphics.fill(x, y, x + w, y + h, 0xEE0B0F1A);
-        graphics.renderOutline(x, y, w, h, 0xFF2D3748);
-
-        int floorIdx = selectedFloor - 1;
-        int stars = starsPerFloor[floorIdx];
-        boolean isLocked = (selectedFloor > unlockedFloor);
-        int recLevel = getRecommendedLevel(selectedFloor);
-
-        int pad = 8;
-        int leftColW = (int) ((w - pad * 3) * 0.48);
-        int rightColW = w - pad * 3 - leftColW;
-        int rightColX = x + pad + leftColW + pad;
-
-        int leftY = y + pad;
-        int leftH = h - pad * 2;
-        graphics.fill(x + pad, leftY, x + pad + leftColW, leftY + leftH, 0xEE111827);
-        graphics.renderOutline(x + pad, leftY, leftColW, leftH, 0xFF374151);
-
-        String badge = getElementalBadge(selectedFloor);
-        int badgeCol = getElementalColor(selectedFloor);
-        graphics.drawString(this.font, badge, x + pad + 8, leftY + 6, badgeCol, true);
-
-        String disorderDesc = getLeyLineDisorderText(selectedFloor);
-        List<net.minecraft.util.FormattedCharSequence> lines = this.font.split(Component.literal(disorderDesc), leftColW - 16);
-        int lineY = leftY + 18;
-        for (var line : lines) {
-            graphics.drawString(this.font, line, x + pad + 8, lineY, 0xFFE5E7EB, false);
-            lineY += 9;
-        }
-
-        String tip = Component.translatable("gui.awakening_system.spiral_abyss.tactic_prefix").getString() + " " + getTacticalTip(selectedFloor);
-        List<net.minecraft.util.FormattedCharSequence> tipLines = this.font.split(Component.literal(tip), leftColW - 16);
-        int tipY = Math.max(lineY + 2, leftY + leftH - 26);
-        for (var tLine : tipLines) {
-            if (tipY < leftY + leftH - 12) {
-                graphics.drawString(this.font, tLine, x + pad + 8, tipY, 0xFFFDE68A, false);
-                tipY += 9;
+    /** The row of banners, the hint at the bottom left and the Confirm / Leave buttons at the bottom right. */
+    private void renderRow(GuiGraphics graphics, int mouseX, int mouseY, int w, int h) {
+        int[] g = rowGeometry();
+        int n = rowCount();
+        for (int i = 0; i < n; i++) {
+            int x = g[0] + i * (g[2] + g[4]);
+            if (selectedTab == 0 && i == 8) {
+                // the rift into the Spire, open once the Corridor's last floor is reached
+                boolean open = unlockedFloor >= 9;
+                boolean hover = over(mouseX, mouseY, x, g[1], g[2], g[3]);
+                com.mojang.blaze3d.systems.RenderSystem.enableBlend();
+                graphics.blit(AbyssArt.rift(open), x, g[1] - (hover ? 3 : 0), g[2], g[3], 0, 0, AbyssArt.BANNER_W, AbyssArt.BANNER_H, AbyssArt.BANNER_W, AbyssArt.BANNER_H);
+                com.mojang.blaze3d.systems.RenderSystem.disableBlend();
+                if (!open) graphics.drawCenteredString(this.font, "🔒", x + g[2] / 2, g[1] + g[3] / 2 - 4, 0xFFE0D8F0);
+                continue;
             }
+            int floor = rowFirstFloor() + i;
+            boolean sel = floor == selectedFloor;
+            boolean hover = over(mouseX, mouseY, x, g[1], g[2], g[3]);
+            int lift = sel ? 6 : (hover ? 3 : 0);
+            int extra = sel ? g[2] / 10 : 0;
+            drawBanner(graphics, floor, x - extra, g[1] - lift - extra, g[2] + extra * 2, g[3] + extra * 2, sel);
         }
-
-        int gaugeY = leftY + leftH - 11;
-        String lvlStatus = this.playerLevel >= recLevel ? Component.translatable("gui.awakening_system.spiral_abyss.level_met").getString() : Component.translatable("gui.awakening_system.spiral_abyss.level_low").getString();
-        String lvlText = Component.translatable("gui.awakening_system.spiral_abyss.level_gauge", recLevel, lvlStatus).getString();
-        graphics.drawString(this.font, lvlText, x + pad + 8, gaugeY, (this.playerLevel >= recLevel) ? 0xFF4ADE80 : 0xFFF87171, false);
-
-        int barX = x + pad + leftColW - 74;
-        int barW = 66;
-        int barH = 5;
-        graphics.fill(barX, gaugeY + 2, barX + barW, gaugeY + 2 + barH, 0xFF1F2937);
-        int fillW = Math.min(barW, Math.max(4, (barW * this.playerLevel) / recLevel));
-        graphics.fill(barX, gaugeY + 2, barX + fillW, gaugeY + 2 + barH, (this.playerLevel >= recLevel) ? 0xFF22C55E : 0xFFEF4444);
-        graphics.renderOutline(barX, gaugeY + 2, barW, barH, 0xFF4B5563);
-
-        int rightY = y + pad;
-
-        int chamberTabW = (rightColW - 8) / 3;
-        int chamberTabH = 18;
-        for (int c = 1; c <= 3; c++) {
-            int cx = rightColX + (c - 1) * (chamberTabW + 4);
-            boolean isCSelected = (c == selectedChamber);
-            boolean isCHover = mouseX >= cx && mouseX <= cx + chamberTabW && mouseY >= rightY && mouseY <= rightY + chamberTabH;
-
-            graphics.fill(cx, rightY, cx + chamberTabW, rightY + chamberTabH, isCSelected ? 0xEE1E3A8A : (isCHover ? 0x99374151 : 0x771F2937));
-            graphics.renderOutline(cx, rightY, chamberTabW, chamberTabH, isCSelected ? 0xFF38BDF8 : 0x334B5563);
-            graphics.drawCenteredString(this.font, Component.translatable("gui.awakening_system.spiral_abyss.chamber_tab", c).getString(), cx + chamberTabW / 2, rightY + 5, isCSelected ? 0xFFFFFFFF : 0xFF9CA3AF);
+        // the Spire's way back to the Corridor: a round arrow at the left
+        if (selectedTab == 1) {
+            int bx = 30, by = g[1] + g[3] / 2;
+            boolean hover = over(mouseX, mouseY, bx - 14, by - 14, 28, 28);
+            circle(graphics, bx, by, 13, hover ? 0xEE3A5A66 : 0xCC22343E, 0xFFBFD8E0);
+            graphics.drawCenteredString(this.font, "◀", bx, by - 4, 0xFFEAF6FA);
         }
-
-        int chamberBoxY = rightY + chamberTabH + 3;
-        int actionRowH = 22;
-        int chamberBoxH = leftH - chamberTabH - actionRowH - 7;
-        graphics.fill(rightColX, chamberBoxY, rightColX + rightColW, chamberBoxY + chamberBoxH, 0xEE111827);
-        graphics.renderOutline(rightColX, chamberBoxY, rightColW, chamberBoxH, 0xFF374151);
-
-        if (selectedFloor >= 5) {
-            graphics.drawString(this.font, Component.translatable("gui.awakening_system.spiral_abyss.half_first").getString() + " §f" + getChamberHalfMonsters(selectedFloor, selectedChamber, 1), rightColX + 6, chamberBoxY + 3, 0xFFE5E7EB, false);
-            graphics.drawString(this.font, Component.translatable("gui.awakening_system.spiral_abyss.half_second").getString() + " §f" + getChamberHalfMonsters(selectedFloor, selectedChamber, 2), rightColX + 6, chamberBoxY + 12, 0xFFE5E7EB, false);
-            graphics.drawString(this.font, Component.translatable("gui.awakening_system.spiral_abyss.time_goals").getString(), rightColX + 6, chamberBoxY + 21, 0xFFD1D5DB, false);
-            graphics.drawString(this.font, Component.translatable("gui.awakening_system.spiral_abyss.two_phase_desc").getString(), rightColX + 6, chamberBoxY + 30, 0xFF9CA3AF, false);
-        } else {
-            graphics.drawString(this.font, Component.translatable("gui.awakening_system.spiral_abyss.monsters_prefix").getString() + " §f" + getChamberMonsters(selectedFloor, selectedChamber), rightColX + 6, chamberBoxY + 4, 0xFFE5E7EB, false);
-            graphics.drawString(this.font, Component.translatable("gui.awakening_system.spiral_abyss.time_goals").getString(), rightColX + 6, chamberBoxY + 14, 0xFFD1D5DB, false);
-            graphics.drawString(this.font, Component.translatable("gui.awakening_system.spiral_abyss.single_phase_desc").getString(), rightColX + 6, chamberBoxY + 24, 0xFF9CA3AF, false);
-        }
-
-        int actionRowY = y + h - pad - actionRowH;
-        int rewardBoxW = (int) (rightColW * 0.58);
-        int challengeBtnW = rightColW - rewardBoxW - 6;
-
-        boolean alreadyClaimed = claimedRewards[floorIdx];
-        boolean canClaim = (stars >= 3 && !alreadyClaimed);
-        boolean hoverClaim = mouseX >= rightColX && mouseX <= rightColX + rewardBoxW && mouseY >= actionRowY && mouseY <= actionRowY + actionRowH;
-
-        int claimBg = alreadyClaimed ? 0xEE14532D : (canClaim ? (hoverClaim ? 0xFFD97706 : 0xFFB45309) : 0xEE1F2937);
-        int claimBorder = alreadyClaimed ? 0xFF22C55E : (canClaim ? 0xFFFFD700 : 0xFF374151);
-        graphics.fill(rightColX, actionRowY, rightColX + rewardBoxW, actionRowY + actionRowH, claimBg);
-        graphics.renderOutline(rightColX, actionRowY, rewardBoxW, actionRowH, claimBorder);
-
-        String claimText = alreadyClaimed ? Component.translatable("gui.awakening_system.spiral_abyss.rewards_claimed").getString() : (canClaim ? Component.translatable("gui.awakening_system.spiral_abyss.claim_button").getString() : Component.translatable("gui.awakening_system.spiral_abyss.rewards_requirement").getString());
-        int claimCol = alreadyClaimed ? 0xFF86EFAC : (canClaim ? 0xFFFFFFFF : 0xFF9CA3AF);
-        graphics.drawCenteredString(this.font, claimText, rightColX + rewardBoxW / 2, actionRowY + 7, claimCol);
-
-        int chX = rightColX + rewardBoxW + 6;
-        boolean canChallenge = !isLocked;
-        boolean hoverChallenge = canChallenge && mouseX >= chX && mouseX <= chX + challengeBtnW && mouseY >= actionRowY && mouseY <= actionRowY + actionRowH;
-
-        int actBg = isLocked ? 0xEE1F2937 : (hoverChallenge ? 0xFF2563EB : 0xFF1D4ED8);
-        int actBorder = isLocked ? 0xFF4B5563 : (hoverChallenge ? 0xFFFFD700 : 0xFF60A5FA);
-        graphics.fill(chX, actionRowY, chX + challengeBtnW, actionRowY + actionRowH, actBg);
-        graphics.renderOutline(chX, actionRowY, challengeBtnW, actionRowH, actBorder);
-        if (canChallenge) {
-            graphics.renderOutline(chX + 1, actionRowY + 1, challengeBtnW - 2, actionRowH - 2, 0x44FFFFFF);
-        }
-
-        String actText = isLocked ? Component.translatable("gui.awakening_system.spiral_abyss.challenge_locked").getString() : Component.translatable("gui.awakening_system.spiral_abyss.challenge_button", selectedFloor).getString();
-        int actCol = isLocked ? 0xFF9CA3AF : 0xFFFFFFFF;
-        graphics.drawCenteredString(this.font, actText, chX + challengeBtnW / 2, actionRowY + 7, actCol);
+        // the hint
+        String hint = Component.translatable(selectedTab == 0 ? "gui.awakening_system.spiral_abyss.hint_corridor" : "gui.awakening_system.spiral_abyss.hint_spire").getString();
+        graphics.drawString(this.font, hint, 30, h - 40, 0xFFE8D29A, true);
+        // the buttons
+        actionButton(graphics, mouseX, mouseY, w - 30 - 70, h - 34, "✕", Component.translatable("gui.awakening_system.spiral_abyss.leave").getString());
+        actionButton(graphics, mouseX, mouseY, w - 30 - 160, h - 34, "○", Component.translatable("gui.awakening_system.spiral_abyss.confirm").getString());
     }
+
+    private void circle(GuiGraphics g, int cx, int cy, int r, int fill, int edge) {
+        for (int dy = -r; dy <= r; dy++) {
+            int half = (int) Math.sqrt(r * r - dy * dy);
+            g.fill(cx - half, cy + dy, cx + half + 1, cy + dy + 1, fill);
+            g.fill(cx - half, cy + dy, cx - half + 1, cy + dy + 1, edge);
+            g.fill(cx + half, cy + dy, cx + half + 1, cy + dy + 1, edge);
+        }
+        g.fill(cx - (int) Math.sqrt(r * r - (r - 1) * (r - 1)), cy - r, cx + (int) Math.sqrt(r * r - (r - 1) * (r - 1)) + 1, cy - r + 1, edge);
+        g.fill(cx - (int) Math.sqrt(r * r - (r - 1) * (r - 1)), cy + r, cx + (int) Math.sqrt(r * r - (r - 1) * (r - 1)) + 1, cy + r + 1, edge);
+    }
+
+    /** A Genshin-like button: a round mark and its word. 80 wide, 16 tall. */
+    private void actionButton(GuiGraphics g, int mouseX, int mouseY, int x, int y, String mark, String label) {
+        boolean hover = over(mouseX, mouseY, x, y, 84, 18);
+        circle(g, x + 8, y + 8, 8, hover ? 0xFFF2F5F8 : 0x00000000, 0xFFE8EEF4);
+        g.drawCenteredString(this.font, mark, x + 8, y + 4, hover ? 0xFF2A3A4C : 0xFFE8EEF4);
+        g.drawString(this.font, label, x + 21, y + 4, hover ? 0xFFFFFFFF : 0xFFE8EEF4, true);
+    }
+
+    /** The floor's own view: its banner at the left; at the right its ley line disorder and its three chambers. */
+    private void renderDetailView(GuiGraphics graphics, int mouseX, int mouseY, int w, int h) {
+        int bh = Math.min((int) (h * 0.62), 260), bw = (bh * AbyssArt.BANNER_W) / AbyssArt.BANNER_H;
+        int bx = Math.max(24, w / 6 - bw / 2), by = (h - bh) / 2;
+        drawBanner(graphics, selectedFloor, bx, by, bw, bh, true);
+        int px = bx + bw + Math.max(20, w / 18), pw = Math.min(w - px - 30, 360);
+        int py = by + 4;
+        int idx = selectedFloor - 1;
+        // the title row: Floor N and the place's mood at the right
+        graphics.drawString(this.font, Component.translatable("gui.awakening_system.spiral_abyss.floor_title", selectedFloor).getString(), px, py, 0xFFFFFFFF, true);
+        String badge = getElementalBadge(selectedFloor);
+        graphics.drawString(this.font, badge, px + pw - this.font.width(badge), py, getElementalColor(selectedFloor), true);
+        graphics.fill(px, py + 12, px + pw, py + 13, 0x66E8EEF4);
+        // the ley line disorder
+        int y = py + 19;
+        graphics.drawString(this.font, Component.translatable("gui.awakening_system.spiral_abyss.disorder_title").getString(), px, y, 0xFFE8D29A, false);
+        y += 11;
+        for (var line : this.font.split(Component.literal("✦ " + getLeyLineDisorderText(selectedFloor)), pw)) {
+            graphics.drawString(this.font, line, px, y, 0xFFD8E2EA, false);
+            y += 10;
+        }
+        y += 8;
+        graphics.drawString(this.font, Component.translatable("gui.awakening_system.spiral_abyss.challenge_target").getString(), px, y, 0xFFE8D29A, false);
+        y += 12;
+        // the three chambers, each with its three stars
+        int stars = starsPerFloor[idx];
+        for (int c = 1; c <= 3; c++) {
+            int rowY = y + (c - 1) * 22;
+            boolean sel = c == selectedChamber;
+            boolean hover = over(mouseX, mouseY, px, rowY, pw, 19);
+            graphics.fill(px, rowY, px + pw, rowY + 19, sel ? 0xCC3A4C60 : (hover ? 0xAA2E3C4E : 0x99202C3A));
+            if (sel) graphics.renderOutline(px, rowY, pw, 19, 0xFFE8EEF4);
+            graphics.drawString(this.font, Component.translatable("gui.awakening_system.spiral_abyss.chamber_tab", c).getString(), px + 8, rowY + 6, 0xFFFFFFFF, false);
+            int won = Math.max(0, Math.min(3, stars - (c - 1) * 3));
+            for (int s = 0; s < 3; s++)
+                graphics.drawString(this.font, "★", px + pw - 40 + s * 11, rowY + 6, s < won ? 0xFFFFE08A : 0xFF5A6878, false);
+        }
+        y += 3 * 22 + 6;
+        // what waits in the chosen chamber, and the level asked
+        String monsters = selectedFloor >= 5
+                ? getChamberHalfMonsters(selectedFloor, selectedChamber, 1) + " / " + getChamberHalfMonsters(selectedFloor, selectedChamber, 2)
+                : getChamberMonsters(selectedFloor, selectedChamber);
+        for (var line : this.font.split(Component.literal(Component.translatable("gui.awakening_system.spiral_abyss.monsters_prefix").getString() + " " + monsters), pw)) {
+            graphics.drawString(this.font, line, px, y, 0xFFB8C4D0, false);
+            y += 10;
+        }
+        int rec = getRecommendedLevel(selectedFloor);
+        String lvl = Component.translatable("gui.awakening_system.spiral_abyss.level_gauge", rec,
+                Component.translatable(this.playerLevel >= rec ? "gui.awakening_system.spiral_abyss.level_met" : "gui.awakening_system.spiral_abyss.level_low").getString()).getString();
+        graphics.drawString(this.font, lvl, px, y + 2, this.playerLevel >= rec ? 0xFF7EE08A : 0xFFF08080, false);
+        // the buttons: collect the reward, start, back
+        boolean canClaim = stars >= 3 && !claimedRewards[idx];
+        int bxs = w - 30 - 250;
+        actionButton(graphics, mouseX, mouseY, bxs, h - 34, "□", Component.translatable(claimedRewards[idx] ? "gui.awakening_system.spiral_abyss.rewards_claimed"
+                : (canClaim ? "gui.awakening_system.spiral_abyss.claim_button" : "gui.awakening_system.spiral_abyss.rewards_requirement")).getString());
+        actionButton(graphics, mouseX, mouseY, w - 30 - 160, h - 34, "▷", Component.translatable(selectedFloor > unlockedFloor
+                ? "gui.awakening_system.spiral_abyss.challenge_locked" : "gui.awakening_system.spiral_abyss.start").getString());
+        actionButton(graphics, mouseX, mouseY, w - 30 - 70, h - 34, "✕", Component.translatable("gui.awakening_system.spiral_abyss.back").getString());
+    }
+
+    // ---- clicks
 
     @Override
     public boolean mouseClicked(double mouseX, double mouseY, int button) {
         if (button != 0) return super.mouseClicked(mouseX, mouseY, button);
-
-        int w = this.width;
-        int h = this.height;
-
-        if (mouseX >= 12 && mouseX <= 68 && mouseY >= 6 && mouseY <= 28) {
+        int w = this.width, h = this.height;
+        if (detailView) {
+            int bh = Math.min((int) (h * 0.62), 260), bw = (bh * AbyssArt.BANNER_W) / AbyssArt.BANNER_H;
+            int bx = Math.max(24, w / 6 - bw / 2), by = (h - bh) / 2;
+            int px = bx + bw + Math.max(20, w / 18), pw = Math.min(w - px - 30, 360);
+            int idx = selectedFloor - 1;
+            // the chamber rows sit below the disorder text: worked out as drawn
+            int y = by + 4 + 19 + 11 + 10 * this.font.split(Component.literal("✦ " + getLeyLineDisorderText(selectedFloor)), pw).size() + 8 + 12;
+            for (int c = 1; c <= 3; c++) {
+                if (over(mouseX, mouseY, px, y + (c - 1) * 22, pw, 19)) {
+                    if (selectedChamber != c) playClickSound();
+                    selectedChamber = c;
+                    return true;
+                }
+            }
+            if (over(mouseX, mouseY, w - 30 - 250, h - 34, 84, 18)) {
+                if (starsPerFloor[idx] >= 3 && !claimedRewards[idx]) {
+                    PacketDistributor.sendToServer(new ClaimAbyssRewardPayload(this.selectedFloor));
+                    if (this.minecraft != null && this.minecraft.player != null) this.minecraft.player.playSound(SoundEvents.PLAYER_LEVELUP, 1.0F, 1.2F);
+                } else playClickSound();
+                return true;
+            }
+            if (over(mouseX, mouseY, w - 30 - 160, h - 34, 84, 18)) {
+                if (this.selectedFloor <= this.unlockedFloor) {
+                    PacketDistributor.sendToServer(new StartAbyssFloorPayload(this.selectedFloor));
+                    if (this.minecraft != null && this.minecraft.player != null) this.minecraft.player.playSound(ModSounds.ABYSS_ENTER.value(), 0.9F, 1.0F);
+                    this.onClose();
+                } else if (this.minecraft != null && this.minecraft.player != null) {
+                    this.minecraft.player.playSound(SoundEvents.CHEST_LOCKED, 0.8F, 1.0F);
+                }
+                return true;
+            }
+            if (over(mouseX, mouseY, w - 30 - 70, h - 34, 84, 18)) {
+                detailView = false;
+                playClickSound();
+                return true;
+            }
+            return super.mouseClicked(mouseX, mouseY, button);
+        }
+        // the row of banners
+        int[] g = rowGeometry();
+        for (int i = 0; i < rowCount(); i++) {
+            int x = g[0] + i * (g[2] + g[4]);
+            if (!over(mouseX, mouseY, x, g[1] - 8, g[2], g[3] + 8)) continue;
+            if (selectedTab == 0 && i == 8) {
+                if (unlockedFloor >= 9) {
+                    selectedTab = 1;
+                    selectedFloor = Math.max(9, Math.min(unlockedFloor, 12));
+                    if (this.minecraft != null && this.minecraft.player != null) this.minecraft.player.playSound(ModSounds.ABYSS_ENTER.value(), 0.6F, 1.2F);
+                } else if (this.minecraft != null && this.minecraft.player != null) {
+                    this.minecraft.player.playSound(SoundEvents.CHEST_LOCKED, 0.8F, 1.0F);
+                }
+                return true;
+            }
+            int floor = rowFirstFloor() + i;
+            if (floor == selectedFloor && floor <= unlockedFloor) {
+                // a second click on the chosen banner opens it, as Confirm does
+                detailView = true;
+                selectedChamber = 1;
+            }
+            if (selectedFloor != floor) playClickSound();
+            selectedFloor = floor;
+            return true;
+        }
+        if (selectedTab == 1 && over(mouseX, mouseY, 16, g[1] + g[3] / 2 - 14, 28, 28)) {
+            selectedTab = 0;
+            selectedFloor = Math.max(1, Math.min(unlockedFloor, 8));
+            playClickSound();
+            return true;
+        }
+        if (over(mouseX, mouseY, w - 30 - 160, h - 34, 84, 18)) {
+            if (selectedFloor <= unlockedFloor) {
+                detailView = true;
+                selectedChamber = 1;
+                playClickSound();
+            } else if (this.minecraft != null && this.minecraft.player != null) {
+                this.minecraft.player.playSound(SoundEvents.CHEST_LOCKED, 0.8F, 1.0F);
+            }
+            return true;
+        }
+        if (over(mouseX, mouseY, w - 30 - 70, h - 34, 84, 18)) {
             playClickSound();
             this.onClose();
             return true;
         }
-
-        int tabY = 36;
-        int tabH = 22;
-        int tabW = 175;
-        int startX = (w - (tabW * 2 + 8)) / 2;
-
-        if (mouseX >= startX && mouseX <= startX + tabW && mouseY >= tabY && mouseY <= tabY + tabH) {
-            if (this.selectedTab != 0) {
-                this.selectedTab = 0;
-                this.selectedFloor = (corridorPage == 0) ? 1 : 5;
-                playClickSound();
-            }
-            return true;
-        }
-        int tab1X = startX + tabW + 8;
-        if (mouseX >= tab1X && mouseX <= tab1X + tabW && mouseY >= tabY && mouseY <= tabY + tabH) {
-            if (this.selectedTab != 1) {
-                this.selectedTab = 1;
-                this.selectedFloor = 9;
-                playClickSound();
-            }
-            return true;
-        }
-
-        int bottomPad = 8;
-        int detailsH = Math.min(132, Math.max(108, (int) (h * 0.30)));
-        int detailsY = h - detailsH - bottomPad;
-        int doorsY = tabY + tabH + 8;
-        int doorH = detailsY - doorsY - 8;
-
-        int count = 4;
-        int maxDoorW = (w - 140) / count;
-        int doorW = Math.max(82, Math.min((int) (doorH * 0.54), maxDoorW));
-        int gap = Math.min(24, Math.max(10, (w - 90 - count * doorW) / (count + 1)));
-        int totalDoorsW = count * doorW + (count - 1) * gap;
-        int doorsStartX = (w - totalDoorsW) / 2;
-
-        if (selectedTab == 0) {
-            int arrowW = 24;
-            int arrowH = 46;
-            int leftArrowX = doorsStartX - arrowW - 12;
-            int arrowY = doorsY + (doorH - arrowH) / 2;
-
-            if (mouseX >= leftArrowX && mouseX <= leftArrowX + arrowW && mouseY >= arrowY && mouseY <= arrowY + arrowH) {
-                if (corridorPage > 0) {
-                    corridorPage--;
-                    selectedFloor = (corridorPage == 0) ? 1 : 5;
-                    playClickSound();
-                }
-                return true;
-            }
-
-            int rightArrowX = doorsStartX + totalDoorsW + 12;
-            if (mouseX >= rightArrowX && mouseX <= rightArrowX + arrowW && mouseY >= arrowY && mouseY <= arrowY + arrowH) {
-                if (corridorPage < 1) {
-                    corridorPage++;
-                    selectedFloor = 5;
-                    playClickSound();
-                }
-                return true;
-            }
-        }
-
-        int minFloor = (selectedTab == 0) ? ((corridorPage == 0) ? 1 : 5) : 9;
-        for (int i = 0; i < 4; i++) {
-            int floor = minFloor + i;
-            int dx = doorsStartX + i * (doorW + gap);
-            if (mouseX >= dx && mouseX <= dx + doorW && mouseY >= doorsY - 6 && mouseY <= doorsY + doorH + 6) {
-                if (this.selectedFloor != floor) {
-                    this.selectedFloor = floor;
-                    playClickSound();
-                }
-                return true;
-            }
-        }
-
-        int pad = 8;
-        int leftColW = (int) ((w - 32 - pad * 3) * 0.48);
-        int rightColW = (w - 32) - pad * 3 - leftColW;
-        int rightColX = 16 + pad + leftColW + pad;
-        int rightY = detailsY + pad;
-
-        int chamberTabW = (rightColW - 8) / 3;
-        int chamberTabH = 18;
-        for (int c = 1; c <= 3; c++) {
-            int cx = rightColX + (c - 1) * (chamberTabW + 4);
-            if (mouseX >= cx && mouseX <= cx + chamberTabW && mouseY >= rightY && mouseY <= rightY + chamberTabH) {
-                if (this.selectedChamber != c) {
-                    this.selectedChamber = c;
-                    playClickSound();
-                }
-                return true;
-            }
-        }
-
-        int actionRowH = 22;
-        int actionRowY = detailsY + detailsH - pad - actionRowH;
-        int rewardBoxW = (int) (rightColW * 0.58);
-        if (mouseX >= rightColX && mouseX <= rightColX + rewardBoxW && mouseY >= actionRowY && mouseY <= actionRowY + actionRowH) {
-            int floorIdx = selectedFloor - 1;
-            int stars = starsPerFloor[floorIdx];
-            boolean alreadyClaimed = claimedRewards[floorIdx];
-            if (stars >= 3 && !alreadyClaimed) {
-                PacketDistributor.sendToServer(new ClaimAbyssRewardPayload(this.selectedFloor));
-                if (this.minecraft != null && this.minecraft.player != null) {
-                    this.minecraft.player.playSound(SoundEvents.PLAYER_LEVELUP, 1.0F, 1.2F);
-                }
-            } else {
-                playClickSound();
-            }
-            return true;
-        }
-
-        int challengeBtnW = rightColW - rewardBoxW - 6;
-        int chX = rightColX + rewardBoxW + 6;
-        if (mouseX >= chX && mouseX <= chX + challengeBtnW && mouseY >= actionRowY && mouseY <= actionRowY + actionRowH) {
-            if (this.selectedFloor <= this.unlockedFloor) {
-                PacketDistributor.sendToServer(new StartAbyssFloorPayload(this.selectedFloor));
-                if (this.minecraft != null && this.minecraft.player != null) {
-                    this.minecraft.player.playSound(ModSounds.ABYSS_ENTER.value(), 0.9F, 1.0F);
-                }
-                this.onClose();
-            } else {
-                if (this.minecraft != null && this.minecraft.player != null) {
-                    this.minecraft.player.playSound(SoundEvents.CHEST_LOCKED, 0.8F, 1.0F);
-                }
-            }
-            return true;
-        }
-
         return super.mouseClicked(mouseX, mouseY, button);
+    }
+
+    @Override
+    public boolean keyPressed(int keyCode, int scanCode, int modifiers) {
+        // Escape in a floor's view goes back to the row first
+        if (keyCode == org.lwjgl.glfw.GLFW.GLFW_KEY_ESCAPE && detailView) {
+            detailView = false;
+            return true;
+        }
+        return super.keyPressed(keyCode, scanCode, modifiers);
     }
 
     private void playClickSound() {

@@ -1,4 +1,12 @@
 {
+    "gui.awakening_system.spiral_abyss.challenge_target": "Цель испытания",
+    "gui.awakening_system.spiral_abyss.disorder_title": "Нарушение лей-линий",
+    "gui.awakening_system.spiral_abyss.back": "Назад",
+    "gui.awakening_system.spiral_abyss.start": "Начать",
+    "gui.awakening_system.spiral_abyss.confirm": "Подтвердить",
+    "gui.awakening_system.spiral_abyss.leave": "Выйти",
+    "gui.awakening_system.spiral_abyss.hint_spire": "Шпиль Луны Бездны обновляется с каждым циклом.",
+    "gui.awakening_system.spiral_abyss.hint_corridor": "Сокровища Коридора Бездны можно получить лишь один раз. Пройдите 8-й этаж, чтобы открыть Шпиль Луны Бездны.",
     "awakening_system.sanmortis.none_near": "§cВ радиусе 40 блоков нет банки San Mortis.",
     "awakening_system.sanmortis.removed": "§aБлижайшую банку San Mortis снова можно сломать.",
     "item.awakening_system.cooked_jurel": "Жареная ставрида",

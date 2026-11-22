@@ -1,4 +1,12 @@
 {
+    "gui.awakening_system.spiral_abyss.challenge_target": "Objetivo del desafío",
+    "gui.awakening_system.spiral_abyss.disorder_title": "Trastorno de las Líneas Ley",
+    "gui.awakening_system.spiral_abyss.back": "Volver",
+    "gui.awakening_system.spiral_abyss.start": "Iniciar",
+    "gui.awakening_system.spiral_abyss.confirm": "Confirmar",
+    "gui.awakening_system.spiral_abyss.leave": "Salir",
+    "gui.awakening_system.spiral_abyss.hint_spire": "La Espiral de la Luna Abisal se reinicia con cada ciclo.",
+    "gui.awakening_system.spiral_abyss.hint_corridor": "Los tesoros del Corredor del Abismo solo se pueden obtener una vez. Supera el piso 8 para abrir la Espiral de la Luna Abisal.",
     "awakening_system.sanmortis.none_near": "§cNo hay ninguna lata de San Mortis a menos de 40 bloques.",
     "awakening_system.sanmortis.removed": "§aLa lata de San Mortis más cercana ya se puede romper.",
     "item.awakening_system.cooked_jurel": "Jurel cocinado",
