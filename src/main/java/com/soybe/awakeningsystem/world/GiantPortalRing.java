@@ -193,7 +193,15 @@ public final class GiantPortalRing {
     private static void register(CommandDispatcher<CommandSourceStack> d) {
         d.register(Commands.literal("giantportal").requires(s -> s.hasPermission(2))
                 .then(Commands.literal("ruined").executes(ctx -> place(ctx.getSource(), false)))
-                .then(Commands.literal("repaired").executes(ctx -> place(ctx.getSource(), true))));
+                .then(Commands.literal("repaired").executes(ctx -> place(ctx.getSource(), true)))
+                .then(Commands.literal("fix").executes(ctx -> {
+                    ctx.getSource().sendSuccess(() -> GiantRingSite.forceRepair(ctx.getSource().getServer()), true);
+                    return 1;
+                }))
+                .then(Commands.literal("locate").executes(ctx -> {
+                    ctx.getSource().sendSuccess(() -> GiantRingSite.describe(ctx.getSource().getServer()), false);
+                    return 1;
+                })));
     }
 
     private static int place(CommandSourceStack src, boolean repaired) {

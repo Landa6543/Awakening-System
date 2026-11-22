@@ -1,4 +1,12 @@
 {
+    "awakening_system.giant_portal.given": "§bАлтарь принимает ваше подношение.§r Восстановление кольца: %s",
+    "awakening_system.giant_portal.need": "Восстановление кольца: %s. Принесите к алтарю недостающее.",
+    "awakening_system.giant_portal.locate_repaired": "Восстановленное гигантское кольцо стоит в Тейвате на %s, %s.",
+    "awakening_system.giant_portal.locate_ruined": "Разрушенное гигантское кольцо стоит в Тейвате на %s, %s.",
+    "awakening_system.giant_portal.locate_unbuilt": "Гигантское кольцо стоит в Тейвате около %s, %s (появляется, когда кто-то подходит).",
+    "awakening_system.giant_portal.no_teyvat": "Тейват недоступен.",
+    "awakening_system.giant_portal.already_repaired": "Кольцо уже восстановлено.",
+    "awakening_system.giant_portal.repaired": "§bГигантское кольцо снова цело. Его руны светятся: однажды оно откроется в Этергард.",
     "awakening_system.giant_portal.built_repaired": "Восстановленное гигантское кольцо построено в %s, %s, %s.",
     "awakening_system.giant_portal.built_ruined": "Разрушенное гигантское кольцо построено в %s, %s, %s.",
     "awakening_system.sanmortis.dance": "Ставриды начинают свой танец.",
