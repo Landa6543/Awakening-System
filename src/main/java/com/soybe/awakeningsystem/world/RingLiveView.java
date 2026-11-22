@@ -34,8 +34,8 @@ import java.util.zip.InflaterInputStream;
  * whole box once; then, every second, only the 16-block sections that changed; and ten times a second the
  * creatures and players over there, where they are and which way they look. The client draws all of it inside
  * the ring (see {@code client.AethergardWindow}): the other world, live.
+ * Driven from {@link AethergardGate}'s tick; only its message registration below listens to events itself.
  */
-@EventBusSubscriber(modid = AwakeningSystemMod.MOD_ID)
 public final class RingLiveView {
     private RingLiveView() {}
 
