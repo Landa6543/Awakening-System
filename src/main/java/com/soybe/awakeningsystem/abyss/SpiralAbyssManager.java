@@ -373,10 +373,35 @@ public final class SpiralAbyssManager {
         player.displayClientMessage(Component.translatable("abyss.awakening_system.interact_key_prompt"), false);
     }
 
+    /**
+     * The arena's air is the Abyss's own calm biome, not the Warped Forest the dimension was made with (whose
+     * eerie ambient sound and floating spores filled every chamber). Done in pieces under the game's limit.
+     */
+    private static void calmBiome(ServerLevel level, BlockPos center) {
+        var biome = level.registryAccess().registryOrThrow(net.minecraft.core.registries.Registries.BIOME)
+                .getHolder(ResourceKey.create(net.minecraft.core.registries.Registries.BIOME,
+                        net.minecraft.resources.ResourceLocation.fromNamespaceAndPath(AwakeningSystemMod.MOD_ID, "spiral_abyss_hall")));
+        if (biome.isEmpty()) return;
+        for (int x = -64; x < 64; x += 32)
+            for (int z = -64; z < 64; z += 32)
+                for (int y = -48; y < 64; y += 16) {
+                    BlockPos from = center.offset(x, y, z), to = center.offset(x + 31, y + 15, z + 31);
+                    try {
+                        net.minecraft.server.commands.FillBiomeCommand.fill(level, from, to, biome.get());
+                    } catch (Exception ignored) {
+                    }
+                }
+        // players there get the chunks again with the new biome
+        for (int cx = (center.getX() - 64) >> 4; cx <= (center.getX() + 64) >> 4; cx++)
+            for (int cz = (center.getZ() - 64) >> 4; cz <= (center.getZ() + 64) >> 4; cz++)
+                if (level.hasChunk(cx, cz)) level.getChunkSource().chunkMap.resendBiomesForChunks(java.util.List.of(level.getChunk(cx, cz)));
+    }
+
     private static void buildAbyssArena(ServerLevel level, BlockPos center) {
         int r = 18;
         int centerY = center.getY();
         int chasmY = centerY - 38;
+        calmBiome(level, center);
 
         for (int dx = -55; dx <= 55; dx++) {
             for (int dz = -55; dz <= 55; dz++) {
@@ -868,6 +893,8 @@ public final class SpiralAbyssManager {
             if (mob != null) {
                 mob.moveTo(spawnPos.getX() + 0.5, spawnPos.getY(), spawnPos.getZ() + 0.5, (float) (angle * 180 / Math.PI), 0.0F);
                 mob.setPersistenceRequired();
+                // a fixed level for the floor and chamber (the window shows the same), not the player's
+                mob.getPersistentData().putInt("abyss_level", abyssMobLevel(floor, chamber, half));
 
                 double hpScale = 1.0 + (floor - 1) * 0.35 + (chamber - 1) * 0.15 + (half == 2 ? 0.20 : 0.0);
                 if (mob.getAttribute(Attributes.MAX_HEALTH) != null) {
@@ -978,6 +1005,12 @@ public final class SpiralAbyssManager {
             }
             return w;
         }
+    }
+
+    /** A creature's level in a floor's chamber and half: the floor's own level, two more per chamber, one more in the second half. */
+    public static int abyssMobLevel(int floor, int chamber, int half) {
+        int[] base = {25, 40, 45, 50, 55, 60, 70, 70, 72, 80, 88, 95};
+        return base[Math.max(0, Math.min(11, floor - 1))] + (chamber - 1) * 2 + (half - 1);
     }
 
     /** The creature at a place of a chamber's wave; also used by the window to show who waits in each chamber. */
@@ -1111,18 +1144,20 @@ public final class SpiralAbyssManager {
 
     public static void tick(MinecraftServer server) {
         if (!PENDING_MENU_OPENS.isEmpty()) {
-            PENDING_MENU_OPENS.entrySet().removeIf(entry -> {
-                int rem = entry.getValue() - 1;
+            // counted down key by key: the map's own entries can't be changed in place (that crashed the game
+            // when the menu was to open after the last chamber)
+            for (UUID id : new java.util.ArrayList<>(PENDING_MENU_OPENS.keySet())) {
+                Integer left = PENDING_MENU_OPENS.get(id);
+                if (left == null) continue;
+                int rem = left - 1;
                 if (rem <= 0) {
-                    ServerPlayer p = server.getPlayerList().getPlayer(entry.getKey());
-                    if (p != null) {
-                        openAbyssScreen(p);
-                    }
-                    return true;
+                    PENDING_MENU_OPENS.remove(id);
+                    ServerPlayer p = server.getPlayerList().getPlayer(id);
+                    if (p != null) openAbyssScreen(p);
+                } else {
+                    PENDING_MENU_OPENS.put(id, rem);
                 }
-                entry.setValue(rem);
-                return false;
-            });
+            }
         }
 
         if (ACTIVE_SESSIONS.isEmpty()) return;
@@ -1633,6 +1668,7 @@ public final class SpiralAbyssManager {
             if (safePos.distanceTo(new Vec3(TeyvatWorldManager.MUSK_REEF_ISLAND_POS.getX(), safePos.y, TeyvatWorldManager.MUSK_REEF_ISLAND_POS.getZ())) < 20.0) {
                 safePos = safePos.add(0, 0, 5.0);
             }
+            safePos = com.soybe.awakeningsystem.world.SafeSpot.near(retLevel, safePos);   // never inside the ground
             player.teleportTo(retLevel, safePos.x, safePos.y, safePos.z, session.returnYaw, session.returnPitch);
         } else {
             TeyvatWorldManager.teleportToAbyss(player);
@@ -1655,6 +1691,7 @@ public final class SpiralAbyssManager {
             if (safePos.distanceTo(new Vec3(TeyvatWorldManager.MUSK_REEF_ISLAND_POS.getX(), safePos.y, TeyvatWorldManager.MUSK_REEF_ISLAND_POS.getZ())) < 20.0) {
                 safePos = safePos.add(0, 0, 5.0);
             }
+            safePos = com.soybe.awakeningsystem.world.SafeSpot.near(retLevel, safePos);   // never inside the ground
             player.teleportTo(retLevel, safePos.x, safePos.y, safePos.z, session.returnYaw, session.returnPitch);
         } else {
             TeyvatWorldManager.teleportToAbyss(player);
@@ -1721,7 +1758,8 @@ public final class SpiralAbyssManager {
                 ACTIVE_SESSIONS.remove(player.getUUID());
                 ServerLevel retLevel = server.getLevel(session.returnDimension);
                 if (retLevel != null) {
-                    player.teleportTo(retLevel, session.returnPos.x, session.returnPos.y, session.returnPos.z, session.returnYaw, session.returnPitch);
+                    Vec3 back = com.soybe.awakeningsystem.world.SafeSpot.near(retLevel, session.returnPos);
+                player.teleportTo(retLevel, back.x, back.y, back.z, session.returnYaw, session.returnPitch);
                 } else {
                     TeyvatWorldManager.teleportToAbyss(player);
                 }
@@ -1742,7 +1780,8 @@ public final class SpiralAbyssManager {
             cleanUpSession(server, session);
             ServerLevel retLevel = server.getLevel(session.returnDimension);
             if (retLevel != null) {
-                player.teleportTo(retLevel, session.returnPos.x, session.returnPos.y, session.returnPos.z, session.returnYaw, session.returnPitch);
+                Vec3 back = com.soybe.awakeningsystem.world.SafeSpot.near(retLevel, session.returnPos);
+                player.teleportTo(retLevel, back.x, back.y, back.z, session.returnYaw, session.returnPitch);
             } else {
                 TeyvatWorldManager.teleportToAbyss(player);
             }

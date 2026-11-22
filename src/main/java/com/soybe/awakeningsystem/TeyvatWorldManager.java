@@ -288,12 +288,13 @@ public final class TeyvatWorldManager {
                 for (int dz = -r; dz <= r; dz += (r == 0 ? 1 : 8)) {
                     int x = dx;
                     int z = dz;
-                    int y = level.getHeight(Heightmap.Types.WORLD_SURFACE, x, z);
+                    // the ground, not the tree tops (WORLD_SURFACE stood the arrival plaza on the leaves)
+                    int y = level.getHeight(Heightmap.Types.MOTION_BLOCKING_NO_LEAVES, x, z);
                     if (y <= level.getMinBuildHeight() + 5 || y >= level.getMaxBuildHeight() - 10) continue;
 
                     BlockPos pos = new BlockPos(x, y, z);
                     net.minecraft.world.level.block.state.BlockState ground = level.getBlockState(pos.below());
-                    if (ground.liquid() || !ground.isSolid()) continue;
+                    if (ground.liquid() || !ground.isSolid() || ground.is(net.minecraft.tags.BlockTags.LOGS)) continue;
 
                     String biomeName = level.getBiome(pos).unwrapKey().map(k -> k.location().getPath()).orElse("");
                     int score = 0;
@@ -336,7 +337,8 @@ public final class TeyvatWorldManager {
             TowerManager.exitTowerToDimension(player, teyvatLevel, spawnPos);
         }
 
-        player.teleportTo(teyvatLevel, spawnPos.getX() + 0.5D, (double) spawnPos.getY(), spawnPos.getZ() + 2.0D, 0.0F, 0.0F);
+        Vec3 arrive = com.soybe.awakeningsystem.world.SafeSpot.near(teyvatLevel, new Vec3(spawnPos.getX() + 0.5D, spawnPos.getY(), spawnPos.getZ() + 2.0D));
+        player.teleportTo(teyvatLevel, arrive.x, arrive.y, arrive.z, 0.0F, 0.0F);
 
         teyvatLevel.sendParticles(ParticleTypes.END_ROD, spawnPos.getX() + 0.5D, spawnPos.getY() + 1.5D, spawnPos.getZ() + 0.5D, 50, 1.0D, 1.0D, 1.0D, 0.08D);
         teyvatLevel.sendParticles(ParticleTypes.HAPPY_VILLAGER, spawnPos.getX() + 0.5D, spawnPos.getY() + 1.5D, spawnPos.getZ() + 0.5D, 40, 1.5D, 1.0D, 1.5D, 0.2D);
@@ -430,7 +432,8 @@ public final class TeyvatWorldManager {
             TowerManager.exitTowerToDimension(player, teyvatLevel, target);
         }
 
-        player.teleportTo(teyvatLevel, target.getX() + 0.5D, target.getY(), target.getZ() + 0.5D, 0.0F, 0.0F);
+        Vec3 arrive = com.soybe.awakeningsystem.world.SafeSpot.near(teyvatLevel, new Vec3(target.getX() + 0.5D, target.getY(), target.getZ() + 0.5D));
+        player.teleportTo(teyvatLevel, arrive.x, arrive.y, arrive.z, 0.0F, 0.0F);
 
         teyvatLevel.sendParticles(ParticleTypes.END_ROD, target.getX() + 0.5D, target.getY() + 1.0D, target.getZ() + 0.5D, 40, 1.0D, 1.0D, 1.0D, 0.05D);
         player.playNotifySound(SoundEvents.BEACON_ACTIVATE, SoundSource.PLAYERS, 1.0F, 1.2F);
@@ -604,7 +607,8 @@ public final class TeyvatWorldManager {
         if (targetY < 60 || targetY > 150) targetY = capitalPos.getY();
 
         BlockPos target = new BlockPos(capitalPos.getX(), targetY + 1, capitalPos.getZ());
-        player.teleportTo(teyvatLevel, target.getX() + 0.5D, target.getY(), target.getZ() + 0.5D, 0.0F, 0.0F);
+        Vec3 arrive = com.soybe.awakeningsystem.world.SafeSpot.near(teyvatLevel, new Vec3(target.getX() + 0.5D, target.getY(), target.getZ() + 0.5D));
+        player.teleportTo(teyvatLevel, arrive.x, arrive.y, arrive.z, 0.0F, 0.0F);
 
         teyvatLevel.sendParticles(ParticleTypes.END_ROD, target.getX() + 0.5D, target.getY() + 1.0D, target.getZ() + 0.5D, 35, 0.8D, 1.0D, 0.8D, 0.05D);
         player.playNotifySound(SoundEvents.BEACON_ACTIVATE, SoundSource.PLAYERS, 1.0F, 1.2F);

@@ -51,6 +51,12 @@ public class AbyssChallengeKeyEntity extends LivingEntity {
         return false;
     }
 
+    /** Solid, like a block: the chamber's creatures walk round it instead of crowding onto it. */
+    @Override
+    public boolean canBeCollidedWith() {
+        return true;
+    }
+
     @Override
     protected void doPush(net.minecraft.world.entity.Entity entity) {}
 

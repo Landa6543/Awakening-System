@@ -77,7 +77,50 @@ public final class TeyvatRegionalBuilder {
      * Plataforma ceremonial con la Estatua de los Siete de Anemo, Punto de Teletransporte
      * y mirador con vista hacia todas las naciones.
      */
+    private static boolean plazaSupported;
+
+    /**
+     * The arrival plaza of older worlds was stood on the tree tops (its spot was read with the leaves counted):
+     * it is found where that old reading puts it, and stone columns are run from under it down to the ground.
+     */
+    private static void supportOldArrivalPlaza(ServerLevel level) {
+        if (plazaSupported) return;
+        plazaSupported = true;
+        BlockPos old = null;
+        int bestScore = Integer.MIN_VALUE;
+        for (int x = -48; x <= 48; x += 8)
+            for (int z = -48; z <= 48; z += 8) {
+                int y = level.getHeight(net.minecraft.world.level.levelgen.Heightmap.Types.WORLD_SURFACE, x, z);
+                BlockPos p = new BlockPos(x, y, z);
+                if (!level.getBlockState(p.below()).is(Blocks.SMOOTH_QUARTZ) && !level.getBlockState(p.below()).is(Blocks.QUARTZ_BRICKS)) continue;
+                int score = -(Math.abs(x) + Math.abs(z));
+                if (score > bestScore) {
+                    bestScore = score;
+                    old = p;
+                }
+            }
+        if (old == null) return;
+        for (int dx = -7; dx <= 7; dx++)
+            for (int dz = -7; dz <= 7; dz++) {
+                // the plaza's own floor block in this column, then down through air and leaves to the ground
+                BlockPos col = old.offset(dx, 0, dz);
+                BlockPos floor = null;
+                for (int dy = 1; dy >= -3 && floor == null; dy--) {
+                    BlockState s = level.getBlockState(col.offset(0, dy - 1, 0));
+                    if (s.is(Blocks.SMOOTH_QUARTZ) || s.is(Blocks.QUARTZ_BRICKS) || s.is(Blocks.POLISHED_DEEPSLATE) || s.is(Blocks.STONE_BRICKS)) floor = col.offset(0, dy - 1, 0);
+                }
+                if (floor == null) continue;
+                for (int d = 1; d <= 40; d++) {
+                    BlockPos q = floor.below(d);
+                    BlockState s = level.getBlockState(q);
+                    if (s.blocksMotion() && !s.is(net.minecraft.tags.BlockTags.LEAVES)) break;
+                    level.setBlock(q, Blocks.STONE_BRICKS.defaultBlockState(), 2);
+                }
+            }
+    }
+
     public static synchronized void ensureTeyvatArrivalPlaza(ServerLevel level) {
+        supportOldArrivalPlaza(level);
         if (arrivalPlazaBuilt) return;
         if (level.getServer() != null) {
             var tData = TeyvatWorldGenManager.TeyvatFeaturesData.get(level.getServer());

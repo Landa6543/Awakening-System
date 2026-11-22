@@ -253,6 +253,12 @@ public final class RpgLevelZoneManager {
             applyMobLevelAttributes(mob, towerFloorLevel(floor, com.soybe.awakeningsystem.config.BossCompatibilityManager.isBoss(mob)), false);
             return;
         }
+        // the Spiral Abyss: each creature has the fixed level of its floor and chamber, whatever the player's
+        if (mob.getPersistentData().contains("abyss_level")) {
+            mob.addTag("rpg_scaled");
+            applyMobLevelAttributes(mob, mob.getPersistentData().getInt("abyss_level"), false);
+            return;
+        }
         if (mob instanceof com.soybe.awakeningsystem.entity.LimboStalkerCreature || com.soybe.awakeningsystem.limbo.LimboWorldManager.isLimboDimension(level)) {
             return;
         }

@@ -3,7 +3,7 @@
   "generator": {
     "type": "minecraft:flat",
     "settings": {
-      "biome": "minecraft:warped_forest",
+      "biome": "awakening_system:spiral_abyss_hall",
       "lakes": false,
       "features": false,
       "layers": [

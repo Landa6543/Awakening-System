@@ -30,6 +30,9 @@ public class AbyssChallengeKeyRenderer extends EntityRenderer<AbyssChallengeKeyE
     public void render(AbyssChallengeKeyEntity entity, float entityYaw, float partialTicks,
                        PoseStack poseStack, MultiBufferSource buffer, int packedLight) {
         poseStack.pushPose();
+        // models are made with y growing downwards: turned the right way up, standing on the ground (it was upside down)
+        poseStack.scale(-1.0F, -1.0F, 1.0F);
+        poseStack.translate(0.0F, -1.501F, 0.0F);
 
         float ageInTicks = (float) entity.tickCount + partialTicks;
         this.model.setupAnim(entity, 0.0F, 0.0F, ageInTicks, 0.0F, 0.0F);
