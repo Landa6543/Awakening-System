@@ -1090,9 +1090,9 @@ public final class SpiralAbyssManager {
 
     /** A creature's level in a floor's chamber and half: the floor's own level, two more per chamber, one more in the second half. */
     public static int abyssMobLevel(int floor, int chamber, int half) {
-        // Teyvat is the last world a hunter reaches: its Abyss starts at Teyvat's own floor (250) and climbs past 600
-        int[] base = {250, 270, 290, 310, 330, 360, 390, 420, 460, 500, 550, 610};
-        return base[Math.max(0, Math.min(11, floor - 1))] + (chamber - 1) * 4 + (half - 1) * 2;
+        // Teyvat is the last world a hunter reaches (of 2000 levels): its Abyss starts at Teyvat's own floor (1000) and climbs near 1900
+        int[] base = {1000, 1060, 1120, 1180, 1250, 1320, 1400, 1480, 1570, 1660, 1760, 1860};
+        return base[Math.max(0, Math.min(11, floor - 1))] + (chamber - 1) * 10 + (half - 1) * 5;
     }
 
     /** The creature at a place of a chamber's wave; also used by the window to show who waits in each chamber. */

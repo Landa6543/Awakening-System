@@ -103,13 +103,13 @@ public final class RpgLevelZoneManager {
         }
         // the worlds a hunter reaches one after the other: their creatures never fall below the world's floor
         if (level.dimension().equals(IsekaiWorldManager.ISEKAI_WORLD)) {
-            return ISEKAI_MIN + RNG.nextInt(25);
+            return ISEKAI_MIN + RNG.nextInt(60);
         }
         if (level.dimension().equals(MurimWorldManager.MURIM_WORLD)) {
-            return MURIM_MIN + RNG.nextInt(30);
+            return MURIM_MIN + RNG.nextInt(80);
         }
         if (level.dimension().equals(TeyvatWorldManager.TEYVAT_WORLD)) {
-            return TEYVAT_MIN + RNG.nextInt(40);
+            return TEYVAT_MIN + RNG.nextInt(100);
         }
         BlockPos spawn = level.getSharedSpawnPos();
         double dist = Math.sqrt(pos.distSqr((Vec3i)spawn));
@@ -132,7 +132,7 @@ public final class RpgLevelZoneManager {
     }
 
     /** The lowest level of the creatures in each later world (System 2.0, 3.0 and 4.0, in that order). */
-    public static final int ISEKAI_MIN = 100, MURIM_MIN = 175, TEYVAT_MIN = 250;
+    public static final int ISEKAI_MIN = 300, MURIM_MIN = 600, TEYVAT_MIN = 1000;   // of 2000 levels
 
     public static int getDimensionMinLevel(Level level) {
         if (level.dimension() == Level.NETHER) {
@@ -173,13 +173,13 @@ public final class RpgLevelZoneManager {
             return Math.max(80, safePlayerLvl + 5);
         }
         if (level.dimension().equals(IsekaiWorldManager.ISEKAI_WORLD)) {
-            return Math.max(ISEKAI_MIN + 20, safePlayerLvl + 4);
+            return Math.max(ISEKAI_MIN + 60, safePlayerLvl + 4);
         }
         if (level.dimension().equals(MurimWorldManager.MURIM_WORLD)) {
-            return Math.max(MURIM_MIN + 25, safePlayerLvl + 4);
+            return Math.max(MURIM_MIN + 80, safePlayerLvl + 4);
         }
         if (level.dimension().equals(TeyvatWorldManager.TEYVAT_WORLD)) {
-            return Math.max(TEYVAT_MIN + 30, safePlayerLvl + 4);
+            return Math.max(TEYVAT_MIN + 100, safePlayerLvl + 4);
         }
         return safePlayerLvl + 5;
     }
@@ -189,7 +189,7 @@ public final class RpgLevelZoneManager {
             return 500;
         }
         // with no player near, at least as high as the world's own floor
-        return Math.max(150, getDimensionMinLevel(level) + 40);
+        return Math.max(150, getDimensionMinLevel(level) + 100);
     }
 
     public static String getZoneName(int level) {
