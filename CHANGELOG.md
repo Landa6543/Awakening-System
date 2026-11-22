@@ -22,16 +22,75 @@ Implementación integral de un sistema de diálogos interactivos cinematográfic
 ---
 
 ## 🎖️ NPC Evaluador de la Asociación (Woo Jin-Chul) & Ascenso de Rango
-* **Entidad `hunter_evaluator`:** Inspector oficial de la Asociación de Cazadores con modelo bipedo y traje formal.
+* **Entidad `hunter_evaluator`:** Inspector oficial de la Asociación de Cazadores con modelo bípedo y traje formal.
 * **Evaluación de Maná Oficial:**
   * Detecta si el jugador ha llegado al límite de nivel de su rango (`isEvaluationPending`).
-  * Al iniciar la evaluación, el cristal reacciona violentamente con sonidos de fanfarria (`UI_TOAST_CHALLENGE_COMPLETE`, `PLAYER_LEVELUP`) y partículas de tótem de inmortalidad.
+  * Al iniciar la evaluación, el cristal reacciona con sonidos de fanfarria (`UI_TOAST_CHALLENGE_COMPLETE`, `PLAYER_LEVELUP`) y partículas místicas.
   * Otorga +5 Puntos de Atributo permanentes y libera toda la experiencia acumulada en reserva (`reserveExperience`).
-* **Tabla de Rangos y Consulta:** Explica detalladamente los límites de nivel por rango (F hasta X) y beneficios del ascenso.
+* **Tabla de Rangos y Consulta:**
+  * Menú categorizado en 5 Tiers existenciales desde Mortales hasta Dioses Absolutos (Nivel 2000).
+  * Opciones visualmente depuradas sin paréntesis desbordantes ni duplicación de números.
+* **Sonido Táctil de Tecleo:**
+  * Restaurado el sonido rítmico de máquina de escribir / consola (`playVoiceBlipForNewText`) al revelarse el texto carácter por carácter.
+  * Silenciado el sonido genérico de interacción repetitiva.
 * **Venta del Rastreador de la Asociación:** Posibilidad de adquirir el `hunter_association_tracker` por 100 Monedas directamente desde el diálogo.
 * **Comando y Huevo Generador:**
   * Comando `/system summon_evaluator` para invocar al Inspector Woo Jin-Chul en la posición actual.
   * Objeto `hunter_evaluator_spawn_egg` registrado en pestaña creativa.
+
+---
+
+## ☄️ Meteoritos de Siderita & Cráter de Impacto Tridimensional Real
+* **Entidad Cinemática `FallingSideriteMeteorEntity`:**
+  * Alerta celestial en chat al entrar el bólido en la atmósfera terrestre (`awakening_system.announcement.meteor_entry`).
+  * Estela luminosa de fuego y humo denso cayendo a gran velocidad desde la estratosfera.
+  * Mensaje de coordenadas exactas del impacto con sonido de choque sísmico masivo (`meteor_impact`).
+* **Excavación de Cráter Real 3D (No Parche Plano):**
+  * Cavidad semiesférica cóncava natural con radio de 6.5 bloques y 4 bloques de profundidad real.
+  * **Núcleo y Corteza:** Núcleo de Bloques de Siderita (`siderite_block`) y Mineral de Siderita (`siderite_ore`), rodeado por una corteza fundida de obsidiana llorosa, bloques de magma incandescente, basalto liso y deepslate empedrado.
+  * **Reborde Elevado (*Ejecta Lip Rim*):** Elevación de tierra y rocas expulsadas en los bordes con ascuas encendidas.
+
+---
+
+## 🗡️ Armamento de Siderita & Daga "Colmillo Envenenado de Kasaka"
+* **Colmillo Envenenado de Kasaka (`kasakas_venom_fang`):**
+  * Daga icónica de *Solo Leveling* implementada con proporciones auténticas de daga (no alargada como espada).
+  * Posicionamiento y rotación sincronizados con la **Daga de Sombras** (`shadow_daggers` a 55°), apuntando naturalmente hacia adelante.
+* **Hacha-Martillo de Siderita Meteórica (`siderite_hamaxe`):**
+  * Textura reorientada con el filo del hacha cortando hacia el frente y la cabeza del martillo con ascuas hacia atrás.
+  * Sostén ergonómico natural por el mango inferior alineado con la mano del jugador.
+* **Pico de Siderita Meteórica (`siderite_pickaxe`):**
+  * Eliminada la rotación errónea invertida de 145°. Ahora utiliza la orientación canónica de herramientas handheld de Minecraft picando hacia adelante.
+* **Limpieza de Auras Visibles:**
+  * Eliminada la columna invasiva de partículas de fuego celeste (`SOUL_FIRE_FLAME`) que tapaba la visión al empuñar armas comunes.
+
+---
+
+## ⚖️ Reescalado de Drops RPG a 2000 Niveles y Separación de Dimensiones
+* **Separación Estricta por Dimensiones:**
+  * Las criaturas del Overworld nunca soltarán materiales ni armaduras de reinos superiores (Mithril, Adamantita, Jade Espiritual, etc.).
+* **Escala Balanceada de Botín:**
+  * **Nv. 1 – 59:** Cuero, Malla y Hierro.
+  * **Nv. 60 – 119:** Hierro, Oro y Diamante.
+  * **Nv. 120 – 199:** Diamante, Netherite y Siderita Meteórica (armadura, espada y hacha-martillo).
+  * **Nv. 200 – 299:** Netherite, Siderita y Forja de Almas / Soul Alloy.
+  * **Nv. 300 – 399:** Mithril y Adamantita.
+  * **Nv. 400 – 500+:** Adamantita, Jade Espiritual, Forja de Almas y Astralita.
+  * Progresión extendida para Deidades y Creadores Supremos hasta Nivel 2000.
+* **Compatibilidad con Criaturas y Dragones de Ice and Fire:**
+  * Dragones y bestias de Ice and Fire (`iceandfire:`) ahora reciben nivelación RPG (`[Nv. X]`), escalado de atributos y recompensas.
+  * Detección y rastreo en el Minimapa HUD (`HunterMinimapRenderer`).
+
+---
+
+## 🌐 100% Paridad de Traducciones y Corrección de Codificación UTF-8
+* **Eliminación Total de Mojibake:**
+  * Archivos de localización regenerados con UTF-8 puro sin BOM ni caracteres corruptos (`Ã³`, `Ã­`, `Ã¡`).
+* **Traducciones Nuevas Completas:**
+  * Casco, pechera, pantalones, botas, espada, hacha-martillo, pico, lingote, fragmento y mineral de siderita meteórica.
+  * Bonus del conjunto de armadura de siderita meteórica (`awakening_system.armor_set.siderite.header` y `desc`).
+  * Manzana de Sombras (`shadow_apple`), Zanahoria de Qi Espiritual (`spirit_qi_carrot`), Rastreador de la Asociación (`hunter_association_tracker`) y diálogos completos del Inspector.
+  * Paridad en 14 archivos de idioma (Español de todas las regiones, Inglés, Francés, Alemán, Portugués y Ruso).
 
 ---
 
@@ -415,6 +474,58 @@ Sistema dinámico de eventos de temporada integrando consumibles gastronómicos 
 
 ---
 
+## 🔨 Forja del Cazador (`hunter_forge`)
+* **Nueva estación de trabajo** con modelo 3D de yunque de acero azulado sobre un pedestal de brasas y pantalla propia del Sistema.
+* **Templado por golpe:** una barra de precisión se detiene al golpear y define la calidad del forjado; el resultado se muestra en pantalla.
+* **Bonificaciones reales:** el arma o armadura forjada gana daño o armadura según la calidad, más un extra según el rango del núcleo de monstruo usado.
+* **Solo acepta lo correcto:** equipo, núcleos de monstruo, catalizadores y gemas en su ranura (etiquetas `forge_catalysts` y `forge_gems`).
+
+---
+
+## 🛡️ Escudos del Sistema con Modelo 3D (Roadmap Sección 58)
+* **Escudo Cometa de Siderita (`siderite_kite_shield`):** al bloquear empuja a los atacantes cuerpo a cuerpo. +2 de armadura en la mano secundaria.
+* **Escudo Torre del Baluarte (`bastion_tower_shield`):** cada bloqueo da Resistencia por un momento; con la clase Baluarte de Hierro además devuelve el 30% del daño al atacante. +4 de armadura y resistencia al empuje.
+* **Escudo Redondo de Jade Espiritual (`spirit_jade_round_shield`):** al bloquear cura con el Qi del golpe detenido. +3 de armadura y +2 corazones.
+* Se sostienen y bloquean igual que el escudo de Minecraft, también con Epic Fight. Recetas con un escudo y su material; se reparan en el yunque con ese material.
+
+---
+
+## 🏰 Clase Tanque: Baluarte de Hierro y Pasivas de Combate
+* **Nueva clase Baluarte de Hierro (`iron_bastion`):** atrae a los enemigos, bloquea solo golpes frontales que un escudo puede parar y tiene su propio árbol de habilidades.
+* **Pasivas de combate** nuevas para seis clases existentes (cadena de rayos limitada a 3 enemigos hostiles, robo de vida, daño extra contra enemigos heridos, entre otras).
+
+---
+
+## ☄️ Meteoritos: Caída, Impacto y Objetos Nuevos
+* **Caída en diagonal** desde lejos, con explosión a nivel del suelo, onda expansiva, cúpula de fuego, humo que sube y un estruendo retrasado en capas.
+* **Cráter humeante y restos del meteorito** tras el impacto.
+* **Brújula de Meteoritos (`meteor_compass`):** apunta al último meteorito caído.
+* **Fragmento de meteorito** y texturas nuevas: espadón de siderita más grande, bloque de siderita con placas, fragmento de metal y piedras rúnicas talladas.
+* **Corregido:** el cierre del juego al chocar el meteorito contra el suelo y la estela que seguía a la cámara.
+
+---
+
+## ⌚ Reloj de Kim Gong-ja
+* Nueva textura dorada.
+* **Clic derecho:** muestra cuándo puede volver a salvarte.
+
+---
+
+## 🧑‍🤝‍🧑 NPCs, Gremios y Rangos
+* **Corregido:** las estructuras ya no vuelven a generar NPCs que fueron reclutados por un gremio.
+* **Corregido:** los NPCs expulsados de un gremio vuelven a su estructura.
+* **Corregido:** sobre los jugadores se muestra el rango de cazador evaluado y no el rango por nivel.
+* Se quitaron las voces genéricas de los NPCs; solo queda la voz del inspector de la Asociación.
+
+---
+
+## 🧹 Limpieza y Correcciones Varias
+* Se quitaron la arena de prueba y el observatorio.
+* Se quitó el aviso permanente de la pantalla de clase y se subió el botón de confirmar.
+* **Epic Fight:** se quitaron 75 archivos de armas duplicados que generaban avisos al entrar al mundo; las armas siguen con sus movimientos.
+
+---
+
 ## 🏘️ Pueblo Medieval del Piso 11 (Pradera Serena)
 * **Pueblo grande con interiores:** taberna, herrería, biblioteca, panadería, capilla con campanario, casa señorial, granero, torres de vigía, puestos en la plaza, pozo, campos de cultivo y casas por todas las calles. Se construye solo al llegar al piso; `/medieval_village` lo pone donde estés.
 * **Casas variadas de verdad:** 10 paletas de materiales, formas distintas (pequeñas, altas, alargadas, en L), porches, chimeneas, torrecillas y escalones en la puerta. Techos cerrados por dentro, puertas que abren hacia fuera, vallas unidas, calles lisas, campos planos y agua a un solo nivel.
@@ -476,7 +587,6 @@ Sistema dinámico de eventos de temporada integrando consumibles gastronómicos 
 * La comisión diaria del Gremio da una **bolsa de botín** que se vacía en el inventario, en vez de un cofre con llave.
 * Sonidos de misión completada más suaves.
 * Créditos: se añadieron los autores de las 14 skins de los vecinos del pueblo (ver `CREDITS.md`).
-
 
 ---
 
@@ -596,6 +706,88 @@ Sistema dinámico de eventos de temporada integrando consumibles gastronómicos 
 * **Espiral Lunar (pisos 9-12):** se reinicia cada 14 días (estrellas y recompensas de esos pisos), con la cuenta atrás en la ventana. Cada piso tiene un **Registro** de quién lo superó, cuándo, con cuántas estrellas y con qué equipo (sus sombras e invocaciones). En la última sala de esos pisos puede aparecer un **jefe de otro mod instalado** (Cataclysm, Twilight Forest, Ice and Fire...); se desactiva con `abyss_modded_bosses` en `custom_bosses.json`.
 * **Arreglos:** el juego ya no se cierra al terminar el último piso; volver del Abismo o viajar a Teyvat ya no te deja enterrado, y la plaza de llegada antigua que flotaba tiene columnas; las armas celestiales (como el Mandoble del Juicio) ya no caen de los monstruos; el mensaje de Protogemas depositadas ya no muestra "%s"; el panel de misiones SAO muestra la misión del escenario.
 * Se quitó el motor de combate ACE abandonado.
+
+---
+
+## 🚪 Puertas de Ruinas y Catacumbas Olvidadas
+* **Puertas de Ruinas:** mazmorras nuevas hechas con piezas de DungeonZ (ver `CREDITS.md`), con rango, un portal de verdad dentro de su ruina de entrada y botín según el rango.
+* **Catacumbas Olvidadas:** un tipo de Puerta que aparece sola por el mundo, con su propio portal. Su jefe es el **Señor Esqueleto**, con bastón, hechizos y cristales que brillan.
+* **Corregido:** el juego se cerraba al entrar en el portal de una Puerta; salir de una Puerta ya no te mete en otra partida nueva; las salidas se abren como bloques de portal; no quedan postes de muro en el foso del portal de la mina.
+* **Colmillos en Picado:** habilidad nueva de dagas dobles con las animaciones de Epic Fight; el salto apunta al enemigo más cercano.
+
+---
+
+## 🕳️ Grutas Abisales
+* Cuevas que se encuentran explorando el Overworld: una red de túneles cerrada, con caminos anchos y pendientes naturales.
+
+---
+
+## 🗼 Gran Torre: el Comienzo
+* **Una sola Gran Torre cerca del punto de aparición.** A su lado está la agencia de la Asociación de Cazadores.
+* **Tablón de misiones** en una repisa y **Cristal de medición** grande con su propio pedestal.
+* Santuarios de llegada en cada piso, un vórtice de portal que se queda dentro de su marco y un altar abierto sencillo.
+* **Pisos 1 al 15 con terreno propio** (el piso 9 con los cerezos de Minecraft), y las salidas de los pisos ya no quedan escondidas entre los árboles.
+* **Piso 10, la Cámara del Titán Colosal de Sculk:** una cueva para explorar, con el titán como jefe (modelo propio, piel verde azulada, corazón brillante en la caja torácica y siete ataques que se ven venir).
+* Arreglados el bucle del portal de la torre, el Guardián de Jade y las recompensas del tablón.
+
+---
+
+## 🏰 Estructuras Nuevas
+* **Castillo del Rey Demonio**, **Gruta del Inmortal**, **campamento de guerra de Valter**, **santuarios de las islas elementales** y una **ciudadela en el cielo**.
+* Los cofres del campamento de expedición de cazadores, del puesto en ruinas del observador de estrellas y de la estela del saber antiguo tienen botín propio.
+
+---
+
+## ☄️ Meteoritos y Zona de Penalización
+* Los meteoritos caen de formas distintas, dejan una estela propia y se oyen desde la dirección del impacto.
+* **Los cráteres se curan solos a los 5 días**, salvo que alguien haya construido en ellos.
+* **Zona de Penalización:** solo llega después de 5 días de misiones diarias fallidas. Los gusanos de arena cazan como gusanos de arena gigantes. Arreglada la salida del desierto.
+
+---
+
+## 👹 Orcos de Sangre
+* Rediseñados como brutos enormes en estilo manhwa oscuro, en variantes roja y verde (los verdes con su propio nombre). Tienen codos y rodillas, ya no parpadean y se mueven mejor.
+
+---
+
+## ☯️ Cultivo Murim: 14 Reinos
+* El cultivo pasa de 10 a **14 reinos**, con un botón **"Ver reinos"** que abre la jerarquía completa.
+* Cada reino pide su píldora (Construcción de Cimientos, Ruptura de Reino, Transformación del Alma, Nueve Revoluciones y Renacimiento Primordial).
+* La ventana muestra la densidad de Qi del lugar.
+* `/dantian reinos` lista los reinos.
+
+---
+
+## 🏅 Títulos y Comunidad
+* **Títulos exclusivos:** *El Sombrerero Loco* y *Orthax*, con sus bonificaciones y un aviso en pantalla al obtenerlos.
+* Cinco títulos que todos los jugadores tenían desde el principio (uno de ellos Mítico) ahora piden su condición: gastar monedas, vencer jefes, conquistar Puertas, el evento de temporada o el nivel 900.
+* **Discord:** botón en la pantalla de bienvenida y comando `/discord`.
+
+---
+
+## 🧹 Más Cambios y Correcciones
+* **Sombras:** `/shadows deploy <escuadrón>` y `/shadows recall <escuadrón>` despliegan o retiran un escuadrón entero.
+* **Ejercicios del Monarca más rápidos:** la Fuerza acelera las flexiones y sentadillas, y la Vitalidad los abdominales.
+* Se quitaron las partículas de aura de rango alrededor de los jugadores.
+* Las armaduras del mod se pueden encantar (Protección, Irrompibilidad, Reparación, Espinas y los encantamientos propios de cada pieza).
+* La bonificación de velocidad de la Agilidad ahora se nota.
+* **Pantalla de elección de patrocinador** rediseñada. El **Archivo de Mundos** solo aparece cuando las pestañas de mundos no caben, y está rehecho.
+* La ruleta ya no da armas del gacha.
+* **Santuario de bolsillo:** se coloca en tierra firme y no en el océano; la vuelta a la puerta funciona en mundos planos; se puede mejorar y las puertas de otros jugadores están protegidas; al mejorarlo ya no se duplican objetos.
+* Al salir del Limbo apareces sobre el suelo del Overworld.
+* Apuestas del casino, comprobación del creador y viajes entre dimensiones más seguros.
+* Recetas de madera que faltaban y nombres manhwa de las clases.
+* **Traducciones** completas en inglés, español, ruso y portugués.
+
+---
+
+## 🗺️ Mapa Diorama Actualizado
+* **Mapas guardados y exportación** del mapa a imagen. Lista de dimensiones. Mapa nocturno con su propia luz. Cortes de cuevas.
+* **Radar con categorías** de criaturas configurables, y posición del minimapa a elegir.
+* **Puntos de ruta** con iconos, columnas de luz, orden y carpetas; teletransporte por comando.
+* Borde del mundo y zonas reclamadas (FTB Chunks, Open Parties and Claims, Chunky) dibujados en el mapa.
+* Compatibilidad con Cobblemon, Pixelmon, MineColonies y los trenes de Create.
+* Nuevos idiomas del mapa: bielorruso, japonés y chino tradicional.
 
 ---
 
