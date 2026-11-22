@@ -164,22 +164,8 @@ public class LeyLineMonolithEntity extends LivingEntity {
             this.invulnTicks--;
         }
 
-        if (this.level().isClientSide) {
-            double angle = (this.tickCount * 0.06D);
-            double radius = 1.3D;
-            double px = this.getX() + Math.cos(angle) * radius;
-            double pz = this.getZ() + Math.sin(angle) * radius;
-            double py = this.getY() + 0.6D + (this.tickCount % 60) * 0.035D;
-
-            this.level().addParticle(ParticleTypes.SOUL_FIRE_FLAME, px, py, pz, 0.0D, 0.02D, 0.0D);
-            if (this.random.nextFloat() < 0.2F) {
-                this.level().addParticle(ParticleTypes.REVERSE_PORTAL,
-                        this.getX() + (this.random.nextDouble() - 0.5D) * 1.5D,
-                        this.getY() + 1.0D + this.random.nextDouble() * 2.0D,
-                        this.getZ() + (this.random.nextDouble() - 0.5D) * 1.5D,
-                        0.0D, 0.03D, 0.0D);
-            }
-        } else {
+        // no particles round it any more: they hid the fight (its rings and core move on the model instead)
+        if (!this.level().isClientSide) {
             this.aggroPulseCooldown--;
             if (this.aggroPulseCooldown <= 0) {
                 this.aggroPulseCooldown = 20;

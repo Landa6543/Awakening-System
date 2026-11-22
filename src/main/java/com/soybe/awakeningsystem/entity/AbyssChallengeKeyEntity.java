@@ -119,22 +119,7 @@ public class AbyssChallengeKeyEntity extends LivingEntity {
         this.yHeadRot = this.yHeadRotO = 0;
         this.hurtTime = 0;
 
-        if (this.level().isClientSide) {
-            double angle = (this.tickCount * 0.08D);
-            double r = 0.9D;
-            double px = this.getX() + Math.cos(angle) * r;
-            double pz = this.getZ() + Math.sin(angle) * r;
-            double py = this.getY() + 0.4D + (this.tickCount % 40) * 0.04D;
-
-            this.level().addParticle(ParticleTypes.FLAME, px, py, pz, 0.0D, 0.02D, 0.0D);
-            if (this.random.nextFloat() < 0.25F) {
-                this.level().addParticle(ParticleTypes.SMOKE,
-                        this.getX() + (this.random.nextDouble() - 0.5D) * 0.6D,
-                        this.getY() + 0.8D + this.random.nextDouble() * 0.8D,
-                        this.getZ() + (this.random.nextDouble() - 0.5D) * 0.6D,
-                        0.0D, 0.02D, 0.0D);
-            }
-        }
+        // no flames or smoke round it: they hid it and everything behind it
     }
 
     @Override

@@ -30,6 +30,10 @@ public class LeyLineMonolithRenderer extends EntityRenderer<LeyLineMonolithEntit
     public void render(LeyLineMonolithEntity entity, float entityYaw, float partialTicks,
                        PoseStack poseStack, MultiBufferSource buffer, int packedLight) {
         poseStack.pushPose();
+        // models are made with y growing downwards: turned the right way up and standing on the floor
+        // (it was drawn upside down, half under the floor), a little larger than a man
+        poseStack.scale(-1.25F, -1.25F, 1.25F);
+        poseStack.translate(0.0F, -1.501F, 0.0F);
 
         float ageInTicks = (float) entity.tickCount + partialTicks;
         this.model.setupAnim(entity, 0.0F, 0.0F, ageInTicks, 0.0F, 0.0F);

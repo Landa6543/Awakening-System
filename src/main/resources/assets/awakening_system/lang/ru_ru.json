@@ -4,6 +4,7 @@
   "awakening_system.sao.tab_daily": "Ежедневные",
   "gui.awakening_system.spiral_abyss.leave_abyss": "Покинуть Витую Бездну",
   "gui.awakening_system.spiral_abyss.chamber_chest": "Каждый пройденный зал также оставляет сундук: %s моры, %s примогемов и %s опыта героя.",
+  "awakening_system.gacha.shop.primo_section": "Судьбы за примогемы (160 за штуку)",
   "gui.awakening_system.abyss_result.title": "Испытание пройдено",
   "gui.awakening_system.abyss_result.chamber": "Этаж %s · Зал %s",
   "gui.awakening_system.abyss_result.next_chamber": "Зал %s",

@@ -66,6 +66,73 @@ public final class GachaArt {
         return v;
     }
 
+    private static ResourceLocation starRail;
+
+    /**
+     * The Star Rail warp's backdrop: deep space, a spiral galaxy, pink and teal nebulae, two planets lit from
+     * one side, and the golden star rails of the Astral Express curving across it all.
+     */
+    public static ResourceLocation starRail() {
+        if (starRail != null) return starRail;
+        NativeImage img = new NativeImage(W, H, true);
+        for (int y = 0; y < H; y++)
+            for (int x = 0; x < W; x++) {
+                double t = y / (double) H;
+                int col = mix(0x05061A, 0x160A30, t);
+                double n = fbm(x / 60.0 + 40, y / 45.0);
+                double n2 = fbm(x / 35.0 + 9, y / 35.0 + 21);
+                col = mix(col, 0x8A2E9C, Math.max(0, n - 0.52) * 1.2);   // pink-violet nebula
+                col = mix(col, 0x1E7AA8, Math.max(0, n2 - 0.6) * 1.1);   // teal nebula
+                // a spiral galaxy, upper left
+                double gx = x - W * 0.27, gy = (y - H * 0.3) * 2.2, gr = Math.hypot(gx, gy), ga = Math.atan2(gy, gx);
+                double arm = Math.pow(Math.max(0, Math.cos(ga * 2 - Math.log(Math.max(1, gr)) * 3.2)), 4) * Math.max(0, 1 - gr / 90);
+                col = mix(col, 0xD8C8FF, arm * 0.55 + Math.max(0, 1 - gr / 14) * 0.8);
+                img.setPixelRGBA(x, y, c(col));
+            }
+        Random r = new Random(777);
+        for (int i = 0; i < 1200; i++) blend(img, r.nextInt(W), r.nextInt(H), r.nextInt(6) == 0 ? 0xFFD8A8 : 0xE8F0FF, 0.3 + r.nextDouble() * 0.7);
+        for (int i = 0; i < 30; i++) {
+            int x = r.nextInt(W), y = r.nextInt(H);
+            for (int k = -3; k <= 3; k++) {
+                double f = 1 - Math.abs(k) / 4.0;
+                blend(img, x + k, y, 0xFFFFFF, f);
+                blend(img, x, y + k, 0xFFFFFF, f);
+            }
+        }
+        // two planets, lit from the upper left, one with a ring
+        int[][] planets = {{(int) (W * 0.8), (int) (H * 0.26), 34, 0xC86A4A, 0x3A1A2A}, {(int) (W * 0.62), (int) (H * 0.7), 18, 0x5AA8C8, 0x14284A}};
+        for (int pi = 0; pi < planets.length; pi++) {
+            int[] p = planets[pi];
+            for (int y = p[1] - p[2]; y <= p[1] + p[2]; y++)
+                for (int x = p[0] - p[2]; x <= p[0] + p[2]; x++) {
+                    double dx = x - p[0], dy = y - p[1], d = Math.hypot(dx, dy) / p[2];
+                    if (d > 1) continue;
+                    double light = Math.max(0, (-dx - dy) / (p[2] * 1.4) + 0.5);
+                    int col = mix(p[4], p[3], light);
+                    col = mix(col, 0xFFFFFF, Math.max(0, light - 0.85) * 1.5);
+                    col = mix(col, p[3], Math.sin(dy * 0.5 + fbm(x / 6.0, y / 3.0) * 3) * 0.08 + 0.04);
+                    blend(img, x, y, col, Math.min(1, (1 - d) * 8));
+                }
+            if (pi == 0)
+                for (double a = 0; a < Math.PI * 2; a += 0.004) {
+                    int x = (int) (p[0] + Math.cos(a) * p[2] * 1.8), y = (int) (p[1] + Math.sin(a) * p[2] * 0.35);
+                    boolean behind = Math.sin(a) < 0 && Math.hypot(x - p[0], y - p[1]) < p[2];
+                    if (!behind) blend(img, x, y, 0xE8C8A0, 0.6);
+                }
+        }
+        // the star rails: golden tracks curving across, with sleepers
+        for (int rail = 0; rail < 2; rail++)
+            for (int x = 0; x < W; x++) {
+                double t = x / (double) W;
+                double y = H * (0.92 - 0.55 * t * t + 0.06 * Math.sin(t * 5)) + rail * 6;
+                blend(img, x, (int) y, 0xF2C96A, 0.85);
+                blend(img, x, (int) y + 1, 0x8A6A2A, 0.6);
+                if (rail == 0 && x % 10 == 0) for (int k = 0; k < 7; k++) blend(img, x, (int) y + k, 0xB08A48, 0.5);
+            }
+        starRail = Minecraft.getInstance().getTextureManager().register(AwakeningSystemMod.MOD_ID + "_gacha_star_rail", new DynamicTexture(img));
+        return starRail;
+    }
+
     public static ResourceLocation sky() {
         if (sky != null) return sky;
         NativeImage img = new NativeImage(W, H, true);

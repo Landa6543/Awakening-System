@@ -177,6 +177,11 @@ public class GenshinSlimeEntity extends Monster {
         String sizePrefix = isBig() ? "§lSlime " + el.getDisplayName() + " Gigante" : "Slime " + el.getDisplayName();
         this.setCustomName(Component.literal(sizePrefix));
         this.setCustomNameVisible(false);
+        // its element or size was set after it got its level: the new name lost the level, so it is put back
+        if (!this.level().isClientSide && this.getPersistentData().getInt("rpg_mob_level") > 0) {
+            this.getPersistentData().putString("rpg_orig_name", sizePrefix);
+            com.soybe.awakeningsystem.RpgLevelZoneManager.applyMobLevelAttributes(this, this.getPersistentData().getInt("rpg_mob_level"), true);
+        }
     }
 
     @Override

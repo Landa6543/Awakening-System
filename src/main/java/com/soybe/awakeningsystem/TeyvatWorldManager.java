@@ -543,7 +543,7 @@ public final class TeyvatWorldManager {
                 long lastOpen = player.getPersistentData().getLong("abyss_last_open_ms");
                 if (now - lastOpen > 3000) {
                     player.getPersistentData().putLong("abyss_last_open_ms", now);
-                    player.playNotifySound(ModSounds.ABYSS_ENTER.value(), SoundSource.PLAYERS, 0.9F, 1.0F);
+                    player.playNotifySound(SoundEvents.AMETHYST_BLOCK_CHIME, SoundSource.PLAYERS, 0.7F, 1.1F);
                     player.serverLevel().sendParticles(ParticleTypes.PORTAL, player.getX(), player.getY() + 1.0D, player.getZ(), 30, 0.5D, 0.8D, 0.5D, 0.1D);
                     com.soybe.awakeningsystem.abyss.SpiralAbyssManager.openAbyssScreen(player);
                 }

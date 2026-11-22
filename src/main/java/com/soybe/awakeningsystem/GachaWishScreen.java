@@ -577,9 +577,12 @@ public final class GachaWishScreen extends Screen {
             renderTracenAcademyBackground(graphics, w, h);
             return;
         } else if (activeBanner == BANNER_STELLAR_WARP) {
-            graphics.fillGradient(0, 0, w, h, 0xFF0A071E, 0xFF1D1140);
-            graphics.fillGradient(0, h - 100, w, h, 0x00000000, 0x446C5CE7);
             long time = System.currentTimeMillis();
+            // the painted deep space with its planets and star rails (GachaArt), drifting slowly
+            float sc = Math.max(w / (float) GachaArt.W, h / (float) GachaArt.H) * 1.06F;
+            int dw = Math.round(GachaArt.W * sc), dh = Math.round(GachaArt.H * sc);
+            int drift = (int) (Math.sin(time / 11000.0) * (dw - w) * 0.45);
+            graphics.blit(GachaArt.starRail(), (w - dw) / 2 + drift, (h - dh) / 2, dw, dh, 0, 0, GachaArt.W, GachaArt.H, GachaArt.W, GachaArt.H);
             for (int i = 0; i < 36; i++) {
                 int sx = (i * 67 + 23) % Math.max(1, w);
                 int sy = (i * 47 + 13) % Math.max(1, h);
@@ -854,6 +857,67 @@ public final class GachaWishScreen extends Screen {
         int availTextW = Math.max(10, w - 22);
         renderFittedText(graphics, weapon.getHoverName().getString(), textX, y + 2, availTextW, hover ? 0xFFFFFF : 0xBBDEFB, false);
         renderFittedText(graphics, Component.translatable("gui.awakening_system.gacha.card.4star_weapon").getString(), textX, y + 11, availTextW, 0xFF64B5F6, false);
+    }
+
+    /**
+     * Depth for a banner's card (it was one flat colour): the banner colour glowing behind the featured
+     * character, faint rings round it, diagonal beams of light across the card, drifting dust, a shine along
+     * the top, and for the Star Rail warp the golden rails of the Astral Express sweeping across.
+     */
+    private void renderCardArt(GuiGraphics g, int x, int y, int w, int h, int accent, boolean starRail) {
+        long now = System.currentTimeMillis();
+        int rgb = accent & 0xFFFFFF;
+        g.enableScissor(x + 1, y + 1, x + w - 1, y + h - 1);
+        // the glow behind the character (the right side of the card)
+        int gx = x + w - Math.min(160, (int) (w * 0.35F)) / 2 - 14, gy = y + h / 2;
+        for (int k = 6; k >= 1; k--) {
+            int rr = (int) (h * 0.12F * k);
+            int al = 10 + (6 - k) * 6;
+            for (int dy = -rr; dy <= rr; dy += 2) {
+                int half = (int) Math.sqrt((double) rr * rr - (double) dy * dy);
+                g.fill(gx - half, gy + dy, gx + half, gy + dy + 2, (al << 24) | rgb);
+            }
+        }
+        // thin rings turning slowly round it
+        for (int ring = 0; ring < 3; ring++) {
+            double r = h * (0.28 + ring * 0.11);
+            double turn = now / (5000.0 + ring * 2500) * (ring % 2 == 0 ? 1 : -1);
+            for (int s = 0; s < 120; s++) {
+                if ((s / 6) % 3 == 2) continue;   // dashed
+                double a = turn + s * Math.PI * 2 / 120;
+                int px = (int) (gx + Math.cos(a) * r), py = (int) (gy + Math.sin(a) * r * 0.9);
+                g.fill(px, py, px + 1, py + 1, 0x55000000 | rgb);
+            }
+        }
+        // beams of light slanting across the card, drifting
+        for (int b = 0; b < 5; b++) {
+            int bx = x + (int) (((now / 60.0) + b * 140) % (w + 200)) - 100;
+            for (int k = 0; k < 26; k++) g.fill(bx + k - h / 2, y + h - (k * h / 26), bx + k + 2 - h / 2, y + h - (k * h / 26) + h / 26 + 1, 0x0CFFFFFF);
+        }
+        // dust rising through it
+        java.util.Random rnd = new java.util.Random(4242);
+        for (int i = 0; i < 40; i++) {
+            float sp = 0.015F + rnd.nextFloat() * 0.03F;
+            float ph = ((now / 1000F) * sp + rnd.nextFloat()) % 1F;
+            int px = x + rnd.nextInt(Math.max(1, w)), py = (int) (y + h - ph * h);
+            int al = (int) (Math.sin(ph * Math.PI) * 140);
+            g.fill(px, py, px + 1, py + 1, (al << 24) | (i % 3 == 0 ? 0xFFFFFF : rgb));
+        }
+        if (starRail) {
+            // the Astral Express's rails: two golden curves with sleepers, sweeping across the card
+            for (int rail = 0; rail < 2; rail++) {
+                for (int s = 0; s <= w; s += 2) {
+                    double t = s / (double) w;
+                    int py = (int) (y + h * (0.86 - 0.5 * t * t) + rail * 7);
+                    g.fill(x + s, py, x + s + 2, py + 1, 0x88F2C96A);
+                    if (rail == 0 && s % 14 == 0) g.fill(x + s, py, x + s + 1, py + 8, 0x55C89A40);
+                }
+            }
+        }
+        // a shine along the top edge and a soft shade at the bottom
+        g.fillGradient(x, y, x + w, y + 22, 0x22FFFFFF, 0x00FFFFFF);
+        g.fillGradient(x, y + h - 30, x + w, y + h, 0x00000000, 0x55000000);
+        g.disableScissor();
     }
 
     private void renderBannerSelection(GuiGraphics graphics, int mouseX, int mouseY) {
@@ -1152,6 +1216,7 @@ public final class GachaWishScreen extends Screen {
         }
 
         graphics.fillGradient(cardX, cardY, cardX + cardW, cardY + cardH, cardBgTop, cardBgBot);
+        renderCardArt(graphics, cardX, cardY, cardW, cardH, cardBorder, activeBanner == BANNER_STELLAR_WARP);
         graphics.renderOutline(cardX, cardY, cardW, cardH, cardBorder);
         graphics.renderOutline(cardX + 2, cardY + 2, cardW - 4, cardH - 4, 0x33FFFFFF);
 
@@ -1762,8 +1827,13 @@ public final class GachaWishScreen extends Screen {
                 renderFittedText(graphics, "§c" + VersionBannerManager.getMaintenanceRemainingFormatted(dayTime), wish10X + 26, bottomY + 15, wish1W - 28, 0xFFFF5555, false);
             } else {
                 graphics.drawString(this.font, Component.translatable("awakening_system.gacha.btn.wish_10").getString(), wish10X + 26, bottomY + 3, 0xFFFFFFFF, true);
-                boolean hasFates10 = (usesIntertwined ? intertwinedFates : acquaintFates) >= 10;
-                String cost10Text = hasFates10 ? Component.translatable("awakening_system.gacha.cost_fates", 10).getString() : Component.translatable("awakening_system.gacha.cost_primos", 1600).getString();
+                int heldFates = usesIntertwined ? intertwinedFates : acquaintFates;
+                boolean hasFates10 = heldFates >= 10;
+                // the fates held go first and only the rest is paid in primogems, as in the game
+                String cost10Text = hasFates10 ? Component.translatable("awakening_system.gacha.cost_fates", 10).getString()
+                        : heldFates > 0 ? Component.translatable("awakening_system.gacha.cost_fates", heldFates).getString() + " + "
+                        + Component.translatable("awakening_system.gacha.cost_primos", (10 - heldFates) * 160).getString()
+                        : Component.translatable("awakening_system.gacha.cost_primos", 1600).getString();
                 renderFittedText(graphics, cost10Text, wish10X + 26, bottomY + 15, wish1W - 28, hasFates10 ? 0xFF80D8FF : 0xFFFFE082, false);
             }
         }
@@ -2376,11 +2446,20 @@ public final class GachaWishScreen extends Screen {
         }
     }
 
+    /** The shop window's height: room at the bottom for the row of fates bought with primogems. */
+    private static final int SHOP_H = 312;
+
+    /** One of the four "fates for primogems" buttons (1 / 10 Intertwined, 1 / 10 Acquaint): x, y, w, h. */
+    private int[] primoFateButton(int mX, int mY, int i) {
+        int w = (500 - 28 - 3 * 8) / 4;
+        return new int[]{mX + 14 + i * (w + 8), mY + SHOP_H - 42, w, 30};
+    }
+
     private void renderShopModal(GuiGraphics graphics, int mouseX, int mouseY) {
         graphics.fill(0, 0, getVirtW(), getVirtH(), 0xEE05070E);
 
         int mW = 500;
-        int mH = 265;
+        int mH = SHOP_H;
         int mX = getVirtW() / 2 - mW / 2;
         int mY = getVirtH() / 2 - mH / 2;
 
@@ -2534,6 +2613,26 @@ public final class GachaWishScreen extends Screen {
             graphics.renderOutline(bX, bY, 60, 22, canAfford ? (hoverBuy ? 0xFFFFFFFF : 0xFFFFD700) : 0xFF554444);
             String btnText = canAfford ? (i >= 2 ? Component.translatable("awakening_system.gacha.shop.recruit").getString() : Component.translatable("awakening_system.gacha.shop.exchange").getString()) : Component.translatable("awakening_system.gacha.shop.insufficient").getString();
             graphics.drawCenteredString(this.font, btnText, bX + 30, bY + 7, canAfford ? 0xFFFFD700 : 0x887777);
+        }
+
+        // fates bought with primogems, as in the game's shop (160 each)
+        {
+            int rowY = mY + SHOP_H - 46;
+            graphics.drawString(this.font, Component.translatable("awakening_system.gacha.shop.primo_section").getString(), mX + 14, rowY - 11, 0xFFFFE082, false);
+            for (int i = 0; i < 4; i++) {
+                int[] r = primoFateButton(mX, mY, i);
+                boolean intertwined = i < 2;
+                int amount = i % 2 == 0 ? 1 : 10;
+                boolean can = primogems >= amount * 160;
+                boolean hover = mouseX >= r[0] && mouseX <= r[0] + r[2] && mouseY >= r[1] && mouseY <= r[1] + r[3];
+                graphics.fill(r[0], r[1], r[0] + r[2], r[1] + r[3], can ? (hover ? 0xFF3A2A5A : 0xFF241A3C) : 0xFF1E1E26);
+                graphics.renderOutline(r[0], r[1], r[2], r[3], can ? (hover ? 0xFFFFFFFF : 0xFFDA70D6) : 0xFF444455);
+                ItemStack icon = intertwined ? (SystemItems.INTERTWINED_FATE.isBound() ? new ItemStack(SystemItems.INTERTWINED_FATE.get()) : ItemStack.EMPTY)
+                        : (SystemItems.ACQUAINT_FATE.isBound() ? new ItemStack(SystemItems.ACQUAINT_FATE.get()) : ItemStack.EMPTY);
+                if (!icon.isEmpty()) graphics.renderItem(icon, r[0] + 4, r[1] + 6);
+                graphics.drawString(this.font, "x" + amount, r[0] + 22, r[1] + 5, 0xFFFFFFFF, false);
+                graphics.drawString(this.font, (amount * 160) + " ✦", r[0] + 22, r[1] + 16, can ? 0xFFFFE082 : 0xFF886666, false);
+            }
         }
 
         for (int i = 0; i < 4; i++) {
@@ -4350,7 +4449,7 @@ public final class GachaWishScreen extends Screen {
 
         if (showShopModal) {
             int mW = 500;
-            int mH = 265;
+            int mH = SHOP_H;
             int mX = getVirtW() / 2 - mW / 2;
             int mY = getVirtH() / 2 - mH / 2;
 
@@ -4363,6 +4462,20 @@ public final class GachaWishScreen extends Screen {
                 showShopModal = false;
                 Minecraft.getInstance().getSoundManager().play(SimpleSoundInstance.forUI(SoundEvents.UI_BUTTON_CLICK, 0.9F));
                 return true;
+            }
+
+            for (int i = 0; i < 4; i++) {
+                int[] r = primoFateButton(mX, mY, i);
+                if (mouseX >= r[0] && mouseX <= r[0] + r[2] && mouseY >= r[1] && mouseY <= r[1] + r[3]) {
+                    int amount = i % 2 == 0 ? 1 : 10;
+                    if (primogems >= amount * 160) {
+                        PacketDistributor.sendToServer(new GachaTopUpPayload(10, i));
+                        Minecraft.getInstance().getSoundManager().play(SimpleSoundInstance.forUI(SoundEvents.AMETHYST_BLOCK_CHIME, 1.2F));
+                    } else {
+                        Minecraft.getInstance().getSoundManager().play(SimpleSoundInstance.forUI(SoundEvents.VILLAGER_NO, 1.0F));
+                    }
+                    return true;
+                }
             }
 
             int colW = 230;

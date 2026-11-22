@@ -277,6 +277,8 @@ public final class SpiralAbyssManager {
         public BlockPos rewardChestPos = null;
         public UUID rewardChestMarkerId = null;
         public boolean rewardChestClaimed = false;
+        /** The cleared-chamber window, waiting for the chest to be opened. */
+        public AbyssChamberResult.ResultPayload pendingResult = null;
 
         public BlockPos descentPortalPos = null;
         public UUID descentPortalMarkerId = null;
@@ -436,8 +438,8 @@ public final class SpiralAbyssManager {
         BlockPos spawnPos = arenaCenter.offset(0, 1, -14);
         player.teleportTo(abyssLevel, spawnPos.getX() + 0.5, spawnPos.getY(), spawnPos.getZ() + 0.5, 0.0F, 0.0F);
 
-        player.playNotifySound(SoundEvents.END_PORTAL_SPAWN, SoundSource.PLAYERS, 0.9F, 1.0F);
-        player.playNotifySound(SoundEvents.BEACON_ACTIVATE, SoundSource.PLAYERS, 1.0F, 0.8F);
+        // a soft chime on arrival (the End portal's boom and the beacon's hum here rang like a strange bell)
+        player.playNotifySound(SoundEvents.AMETHYST_BLOCK_CHIME, SoundSource.PLAYERS, 0.8F, 1.2F);
 
         abyssLevel.sendParticles(ParticleTypes.PORTAL, spawnPos.getX() + 0.5, spawnPos.getY() + 1.0, spawnPos.getZ() + 0.5, 50, 1.0, 1.5, 1.0, 0.1);
 
@@ -1088,8 +1090,8 @@ public final class SpiralAbyssManager {
 
     /** A creature's level in a floor's chamber and half: the floor's own level, two more per chamber, one more in the second half. */
     public static int abyssMobLevel(int floor, int chamber, int half) {
-        // Teyvat is the last world a hunter reaches: its Abyss is fought from level 120 up to nearly 500
-        int[] base = {120, 140, 160, 180, 200, 230, 260, 290, 330, 370, 420, 480};
+        // Teyvat is the last world a hunter reaches: its Abyss starts at Teyvat's own floor (250) and climbs past 600
+        int[] base = {250, 270, 290, 310, 330, 360, 390, 420, 460, 500, 550, 610};
         return base[Math.max(0, Math.min(11, floor - 1))] + (chamber - 1) * 4 + (half - 1) * 2;
     }
 
@@ -1295,8 +1297,7 @@ public final class SpiralAbyssManager {
 
             if (session.state == SessionState.WAITING_FOR_TRIGGER) {
                 BlockPos keyPos = session.arenaCenter.above(2);
-                abyssLevel.sendParticles(ParticleTypes.SOUL_FIRE_FLAME, keyPos.getX() + 0.5, keyPos.getY() + 0.8, keyPos.getZ() + 0.5, 4, 0.2, 0.3, 0.2, 0.02);
-                abyssLevel.sendParticles(ParticleTypes.REVERSE_PORTAL, keyPos.getX() + 0.5, keyPos.getY() + 0.5, keyPos.getZ() + 0.5, 3, 0.2, 0.3, 0.2, 0.03);
+                // (no flames pouring off the key: they covered it and made the wait tense)
 
                 double distToKey = player.position().distanceTo(new Vec3(keyPos.getX() + 0.5, keyPos.getY(), keyPos.getZ() + 0.5));
                 if (distToKey <= 2.2) {
@@ -1641,8 +1642,8 @@ public final class SpiralAbyssManager {
         } else {
             player.displayClientMessage(Component.translatable("abyss.awakening_system.claim_chest_descent_portal"), false);
         }
-        // the game's own window: this chamber's stars, the time left, and what next
-        PacketDistributor.sendToPlayer(player, new AbyssChamberResult.ResultPayload(session.floorNumber, session.currentChamber,
+        // the game's own window (this chamber's stars, the time left, what next) comes once the chest is opened
+        session.pendingResult = (new AbyssChamberResult.ResultPayload(session.floorNumber, session.currentChamber,
                 session.chamberStarsEarned[Math.max(0, Math.min(2, session.currentChamber - 1))], session.chamberStarsEarned.clone(),
                 Math.max(0, session.chamberSecondsRemaining), isFloorFinished, canAdvance));
     }
@@ -1745,21 +1746,10 @@ public final class SpiralAbyssManager {
                 AwakeningSystemMod.sync(player);
             }
 
-            if (SystemItems.MORA.isBound()) {
-                ItemEntity moraDrop = new ItemEntity(level, clickedPos.getX() + 0.5, clickedPos.getY() + 0.8, clickedPos.getZ() + 0.5, new ItemStack(SystemItems.MORA.get(), Math.min(64, 10 * floor)));
-                moraDrop.setDefaultPickUpDelay();
-                level.addFreshEntity(moraDrop);
-            }
-            if (SystemItems.PRIMOGEM.isBound()) {
-                ItemEntity primoDrop = new ItemEntity(level, clickedPos.getX() + 0.5, clickedPos.getY() + 1.0, clickedPos.getZ() + 0.5, new ItemStack(SystemItems.PRIMOGEM.get(), 2));
-                primoDrop.setDefaultPickUpDelay();
-                level.addFreshEntity(primoDrop);
-            }
-            if (SystemItems.HEROS_WIT.isBound()) {
-                ItemEntity witDrop = new ItemEntity(level, clickedPos.getX() + 0.5, clickedPos.getY() + 0.9, clickedPos.getZ() + 0.5, new ItemStack(SystemItems.HEROS_WIT.get(), witCount));
-                witDrop.setDefaultPickUpDelay();
-                level.addFreshEntity(witDrop);
-            }
+            // straight into the inventory (they used to be thrown on the floor); only what does not fit is dropped
+            if (SystemItems.MORA.isBound()) giveOrDrop(player, new ItemStack(SystemItems.MORA.get(), Math.min(64, 10 * floor)));
+            if (SystemItems.PRIMOGEM.isBound()) giveOrDrop(player, new ItemStack(SystemItems.PRIMOGEM.get(), 2));
+            if (SystemItems.HEROS_WIT.isBound()) giveOrDrop(player, new ItemStack(SystemItems.HEROS_WIT.get(), witCount));
 
             player.playNotifySound(SoundEvents.CHEST_OPEN, SoundSource.BLOCKS, 1.0F, 1.0F);
             player.playNotifySound(SoundEvents.PLAYER_LEVELUP, SoundSource.PLAYERS, 1.0F, 1.3F);
@@ -1776,9 +1766,18 @@ public final class SpiralAbyssManager {
             level.setBlock(clickedPos, Blocks.AIR.defaultBlockState(), 2);
             session.rewardChestPos = null;
 
+            // the chest opened: now the "challenge completed" window, with what next
+            if (session.pendingResult != null) {
+                PacketDistributor.sendToPlayer(player, session.pendingResult);
+                session.pendingResult = null;
+            }
             return true;
         }
         return false;
+    }
+
+    private static void giveOrDrop(ServerPlayer player, ItemStack stack) {
+        if (!player.getInventory().add(stack) && !stack.isEmpty()) player.drop(stack, false);
     }
 
     /**

@@ -703,6 +703,7 @@ public final class AwakeningSystemClient {
         event.registerLayerDefinition(com.soybe.awakeningsystem.entity.client.GenshinLargeSlimeModel.LAYER_LOCATION, com.soybe.awakeningsystem.entity.client.GenshinLargeSlimeModel::createBodyLayer);
         event.registerLayerDefinition(com.soybe.awakeningsystem.entity.client.HilichurlModel.LAYER_LOCATION, com.soybe.awakeningsystem.entity.client.HilichurlModel::createBodyLayer);
         event.registerLayerDefinition(com.soybe.awakeningsystem.entity.client.MitachurlModel.LAYER_LOCATION, com.soybe.awakeningsystem.entity.client.MitachurlModel::createBodyLayer);
+        event.registerLayerDefinition(com.soybe.awakeningsystem.entity.client.MitachurlModel.SHIELD_LAYER, com.soybe.awakeningsystem.entity.client.MitachurlModel::createShieldLayer);
 
         event.registerLayerDefinition(com.soybe.awakeningsystem.entity.hypostasis.client.AnemoHypostasisRenderer.LAYER_LOCATION, com.soybe.awakeningsystem.entity.hypostasis.client.HypostasisModel::createBodyLayer);
         event.registerLayerDefinition(com.soybe.awakeningsystem.entity.hypostasis.client.ElectroHypostasisRenderer.LAYER_LOCATION, com.soybe.awakeningsystem.entity.hypostasis.client.HypostasisModel::createBodyLayer);

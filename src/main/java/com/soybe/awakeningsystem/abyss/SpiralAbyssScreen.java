@@ -87,7 +87,7 @@ public final class SpiralAbyssScreen extends Screen {
     protected void init() {
         super.init();
         if (this.minecraft != null && this.minecraft.player != null) {
-            this.minecraft.player.playSound(ModSounds.ABYSS_ENTER.value(), 0.75F, 1.0F);
+            // no sound of its own on opening: the portal already chimed
         }
     }
 
@@ -677,7 +677,7 @@ public final class SpiralAbyssScreen extends Screen {
             if (over(mouseX, mouseY, bxs[3], h - 34, buttonWidth(labels[3]), 18)) {
                 if (this.selectedFloor <= this.unlockedFloor) {
                     PacketDistributor.sendToServer(new StartAbyssFloorPayload(this.selectedFloor));
-                    if (this.minecraft != null && this.minecraft.player != null) this.minecraft.player.playSound(ModSounds.ABYSS_ENTER.value(), 0.9F, 1.0F);
+                    if (this.minecraft != null && this.minecraft.player != null) this.minecraft.player.playSound(SoundEvents.AMETHYST_BLOCK_CHIME, 0.7F, 1.0F);
                     this.onClose();
                 } else if (this.minecraft != null && this.minecraft.player != null) {
                     this.minecraft.player.playSound(SoundEvents.CHEST_LOCKED, 0.8F, 1.0F);
@@ -700,7 +700,7 @@ public final class SpiralAbyssScreen extends Screen {
                 if (unlockedFloor >= 9) {
                     selectedTab = 1;
                     selectedFloor = Math.max(9, Math.min(unlockedFloor, 12));
-                    if (this.minecraft != null && this.minecraft.player != null) this.minecraft.player.playSound(ModSounds.ABYSS_ENTER.value(), 0.6F, 1.2F);
+                    if (this.minecraft != null && this.minecraft.player != null) this.minecraft.player.playSound(SoundEvents.AMETHYST_BLOCK_CHIME, 0.6F, 1.3F);
                 } else if (this.minecraft != null && this.minecraft.player != null) {
                     this.minecraft.player.playSound(SoundEvents.CHEST_LOCKED, 0.8F, 1.0F);
                 }

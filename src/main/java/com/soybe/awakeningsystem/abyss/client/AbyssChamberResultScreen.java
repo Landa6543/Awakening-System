@@ -48,14 +48,27 @@ public final class AbyssChamberResultScreen extends Screen {
     }
 
     private int bw(String s) {
-        return this.font.width(s) + 30;
+        return this.font.width(s) + 34;
+    }
+
+    /** How much the whole window is blown up: the text was too small to read at low interface scales. */
+    private float ui() {
+        return Math.max(1.0F, Math.min(2.2F, this.width / 380.0F));
+    }
+
+    private int vw() {
+        return (int) (this.width / ui());
+    }
+
+    private int vh() {
+        return (int) (this.height / ui());
     }
 
     private int[] xs() {
         String[] l = labels();
         int total = 0;
         for (String s : l) total += bw(s) + 12;
-        int x = (this.width - (total - 12)) / 2;
+        int x = (vw() - (total - 12)) / 2;
         int[] out = new int[l.length];
         for (int i = 0; i < l.length; i++) {
             out[i] = x;
@@ -65,13 +78,18 @@ public final class AbyssChamberResultScreen extends Screen {
     }
 
     private int buttonsY() {
-        return this.height / 2 + 62;
+        return vh() / 2 + 60;
     }
 
     @Override
     public void render(GuiGraphics g, int mouseX, int mouseY, float partialTick) {
         super.render(g, mouseX, mouseY, partialTick);
-        int w = this.width, h = this.height, cy = h / 2 - 10;
+        float ui = ui();
+        g.pose().pushPose();
+        g.pose().scale(ui, ui, 1);
+        mouseX = (int) (mouseX / ui);
+        mouseY = (int) (mouseY / ui);
+        int w = vw(), h = vh(), cy = h / 2 - 10;
         float t = (System.currentTimeMillis() - opened) / 1000F;
         // the band, fading in from the middle outwards
         int half = (int) (w / 2 * Math.min(1F, t * 2.5F));
@@ -86,7 +104,7 @@ public final class AbyssChamberResultScreen extends Screen {
         g.drawCenteredString(this.font, title, 0, 0, 0xFFFFE6A8);
         g.pose().popPose();
         String sub = Component.translatable("gui.awakening_system.abyss_result.chamber", r.floor(), r.chamber()).getString();
-        g.drawCenteredString(this.font, sub, w / 2, cy - 26, 0xFFC8D4E0);
+        g.drawCenteredString(this.font, sub, w / 2, cy - 26, 0xFFFFFFFF);
 
         // three big stars, each lighting up in turn
         for (int i = 0; i < 3; i++) {
@@ -103,7 +121,7 @@ public final class AbyssChamberResultScreen extends Screen {
         }
         int secs = r.secondsLeft();
         String time = Component.translatable("gui.awakening_system.abyss_result.time_left", String.format("%d:%02d", secs / 60, secs % 60)).getString();
-        g.drawCenteredString(this.font, time, w / 2, cy + 26, 0xFFB8C4D0);
+        g.drawCenteredString(this.font, time, w / 2, cy + 26, 0xFFFFFFFF);
         // the floor so far: a row of nine little stars, three per chamber
         StringBuilder row = new StringBuilder();
         for (int c = 0; c < 3; c++) {
@@ -117,21 +135,26 @@ public final class AbyssChamberResultScreen extends Screen {
         int[] x = xs();
         int by = buttonsY();
         for (int i = 0; i < l.length; i++) {
-            boolean hover = mouseX >= x[i] && mouseX < x[i] + bw(l[i]) && mouseY >= by && mouseY < by + 20;
+            boolean hover = mouseX >= x[i] && mouseX < x[i] + bw(l[i]) && mouseY >= by && mouseY < by + 22;
             int fill = i == 0 ? (hover ? 0xFFF2D58A : 0xFFE0BE6A) : (hover ? 0xFF4A5A70 : 0xFF2E3A4C);
-            g.fill(x[i], by, x[i] + bw(l[i]), by + 20, fill);
-            g.renderOutline(x[i], by, bw(l[i]), 20, i == 0 ? 0xFFFFF2C8 : 0xFF8A9AB0);
-            g.drawCenteredString(this.font, l[i], x[i] + bw(l[i]) / 2, by + 6, i == 0 ? 0xFF2A2010 : 0xFFE8EEF4);
+            g.fill(x[i], by, x[i] + bw(l[i]), by + 22, fill);
+            g.renderOutline(x[i], by, bw(l[i]), 22, i == 0 ? 0xFFFFF2C8 : 0xFFB8C4D4);
+            // dark text on the gold button, white with a shadow on the others
+            if (i == 0) g.drawString(this.font, l[i], x[i] + (bw(l[i]) - this.font.width(l[i])) / 2, by + 7, 0xFF1E1608, false);
+            else g.drawCenteredString(this.font, l[i], x[i] + bw(l[i]) / 2, by + 7, 0xFFFFFFFF);
         }
+        g.pose().popPose();
     }
 
     @Override
     public boolean mouseClicked(double mouseX, double mouseY, int button) {
+        mouseX /= ui();
+        mouseY /= ui();
         String[] l = labels();
         int[] x = xs();
         int by = buttonsY();
         for (int i = 0; i < l.length; i++) {
-            if (mouseX >= x[i] && mouseX < x[i] + bw(l[i]) && mouseY >= by && mouseY < by + 20) {
+            if (mouseX >= x[i] && mouseX < x[i] + bw(l[i]) && mouseY >= by && mouseY < by + 22) {
                 choose(i == 0 ? AbyssChamberResult.NEXT : (i == 1 ? AbyssChamberResult.LEAVE : AbyssChamberResult.STAY));
                 return true;
             }

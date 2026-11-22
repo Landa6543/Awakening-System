@@ -24,7 +24,8 @@ public final class AbyssQuiet {
         String path = event.getSound().getLocation().getPath();
         if (path.startsWith("ambient.warped_forest") || path.startsWith("ambient.crimson_forest")
                 || path.startsWith("ambient.soul_sand_valley") || path.startsWith("ambient.nether_wastes")
-                || path.startsWith("ambient.basalt_deltas")) {
+                || path.startsWith("ambient.basalt_deltas") || path.startsWith("ambient.cave")
+                || path.equals("block.end_portal.spawn") || path.equals("block.beacon.ambient")) {
             event.setSound(null);
         }
     }

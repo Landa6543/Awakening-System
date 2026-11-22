@@ -488,27 +488,26 @@ public final class GachaManager {
                 return;
             }
         } else if (isPromotional) {
-            if (data.intertwinedFates() >= count) {
-                data.spendIntertwinedFates(count);
-            } else {
-                int costPrimos = count * 160;
-                if (!data.spendPrimogems(costPrimos)) {
-                    player.displayClientMessage(Component.translatable("awakening_system.gacha.promo_insufficient_primos", costPrimos), true);
-                    player.playNotifySound(SoundEvents.VILLAGER_NO, SoundSource.PLAYERS, 0.8F, 1.0F);
-                    return;
-                }
+            // as in the game: the fates held are used first, and only the ones missing are paid in primogems (160 each)
+            int useFates = Math.min(data.intertwinedFates(), count);
+            int costPrimos = (count - useFates) * 160;
+            if (data.primogems() < costPrimos) {
+                player.displayClientMessage(Component.translatable("awakening_system.gacha.promo_insufficient_primos", costPrimos), true);
+                player.playNotifySound(SoundEvents.VILLAGER_NO, SoundSource.PLAYERS, 0.8F, 1.0F);
+                return;
             }
+            if (useFates > 0) data.spendIntertwinedFates(useFates);
+            if (costPrimos > 0) data.spendPrimogems(costPrimos);
         } else {
-            if (data.acquaintFates() >= count) {
-                data.spendAcquaintFates(count);
-            } else {
-                int costPrimos = count * 160;
-                if (!data.spendPrimogems(costPrimos)) {
-                    player.displayClientMessage(Component.translatable("awakening_system.gacha.standard_insufficient_primos", costPrimos), true);
-                    player.playNotifySound(SoundEvents.VILLAGER_NO, SoundSource.PLAYERS, 0.8F, 1.0F);
-                    return;
-                }
+            int useFates = Math.min(data.acquaintFates(), count);
+            int costPrimos = (count - useFates) * 160;
+            if (data.primogems() < costPrimos) {
+                player.displayClientMessage(Component.translatable("awakening_system.gacha.standard_insufficient_primos", costPrimos), true);
+                player.playNotifySound(SoundEvents.VILLAGER_NO, SoundSource.PLAYERS, 0.8F, 1.0F);
+                return;
             }
+            if (useFates > 0) data.spendAcquaintFates(useFates);
+            if (costPrimos > 0) data.spendPrimogems(costPrimos);
         }
 
         List<ItemStack> wonItems = new ArrayList<>();
@@ -1172,6 +1171,24 @@ public final class GachaManager {
         SystemData data = SystemEvents.data(player);
         int action = payload.actionType();
         int pack = payload.packId();
+
+        if (action == 10) {
+            // fates bought with primogems, 160 each: 0/1 = 1/10 Intertwined, 2/3 = 1/10 Acquaint
+            if (pack < 0 || pack > 3) return;
+            int amount = pack % 2 == 0 ? 1 : 10;
+            int cost = amount * 160;
+            if (data.primogems() < cost) {
+                player.displayClientMessage(Component.translatable("awakening_system.gacha.promo_insufficient_primos", cost), true);
+                player.playNotifySound(SoundEvents.VILLAGER_NO, SoundSource.PLAYERS, 0.9F, 1.0F);
+                return;
+            }
+            data.spendPrimogems(cost);
+            if (pack < 2) data.addIntertwinedFates(amount);
+            else data.addAcquaintFates(amount);
+            AwakeningSystemMod.sync(player);
+            player.playNotifySound(SoundEvents.AMETHYST_BLOCK_CHIME, SoundSource.PLAYERS, 0.9F, 1.3F);
+            return;
+        }
 
         double[] usdPrices = {0.99, 4.99, 14.99, 29.99, 49.99, 99.99, 4.99};
         int[] crystalAmounts = {60, 330, 1090, 2240, 3880, 8080, 300};
