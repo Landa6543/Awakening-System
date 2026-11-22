@@ -1,4 +1,6 @@
 {
+    "awakening_system.giant_portal.built_repaired": "Anel gigante reparado construído em %s, %s, %s.",
+    "awakening_system.giant_portal.built_ruined": "Anel gigante em ruínas construído em %s, %s, %s.",
     "awakening_system.sanmortis.dance": "Os carapaus começam a dançar.",
     "awakening_system.npc_talk.lore": "§6§l★ CONSELHOS E EXPERIÊNCIA DE COMBATE ★§r\n\n§7• §f«%s»\n§7• §f«%s»\n§7• §f«%s»\n§7• §f«%s»",
     "awakening_system.npc_talk.invite_reply.default": "«É uma honra receber seu convite. Aceito entrar na sua guilda e lutarei pelo prestígio dela.»",

@@ -1,4 +1,6 @@
 {
+    "awakening_system.giant_portal.built_repaired": "Repaired giant ring built at %s, %s, %s.",
+    "awakening_system.giant_portal.built_ruined": "Ruined giant ring built at %s, %s, %s.",
     "awakening_system.sanmortis.dance": "The jureles start their dance.",
     "awakening_system.npc_talk.lore": "§6§l★ COMBAT ADVICE AND EXPERIENCE ★§r\n\n§7• §f«%s»\n§7• §f«%s»\n§7• §f«%s»\n§7• §f«%s»",
     "awakening_system.npc_talk.invite_reply.default": "«It is an honour to receive your invitation. I accept to join your guild and will fight for its prestige.»",

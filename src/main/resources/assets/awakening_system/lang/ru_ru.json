@@ -1,4 +1,6 @@
 {
+    "awakening_system.giant_portal.built_repaired": "Восстановленное гигантское кольцо построено в %s, %s, %s.",
+    "awakening_system.giant_portal.built_ruined": "Разрушенное гигантское кольцо построено в %s, %s, %s.",
     "awakening_system.sanmortis.dance": "Ставриды начинают свой танец.",
     "awakening_system.npc_talk.lore": "§6§l★ БОЕВЫЕ СОВЕТЫ И ОПЫТ ★§r\n\n§7• §f«%s»\n§7• §f«%s»\n§7• §f«%s»\n§7• §f«%s»",
     "awakening_system.npc_talk.invite_reply.default": "«Для меня честь получить твоё приглашение. Я вступаю в твою гильдию и буду сражаться за её славу.»",

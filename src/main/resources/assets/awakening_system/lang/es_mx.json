@@ -1,4 +1,6 @@
 {
+    "awakening_system.giant_portal.built_repaired": "Anillo gigante reparado construido en %s, %s, %s.",
+    "awakening_system.giant_portal.built_ruined": "Anillo gigante en ruinas construido en %s, %s, %s.",
     "awakening_system.sanmortis.dance": "Los jureles empiezan su baile.",
     "awakening_system.npc_talk.lore": "§6§l★ CONSEJOS Y EXPERIENCIA DE COMBATE ★§r\n\n§7• §f«%s»\n§7• §f«%s»\n§7• §f«%s»\n§7• §f«%s»",
     "awakening_system.npc_talk.invite_reply.default": "«Es un honor recibir tu invitación. Acepto unirme a tu gremio y lucharé por su prestigio.»",
