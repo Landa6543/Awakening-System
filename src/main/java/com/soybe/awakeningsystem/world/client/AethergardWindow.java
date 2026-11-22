@@ -66,7 +66,7 @@ import java.util.*;
 public final class AethergardWindow {
     private AethergardWindow() {}
 
-    private static final int SECTIONS_PER_FRAME = 8;
+    private static final int SECTIONS_PER_FRAME = 12;
     /** How long after a crossing the loading screen is skipped. */
     private static final long CROSS_WINDOW_MS = 6000;
 
@@ -258,7 +258,9 @@ public final class AethergardWindow {
         @Override
         public BlockState getBlockState(BlockPos pos) {
             int x = pos.getX(), y = pos.getY(), z = pos.getZ();
-            if (x < 0 || y < 0 || z < 0 || x >= sx || y >= sy || z >= sz) return Blocks.AIR.defaultBlockState();
+            // beyond the box's sides and floor the land goes on: solid, so the edge shows no cut-away walls
+            if (y >= sy) return Blocks.AIR.defaultBlockState();
+            if (x < 0 || y < 0 || z < 0 || x >= sx || z >= sz) return Blocks.STONE.defaultBlockState();
             return Block.stateById(cells[(y * sz + z) * sx + x] >>> 8);
         }
 

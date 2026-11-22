@@ -40,9 +40,12 @@ public final class RingLiveView {
     private RingLiveView() {}
 
     /** Half sizes of the box: across the opening, up and down, and through it (each side). */
-    static final int HALF_U = 36, HALF_V = 34, HALF_W = 56;
-    static final double VIEW_RANGE = 200;
+    static final int HALF_U = 96, HALF_V = 48, HALF_W = 160;
+    static final double VIEW_RANGE = 220;
     private static final int MAX_ENTITIES = 80;
+    /** The ring's surroundings, out to this distance, are looked at again more often than the far land. */
+    private static final int NEAR = 64;
+    private static final int NEAR_PER_TICK = 4, FAR_PER_TICK = 3, FIRST_PASS_PER_TICK = 12;
     /** Keeps the far ring's land loaded (and its creatures moving) for a while after each renewal. */
     private static final net.minecraft.server.level.TicketType<Long> VIEW_TICKET =
             net.minecraft.server.level.TicketType.create("awakening_ring_view", Long::compare, 300);
@@ -50,9 +53,12 @@ public final class RingLiveView {
     /** One world being looked into: the box round its ring and what is in it. */
     private static final class Remote {
         final AethergardGate.End there;
-        final int hx, hy, hz, sx, sy, sz;
-        int[] cells;
-        int cursor;
+        final int hx, hy, hz, sx, sy, sz, nx, ny, nz;
+        final int[] cells;
+        /** Sections never read yet (nearest first), then the near and the far ones read over and over. */
+        final ArrayDeque<Integer> unread = new ArrayDeque<>();
+        final int[] near, far;
+        int nearCursor, farCursor;
         final Set<Integer> dirty = new LinkedHashSet<>();
 
         Remote(AethergardGate.End there) {
@@ -64,28 +70,31 @@ public final class RingLiveView {
             sx = hx * 2 + 1;
             sy = hy * 2 + 1;
             sz = hz * 2 + 1;
+            nx = (sx + 15) / 16;
+            ny = (sy + 15) / 16;
+            nz = (sz + 15) / 16;
+            cells = new int[sx * sy * sz];
+            List<Integer> all = new ArrayList<>();
+            for (int s = 0; s < nx * ny * nz; s++) all.add(s);
+            all.sort(Comparator.comparingInt(this::distanceSq));
+            unread.addAll(all);
+            near = all.stream().filter(s -> distanceSq(s) <= NEAR * NEAR).mapToInt(Integer::intValue).toArray();
+            far = all.stream().filter(s -> distanceSq(s) > NEAR * NEAR).mapToInt(Integer::intValue).toArray();
+        }
+
+        int distanceSq(int s) {
+            int cx = s % nx, cz = (s / nx) % nz, cy = s / (nx * nz);
+            int dx = cx * 16 + 8 - hx, dy = cy * 16 + 8 - hy, dz = cz * 16 + 8 - hz;
+            return dx * dx + dy * dy + dz * dz;
         }
 
         BlockPos origin() {
             return there.centre().offset(-hx, -hy, -hz);
         }
 
-        /** Reads every cell of the box from the world (loading its chunks if needed). */
-        int[] read() {
-            int[] out = new int[sx * sy * sz];
-            BlockPos o = origin();
-            BlockPos.MutableBlockPos m = new BlockPos.MutableBlockPos();
-            ServerLevel level = there.level();
-            int i = 0;
-            for (int y = 0; y < sy; y++)
-                for (int z = 0; z < sz; z++)
-                    for (int x = 0; x < sx; x++) {
-                        m.set(o.getX() + x, o.getY() + y, o.getZ() + z);
-                        int id = Block.getId(level.getBlockState(m));
-                        int light = (level.getBrightness(LightLayer.SKY, m) << 4) | level.getBrightness(LightLayer.BLOCK, m);
-                        out[i++] = (id << 8) | light;
-                    }
-            return out;
+        void keepLoaded() {
+            there.level().getChunkSource().addRegionTicket(VIEW_TICKET, new net.minecraft.world.level.ChunkPos(there.centre()),
+                    Math.max(hx, hz) / 16 + 1, there.centre().asLong());
         }
     }
 
@@ -93,6 +102,9 @@ public final class RingLiveView {
     /** Which world each player is looking into, and at which ring here. */
     private static final Map<UUID, String> VIEWING = new HashMap<>();
     private static final Map<UUID, BlockPos> VIEW_AT = new HashMap<>();
+    /** For a player who started looking after the land was read: the sections still to send them. */
+    private static final Map<UUID, ArrayDeque<Integer>> CATCH_UP = new HashMap<>();
+    private static final int CATCH_UP_PER_TICK = 24;
 
     private static String key(AethergardGate.End end) {
         return end.level().dimension().location().toString();
@@ -107,23 +119,32 @@ public final class RingLiveView {
         }
         String key = key(there);
         if (key.equals(VIEWING.get(p.getUUID())) && here.centre().equals(VIEW_AT.get(p.getUUID()))) return;
-        Remote r = REMOTES.computeIfAbsent(key, k -> new Remote(there));
-        if (r.cells == null) r.cells = r.read();
+        Remote r = REMOTES.computeIfAbsent(key, k -> {
+            Remote made = new Remote(there);
+            made.keepLoaded();
+            return made;
+        });
+        // an empty box first; then every section read so far, a few at a time, and the rest as the land loads
         String biome = there.level().dimension().equals(AethergardGate.AETHERGARD) ? "awakening_system:aethelgard_oakhaven_plains" : "minecraft:plains";
-        PacketDistributor.sendToPlayer(p, new FullPayload(true, here.centre(), there.facing(), r.hx, r.hy, r.hz, pack(r.cells), biome));
+        PacketDistributor.sendToPlayer(p, new FullPayload(true, here.centre(), there.facing(), r.hx, r.hy, r.hz, new byte[0], biome));
+        List<Integer> order = new ArrayList<>();
+        for (int s = 0; s < r.nx * r.ny * r.nz; s++) if (!r.unread.contains(s)) order.add(s);
+        order.sort(Comparator.comparingInt(r::distanceSq));
+        CATCH_UP.put(p.getUUID(), new ArrayDeque<>(order));
         VIEWING.put(p.getUUID(), key);
         VIEW_AT.put(p.getUUID(), here.centre());
         AwakeningSystemMod.LOGGER.debug("Ring view: {} looks into {}", p.getName().getString(), key);
     }
 
     static void stop(ServerPlayer p) {
+        CATCH_UP.remove(p.getUUID());
         if (VIEWING.remove(p.getUUID()) != null) {
             VIEW_AT.remove(p.getUUID());
             PacketDistributor.sendToPlayer(p, FullPayload.NONE);
         }
     }
 
-    /** Every tick: the changed sections once a second, the creatures ten times a second. */
+    /** Every tick: a few sections read, the changed ones sent once a second, the creatures ten times a second. */
     static void tick(MinecraftServer server) {
         if (VIEWING.isEmpty()) {
             REMOTES.clear();
@@ -136,6 +157,7 @@ public final class RingLiveView {
             if (p == null) {
                 VIEWING.remove(e.getKey());
                 VIEW_AT.remove(e.getKey());
+                CATCH_UP.remove(e.getKey());
                 continue;
             }
             viewers.computeIfAbsent(e.getValue(), k -> new ArrayList<>()).add(p);
@@ -143,44 +165,88 @@ public final class RingLiveView {
         REMOTES.keySet().retainAll(viewers.keySet());
         for (var e : viewers.entrySet()) {
             Remote r = REMOTES.get(e.getKey());
-            if (r == null || r.cells == null) continue;
+            if (r == null) continue;
             // the other side stays awake while someone looks at it, so its creatures move and its water flows
-            if (t % 100 == 0) r.there.level().getChunkSource().addRegionTicket(VIEW_TICKET,
-                    new net.minecraft.world.level.ChunkPos(r.there.centre()), 6, r.there.centre().asLong());
+            if (t % 100 == 0) r.keepLoaded();
             scan(r);
             if (t % 20 == 0) sendChanges(r, e.getValue());
             if (t % 2 == 0) sendEntities(r, e.getValue());
+            for (ServerPlayer p : e.getValue()) catchUp(r, p);
         }
     }
 
-    /** Sections looked at again each tick: the whole box is gone over every second and a half or so. */
-    private static final int SECTIONS_PER_TICK = 6;
+    private static void catchUp(Remote r, ServerPlayer p) {
+        ArrayDeque<Integer> queue = CATCH_UP.get(p.getUUID());
+        if (queue == null) return;
+        List<SectionPayload.Section> batch = new ArrayList<>();
+        while (batch.size() < CATCH_UP_PER_TICK && !queue.isEmpty()) {
+            SectionPayload.Section s = section(r, queue.poll());
+            if (s != null) batch.add(s);
+        }
+        if (queue.isEmpty()) CATCH_UP.remove(p.getUUID());
+        if (!batch.isEmpty()) PacketDistributor.sendToPlayer(p, new SectionPayload(batch));
+    }
+
+    /** One section's cells, packed; null if it is all empty. */
+    private static SectionPayload.Section section(Remote r, int s) {
+        int cx = s % r.nx, cz = (s / r.nx) % r.nz, cy = s / (r.nx * r.nz);
+        int[] part = new int[16 * 16 * 16];
+        boolean any = false;
+        for (int y = 0; y < 16; y++)
+            for (int z = 0; z < 16; z++)
+                for (int x = 0; x < 16; x++) {
+                    int gx = cx * 16 + x, gy = cy * 16 + y, gz = cz * 16 + z;
+                    int v = gx < r.sx && gy < r.sy && gz < r.sz ? r.cells[(gy * r.sz + gz) * r.sx + gx] : 0;
+                    part[(y * 16 + z) * 16 + x] = v;
+                    any |= v != 0;
+                }
+        return any ? new SectionPayload.Section(cx, cy, cz, pack(part)) : null;
+    }
 
     /** Reads a few more sections of the box from the world; those that changed wait to be sent. */
     private static void scan(Remote r) {
-        int nx = (r.sx + 15) / 16, ny = (r.sy + 15) / 16, nz = (r.sz + 15) / 16, total = nx * ny * nz;
-        BlockPos o = r.origin();
-        BlockPos.MutableBlockPos m = new BlockPos.MutableBlockPos();
-        ServerLevel level = r.there.level();
-        for (int k = 0; k < SECTIONS_PER_TICK; k++) {
-            int s = r.cursor++ % total;
-            int cx = s % nx, cz = (s / nx) % nz, cy = s / (nx * nz);
-            boolean diff = false;
-            for (int y = cy * 16; y < Math.min(r.sy, cy * 16 + 16); y++)
-                for (int z = cz * 16; z < Math.min(r.sz, cz * 16 + 16); z++)
-                    for (int x = cx * 16; x < Math.min(r.sx, cx * 16 + 16); x++) {
-                        m.set(o.getX() + x, o.getY() + y, o.getZ() + z);
-                        if (!level.isLoaded(m)) continue;
-                        int light = (level.getBrightness(LightLayer.SKY, m) << 4) | level.getBrightness(LightLayer.BLOCK, m);
-                        int v = (Block.getId(level.getBlockState(m)) << 8) | light;
-                        int i = (y * r.sz + z) * r.sx + x;
-                        if (r.cells[i] != v) {
-                            r.cells[i] = v;
-                            diff = true;
-                        }
-                    }
-            if (diff) r.dirty.add(s);
+        if (!r.unread.isEmpty()) {
+            // the first time round, nearest first; a section whose land is not loaded yet waits its turn again
+            int tries = r.unread.size();
+            for (int done = 0; done < FIRST_PASS_PER_TICK && tries-- > 0 && !r.unread.isEmpty(); ) {
+                int s = r.unread.poll();
+                if (read(r, s)) done++;
+                else r.unread.add(s);
+            }
+            return;
         }
+        for (int k = 0; k < NEAR_PER_TICK && r.near.length > 0; k++) read(r, r.near[r.nearCursor++ % r.near.length]);
+        for (int k = 0; k < FAR_PER_TICK && r.far.length > 0; k++) read(r, r.far[r.farCursor++ % r.far.length]);
+    }
+
+    /** Reads one section from the world; false if its land is not loaded yet. */
+    private static boolean read(Remote r, int s) {
+        int cx = s % r.nx, cz = (s / r.nx) % r.nz, cy = s / (r.nx * r.nz);
+        BlockPos o = r.origin();
+        ServerLevel level = r.there.level();
+        int x0 = cx * 16, x1 = Math.min(r.sx, x0 + 16), z0 = cz * 16, z1 = Math.min(r.sz, z0 + 16);
+        int y0 = cy * 16, y1 = Math.min(r.sy, y0 + 16);
+        // all its columns' chunks must be there (no chunk is made or loaded from here)
+        for (int x = x0; x < x1; x += 15)
+            for (int z = z0; z < z1; z += 15)
+                if (!level.hasChunk((o.getX() + Math.min(x, x1 - 1)) >> 4, (o.getZ() + Math.min(z, z1 - 1)) >> 4)) return false;
+        if (!level.hasChunk((o.getX() + x1 - 1) >> 4, (o.getZ() + z1 - 1) >> 4)) return false;
+        BlockPos.MutableBlockPos m = new BlockPos.MutableBlockPos();
+        boolean diff = false;
+        for (int y = y0; y < y1; y++)
+            for (int z = z0; z < z1; z++)
+                for (int x = x0; x < x1; x++) {
+                    m.set(o.getX() + x, o.getY() + y, o.getZ() + z);
+                    int light = (level.getBrightness(LightLayer.SKY, m) << 4) | level.getBrightness(LightLayer.BLOCK, m);
+                    int v = (Block.getId(level.getBlockState(m)) << 8) | light;
+                    int i = (y * r.sz + z) * r.sx + x;
+                    if (r.cells[i] != v) {
+                        r.cells[i] = v;
+                        diff = true;
+                    }
+                }
+        if (diff) r.dirty.add(s);
+        return true;
     }
 
     private static void sendChanges(Remote r, List<ServerPlayer> to) {
@@ -188,17 +254,16 @@ public final class RingLiveView {
         int nx = (r.sx + 15) / 16, nz = (r.sz + 15) / 16;
         List<SectionPayload.Section> changed = new ArrayList<>();
         for (int s : r.dirty) {
-            int cx = s % nx, cz = (s / nx) % nz, cy = s / (nx * nz);
-            int[] part = new int[16 * 16 * 16];
-            for (int y = 0; y < 16; y++)
-                for (int z = 0; z < 16; z++)
-                    for (int x = 0; x < 16; x++) {
-                        int gx = cx * 16 + x, gy = cy * 16 + y, gz = cz * 16 + z;
-                        part[(y * 16 + z) * 16 + x] = gx < r.sx && gy < r.sy && gz < r.sz ? r.cells[(gy * r.sz + gz) * r.sx + gx] : 0;
-                    }
-            changed.add(new SectionPayload.Section(cx, cy, cz, pack(part)));
+            SectionPayload.Section sec = section(r, s);
+            if (sec != null) changed.add(sec);
+            if (changed.size() >= 64) {
+                SectionPayload payload = new SectionPayload(changed);
+                for (ServerPlayer p : to) PacketDistributor.sendToPlayer(p, payload);
+                changed = new ArrayList<>();
+            }
         }
         r.dirty.clear();
+        if (changed.isEmpty()) return;
         SectionPayload payload = new SectionPayload(changed);
         for (ServerPlayer p : to) PacketDistributor.sendToPlayer(p, payload);
     }
@@ -264,6 +329,7 @@ public final class RingLiveView {
 
     public static int[] unpack(byte[] data, int size) {
         int[] out = new int[size];
+        if (data.length == 0) return out;
         try (InflaterInputStream in = new InflaterInputStream(new java.io.ByteArrayInputStream(data))) {
             byte[] raw = in.readAllBytes();
             int[] pos = {0};
