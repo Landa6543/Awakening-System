@@ -591,7 +591,7 @@ Sistema dinámico de eventos de temporada integrando consumibles gastronómicos 
 * **World Boss:** criaturas comunes salían como "WORLD BOSS" porque su nombre contenía una palabra de jefe (hi**lich**url contiene "lich", man**drake** contiene "drake"). Ahora se comparan palabras enteras, y las criaturas que ya tenían el título lo pierden al cargar y recuperan su vida normal. Los World Boss de otros mods tienen al menos la vida de su nivel y su nombre traducido.
 * **Hipódromo Uma:** las corredoras salen dentro de los cajones de salida, la carrera se gana en la línea de meta real, no se quedan atascadas en el bordillo y las vallas blancas quedan unidas. Las estructuras ya no colocan su bloque de estructura.
 * **Abismo:** las gradas de acceso a la plataforma están bien orientadas (en estructuras nuevas).
-* **Abismo:** las gradas de acceso a la plataforma están bien orientadas, también en los portales ya construidos. La ventana del Abismo tiene nuevo fondo (una sala de arcos abierta a un cielo nocturno con un anillo de luz) y un estandarte por piso con su numeral, una escalera hacia una puerta y su cofre.
+* **Abismo:** las gradas de acceso a la plataforma están bien orientadas, también en los portales ya construidos. La ventana del Abismo, rehecha al estilo del juego: los 8 pisos del Corredor en fila con estandartes detallados (su sala, una escalera hacia una puerta iluminada, el cofre en un rombo, sus estrellas) y una grieta morada hacia la Espiral; luz que respira, motas que flotan y el vórtice que gira. La vista de cada piso muestra el trastorno de las líneas ley, las tres salas con sus estrellas, **los enemigos de cada mitad en 3D** y la ventana "Tesoro de la sala" con las recompensas.
 * Se quitó el motor de combate ACE abandonado.
 
 ---

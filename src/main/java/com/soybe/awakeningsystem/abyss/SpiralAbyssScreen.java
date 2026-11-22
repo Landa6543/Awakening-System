@@ -142,6 +142,43 @@ public final class SpiralAbyssScreen extends Screen {
         float scale = Math.max(w / (float) AbyssArt.BG_W, h / (float) AbyssArt.BG_H);
         int dw = Math.round(AbyssArt.BG_W * scale), dh = Math.round(AbyssArt.BG_H * scale);
         graphics.blit(tex, (w - dw) / 2, (h - dh) / 2, dw, dh, 0, 0, AbyssArt.BG_W, AbyssArt.BG_H, AbyssArt.BG_W, AbyssArt.BG_H);
+        long now = System.currentTimeMillis();
+        int cx = w / 2, cy = (int) (h * (selectedTab == 0 ? 0.545F : 0.5F));
+        int glowCol = selectedTab == 0 ? 0x7FE6D8 : 0xA88CF0;
+        // the light at the heart of the hall breathes
+        float breath = (float) (Math.sin(now / 1400.0) * 0.5 + 0.5);
+        int gr = (int) (Math.min(w, h) * (0.16F + breath * 0.03F));
+        for (int k = 5; k >= 1; k--) {
+            int rr = gr * k / 5;
+            int a = (int) ((10 + breath * 14) * (6 - k) / 5.0F);
+            for (int dy = -rr; dy <= rr; dy += 2) {
+                int half = (int) Math.sqrt((double) rr * rr - (double) dy * dy);
+                graphics.fill(cx - half, cy + dy, cx + half, cy + dy + 2, (a << 24) | glowCol);
+            }
+        }
+        // the Spire's eye turns slowly: spokes of light sweeping round it
+        if (selectedTab == 1) {
+            double turn = now / 9000.0;
+            for (int i = 0; i < 24; i++) {
+                double a = turn + i * Math.PI * 2 / 24;
+                for (int d = gr + 10; d < gr + 10 + Math.min(w, h) / 3; d += 3) {
+                    int px = (int) (cx + Math.cos(a) * d), py = (int) (cy + Math.sin(a) * d * 0.85);
+                    int al = (int) (40 * (1 - (d - gr) / (double) (Math.min(w, h) / 3 + 10)));
+                    if (al > 0) graphics.fill(px, py, px + 2, py + 2, (al << 24) | 0xC8B8FF);
+                }
+            }
+        }
+        // motes of light drifting upwards through the hall
+        java.util.Random rnd = new java.util.Random(77);
+        for (int i = 0; i < 46; i++) {
+            float speed = 0.02F + rnd.nextFloat() * 0.03F;
+            float ph = ((now / 1000.0F) * speed + rnd.nextFloat()) % 1.0F;
+            int px = (int) (rnd.nextFloat() * w + Math.sin(now / 1500.0 + i) * 8);
+            int py = (int) (h - ph * (h + 20));
+            int a = (int) (Math.sin(ph * Math.PI) * (90 + rnd.nextInt(120)));
+            int size = rnd.nextInt(5) == 0 ? 2 : 1;
+            graphics.fill(px, py, px + size, py + size, (a << 24) | glowCol);
+        }
         graphics.fillGradient(0, 0, w, 50, 0x99060C1C, 0x00060C1C);
         graphics.fillGradient(0, h - 70, w, h, 0x00060C1C, 0xAA060C1C);
     }
@@ -182,10 +219,24 @@ public final class SpiralAbyssScreen extends Screen {
         boolean locked = floor > unlockedFloor;
         int state = locked ? 1 : (claimedRewards[idx] ? 2 : 0);
         com.mojang.blaze3d.systems.RenderSystem.enableBlend();
-        graphics.blit(AbyssArt.banner(floor, state, selected), x, y, bw, bh, 0, 0, AbyssArt.BANNER_W, AbyssArt.BANNER_H, AbyssArt.BANNER_W, AbyssArt.BANNER_H);
-        com.mojang.blaze3d.systems.RenderSystem.disableBlend();
+        int tw = AbyssArt.BANNER_W * AbyssArt.K, th = AbyssArt.BANNER_H * AbyssArt.K;
+        graphics.blit(AbyssArt.banner(floor, state, selected), x, y, bw, bh, 0, 0, tw, th, tw, th);
         float s = bh / (float) AbyssArt.BANNER_H;
         int cx = x + bw / 2;
+        long now = System.currentTimeMillis();
+        if (!locked) {
+            // the doorway's light breathes, and a mote of it drifts up the stair now and then
+            float glow = (float) (Math.sin(now / 700.0 + floor) * 0.5 + 0.5);
+            int gx = (int) (cx - 6 * s), gy = (int) (y + 44 * s), gw = (int) (12 * s), gh = (int) (26 * s);
+            graphics.fillGradient(gx, gy, gx + gw, gy + gh, ((int) (20 + glow * 50) << 24) | 0xFFFFFF, 0x00FFFFFF);
+            for (int m = 0; m < 3; m++) {
+                float ph = ((now / 1800.0F) + m / 3.0F + floor * 0.17F) % 1.0F;
+                int mx = (int) (cx + Math.sin(ph * 6 + m) * 5 * s), my = (int) (y + (96 - ph * 50) * s);
+                int a = (int) (Math.sin(ph * Math.PI) * 200);
+                graphics.fill(mx, my, mx + Math.max(1, (int) s), my + Math.max(1, (int) s), (a << 24) | 0xFFFFFF);
+            }
+        }
+        com.mojang.blaze3d.systems.RenderSystem.disableBlend();
         // the number, dark on the white disc
         String num = String.valueOf(floor);
         graphics.pose().pushPose();
@@ -195,9 +246,11 @@ public final class SpiralAbyssScreen extends Screen {
         graphics.drawString(this.font, num, -this.font.width(num) / 2, -4, 0xFF2A3A4C, false);
         graphics.pose().popPose();
         // under the diamond: progress if it is begun but not finished
-        int under = (int) (y + (AbyssArt.DIAMOND_Y + 13) * s);
+        int under = (int) (y + (AbyssArt.DIAMOND_Y + 12) * s);
         int stars = starsPerFloor[idx];
-        if (!locked && state != 2) {
+        if (state == 2) {
+            // collected: the tick is painted under the diamond; nothing else to write
+        } else if (!locked) {
             String prog = stars + "/9";
             int pw = this.font.width(prog) + 6;
             graphics.fill(cx - pw / 2, under - 1, cx + pw / 2, under + 9, 0xCC2E3E50);
@@ -209,8 +262,9 @@ public final class SpiralAbyssScreen extends Screen {
             graphics.drawString(this.font, lk, cx - this.font.width(lk) / 2, under, 0xFFCBD5E1, false);
         }
         // difficulty marks at the foot: one diamond on the first floors, two from floor 5
+        // well below the progress label (it read through "LOCKED" before)
         int marks = floor <= 4 ? 1 : 2;
-        int my = (int) (y + (AbyssArt.BANNER_H - 22) * s);
+        int my = Math.max(under + 14, (int) (y + (AbyssArt.BANNER_H - 11) * s));
         for (int m = 0; m < marks; m++) {
             int mx = cx + (m - (marks - 1) / 2.0F > 0 ? 4 : (marks == 1 ? 0 : -4));
             diamond(graphics, mx, my, 3, 0xFFFFFFFF, 0xFF8C9EAE);
@@ -233,7 +287,21 @@ public final class SpiralAbyssScreen extends Screen {
                 boolean open = unlockedFloor >= 9;
                 boolean hover = over(mouseX, mouseY, x, g[1], g[2], g[3]);
                 com.mojang.blaze3d.systems.RenderSystem.enableBlend();
-                graphics.blit(AbyssArt.rift(open), x, g[1] - (hover ? 3 : 0), g[2], g[3], 0, 0, AbyssArt.BANNER_W, AbyssArt.BANNER_H, AbyssArt.BANNER_W, AbyssArt.BANNER_H);
+                int ry = g[1] - (hover ? 3 : 0);
+                graphics.blit(AbyssArt.rift(open), x, ry, g[2], g[3], 0, 0, AbyssArt.BANNER_W, AbyssArt.BANNER_H, AbyssArt.BANNER_W, AbyssArt.BANNER_H);
+                // the rift swirls: sparks spiralling into its dark heart
+                graphics.enableScissor(x + g[2] / 8, ry + g[3] / 10, x + g[2] - g[2] / 8, ry + g[3] - g[3] / 10);
+                long tnow = System.currentTimeMillis();
+                int rcx = x + g[2] / 2, rcy = ry + g[3] / 2;
+                for (int sp = 0; sp < 40; sp++) {
+                    float ph = ((tnow / 2600.0F) + sp / 40.0F) % 1.0F;
+                    double ang = sp * 2.4 + ph * 7.0;
+                    double rad = (1.0 - ph) * g[3] * 0.48;
+                    int px = (int) (rcx + Math.cos(ang) * rad * 0.42), py = (int) (rcy + Math.sin(ang) * rad);
+                    int a = (int) (Math.sin(ph * Math.PI) * (open ? 230 : 110));
+                    graphics.fill(px, py, px + 2, py + 2, (a << 24) | (sp % 3 == 0 ? 0xFFFFFF : 0xC890FF));
+                }
+                graphics.disableScissor();
                 com.mojang.blaze3d.systems.RenderSystem.disableBlend();
                 if (!open) graphics.drawCenteredString(this.font, "🔒", x + g[2] / 2, g[1] + g[3] / 2 - 4, 0xFFE0D8F0);
                 continue;
@@ -256,8 +324,10 @@ public final class SpiralAbyssScreen extends Screen {
         String hint = Component.translatable(selectedTab == 0 ? "gui.awakening_system.spiral_abyss.hint_corridor" : "gui.awakening_system.spiral_abyss.hint_spire").getString();
         graphics.drawString(this.font, hint, 30, h - 40, 0xFFE8D29A, true);
         // the buttons
-        actionButton(graphics, mouseX, mouseY, w - 30 - 70, h - 34, "✕", Component.translatable("gui.awakening_system.spiral_abyss.leave").getString());
-        actionButton(graphics, mouseX, mouseY, w - 30 - 160, h - 34, "○", Component.translatable("gui.awakening_system.spiral_abyss.confirm").getString());
+        String[] labels = rowLabels();
+        int[] bx = buttonXs(labels);
+        actionButton(graphics, mouseX, mouseY, bx[0], h - 34, "○", labels[0]);
+        actionButton(graphics, mouseX, mouseY, bx[1], h - 34, "✕", labels[1]);
     }
 
     private void circle(GuiGraphics g, int cx, int cy, int r, int fill, int edge) {
@@ -271,72 +341,213 @@ public final class SpiralAbyssScreen extends Screen {
         g.fill(cx - (int) Math.sqrt(r * r - (r - 1) * (r - 1)), cy + r, cx + (int) Math.sqrt(r * r - (r - 1) * (r - 1)) + 1, cy + r + 1, edge);
     }
 
-    /** A Genshin-like button: a round mark and its word. 80 wide, 16 tall. */
+    private String[] rowLabels() {
+        return new String[]{Component.translatable("gui.awakening_system.spiral_abyss.confirm").getString(),
+                Component.translatable("gui.awakening_system.spiral_abyss.leave").getString()};
+    }
+
+    private String[] detailLabels() {
+        int idx = selectedFloor - 1;
+        boolean canClaim = starsPerFloor[idx] >= 3 && !claimedRewards[idx];
+        return new String[]{Component.translatable("gui.awakening_system.spiral_abyss.chamber_treasure").getString(),
+                Component.translatable(claimedRewards[idx] ? "gui.awakening_system.spiral_abyss.rewards_claimed"
+                        : (canClaim ? "gui.awakening_system.spiral_abyss.collect" : "gui.awakening_system.spiral_abyss.collect_locked")).getString(),
+                Component.translatable(selectedFloor > unlockedFloor ? "gui.awakening_system.spiral_abyss.challenge_locked" : "gui.awakening_system.spiral_abyss.start").getString(),
+                Component.translatable("gui.awakening_system.spiral_abyss.back").getString()};
+    }
+
+    private int buttonWidth(String label) {
+        return 24 + this.font.width(label);
+    }
+
+    /** The buttons of the bottom row, laid from the right edge leftwards with room between them. */
+    private int[] buttonXs(String[] labels) {
+        int[] xs = new int[labels.length];
+        int x = this.width - 24;
+        for (int i = labels.length - 1; i >= 0; i--) {
+            x -= buttonWidth(labels[i]);
+            xs[i] = x;
+            x -= 16;
+        }
+        return xs;
+    }
+
+    /** A Genshin-like button: a round mark and its word. */
     private void actionButton(GuiGraphics g, int mouseX, int mouseY, int x, int y, String mark, String label) {
-        boolean hover = over(mouseX, mouseY, x, y, 84, 18);
+        boolean hover = over(mouseX, mouseY, x, y, buttonWidth(label), 18);
+        if (hover) g.fill(x - 3, y - 2, x + buttonWidth(label) + 2, y + 19, 0x44FFFFFF);
         circle(g, x + 8, y + 8, 8, hover ? 0xFFF2F5F8 : 0x00000000, 0xFFE8EEF4);
         g.drawCenteredString(this.font, mark, x + 8, y + 4, hover ? 0xFF2A3A4C : 0xFFE8EEF4);
         g.drawString(this.font, label, x + 21, y + 4, hover ? 0xFFFFFFFF : 0xFFE8EEF4, true);
     }
 
-    /** The floor's own view: its banner at the left; at the right its ley line disorder and its three chambers. */
+    /** The chamber treasure window is open over the floor's view. */
+    private boolean treasureOpen;
+    /** The creatures shown for each chamber and half (made once, kept while the window is open). */
+    private final java.util.Map<String, List<net.minecraft.world.entity.Mob>> previews = new java.util.HashMap<>();
+
+    /**
+     * Who waits in a chamber's half: the very creatures the server sends (SpiralAbyssManager.createAbyssMob),
+     * made here only to be drawn, one of each kind.
+     */
+    private List<net.minecraft.world.entity.Mob> chamberMobs(int floor, int chamber, int half) {
+        String key = floor + ":" + chamber + ":" + half;
+        List<net.minecraft.world.entity.Mob> done = previews.get(key);
+        if (done != null) return done;
+        List<net.minecraft.world.entity.Mob> list = new java.util.ArrayList<>();
+        java.util.Set<String> kinds = new java.util.HashSet<>();
+        if (this.minecraft != null && this.minecraft.level != null) {
+            // the same count as the wave on the server: 6 + floor/2 + 2 per chamber, one more in the second half
+            int count = 6 + floor / 2 + chamber * 2 + (half == 2 ? 1 : 0);
+            for (int i = 0; i < count && list.size() < 4; i++) {
+                try {
+                    net.minecraft.world.entity.Mob m = SpiralAbyssManager.createAbyssMob(this.minecraft.level, floor, chamber, half, i);
+                    if (m == null) continue;
+                    String kind = m.getType().toString() + "|" + (m.getCustomName() != null ? m.getCustomName().getString() : "")
+                            + (m instanceof com.soybe.awakeningsystem.entity.HilichurlEntity hc ? hc.getRole() : "");
+                    if (kinds.add(kind)) list.add(m);
+                } catch (Throwable ignored) {
+                }
+            }
+        }
+        previews.put(key, list);
+        return list;
+    }
+
+    /** A creature's card: a framed portrait with the creature turning slowly in it, its level under it. */
+    private void mobCard(GuiGraphics g, net.minecraft.world.entity.Mob mob, int x, int y, int size, int level, int mouseX, int mouseY) {
+        boolean boss = mob.getBbHeight() > 2.2F || mob instanceof net.minecraft.world.entity.monster.WitherSkeleton
+                || mob instanceof net.minecraft.world.entity.animal.IronGolem;
+        g.fillGradient(x, y, x + size, y + size, boss ? 0xFF8A5A2A : 0xFF5A4A8C, boss ? 0xFFD49A4A : 0xFF9A84D0);
+        g.renderOutline(x, y, size, size, 0xFFE8E2F4);
+        g.enableScissor(x + 1, y + 1, x + size - 1, y + size - 1);
+        float h = Math.max(0.6F, mob.getBbHeight());
+        float scale = (size * 0.62F) / h;
+        float turn = (System.currentTimeMillis() % 12000L) / 12000.0F * (float) Math.PI * 2;
+        org.joml.Quaternionf pose = new org.joml.Quaternionf().rotateZ((float) Math.PI).rotateY(turn);
+        try {
+            net.minecraft.client.gui.screens.inventory.InventoryScreen.renderEntityInInventory(g, x + size / 2.0F, y + size * 0.88F, scale,
+                    new org.joml.Vector3f(), pose, null, mob);
+        } catch (Throwable ignored) {
+        }
+        g.disableScissor();
+        g.fill(x, y + size - 10, x + size, y + size, 0xCC2A2438);
+        String lv = Component.translatable("gui.awakening_system.spiral_abyss.level_short", level).getString();
+        g.drawCenteredString(this.font, lv, x + size / 2, y + size - 9, 0xFFE8E2F4);
+        if (over(mouseX, mouseY, x, y, size, size)) g.renderTooltip(this.font, mob.getDisplayName(), mouseX, mouseY);
+    }
+
+    /** The floor's own view: its banner at the left; at the right its ley line disorder, chambers and foes. */
     private void renderDetailView(GuiGraphics graphics, int mouseX, int mouseY, int w, int h) {
         int bh = Math.min((int) (h * 0.62), 260), bw = (bh * AbyssArt.BANNER_W) / AbyssArt.BANNER_H;
-        int bx = Math.max(24, w / 6 - bw / 2), by = (h - bh) / 2;
+        int bx = Math.max(24, w / 7 - bw / 2), by = (h - bh) / 2;
         drawBanner(graphics, selectedFloor, bx, by, bw, bh, true);
-        int px = bx + bw + Math.max(20, w / 18), pw = Math.min(w - px - 30, 360);
-        int py = by + 4;
+        int px = bx + bw + Math.max(20, w / 20), pw = Math.min(w - px - 30, 420);
+        int py = Math.max(40, by - 10);
         int idx = selectedFloor - 1;
-        // the title row: Floor N and the place's mood at the right
+        // a translucent sheet behind the text, like the game's
+        graphics.fillGradient(px - 10, py - 8, px + pw + 10, h - 50, 0x88101830, 0x55101830);
         graphics.drawString(this.font, Component.translatable("gui.awakening_system.spiral_abyss.floor_title", selectedFloor).getString(), px, py, 0xFFFFFFFF, true);
         String badge = getElementalBadge(selectedFloor);
         graphics.drawString(this.font, badge, px + pw - this.font.width(badge), py, getElementalColor(selectedFloor), true);
         graphics.fill(px, py + 12, px + pw, py + 13, 0x66E8EEF4);
-        // the ley line disorder
-        int y = py + 19;
+        int y = py + 18;
         graphics.drawString(this.font, Component.translatable("gui.awakening_system.spiral_abyss.disorder_title").getString(), px, y, 0xFFE8D29A, false);
         y += 11;
         for (var line : this.font.split(Component.literal("✦ " + getLeyLineDisorderText(selectedFloor)), pw)) {
             graphics.drawString(this.font, line, px, y, 0xFFD8E2EA, false);
             y += 10;
         }
-        y += 8;
+        y += 6;
         graphics.drawString(this.font, Component.translatable("gui.awakening_system.spiral_abyss.challenge_target").getString(), px, y, 0xFFE8D29A, false);
         y += 12;
-        // the three chambers, each with its three stars
         int stars = starsPerFloor[idx];
         for (int c = 1; c <= 3; c++) {
-            int rowY = y + (c - 1) * 22;
+            int rowY = y + (c - 1) * 21;
             boolean sel = c == selectedChamber;
-            boolean hover = over(mouseX, mouseY, px, rowY, pw, 19);
-            graphics.fill(px, rowY, px + pw, rowY + 19, sel ? 0xCC3A4C60 : (hover ? 0xAA2E3C4E : 0x99202C3A));
-            if (sel) graphics.renderOutline(px, rowY, pw, 19, 0xFFE8EEF4);
-            graphics.drawString(this.font, Component.translatable("gui.awakening_system.spiral_abyss.chamber_tab", c).getString(), px + 8, rowY + 6, 0xFFFFFFFF, false);
+            boolean hover = over(mouseX, mouseY, px, rowY, pw, 18);
+            graphics.fill(px, rowY, px + pw, rowY + 18, sel ? 0xCC3A4C66 : (hover ? 0xAA2E3C52 : 0x99202C40));
+            if (sel) graphics.renderOutline(px, rowY, pw, 18, 0xFFE8EEF4);
+            graphics.drawString(this.font, Component.translatable("gui.awakening_system.spiral_abyss.chamber_tab", c).getString(), px + 8, rowY + 5, 0xFFFFFFFF, false);
             int won = Math.max(0, Math.min(3, stars - (c - 1) * 3));
             for (int s = 0; s < 3; s++)
-                graphics.drawString(this.font, "★", px + pw - 40 + s * 11, rowY + 6, s < won ? 0xFFFFE08A : 0xFF5A6878, false);
+                graphics.drawString(this.font, "✹", px + pw - 40 + s * 12, rowY + 5, s < won ? 0xFFFFF2C8 : 0xFF56647A, false);
         }
-        y += 3 * 22 + 6;
-        // what waits in the chosen chamber, and the level asked
-        String monsters = selectedFloor >= 5
-                ? getChamberHalfMonsters(selectedFloor, selectedChamber, 1) + " / " + getChamberHalfMonsters(selectedFloor, selectedChamber, 2)
-                : getChamberMonsters(selectedFloor, selectedChamber);
-        for (var line : this.font.split(Component.literal(Component.translatable("gui.awakening_system.spiral_abyss.monsters_prefix").getString() + " " + monsters), pw)) {
-            graphics.drawString(this.font, line, px, y, 0xFFB8C4D0, false);
-            y += 10;
-        }
+        y += 3 * 21 + 6;
+        // the foes of the chosen chamber, the first and second half side by side
         int rec = getRecommendedLevel(selectedFloor);
+        int halves = SpiralAbyssManager.isTwoHalvesFloor(selectedFloor) ? 2 : 1;
+        int card = Math.max(28, Math.min(46, (pw - 30) / (halves * 4 + 1)));
+        for (int half = 1; half <= halves; half++) {
+            int hx = px + (half - 1) * (pw / 2 + 6);
+            List<net.minecraft.world.entity.Mob> mobs = chamberMobs(selectedFloor, selectedChamber, half);
+            for (int i = 0; i < mobs.size(); i++)
+                mobCard(graphics, mobs.get(i), hx + i * (card + 4), y, card, rec + (selectedChamber - 1) * 2 + (half - 1), mouseX, mouseY);
+            String label = Component.translatable(halves == 1 ? "gui.awakening_system.spiral_abyss.single_half" : (half == 1
+                    ? "gui.awakening_system.spiral_abyss.half_first_short" : "gui.awakening_system.spiral_abyss.half_second_short")).getString();
+            int span = Math.max(card, mobs.size() * (card + 4) - 4);
+            graphics.drawCenteredString(this.font, label, hx + span / 2, y + card + 4, 0xFFE8E2F4);
+        }
+        y += card + 18;
         String lvl = Component.translatable("gui.awakening_system.spiral_abyss.level_gauge", rec,
                 Component.translatable(this.playerLevel >= rec ? "gui.awakening_system.spiral_abyss.level_met" : "gui.awakening_system.spiral_abyss.level_low").getString()).getString();
-        graphics.drawString(this.font, lvl, px, y + 2, this.playerLevel >= rec ? 0xFF7EE08A : 0xFFF08080, false);
-        // the buttons: collect the reward, start, back
-        boolean canClaim = stars >= 3 && !claimedRewards[idx];
-        int bxs = w - 30 - 250;
-        actionButton(graphics, mouseX, mouseY, bxs, h - 34, "□", Component.translatable(claimedRewards[idx] ? "gui.awakening_system.spiral_abyss.rewards_claimed"
-                : (canClaim ? "gui.awakening_system.spiral_abyss.claim_button" : "gui.awakening_system.spiral_abyss.rewards_requirement")).getString());
-        actionButton(graphics, mouseX, mouseY, w - 30 - 160, h - 34, "▷", Component.translatable(selectedFloor > unlockedFloor
-                ? "gui.awakening_system.spiral_abyss.challenge_locked" : "gui.awakening_system.spiral_abyss.start").getString());
-        actionButton(graphics, mouseX, mouseY, w - 30 - 70, h - 34, "✕", Component.translatable("gui.awakening_system.spiral_abyss.back").getString());
+        graphics.drawString(this.font, lvl, px, y, this.playerLevel >= rec ? 0xFF7EE08A : 0xFFF08080, false);
+        graphics.drawString(this.font, Component.translatable("gui.awakening_system.spiral_abyss.starts_at", selectedFloor, selectedChamber).getString(),
+                px, y + 12, 0xFF9AA6B8, false);
+        String[] labels = detailLabels();
+        int[] bxs = buttonXs(labels);
+        actionButton(graphics, mouseX, mouseY, bxs[0], h - 34, "❖", labels[0]);
+        actionButton(graphics, mouseX, mouseY, bxs[1], h - 34, "□", labels[1]);
+        actionButton(graphics, mouseX, mouseY, bxs[2], h - 34, "▷", labels[2]);
+        actionButton(graphics, mouseX, mouseY, bxs[3], h - 34, "✕", labels[3]);
+        if (treasureOpen) renderTreasure(graphics, mouseX, mouseY, w, h);
+    }
+
+    /** The rewards of one star step of a floor, as the server gives them (SpiralAbyssManager.handleClaimReward). */
+    private List<ItemStack> stepRewards(int step) {
+        List<ItemStack> out = new java.util.ArrayList<>();
+        int[] primos = {100, 100, 100}, coins = {20000, 30000, 50000}, fates = {0, 1, 2};
+        if (SystemItems.PRIMOGEM.isBound()) out.add(new ItemStack(SystemItems.PRIMOGEM.get(), primos[step]));
+        if (SystemItems.MORA.isBound()) out.add(new ItemStack(SystemItems.MORA.get(), 1));
+        if (fates[step] > 0 && SystemItems.INTERTWINED_FATE.isBound()) out.add(new ItemStack(SystemItems.INTERTWINED_FATE.get(), fates[step]));
+        return out;
+    }
+
+    /** The chamber treasure window: each star step of the floor and what it gives, with the chamber chest. */
+    private void renderTreasure(GuiGraphics g, int mouseX, int mouseY, int w, int h) {
+        g.fill(0, 0, w, h, 0x99000000);
+        int ww = Math.min(w - 60, 440), wh = Math.min(h - 60, 230);
+        int x = (w - ww) / 2, y = (h - wh) / 2;
+        g.fill(x, y, x + ww, y + wh, 0xF0303A52);
+        g.renderOutline(x, y, ww, wh, 0xFF9AA8C0);
+        g.renderOutline(x + 3, y + 3, ww - 6, wh - 6, 0x66C8D0E0);
+        for (int[] cn : new int[][]{{x, y}, {x + ww - 6, y}, {x, y + wh - 6}, {x + ww - 6, y + wh - 6}}) g.fill(cn[0], cn[1], cn[0] + 6, cn[1] + 6, 0xFFE8D29A);
+        String title = Component.translatable("gui.awakening_system.spiral_abyss.chamber_treasure").getString();
+        g.drawCenteredString(this.font, title, x + ww / 2, y + 10, 0xFFE8D29A);
+        g.drawString(this.font, "✕", x + ww - 16, y + 9, over(mouseX, mouseY, x + ww - 20, y + 5, 14, 14) ? 0xFFFFFFFF : 0xFFB8C0D0, false);
+        int rowY = y + 28;
+        String[] steps = {"✹", "✹✹", "✹✹✹"};
+        int[] needs = {3, 6, 9};
+        int[] coinAmounts = {20000, 30000, 50000};
+        for (int s = 0; s < 3; s++) {
+            g.fill(x + 12, rowY, x + ww - 12, rowY + 40, 0xCC404C66);
+            String name = Component.translatable("gui.awakening_system.spiral_abyss.treasure_step", selectedFloor, needs[s]).getString();
+            g.drawString(this.font, name, x + 22, rowY + 9, 0xFFFFFFFF, false);
+            g.drawString(this.font, steps[s], x + 22, rowY + 22, starsPerFloor[selectedFloor - 1] >= needs[s] ? 0xFFFFF2C8 : 0xFF6A7890, false);
+            List<ItemStack> items = stepRewards(s);
+            int ix = x + ww - 22 - items.size() * 34;
+            for (ItemStack it : items) {
+                g.fill(ix, rowY + 4, ix + 30, rowY + 36, 0xFF56688A);
+                g.renderItem(it, ix + 7, rowY + 7);
+                String amount = it.is(SystemItems.MORA.get()) ? formatNumber(coinAmounts[s]) : String.valueOf(it.getCount());
+                g.drawCenteredString(this.font, amount, ix + 15, rowY + 25, 0xFFFFFFFF);
+                ix += 34;
+            }
+            rowY += 44;
+        }
+        // the chest each chamber leaves when cleared
+        g.drawString(this.font, Component.translatable("gui.awakening_system.spiral_abyss.chamber_chest", formatNumber(20000 * selectedFloor), 100, 2 + selectedFloor).getString(),
+                x + 16, rowY + 4, 0xFFC8D0E0, false);
     }
 
     // ---- clicks
@@ -345,28 +556,41 @@ public final class SpiralAbyssScreen extends Screen {
     public boolean mouseClicked(double mouseX, double mouseY, int button) {
         if (button != 0) return super.mouseClicked(mouseX, mouseY, button);
         int w = this.width, h = this.height;
+        if (detailView && treasureOpen) {
+            // any click closes the treasure window
+            treasureOpen = false;
+            playClickSound();
+            return true;
+        }
         if (detailView) {
             int bh = Math.min((int) (h * 0.62), 260), bw = (bh * AbyssArt.BANNER_W) / AbyssArt.BANNER_H;
-            int bx = Math.max(24, w / 6 - bw / 2), by = (h - bh) / 2;
-            int px = bx + bw + Math.max(20, w / 18), pw = Math.min(w - px - 30, 360);
+            int bx = Math.max(24, w / 7 - bw / 2), by = (h - bh) / 2;
+            int px = bx + bw + Math.max(20, w / 20), pw = Math.min(w - px - 30, 420);
+            int py = Math.max(40, by - 10);
             int idx = selectedFloor - 1;
-            // the chamber rows sit below the disorder text: worked out as drawn
-            int y = by + 4 + 19 + 11 + 10 * this.font.split(Component.literal("✦ " + getLeyLineDisorderText(selectedFloor)), pw).size() + 8 + 12;
+            int y = py + 18 + 11 + 10 * this.font.split(Component.literal("✦ " + getLeyLineDisorderText(selectedFloor)), pw).size() + 6 + 12;
             for (int c = 1; c <= 3; c++) {
-                if (over(mouseX, mouseY, px, y + (c - 1) * 22, pw, 19)) {
+                if (over(mouseX, mouseY, px, y + (c - 1) * 21, pw, 18)) {
                     if (selectedChamber != c) playClickSound();
                     selectedChamber = c;
                     return true;
                 }
             }
-            if (over(mouseX, mouseY, w - 30 - 250, h - 34, 84, 18)) {
+            String[] labels = detailLabels();
+            int[] bxs = buttonXs(labels);
+            if (over(mouseX, mouseY, bxs[0], h - 34, buttonWidth(labels[0]), 18)) {
+                treasureOpen = true;
+                playClickSound();
+                return true;
+            }
+            if (over(mouseX, mouseY, bxs[1], h - 34, buttonWidth(labels[1]), 18)) {
                 if (starsPerFloor[idx] >= 3 && !claimedRewards[idx]) {
                     PacketDistributor.sendToServer(new ClaimAbyssRewardPayload(this.selectedFloor));
                     if (this.minecraft != null && this.minecraft.player != null) this.minecraft.player.playSound(SoundEvents.PLAYER_LEVELUP, 1.0F, 1.2F);
                 } else playClickSound();
                 return true;
             }
-            if (over(mouseX, mouseY, w - 30 - 160, h - 34, 84, 18)) {
+            if (over(mouseX, mouseY, bxs[2], h - 34, buttonWidth(labels[2]), 18)) {
                 if (this.selectedFloor <= this.unlockedFloor) {
                     PacketDistributor.sendToServer(new StartAbyssFloorPayload(this.selectedFloor));
                     if (this.minecraft != null && this.minecraft.player != null) this.minecraft.player.playSound(ModSounds.ABYSS_ENTER.value(), 0.9F, 1.0F);
@@ -376,7 +600,7 @@ public final class SpiralAbyssScreen extends Screen {
                 }
                 return true;
             }
-            if (over(mouseX, mouseY, w - 30 - 70, h - 34, 84, 18)) {
+            if (over(mouseX, mouseY, bxs[3], h - 34, buttonWidth(labels[3]), 18)) {
                 detailView = false;
                 playClickSound();
                 return true;
@@ -414,7 +638,9 @@ public final class SpiralAbyssScreen extends Screen {
             playClickSound();
             return true;
         }
-        if (over(mouseX, mouseY, w - 30 - 160, h - 34, 84, 18)) {
+        String[] rl = rowLabels();
+        int[] rbx = buttonXs(rl);
+        if (over(mouseX, mouseY, rbx[0], h - 34, buttonWidth(rl[0]), 18)) {
             if (selectedFloor <= unlockedFloor) {
                 detailView = true;
                 selectedChamber = 1;
@@ -424,7 +650,7 @@ public final class SpiralAbyssScreen extends Screen {
             }
             return true;
         }
-        if (over(mouseX, mouseY, w - 30 - 70, h - 34, 84, 18)) {
+        if (over(mouseX, mouseY, rbx[1], h - 34, buttonWidth(rl[1]), 18)) {
             playClickSound();
             this.onClose();
             return true;
@@ -436,7 +662,8 @@ public final class SpiralAbyssScreen extends Screen {
     public boolean keyPressed(int keyCode, int scanCode, int modifiers) {
         // Escape in a floor's view goes back to the row first
         if (keyCode == org.lwjgl.glfw.GLFW.GLFW_KEY_ESCAPE && detailView) {
-            detailView = false;
+            if (treasureOpen) treasureOpen = false;
+            else detailView = false;
             return true;
         }
         return super.keyPressed(keyCode, scanCode, modifiers);

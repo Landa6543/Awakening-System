@@ -1,4 +1,13 @@
 {
+    "gui.awakening_system.spiral_abyss.chamber_chest": "Каждый пройденный зал также оставляет сундук: %s моры, %s примогемов и %s опыта героя.",
+    "gui.awakening_system.spiral_abyss.treasure_step": "Этаж %s - %s звёзд",
+    "gui.awakening_system.spiral_abyss.starts_at": "Испытание начнётся с этажа %s, зал %s.",
+    "gui.awakening_system.spiral_abyss.half_second_short": "Вторая половина",
+    "gui.awakening_system.spiral_abyss.half_first_short": "Первая половина",
+    "gui.awakening_system.spiral_abyss.single_half": "Враги",
+    "gui.awakening_system.spiral_abyss.collect_locked": "Забрать (3+ звезды)",
+    "gui.awakening_system.spiral_abyss.collect": "Забрать",
+    "gui.awakening_system.spiral_abyss.chamber_treasure": "Сокровища зала",
     "gui.awakening_system.spiral_abyss.challenge_target": "Цель испытания",
     "gui.awakening_system.spiral_abyss.disorder_title": "Нарушение лей-линий",
     "gui.awakening_system.spiral_abyss.back": "Назад",

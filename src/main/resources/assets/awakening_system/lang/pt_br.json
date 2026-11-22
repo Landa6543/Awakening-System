@@ -1,4 +1,13 @@
 {
+    "gui.awakening_system.spiral_abyss.chamber_chest": "Cada sala concluída também deixa um baú: %s Mora, %s Protogemas e %s Sabedoria do Herói.",
+    "gui.awakening_system.spiral_abyss.treasure_step": "Andar %s - %s estrelas",
+    "gui.awakening_system.spiral_abyss.starts_at": "O desafio começará no andar %s, sala %s.",
+    "gui.awakening_system.spiral_abyss.half_second_short": "Segunda metade",
+    "gui.awakening_system.spiral_abyss.half_first_short": "Primeira metade",
+    "gui.awakening_system.spiral_abyss.single_half": "Inimigos",
+    "gui.awakening_system.spiral_abyss.collect_locked": "Coletar (3+ estrelas)",
+    "gui.awakening_system.spiral_abyss.collect": "Coletar",
+    "gui.awakening_system.spiral_abyss.chamber_treasure": "Tesouro da Sala",
     "gui.awakening_system.spiral_abyss.challenge_target": "Objetivo do desafio",
     "gui.awakening_system.spiral_abyss.disorder_title": "Distúrbio das Linhas Ley",
     "gui.awakening_system.spiral_abyss.back": "Voltar",

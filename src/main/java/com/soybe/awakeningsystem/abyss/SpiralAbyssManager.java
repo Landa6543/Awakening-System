@@ -886,7 +886,7 @@ public final class SpiralAbyssManager {
         }
     }
 
-    private static GenshinSlimeEntity createGenshinSlime(ServerLevel level, GenshinSlimeEntity.Element element, boolean isBig) {
+    private static GenshinSlimeEntity createGenshinSlime(net.minecraft.world.level.Level level, GenshinSlimeEntity.Element element, boolean isBig) {
         GenshinSlimeEntity slime = new GenshinSlimeEntity(ModEntities.GENSHIN_SLIME.get(), level);
         slime.setElement(element);
         slime.setBig(isBig);
@@ -896,13 +896,13 @@ public final class SpiralAbyssManager {
         return slime;
     }
 
-    private static HilichurlEntity createHilichurl(ServerLevel level, HilichurlEntity.HilichurlRole role) {
+    private static HilichurlEntity createHilichurl(net.minecraft.world.level.Level level, HilichurlEntity.HilichurlRole role) {
         HilichurlEntity h = new HilichurlEntity(ModEntities.HILICHURL.get(), level);
         h.setRole(role);
         return h;
     }
 
-    private static MitachurlEntity createMitachurl(ServerLevel level, boolean fireAxe) {
+    private static MitachurlEntity createMitachurl(net.minecraft.world.level.Level level, boolean fireAxe) {
         MitachurlEntity m = new MitachurlEntity(ModEntities.MITACHURL.get(), level);
         m.setMitachurlType(fireAxe ? MitachurlEntity.MitachurlType.BLAZING_AXE : MitachurlEntity.MitachurlType.SHIELDWALL);
         return m;
@@ -948,7 +948,7 @@ public final class SpiralAbyssManager {
         return mob;
     }
 
-    private static Mob createAbyssMage(ServerLevel level, String element) {
+    private static Mob createAbyssMage(net.minecraft.world.level.Level level, String element) {
         if ("pyro".equalsIgnoreCase(element)) {
             Blaze b = EntityType.BLAZE.create(level);
             if (b != null) {
@@ -980,7 +980,8 @@ public final class SpiralAbyssManager {
         }
     }
 
-    private static Mob createAbyssMob(ServerLevel level, int floor, int chamber, int half, int index) {
+    /** The creature at a place of a chamber's wave; also used by the window to show who waits in each chamber. */
+    public static Mob createAbyssMob(net.minecraft.world.level.Level level, int floor, int chamber, int half, int index) {
         if (floor <= 2) {
             if (index == 0 && chamber == 3 && floor == 2) {
                 return createMitachurl(level, false);

@@ -1,4 +1,13 @@
 {
+    "gui.awakening_system.spiral_abyss.chamber_chest": "Each cleared chamber also leaves a chest: %s Mora, %s Primogems and %s Hero's Wit.",
+    "gui.awakening_system.spiral_abyss.treasure_step": "Floor %s - %s stars",
+    "gui.awakening_system.spiral_abyss.starts_at": "The challenge starts at floor %s, chamber %s.",
+    "gui.awakening_system.spiral_abyss.half_second_short": "Second Half",
+    "gui.awakening_system.spiral_abyss.half_first_short": "First Half",
+    "gui.awakening_system.spiral_abyss.single_half": "Foes",
+    "gui.awakening_system.spiral_abyss.collect_locked": "Collect (3+ stars)",
+    "gui.awakening_system.spiral_abyss.collect": "Collect",
+    "gui.awakening_system.spiral_abyss.chamber_treasure": "Chamber Treasure",
     "gui.awakening_system.spiral_abyss.challenge_target": "Challenge Target",
     "gui.awakening_system.spiral_abyss.disorder_title": "Ley Line Disorder",
     "gui.awakening_system.spiral_abyss.back": "Return",

@@ -157,26 +157,36 @@ public final class AbyssArt {
 
     // ---- banners
 
-    /** The banner's outline: pointed at the top and the bottom. true where the banner is. */
-    private static boolean inside(int x, int y, int inset) {
-        int w = BANNER_W - inset * 2, mid = BANNER_W / 2;
-        int top = 14, bottom = BANNER_H - 14;
-        int dx = Math.abs(x - mid);
+    /** Banners are painted at this many pixels per design unit (the design is 50 x 150). */
+    public static final int K = 2;
+
+    /** The banner's outline in design units: pointed at the top and the bottom. true where the banner is. */
+    private static boolean inside(double x, double y, double inset) {
+        double mid = BANNER_W / 2.0, half = BANNER_W / 2.0 - inset;
+        double top = 14, bottom = BANNER_H - 14;
+        double dx = Math.abs(x - mid);
         if (y < inset || y >= BANNER_H - inset) return false;
-        int half = w / 2;
-        if (y < top) return dx <= half * (y - inset) / (double) (top - inset);
-        if (y > bottom) return dx <= half * (BANNER_H - inset - 1 - y) / (double) (BANNER_H - inset - 1 - bottom);
+        if (y < top) return dx <= half * (y - inset) / (top - inset);
+        if (y > bottom) return dx <= half * (BANNER_H - inset - y) / (BANNER_H - inset - bottom);
         return dx <= half;
     }
 
     /** A floor's colours: the hall's dark, its light, the doorway's glow. */
     private static int[] palette(int floor) {
-        if (floor <= 2) return new int[]{0x243F3A, 0x8EC0B8, 0x7FF0FF};
-        if (floor <= 5) return new int[]{0x5A3420, 0xD9A878, 0xFFE2AE};
-        if (floor <= 8) return new int[]{0x22225E, 0x7E86D8, 0xC8B8FF};
-        if (floor <= 10) return new int[]{0x1C2E66, 0x8FA8E0, 0xBFD8FF};
-        if (floor == 11) return new int[]{0x3A2266, 0xB396E6, 0xE0C8FF};
-        return new int[]{0x101838, 0x5868B8, 0xA8C0FF};
+        if (floor <= 2) return new int[]{0x1F3A36, 0x8EC0B8, 0x8FF4FF};
+        if (floor <= 5) return new int[]{0x4E2C1A, 0xD9A878, 0xFFE6B4};
+        if (floor <= 8) return new int[]{0x1E1E58, 0x7E86D8, 0xCDBEFF};
+        if (floor <= 10) return new int[]{0x1A2A60, 0x8FA8E0, 0xC4DCFF};
+        if (floor == 11) return new int[]{0x34205E, 0xB396E6, 0xE4CEFF};
+        return new int[]{0x0E1634, 0x5868B8, 0xA8C0FF};
+    }
+
+    private static void star(NativeImage img, int cx, int cy, int r, int rgb) {
+        for (int i = -r; i <= r; i++) {
+            int a = 255 - Math.abs(i) * 200 / Math.max(1, r);
+            if (cx + i >= 0 && cx + i < img.getWidth()) img.setPixelRGBA(cx + i, cy, ca(rgb, a));
+            if (cy + i >= 0 && cy + i < img.getHeight()) img.setPixelRGBA(cx, cy + i, ca(rgb, a));
+        }
     }
 
     /** state: 0 open, 1 locked, 2 reward taken; selected draws a bright white rim. */
@@ -184,94 +194,146 @@ public final class AbyssArt {
         String key = "b" + floor + "_" + state + (selected ? "s" : "");
         ResourceLocation done = CACHE.get(key);
         if (done != null) return done;
-        NativeImage img = new NativeImage(BANNER_W, BANNER_H, true);
+        int W = BANNER_W * K, H = BANNER_H * K;
+        NativeImage img = new NativeImage(W, H, true);
         boolean locked = state == 1;
         int[] p = palette(floor);
-        int mid = BANNER_W / 2;
+        double mid = BANNER_W / 2.0;
         Random r = new Random(floor * 131L);
-        for (int y = 0; y < BANNER_H; y++)
-            for (int x = 0; x < BANNER_W; x++) {
+        for (int py = 0; py < H; py++)
+            for (int px = 0; px < W; px++) {
+                double x = (px + 0.5) / K, y = (py + 0.5) / K;
                 if (!inside(x, y, 0)) continue;
                 int col;
-                if (!inside(x, y, 3)) col = selected ? 0xFFFFFF : 0xC7DCEA;                  // the glass rim
-                else if (!inside(x, y, 4)) col = 0x2C4458;                                   // a dark line inside it
+                double dx = Math.abs(x - mid);
+                if (!inside(x, y, 1.2)) col = selected ? 0xFFFFFF : 0xBFD3E2;                    // the glass rim, outer
+                else if (!inside(x, y, 2.6)) col = selected ? 0xEAF6FF : mix(0x8FA9BE, 0xD8E8F2, y / BANNER_H);   // its inner band
+                else if (!inside(x, y, 3.3)) col = 0x22384C;                                     // a dark line inside it
                 else if (y < 98) {
-                    // the hall: dark above, its light below, pillars at both sides
                     double t = (y - 4) / 94.0;
-                    col = mix(p[0], p[1], t * t);
-                    int dx = Math.abs(x - mid);
-                    if (dx >= 13 && dx <= 17) col = mix(col, p[1], 0.45 - (dx == 15 ? 0 : 0.15));
-                    if (floor == 12 && y < 70 && r.nextInt(30) == 0) col = 0xE8F0FF;          // the stars over the last floor
+                    col = mix(p[0], p[1], t * t * 0.9);
+                    // the pointed arch's lattice above the doorway
+                    if (y < 40) {
+                        double archR = Math.hypot(dx, (y - 40) * 0.7);
+                        if (Math.abs(archR - 14) < 0.5 || Math.abs(archR - 18) < 0.5) col = mix(col, p[1], 0.45);
+                        if ((int) (x * 2) % 6 == 0 && archR > 14 && archR < 18) col = mix(col, p[1], 0.3);
+                    }
+                    // tall windows on the back wall, with arched tops
+                    for (double wx : new double[]{mid - 8.5, mid + 8.5}) {
+                        double wdx = Math.abs(x - wx);
+                        if (wdx < 1.6 && y > 34 && y < 66 && (y > 37 || wdx < 1.6 - (37 - y))) col = mix(col, p[2], 0.28 + 0.1 * Math.sin(y));
+                    }
+                    // the pillars at both sides, with capitals and fluting
+                    if (dx >= 15.5 && dx <= 20) {
+                        col = mix(p[0], p[1], 0.35 + t * 0.4);
+                        if (Math.abs(dx - 17.7) < 0.35) col = mix(col, 0x000000, 0.25);
+                        if (dx > 19.4) col = mix(col, 0xFFFFFF, 0.12);
+                        if (Math.abs(y - 36) < 1.2 || Math.abs(y - 90) < 1.2) col = mix(p[1], 0xFFFFFF, 0.35);
+                    }
+                    // the floor: tiles in perspective towards the door, with the door's light on them
+                    if (y > 82) {
+                        double depth = (y - 82) / 16.0;
+                        double lane = (x - mid) / (0.25 + depth);
+                        if (Math.abs(lane - Math.round(lane / 4) * 4) < 0.18 || Math.abs(Math.sin(depth * 9)) < 0.08) col = mix(col, 0x000000, 0.18);
+                        col = mix(col, p[2], Math.max(0, 0.45 - dx / 22) * (1 - depth * 0.4));
+                    }
+                    if (floor == 12 && y < 72 && dx < 15 && r.nextInt(25) == 0) col = 0xE8F0FF;    // stars over the last floor
                 } else {
-                    col = mix(0xDCE7EF, 0xAFC3D4, (y - 98) / 40.0);                         // the frosted foot
+                    // the frosted foot, with a soft sparkle
+                    col = mix(0xE2ECF3, 0xA9BDCE, (y - 98) / 42.0);
+                    if (r.nextInt(60) == 0) col = mix(col, 0xFFFFFF, 0.7);
+                    if (Math.abs(y - 99) < 0.6) col = mix(p[1], 0xFFFFFF, 0.3);
                 }
-                img.setPixelRGBA(x, y, c(col));
+                img.setPixelRGBA(px, py, c(col));
             }
-        // the doorway at the top of the stair, lit from inside, with a figure's shadow in it
-        for (int y = 42; y < 70; y++)
-            for (int x = mid - 6; x <= mid + 6; x++) {
-                boolean arch = y < 48 && Math.abs(x - mid) > (y - 42) + 1;
-                if (arch) continue;
-                img.setPixelRGBA(x, y, c(mix(p[2], 0xFFFFFF, (y - 42) / 60.0)));
+        // the doorway, lit from inside, with a statue's dark shape in its light
+        for (int py = 42 * K; py < 72 * K; py++)
+            for (int px = (int) ((mid - 6.5) * K); px <= (int) ((mid + 6.5) * K); px++) {
+                double x = (px + 0.5) / K, y = (py + 0.5) / K, dx = Math.abs(x - mid);
+                if (y < 49 && dx > 6.5 - (49 - y) * 0.9) continue;
+                int col = mix(p[2], 0xFFFFFF, Math.max(0, 0.5 - dx / 13) + (y - 42) / 80.0);
+                boolean statue = (dx < 1.3 && y > 50 && y < 70) || (dx < 2.4 && y > 54 && y < 70) || (Math.hypot(dx, y - 52) < 1.6);
+                if (statue) col = mix(p[0], 0x000000, 0.35);
+                img.setPixelRGBA(px, py, c(col));
             }
-        for (int y = 50; y < 69; y++)
-            for (int x = mid - 2; x <= mid + 1; x++)
-                if (y > 52 || Math.abs(x - mid + 0.5) < 1.5) img.setPixelRGBA(x, y, c(mix(p[0], 0x000000, 0.3)));
-        // the stair, widening towards the viewer
-        for (int s = 0; s < 9; s++) {
-            int y = 70 + s * 3, half = 7 + s * 1;
-            for (int dy = 0; dy < 3; dy++)
-                for (int x = mid - half; x <= mid + half; x++)
-                    if (inside(x, y + dy, 5)) img.setPixelRGBA(x, y + dy, c(dy == 0 ? mix(p[1], 0xFFFFFF, 0.45) : mix(p[1], p[0], 0.35)));
+        // the stair, widening towards the viewer, its edges catching the light
+        for (int s = 0; s < 10; s++) {
+            double y0 = 71 + s * 2.6, half = 7 + s * 0.9;
+            for (int py = (int) (y0 * K); py < (int) ((y0 + 2.6) * K); py++)
+                for (int px = (int) ((mid - half) * K); px <= (int) ((mid + half) * K); px++) {
+                    double x = (px + 0.5) / K, y = (py + 0.5) / K;
+                    if (!inside(x, y, 3.5) || y > 97) continue;
+                    boolean edge = y - y0 < 0.6;
+                    int col = edge ? mix(p[1], 0xFFFFFF, 0.55) : mix(p[1], p[0], 0.3 + (y - y0) / 8);
+                    col = mix(col, p[2], Math.max(0, 0.3 - Math.abs(x - mid) / 30));
+                    img.setPixelRGBA(px, py, c(col));
+                }
         }
-        // the light's glow on the hall's floor
-        for (int y = 92; y < 98; y++)
-            for (int x = mid - 9; x <= mid + 9; x++)
-                if (inside(x, y, 5)) blend(img, x, y, p[2], 0.35 * (1 - Math.abs(x - mid) / 10.0));
-        // the number's disc: white with a grey ring
-        for (int y = DISC_Y - 10; y <= DISC_Y + 10; y++)
-            for (int x = mid - 10; x <= mid + 10; x++) {
-                double d = Math.hypot(x - mid, y - DISC_Y);
-                if (d <= 10) img.setPixelRGBA(x, y, c(d > 8.6 ? 0x9FB2C2 : (d > 7.6 ? 0xFFFFFF : 0xF2F5F8)));
+        // the number's disc: white with a grey ring and a fine inner line
+        for (int py = (DISC_Y - 11) * K; py <= (DISC_Y + 11) * K; py++)
+            for (int px = (int) ((mid - 11) * K); px <= (int) ((mid + 11) * K); px++) {
+                double d = Math.hypot((px + 0.5) / K - mid, (py + 0.5) / K - DISC_Y);
+                if (d > 10.5) continue;
+                int col = d > 9.4 ? 0x8C9FB0 : (d > 8.6 ? 0xFFFFFF : (Math.abs(d - 7.4) < 0.25 ? 0xC9D4DE : 0xF4F7FA));
+                img.setPixelRGBA(px, py, c(col));
             }
-        // the diamond with the chest (or a lock)
-        for (int y = DIAMOND_Y - 10; y <= DIAMOND_Y + 10; y++)
-            for (int x = mid - 10; x <= mid + 10; x++) {
-                int md = Math.abs(x - mid) + Math.abs(y - DIAMOND_Y);
-                if (md <= 10) img.setPixelRGBA(x, y, c(md >= 9 ? 0x8C9EAE : 0x3A4A5C));
+        // the diamond holding the chest (or the lock), bevelled
+        for (int py = (DIAMOND_Y - 11) * K; py <= (DIAMOND_Y + 11) * K; py++)
+            for (int px = (int) ((mid - 11) * K); px <= (int) ((mid + 11) * K); px++) {
+                double x = (px + 0.5) / K, y = (py + 0.5) / K;
+                double md = Math.abs(x - mid) + Math.abs(y - DIAMOND_Y);
+                if (md > 10.5) continue;
+                int col = md > 9.6 ? 0xE6EEF4 : (md > 8.6 ? 0x7D90A2 : mix(0x46586C, 0x2E3C4E, (y - DIAMOND_Y + 9) / 18));
+                img.setPixelRGBA(px, py, c(col));
             }
+        int cx = (int) (mid * K), cy = DIAMOND_Y * K;
         if (locked) {
-            for (int y = DIAMOND_Y - 5; y <= DIAMOND_Y - 2; y++) {
-                img.setPixelRGBA(mid - 3, y, c(0xF2F5F8));
-                img.setPixelRGBA(mid + 3, y, c(0xF2F5F8));
-            }
-            for (int x = mid - 3; x <= mid + 3; x++) img.setPixelRGBA(x, DIAMOND_Y - 5, c(0xF2F5F8));
-            for (int y = DIAMOND_Y - 1; y <= DIAMOND_Y + 4; y++)
-                for (int x = mid - 4; x <= mid + 4; x++)
-                    img.setPixelRGBA(x, y, c((x == mid && y >= DIAMOND_Y + 1 && y <= DIAMOND_Y + 2) ? 0x3A4A5C : 0xF2F5F8));
+            for (int py = cy - 11; py <= cy - 3; py++)
+                for (int px = cx - 7; px <= cx + 7; px++) {
+                    double d = Math.hypot(px - cx, (py - (cy - 3)) * 1.0);
+                    if (d >= 4.5 && d <= 7 && py <= cy - 3) img.setPixelRGBA(px, py, c(0xF2F5F8));
+                }
+            for (int py = cy - 3; py <= cy + 8; py++)
+                for (int px = cx - 8; px <= cx + 8; px++)
+                    img.setPixelRGBA(px, py, c((Math.abs(px - cx) <= 1 && py >= cy && py <= cy + 4) ? 0x3A4A5C : (py == cy - 3 ? 0xFFFFFF : 0xE4EAF0)));
         } else {
-            for (int y = DIAMOND_Y - 4; y <= DIAMOND_Y + 4; y++)
-                for (int x = mid - 6; x <= mid + 6; x++) {
-                    int col = (y == DIAMOND_Y - 1) ? 0x6B4414 : (Math.abs(x - mid) <= 1 && y >= DIAMOND_Y - 2 && y <= DIAMOND_Y + 1 ? 0xFFF3C2 : 0xE8B848);
-                    if (y == DIAMOND_Y - 4 || x == mid - 6 || x == mid + 6) col = 0x8A5A1A;
-                    img.setPixelRGBA(x, y, c(col));
+            // a golden chest: lid, body, bands and a lock plate
+            for (int py = cy - 8; py <= cy + 8; py++)
+                for (int px = cx - 12; px <= cx + 12; px++) {
+                    int col;
+                    boolean lid = py < cy - 1;
+                    boolean rim = Math.abs(px - cx) == 12 || py == cy - 8 || py == cy + 8 || py == cy - 1;
+                    boolean band = Math.abs(px - (cx - 7)) <= 1 || Math.abs(px - (cx + 7)) <= 1;
+                    col = lid ? mix(0xF2C860, 0xC88A2A, (py - cy + 8) / 7.0) : mix(0xD49A34, 0x9A6418, (py - cy) / 8.0);
+                    if (band) col = 0xFFE9A0;
+                    if (rim) col = 0x6B4414;
+                    if (Math.abs(px - cx) <= 2 && py >= cy - 3 && py <= cy + 3) col = (Math.abs(px - cx) <= 0 && py >= cy) ? 0x3A2408 : 0xFFF5D0;
+                    img.setPixelRGBA(px, py, c(col));
                 }
             if (state == 2) {
-                // a green tick under the diamond
-                int ty = DIAMOND_Y + 14;
-                for (int y = ty - 4; y <= ty + 4; y++)
-                    for (int x = mid - 4; x <= mid + 4; x++)
-                        if (Math.hypot(x - mid, y - ty) <= 4.4) img.setPixelRGBA(x, y, c(0x1E3A2E));
-                int[][] tick = {{-2, 0}, {-1, 1}, {0, 2}, {1, 1}, {2, 0}, {3, -1}};
-                for (int[] t : tick) img.setPixelRGBA(mid + t[0], ty + t[1] - 1, c(0x6EE07A));
+                int ty = cy + 26;
+                for (int py = ty - 7; py <= ty + 7; py++)
+                    for (int px = cx - 7; px <= cx + 7; px++) {
+                        double d = Math.hypot(px - cx, py - ty);
+                        if (d <= 7.2) img.setPixelRGBA(px, py, c(d > 6.2 ? 0x9AD8A4 : 0x1E3A2E));
+                    }
+                int[][] tick = {{-4, 0}, {-3, 1}, {-2, 2}, {-1, 3}, {0, 2}, {1, 1}, {2, 0}, {3, -1}, {4, -2}};
+                for (int[] tk : tick) {
+                    img.setPixelRGBA(cx + tk[0], ty + tk[1], c(0x6EE07A));
+                    img.setPixelRGBA(cx + tk[0], ty + tk[1] - 1, c(0x6EE07A));
+                }
             }
         }
+        // little stars at the banner's top and bottom points
+        star(img, (int) (mid * K), 6 * K, 4, 0xFFFFFF);
+        star(img, (int) (mid * K), H - 6 * K, 4, 0xFFFFFF);
         if (locked) {
-            // the whole banner dimmed and cooled
-            for (int y = 0; y < BANNER_H; y++)
-                for (int x = 0; x < BANNER_W; x++)
-                    if (inside(x, y, 4) && !(Math.abs(x - mid) + Math.abs(y - DIAMOND_Y) <= 10) && Math.hypot(x - mid, y - DISC_Y) > 10)
-                        blend(img, x, y, 0x40505E, 0.45);
+            for (int py = 0; py < H; py++)
+                for (int px = 0; px < W; px++) {
+                    double x = (px + 0.5) / K, y = (py + 0.5) / K;
+                    if (inside(x, y, 3.3) && Math.abs(x - mid) + Math.abs(y - DIAMOND_Y) > 10.5 && Math.hypot(x - mid, y - DISC_Y) > 10.5)
+                        blend(img, px, py, 0x3A4856, 0.5);
+                }
         }
         ResourceLocation id = upload(key, img);
         CACHE.put(key, id);

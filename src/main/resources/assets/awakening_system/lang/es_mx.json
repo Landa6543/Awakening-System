@@ -1,4 +1,13 @@
 {
+    "gui.awakening_system.spiral_abyss.chamber_chest": "Cada sala superada deja además un cofre: %s Mora, %s Protogemas y %s Experiencia de Héroe.",
+    "gui.awakening_system.spiral_abyss.treasure_step": "Piso %s - %s estrellas",
+    "gui.awakening_system.spiral_abyss.starts_at": "El desafío comenzará en el piso %s - sala %s.",
+    "gui.awakening_system.spiral_abyss.half_second_short": "Segunda mitad",
+    "gui.awakening_system.spiral_abyss.half_first_short": "Primera mitad",
+    "gui.awakening_system.spiral_abyss.single_half": "Enemigos",
+    "gui.awakening_system.spiral_abyss.collect_locked": "Recoger (3+ estrellas)",
+    "gui.awakening_system.spiral_abyss.collect": "Recoger",
+    "gui.awakening_system.spiral_abyss.chamber_treasure": "Tesoro de la sala",
     "gui.awakening_system.spiral_abyss.challenge_target": "Objetivo del desafío",
     "gui.awakening_system.spiral_abyss.disorder_title": "Trastorno de las Líneas Ley",
     "gui.awakening_system.spiral_abyss.back": "Volver",
