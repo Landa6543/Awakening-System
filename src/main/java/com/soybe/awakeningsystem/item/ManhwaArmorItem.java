@@ -68,6 +68,38 @@ public class ManhwaArmorItem extends ArmorItem implements GeoItem {
     }
 
     @Override
+    public boolean isEnchantable(ItemStack stack) {
+        return true;
+    }
+
+    @Override
+    public boolean supportsEnchantment(ItemStack stack, Holder<net.minecraft.world.item.enchantment.Enchantment> enchantment) {
+        if (super.supportsEnchantment(stack, enchantment)) return true;
+        net.minecraft.resources.ResourceLocation loc = enchantment.unwrapKey().map(net.minecraft.resources.ResourceKey::location).orElse(null);
+        if (loc == null) return false;
+        String path = loc.getPath().toLowerCase(java.util.Locale.ROOT);
+        if (path.contains("unbreaking") || path.contains("mending") || path.contains("protection") || path.contains("thorns")) {
+            return true;
+        }
+        if (this.getType() == Type.HELMET && (path.contains("respiration") || path.contains("aqua_affinity"))) {
+            return true;
+        }
+        if (this.getType() == Type.LEGGINGS && path.contains("swift_sneak")) {
+            return true;
+        }
+        if (this.getType() == Type.BOOTS && (path.contains("feather_falling") || path.contains("depth_strider") || path.contains("frost_walker") || path.contains("soul_speed"))) {
+            return true;
+        }
+        return false;
+    }
+
+    @Override
+    public boolean isPrimaryItemFor(ItemStack stack, Holder<net.minecraft.world.item.enchantment.Enchantment> enchantment) {
+        if (super.isPrimaryItemFor(stack, enchantment)) return true;
+        return supportsEnchantment(stack, enchantment);
+    }
+
+    @Override
     public <T extends LivingEntity> int damageItem(ItemStack stack, int amount, T entity, Consumer<Item> onBroken) {
         // High-level RPG mobs deal hundreds or thousands of damage per strike.
         // In vanilla, damage / 4 would instantly disintegrate armor durability in 2-3 hits.

@@ -385,6 +385,10 @@ public final class AwakeningSystemMod {
                             dragon.setFlightInput(payload.space(), payload.shift(), payload.sprint());
                         } else if (player.getVehicle() instanceof com.soybe.awakeningsystem.entity.WyvernEntity wyvern) {
                             wyvern.setFlightInput(payload.space(), payload.shift(), payload.sprint());
+                            wyvern.setFlying(payload.flying());
+                        } else if (player.getVehicle() instanceof com.soybe.awakeningsystem.entity.kaisel.AbstractKaiselEntity kaisel) {
+                            kaisel.setFlightInput(payload.space(), payload.shift(), payload.sprint());
+                            kaisel.setFlying(payload.flying());
                         }
                     }
                 }));
@@ -440,6 +444,13 @@ public final class AwakeningSystemMod {
                 (payload, context) -> context.enqueueWork(() -> {
                     if (context.player() instanceof net.minecraft.server.level.ServerPlayer player
                             && SystemEvents.claimDailyMission(player)) {
+                        AwakeningSystemMod.sync(player);
+                    }
+                }));
+        registrar.playToServer(ClaimHunterCommissionPayload.TYPE, ClaimHunterCommissionPayload.STREAM_CODEC,
+                (payload, context) -> context.enqueueWork(() -> {
+                    if (context.player() instanceof net.minecraft.server.level.ServerPlayer player
+                            && SystemEvents.claimHunterCommission(player)) {
                         AwakeningSystemMod.sync(player);
                     }
                 }));
@@ -911,6 +922,42 @@ public final class AwakeningSystemMod {
         registrar.playToClient(com.soybe.awakeningsystem.dialogue.network.CloseDialoguePayload.TYPE,
                 com.soybe.awakeningsystem.dialogue.network.CloseDialoguePayload.STREAM_CODEC,
                 (payload, context) -> context.enqueueWork(AwakeningSystemClient::handleCloseDialogue));
+
+        // Sistema Tactico de Escuadrones de Sombras (Seccion 39)
+        registrar.playToServer(com.soybe.awakeningsystem.network.ManageShadowSquadPayload.TYPE,
+                com.soybe.awakeningsystem.network.ManageShadowSquadPayload.STREAM_CODEC,
+                (payload, context) -> context.enqueueWork(() -> {
+                    if (context.player() instanceof net.minecraft.server.level.ServerPlayer player) {
+                        handleManageShadowSquad(player, payload);
+                    }
+                }));
+    }
+
+    public static void handleManageShadowSquad(net.minecraft.server.level.ServerPlayer player, com.soybe.awakeningsystem.network.ManageShadowSquadPayload payload) {
+        if (player == null) return;
+        SystemData data = SystemEvents.data(player);
+        switch (payload.action()) {
+            case com.soybe.awakeningsystem.network.ManageShadowSquadPayload.ACTION_DEPLOY_SQUAD -> {
+                SystemEvents.deploySquad(player, payload.squadId());
+            }
+            case com.soybe.awakeningsystem.network.ManageShadowSquadPayload.ACTION_RECALL_SQUAD -> {
+                SystemEvents.recallSquad(player, payload.squadId());
+            }
+            case com.soybe.awakeningsystem.network.ManageShadowSquadPayload.ACTION_DEPLOY_ALL -> {
+                SystemEvents.deployAllArmy(player);
+            }
+            case com.soybe.awakeningsystem.network.ManageShadowSquadPayload.ACTION_RECALL_ALL -> {
+                SystemEvents.recallAllArmy(player);
+            }
+            case com.soybe.awakeningsystem.network.ManageShadowSquadPayload.ACTION_RENAME_SQUAD -> {
+                data.setShadowSquadName(payload.squadId(), payload.squadName());
+                AwakeningSystemMod.sync(player);
+            }
+            case com.soybe.awakeningsystem.network.ManageShadowSquadPayload.ACTION_MOVE_SHADOW -> {
+                data.setShadowSquad(payload.shadowIndex(), payload.squadId());
+                AwakeningSystemMod.sync(player);
+            }
+        }
     }
 
     public static void handleUmaRaceAction(net.minecraft.server.level.ServerPlayer player, com.soybe.awakeningsystem.uma.network.UmaRaceActionC2SPayload payload) {

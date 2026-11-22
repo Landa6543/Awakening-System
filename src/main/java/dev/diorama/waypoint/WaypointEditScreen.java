@@ -1,26 +1,32 @@
 package dev.diorama.waypoint;
 
 import com.mojang.blaze3d.platform.InputConstants;
+import dev.diorama.MapScreen;
+import dev.diorama.MapSession;
 import dev.diorama.render.Pins;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Locale;
+import net.minecraft.ChatFormatting;
 import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.gui.components.Button;
 import net.minecraft.client.gui.components.Checkbox;
 import net.minecraft.client.gui.components.EditBox;
 import net.minecraft.client.gui.screens.Screen;
 //? if >=1.21.9 {
-/*import net.minecraft.client.input.MouseButtonEvent;
+/*import net.minecraft.client.input.KeyEvent;
+import net.minecraft.client.input.MouseButtonEvent;
 *///?}
 import net.minecraft.network.chat.CommonComponents;
 import net.minecraft.network.chat.Component;
+import net.minecraft.util.Mth;
+import net.minecraft.world.entity.Entity;
 import org.jspecify.annotations.Nullable;
 
 /**
  * Creates or edits one waypoint: name, initials, position, colour, folder and whether it shows. A
- * preview on the right stands its pin on a piece of the map, as the map will draw it, and follows
- * the colour and initials as they change; the folder, Share in chat and Teleport sit under it. The footer is only
+ * preview on the right stands its pin on the piece of the map where it is, in its own dimension, as
+ * the map will draw it, and follows the position, colour and initials as they change; the folder,
+ * Share in chat and Teleport sit under it. The footer is only
  * the two ways out, Save and Cancel. Deleting lives on the list's rows and the map's menu.
  */
 public final class WaypointEditScreen extends Screen {
@@ -37,6 +43,8 @@ public final class WaypointEditScreen extends Screen {
 	/** Vanilla's colour for a number field it can't read, from the game rules screen. */
 	private static final int INVALID_TEXT = 0xFFFF0000;
 	private static final int LABEL = 0xFFA0A0A0;
+	/** The most characters a waypoint name can have. */
+	private static final int MAX_NAME = 32;
 
 	private final @Nullable Screen parent;
 	private final Waypoint waypoint;
@@ -65,6 +73,15 @@ public final class WaypointEditScreen extends Screen {
 	/** The custom folder name, or empty for the dimension's own folder. */
 	private String folder;
 	private @Nullable Button folderButton;
+	/**
+	 * The folders to pick from, open under the folder button after a click on it, as Xaero's Minimap
+	 * picks a waypoint's set from a dropdown in its editor. Drawn over the screen, which hands it the
+	 * clicks while it's open.
+	 */
+	private @Nullable FolderMenu folderMenu;
+	/** The icon picked, by {@link dev.diorama.render.WaypointIcons} id; empty shows the initials. */
+	private String icon;
+	private @Nullable Button iconButton;
 
 	public WaypointEditScreen(@Nullable Screen parent, Waypoint waypoint, boolean isNew) {
 		super(Component.translatable(isNew ? "diorama.waypoint.new" : "diorama.waypoint.edit"));
@@ -73,6 +90,7 @@ public final class WaypointEditScreen extends Screen {
 		this.isNew = isNew;
 		this.color = waypoint.color;
 		this.visible = waypoint.visible;
+		this.icon = waypoint.icon == null ? "" : waypoint.icon;
 		WaypointStore store = WaypointStore.get();
 		String known = store == null ? null : store.folderName(waypoint.folder);
 		this.folder = known == null ? "" : known;
@@ -93,14 +111,19 @@ public final class WaypointEditScreen extends Screen {
 		int top = this.top();
 		int cx = left + FORM / 2;
 		// Resizing the window or changing GUI scale runs init() again: keep what's typed, not the saved waypoint.
-		this.name = this.field(left, top + 16, 156, draft(this.name, this.waypoint.name), "diorama.waypoint.name", 32);
-		this.initials = this.field(left + 160, top + 16, 40, draft(this.initials, this.waypoint.initials), "diorama.waypoint.initials", 2);
+		this.name = this.field(left, top + 16, 112, draft(this.name, this.waypoint.shownName()), "diorama.waypoint.name", MAX_NAME);
+		this.iconButton = this.addRenderableWidget(Button.builder(this.iconLabel(), b -> this.pickIcon())
+			.bounds(left + 116, top + 16, 40, 20).build());
+		// A death marker always shows its headstone.
+		this.iconButton.active = this.waypoint.kind != Waypoint.Kind.DEATH;
+		this.initials = this.field(left + 160, top + 16, 40, draft(this.initials, this.waypoint.initials), "diorama.waypoint.initials", Waypoint.MAX_INITIALS);
 		this.x = this.field(left, top + 56, 64, draft(this.x, Integer.toString(this.waypoint.x)), "diorama.waypoint.x", 9);
 		this.y = this.field(left + 68, top + 56, 64, draft(this.y, Integer.toString(this.waypoint.y)), "diorama.waypoint.y", 9);
 		this.z = this.field(left + 136, top + 56, 64, draft(this.z, Integer.toString(this.waypoint.z)), "diorama.waypoint.z", 9);
 		this.x.setResponder(text -> this.validate());
 		this.y.setResponder(text -> this.validate());
 		this.z.setResponder(text -> this.validate());
+		this.hintHere();
 		this.swatchX = cx - WaypointColours.COLUMNS * SLOT / 2;
 		this.swatchY = top + 92;
 		// The hex field sits right of a chip showing the colour, then Random.
@@ -116,18 +139,32 @@ public final class WaypointEditScreen extends Screen {
 		// Always a new colour, never close to the one shown.
 		this.addRenderableWidget(Button.builder(Component.translatable("diorama.waypoint.random"), b -> this.pick(WaypointColours.random(this.color)))
 			.bounds(left + 98, top + 132, FORM - 98, 20).build());
+		//? if >=1.21 {
 		this.addRenderableWidget(Checkbox.builder(Component.translatable("diorama.waypoint.show_on_maps"), this.font)
 			.pos(left, top + 157)
 			.selected(this.visible)
 			.onValueChange((box, value) -> this.visible = value)
 			.build());
+		//?} else {
+		/*// 1.20.1's checkbox has no builder and tells no one it changed: a 20 pixel box with the
+		// label 4 pixels right of it.
+		Component showOnMaps = Component.translatable("diorama.waypoint.show_on_maps");
+		this.addRenderableWidget(new Checkbox(left, top + 157, 24 + this.font.width(showOnMaps), 20, showOnMaps, this.visible) {
+			@Override
+			public void onPress() {
+				super.onPress();
+				WaypointEditScreen.this.visible = this.selected();
+			}
+		});
+		*///?}
 
 		// What to do with this place, under its preview. A new waypoint has none until it's saved.
 		int previewLeft = left + PREVIEW_LEFT;
 		int previewWidth = WIDTH - PREVIEW_LEFT;
 		this.share = null;
 		this.teleport = null;
-		this.folderButton = this.addRenderableWidget(Button.builder(this.folderLabel(), b -> this.nextFolder())
+		this.folderMenu = null;
+		this.folderButton = this.addRenderableWidget(Button.builder(this.folderLabel(), b -> this.openFolderMenu())
 			.bounds(previewLeft, this.previewBottom() + 14, previewWidth, 20)
 			.tooltip(net.minecraft.client.gui.components.Tooltip.create(Component.translatable("diorama.waypoint.folder_tooltip")))
 			.build());
@@ -146,6 +183,27 @@ public final class WaypointEditScreen extends Screen {
 			.bounds(left + WIDTH - half, top + 192, half, 20).build());
 		this.validate();
 		this.setInitialFocus(this.name);
+	}
+
+	/** The icon's name cut to fit its narrow button. */
+	private Component iconLabel() {
+		String text = WaypointIconScreen.name(this.icon).getString();
+		if (this.font.width(text) > 34) {
+			text = this.font.plainSubstrByWidth(text, 34 - this.font.width("..")) + "..";
+		}
+		return Component.literal(text);
+	}
+
+	private void pickIcon() {
+		this.preview.name = this.typedName();
+		this.preview.initials = this.initials.getValue().trim();
+		this.preview.color = this.color;
+		this.minecraft.setScreen(new WaypointIconScreen(this, this.preview, this.icon, id -> {
+			this.icon = id;
+			if (this.iconButton != null) {
+				this.iconButton.setMessage(this.iconLabel());
+			}
+		}));
 	}
 
 	private int previewTop() {
@@ -167,12 +225,62 @@ public final class WaypointEditScreen extends Screen {
 		return out;
 	}
 
-	private void nextFolder() {
-		List<String> folders = this.folders();
-		int index = folders.indexOf(this.folder);
-		this.folder = folders.get((index + 1) % folders.size());
+	/** Opens the list of folders under the folder button, or above it where there's more room. */
+	private void openFolderMenu() {
+		Button button = this.folderButton;
+		if (button == null) {
+			return;
+		}
+		WaypointStore store = WaypointStore.get();
+		List<FolderMenu.Entry> entries = new ArrayList<>();
+		for (String folder : this.folders()) {
+			String name = folder.isEmpty() ? Waypoints.dimensionName(this.waypoint.dimension).getString() : folder;
+			String key = folder.isEmpty() ? WaypointStore.dimensionKey(this.waypoint.dimension) : WaypointStore.customKey(folder);
+			entries.add(new FolderMenu.Entry(folder, name, -1, store != null && store.folderHidden(key)));
+		}
+		this.folderMenu = new FolderMenu(this.font, entries, this.folder, button.getX(), button.getY(), button.getY() + button.getHeight(),
+			button.getWidth(), this.height);
+		// The button keeps the keyboard's focus while the list is open, and its tooltip would cover the list.
+		button.setTooltip(null);
+	}
+
+	private void closeFolderMenu() {
+		this.folderMenu = null;
 		if (this.folderButton != null) {
-			this.folderButton.setMessage(this.folderLabel());
+			this.folderButton.setTooltip(net.minecraft.client.gui.components.Tooltip.create(Component.translatable("diorama.waypoint.folder_tooltip")));
+		}
+	}
+
+	/** A click while the list of folders is open: on a folder it picks that folder, anywhere else it only closes the list. */
+	private void clickFolderMenu(double x, double y, int button) {
+		FolderMenu menu = this.folderMenu;
+		this.closeFolderMenu();
+		this.pickFolder(menu == null || button != InputConstants.MOUSE_BUTTON_LEFT ? null : menu.under(x, y));
+	}
+
+	/**
+	 * A key while the list of folders is open goes to the list and nowhere else: Escape closes it,
+	 * and the arrows and Enter pick from it, so the folder can still be picked without the mouse.
+	 */
+	private void keyFolderMenu(int key) {
+		FolderMenu menu = this.folderMenu;
+		if (menu == null || key == InputConstants.KEY_ESCAPE) {
+			this.closeFolderMenu();
+			return;
+		}
+		FolderMenu.Entry picked = menu.keyPressed(key);
+		if (picked != null) {
+			this.closeFolderMenu();
+			this.pickFolder(picked);
+		}
+	}
+
+	private void pickFolder(FolderMenu.@Nullable Entry picked) {
+		if (picked != null) {
+			this.folder = picked.key();
+			if (this.folderButton != null) {
+				this.folderButton.setMessage(this.folderLabel());
+			}
 		}
 	}
 
@@ -201,7 +309,7 @@ public final class WaypointEditScreen extends Screen {
 	private void validate() {
 		boolean valid = true;
 		for (EditBox box : new EditBox[] {this.x, this.y, this.z}) {
-			boolean reads = parse(box.getValue()) != null;
+			boolean reads = this.coordinate(box) != null;
 			box.setTextColor(reads ? EditBox.DEFAULT_TEXT_COLOR : INVALID_TEXT);
 			valid &= reads;
 		}
@@ -212,8 +320,7 @@ public final class WaypointEditScreen extends Screen {
 			this.share.active = valid;
 		}
 		if (this.teleport != null) {
-			// /tp moves within the dimension you're in, so a waypoint in another one is out of reach.
-			this.teleport.active = valid && Waypoints.canTeleport() && this.waypoint.dimension.equals(Waypoints.dimension());
+			this.teleport.active = valid && Waypoints.canTeleport(this.waypoint.dimension);
 		}
 	}
 
@@ -227,11 +334,18 @@ public final class WaypointEditScreen extends Screen {
 
 	@Override
 	public void render(GuiGraphics graphics, int mouseX, int mouseY, float a) {
-		super.render(graphics, mouseX, mouseY, a);
+		// A 1.20.1 screen draws its own background.
+		//? if <1.21 {
+		/*this.renderBackground(graphics);
+		*///?}
+		// Nothing under the open list of folders lights up or shows its tooltip.
+		boolean menuOpen = this.folderMenu != null;
+		super.render(graphics, menuOpen ? -1 : mouseX, menuOpen ? -1 : mouseY, a);
 		int left = this.left();
 		int top = this.top();
 		graphics.drawCenteredString(this.font, this.title, this.width / 2, top - 12, 0xFFFFFFFF);
 		graphics.drawString(this.font, Component.translatable("diorama.waypoint.name"), left, top + 5, LABEL, true);
+		graphics.drawString(this.font, Component.translatable("diorama.waypoint.icon"), left + 116, top + 5, LABEL, true);
 		graphics.drawString(this.font, Component.translatable("diorama.waypoint.initials"), left + 160, top + 5, LABEL, true);
 		graphics.drawString(this.font, Component.translatable("diorama.waypoint.position"), left, top + 45, LABEL, true);
 		Component colourLabel = Component.translatable("diorama.waypoint.colour");
@@ -240,9 +354,44 @@ public final class WaypointEditScreen extends Screen {
 		if (current != null) {
 			graphics.drawString(this.font, Component.literal("· ").append(current.name()), left + this.font.width(colourLabel) + 4, top + 81, 0xFFFFFFFF, true);
 		}
-		this.drawSwatches(graphics, mouseX, mouseY);
+		this.drawSwatches(graphics, menuOpen ? -1 : mouseX, menuOpen ? -1 : mouseY);
 		this.drawPreview(graphics);
+		FolderMenu menu = this.folderMenu;
+		if (menu != null) {
+			// Over everything drawn so far, text included.
+			//? if >=1.21.6 {
+			/*graphics.nextStratum();
+			menu.draw(graphics, mouseX, mouseY);
+			*///?} else {
+			graphics.flush();
+			var pose = graphics.pose();
+			pose.pushPose();
+			pose.translate(0, 0, 400);
+			menu.draw(graphics, mouseX, mouseY);
+			pose.popPose();
+			//?}
+		}
 	}
+
+	// The mouse wheel had only the one axis on 1.20.1.
+	@Override
+	//? if >=1.21 {
+	public boolean mouseScrolled(double x, double y, double scrollX, double scrollY) {
+		if (this.folderMenu != null) {
+			this.folderMenu.scroll(scrollY);
+			return true;
+		}
+		return super.mouseScrolled(x, y, scrollX, scrollY);
+	}
+	//?} else {
+	/*public boolean mouseScrolled(double x, double y, double scrollY) {
+		if (this.folderMenu != null) {
+			this.folderMenu.scroll(scrollY);
+			return true;
+		}
+		return super.mouseScrolled(x, y, scrollY);
+	}
+	*///?}
 
 	/**
 	 * The colours as flat swatches on a dark panel, the hovered one ringed in grey and the picked
@@ -376,8 +525,8 @@ public final class WaypointEditScreen extends Screen {
 	}
 
 	/**
-	 * The pin as the map will draw it, standing on the same piece of map as the empty list, in a
-	 * list panel of its own. The pin's head rises above the piece, so the two are centred together.
+	 * The pin as the map will draw it, standing on its own piece of the map, in a list panel of its
+	 * own. The pin's head rises above the piece, so the two are centred together.
 	 */
 	private void drawPreview(GuiGraphics graphics) {
 		int x0 = this.left() + PREVIEW_LEFT;
@@ -386,16 +535,20 @@ public final class WaypointEditScreen extends Screen {
 		int y1 = this.previewBottom();
 		graphics.drawString(this.font, Component.translatable("diorama.waypoint.preview"), x0, this.top() + 5, LABEL, true);
 		ScreenArt.list(graphics, x0, y0, x1, y1);
-		this.preview.name = this.name.getValue().trim().isEmpty() ? this.waypoint.name : this.name.getValue().trim();
-		this.preview.initials = this.initials.getValue().trim().toUpperCase(Locale.ROOT);
+		this.preview.name = this.typedName();
+		this.preview.initials = this.initials.getValue().trim();
 		this.preview.color = this.color;
 		this.preview.kind = this.waypoint.kind;
+		this.preview.icon = this.icon;
 		// At twice its size, the pin reaches this far above its tip: its head, its rim and its point.
-		int rise = Math.round(2 * (Pins.headAbove(Pins.LARGE) + Pins.LARGE / 2.0F + 1)) - this.piece.tipY();
+		// An icon's pin is bigger.
+		float radius = Pins.reach(this.preview, Pins.LARGE) - 1;
+		int rise = Math.round(2 * (Pins.headAbove(this.preview, Pins.LARGE) + radius)) - this.piece.tipY();
 		int total = rise + this.piece.outerHeight();
 		int pieceX = (x0 + x1) / 2 - this.piece.outerWidth() / 2;
 		int pieceY = y0 + (y1 - y0 - total) / 2 + rise;
-		this.piece.draw(graphics, pieceX, pieceY);
+		this.piece.draw(graphics, pieceX, pieceY, new MapPiece.Place(this.waypoint.dimension,
+			this.typed(this.x, this.waypoint.x), this.typed(this.y, this.waypoint.y), this.typed(this.z, this.waypoint.z)));
 		// The caption of the folder button under the panel.
 		graphics.drawString(this.font, Component.translatable("diorama.waypoint.folder_caption"), x0, y1 + 3, LABEL, true);
 		graphics.pose().pushPose();
@@ -409,6 +562,10 @@ public final class WaypointEditScreen extends Screen {
 	//? if >=1.21.9 {
 	/*@Override
 	public boolean mouseClicked(MouseButtonEvent event, boolean doubleClick) {
+		if (this.folderMenu != null) {
+			this.clickFolderMenu(event.x(), event.y(), event.button());
+			return true;
+		}
 		return this.clicked(event.x(), event.y(), event.button()) || super.mouseClicked(event, doubleClick);
 	}
 
@@ -422,9 +579,32 @@ public final class WaypointEditScreen extends Screen {
 		this.dragging = 0;
 		return super.mouseReleased(event);
 	}
+
+	// Escape closes the open list of folders, and the screen only after that.
+	@Override
+	public boolean keyPressed(KeyEvent event) {
+		if (this.folderMenu != null) {
+			this.keyFolderMenu(event.key());
+			return true;
+		}
+		return super.keyPressed(event);
+	}
 	*///?} else {
 	@Override
+	public boolean keyPressed(int key, int scancode, int modifiers) {
+		if (this.folderMenu != null) {
+			this.keyFolderMenu(key);
+			return true;
+		}
+		return super.keyPressed(key, scancode, modifiers);
+	}
+
+	@Override
 	public boolean mouseClicked(double x, double y, int button) {
+		if (this.folderMenu != null) {
+			this.clickFolderMenu(x, y, button);
+			return true;
+		}
 		return this.clicked(x, y, button) || super.mouseClicked(x, y, button);
 	}
 
@@ -467,23 +647,47 @@ public final class WaypointEditScreen extends Screen {
 		return true;
 	}
 
+	/** The open list of folders, or null. For tests. */
+	public @Nullable FolderMenu folderMenu() {
+		return this.folderMenu;
+	}
+
+	/** The button that opens the list of folders. For tests. */
+	public @Nullable Button folderButton() {
+		return this.folderButton;
+	}
+
 	/** The waypoint being edited. For tests. */
 	public Waypoint waypoint() {
 		return this.waypoint;
 	}
 
+	/**
+	 * The name field's text, or the saved name while the field is empty or still shows it, so an
+	 * automatic pin saved without a rename keeps following the player's language. The field holds
+	 * {@link #MAX_NAME} characters, so a longer translation shows cut, and the cut text counts too.
+	 */
+	private String typedName() {
+		String typed = this.name.getValue().trim();
+		String shown = this.waypoint.shownName();
+		shown = shown.length() > MAX_NAME ? shown.substring(0, MAX_NAME) : shown;
+		return typed.isEmpty() || typed.equals(shown.trim()) ? this.waypoint.name : typed;
+	}
+
 	/** The waypoint as the fields show it now, edits included, without saving; null while a coordinate isn't a number. */
 	private @Nullable Waypoint shown() {
-		Integer x = parse(this.x.getValue());
-		Integer y = parse(this.y.getValue());
-		Integer z = parse(this.z.getValue());
+		Integer x = this.coordinate(this.x);
+		Integer y = this.coordinate(this.y);
+		Integer z = this.coordinate(this.z);
 		if (x == null || y == null || z == null) {
 			return null;
 		}
-		String name = this.name.getValue().trim();
-		Waypoint shown = new Waypoint(name.isEmpty() ? this.waypoint.name : name, x, y, z, this.waypoint.dimension, this.color);
+		Waypoint shown = new Waypoint(this.typedName(), x, y, z, this.waypoint.dimension, this.color);
+		shown.kind = this.waypoint.kind;
+		// A death pin's name shows when it died.
+		shown.created = this.waypoint.created;
 		String initials = this.initials.getValue().trim();
-		shown.initials = initials.isEmpty() ? shown.initials : initials.toUpperCase(Locale.ROOT);
+		shown.initials = initials.isEmpty() ? shown.initials : initials;
 		return shown;
 	}
 
@@ -503,7 +707,7 @@ public final class WaypointEditScreen extends Screen {
 		if (shown == null) {
 			return;
 		}
-		Waypoints.teleport(shown.x, shown.y, shown.z);
+		Waypoints.teleport(shown.dimension, shown.x, shown.y, shown.z);
 		this.onClose();
 	}
 
@@ -517,12 +721,15 @@ public final class WaypointEditScreen extends Screen {
 			this.onClose();
 			return;
 		}
+		this.waypoint.edited |= this.waypoint.kind.isPortal() && (!shown.name.equals(this.waypoint.name)
+			|| shown.x != this.waypoint.x || shown.y != this.waypoint.y || shown.z != this.waypoint.z);
 		this.waypoint.name = shown.name;
-		this.waypoint.initials = this.initials.getValue().trim().toUpperCase(Locale.ROOT);
+		this.waypoint.initials = this.initials.getValue().trim();
 		this.waypoint.x = shown.x;
 		this.waypoint.y = shown.y;
 		this.waypoint.z = shown.z;
 		this.waypoint.color = this.color;
+		this.waypoint.icon = this.icon;
 		this.waypoint.visible = this.visible;
 		this.waypoint.folder = this.folder;
 		// Saving a temporary waypoint from the editor keeps it; otherwise a renamed one would still
@@ -538,12 +745,61 @@ public final class WaypointEditScreen extends Screen {
 		this.onClose();
 	}
 
+	/** A coordinate as typed, or the saved one while the field doesn't read as a number. */
+	private int typed(EditBox box, int saved) {
+		Integer value = this.coordinate(box);
+		return value == null ? saved : value;
+	}
+
+	/** A coordinate box's number; an empty box means where the player stands, as in Xaero's. Null while it doesn't read. */
+	private @Nullable Integer coordinate(EditBox box) {
+		return box.getValue().isBlank() ? this.here(box) : parse(box.getValue());
+	}
+
+	/**
+	 * The player's block coordinate for a box, in the waypoint's dimension the way Xaero's reckons
+	 * it: X and Z scaled from the player's dimension to the waypoint's, Y as it is. Null with no player.
+	 */
+	private @Nullable Integer here(EditBox box) {
+		Entity viewer = MapSession.viewer();
+		String dimension = Waypoints.dimension();
+		if (viewer == null || dimension == null) {
+			return null;
+		}
+		if (box == this.y) {
+			return viewer.blockPosition().getY();
+		}
+		double scale = dimension.equals(this.waypoint.dimension) ? 1
+			: viewer.level().dimensionType().coordinateScale() / MapScreen.dimensionScale(this.waypoint.dimension);
+		return Mth.floor((box == this.x ? viewer.blockPosition().getX() : viewer.blockPosition().getZ()) * scale);
+	}
+
+	/** An empty coordinate box shows the number it stands for, greyed, as it follows the player. */
+	private void hintHere() {
+		this.hintHere(this.x, "diorama.waypoint.x");
+		this.hintHere(this.y, "diorama.waypoint.y");
+		this.hintHere(this.z, "diorama.waypoint.z");
+	}
+
+	private void hintHere(EditBox box, String axis) {
+		Integer here = this.here(box);
+		// Styled here, as 1.20.1 draws an unstyled hint in the text's own colour.
+		box.setHint((here == null ? Component.translatable(axis) : Component.literal(Integer.toString(here))).withStyle(ChatFormatting.DARK_GRAY));
+	}
+
 	private static @Nullable Integer parse(String text) {
 		try {
 			return Integer.parseInt(text.trim());
 		} catch (NumberFormatException e) {
 			return null;
 		}
+	}
+
+	@Override
+	public void tick() {
+		super.tick();
+		this.hintHere();
+		this.piece.tick();
 	}
 
 	@Override

@@ -363,20 +363,22 @@ public final class SubspaceManager {
 
             data.ensureSubspaceCapacity(Math.max(54, unlockedSlots));
 
-            net.minecraft.core.NonNullList<ItemStack> items = data.getSubspaceItems();
-            int globalIndex = 0;
-            for (Container chest : containers) {
-                int cSize = chest.getContainerSize();
-                for (int s = 0; s < cSize; s++) {
-                    if (globalIndex < items.size()) {
-                        items.set(globalIndex, chest.getItem(s).copy());
+            if (!containers.isEmpty()) {
+                net.minecraft.core.NonNullList<ItemStack> items = data.getSubspaceItems();
+                int globalIndex = 0;
+                for (Container chest : containers) {
+                    int cSize = chest.getContainerSize();
+                    for (int s = 0; s < cSize; s++) {
+                        if (globalIndex < items.size()) {
+                            items.set(globalIndex, chest.getItem(s).copy());
+                        }
+                        globalIndex++;
                     }
+                }
+                while (globalIndex < unlockedSlots && globalIndex < items.size()) {
+                    items.set(globalIndex, ItemStack.EMPTY);
                     globalIndex++;
                 }
-            }
-            while (globalIndex < unlockedSlots && globalIndex < items.size()) {
-                items.set(globalIndex, ItemStack.EMPTY);
-                globalIndex++;
             }
             AwakeningSystemMod.sync(player);
         } catch (Throwable t) {
@@ -541,7 +543,7 @@ public final class SubspaceManager {
 
         // Si la estructura construida es inferior al nivel alcanzado o el área está vacía, construirla/actualizarla
         if (data.subspaceBuiltLevel() < data.subspaceLevel()) {
-            regenerateSubspaceStructure(player);
+            regenerateSubspaceStructure(player, subspaceLevel);
             data.setSubspaceBuiltLevel(data.subspaceLevel());
             AwakeningSystemMod.sync(player);
         } else {
@@ -567,6 +569,15 @@ public final class SubspaceManager {
             data.ensureSubspaceCapacity(unlockedSlots);
         }
         reconcileSubspaceStorage(containers, data);
+
+        // Purgar rigurosamente cualquier item tirado en el suelo dentro de la parcela al entrar
+        net.minecraft.world.phys.AABB entryArea = new net.minecraft.world.phys.AABB(
+                originX - 32, originY - 10, originZ - 32,
+                originX + 32, originY + 40, originZ + 32
+        );
+        for (net.minecraft.world.entity.item.ItemEntity itemEntity : subspaceLevel.getEntitiesOfClass(net.minecraft.world.entity.item.ItemEntity.class, entryArea)) {
+            itemEntity.discard();
+        }
 
         subspaceLevel.sendParticles(ParticleTypes.PORTAL, originX + 0.5D, originY + 1.5D, originZ - 2.5D, 40, 0.5D, 0.8D, 0.5D, 0.1D);
         // no gate sound when travelling between worlds (it sounded on every change of world)
@@ -666,7 +677,7 @@ public final class SubspaceManager {
 
         if (player.serverLevel().dimension().equals(SUBSPACE_REALM)) {
             // Actualizar la estructura física de la parcela inmediatamente al nuevo nivel
-            regenerateSubspaceStructure(player);
+            regenerateSubspaceStructure(player, player.serverLevel());
             data.setSubspaceBuiltLevel(nextLvl);
             AwakeningSystemMod.sync(player);
         } else {
@@ -763,31 +774,60 @@ public final class SubspaceManager {
     }
 
     public static void regenerateSubspaceStructure(ServerPlayer player) {
+        ServerLevel subspaceLevel = getSubspaceLevel(player.getServer());
+        if (subspaceLevel == null) return;
         if (!player.serverLevel().dimension().equals(SUBSPACE_REALM)) {
             player.sendSystemMessage(Component.translatable("awakening_system.msg.debes_estar_dentro_de_tu_subespacio"));
             return;
         }
+        regenerateSubspaceStructure(player, subspaceLevel);
+    }
+
+    public static void regenerateSubspaceStructure(ServerPlayer player, ServerLevel level) {
+        if (player == null || level == null) return;
 
         SystemData data = SystemEvents.data(player);
         int lvl = data.subspaceLevel();
         int ox = getPlotOriginX(player);
         int oz = getPlotOriginZ(player);
         int oy = getPlotOriginY();
-        ServerLevel level = player.serverLevel();
 
-        // 1. Limpieza segura y anti-duplicación de la parcela previa
-        int cleanRadius = 16;
+        int cleanRadius = 24; // Amplio para cubrir completamente todos los niveles de estructura (hasta 25x25)
+
+        // 0. Forzar la carga sincrónica de todos los chunks que abarcan la parcela
+        int minChunkX = (ox - cleanRadius - 8) >> 4;
+        int maxChunkX = (ox + cleanRadius + 8) >> 4;
+        int minChunkZ = (oz - cleanRadius - 8) >> 4;
+        int maxChunkZ = (oz + cleanRadius + 8) >> 4;
+        for (int cx = minChunkX; cx <= maxChunkX; cx++) {
+            for (int cz = minChunkZ; cz <= maxChunkZ; cz++) {
+                level.getChunk(cx, cz);
+            }
+        }
+
+        // 1. Sincronizar primero cualquier ítem que esté en cofres del mundo al SystemData del jugador
+        // para asegurar que nada se pierda antes de la regeneración
+        try {
+            syncWorldToSubspace(level, player);
+        } catch (Throwable t) {
+            AwakeningSystemMod.LOGGER.error("Error sincronizando items previos de subespacio", t);
+        }
+
+        // 2. Limpieza segura y 100% anti-duplicación de la parcela previa
         BlockPos.MutableBlockPos mpos = new BlockPos.MutableBlockPos();
         for (int dx = -cleanRadius; dx <= cleanRadius; dx++) {
             for (int dz = -cleanRadius; dz <= cleanRadius; dz++) {
-                for (int y = oy - 4; y <= oy + 22; y++) {
+                for (int y = oy - 6; y <= oy + 26; y++) {
                     mpos.set(ox + dx, y, oz + dz);
-                    // IMPORTANTE: Vaciar cualquier contenedor antes de destruir el bloque
-                    // para evitar que Minecraft active Containers.dropContentsOnDestroy() y arroje los ítems al suelo duplicándolos
-                    net.minecraft.world.level.block.entity.BlockEntity be = level.getBlockEntity(mpos);
-                    if (be instanceof Container c) {
-                        c.clearContent();
-                    } else if (be != null) {
+                    BlockEntity be = level.getBlockEntity(mpos);
+                    if (be != null) {
+                        if (be instanceof Container c) {
+                            for (int s = 0; s < c.getContainerSize(); s++) {
+                                c.setItem(s, ItemStack.EMPTY);
+                            }
+                            c.clearContent();
+                            c.setChanged();
+                        }
                         try {
                             var handler = level.getCapability(Capabilities.ItemHandler.BLOCK, mpos, level.getBlockState(mpos), be, null);
                             if (handler instanceof IItemHandlerModifiable modifiable) {
@@ -796,33 +836,53 @@ public final class SubspaceManager {
                                 }
                             }
                         } catch (Throwable ignored) {}
+
+                        // Remover la entidad de bloque ANTES de reemplazar el bloque por aire
+                        // Esto garantiza que Containers.dropContentsOnDestroy no encuentre la entidad y no suelte ítems
+                        level.removeBlockEntity(mpos);
                     }
+
                     if (!level.getBlockState(mpos).isAir()) {
-                        level.setBlock(mpos, Blocks.AIR.defaultBlockState(), 2);
+                        // Flag 50 = UPDATE_CLIENTS (2) | UPDATE_SUPPRESS_DROPS (32) | UPDATE_KNOWN_SHAPE (16)
+                        level.setBlock(mpos, Blocks.AIR.defaultBlockState(), 50);
                     }
                 }
             }
         }
-        // Purgar rigurosamente cualquier ItemEntity en el suelo dentro de la parcela para erradicar cualquier duplicado residual
-        net.minecraft.world.phys.AABB plotArea = new net.minecraft.world.phys.AABB(ox - cleanRadius - 4, oy - 6, oz - cleanRadius - 4, ox + cleanRadius + 4, oy + 26, oz + cleanRadius + 4);
+
+        // Purgar rigurosamente cualquier ItemEntity en el suelo dentro de la parcela
+        net.minecraft.world.phys.AABB plotArea = new net.minecraft.world.phys.AABB(
+                ox - cleanRadius - 8, oy - 10, oz - cleanRadius - 8,
+                ox + cleanRadius + 8, oy + 32, oz + cleanRadius + 8
+        );
         for (net.minecraft.world.entity.item.ItemEntity itemEntity : level.getEntitiesOfClass(net.minecraft.world.entity.item.ItemEntity.class, plotArea)) {
             itemEntity.discard();
         }
-        clearBedrockBelow(level, ox, oz, 20);
+        clearBedrockBelow(level, ox, oz, 24);
 
-        // 2. Colocar la nueva estructura del nivel correspondiente
+        // 3. Colocar la nueva estructura del nivel correspondiente
         ensureSubspaceStructure(level, ox, oy, oz, lvl);
 
-        // 3. Teletransportar al jugador a una posición segura frente al waypoint
+        // Purgar de nuevo cualquier entidad de ítem que pudiera haberse generado al colocar la estructura
+        for (net.minecraft.world.entity.item.ItemEntity itemEntity : level.getEntitiesOfClass(net.minecraft.world.entity.item.ItemEntity.class, plotArea)) {
+            itemEntity.discard();
+        }
+
+        // 4. Teletransportar al jugador a una posición segura frente al waypoint
         player.teleportTo(level, ox + 0.5D, oy + 1.0D, oz - 2.5D, 0.0F, 0.0F);
         player.fallDistance = 0.0F;
 
-        // 4. Sincronizar contenedores nuevos
+        // 5. Sincronizar y reconciliar contenedores nuevos
         List<Container> containers = getPlotChestContainers(level, ox, oy, oz);
         reconcileSubspaceStorage(containers, data);
         syncWorldToSubspace(level, player);
 
-        // 5. Notificación y efectos
+        // Purgar por tercera vez cualquier ItemEntity residual
+        for (net.minecraft.world.entity.item.ItemEntity itemEntity : level.getEntitiesOfClass(net.minecraft.world.entity.item.ItemEntity.class, plotArea)) {
+            itemEntity.discard();
+        }
+
+        // 6. Notificación y efectos
         level.sendParticles(ParticleTypes.END_ROD, ox + 0.5D, oy + 2.0D, oz + 0.5D, 80, 2.0D, 1.5D, 2.0D, 0.1D);
         player.playNotifySound(SoundEvents.PLAYER_LEVELUP, SoundSource.PLAYERS, 1.0F, 1.0F);
         player.sendSystemMessage(Component.translatable("awakening_system.msg.subespacio_tu_subespacio_ha_sido_regenerado", String.valueOf(lvl)));

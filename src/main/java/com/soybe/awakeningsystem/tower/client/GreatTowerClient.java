@@ -30,6 +30,10 @@ public final class GreatTowerClient {
         event.register((stack, tintIndex) -> tintIndex == 0
                         ? 0xFF000000 | com.soybe.awakeningsystem.LootBagItem.COLORS[com.soybe.awakeningsystem.LootBagItem.tier(stack) - 1] : -1,
                 com.soybe.awakeningsystem.SystemItems.GUILD_LOOT_BAG.get());
+        event.register((stack, tintIndex) -> tintIndex == 0 ? 0x332244 : (tintIndex == 1 ? 0xAA22CC : -1),
+                com.soybe.awakeningsystem.SystemItems.KAISEL_ALIVE_SPAWN_EGG.get());
+        event.register((stack, tintIndex) -> tintIndex == 0 ? 0x111122 : (tintIndex == 1 ? 0x2288EE : -1),
+                com.soybe.awakeningsystem.SystemItems.KAISEL_SHADOW_SPAWN_EGG.get());
     }
 
     @SubscribeEvent

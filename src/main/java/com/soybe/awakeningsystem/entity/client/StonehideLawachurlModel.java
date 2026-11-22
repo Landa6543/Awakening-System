@@ -2,7 +2,9 @@ package com.soybe.awakeningsystem.entity.client;
 
 import com.mojang.blaze3d.vertex.PoseStack;
 import com.mojang.blaze3d.vertex.VertexConsumer;
+import com.soybe.awakeningsystem.entity.FrostarmLawachurlEntity;
 import com.soybe.awakeningsystem.entity.StonehideLawachurlEntity;
+import com.soybe.awakeningsystem.entity.ThunderhelmLawachurlEntity;
 import net.minecraft.client.model.EntityModel;
 import net.minecraft.client.model.geom.ModelPart;
 import net.minecraft.client.model.geom.PartPose;
@@ -454,27 +456,27 @@ public class StonehideLawachurlModel<T extends Monster> extends EntityModel<T> {
 
         PartDefinition part_body = root.addOrReplaceChild("body",
                 CubeListBuilder.create()
-                .texOffs(0, 0).mirror(false).addBox(-10.3173F, -10.7602F, -5.88F, 13.0F, 30.0F, 14.0F)
-                .texOffs(147, 157).mirror(false).addBox(-2.7573F, -6.5202F, -7.14F, 13.0F, 14.0F, 2.0F)
-                .texOffs(159, 135).mirror(false).addBox(-3.1573F, 8.5198F, -6.3F, 5.0F, 4.0F, 1.0F)
-                .texOffs(153, 0).mirror(false).addBox(-9.8773F, 8.5198F, -6.3F, 5.0F, 4.0F, 1.0F)
-                .texOffs(102, 156).mirror(false).addBox(-3.1573F, 13.9798F, -6.3F, 5.0F, 4.0F, 1.0F)
-                .texOffs(114, 119).mirror(false).addBox(-9.8773F, 13.9798F, -6.3F, 5.0F, 4.0F, 1.0F)
-                .texOffs(147, 141).mirror(false).addBox(-17.8773F, -6.5202F, -7.14F, 13.0F, 14.0F, 2.0F)
-                .texOffs(122, 84).mirror(false).addBox(-0.0348F, 15.1538F, -4.46F, 9.0F, 4.0F, 12.0F)
-                .texOffs(120, 15).mirror(false).addBox(-16.7999F, 15.1538F, -4.46F, 9.0F, 4.0F, 12.0F),
-                PartPose.offset(4.0373F, -45.2898F, 4.6F));
+                .texOffs(0, 0).mirror(false).addBox(-6.28F, -10.7602F, -5.88F, 13.0F, 30.0F, 14.0F)
+                .texOffs(147, 157).mirror(false).addBox(1.28F, -6.5202F, -7.14F, 13.0F, 14.0F, 2.0F)
+                .texOffs(159, 135).mirror(false).addBox(0.88F, 8.5198F, -6.3F, 5.0F, 4.0F, 1.0F)
+                .texOffs(153, 0).mirror(false).addBox(-5.84F, 8.5198F, -6.3F, 5.0F, 4.0F, 1.0F)
+                .texOffs(102, 156).mirror(false).addBox(0.88F, 13.9798F, -6.3F, 5.0F, 4.0F, 1.0F)
+                .texOffs(114, 119).mirror(false).addBox(-5.84F, 13.9798F, -6.3F, 5.0F, 4.0F, 1.0F)
+                .texOffs(147, 141).mirror(false).addBox(-13.84F, -6.5202F, -7.14F, 13.0F, 14.0F, 2.0F)
+                .texOffs(122, 84).mirror(false).addBox(4.0025F, 15.1538F, -4.46F, 9.0F, 4.0F, 12.0F)
+                .texOffs(120, 15).mirror(false).addBox(-12.7626F, 15.1538F, -4.46F, 9.0F, 4.0F, 12.0F),
+                PartPose.offset(0.0F, -45.2898F, 4.6F));
 
         PartDefinition part_cube_r5 = part_body.addOrReplaceChild("cube_r5",
                 CubeListBuilder.create()
                 .texOffs(0, 56).mirror(false).addBox(0.18F, -10.3F, -5.46F, 12.0F, 25.0F, 13.0F)
                 .texOffs(0, 56).mirror(false).addBox(0.18F, -10.3F, -5.46F, 12.0F, 25.0F, 13.0F),
-                PartPose.offsetAndRotation(0.0F, 0.0F, 0.0F, 0.0F, 0.0F, 0.2182F));
+                PartPose.offsetAndRotation(4.0373F, 0.0F, 0.0F, 0.0F, 0.0F, 0.2182F));
 
         PartDefinition part_cube_r6 = part_body.addOrReplaceChild("cube_r6",
                 CubeListBuilder.create()
                 .texOffs(41, 31).mirror(false).addBox(-12.42F, -10.3F, -5.46F, 13.0F, 25.0F, 13.0F),
-                PartPose.offsetAndRotation(-8.0747F, 0.0F, 0.0F, 0.0F, 0.0F, -0.2182F));
+                PartPose.offsetAndRotation(-4.0374F, 0.0F, 0.0F, 0.0F, 0.0F, -0.2182F));
 
         PartDefinition part_legs = root.addOrReplaceChild("legs",
                 CubeListBuilder.create()
@@ -686,14 +688,14 @@ public class StonehideLawachurlModel<T extends Monster> extends EntityModel<T> {
 
         PartDefinition part_right_leg = root.addOrReplaceChild("right_leg",
                 CubeListBuilder.create()
-                .texOffs(0, 110).mirror(true).addBox(-12.2752F, 10.9491F, -4.6685F, 11.0F, 12.0F, 10.0F)
-                .texOffs(86, 92).mirror(true).addBox(-12.5126F, -4.0509F, -5.6685F, 12.0F, 15.0F, 12.0F),
-                PartPose.offset(0.5126F, -22.085F, 5.8085F));
+                .texOffs(0, 110).mirror(true).addBox(-5.25F, 10.9491F, -4.6685F, 11.0F, 12.0F, 10.0F)
+                .texOffs(86, 92).mirror(true).addBox(-5.4874F, -4.0509F, -5.6685F, 12.0F, 15.0F, 12.0F),
+                PartPose.offset(-6.5126F, -22.085F, 5.8085F));
 
         PartDefinition part_right_leg2 = part_right_leg.addOrReplaceChild("right_leg2",
                 CubeListBuilder.create()
                 .texOffs(0, 44).mirror(true).addBox(-4.0F, 18.9491F, -4.1685F, 8.0F, 2.0F, 9.0F),
-                PartPose.offset(-6.7752F, 23.0F, 0.0F));
+                PartPose.offset(0.25F, 23.0F, 0.0F));
 
         PartDefinition part_cube_r41 = part_right_leg2.addOrReplaceChild("cube_r41",
                 CubeListBuilder.create()
@@ -765,14 +767,35 @@ public class StonehideLawachurlModel<T extends Monster> extends EntityModel<T> {
         this.head.yRot = netHeadYaw * ((float) Math.PI / 180F);
         this.head.xRot = headPitch * ((float) Math.PI / 180F);
 
-        this.rightLeg.xRot = Mth.cos(limbSwing * 1.0F) * 1.0F * limbSwingAmount;
-        this.leftLeg.xRot = Mth.cos(limbSwing * 1.0F) * -1.0F * limbSwingAmount;
-        this.rightHand.xRot = Mth.cos(limbSwing * 0.6662F + (float) Math.PI) * limbSwingAmount;
-        this.leftHand.xRot = Mth.cos(limbSwing * 0.6662F) * limbSwingAmount;
+        // Legs swing naturally along the sagittal plane (X axis)
+        float legSwing = Mth.cos(limbSwing * 0.6662F) * 0.75F * limbSwingAmount;
+        this.rightLeg.xRot = legSwing;
+        this.leftLeg.xRot = -legSwing;
 
+        // Reset base rotations
+        this.rightHand.xRot = 0.0F;
+        this.leftHand.xRot = 0.0F;
+        this.rightHand.zRot = -1.5708F;
+        this.leftHand.zRot = 1.5708F;
+
+        // Arms swing along sagittal plane via yRot (due to base zRot of +/- 90 degrees)
+        float armSwing = Mth.cos(limbSwing * 0.6662F) * 0.55F * limbSwingAmount;
+        this.leftHand.yRot = armSwing;
+        this.rightHand.yRot = armSwing;
+
+        boolean leaping = false;
         if (entity instanceof StonehideLawachurlEntity sl && sl.isLeaping()) {
-            this.rightHand.xRot = -2.2F;
-            this.leftHand.xRot = -2.2F;
+            leaping = true;
+        } else if (entity instanceof FrostarmLawachurlEntity fl && fl.isLeaping()) {
+            leaping = true;
+        } else if (entity instanceof ThunderhelmLawachurlEntity tl && tl.isLeaping()) {
+            leaping = true;
+        }
+
+        if (leaping) {
+            // Both arms raise high in the air above the head for devastating overhead ground slam
+            this.leftHand.yRot = -2.0F;
+            this.rightHand.yRot = 2.0F;
         }
     }
 

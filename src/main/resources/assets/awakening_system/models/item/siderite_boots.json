@@ -1,6 +1,251 @@
 {
-  "parent": "minecraft:item/generated",
+  "credit": "Made with Blockbench for Awakening System",
+  "texture_size": [
+    128,
+    128
+  ],
   "textures": {
-    "layer0": "awakening_system:item/siderite_boots"
+    "0": "awakening_system:item/siderite_armor",
+    "particle": "awakening_system:item/siderite_armor"
+  },
+  "gui_light": "front",
+  "elements": [
+    {
+      "from": [
+        3,
+        -1,
+        5
+      ],
+      "to": [
+        9,
+        3,
+        11
+      ],
+      "faces": {
+        "north": {
+          "uv": [
+            11.375,
+            13.125,
+            12,
+            13.5
+          ],
+          "texture": "#0"
+        },
+        "east": {
+          "uv": [
+            10.75,
+            13.125,
+            11.375,
+            13.5
+          ],
+          "texture": "#0"
+        },
+        "south": {
+          "uv": [
+            12.625,
+            13.125,
+            13.25,
+            13.5
+          ],
+          "texture": "#0"
+        },
+        "west": {
+          "uv": [
+            12,
+            13.125,
+            12.625,
+            13.5
+          ],
+          "texture": "#0"
+        },
+        "up": {
+          "uv": [
+            12,
+            13.125,
+            11.375,
+            12.5
+          ],
+          "texture": "#0"
+        },
+        "down": {
+          "uv": [
+            12.625,
+            12.5,
+            12,
+            13.125
+          ],
+          "texture": "#0"
+        }
+      }
+    },
+    {
+      "from": [
+        7,
+        -1,
+        5
+      ],
+      "to": [
+        13,
+        3,
+        11
+      ],
+      "faces": {
+        "north": {
+          "uv": [
+            12,
+            13.125,
+            11.375,
+            13.5
+          ],
+          "texture": "#0"
+        },
+        "east": {
+          "uv": [
+            12.625,
+            13.125,
+            12,
+            13.5
+          ],
+          "texture": "#0"
+        },
+        "south": {
+          "uv": [
+            13.25,
+            13.125,
+            12.625,
+            13.5
+          ],
+          "texture": "#0"
+        },
+        "west": {
+          "uv": [
+            11.375,
+            13.125,
+            10.75,
+            13.5
+          ],
+          "texture": "#0"
+        },
+        "up": {
+          "uv": [
+            11.375,
+            13.125,
+            12,
+            12.5
+          ],
+          "texture": "#0"
+        },
+        "down": {
+          "uv": [
+            12,
+            12.5,
+            12.625,
+            13.125
+          ],
+          "texture": "#0"
+        }
+      }
+    }
+  ],
+  "display": {
+    "thirdperson_righthand": {
+      "rotation": [
+        0,
+        180,
+        0
+      ],
+      "translation": [
+        0,
+        7.25,
+        0
+      ]
+    },
+    "thirdperson_lefthand": {
+      "rotation": [
+        0,
+        -180,
+        0
+      ],
+      "translation": [
+        0,
+        7.25,
+        0
+      ]
+    },
+    "firstperson_righthand": {
+      "rotation": [
+        0,
+        180,
+        0
+      ],
+      "translation": [
+        0,
+        10,
+        0
+      ]
+    },
+    "firstperson_lefthand": {
+      "rotation": [
+        0,
+        -180,
+        0
+      ],
+      "translation": [
+        0,
+        10,
+        0
+      ]
+    },
+    "gui": {
+      "rotation": [
+        0,
+        -180,
+        0
+      ],
+      "translation": [
+        0,
+        4.25,
+        0
+      ],
+      "scale": [
+        1.15,
+        1.21,
+        1
+      ]
+    },
+    "ground": {
+      "rotation": [
+        0,
+        0,
+        0
+      ],
+      "translation": [
+        0,
+        3,
+        0
+      ],
+      "scale": [
+        0.6,
+        0.6,
+        0.6
+      ]
+    },
+    "fixed": {
+      "rotation": [
+        0,
+        180,
+        0
+      ],
+      "translation": [
+        0,
+        3,
+        0
+      ],
+      "scale": [
+        0.75,
+        0.75,
+        0.75
+      ]
+    }
   }
 }

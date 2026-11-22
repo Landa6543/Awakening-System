@@ -10,7 +10,7 @@ import net.minecraft.resources.ResourceLocation;
 public class FrostarmLawachurlRenderer extends MobRenderer<FrostarmLawachurlEntity, StonehideLawachurlModel<FrostarmLawachurlEntity>> {
 
     private static final ResourceLocation TEXTURE =
-            ResourceLocation.fromNamespaceAndPath(AwakeningSystemMod.MOD_ID, "textures/entity/frostarm_lawachurl.png");
+            ResourceLocation.fromNamespaceAndPath(AwakeningSystemMod.MOD_ID, "textures/entity/lawachurl/frostarm_lawachurl.png");
 
     public FrostarmLawachurlRenderer(EntityRendererProvider.Context context) {
         super(context, new StonehideLawachurlModel<>(context.bakeLayer(StonehideLawachurlRenderer.LAYER_LOCATION)), 1.6F);
@@ -18,7 +18,8 @@ public class FrostarmLawachurlRenderer extends MobRenderer<FrostarmLawachurlEnti
 
     @Override
     protected void scale(FrostarmLawachurlEntity entity, PoseStack poseStack, float partialTickTime) {
-        poseStack.scale(1.4F, 1.4F, 1.4F);
+        poseStack.scale(0.96F, 0.96F, 0.96F);
+        poseStack.translate(0.0D, -0.04D, 0.0D);
         super.scale(entity, poseStack, partialTickTime);
     }
 

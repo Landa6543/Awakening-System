@@ -36,6 +36,7 @@ public final class AwakeningSystemClient {
     public static final KeyMapping ACTIVATE_RUNE_2 = new KeyMapping("key.awakening_system.activate_rune_2", InputConstants.Type.KEYSYM, GLFW.GLFW_KEY_COMMA, "key.categories.awakening_system");
     public static final KeyMapping OPEN_WORLD_MAP = new KeyMapping("key.awakening_system.open_world_map", InputConstants.Type.KEYSYM, GLFW.GLFW_KEY_M, "key.categories.awakening_system");
     public static final KeyMapping OPEN_SUBSPACE = new KeyMapping("key.awakening_system.open_subspace", InputConstants.Type.KEYSYM, GLFW.GLFW_KEY_UNKNOWN, "key.categories.awakening_system");
+    public static final KeyMapping OPEN_SHADOW_COMMAND = new KeyMapping("key.awakening_system.open_shadow_command", InputConstants.Type.KEYSYM, GLFW.GLFW_KEY_O, "key.categories.awakening_system");
     public static final java.util.List<LeaderboardPayload.LeaderboardEntry> LEADERBOARD = new java.util.ArrayList<>();
     public static final java.util.List<SyncRiftsPayload.RiftEntry> ACTIVE_RIFTS = new java.util.concurrent.CopyOnWriteArrayList<>();
     public static final java.util.Map<BlockPos, Long> RIFT_BEAM_EXPIRY = new java.util.concurrent.ConcurrentHashMap<>();
@@ -357,6 +358,9 @@ public final class AwakeningSystemClient {
     public static void claimDailyMission() {
         PacketDistributor.sendToServer(new ClaimDailyMissionPayload());
     }
+    public static void claimHunterCommission() {
+        PacketDistributor.sendToServer(new ClaimHunterCommissionPayload());
+    }
     public static void startWorkout(int exerciseType) {
         PacketDistributor.sendToServer(new StartWorkoutPayload(exerciseType));
     }
@@ -430,6 +434,7 @@ public final class AwakeningSystemClient {
         event.register(ACTIVATE_RUNE_2);
         event.register(OPEN_WORLD_MAP);
         event.register(OPEN_SUBSPACE);
+        event.register(OPEN_SHADOW_COMMAND);
     }
 
     public static void registerScreens(net.neoforged.neoforge.client.event.RegisterMenuScreensEvent event) {
@@ -555,6 +560,9 @@ public final class AwakeningSystemClient {
         event.registerEntityRenderer(com.soybe.awakeningsystem.entity.ModEntities.MANA_CHICKEN.get(), com.soybe.awakeningsystem.entity.client.ManaChickenRenderer::new);
         event.registerEntityRenderer(com.soybe.awakeningsystem.entity.ModEntities.ANCIENT_DRAGON.get(), com.soybe.awakeningsystem.entity.client.AncientDragonRenderer::new);
         event.registerEntityRenderer(com.soybe.awakeningsystem.entity.ModEntities.ANCIENT_DRAGON_BREATH.get(), com.soybe.awakeningsystem.entity.client.AncientDragonBreathRenderer::new);
+
+        event.registerEntityRenderer(com.soybe.awakeningsystem.entity.ModEntities.KAISEL_ALIVE.get(), com.soybe.awakeningsystem.entity.kaisel.KaiselRenderer::new);
+        event.registerEntityRenderer(com.soybe.awakeningsystem.entity.ModEntities.KAISEL_SHADOW.get(), com.soybe.awakeningsystem.entity.kaisel.KaiselRenderer::new);
 
         event.registerEntityRenderer(com.soybe.awakeningsystem.entity.ModEntities.GENSHIN_SLIME.get(), com.soybe.awakeningsystem.entity.client.GenshinSlimeRenderer::new);
         event.registerEntityRenderer(com.soybe.awakeningsystem.entity.ModEntities.HILICHURL.get(), com.soybe.awakeningsystem.entity.client.HilichurlRenderer::new);
@@ -1033,7 +1041,7 @@ public final class AwakeningSystemClient {
             SystemData clientData = minecraft.player.getData(AwakeningSystemMod.PLAYER_SYSTEM);
             clientData.tickCombat();
             com.soybe.awakeningsystem.client.renderer.SwordAuraRenderer.tickParticles(minecraft);
-            com.soybe.awakeningsystem.client.renderer.PlayerRankAuraRenderer.tickParticles(minecraft);
+            // PlayerRankAuraRenderer eliminado a petición del usuario
             com.soybe.awakeningsystem.client.renderer.AbyssalPotionVfxRenderer.tickClientParticles(minecraft);
 
             if (minecraft.player.tickCount % 20 == 0) {
@@ -1060,19 +1068,25 @@ public final class AwakeningSystemClient {
                 boolean shift = minecraft.options.keyShift.isDown();
                 boolean sprint = minecraft.options.keySprint.isDown();
                 dragon.setFlightInput(space, shift, sprint);
-                PacketDistributor.sendToServer(new DragonFlightControlPayload(space, shift, sprint));
+                PacketDistributor.sendToServer(new DragonFlightControlPayload(space, shift, sprint, dragon.isFlying()));
             } else if (minecraft.player.getVehicle() instanceof com.soybe.awakeningsystem.entity.AncientDragonEntity dragon) {
                 boolean space = minecraft.options.keyJump.isDown();
                 boolean shift = minecraft.options.keyShift.isDown();
                 boolean sprint = minecraft.options.keySprint.isDown();
                 dragon.setFlightInput(space, shift, sprint);
-                PacketDistributor.sendToServer(new DragonFlightControlPayload(space, shift, sprint));
+                PacketDistributor.sendToServer(new DragonFlightControlPayload(space, shift, sprint, dragon.isFlying()));
             } else if (minecraft.player.getVehicle() instanceof com.soybe.awakeningsystem.entity.WyvernEntity wyvern) {
                 boolean space = minecraft.options.keyJump.isDown();
                 boolean shift = minecraft.options.keyShift.isDown();
                 boolean sprint = minecraft.options.keySprint.isDown();
                 wyvern.setFlightInput(space, shift, sprint);
-                PacketDistributor.sendToServer(new DragonFlightControlPayload(space, shift, sprint));
+                PacketDistributor.sendToServer(new DragonFlightControlPayload(space, shift, sprint, wyvern.isFlying()));
+            } else if (minecraft.player.getVehicle() instanceof com.soybe.awakeningsystem.entity.kaisel.AbstractKaiselEntity kaisel) {
+                boolean space = minecraft.options.keyJump.isDown();
+                boolean shift = minecraft.options.keyShift.isDown();
+                boolean sprint = minecraft.options.keySprint.isDown();
+                kaisel.setFlightInput(space, shift, sprint);
+                PacketDistributor.sendToServer(new DragonFlightControlPayload(space, shift, sprint, kaisel.isFlying()));
             }
         }
         if (minecraft.level != null && minecraft.player != null) {
@@ -1404,6 +1418,13 @@ public final class AwakeningSystemClient {
         while (OPEN_SUBSPACE.consumeClick()) {
             if (minecraft.player != null) {
                 PacketDistributor.sendToServer(new OpenSubspaceC2SPayload());
+            }
+        }
+        while (OPEN_SHADOW_COMMAND.consumeClick()) {
+            if (minecraft.screen == null) {
+                openShadowCommandScreen();
+            } else if (minecraft.screen instanceof com.soybe.awakeningsystem.client.gui.ShadowCommandScreen) {
+                minecraft.setScreen(null);
             }
         }
         if (minecraft.player != null && minecraft.level != null && minecraft.player.getVehicle() instanceof com.soybe.awakeningsystem.entity.MeditationSeatEntity) {
@@ -2036,6 +2057,10 @@ public final class AwakeningSystemClient {
         Minecraft.getInstance().setScreen(new SystemGuidebookScreen());
     }
 
+    public static void openShadowCommandScreen() {
+        Minecraft.getInstance().setScreen(new com.soybe.awakeningsystem.client.gui.ShadowCommandScreen());
+    }
+
     public static void openBestiaryScreen() {
         Minecraft.getInstance().setScreen(new SystemBestiaryScreen());
     }
@@ -2445,45 +2470,6 @@ public final class AwakeningSystemClient {
         }
 
         if (isShadowSoldier(living)) {
-            Minecraft mc = Minecraft.getInstance();
-            byte alliance = SHADOW_ALLIANCE_MAP.getOrDefault(entityId, (byte) 2);
-            if (mc.player != null && living.getTags().contains("shadow_master_" + mc.player.getUUID())) {
-                alliance = 1;
-            }
-
-            if (mc.level != null) {
-                net.minecraft.world.scores.Scoreboard csb = mc.level.getScoreboard();
-                String teamName;
-                net.minecraft.ChatFormatting teamColor;
-
-                if (alliance == 2) {
-                    teamName = "shadows_guild";
-                    teamColor = net.minecraft.ChatFormatting.GREEN; // Contorno Verde Esmeralda Aliado de Gremio
-                } else if (alliance == 1) {
-                    teamName = "shadows_own";
-                    teamColor = net.minecraft.ChatFormatting.AQUA; // Contorno Cian Monarca Propio
-                } else {
-                    teamName = "shadows_enemy";
-                    teamColor = net.minecraft.ChatFormatting.DARK_RED; // Contorno Rojo Enemigo Hostil
-                }
-
-                net.minecraft.world.scores.PlayerTeam cteam = csb.getPlayerTeam(teamName);
-                if (cteam == null) {
-                    cteam = csb.addPlayerTeam(teamName);
-                    cteam.setColor(teamColor);
-                } else if (cteam.getColor() != teamColor) {
-                    cteam.setColor(teamColor);
-                }
-
-                String member = living.getScoreboardName();
-                if (!cteam.getPlayers().contains(member)) {
-                    csb.addPlayerToTeam(member, cteam);
-                }
-                String uuidStr = living.getStringUUID();
-                if (!cteam.getPlayers().contains(uuidStr)) {
-                    csb.addPlayerToTeam(uuidStr, cteam);
-                }
-            }
             living.setGlowingTag(true);
         }
     }
@@ -2724,17 +2710,34 @@ public final class AwakeningSystemClient {
                 boolean isCaffeineTitle = "caffeine_addict".equals(badge.equippedTitle());
                 boolean isSchvisTitle = "futanari_hentai_master".equals(badge.equippedTitle());
                 boolean isPokemonTitle = "pokemon_master".equals(badge.equippedTitle());
-                int titleCol = isNandaTitle ? 0xFFFF77DD : (isCaffeineTitle ? 0xFFD27D2D : (isSchvisTitle ? 0xFFFF69B4 : (isPokemonTitle ? 0xFFFF3333 : switch (titleDef.rarity()) {
-                    case UNIQUE -> 0xFFD700;
-                    case MYTHIC -> 0xFF4A4A;
-                    case LEGENDARY -> 0xFFAA00;
-                    case EPIC -> 0xAA00AA;
-                    case RARE -> 0x5555FF;
-                    case UNCOMMON -> 0x55FF55;
-                    default -> 0x55FFFF;
-                })));
-                String prefix = isCreatorTitle ? "§6👑 «" : (isNandaTitle ? "§d🐱 «" : (isCaffeineTitle ? "§6☕ «" : (isSchvisTitle ? "§d💖 «" : (isPokemonTitle ? "§c⚡ «" : (titleDef.rarity() == SkillDefinitions.Rarity.UNIQUE ? "§6★ «" : (titleDef.rarity() == SkillDefinitions.Rarity.MYTHIC ? "§c✦ «" : "§b«"))))));
-                String suffix = isCreatorTitle ? "§6»" : (isNandaTitle ? "§d» §e🐾" : (isCaffeineTitle ? "§6» §e☕" : (isSchvisTitle ? "§d» §e💖" : (isPokemonTitle ? "§c» §e⚡" : (titleDef.rarity() == SkillDefinitions.Rarity.UNIQUE ? "§6»" : (titleDef.rarity() == SkillDefinitions.Rarity.MYTHIC ? "§c»" : "§b»"))))));
+                boolean isMadHatterTitle = "the_mad_hatter".equals(badge.equippedTitle());
+                boolean isOrthaxTitle = "orthax".equals(badge.equippedTitle());
+                int titleCol;
+                if (isNandaTitle) {
+                    titleCol = 0xFFFF77DD;
+                } else if (isCaffeineTitle) {
+                    titleCol = 0xFFD27D2D;
+                } else if (isSchvisTitle) {
+                    titleCol = 0xFFFF69B4;
+                } else if (isPokemonTitle) {
+                    titleCol = 0xFFFF3333;
+                } else if (isMadHatterTitle) {
+                    titleCol = 0xFF00FA9A;
+                } else if (isOrthaxTitle) {
+                    titleCol = 0xFFB388FF;
+                } else {
+                    titleCol = switch (titleDef.rarity()) {
+                        case UNIQUE -> 0xFFD700;
+                        case MYTHIC -> 0xFF4A4A;
+                        case LEGENDARY -> 0xFFAA00;
+                        case EPIC -> 0xAA00AA;
+                        case RARE -> 0x5555FF;
+                        case UNCOMMON -> 0x55FF55;
+                        default -> 0x55FFFF;
+                    };
+                }
+                String prefix = isCreatorTitle ? "§6👑 «" : (isNandaTitle ? "§d🐱 «" : (isCaffeineTitle ? "§6☕ «" : (isSchvisTitle ? "§d💖 «" : (isPokemonTitle ? "§c⚡ «" : (isMadHatterTitle ? "§a🎩 «" : (isOrthaxTitle ? "§5👁 «" : (titleDef.rarity() == SkillDefinitions.Rarity.UNIQUE ? "§6★ «" : (titleDef.rarity() == SkillDefinitions.Rarity.MYTHIC ? "§c✦ «" : "§b«"))))))));
+                String suffix = isCreatorTitle ? "§6»" : (isNandaTitle ? "§d» §e🐾" : (isCaffeineTitle ? "§6» §e☕" : (isSchvisTitle ? "§d» §e💖" : (isPokemonTitle ? "§c» §e⚡" : (isMadHatterTitle ? "§a» §e🎩" : (isOrthaxTitle ? "§5» §d👁" : (titleDef.rarity() == SkillDefinitions.Rarity.UNIQUE ? "§6»" : (titleDef.rarity() == SkillDefinitions.Rarity.MYTHIC ? "§c»" : "§b»"))))))));
                 Component titleComp = Component.literal(prefix)
                         .append(Component.translatable(titleDef.translationKey()).withStyle(s -> s.withColor(titleCol)))
                         .append(Component.literal(suffix));
@@ -3862,8 +3865,7 @@ public final class AwakeningSystemClient {
     }
 
     private static boolean isTrackerWaypoint(String name) {
-        return name != null && (name.equals(trackerWaypointName()) || name.equals("Sal\u00f3n de Evaluaci\u00f3n"));
+        return name != null && (name.equals(trackerWaypointName()) || name.equals("Salón de Evaluación"));
     }
-
 }
 

@@ -1,8 +1,10 @@
 package dev.diorama.neoforge;
 
+import dev.diorama.Claims;
 import dev.diorama.Diorama;
 import dev.diorama.DioramaClient;
 import dev.diorama.MapSession;
+import dev.diorama.Maps;
 import dev.diorama.MinimapHud;
 import dev.diorama.ServerRules;
 import dev.diorama.Settings;
@@ -10,7 +12,11 @@ import dev.diorama.SettingsScreen;
 import dev.diorama.TrackedPlayers;
 import dev.diorama.WorldKey;
 import dev.diorama.XaeroChannels;
+import dev.diorama.ChunkyBorders;
+import dev.diorama.drawing.DrawingStore;
+import dev.diorama.bake.BlockLooks;
 import dev.diorama.render.XaeroRadarIcons;
+import dev.diorama.share.ShareClient;
 //? if >=1.21.6 {
 /*import dev.diorama.render.DioramaPipelines;
 *///?}
@@ -43,13 +49,22 @@ import net.neoforged.neoforge.event.level.ChunkEvent;
 import net.neoforged.neoforge.network.event.RegisterPayloadHandlersEvent;
 
 /**
- * Diorama's entrypoint on NeoForge: what {@code dev.diorama.fabric.DioramaFabric} does on Fabric,
- * through NeoForge's events. Only the NeoForge jars contain this package.
+ * Diorama's entrypoint on the client on NeoForge: what {@code dev.diorama.fabric.DioramaFabric}
+ * does on Fabric, through NeoForge's events. {@link DioramaNeoForgeCommon} runs on both sides.
+ * Only the NeoForge jars contain this package.
  */
 @Mod(value = Diorama.MOD_ID, dist = Dist.CLIENT)
 public final class DioramaNeoForge {
 	public DioramaNeoForge(IEventBus modBus, ModContainer container) {
 		DioramaClient.init();
+		// The channel itself is DioramaNeoForgeCommon's.
+		ShareClient.init();
+		dev.diorama.share.ShareProtocol.toServer(data -> {
+			net.minecraft.client.multiplayer.ClientPacketListener connection = Minecraft.getInstance().getConnection();
+			if (connection != null) {
+				connection.send(new dev.diorama.share.ShareProtocol.Packet(data));
+			}
+		});
 		// The mod list's Config button opens the map settings.
 		container.registerExtensionPoint(IConfigScreenFactory.class, (mod, parent) -> new SettingsScreen(parent));
 		// The settings file sits in the game directory, and from NeoForge 21.5 mods are constructed
@@ -62,15 +77,20 @@ public final class DioramaNeoForge {
 			DioramaClient.KEY_MAPPINGS.forEach(event::register);
 		});
 		//? if >=1.21.6 {
-		/*modBus.addListener(RegisterRenderPipelinesEvent.class, event -> event.registerPipeline(DioramaPipelines.FOG));
+		/*modBus.addListener(RegisterRenderPipelinesEvent.class, event -> {
+			event.registerPipeline(DioramaPipelines.FOG);
+			event.registerPipeline(DioramaPipelines.FOG_LAYER);
+			event.registerPipeline(DioramaPipelines.TILE);
+			event.registerPipeline(DioramaPipelines.TILE_NIGHT);
+		});
 		*///?}
-		// Above the whole vanilla HUD, in the same order as on Fabric: waypoint labels, then the
-		// minimap over them. Each layer already sits 200 deeper than the one before, which the Fabric
-		// jars before 1.21.6 have to make up for themselves.
+		// As on Fabric: waypoints in the world under the whole vanilla HUD and every screen, as part
+		// of the picture of the world, and the minimap above the HUD. Each layer already sits 200
+		// deeper than the one before, which the Fabric jars before 1.21.6 have to make up for themselves.
 		modBus.addListener(RegisterGuiLayersEvent.class, event -> {
 			WaypointHud waypoints = new WaypointHud();
 			MinimapHud minimap = new MinimapHud();
-			event.registerAboveAll(Diorama.id("waypoints"), (graphics, deltaTracker) -> waypoints.render(graphics, deltaTracker));
+			event.registerBelowAll(Diorama.id("waypoints"), (graphics, deltaTracker) -> waypoints.render(graphics, deltaTracker));
 			event.registerAboveAll(Diorama.id("minimap"), (graphics, deltaTracker) -> minimap.render(graphics, deltaTracker));
 		});
 
@@ -88,21 +108,36 @@ public final class DioramaNeoForge {
 		NeoForge.EVENT_BUS.addListener(ClientPlayerNetworkEvent.LoggingOut.class, event -> {
 			ServerRules.onDisconnect();
 			WaypointStore.onLeave();
+			Maps.onLeave();
+			DrawingStore.onLeave();
 			WorldKey.onJoinOrLeave();
 			XaeroChannels.onJoinOrLeave();
+			ChunkyBorders.clear();
+			ShareClient.onJoinOrLeave();
 			TrackedPlayers.clear();
 			Waystones.clear();
+			Claims.clear();
 		});
 		// A network moving the player to another of its servers joins again without leaving.
 		NeoForge.EVENT_BUS.addListener(ClientPlayerNetworkEvent.LoggingIn.class, event -> {
 			ServerRules.onDisconnect();
 			WaypointStore.onLeave();
+			Maps.onLeave();
+			DrawingStore.onLeave();
 			WorldKey.onJoinOrLeave();
+			// Mods sync block ids from the server before this, which can number block states differently.
+			BlockLooks.invalidate();
 			XaeroChannels.onJoinOrLeave();
+			ChunkyBorders.clear();
+			ShareClient.onJoinOrLeave();
 			TrackedPlayers.clear();
 			Waystones.clear();
+			Claims.clear();
 		});
-		modBus.addListener(RegisterPayloadHandlersEvent.class, XaeroChannels::register);
+		// Lowest: mod bus events run priority by priority across mods, so a mod that has Xaero's
+		// channels has them by then.
+		modBus.addListener(EventPriority.LOWEST, false, RegisterPayloadHandlersEvent.class, XaeroChannels::register);
+		modBus.addListener(EventPriority.LOWEST, false, RegisterPayloadHandlersEvent.class, ChunkyBorders::register);
 		// Radar icons from Xaero's Minimap's icon files, read again on every resource reload.
 		//? if >=1.21.4 {
 		/*modBus.addListener(net.neoforged.neoforge.client.event.AddClientReloadListenersEvent.class, event -> event.addListener(XaeroRadarIcons.ID, XaeroRadarIcons.LISTENER));

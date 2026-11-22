@@ -30,12 +30,25 @@ final class StateCanvas implements MapCanvas {
 	@Override
 	public void quad(MapTexture texture, Sampling sampling, float[] corners, float[] uvs, int argb) {
 		this.graphics.guiRenderState.submitGuiElement(QuadElement.of(
-			RenderPipelines.GUI_TEXTURED,
+			sampling == Sampling.TILE_AREA ? DioramaPipelines.TILE : RenderPipelines.GUI_TEXTURED,
 			((StateTexture) texture).single(sampling),
 			new Matrix3x2f(this.graphics.pose()),
 			corners,
 			uvs,
 			argb,
+			this.graphics.scissorStack.peek()
+		));
+	}
+
+	@Override
+	public void nightTile(MapTexture tile, Sampling sampling, MapTexture light, float[] corners, float[] uvs, int params) {
+		this.graphics.guiRenderState.submitGuiElement(QuadElement.of(
+			DioramaPipelines.TILE_NIGHT,
+			StateTexture.pair((StateTexture) tile, sampling, (StateTexture) light, Sampling.TILE_SMOOTH),
+			new Matrix3x2f(this.graphics.pose()),
+			corners,
+			uvs,
+			params,
 			this.graphics.scissorStack.peek()
 		));
 	}
@@ -96,10 +109,10 @@ final class StateCanvas implements MapCanvas {
 	}
 
 	@Override
-	public void fog(MapTexture mask, MapTexture noise, float[] corners, float[] uvs, int x, int y, int width, int height, int params) {
+	public void fog(MapTexture mask, MapTexture noise, MapTexture detail, float[] corners, float[] uvs, int x, int y, int width, int height, int params) {
 		this.graphics.guiRenderState.submitGuiElement(QuadElement.of(
 			DioramaPipelines.FOG,
-			StateTexture.pair((StateTexture) mask, Sampling.CLAMP_LINEAR, (StateTexture) noise, Sampling.REPEAT_LINEAR),
+			StateTexture.triple((StateTexture) mask, Sampling.CLAMP_LINEAR, (StateTexture) noise, Sampling.REPEAT_LINEAR, (StateTexture) detail, Sampling.CLAMP_LINEAR),
 			new Matrix3x2f(this.graphics.pose()),
 			corners,
 			uvs,

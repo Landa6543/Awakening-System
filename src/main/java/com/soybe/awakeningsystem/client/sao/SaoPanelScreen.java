@@ -705,7 +705,12 @@ public class SaoPanelScreen extends Screen {
             shopIcon(g, e, x + 15, ry + 2);
             String name = this.font.plainSubstrByWidth(Component.translatable(e.nameKey()).getString(), 170);
             g.drawString(this.font, name, x + 36, ry + 6, alpha(!ok ? GREY_LIGHT : (hot ? WHITE : 0xFF4A4A52), a), false);
-            String price = ok ? e.cost() + " ⛃" : tr("rank", "Rank %s", com.soybe.awakeningsystem.ShopDefinitions.requiredRank(e)).getString();
+            int tierLeft = com.soybe.awakeningsystem.ShopDefinitions.missingSystemTier(e, d);
+            boolean rankOk = e.minLevel() <= 0 || com.soybe.awakeningsystem.SystemData.rankIndex(d.evaluatedRank())
+                    >= com.soybe.awakeningsystem.SystemData.rankIndex(com.soybe.awakeningsystem.ShopDefinitions.requiredRank(e));
+            // locked by the System's version, not the rank: say which version
+            String price = ok ? e.cost() + " ⛃" : (rankOk && tierLeft > 0 ? "🔒 " + tierLeft + ".0"
+                    : tr("rank", "Rank %s", com.soybe.awakeningsystem.ShopDefinitions.requiredRank(e)).getString());
             g.drawString(this.font, price, x + PW - 22 - this.font.width(price), ry + 6, alpha(!ok ? 0xFFD6473E : (hot ? WHITE : ORANGE_DARK), a), false);
         }
         int fy = y + PH - 40;
@@ -720,10 +725,16 @@ public class SaoPanelScreen extends Screen {
         boolean ok = com.soybe.awakeningsystem.ShopDefinitions.isUnlocked(sel, d);
         boolean afford = d.coins() >= sel.cost();
         if (ok) claimButtonText(g, x + PW - 112, fy + 6, afford ? tr("buy", "Buy") : tr("no_coins", "Not enough G"), mouseX, mouseY, afford ? a : a * 0.5F);
-        else if (com.soybe.awakeningsystem.ShopDefinitions.requiresEnd(sel.id())) {
-            // the Ranker Tower's ticket and return scroll open up on reaching the End
+        else if (com.soybe.awakeningsystem.ShopDefinitions.requiresEnd(sel.id())
+                || (com.soybe.awakeningsystem.ShopDefinitions.missingSystemTier(sel, d) > 0
+                    && (sel.minLevel() <= 0 || com.soybe.awakeningsystem.SystemData.rankIndex(d.evaluatedRank())
+                        >= com.soybe.awakeningsystem.SystemData.rankIndex(com.soybe.awakeningsystem.ShopDefinitions.requiredRank(sel))))) {
+            // the Ranker Tower's ticket and return scroll open up on reaching the End; other goods with a newer System
+            Component why = com.soybe.awakeningsystem.ShopDefinitions.requiresEnd(sel.id())
+                    ? Component.translatable("awakening_system.shop.locked_end")
+                    : Component.translatable("awakening_system.shop.locked_tier", com.soybe.awakeningsystem.ShopDefinitions.missingSystemTier(sel, d) + ".0");
             int ty = fy + 4;
-            for (var l : this.font.split(Component.translatable("awakening_system.shop.locked_end"), 108)) {
+            for (var l : this.font.split(why, 108)) {
                 g.drawString(this.font, l, x + PW - 112, ty, alpha(0xFFD6473E, a), false);
                 ty += 9;
             }

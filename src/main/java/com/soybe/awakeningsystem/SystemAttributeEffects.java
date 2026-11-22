@@ -207,10 +207,10 @@ public final class SystemAttributeEffects {
                 apply(player, Attributes.MAX_HEALTH, "title_creator_health", 20.0D);
                 apply(player, Attributes.ATTACK_DAMAGE, "title_creator_damage", 6.0D);
                 apply(player, Attributes.ARMOR, "title_creator_armor", 10.0D);
-                apply(player, Attributes.LUCK, "title_creator_luck", 5.0D);
+                apply(player, Attributes.LUCK, "title_creator_luck", 10.0D);
             }
             case "michi_lover" -> {
-                apply(player, Attributes.MAX_HEALTH, "title_nanda_health", 20.0D);
+                apply(player, Attributes.MAX_HEALTH, "title_nanda_health", 12.0D);
                 apply(player, Attributes.ATTACK_DAMAGE, "title_nanda_damage", 8.0D);
                 apply(player, Attributes.ARMOR, "title_nanda_armor", 6.0D);
                 apply(player, Attributes.MOVEMENT_SPEED, "title_nanda_speed", 0.04D);
@@ -219,12 +219,12 @@ public final class SystemAttributeEffects {
             case "caffeine_addict" -> {
                 apply(player, Attributes.ATTACK_SPEED, "title_caffeine_atk_speed", 1.25D);
                 apply(player, Attributes.MOVEMENT_SPEED, "title_caffeine_speed", 0.04D);
-                apply(player, Attributes.MAX_HEALTH, "title_caffeine_health", 16.0D);
+                apply(player, Attributes.MAX_HEALTH, "title_caffeine_health", 10.0D);
                 apply(player, Attributes.ATTACK_DAMAGE, "title_caffeine_damage", 7.0D);
                 apply(player, Attributes.LUCK, "title_caffeine_luck", 5.0D);
             }
             case "futanari_hentai_master" -> {
-                apply(player, Attributes.MAX_HEALTH, "title_schvis_health", 20.0D);
+                apply(player, Attributes.MAX_HEALTH, "title_schvis_health", 12.0D);
                 apply(player, Attributes.ATTACK_DAMAGE, "title_schvis_damage", 4.0D);
                 apply(player, Attributes.ARMOR, "title_schvis_armor", 8.0D);
                 apply(player, Attributes.MOVEMENT_SPEED, "title_schvis_speed", 0.035D);
@@ -233,12 +233,20 @@ public final class SystemAttributeEffects {
                 apply(player, Attributes.SCALE, "title_schvis_scale", 0.1D);
             }
             case "pokemon_master" -> {
-                apply(player, Attributes.MAX_HEALTH, "title_pokemon_health", 18.0D);
+                apply(player, Attributes.MAX_HEALTH, "title_pokemon_health", 10.0D);
                 apply(player, Attributes.ATTACK_DAMAGE, "title_pokemon_damage", 6.0D);
                 apply(player, Attributes.ARMOR, "title_pokemon_armor", 6.0D);
                 apply(player, Attributes.MOVEMENT_SPEED, "title_pokemon_speed", 0.035D);
                 apply(player, Attributes.ATTACK_SPEED, "title_pokemon_atk_speed", 0.25D);
                 apply(player, Attributes.LUCK, "title_pokemon_luck", 7.0D);
+            }
+            case "the_mad_hatter" -> {
+                apply(player, Attributes.LUCK, "title_mad_hatter_luck", 10.0D);
+                apply(player, Attributes.MAX_HEALTH, "title_mad_hatter_health", 8.0D);
+                apply(player, Attributes.MOVEMENT_SPEED, "title_mad_hatter_speed", 0.04D);
+            }
+            case "orthax" -> {
+                apply(player, Attributes.MOVEMENT_SPEED, "title_orthax_speed", 0.035D);
             }
             case "mod_conqueror" -> {
                 apply(player, Attributes.MAX_HEALTH, "title_conqueror_health", 16.0D);
@@ -462,7 +470,7 @@ public final class SystemAttributeEffects {
     }
 
     private static void clearTitleModifiers(ServerPlayer player) {
-        String[] ids = {"rank_damage", "rank_health", "nanda_health", "nanda_damage", "nanda_armor", "nanda_speed", "nanda_luck", "caffeine_atk_speed", "caffeine_speed", "caffeine_health", "caffeine_damage", "caffeine_luck", "schvis_health", "schvis_damage", "schvis_armor", "schvis_speed", "schvis_kb", "schvis_luck", "schvis_scale", "creator_health", "creator_damage", "creator_armor", "creator_luck", "conqueror_health", "conqueror_damage", "conqueror_armor", "conqueror_luck", "stone_breaker_speed", "stone_breaker_luck", "deep_delver_health", "ironforged_resistance", "diamond_blessed_luck", "nether_walker_speed", "ender_walker_health", "dragon_slayer_damage", "village_hero_luck", "sea_explorer_health", "master_fisher_luck", "beast_hunter_damage", "raid_breaker_resistance", "ancient_hunter_damage", "warden_survivor_health", "librarian_attack_speed", "master_builder_health", "netherite_damage", "netherite_resistance", "ex_damage", "ex_health", "rank_s_damage", "rank_ss_damage", "rank_ss_health", "rank_sss_damage", "rank_sss_health", "rank_ex_plus_damage", "rank_ex_plus_health", "rank_transcendent_damage", "rank_transcendent_health", "rank_transcendent_speed", "rank_singularity_damage", "rank_singularity_health", "rank_singularity_luck", "ranker_damage", "ranker_health", "ranker_speed", "ranker_kb", "awakened_health", "evolved_damage", "evolved_speed", "awakening_health", "generic_luck", "generic_health",
+        String[] ids = {"rank_damage", "rank_health", "nanda_health", "nanda_damage", "nanda_armor", "nanda_speed", "nanda_luck", "caffeine_atk_speed", "caffeine_speed", "caffeine_health", "caffeine_damage", "caffeine_luck", "schvis_health", "schvis_damage", "schvis_armor", "schvis_speed", "schvis_kb", "schvis_luck", "schvis_scale", "creator_health", "creator_damage", "creator_armor", "creator_luck", "pokemon_health", "pokemon_damage", "pokemon_armor", "pokemon_speed", "pokemon_atk_speed", "pokemon_luck", "mad_hatter_luck", "mad_hatter_health", "mad_hatter_speed", "orthax_speed", "conqueror_health", "conqueror_damage", "conqueror_armor", "conqueror_luck", "stone_breaker_speed", "stone_breaker_luck", "deep_delver_health", "ironforged_resistance", "diamond_blessed_luck", "nether_walker_speed", "ender_walker_health", "dragon_slayer_damage", "village_hero_luck", "sea_explorer_health", "master_fisher_luck", "beast_hunter_damage", "raid_breaker_resistance", "ancient_hunter_damage", "warden_survivor_health", "librarian_attack_speed", "master_builder_health", "netherite_damage", "netherite_resistance", "ex_damage", "ex_health", "rank_s_damage", "rank_ss_damage", "rank_ss_health", "rank_sss_damage", "rank_sss_health", "rank_ex_plus_damage", "rank_ex_plus_health", "rank_transcendent_damage", "rank_transcendent_health", "rank_transcendent_speed", "rank_singularity_damage", "rank_singularity_health", "rank_singularity_luck", "ranker_damage", "ranker_health", "ranker_speed", "ranker_kb", "awakened_health", "evolved_damage", "evolved_speed", "awakening_health", "generic_luck", "generic_health",
                 "hunter_gaze_luck", "hunter_gaze_dmg", "unyielding_flesh_kb", "unyielding_flesh_armor", "wind_strider_speed", "wind_strider_spd", "earth_instinct_luck", "earth_instinct_tough", "steel_master_spd", "steel_master_dmg",
                 "armageddon_colossus_armor", "armageddon_colossus_kb", "armageddon_goblin_luck", "armageddon_goblin_spd", "armageddon_emerald_dmg", "armageddon_emerald_luck", "armageddon_nether_hp", "armageddon_nether_armor", "armageddon_void_dmg", "armageddon_void_speed", "armageddon_elven_dmg", "armageddon_elven_spd", "armageddon_doom_hp", "armageddon_doom_armor", "armageddon_calamity_hp", "armageddon_calamity_dmg", "armageddon_calamity_tough", "armageddon_calamity_kb"};
         for (String id : ids) clearModifier(player, "title_" + id);

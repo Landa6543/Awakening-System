@@ -7,6 +7,15 @@ import com.soybe.awakeningsystem.item.DeathKingClockItem;
 import com.soybe.awakeningsystem.item.DreadScytheItem;
 import com.soybe.awakeningsystem.item.ElucidatorItem;
 import com.soybe.awakeningsystem.item.DarkRepulserItem;
+import com.soybe.awakeningsystem.item.BarukasDaggerItem;
+import com.soybe.awakeningsystem.item.BlueMonsoonItem;
+import com.soybe.awakeningsystem.item.CrimsonShadowItem;
+import com.soybe.awakeningsystem.item.DemonKingsDaggersItem;
+import com.soybe.awakeningsystem.item.EnniosRoarItem;
+import com.soybe.awakeningsystem.item.KnightKillerItem;
+import com.soybe.awakeningsystem.item.MoonshadowItem;
+import com.soybe.awakeningsystem.item.PhantombladeItem;
+import com.soybe.awakeningsystem.item.TruthKasakasVenomFangItem;
 import com.soybe.awakeningsystem.item.KasakasVenomFangItem;
 import com.soybe.awakeningsystem.item.LambentLightItem;
 import com.soybe.awakeningsystem.item.FlyingSwordItem;
@@ -850,6 +859,33 @@ public final class SystemItems {
 
     public static final DeferredHolder<Item, Item> KASAKAS_VENOM_FANG = AwakeningSystemMod.ITEMS.register(
             "kasakas_venom_fang", () -> new KasakasVenomFangItem(new Item.Properties().stacksTo(1)));
+
+    public static final DeferredHolder<Item, Item> BARUKAS_DAGGER = AwakeningSystemMod.ITEMS.register(
+            "barukas_dagger", () -> new BarukasDaggerItem(new Item.Properties().stacksTo(1)));
+
+    public static final DeferredHolder<Item, Item> BLUE_MONSOON = AwakeningSystemMod.ITEMS.register(
+            "blue_monsoon", () -> new BlueMonsoonItem(new Item.Properties().stacksTo(1)));
+
+    public static final DeferredHolder<Item, Item> CRIMSON_SHADOW = AwakeningSystemMod.ITEMS.register(
+            "crimson_shadow", () -> new CrimsonShadowItem(new Item.Properties().stacksTo(1)));
+
+    public static final DeferredHolder<Item, Item> DEMON_KINGS_DAGGERS = AwakeningSystemMod.ITEMS.register(
+            "demon_kings_daggers", () -> new DemonKingsDaggersItem(new Item.Properties().stacksTo(1)));
+
+    public static final DeferredHolder<Item, Item> ENNIOS_ROAR = AwakeningSystemMod.ITEMS.register(
+            "ennios_roar", () -> new EnniosRoarItem(new Item.Properties().stacksTo(1)));
+
+    public static final DeferredHolder<Item, Item> KNIGHT_KILLER = AwakeningSystemMod.ITEMS.register(
+            "knight_killer", () -> new KnightKillerItem(new Item.Properties().stacksTo(1)));
+
+    public static final DeferredHolder<Item, Item> MOONSHADOW = AwakeningSystemMod.ITEMS.register(
+            "moonshadow", () -> new MoonshadowItem(new Item.Properties().stacksTo(1)));
+
+    public static final DeferredHolder<Item, Item> PHANTOMBLADE = AwakeningSystemMod.ITEMS.register(
+            "phantomblade", () -> new PhantombladeItem(new Item.Properties().stacksTo(1)));
+
+    public static final DeferredHolder<Item, Item> TRUTH_KASAKAS_VENOM_FANG = AwakeningSystemMod.ITEMS.register(
+            "truth_kasakas_venom_fang", () -> new TruthKasakasVenomFangItem(new Item.Properties().stacksTo(1)));
 
     public static final DeferredHolder<Item, Item> RADIANT_LIGHT_SWORD = AwakeningSystemMod.ITEMS.register(
             "radiant_light_sword", () -> new RadiantLightSwordItem(new Item.Properties().stacksTo(1)));
@@ -3282,6 +3318,12 @@ public final class SystemItems {
     public static final DeferredHolder<Item, Item> STATUE_OF_GOD_SPAWN_EGG = AwakeningSystemMod.ITEMS.register(
             "statue_of_god_spawn_egg", () -> new net.neoforged.neoforge.common.DeferredSpawnEggItem(
                     com.soybe.awakeningsystem.entity.ModEntities.STATUE_OF_GOD, 0x4A4A52, 0xDC143C, new Item.Properties()));
+    public static final DeferredHolder<Item, Item> KAISEL_ALIVE_SPAWN_EGG = AwakeningSystemMod.ITEMS.register(
+            "kaisel_alive_spawn_egg", () -> new net.neoforged.neoforge.common.DeferredSpawnEggItem(
+                    com.soybe.awakeningsystem.entity.ModEntities.KAISEL_ALIVE, 0x332244, 0xAA22CC, new Item.Properties()));
+    public static final DeferredHolder<Item, Item> KAISEL_SHADOW_SPAWN_EGG = AwakeningSystemMod.ITEMS.register(
+            "kaisel_shadow_spawn_egg", () -> new net.neoforged.neoforge.common.DeferredSpawnEggItem(
+                    com.soybe.awakeningsystem.entity.ModEntities.KAISEL_SHADOW, 0x111122, 0x2288EE, new Item.Properties()));
 
     public static final DeferredHolder<Item, Item> MANA_CRYSTAL_SHARD_E = AwakeningSystemMod.ITEMS.register("mana_crystal_shard_e",
             () -> new ManaCrystalShardItem(ManaCrystalShardItem.CrystalRank.E));

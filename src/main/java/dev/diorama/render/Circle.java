@@ -18,7 +18,7 @@ public final class Circle {
 	private static final float[] UNIT = new float[SIDES * 2];
 	/**
 	 * The shape being clipped and the next one, kept between calls: clipping by each side adds at
-	 * most one corner to the rectangle's four. Render thread only.
+	 * most one corner to the shape's. Render thread only.
 	 */
 	private static float[] shape = new float[(SIDES + 5) * 2];
 	private static float[] kept = new float[(SIDES + 5) * 2];
@@ -107,11 +107,66 @@ public final class Circle {
 		return this.disc;
 	}
 
+	/**
+	 * The band between this circle's edge and a circle {@code width} smaller inside it, as quads
+	 * textured from a picture of a ring: the picture's edge on this circle, and a circle
+	 * {@code pictureWidth} (a share of the picture's width) inside that on the inner one.
+	 */
+	public Quads ring(float width, float pictureWidth) {
+		float inner = Math.max(0, this.r - width);
+		float innerUv = 0.5F - pictureWidth;
+		float[] corners = new float[SIDES * 8];
+		float[] uvs = new float[SIDES * 8];
+		int out = 0;
+		for (int i = 0; i < SIDES; i++) {
+			int j = (i + 1) % SIDES;
+			// Along the outside in the circle's turning order, then back along the inside: counter-clockwise
+			// on screen, like disc()'s quads, since the GUI culls the other winding.
+			out = this.corner(corners, uvs, out, i, this.r, 0.5F);
+			out = this.corner(corners, uvs, out, j, this.r, 0.5F);
+			out = this.corner(corners, uvs, out, j, inner, innerUv);
+			out = this.corner(corners, uvs, out, i, inner, innerUv);
+		}
+		return new Quads(corners, uvs);
+	}
+
+	private int corner(float[] corners, float[] uvs, int out, int side, float radius, float uvRadius) {
+		corners[out] = this.cx + radius * UNIT[side * 2];
+		corners[out + 1] = this.cy + radius * UNIT[side * 2 + 1];
+		uvs[out] = 0.5F + uvRadius * UNIT[side * 2];
+		uvs[out + 1] = 0.5F + uvRadius * UNIT[side * 2 + 1];
+		return out + 2;
+	}
+
+	/**
+	 * The part of a convex polygon inside the circle, as the corners of its quads in the polygon's
+	 * own turning order, or null when none of it is. For the shapes drawings are made of.
+	 */
+	public float @Nullable [] clip(float[] polygon, int count) {
+		boolean inside = true;
+		for (int k = 0; k < count && inside; k++) {
+			inside = this.contains(polygon[k * 2], polygon[k * 2 + 1]);
+		}
+		if (inside) {
+			return fan(polygon, count);
+		}
+		int left = this.cut(polygon, count);
+		return left < 3 ? null : fan(shape, left);
+	}
+
 	/** Cuts the rectangle by each side of the polygon it crosses, into {@link #shape}. Returns its corner count. */
 	private int cut(float x0, float y0, float x1, float y1) {
-		float[] rect = {x0, y0, x0, y1, x1, y1, x1, y0};
-		System.arraycopy(rect, 0, shape, 0, 8);
-		int count = 4;
+		return this.cut(new float[] {x0, y0, x0, y1, x1, y1, x1, y0}, 4);
+	}
+
+	/** Cuts a convex polygon by each side of the circle's it crosses, into {@link #shape}. Returns its corner count. */
+	private int cut(float[] polygon, int corners) {
+		if (shape.length < (corners + SIDES) * 2) {
+			shape = new float[(corners + SIDES) * 2];
+			kept = new float[(corners + SIDES) * 2];
+		}
+		System.arraycopy(polygon, 0, shape, 0, corners * 2);
+		int count = corners;
 		for (int i = 0; i < SIDES && count > 0; i++) {
 			int j = (i + 1) % SIDES;
 			float ax = this.points[i * 2];
@@ -120,10 +175,10 @@ public final class Circle {
 			float ey = this.points[j * 2 + 1] - ay;
 			// Which side of this edge the centre is on is the inside.
 			float inside = Math.signum(ex * (this.cy - ay) - ey * (this.cx - ax));
-			// The shape stays inside the rectangle, so a side the whole rectangle is inside of cuts nothing.
+			// The shape stays inside the polygon, so a side the whole polygon is inside of cuts nothing.
 			boolean cuts = false;
-			for (int k = 0; k < 8 && !cuts; k += 2) {
-				cuts = inside * (ex * (rect[k + 1] - ay) - ey * (rect[k] - ax)) < 0;
+			for (int k = 0; k < corners * 2 && !cuts; k += 2) {
+				cuts = inside * (ex * (polygon[k + 1] - ay) - ey * (polygon[k] - ax)) < 0;
 			}
 			if (!cuts) {
 				continue;

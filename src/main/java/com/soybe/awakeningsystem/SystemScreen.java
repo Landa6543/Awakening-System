@@ -159,6 +159,9 @@ public final class SystemScreen extends Screen {
     private int p2pSelectedSlot = -1;
     private int p2pSellCount = 1;
     private net.minecraft.client.gui.components.EditBox p2pPriceBox;
+    private ShopDefinitions.Entry selectedShopEntry = null;
+    private int shopBuyAmount = 1;
+    private int missionSubTab = 0; // 0 = Diarias (Solo Leveling + Cazadores), 1 = Escenario ORV
     private int equipmentFilterMode = 0;
     private int equipmentScrollPage = 0;
 
@@ -531,13 +534,16 @@ public final class SystemScreen extends Screen {
         }
 
         if (tab == 1) {
-            boolean hasClass = data().hasHunterClass();
-            int totalSubBtns = hasClass ? 4 : 3;
+            SystemData d0 = data();
+            boolean hasClass = d0.hasHunterClass();
+            boolean hasShadows = d0.storedShadowCount() > 0 || "shadow_monarch".equalsIgnoreCase(d0.hunterClass()) || "necromancer".equalsIgnoreCase(d0.hunterClass()) || d0.hasSkill("shadow_monarch") || d0.hasSkill("unique_absolute_extraction") || d0.hasSkill("surge");
+            int totalSubBtns = (hasClass ? 4 : 3) + (hasShadows ? 1 : 0);
             int subBtnW = (W - 40 - (totalSubBtns - 1) * 4) / totalSubBtns;
             int btn1X = left + 20;
             int btn2X = btn1X + subBtnW + 4;
             int btn3X = btn2X + subBtnW + 4;
             int btn4X = btn3X + subBtnW + 4;
+            int btn5X = btn4X + subBtnW + 4;
             int btnY = top + 78;
 
             if (mouseX >= btn1X && mouseX < btn1X + subBtnW && mouseY >= btnY && mouseY < btnY + 20) {
@@ -555,6 +561,14 @@ public final class SystemScreen extends Screen {
             if (hasClass && mouseX >= btn4X && mouseX < btn4X + subBtnW && mouseY >= btnY && mouseY < btnY + 20) {
                 Minecraft.getInstance().setScreen(new ClassSkillTreeScreen(this));
                 return true;
+            }
+            if (hasShadows) {
+                int shadowBtnX = hasClass ? btn5X : btn4X;
+                if (mouseX >= shadowBtnX && mouseX < shadowBtnX + subBtnW && mouseY >= btnY && mouseY < btnY + 20) {
+                    AwakeningSystemClient.playUiSound(ModSounds.SYSTEM_CLICK.value(), 1.0F, 1.2F);
+                    AwakeningSystemClient.openShadowCommandScreen();
+                    return true;
+                }
             }
 
             SystemData d = data();
@@ -723,76 +737,114 @@ public final class SystemScreen extends Screen {
 
         if (tab == 2) {
             SystemData d = data();
-            int cardX = left + 28;
-            int cardW = W - 56;
-            int cardY = top + 98;
-            int trainBtnW = 46;
-            int trainBtnH = 12;
-            int dailyBarW = 96;
+            if (!d.isAwakened()) return true;
 
-            int c1X = cardX + 10;
-            int c2X = cardX + cardW - 10 - (dailyBarW + 6 + trainBtnW);
+            // Subpestañas del encabezado: [ ⚡ DIARIAS ] vs [ 📖 ESCENARIO ]
+            int st0X = left + W - 190;
+            int st1X = left + W - 100;
+            int stY = top + 81;
+            int st0W = 86;
+            int st1W = 76;
+            int stH = 14;
 
-            // Workout Button 0: Flexiones (Push-ups)
-            int b0X = c1X + dailyBarW + 6;
-            int b0Y = cardY + 23;
-            if (mouseX >= b0X && mouseX < b0X + trainBtnW && mouseY >= b0Y && mouseY < b0Y + trainBtnH) {
-                AwakeningSystemClient.startWorkout(0);
-                this.onClose();
+            if (mouseX >= st0X && mouseX < st0X + st0W && mouseY >= stY && mouseY < stY + stH) {
+                missionSubTab = 0;
+                AwakeningSystemClient.playUiSound(ModSounds.SYSTEM_CLICK.value(), 1.0F, 1.2F);
+                return true;
+            }
+            if (mouseX >= st1X && mouseX < st1X + st1W && mouseY >= stY && mouseY < stY + stH) {
+                missionSubTab = 1;
+                AwakeningSystemClient.playUiSound(ModSounds.SYSTEM_CLICK.value(), 1.0F, 1.2F);
                 return true;
             }
 
-            // Workout Button 1: Abdominales (Sit-ups)
-            int b1X = c1X + dailyBarW + 6;
-            int b1Y = cardY + 47;
-            if (mouseX >= b1X && mouseX < b1X + trainBtnW && mouseY >= b1Y && mouseY < b1Y + trainBtnH) {
-                AwakeningSystemClient.startWorkout(1);
-                this.onClose();
-                return true;
-            }
+            int cardX = left + 26;
+            int cardW = W - 52;
 
-            // Workout Button 2: Sentadillas (Squats)
-            int b2X = c2X + dailyBarW + 6;
-            int b2Y = cardY + 23;
-            if (mouseX >= b2X && mouseX < b2X + trainBtnW && mouseY >= b2Y && mouseY < b2Y + trainBtnH) {
-                AwakeningSystemClient.startWorkout(2);
-                this.onClose();
-                return true;
-            }
+            if (missionSubTab == 0) {
+                int cardY = top + 98;
+                int colW = 154;
+                int c1X = cardX + 10;
+                int c2X = cardX + cardW - 10 - colW;
+                int trainBtnW = 42;
+                int trainBtnH = 12;
+                int btnOffsetX = 112;
 
-            // Workout Button 3: Carrera (Running info / reminder)
-            int b3X = c2X + dailyBarW + 6;
-            int b3Y = cardY + 47;
-            if (mouseX >= b3X && mouseX < b3X + trainBtnW && mouseY >= b3Y && mouseY < b3Y + trainBtnH) {
-                if (d.dailyRunning() < 1000) {
-                    if (this.minecraft != null && this.minecraft.player != null) {
-                        this.minecraft.player.displayClientMessage(
-                            Component.translatable("awakening_system.msg.mision_diaria_camina_corre_pie_por", String.valueOf(d.dailyRunning())),
-                            false
-                        );
-                    }
+                // Workout Button 0: Flexiones (Push-ups)
+                int b0X = c1X + btnOffsetX;
+                int b0Y = cardY + 17;
+                if (mouseX >= b0X && mouseX < b0X + trainBtnW && mouseY >= b0Y && mouseY < b0Y + trainBtnH) {
+                    AwakeningSystemClient.startWorkout(0);
                     this.onClose();
                     return true;
                 }
-            }
 
-            // Daily Quest Claim Button
-            if (d.isDailyQuestComplete() && !d.isDailyClaimed()) {
-                int btnX = cardX + cardW - 132;
-                int btnY = cardY + 68;
-                if (mouseX >= btnX && mouseX < btnX + 126 && mouseY >= btnY && mouseY < btnY + 14) {
-                    AwakeningSystemClient.claimDailyMission();
+                // Workout Button 1: Abdominales (Sit-ups)
+                int b1X = c1X + btnOffsetX;
+                int b1Y = cardY + 35;
+                if (mouseX >= b1X && mouseX < b1X + trainBtnW && mouseY >= b1Y && mouseY < b1Y + trainBtnH) {
+                    AwakeningSystemClient.startWorkout(1);
+                    this.onClose();
                     return true;
                 }
-            }
 
-            // Scenario Claim Button
-            if (d.isScenarioComplete()) {
-                int btnX = cardX + cardW - 108;
-                int btnY = top + 188 + 25;
-                if (mouseX >= btnX && mouseX < btnX + 102 && mouseY >= btnY && mouseY < btnY + 16) {
-                    AwakeningSystemClient.claimScenario();
+                // Workout Button 2: Sentadillas (Squats)
+                int b2X = c2X + btnOffsetX;
+                int b2Y = cardY + 17;
+                if (mouseX >= b2X && mouseX < b2X + trainBtnW && mouseY >= b2Y && mouseY < b2Y + trainBtnH) {
+                    AwakeningSystemClient.startWorkout(2);
+                    this.onClose();
                     return true;
+                }
+
+                // Workout Button 3: Carrera (Running info / reminder)
+                int b3X = c2X + btnOffsetX;
+                int b3Y = cardY + 35;
+                if (mouseX >= b3X && mouseX < b3X + trainBtnW && mouseY >= b3Y && mouseY < b3Y + trainBtnH) {
+                    if (d.dailyRunning() < 1000) {
+                        if (this.minecraft != null && this.minecraft.player != null) {
+                            this.minecraft.player.displayClientMessage(
+                                Component.translatable("awakening_system.msg.mision_diaria_camina_corre_pie_por", String.valueOf(d.dailyRunning())),
+                                false
+                            );
+                        }
+                        this.onClose();
+                        return true;
+                    }
+                }
+
+                // Daily Quest Claim Button (Solo Leveling Workout)
+                if (d.isDailyQuestComplete() && !d.isDailyClaimed()) {
+                    int btnX = cardX + cardW - 132;
+                    int btnY = cardY + 54;
+                    if (mouseX >= btnX && mouseX < btnX + 126 && mouseY >= btnY && mouseY < btnY + 15) {
+                        AwakeningSystemClient.claimDailyMission();
+                        return true;
+                    }
+                }
+
+                // Hunter Commission Claim Button (Asociacion de Cazadores)
+                int hCardY = top + 177;
+                if (d.isDailyHunterComplete() && !d.isDailyHunterClaimed()) {
+                    int hBtnX = cardX + cardW - 132;
+                    int hBtnY = hCardY + 62;
+                    if (mouseX >= hBtnX && mouseX < hBtnX + 126 && mouseY >= hBtnY && mouseY < hBtnY + 16) {
+                        AwakeningSystemClient.claimHunterCommission();
+                        return true;
+                    }
+                }
+            } else {
+                // Subpestaña 1: Escenario ORV
+                int scenY = top + 98;
+                if (d.isScenarioComplete()) {
+                    int sBtnX = cardX + cardW - 146;
+                    int sBtnY = scenY + 132;
+                    int sBtnW = 140;
+                    int sBtnH = 18;
+                    if (mouseX >= sBtnX && mouseX < sBtnX + sBtnW && mouseY >= sBtnY && mouseY < sBtnY + sBtnH) {
+                        AwakeningSystemClient.claimScenario();
+                        return true;
+                    }
                 }
             }
             return true;
@@ -878,12 +930,13 @@ public final class SystemScreen extends Screen {
 
             int trackTop = top + 120;
             int trackBottom = top + 258;
-            if (mouseX >= left + W - 32 && mouseX <= left + W - 4 && mouseY >= trackTop && mouseY <= trackBottom) {
+            boolean isShopScrollArea = shopMode == 0 ? (mouseX >= left + 226 && mouseX <= left + 238) : (mouseX >= left + W - 32 && mouseX <= left + W - 4);
+            if (isShopScrollArea && mouseY >= trackTop && mouseY <= trackBottom) {
                 if (shopMode == 0) {
                     List<ShopDefinitions.Entry> entries = availableShopEntries();
-                    int maxScroll = Math.max(0, entries.size() - 4);
+                    int maxScroll = Math.max(0, entries.size() - 5);
                     if (maxScroll > 0) {
-                        int thumbHeight = Math.max(14, (trackBottom - trackTop) * 4 / entries.size());
+                        int thumbHeight = Math.max(14, (trackBottom - trackTop) * 5 / entries.size());
                         int thumbRange = Math.max(1, trackBottom - trackTop - thumbHeight);
                         int currentThumbY = trackTop + (int) Math.round((double) thumbRange * shopScroll / maxScroll);
 
@@ -1126,59 +1179,120 @@ public final class SystemScreen extends Screen {
             }
 
             if (shopMode == 0) {
-                int catX = left + 30;
+                int catX = left + 26;
                 int catY = top + 100;
                 for (int c = 0; c < SHOP_CATEGORIES.length; c++) {
                     String cat = SHOP_CATEGORIES[c];
                     Component catLabel = Component.translatable("awakening_system.screen.shop.cat." + cat);
-                    int btnW = Math.max(34, font.width(catLabel) + 10);
+                    int btnW = Math.max(32, font.width(catLabel) + 8);
                     if (mouseX >= catX && mouseX < catX + btnW && mouseY >= catY && mouseY < catY + 16) {
                         shopCategory = SHOP_CATEGORIES[c];
                         shopScroll = 0;
+                        selectedShopEntry = null;
+                        shopBuyAmount = 1;
                         if (minecraft != null && minecraft.player != null) {
                             minecraft.player.playSound(ModSounds.SYSTEM_CLICK.value(), 1.0F, 1.0F);
                         }
                         return true;
                     }
-                    catX += btnW + 3;
+                    catX += btnW + 2;
                 }
 
                 List<ShopDefinitions.Entry> entries = availableShopEntries();
-                for (int row = 0; row < entries.size(); row++) {
-                    int entryY = top + 122 + (row - shopScroll) * 32;
-                    if (entryY < top + 118 || entryY >= top + 258) continue;
-                    if (mouseX >= left + 30 && mouseX < left + W - 30 && mouseY >= entryY && mouseY < entryY + 28) {
-                        ShopDefinitions.Entry entry = entries.get(row);
-                        SystemData d = data();
-                        if (!ShopDefinitions.isUnlocked(entry, d)) {
+                int catPanelX = left + 26;
+                int catPanelY = top + 120;
+                int catPanelW = 212;
+                int catPanelH = 138;
+
+                // Clic en el panel izquierdo (Catálogo)
+                if (mouseX >= catPanelX && mouseX < catPanelX + catPanelW - 6 && mouseY >= catPanelY && mouseY < catPanelY + catPanelH) {
+                    for (int row = 0; row < entries.size(); row++) {
+                        int entryY = catPanelY + 2 + (row - shopScroll) * 27;
+                        if (entryY < catPanelY - 26 || entryY >= catPanelY + catPanelH) continue;
+                        if (mouseY >= entryY && mouseY < entryY + 26) {
+                            selectedShopEntry = entries.get(row);
+                            shopBuyAmount = 1;
                             if (minecraft != null && minecraft.player != null) {
-                                minecraft.player.playSound(ModSounds.SYSTEM_ERROR.value(), 0.9F, 1.0F);
-                            }
-                            boolean lvlLock = entry.minLevel() > 0 && d.level() < entry.minLevel();
-                            boolean dimLock = !entry.requiredDimension().isEmpty() && !d.hasVisitedDimension(entry.requiredDimension());
-                            if (lvlLock && dimLock) {
-                                AwakeningSystemClient.showNotification("awakening_system.notification.shop.error_title",
-                                        "awakening_system.screen.shop.lock.dual_msg", "Nvl. " + entry.minLevel() + " | " + getDimShortName(entry.requiredDimension()), 0xFFFF7666);
-                            } else if (lvlLock) {
-                                AwakeningSystemClient.showNotification("awakening_system.notification.shop.error_title",
-                                        "awakening_system.shop.level_required_msg", "Nvl. " + entry.minLevel(), 0xFFFF7666);
-                            } else {
-                                AwakeningSystemClient.showNotification("awakening_system.notification.shop.error_title",
-                                        "awakening_system.notification.shop.dimension_locked", "", 0xFFFF7666);
+                                minecraft.player.playSound(ModSounds.SYSTEM_CLICK.value(), 1.0F, 1.2F);
                             }
                             return true;
                         }
-                        boolean isDirectOpenBox = ShopDefinitions.isBoxId(entry.id());
-                        if (isDirectOpenBox) {
-                            if (d.coins() < entry.cost()) {
-                                if (minecraft != null && minecraft.player != null) {
-                                    minecraft.player.playSound(net.minecraft.sounds.SoundEvents.UI_BUTTON_CLICK.value(), 0.3F, 0.6F);
-                                }
-                                AwakeningSystemClient.showNotification("awakening_system.notification.shop.error_title",
-                                        "awakening_system.notification.shop.insufficient", "", 0xFFFF7666);
-                                return true;
+                    }
+                }
+
+                // Clic en el panel derecho (Detalle e Inspección)
+                int rightX = left + 242;
+                int rightY = top + 120;
+                int rightW = 172;
+                int rightH = 138;
+
+                if (selectedShopEntry != null && mouseX >= rightX && mouseX < rightX + rightW && mouseY >= rightY && mouseY < rightY + rightH) {
+                    int ctrlY = rightY + 112;
+                    boolean isBox = ShopDefinitions.isBoxId(selectedShopEntry.id());
+
+                    // Selector de cantidad para items normales
+                    if (!isBox) {
+                        // Boton [-]
+                        if (mouseX >= rightX + 6 && mouseX < rightX + 22 && mouseY >= ctrlY && mouseY < ctrlY + 20) {
+                            if (shopBuyAmount == 64) shopBuyAmount = 16;
+                            else if (shopBuyAmount == 16) shopBuyAmount = 1;
+                            else shopBuyAmount = 1;
+                            AwakeningSystemClient.playUiSound(ModSounds.SYSTEM_CLICK.value(), 1.0F, 1.1F);
+                            return true;
+                        }
+                        // Boton [+]
+                        if (mouseX >= rightX + 46 && mouseX < rightX + 62 && mouseY >= ctrlY && mouseY < ctrlY + 20) {
+                            if (shopBuyAmount == 1) shopBuyAmount = 16;
+                            else if (shopBuyAmount == 16) shopBuyAmount = 64;
+                            AwakeningSystemClient.playUiSound(ModSounds.SYSTEM_CLICK.value(), 1.0F, 1.1F);
+                            return true;
+                        }
+                    }
+
+                    // Boton de Compra / Apertura
+                    int buyBtnX = isBox ? (rightX + 6) : (rightX + 66);
+                    int buyBtnW = isBox ? (rightW - 12) : (rightW - 72);
+
+                    if (mouseX >= buyBtnX && mouseX < buyBtnX + buyBtnW && mouseY >= ctrlY && mouseY < ctrlY + 20) {
+                        SystemData d = data();
+                        if (!ShopDefinitions.isUnlocked(selectedShopEntry, d)) {
+                            if (minecraft != null && minecraft.player != null) {
+                                minecraft.player.playSound(ModSounds.SYSTEM_ERROR.value(), 0.9F, 1.0F);
                             }
-                            int tier = switch (entry.id()) {
+                            String reqRank = ShopDefinitions.requiredRank(selectedShopEntry);
+                            boolean rankLocked = selectedShopEntry.minLevel() > 0 && SystemData.rankIndex(d.evaluatedRank()) < SystemData.rankIndex(reqRank);
+                            boolean dimLocked = !selectedShopEntry.requiredDimension().isEmpty() && !d.hasVisitedDimension(selectedShopEntry.requiredDimension());
+                            if (rankLocked) {
+                                AwakeningSystemClient.showNotification("awakening_system.notification.shop.error_title",
+                                        "awakening_system.shop.level_required_msg", Component.translatable("awakening_system.screen.shop.rank_badge", reqRank).getString(), 0xFFFF7666);
+                            } else if (dimLocked) {
+                                AwakeningSystemClient.showNotification("awakening_system.notification.shop.error_title",
+                                        "awakening_system.notification.shop.dimension_locked", getDimShortName(selectedShopEntry.requiredDimension()), 0xFFFF7666);
+                            } else if (ShopDefinitions.missingSystemTier(selectedShopEntry, d) > 0) {
+                                AwakeningSystemClient.showNotification("awakening_system.notification.shop.error_title",
+                                        "awakening_system.shop.locked_tier", ShopDefinitions.missingSystemTier(selectedShopEntry, d) + ".0", 0xFFFF7666);
+                            } else if (ShopDefinitions.requiresEnd(selectedShopEntry.id())) {
+                                AwakeningSystemClient.showNotification("awakening_system.notification.shop.error_title",
+                                        "awakening_system.shop.locked_end", "", 0xFFFF7666);
+                            } else {
+                                AwakeningSystemClient.showNotification("awakening_system.notification.shop.error_title",
+                                        "awakening_system.screen.shop.lock.locked", "", 0xFFFF7666);
+                            }
+                            return true;
+                        }
+
+                        int totalCost = selectedShopEntry.cost() * (isBox ? 1 : shopBuyAmount);
+                        if (d.coins() < totalCost) {
+                            if (minecraft != null && minecraft.player != null) {
+                                minecraft.player.playSound(net.minecraft.sounds.SoundEvents.UI_BUTTON_CLICK.value(), 0.3F, 0.6F);
+                            }
+                            AwakeningSystemClient.showNotification("awakening_system.notification.shop.error_title",
+                                    "awakening_system.notification.shop.insufficient", "", 0xFFFF7666);
+                            return true;
+                        }
+
+                        if (isBox) {
+                            int tier = switch (selectedShopEntry.id()) {
                                 case "box_rare" -> 2;
                                 case "box_epic" -> 3;
                                 case "box_legendary" -> 4;
@@ -1186,12 +1300,14 @@ public final class SystemScreen extends Screen {
                                 case "box_primordial" -> 6;
                                 default -> 1;
                             };
-                            AwakeningSystemClient.buyShopItem(entry.id());
-                            Minecraft.getInstance().setScreen(new ChestOpeningScreen(this, entry.id(), entry.nameKey(), tier, entry.cost()));
+                            AwakeningSystemClient.buyShopItem(selectedShopEntry.id());
+                            Minecraft.getInstance().setScreen(new ChestOpeningScreen(this, selectedShopEntry.id(), selectedShopEntry.nameKey(), tier, selectedShopEntry.cost()));
                             return true;
                         }
 
-                        AwakeningSystemClient.buyShopItem(entry.id());
+                        for (int b = 0; b < shopBuyAmount; b++) {
+                            AwakeningSystemClient.buyShopItem(selectedShopEntry.id());
+                        }
                         AwakeningSystemClient.playUiSound(ModSounds.SYSTEM_COINS.value(), 1.0F, 1.0F);
                         return true;
                     }
@@ -1709,7 +1825,7 @@ public final class SystemScreen extends Screen {
                 int maxScroll = Math.max(0, availableSellEntries().size() - 4);
                 sellScroll = Math.max(0, Math.min(maxScroll, sellScroll - (int) Math.signum(verticalAmount)));
             } else if (shopMode == 0) {
-                int maxScroll = Math.max(0, availableShopEntries().size() - 4);
+                int maxScroll = Math.max(0, availableShopEntries().size() - 5);
                 shopScroll = Math.max(0, Math.min(maxScroll, shopScroll - (int) Math.signum(verticalAmount)));
             } else if (shopMode == 4 && !p2pPublishDialogOpen) {
                 int maxScroll = Math.max(0, filteredP2PListings().size() - 4);
@@ -1743,9 +1859,9 @@ public final class SystemScreen extends Screen {
                 int trackBottom = top + 256;
                 if (shopMode == 0) {
                     List<ShopDefinitions.Entry> entries = availableShopEntries();
-                    int maxScroll = Math.max(0, entries.size() - 4);
+                    int maxScroll = Math.max(0, entries.size() - 5);
                     if (maxScroll > 0) {
-                        int thumbHeight = Math.max(14, (trackBottom - trackTop) * 4 / entries.size());
+                        int thumbHeight = Math.max(14, (trackBottom - trackTop) * 5 / entries.size());
                         int thumbRange = Math.max(1, trackBottom - trackTop - thumbHeight);
                         float progress = (float)(mouseY - trackTop - thumbHeight / 2.0) / (float)thumbRange;
                         progress = Math.max(0.0F, Math.min(1.0F, progress));
@@ -2853,7 +2969,9 @@ public final class SystemScreen extends Screen {
         int pct = Math.min(100, (int) ((double) expCurrent / expNeeded * 100));
         String expStr;
         if (d.isEvaluationPending()) {
-            expStr = "EXP " + expCurrent + " / " + expNeeded + " [★ EVALUACIÓN PENDIENTE ★] (Reserva: +" + String.format(java.util.Locale.US, "%,d", d.reserveExperience()) + ")";
+            String pendingTag = Component.translatable("awakening_system.screen.status.eval_pending").getString();
+            String reserveTag = Component.translatable("awakening_system.screen.status.eval_reserve", String.format(java.util.Locale.US, "%,d", d.reserveExperience())).getString();
+            expStr = "EXP " + expCurrent + " / " + expNeeded + " " + pendingTag + " (" + reserveTag + ")";
         } else {
             expStr = "EXP " + expCurrent + " / " + expNeeded + " (" + pct + "%)";
         }
@@ -3262,12 +3380,14 @@ public final class SystemScreen extends Screen {
         g.fill(left + 20, top + 98, left + W - 20, top + 99, tabLine);
 
         boolean hasClass = d.hasHunterClass();
-        int totalSubBtns = hasClass ? 4 : 3;
+        boolean hasShadows = d.storedShadowCount() > 0 || "shadow_monarch".equalsIgnoreCase(d.hunterClass()) || "necromancer".equalsIgnoreCase(d.hunterClass()) || d.hasSkill("shadow_monarch") || d.hasSkill("unique_absolute_extraction") || d.hasSkill("surge");
+        int totalSubBtns = (hasClass ? 4 : 3) + (hasShadows ? 1 : 0);
         int subBtnW = (W - 40 - (totalSubBtns - 1) * 4) / totalSubBtns;
         int btn1X = left + 20;
         int btn2X = btn1X + subBtnW + 4;
         int btn3X = btn2X + subBtnW + 4;
         int btn4X = btn3X + subBtnW + 4;
+        int btn5X = btn4X + subBtnW + 4;
         int btnY = top + 78;
 
         int btn1Bg = skillTabMode == 0 ? (sys30 ? 0xFF1C382E : (sys20 ? 0xFF3A1259 : 0xFF1E465D)) :
@@ -3326,6 +3446,18 @@ public final class SystemScreen extends Screen {
             }
             Component labelTree = Component.literal("🌿 " + Component.translatable("awakening_system.screen.skills.class_tree_btn").getString());
             g.drawCenteredString(font, labelTree, btn4X + subBtnW / 2, btnY + 6, hov4 ? 0xFFFFD700 : (sys30 ? 0xFF50FA7B : 0xFF00E5FF));
+        }
+
+        if (hasShadows) {
+            int shadowBtnX = hasClass ? btn5X : btn4X;
+            boolean hovSh = mouseX >= shadowBtnX && mouseX < shadowBtnX + subBtnW && mouseY >= btnY && mouseY < btnY + 20;
+            int shadowBg = hovSh ? 0xFF144D66 : 0xFF0D3244;
+            g.fill(shadowBtnX, btnY, shadowBtnX + subBtnW, btnY + 20, shadowBg);
+            if (hovSh) {
+                g.fill(shadowBtnX, btnY + 18, shadowBtnX + subBtnW, btnY + 20, 0xFF00E5FF);
+            }
+            Component labelShadows = Component.literal("⚔ " + Component.translatable("gui.awakening_system.shadow_command.short_btn").getString());
+            g.drawCenteredString(font, labelShadows, shadowBtnX + subBtnW / 2, btnY + 6, hovSh ? 0xFF00E5FF : 0xFF80D8FF);
         }
 
         if (skillTabMode == 0) {
@@ -3810,6 +3942,7 @@ public final class SystemScreen extends Screen {
         section(g, left + 20, top + 78, W - 40, 186, Component.translatable("awakening_system.screen.tab.missions"));
         boolean sys30 = isSys30();
         boolean sys20 = isSys20() || sys30;
+        List<Component> missionTooltip = null;
 
         if (!d.isAwakened()) {
             // the dormant System: it only points the way to the Great Tower
@@ -3828,164 +3961,395 @@ public final class SystemScreen extends Screen {
             return;
         }
 
-        int cardX = left + 28;
-        int cardY = top + 98;
-        int cardW = W - 56;
-        int cardH = 84;
+        // Subpestañas en el encabezado de MISIONES: [ ⚡ DIARIAS ] y [ 📖 ESCENARIO ]
+        int st0X = left + W - 190;
+        int st1X = left + W - 100;
+        int stY = top + 81;
+        int st0W = 86;
+        int st1W = 76;
+        int stH = 14;
 
-        // 1. SOLO LEVELING DAILY QUEST CARD
-        g.fill(cardX, cardY, cardX + cardW, cardY + cardH, sys30 ? 0x500E261E : (sys20 ? 0x50160926 : 0x500C1925));
-        g.fill(cardX, cardY, cardX + cardW, cardY + 1, (sys30 || sys20) ? 0x80FFD700 : 0x8070E8FF);
-        g.fill(cardX, cardY + cardH - 1, cardX + cardW, cardY + cardH, sys30 ? 0x40163E2A : (sys20 ? 0x409D4EDD : 0x402D7691));
+        boolean st0Hov = mouseX >= st0X && mouseX < st0X + st0W && mouseY >= stY && mouseY < stY + stH;
+        boolean st1Hov = mouseX >= st1X && mouseX < st1X + st1W && mouseY >= stY && mouseY < stY + stH;
 
-        Component dailyTitle = Component.translatable("awakening_system.screen.missions.solo_daily.title").withStyle(ChatFormatting.BOLD);
-        drawClipped(g, dailyTitle, cardX + 6, cardY + 4, (sys30 || sys20) ? 0xFFFFD700 : 0xFF70E8FF, cardW - 120);
+        // Botón Subpestaña 0: Diarias
+        int bg0 = missionSubTab == 0 ? 0xFF17354B : (st0Hov ? 0xFF0D3442 : 0xAA08202B);
+        int border0 = missionSubTab == 0 ? 0xFF70E8FF : (st0Hov ? 0xFFFFD700 : 0xFF00838F);
+        g.fill(st0X, stY, st0X + st0W, stY + stH, bg0);
+        drawBorder(g, st0X, stY, st0W, stH, border0);
+        drawAutoScaledCentered(g, Component.translatable("awakening_system.screen.missions.subtab.daily").withStyle(ChatFormatting.BOLD), st0X + st0W / 2, stY + 3, missionSubTab == 0 ? 0xFFFFFFFF : 0xFFA0C8D8, st0W - 4);
 
-        Component dailyStatusComp;
-        int dailyStatusCol;
-        if (d.isDailyClaimed()) {
-            dailyStatusComp = Component.translatable("awakening_system.screen.missions.solo_daily.claimed_tag");
-            dailyStatusCol = 0xFF50FA7B;
-        } else if (d.isDailyQuestComplete()) {
-            dailyStatusComp = Component.translatable("awakening_system.screen.missions.solo_daily.ready_tag");
-            dailyStatusCol = 0xFFFFD700;
+        // Botón Subpestaña 1: Escenario ORV
+        int bg1 = missionSubTab == 1 ? 0xFF35174B : (st1Hov ? 0xFF2A0D42 : 0xAA18082B);
+        int border1 = missionSubTab == 1 ? 0xFFFF70E8 : (st1Hov ? 0xFFFFD700 : 0xFF83008F);
+        g.fill(st1X, stY, st1X + st1W, stY + stH, bg1);
+        drawBorder(g, st1X, stY, st1W, stH, border1);
+        drawAutoScaledCentered(g, Component.translatable("awakening_system.screen.missions.subtab.scenario").withStyle(ChatFormatting.BOLD), st1X + st1W / 2, stY + 3, missionSubTab == 1 ? 0xFFFFFFFF : 0xFFA0C8D8, st1W - 4);
+
+        int cardX = left + 26;
+        int cardW = W - 52;
+
+        if (missionSubTab == 0) {
+            // ═══════════════════════════════════════════════════════════════
+            // 1. TARJETA: SOLO LEVELING - ENTRENAMIENTO DEL MONARCA
+            // ═══════════════════════════════════════════════════════════════
+            int cardY = top + 98;
+            int cardH = 75;
+            g.fill(cardX, cardY, cardX + cardW, cardY + cardH, sys30 ? 0x500E261E : (sys20 ? 0x50160926 : 0x500C1925));
+            g.fill(cardX, cardY, cardX + cardW, cardY + 1, (sys30 || sys20) ? 0x80FFD700 : 0x8070E8FF);
+            g.fill(cardX, cardY + cardH - 1, cardX + cardW, cardY + cardH, sys30 ? 0x40163E2A : (sys20 ? 0x409D4EDD : 0x402D7691));
+
+            Component dailyTitle = Component.translatable("awakening_system.screen.missions.solo_leveling_header").withStyle(ChatFormatting.BOLD);
+            drawClipped(g, dailyTitle, cardX + 6, cardY + 4, (sys30 || sys20) ? 0xFFFFD700 : 0xFF70E8FF, cardW - 140);
+
+            // Reloj Dinámico de Medianoche (Alerta de Penalización estilo Manhwa)
+            long dayTime = (minecraft != null && minecraft.level != null) ? minecraft.level.getDayTime() % 24000L : 0L;
+            long ticksUntilMidnight = dayTime < 18000L ? (18000L - dayTime) : (24000L - dayTime + 18000L);
+            long secLeft = ticksUntilMidnight / 20L;
+            long minLeft = secLeft / 60L;
+            long sLeft = secLeft % 60L;
+            boolean criticalTime = ticksUntilMidnight < 2400L && !d.isDailyClaimed();
+            String timerText = criticalTime
+                    ? Component.translatable("awakening_system.screen.missions.penalty_warn", String.format(java.util.Locale.ROOT, "%02d:%02d", minLeft, sLeft)).getString()
+                    : Component.translatable("awakening_system.screen.missions.midnight_clock", String.format(java.util.Locale.ROOT, "%02d:%02d", minLeft, sLeft)).getString();
+            int timerColor = criticalTime ? ((minecraft != null && (minecraft.level.getGameTime() / 10L) % 2 == 0) ? 0xFFFF5555 : 0xFFFFAA00) : 0xFFFFD866;
+            g.drawString(font, Component.literal(timerText), cardX + cardW - 6 - font.width(timerText), cardY + 4, timerColor);
+
+            // 4 Ejercicios Físicos (Flexiones, Abdominales, Sentadillas, Carrera)
+            int colW = 154;
+            int c1X = cardX + 10;
+            int c2X = cardX + cardW - 10 - colW;
+            int trainBtnW = 42;
+            int trainBtnH = 12;
+            int barW = 104;
+            int btnOffsetX = 112;
+
+            // Ejercicio 1: Flexiones
+            drawAutoScaled(g, Component.translatable("awakening_system.screen.missions.solo_daily.pushups", d.dailyPushUps(), 100), c1X, cardY + 16, 0xFFE0E0E0, barW);
+            g.fill(c1X, cardY + 26, c1X + barW, cardY + 30, 0xFF0B141D);
+            int fill1 = (int) (barW * Math.min(1.0F, (float) d.dailyPushUps() / 100.0F));
+            if (fill1 > 0) g.fill(c1X, cardY + 26, c1X + fill1, cardY + 30, 0xFF50FA7B);
+
+            int b0X = c1X + btnOffsetX;
+            int b0Y = cardY + 17;
+            boolean h0 = mouseX >= b0X && mouseX < b0X + trainBtnW && mouseY >= b0Y && mouseY < b0Y + trainBtnH;
+            g.fill(b0X, b0Y, b0X + trainBtnW, b0Y + trainBtnH, h0 ? 0xFF1E88E5 : 0xFF0D47A1);
+            g.renderOutline(b0X, b0Y, trainBtnW, trainBtnH, h0 ? 0xFFFFFFFF : 0xFF42A5F5);
+            Component btnTrain0 = d.dailyPushUps() >= 100 ? Component.literal("§a✔ 100") :
+                    (h0 ? Component.translatable("awakening_system.screen.missions.train_hover") : Component.translatable("awakening_system.screen.missions.train_btn"));
+            drawAutoScaledCentered(g, btnTrain0, b0X + trainBtnW / 2, b0Y + 2, 0xFFFFFFFF, trainBtnW - 4);
+
+            // Ejercicio 2: Abdominales
+            drawAutoScaled(g, Component.translatable("awakening_system.screen.missions.solo_daily.situps", d.dailySitUps(), 100), c1X, cardY + 34, 0xFFE0E0E0, barW);
+            g.fill(c1X, cardY + 44, c1X + barW, cardY + 48, 0xFF0B141D);
+            int fill2 = (int) (barW * Math.min(1.0F, (float) d.dailySitUps() / 100.0F));
+            if (fill2 > 0) g.fill(c1X, cardY + 44, c1X + fill2, cardY + 48, 0xFF50FA7B);
+
+            int b1X = c1X + btnOffsetX;
+            int b1Y = cardY + 35;
+            boolean h1 = mouseX >= b1X && mouseX < b1X + trainBtnW && mouseY >= b1Y && mouseY < b1Y + trainBtnH;
+            g.fill(b1X, b1Y, b1X + trainBtnW, b1Y + trainBtnH, h1 ? 0xFF1E88E5 : 0xFF0D47A1);
+            g.renderOutline(b1X, b1Y, trainBtnW, trainBtnH, h1 ? 0xFFFFFFFF : 0xFF42A5F5);
+            Component btnTrain1 = d.dailySitUps() >= 100 ? Component.literal("§a✔ 100") :
+                    (h1 ? Component.translatable("awakening_system.screen.missions.train_hover") : Component.translatable("awakening_system.screen.missions.train_btn"));
+            drawAutoScaledCentered(g, btnTrain1, b1X + trainBtnW / 2, b1Y + 2, 0xFFFFFFFF, trainBtnW - 4);
+
+            // Ejercicio 3: Sentadillas
+            drawAutoScaled(g, Component.translatable("awakening_system.screen.missions.solo_daily.squats", d.dailySquats(), 100), c2X, cardY + 16, 0xFFE0E0E0, barW);
+            g.fill(c2X, cardY + 26, c2X + barW, cardY + 30, 0xFF0B141D);
+            int fill3 = (int) (barW * Math.min(1.0F, (float) d.dailySquats() / 100.0F));
+            if (fill3 > 0) g.fill(c2X, cardY + 26, c2X + fill3, cardY + 30, 0xFF50FA7B);
+
+            int b2X = c2X + btnOffsetX;
+            int b2Y = cardY + 17;
+            boolean h2 = mouseX >= b2X && mouseX < b2X + trainBtnW && mouseY >= b2Y && mouseY < b2Y + trainBtnH;
+            g.fill(b2X, b2Y, b2X + trainBtnW, b2Y + trainBtnH, h2 ? 0xFF1E88E5 : 0xFF0D47A1);
+            g.renderOutline(b2X, b2Y, trainBtnW, trainBtnH, h2 ? 0xFFFFFFFF : 0xFF42A5F5);
+            Component btnTrain2 = d.dailySquats() >= 100 ? Component.literal("§a✔ 100") :
+                    (h2 ? Component.translatable("awakening_system.screen.missions.train_hover") : Component.translatable("awakening_system.screen.missions.train_btn"));
+            drawAutoScaledCentered(g, btnTrain2, b2X + trainBtnW / 2, b2Y + 2, 0xFFFFFFFF, trainBtnW - 4);
+
+            // Ejercicio 4: Carrera
+            drawAutoScaled(g, Component.translatable("awakening_system.screen.missions.solo_daily.running", d.dailyRunning(), 1000), c2X, cardY + 34, 0xFFE0E0E0, barW);
+            g.fill(c2X, cardY + 44, c2X + barW, cardY + 48, 0xFF0B141D);
+            int fill4 = (int) (barW * Math.min(1.0F, (float) d.dailyRunning() / 1000.0F));
+            if (fill4 > 0) g.fill(c2X, cardY + 44, c2X + fill4, cardY + 48, 0xFF50FA7B);
+
+            int b3X = c2X + btnOffsetX;
+            int b3Y = cardY + 35;
+            boolean h3 = mouseX >= b3X && mouseX < b3X + trainBtnW && mouseY >= b3Y && mouseY < b3Y + trainBtnH;
+            g.fill(b3X, b3Y, b3X + trainBtnW, b3Y + trainBtnH, h3 ? 0xFF1E88E5 : (d.dailyRunning() >= 1000 ? 0x401B7A4E : 0x400B141D));
+            g.renderOutline(b3X, b3Y, trainBtnW, trainBtnH, h3 ? 0xFFFFFFFF : (d.dailyRunning() >= 1000 ? 0xFF50FA7B : 0x50336688));
+            Component runStatus = d.dailyRunning() >= 1000 ? Component.literal("§a✔ 1km") :
+                    (h3 ? Component.translatable("awakening_system.msg.pie") : Component.literal("§71000m"));
+            drawAutoScaledCentered(g, runStatus, b3X + trainBtnW / 2, b3Y + 2, d.dailyRunning() >= 1000 ? 0xFF50FA7B : (h3 ? 0xFFFFFFFF : 0xFF8AAAB8), trainBtnW - 4);
+
+            // Roadmap Seccion 66: Tooltips informativos de escalado de estadisticas
+            int repsEarned0 = 1 + Math.min(4, d.strength() / 25);
+            int period0 = Math.max(14, 24 - Math.min(8, d.strength() / 20));
+            if (mouseX >= c1X && mouseX < c1X + colW && mouseY >= cardY + 16 && mouseY < cardY + 32) {
+                List<Component> tip = new ArrayList<>();
+                tip.add(Component.translatable("awakening_system.screen.missions.tip.pushups.title"));
+                tip.add(Component.translatable("awakening_system.screen.missions.tip.pushups.stat", d.strength()));
+                tip.add(Component.translatable("awakening_system.screen.missions.tip.pushups.reps", repsEarned0, repsEarned0 > 1 ? Component.translatable("awakening_system.screen.missions.tip.pushups.reps_bonus").getString() : ""));
+                tip.add(Component.translatable("awakening_system.screen.missions.tip.pushups.time", String.format(java.util.Locale.ROOT, "%.2fs", period0 / 20.0F), period0));
+                tip.add(Component.translatable("awakening_system.screen.missions.tip.pushups.footer"));
+                missionTooltip = tip;
+            }
+
+            int repsEarned1 = 1 + Math.min(4, d.vitality() / 25);
+            int period1 = Math.max(14, 26 - Math.min(8, d.vitality() / 20));
+            if (mouseX >= c1X && mouseX < c1X + colW && mouseY >= cardY + 34 && mouseY < cardY + 50) {
+                List<Component> tip = new ArrayList<>();
+                tip.add(Component.translatable("awakening_system.screen.missions.tip.situps.title"));
+                tip.add(Component.translatable("awakening_system.screen.missions.tip.situps.stat", d.vitality()));
+                tip.add(Component.translatable("awakening_system.screen.missions.tip.situps.reps", repsEarned1, repsEarned1 > 1 ? Component.translatable("awakening_system.screen.missions.tip.situps.reps_bonus").getString() : ""));
+                tip.add(Component.translatable("awakening_system.screen.missions.tip.situps.time", String.format(java.util.Locale.ROOT, "%.2fs", period1 / 20.0F), period1));
+                tip.add(Component.translatable("awakening_system.screen.missions.tip.situps.footer"));
+                missionTooltip = tip;
+            }
+
+            int repsEarned2 = 1 + Math.min(4, (d.strength() + d.agility()) / 40);
+            int period2 = Math.max(14, 20 - Math.min(8, ((d.strength() + d.agility()) / 2) / 20));
+            if (mouseX >= c2X && mouseX < c2X + colW && mouseY >= cardY + 16 && mouseY < cardY + 32) {
+                List<Component> tip = new ArrayList<>();
+                tip.add(Component.translatable("awakening_system.screen.missions.tip.squats.title"));
+                tip.add(Component.translatable("awakening_system.screen.missions.tip.squats.stat", d.strength(), d.agility()));
+                tip.add(Component.translatable("awakening_system.screen.missions.tip.squats.reps", repsEarned2, repsEarned2 > 1 ? Component.translatable("awakening_system.screen.missions.tip.squats.reps_bonus").getString() : ""));
+                tip.add(Component.translatable("awakening_system.screen.missions.tip.squats.time", String.format(java.util.Locale.ROOT, "%.2fs", period2 / 20.0F), period2));
+                tip.add(Component.translatable("awakening_system.screen.missions.tip.squats.footer"));
+                missionTooltip = tip;
+            }
+
+            double agiMult = 1.0 + Math.min(3.0, (double) d.agility() / 30.0);
+            if (mouseX >= c2X && mouseX < c2X + colW && mouseY >= cardY + 34 && mouseY < cardY + 50) {
+                List<Component> tip = new ArrayList<>();
+                tip.add(Component.translatable("awakening_system.screen.missions.tip.running.title"));
+                tip.add(Component.translatable("awakening_system.screen.missions.tip.running.stat", d.agility()));
+                tip.add(Component.translatable("awakening_system.screen.missions.tip.running.mult", String.format(java.util.Locale.ROOT, "%.1fx", agiMult), agiMult > 1.0 ? Component.translatable("awakening_system.screen.missions.tip.running.mult_bonus").getString() : ""));
+                tip.add(Component.translatable("awakening_system.screen.missions.tip.running.prog", d.dailyRunning()));
+                tip.add(Component.translatable("awakening_system.screen.missions.tip.running.footer"));
+                missionTooltip = tip;
+            }
+
+            // Resumen de Recompensas y Botón Reclamar Entrenamiento
+            drawClipped(g, Component.translatable("awakening_system.screen.missions.daily_rewards_summary"), cardX + 8, cardY + 57, 0xFFFFD866, cardW - 146);
+
+            if (d.isDailyQuestComplete() && !d.isDailyClaimed()) {
+                int btnX = cardX + cardW - 132;
+                int btnY = cardY + 54;
+                int btnW = 126;
+                int btnH = 15;
+                boolean hovered = mouseX >= btnX && mouseX < btnX + btnW && mouseY >= btnY && mouseY < btnY + btnH;
+                g.fill(btnX, btnY, btnX + btnW, btnY + btnH, hovered ? 0xFF50FA7B : 0xFF1B7A4E);
+                g.renderOutline(btnX, btnY, btnW, btnH, hovered ? 0xFFFFFFFF : 0xFF70FF9A);
+                drawAutoScaledCentered(g, Component.translatable("awakening_system.screen.missions.solo_daily.claim_btn").withStyle(ChatFormatting.BOLD),
+                        btnX + btnW / 2, btnY + 3, hovered ? 0xFF10202D : 0xFFFFFFFF, btnW - 6);
+            } else if (d.isDailyClaimed()) {
+                int claimTagX = cardX + cardW - 132;
+                drawAutoScaledCentered(g, Component.translatable("awakening_system.screen.missions.solo_daily.claimed"), claimTagX + 63, cardY + 57, 0xFF50FA7B, 126);
+            }
+
+            // ═══════════════════════════════════════════════════════════════
+            // 2. TARJETA: ASOCIACIÓN DE CAZADORES - COMISIÓN DIARIA POR RANGO
+            // ═══════════════════════════════════════════════════════════════
+            int hCardY = top + 177;
+            int hCardH = 84;
+            g.fill(cardX, hCardY, cardX + cardW, hCardY + hCardH, sys30 ? 0x500E261E : (sys20 ? 0x50160926 : 0x500C1925));
+            g.fill(cardX, hCardY, cardX + cardW, hCardY + 1, (sys30 || sys20) ? 0x80FFD700 : 0x8070E8FF);
+            g.fill(cardX, hCardY + hCardH - 1, cardX + cardW, hCardY + hCardH, sys30 ? 0x40163E2A : (sys20 ? 0x409D4EDD : 0x402D7691));
+
+            String rank = d.evaluatedRank();
+            Component hunterHeader = Component.translatable("awakening_system.screen.missions.hunter_header", rank).withStyle(ChatFormatting.BOLD);
+            drawClipped(g, hunterHeader, cardX + 6, hCardY + 4, 0xFFFFAA00, cardW - 130);
+
+            // Estado del Gremio a la derecha
+            Component hunterStatusComp;
+            int hunterStatusCol;
+            if (d.isDailyHunterClaimed()) {
+                hunterStatusComp = Component.translatable("awakening_system.screen.missions.hunter_salary_claimed");
+                hunterStatusCol = 0xFF50FA7B;
+            } else if (d.isDailyHunterComplete()) {
+                hunterStatusComp = Component.translatable("awakening_system.screen.missions.hunter_salary_ready");
+                hunterStatusCol = 0xFFFFD700;
+            } else {
+                hunterStatusComp = Component.translatable("awakening_system.screen.missions.hunter_in_hunt");
+                hunterStatusCol = MUTED;
+            }
+            g.drawString(font, hunterStatusComp, cardX + cardW - 6 - font.width(hunterStatusComp), hCardY + 4, hunterStatusCol);
+
+            // Título de la Comisión y Objetivo
+            Component commTitle = getHunterCommissionTitle(rank);
+            drawClipped(g, Component.literal("§e").append(commTitle), cardX + 8, hCardY + 16, 0xFFFFE4A0, cardW - 16);
+
+            int hunterTarget = d.dailyHunterTarget();
+            boolean isBossQuest = d.isBossCommission();
+            Component targetDesc = isBossQuest
+                    ? Component.translatable("awakening_system.screen.missions.hunter_target_boss")
+                    : Component.translatable("awakening_system.screen.missions.hunter_target_mobs", hunterTarget);
+            drawClipped(g, Component.literal("§7").append(targetDesc), cardX + 8, hCardY + 27, 0xFFCCCCCC, cardW - 16);
+
+            // Barra de Progreso de Cacería
+            int hBarX = cardX + 8;
+            int hBarY = hCardY + 39;
+            int hBarW = cardW - 16;
+            int hBarH = 10;
+            float hProgressRatio = isBossQuest
+                    ? (d.dailyHunterBossKills() >= 1 ? 1.0F : Math.min(1.0F, (float) d.dailyHunterKills() / 35.0F))
+                    : Math.min(1.0F, (float) d.dailyHunterKills() / (float) Math.max(1, hunterTarget));
+
+            g.fill(hBarX - 1, hBarY - 1, hBarX + hBarW + 1, hBarY + hBarH + 1, 0xFF050B10);
+            g.fill(hBarX, hBarY, hBarX + hBarW, hBarY + hBarH, sys30 ? 0xFF0E261E : (sys20 ? 0xFF28103F : 0xFF17354B));
+            int hFilledW = (int) (hBarW * hProgressRatio);
+            if (hFilledW > 0) {
+                g.fill(hBarX, hBarY, hBarX + hFilledW, hBarY + hBarH, d.isDailyHunterComplete() ? 0xFF50FA7B : 0xFF276A82);
+                g.fill(hBarX, hBarY, hBarX + hFilledW, hBarY + 2, d.isDailyHunterComplete() ? 0xFF70FF9A : 0xFF70E8FF);
+            }
+            String hProgText = isBossQuest
+                    ? (d.dailyHunterBossKills() >= 1 ? "✔ " + Component.translatable("awakening_system.screen.missions.completed_badge").getString() : d.dailyHunterKills() + " / 35")
+                    : d.dailyHunterKills() + " / " + hunterTarget;
+            g.drawCenteredString(font, Component.literal(hProgText), hBarX + hBarW / 2, hBarY + 1, 0xFFFFFFFF);
+
+            // Roadmap Seccion 66: Tooltip de escalado de Fuerza en la Comision de Cazadores
+            if (mouseX >= hBarX && mouseX < hBarX + hBarW && mouseY >= hBarY && mouseY < hBarY + hBarH) {
+                List<Component> tip = new ArrayList<>();
+                int combatBonus = (d.strength() >= 40) ? 2 : 1;
+                tip.add(Component.translatable("awakening_system.screen.missions.tip.hunter.title"));
+                tip.add(Component.translatable("awakening_system.screen.missions.tip.hunter.stat", d.strength()));
+                tip.add(Component.translatable("awakening_system.screen.missions.tip.hunter.kill_bonus", combatBonus, combatBonus > 1 ? Component.translatable("awakening_system.screen.missions.tip.hunter.kill_bonus_active").getString() : Component.translatable("awakening_system.screen.missions.tip.hunter.kill_bonus_req").getString()));
+                tip.add(Component.translatable("awakening_system.screen.missions.tip.hunter.boss_bonus", d.strength() >= 40 ? 7 : 5));
+                tip.add(Component.translatable("awakening_system.screen.missions.tip.hunter.footer"));
+                missionTooltip = tip;
+            }
+
+            // Salario y Recompensas del Gremio
+            long salary = switch (rank.toUpperCase(java.util.Locale.ROOT)) {
+                case "EX" -> 150000L;
+                case "S", "S+", "SS", "SSS" -> 80000L;
+                case "A", "A+" -> 35000L;
+                case "B", "B+" -> 15000L;
+                case "C", "C+" -> 7500L;
+                case "D", "D+" -> 3500L;
+                default -> 1500L;
+            };
+            int attrPts = SystemData.rankIndex(rank) >= 6 ? 3 : (SystemData.rankIndex(rank) >= 3 ? 2 : 1);
+            Component boxName = getHunterBoxName(rank);
+            Component rewSummary = Component.translatable("awakening_system.screen.missions.hunter_reward_summary", String.valueOf(salary), String.valueOf(attrPts), boxName.getString());
+            drawClipped(g, Component.literal("§6").append(rewSummary), cardX + 8, hCardY + 62, 0xFFFFD866, cardW - 146);
+
+            // Botón de Cobrar Salario
+            if (d.isDailyHunterComplete() && !d.isDailyHunterClaimed()) {
+                int btnX = cardX + cardW - 132;
+                int btnY = hCardY + 59;
+                int btnW = 126;
+                int btnH = 15;
+                boolean hovered = mouseX >= btnX && mouseX < btnX + btnW && mouseY >= btnY && mouseY < btnY + btnH;
+                g.fill(btnX, btnY, btnX + btnW, btnY + btnH, hovered ? 0xFF50FA7B : 0xFF1B7A4E);
+                g.renderOutline(btnX, btnY, btnW, btnH, hovered ? 0xFFFFFFFF : 0xFF70FF9A);
+                drawAutoScaledCentered(g, Component.translatable("awakening_system.screen.missions.hunter_claim_btn").withStyle(ChatFormatting.BOLD),
+                        btnX + btnW / 2, btnY + 4, hovered ? 0xFF10202D : 0xFFFFFFFF, btnW - 6);
+            } else if (d.isDailyHunterClaimed()) {
+                int claimTagX = cardX + cardW - 132;
+                drawAutoScaledCentered(g, Component.translatable("awakening_system.screen.missions.hunter_salary_claimed"), claimTagX + 63, hCardY + 62, 0xFF50FA7B, 126);
+            }
         } else {
-            dailyStatusComp = Component.translatable("awakening_system.screen.missions.solo_daily.in_progress");
-            dailyStatusCol = MUTED;
-        }
-        g.drawString(font, dailyStatusComp, cardX + cardW - 6 - font.width(dailyStatusComp), cardY + 4, dailyStatusCol);
+            // ═══════════════════════════════════════════════════════════════
+            // SUBPESTAÑA 1: ESCENARIO ACTIVO DE ORV (OMNISCIENT READER / DOKKAEBI)
+            // ═══════════════════════════════════════════════════════════════
+            int scenY = top + 98;
+            int scenH = 163;
+            g.fill(cardX, scenY, cardX + cardW, scenY + scenH, sys30 ? 0x500E261E : (sys20 ? 0x50160926 : 0x500C1925));
+            g.fill(cardX, scenY, cardX + cardW, scenY + 1, 0x80FF70E8);
+            g.fill(cardX, scenY + scenH - 1, cardX + cardW, scenY + scenH, 0x409D4EDD);
 
-        // 4 Solo Leveling Physical Exercises (2x2 grid with generous center gap)
-        int trainBtnW = 46;
-        int trainBtnH = 12;
-        int dailyBarW = 96;
-        int colTotalW = dailyBarW + 6 + trainBtnW;
+            // Cabecera del Canal Dokkaebi
+            Component dokHeader = Component.translatable("awakening_system.screen.missions.dokkaebi_header").withStyle(ChatFormatting.BOLD);
+            drawClipped(g, dokHeader, cardX + 8, scenY + 6, 0xFFFF70E8, cardW - 16);
 
-        int c1X = cardX + 10;
-        int c2X = cardX + cardW - 10 - colTotalW;
+            String scenId = d.activeScenario();
+            if (!net.minecraft.client.resources.language.I18n.exists("awakening_system.scenario." + scenId + ".name")) {
+                scenId = "night_hunt";
+            }
+            Component scenName = Component.translatable("awakening_system.scenario." + scenId + ".name");
+            Component scenDesc = Component.translatable("awakening_system.scenario." + scenId + ".desc");
 
-        // Exercise 1: Flexiones (Push-ups) - Column 1 Row 1
-        drawClipped(g, Component.translatable("awakening_system.screen.missions.solo_daily.pushups", d.dailyPushUps(), 100), c1X, cardY + 16, 0xFFE0E0E0, colTotalW);
-        g.fill(c1X, cardY + 27, c1X + dailyBarW, cardY + 32, 0xFF0B141D);
-        int fill1 = (int) (dailyBarW * Math.min(1.0F, (float) d.dailyPushUps() / 100.0F));
-        if (fill1 > 0) g.fill(c1X, cardY + 27, c1X + fill1, cardY + 32, 0xFF50FA7B);
+            drawClipped(g, Component.translatable("awakening_system.screen.missions.objective_prefix").withStyle(ChatFormatting.GOLD).append(scenName.copy().withStyle(ChatFormatting.WHITE)), cardX + 8, scenY + 22, 0xFFFFD866, cardW - 16);
+            drawClipped(g, scenDesc, cardX + 8, scenY + 36, 0xFFD1B3E0, cardW - 16);
 
-        int b0X = c1X + dailyBarW + 6;
-        int b0Y = cardY + 23;
-        boolean h0 = mouseX >= b0X && mouseX < b0X + trainBtnW && mouseY >= b0Y && mouseY < b0Y + trainBtnH;
-        g.fill(b0X, b0Y, b0X + trainBtnW, b0Y + trainBtnH, h0 ? 0xFF1E88E5 : 0xFF0D47A1);
-        g.renderOutline(b0X, b0Y, trainBtnW, trainBtnH, h0 ? 0xFFFFFFFF : 0xFF42A5F5);
-        Component btnTrain0 = d.dailyPushUps() >= 100 ? Component.literal("§a✔ 100") :
-                (h0 ? Component.translatable("awakening_system.screen.missions.train_hover") : Component.translatable("awakening_system.screen.missions.train_btn"));
-        drawAutoScaledCentered(g, btnTrain0, b0X + trainBtnW / 2, b0Y + 2, 0xFFFFFFFF, trainBtnW - 4);
+            // Barra de Progreso del Escenario
+            int sBarX = cardX + 8;
+            int sBarY = scenY + 54;
+            int sBarW = cardW - 16;
+            int sBarH = 12;
+            float sRatio = Math.max(0.0F, Math.min(1.0F, (float) d.scenarioProgress() / (float) Math.max(1, d.scenarioTarget())));
 
-        // Exercise 2: Abdominales (Sit-ups) - Column 1 Row 2
-        drawClipped(g, Component.translatable("awakening_system.screen.missions.solo_daily.situps", d.dailySitUps(), 100), c1X, cardY + 40, 0xFFE0E0E0, colTotalW);
-        g.fill(c1X, cardY + 51, c1X + dailyBarW, cardY + 56, 0xFF0B141D);
-        int fill2 = (int) (dailyBarW * Math.min(1.0F, (float) d.dailySitUps() / 100.0F));
-        if (fill2 > 0) g.fill(c1X, cardY + 51, c1X + fill2, cardY + 56, 0xFF50FA7B);
+            g.fill(sBarX - 1, sBarY - 1, sBarX + sBarW + 1, sBarY + sBarH + 1, 0xFF050B10);
+            g.fill(sBarX, sBarY, sBarX + sBarW, sBarY + sBarH, 0xFF28103F);
+            int sFilledW = (int) (sBarW * sRatio);
+            if (sFilledW > 0) {
+                g.fill(sBarX, sBarY, sBarX + sFilledW, sBarY + sBarH, d.isScenarioComplete() ? 0xFF50FA7B : 0xFF8A2BE2);
+                g.fill(sBarX, sBarY, sBarX + sFilledW, sBarY + 2, d.isScenarioComplete() ? 0xFF70FF9A : 0xFFFFD700);
+            }
+            String compBadge = d.isScenarioComplete() ? " (" + Component.translatable("awakening_system.screen.missions.completed_badge").getString() + ")" : "";
+            String sProgText = d.scenarioProgress() + " / " + d.scenarioTarget() + compBadge;
+            g.drawCenteredString(font, Component.literal(sProgText), sBarX + sBarW / 2, sBarY + 2, 0xFFFFFFFF);
 
-        int b1X = c1X + dailyBarW + 6;
-        int b1Y = cardY + 47;
-        boolean h1 = mouseX >= b1X && mouseX < b1X + trainBtnW && mouseY >= b1Y && mouseY < b1Y + trainBtnH;
-        g.fill(b1X, b1Y, b1X + trainBtnW, b1Y + trainBtnH, h1 ? 0xFF1E88E5 : 0xFF0D47A1);
-        g.renderOutline(b1X, b1Y, trainBtnW, trainBtnH, h1 ? 0xFFFFFFFF : 0xFF42A5F5);
-        Component btnTrain1 = d.dailySitUps() >= 100 ? Component.literal("§a✔ 100") :
-                (h1 ? Component.translatable("awakening_system.screen.missions.train_hover") : Component.translatable("awakening_system.screen.missions.train_btn"));
-        drawAutoScaledCentered(g, btnTrain1, b1X + trainBtnW / 2, b1Y + 2, 0xFFFFFFFF, trainBtnW - 4);
+            // Panel de Constelaciones y Atmósfera
+            int boxY = scenY + 74;
+            int boxH = 50;
+            g.fill(cardX + 8, boxY, cardX + cardW - 8, boxY + boxH, 0x40160926);
+            drawBorder(g, cardX + 8, boxY, cardW - 16, boxH, 0x309D4EDD);
 
-        // Exercise 3: Sentadillas (Squats) - Column 2 Row 1
-        drawClipped(g, Component.translatable("awakening_system.screen.missions.solo_daily.squats", d.dailySquats(), 100), c2X, cardY + 16, 0xFFE0E0E0, colTotalW);
-        g.fill(c2X, cardY + 27, c2X + dailyBarW, cardY + 32, 0xFF0B141D);
-        int fill3 = (int) (dailyBarW * Math.min(1.0F, (float) d.dailySquats() / 100.0F));
-        if (fill3 > 0) g.fill(c2X, cardY + 27, c2X + fill3, cardY + 32, 0xFF50FA7B);
+            drawClipped(g, Component.translatable("awakening_system.screen.missions.astral_broadcast").withStyle(ChatFormatting.GOLD, ChatFormatting.BOLD), cardX + 14, boxY + 6, 0xFFFFD700, cardW - 28);
+            drawClipped(g, Component.translatable("awakening_system.screen.missions.astral_desc1"), cardX + 14, boxY + 18, 0xFFCCCCCC, cardW - 28);
+            drawClipped(g, Component.translatable("awakening_system.screen.missions.astral_desc2"), cardX + 14, boxY + 30, 0xFFD1B3E0, cardW - 28);
 
-        int b2X = c2X + dailyBarW + 6;
-        int b2Y = cardY + 23;
-        boolean h2 = mouseX >= b2X && mouseX < b2X + trainBtnW && mouseY >= b2Y && mouseY < b2Y + trainBtnH;
-        g.fill(b2X, b2Y, b2X + trainBtnW, b2Y + trainBtnH, h2 ? 0xFF1E88E5 : 0xFF0D47A1);
-        g.renderOutline(b2X, b2Y, trainBtnW, trainBtnH, h2 ? 0xFFFFFFFF : 0xFF42A5F5);
-        Component btnTrain2 = d.dailySquats() >= 100 ? Component.literal("§a✔ 100") :
-                (h2 ? Component.translatable("awakening_system.screen.missions.train_hover") : Component.translatable("awakening_system.screen.missions.train_btn"));
-        drawAutoScaledCentered(g, btnTrain2, b2X + trainBtnW / 2, b2Y + 2, 0xFFFFFFFF, trainBtnW - 4);
+            // Recompensa y Botón de Reclamar
+            drawClipped(g, Component.translatable("awakening_system.screen.missions.scenario_reward_summary"), cardX + 8, scenY + 135, 0xFFFFD866, cardW - 156);
 
-        // Exercise 4: Carrera (Running) - Column 2 Row 2 (scaled nicely to match Squats)
-        drawClipped(g, Component.translatable("awakening_system.screen.missions.solo_daily.running", d.dailyRunning(), 1000), c2X, cardY + 40, 0xFFE0E0E0, colTotalW);
-        g.fill(c2X, cardY + 51, c2X + dailyBarW, cardY + 56, 0xFF0B141D);
-        int fill4 = (int) (dailyBarW * Math.min(1.0F, (float) d.dailyRunning() / 1000.0F));
-        if (fill4 > 0) g.fill(c2X, cardY + 51, c2X + fill4, cardY + 56, 0xFF50FA7B);
+            int btnX = cardX + cardW - 146;
+            int btnY = scenY + 131;
+            int btnW = 140;
+            int btnH = 18;
 
-        int b3X = c2X + dailyBarW + 6;
-        int b3Y = cardY + 47;
-        boolean h3 = mouseX >= b3X && mouseX < b3X + trainBtnW && mouseY >= b3Y && mouseY < b3Y + trainBtnH;
-        g.fill(b3X, b3Y, b3X + trainBtnW, b3Y + trainBtnH, h3 ? 0xFF1E88E5 : (d.dailyRunning() >= 1000 ? 0x401B7A4E : 0x400B141D));
-        g.renderOutline(b3X, b3Y, trainBtnW, trainBtnH, h3 ? 0xFFFFFFFF : (d.dailyRunning() >= 1000 ? 0xFF50FA7B : 0x50336688));
-        Component runStatus = d.dailyRunning() >= 1000 ? Component.literal("§a✔ 1km") :
-                (h3 ? Component.translatable("awakening_system.msg.pie") : Component.literal("§71000m"));
-        drawAutoScaledCentered(g, runStatus, b3X + trainBtnW / 2, b3Y + 2, d.dailyRunning() >= 1000 ? 0xFF50FA7B : (h3 ? 0xFFFFFFFF : 0xFF8AAAB8), trainBtnW - 4);
-
-        // Warning & Rewards summary
-        drawClipped(g, Component.translatable("awakening_system.screen.missions.solo_daily.warning"), cardX + 8, cardY + 62, 0xFFFFAA00, cardW - 146);
-        drawClipped(g, Component.translatable("awakening_system.screen.missions.solo_daily.rewards_hint"), cardX + 8, cardY + 74, 0xFFFFD866, cardW - 146);
-
-        if (d.isDailyQuestComplete() && !d.isDailyClaimed()) {
-            int btnX = cardX + cardW - 132;
-            int btnY = cardY + 68;
-            int btnW = 126;
-            int btnH = 14;
-            boolean hovered = mouseX >= btnX && mouseX < btnX + btnW && mouseY >= btnY && mouseY < btnY + btnH;
-            g.fill(btnX, btnY, btnX + btnW, btnY + btnH, hovered ? 0xFF50FA7B : 0xFF1B7A4E);
-            g.renderOutline(btnX, btnY, btnW, btnH, hovered ? 0xFFFFFFFF : 0xFF70FF9A);
-            drawAutoScaledCentered(g, Component.translatable("awakening_system.screen.missions.solo_daily.claim_btn").withStyle(ChatFormatting.BOLD),
-                    btnX + btnW / 2, btnY + 3, hovered ? 0xFF10202D : 0xFFFFFFFF, btnW - 6);
-        } else if (d.isDailyClaimed()) {
-            int claimTagX = cardX + cardW - 132;
-            drawAutoScaledCentered(g, Component.translatable("awakening_system.screen.missions.solo_daily.claimed"), claimTagX + 63, cardY + 70, 0xFF50FA7B, 126);
+            if (d.isScenarioComplete()) {
+                boolean sHov = mouseX >= btnX && mouseX < btnX + btnW && mouseY >= btnY && mouseY < btnY + btnH;
+                g.fill(btnX, btnY, btnX + btnW, btnY + btnH, sHov ? 0xFF50FA7B : 0xFF1B7A4E);
+                g.renderOutline(btnX, btnY, btnW, btnH, sHov ? 0xFFFFFFFF : 0xFF70FF9A);
+                drawAutoScaledCentered(g, Component.translatable("awakening_system.screen.missions.claim_scenario_btn").withStyle(ChatFormatting.BOLD), btnX + btnW / 2, btnY + 5, sHov ? 0xFF10202D : 0xFFFFFFFF, btnW - 6);
+            } else {
+                g.fill(btnX, btnY, btnX + btnW, btnY + btnH, 0x40160926);
+                drawBorder(g, btnX, btnY, btnW, btnH, 0x409D4EDD);
+                drawAutoScaledCentered(g, Component.translatable("awakening_system.screen.missions.in_progress_btn"), btnX + btnW / 2, btnY + 5, 0xFF8AAAB8, btnW - 6);
+            }
         }
 
-        // 2. ACTIVE SCENARIO CARD
-        int scenY = top + 188;
-        int scenH = 68;
-        g.fill(cardX, scenY, cardX + cardW, scenY + scenH, sys30 ? 0x500E261E : (sys20 ? 0x50160926 : 0x500C1925));
-        g.fill(cardX, scenY, cardX + cardW, scenY + 1, (sys30 || sys20) ? 0x80FFD700 : 0x8070E8FF);
-        g.fill(cardX, scenY + scenH - 1, cardX + cardW, scenY + scenH, sys30 ? 0x40163E2A : (sys20 ? 0x409D4EDD : 0x402D7691));
-
-        String scenId = d.activeScenario();
-        if (!net.minecraft.client.resources.language.I18n.exists("awakening_system.scenario." + scenId + ".name")) {
-            scenId = "night_hunt";
+        if (missionTooltip != null) {
+            g.renderComponentTooltip(font, missionTooltip, mouseX, mouseY);
         }
-        Component scenName = Component.translatable("awakening_system.scenario." + scenId + ".name");
-        Component scenDesc = Component.translatable("awakening_system.scenario." + scenId + ".desc");
+    }
 
-        drawClipped(g, Component.translatable("awakening_system.screen.missions.scenario_header", scenName), cardX + 6, scenY + 4, 0xFFFFD866, cardW - 12);
-        drawClipped(g, scenDesc, cardX + 6, scenY + 16, sys30 ? 0xFF88C999 : (sys20 ? 0xFFD1B3E0 : MUTED), cardW - 12);
+    private Component getHunterCommissionTitle(String rank) {
+        return switch (rank.toUpperCase(java.util.Locale.ROOT)) {
+            case "EX", "ABSOLUTE_GOD", "LIMITLESS", "SINGULARITY", "ASTRAL_DEITY", "TIMELESS_MONARCH", "CHAOS_SOVEREIGN", "ABSOLUTE_CREATOR", "SUPREME_CREATOR", "ABSOLUTE", "ABSOLUTE_BEING" -> Component.translatable("awakening_system.screen.missions.comm_title.god");
+            case "S", "S+", "SS", "SSS" -> Component.translatable("awakening_system.screen.missions.comm_title.s");
+            case "A", "A+" -> Component.translatable("awakening_system.screen.missions.comm_title.a");
+            case "B", "B+" -> Component.translatable("awakening_system.screen.missions.comm_title.b");
+            case "C", "C+" -> Component.translatable("awakening_system.screen.missions.comm_title.c");
+            case "D", "D+" -> Component.translatable("awakening_system.screen.missions.comm_title.d");
+            default -> Component.translatable("awakening_system.screen.missions.comm_title.default");
+        };
+    }
 
-        int barX = cardX + 6;
-        int barY = scenY + 28;
-        int barW = cardW - 120;
-        int barH = 10;
-        float progressRatio = Math.max(0.0F, Math.min(1.0F, (float) d.scenarioProgress() / d.scenarioTarget()));
-        g.fill(barX - 1, barY - 1, barX + barW + 1, barY + barH + 1, 0xFF050B10);
-        g.fill(barX, barY, barX + barW, barY + barH, sys30 ? 0xFF0E261E : (sys20 ? 0xFF28103F : 0xFF17354B));
-        int filledW = (int) (barW * progressRatio);
-        if (filledW > 0) {
-            g.fill(barX, barY, barX + filledW, barY + barH, d.isScenarioComplete() ? 0xFF50FA7B : (sys30 ? 0xFF1B7A4E : (sys20 ? 0xFF8A2BE2 : 0xFF276A82)));
-            g.fill(barX, barY, barX + filledW, barY + 2, d.isScenarioComplete() ? 0xFF70FF9A : ((sys30 || sys20) ? 0xFFFFD700 : 0xFF70E8FF));
-        }
-        String progressText = d.scenarioProgress() + " / " + d.scenarioTarget();
-        g.drawCenteredString(font, Component.literal(progressText), barX + barW / 2, barY + 1, 0xFFFFFFFF);
-
-        if (d.isScenarioComplete()) {
-            int btnX = cardX + cardW - 108;
-            int btnY = scenY + 25;
-            int btnW = 102;
-            int btnH = 16;
-            boolean hovered = mouseX >= btnX && mouseX < btnX + btnW && mouseY >= btnY && mouseY < btnY + btnH;
-            g.fill(btnX, btnY, btnX + btnW, btnY + btnH, hovered ? 0xFF50FA7B : (sys30 ? 0xFF1B7A4E : (sys20 ? 0xFF8A2BE2 : 0xFF276A82)));
-            g.drawCenteredString(font, Component.translatable("awakening_system.screen.missions.claim_btn"), btnX + btnW / 2, btnY + 4, hovered ? 0xFF10202D : 0xFFFFFFFF);
-        } else {
-            drawClipped(g, Component.translatable("awakening_system.screen.missions.reward_summary"), cardX + cardW - 108, scenY + 29, 0xFFFFD866, 102);
-        }
+    private Component getHunterBoxName(String rank) {
+        return switch (rank.toUpperCase(java.util.Locale.ROOT)) {
+            case "EX" -> Component.translatable("awakening_system.screen.missions.hunter_box.primordial");
+            case "S", "S+", "SS", "SSS" -> Component.translatable("awakening_system.screen.missions.hunter_box.mythic");
+            case "A", "A+" -> Component.translatable("awakening_system.screen.missions.hunter_box.legendary");
+            case "B", "B+" -> Component.translatable("awakening_system.screen.missions.hunter_box.epic");
+            case "C", "C+", "D", "D+" -> Component.translatable("awakening_system.screen.missions.hunter_box.rare");
+            default -> Component.translatable("awakening_system.screen.missions.hunter_box.common");
+        };
     }
 
     private void renderTitles(GuiGraphics g, int left, int top, SystemData d, int mouseX, int mouseY) {
@@ -4389,15 +4753,145 @@ public final class SystemScreen extends Screen {
         g.drawCenteredString(font, btnText, btnX + btnW / 2, btnY + 8, textCol);
     }
 
+    private String getItemDescription(ShopDefinitions.Entry entry, ItemStack stack) {
+        if (entry == null) return "";
+        if (ShopDefinitions.isBoxId(entry.id())) {
+            String descKey = entry.nameKey() + ".desc";
+            Component trans = Component.translatable(descKey);
+            if (!trans.getString().equals(descKey)) {
+                return trans.getString();
+            }
+            return switch (entry.id()) {
+                case "box_primordial" -> Component.translatable("awakening_system.shop.desc.box_primordial").getString();
+                case "box_mythic" -> Component.translatable("awakening_system.shop.desc.box_mythic").getString();
+                case "box_legendary" -> Component.translatable("awakening_system.shop.desc.box_legendary").getString();
+                case "box_epic" -> Component.translatable("awakening_system.shop.desc.box_epic").getString();
+                case "box_rare" -> Component.translatable("awakening_system.shop.desc.box_rare").getString();
+                case "lucky_box" -> Component.translatable("awakening_system.shop.item.lucky_box.desc").getString();
+                default -> Component.translatable("awakening_system.shop.desc.box_common").getString();
+            };
+        }
+        if (!stack.isEmpty() && minecraft != null && minecraft.level != null) {
+            List<Component> tooltip = stack.getTooltipLines(net.minecraft.world.item.Item.TooltipContext.of(minecraft.level), minecraft.player, net.minecraft.world.item.TooltipFlag.NORMAL);
+            if (tooltip.size() > 1) {
+                StringBuilder sb = new StringBuilder();
+                for (int i = 1; i < Math.min(tooltip.size(), 4); i++) {
+                    String line = tooltip.get(i).getString().trim();
+                    if (!line.isEmpty()) {
+                        if (sb.length() > 0) sb.append(" ");
+                        sb.append(line);
+                    }
+                }
+                if (sb.length() > 0) return sb.toString();
+            }
+        }
+        if (entry.nameKey() != null && !entry.nameKey().isEmpty()) {
+            String descKey = entry.nameKey() + ".desc";
+            Component trans = Component.translatable(descKey);
+            if (!trans.getString().equals(descKey)) {
+                return trans.getString();
+            }
+        }
+        if (entry.id().contains("furnace")) {
+            return Component.translatable("awakening_system.shop.desc.furnace").getString();
+        }
+        if (entry.id().startsWith("upgrade_")) {
+            return Component.translatable("awakening_system.shop.desc.upgrade").getString();
+        }
+        if (entry.id().endsWith("_key") || entry.id().contains("ticket")) {
+            return Component.translatable("awakening_system.shop.desc.key").getString();
+        }
+        if (entry.id().endsWith("_pouch")) {
+            return Component.translatable("awakening_system.shop.desc.pouch").getString();
+        }
+        if ("roulette_altar".equals(entry.id())) {
+            return Component.translatable("awakening_system.shop.desc.roulette_altar").getString();
+        }
+        if ("death_king_clock".equals(entry.id())) {
+            return Component.translatable("awakening_system.shop.desc.death_king_clock").getString();
+        }
+
+        return switch (entry.category()) {
+            case "weapons" -> Component.translatable("awakening_system.shop.desc.cat_weapons").getString();
+            case "potions" -> Component.translatable("awakening_system.shop.desc.cat_potions").getString();
+            case "materials" -> Component.translatable("awakening_system.shop.desc.cat_materials").getString();
+            case "utility" -> Component.translatable("awakening_system.shop.desc.cat_utility").getString();
+            case "equipment", "gear", "armor" -> Component.translatable("awakening_system.shop.desc.cat_gear").getString();
+            case "relics" -> Component.translatable("awakening_system.shop.desc.cat_relics").getString();
+            default -> Component.translatable("awakening_system.shop.desc.default").getString();
+        };
+    }
+
+    private Component getItemStats(ShopDefinitions.Entry entry, ItemStack stack) {
+        if (entry == null) return Component.empty();
+        if (ShopDefinitions.isBoxId(entry.id())) {
+            return switch (entry.id()) {
+                case "box_primordial" -> Component.translatable("awakening_system.screen.shop.tier_primordial");
+                case "box_mythic" -> Component.translatable("awakening_system.screen.shop.tier_mythic");
+                case "box_legendary" -> Component.translatable("awakening_system.screen.shop.tier_legendary");
+                case "box_epic" -> Component.translatable("awakening_system.screen.shop.tier_epic");
+                case "box_rare" -> Component.translatable("awakening_system.screen.shop.tier_rare");
+                default -> Component.translatable("awakening_system.screen.shop.tier_common");
+            };
+        }
+        if (!stack.isEmpty()) {
+            net.minecraft.world.item.Item item = stack.getItem();
+            if (item instanceof net.minecraft.world.item.SwordItem sword) {
+                int dmg = (int) (sword.getTier().getAttackDamageBonus() + 4);
+                return Component.translatable("awakening_system.screen.shop.stat_attack", dmg);
+            }
+            if (item instanceof net.minecraft.world.item.ArmorItem armor) {
+                return Component.translatable("awakening_system.screen.shop.stat_defense", armor.getDefense(), (int) armor.getToughness());
+            }
+        }
+        String id = entry.id().toLowerCase(java.util.Locale.ROOT);
+        if ("boxes".equals(entry.category())) {
+            return Component.translatable("awakening_system.screen.shop.stat_type", Component.translatable("awakening_system.screen.shop.category.boxes").getString());
+        }
+        if (id.contains("furnace")) {
+            return Component.translatable("awakening_system.screen.shop.stat_forge");
+        }
+        if (id.contains("key") || id.contains("scroll") || id.contains("ticket")) {
+            return Component.translatable("awakening_system.screen.shop.stat_access");
+        }
+        return Component.translatable("awakening_system.screen.shop.stat_type", getCategoryDisplayName(entry.category()));
+    }
+
+    public static String getCategoryDisplayName(String cat) {
+        if (cat == null || cat.isEmpty()) return "General";
+        String catLower = cat.toLowerCase(java.util.Locale.ROOT);
+        String categoryKey = "awakening_system.screen.shop.category." + catLower;
+        if (net.minecraft.client.resources.language.I18n.exists(categoryKey)) {
+            return net.minecraft.client.resources.language.I18n.get(categoryKey);
+        }
+        String catKey = "awakening_system.screen.shop.cat." + catLower;
+        if (net.minecraft.client.resources.language.I18n.exists(catKey)) {
+            return net.minecraft.client.resources.language.I18n.get(catKey);
+        }
+        return switch (catLower) {
+            case "utility" -> Component.translatable("awakening_system.screen.shop.cat.utility").getString();
+            case "equipment", "gear" -> Component.translatable("awakening_system.screen.shop.cat.gear").getString();
+            case "weapons" -> Component.translatable("awakening_system.screen.shop.cat.weapons").getString();
+            case "armor" -> Component.translatable("awakening_system.screen.shop.cat.armor").getString();
+            case "tools" -> Component.translatable("awakening_system.screen.shop.cat.tools").getString();
+            case "relics" -> Component.translatable("awakening_system.screen.shop.cat.relics").getString();
+            case "consumables" -> Component.translatable("awakening_system.screen.shop.cat.consumables").getString();
+            case "materials" -> Component.translatable("awakening_system.screen.shop.cat.materials").getString();
+            case "boxes" -> Component.translatable("awakening_system.screen.shop.cat.boxes").getString();
+            case "all" -> Component.translatable("awakening_system.screen.shop.cat.all").getString();
+            default -> cat.substring(0, 1).toUpperCase(java.util.Locale.ROOT) + cat.substring(1);
+        };
+    }
+
     private void renderBuyShop(GuiGraphics g, int left, int top, SystemData d, int mouseX, int mouseY) {
         boolean sys30 = isSys30();
         boolean sys20 = isSys20() || sys30;
-        int catX = left + 30;
+        int catX = left + 26;
         int catY = top + 100;
         for (int c = 0; c < SHOP_CATEGORIES.length; c++) {
             String cat = SHOP_CATEGORIES[c];
             Component catLabel = Component.translatable("awakening_system.screen.shop.cat." + cat);
-            int btnW = Math.max(34, font.width(catLabel) + 10);
+            int btnW = Math.max(32, font.width(catLabel) + 8);
             boolean selected = shopCategory.equalsIgnoreCase(cat);
             boolean hovered = mouseX >= catX && mouseX < catX + btnW && mouseY >= catY && mouseY < catY + 16;
             g.fill(catX, catY, catX + btnW, catY + 16, selected ? (sys30 ? 0xFF1C382E : (sys20 ? 0xFF3A1259 : 0xFF276A82)) : (hovered ? (sys30 ? 0x40163E2A : (sys20 ? 0x409D4EDD : 0x402D7691)) : (sys30 ? 0xFF0A1815 : (sys20 ? 0xFF160926 : 0xFF102536))));
@@ -4405,11 +4899,11 @@ public final class SystemScreen extends Screen {
             int textColor = selected ? ((sys30 || sys20) ? 0xFFFFD700 : CYAN) : (hovered ? (sys30 ? 0xFF50FA7B : (sys20 ? 0xFFF2D6 : 0xFFFFFFFF)) : (sys30 ? 0xFF88C999 : (sys20 ? 0xFFD1B3E0 : MUTED)));
             if ("boxes".equals(cat)) textColor = selected ? 0xFFFFAA00 : (hovered ? 0xFFFFD866 : 0xFFFFAA00);
             g.drawCenteredString(font, catLabel, catX + btnW / 2, catY + 4, textColor);
-            catX += btnW + 3;
+            catX += btnW + 2;
         }
 
         if (shopSearchBox != null) {
-            int sX = left + 412 - 92;
+            int sX = left + 412 - 92;   // where the text field itself sits (updateSearchBoxPosition), so the text stays inside
             int sY = top + 100;
             int sW = 92;
             int sH = 16;
@@ -4422,39 +4916,59 @@ public final class SystemScreen extends Screen {
         }
 
         List<ShopDefinitions.Entry> entries = availableShopEntries();
-        int maxScroll = Math.max(0, entries.size() - 4);
+        if (selectedShopEntry == null && !entries.isEmpty()) {
+            selectedShopEntry = entries.get(0);
+        } else if (selectedShopEntry != null && !entries.contains(selectedShopEntry)) {
+            if (!entries.isEmpty()) selectedShopEntry = entries.get(0);
+        }
+
+        // ==========================================
+        // PANEL IZQUIERDO: CATALOGO (Width: 212)
+        // ==========================================
+        int catPanelX = left + 26;
+        int catPanelY = top + 120;
+        int catPanelW = 212;
+        int catPanelH = 138;
+
+        g.fill(catPanelX, catPanelY, catPanelX + catPanelW, catPanelY + catPanelH, sys30 ? 0x600A1815 : (sys20 ? 0x60160926 : 0x600C1925));
+        drawBorder(g, catPanelX, catPanelY, catPanelW, catPanelH, sys30 ? 0x6000FF88 : (sys20 ? 0x609D4EDD : 0x6000E5FF));
+
+        int maxScroll = Math.max(0, entries.size() - 5);
         if (shopScroll > maxScroll) shopScroll = maxScroll;
 
-        enableScissorScaled(g, left + 28, top + 119, left + 412, top + 260);
-        ItemStack hoveredStack = null;
-        ShopDefinitions.Entry hoveredBoxEntry = null;
-        List<Component> lockedTooltip = null;
+        enableScissorScaled(g, catPanelX + 1, catPanelY + 1, catPanelX + catPanelW - 6, catPanelY + catPanelH - 1);
         for (int row = 0; row < entries.size(); row++) {
             ShopDefinitions.Entry entry = entries.get(row);
-            int entryY = top + 122 + (row - shopScroll) * 32;
-            if (entryY < top + 118 || entryY >= top + 258) continue;
-            boolean hovered = mouseX >= left + 30 && mouseX < left + 406 && mouseY >= entryY && mouseY < entryY + 28;
-            if (hovered) g.fill(left + 30, entryY, left + 406, entryY + 28, sys30 ? 0x30163E2A : (sys20 ? 0x303A1259 : 0x301C465D));
+            int entryY = catPanelY + 2 + (row - shopScroll) * 27;
+            if (entryY < catPanelY - 26 || entryY >= catPanelY + catPanelH) continue;
+
+            boolean isSelected = selectedShopEntry != null && selectedShopEntry.id().equals(entry.id());
+            boolean hovered = mouseX >= catPanelX + 2 && mouseX < catPanelX + catPanelW - 8 && mouseY >= entryY && mouseY < entryY + 26;
+
+            int rowBg = isSelected ? (sys30 ? 0x501C382E : (sys20 ? 0x503A1259 : 0x50276A82))
+                    : (hovered ? (sys30 ? 0x30163E2A : (sys20 ? 0x303A1259 : 0x301C465D)) : 0x20000000);
+            g.fill(catPanelX + 3, entryY, catPanelX + catPanelW - 8, entryY + 26, rowBg);
+
+            int accentCol = (sys30 || sys20) ? 0xFFFFD700 : CYAN;
+            if (isSelected) {
+                g.fill(catPanelX + 3, entryY, catPanelX + 5, entryY + 26, accentCol);
+                drawBorder(g, catPanelX + 3, entryY, catPanelW - 11, 26, accentCol);
+            } else if (hovered) {
+                drawBorder(g, catPanelX + 3, entryY, catPanelW - 11, 26, 0x402D7691);
+            }
 
             ItemStack stack = ItemStack.EMPTY;
             ResourceLocation boxTex = getShopBoxTexture(entry.id());
             if (boxTex != null) {
                 com.mojang.blaze3d.systems.RenderSystem.enableBlend();
-                g.blit(boxTex, left + 34, entryY + 4, 0.0F, 0.0F, 16, 16, 16, 16);
-                if (mouseX >= left + 34 && mouseX < left + 52 && mouseY >= entryY + 4 && mouseY < entryY + 22) {
-                    hoveredBoxEntry = entry;
-                }
+                g.blit(boxTex, catPanelX + 7, entryY + 5, 0.0F, 0.0F, 16, 16, 16, 16);
             } else {
                 stack = ShopDefinitions.createStack(entry);
-                g.renderItem(stack, left + 34, entryY + 4);
-                if (mouseX >= left + 34 && mouseX < left + 52 && mouseY >= entryY + 4 && mouseY < entryY + 22) {
-                    hoveredStack = stack;
-                }
+                g.renderItem(stack, catPanelX + 7, entryY + 5);
             }
 
             boolean unlocked = ShopDefinitions.isUnlocked(entry, d);
-
-            int nameColor = 0xFFFFFFFF;
+            int nameColor = isSelected ? 0xFFFFFFFF : (!unlocked ? 0xFF888888 : 0xFFE0E0E0);
             if ("boxes".equals(entry.category())) {
                 nameColor = switch (entry.id()) {
                     case "box_primordial" -> 0xFFFFD700;
@@ -4467,27 +4981,6 @@ public final class SystemScreen extends Screen {
                 };
             }
 
-            int btnW = 58;
-            int btnX = left + 344;
-            boolean btnHovered = mouseX >= btnX && mouseX < btnX + btnW && mouseY >= entryY + 5 && mouseY < entryY + 23;
-
-            Component price = Component.translatable("awakening_system.screen.shop.price", entry.cost(), entry.amount());
-            boolean canAfford = d.coins() >= entry.cost();
-            int priceColor = !unlocked ? 0xFF888888 : (canAfford ? 0xFFFFD866 : 0xFFFF7666);
-            int priceW = font.width(price);
-            int priceX = btnX - 8 - priceW;
-            int coinIconX = priceX - 12;
-
-            ItemStack coinIcon = SystemItems.coin(1);
-            g.pose().pushPose();
-            g.pose().translate(coinIconX, entryY + 8, 0);
-            g.pose().scale(0.6F, 0.6F, 1.0F);
-            g.renderItem(coinIcon, 0, 0);
-            g.pose().popPose();
-
-            g.drawString(font, price, priceX, entryY + 9, priceColor);
-
-            int titleMaxW = Math.max(60, coinIconX - (left + 58) - 4);
             Component itemTitle;
             if (entry.nameKey() != null && !entry.nameKey().isEmpty() && entry.nameKey().startsWith("awakening_system.")) {
                 itemTitle = Component.translatable(entry.nameKey());
@@ -4498,119 +4991,196 @@ public final class SystemScreen extends Screen {
             } else {
                 itemTitle = Component.literal(entry.id());
             }
-            drawClipped(g, itemTitle, left + 58, entryY + 3, hovered ? ((sys30 || sys20) ? 0xFFFFD700 : CYAN) : nameColor, titleMaxW);
-            
-            if (unlocked) {
-                g.drawString(font, Component.translatable("awakening_system.screen.shop.category." + entry.category()), left + 58, entryY + 15, sys30 ? 0xFF88C999 : (sys20 ? 0xFFD1B3E0 : MUTED));
-            } else {
-                boolean levelLocked = entry.minLevel() > 0 && d.level() < entry.minLevel();
-                boolean dimLocked = !entry.requiredDimension().isEmpty() && !d.hasVisitedDimension(entry.requiredDimension());
-                boolean tierLocked = (entry.requiredSystemTier() == 2 && !isSys20())
-                        || (entry.requiredSystemTier() == 3 && !isSys30())
-                        || (entry.requiredSystemTier() >= 4 && !isSys40());
-                Component lockMsg;
-                if (tierLocked) {
-                    if (entry.requiredSystemTier() == 2) {
-                        lockMsg = Component.translatable("awakening_system.screen.shop.lock.sys20");
-                    } else if (entry.requiredSystemTier() == 3) {
-                        lockMsg = Component.translatable("awakening_system.screen.shop.lock.sys30");
-                    } else {
-                        lockMsg = Component.translatable("awakening_system.screen.shop.lock.sys40");
-                    }
-                } else if (levelLocked && dimLocked) {
-                    lockMsg = Component.translatable("awakening_system.screen.shop.lock.dual", entry.minLevel(), getDimShortName(entry.requiredDimension()));
-                } else if (ShopDefinitions.requiresEnd(entry.id()) && (!d.hasVisitedDimension("minecraft:the_end") && !d.hasVisitedDimension("the_end") && !d.isEnderDragonDefeated())) {
-                    lockMsg = Component.translatable("awakening_system.shop.lock_end_short");
-                } else if (levelLocked) {
-                    lockMsg = Component.translatable("awakening_system.screen.shop.lock.level", entry.minLevel());
-                } else if (dimLocked) {
-                    lockMsg = getDimLockComponent(entry.requiredDimension());
-                } else {
-                    lockMsg = Component.translatable("awakening_system.screen.shop.lock.locked");
-                }
-                g.drawString(font, lockMsg, left + 58, entryY + 15, 0xFFFF5555);
-            }
+            drawClipped(g, itemTitle, catPanelX + 26, entryY + 3, nameColor, 105);
 
-            if (unlocked) {
-                boolean isDirectOpenBox = ShopDefinitions.isBoxId(entry.id());
-                String btnKey = isDirectOpenBox ? "awakening_system.screen.shop.open_btn" : "awakening_system.screen.shop.buy_btn";
-                Component btnText = Component.translatable(btnKey);
-                g.fill(btnX, entryY + 5, btnX + btnW, entryY + 23, btnHovered ? (canAfford ? 0xFF2ECC71 : 0xFFE74C3C) : (canAfford ? 0xFF1D5A40 : 0xFF3A1E24));
-                drawBorder(g, btnX, entryY + 5, btnW, 18, btnHovered ? (canAfford ? 0xFFFFFFFF : 0xFFFF5555) : (canAfford ? 0xFF50FA7B : 0xFF882222));
-                g.drawCenteredString(font, btnText, btnX + btnW / 2, entryY + 9, btnHovered ? 0xFFFFFFFF : (canAfford ? 0xFF50FA7B : 0xFFFF7666));
-            } else {
-                g.fill(btnX, entryY + 5, btnX + btnW, entryY + 23, btnHovered ? 0xFF3A1118 : 0xFF200B0E);
-                drawBorder(g, btnX, entryY + 5, btnW, 18, 0xFF882222);
-                g.drawCenteredString(font, Component.translatable("awakening_system.shop.locked_badge"), btnX + btnW / 2, entryY + 9, 0xFFFF7666);
-                if (btnHovered || (hovered && mouseX >= left + 58)) {
-                    boolean levelLocked = entry.minLevel() > 0 && d.level() < entry.minLevel();
-                    boolean dimLocked = !entry.requiredDimension().isEmpty() && !d.hasVisitedDimension(entry.requiredDimension());
-                    boolean tierLocked = (entry.requiredSystemTier() == 2 && !isSys20())
-                            || (entry.requiredSystemTier() == 3 && !isSys30())
-                            || (entry.requiredSystemTier() >= 4 && !isSys40());
-                    List<Component> list = new ArrayList<>();
-                    list.add(Component.translatable("awakening_system.shop.locked_title").copy().withStyle(net.minecraft.ChatFormatting.RED, net.minecraft.ChatFormatting.BOLD));
+            String reqRank = ShopDefinitions.requiredRank(entry);
+            int rankColor = unlocked ? 0xFF50FA7B : 0xFFFF5555;
+            int tierLeft = ShopDefinitions.missingSystemTier(entry, d);
+            // the rank, and the System version too when that is what still locks it
+            g.drawString(font, "[" + reqRank + "]" + (tierLeft > 0 ? " 🔒" + tierLeft + ".0" : ""), catPanelX + 26, entryY + 14, rankColor);
 
-                    if (entry.requiredSystemTier() >= 2) {
-                        String tierStr = entry.requiredSystemTier() >= 4 ? "4.0" : (entry.requiredSystemTier() == 3 ? "3.0" : "2.0");
-                        if (tierLocked) {
-                            list.add(Component.literal("✗ ").withStyle(net.minecraft.ChatFormatting.RED)
-                                    .append(Component.translatable("awakening_system.shop.locked_tier", tierStr).copy().withStyle(net.minecraft.ChatFormatting.RED)));
-                        } else {
-                            list.add(Component.literal("✔ ").withStyle(net.minecraft.ChatFormatting.GREEN)
-                                    .append(Component.translatable("awakening_system.shop.locked_tier", tierStr).copy().withStyle(net.minecraft.ChatFormatting.GREEN)));
-                        }
-                    }
+            Component priceComp = Component.literal("" + entry.cost());
+            boolean canAfford = d.coins() >= entry.cost();
+            int priceColor = !unlocked ? 0xFF666666 : (canAfford ? 0xFFFFD866 : 0xFFFF7666);
+            int priceW = font.width(priceComp);
+            int priceX = catPanelX + catPanelW - 12 - priceW;
 
-                    if (entry.minLevel() > 0) {
-                        net.minecraft.ChatFormatting cf = levelLocked ? net.minecraft.ChatFormatting.RED : net.minecraft.ChatFormatting.GREEN;
-                        String mark = levelLocked ? "✗ " : "✔ ";
-                        list.add(Component.literal(mark).withStyle(cf)
-                                .append(Component.translatable("awakening_system.screen.shop.lock.level", entry.minLevel()).copy().withStyle(cf)));
-                    }
-                    if (ShopDefinitions.requiresEnd(entry.id())) {
-                        boolean endLocked = !d.hasVisitedDimension("minecraft:the_end") && !d.hasVisitedDimension("the_end") && !d.isEnderDragonDefeated();
-                        net.minecraft.ChatFormatting cf = endLocked ? net.minecraft.ChatFormatting.RED : net.minecraft.ChatFormatting.GREEN;
-                        String mark = endLocked ? "✖ " : "✔ ";
-                        list.add(Component.literal(mark).withStyle(cf)
-                                .append(Component.translatable("awakening_system.shop.locked_end").copy().withStyle(cf)));
-                    }
-                    if (!entry.requiredDimension().isEmpty()) {
-                        net.minecraft.ChatFormatting cf = dimLocked ? net.minecraft.ChatFormatting.RED : net.minecraft.ChatFormatting.GREEN;
-                        String mark = dimLocked ? "✗ " : "✔ ";
-                        list.add(Component.literal(mark).withStyle(cf)
-                                .append(Component.translatable("awakening_system.shop.locked_dim", getDimDisplayName(entry.requiredDimension())).copy().withStyle(cf)));
-                    }
-                    lockedTooltip = list;
-                }
-            }
+            ItemStack coinIcon = SystemItems.coin(1);
+            g.pose().pushPose();
+            g.pose().translate(priceX - 11, entryY + 13, 0);
+            g.pose().scale(0.55F, 0.55F, 1.0F);
+            g.renderItem(coinIcon, 0, 0);
+            g.pose().popPose();
+
+            g.drawString(font, priceComp, priceX, entryY + 14, priceColor);
         }
         g.disableScissor();
 
-        if (hoveredBoxEntry != null) {
-            List<Component> boxTooltip = new ArrayList<>();
-            boxTooltip.add(Component.translatable(hoveredBoxEntry.nameKey()).copy().withStyle(net.minecraft.ChatFormatting.BOLD));
-            String descKey = hoveredBoxEntry.nameKey() + ".desc";
-            boxTooltip.add(Component.translatable(descKey).copy().withStyle(net.minecraft.ChatFormatting.GRAY));
-            g.renderComponentTooltip(font, boxTooltip, mouseX, mouseY);
-        } else if (hoveredStack != null && !hoveredStack.isEmpty()) {
-            g.renderTooltip(font, hoveredStack, mouseX, mouseY);
-        } else if (lockedTooltip != null) {
-            g.renderComponentTooltip(font, lockedTooltip, mouseX, mouseY);
-        }
-
-        if (entries.size() > 4) {
-            int trackTop = top + 122;
-            int trackBottom = top + 256;
-            int thumbHeight = Math.max(14, (trackBottom - trackTop) * 4 / entries.size());
+        // Scrollbar del Catalogo
+        if (entries.size() > 5) {
+            int trackTop = catPanelY + 3;
+            int trackBottom = catPanelY + catPanelH - 3;
+            int thumbHeight = Math.max(14, (trackBottom - trackTop) * 5 / entries.size());
             int thumbRange = trackBottom - trackTop - thumbHeight;
             int thumbY = trackTop + thumbRange * shopScroll / maxScroll;
-            boolean scrollHover = mouseX >= left + W - 24 && mouseX <= left + W - 8 && mouseY >= trackTop && mouseY <= trackBottom;
             int trackCol = sys30 ? 0xFF0A1815 : (sys20 ? 0xFF160926 : 0xFF0C1925);
-            int thumbCol = (sys30 || sys20) ? ((scrollHover || (isDraggingScrollbar && draggingScrollbarTab == 4)) ? 0xFFFFF176 : 0xFFFFD700)
-                    : ((scrollHover || (isDraggingScrollbar && draggingScrollbarTab == 4)) ? 0xFFA0F5FF : CYAN);
-            g.fill(left + W - 19, trackTop, left + W - 14, trackBottom, trackCol);
-            g.fill(left + W - 19, thumbY, left + W - 14, thumbY + thumbHeight, thumbCol);
+            int thumbCol = (sys30 || sys20) ? 0xFFFFD700 : CYAN;
+            g.fill(catPanelX + catPanelW - 6, trackTop, catPanelX + catPanelW - 2, trackBottom, trackCol);
+            g.fill(catPanelX + catPanelW - 6, thumbY, catPanelX + catPanelW - 2, thumbY + thumbHeight, thumbCol);
+        }
+
+        if (entries.isEmpty()) {
+            g.drawString(font, Component.translatable("awakening_system.screen.shop.empty"), catPanelX + 10, catPanelY + 50, MUTED);
+        }
+
+        // ==========================================
+        // PANEL DERECHO: VISTA DEL OBJETO E INSPECCION (Width: 172)
+        // ==========================================
+        int rightX = left + 242;
+        int rightY = top + 120;
+        int rightW = 172;
+        int rightH = 138;
+
+        g.fill(rightX, rightY, rightX + rightW, rightY + rightH, sys30 ? 0xDD0C1914 : (sys20 ? 0xDD180A26 : 0xDD0A1522));
+        drawBorder(g, rightX, rightY, rightW, rightH, sys30 ? 0x8000FF88 : (sys20 ? 0x809D4EDD : 0x8000E5FF));
+
+        if (selectedShopEntry != null) {
+            ShopDefinitions.Entry sel = selectedShopEntry;
+            ItemStack selStack = ShopDefinitions.createStack(sel);
+            ResourceLocation selBoxTex = getShopBoxTexture(sel.id());
+            boolean unlocked = ShopDefinitions.isUnlocked(sel, d);
+            String reqRank = ShopDefinitions.requiredRank(sel);
+
+            // 1. Marco de Exposicion del Item (36x36)
+            int boxX = rightX + 6;
+            int boxY = rightY + 6;
+            int boxS = 36;
+            g.fill(boxX, boxY, boxX + boxS, boxY + boxS, 0x80050D15);
+            drawBorder(g, boxX, boxY, boxS, boxS, unlocked ? ((sys30 || sys20) ? 0x80FFD700 : 0x8000E5FF) : 0x60882222);
+
+            g.pose().pushPose();
+            g.pose().translate(boxX + 4, boxY + 4, 0);
+            g.pose().scale(1.75F, 1.75F, 1.0F);
+            if (selBoxTex != null) {
+                com.mojang.blaze3d.systems.RenderSystem.enableBlend();
+                g.blit(selBoxTex, 0, 0, 0.0F, 0.0F, 16, 16, 16, 16);
+            } else if (!selStack.isEmpty()) {
+                g.renderItem(selStack, 0, 0);
+            }
+            g.pose().popPose();
+
+            // 2. Cabecera e Informacion Superior
+            int infoX = rightX + 46;
+            Component selTitle;
+            if (sel.nameKey() != null && !sel.nameKey().isEmpty() && sel.nameKey().startsWith("awakening_system.")) {
+                selTitle = Component.translatable(sel.nameKey());
+            } else if (!selStack.isEmpty()) {
+                selTitle = selStack.getHoverName();
+            } else if (sel.nameKey() != null && !sel.nameKey().isEmpty()) {
+                selTitle = Component.translatable(sel.nameKey());
+            } else {
+                selTitle = Component.literal(sel.id());
+            }
+            int titleCol = (sys30 || sys20) ? 0xFFFFD700 : CYAN;
+            drawClipped(g, selTitle, infoX, rightY + 6, titleCol, rightW - 52);
+
+            // Badge de Rango
+            Component rankBadge = Component.translatable("awakening_system.screen.shop.rank_badge", reqRank);
+            g.drawString(font, rankBadge, infoX, rightY + 18, unlocked ? 0xFF50FA7B : 0xFFFF5555);
+
+            // Categoria
+            Component catComp = Component.literal(getCategoryDisplayName(sel.category()));
+            g.drawString(font, catComp, infoX, rightY + 28, MUTED);
+
+            // Divisor
+            g.fill(rightX + 6, rightY + 45, rightX + rightW - 6, rightY + 46, 0x402D7691);
+
+            // 3. Descripcion / Lore del Manhwa
+            String loreText = getItemDescription(sel, selStack);
+            var loreLines = font.split(Component.literal(loreText), rightW - 14);
+            int curLoreY = rightY + 49;
+            for (int i = 0; i < Math.min(loreLines.size(), 3); i++) {
+                g.drawString(font, loreLines.get(i), rightX + 7, curLoreY, 0xFFCCCCCC);
+                curLoreY += 10;
+            }
+
+            // 4. Estadisticas / Propiedades
+            Component statsComp = getItemStats(sel, selStack);
+            drawClipped(g, statsComp, rightX + 7, rightY + 81, 0xFFFFD866, rightW - 14);
+
+            // 5. Estado de Requisito de Rango
+            if (unlocked) {
+                g.drawString(font, Component.translatable("awakening_system.screen.shop.rank_fulfilled"), rightX + 7, rightY + 95, 0xFF50FA7B);
+            } else {
+                boolean levelLocked = sel.minLevel() > 0 && SystemData.rankIndex(d.evaluatedRank()) < SystemData.rankIndex(reqRank);
+                boolean dimLocked = !sel.requiredDimension().isEmpty() && !d.hasVisitedDimension(sel.requiredDimension());
+                if (levelLocked) {
+                    g.drawString(font, Component.translatable("awakening_system.screen.shop.requires_rank", reqRank), rightX + 7, rightY + 95, 0xFFFF5555);
+                } else if (dimLocked) {
+                    g.drawString(font, Component.literal("🔒 " + getDimShortName(sel.requiredDimension())), rightX + 7, rightY + 95, 0xFFFF5555);
+                } else if (ShopDefinitions.missingSystemTier(sel, d) > 0) {
+                    // locked by the System's version (System 4.0 for Teyvat's goods), not by rank
+                    g.drawString(font, Component.translatable("awakening_system.shop.locked_tier", ShopDefinitions.missingSystemTier(sel, d) + ".0"), rightX + 7, rightY + 95, 0xFFFF5555);
+                } else if (ShopDefinitions.requiresEnd(sel.id())) {
+                    // the Ranker Tower's ticket and return scroll open up on reaching the End
+                    int ly = rightY + 91;
+                    for (net.minecraft.util.FormattedCharSequence line : font.split(Component.translatable("awakening_system.shop.locked_end"), 160)) {
+                        g.drawString(font, line, rightX + 7, ly, 0xFFFF5555);
+                        ly += 9;
+                    }
+                } else {
+                    g.drawString(font, Component.translatable("awakening_system.screen.shop.locked"), rightX + 7, rightY + 95, 0xFFFF5555);
+                }
+            }
+
+            // 6. Controles Inferiores (Cantidad y Boton de Compra)
+            int ctrlY = rightY + 112;
+            boolean isBox = ShopDefinitions.isBoxId(sel.id());
+            int totalCost = sel.cost() * (isBox ? 1 : shopBuyAmount);
+            boolean canAfford = d.coins() >= totalCost;
+
+            if (isBox) {
+                // Cofre: Boton ancho unico de apertura
+                boolean btnHov = mouseX >= rightX + 6 && mouseX < rightX + rightW - 6 && mouseY >= ctrlY && mouseY < ctrlY + 20;
+                int btnBg = !unlocked ? 0xFF200B0E : (canAfford ? (btnHov ? 0xFF2ECC71 : 0xFF1D5A40) : 0xFF3A1E24);
+                int btnBorder = !unlocked ? 0xFF882222 : (canAfford ? (btnHov ? 0xFFFFFFFF : 0xFF50FA7B) : 0xFFFF5555);
+                g.fill(rightX + 6, ctrlY, rightX + rightW - 6, ctrlY + 20, btnBg);
+                drawBorder(g, rightX + 6, ctrlY, rightW - 12, 20, btnBorder);
+
+                Component boxBtnText = !unlocked ? Component.translatable("awakening_system.screen.shop.btn_locked")
+                        : (canAfford ? Component.translatable("awakening_system.screen.shop.btn_open", totalCost) : Component.translatable("awakening_system.screen.shop.btn_insufficient"));
+                g.drawCenteredString(font, boxBtnText, rightX + rightW / 2, ctrlY + 6, !unlocked ? 0xFFFF7666 : (canAfford ? 0xFFFFFFFF : 0xFFFF7666));
+            } else {
+                // Selector de Cantidad: [-] [x1] [+]
+                boolean minusHov = mouseX >= rightX + 6 && mouseX < rightX + 22 && mouseY >= ctrlY && mouseY < ctrlY + 20;
+                boolean plusHov = mouseX >= rightX + 46 && mouseX < rightX + 62 && mouseY >= ctrlY && mouseY < ctrlY + 20;
+
+                g.fill(rightX + 6, ctrlY, rightX + 22, ctrlY + 20, minusHov ? 0xFF276A82 : 0xFF102536);
+                drawBorder(g, rightX + 6, ctrlY, 16, 20, minusHov ? CYAN : 0x502D7691);
+                g.drawCenteredString(font, Component.literal("-"), rightX + 14, ctrlY + 6, minusHov ? 0xFFFFFFFF : CYAN);
+
+                g.fill(rightX + 24, ctrlY, rightX + 44, ctrlY + 20, 0xFF081420);
+                drawBorder(g, rightX + 24, ctrlY, 20, 20, 0x402D7691);
+                g.drawCenteredString(font, Component.literal("" + shopBuyAmount), rightX + 34, ctrlY + 6, 0xFFFFFFFF);
+
+                g.fill(rightX + 46, ctrlY, rightX + 62, ctrlY + 20, plusHov ? 0xFF276A82 : 0xFF102536);
+                drawBorder(g, rightX + 46, ctrlY, 16, 20, plusHov ? CYAN : 0x502D7691);
+                g.drawCenteredString(font, Component.literal("+"), rightX + 54, ctrlY + 6, plusHov ? 0xFFFFFFFF : CYAN);
+
+                // Boton de Compra
+                int buyBtnX = rightX + 66;
+                int buyBtnW = rightW - 72;
+                boolean buyHov = mouseX >= buyBtnX && mouseX < buyBtnX + buyBtnW && mouseY >= ctrlY && mouseY < ctrlY + 20;
+
+                int buyBg = !unlocked ? 0xFF200B0E : (canAfford ? (buyHov ? 0xFF2ECC71 : 0xFF1D5A40) : 0xFF3A1E24);
+                int buyBorder = !unlocked ? 0xFF882222 : (canAfford ? (buyHov ? 0xFFFFFFFF : 0xFF50FA7B) : 0xFFFF5555);
+                g.fill(buyBtnX, ctrlY, buyBtnX + buyBtnW, ctrlY + 20, buyBg);
+                drawBorder(g, buyBtnX, ctrlY, buyBtnW, 20, buyBorder);
+
+                Component buyText = !unlocked ? Component.translatable("awakening_system.screen.shop.btn_locked")
+                        : (canAfford ? Component.translatable("awakening_system.screen.shop.btn_buy") : Component.translatable("awakening_system.screen.shop.btn_need_coins"));
+                g.drawCenteredString(font, buyText, buyBtnX + buyBtnW / 2, ctrlY + 6, !unlocked ? 0xFFFF7666 : (canAfford ? 0xFFFFFFFF : 0xFFFF7666));
+            }
         }
 
         if (entries.isEmpty()) g.drawString(font, Component.translatable("awakening_system.screen.shop.empty"), left + 34, top + 140, sys30 ? 0xFF88C999 : (sys20 ? 0xFFD1B3E0 : MUTED));

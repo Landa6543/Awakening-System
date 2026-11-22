@@ -29,8 +29,11 @@ import net.minecraft.world.entity.monster.Monster;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.level.Level;
+import net.minecraft.world.entity.ai.goal.Goal;
 import net.minecraft.world.phys.AABB;
+import net.minecraft.world.phys.Vec3;
 
+import java.util.EnumSet;
 import java.util.List;
 
 /**
@@ -41,9 +44,11 @@ public class FrostarmLawachurlEntity extends Monster {
 
     private static final EntityDataAccessor<Boolean> DATA_SHIELDED =
             SynchedEntityData.defineId(FrostarmLawachurlEntity.class, EntityDataSerializers.BOOLEAN);
+    private static final EntityDataAccessor<Boolean> LEAPING =
+            SynchedEntityData.defineId(FrostarmLawachurlEntity.class, EntityDataSerializers.BOOLEAN);
 
     private float cryoShield = 130.0F;
-    private int slamCooldown = 60;
+    private int slamCooldown = 180;
 
     public FrostarmLawachurlEntity(EntityType<? extends Monster> entityType, Level level) {
         super(entityType, level);
@@ -67,11 +72,21 @@ public class FrostarmLawachurlEntity extends Monster {
     protected void defineSynchedData(SynchedEntityData.Builder builder) {
         super.defineSynchedData(builder);
         builder.define(DATA_SHIELDED, true);
+        builder.define(LEAPING, false);
+    }
+
+    public boolean isLeaping() {
+        return this.entityData.get(LEAPING);
+    }
+
+    public void setLeaping(boolean leaping) {
+        this.entityData.set(LEAPING, leaping);
     }
 
     @Override
     protected void registerGoals() {
-        this.goalSelector.addGoal(1, new FloatGoal(this));
+        this.goalSelector.addGoal(0, new FloatGoal(this));
+        this.goalSelector.addGoal(1, new FrostarmSlamGoal(this));
         this.goalSelector.addGoal(2, new MeleeAttackGoal(this, 1.25D, false));
         this.goalSelector.addGoal(5, new WaterAvoidingRandomStrollGoal(this, 0.8D));
         this.goalSelector.addGoal(7, new LookAtPlayerGoal(this, Player.class, 20.0F));
@@ -88,29 +103,74 @@ public class FrostarmLawachurlEntity extends Monster {
     @Override
     public void tick() {
         super.tick();
-
-        LivingEntity target = this.getTarget();
-        if (!this.level().isClientSide && target != null && target.isAlive()) {
-            if (slamCooldown > 0) {
-                slamCooldown--;
-            } else if (this.distanceToSqr(target) <= 64.0D) {
-                executeFrostSlam(target);
-            }
+        if (this.slamCooldown > 0) {
+            this.slamCooldown--;
         }
     }
 
-    private void executeFrostSlam(LivingEntity target) {
-        this.slamCooldown = 75;
-        if (!(this.level() instanceof ServerLevel sl)) return;
+    static class FrostarmSlamGoal extends Goal {
+        private final FrostarmLawachurlEntity lawachurl;
+        private int leapTicks = 0;
 
-        sl.playSound(null, this.blockPosition(), SoundEvents.GENERIC_EXPLODE.value(), SoundSource.HOSTILE, 2.0F, 1.2F);
-        sl.sendParticles(ParticleTypes.SNOWFLAKE, this.getX(), this.getY() + 0.5D, this.getZ(), 40, 1.5D, 0.5D, 1.5D, 0.1D);
+        public FrostarmSlamGoal(FrostarmLawachurlEntity lawachurl) {
+            this.lawachurl = lawachurl;
+            this.setFlags(EnumSet.of(Flag.MOVE, Flag.JUMP));
+        }
 
-        AABB area = this.getBoundingBox().inflate(3.5D, 1.5D, 3.5D);
-        for (LivingEntity nearby : sl.getEntitiesOfClass(LivingEntity.class, area, e -> e != this && e.isAlive())) {
-            nearby.hurt(this.damageSources().mobAttack(this), 26.0F);
-            nearby.knockback(1.4D, nearby.getX() - this.getX(), nearby.getZ() - this.getZ());
-            nearby.addEffect(new MobEffectInstance(MobEffects.MOVEMENT_SLOWDOWN, 80, 2));
+        @Override
+        public boolean canUse() {
+            LivingEntity target = this.lawachurl.getTarget();
+            return target != null && target.isAlive() && this.lawachurl.slamCooldown <= 0
+                    && this.lawachurl.distanceToSqr(target) > 25.0D && this.lawachurl.distanceToSqr(target) < 225.0D
+                    && this.lawachurl.onGround();
+        }
+
+        @Override
+        public void start() {
+            this.lawachurl.setLeaping(true);
+            this.leapTicks = 40;
+            this.lawachurl.slamCooldown = 200;
+
+            LivingEntity target = this.lawachurl.getTarget();
+            if (target != null) {
+                Vec3 dir = target.position().subtract(this.lawachurl.position()).normalize();
+                this.lawachurl.setDeltaMovement(dir.x * 1.15D, 0.95D, dir.z * 1.15D);
+                this.lawachurl.hasImpulse = true;
+            }
+
+            this.lawachurl.level().playSound(null, this.lawachurl.getX(), this.lawachurl.getY(), this.lawachurl.getZ(),
+                    SoundEvents.RAVAGER_ROAR, SoundSource.HOSTILE, 1.8F, 0.8F);
+        }
+
+        @Override
+        public void tick() {
+            this.leapTicks--;
+
+            if (this.leapTicks < 30 && this.lawachurl.onGround() && !this.lawachurl.level().isClientSide) {
+                ServerLevel sl = (ServerLevel) this.lawachurl.level();
+                sl.playSound(null, this.lawachurl.getX(), this.lawachurl.getY(), this.lawachurl.getZ(),
+                        SoundEvents.GENERIC_EXPLODE.value(), SoundSource.HOSTILE, 2.0F, 1.2F);
+                sl.sendParticles(ParticleTypes.SNOWFLAKE, this.lawachurl.getX(), this.lawachurl.getY() + 0.5D, this.lawachurl.getZ(),
+                        60, 2.0D, 0.5D, 2.0D, 0.15D);
+
+                AABB area = this.lawachurl.getBoundingBox().inflate(4.0D, 1.5D, 4.0D);
+                for (LivingEntity nearby : sl.getEntitiesOfClass(LivingEntity.class, area, e -> e != this.lawachurl && e.isAlive())) {
+                    nearby.hurt(this.lawachurl.damageSources().mobAttack(this.lawachurl), 28.0F);
+                    nearby.knockback(1.5D, nearby.getX() - this.lawachurl.getX(), nearby.getZ() - this.lawachurl.getZ());
+                    nearby.addEffect(new MobEffectInstance(MobEffects.MOVEMENT_SLOWDOWN, 100, 2));
+                }
+                this.leapTicks = 0;
+            }
+        }
+
+        @Override
+        public boolean canContinueToUse() {
+            return this.leapTicks > 0;
+        }
+
+        @Override
+        public void stop() {
+            this.lawachurl.setLeaping(false);
         }
     }
 

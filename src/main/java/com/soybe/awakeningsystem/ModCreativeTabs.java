@@ -81,6 +81,15 @@ public final class ModCreativeTabs {
                         accept(output, SystemItems.DREAD_SCYTHE);
                         accept(output, SystemItems.SHADOW_DAGGERS);
                         accept(output, SystemItems.KASAKAS_VENOM_FANG);
+                        accept(output, SystemItems.TRUTH_KASAKAS_VENOM_FANG);
+                        accept(output, SystemItems.BARUKAS_DAGGER);
+                        accept(output, SystemItems.BLUE_MONSOON);
+                        accept(output, SystemItems.CRIMSON_SHADOW);
+                        accept(output, SystemItems.DEMON_KINGS_DAGGERS);
+                        accept(output, SystemItems.ENNIOS_ROAR);
+                        accept(output, SystemItems.KNIGHT_KILLER);
+                        accept(output, SystemItems.MOONSHADOW);
+                        accept(output, SystemItems.PHANTOMBLADE);
                         accept(output, SystemItems.RADIANT_LIGHT_SWORD);
                         accept(output, SystemItems.SKY_DEMON_SWORD);
                         accept(output, SystemItems.HEAVEN_SHAKING_SWORD);
@@ -1121,6 +1130,8 @@ public final class ModCreativeTabs {
                         accept(output, SystemItems.MOTHER_SPIDER_BOSS_SPAWN_EGG);
                         accept(output, SystemItems.BERU_BOSS_SPAWN_EGG);
                         accept(output, SystemItems.STATUE_OF_GOD_SPAWN_EGG);
+                        accept(output, SystemItems.KAISEL_ALIVE_SPAWN_EGG);
+                        accept(output, SystemItems.KAISEL_SHADOW_SPAWN_EGG);
                         accept(output, SystemItems.LIMBO_OPHANIM_SPAWN_EGG);
                         accept(output, SystemItems.STILT_WALKER_SPAWN_EGG);
                         accept(output, SystemItems.SPIDER_HEAD_SPAWN_EGG);

@@ -720,13 +720,21 @@ public final class ShopDefinitions {
         return "ranker_tower_ticket".equals(entryId) || "ranker_return_scroll".equals(entryId);
     }
 
+    public static String requiredRank(Entry entry) {
+        if (entry == null || entry.minLevel() <= 0) return "F";
+        return SystemData.rankForLevel(entry.minLevel());
+    }
+
     public static boolean isUnlocked(Entry entry, SystemData data) {
         if (entry == null || !isAvailable(entry)) return false;
         if (data == null) return entry.requiredSystemTier() <= 1 && entry.requiredDimension().isEmpty() && entry.minLevel() <= 0;
 
-        // 1. Bloqueo estricto por Nivel de Jugador
-        if (entry.minLevel() > 0 && data.level() < entry.minLevel()) {
-            return false;
+        // 1. Bloqueo estricto por Rango Evaluado del Cazador (Sección 62: evalúa d.evaluatedRank en lugar de solo nivel)
+        if (entry.minLevel() > 0) {
+            String reqRank = requiredRank(entry);
+            if (SystemData.rankIndex(data.evaluatedRank()) < SystemData.rankIndex(reqRank)) {
+                return false;
+            }
         }
 
         // Bloqueo de Progresion Lineal: lo de la Torre de Rankers (boleto y pergamino de retorno) requiere haber viajado al End
@@ -744,22 +752,23 @@ public final class ShopDefinitions {
         }
 
         // 3. Bloqueo por Tier de Sistema
-        if (entry.requiredSystemTier() <= 1) return true;
+        return missingSystemTier(entry, data) == 0;
+    }
+
+    /**
+     * The System version (2 to 4) an entry still waits for, or 0 if the player's System is new enough.
+     * The shop shows it, so an item locked by its version doesn't seem locked by rank alone.
+     */
+    public static int missingSystemTier(Entry entry, SystemData data) {
+        if (entry == null || data == null || entry.requiredSystemTier() <= 1) return 0;
         boolean has40 = data.system40Updated() || data.isSystem40Updating() || data.teyvatUnlocked()
                 || data.hasVisitedDimension("awakening_system:teyvat_world") || data.hasVisitedDimension("awakening_system:teyvat");
         boolean has30 = has40 || data.system30Updated() || data.isSystem30Updating() || data.murimUnlocked()
                 || data.hasVisitedDimension("awakening_system:murim");
         boolean has20 = has30 || data.systemUpdated() || data.isSystemUpdating() || data.isekaiUnlocked()
                 || data.hasVisitedDimension("awakening_system:isekai");
-        if (entry.requiredSystemTier() == 2) {
-            return has20;
-        }
-        if (entry.requiredSystemTier() == 3) {
-            return has30;
-        }
-        if (entry.requiredSystemTier() >= 4) {
-            return has40;
-        }
-        return true;
+        int tier = Math.min(4, entry.requiredSystemTier());
+        boolean has = tier == 2 ? has20 : (tier == 3 ? has30 : has40);
+        return has ? 0 : tier;
     }
 }

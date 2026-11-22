@@ -78,7 +78,7 @@ public final class TowerFloorsScreen extends Screen {
             g.pose().scale(1.5F, 1.5F, 1.0F);
             g.drawString(font, String.valueOf(f), 0, 0, cur ? 0xFFFFC94A : open ? 0xFFB4FAFF : 0xFF55606A, false);
             g.pose().popPose();
-            String sub = open ? GreatTowerWorldManager.getFloorTitle(f) : Component.translatable("awakening_system.world_archive.badge_locked").getString();
+            String sub = open ? Component.translatable("awakening_system.tower.floor." + f).getString() : Component.translatable("awakening_system.world_archive.badge_locked").getString();
             g.pose().pushPose();
             g.pose().translate(cx + 4, cy + 22, 0);
             g.pose().scale(0.6F, 0.6F, 1.0F);

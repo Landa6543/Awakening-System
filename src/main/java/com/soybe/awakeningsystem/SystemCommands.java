@@ -52,8 +52,50 @@ public final class SystemCommands {
                 .executes(context -> claimTomcraftTitle(context.getSource())));
         dispatcher.register(Commands.literal("pokemon")
                 .executes(context -> claimTomcraftTitle(context.getSource())));
+        dispatcher.register(Commands.literal("hatter")
+                .executes(context -> claimHatterTitle(context.getSource())));
+        dispatcher.register(Commands.literal("madhatter")
+                .executes(context -> claimHatterTitle(context.getSource())));
+        dispatcher.register(Commands.literal("orthax")
+                .executes(context -> claimOrthaxTitle(context.getSource())));
+        dispatcher.register(Commands.literal("wraith")
+                .executes(context -> claimOrthaxTitle(context.getSource())));
         dispatcher.register(Commands.literal("welcome")
                 .executes(context -> openWelcome(context.getSource())));
+        dispatcher.register(Commands.literal("discord")
+                .executes(context -> openDiscordLink(context.getSource())));
+
+        dispatcher.register(Commands.literal("shadows")
+                .then(Commands.literal("deploy")
+                        .executes(ctx -> {
+                            if (ctx.getSource().getEntity() instanceof ServerPlayer player) {
+                                SystemEvents.deployAllArmy(player);
+                            }
+                            return 1;
+                        })
+                        .then(Commands.argument("squad", IntegerArgumentType.integer(1, 4))
+                                .executes(ctx -> {
+                                    if (ctx.getSource().getEntity() instanceof ServerPlayer player) {
+                                        int sq = IntegerArgumentType.getInteger(ctx, "squad") - 1;
+                                        SystemEvents.deploySquad(player, sq);
+                                    }
+                                    return 1;
+                                })))
+                .then(Commands.literal("recall")
+                        .executes(ctx -> {
+                            if (ctx.getSource().getEntity() instanceof ServerPlayer player) {
+                                SystemEvents.recallAllArmy(player);
+                            }
+                            return 1;
+                        })
+                        .then(Commands.argument("squad", IntegerArgumentType.integer(1, 4))
+                                .executes(ctx -> {
+                                    if (ctx.getSource().getEntity() instanceof ServerPlayer player) {
+                                        int sq = IntegerArgumentType.getInteger(ctx, "squad") - 1;
+                                        SystemEvents.recallSquad(player, sq);
+                                    }
+                                    return 1;
+                                }))));
 
         dispatcher.register(Commands.literal("workout")
                 .then(Commands.literal("push_ups").executes(context -> startWorkoutCommand(context.getSource(), 0)))
@@ -70,12 +112,17 @@ public final class SystemCommands {
                 .requires(source -> hasAdminOrCreatorPermission(source))
                 .executes(context -> show(context.getSource()))
                 .then(Commands.literal("welcome").executes(context -> openWelcome(context.getSource())))
+                .then(Commands.literal("discord").executes(context -> openDiscordLink(context.getSource())))
                 .then(Commands.literal("creator").executes(context -> claimCreatorTitle(context.getSource())))
                 .then(Commands.literal("nanda").executes(context -> claimNandaTitle(context.getSource())))
                 .then(Commands.literal("misticpotato").executes(context -> claimMisticPotatoTitle(context.getSource())))
                 .then(Commands.literal("potato").executes(context -> claimMisticPotatoTitle(context.getSource())))
                 .then(Commands.literal("schvis").executes(context -> claimSchvisTitle(context.getSource())))
                 .then(Commands.literal("tomcraft").executes(context -> claimTomcraftTitle(context.getSource())))
+                .then(Commands.literal("hatter").executes(context -> claimHatterTitle(context.getSource())))
+                .then(Commands.literal("madhatter").executes(context -> claimHatterTitle(context.getSource())))
+                .then(Commands.literal("orthax").executes(context -> claimOrthaxTitle(context.getSource())))
+                .then(Commands.literal("wraith").executes(context -> claimOrthaxTitle(context.getSource())))
                 .then(Commands.literal("stats").executes(context -> show(context.getSource())))
                 .then(Commands.literal("give_all").executes(context -> giveAll(context.getSource())))
                 .then(Commands.literal("unlock_all").executes(context -> giveAll(context.getSource())))
@@ -96,16 +143,16 @@ public final class SystemCommands {
                                 .then(Commands.literal("status").executes(context -> getSeasonStatusCommand(context.getSource()))))
                         .then(Commands.literal("tribulation")
                                 .executes(context -> startTribulationDevCommand(context.getSource(), -1, -1))
-                                .then(Commands.argument("realm", com.mojang.brigadier.arguments.IntegerArgumentType.integer(2, 9))
+                                .then(Commands.argument("realm", com.mojang.brigadier.arguments.IntegerArgumentType.integer(2, 14))
                                         .executes(context -> startTribulationDevCommand(context.getSource(), com.mojang.brigadier.arguments.IntegerArgumentType.getInteger(context, "realm"), -1))
-                                        .then(Commands.argument("strikes", com.mojang.brigadier.arguments.IntegerArgumentType.integer(1, 36))
+                                        .then(Commands.argument("strikes", com.mojang.brigadier.arguments.IntegerArgumentType.integer(1, 81))
                                                 .executes(context -> startTribulationDevCommand(context.getSource(), com.mojang.brigadier.arguments.IntegerArgumentType.getInteger(context, "realm"), com.mojang.brigadier.arguments.IntegerArgumentType.getInteger(context, "strikes")))))))
                 .then(Commands.literal("tribulation")
                         .requires(source -> hasAdminOrCreatorPermission(source))
                         .executes(context -> startTribulationDevCommand(context.getSource(), -1, -1))
-                        .then(Commands.argument("realm", com.mojang.brigadier.arguments.IntegerArgumentType.integer(2, 9))
+                        .then(Commands.argument("realm", com.mojang.brigadier.arguments.IntegerArgumentType.integer(2, 14))
                                 .executes(context -> startTribulationDevCommand(context.getSource(), com.mojang.brigadier.arguments.IntegerArgumentType.getInteger(context, "realm"), -1))
-                                .then(Commands.argument("strikes", com.mojang.brigadier.arguments.IntegerArgumentType.integer(1, 36))
+                                .then(Commands.argument("strikes", com.mojang.brigadier.arguments.IntegerArgumentType.integer(1, 81))
                                         .executes(context -> startTribulationDevCommand(context.getSource(), com.mojang.brigadier.arguments.IntegerArgumentType.getInteger(context, "realm"), com.mojang.brigadier.arguments.IntegerArgumentType.getInteger(context, "strikes"))))))
                 .then(Commands.literal("season")
                         .requires(source -> hasAdminOrCreatorPermission(source))
@@ -162,6 +209,10 @@ public final class SystemCommands {
                                         .executes(context -> warpTowerFloor(context.getSource(), IntegerArgumentType.getInteger(context, "floorNum"))))))
                 .then(Commands.literal("cultivate").executes(context -> cultivate(context.getSource())))
                 .then(Commands.literal("meditate").executes(context -> cultivate(context.getSource())))
+                .then(Commands.literal("reinos").executes(context -> listCultivationRealmsCommand(context.getSource())))
+                .then(Commands.literal("dantian")
+                        .then(Commands.literal("reinos").executes(context -> listCultivationRealmsCommand(context.getSource())))
+                        .then(Commands.literal("list").executes(context -> listCultivationRealmsCommand(context.getSource()))))
                 .then(Commands.literal("isekai").executes(context -> warpIsekai(context.getSource())))
                 .then(Commands.literal("murim").executes(context -> warpMurim(context.getSource())))
                 .then(Commands.literal("abyss")
@@ -867,6 +918,8 @@ public final class SystemCommands {
                 .executes(context -> cultivate(context.getSource())));
         dispatcher.register(Commands.literal("meditate")
                 .executes(context -> cultivate(context.getSource())));
+        dispatcher.register(Commands.literal("reinos")
+                .executes(context -> listCultivationRealmsCommand(context.getSource())));
 
         dispatcher.register(Commands.literal("worldtree")
                 .requires(source -> hasAdminOrCreatorPermission(source))
@@ -3863,6 +3916,32 @@ public final class SystemCommands {
         return 0;
     }
 
+    private static int claimOrthaxTitle(CommandSourceStack source) {
+        if (source.getEntity() instanceof ServerPlayer player) {
+            if (!TitleDefinitions.isWraith(player) && !TitleDefinitions.isCreator(player)) {
+                player.sendSystemMessage(Component.translatable("awakening_system.orthax.only_wraith").withStyle(ChatFormatting.RED));
+                return 0;
+            }
+            SystemData data = SystemEvents.data(player);
+            data.setWraith(true);
+            data.equipTitle("orthax");
+            AwakeningSystemMod.sync(player);
+            AwakeningSystemMod.syncPlayerBadge(player);
+
+            player.connection.send(new net.minecraft.network.protocol.game.ClientboundSetTitlesAnimationPacket(10, 80, 20));
+            player.connection.send(new net.minecraft.network.protocol.game.ClientboundSetTitleTextPacket(
+                    Component.translatable("awakening_system.title.orthax_unlocked.title")
+            ));
+            player.connection.send(new net.minecraft.network.protocol.game.ClientboundSetSubtitleTextPacket(
+                    Component.translatable("awakening_system.title.orthax_unlocked.subtitle")
+            ));
+            player.playNotifySound(SoundEvents.UI_TOAST_CHALLENGE_COMPLETE, SoundSource.PLAYERS, 1.2F, 1.2F);
+            player.playNotifySound(SoundEvents.PLAYER_LEVELUP, SoundSource.PLAYERS, 1.0F, 1.3F);
+            return 1;
+        }
+        return 0;
+    }
+
     private static int claimTomcraftTitle(CommandSourceStack source) {
         if (source.getEntity() instanceof ServerPlayer player) {
             if (!TitleDefinitions.isTomcraft(player) && !TitleDefinitions.isCreator(player)) {
@@ -3884,6 +3963,32 @@ public final class SystemCommands {
             ));
             player.playNotifySound(SoundEvents.UI_TOAST_CHALLENGE_COMPLETE, SoundSource.PLAYERS, 1.2F, 1.2F);
             player.playNotifySound(SoundEvents.LIGHTNING_BOLT_THUNDER, SoundSource.PLAYERS, 0.45F, 1.8F);
+            return 1;
+        }
+        return 0;
+    }
+
+    private static int claimHatterTitle(CommandSourceStack source) {
+        if (source.getEntity() instanceof ServerPlayer player) {
+            if (!TitleDefinitions.isTheRealHatter(player) && !TitleDefinitions.isCreator(player)) {
+                player.sendSystemMessage(Component.translatable("awakening_system.hatter.only_hatter").withStyle(ChatFormatting.RED));
+                return 0;
+            }
+            SystemData data = SystemEvents.data(player);
+            data.setTheRealHatter(true);
+            data.equipTitle("the_mad_hatter");
+            AwakeningSystemMod.sync(player);
+            AwakeningSystemMod.syncPlayerBadge(player);
+
+            player.connection.send(new net.minecraft.network.protocol.game.ClientboundSetTitlesAnimationPacket(10, 80, 20));
+            player.connection.send(new net.minecraft.network.protocol.game.ClientboundSetTitleTextPacket(
+                    Component.translatable("awakening_system.title.the_mad_hatter_unlocked.title")
+            ));
+            player.connection.send(new net.minecraft.network.protocol.game.ClientboundSetSubtitleTextPacket(
+                    Component.translatable("awakening_system.title.the_mad_hatter_unlocked.subtitle")
+            ));
+            player.playNotifySound(SoundEvents.UI_TOAST_CHALLENGE_COMPLETE, SoundSource.PLAYERS, 1.2F, 1.2F);
+            player.playNotifySound(SoundEvents.PLAYER_LEVELUP, SoundSource.PLAYERS, 1.0F, 1.3F);
             return 1;
         }
         return 0;
@@ -3944,7 +4049,7 @@ public final class SystemCommands {
             }
 
             int currentRealm = data.dantianRealm();
-            int targetRealm = (realmArg >= 2 && realmArg <= 9) ? realmArg : Math.max(2, Math.min(9, currentRealm + 1));
+            int targetRealm = (realmArg >= 2 && realmArg <= 14) ? realmArg : Math.max(2, Math.min(14, currentRealm + 1));
             int strikes = strikesArg > 0 ? strikesArg : switch (targetRealm) {
                 case 2 -> 3;
                 case 3 -> 6;
@@ -3954,6 +4059,11 @@ public final class SystemCommands {
                 case 7 -> 18;
                 case 8 -> 27;
                 case 9 -> 36;
+                case 10 -> 45;
+                case 11 -> 54;
+                case 12 -> 63;
+                case 13 -> 72;
+                case 14 -> 81;
                 default -> 3;
             };
 
@@ -3976,6 +4086,60 @@ public final class SystemCommands {
             return 1;
         } catch (Exception e) {
             source.sendFailure(Component.translatable("awakening_system.msg.error_ejecutando_comando_de_tribulacion", String.valueOf(e.getMessage())));
+            return 0;
+        }
+    }
+
+    private static int openDiscordLink(CommandSourceStack source) {
+        Component linkComp = Component.literal("§9§l✦ [DISCORD] §f¡Únete a la comunidad oficial del mod §b§lAwakening System§f en Discord!\n§9§l✦ §e§nhttps://discord.gg/DqzTE3Ux8\n§7(Haz clic aquí para abrir la invitación en tu navegador)")
+                .withStyle(style -> style
+                        .withClickEvent(new net.minecraft.network.chat.ClickEvent(net.minecraft.network.chat.ClickEvent.Action.OPEN_URL, "https://discord.gg/DqzTE3Ux8"))
+                        .withHoverEvent(new net.minecraft.network.chat.HoverEvent(net.minecraft.network.chat.HoverEvent.Action.SHOW_TEXT, Component.literal("§aAbrir https://discord.gg/DqzTE3Ux8"))));
+        source.sendSuccess(() -> linkComp, false);
+        return 1;
+    }
+
+    private static int listCultivationRealmsCommand(CommandSourceStack source) {
+        try {
+            ServerPlayer player = source.getPlayer();
+            SystemData data = player != null ? SystemEvents.data(player) : null;
+            int curRealm = data != null ? data.dantianRealm() : 0;
+            int curSub = data != null ? data.cultivationSubLevel() : 1;
+
+            source.sendSuccess(() -> Component.literal("§6§l✦══════ [ JERARQUÍA DE REINOS DEL DAO CELESTIAL (1 - 14) ] ══════✦"), false);
+            for (int r = 1; r <= 14; r++) {
+                int realmNum = r;
+                Component rName = SystemEvents.getDantianRealmComponent(realmNum);
+                int stats = SystemEvents.getRealmBaseStats(realmNum);
+                Component pill = SystemEvents.getRequiredPillComponent(realmNum);
+                int strikes = SystemEvents.getTribulationStrikes(realmNum);
+
+                net.minecraft.network.chat.MutableComponent line;
+                if (realmNum == curRealm) {
+                    line = Component.literal(" §e▶ §lReino " + realmNum + ": ").append(rName)
+                            .append(Component.literal(" §6[TU REINO - Nv. " + curSub + "/9] §f(+" + stats + " Stats"));
+                } else if (realmNum < curRealm) {
+                    line = Component.literal(" §a✔ §fReino " + realmNum + ": ").append(rName)
+                            .append(Component.literal(" §7(+" + stats + " Stats"));
+                } else {
+                    line = Component.literal(" §7🔒 Reino " + realmNum + ": ").append(rName)
+                            .append(Component.literal(" §8(+" + stats + " Stats"));
+                }
+
+                if (strikes > 0) {
+                    line.append(Component.literal(" | ⚡" + strikes + " Rayos"));
+                }
+                if (realmNum > 1) {
+                    line.append(Component.literal(" | 💊 ").append(pill));
+                }
+                line.append(Component.literal(")"));
+
+                source.sendSuccess(() -> line, false);
+            }
+            source.sendSuccess(() -> Component.literal("§6§l✦══════════════════════════════════════════════════════════════✦"), false);
+            return 1;
+        } catch (Exception e) {
+            source.sendFailure(Component.literal("§cError al listar reinos: " + e.getMessage()));
             return 0;
         }
     }

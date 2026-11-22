@@ -131,12 +131,26 @@ public class WorkoutEntity extends Entity implements GeoEntity {
     }
 
     public int getRepDurationTicks() {
-        return switch (getExerciseType()) {
-            case TYPE_PUSH_UPS -> 40; // 2.0s
-            case TYPE_SIT_UPS -> 44;  // 2.2s
-            case TYPE_SQUATS -> 36;   // 1.8s
-            default -> 40;
+        return getRepDurationTicks(null);
+    }
+
+    public int getRepDurationTicks(ServerPlayer player) {
+        int base = switch (getExerciseType()) {
+            case TYPE_PUSH_UPS -> 24; // 1.2s base
+            case TYPE_SIT_UPS -> 26;  // 1.3s base
+            case TYPE_SQUATS -> 20;   // 1.0s base
+            default -> 24;
         };
+        if (player == null) return base;
+        SystemData d = SystemEvents.data(player);
+        int relevantStat = switch (getExerciseType()) {
+            case TYPE_PUSH_UPS -> d.strength();
+            case TYPE_SIT_UPS -> d.vitality();
+            case TYPE_SQUATS -> (d.strength() + d.agility()) / 2;
+            default -> 0;
+        };
+        int reduction = Math.min(8, relevantStat / 20);
+        return Math.max(14, base - reduction);
     }
 
     @Override
@@ -167,7 +181,7 @@ public class WorkoutEntity extends Entity implements GeoEntity {
             }
 
             exerciseTick++;
-            int period = getRepDurationTicks();
+            int period = getRepDurationTicks(player);
             if (exerciseTick >= period) {
                 exerciseTick = 0;
                 onRepetitionCycle(player);
@@ -183,19 +197,27 @@ public class WorkoutEntity extends Entity implements GeoEntity {
         int target = 100;
         Component nameComp;
 
+        // Roadmap Seccion 66: Escala con estadisticas (Fuerza = flexiones/sentadillas, Vitalidad = abdominales)
+        int repsEarned = switch (type) {
+            case TYPE_PUSH_UPS -> 1 + Math.min(4, data.strength() / 25);
+            case TYPE_SIT_UPS -> 1 + Math.min(4, data.vitality() / 25);
+            case TYPE_SQUATS -> 1 + Math.min(4, (data.strength() + data.agility()) / 40);
+            default -> 1;
+        };
+
         switch (type) {
             case TYPE_PUSH_UPS -> {
-                data.recordPushUps(day, 1);
+                data.recordPushUps(day, repsEarned);
                 current = data.dailyPushUps();
                 nameComp = Component.translatable("awakening_system.workout.name.pushups");
             }
             case TYPE_SIT_UPS -> {
-                data.recordSitUps(day, 1);
+                data.recordSitUps(day, repsEarned);
                 current = data.dailySitUps();
                 nameComp = Component.translatable("awakening_system.workout.name.situps");
             }
             case TYPE_SQUATS -> {
-                data.recordSquats(day, 1);
+                data.recordSquats(day, repsEarned);
                 current = data.dailySquats();
                 nameComp = Component.translatable("awakening_system.workout.name.squats");
             }
@@ -218,11 +240,20 @@ public class WorkoutEntity extends Entity implements GeoEntity {
             sl.sendParticles(ParticleTypes.SPLASH, player.getX(), player.getY() + 0.3, player.getZ(), 4, 0.15, 0.1, 0.15, 0.02);
         }
 
-        // Mensaje de barra de accion
-        player.displayClientMessage(
-                Component.translatable("awakening_system.workout.actionbar", nameComp, current, target),
-                true
-        );
+        // Mensaje de barra de accion con bonus de atributo si aplica
+        if (repsEarned > 1) {
+            player.displayClientMessage(
+                    Component.literal("§a[+" + repsEarned + "] ").append(
+                            Component.translatable("awakening_system.workout.actionbar", nameComp, current, target)
+                    ).append(Component.literal(" §e(⚡ Bonus de Atributo)")),
+                    true
+            );
+        } else {
+            player.displayClientMessage(
+                    Component.translatable("awakening_system.workout.actionbar", nameComp, current, target),
+                    true
+            );
+        }
 
         // Si se alcanzan las 100 repeticiones
         if (current >= target) {

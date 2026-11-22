@@ -1,5 +1,6 @@
 package dev.diorama;
 
+import dev.diorama.bake.BiomeTints;
 import dev.diorama.bake.BlockLooks;
 import net.minecraft.client.gui.Font;
 import net.minecraft.client.gui.GuiGraphics;
@@ -8,7 +9,6 @@ import net.minecraft.client.renderer.BiomeColors;
 import net.minecraft.core.BlockPos;
 import net.minecraft.network.chat.Component;
 import net.minecraft.tags.BlockTags;
-import net.minecraft.world.level.block.Block;
 import net.minecraft.world.level.block.state.BlockState;
 import org.jspecify.annotations.Nullable;
 
@@ -241,7 +241,7 @@ final class DepthGauge {
 		if (looks == null) {
 			return false;
 		}
-		byte kind = looks.kind[Block.BLOCK_STATE_REGISTRY.getId(state)];
+		byte kind = looks.kind[looks.lookId(state)];
 		return kind == BlockLooks.AIR || kind == BlockLooks.PLANT;
 	}
 
@@ -250,14 +250,14 @@ final class DepthGauge {
 		if (looks == null) {
 			return 0xFF7F7F7F;
 		}
-		int id = Block.BLOCK_STATE_REGISTRY.getId(state);
+		int id = looks.lookId(state);
 		int base = top ? looks.top[id] : looks.side[id];
 		int tinted = top ? looks.topTinted[id] : looks.sideTinted[id];
 		float w = top ? looks.topTintWeight[id] : looks.sideTintWeight[id];
 		int tint = switch (looks.tint[id]) {
 			case BlockLooks.TINT_GRASS -> BiomeColors.getAverageGrassColor(level, pos);
 			case BlockLooks.TINT_FOLIAGE, BlockLooks.TINT_DRY_FOLIAGE -> BiomeColors.getAverageFoliageColor(level, pos);
-			case BlockLooks.TINT_WATER -> BiomeColors.getAverageWaterColor(level, pos);
+			case BlockLooks.TINT_WATER -> level.getBlockTint(pos, BiomeTints.water());
 			default -> looks.constantTint[id] < 0 ? 0xFFFFFF : looks.constantTint[id];
 		};
 		int r = mix(base >> 16, tinted >> 16, tint >> 16, w);

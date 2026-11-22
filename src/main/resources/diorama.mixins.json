@@ -2,15 +2,26 @@
 	"required": true,
 	"package": "dev.diorama.mixin",
 	"compatibilityLevel": "JAVA_21",
-	"client": [
+	"mixins": [
 		"BiomeManagerAccessor",
+		"ChunkMapInvoker"
+	],
+	"client": [
+		"BossBarMixin",
 		"ChatComponentMixin",
 		"ClientChunkCacheMixin",
 		"ClientPacketListenerMixin",
+		"CustomPayloadMixin",
+		"CustomPayloadPacketMixin",
 		"DeathPacketMixin",
+		"EffectIconsMixin",
+		"FtbChunksUpdateMixin",
 		"GameRendererMixin",
 		"LevelChunkMixin",
-		"RealmsServerMixin"
+		"PufferfishRendererAccessor",
+		"RealmsServerMixin",
+		"SpriteContentsMixin",
+		"TropicalFishRendererAccessor"
 	],
 	"injectors": {
 		"defaultRequire": 1

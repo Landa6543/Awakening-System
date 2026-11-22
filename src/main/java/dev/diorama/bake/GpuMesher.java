@@ -4,6 +4,7 @@ import dev.diorama.MapStyle;
 import dev.diorama.Projection;
 import dev.diorama.data.ChunkSnapshot;
 import org.jspecify.annotations.Nullable;
+import org.lwjgl.system.MemoryUtil;
 
 /**
  * Builds the block faces a tile shows, for drawing it on the GPU instead of tracing it.
@@ -64,23 +65,77 @@ public final class GpuMesher {
 	}
 
 	/**
-	 * Ints per face in {@link Quads#data}: cell, face, colour, occlusion, light, flags, then the
+	 * Ints per face in a {@link Quads} list: cell, face, colour, occlusion, light, flags, then the
 	 * face's box as {@link ShapeFaces} packs it, two ints in 128ths of a block, then under a roof
 	 * the biome fog at its four corners (see {@link Quads#haze}). A cube's faces cover the whole
 	 * cell; a smaller block's cover a piece of one of its boxes.
 	 */
 	public static final int STRIDE = 14;
 
-	/** A growable list of faces, {@link #STRIDE} ints each: see {@link #add}. */
+	/**
+	 * A growable list of faces, {@link #STRIDE} ints each: see {@link #add}. A tile's lists run to
+	 * tens of MB but only hold its faces until {@code GpuTileBaker} packs them, so they live outside
+	 * the Java heap, made for each mesh and freed once packed ({@link Mesh#freeFaces}). On the heap
+	 * the collector had to copy them; kept for reuse, each thread's lists held on to the biggest
+	 * tile it had ever built, which crowded the game's heap.
+	 */
 	public static final class Quads {
-		public int[] data = new int[STRIDE * 1024];
+		/** Room a list starts with: 4096 faces, 224 KB. */
+		private static final int FIRST_INTS = STRIDE * 4096;
+		private static final java.lang.ref.Cleaner CLEANER = java.lang.ref.Cleaner.create();
+
+		/** The native memory, apart from the list, so the cleaner can free it if nothing else did. */
+		private static final class Memory implements Runnable {
+			java.nio.@Nullable IntBuffer data;
+
+			@Override
+			public void run() {
+				if (this.data != null) {
+					MemoryUtil.memFree(this.data);
+					this.data = null;
+				}
+			}
+		}
+
+		private final Memory memory = new Memory();
+		private final java.lang.ref.Cleaner.Cleanable cleanable;
 		public int count;
+
+		Quads() {
+			this.memory.data = MemoryUtil.memAllocInt(FIRST_INTS);
+			// A mesh dropped before it was packed, after a failure say, is freed when it's collected.
+			this.cleanable = CLEANER.register(this, this.memory);
+		}
+
+		/** Int {@code i} of the faces, {@link #STRIDE} to a face. */
+		public int get(int i) {
+			return this.memory.data.get(i);
+		}
+
+		/** Frees the list; reading it afterwards fails. Runs at most once, however often it's called. */
+		void free() {
+			this.cleanable.clean();
+		}
+
+		/** Puts the faces in this order: face {@code q} becomes the one {@code faces[q]} was. */
+		void reorder(int[] faces) {
+			java.nio.IntBuffer from = this.memory.data;
+			java.nio.IntBuffer to = MemoryUtil.memAllocInt(from.capacity());
+			long src = MemoryUtil.memAddress(from);
+			long dst = MemoryUtil.memAddress(to);
+			for (int q = 0; q < faces.length; q++) {
+				MemoryUtil.memCopy(src + (long) faces[q] * STRIDE * Integer.BYTES, dst + (long) q * STRIDE * Integer.BYTES, STRIDE * Integer.BYTES);
+			}
+			this.memory.data = to;
+			MemoryUtil.memFree(from);
+		}
 
 		/**
 		 * One face of block {@code (x, y, z)}. {@code color} is sRGB {@code 0xAARRGGBB} where alpha
 		 * carries the face's own weight (plants and glass) or emission; {@code ao} packs the four
 		 * corners a byte each, in the order of {@link GpuMesher#aoTop}. {@code light} is the block
-		 * and sky light in cave views: sky in the top byte, block light in the next.
+		 * and sky light in cave views: sky in the top byte, block light in the next; in the sky view
+		 * only the block light, which lights the map at night.
 		 */
 		void add(int x, int y, int z, int face, int color, int ao, int light, int flags) {
 			this.add(x, y, z, face, color, ao, light, flags, ShapeFaces.FULL_LO, ShapeFaces.FULL_HI);
@@ -89,23 +144,25 @@ public final class GpuMesher {
 		/** A face on part of a block smaller than a cube, {@code lo} and {@code hi} as {@link ShapeFaces} packs them. */
 		void add(int x, int y, int z, int face, int color, int ao, int light, int flags, int lo, int hi) {
 			int i = this.count * STRIDE;
-			if (i + STRIDE > this.data.length) {
-				this.data = java.util.Arrays.copyOf(this.data, this.data.length * 2);
+			java.nio.IntBuffer data = this.memory.data;
+			if (i + STRIDE > data.capacity()) {
+				data = MemoryUtil.memRealloc(data, data.capacity() * 2);
+				this.memory.data = data;
 			}
-			this.data[i] = x;
-			this.data[i + 1] = y;
-			this.data[i + 2] = z;
-			this.data[i + 3] = face;
-			this.data[i + 4] = color;
-			this.data[i + 5] = ao;
-			this.data[i + 6] = light;
-			this.data[i + 7] = flags;
-			this.data[i + 8] = lo;
-			this.data[i + 9] = hi;
-			this.data[i + 10] = 0;
-			this.data[i + 11] = 0;
-			this.data[i + 12] = 0;
-			this.data[i + 13] = 0;
+			data.put(i, x);
+			data.put(i + 1, y);
+			data.put(i + 2, z);
+			data.put(i + 3, face);
+			data.put(i + 4, color);
+			data.put(i + 5, ao);
+			data.put(i + 6, light);
+			data.put(i + 7, flags);
+			data.put(i + 8, lo);
+			data.put(i + 9, hi);
+			data.put(i + 10, 0);
+			data.put(i + 11, 0);
+			data.put(i + 12, 0);
+			data.put(i + 13, 0);
 			this.count++;
 		}
 
@@ -115,19 +172,13 @@ public final class GpuMesher {
 		 */
 		void haze(int a, int b, int c, int d) {
 			int i = (this.count - 1) * STRIDE;
-			this.data[i + 10] = a;
-			this.data[i + 11] = b;
-			this.data[i + 12] = c;
-			this.data[i + 13] = d;
+			java.nio.IntBuffer data = this.memory.data;
+			data.put(i + 10, a);
+			data.put(i + 11, b);
+			data.put(i + 12, c);
+			data.put(i + 13, d);
 		}
 	}
-
-	/**
-	 * Each thread's face lists, reused by its next build: a tile's lists run to several MB, and
-	 * making new ones for every bake kept the collector busy. So a mesh's faces only last until
-	 * the same thread builds another; pack them first ({@code GpuTileBaker.submit} does).
-	 */
-	private static final ThreadLocal<Quads[]> LISTS = ThreadLocal.withInitial(() -> new Quads[] {new Quads(), new Quads(), new Quads(), new Quads()});
 
 	/** Everything one tile draws, plus the region its shadow casters cover. */
 	public static final class Mesh {
@@ -145,6 +196,8 @@ public final class GpuMesher {
 		 * were lifted off, with shadows and sky occlusion, and fading into the biome's fog.
 		 */
 		public boolean lifted;
+		/** A cave slice in the depth look; see {@link TileBaker#depthLook}. */
+		public boolean depthLook;
 		/** The roof's y, where the fog under it is measured from; see {@link ChunkSource#roof}. */
 		public int roof;
 		public final boolean cave;
@@ -194,14 +247,10 @@ public final class GpuMesher {
 		private final java.util.Map<Long, Boolean> slimeChunks = new java.util.HashMap<>();
 
 		Mesh(TileKey key, int topY, int minY, double sin, double cos, boolean lit, boolean cave, boolean empty) {
-			Quads[] lists = LISTS.get();
-			for (Quads list : lists) {
-				list.count = 0;
-			}
-			this.opaque = lists[0];
-			this.water = lists[1];
-			this.tinted = lists[2];
-			this.casters = lists[3];
+			this.opaque = new Quads();
+			this.water = new Quads();
+			this.tinted = new Quads();
+			this.casters = new Quads();
 			this.key = key;
 			this.topY = topY;
 			this.minY = minY;
@@ -211,6 +260,14 @@ public final class GpuMesher {
 			this.cave = cave;
 			this.empty = empty;
 			this.originX = (int) Math.floor(key.minU());
+		}
+
+		/** Frees the face lists, once they're packed; the counts stay. */
+		public void freeFaces() {
+			this.opaque.free();
+			this.water.free();
+			this.tinted.free();
+			this.casters.free();
 		}
 	}
 
@@ -228,8 +285,17 @@ public final class GpuMesher {
 	 * what the player has seen, and overlay bits are recorded when {@code overlays} isn't null.
 	 */
 	public static Mesh build(TileKey key, ChunkSource source, BlockLooks looks, boolean fogOfWar, @Nullable Overlays overlays) {
+		return build(key, source, looks, fogOfWar, overlays, null);
+	}
+
+	/**
+	 * Same, with the saved tile's {@link TileSpots}: cells of chunks the map has no data for are
+	 * open where every saved ray through them stood lower (see {@link TileSpots#passedWhenSaved}),
+	 * as the tracer has them.
+	 */
+	public static Mesh build(TileKey key, ChunkSource source, BlockLooks looks, boolean fogOfWar, @Nullable Overlays overlays, int @Nullable [] savedSpots) {
 		long start = System.nanoTime();
-		TileBaker helper = TileBaker.forMeshing(key, source, looks, fogOfWar);
+		TileBaker helper = TileBaker.forMeshing(key, source, looks, fogOfWar, savedSpots);
 		VoxelReader reader = helper.reader;
 		MapStyle style = MapStyle.get();
 		double sin = Projection.sin();
@@ -242,6 +308,12 @@ public final class GpuMesher {
 		mesh.overlays = overlays;
 		boolean lifted = helper.lifted;
 		mesh.lifted = lifted;
+		mesh.depthLook = helper.depthLook;
+		if (helper.caveCut != null) {
+			// Ground raised over the cut is traced: the mesh has rays start at one height.
+			mesh.traceInstead = true;
+			return mesh;
+		}
 		mesh.roof = source.roof();
 		// Under a lifted lid nothing above the cut is left to block light.
 		mesh.rayTop = lifted ? Math.min(helper.rayTop, startY) : helper.rayTop;
@@ -319,13 +391,16 @@ public final class GpuMesher {
 					}
 					int id = reader.state(x, y, z);
 					if (id == VoxelReader.UNKNOWN) {
-						if (fromAbove) {
-							mesh.opaque.add(x, y, z, TOP, 0, 0, 0, UNKNOWN);
+						if (!helper.passesMissing(y) && !helper.passedWhenSaved(x, y, z)) {
+							if (fromAbove) {
+								mesh.opaque.add(x, y, z, TOP, 0, 0, 0, UNKNOWN);
+							}
+							if (fromSouth) {
+								mesh.opaque.add(x, y, z, SOUTH, 0, 0, 0, UNKNOWN);
+							}
+							continue;
 						}
-						if (fromSouth) {
-							mesh.opaque.add(x, y, z, SOUTH, 0, 0, 0, UNKNOWN);
-						}
-						continue;
+						id = VoxelReader.AIR_ID;
 					}
 					byte kind = looks.kind[id];
 					// Smaller than a cube (only solid and see-through blocks have shapes): a ray
@@ -370,7 +445,7 @@ public final class GpuMesher {
 							}
 						}
 					} else if (shape != 0) {
-						ShapeFaces sh = ShapeFaces.of(looks.shapes[shape]);
+						ShapeFaces sh = looks.faces(shape);
 						int wet = looks.wetShape[id];
 						boolean passes = false;
 						boolean reached;
@@ -383,8 +458,8 @@ public final class GpuMesher {
 								any = true;
 							}
 							reached = openAbove || openSouth;
-							if (reached && lifted && reader.ceilingUnderside(x, y, z, helper.lid(x, z), limitY)) {
-								// The bottom of a ceiling under a roof: rays that have left the rock pass
+							if (reached && (lifted || helper.depthLook) && reader.ceilingUnderside(x, y, z, helper.lid(x, z), limitY)) {
+								// The bottom of a ceiling: rays that have left the rock pass
 								// through it, as the tracer's do, so it doesn't float over the floor.
 								passes = true;
 								underside = true;
@@ -476,8 +551,8 @@ public final class GpuMesher {
 							keepRock(hereRock, hereRockU, hereRockN, i, rockIn, rockN);
 							any = true;
 						}
-						if ((openAbove || openSouth) && lifted && reader.ceilingUnderside(x, y, z, helper.lid(x, z), limitY)) {
-							// The bottom of a ceiling under a roof: rays that have left the rock pass
+						if ((openAbove || openSouth) && (lifted || helper.depthLook) && reader.ceilingUnderside(x, y, z, helper.lid(x, z), limitY)) {
+							// The bottom of a ceiling: rays that have left the rock pass
 							// through it, as the tracer's do, so it doesn't float over the floor.
 							hereOpen[i] = true;
 							any = true;
@@ -539,6 +614,27 @@ public final class GpuMesher {
 					fx1 = Math.max(fx1, x);
 					fz0 = Math.min(fz0, z);
 					fz1 = Math.max(fz1, z);
+				}
+				if (y == helper.rockLimit && y > limitY) {
+					// Rays still in the rock this far below the cut stop on the cut face, as the tracer's do.
+					for (int z = hi; z >= lo; z--) {
+						int i = z - zBase;
+						if (!hereRock[i]) {
+							continue;
+						}
+						if (hereOpen[i] && hereRockN[i] == RockRays.ALL) {
+							mesh.traceInstead = true;
+						} else if (hereOpen[i]) {
+							int n = RockRays.pieces(pieces, 0, true, FLOOR_LO, FLOOR_HI, hereRockU[i], hereRockN[i], y, z, cot, true);
+							for (int b = 0; b < n; b += 2) {
+								mesh.opaque.add(x, y, z, FLOOR, 0, 0, 0, fog ? UNKNOWN : CUT, pieces[b], pieces[b + 1]);
+							}
+						} else {
+							mesh.opaque.add(x, y, z, FLOOR, 0, 0, 0, fog ? UNKNOWN : CUT);
+						}
+						hereRock[i] = false;
+						hereRockN[i] = 0;
+					}
 				}
 				if (y == limitY) {
 					// Rays still going: they end at the view's limit, on the cut face or the void.
@@ -731,7 +827,12 @@ public final class GpuMesher {
 		}
 		int color = solidColor(helper, id, x, y, z, top, looks.emission[id], kind, style);
 		int ao = top ? aoTop(helper, x, y + 1, z) : aoSouth(helper, x, y, z + 1);
-		int light = lit ? (top ? light(helper.reader, x, y + 1, z) : light(helper.reader, x, y, z + 1)) : 0;
+		// The sky view keeps only the block light, which lights the map at night (TileBaker.outBlockLight).
+		int light = lit ? (top ? light(helper.reader, x, y + 1, z) : light(helper.reader, x, y, z + 1))
+			: (top ? helper.reader.blockLight(x, y + 1, z) : helper.reader.blockLight(x, y, z + 1)) << 16;
+		if (mesh.depthLook && !top) {
+			light |= helper.wallDepth(x, y, z) << 8;
+		}
 		int flags = kind == BlockLooks.LAVA ? LAVA : 0;
 		if (mesh.overlays != null && kind == BlockLooks.SOLID) {
 			flags |= overlayFlags(mesh, helper.reader, looks, id, x, y, z, top);
@@ -768,7 +869,8 @@ public final class GpuMesher {
 		if (seed != null) {
 			int cx = x >> 4;
 			int cz = z >> 4;
-			if (mesh.slimeChunks.computeIfAbsent(((long) cx << 32) | (cz & 0xFFFFFFFFL), k -> Overlays.slimeChunk(seed, cx, cz))) {
+			dev.diorama.Facing facing = Projection.facing();
+			if (mesh.slimeChunks.computeIfAbsent(((long) cx << 32) | (cz & 0xFFFFFFFFL), k -> Overlays.slimeChunk(seed, facing.worldBlockX(cx, cz), facing.worldBlockZ(cx, cz)))) {
 				flags |= SLIME;
 			}
 		}
@@ -912,14 +1014,28 @@ public final class GpuMesher {
 				if (lifted) {
 					top = Math.min(top, helper.lid(x, z) - 1);
 				}
+				long[] mayCast = null;
+				int castY = Integer.MIN_VALUE;
 				for (int y = top; y >= bottom; y--) {
+					if (!lifted) {
+						// Most of a column is rock under rock, which casts nothing: skip those blocks
+						// on a bit each instead of looking at them and their neighbours.
+						if (y >> 4 != castY) {
+							castY = y >> 4;
+							mayCast = reader.casterSection(x >> 4, castY, z >> 4);
+						}
+						int i = ((y & 15) << 8) | ((z & 15) << 4) | (x & 15);
+						if (mayCast != null && (mayCast[i >> 6] >>> i & 1) == 0) {
+							continue;
+						}
+					}
 					int solid = reader.solid(x, y, z);
 					if (solid == 2) {
 						// Smaller than a cube: shadow rays only stop at its boxes (TileBaker.meetsShape).
 						int id = reader.state(x, y, z);
 						int shape = id < 0 ? 0 : looks.shape[id];
 						if (shape != 0) {
-							int[] boxes = ShapeFaces.of(looks.shapes[shape]).boxes;
+							int[] boxes = looks.faces(shape).boxes;
 							for (int b = 0; b < boxes.length; b += 2) {
 								mesh.casters.add(x, y, z, TOP, 0, 0, 0, 0, boxes[b], boxes[b + 1]);
 								mesh.casters.add(x, y, z, WEST, 0, 0, 0, 0, boxes[b], boxes[b + 1]);
@@ -966,27 +1082,33 @@ public final class GpuMesher {
 		for (int q = 0; q < n; q++) {
 			int i = q * STRIDE;
 			// Where the face's piece is: in its plane, in the middle.
-			int lo = quads.data[i + 8];
-			int hi = quads.data[i + 9];
+			int lo = quads.get(i + 8);
+			int hi = quads.get(i + 9);
 			double y0 = (lo >> 8 & 255) / (double) ShapeFaces.UNIT;
 			double z0 = (lo >> 16 & 255) / (double) ShapeFaces.UNIT;
 			double y1 = (hi >> 8 & 255) / (double) ShapeFaces.UNIT;
 			double z1 = (hi >> 16 & 255) / (double) ShapeFaces.UNIT;
-			boolean top = quads.data[i + 3] == TOP;
-			double y = quads.data[i + 1] + (top ? y1 : (y0 + y1) / 2);
-			double z = quads.data[i + 2] + (top ? (z0 + z1) / 2 : z1);
+			double y = quads.get(i + 1);
+			double z = quads.get(i + 2);
+			// A branch, not a boolean: Java 21.0.8 and older can crash compiling `face == TOP` kept as
+			// a value (JDK-8358534), and Minecraft's launcher gives 1.20.5 to 1.21.11 Java 21.0.7.
+			if (quads.get(i + 3) == TOP) {
+				y += y1;
+				z += (z0 + z1) / 2;
+			} else {
+				y += (y0 + y1) / 2;
+				z += z1;
+			}
 			double depth = -(sin * y + cos * z);
 			long d = (long) (depth * 1024);
 			order[q] = (d << 24) | q;
 		}
 		java.util.Arrays.sort(order);
-		int[] sorted = new int[n * STRIDE];
+		int[] faces = new int[n];
 		for (int q = 0; q < n; q++) {
-			int from = (int) (order[q] & 0xFFFFFF) * STRIDE;
-			System.arraycopy(quads.data, from, sorted, q * STRIDE, STRIDE);
+			faces[q] = (int) (order[q] & 0xFFFFFF);
 		}
-		// Back into the list, which is reused: see LISTS.
-		System.arraycopy(sorted, 0, quads.data, 0, n * STRIDE);
+		quads.reorder(faces);
 	}
 
 	private static int solidColor(TileBaker helper, int id, int x, int y, int z, boolean top, int emission, byte kind, MapStyle style) {

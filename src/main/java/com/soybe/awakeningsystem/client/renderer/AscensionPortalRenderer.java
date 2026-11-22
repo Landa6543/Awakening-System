@@ -86,11 +86,11 @@ public class AscensionPortalRenderer extends GeoBlockRenderer<AscensionPortalBlo
         pose.mulPose(Axis.YP.rotationDegrees(-facing.toYRot()));
         // the dark depth behind everything, then two swirls turning at different speeds, then the glow
         disc(pose, buffers.getBuffer(RenderType.entityTranslucent(DEPTH)), radius, 0.0F, -0.06F, 255);
-        disc(pose, buffers.getBuffer(RenderType.entityTranslucent(SWIRL)), radius * 0.98F, time * 2.2F, -0.03F, 235);
+        disc(pose, buffers.getBuffer(RenderType.entityTranslucent(SWIRL)), radius * 0.98F, time * 1.8F, -0.03F, 220);
         // glowing layers that still respect the textures' transparency (no square around the circle)
-        disc(pose, buffers.getBuffer(RenderType.entityTranslucentEmissive(SWIRL)), radius * 0.7F, time * 4.0F + 40.0F, 0.0F, 110);
-        float pulse = 0.92F + 0.08F * (float) Math.sin(time * 0.08F);
-        disc(pose, buffers.getBuffer(RenderType.entityTranslucentEmissive(GLOW)), radius * 0.92F * pulse, 0.0F, 0.03F, 170);
+        disc(pose, buffers.getBuffer(RenderType.entityTranslucentEmissive(SWIRL)), radius * 0.75F, -time * 2.6F + 40.0F, 0.0F, 120);
+        float pulse = 0.94F + 0.06F * (float) Math.sin(time * 0.08F);
+        disc(pose, buffers.getBuffer(RenderType.entityTranslucentEmissive(GLOW)), radius * 0.95F * pulse, 0.0F, 0.03F, 150);
         pose.popPose();
         tint = 0xFFFFFF;
     }

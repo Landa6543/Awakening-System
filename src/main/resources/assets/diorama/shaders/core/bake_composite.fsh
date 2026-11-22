@@ -1,14 +1,14 @@
-#version 330
+#version 150
 // Two dialects, picked per version: 26.3 compiles through SPIR-V and matches the values passed
 // between stages by location; before it, OpenGL compiles this text as it is and binds by name.
 // (Kept here rather than in the include, which isn't processed per version.)
 //? if >=26.3 {
-//#extension GL_ARB_separate_shader_objects : require
-//#define LOC(n) layout(location = n)
-//#define VERTEX_INDEX gl_VertexIndex
-//
-//#include <diorama:bake.glsl>
-//?} else {
+/*#extension GL_ARB_separate_shader_objects : require
+#define LOC(n) layout(location = n)
+#define VERTEX_INDEX gl_VertexIndex
+
+#include <diorama:bake.glsl>
+*///?} else {
 #define LOC(n)
 #define VERTEX_INDEX gl_VertexID
 
@@ -27,10 +27,12 @@ uniform sampler2D WaterColor;
 uniform sampler2D WaterDepth;
 
 layout(location = 0) out vec4 fragColor;
-// The overlay bits of the pixel's first sample, as the tracer records them.
+// The overlay bits of the pixel's first sample, as the tracer records them, and the block light
+// averaged over its known samples, as TileBaker.bakePixels does.
 layout(location = 1) out vec4 fragInfo;
 
-const float OUTLINE_DEPTH = 1.5;
+// TileBaker.OUTLINE_WATER_FADE: outlines under water fade with the water in front of them.
+const float OUTLINE_WATER_FADE = 6.0;
 
 float luminance(vec3 c) {
     return dot(c, vec3(0.2126, 0.7152, 0.0722));
@@ -40,11 +42,11 @@ vec3 mix_water(vec3 under, vec4 water, float depth) {
     vec3 w = water.rgb;
     float light = water.a;
     if (Grade.w > 0.5) {
-        float peak = max(w.r, max(w.g, w.b));
-        vec3 t = exp(-depth * 0.45 * (1.0 - w / peak) - depth * 0.04);
-        vec3 deep = w * 0.55 * light;
-        float sheen = 0.05 * light;
-        return under * t + deep * (1.0 - t) + vec3(sheen, sheen, sheen * 1.2);
+        float peak = max(1e-4, max(w.r, max(w.g, w.b)));
+        vec3 t = exp(-depth * (0.45 * (1.0 - w / peak) + 0.16));
+        float l = luminance(w);
+        vec3 deep = max(vec3(0.0), vec3(l) + (w - vec3(l)) * 1.2) * light * (0.3 + 0.7 * exp(-depth / 18.0));
+        return under * t + deep * (1.0 - t);
     }
     float a = clamp(1.0 - exp(-0.2 * depth), 0.5, 0.94);
     return under * (1.0 - a) + w * light * a;
@@ -65,8 +67,28 @@ float pixel_depth(ivec2 pixel) {
     return known == 0 ? -1.0 : sum / float(known);
 }
 
+// Blocks of water in front of what each sample hit, averaged over the pixel's known samples
+// (0 for a sample with none), as TileBaker.mixWater counts them.
+float pixel_water(ivec2 pixel) {
+    float sum = 0.0;
+    int known = 0;
+    for (int i = 0; i < 4; i++) {
+        ivec2 s = pixel * 2 + ivec2(i & 1, i >> 1);
+        if (texelFetch(SceneColor, s, 0).a > 0.5) {
+            float window = texelFetch(SceneDepth, s, 0).r;
+            float waterWindow = texelFetch(WaterDepth, s, 0).r;
+            if (waterWindow > 0.0 && waterWindow >= window) {
+                bool nothing = texelFetch(SceneAux, s, 0).b > 0.5;
+                sum += nothing || window <= 0.0 ? 64.0 : max(0.0, bake_depth(window) - bake_depth(waterWindow));
+            }
+            known++;
+        }
+    }
+    return known == 0 ? 0.0 : sum / float(known);
+}
+
 bool nearer(float neighbour, float here) {
-    return neighbour >= 0.0 && here - neighbour > OUTLINE_DEPTH;
+    return neighbour >= 0.0 && here - neighbour > Shadow.z;
 }
 
 vec3 to_srgb(vec3 l) {
@@ -82,6 +104,7 @@ void main() {
     ivec2 pixel = ivec2(gl_FragCoord.xy) + ivec2(1);
     fragInfo = vec4(texelFetch(SceneAux, pixel * 2, 0).r, 0.0, 0.0, 0.0);
     vec3 sum = vec3(0.0);
+    float lightSum = 0.0;
     int known = 0;
     for (int i = 0; i < 4; i++) {
         ivec2 s = pixel * 2 + ivec2(i & 1, i >> 1);
@@ -121,12 +144,14 @@ void main() {
             }
         }
         sum += c;
+        lightSum += aux.a;
         known++;
     }
     if (known == 0) {
         fragColor = vec4(0.0);
         return;
     }
+    fragInfo.g = lightSum / float(known);
     vec3 c = sum / float(known);
     float saturation = Grade.x;
     float exposure = Grade.y;
@@ -137,7 +162,7 @@ void main() {
         float here = pixel_depth(pixel);
         if (nearer(pixel_depth(pixel + ivec2(-1, 0)), here) || nearer(pixel_depth(pixel + ivec2(1, 0)), here)
             || nearer(pixel_depth(pixel + ivec2(0, -1)), here) || nearer(pixel_depth(pixel + ivec2(0, 1)), here)) {
-            srgb *= 1.0 - Grade.z;
+            srgb *= 1.0 - Grade.z * exp(-pixel_water(pixel) / OUTLINE_WATER_FADE);
         }
     }
     fragColor = vec4(srgb, floor(float(known) * 255.0 / 4.0) / 255.0);

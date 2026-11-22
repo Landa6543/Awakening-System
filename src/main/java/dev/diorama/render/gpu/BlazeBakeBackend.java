@@ -49,7 +49,7 @@ import static dev.diorama.render.gpu.GpuTileBaker.VOXEL_WIDTH;
 /^*
  * Bakes through Minecraft's own GPU layer, which from 26.2 can express everything a bake needs
  * and runs on OpenGL and Vulkan alike. Pipelines aren't registered: they compile the first time
- * they're used, so a broken shader only stops the experiment.
+ * they're used, so a broken shader only sends tiles back to the tracer.
  ^/
 final class BlazeBakeBackend implements BakeBackend {
 	private @Nullable Targets targets;
@@ -179,7 +179,7 @@ final class BlazeBakeBackend implements BakeBackend {
 		return new ColorTargetState(Optional.empty(), format, ColorTargetState.WRITE_ALL);
 	}
 
-	// Not registered: compiled the first time they're used, so a broken shader only stops the experiment.
+	// Not registered: compiled the first time they're used, so a broken shader only sends tiles back to the tracer.
 	private static final RenderPipeline SKY_PASS = faces("bake_sky", "SKY_PASS", FACE)
 		.withBindGroupLayout(VOXELS)
 		.withColorTargetState(target(GpuFormat.R8_UNORM))
@@ -210,6 +210,7 @@ final class BlazeBakeBackend implements BakeBackend {
 	private static final RenderPipeline WATER = faces("bake_water", "WATER", FACE)
 		.withBindGroupLayout(SHADOW_MAP)
 		.withBindGroupLayout(SKY)
+		.withBindGroupLayout(VOXELS)
 		.withColorTargetState(target(GpuFormat.RGBA16_FLOAT))
 		.withDepthStencilState(DepthStencilState.DEFAULT)
 		.build();
@@ -220,7 +221,7 @@ final class BlazeBakeBackend implements BakeBackend {
 		.withBindGroupLayout(BAKE)
 		.withBindGroupLayout(SCENE_SAMPLERS)
 		.withColorTargetState(0, ColorTargetState.DEFAULT)
-		.withColorTargetState(1, target(GpuFormat.R8_UNORM))
+		.withColorTargetState(1, target(GpuFormat.RG8_UNORM))
 		.withPrimitiveTopology(PrimitiveTopology.TRIANGLES)
 		.build();
 
@@ -250,21 +251,20 @@ final class BlazeBakeBackend implements BakeBackend {
 		return builder;
 	}
 
-	/^* Read on the render thread at the first bake; the check reads it from a baker thread. ^/
-	private volatile @Nullable String device;
+	private @Nullable String device;
 
 	@Override
 	public @Nullable String device() {
-		return this.device;
-	}
-
-	@Override
-	public boolean draw(GpuTileBaker.Job job) {
 		if (this.device == null) {
 			var info = RenderSystem.getDevice().getDeviceInfo();
 			this.device = info.name() + " (" + info.vendorName() + ", " + info.backendName() + " " + info.driverInfo() + ")";
 			Diorama.LOGGER.info("GPU baking on {}", this.device);
 		}
+		return this.device;
+	}
+
+	@Override
+	public boolean draw(GpuTileBaker.Job job) {
 		long start = System.nanoTime();
 		int skyFaces = job.opaqueCount + job.waterCount;
 		if (!ready(SKY_PASS) || !ready(SHADOW) || !ready(OPAQUE) || !ready(TINTED) || !ready(WATER) || !ready(COMPOSITE)) {
@@ -291,8 +291,8 @@ final class BlazeBakeBackend implements BakeBackend {
 		GpuBuffer faceBuffer = null;
 		GpuBuffer casterBuffer = null;
 		try {
-			faceBuffer = job.faceCount() == 0 ? null : device.createBuffer(() -> "Diorama bake faces", GpuBuffer.USAGE_VERTEX, job.faces);
-			casterBuffer = job.casterCount == 0 ? null : device.createBuffer(() -> "Diorama bake casters", GpuBuffer.USAGE_VERTEX, job.casters);
+			faceBuffer = job.faceCount() == 0 ? null : t.faces(device, encoder, job.faces);
+			casterBuffer = job.casterCount == 0 ? null : t.casters(device, encoder, job.casters);
 			RenderSystem.AutoStorageIndexBuffer quads = RenderSystem.getSequentialBuffer(PrimitiveTopology.QUADS);
 			GpuBuffer indices = quads.getBuffer(6);
 			IndexType indexType = quads.type();
@@ -374,6 +374,8 @@ final class BlazeBakeBackend implements BakeBackend {
 					pass.setUniform("DioramaBake", t.ubo);
 					bind(pass, "ShadowMap", t.shadowView, nearest);
 					bind(pass, "Sky", t.skyView, nearest);
+					// For the shadows the shadow map misses, as on the ground.
+					bind(pass, "Voxels", t.voxelsView, t.voxelSampler);
 					pass.setVertexBuffer(0, t.corners.slice());
 					pass.setIndexBuffer(indices, indexType);
 					pass.setVertexBuffer(1, faceBuffer.slice(opaqueBytes + tintedBytes, waterBytes));
@@ -398,19 +400,23 @@ final class BlazeBakeBackend implements BakeBackend {
 			int size = Projection.TILE_PIXELS;
 			GpuBuffer readback = device.createBuffer(() -> "Diorama bake readback", GpuBuffer.USAGE_COPY_DST | GpuBuffer.USAGE_MAP_READ, (long) size * size * 4);
 			boolean wantsInfo = job.mesh.overlays != null;
-			GpuBuffer infoReadback = wantsInfo ? device.createBuffer(() -> "Diorama bake info readback", GpuBuffer.USAGE_COPY_DST | GpuBuffer.USAGE_MAP_READ, (long) size * size) : null;
-			// The colour finishes the job; the overlay bits, read back first, ride along. Both
-			// backends run these callbacks in the order the copies were recorded.
-			byte[][] info = new byte[1][];
+			// The sky view's block light shares the overlays' texture, two bytes a pixel.
+			boolean wantsLight = !job.mesh.lit;
+			GpuBuffer infoReadback = wantsInfo || wantsLight
+				? device.createBuffer(() -> "Diorama bake info readback", GpuBuffer.USAGE_COPY_DST | GpuBuffer.USAGE_MAP_READ, (long) size * size * 2) : null;
+			// The colour finishes the job; the overlay bits and light, read back first, ride along.
+			// Both backends run these callbacks in the order the copies were recorded.
+			byte[][] info = new byte[2][];
 			GpuQueryPool timestamps = t.timestamps;
 			long[] recorded = new long[1];
 			job.pending();
 			if (infoReadback != null) {
 				encoder.copyTextureToBuffer(t.outputInfo, infoReadback, 0L, () -> {
 					try (GpuBufferSlice.MappedView view = infoReadback.map(true, false)) {
-						byte[] bits = new byte[size * size];
-						view.data().get(bits);
-						info[0] = bits;
+						byte[] both = new byte[size * size * 2];
+						view.data().get(both);
+						info[0] = wantsInfo ? GpuTileBaker.channel(both, 0) : null;
+						info[1] = wantsLight ? GpuTileBaker.channel(both, 1) : null;
 					} catch (Throwable e) {
 						Diorama.LOGGER.error("Reading back GPU tile overlays {} failed", job.mesh.key, e);
 					} finally {
@@ -420,8 +426,8 @@ final class BlazeBakeBackend implements BakeBackend {
 			}
 			encoder.copyTextureToBuffer(t.output, readback, 0L, () -> {
 				try {
-					if (wantsInfo && info[0] == null) {
-						// Overlays were asked for and didn't come back: let the tracer bake it.
+					if (wantsInfo && info[0] == null || wantsLight && info[1] == null) {
+						// Overlays or light were asked for and didn't come back: let the tracer bake it.
 						job.fail();
 						return;
 					}
@@ -429,7 +435,7 @@ final class BlazeBakeBackend implements BakeBackend {
 					try (GpuBufferSlice.MappedView view = readback.map(true, false)) {
 						view.data().order(ByteOrder.LITTLE_ENDIAN).asIntBuffer().get(pixels);
 					}
-					job.done(pixels, info[0], recorded[0], gpuNanos(timestamps, slot));
+					job.done(pixels, info[0], info[1], recorded[0], gpuNanos(timestamps, slot));
 				} catch (Throwable e) {
 					Diorama.LOGGER.error("Reading back GPU tile {} failed", job.mesh.key, e);
 					job.fail();
@@ -442,12 +448,6 @@ final class BlazeBakeBackend implements BakeBackend {
 			recorded[0] = System.nanoTime() - start;
 			GpuTileBaker.recorded(recorded[0]);
 		} finally {
-			if (faceBuffer != null) {
-				faceBuffer.close();
-			}
-			if (casterBuffer != null) {
-				casterBuffer.close();
-			}
 			job.free();
 		}
 		return true;
@@ -528,6 +528,36 @@ final class BlazeBakeBackend implements BakeBackend {
 		final GpuBuffer corners;
 		final GpuBuffer ubo;
 		final GpuQueryPool timestamps;
+		/^*
+		 * The faces and shadow casters of the bake being drawn, grown to fit and kept. Making them
+		 * new for each bake took half of a bake's time on the render thread.
+		 ^/
+		private @Nullable GpuBuffer faces;
+		private @Nullable GpuBuffer casters;
+
+		GpuBuffer faces(GpuDevice device, CommandEncoder encoder, ByteBuffer data) {
+			this.faces = fit(device, this.faces, data.remaining(), "Diorama bake faces");
+			encoder.writeToBuffer(this.faces.slice(0, data.remaining()), data);
+			return this.faces;
+		}
+
+		GpuBuffer casters(GpuDevice device, CommandEncoder encoder, ByteBuffer data) {
+			this.casters = fit(device, this.casters, data.remaining(), "Diorama bake casters");
+			encoder.writeToBuffer(this.casters.slice(0, data.remaining()), data);
+			return this.casters;
+		}
+
+		/^* {@code buffer} if it holds {@code bytes}, else a new one: the next power of two that does, at least a megabyte. ^/
+		private static GpuBuffer fit(GpuDevice device, @Nullable GpuBuffer buffer, long bytes, String label) {
+			if (buffer != null && buffer.size() >= bytes) {
+				return buffer;
+			}
+			if (buffer != null) {
+				buffer.close();
+			}
+			long size = Math.max(1L << 20, Long.highestOneBit(Math.max(1, bytes - 1)) << 1);
+			return device.createBuffer(() -> label, GpuBuffer.USAGE_VERTEX | GpuBuffer.USAGE_COPY_DST, size);
+		}
 
 		Targets() {
 			GpuDevice device = RenderSystem.getDevice();
@@ -566,7 +596,8 @@ final class BlazeBakeBackend implements BakeBackend {
 			//?}
 			this.output = device.createTexture("Diorama bake output", read, GpuFormat.RGBA8_UNORM, size, size, 1, 1);
 			this.outputView = device.createTextureView(this.output);
-			this.outputInfo = device.createTexture("Diorama bake output overlays", read, GpuFormat.R8_UNORM, size, size, 1, 1);
+			// Overlay bits in red, block light in green.
+			this.outputInfo = device.createTexture("Diorama bake output overlays", read, GpuFormat.RG8_UNORM, size, size, 1, 1);
 			this.outputInfoView = device.createTextureView(this.outputInfo);
 			ByteBuffer corners = MemoryUtil.memAlloc(16);
 			try {

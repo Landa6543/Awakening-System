@@ -1,0 +1,17 @@
+{
+  "replace": false,
+  "values": [
+    "#minecraft:chest_armor",
+    "awakening_system:abyssal_chestplate",
+    "awakening_system:soul_alloy_chestplate",
+    "awakening_system:siderite_chestplate",
+    "awakening_system:mithril_chestplate",
+    "awakening_system:astralite_chestplate",
+    "awakening_system:adamantite_chestplate",
+    "awakening_system:spirit_jade_chestplate",
+    "awakening_system:astral_chestplate",
+    "awakening_system:celestial_chestplate",
+    "awakening_system:primordial_chestplate",
+    "awakening_system:mora_chestplate"
+  ]
+}

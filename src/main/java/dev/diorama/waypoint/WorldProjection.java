@@ -7,8 +7,8 @@ import org.joml.Vector4f;
 import org.jspecify.annotations.Nullable;
 
 /**
- * The camera of the last rendered frame, as the world was actually drawn. Projecting through it
- * puts a waypoint's label exactly over its spot, whatever the bobbing, tilt or field of view.
+ * The camera the world is drawn with in the frame whose GUI is being laid out. Projecting through
+ * it puts a waypoint's label exactly over its spot, whatever the bobbing, tilt or field of view.
  */
 public final class WorldProjection {
 	private static final Matrix4f WORLD = new Matrix4f();
@@ -17,9 +17,29 @@ public final class WorldProjection {
 	private WorldProjection() {
 	}
 
+	private static float focal = 1;
+
 	public static void capture(Matrix4fc projection, Matrix4fc viewRotation, Vec3 cameraPos) {
 		WORLD.set(projection).mul(viewRotation);
+		focal = Math.abs(projection.m11());
 		camera = cameraPos;
+	}
+
+	/**
+	 * A point's position before the perspective divide, given relative to the camera: for shapes
+	 * that have to be cut where they pass behind it. False when no frame has been drawn yet.
+	 */
+	static boolean clip(double dx, double dy, double dz, Vector4f into) {
+		if (camera == null) {
+			return false;
+		}
+		WORLD.transform(into.set((float) dx, (float) dy, (float) dz, 1));
+		return true;
+	}
+
+	/** How tall something one block high looks at one block's distance, in half screen heights: the field of view. */
+	static float focal() {
+		return focal;
 	}
 
 	/**

@@ -33,6 +33,7 @@ public final class CultivationScreen extends Screen {
     private float animTick = 0.0F;
     private int unlockEffectTicks = 0;
     private int lastUnlockedMeridian = -1;
+    private boolean showRealmsModal = false;
 
     public record MeridianInfo(int id, int qiCost) {
         public Component name() {
@@ -145,6 +146,10 @@ public final class CultivationScreen extends Screen {
 
     @Override
     public boolean keyPressed(int keyCode, int scanCode, int modifiers) {
+        if (showRealmsModal && (keyCode == GLFW.GLFW_KEY_ESCAPE || keyCode == GLFW.GLFW_KEY_E || keyCode == GLFW.GLFW_KEY_C)) {
+            showRealmsModal = false;
+            return true;
+        }
         if (keyCode == GLFW.GLFW_KEY_ESCAPE || keyCode == GLFW.GLFW_KEY_E) {
             onClose();
             return true;
@@ -258,6 +263,26 @@ public final class CultivationScreen extends Screen {
             int left = (width - PANEL_W) / 2;
             int top = (height - PANEL_H) / 2;
 
+            if (showRealmsModal) {
+                int modalW = 484;
+                int modalH = 296;
+                int modalX = left + (PANEL_W - modalW) / 2;
+                int modalY = top + (PANEL_H - modalH) / 2;
+                int closeX = modalX + modalW - 20;
+                int closeY = modalY + 6;
+                if (mouseX >= closeX && mouseX <= closeX + 14 && mouseY >= closeY && mouseY <= closeY + 14) {
+                    minecraft.getSoundManager().play(SimpleSoundInstance.forUI(SoundEvents.UI_BUTTON_CLICK, 0.9F));
+                    showRealmsModal = false;
+                    return true;
+                }
+                if (mouseX < modalX || mouseX > modalX + modalW || mouseY < modalY || mouseY > modalY + modalH) {
+                    minecraft.getSoundManager().play(SimpleSoundInstance.forUI(SoundEvents.UI_BUTTON_CLICK, 0.9F));
+                    showRealmsModal = false;
+                    return true;
+                }
+                return true;
+            }
+
             // Close button [✕]
             int closeX = left + PANEL_W - 32;
             int closeY = top + 14;
@@ -269,7 +294,7 @@ public final class CultivationScreen extends Screen {
                 return true;
             }
 
-            // Meditation pill button
+            // Meditation button
             int medW = 86;
             int medH = 16;
             int medX = closeX - 10 - medW;
@@ -280,7 +305,20 @@ public final class CultivationScreen extends Screen {
                 return true;
             }
 
+            // View Realms Button in top header (between title and meditation)
+            int rBtnW = 94;
+            int rBtnH = 16;
+            int rBtnX = medX - 8 - rBtnW;
+            int rBtnY = top + 14;
+            if (mouseX >= rBtnX && mouseX <= rBtnX + rBtnW && mouseY >= rBtnY && mouseY <= rBtnY + rBtnH) {
+                minecraft.getSoundManager().play(SimpleSoundInstance.forUI(SoundEvents.UI_BUTTON_CLICK, 1.0F));
+                showRealmsModal = true;
+                return true;
+            }
+
             int cardTop = top + 31;
+            int realm = data.dantianRealm();
+            int subLevel = data.cultivationSubLevel();
 
             // Physique Button
             int phyW = 120;
@@ -408,7 +446,7 @@ public final class CultivationScreen extends Screen {
                 int cardX = left + 14;
                 int cardW = PANEL_W - 30;
                 int visibleCount = 3;
-                int realm = data.dantianRealm();
+                realm = data.dantianRealm();
 
                 for (int i = 0; i < visibleCount; i++) {
                     int index = scrollOffset + i;
@@ -526,6 +564,18 @@ public final class CultivationScreen extends Screen {
                 : Component.literal("§b☯ ").append(Component.translatable("awakening_system.screen.cultivation.start_meditation_short"));
         graphics.drawCenteredString(font, ModernGuiHelper.manhwa(medText), medX + medW / 2, medY + 4, isMeditating ? 0xFF50FA7B : 0xFF70E8FF);
 
+        // View Realms Button (Top toolbar next to meditation)
+        int rBtnW = 94;
+        int rBtnH = 16;
+        int rBtnX = medX - 8 - rBtnW;
+        int rBtnY = top + 14;
+        boolean hoverRealmBtn = mX >= rBtnX && mX <= rBtnX + rBtnW && mY >= rBtnY && mY <= rBtnY + rBtnH;
+        int rBtnBg = hoverRealmBtn ? 0x6000E5FF : 0x2500E5FF;
+        int rBtnBorder = hoverRealmBtn ? 0xFFFFFFFF : 0x8000E5FF;
+        graphics.fill(rBtnX, rBtnY, rBtnX + rBtnW, rBtnY + rBtnH, rBtnBg);
+        graphics.renderOutline(rBtnX, rBtnY, rBtnW, rBtnH, rBtnBorder);
+        graphics.drawCenteredString(font, ModernGuiHelper.manhwa(Component.translatable("awakening_system.screen.cultivation.view_realms_btn")), rBtnX + rBtnW / 2, rBtnY + 4, hoverRealmBtn ? 0xFFFFFFFF : 0xFF70E8FF);
+
         // Dantian & Realm Status Card
         int cardTop = top + 31;
         int cardW = PANEL_W - 24; // 496px
@@ -539,7 +589,10 @@ public final class CultivationScreen extends Screen {
         graphics.drawString(font, ModernGuiHelper.manhwa(realmComp), left + 18, cardTop + 5, 0xFFFFFFFF, false);
 
         float qiDensity = SystemEvents.getZoneQiDensity(minecraft.player);
-        Component infoComp = Component.translatable("awakening_system.screen.cultivation.qi_density_info", String.format(Locale.US, "%.1fx", qiDensity), data.cultivationQi(), data.maxCultivationQi());
+        int imp = data.bodyImpurities();
+        String impColor = (imp > 30) ? "§c" : ((imp > 15) ? "§e" : "§a");
+        Component infoComp = Component.translatable("awakening_system.screen.cultivation.qi_density_info", String.format(Locale.US, "%.1fx", qiDensity), data.cultivationQi(), data.maxCultivationQi())
+            .append(Component.literal("  " + impColor + "[Imp: " + imp + "%]"));
         graphics.drawString(font, ModernGuiHelper.manhwa(infoComp), left + 18, cardTop + 17, 0xFFCCE3EC, false);
 
         // Qi gauge
@@ -570,7 +623,11 @@ public final class CultivationScreen extends Screen {
         int phyBg;
         int phyBorder;
         if (rollTicks > 0) {
-            String[] rollNames = {"pure_yang", "nine_yin", "innate_sword", "celestial_dragon", "heavenly_demon", "primordial_chaos"};
+            String[] rollNames = {
+                "pure_yang", "nine_yin", "innate_sword", "vajra_indestructible",
+                "five_elements", "celestial_dragon", "heavenly_thunder",
+                "heavenly_demon", "nirvana_phoenix", "abyssal_void", "primordial_chaos"
+            };
             String rolling = rollNames[(rollTicks / 4) % rollNames.length];
             phyBtnText = Component.literal("§e⚡ ").append(Component.translatable("awakening_system.physique." + rolling + ".short"));
             phyBg = 0x807D3C98;
@@ -606,9 +663,16 @@ public final class CultivationScreen extends Screen {
             advBorderCol = canAdvanceSub ? (hoverAdv ? 0xFFFFF088 : 0xFF00E5FF) : 0x3500E5FF;
             advTextColor = canAdvanceSub ? 0xFF70E8FF : 0xFF8AAAB8;
             advComp = Component.translatable("awakening_system.screen.cultivation.breakthrough_sublevel", (subLevel + 1));
-        } else if (realm < 9) {
+        } else if (realm < 14) {
             int reqMeridians = Math.min(12, (realm + 1) * 2);
-            int reqQi = (realm + 1) * 150;
+            int reqQi = switch (realm + 1) {
+                case 10 -> 2500;
+                case 11 -> 4000;
+                case 12 -> 6000;
+                case 13 -> 8500;
+                case 14 -> 12000;
+                default -> (realm + 1) * 150;
+            };
             boolean canBreakthrough = data.getOpenedMeridiansCount() >= reqMeridians && qi >= reqQi;
             advColor = canBreakthrough ? (hoverAdv ? 0x90996800 : 0x70805500) : 0x20FFD700;
             advBorderCol = canBreakthrough ? (hoverAdv ? 0xFFFFF088 : 0xFFFFD700) : 0x40665520;
@@ -660,39 +724,58 @@ public final class CultivationScreen extends Screen {
             graphics.drawString(font, shieldComp, left + 345, tabY + 5, 0xFF50FA7B, false);
         }
 
-        // Content Rendering
-        if (activeTab == 0) {
-            renderMeridianMannequinTab(graphics, left, top, data, mX, mY);
+        if (showRealmsModal) {
+            renderRealmsModal(graphics, left, top, data, realm, subLevel, mX, mY);
         } else {
-            renderDaoSkillsTab(graphics, left, top, data, realm, mX, mY);
-        }
-
-        // Physique Tooltip
-        if (hoverPhy && rollTicks <= 0) {
-            List<Component> tooltip = new ArrayList<>();
-            if (isUnawakened) {
-                tooltip.add(Component.translatable("awakening_system.cultivation.judgment.title"));
-                tooltip.add(Component.translatable("awakening_system.cultivation.judgment.desc1"));
-                tooltip.add(Component.translatable("awakening_system.cultivation.judgment.desc2"));
-                tooltip.add(Component.empty());
-                tooltip.add(Component.translatable("awakening_system.cultivation.judgment.rates_header"));
-                tooltip.add(Component.translatable("awakening_system.cultivation.judgment.rate_yang"));
-                tooltip.add(Component.translatable("awakening_system.cultivation.judgment.rate_yin"));
-                tooltip.add(Component.translatable("awakening_system.cultivation.judgment.rate_sword"));
-                tooltip.add(Component.translatable("awakening_system.cultivation.judgment.rate_dragon"));
-                tooltip.add(Component.translatable("awakening_system.cultivation.judgment.rate_demon"));
-                tooltip.add(Component.translatable("awakening_system.cultivation.judgment.rate_chaos"));
-                tooltip.add(Component.empty());
-                tooltip.add(Component.translatable("awakening_system.cultivation.judgment.click_prompt"));
+            // Content Rendering
+            if (activeTab == 0) {
+                renderMeridianMannequinTab(graphics, left, top, data, mX, mY);
             } else {
-                tooltip.add(Component.translatable("awakening_system.cultivation.physique_header", Component.translatable("awakening_system.physique." + curPhys + ".name")));
-                tooltip.add(Component.translatable("awakening_system.physique." + curPhys + ".desc").withStyle(ChatFormatting.GRAY));
-                tooltip.add(Component.empty());
-                tooltip.add(Component.translatable("awakening_system.cultivation.permanent_header"));
-                tooltip.add(Component.translatable("awakening_system.cultivation.permanent_desc1"));
-                tooltip.add(Component.translatable("awakening_system.cultivation.permanent_desc2"));
+                renderDaoSkillsTab(graphics, left, top, data, realm, mX, mY);
             }
-            graphics.renderComponentTooltip(font, tooltip, mX, mY);
+
+            // Realms Button Tooltip
+            if (hoverRealmBtn) {
+                List<Component> rTip = new ArrayList<>();
+                rTip.add(Component.translatable("awakening_system.screen.cultivation.view_realms_btn").copy().withStyle(ChatFormatting.GOLD, ChatFormatting.BOLD));
+                rTip.add(Component.translatable("awakening_system.screen.cultivation.view_realms_tooltip").withStyle(ChatFormatting.GRAY));
+                rTip.add(Component.empty());
+                rTip.add(Component.literal("§e[Clic Izquierdo] §fAbrir la Jerarquía de los 14 Reinos."));
+                graphics.renderComponentTooltip(font, rTip, mX, mY);
+            }
+
+            // Physique Tooltip
+            if (hoverPhy && rollTicks <= 0) {
+                List<Component> tooltip = new ArrayList<>();
+                if (isUnawakened) {
+                    tooltip.add(Component.translatable("awakening_system.cultivation.judgment.title"));
+                    tooltip.add(Component.translatable("awakening_system.cultivation.judgment.desc1"));
+                    tooltip.add(Component.translatable("awakening_system.cultivation.judgment.desc2"));
+                    tooltip.add(Component.empty());
+                    tooltip.add(Component.translatable("awakening_system.cultivation.judgment.rates_header"));
+                    tooltip.add(Component.translatable("awakening_system.cultivation.judgment.rate_yang"));
+                    tooltip.add(Component.translatable("awakening_system.cultivation.judgment.rate_yin"));
+                    tooltip.add(Component.translatable("awakening_system.cultivation.judgment.rate_sword"));
+                    tooltip.add(Component.translatable("awakening_system.cultivation.judgment.rate_vajra"));
+                    tooltip.add(Component.translatable("awakening_system.cultivation.judgment.rate_elements"));
+                    tooltip.add(Component.translatable("awakening_system.cultivation.judgment.rate_dragon"));
+                    tooltip.add(Component.translatable("awakening_system.cultivation.judgment.rate_thunder"));
+                    tooltip.add(Component.translatable("awakening_system.cultivation.judgment.rate_demon"));
+                    tooltip.add(Component.translatable("awakening_system.cultivation.judgment.rate_phoenix"));
+                    tooltip.add(Component.translatable("awakening_system.cultivation.judgment.rate_void"));
+                    tooltip.add(Component.translatable("awakening_system.cultivation.judgment.rate_chaos"));
+                    tooltip.add(Component.empty());
+                    tooltip.add(Component.translatable("awakening_system.cultivation.judgment.click_prompt"));
+                } else {
+                    tooltip.add(Component.translatable("awakening_system.cultivation.physique_header", Component.translatable("awakening_system.physique." + curPhys + ".name")));
+                    tooltip.add(Component.translatable("awakening_system.physique." + curPhys + ".desc").withStyle(ChatFormatting.GRAY));
+                    tooltip.add(Component.empty());
+                    tooltip.add(Component.translatable("awakening_system.cultivation.permanent_header"));
+                    tooltip.add(Component.translatable("awakening_system.cultivation.permanent_desc1"));
+                    tooltip.add(Component.translatable("awakening_system.cultivation.permanent_desc2"));
+                }
+                graphics.renderComponentTooltip(font, tooltip, mX, mY);
+            }
         }
 
         graphics.pose().popPose();
@@ -1167,5 +1250,133 @@ public final class CultivationScreen extends Screen {
         graphics.fill(btnDownX, btnNavY, btnDownX + btnNavSize, btnNavY + btnNavSize, canDown ? (hoverDown ? 0x5000E5FF : 0x2500E5FF) : 0x1000E5FF);
         graphics.renderOutline(btnDownX, btnNavY, btnNavSize, btnNavSize, canDown ? (hoverDown ? 0xFF00E5FF : 0x5500E5FF) : 0x2500E5FF);
         graphics.drawCenteredString(font, "▼", btnDownX + btnNavSize / 2, btnNavY + 6, canDown ? 0xFF00E5FF : 0xFF555555);
+    }
+
+    private void renderRealmsModal(GuiGraphics g, int left, int top, SystemData data, int currentRealm, int subLevel, int mX, int mY) {
+        int modalW = 496;
+        int modalH = PANEL_H - 12;
+        int modalX = left + (PANEL_W - modalW) / 2;
+        int modalY = top + (PANEL_H - modalH) / 2;
+
+        // Solid opaque obsidian backdrop over the cultivation panel so underlying elements never bleed through
+        g.fill(left, top, left + PANEL_W, top + PANEL_H, 0xFF050C16);
+
+        // Frame and frosted glass inner container
+        g.fillGradient(modalX, modalY, modalX + modalW, modalY + modalH, 0xFF0A1828, 0xFF050C16);
+        g.renderOutline(modalX, modalY, modalW, modalH, 0xFF00E5FF);
+
+        // Header
+        Component titleComp = Component.translatable("awakening_system.screen.cultivation.realms_modal_title");
+        g.drawCenteredString(font, ModernGuiHelper.manhwa(titleComp), modalX + modalW / 2, modalY + 8, 0xFFFFD700);
+
+        // Header divider
+        g.fill(modalX + 16, modalY + 22, modalX + modalW - 16, modalY + 23, 0x8000E5FF);
+
+        // Close button [✕]
+        int closeX = modalX + modalW - 20;
+        int closeY = modalY + 6;
+        boolean closeHov = mX >= closeX && mX <= closeX + 14 && mY >= closeY && mY <= closeY + 14;
+        g.fill(closeX, closeY, closeX + 14, closeY + 14, closeHov ? 0xDD7A1515 : 0x3000E5FF);
+        g.renderOutline(closeX, closeY, 14, 14, closeHov ? 0xFFFF5555 : 0x8000E5FF);
+        g.drawCenteredString(font, "✕", closeX + 7, closeY + 3, closeHov ? 0xFFFFFFFF : 0xFF70E8FF);
+
+        int colW = 232;
+        int itemH = 33;
+        int col1X = modalX + 10;
+        int col2X = modalX + modalW - 10 - colW;
+        int startY = modalY + 28;
+
+        List<Component> hoveredCardTooltip = null;
+
+        for (int r = 1; r <= 14; r++) {
+            boolean isCol1 = r <= 7;
+            int colX = isCol1 ? col1X : col2X;
+            int rowIdx = isCol1 ? (r - 1) : (r - 8);
+            int itemY = startY + rowIdx * (itemH + 3);
+
+            boolean isHovered = mX >= colX && mX <= colX + colW && mY >= itemY && mY <= itemY + itemH;
+
+            int bgCol;
+            int borderCol;
+            if (r == currentRealm) {
+                bgCol = isHovered ? 0x907A5812 : 0x655A3F0D;
+                borderCol = 0xFFFFD700;
+            } else if (r < currentRealm) {
+                bgCol = isHovered ? 0x701B4B2E : 0x40143822;
+                borderCol = isHovered ? 0xFF50FA7B : 0x8050FA7B;
+            } else {
+                bgCol = isHovered ? 0x40102636 : 0x2008131B;
+                borderCol = isHovered ? 0xFF70E8FF : 0x4000E5FF;
+            }
+
+            g.fill(colX, itemY, colX + colW, itemY + itemH, bgCol);
+            g.renderOutline(colX, itemY, colW, itemH, borderCol);
+
+            Component rShortName = SystemEvents.getDantianRealmShortComponent(r);
+            Component rFullName = SystemEvents.getDantianRealmComponent(r);
+            String statusBadge;
+            int statusCol;
+            if (r < currentRealm) {
+                statusBadge = "§a✔ ";
+                statusCol = 0xFF50FA7B;
+            } else if (r == currentRealm) {
+                statusBadge = "§e▶ ";
+                statusCol = 0xFFFFD700;
+            } else {
+                statusBadge = "§7🔒 ";
+                statusCol = 0xFF8AAAB8;
+            }
+
+            Component titleLine = Component.literal(statusBadge + "§l" + r + ". ").append(rShortName);
+            g.drawString(font, ModernGuiHelper.manhwa(titleLine), colX + 5, itemY + 4, statusCol, false);
+
+            if (r == currentRealm) {
+                Component curTag = Component.literal("§e[Nv. " + subLevel + "/9]");
+                g.drawString(font, curTag, colX + colW - font.width(curTag) - 5, itemY + 4, 0xFFFFE082, false);
+            } else if (r < currentRealm) {
+                Component doneTag = Component.literal("§a[Superado]");
+                g.drawString(font, doneTag, colX + colW - font.width(doneTag) - 5, itemY + 4, 0xFF50FA7B, false);
+            }
+
+            int stats = SystemEvents.getRealmBaseStats(r);
+            Component pill = SystemEvents.getRequiredPillComponent(r);
+            int strikes = SystemEvents.getTribulationStrikes(r);
+
+            String detail = "§b+" + stats + " Stats";
+            if (strikes > 0) {
+                detail += " §7| §e⚡" + strikes + "R";
+            }
+            if (r > 1) {
+                String pillStr = pill.getString();
+                if (font.width(detail + " §7| §d" + pillStr) > colW - 10) {
+                    while (pillStr.length() > 5 && font.width(detail + " §7| §d" + pillStr + "…") > colW - 10) {
+                        pillStr = pillStr.substring(0, pillStr.length() - 1);
+                    }
+                    pillStr = pillStr + "…";
+                }
+                detail += " §7| §d" + pillStr;
+            }
+            g.drawString(font, Component.literal(detail), colX + 5, itemY + 18, 0xFF8AAAB8, false);
+
+            if (isHovered) {
+                hoveredCardTooltip = new ArrayList<>();
+                hoveredCardTooltip.add(Component.literal("§6§l✦ Reino " + r + ": ").append(rFullName).append(" ✦"));
+                hoveredCardTooltip.add(Component.literal(r == currentRealm ? "§e▶ TU REINO ACTUAL (Sub-nivel " + subLevel + " de 9)" : (r < currentRealm ? "§a✔ Reino ya alcanzado y consolidado" : "§c🔒 Reino superior bloqueado")));
+                hoveredCardTooltip.add(Component.empty());
+                hoveredCardTooltip.add(Component.literal("§b✦ Bonos de Atributos: §f+" + stats + " a Vida Máxima, Ataque y Defensa."));
+                if (strikes > 0) {
+                    hoveredCardTooltip.add(Component.literal("§e⚡ Calamidad Celestial: §fRequiere superar §6" + strikes + " Rayos Celestiales§f."));
+                }
+                if (r > 1) {
+                    hoveredCardTooltip.add(Component.literal("§d💊 Píldora Requerida: §f").append(pill));
+                } else {
+                    hoveredCardTooltip.add(Component.literal("§d💊 Píldora Requerida: §7No requerida para este reino inicial."));
+                }
+            }
+        }
+
+        if (hoveredCardTooltip != null) {
+            g.renderComponentTooltip(font, hoveredCardTooltip, mX, mY);
+        }
     }
 }

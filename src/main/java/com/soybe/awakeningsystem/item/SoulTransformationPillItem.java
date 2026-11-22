@@ -34,6 +34,7 @@ public class SoulTransformationPillItem extends Item {
             var data = SystemEvents.data(sp);
             data.addCultivationQi(3000);
             data.addCoins(100000);
+            data.cleanseImpurities(35);
             AwakeningSystemMod.sync(sp);
 
             sp.addEffect(new MobEffectInstance(MobEffects.REGENERATION, 600, 1));

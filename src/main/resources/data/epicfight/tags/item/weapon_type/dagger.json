@@ -3,6 +3,11 @@
     "values": [
         "awakening_system:shadow_daggers",
         "awakening_system:kasakas_venom_fang",
-        "awakening_system:transcendent_thorn"
+        "awakening_system:transcendent_thorn",
+        "awakening_system:barukas_dagger",
+        "awakening_system:demon_kings_daggers",
+        "awakening_system:knight_killer",
+        "awakening_system:moonshadow",
+        "awakening_system:truth_kasakas_venom_fang"
     ]
 }

@@ -223,11 +223,15 @@ public final class RpgLevelZoneManager {
         // the racers of the Uma racecourse are no one's enemies either
         if (living instanceof com.soybe.awakeningsystem.uma.UmaRacerEntity) return false;
         String typeKey = BuiltInRegistries.ENTITY_TYPE.getKey(living.getType()).toString().toLowerCase(Locale.ROOT);
-        if (typeKey.startsWith("iceandfire:") || living.getClass().getName().contains("iceandfire")) return true;
+        String className = living.getClass().getName().toLowerCase(Locale.ROOT);
+        if (typeKey.contains("dragon") || typeKey.contains("drake") || typeKey.contains("wyvern") || typeKey.contains("titan")) return true;
+        if (className.contains("dragon") || className.contains("drake") || className.contains("wyvern") || className.contains("titan")) return true;
+        if (typeKey.startsWith("iceandfire:") || className.contains("iceandfire")) return true;
         if (com.soybe.awakeningsystem.compat.iceandfire.IceAndFireCompat.isHostileOrExtractable(living)) {
             if (living instanceof Mob mob && mob.getTarget() != null) return true;
             if (living.getAttribute(Attributes.ATTACK_DAMAGE) != null && living.getMaxHealth() >= 20.0F) return true;
         }
+        if (living.getAttribute(Attributes.ATTACK_DAMAGE) != null && living.getMaxHealth() >= 50.0F) return true;
         return false;
     }
 

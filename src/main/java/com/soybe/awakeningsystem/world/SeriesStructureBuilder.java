@@ -71,10 +71,23 @@ import net.minecraft.world.level.block.entity.LecternBlockEntity;
 import net.minecraft.world.item.component.WrittenBookContent;
 import net.minecraft.server.network.Filterable;
 
+import net.minecraft.core.registries.Registries;
+import net.minecraft.resources.ResourceKey;
+import net.minecraft.resources.ResourceLocation;
+import net.minecraft.world.level.storage.loot.LootTable;
+import net.minecraft.world.level.block.entity.RandomizableContainerBlockEntity;
+
 import java.util.List;
 
 public final class SeriesStructureBuilder {
     private SeriesStructureBuilder() {}
+
+    public static final ResourceKey<LootTable> HUNTER_CAMP_LOOT = ResourceKey.create(
+            Registries.LOOT_TABLE, ResourceLocation.fromNamespaceAndPath("awakening_system", "chests/hunter_expedition_camp"));
+    public static final ResourceKey<LootTable> STARGAZER_OUTPOST_LOOT = ResourceKey.create(
+            Registries.LOOT_TABLE, ResourceLocation.fromNamespaceAndPath("awakening_system", "chests/ruined_stargazer_outpost"));
+    public static final ResourceKey<LootTable> LORE_STELE_LOOT = ResourceKey.create(
+            Registries.LOOT_TABLE, ResourceLocation.fromNamespaceAndPath("awakening_system", "chests/ancient_lore_stele"));
 
     public static void ensureFoundation(ServerLevel level, int minX, int maxX, int minZ, int maxZ, int ySurface, net.minecraft.world.level.block.Block block) {
         for (int x = minX; x <= maxX; x++) {
@@ -4675,6 +4688,9 @@ public final class SeriesStructureBuilder {
 
     private static void fillHunterCampChest(ServerLevel level, BlockPos pos) {
         BlockEntity be = level.getBlockEntity(pos);
+        if (be instanceof RandomizableContainerBlockEntity rc) {
+            rc.setLootTable(HUNTER_CAMP_LOOT, level.getRandom().nextLong());
+        }
         if (be instanceof Container container) {
             container.clearContent();
             ItemStack slowFallPotion = net.minecraft.world.item.alchemy.PotionContents.createItemStack(
@@ -4927,6 +4943,9 @@ public final class SeriesStructureBuilder {
 
     private static void fillStargazerChest(ServerLevel level, BlockPos pos) {
         BlockEntity be = level.getBlockEntity(pos);
+        if (be instanceof RandomizableContainerBlockEntity rc) {
+            rc.setLootTable(STARGAZER_OUTPOST_LOOT, level.getRandom().nextLong());
+        }
         if (be instanceof Container container) {
             container.clearContent();
             container.setItem(0, new ItemStack(Items.SPYGLASS, 1));
@@ -5057,6 +5076,9 @@ public final class SeriesStructureBuilder {
 
     private static void fillSteleChest(ServerLevel level, BlockPos pos) {
         BlockEntity be = level.getBlockEntity(pos);
+        if (be instanceof RandomizableContainerBlockEntity rc) {
+            rc.setLootTable(LORE_STELE_LOOT, level.getRandom().nextLong());
+        }
         if (be instanceof Container container) {
             container.clearContent();
             container.setItem(0, new ItemStack(Items.GHAST_TEAR, 2));

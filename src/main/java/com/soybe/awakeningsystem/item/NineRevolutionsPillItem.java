@@ -34,6 +34,7 @@ public class NineRevolutionsPillItem extends Item {
         if (!level.isClientSide() && player instanceof ServerPlayer sp) {
             SystemData data = SystemEvents.data(sp);
             data.addCultivationQi(10000);
+            data.cleanseImpurities(50);
 
             int subLevel = data.cultivationSubLevel();
             int realm = data.dantianRealm();

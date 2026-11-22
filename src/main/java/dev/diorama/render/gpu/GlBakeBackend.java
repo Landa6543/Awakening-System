@@ -81,7 +81,7 @@ final class GlBakeBackend implements BakeBackend {
 	private int casterVbo;
 	private int ubo;
 	private boolean timestamps;
-	private volatile @Nullable String device;
+	private @Nullable String device;
 	/**
 	 * Up to 1.21.8 the game asks for OpenGL 3.2, so what the bake needs from 3.3 is looked for one
 	 * by one: drivers usually offer it anyway, or the extension it came from.
@@ -208,13 +208,14 @@ final class GlBakeBackend implements BakeBackend {
 			Saved.plainPixelStore();
 			glReadBuffer(GL_COLOR_ATTACHMENT0);
 			glReadPixels(0, 0, size, size, GL_RGBA, GL_UNSIGNED_BYTE, 0L);
-			if (job.mesh.overlays != null) {
+			// Overlay bits in red, the sky view's block light in green.
+			if (job.mesh.overlays != null || !job.mesh.lit) {
 				info = glGenBuffers();
 				glBindBuffer(GL_PIXEL_PACK_BUFFER, info);
-				glBufferData(GL_PIXEL_PACK_BUFFER, (long) size * size, GL_STREAM_READ);
+				glBufferData(GL_PIXEL_PACK_BUFFER, (long) size * size * 2, GL_STREAM_READ);
 				glPixelStorei(GL_PACK_ALIGNMENT, 1);
 				glReadBuffer(GL_COLOR_ATTACHMENT1);
-				glReadPixels(0, 0, size, size, GL_RED, GL_UNSIGNED_BYTE, 0L);
+				glReadPixels(0, 0, size, size, GL_RG, GL_UNSIGNED_BYTE, 0L);
 				glReadBuffer(GL_COLOR_ATTACHMENT0);
 			}
 			if (startQuery != 0) {
@@ -248,6 +249,9 @@ final class GlBakeBackend implements BakeBackend {
 
 	@Override
 	public @Nullable String device() {
+		if (this.device == null) {
+			this.device = glGetString(GL_RENDERER) + " (" + glGetString(GL_VENDOR) + ", OpenGL " + glGetString(GL_VERSION) + ")";
+		}
 		return this.device;
 	}
 
@@ -282,21 +286,24 @@ final class GlBakeBackend implements BakeBackend {
 					mapped.order(ByteOrder.LITTLE_ENDIAN).asIntBuffer().get(pixels);
 					glUnmapBuffer(GL_PIXEL_PACK_BUFFER);
 					byte[] info = null;
+					byte[] light = null;
 					if (r.info != 0) {
 						glBindBuffer(GL_PIXEL_PACK_BUFFER, r.info);
-						ByteBuffer bits = glMapBufferRange(GL_PIXEL_PACK_BUFFER, 0, (long) size * size, GL_MAP_READ_BIT);
+						ByteBuffer bits = glMapBufferRange(GL_PIXEL_PACK_BUFFER, 0, (long) size * size * 2, GL_MAP_READ_BIT);
 						if (bits == null) {
 							throw new IllegalStateException("couldn't map the tile's overlay bits");
 						}
-						info = new byte[size * size];
-						bits.get(info);
+						byte[] both = new byte[size * size * 2];
+						bits.get(both);
 						glUnmapBuffer(GL_PIXEL_PACK_BUFFER);
+						info = r.job.mesh.overlays != null ? GpuTileBaker.channel(both, 0) : null;
+						light = !r.job.mesh.lit ? GpuTileBaker.channel(both, 1) : null;
 					}
 					long gpu = -1;
 					if (r.startQuery != 0 && glGetQueryObjecti(r.endQuery, GL_QUERY_RESULT_AVAILABLE) != 0) {
 						gpu = glGetQueryObjecti64(r.endQuery, GL_QUERY_RESULT) - glGetQueryObjecti64(r.startQuery, GL_QUERY_RESULT);
 					}
-					r.job.done(pixels, info, r.recordNanos, gpu);
+					r.job.done(pixels, info, light, r.recordNanos, gpu);
 				} catch (Throwable t) {
 					Diorama.LOGGER.error("Reading back GPU tile {} failed", r.job.mesh.key, t);
 					r.job.fail();
@@ -379,8 +386,7 @@ final class GlBakeBackend implements BakeBackend {
 				}
 				samplerObjects = caps.glBindSampler != 0;
 				this.timestamps = caps.glQueryCounter != 0 && caps.glGetQueryObjecti64v != 0;
-				this.device = glGetString(GL_RENDERER) + " (" + glGetString(GL_VENDOR) + ", OpenGL " + glGetString(GL_VERSION) + ")";
-				Diorama.LOGGER.info("GPU baking on {}", this.device);
+				Diorama.LOGGER.info("GPU baking on {}", this.device());
 				// An error stays flagged until someone reads it, and on Windows nothing in the game
 				// does, so one another mod raised minutes ago would be blamed on this setup. Read
 				// them away first; GL keeps one per kind, so a few reads clear them all.
@@ -414,7 +420,8 @@ final class GlBakeBackend implements BakeBackend {
 		// Under a roof the voxels too, for the shadows the shadow map misses.
 		this.opaqueProgram = program(vsh, fsh, Map.of("ShadowMap", 0, "Sky", 1, "Voxels", 2), null, depth);
 		this.tintedProgram = program(vsh, fsh, faces, "TINTED", depth);
-		this.waterProgram = program(vsh, fsh, faces, "WATER", depth);
+		// The voxels stay bound on unit 2 from the opaque pass.
+		this.waterProgram = program(vsh, fsh, Map.of("ShadowMap", 0, "Sky", 1, "Voxels", 2), "WATER", depth);
 		Map<String, Integer> composite = new LinkedHashMap<>();
 		String[] names = {"SceneColor", "SceneDepth", "SceneAux", "Tint", "WaterColor", "WaterDepth"};
 		for (int i = 0; i < names.length; i++) {
@@ -433,7 +440,7 @@ final class GlBakeBackend implements BakeBackend {
 		this.sky = texture(GL_R8, SKY_WIDTH, SKY_HEIGHT, GL_RED, GL_UNSIGNED_BYTE);
 		this.voxels = texture(GL_R32UI, VOXEL_WIDTH, VOXEL_HEIGHT, GL_RED_INTEGER, GL_UNSIGNED_INT);
 		this.output = texture(GL_RGBA8, size, size, GL_RGBA, GL_UNSIGNED_BYTE);
-		this.outputInfo = texture(GL_R8, size, size, GL_RED, GL_UNSIGNED_BYTE);
+		this.outputInfo = texture(GL_RG8, size, size, GL_RG, GL_UNSIGNED_BYTE);
 
 		this.skyFbo = framebuffer(0, this.sky);
 		this.shadowFbo = framebuffer(this.shadowTexture);

@@ -114,6 +114,22 @@ public final class ModEntities {
                             .eyeHeight(2.9F)
                             .build("shadow_monarch_boss"));
 
+    public static final Supplier<EntityType<com.soybe.awakeningsystem.entity.kaisel.KaiselAliveEntity>> KAISEL_ALIVE =
+            ENTITY_TYPES.register("kaisel_alive", () ->
+                    EntityType.Builder.<com.soybe.awakeningsystem.entity.kaisel.KaiselAliveEntity>of(
+                            com.soybe.awakeningsystem.entity.kaisel.KaiselAliveEntity::new, MobCategory.MONSTER)
+                            .sized(2.4F, 2.2F)
+                            .clientTrackingRange(64)
+                            .build("kaisel_alive"));
+
+    public static final Supplier<EntityType<com.soybe.awakeningsystem.entity.kaisel.KaiselShadowEntity>> KAISEL_SHADOW =
+            ENTITY_TYPES.register("kaisel_shadow", () ->
+                    EntityType.Builder.<com.soybe.awakeningsystem.entity.kaisel.KaiselShadowEntity>of(
+                            com.soybe.awakeningsystem.entity.kaisel.KaiselShadowEntity::new, MobCategory.CREATURE)
+                            .sized(2.4F, 2.2F)
+                            .clientTrackingRange(64)
+                            .build("kaisel_shadow"));
+
     public static final Supplier<EntityType<AbyssalNecromancerEntity>> ABYSSAL_NECROMANCER =
             ENTITY_TYPES.register("abyssal_necromancer", () ->
                     EntityType.Builder.of(AbyssalNecromancerEntity::new, MobCategory.MONSTER)
@@ -900,8 +916,8 @@ public final class ModEntities {
     public static final Supplier<EntityType<RuinGuardEntity>> RUIN_GUARD =
             ENTITY_TYPES.register("ruin_guard", () ->
                     EntityType.Builder.<RuinGuardEntity>of(RuinGuardEntity::new, MobCategory.MONSTER)
-                            .sized(3.25F, 4.5F)
-                            .eyeHeight(3.6F)
+                            .sized(3.0F, 4.8F)
+                            .eyeHeight(3.8F)
                             .clientTrackingRange(64)
                             .updateInterval(2)
                             .build("ruin_guard"));
@@ -926,7 +942,7 @@ public final class ModEntities {
     public static final Supplier<EntityType<StonehideLawachurlEntity>> STONEHIDE_LAWACHURL =
             ENTITY_TYPES.register("stonehide_lawachurl", () ->
                     EntityType.Builder.<StonehideLawachurlEntity>of(StonehideLawachurlEntity::new, MobCategory.MONSTER)
-                            .sized(3.6F, 5.0F)
+                            .sized(3.2F, 5.0F)
                             .eyeHeight(4.2F)
                             .clientTrackingRange(64)
                             .updateInterval(2)
@@ -1121,7 +1137,7 @@ public final class ModEntities {
     public static final Supplier<EntityType<FrostarmLawachurlEntity>> FROSTARM_LAWACHURL =
             ENTITY_TYPES.register("frostarm_lawachurl", () ->
                     EntityType.Builder.<FrostarmLawachurlEntity>of(FrostarmLawachurlEntity::new, MobCategory.MONSTER)
-                            .sized(3.6F, 5.0F)
+                            .sized(3.2F, 5.0F)
                             .eyeHeight(4.2F)
                             .clientTrackingRange(64)
                             .updateInterval(2)
@@ -1130,7 +1146,7 @@ public final class ModEntities {
     public static final Supplier<EntityType<ThunderhelmLawachurlEntity>> THUNDERHELM_LAWACHURL =
             ENTITY_TYPES.register("thunderhelm_lawachurl", () ->
                     EntityType.Builder.<ThunderhelmLawachurlEntity>of(ThunderhelmLawachurlEntity::new, MobCategory.MONSTER)
-                            .sized(3.6F, 5.0F)
+                            .sized(3.2F, 5.0F)
                             .eyeHeight(4.2F)
                             .clientTrackingRange(64)
                             .updateInterval(2)
@@ -1248,6 +1264,8 @@ public final class ModEntities {
         event.put(MANA_SHEEP.get(), com.soybe.awakeningsystem.entity.animal.ManaSheepEntity.createAttributes().build());
         event.put(MANA_CHICKEN.get(), com.soybe.awakeningsystem.entity.animal.ManaChickenEntity.createAttributes().build());
         event.put(SHADOW_INFANTRY.get(), ShadowInfantryEntity.createAttributes().build());
+        event.put(KAISEL_ALIVE.get(), com.soybe.awakeningsystem.entity.kaisel.AbstractKaiselEntity.createKaiselAttributes().build());
+        event.put(KAISEL_SHADOW.get(), com.soybe.awakeningsystem.entity.kaisel.AbstractKaiselEntity.createKaiselAttributes().build());
         event.put(ABYSSAL_ORC.get(), AbyssalOrcEntity.createAttributes().build());
         event.put(SHADOW_MONARCH_BOSS.get(), ShadowMonarchBossEntity.createAttributes().build());
         event.put(ABYSSAL_NECROMANCER.get(), AbyssalNecromancerEntity.createAttributes().build());

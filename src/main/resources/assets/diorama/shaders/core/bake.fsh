@@ -1,20 +1,20 @@
-#version 330
+#version 150
 // Two dialects, picked per version: 26.3 compiles through SPIR-V and matches the values passed
 // between stages by location; before it, OpenGL compiles this text as it is and binds by name.
 // (Kept here rather than in the include, which isn't processed per version.)
 //? if >=26.3 {
-//#extension GL_ARB_separate_shader_objects : require
-//#define LOC(n) layout(location = n)
-//#define VERTEX_INDEX gl_VertexIndex
-//#if !defined(SKY_PASS) && !defined(SHADOW) && !defined(WATER) && !defined(TINTED)
-//#define VOXEL_WALK
-//#endif
-//
-//#include <diorama:bake.glsl>
-//?} else {
+/*#extension GL_ARB_separate_shader_objects : require
+#define LOC(n) layout(location = n)
+#define VERTEX_INDEX gl_VertexIndex
+#if !defined(SKY_PASS) && !defined(SHADOW) && !defined(TINTED)
+#define VOXEL_WALK
+#endif
+
+#include <diorama:bake.glsl>
+*///?} else {
 #define LOC(n)
 #define VERTEX_INDEX gl_VertexID
-#if !defined(SKY_PASS) && !defined(SHADOW) && !defined(WATER) && !defined(TINTED)
+#if !defined(SKY_PASS) && !defined(SHADOW) && !defined(TINTED)
 #define VOXEL_WALK
 #endif
 
@@ -41,8 +41,9 @@ LOC(8) flat in ivec4 faceHaze;
 
 layout(location = 0) out vec4 fragColor;
 #if !defined(WATER) && !defined(TINTED)
-// The sample's overlay bits over 255, its surface's albedo brightness, and 1 on a floor, where
-// rays that met nothing end: the composite needs these to tint and to mix water like the tracer.
+// The sample's overlay bits over 255, its surface's albedo brightness, 1 on a floor, where rays
+// that met nothing end, and in the sky view its block light over 15: the composite needs these to
+// tint and to mix water like the tracer, and to keep the light that lights the map at night.
 layout(location = 1) out vec4 fragAux;
 #endif
 
@@ -81,16 +82,46 @@ float caster_gap(vec3 p) {
     return occluder - dot(p, SunDir.xyz);
 }
 
+// The spots a nudged ray is looked for at, over the shadow distance (see sunlight).
+const int NUDGED_STEPS = 8;
+
+// Whether a ray from p toward the sun nudged by jitter meets a caster g blocks out, found over
+// some spot: that far out the ray is over p + jitter * g, so it does if there's one in reach
+// there, and, found by following the ray, about as far out (within blocks), or it could be another
+// caster that ray passes by.
+bool nudged_meets(vec3 p, vec3 jitter, float g, float within) {
+    if (g <= Shadow.x || g >= SunDir.w) {
+        return false;
+    }
+    float there = caster_gap(p + jitter * g);
+    return there > Shadow.x && there < SunDir.w && abs(there - g) <= within;
+}
+
 // 1 where the sun reaches p, 0 where a block within the shadow distance is in the way. The
-// tracer aims each sample's shadow ray at a slightly different sun; a ray toward a nudged sun
-// drifts by the nudge times the distance to the caster, so look again that far over.
+// tracer aims each sample's shadow ray at a slightly different sun, which softens shadow edges,
+// and the shadow map only holds the sun's own direction. A nudged ray meets the casters the
+// sun's own ray from p meets, unless it drifts past them first, and on the outer side of a
+// shadow's edge it also meets casters that ray passes by. Those are found by looking along the
+// nudged ray for a spot whose caster is about as far from it as the ray is out: looking only
+// over p left the outer sides of edges lit, and the map brighter than the tracer's along every
+// shadow, enough in a city of tall builds to fail GPU baking's check.
 float sunlight(vec3 p, vec3 jitter) {
-    float gap = caster_gap(p);
-    if (gap <= Shadow.x || gap >= SunDir.w) {
+    if (nudged_meets(p, jitter, caster_gap(p), SunDir.w)) {
+        return 0.0;
+    }
+    if (jitter == vec3(0.0)) {
         return 1.0;
     }
-    float nudged = caster_gap(p + jitter * gap);
-    return nudged > Shadow.x && nudged < SunDir.w ? 0.0 : 1.0;
+    float step = SunDir.w / float(NUDGED_STEPS);
+    for (int i = 0; i < NUDGED_STEPS; i++) {
+        // t blocks out the ray is over this spot: a caster about t from it is one it can meet.
+        float t = (float(i) + 0.5) * step;
+        float g = caster_gap(p + jitter * t);
+        if (abs(g - t) <= 0.5 * step && nudged_meets(p, jitter, g, 0.5 * step)) {
+            return 0.0;
+        }
+    }
+    return 1.0;
 }
 
 // Corner occlusion as it dims the sunlight, as TileBaker.shade; the sky light gets the deeper of it and ao.
@@ -182,7 +213,7 @@ vec3 hazed(vec3 c, float y) {
 }
 
 // Caves and under a roof: the game's block and sky light in the cell the face looks into.
-vec3 lit_light(vec3 p, float ao) {
+vec3 lit_light(vec3 p, bool top, float ao) {
     float bl = faceLight.y * 255.0 / 15.0;
     float sl = faceLight.x * 255.0 / 15.0 * 0.8;
     float warm = pow(bl, 1.5);
@@ -190,9 +221,20 @@ vec3 lit_light(vec3 p, float ao) {
     // Unlit caves stay readable; torches, lava and daylight make them glow.
     float base = 0.42;
     vec3 l = (base * vec3(0.92, 0.96, 1.08) + warm * vec3(0.9, 0.75, 0.5) + cool * vec3(0.6, 0.65, 0.75)) * ao;
-    if (Mode.y > 0.5) {
+    if (Mode.y > 0.5 && Shadow.w > 0.5) {
+        // The depth look: deeper below the player's level reads darker, and walls with the rock above them, as TileBaker.CAVE_FADE.
+        l *= exp(min(0.0, p.y - Mode.z + 6.0) / 12.0);
+        if (!top) {
+            l *= exp(-faceLight.z * 255.0 / 4.0);
+        }
+    } else if (Mode.y > 0.5) {
         // Deeper below the cut reads darker.
         l *= 1.0 - min(0.5, (Mode.z - p.y) / 60.0);
+    }
+    // Bright light eases toward a ceiling instead of washing blocks out, keeping its colour, as Lighting.cave.
+    float peak = max(l.r, max(l.g, l.b));
+    if (peak > 0.5) {
+        l *= (0.5 + 0.3 * (1.0 - exp(-(peak - 0.5) / 0.3))) / peak;
     }
     return l;
 }
@@ -216,13 +258,18 @@ void main() {
     if (Mode.x > 0.5) {
         float levels = max(faceLight.y * 255.0, faceLight.x * 255.0 * 0.8);
         lit = 0.42 + pow(levels / 15.0, 1.5) * 0.8;
+        if (Mode.y > 0.5 && Mode.w < 0.5 && Shadow.w > 0.5) {
+            lit *= exp(min(0.0, localPos.y - Mode.z + 6.0) / 12.0);
+        }
     } else {
         vec3 normal = top ? vec3(0.0, 1.0, 0.0) : vec3(0.0, 0.0, 1.0);
         float ambient = Light.x;
         if (Light.z > 0.0) {
             ambient *= 1.0 - Light.z * (1.0 - (0.15 + 0.85 * bilinear(faceSky, faceUv)));
         }
-        lit = ambient + sunlight(localPos + normal * 0.06, vec3(0.0)) * Light.y;
+        // As TileBaker.mixWater: the sun's own ray from the surface, without a nudge, and like the
+        // ground's it can meet a block nearer than the caster the shadow map holds.
+        lit = ambient + far_sunlight(localPos + normal * 0.06, localPos + normal * 1e-4, vec3(0.0), true) * Light.y;
         if (Light.w != 0.0) {
             lit *= 1.0 + Light.w * clamp((localPos.y - 64.0) / 64.0, -1.0, 1.0);
         }
@@ -267,14 +314,16 @@ void main() {
     }
     if (faceInfo.x == FACE_FLOOR) {
         // Rays that reached the view's limit: the cut face if still in rock, else the void.
-        fragColor = vec4((flags & FLAG_CUT) != 0 ? vec3(0.0065, 0.0068, 0.0085) : vec3(0.01, 0.01, 0.015), 1.0);
+        // The depth look's cut rock is a muted grey (Lighting.CAVE_CUT), else near-black (CAVE_CUT_DARK).
+        vec3 cut = Shadow.w > 0.5 ? vec3(0.022, 0.023, 0.027) : vec3(0.0065, 0.0068, 0.0085);
+        fragColor = vec4((flags & FLAG_CUT) != 0 ? cut : vec3(0.01, 0.01, 0.015), 1.0);
         fragAux = vec4(0.0, 0.0, 1.0, 0.0);
         return;
     }
     float ao = bilinear(faceOcclusion, faceUv);
     bool lid = Mode.w > 0.5;
     vec3 l = lid ? lid_light(localPos, top, ao, bilinear(faceSky, faceUv))
-        : Mode.x > 0.5 ? lit_light(localPos, ao) : sun_light(localPos, top, ao, bilinear(faceSky, faceUv));
+        : Mode.x > 0.5 ? lit_light(localPos, top, ao) : sun_light(localPos, top, ao, bilinear(faceSky, faceUv));
     float emission = faceColor.a;
     if (emission > 0.0) {
         // In the fog, small lights like shroomlights and glowstone glow softer, so they don't
@@ -286,8 +335,15 @@ void main() {
         l *= 0.82;
     }
     vec3 shaded = albedo * l;
+    if (Mode.y > 0.5 && !lid && Shadow.w > 0.5) {
+        // The depth look: lower ground fades toward a cool dark, as Lighting.CAVE_FOG.
+        float fade = exp(min(0.0, localPos.y - Mode.z + 6.0) / 12.0) * (top ? 1.0 : exp(-faceLight.z * 255.0 / 4.0));
+        shaded += vec3(0.008, 0.010, 0.015) * (1.0 - fade);
+    }
     fragColor = vec4(lid ? hazed(shaded, localPos.y) : shaded, 1.0);
-    fragAux = vec4(bits, luminance(albedo), 0.0, 0.0);
+    // In the sky view, the block light in front of the face, or a lamp's own if brighter (TileBaker.outBlockLight).
+    float blockLight = Mode.x > 0.5 ? 0.0 : max(faceLight.y * 255.0, floor(emission * 15.0 + 0.5)) / 15.0;
+    fragAux = vec4(bits, luminance(albedo), 0.0, blockLight);
 #endif
 #endif
 }

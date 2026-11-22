@@ -1,18 +1,18 @@
 package dev.diorama.waypoint;
 
+import dev.diorama.MapSession;
 import dev.diorama.Settings;
 import java.time.LocalTime;
-import java.time.format.DateTimeFormatter;
 import java.util.List;
 import java.util.concurrent.ThreadLocalRandom;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.player.LocalPlayer;
 import net.minecraft.core.BlockPos;
+import net.minecraft.world.entity.Entity;
 import org.jspecify.annotations.Nullable;
 
 /** Making waypoints (where the player stands, at a picked spot, where they die) and going to them. */
 public final class Waypoints {
-	private static final DateTimeFormatter TIME = DateTimeFormatter.ofPattern("HH:mm");
 
 	private Waypoints() {
 	}
@@ -22,25 +22,24 @@ public final class Waypoints {
 		return mc.level == null ? null : mc.level.dimension().location().toString();
 	}
 
-	/** A new, unsaved waypoint where the player stands. */
+	/** A new, unsaved waypoint where the player stands, or at who they're watching through. */
 	public static @Nullable Waypoint atPlayer() {
-		LocalPlayer player = Minecraft.getInstance().player;
-		return player == null ? null : at(player.blockPosition());
+		Entity viewer = MapSession.viewer();
+		String dimension = dimension();
+		return viewer == null || dimension == null ? null : at(viewer.blockPosition(), dimension);
 	}
 
 	/** A new, unsaved waypoint at a block position, named and coloured so the next one differs. */
-	public static @Nullable Waypoint at(BlockPos pos) {
-		String dimension = dimension();
+	public static @Nullable Waypoint at(BlockPos pos, String dimension) {
 		WaypointStore store = WaypointStore.get();
-		if (dimension == null || store == null) {
+		if (store == null) {
 			return null;
 		}
 		int count = store.all().size() + 1;
 		// A fresh random colour every time, never close to the last waypoint's.
 		List<Waypoint> all = store.all();
 		int color = WaypointColours.random(all.isEmpty() ? 0 : all.get(all.size() - 1).color);
-		String defaultName = net.minecraft.network.chat.Component.translatable("diorama.waypoint.default_name", count).getString();
-		return new Waypoint(defaultName, pos.getX(), pos.getY(), pos.getZ(), dimension, color);
+		return new Waypoint("Waypoint " + count, pos.getX(), pos.getY(), pos.getZ(), dimension, color);
 	}
 
 	/** A dimension's name for its folder: Overworld, Nether, End, or the id's path for a modded one. */
@@ -49,14 +48,23 @@ public final class Waypoints {
 			case "minecraft:overworld" -> net.minecraft.network.chat.Component.translatable("diorama.folder.overworld");
 			case "minecraft:the_nether" -> net.minecraft.network.chat.Component.translatable("diorama.folder.nether");
 			case "minecraft:the_end" -> net.minecraft.network.chat.Component.translatable("diorama.folder.end");
+			case "awakening_system:isekai", "awakening_system:isekai_world", "isekai" -> net.minecraft.network.chat.Component.translatable("dimension.awakening_system.isekai_world");
+			case "awakening_system:murim", "awakening_system:murim_world", "murim" -> net.minecraft.network.chat.Component.translatable("dimension.awakening_system.murim_world");
+			case "awakening_system:teyvat", "awakening_system:teyvat_world", "teyvat" -> net.minecraft.network.chat.Component.translatable("dimension.awakening_system.teyvat_world");
+			case "awakening_system:limbo", "limbo" -> net.minecraft.network.chat.Component.translatable("dimension.awakening_system.limbo");
+			case "awakening_system:shadow_monarch_realm" -> net.minecraft.network.chat.Component.translatable("dimension.awakening_system.shadow_monarch_realm");
+			case "awakening_system:tower", "awakening_system:ranker_tower" -> net.minecraft.network.chat.Component.translatable("dimension.awakening_system.ranker_tower");
+			case "awakening_system:catacombs" -> net.minecraft.network.chat.Component.translatable("dimension.awakening_system.catacombs");
+			case "awakening_system:penalty_zone" -> net.minecraft.network.chat.Component.translatable("dimension.awakening_system.penalty_zone");
+			case "awakening_system:dungeon_realm" -> net.minecraft.network.chat.Component.translatable("dimension.awakening_system.dungeon_realm");
+			case "awakening_system:pagoda_realm" -> net.minecraft.network.chat.Component.translatable("dimension.awakening_system.pagoda_realm");
+			case "awakening_system:spiral_abyss" -> net.minecraft.network.chat.Component.translatable("dimension.awakening_system.spiral_abyss");
+			case "awakening_system:subspace_realm" -> net.minecraft.network.chat.Component.translatable("dimension.awakening_system.subspace_realm");
+			case "awakening_system:pocket_sanctuary" -> net.minecraft.network.chat.Component.translatable("awakening_system.dimension.pocket_sanctuary");
 			default -> {
-				String dimKey = "dimension." + dimension.replace(':', '.');
-				if (net.minecraft.client.resources.language.I18n.exists(dimKey)) {
-					yield net.minecraft.network.chat.Component.translatable(dimKey);
-				}
-				String dFolderKey = "diorama.folder." + dimension.substring(dimension.indexOf(':') + 1);
-				if (net.minecraft.client.resources.language.I18n.exists(dFolderKey)) {
-					yield net.minecraft.network.chat.Component.translatable(dFolderKey);
+				if (dimension.startsWith("awakening_system:tower_floor_")) {
+					String key = "travelerstitles.dimension." + dimension.replace(':', '.');   // the lang keys use a dot
+					yield net.minecraft.network.chat.Component.translatable(key);
 				}
 				String path = dimension.substring(dimension.indexOf(':') + 1).replace('_', ' ').replace('/', ' ');
 				yield net.minecraft.network.chat.Component.literal(path.isEmpty() ? dimension : Character.toUpperCase(path.charAt(0)) + path.substring(1));
@@ -65,10 +73,9 @@ public final class Waypoints {
 	}
 
 	/** Adds a temporary waypoint at a block position: no editor, and it's never saved. */
-	public static void addTemporary(BlockPos pos) {
-		String dimension = dimension();
+	public static void addTemporary(BlockPos pos, String dimension) {
 		WaypointStore store = WaypointStore.get();
-		if (dimension == null || store == null) {
+		if (store == null) {
 			return;
 		}
 		String name = net.minecraft.network.chat.Component.translatable("diorama.waypoint.temporary").getString();
@@ -77,17 +84,125 @@ public final class Waypoints {
 		store.add(temporary);
 	}
 
-	/** The server only sends the commands a player may use, so {@code tp} being there means it's allowed. */
+	/**
+	 * The server only sends the commands a player may use, so teleporting is offered when it sent
+	 * the teleport command's first word.
+	 */
 	public static boolean canTeleport() {
-		var connection = Minecraft.getInstance().getConnection();
-		return connection != null && connection.getCommands().getRoot().getChild("tp") != null;
+		return mayUse(Settings.get().teleportCommand);
 	}
 
-	/** Sends {@code /tp} to a block position. */
-	public static void teleport(int x, int y, int z) {
+	/**
+	 * Whether teleporting into a dimension is on offer. To another one, the teleport is run through
+	 * {@code /execute in}, as Xaero's World Map does. That only suits {@code /tp}: nothing says a
+	 * server's own teleport command would still work through it, or take the player's dimension along.
+	 * The server has to have the dimension, too: a waypoint can outlive one.
+	 */
+	public static boolean canTeleport(String dimension) {
+		if (dimension.equals(dimension())) {
+			return canTeleport();
+		}
+		var connection = Minecraft.getInstance().getConnection();
+		if (connection == null || !Settings.get().teleportCommand.equals(Settings.DEFAULT_TELEPORT_COMMAND) || !canTeleport()) {
+			return false;
+		}
+		var execute = connection.getCommands().getRoot().getChild("execute");
+		return execute != null && execute.getChild("in") != null
+			&& connection.levels().stream().anyMatch(level -> level.location().toString().equals(dimension));
+	}
+
+	private static boolean mayUse(String command) {
+		var connection = Minecraft.getInstance().getConnection();
+		return connection != null && connection.getCommands().getRoot().getChild(command.split(" ", 2)[0]) != null;
+	}
+
+	/** Sends the player's teleport command, {@code /tp} unless they changed it, to a block position in a dimension. */
+	public static void teleport(String dimension, int x, int y, int z) {
 		LocalPlayer player = Minecraft.getInstance().player;
-		if (player != null) {
-			player.connection.sendCommand("tp @s " + x + " " + y + " " + z);
+		String command = (dimension.equals(dimension()) ? "" : "execute in " + dimension + " run ") + Settings.get().teleportCommand
+			.replace("{x}", Integer.toString(x))
+			.replace("{y}", Integer.toString(y))
+			.replace("{z}", Integer.toString(z));
+		// The command packet holds 256 characters; a longer one throws instead of sending.
+		if (player != null && command.length() <= 256) {
+			player.connection.sendCommand(command);
+		}
+	}
+
+	private static boolean wasSleeping;
+
+	/**
+	 * Keeps a bed waypoint where the player last lay down to sleep, one per dimension, moved when
+	 * they sleep somewhere else. Lying down is what the client sees of the server setting their
+	 * respawn point, on any bed that sets one. Called every tick.
+	 */
+	public static void watchSleep(Minecraft mc) {
+		LocalPlayer player = mc.player;
+		boolean sleeping = player != null && player.isSleeping();
+		if (sleeping && !wasSleeping && Settings.get().bedMarkers) {
+			// On joining a server the world may not be known yet; until it is, try again each tick.
+			sleeping = player.getSleepingPos().map(Waypoints::slept).orElse(true);
+		}
+		wasSleeping = sleeping;
+	}
+
+	/** Puts the bed pin on a bed; false if there's no world to keep it in yet. */
+	private static boolean slept(BlockPos pos) {
+		WaypointStore store = WaypointStore.get();
+		String dimension = dimension();
+		if (store == null || dimension == null) {
+			return false;
+		}
+		//? if >=26.3 {
+		/*// A straw bed is for a night away: the respawn point stays where it was, and so does the pin.
+		var level = Minecraft.getInstance().level;
+		if (level.getBlockState(pos).getBlock() instanceof net.minecraft.world.level.block.AbstractBedBlock bed && bed.getBedRule(level, pos).canSetSpawn() == net.minecraft.world.attribute.BedRule.Rule.NEVER) {
+			return true;
+		}
+		*///?}
+		for (Waypoint waypoint : store.in(dimension)) {
+			if (waypoint.kind == Waypoint.Kind.BED) {
+				waypoint.x = pos.getX();
+				waypoint.y = pos.getY();
+				waypoint.z = pos.getZ();
+				store.changed();
+				return true;
+			}
+		}
+		Waypoint bed = new Waypoint(Waypoint.BED_NAME, pos.getX(), pos.getY(), pos.getZ(), dimension, 0xFFE5484D);
+		bed.kind = Waypoint.Kind.BED;
+		bed.icon = dev.diorama.render.WaypointIcons.BED;
+		store.add(bed);
+		return true;
+	}
+
+	/** How close the player has to come back to a death marker to remove it: Xaero's Minimap's distance. */
+	public static final double DEATH_REACHED = 4;
+	/** A new death marker is left alone this long, as in Xaero's Minimap, so respawning on the spot doesn't take it at once. */
+	private static final long DEATH_GRACE_MS = 5000;
+
+	/**
+	 * Removes the death markers the player has come back to, unless they hid them: those in their
+	 * dimension on the map in use. Called every tick.
+	 */
+	public static void watchDeaths(Minecraft mc) {
+		LocalPlayer player = mc.player;
+		// While the death screen is up, the player still stands where they died. With any screen open
+		// it waits, so a pin doesn't go from under its editor or the waypoint list.
+		if (player == null || !player.isAlive() || mc.screen != null || !Settings.get().removeReachedDeaths) {
+			return;
+		}
+		WaypointStore store = WaypointStore.get();
+		String dimension = dimension();
+		if (store == null || dimension == null) {
+			return;
+		}
+		long now = System.currentTimeMillis();
+		for (Waypoint waypoint : store.all()) {
+			if (waypoint.kind == Waypoint.Kind.DEATH && waypoint.dimension.equals(dimension) && now - waypoint.created > DEATH_GRACE_MS
+				&& store.shown(waypoint) && waypoint.distanceTo(player.getX(), player.getY(), player.getZ()) < DEATH_REACHED) {
+				store.remove(waypoint);
+			}
 		}
 	}
 
@@ -102,8 +217,7 @@ public final class Waypoints {
 			return;
 		}
 		BlockPos pos = player.blockPosition();
-		String deathLabel = net.minecraft.network.chat.Component.translatable("diorama.waypoint.death_name", LocalTime.now().format(TIME)).getString();
-		Waypoint death = new Waypoint(deathLabel, pos.getX(), pos.getY(), pos.getZ(), dimension, 0xFF60646C);
+		Waypoint death = new Waypoint(Waypoint.deathName(LocalTime.now()), pos.getX(), pos.getY(), pos.getZ(), dimension, 0xFF60646C);
 		death.kind = Waypoint.Kind.DEATH;
 		store.add(death);
 	}

@@ -93,21 +93,32 @@ public class SystemWelcomeScreen extends Screen {
         Component hint = Component.translatable("awakening_system.screen.welcome.hint");
         g.drawCenteredString(font, hint, width / 2, hintY, 0xFFFFE082);
 
-        // 6. [ ACEPTAR ] Button
-        int btnW = 110;
+        // 6. [ ACEPTAR ] & [ 💬 DISCORD ] Buttons
+        int btnW = 105;
         int btnH = 22;
-        int btnX = (width - btnW) / 2;
+        int btnX1 = (width / 2) - btnW - 6;
+        int btnX2 = (width / 2) + 6;
         int btnY = top + 154;
-        boolean btnHov = mouseX >= btnX && mouseX < btnX + btnW && mouseY >= btnY && mouseY < btnY + btnH;
 
-        int btnBg = btnHov ? 0xDD1B4357 : 0x990C1925;
-        int btnBorder = btnHov ? 0xFFFFFFFF : 0xFF00E5FF;
-        int btnTextCol = btnHov ? 0xFFFFFFFF : 0xFF70E8FF;
+        boolean btn1Hov = mouseX >= btnX1 && mouseX < btnX1 + btnW && mouseY >= btnY && mouseY < btnY + btnH;
+        int btn1Bg = btn1Hov ? 0xDD1B4357 : 0x990C1925;
+        int btn1Border = btn1Hov ? 0xFFFFFFFF : 0xFF00E5FF;
+        int btn1TextCol = btn1Hov ? 0xFFFFFFFF : 0xFF70E8FF;
 
-        g.fill(btnX, btnY, btnX + btnW, btnY + btnH, btnBg);
-        g.renderOutline(btnX, btnY, btnW, btnH, btnBorder);
+        g.fill(btnX1, btnY, btnX1 + btnW, btnY + btnH, btn1Bg);
+        g.renderOutline(btnX1, btnY, btnW, btnH, btn1Border);
         g.drawCenteredString(font, Component.translatable("awakening_system.screen.welcome.accept").withStyle(ChatFormatting.BOLD),
-                btnX + btnW / 2, btnY + 7, btnTextCol);
+                btnX1 + btnW / 2, btnY + 7, btn1TextCol);
+
+        boolean btn2Hov = mouseX >= btnX2 && mouseX < btnX2 + btnW && mouseY >= btnY && mouseY < btnY + btnH;
+        int btn2Bg = btn2Hov ? 0xDD4A358A : 0x992B1C56;
+        int btn2Border = btn2Hov ? 0xFFFFFFFF : 0xFF9E7BFF;
+        int btn2TextCol = btn2Hov ? 0xFFFFFFFF : 0xFFC9B5FF;
+
+        g.fill(btnX2, btnY, btnX2 + btnW, btnY + btnH, btn2Bg);
+        g.renderOutline(btnX2, btnY, btnW, btnH, btn2Border);
+        g.drawCenteredString(font, Component.literal("💬 Discord").withStyle(ChatFormatting.BOLD),
+                btnX2 + btnW / 2, btnY + 7, btn2TextCol);
 
         super.render(g, mouseX, mouseY, partialTick);
     }
@@ -128,15 +139,23 @@ public class SystemWelcomeScreen extends Screen {
                 return true;
             }
 
-            // Check [ ACEPTAR ] button
-            int btnW = 110;
+            // Check [ ACEPTAR ] & [ 💬 DISCORD ] buttons
+            int btnW = 105;
             int btnH = 22;
-            int btnX = (width - btnW) / 2;
+            int btnX1 = (width / 2) - btnW - 6;
+            int btnX2 = (width / 2) + 6;
             int btnY = top + 154;
-            if (mouseX >= btnX && mouseX < btnX + btnW && mouseY >= btnY && mouseY < btnY + btnH) {
+            if (mouseX >= btnX1 && mouseX < btnX1 + btnW && mouseY >= btnY && mouseY < btnY + btnH) {
                 Minecraft.getInstance().getSoundManager().play(
                         SimpleSoundInstance.forUI(SoundEvents.UI_BUTTON_CLICK, 1.0F));
                 onClose();
+                return true;
+            }
+
+            if (mouseX >= btnX2 && mouseX < btnX2 + btnW && mouseY >= btnY && mouseY < btnY + btnH) {
+                Minecraft.getInstance().getSoundManager().play(
+                        SimpleSoundInstance.forUI(SoundEvents.UI_BUTTON_CLICK, 1.2F));
+                net.minecraft.Util.getPlatform().openUri(java.net.URI.create("https://discord.gg/DqzTE3Ux8"));
                 return true;
             }
         }

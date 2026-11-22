@@ -118,8 +118,8 @@ public class DragonNestFeature extends Feature<NoneFeatureConfiguration> {
         }
 
         try {
-            net.minecraft.world.phys.AABB checkArea = new net.minecraft.world.phys.AABB(origin).inflate(64.0D);
-            if (rand.nextFloat() < 0.70F && level.getEntitiesOfClass(AncientDragonEntity.class, checkArea).isEmpty()) {
+            net.minecraft.world.phys.AABB checkArea = new net.minecraft.world.phys.AABB(origin).inflate(160.0D);
+            if (rand.nextFloat() < 0.60F && level.getEntitiesOfClass(AncientDragonEntity.class, checkArea).isEmpty()) {
                 AncientDragonEntity guardian = ModEntities.ANCIENT_DRAGON.get().create(level.getLevel());
                 if (guardian != null) {
                     guardian.moveTo(origin.getX() + 0.5D, origin.getY() + 0.5D, origin.getZ() + 0.5D, rand.nextFloat() * 360.0F, 0.0F);

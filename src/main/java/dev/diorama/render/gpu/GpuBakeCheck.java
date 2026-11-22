@@ -3,15 +3,27 @@ package dev.diorama.render.gpu;
 import dev.diorama.Diorama;
 import dev.diorama.Projection;
 import dev.diorama.Settings;
+import java.util.Arrays;
 import org.jspecify.annotations.Nullable;
 import net.minecraft.client.Minecraft;
 import net.minecraft.network.chat.Component;
+//? if fabric {
+/*import net.fabricmc.loader.api.FabricLoader;
+*///?} else if neoforge {
+import net.neoforged.fml.ModList;
+//?} else {
+/*import net.minecraftforge.fml.ModList;
+*///?}
 
 /**
- * Whether a bake goes to the GPU. The player turns GPU baking on in the settings
- * ({@code DIORAMA_GPU_BAKE=1} forces it on for tests). Before the map shows any GPU tile, the
- * first few are also traced and the two compared: a graphics driver that draws them differently
- * turns GPU baking off for the rest of the session, so it can't spoil a map.
+ * Whether a bake goes to the GPU. It does unless the player turns GPU baking off in the settings
+ * ({@code DIORAMA_GPU_BAKE=1} or {@code 0} forces it for tests). Before the map shows any GPU tile,
+ * the first few are also traced and the two compared: a graphics driver that draws them differently
+ * turns GPU baking off, so it can't spoil a map. So does a card too slow to bake without the
+ * player feeling it, and any failure of the GPU code, down to a driver crash taking the game with
+ * it. Each is saved per card ({@link GpuBakeRecord}), so the next session goes straight to the
+ * tracer, except after a first mismatch, which the next session checks again; turning the setting
+ * off and on again asks for a new try.
  *
  * <p>Both bakes of a check tile read the same chunks (a {@code PinnedSource}), so any difference
  * past what the two sample patterns explain is the GPU's. Six kinds of bake are checked apart:
@@ -34,6 +46,16 @@ public final class GpuBakeCheck {
 		GPU,
 		/** On the GPU and the CPU both; the map gets the traced one. */
 		CHECK
+	}
+
+	/** Why GPU baking turned itself off. */
+	public enum Off {
+		/** The tiles came out differently from the tracer's, or the GPU couldn't draw them. */
+		NO_MATCH,
+		/** Tiles took long enough on the GPU to stall frames. */
+		TOO_SLOW,
+		/** The game went down during the first bakes. */
+		CRASHED
 	}
 
 	private static final String FORCED = System.getenv("DIORAMA_GPU_BAKE");
@@ -63,6 +85,11 @@ public final class GpuBakeCheck {
 	 * explored area the two sample patterns split pixels differently: matching drivers measured
 	 * up to 0.12% and 3.1% there. Alpha decides which pixels a merge keeps from the saved tile, so
 	 * it can't be loose: 8%, as the comparison test allows.
+	 *
+	 * <p>Those split pixels lie in a row along each edge of the unknown, so there are about as many
+	 * as the edge is long, however little of the tile is known. The alpha share is therefore taken
+	 * of at least {@link #PASS_PIXELS}: a tile with only a thin strip known, as the first tiles at
+	 * the edge of what has loaded often are, had one straight edge's row come to 8% of it.
 	 */
 	private static final double MAX_MISMATCH = 0.02;
 	private static final double MAX_ALPHA = 0.08;
@@ -74,9 +101,32 @@ public final class GpuBakeCheck {
 	 */
 	private static final int PASS_PIXELS = Projection.TILE_PIXELS * Projection.TILE_PIXELS / 4;
 	private static final int JUDGE_PIXELS = 2048;
+	/**
+	 * The longest the middle check tile of a view may take, render thread or GPU. A bake can't be
+	 * cut short, so it holds up the frame it lands on by about this long, however thin the budget
+	 * spreads bakes out. Tests that force GPU baking on don't stop for it.
+	 */
+	private static final long MAX_COST = Long.getLong("diorama.gpuBakeMaxMs", 50) * 1_000_000;
+	/** Finished bakes in a row the GPU couldn't draw before giving up on it, once it passed. */
+	private static final int FAILURES_IN_A_ROW = 3;
 
 	private static final Object LOCK = new Object();
-	private static volatile boolean failed;
+	private static volatile @Nullable Off off;
+	/** Whether this card's saved result has been read: {@link #open}. */
+	private static volatile boolean opened;
+	/**
+	 * This game's mark is in the record: set at {@link #open} and when a kind's first check tile goes
+	 * to the GPU, cleared once every kind that went to the GPU has had a tile read back.
+	 */
+	private static boolean unproven;
+	/** The player asked for a new try: {@link #open} forgets this card's saved result. */
+	private static boolean retrying;
+	/** The card {@link #open} read the saved result for this session. */
+	private static @Nullable String openedDevice;
+	private static boolean closingHooked;
+	/** The game is closing in good order and the mark is gone: nothing marks again. */
+	private static boolean closing;
+	private static int failuresInARow;
 	/** The views, as {@link #mode} and the rest take them. */
 	public static final int SKY = 0;
 	public static final int CAVE = 1;
@@ -94,6 +144,13 @@ public final class GpuBakeCheck {
 	private static final class Check {
 		final String name;
 		volatile boolean passed;
+		/**
+		 * A check tile of this kind went to the GPU this session. Kept through a retry, which
+		 * doesn't wait for tiles still out.
+		 */
+		boolean sent;
+		/** One of them came back drawn: the driver got through this kind's way of drawing. */
+		boolean readBack;
 		int out;
 		int compared;
 		int failures;
@@ -103,23 +160,242 @@ public final class GpuBakeCheck {
 		double worstAlpha;
 		double worstOverlay;
 		double worstChannel;
+		final long[] costs = new long[TILES];
 
 		Check(String name) {
 			this.name = name;
+		}
+
+		void reset() {
+			this.passed = false;
+			this.compared = 0;
+			this.failures = 0;
+			this.worstMean = 0;
+			this.worstBias = 0;
+			this.worstMismatch = 0;
+			this.worstAlpha = 0;
+			this.worstOverlay = 0;
+			this.worstChannel = 0;
 		}
 	}
 
 	/** Whether GPU baking is asked for, by the setting or a test. */
 	public static boolean wanted() {
-		if (FORCED != null && !FORCED.isEmpty()) {
-			return "1".equals(FORCED);
+		if ("0".equals(FORCED)) {
+			return false;
 		}
-		return Settings.get().gpuBaking;
+		return forcedOn() || Settings.get().gpuBaking;
 	}
 
-	/** Whether the check turned GPU baking off this session. */
+	/** Whether GPU baking turned itself off, this session or from the saved result. */
 	public static boolean failed() {
-		return failed;
+		return off != null;
+	}
+
+	/** Why GPU baking turned itself off, if it did. */
+	public static @Nullable Off off() {
+		return off;
+	}
+
+	/** Whether a test forces GPU baking on, past what's saved and the speed limit. */
+	private static boolean forcedOn() {
+		return "1".equals(FORCED);
+	}
+
+	static boolean opened() {
+		return opened;
+	}
+
+	/**
+	 * The first frame with GPU baking wanted, before the GPU is asked for anything: goes by what's
+	 * saved for this card, or marks its first bakes unproven. Render thread.
+	 */
+	static void open(@Nullable String device) {
+		synchronized (LOCK) {
+			opened = true;
+			openedDevice = device;
+			if (device == null) {
+				return;
+			}
+			GpuBakeRecord record = GpuBakeRecord.load();
+			String mod = modVersion();
+			boolean elsewhere = readMark(record);
+			if (retrying) {
+				retrying = false;
+				record.off.remove(device);
+			}
+			Off saved = forcedOn() ? null : record.result(device, mod);
+			if (!forcedOn() && saved == null && record.off.containsKey(device) && mod.equals(record.off.get(device).mod)) {
+				Diorama.LOGGER.info("GPU baking turned off once before on {} ({}); checking it again.", device, record.off.get(device).result);
+			}
+			if (saved != null) {
+				off = saved;
+				Diorama.LOGGER.info("GPU baking stays off on {}: {} here before. Tiles are traced on the CPU.", device, saved);
+				record.save();
+				return;
+			}
+			if (elsewhere) {
+				return;
+			}
+			mark(record, device, mod);
+		}
+	}
+
+	/**
+	 * Reads the mark in the record, if another game left one: a game that's gone went down while it
+	 * was set, and GPU baking goes off on its card. Returns whether that game is still running, so
+	 * the mark is its own. Guarded by {@link #LOCK}.
+	 */
+	private static boolean readMark(GpuBakeRecord record) {
+		String crashed = record.starting;
+		// This game's own: an earlier mark that couldn't be cleared.
+		if (crashed == null || record.startingProcess == ProcessHandle.current().pid()) {
+			return false;
+		}
+		// Another game in this folder, still on its first bakes, hasn't crashed: it's running.
+		if (ProcessHandle.of(record.startingProcess).filter(ProcessHandle::isAlive).isPresent()) {
+			return true;
+		}
+		record.starting = null;
+		if (!forcedOn()) {
+			Diorama.LOGGER.warn("The game went down during the first GPU bakes on {}. Tiles are traced on the CPU on that card from now on.", crashed);
+			record.turnedOff(crashed, Off.CRASHED, record.startingMod == null ? "" : record.startingMod);
+		}
+		return false;
+	}
+
+	/**
+	 * Marks this game's bakes unproven in the record, before the GPU draws them: a driver that dies
+	 * on them leaves the mark behind for the next {@link #open}. Guarded by {@link #LOCK}.
+	 */
+	private static void mark(GpuBakeRecord record, String device, String mod) {
+		record.starting = device;
+		record.startingProcess = ProcessHandle.current().pid();
+		record.startingMod = mod;
+		record.save();
+		unproven = true;
+		if (!closingHooked) {
+			closingHooked = true;
+			// A game that closes, or crashes with a report, runs this; a dead driver doesn't.
+			Runtime.getRuntime().addShutdownHook(new Thread(GpuBakeCheck::close, "diorama-gpu-closing"));
+		}
+	}
+
+	/**
+	 * A check tile with something to draw is about to go to the GPU. The first of its kind marks the
+	 * record again if an earlier kind's read-back cleared it: each kind lights and records its own
+	 * way, so a driver that drew one fine can still die on the next one's first tile. On the check
+	 * thread, so the render thread doesn't wait on the disk.
+	 */
+	public static void checking(int view, boolean overlays) {
+		synchronized (LOCK) {
+			Check check = check(view, overlays);
+			if (check.sent) {
+				return;
+			}
+			check.sent = true;
+			String device = openedDevice;
+			if (unproven || off != null || device == null || closing) {
+				return;
+			}
+			GpuBakeRecord record = GpuBakeRecord.load();
+			if (readMark(record)) {
+				return;
+			}
+			String mod = modVersion();
+			// Another game in this folder may have gone down on this card since this one opened.
+			Off saved = forcedOn() ? null : record.result(device, mod);
+			if (saved != null) {
+				off = saved;
+				Diorama.LOGGER.warn("GPU baking turned off on {}: {} in another game. Tiles are traced on the CPU instead.", device, saved);
+				record.save();
+				return;
+			}
+			mark(record, device, mod);
+		}
+	}
+
+	/**
+	 * A check tile came back drawn, before it's compared. Once every kind sent to the GPU has had
+	 * one back, none is unproven: the mark goes. A tile handed back undrawn proves nothing, so a
+	 * kind whose first tiles were cancelled or failed keeps the mark until the game closes.
+	 */
+	public static void readBack(int view, boolean overlays) {
+		synchronized (LOCK) {
+			check(view, overlays).readBack = true;
+			if (unproven && allReadBack()) {
+				proven();
+			}
+		}
+	}
+
+	/** Whether every kind sent to the GPU has had a tile back drawn. Guarded by {@link #LOCK}. */
+	private static boolean allReadBack() {
+		return Arrays.stream(CHECKS).allMatch(check -> !check.sent || check.readBack);
+	}
+
+	/** The game is closing in good order: clears the mark, and the check thread can't set it again. */
+	private static void close() {
+		synchronized (LOCK) {
+			closing = true;
+			proven();
+		}
+	}
+
+	/** The first bakes are through, or the game is closing in good order. */
+	private static void proven() {
+		synchronized (LOCK) {
+			if (unproven) {
+				GpuBakeRecord record = GpuBakeRecord.load();
+				clearMark(record);
+				record.save();
+			}
+		}
+	}
+
+	/** Drops this game's mark, leaving one another game in the folder has set since. */
+	private static void clearMark(GpuBakeRecord record) {
+		unproven = false;
+		if (record.startingProcess == ProcessHandle.current().pid()) {
+			record.starting = null;
+		}
+	}
+
+	/**
+	 * The player turned the setting back on: forgets this card's result and checks it again. Before
+	 * the session's first bake the result hasn't been read yet, so that's when it's forgotten.
+	 */
+	public static void retry() {
+		synchronized (LOCK) {
+			retrying = true;
+			if (off == null) {
+				if (opened && openedDevice != null) {
+					// This session's check is under way, past reading the saved result: forget it
+					// now, so a first mismatch from before doesn't count towards a second.
+					retrying = false;
+					GpuBakeRecord record = GpuBakeRecord.load();
+					if (record.off.remove(openedDevice) != null) {
+						record.save();
+					}
+				}
+				return;
+			}
+			off = null;
+			opened = false;
+			failuresInARow = 0;
+			for (Check check : CHECKS) {
+				check.reset();
+			}
+			GpuTileBaker.retry();
+		}
+	}
+
+	private static String modVersion() {
+		//? if fabric {
+		/*return FabricLoader.getInstance().getModContainer(Diorama.MOD_ID).map(mod -> mod.getMetadata().getVersion().getFriendlyString()).orElse("");
+		*///?} else {
+		return ModList.get().getModContainerById(Diorama.MOD_ID).map(mod -> mod.getModInfo().getVersion().toString()).orElse("");
+		//?}
 	}
 
 	private static Check check(int view, boolean overlays) {
@@ -127,12 +403,28 @@ public final class GpuBakeCheck {
 	}
 
 	/**
+	 * Whether tiles of a {@code view} may go to the GPU without being checked, for bakes that aren't
+	 * made to read the same chunks twice: GPU baking is on and this GPU drew this view right, with
+	 * overlays or without. Until then such a bake traces, and the map's own bakes do the checking.
+	 */
+	public static boolean trusted(int view) {
+		return wanted() && !failed() && (check(view, false).passed || check(view, true).passed);
+	}
+
+	/**
 	 * How the next bake of a {@code view} ({@link #SKY}, {@link #CAVE} or {@link #UNDER_ROOF}) runs,
 	 * with fog of war and overlays or not. A {@link Mode#CHECK} must be answered with {@link #compare} or {@link #undrawn},
-	 * exactly once, with the same kind, and its two bakes must read the same chunks.
+	 * exactly once, with the same kind, and its two bakes must read the same chunks. One with
+	 * something to draw goes to the GPU after {@link #checking}, and pixels drawn come back through
+	 * {@link #readBack}.
 	 */
 	public static Mode mode(int view, boolean fogOfWar, boolean overlays) {
-		if (!wanted() || failed) {
+		if (!wanted() || off != null) {
+			return Mode.TRACE;
+		}
+		if (!opened) {
+			// Traced while the next frame reads what's saved for this card.
+			GpuTileBaker.use();
 			return Mode.TRACE;
 		}
 		Check check = check(view, overlays);
@@ -144,7 +436,7 @@ public final class GpuBakeCheck {
 		}
 		synchronized (LOCK) {
 			// A few at a time, so a tile without much in it doesn't hold the check up.
-			if (!failed && !check.passed && check.compared + check.out < TILES) {
+			if (off == null && !check.passed && check.compared + check.out < TILES) {
 				check.out++;
 				return Mode.CHECK;
 			}
@@ -154,9 +446,9 @@ public final class GpuBakeCheck {
 
 	/**
 	 * A check tile came back from both bakers: the GPU's pixels and the tracer's, before any merge,
-	 * with their overlay bits when the bake asked for them.
+	 * with their overlay bits when the bake asked for them, and what the GPU's bake cost.
 	 */
-	public static void compare(int view, int[] gpu, int[] traced, byte @Nullable [] gpuInfo, byte @Nullable [] tracedInfo) {
+	public static void compare(int view, int[] gpu, int[] traced, byte @Nullable [] gpuInfo, byte @Nullable [] tracedInfo, long costNanos) {
 		boolean overlays = tracedInfo != null;
 		long both = 0;
 		long mismatched = 0;
@@ -194,7 +486,7 @@ public final class GpuBakeCheck {
 		Check check = check(view, overlays);
 		synchronized (LOCK) {
 			check.out--;
-			if (failed || check.passed) {
+			if (off != null || check.passed) {
 				return;
 			}
 			double mismatch = mismatched / (double) traced.length;
@@ -203,12 +495,12 @@ public final class GpuBakeCheck {
 			double mean = judged ? sum / both : 0;
 			double brighter = judged ? bias / both : 0;
 			double channel = judged ? Math.max(Math.abs(redBias), Math.max(Math.abs(greenBias), Math.abs(blueBias))) / both : 0;
-			double alpha = judged ? alphaDiffers / (double) both : 0;
+			double alpha = judged ? alphaDiffers / (double) Math.max(both, PASS_PIXELS) : 0;
 			double overlay = judged && overlays ? overlayDiffers / (double) both : 0;
 			// Every tile must match on its own: the two read the same chunks, so nothing but the
 			// GPU makes them differ, and matching tiles mustn't hide one that doesn't.
 			if (mean > MAX_MEAN || Math.abs(brighter) > MAX_BIAS || channel > MAX_CHANNEL_BIAS || mismatch > MAX_MISMATCH || alpha > MAX_ALPHA || overlay > MAX_OVERLAY) {
-				fail(String.format(java.util.Locale.ROOT, "a %s tile doesn't match the tracer's (mean difference %.2f/255, %+.2f brighter, one channel off by %.2f, %.2f%% known/unknown mismatch, %.2f%% different alpha, %.2f%% different overlay bits)",
+				fail(Off.NO_MATCH, String.format(java.util.Locale.ROOT, "a %s tile doesn't match the tracer's (mean difference %.2f/255, %+.2f brighter, one channel off by %.2f, %.2f%% known/unknown mismatch, %.2f%% different alpha, %.2f%% different overlay bits)",
 					check.name, mean, brighter, channel, mismatch * 100, alpha * 100, overlay * 100));
 				return;
 			}
@@ -216,7 +508,7 @@ public final class GpuBakeCheck {
 				// Mostly unexplored or empty: it matched, but another tile will tell more.
 				return;
 			}
-			check.compared++;
+			check.costs[check.compared++] = costNanos;
 			check.worstMean = Math.max(check.worstMean, mean);
 			check.worstBias = Math.abs(brighter) > Math.abs(check.worstBias) ? brighter : check.worstBias;
 			check.worstMismatch = Math.max(check.worstMismatch, mismatch);
@@ -224,10 +516,18 @@ public final class GpuBakeCheck {
 			check.worstOverlay = Math.max(check.worstOverlay, overlay);
 			check.worstChannel = Math.max(check.worstChannel, channel);
 			if (check.compared >= TILES) {
+				// The middle one: the first also pays for compiling the shaders.
+				long[] costs = check.costs.clone();
+				Arrays.sort(costs);
+				long cost = (costs[TILES / 2 - 1] + costs[TILES / 2]) / 2;
+				if (cost > MAX_COST && !forcedOn()) {
+					fail(Off.TOO_SLOW, String.format(java.util.Locale.ROOT, "a %s tile takes %.1f ms, past the %.0f ms that stalls a frame", check.name, cost / 1e6, MAX_COST / 1e6));
+					return;
+				}
 				check.passed = true;
 				Diorama.LOGGER.info("GPU baking matches the tracer on {} ({}): on", GpuTileBaker.device(), String.format(java.util.Locale.ROOT,
-					"%s, %d tiles, worst: mean difference %.2f/255, %+.2f brighter, one channel off by %.2f, %.2f%% known/unknown mismatch, %.2f%% different alpha, %.2f%% different overlay bits",
-					check.name, check.compared, check.worstMean, check.worstBias, check.worstChannel, check.worstMismatch * 100, check.worstAlpha * 100, check.worstOverlay * 100));
+					"%s, %d tiles, %.1f ms a tile, worst: mean difference %.2f/255, %+.2f brighter, one channel off by %.2f, %.2f%% known/unknown mismatch, %.2f%% different alpha, %.2f%% different overlay bits",
+					check.name, check.compared, cost / 1e6, check.worstMean, check.worstBias, check.worstChannel, check.worstMismatch * 100, check.worstAlpha * 100, check.worstOverlay * 100));
 			}
 		}
 	}
@@ -241,15 +541,47 @@ public final class GpuBakeCheck {
 		Check check = check(view, overlays);
 		synchronized (LOCK) {
 			check.out--;
-			if (cannotDraw && !failed && !check.passed && ++check.failures >= FAILURES) {
-				fail("couldn't draw any of " + check.failures + " " + check.name + " tiles");
+			if (cannotDraw && off == null && !check.passed && ++check.failures >= FAILURES) {
+				fail(Off.NO_MATCH, "couldn't draw any of " + check.failures + " " + check.name + " tiles");
 			}
 		}
 	}
 
-	private static void fail(String why) {
-		failed = true;
-		Diorama.LOGGER.warn("GPU baking turned off for this session on {}: {}. Tiles are traced on the CPU instead.", GpuTileBaker.device(), why);
+	/** A map tile came back from the GPU, drawn or not. A card that stops drawing, after passing, stops being asked. */
+	public static void drawn(boolean drew) {
+		synchronized (LOCK) {
+			failuresInARow = drew ? 0 : failuresInARow + 1;
+			if (failuresInARow >= FAILURES_IN_A_ROW && off == null) {
+				fail(Off.NO_MATCH, "couldn't draw " + failuresInARow + " tiles in a row");
+			}
+		}
+	}
+
+	/** The GPU code failed where a single tile can't take the blame. */
+	static void broken(String why) {
+		synchronized (LOCK) {
+			if (off == null) {
+				fail(Off.NO_MATCH, why);
+			}
+		}
+	}
+
+	/** Guarded by {@link #LOCK}. */
+	private static void fail(Off why, String details) {
+		off = why;
+		String device = GpuTileBaker.device();
+		Diorama.LOGGER.warn("GPU baking turned off on {}: {}. Tiles are traced on the CPU instead.", device, details);
+		GpuBakeRecord record = GpuBakeRecord.load();
+		record.turnedOff(device, why, modVersion());
+		// A kind's first tile can still be on the GPU: the mark stays until it's back, or the game closes.
+		if (unproven && allReadBack()) {
+			clearMark(record);
+		}
+		record.save();
+		if (why == Off.TOO_SLOW) {
+			// Nothing's wrong and nothing changes on the map: the setting says so if anyone looks.
+			return;
+		}
 		Minecraft mc = Minecraft.getInstance();
 		mc.execute(() -> {
 			Component message = Component.translatable("diorama.gpu_baking.failed");

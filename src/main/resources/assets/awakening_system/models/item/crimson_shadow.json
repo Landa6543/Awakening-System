@@ -1,0 +1,12 @@
+{
+  "parent": "minecraft:item/handheld",
+  "textures": {"layer0":"awakening_system:item/crimson_shadow"},
+  "display": {
+    "thirdperson_righthand": { "rotation": [0, -90, 55], "translation": [0, 8.21, -0.24], "scale": [1.4, 1.4, 1.4] },
+    "thirdperson_lefthand": { "rotation": [0, 90, -55], "translation": [0, 8.21, -0.24], "scale": [1.4, 1.4, 1.4] },
+    "firstperson_righthand": { "rotation": [0, -90, 25], "translation": [1.13, 6.42, 2.3], "scale": [1.12, 1.12, 1.12] },
+    "firstperson_lefthand": { "rotation": [0, 90, -25], "translation": [1.13, 6.42, 2.3], "scale": [1.12, 1.12, 1.12] },
+    "ground": { "translation": [0, 2, 0], "scale": [0.5, 0.5, 0.5] },
+    "gui": { "rotation": [0, 0, 0], "translation": [0, 0, 0], "scale": [1, 1, 1] },
+    "fixed": { "rotation": [0, 180, 0], "scale": [1, 1, 1] }
+  }}

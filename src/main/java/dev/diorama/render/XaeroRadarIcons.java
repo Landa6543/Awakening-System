@@ -5,6 +5,7 @@ import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
 import com.mojang.blaze3d.platform.NativeImage;
 import dev.diorama.Diorama;
+import dev.diorama.compat.Pixelmon;
 import dev.diorama.render.gpu.MapTexture;
 import dev.diorama.render.gpu.Sampling;
 import java.io.IOException;
@@ -12,9 +13,11 @@ import java.io.InputStream;
 import java.io.Reader;
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
+import java.util.Set;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.core.registries.BuiltInRegistries;
@@ -26,6 +29,7 @@ import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.EntityType;
 import net.minecraft.world.item.Item;
 import net.minecraft.world.item.ItemStack;
+import net.minecraft.world.item.Items;
 import org.jspecify.annotations.Nullable;
 
 /**
@@ -66,7 +70,15 @@ public final class XaeroRadarIcons {
 		DOT
 	}
 
-	record ItemIcon(ItemStack stack) implements Icon {
+	/**
+	 * An item as the icon. It holds the item, and the radar makes the stack it draws as it draws
+	 * it: a file in a mod's own jar is read in the game's first resource load, when 26.x can't make
+	 * a stack yet (an item gets its components as a world's data loads, and each world gives its own).
+	 */
+	record ItemIcon(Item item) implements Icon {
+		ItemStack stack() {
+			return new ItemStack(this.item);
+		}
 	}
 
 	/** One mob's file: icons for the variant IDs Diorama can match (textures), and the default. */
@@ -76,6 +88,8 @@ public final class XaeroRadarIcons {
 	private static @Nullable Map<EntityType<?>, Definition> definitions;
 	/** Sprites by location, shared by every file that names them; their textures are made when first drawn. */
 	private static final Map<SpriteKey, Sprite> sprites = new HashMap<>();
+	/** Sprites a mod named that can't be drawn, so they're tried once per resource load, not every frame. */
+	private static final Set<ResourceLocation> unreadable = new HashSet<>();
 
 	private record SpriteKey(ResourceLocation location, boolean outlined, boolean flipped) {
 	}
@@ -92,18 +106,39 @@ public final class XaeroRadarIcons {
 			loaded = definitions;
 		}
 		Definition definition = loaded.get(entity.getType());
-		if (definition == null) {
+		Icon icon = null;
+		if (definition != null) {
+			if (!definition.byTexture().isEmpty()) {
+				ResourceLocation texture = MobFaces.texture(entity);
+				icon = texture == null ? null : definition.byTexture().get(texture.toString());
+			}
+			if (icon == null) {
+				icon = definition.fallback();
+			}
+		}
+		return icon == null || icon == Basic.OWN_FACE ? pokemon(entity) : icon;
+	}
+
+	/**
+	 * A Pokémon's picture, outlined to stand out from the map like a face: Pixelmon's own sprite, or
+	 * Cobblemon's portrait of a Pokémon or NPC. A pack's file for the mob comes first.
+	 */
+	private static @Nullable Icon pokemon(Entity entity) {
+		ResourceLocation location = Pixelmon.sprite(entity);
+		if (location == null) {
+			return CobblemonPortraits.of(entity);
+		}
+		if (unreadable.contains(location)) {
 			return null;
 		}
-		Icon icon = null;
-		if (!definition.byTexture().isEmpty()) {
-			ResourceLocation texture = MobFaces.texture(entity);
-			icon = texture == null ? null : definition.byTexture().get(texture.toString());
+		ResourceManager manager = Minecraft.getInstance().getResourceManager();
+		List<String> problems = new ArrayList<>();
+		Sprite sprite = sprite(location, true, false, manager, problems);
+		if (sprite == null) {
+			unreadable.add(location);
+			Diorama.LOGGER.warn("Radar icon for {}: {}", entity.getType(), String.join("; ", problems));
 		}
-		if (icon == null) {
-			icon = definition.fallback();
-		}
-		return icon == Basic.OWN_FACE ? null : icon;
+		return sprite;
 	}
 
 	/**
@@ -112,18 +147,26 @@ public final class XaeroRadarIcons {
 	 * {@code "normal_sprite ..."}; null for Diorama's own face.
 	 */
 	public static @Nullable String describe(Entity entity) {
+		// Not a pattern switch: the 1.20.1 jar is built for Java 17.
 		Icon icon = of(entity);
-		return switch (icon) {
-			case null -> null;
-			case Basic basic -> basic.name().toLowerCase(java.util.Locale.ROOT);
-			case ItemIcon item -> "item " + BuiltInRegistries.ITEM.getKey(item.stack().getItem());
-			case Sprite sprite -> (sprite.outlined ? "outlined_sprite " : sprite.flipped ? "sprite " : "normal_sprite ") + sprite.location + " " + sprite.w + "x" + sprite.h;
-		};
+		if (icon instanceof Basic basic) {
+			return basic.name().toLowerCase(java.util.Locale.ROOT);
+		}
+		if (icon instanceof ItemIcon item) {
+			return "item " + BuiltInRegistries.ITEM.getKey(item.item());
+		}
+		if (icon instanceof Sprite sprite) {
+			return (sprite.outlined ? "outlined_sprite " : sprite.flipped ? "sprite " : "normal_sprite ") + sprite.location + " " + sprite.w + "x" + sprite.h;
+		}
+		return null;
 	}
 
 	/** Reads the files again; runs on the game thread at the end of each resource reload. */
 	public static void reload(ResourceManager manager) {
 		load(manager);
+		// Waypoint icons and the minimap's frame are resources too; this listener is the one both loaders already register.
+		WaypointIcons.reload();
+		MinimapFrames.reload();
 	}
 
 	private static void load(ResourceManager manager) {
@@ -131,6 +174,8 @@ public final class XaeroRadarIcons {
 			sprite.close();
 		}
 		sprites.clear();
+		unreadable.clear();
+		CobblemonPortraits.clear();
 		Map<EntityType<?>, Definition> loaded = new HashMap<>();
 		// Like Xaero's, one file per mob in the game: the top pack's file wins, and files for mobs
 		// that aren't installed (Xaero's own example_mod, a modpack's leftovers) are never read.
@@ -232,8 +277,8 @@ public final class XaeroRadarIcons {
 					problems.add("no item " + value.substring("item:".length()));
 					return Basic.DOT;
 				}
-				ItemStack stack = new ItemStack(item.get());
-				return stack.isEmpty() ? Basic.DOT : new ItemIcon(stack);
+				// Air is the one item whose stack is empty, with nothing to draw.
+				return item.get() == Items.AIR ? Basic.DOT : new ItemIcon(item.get());
 			case "normal_sprite", "outlined_sprite", "sprite":
 				// "sprite" is the form before normal_sprite. Xaero's still reads it, and draws its
 				// image upside down compared with normal_sprite's.
@@ -359,8 +404,8 @@ public final class XaeroRadarIcons {
 			int factor = this.factor(size);
 			Baked b = this.baked(factor);
 			float texel = Radar.texel(size, Math.max(b.w(), b.h()));
-			float x0 = Radar.snap(x - b.w() * texel / 2);
-			float y0 = Radar.snap(y - b.h() * texel / 2);
+			float x0 = x - b.w() * texel / 2;
+			float y0 = y - b.h() * texel / 2;
 			GuiGraphics graphics = icons.graphics();
 			graphics.pose().pushPose();
 			graphics.pose().translate(x0, y0, 0);
@@ -512,7 +557,7 @@ public final class XaeroRadarIcons {
 			return 0xFF000000 | (int) Math.round(r / a) << 16 | (int) Math.round(g / a) << 8 | (int) Math.round(b / a);
 		}
 
-		private void close() {
+		void close() {
 			for (Baked b : this.baked.values()) {
 				b.texture().close();
 			}

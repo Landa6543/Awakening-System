@@ -40,7 +40,7 @@ public final class TileSpots {
 			return null;
 		}
 		TileKey key = image.key();
-		MapPick pick = new MapPick(source, looks, key, fogOfWar);
+		MapPick pick = new MapPick(source, looks, key, fogOfWar).passWhereSaved(saved);
 		int[] spots = new int[COLUMNS * ROWS];
 		boolean known = false;
 		if (image.isFull()) {
@@ -84,15 +84,44 @@ public final class TileSpots {
 		if (spots == null) {
 			return null;
 		}
-		int column = Math.clamp((long) Math.floor(u - key.minU()), 0, COLUMNS - 1);
-		int row = Math.clamp((long) Math.floor((v - key.minV()) * Projection.PIXELS_PER_UNIT), 0, ROWS - 1);
-		int value = spots[row * COLUMNS + column];
+		int i = index(key, u, v);
+		int value = spots[i];
 		if ((value & ~0xFFFFFF) != SPOT) {
 			return null;
 		}
+		int column = i % COLUMNS;
+		int row = i / COLUMNS;
 		int y = (short) value;
 		int z = (int) Math.floor(Projection.zAt(v(key, row), y)) - ((value >>> 16) & 0xFF);
 		return new BlockPos((int) Math.floor(key.minU()) + column, y, z);
+	}
+
+	/**
+	 * Whether the spots answer for map point {@code (u, v)} of a level-0 surface tile: they were
+	 * saved, and the chunks were there when that part was baked.
+	 */
+	public static boolean known(TileKey key, int @Nullable [] spots, double u, double v) {
+		return spots != null && spots[index(key, u, v)] != UNKNOWN;
+	}
+
+	/**
+	 * The z of the block a sample stands on, or {@link Integer#MIN_VALUE} where the sample has no
+	 * spot (unknown, or nothing to stand on).
+	 */
+	public static int z(TileKey key, int[] spots, int column, int row) {
+		int value = spots[row * COLUMNS + column];
+		if ((value & ~0xFFFFFF) != SPOT) {
+			return Integer.MIN_VALUE;
+		}
+		return (int) Math.floor(Projection.zAt(v(key, row), (short) value)) - ((value >>> 16) & 0xFF);
+	}
+
+	/** The sample at map point {@code (u, v)} of a level-0 tile. */
+	private static int index(TileKey key, double u, double v) {
+		// Clamped as longs (Math.clamp is Java 21; the 1.20.1 jar is built for 17).
+		int column = (int) Math.max(0L, Math.min(COLUMNS - 1L, (long) Math.floor(u - key.minU())));
+		int row = (int) Math.max(0L, Math.min(ROWS - 1L, (long) Math.floor((v - key.minV()) * Projection.PIXELS_PER_UNIT)));
+		return row * COLUMNS + column;
 	}
 
 	/** The map v a sample answers for: the middle of its pixel row. */
@@ -106,6 +135,63 @@ public final class TileSpots {
 	 */
 	public static double rowMiddle(double v) {
 		return (Math.floor(v * Projection.PIXELS_PER_UNIT) + 0.5) / Projection.PIXELS_PER_UNIT;
+	}
+
+	/**
+	 * Whether the saved ray through block column {@code x} and map row {@code v} of a level-0
+	 * surface tile passed through height {@code y} on its way down: it stood on something lower, so
+	 * whatever it crossed up there was open when the tile was saved.
+	 *
+	 * <p>A ray that reaches a chunk the map has no data for can take the cell as open on that word.
+	 * Rays start at the top of the tallest chunk around the tile, so where a hill or a tower stands
+	 * nearby they cross chunks well south of what they land on; on a server those are often chunks
+	 * that are never sent while the player is close. Without this, the fresh pixel comes out less
+	 * known than the saved one, the saved one stays, and nothing built there since ever shows.
+	 * Below the saved spot the cell stays unknown: the saved ray may have landed in that chunk. A ray
+	 * goes on through glass and plants, so glass or a tall plant in a chunk taken as open draws as
+	 * air until the chunk is back; only its tint is lost.
+	 */
+	private static boolean passedWhenSaved(TileKey key, int @Nullable [] spots, int x, int y, double v) {
+		if (spots == null) {
+			return false;
+		}
+		long column = x - (long) Math.floor(key.minU());
+		long row = (long) Math.floor((v - key.minV()) * Projection.PIXELS_PER_UNIT);
+		if (column < 0 || column >= COLUMNS || row < 0 || row >= ROWS) {
+			return false;
+		}
+		int value = spots[(int) row * COLUMNS + (int) column];
+		return (value & ~0xFFFFFF) == SPOT && y > (short) value;
+	}
+
+	/**
+	 * Whether every saved ray of the tile's pixel rows crossing block {@code (x, y, z)} passed
+	 * through it, so the block can be taken as open; false if none of them is in the tile. A spot
+	 * comes from the middle of its row, while a pixel's samples spread across it, so one row's word
+	 * isn't enough: at a tower's edge the middle can pass while a sample hits. Only rows whose middle
+	 * crosses the block speak for it, so at least one has to, and every row reaching it has to agree.
+	 * The tracer, the GPU mesher and the pick all ask this, so they agree.
+	 */
+	public static boolean passedWhenSaved(TileKey key, int @Nullable [] spots, int x, int y, int z) {
+		if (spots == null) {
+			return false;
+		}
+		double sin = Projection.sin();
+		double cos = Projection.cos();
+		double first = Math.max(key.minV(), z * sin - (y + 1) * cos);
+		double last = Math.min(key.minV() + Projection.TILE_UNITS, (z + 1) * sin - y * cos);
+		if (first >= last) {
+			return false;
+		}
+		double step = 1.0 / Projection.PIXELS_PER_UNIT;
+		boolean crossed = false;
+		for (double v = rowMiddle(first); v - step / 2 < last; v += step) {
+			if (!passedWhenSaved(key, spots, x, y, v)) {
+				return false;
+			}
+			crossed |= v >= first && v < last;
+		}
+		return crossed;
 	}
 
 	private static int encode(int y, int z, double v) {

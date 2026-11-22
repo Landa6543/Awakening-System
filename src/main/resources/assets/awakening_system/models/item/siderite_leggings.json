@@ -1,6 +1,261 @@
 {
-  "parent": "minecraft:item/generated",
+  "credit": "Made with Blockbench for Awakening System",
+  "texture_size": [
+    128,
+    128
+  ],
   "textures": {
-    "layer0": "awakening_system:item/siderite_leggings"
+    "0": "awakening_system:item/siderite_armor",
+    "particle": "awakening_system:item/siderite_armor"
+  },
+  "gui_light": "front",
+  "elements": [
+    {
+      "from": [
+        3.5,
+        -0.5,
+        5.5
+      ],
+      "to": [
+        8.5,
+        14.5,
+        10.5
+      ],
+      "faces": {
+        "north": {
+          "uv": [
+            9.5,
+            13.5,
+            10.125,
+            15.375
+          ],
+          "texture": "#0"
+        },
+        "east": {
+          "uv": [
+            8.875,
+            13.5,
+            9.5,
+            15.375
+          ],
+          "texture": "#0"
+        },
+        "south": {
+          "uv": [
+            10.75,
+            13.5,
+            11.375,
+            15.375
+          ],
+          "texture": "#0"
+        },
+        "west": {
+          "uv": [
+            10.125,
+            13.5,
+            10.75,
+            15.375
+          ],
+          "texture": "#0"
+        },
+        "up": {
+          "uv": [
+            10.125,
+            13.5,
+            9.5,
+            12.875
+          ],
+          "texture": "#0"
+        },
+        "down": {
+          "uv": [
+            10.75,
+            12.875,
+            10.125,
+            13.5
+          ],
+          "texture": "#0"
+        }
+      }
+    },
+    {
+      "from": [
+        7.5,
+        -0.5,
+        5.5
+      ],
+      "to": [
+        12.5,
+        14.5,
+        10.5
+      ],
+      "faces": {
+        "north": {
+          "uv": [
+            10.125,
+            13.5,
+            9.5,
+            15.375
+          ],
+          "texture": "#0"
+        },
+        "east": {
+          "uv": [
+            10.75,
+            13.5,
+            10.125,
+            15.375
+          ],
+          "texture": "#0"
+        },
+        "south": {
+          "uv": [
+            11.375,
+            13.5,
+            10.75,
+            15.375
+          ],
+          "texture": "#0"
+        },
+        "west": {
+          "uv": [
+            9.5,
+            13.5,
+            8.875,
+            15.375
+          ],
+          "texture": "#0"
+        },
+        "up": {
+          "uv": [
+            9.5,
+            13.5,
+            10.125,
+            12.875
+          ],
+          "texture": "#0"
+        },
+        "down": {
+          "uv": [
+            10.125,
+            12.875,
+            10.75,
+            13.5
+          ],
+          "texture": "#0"
+        }
+      }
+    }
+  ],
+  "display": {
+    "thirdperson_righthand": {
+      "rotation": [
+        0,
+        0,
+        0
+      ],
+      "translation": [
+        0,
+        0,
+        -1.5
+      ],
+      "scale": [
+        0.77734,
+        0.72656,
+        1
+      ]
+    },
+    "thirdperson_lefthand": {
+      "rotation": [
+        0,
+        0,
+        0
+      ],
+      "translation": [
+        0,
+        0,
+        -1
+      ],
+      "scale": [
+        0.77734,
+        0.72656,
+        1
+      ]
+    },
+    "firstperson_righthand": {
+      "rotation": [
+        0,
+        0,
+        0
+      ],
+      "translation": [
+        0,
+        0.75,
+        0
+      ]
+    },
+    "firstperson_lefthand": {
+      "rotation": [
+        0,
+        0,
+        0
+      ],
+      "translation": [
+        0,
+        0.75,
+        0
+      ]
+    },
+    "gui": {
+      "rotation": [
+        0,
+        180,
+        0
+      ],
+      "translation": [
+        0,
+        0.5,
+        0
+      ],
+      "scale": [
+        0.85,
+        0.85,
+        0.85
+      ]
+    },
+    "ground": {
+      "rotation": [
+        0,
+        0,
+        0
+      ],
+      "translation": [
+        0,
+        1,
+        0
+      ],
+      "scale": [
+        0.55,
+        0.55,
+        0.55
+      ]
+    },
+    "fixed": {
+      "rotation": [
+        0,
+        180,
+        0
+      ],
+      "translation": [
+        0,
+        0,
+        0
+      ],
+      "scale": [
+        0.75,
+        0.75,
+        0.75
+      ]
+    }
   }
 }

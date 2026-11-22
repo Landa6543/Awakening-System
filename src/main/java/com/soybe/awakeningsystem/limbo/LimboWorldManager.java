@@ -169,25 +169,44 @@ public final class LimboWorldManager {
 
     /**
      * Regresa al jugador desde el Limbo hacia su punto de reaparición en el Overworld.
+     * Seguro para servidores dedicados multijugador: encola en el hilo principal del servidor,
+     * comprueba portal cooldown, calcula altura segura de superficie y reinicia movimiento.
      */
     public static void returnFromLimbo(ServerPlayer player) {
         MinecraftServer server = player.getServer();
         if (server == null) return;
 
+        if (player.isOnPortalCooldown()) return;
+        player.setPortalCooldown();
+
         ServerLevel overworld = server.getLevel(Level.OVERWORLD);
         if (overworld == null) return;
 
-        BlockPos targetPos = com.soybe.awakeningsystem.SystemEvents.overworldReturnPos(player, overworld);
+        BlockPos rawPos = com.soybe.awakeningsystem.SystemEvents.overworldReturnPos(player, overworld);
+        if (rawPos == null) rawPos = overworld.getSharedSpawnPos();
 
-        player.fallDistance = 0.0F;
-        player.clearFire();
-        player.teleportTo(overworld, targetPos.getX() + 0.5D, targetPos.getY() + 1.0D, targetPos.getZ() + 0.5D, player.getYRot(), 0.0F);
+        int safeY = overworld.getHeight(net.minecraft.world.level.levelgen.Heightmap.Types.MOTION_BLOCKING_NO_LEAVES, rawPos.getX(), rawPos.getZ());
+        if (safeY < overworld.getMinBuildHeight() || safeY > overworld.getMaxBuildHeight() - 2) {
+            safeY = Math.max(64, rawPos.getY() + 1);
+        }
+        final BlockPos targetPos = new BlockPos(rawPos.getX(), safeY, rawPos.getZ());
 
-        overworld.sendParticles(ParticleTypes.PORTAL, targetPos.getX() + 0.5D, targetPos.getY() + 1.2D, targetPos.getZ() + 0.5D, 80, 1.2D, 1.2D, 1.2D, 0.08D);
-        overworld.sendParticles(ParticleTypes.FLASH, targetPos.getX() + 0.5D, targetPos.getY() + 1.5D, targetPos.getZ() + 0.5D, 3, 0, 0, 0, 0);
+        server.execute(() -> {
+            if (!player.isAlive() || player.hasDisconnected()) return;
+            if (!isLimboDimension(player.level())) return;
 
-        // no gate sound when travelling between worlds (it sounded on every change of world)
-        player.displayClientMessage(Component.translatable("awakening_system.limbo.returned_to_overworld"), true);
+            player.fallDistance = 0.0F;
+            player.clearFire();
+            player.setDeltaMovement(0, 0, 0);
+
+            player.teleportTo(overworld, targetPos.getX() + 0.5D, targetPos.getY() + 0.1D, targetPos.getZ() + 0.5D, player.getYRot(), 0.0F);
+
+            overworld.sendParticles(ParticleTypes.PORTAL, targetPos.getX() + 0.5D, targetPos.getY() + 1.2D, targetPos.getZ() + 0.5D, 80, 1.2D, 1.2D, 1.2D, 0.08D);
+            overworld.sendParticles(ParticleTypes.FLASH, targetPos.getX() + 0.5D, targetPos.getY() + 1.5D, targetPos.getZ() + 0.5D, 3, 0, 0, 0, 0);
+
+            // no gate sound when travelling between worlds (it sounded on every change of world)
+            player.displayClientMessage(Component.translatable("awakening_system.limbo.returned_to_overworld"), true);
+        });
     }
 
     /**

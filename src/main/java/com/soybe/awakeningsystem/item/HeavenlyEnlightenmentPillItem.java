@@ -34,6 +34,7 @@ public class HeavenlyEnlightenmentPillItem extends Item {
         if (!level.isClientSide() && player instanceof ServerPlayer sp) {
             SystemData data = SystemEvents.data(sp);
             data.addCultivationQi(4500);
+            data.cleanseImpurities(40);
 
             for (int i = 0; i < 8; i++) {
                 if (!data.isMeridianOpen(i)) {

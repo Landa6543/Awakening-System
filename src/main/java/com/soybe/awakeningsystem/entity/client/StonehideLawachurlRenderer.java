@@ -22,7 +22,8 @@ public class StonehideLawachurlRenderer extends MobRenderer<StonehideLawachurlEn
 
     @Override
     protected void scale(StonehideLawachurlEntity entity, PoseStack poseStack, float partialTickTime) {
-        poseStack.scale(1.4F, 1.4F, 1.4F);
+        poseStack.scale(0.96F, 0.96F, 0.96F);
+        poseStack.translate(0.0D, -0.04D, 0.0D);
         super.scale(entity, poseStack, partialTickTime);
     }
 

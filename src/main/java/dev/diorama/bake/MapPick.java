@@ -28,23 +28,62 @@ public final class MapPick {
 	private final boolean roofless;
 	private final int startY;
 	private final int limitY;
+	private final int base;
+	private final int rockLimit;
+	private final boolean raised;
+	/** A cave slice in the depth look; see {@link TileBaker#depthLook}. */
+	private final boolean depthLook;
+	/** Builds above an ordinary world's top, as the baker has them; null when no ray starts up there. */
+	private final @Nullable TallChunks tall;
+	private final TileKey tile;
+	/** The saved tile's spots, in the sky view: see {@link #passWhereSaved}. */
+	private int @Nullable [] savedSpots;
 	/** Where the last {@link #FOUND} pick stands; its x is the picked column. */
 	public int y;
 	public int z;
 
 	/** A pick for map points in {@code tile}, which must be a level-0 tile. */
 	public MapPick(ChunkSource source, BlockLooks looks, TileKey tile, boolean fogOfWar) {
+		this(source, looks, tile, fogOfWar, false);
+	}
+
+	/**
+	 * A pick whose rays start at the top of the world, not at the top of the chunks around the
+	 * tile: for a source that loads each chunk when a ray first reaches it, where looking at them
+	 * all first would load hundreds. The rays walk more air first and reach the same blocks, unless
+	 * something taller than the map had seen when it drew them now stands in front.
+	 */
+	public static MapPick fromWorldTop(ChunkSource source, BlockLooks looks, TileKey tile, boolean fogOfWar) {
+		return new MapPick(source, looks, tile, fogOfWar, true);
+	}
+
+	private MapPick(ChunkSource source, BlockLooks looks, TileKey tile, boolean fogOfWar, boolean fromWorldTop) {
 		this.source = source;
 		this.looks = looks;
+		this.tile = tile;
 		this.reader = new VoxelReader(source, looks);
 		this.fogOfWar = fogOfWar;
 		this.underRoof = source.roof() != ChunkSource.NO_ROOF;
 		this.cave = tile.isCave();
 		this.roofless = !this.cave && this.underRoof;
 		// Start where the baker starts for this tile, so whatever the map draws can be picked.
-		this.startY = this.cave ? Math.min(tile.layer(), source.maxY())
-			: this.roofless ? Math.min(source.roof(), source.maxY()) : TileBaker.localTop(tile, source, 0);
-		this.limitY = this.cave ? Math.max(source.minY(), this.startY - TileBaker.CAVE_DEPTH) : source.minY();
+		this.base = this.cave ? Math.min(tile.layer(), source.maxY()) : Integer.MIN_VALUE;
+		this.depthLook = this.cave && !this.underRoof && source.depthCaves();
+		this.raised = this.depthLook && tile.lod() == 0;
+		this.startY = this.cave ? Math.min(this.base + (this.raised ? CaveCut.LIFT : 0), source.maxY())
+			: this.roofless ? Math.min(source.roof(), source.maxY()) : fromWorldTop ? source.maxY() : TileBaker.localTop(tile, source, 0);
+		this.limitY = this.cave ? Math.max(source.minY(), this.base - TileBaker.CAVE_DEPTH) : source.minY();
+		this.rockLimit = this.depthLook ? this.base - TileBaker.CAVE_ROCK : Integer.MIN_VALUE;
+		this.tall = this.cave || this.roofless || fromWorldTop ? null : TallChunks.around(tile, source, this.startY);
+	}
+
+	/**
+	 * Lets rays through chunks the map has no data for above where the saved tile's rays stood,
+	 * as the baker does (see {@link TileSpots#passedWhenSaved}). Sky view only.
+	 */
+	public MapPick passWhereSaved(int @Nullable [] spots) {
+		this.savedSpots = this.cave || this.roofless || this.tile.lod() != 0 ? null : spots;
+		return this;
 	}
 
 	/**
@@ -66,23 +105,40 @@ public final class MapPick {
 		double sin = Projection.sin();
 		double cos = Projection.cos();
 		int x = (int) Math.floor(u);
-		double z0 = (v + this.startY * cos) / sin;
-		int by = this.startY - 1;
+		int top = this.tall == null ? this.startY : this.tall.rayStart(x, v, sin, cos);
+		double z0 = (v + top * cos) / sin;
+		int by = top - 1;
 		int bz = (int) Math.floor(z0);
 		double tMaxY = 1 / sin;
 		double tMaxZ = (z0 - bz) / cos;
 		boolean skippingRock = this.cave || this.roofless;
-		while (by >= this.limitY) {
+		CaveCut cut = this.raised ? new CaveCut(this.reader, this.base, x, (int) Math.floor((v + this.limitY * cos) / sin) - 2, x, bz + 1) : null;
+		while (by >= this.limitY && !(skippingRock && by < this.rockLimit)) {
+			if (cut != null && by >= cut.at(x, bz)) {
+				// Cut away: rock, as the baker has it.
+				skippingRock = true;
+				if (tMaxY < tMaxZ) {
+					by--;
+					tMaxY += 1 / sin;
+				} else {
+					bz--;
+					tMaxZ += 1 / cos;
+				}
+				continue;
+			}
 			int id = this.reader.state(x, by, bz);
 			if (id == VoxelReader.UNKNOWN) {
-				return UNKNOWN;
+				if ((this.tall == null || by < this.tall.missingTop) && !TileSpots.passedWhenSaved(this.tile, this.savedSpots, x, by, bz)) {
+					return UNKNOWN;
+				}
+				id = VoxelReader.AIR_ID;
 			}
 			byte kind = this.looks.kind[id];
 			if (skippingRock && kind != BlockLooks.SOLID && !(this.underRoof && by + 1 < this.startY && this.reader.pocket(x, by, bz))) {
 				skippingRock = false;
 			}
-			boolean underside = !skippingRock && this.underRoof && (this.cave || this.roofless) && kind == BlockLooks.SOLID
-				&& this.reader.ceilingUnderside(x, by, bz, this.reader.lid(x, bz, this.startY, this.limitY), this.limitY);
+			boolean underside = !skippingRock && (this.underRoof || this.depthLook) && (this.cave || this.roofless) && kind == BlockLooks.SOLID
+				&& this.reader.ceilingUnderside(x, by, bz, this.reader.lid(x, bz, cut == null ? this.startY : cut.at(x, bz), this.limitY), this.limitY);
 			// The baker passes through the underside of a ceiling once the ray has left the rock.
 			if (!skippingRock && !underside && (kind == BlockLooks.SOLID || kind == BlockLooks.LAVA || kind == BlockLooks.WATER)) {
 				// Fog of war: a cave the player hasn't seen can't be picked, or its floor would leak.

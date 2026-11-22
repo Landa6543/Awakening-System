@@ -1,17 +1,18 @@
 {
-    "replace":  false,
-    "values":  [
-                   "awakening_system:staff_of_homa",
-                   "awakening_system:engulfing_lightning",
-                   "awakening_system:primordial_jade_winged_spear",
-                   "awakening_system:vortex_vanquisher",
-                   "awakening_system:the_catch",
-                   "awakening_system:black_tassel",
-                   "awakening_system:astral_guandao",
-                   "awakening_system:scarlet_devil",
-                   "awakening_system:shard_of_antumbra",
-                   "awakening_system:spear_of_destiny",
-                   "awakening_system:atom_splitter",
-                   "awakening_system:vehemence"
+    "replace": false,
+    "values": [
+        "awakening_system:staff_of_homa",
+        "awakening_system:engulfing_lightning",
+        "awakening_system:primordial_jade_winged_spear",
+        "awakening_system:vortex_vanquisher",
+        "awakening_system:the_catch",
+        "awakening_system:black_tassel",
+        "awakening_system:astral_guandao",
+        "awakening_system:blue_monsoon",
+        "awakening_system:scarlet_devil",
+        "awakening_system:shard_of_antumbra",
+        "awakening_system:spear_of_destiny",
+        "awakening_system:atom_splitter",
+        "awakening_system:vehemence"
     ]
 }

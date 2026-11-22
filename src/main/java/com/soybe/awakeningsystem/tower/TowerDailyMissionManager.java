@@ -333,6 +333,14 @@ public final class TowerDailyMissionManager {
         result[8] = pool8.get(0);
         result[9] = pool9.get(0);
 
+        // Ordenar estrictamente de menor a mayor piso para una progresión coherente
+        List<Integer> sortedList = new ArrayList<>();
+        for (int idx : result) sortedList.add(idx);
+        sortedList.sort(Comparator.comparingInt(idx -> ALL_MISSIONS.get(idx).floor()));
+        for (int i = 0; i < DAILY_OFFERS_COUNT; i++) {
+            result[i] = sortedList.get(i);
+        }
+
         return result;
     }
 
@@ -398,8 +406,16 @@ public final class TowerDailyMissionManager {
         long currentDay = getCurrentWorldDay(player.level());
         SystemData data = SystemEvents.data(player);
         // measuring the potential at the Altar of Origin registers the player with the Tower
-        boolean hasEntered = tag.getBoolean("tower_has_entered") || data.potentialMeasured();
+        boolean hasEntered = tag.getBoolean("tower_has_entered") || data.potentialMeasured() || data.isAwakened();
         int savedFloor = hasEntered ? Math.max(1, data.savedTowerFloor()) : 0;
+        if (tag.contains("saved_tower_floor")) {
+            int tagFloor = tag.getInt("saved_tower_floor");
+            if (tagFloor > savedFloor) {
+                savedFloor = tagFloor;
+                data.setSavedTowerFloor(savedFloor);
+                com.soybe.awakeningsystem.AwakeningSystemMod.sync(player);
+            }
+        }
 
         int[] dailyIndices = getDailyMissionIndicesForDay(currentDay);
 

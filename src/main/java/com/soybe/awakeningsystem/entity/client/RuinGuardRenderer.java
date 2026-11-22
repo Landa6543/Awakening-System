@@ -23,7 +23,7 @@ public class RuinGuardRenderer extends MobRenderer<RuinGuardEntity, RuinGuardMod
 
     @Override
     protected void scale(RuinGuardEntity entity, PoseStack poseStack, float partialTickTime) {
-        poseStack.scale(1.25F, 1.25F, 1.25F);
+        poseStack.scale(1.05F, 1.05F, 1.05F);
         super.scale(entity, poseStack, partialTickTime);
     }
 

@@ -132,6 +132,20 @@ public final class TowerMissionBoardScreen extends Screen {
         g.drawString(this.font, text, centerX - w / 2, y, color, false);
     }
 
+    private void drawAutoScaledCleanCentered(GuiGraphics g, String text, int centerX, int y, int color, int maxW) {
+        int textW = this.font.width(text);
+        if (textW <= maxW) {
+            drawCleanCentered(g, text, centerX, y, color);
+            return;
+        }
+        float scale = (float) maxW / (float) textW;
+        g.pose().pushPose();
+        g.pose().translate(centerX, y, 0);
+        g.pose().scale(scale, scale, 1.0F);
+        g.drawString(this.font, text, -textW / 2, 0, color, false);
+        g.pose().popPose();
+    }
+
     @Override
     public void render(GuiGraphics g, int mouseX, int mouseY, float partialTick) {
         super.render(g, mouseX, mouseY, partialTick);
@@ -226,8 +240,7 @@ public final class TowerMissionBoardScreen extends Screen {
             drawCleanCentered(g, "??? C | ??? XP", cx, y + 56, 0xFF7A5830);
             drawCleanCentered(g, "+??? Gemas", cx, y + 68, 0xFF4A6B3A);
 
-            // Sello de cera y botón bloqueado
-            g.blit(RED_LOCKED_SEAL, x + w - 28, y + h - 28, 0, 0, 26, 26, 64, 64);
+            // Botón bloqueado limpio
             g.fill(x + 5, y + 83, x + w - 5, y + 99, 0xDD7A1515);
             drawCleanCentered(g, "BLOQUEADO", cx, y + 87, 0xFFFFFFFF);
             return;
@@ -253,10 +266,10 @@ public final class TowerMissionBoardScreen extends Screen {
 
         // Recompensas garantizadas
         String rew1 = formatRewardAmount(item.coins()) + " C | " + formatRewardAmount(item.exp()) + " XP";
-        drawCleanCentered(g, rew1, cx, y + 56, 0xFF8A5A10);
+        drawAutoScaledCleanCentered(g, rew1, cx, y + 56, 0xFF8A5A10, w - 12);
 
-        String rew2 = "+" + item.crystalReward().getCount() + " Cristales de Mana";
-        drawCleanCentered(g, rew2, cx, y + 68, 0xFF1E6E28);
+        String rew2 = "+" + item.crystalReward().getCount() + " Crist. Maná";
+        drawAutoScaledCleanCentered(g, rew2, cx, y + 68, 0xFF1E6E28, w - 12);
 
         // Insignia inferior
         int btnX = x + 5;
@@ -265,7 +278,6 @@ public final class TowerMissionBoardScreen extends Screen {
         int btnH = 16;
 
         if (isLocked) {
-            g.blit(RED_LOCKED_SEAL, x + w - 28, y + h - 28, 0, 0, 26, 26, 64, 64);
             g.fill(btnX, btnY, btnX + btnW, btnY + btnH, 0xDD7A1515);
             drawCleanCentered(g, "BLOQUEADO", cx, btnY + 4, 0xFFFFFFFF);
         } else if (isActive) {

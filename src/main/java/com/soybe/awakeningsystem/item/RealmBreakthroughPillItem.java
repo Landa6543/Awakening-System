@@ -36,11 +36,12 @@ public class RealmBreakthroughPillItem extends Item {
             int subLevel = data.cultivationSubLevel();
             ServerLevel sl = sp.serverLevel();
 
-            if (realm >= 9) {
+            if (realm >= 14) {
                 data.addCultivationQi(5000);
                 sp.heal(20.0F);
                 sp.displayClientMessage(Component.translatable("awakening_system.action.dantian_realm_max"), true);
             } else if (subLevel < 9) {
+                data.cleanseImpurities(25);
                 data.setCultivationSubLevel(9);
                 data.setCultivationQi(data.maxCultivationQi());
                 sl.sendParticles(ParticleTypes.FLASH, sp.getX(), sp.getEyeY(), sp.getZ(), 3, 0, 0, 0, 0);

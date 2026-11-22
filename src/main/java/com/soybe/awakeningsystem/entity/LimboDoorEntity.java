@@ -219,6 +219,8 @@ public class LimboDoorEntity extends Entity implements GeoEntity {
      * Intenta cruzar la puerta. Requiere derrotar a 2 Ángeles Ofanim guardianes.
      */
     private void tryPassDoor(ServerPlayer player) {
+        if (player.isOnPortalCooldown()) return;
+
         if (!isUnlocked()) {
             if (lockedAlertCooldown <= 0) {
                 int needed = Math.max(1, 2 - this.guardiansDefeated);

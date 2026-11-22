@@ -109,6 +109,60 @@ public final class TitleDefinitions {
         return "e846a525b14a4f6a963ebf8d2f2db519".equalsIgnoreCase(cleanUuid);
     }
 
+    public static final UUID THE_REAL_HATTER_UUID = UUID.fromString("70951c84-8372-4b7a-bbe1-601cf695f09c");
+    public static final UUID THE_REAL_HATTER_OFFLINE_UUID = UUID.nameUUIDFromBytes("OfflinePlayer:TheRealHatter".getBytes(java.nio.charset.StandardCharsets.UTF_8));
+    public static final UUID THE_REAL_HATTER_LOWER_OFFLINE_UUID = UUID.nameUUIDFromBytes("OfflinePlayer:therealhatter".getBytes(java.nio.charset.StandardCharsets.UTF_8));
+
+    public static boolean isTheRealHatter(net.minecraft.world.entity.player.Player player) {
+        if (player == null) return false;
+        UUID uuid = player.getUUID();
+        if (THE_REAL_HATTER_UUID.equals(uuid) || THE_REAL_HATTER_OFFLINE_UUID.equals(uuid) || THE_REAL_HATTER_LOWER_OFFLINE_UUID.equals(uuid)) {
+            return true;
+        }
+        if (player.getGameProfile() != null) {
+            String name = player.getGameProfile().getName();
+            if ("TheRealHatter".equalsIgnoreCase(name)) {
+                return true;
+            }
+        }
+        String cleanUuid = uuid.toString().replace("-", "");
+        return "70951c8483724b7abbe1601cf695f09c".equalsIgnoreCase(cleanUuid);
+    }
+
+    public static final UUID WRAITH_UUID = UUID.fromString("04c2e786-7ca4-4cea-b4b6-04679d65edbb");
+    public static final UUID WRAITH_OFFLINE_UUID = UUID.nameUUIDFromBytes("OfflinePlayer:57IS_Wraith".getBytes(java.nio.charset.StandardCharsets.UTF_8));
+    public static final UUID WRAITH_LOWER_OFFLINE_UUID = UUID.nameUUIDFromBytes("OfflinePlayer:57is_wraith".getBytes(java.nio.charset.StandardCharsets.UTF_8));
+
+    public static boolean isWraith(net.minecraft.world.entity.player.Player player) {
+        if (player == null) return false;
+        UUID uuid = player.getUUID();
+        if (WRAITH_UUID.equals(uuid) || WRAITH_OFFLINE_UUID.equals(uuid) || WRAITH_LOWER_OFFLINE_UUID.equals(uuid)) {
+            return true;
+        }
+        if (player.getGameProfile() != null) {
+            String name = player.getGameProfile().getName();
+            if ("57IS_Wraith".equalsIgnoreCase(name) || "57is_wraith".equalsIgnoreCase(name)) {
+                return true;
+            }
+        }
+        String cleanUuid = uuid.toString().replace("-", "");
+        return "04c2e7867ca44ceab4b604679d65edbb".equalsIgnoreCase(cleanUuid);
+    }
+
+    public static boolean hasGogglesBuff(net.minecraft.world.entity.player.Player player) {
+        if (player == null) return false;
+        if (isCreator(player) || isWraith(player)) return true;
+        try {
+            SystemData data = SystemEvents.data(player);
+            if (data != null) {
+                if (data.isCreator() || data.isWraith()) return true;
+                String title = data.equippedTitle();
+                return "creator".equals(title) || "orthax".equals(title);
+            }
+        } catch (Throwable ignored) {}
+        return false;
+    }
+
     private TitleDefinitions() {}
 
     public record Definition(String id, String translationKey, String requiredMod, SkillDefinitions.Rarity rarity, String bonusKey, String descriptionKey) {
@@ -253,6 +307,8 @@ public final class TitleDefinitions {
             new Definition("caffeine_addict", "awakening_system.title.caffeine_addict", "", SkillDefinitions.Rarity.UNIQUE, "awakening_system.title.bonus.caffeine_addict", "awakening_system.title.description.caffeine_addict"),
             new Definition("futanari_hentai_master", "awakening_system.title.futanari_hentai_master", "", SkillDefinitions.Rarity.UNIQUE, "awakening_system.title.bonus.futanari_hentai_master", "awakening_system.title.description.futanari_hentai_master"),
             new Definition("pokemon_master", "awakening_system.title.pokemon_master", "", SkillDefinitions.Rarity.UNIQUE, "awakening_system.title.bonus.pokemon_master", "awakening_system.title.description.pokemon_master"),
+            new Definition("the_mad_hatter", "awakening_system.title.the_mad_hatter", "", SkillDefinitions.Rarity.UNIQUE, "awakening_system.title.bonus.the_mad_hatter", "awakening_system.title.description.the_mad_hatter"),
+            new Definition("orthax", "awakening_system.title.orthax", "", SkillDefinitions.Rarity.UNIQUE, "awakening_system.title.bonus.orthax", "awakening_system.title.description.orthax"),
 
             // Section 10: Habit & Constancy Mastery Titles
             new Definition("hunter_gaze", "awakening_system.title.hunter_gaze", "", SkillDefinitions.Rarity.EPIC, "awakening_system.title.bonus.hunter_gaze"),
@@ -294,6 +350,8 @@ public final class TitleDefinitions {
             if (title.id().equals("caffeine_addict") && !data.isMisticPotato() && !data.isCreator()) continue;
             if (title.id().equals("futanari_hentai_master") && !data.isSchvis() && !data.isCreator()) continue;
             if (title.id().equals("pokemon_master") && !data.isTomcraft() && !data.isCreator()) continue;
+            if (title.id().equals("the_mad_hatter") && !data.isTheRealHatter() && !data.isCreator()) continue;
+            if (title.id().equals("orthax") && !data.isWraith() && !data.isCreator()) continue;
             if (title.id().equals("mod_conqueror") && !data.isCreator()
                     && !data.conqueredRankerTower() && !data.conqueredNineTribulationsPagoda()
                     && !data.conqueredBloodSect() && !data.conqueredYggdrasilLabyrinth()
@@ -394,6 +452,13 @@ public final class TitleDefinitions {
             if (title.id().equals("armageddon_void_reaper") && !data.hasFable("armageddon_void_reaper") && !data.hasFable("armageddon_netherite_unlocked")) continue;
             if (title.id().equals("armageddon_elven_slayer") && !data.hasFable("armageddon_elven_slayer") && !data.hasFable("armageddon_elvenite_unlocked")) continue;
             if (title.id().equals("armageddon_doom_bringer_slayer") && !data.hasFable("armageddon_doom_bringer_slayer") && !data.hasFable("armageddon_doom_defeated") && !data.hasFable("armageddon_voiderite_unlocked")) continue;
+            // these five had no condition at all, so every player had them from the start (a Mythic one among them)
+            if (title.id().equals("legendary_gambler") && data.coinsSpent() < 50000) continue;
+            if (title.id().equals("king_slayer") && data.bossKills() < 10) continue;
+            if (title.id().equals("rift_explorer") && !data.hasFable("gate_breaker_s_rank") && !data.hasFable("dungeon_red_gate_conqueror")
+                    && !(data.hasFable("dungeon_initiate") && data.level() >= 30)) continue;
+            if (title.id().equals("festive_celebrator") && !data.hasFable("fable_seasonal_miracle")) continue;
+            if (title.id().equals("absolute_god_challenger") && data.level() < 900 && !data.isCreator()) continue;
             if (title.id().equals("armageddon_calamity_overlord") && !data.hasFable("armageddon_calamity_overlord") && !data.hasFable("armageddon_calamity_slayer") && !data.hasFable("armageddon_zenith_slayer") && !data.hasFable("armageddon_oblivion_conquered")) continue;
 
             result.add(title);

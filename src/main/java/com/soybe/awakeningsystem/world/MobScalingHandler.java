@@ -58,7 +58,8 @@ public final class MobScalingHandler {
                 || mob.getTags().contains("rpg_scaled")
                 || mob.getTags().contains("tower_mob")
                 || mob.getTags().contains("pagoda_trial_mob")
-                || mob.getTags().contains("no_distance_scaling")) {
+                || mob.getTags().contains("no_distance_scaling")
+                || WorldBossScalingManager.isWorldBoss(mob)) {
             return;
         }
 

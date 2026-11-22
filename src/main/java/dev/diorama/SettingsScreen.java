@@ -1,5 +1,7 @@
 package dev.diorama;
 
+import dev.diorama.render.Pins;
+import dev.diorama.render.TextSize;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Locale;
@@ -13,6 +15,7 @@ import net.minecraft.client.gui.components.AbstractSliderButton;
 import net.minecraft.client.gui.components.AbstractWidget;
 import net.minecraft.client.gui.components.Button;
 import net.minecraft.client.gui.components.Checkbox;
+import net.minecraft.client.gui.components.StringWidget;
 import net.minecraft.client.gui.components.Tooltip;
 import net.minecraft.client.gui.components.tabs.GridLayoutTab;
 //? if >=26.2 {
@@ -46,6 +49,9 @@ public final class SettingsScreen extends Screen {
 	/** The settings' width; two checkbox columns with a gap between them. */
 	private static final int CONTENT = 280;
 	private static final int COLUMN_GAP = 8;
+	private static final int HEADING = 11;
+	/** How wide a text size slider is beside a button that keeps the rest of the row: room for "Text size: 200%". */
+	private static final int TEXT_SLIDER = 84;
 	private static final int TAB_BAR_HEIGHT = 24;
 	private static final ResourceLocation LIST_BACKGROUND = ResourceLocation.withDefaultNamespace("textures/gui/inworld_menu_list_background.png");
 
@@ -78,58 +84,146 @@ public final class SettingsScreen extends Screen {
 		minimap.toggle("compass", () -> s.compass, v -> s.compass = v);
 		minimap.toggle("coordinates", () -> s.coordinates, v -> s.coordinates = v);
 		minimap.toggle("biome", () -> s.biome, v -> s.biome = v);
-		minimap.toggle("auto_caves", () -> s.autoCaves, v -> s.autoCaves = v);
-		Settings.Corner[] corners = Settings.Corner.values();
-		minimap.cycle("corner", () -> s.minimapCorner.ordinal(), corners.length, i -> s.minimapCorner = corners[i],
-			i -> Component.translatable("diorama.settings.corner." + corners[i].name().toLowerCase(Locale.ROOT)));
+		minimap.toggle("auto_caves", () -> s.autoCaves, v -> s.autoCaves = v, ServerRules.caveMapsAllowed() ? null : false);
+		minimap.toggle("prefer_surface", () -> s.preferSurface, v -> s.preferSurface = v);
+		minimap.toggle("legible_caves", () -> s.legibleCaves, v -> s.legibleCaves = v);
+		minimap.toggle("enlarge_toggle", () -> s.minimapEnlargeToggle, v -> s.minimapEnlargeToggle = v);
+		minimap.open("position", MinimapPositionScreen.placeName(), () -> this.minecraft.setScreen(new MinimapPositionScreen(this)));
+		minimap.choice("game_time", Settings.GameTime.values(), () -> s.gameTime, v -> s.gameTime = v);
+		// Beside Position, so the tab doesn't grow.
+		minimap.lastTwoSideBySide();
 		int sizes = (Settings.MAX_SIZE - Settings.MIN_SIZE) / Settings.SIZE_STEP + 1;
 		minimap.slider("size", (s.minimapSize - Settings.MIN_SIZE) / Settings.SIZE_STEP, sizes,
 			i -> s.minimapSize = Settings.MIN_SIZE + i * Settings.SIZE_STEP, i -> Component.literal(Integer.toString(Settings.MIN_SIZE + i * Settings.SIZE_STEP)));
-		minimap.slider("zoom", s.minimapZoom, Settings.ZOOMS.length, i -> s.minimapZoom = i, i -> Component.literal(Settings.ZOOMS[i] + "×"));
+		int enlargedSizes = (Settings.MAX_ENLARGED - Settings.MIN_ENLARGED) / Settings.ENLARGED_STEP + 1;
+		minimap.slider("enlarged", (s.minimapEnlarged - Settings.MIN_ENLARGED) / Settings.ENLARGED_STEP, enlargedSizes,
+			i -> s.minimapEnlarged = Settings.MIN_ENLARGED + i * Settings.ENLARGED_STEP,
+			i -> Component.literal(java.math.BigDecimal.valueOf(Settings.MIN_ENLARGED + i * Settings.ENLARGED_STEP, 2).stripTrailingZeros().toPlainString() + "×"));
+		minimap.slider("zoom", s.zoomStep(), Settings.ZOOMS.length, s::zoomStep, i -> Component.literal(Settings.ZOOMS[i] + "×"));
+		// Three to a row, so the tab doesn't grow: it has no room for another row on a small screen.
+		minimap.lastThreeSideBySide();
+		int opacities = (Settings.MAX_OPACITY - Settings.MIN_OPACITY) / Settings.OPACITY_STEP + 1;
+		minimap.slider("opacity", (Settings.snapOpacity(s.minimapOpacity) - Settings.MIN_OPACITY) / Settings.OPACITY_STEP, opacities,
+			i -> s.minimapOpacity = Settings.MIN_OPACITY + i * Settings.OPACITY_STEP, i -> Component.literal((Settings.MIN_OPACITY + i * Settings.OPACITY_STEP) + "%"));
+		int[] textSizes = TextSize.sizes();
+		minimap.slider("text_size", nearestIndex(textSizes, s.minimapTextSize), textSizes.length, i -> s.minimapTextSize = textSizes[i], i -> Component.literal(textSizes[i] + "%"));
+		minimap.slider("compass_size", nearestIndex(textSizes, s.minimapCompassSize), textSizes.length, i -> s.minimapCompassSize = textSizes[i], i -> Component.literal(textSizes[i] + "%"));
+		minimap.lastThreeSideBySide();
 		// Side by side, so the tab stays short enough for a small screen.
 		minimap.choice("shape", Settings.Shape.values(), () -> s.minimapShape, v -> s.minimapShape = v);
 		minimap.choice("frame", Settings.Frame.values(), () -> s.minimapFrame, v -> s.minimapFrame = v);
-		minimap.lastTwoSideBySide();
+		// A button beside them and not a ninth checkbox: a fifth row of those doesn't fit a small screen.
+		minimap.cycle("lock_north", () -> s.minimapLockNorth ? 1 : 0, 2, i -> s.minimapLockNorth = i == 1,
+			i -> i == 1 ? net.minecraft.network.chat.CommonComponents.OPTION_ON : net.minecraft.network.chat.CommonComponents.OPTION_OFF);
+		minimap.lastThreeSideBySide();
 
 		SettingsTab radar = new SettingsTab("diorama.settings.radar");
+		Boolean radarSet = ServerRules.radarAllowed() ? null : false;
+		radar.toggle("radar_minimap", () -> s.radarOnMinimap, v -> s.radarOnMinimap = v, radarSet);
+		radar.toggle("radar_map", () -> s.radarOnMap, v -> s.radarOnMap = v, radarSet);
 		radar.toggle("players", () -> s.radarPlayers, v -> s.radarPlayers = v);
 		radar.toggle("hostile", () -> s.radarHostile, v -> s.radarHostile = v);
 		radar.toggle("neutral", () -> s.radarNeutral, v -> s.radarNeutral = v);
 		radar.toggle("passive", () -> s.radarPassive, v -> s.radarPassive = v);
+		radar.toggle("items", () -> s.radarItems, v -> s.radarItems = v);
 		radar.toggle("type_outline", () -> s.radarTypeOutline, v -> s.radarTypeOutline = v);
+		radar.toggle("height_arrows", () -> s.radarHeightArrows, v -> s.radarHeightArrows = v);
 		radar.choice("radar_style", Settings.RadarStyle.values(), () -> s.radarStyle, v -> s.radarStyle = v);
 		int scales = (Settings.MAX_SCALE - Settings.MIN_SCALE) / Settings.SCALE_STEP + 1;
 		radar.slider("icon_size", (s.radarIconScale - Settings.MIN_SCALE) / Settings.SCALE_STEP, scales,
 			i -> s.radarIconScale = Settings.MIN_SCALE + i * Settings.SCALE_STEP, i -> Component.literal((Settings.MIN_SCALE + i * Settings.SCALE_STEP) + "%"));
+		// Side by side, so the tab stays short enough for a small screen.
+		radar.lastTwoSideBySide();
 		radar.choice("player_names", Settings.NameTags.values(), () -> s.playerNames, v -> s.playerNames = v);
 		int[] ranges = Settings.RANGES;
 		radar.slider("range", indexOf(ranges, s.radarRange), ranges.length, i -> s.radarRange = ranges[i], i -> Component.literal(ranges[i] + " m"));
+		radar.open("radar_categories", RadarCategoriesScreen.summary(), () -> this.minecraft.setScreen(new RadarCategoriesScreen(this)));
+		// Beside the range, so the tab doesn't grow.
+		radar.lastTwoSideBySide();
 
 		SettingsTab overlays = new SettingsTab("diorama.settings.overlays");
 		overlays.toggle("chunk_grid", () -> s.chunkGrid, v -> s.chunkGrid = v);
 		overlays.toggle("slime_chunks", () -> s.slimeChunks, v -> s.slimeChunks = v);
+		// The map's buttons here rather than under Waypoints: another row there runs into Done on a short window.
+		overlays.toggle("map_maps_button", () -> s.mapMapsButton, v -> s.mapMapsButton = v);
+		overlays.toggle("map_dimension_button", () -> s.mapDimensionButton, v -> s.mapDimensionButton = v);
+		overlays.toggle("map_waypoints_button", () -> s.mapWaypointsButton, v -> s.mapWaypointsButton = v);
+		overlays.toggle("map_settings_button", () -> s.mapSettingsButton, v -> s.mapSettingsButton = v);
+		overlays.toggle("map_coordinates", () -> s.mapCoordinates, v -> s.mapCoordinates = v);
 		Settings.SpawnSpots[] spots = Settings.SpawnSpots.values();
 		overlays.cycle("spawn_spots", () -> s.spawnSpots.ordinal(), spots.length, i -> s.spawnSpots = spots[i],
 			i -> Component.translatable("diorama.settings.spawn_spots." + spots[i].name().toLowerCase(Locale.ROOT)));
+		if (Claims.supported()) {
+			overlays.choice("claims", Settings.ClaimsShown.values(), () -> s.claims, v -> s.claims = v);
+		}
+		overlays.choice("drawings", Settings.DrawingsShown.values(), () -> s.drawings, v -> s.drawings = v);
+		// The map in a browser; beside Drawings, so the tab doesn't grow.
+		overlays.choice("web_map", Settings.WebMap.values(), () -> s.webMap, v -> s.webMap = v);
+		overlays.lastTwoSideBySide();
+		overlays.choice("world_border", Settings.WorldBorderShown.values(), () -> s.worldBorder, v -> s.worldBorder = v);
 
 		SettingsTab waypoints = new SettingsTab("diorama.settings.waypoints");
 		waypoints.toggle("waypoints_map", () -> s.waypointsOnMap, v -> s.waypointsOnMap = v);
 		waypoints.toggle("waypoints_world", () -> s.waypointsInWorld, v -> s.waypointsInWorld = v);
 		waypoints.toggle("deaths", () -> s.deathMarkers, v -> s.deathMarkers = v);
+		waypoints.toggle("deaths_reached", () -> s.removeReachedDeaths, v -> s.removeReachedDeaths = v);
+		waypoints.toggle("beds", () -> s.bedMarkers, v -> s.bedMarkers = v);
+		waypoints.toggle("portals", () -> s.portalMarkers, v -> s.portalMarkers = v);
+		waypoints.toggle("map_add_waypoints", () -> s.mapAddWaypoints, v -> s.mapAddWaypoints = v);
 		waypoints.choice("waypoint_labels", Settings.WaypointLabels.values(), () -> s.waypointLabels, v -> s.waypointLabels = v);
+		// How big those labels are, beside what they say: the tab has no room for another row.
+		int[] labelSizes = TextSize.sizes();
+		waypoints.slider("waypoint_text_size", nearestIndex(labelSizes, s.waypointWorldTextSize), labelSizes.length, i -> s.waypointWorldTextSize = labelSizes[i], i -> Component.literal(labelSizes[i] + "%"));
+		waypoints.lastTwoSideBySide(TEXT_SLIDER);
+		int[] distances = Settings.WAYPOINT_DISTANCES;
+		waypoints.slider("waypoint_distance", indexOf(distances, s.waypointDistance), distances.length, i -> s.waypointDistance = distances[i],
+			i -> distances[i] == 0 ? Component.translatable("diorama.settings.waypoint_distance.any") : Component.literal(distances[i] + " m"));
+		// Beside the distance, which decides how far off a beam shows too; and the tab has no room for another row.
+		waypoints.choice("waypoint_beams", Settings.Beams.values(), () -> s.waypointBeams, v -> s.waypointBeams = v);
+		waypoints.lastTwoSideBySide();
+		int[] pinSizes = Pins.sizes();
+		waypoints.heading("waypoint_size");
+		waypoints.slider("waypoint_size_minimap", nearestIndex(pinSizes, s.waypointMinimapSize), pinSizes.length, i -> s.waypointMinimapSize = pinSizes[i], i -> Component.literal(pinSizes[i] + "%"));
+		waypoints.slider("waypoint_size_map", nearestIndex(pinSizes, s.waypointMapSize), pinSizes.length, i -> s.waypointMapSize = pinSizes[i], i -> Component.literal(pinSizes[i] + "%"));
+		waypoints.slider("waypoint_size_world", nearestIndex(pinSizes, s.waypointWorldSize), pinSizes.length, i -> s.waypointWorldSize = pinSizes[i], i -> Component.literal(pinSizes[i] + "%"));
+		waypoints.lastThreeSideBySide();
+		waypoints.open("teleport_command", Component.literal("/" + s.teleportCommand), () -> this.minecraft.setScreen(new TeleportCommandScreen(this)));
+		// Beside the command: the tab has no room for another row.
+		int worldOpacities = (Settings.MAX_OPACITY - Settings.MIN_OPACITY) / Settings.OPACITY_STEP + 1;
+		waypoints.slider("waypoint_opacity", (Settings.snapOpacity(s.waypointWorldOpacity) - Settings.MIN_OPACITY) / Settings.OPACITY_STEP, worldOpacities,
+			i -> s.waypointWorldOpacity = Settings.MIN_OPACITY + i * Settings.OPACITY_STEP, i -> Component.literal((Settings.MIN_OPACITY + i * Settings.OPACITY_STEP) + "%"));
+		waypoints.lastTwoSideBySide(TEXT_SLIDER);
 
 		SettingsTab look = new SettingsTab("diorama.settings.look");
 		look.toggle("outlines", () -> s.outlines, v -> s.outlines = v);
+		look.choice("day_night", Settings.DayNight.values(), () -> s.dayNight, v -> s.dayNight = v);
 		look.toggle("rounded_fog", () -> s.roundedFog, v -> s.roundedFog = v);
-		look.toggle("fog_of_war", () -> s.alwaysFogOfWar, v -> s.alwaysFogOfWar = v);
+		look.toggle("fog_of_war", () -> s.alwaysFogOfWar, v -> s.alwaysFogOfWar = v, ServerRules.fogOfWarForced() ? true : null);
+		look.toggle("saved_chunks", () -> s.mapSavedChunks, v -> s.mapSavedChunks = v);
+		look.open("map_off", DimensionsScreen.summary(), () -> this.minecraft.setScreen(new DimensionsScreen(this)));
 		Settings.Quality[] qualities = Settings.Quality.values();
 		look.cycle("quality", () -> s.quality.ordinal(), qualities.length, i -> s.quality = qualities[i],
 			i -> Component.translatable("diorama.settings.quality." + qualities[i].name().toLowerCase(Locale.ROOT)));
-		// On, but turned off this session because the graphics card's tiles didn't match: say so.
-		this.gpuBaking = look.cycle("gpu_baking", () -> s.gpuBaking ? 1 : 0, 2, i -> s.gpuBaking = i == 1, SettingsScreen::gpuBakingValue);
+		// On, but turned itself off on this graphics card: say why. Turning it back on tries again.
+		this.gpuBaking = look.cycle("gpu_baking", () -> s.gpuBaking ? 1 : 0, 2, i -> {
+			s.gpuBaking = i == 1;
+			if (s.gpuBaking) {
+				dev.diorama.render.gpu.GpuBakeCheck.retry();
+				this.gpuFailedShown = dev.diorama.render.gpu.GpuBakeCheck.failed();
+			}
+		}, SettingsScreen::gpuBakingValue);
 		this.gpuFailedShown = dev.diorama.render.gpu.GpuBakeCheck.failed();
 		look.cycle("arrow_color", () -> s.arrowColor, Settings.ARROW_COLORS.length, i -> s.arrowColor = i,
+			//? if >=1.21 {
 			i -> Component.translatable("diorama.settings.arrow_color." + Settings.ARROW_COLOR_NAMES[i]).withColor(Settings.ARROW_COLORS[i]));
+			//?} else {
+			/*i -> Component.translatable("diorama.settings.arrow_color." + Settings.ARROW_COLOR_NAMES[i]).withStyle(style -> style.withColor(Settings.ARROW_COLORS[i])));
+			*///?}
+		int arrowSizes = (Settings.MAX_ARROW_SIZE - Settings.MIN_ARROW_SIZE) / Settings.ARROW_SIZE_STEP + 1;
+		look.slider("arrow_size", (Settings.snapArrowSize(s.arrowSize) - Settings.MIN_ARROW_SIZE) / Settings.ARROW_SIZE_STEP, arrowSizes,
+			i -> s.arrowSize = Settings.MIN_ARROW_SIZE + i * Settings.ARROW_SIZE_STEP, i -> Component.literal((Settings.MIN_ARROW_SIZE + i * Settings.ARROW_SIZE_STEP) + "%"));
+		// Beside its colour, so the tab doesn't grow.
+		look.lastTwoSideBySide();
 
 		// Vanilla's tab bar, over the settings side instead of the whole screen. It's drawn by hand
 		// (extractRenderState), clipped to the side: its separator line runs on past the last tab.
@@ -153,7 +247,12 @@ public final class SettingsScreen extends Screen {
 	}
 
 	private static Component gpuBakingValue(int on) {
-		return Component.translatable(on == 0 ? "options.off" : dev.diorama.render.gpu.GpuBakeCheck.failed() ? "diorama.settings.gpu_baking.no_match" : "options.on");
+		dev.diorama.render.gpu.GpuBakeCheck.Off off = dev.diorama.render.gpu.GpuBakeCheck.off();
+		return Component.translatable(on == 0 ? "options.off" : off == null ? "options.on" : switch (off) {
+			case NO_MATCH -> "diorama.settings.gpu_baking.no_match";
+			case TOO_SLOW -> "diorama.settings.gpu_baking.too_slow";
+			case CRASHED -> "diorama.settings.gpu_baking.crashed";
+		});
 	}
 
 	@Override
@@ -183,23 +282,43 @@ public final class SettingsScreen extends Screen {
 		private final List<AbstractWidget> wide = new ArrayList<>();
 		/** Wide widgets that share a row with the one after them. */
 		private final java.util.Set<AbstractWidget> pairedWithNext = new java.util.HashSet<>();
+		private final java.util.Set<AbstractWidget> tripled = new java.util.HashSet<>();
+		/** The second of a pair that isn't half the row: its width. */
+		private final java.util.Map<AbstractWidget, Integer> narrow = new java.util.HashMap<>();
+		private final java.util.Set<AbstractWidget> headings = new java.util.HashSet<>();
+		/** Whether the tab says which of its settings the server sets. */
+		private boolean serverNoted;
 
 		SettingsTab(String key) {
 			super(Component.translatable(key));
 		}
 
 		void toggle(String key, BooleanSupplier get, Consumer<Boolean> set) {
+			this.toggle(key, get, set, null);
+		}
+
+		/**
+		 * A checkbox; with {@code serverSet}, the value the server decides, greyed out at that value.
+		 * The player's own setting stays as saved, for when they leave.
+		 */
+		void toggle(String key, BooleanSupplier get, Consumer<Boolean> set, @Nullable Boolean serverSet) {
 			int column = (CONTENT - COLUMN_GAP) / 2;
-			Checkbox checkbox = Checkbox.builder(Component.translatable("diorama.settings." + key), SettingsScreen.this.font)
-				.selected(get.getAsBoolean())
-				.maxWidth(column)
-				.onValueChange((box, value) -> {
-					set.accept(value);
-					Settings.get().save();
-				})
-				.build();
+			boolean shown = serverSet != null ? serverSet : get.getAsBoolean();
+			Checkbox checkbox = checkbox(Component.translatable("diorama.settings." + key), SettingsScreen.this.font, shown, column, set);
 			// Not through the builder: from 26.2 it keeps a tooltip only for a label too long to show.
-			checkbox.setTooltip(tooltip(key));
+			checkbox.setTooltip(serverSet == null ? tooltip(key) : Tooltip.create(Component.empty().append(serverSetLine(false)).append("\n\n")
+				.append(Component.translatable("diorama.settings." + key + ".tooltip"))));
+			if (serverSet != null) {
+				checkbox.active = false;
+				checkbox.setAlpha(0.5F);
+				if (!this.serverNoted) {
+					this.serverNoted = true;
+					// First of the wide ones, so it's the line under the checkboxes.
+					StringWidget note = new StringWidget(serverSetLine(true), SettingsScreen.this.font);
+					this.headings.add(note);
+					this.wide.add(0, note);
+				}
+			}
 			this.checkboxes.add(checkbox);
 		}
 
@@ -221,6 +340,12 @@ public final class SettingsScreen extends Screen {
 				i -> Component.translatable("diorama.settings." + key + "." + values[i].name().toLowerCase(Locale.ROOT)));
 		}
 
+		/** A button showing the setting's value that opens a screen to change it. */
+		void open(String key, Component value, Runnable press) {
+			Component label = Component.translatable("diorama.settings." + key);
+			this.wide.add(Button.builder(label(label, value), b -> press.run()).size(CONTENT, 20).tooltip(tooltip(key)).build());
+		}
+
 		void slider(String key, int index, int count, IntConsumer set, IntFunction<Component> name) {
 			StepSlider slider = new StepSlider(Component.translatable("diorama.settings." + key), index, count, set, name);
 			slider.setTooltip(tooltip(key));
@@ -229,6 +354,23 @@ public final class SettingsScreen extends Screen {
 
 		void lastTwoSideBySide() {
 			this.pairedWithNext.add(this.wide.get(this.wide.size() - 2));
+		}
+
+		/** The same, the second {@code width} wide and the first with the rest of the row. */
+		void lastTwoSideBySide(int width) {
+			this.lastTwoSideBySide();
+			this.narrow.put(this.wide.get(this.wide.size() - 1), width);
+		}
+
+		void lastThreeSideBySide() {
+			this.tripled.add(this.wide.get(this.wide.size() - 3));
+		}
+
+		/** A line of text over the next widgets, naming them together. */
+		void heading(String key) {
+			StringWidget heading = new StringWidget(Component.translatable("diorama.settings." + key), SettingsScreen.this.font);
+			this.headings.add(heading);
+			this.wide.add(heading);
 		}
 
 		@Override
@@ -242,27 +384,48 @@ public final class SettingsScreen extends Screen {
 			int content = Math.min(CONTENT, area.width() - 10);
 			int column = (content - COLUMN_GAP) / 2;
 			int left = area.left() + (area.width() - content) / 2;
-			int y = area.top() + 12;
+			int rows = this.wide.size() - this.pairedWithNext.size() - this.tripled.size() * 2 - this.headings.size();
+			int checkRows = (this.checkboxes.size() + 1) / 2;
+			// On a small window, closer together rather than into the buttons below.
+			boolean tight = 22 + checkRows * 22 + rows * 24 + this.headings.size() * HEADING > area.height();
+			int rowStep = tight ? 22 : 24;
+			int y = area.top() + (tight ? 6 : 12);
 			for (int i = 0; i < this.checkboxes.size(); i++) {
-				this.checkboxes.get(i).setPosition(left + (i % 2) * (column + COLUMN_GAP), y + (i / 2) * 22);
+				this.checkboxes.get(i).setPosition(left + (i % 2) * (column + COLUMN_GAP), y + (i / 2) * (tight ? 20 : 22));
 			}
 			if (!this.checkboxes.isEmpty()) {
-				y += (this.checkboxes.size() + 1) / 2 * 22 + 10;
+				y += checkRows * (tight ? 20 : 22) + (tight ? 3 : 10);
 			}
 			for (int i = 0; i < this.wide.size(); i++) {
 				AbstractWidget widget = this.wide.get(i);
-				if (this.pairedWithNext.contains(widget) && i + 1 < this.wide.size()) {
-					int half = (content - 4) / 2;
+				if (this.headings.contains(widget)) {
 					widget.setPosition(left, y);
-					widget.setWidth(half);
+					widget.setWidth(content);
+					y += HEADING;
+					continue;
+				}
+				if (this.tripled.contains(widget)) {
+					int third = (content - 8) / 3;
+					for (int j = 0; j < 3; j++) {
+						AbstractWidget part = this.wide.get(i + j);
+						part.setPosition(left + j * (content - third) / 2, y);
+						part.setWidth(third);
+					}
+					i += 2;
+				} else if (this.pairedWithNext.contains(widget) && i + 1 < this.wide.size()) {
 					AbstractWidget next = this.wide.get(++i);
-					next.setPosition(left + content - half, y);
-					next.setWidth(half);
+					int half = (content - 4) / 2;
+					int second = Math.min(half, this.narrow.getOrDefault(next, half));
+					widget.setPosition(left, y);
+					// Halves as they've always been; the first only takes the rest beside a narrow second.
+					widget.setWidth(second == half ? half : content - 4 - second);
+					next.setPosition(left + content - second, y);
+					next.setWidth(second);
 				} else {
 					widget.setPosition(left, y);
 					widget.setWidth(content);
 				}
-				y += 24;
+				y += rowStep;
 			}
 		}
 	}
@@ -271,7 +434,7 @@ public final class SettingsScreen extends Screen {
 	 * A slider over a list of values, one equal stretch of the track each, the way vanilla's
 	 * option sliders pick a whole number. Saves when the value it points at changes.
 	 */
-	private static final class StepSlider extends AbstractSliderButton {
+	static final class StepSlider extends AbstractSliderButton {
 		private final Component name;
 		private final int count;
 		private final IntConsumer set;
@@ -304,12 +467,58 @@ public final class SettingsScreen extends Screen {
 		}
 	}
 
+	/** A checkbox no wider than {@code maxWidth} that saves the settings after telling {@code set} its new value. */
+	static Checkbox checkbox(Component label, net.minecraft.client.gui.Font font, boolean selected, int maxWidth, Consumer<Boolean> set) {
+		//? if >=1.21 {
+		return Checkbox.builder(label, font)
+			.selected(selected)
+			.maxWidth(maxWidth)
+			.onValueChange((box, value) -> {
+				set.accept(value);
+				Settings.get().save();
+			})
+			.build();
+		//?} else {
+		/*// 1.20.1's checkbox has no builder and tells no one it changed. It's a 20 pixel box with
+		// the label 4 pixels right of it, as wide as both, and no wider than the column.
+		return new Checkbox(0, 0, Math.min(24 + font.width(label), maxWidth), 20, label, selected) {
+			@Override
+			public void onPress() {
+				super.onPress();
+				set.accept(this.selected());
+				Settings.get().save();
+			}
+		};
+		*///?}
+	}
+
+	/**
+	 * Says who set a greyed-out setting: the server the player is on, or in singleplayer the file a
+	 * modpack ships, which the player can change. As the tab's {@code note} or a tooltip's first line.
+	 */
+	static Component serverSetLine(boolean note) {
+		boolean file = net.minecraft.client.Minecraft.getInstance().hasSingleplayerServer();
+		return Component.translatable("diorama.settings." + (note ? "server_note" : "server_set") + (file ? "_file" : ""))
+			.withStyle(net.minecraft.ChatFormatting.GRAY);
+	}
+
 	private static Tooltip tooltip(String key) {
 		return Tooltip.create(Component.translatable("diorama.settings." + key + ".tooltip"));
 	}
 
-	private static Component label(Component name, Component value) {
+	static Component label(Component name, Component value) {
 		return Component.empty().append(name).append(": ").append(value);
+	}
+
+	/** Where in {@code values}, ascending, the one nearest {@code value} is; halfway rounds up, as {@code Pins.scale} and {@code TextSize.scale} do. */
+	private static int nearestIndex(int[] values, int value) {
+		int nearest = 0;
+		for (int i = 1; i < values.length; i++) {
+			if (Math.abs(values[i] - value) <= Math.abs(values[nearest] - value)) {
+				nearest = i;
+			}
+		}
+		return nearest;
 	}
 
 	private static int indexOf(int[] values, int value) {
@@ -321,17 +530,26 @@ public final class SettingsScreen extends Screen {
 		return 1;
 	}
 
+	//? if >=1.21 {
 	@Override
 	public void renderBackground(GuiGraphics graphics, int mouseX, int mouseY, float a) {
 		super.renderBackground(graphics, mouseX, mouseY, a);
+	//?} else {
+	/*// A 1.20.1 screen draws its own background, from its render method below.
+	private void drawBackground(GuiGraphics graphics) {
+		this.renderBackground(graphics);
+	*///?}
 		// After the blur, so the preview stays sharp. A big minimap would reach under the settings:
 		// it's cut off at their edge, which also keeps its depth (before 1.21.6) clear of them.
 		graphics.enableScissor(this.side, 0, this.width, this.height);
 		//? if >=1.21.2 {
 		/*this.preview.preview(graphics, this.minecraft.getDeltaTracker().getGameTimeDeltaPartialTick(true));
-		*///?} else {
+		*///?} else if >=1.21 {
 		this.preview.preview(graphics, this.minecraft.getTimer().getGameTimeDeltaPartialTick(true));
-		//?}
+		//?} else {
+		/*// The partial tick the frame is drawn with, the paused one while the game is paused.
+		this.preview.preview(graphics, this.minecraft.getFrameTime());
+		*///?}
 		graphics.disableScissor();
 		// The settings side, as vanilla draws a list in a world.
 		//? if >=1.21.6 {
@@ -341,17 +559,25 @@ public final class SettingsScreen extends Screen {
 		*///?} else if >=1.21.2 {
 		/*graphics.blit(net.minecraft.client.renderer.RenderType::guiTextured, LIST_BACKGROUND, 0, TAB_BAR_HEIGHT, 0, 0, this.side, this.listBottom() - TAB_BAR_HEIGHT, 32, 32);
 		graphics.blit(net.minecraft.client.renderer.RenderType::guiTextured, Screen.INWORLD_FOOTER_SEPARATOR, 0, this.listBottom(), 0, 0, this.side, 2, 32, 2);
-		*///?} else {
+		*///?} else if >=1.21 {
 		com.mojang.blaze3d.systems.RenderSystem.enableBlend();
 		graphics.blit(LIST_BACKGROUND, 0, TAB_BAR_HEIGHT, 0, 0, this.side, this.listBottom() - TAB_BAR_HEIGHT, 32, 32);
 		graphics.blit(Screen.INWORLD_FOOTER_SEPARATOR, 0, this.listBottom(), 0, 0, this.side, 2, 32, 2);
 		com.mojang.blaze3d.systems.RenderSystem.disableBlend();
-		//?}
+		//?} else {
+		/*// 1.20.1 has neither texture. Each is a flat colour per row, the same as ScreenArt fills.
+		graphics.fill(0, TAB_BAR_HEIGHT, this.side, this.listBottom(), 0x70000000);
+		graphics.fill(0, this.listBottom(), this.side, this.listBottom() + 1, 0xBF000000);
+		graphics.fill(0, this.listBottom() + 1, this.side, this.listBottom() + 2, 0x33FFFFFF);
+		*///?}
 	}
 
 	@Override
 	public void render(GuiGraphics graphics, int mouseX, int mouseY, float a) {
 		// Before 1.21.6 this draws the background too, so the tab bar goes after it.
+		//? if <1.21 {
+		/*this.drawBackground(graphics);
+		*///?}
 		super.render(graphics, mouseX, mouseY, a);
 		if (this.tabBar != null) {
 			graphics.enableScissor(0, 0, this.side, TAB_BAR_HEIGHT);

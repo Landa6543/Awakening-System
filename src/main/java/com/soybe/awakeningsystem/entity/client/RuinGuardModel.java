@@ -23,8 +23,8 @@ public class RuinGuardModel extends EntityModel<RuinGuardEntity> {
         this.ruinGuard = root.getChild("RuinGuard");
         this.leftLeg = root.getChild("left_leg_ANIM");
         this.rightLeg = root.getChild("right_leg_ANIM");
-        this.leftArm = root.getChild("left_arm_ANIM");
-        this.rightArm = root.getChild("right_arm_ANIM");
+        this.leftArm = this.ruinGuard.getChild("left_arm_ANIM");
+        this.rightArm = this.ruinGuard.getChild("right_arm_ANIM");
     }
 
     public static LayerDefinition createBodyLayer() {
@@ -214,9 +214,9 @@ public class RuinGuardModel extends EntityModel<RuinGuardEntity> {
                 .texOffs(100, 191).mirror(false).addBox(-1.0F, -1.0F, -17.0F, 4.0F, 4.0F, 7.0F),
                 PartPose.offset(19.0F, -1.0F, 0.0F));
 
-        PartDefinition part_left_arm_ANIM = root.addOrReplaceChild("left_arm_ANIM",
+        PartDefinition part_left_arm_ANIM = part_RuinGuard.addOrReplaceChild("left_arm_ANIM",
                 CubeListBuilder.create(),
-                PartPose.offset(15.0F, -53.0F, 12.0F));
+                PartPose.offset(15.0F, -68.0F, 12.0F));
 
         PartDefinition part_LRuinShoulder = part_left_arm_ANIM.addOrReplaceChild("LRuinShoulder",
                 CubeListBuilder.create(),
@@ -261,9 +261,9 @@ public class RuinGuardModel extends EntityModel<RuinGuardEntity> {
                 .texOffs(39, 127).mirror(false).addBox(-17.0F, -90.0F, 5.0F, 13.0F, 12.0F, 13.0F),
                 PartPose.offsetAndRotation(-24.0F, 74.0F, -12.0F, 0.0F, 0.0F, 0.4363F));
 
-        PartDefinition part_right_arm_ANIM = root.addOrReplaceChild("right_arm_ANIM",
+        PartDefinition part_right_arm_ANIM = part_RuinGuard.addOrReplaceChild("right_arm_ANIM",
                 CubeListBuilder.create(),
-                PartPose.offset(-20.0F, -54.0F, 12.0F));
+                PartPose.offset(-20.0F, -69.0F, 12.0F));
 
         PartDefinition part_RRuinShoulder = part_right_arm_ANIM.addOrReplaceChild("RRuinShoulder",
                 CubeListBuilder.create(),
@@ -313,26 +313,79 @@ public class RuinGuardModel extends EntityModel<RuinGuardEntity> {
 
     @Override
     public void setupAnim(RuinGuardEntity entity, float limbSwing, float limbSwingAmount, float ageInTicks, float netHeadYaw, float headPitch) {
-        this.leftLeg.yRot = Mth.cos(limbSwing * 1.0F) * -1.0F * limbSwingAmount;
-        this.rightLeg.yRot = Mth.cos(limbSwing * 1.0F) * 1.0F * limbSwingAmount;
-        this.leftLeg.xRot = Mth.cos(limbSwing * 0.6662F) * 0.8F * limbSwingAmount;
-        this.rightLeg.xRot = Mth.cos(limbSwing * 0.6662F + (float) Math.PI) * 0.8F * limbSwingAmount;
+        // Ruin Guard legs: base pose has zRot = 90 deg (PI/2), so yRot controls the forward/backward stride
+        float legStride = Mth.cos(limbSwing * 0.6662F) * 0.65F * limbSwingAmount;
+        this.leftLeg.yRot = legStride;
+        this.rightLeg.yRot = -legStride;
+        this.leftLeg.xRot = 0.0F;
+        this.rightLeg.xRot = 0.0F;
+        this.leftLeg.zRot = 1.5708F;
+        this.rightLeg.zRot = 1.5708F;
 
         if (entity.isSpinning()) {
-            float spin = ageInTicks * 0.8F;
+            // Whirlwind Spin: torso spins 360 deg, arms spread horizontally outwards like twin scythes
+            float spin = ageInTicks * 0.85F;
             this.ruinGuard.yRot = spin;
-            this.leftArm.xRot = -1.5708F;
-            this.rightArm.xRot = -1.5708F;
+            this.ruinGuard.xRot = 0.0F;
+            this.ruinGuard.zRot = 0.0F;
+
+            this.leftArm.yRot = 0.0F;
+            this.rightArm.yRot = 0.0F;
+            this.leftArm.xRot = -0.15F;
+            this.rightArm.xRot = -0.15F;
+            this.leftArm.zRot = 1.35F;
+            this.rightArm.zRot = -1.35F;
         } else if (entity.isStunned()) {
+            // Core vulnerability shutdown: slumped forward, arms hanging limply
+            this.ruinGuard.yRot = 0.0F;
+            this.ruinGuard.xRot = 0.45F;
+            this.ruinGuard.zRot = 0.0F;
+
+            this.leftArm.xRot = -0.2F;
+            this.rightArm.xRot = -0.2F;
+            this.leftArm.yRot = 0.0F;
+            this.rightArm.yRot = 0.0F;
+            this.leftArm.zRot = 0.08F;
+            this.rightArm.zRot = -0.08F;
+        } else if (entity.isFiringMissiles()) {
+            // Missile salvo bombardment: braced stance, leans forward, shoulders pulled back exposing rocket pods
             this.ruinGuard.yRot = 0.0F;
             this.ruinGuard.xRot = 0.35F;
-            this.leftArm.xRot = 0.5F;
-            this.rightArm.xRot = 0.5F;
+            this.ruinGuard.zRot = 0.0F;
+
+            this.leftArm.xRot = 0.45F;
+            this.rightArm.xRot = 0.45F;
+            this.leftArm.yRot = -0.15F;
+            this.rightArm.yRot = 0.15F;
+            this.leftArm.zRot = 0.25F;
+            this.rightArm.zRot = -0.25F;
         } else {
+            // Torso stays rock solid and stable like Genshin original
             this.ruinGuard.xRot = 0.0F;
             this.ruinGuard.yRot = 0.0F;
-            this.rightArm.xRot = Mth.cos(limbSwing * 0.6662F + (float) Math.PI) * limbSwingAmount;
-            this.leftArm.xRot = Mth.cos(limbSwing * 0.6662F) * limbSwingAmount;
+            this.ruinGuard.zRot = 0.0F;
+
+            float attackAnim = entity.getAttackAnim(ageInTicks - (int) ageInTicks);
+            if (attackAnim > 0.0F) {
+                // Melee Ground Pound / Slam attack: both arms slam down with torso impact crunch
+                float swing = Mth.sin(attackAnim * (float) Math.PI);
+                this.leftArm.xRot = -1.6F * swing;
+                this.rightArm.xRot = -1.6F * swing;
+                this.leftArm.yRot = -0.2F * swing;
+                this.rightArm.yRot = 0.2F * swing;
+                this.leftArm.zRot = 0.15F;
+                this.rightArm.zRot = -0.15F;
+                this.ruinGuard.xRot = 0.22F * swing;
+            } else {
+                // Natural robotic arm swing while walking/idling
+                float armSwing = Mth.cos(limbSwing * 0.6662F) * 0.4F * limbSwingAmount;
+                this.leftArm.xRot = -armSwing;
+                this.rightArm.xRot = armSwing;
+                this.leftArm.yRot = 0.0F;
+                this.rightArm.yRot = 0.0F;
+                this.leftArm.zRot = 0.08F;
+                this.rightArm.zRot = -0.08F;
+            }
         }
     }
 

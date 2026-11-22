@@ -1,0 +1,17 @@
+{
+  "replace": false,
+  "values": [
+    "#minecraft:leg_armor",
+    "awakening_system:abyssal_leggings",
+    "awakening_system:soul_alloy_leggings",
+    "awakening_system:siderite_leggings",
+    "awakening_system:mithril_leggings",
+    "awakening_system:astralite_leggings",
+    "awakening_system:adamantite_leggings",
+    "awakening_system:spirit_jade_leggings",
+    "awakening_system:astral_leggings",
+    "awakening_system:celestial_leggings",
+    "awakening_system:primordial_leggings",
+    "awakening_system:mora_leggings"
+  ]
+}

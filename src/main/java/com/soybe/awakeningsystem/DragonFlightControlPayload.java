@@ -6,7 +6,7 @@ import net.minecraft.network.codec.StreamCodec;
 import net.minecraft.network.protocol.common.custom.CustomPacketPayload;
 import net.minecraft.resources.ResourceLocation;
 
-public record DragonFlightControlPayload(boolean space, boolean shift, boolean sprint) implements CustomPacketPayload {
+public record DragonFlightControlPayload(boolean space, boolean shift, boolean sprint, boolean flying) implements CustomPacketPayload {
     public static final Type<DragonFlightControlPayload> TYPE =
             new Type<>(ResourceLocation.fromNamespaceAndPath(AwakeningSystemMod.MOD_ID, "dragon_flight_control"));
 
@@ -15,6 +15,7 @@ public record DragonFlightControlPayload(boolean space, boolean shift, boolean s
                     ByteBufCodecs.BOOL, DragonFlightControlPayload::space,
                     ByteBufCodecs.BOOL, DragonFlightControlPayload::shift,
                     ByteBufCodecs.BOOL, DragonFlightControlPayload::sprint,
+                    ByteBufCodecs.BOOL, DragonFlightControlPayload::flying,
                     DragonFlightControlPayload::new
             );
 

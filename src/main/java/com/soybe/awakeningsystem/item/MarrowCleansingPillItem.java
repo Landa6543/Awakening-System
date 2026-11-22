@@ -44,6 +44,7 @@ public class MarrowCleansingPillItem extends Item {
             sp.removeAllEffects();
             sp.addEffect(new MobEffectInstance(MobEffects.REGENERATION, 300, 1));
             sp.addEffect(new MobEffectInstance(MobEffects.ABSORPTION, 600, 1));
+            data.cleanseImpurities(60);
 
             ServerLevel sl = sp.serverLevel();
             sl.sendParticles(ParticleTypes.TOTEM_OF_UNDYING, sp.getX(), sp.getY() + 1.0D, sp.getZ(), 45, 0.5D, 0.8D, 0.5D, 0.2D);

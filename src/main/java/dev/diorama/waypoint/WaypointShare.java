@@ -35,7 +35,6 @@ public final class WaypointShare {
 	private static final int MAX_CHAT = 256;
 	/** The waypoint editor's limits. */
 	private static final int MAX_NAME = 32;
-	private static final int MAX_INITIALS = 2;
 	private static final Pattern DIMENSION_ID = Pattern.compile("[a-z0-9_.-]+:[a-z0-9_./-]+");
 
 	/** A waypoint someone shared. {@code y} is null when the sender didn't know the height. */
@@ -54,7 +53,7 @@ public final class WaypointShare {
 		String initials = encode(chatSafe(waypoint.label()));
 		String tail = ":" + initials + ":" + waypoint.x + ":" + waypoint.y + ":" + waypoint.z + ":"
 			+ colorIndex(waypoint.color) + ":false:0:Internal-" + xaeroDimension(waypoint.dimension) + "-waypoints";
-		String name = chatSafe(waypoint.name).trim();
+		String name = chatSafe(waypoint.shownName()).trim();
 		if (name.isEmpty()) {
 			name = "Waypoint";
 		}
@@ -112,7 +111,7 @@ public final class WaypointShare {
 		}
 		String name = cut(chatSafe(decode(m.group(1))).trim(), MAX_NAME).trim();
 		StringBuilder initials = new StringBuilder();
-		decode(m.group(2)).codePoints().filter(Character::isLetterOrDigit).limit(MAX_INITIALS).forEach(initials::appendCodePoint);
+		decode(m.group(2)).codePoints().filter(Character::isLetterOrDigit).limit(Waypoint.MAX_INITIALS).forEach(initials::appendCodePoint);
 		int x = Integer.parseInt(m.group(3));
 		int z = Integer.parseInt(m.group(5));
 		Integer y = "~".equals(m.group(4)) ? null : Integer.parseInt(m.group(4));
@@ -123,7 +122,7 @@ public final class WaypointShare {
 			|| color > 15 || dimension == null) {
 			return Optional.empty();
 		}
-		return Optional.of(new Shared(name, initials.toString().toUpperCase(Locale.ROOT), x, y, z, color, dimension));
+		return Optional.of(new Shared(name, initials.toString(), x, y, z, color, dimension));
 	}
 
 	/** At most {@code max} characters of {@code text}, never splitting a character in two. */
@@ -165,11 +164,14 @@ public final class WaypointShare {
 
 	/**
 	 * {@code /diorama waypoint add <x> <y> <z> <colour> "<dimension>" "<initials>" <name>}, which the
-	 * "Add" link runs. Built with Brigadier alone, so it goes in either loader's client commands.
+	 * "Add" link runs, and {@code /diorama waypoint list}, which the Xaero's import line's link runs.
+	 * Built with Brigadier alone, so they go in either loader's client commands.
 	 */
 	public static <S> void register(CommandDispatcher<S> dispatcher) {
 		dispatcher.register(LiteralArgumentBuilder.<S>literal("diorama")
 			.then(LiteralArgumentBuilder.<S>literal("waypoint")
+				.then(LiteralArgumentBuilder.<S>literal("list")
+					.executes(WaypointShare::list))
 				.then(LiteralArgumentBuilder.<S>literal("add")
 					.then(RequiredArgumentBuilder.<S, Integer>argument("x", IntegerArgumentType.integer())
 						.then(RequiredArgumentBuilder.<S, Integer>argument("y", IntegerArgumentType.integer())
@@ -179,6 +181,13 @@ public final class WaypointShare {
 										.then(RequiredArgumentBuilder.<S, String>argument("initials", StringArgumentType.string())
 											.then(RequiredArgumentBuilder.<S, String>argument("name", StringArgumentType.greedyString())
 												.executes(WaypointShare::add)))))))))));
+	}
+
+	private static <S> int list(CommandContext<S> context) {
+		Minecraft mc = Minecraft.getInstance();
+		// Queued for later: a chat click puts the chat screen back right after running this.
+		mc.tell(() -> mc.setScreen(new WaypointListScreen(null)));
+		return 1;
 	}
 
 	private static <S> int add(CommandContext<S> context) {
@@ -193,7 +202,7 @@ public final class WaypointShare {
 		);
 		String initials = StringArgumentType.getString(context, "initials");
 		if (!initials.isEmpty()) {
-			waypoint.initials = cut(initials, MAX_INITIALS);
+			waypoint.initials = cut(initials, Waypoint.MAX_INITIALS);
 		}
 		Minecraft mc = Minecraft.getInstance();
 		// Queued for later: a chat click puts the chat screen back right after running this.

@@ -69,6 +69,21 @@ public final class WorldBossScalingManager {
             return true;
         }
 
+        // Compatibilidad universal con dragones, titanes y jefes de otros mods
+        if (com.soybe.awakeningsystem.config.BossCompatibilityManager.isBoss(entity)) {
+            return true;
+        }
+        // by the creature's own name only: a mod called "...bosses" or a package named "boss" doesn't make every
+        // creature in it a world boss (block_factorys_bosses' 20-health pirates came out as "WORLD BOSS Lv.50")
+        // whole words only ("mandrake" is not a drake); the class name split at its capitals (AncientDragonEntity)
+        net.minecraft.resources.ResourceLocation typeLoc = net.minecraft.core.registries.BuiltInRegistries.ENTITY_TYPE.getKey(entity.getType());
+        String typeKey = typeLoc != null ? typeLoc.getPath() : "";
+        List<String> words = List.of("dragon", "drake", "wyvern", "titan", "boss");
+        if (com.soybe.awakeningsystem.config.BossCompatibilityManager.hasWord(typeKey, words)
+                || com.soybe.awakeningsystem.config.BossCompatibilityManager.hasWord(entity.getClass().getSimpleName(), words)) {
+            return true;
+        }
+
         return false;
     }
 
@@ -96,6 +111,17 @@ public final class WorldBossScalingManager {
                 || boss instanceof com.soybe.awakeningsystem.entity.YggdrasilTreantBossEntity) {
             return 60;
         }
+
+        net.minecraft.resources.ResourceLocation typeLoc = net.minecraft.core.registries.BuiltInRegistries.ENTITY_TYPE.getKey(boss.getType());
+        String typeKey = typeLoc != null ? typeLoc.getPath().toLowerCase(java.util.Locale.ROOT) : "";
+        String className = boss.getClass().getSimpleName().toLowerCase(java.util.Locale.ROOT);
+        if (typeKey.contains("dragon") || className.contains("dragon") || typeKey.contains("wyvern") || className.contains("wyvern") || typeKey.contains("titan")) {
+            return 80;
+        }
+        if (boss.getMaxHealth() >= 300.0F) {
+            return 70;
+        }
+
         return 50;
     }
 

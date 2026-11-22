@@ -149,6 +149,10 @@ public final class SystemData implements INBTSerializable<CompoundTag> {
     private boolean dailyComplete;
     private boolean dailyFailed;
     private long dailyPenaltyUntil;
+    // Hunter Association Daily Commission
+    private int dailyHunterKills;
+    private int dailyHunterBossKills;
+    private boolean dailyHunterClaimed;
     private int emergencySurvival;
     private int bossKills;
     private int distanceMoved;
@@ -168,6 +172,8 @@ public final class SystemData implements INBTSerializable<CompoundTag> {
     private boolean isMisticPotato = false;
     private boolean isSchvis = false;
     private boolean isTomcraft = false;
+    private boolean isTheRealHatter = false;
+    private boolean isWraith = false;
     private final Map<String, Integer> repeatedActions = new LinkedHashMap<>();
 
     private int comboCount;
@@ -188,6 +194,13 @@ public final class SystemData implements INBTSerializable<CompoundTag> {
     private transient boolean pendingWelcomePacket = false;
     private final java.util.Set<String> disabledSkills = new java.util.HashSet<>();
     private final java.util.List<CompoundTag> storedShadowArmy = new java.util.ArrayList<>();
+    public static final int SQUAD_COUNT = 4;
+    private final String[] shadowSquadNames = new String[]{
+            "Escuadrón 1",
+            "Escuadrón 2",
+            "Escuadrón 3",
+            "Escuadrón 4"
+    };
 
     private final java.util.List<String> equippedActiveSkills = new java.util.ArrayList<>(java.util.List.of("", "", "", "", ""));
     private final java.util.List<String> equippedPassiveSkills = new java.util.ArrayList<>(java.util.List.of("", "", ""));
@@ -195,6 +208,7 @@ public final class SystemData implements INBTSerializable<CompoundTag> {
     private int dantianRealm = 0;
     private int cultivationSubLevel = 1;
     private int cultivationQi = 0;
+    private int bodyImpurities = 0;
     private final boolean[] meridians = new boolean[12];
     private int selectedDaoSkill = 0;
     private int tribulationShieldTicks = 0;
@@ -870,11 +884,74 @@ public final class SystemData implements INBTSerializable<CompoundTag> {
         return storedShadowArmy.size();
     }
 
+    public int getMaxShadowCapacity() {
+        int base = 50;
+        int rankBonus = switch (evaluatedRank() != null ? evaluatedRank() : "E") {
+            case "D" -> 30;
+            case "C" -> 70;
+            case "B" -> 150;
+            case "A" -> 300;
+            case "S" -> 500;
+            case "NATIONAL", "NATIONAL_LEVEL" -> 800;
+            case "MONARCH", "SHADOW_MONARCH" -> 1200;
+            default -> 0;
+        };
+        int intBonus = Math.max(0, (intelligence - ATTR_BASE) * 3);
+        int classBonus = ("shadow_monarch".equalsIgnoreCase(hunterClass) || "necromancer".equalsIgnoreCase(hunterClass)) ? 300 : 0;
+        return base + rankBonus + intBonus + classBonus;
+    }
+
+    public String getShadowSquadName(int squadId) {
+        if (squadId >= 0 && squadId < shadowSquadNames.length) {
+            return shadowSquadNames[squadId];
+        }
+        return "Squad " + (squadId + 1);
+    }
+
+    public void setShadowSquadName(int squadId, String name) {
+        if (squadId >= 0 && squadId < shadowSquadNames.length && name != null && !name.trim().isEmpty()) {
+            shadowSquadNames[squadId] = name.trim();
+        }
+    }
+
+    public String[] getShadowSquadNames() {
+        return shadowSquadNames;
+    }
+
+    public java.util.List<CompoundTag> getShadowsInSquad(int squadId) {
+        java.util.List<CompoundTag> list = new java.util.ArrayList<>();
+        for (CompoundTag tag : storedShadowArmy) {
+            int sq = tag.contains("SquadId") ? tag.getInt("SquadId") : 0;
+            if (sq == squadId) {
+                list.add(tag);
+            }
+        }
+        return list;
+    }
+
+    public int getShadowCountInSquad(int squadId) {
+        int count = 0;
+        for (CompoundTag tag : storedShadowArmy) {
+            int sq = tag.contains("SquadId") ? tag.getInt("SquadId") : 0;
+            if (sq == squadId) count++;
+        }
+        return count;
+    }
+
+    public void setShadowSquad(int shadowIndex, int targetSquadId) {
+        if (shadowIndex >= 0 && shadowIndex < storedShadowArmy.size() && targetSquadId >= 0 && targetSquadId < SQUAD_COUNT) {
+            storedShadowArmy.get(shadowIndex).putInt("SquadId", targetSquadId);
+        }
+    }
+
     public void storeShadow(CompoundTag shadowTag) {
-        if (shadowTag != null && storedShadowArmy.size() < 100) {
+        if (shadowTag != null && storedShadowArmy.size() < getMaxShadowCapacity()) {
             String type = shadowTag.getString("MobEntityTypeId");
-            if (type != null && type.toLowerCase().contains("celestial_dragon")) {
+            if (type != null && type.toLowerCase(java.util.Locale.ROOT).contains("celestial_dragon")) {
                 return;
+            }
+            if (!shadowTag.contains("SquadId")) {
+                shadowTag.putInt("SquadId", 0);
             }
             storedShadowArmy.add(shadowTag);
         }
@@ -1368,6 +1445,9 @@ public final class SystemData implements INBTSerializable<CompoundTag> {
             dailyRunning = 0;
             dailyComplete = false;
             dailyFailed = false;
+            dailyHunterKills = 0;
+            dailyHunterBossKills = 0;
+            dailyHunterClaimed = false;
         }
     }
 
@@ -1440,6 +1520,91 @@ public final class SystemData implements INBTSerializable<CompoundTag> {
             ItemStack dungeonKey = new ItemStack(SystemItems.DUNGEON_KEY.get());
             if (!player.getInventory().add(dungeonKey)) {
                 player.drop(dungeonKey, false);
+            }
+        }
+
+        return true;
+    }
+
+    // ── Hunter Association Daily Commission (Comisión Diaria por Rango) ──
+    public int dailyHunterKills() { return dailyHunterKills; }
+    public int dailyHunterBossKills() { return dailyHunterBossKills; }
+    public boolean isDailyHunterClaimed() { return dailyHunterClaimed; }
+
+    public int dailyHunterTarget() {
+        return switch (evaluatedRank().toUpperCase(java.util.Locale.ROOT)) {
+            case "EX", "ABSOLUTE_GOD", "LIMITLESS", "SINGULARITY", "ASTRAL_DEITY", "TIMELESS_MONARCH", "CHAOS_SOVEREIGN", "ABSOLUTE_CREATOR", "SUPREME_CREATOR", "ABSOLUTE", "ABSOLUTE_BEING" -> 1;
+            case "S", "S+", "SS", "SSS" -> 1;
+            case "A", "A+" -> 30;
+            case "B", "B+" -> 25;
+            case "C", "C+" -> 20;
+            case "D", "D+" -> 15;
+            default -> 10;
+        };
+    }
+
+    public boolean isBossCommission() {
+        String r = evaluatedRank().toUpperCase(java.util.Locale.ROOT);
+        return r.startsWith("S") || r.startsWith("EX") || rankIndex(r) >= rankIndex("S");
+    }
+
+    public boolean isDailyHunterComplete() {
+        if (isBossCommission()) {
+            return dailyHunterBossKills >= 1 || dailyHunterKills >= 35;
+        }
+        return dailyHunterKills >= dailyHunterTarget();
+    }
+
+    public boolean recordHunterKill(long day, boolean isBoss) {
+        ensureDailyDay(day);
+        if (dailyHunterClaimed) return false;
+        boolean wasComplete = isDailyHunterComplete();
+        // Roadmap Seccion 66: La Fuerza acelera las misiones de combate
+        int bonusPerKill = (strength() >= 40) ? 2 : 1;
+        if (isBoss) {
+            dailyHunterBossKills++;
+            dailyHunterKills += (strength() >= 40 ? 7 : 5);
+        } else {
+            dailyHunterKills += bonusPerKill;
+        }
+        return !wasComplete && isDailyHunterComplete();
+    }
+
+    public boolean claimHunterDailyReward(net.minecraft.server.level.ServerPlayer player) {
+        if (dailyHunterClaimed || !isDailyHunterComplete()) return false;
+        dailyHunterClaimed = true;
+        missionsCompleted++;
+
+        String rank = evaluatedRank().toUpperCase(java.util.Locale.ROOT);
+        int rankIdx = rankIndex(rank);
+
+        // 1. Salario en Monedas del Sistema según el Rango
+        int salary = switch (rank) {
+            case "EX" -> 150000;
+            case "S", "S+", "SS", "SSS" -> 80000;
+            case "A", "A+" -> 35000;
+            case "B", "B+" -> 15000;
+            case "C", "C+" -> 7500;
+            case "D", "D+" -> 3500;
+            default -> 1500;
+        };
+        addCoins(salary);
+
+        // 2. Experiencia de Cazador
+        int exp = 300 + level * 20 + rankIdx * 200;
+        addExperience(exp);
+
+        // 3. Puntos de Atributo del Gremio
+        int attrPts = rankIdx >= 6 ? 3 : (rankIdx >= 3 ? 2 : 1);
+        this.attributePoints += attrPts;
+
+        // 4. La bolsa de botin de la Asociacion la entrega SystemEvents.claimHunterCommission
+
+        // Si es Rango B o superior, llave de calabozo extra
+        if (rankIdx >= 4 && SystemItems.OVERWORLD_DUNGEON_KEY.isBound()) {
+            ItemStack key = new ItemStack(SystemItems.OVERWORLD_DUNGEON_KEY.get());
+            if (!player.getInventory().add(key)) {
+                player.drop(key, false);
             }
         }
 
@@ -1665,6 +1830,14 @@ public final class SystemData implements INBTSerializable<CompoundTag> {
         "CHAOS_SOVEREIGN", "TIMELESS_MONARCH", "ASTRAL_DEITY", "SINGULARITY", "LIMITLESS", "ABSOLUTE_GOD"
     };
 
+    public static int rankIndex(String rank) {
+        if (rank == null || rank.isEmpty()) return 0;
+        for (int i = 0; i < RANK_ORDER.length; i++) {
+            if (RANK_ORDER[i].equalsIgnoreCase(rank)) return i;
+        }
+        return 0;
+    }
+
     public int maxAllowedLevelForEvaluatedRank() {
         String cur = evaluatedRank();
         for (int i = 0; i < RANK_ORDER.length; i++) {
@@ -1876,7 +2049,18 @@ public final class SystemData implements INBTSerializable<CompoundTag> {
         return true;
     }
     public int getCultivationStatBonus() {
-        return (dantianRealm * 10) + Math.max(0, cultivationSubLevel - 1) * 2;
+        if (dantianRealm <= 9) {
+            return (dantianRealm * 10) + Math.max(0, cultivationSubLevel - 1) * 2;
+        } else {
+            return switch (dantianRealm) {
+                case 10 -> 140 + Math.max(0, cultivationSubLevel - 1) * 8;
+                case 11 -> 240 + Math.max(0, cultivationSubLevel - 1) * 15;
+                case 12 -> 400 + Math.max(0, cultivationSubLevel - 1) * 25;
+                case 13 -> 650 + Math.max(0, cultivationSubLevel - 1) * 40;
+                case 14 -> 1000 + Math.max(0, cultivationSubLevel - 1) * 60;
+                default -> 100 + (dantianRealm - 9) * 150;
+            };
+        }
     }
 
     public int rawStrength() { return strength; }
@@ -1963,6 +2147,22 @@ public final class SystemData implements INBTSerializable<CompoundTag> {
 
     public void setTomcraft(boolean tomcraft) {
         this.isTomcraft = tomcraft;
+    }
+
+    public boolean isTheRealHatter() {
+        return isTheRealHatter;
+    }
+
+    public void setTheRealHatter(boolean theRealHatter) {
+        this.isTheRealHatter = theRealHatter;
+    }
+
+    public boolean isWraith() {
+        return isWraith;
+    }
+
+    public void setWraith(boolean wraith) {
+        this.isWraith = wraith;
     }
 
     public String classId() {
@@ -2337,7 +2537,11 @@ public final class SystemData implements INBTSerializable<CompoundTag> {
     }
 
     public int dantianRealm() { return dantianRealm; }
-    public void setDantianRealm(int realm) { this.dantianRealm = Math.max(0, Math.min(9, realm)); }
+    public void setDantianRealm(int realm) { this.dantianRealm = Math.max(0, Math.min(14, realm)); }
+    public int bodyImpurities() { return bodyImpurities; }
+    public void setBodyImpurities(int v) { this.bodyImpurities = Math.max(0, Math.min(100, v)); }
+    public void addBodyImpurities(int v) { this.bodyImpurities = Math.max(0, Math.min(100, this.bodyImpurities + v)); }
+    public void cleanseImpurities(int v) { this.bodyImpurities = Math.max(0, this.bodyImpurities - v); }
     public int cultivationSubLevel() { return cultivationSubLevel; }
     public void setCultivationSubLevel(int subLevel) { this.cultivationSubLevel = Math.max(1, Math.min(9, subLevel)); }
     public int cultivationQi() { return cultivationQi; }
@@ -2349,7 +2553,12 @@ public final class SystemData implements INBTSerializable<CompoundTag> {
         if (system30Updated) base = (int)(base * 1.8);
         if (system40Updated) base = (int)(base * 2.2);
         if ("primordial_chaos".equals(murimPhysique())) base *= 2;
+        else if ("five_elements".equals(murimPhysique())) base = (int)(base * 1.40);
         else if ("celestial_dragon".equals(murimPhysique())) base = (int)(base * 1.35);
+        else if ("abyssal_void".equals(murimPhysique())) base = (int)(base * 1.30);
+        else if ("nirvana_phoenix".equals(murimPhysique())) base = (int)(base * 1.25);
+        else if ("heavenly_thunder".equals(murimPhysique())) base = (int)(base * 1.20);
+        else if ("vajra_indestructible".equals(murimPhysique())) base = (int)(base * 1.15);
         return base;
     }
     public void addCultivationQi(int amount) { this.cultivationQi = Math.max(0, Math.min(maxCultivationQi(), this.cultivationQi + amount)); }
@@ -2447,38 +2656,58 @@ public final class SystemData implements INBTSerializable<CompoundTag> {
 
     public float getPhysiqueDamageMultiplier() {
         return switch (murimPhysique()) {
-            case "pure_yang" -> 0.25F;
             case "innate_sword" -> 0.35F;
-            case "primordial_chaos" -> 0.20F;
+            case "heavenly_thunder" -> 0.30F;
             case "heavenly_demon" -> 0.30F;
+            case "five_elements" -> 0.25F;
+            case "pure_yang" -> 0.25F;
+            case "nirvana_phoenix" -> 0.20F;
+            case "primordial_chaos" -> 0.20F;
+            case "abyssal_void" -> 0.15F;
+            case "vajra_indestructible" -> 0.10F;
             default -> 0.0F;
         };
     }
 
     public float getPhysiqueSpeedBonus() {
         return switch (murimPhysique()) {
+            case "abyssal_void" -> 0.35F;
             case "nine_yin" -> 0.30F;
+            case "heavenly_thunder" -> 0.25F;
             case "innate_sword" -> 0.15F;
+            case "five_elements" -> 0.15F;
             case "primordial_chaos" -> 0.15F;
+            case "nirvana_phoenix" -> 0.10F;
+            case "vajra_indestructible" -> -0.05F;
             default -> 0.0F;
         };
     }
 
     public int getPhysiqueMaxHpBonus() {
         return switch (murimPhysique()) {
+            case "vajra_indestructible" -> 80;
             case "celestial_dragon" -> 50;
+            case "nirvana_phoenix" -> 40;
+            case "five_elements" -> 35;
             case "primordial_chaos" -> 30;
+            case "heavenly_thunder" -> 25;
             case "heavenly_demon" -> 20;
+            case "abyssal_void" -> 20;
             default -> 0;
         };
     }
 
     public float getPhysiqueQiRegenMultiplier() {
         return switch (murimPhysique()) {
-            case "pure_yang" -> 1.4F;
+            case "abyssal_void" -> 1.7F;
             case "primordial_chaos" -> 1.6F;
+            case "nirvana_phoenix" -> 1.5F;
+            case "five_elements" -> 1.45F;
+            case "pure_yang" -> 1.4F;
             case "nine_yin" -> 1.35F;
+            case "heavenly_thunder" -> 1.3F;
             case "celestial_dragon" -> 1.25F;
+            case "vajra_indestructible" -> 1.1F;
             default -> 1.0F;
         };
     }
@@ -2857,6 +3086,9 @@ public final class SystemData implements INBTSerializable<CompoundTag> {
         tag.putInt("daily_fail_streak", dailyFailStreak);
         tag.putBoolean("daily_penalty_due", dailyPenaltyDue);
         tag.putLong("daily_penalty_until", dailyPenaltyUntil);
+        tag.putInt("daily_hunter_kills", dailyHunterKills);
+        tag.putInt("daily_hunter_boss_kills", dailyHunterBossKills);
+        tag.putBoolean("daily_hunter_claimed", dailyHunterClaimed);
         tag.putInt("emergency_survival", emergencySurvival);
         tag.putBoolean("emergency_complete", emergencyComplete);
         tag.putBoolean("emergency_wounded", emergencyWounded);
@@ -2870,6 +3102,8 @@ public final class SystemData implements INBTSerializable<CompoundTag> {
         tag.putBoolean("is_mistic_potato", isMisticPotato);
         tag.putBoolean("is_schvis", isSchvis);
         tag.putBoolean("is_tomcraft", isTomcraft);
+        tag.putBoolean("is_the_real_hatter", isTheRealHatter);
+        tag.putBoolean("is_wraith", isWraith);
         CompoundTag repetitionTag = new CompoundTag();
         repeatedActions.forEach(repetitionTag::putInt);
         tag.put("repeated_actions", repetitionTag);
@@ -2893,6 +3127,7 @@ public final class SystemData implements INBTSerializable<CompoundTag> {
             tag.putString("equipped_passive_" + i, getEquippedPassiveSkill(i));
         }
         tag.putInt("dantian_realm", dantianRealm);
+        tag.putInt("body_impurities", bodyImpurities);
         tag.putInt("cultivation_qi", cultivationQi);
         tag.putInt("selected_dao_skill", selectedDaoSkill);
         tag.putInt("tribulation_shield_ticks", tribulationShieldTicks);
@@ -2926,6 +3161,11 @@ public final class SystemData implements INBTSerializable<CompoundTag> {
         tag.putInt("dokkaebi_scenario_target", dokkaebiScenarioTargetKills);
         tag.putString("dokkaebi_scenario_title", dokkaebiScenarioTitle == null ? "" : dokkaebiScenarioTitle);
         tag.put("stored_shadow_army", shadowArmyTag);
+        net.minecraft.nbt.ListTag squadNamesTag = new net.minecraft.nbt.ListTag();
+        for (String sName : shadowSquadNames) {
+            squadNamesTag.add(net.minecraft.nbt.StringTag.valueOf(sName));
+        }
+        tag.put("shadow_squad_names", squadNamesTag);
         tag.putBoolean("conquered_ranker_tower", conqueredRankerTower);
         tag.putInt("saved_tower_floor", savedTowerFloor);
         tag.putBoolean("conquered_nine_tribulations_pagoda", conqueredNineTribulationsPagoda);
@@ -3202,6 +3442,9 @@ public final class SystemData implements INBTSerializable<CompoundTag> {
         dailyFailStreak = tag.getInt("daily_fail_streak");
         dailyPenaltyDue = tag.getBoolean("daily_penalty_due");
         dailyPenaltyUntil = Math.max(0L, tag.getLong("daily_penalty_until"));
+        dailyHunterKills = tag.getInt("daily_hunter_kills");
+        dailyHunterBossKills = tag.getInt("daily_hunter_boss_kills");
+        dailyHunterClaimed = tag.getBoolean("daily_hunter_claimed");
         emergencySurvival = tag.getInt("emergency_survival");
         emergencyComplete = tag.getBoolean("emergency_complete");
         emergencyWounded = tag.getBoolean("emergency_wounded");
@@ -3215,6 +3458,8 @@ public final class SystemData implements INBTSerializable<CompoundTag> {
         isMisticPotato = tag.getBoolean("is_mistic_potato");
         isSchvis = tag.getBoolean("is_schvis");
         isTomcraft = tag.getBoolean("is_tomcraft");
+        isTheRealHatter = tag.getBoolean("is_the_real_hatter");
+        isWraith = tag.getBoolean("is_wraith");
         CompoundTag repetitionTag = tag.getCompound("repeated_actions");
         repetitionTag.getAllKeys().forEach(key -> repeatedActions.put(key, repetitionTag.getInt(key)));
         comboCount = tag.getInt("combo_count");
@@ -3245,6 +3490,7 @@ public final class SystemData implements INBTSerializable<CompoundTag> {
             }
         }
         dantianRealm = tag.getInt("dantian_realm");
+        bodyImpurities = tag.contains("body_impurities") ? tag.getInt("body_impurities") : 0;
         cultivationQi = tag.getInt("cultivation_qi");
         selectedDaoSkill = tag.getInt("selected_dao_skill");
         tribulationShieldTicks = tag.getInt("tribulation_shield_ticks");
@@ -3275,7 +3521,22 @@ public final class SystemData implements INBTSerializable<CompoundTag> {
                 net.minecraft.nbt.CompoundTag c = shadowArmyTag.getCompound(i);
                 String mobType = c.getString("MobEntityTypeId").toLowerCase(java.util.Locale.ROOT);
                 if (!mobType.contains("celestial_dragon")) {
+                    if (!c.contains("SquadId")) {
+                        c.putInt("SquadId", 0);
+                    }
                     storedShadowArmy.add(c);
+                }
+            }
+        }
+        if (tag.contains("shadow_squad_names", net.minecraft.nbt.Tag.TAG_LIST)) {
+            net.minecraft.nbt.ListTag squadNamesTag = tag.getList("shadow_squad_names", net.minecraft.nbt.Tag.TAG_STRING);
+            for (int i = 0; i < Math.min(shadowSquadNames.length, squadNamesTag.size()); i++) {
+                String loadedName = squadNamesTag.getString(i);
+                if (loadedName.contains("Ground") || loadedName.contains("Heavy") || loadedName.contains("Aerial") || loadedName.contains("Royal Guard")
+                        || loadedName.contains("Alfa") || loadedName.contains("Beta") || loadedName.contains("Vanguardia")) {
+                    shadowSquadNames[i] = "Escuadrón " + (i + 1);
+                } else {
+                    shadowSquadNames[i] = loadedName;
                 }
             }
         }

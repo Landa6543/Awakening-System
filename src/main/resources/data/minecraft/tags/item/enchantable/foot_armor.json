@@ -1,0 +1,17 @@
+{
+  "replace": false,
+  "values": [
+    "#minecraft:foot_armor",
+    "awakening_system:abyssal_boots",
+    "awakening_system:soul_alloy_boots",
+    "awakening_system:siderite_boots",
+    "awakening_system:mithril_boots",
+    "awakening_system:astralite_boots",
+    "awakening_system:adamantite_boots",
+    "awakening_system:spirit_jade_boots",
+    "awakening_system:astral_boots",
+    "awakening_system:celestial_boots",
+    "awakening_system:primordial_boots",
+    "awakening_system:mora_boots"
+  ]
+}

@@ -3,13 +3,25 @@ package dev.diorama;
 import dev.diorama.bake.BlockLooks;
 import dev.diorama.bake.Overlays;
 import dev.diorama.bake.TileKey;
+import dev.diorama.compat.SubLevels;
+import dev.diorama.craft.Crafts;
+import dev.diorama.data.SeenBiomes;
 import dev.diorama.data.ChunkSnapshot;
 import dev.diorama.data.Copycats;
+import dev.diorama.light.Lights;
 import dev.diorama.render.MapLevel;
+import dev.diorama.render.SavedChunkImport;
+import dev.diorama.share.ShareClient;
+import dev.diorama.waypoint.Portals;
+import dev.diorama.waypoint.WaypointStore;
 import java.nio.file.Path;
+import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.LinkedHashMap;
+import java.util.List;
 import java.util.Map;
+import java.util.Queue;
+import java.util.concurrent.ConcurrentLinkedQueue;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.multiplayer.ClientChunkCache;
 import net.minecraft.client.multiplayer.ClientLevel;
@@ -18,6 +30,7 @@ import net.minecraft.client.player.LocalPlayer;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
 import net.minecraft.core.SectionPos;
+import net.minecraft.world.entity.Entity;
 import net.minecraft.world.level.Level;
 import net.minecraft.util.Mth;
 import net.minecraft.world.level.LightLayer;
@@ -36,35 +49,126 @@ public final class MapSession {
 	private static final long LOAD_DELAY_MS = 750;
 	private static final long CHANGE_DELAY_MS = 250;
 	private static final int SNAPSHOTS_PER_TICK = 24;
+	/** How many blocks of rock above the player count as underground. A house roof is thinner. */
+	private static final int MIN_CAVE_DEPTH = 8;
+	/** How far up to look for open sky. */
+	private static final int MAX_SKY_DEPTH = 32;
 
 	private static @Nullable MapSession current;
+	private static int started;
 	private static final boolean DEBUG_CHANGES = Diorama.DEBUG;
 	private static final Map<String, Integer> CHANGE_TALLY = new java.util.TreeMap<>();
 	private static long lastTallyLog;
 
 	private final ClientLevel level;
 	private final MapLevel map;
+	/**
+	 * Whether this is the dimension's main map. A map the player made starts blank and stays theirs
+	 * to fill, so only the main one fills in from the save.
+	 */
+	private final boolean mainMap;
+	/** Fills the main map in from the world's save, in singleplayer; null elsewhere and when turned off. */
+	private @Nullable SavedChunkImport savedChunks;
+	/** Surface biomes of the land seen, for the map's tooltip on a server; null in singleplayer, where the world's save has them. */
+	private final @Nullable SeenBiomes seenBiomes;
+	private final Crafts crafts;
+	/** Portals found in the save, waiting for the client thread to pin them. */
+	private final Queue<Portals.Spot> savedPortals = new ConcurrentLinkedQueue<>();
+	private final Lights lights;
 	private final Map<Long, Pending> pending = new LinkedHashMap<>();
 	private boolean underground;
+	/** The slice {@link #autoLayer} shows underground, or {@link TileKey#SURFACE} before one is picked. */
+	private int caveLayer = TileKey.SURFACE;
 	private MapStyle style = MapStyle.get();
 
 	private MapSession(ClientLevel level, @Nullable String key) {
 		this.level = level;
 		// The Nether's roof: its sky view looks down from just under it.
 		int roof = level.dimensionType().hasCeiling() ? level.getMinBuildHeight() + level.dimensionType().logicalHeight() : MapLevel.NO_ROOF;
-		this.map = new MapLevel(level.getMinBuildHeight(), (level.getMaxBuildHeight() - 1) + 1, roof, mapFolder(level, key));
+		// Before the map opens: the folder it saves in goes by which way it faces.
+		Projection.setFacing(key == null ? Facing.NORTH : Maps.of(key).facing());
+		Path folder = mapFolder(level, key);
+		this.map = new MapLevel(level.getMinBuildHeight(), (level.getMaxBuildHeight() - 1) + 1, roof, folder);
+		this.mainMap = key != null && Maps.of(key).active(level.dimension().location().toString()).isEmpty();
+		this.seenBiomes = folder == null || Minecraft.getInstance().getSingleplayerServer() != null ? null : new SeenBiomes(folder.resolve("biomes"));
+		this.crafts = new Crafts(level, this.map, folder, this::lookAgain);
+		this.lights = new Lights(level, this.map);
 	}
 
-	/** {@code .minecraft/diorama/<world>/<dimension>}, or null outside a world. */
+	/** Snapshots the chunks under a world box again, as its blocks may have changed unseen. */
+	private void lookAgain(int[] box) {
+		int[] change = {box[0] - 1, box[1] - 1, box[2] - 1, box[3] + 1, box[4] + 1, box[5] + 1, MapLevel.CHANGED_SURFACE};
+		for (int cx = change[0] >> 4; cx <= change[3] >> 4; cx++) {
+			for (int cz = change[2] >> 4; cz <= change[5] >> 4; cz++) {
+				this.schedule(cx, cz, CHANGE_DELAY_MS, change);
+			}
+		}
+	}
+
+	/** Stops filling in from the save, then saves and closes the map. */
+	private void end() {
+		if (this.savedChunks != null) {
+			this.savedChunks.stop();
+		}
+		this.lights.close();
+		if (this.seenBiomes != null) {
+			this.seenBiomes.close();
+		}
+		this.crafts.close(this.ticks);
+		this.map.close();
+	}
+
+	/** The folder of the dimension's map in use ({@link Maps}), or null outside a world. */
 	private static @Nullable Path mapFolder(ClientLevel level, @Nullable String key) {
 		if (key == null) {
 			return null;
 		}
-		return WorldKey.folder(key).resolve(WorldKey.key("dim", level.dimension().location().toString()));
+		Maps maps = Maps.of(key);
+		String dimension = level.dimension().location().toString();
+		return maps.tileFolder(dimension, maps.active(dimension));
+	}
+
+	/**
+	 * The player switched a dimension to another of its maps. If it's this one, the map is saved and
+	 * closed as on a dimension change, and the next tick starts one on the other map; its sweep for
+	 * loaded chunks maps what's around the player again.
+	 */
+	public static void mapChanged(String dimension) {
+		if (current != null && current.level.dimension().location().toString().equals(dimension)) {
+			current.end();
+			current = null;
+		}
+	}
+
+	/** The player turned the map: this world's other dimensions pick it up as they open. */
+	public static void facingChanged() {
+		if (current != null) {
+			current.map.colorsChanged();
+		}
+	}
+
+	/** Turns this world's map by quarter turns, outside the map screen. False if there is no map here or the facing couldn't be saved. */
+	public static boolean turn(int steps) {
+		Maps maps = Maps.get();
+		if (maps == null || current == null) {
+			return false;
+		}
+		Facing now = Projection.facing().next(steps);
+		if (!maps.facing(now)) {
+			return false;
+		}
+		Projection.setFacing(now);
+		facingChanged();
+		return true;
 	}
 
 	public static @Nullable MapSession get() {
 		return current;
+	}
+
+	/** For tests: how many sessions have started, one each time the player's level changes. */
+	public static int started() {
+		return started;
 	}
 
 	/**
@@ -82,8 +186,19 @@ public final class MapSession {
 	/** Saves and ends the session. For closing the game; leaving a world is noticed by {@link #tick}. */
 	public static void close() {
 		if (current != null) {
-			current.map.close();
+			current.end();
 			current = null;
+		}
+	}
+
+	/**
+	 * Takes a finished tile, unless the frame already drew a GPU bake ({@code baked}). Call every
+	 * frame, on the render thread.
+	 */
+	public static void frame(boolean baked) {
+		MapSession session = current;
+		if (session != null && !baked && session.level == mc().level) {
+			session.map.takeFinished(1);
 		}
 	}
 
@@ -120,8 +235,17 @@ public final class MapSession {
 	 */
 	private static @Nullable MapSession forLevel(@Nullable ClientLevel level) {
 		if (current != null && current.level != level) {
-			current.map.close();
+			current.end();
 			current = null;
+		}
+		if (level != null && ServerRules.mapOff(level.dimension().location().toString())) {
+			// The map is off in this dimension: nothing is mapped or saved there, and what was
+			// mapped before stays as it is on disk.
+			if (current != null) {
+				current.end();
+				current = null;
+			}
+			return null;
 		}
 		if (level != null && current == null) {
 			String key = WorldKey.current(level);
@@ -129,12 +253,30 @@ public final class MapSession {
 				return null;
 			}
 			current = new MapSession(level, key);
-			BlockLooks.invalidate();
+			started++;
 		}
 		return current;
 	}
 
+	/**
+	 * Who the map follows: whoever the camera is on. Watching through another player or a mob, the
+	 * server moves the camera, and itself, while this client's own player stays where it started,
+	 * so everything about where the view is goes by this. Only what's about the player's self, like
+	 * their deaths, their bed and what they're allowed to see, stays on {@code mc.player}.
+	 */
+	public static @Nullable Entity viewer() {
+		Minecraft mc = mc();
+		Entity camera = mc.getCameraEntity();
+		return camera != null ? camera : mc.player;
+	}
+
 	public static void chunkLoaded(ClientLevel level, LevelChunk chunk) {
+		// Immersive Portals keeps the levels seen through its portals loaded too, and their chunks
+		// arrive while the client is briefly switched to them. The map follows the player's level.
+		LocalPlayer player = Minecraft.getInstance().player;
+		if (player == null || player.level() != level) {
+			return;
+		}
 		// Chunks can arrive before the first client tick of a new level, so this may start the session.
 		MapSession session = forLevel(level);
 		if (session == null) {
@@ -149,7 +291,7 @@ public final class MapSession {
 		int reach = ChunkSnapshot.BIOME_REACH;
 		for (int dx = -1; dx <= 1; dx++) {
 			for (int dz = -1; dz <= 1; dz++) {
-				ChunkSnapshot around = session.map.chunk(cx + dx, cz + dz);
+				ChunkSnapshot around = session.map.worldChunk(cx + dx, cz + dz);
 				if ((dx == 0 && dz == 0) || around == null || around.hasBiomesAround(-dx, -dz)) {
 					continue;
 				}
@@ -165,14 +307,24 @@ public final class MapSession {
 		}
 	}
 
+	private static boolean sameFromEverySide(BlockLooks looks, BlockState oldState, BlockState newState) {
+		for (Facing facing : Facing.values()) {
+			int oldId = Block.BLOCK_STATE_REGISTRY.getId(facing.turned(oldState));
+			int newId = Block.BLOCK_STATE_REGISTRY.getId(facing.turned(newState));
+			if (oldId < 0 || newId < 0 || !looks.sameLook(oldId, newId)) {
+				return false;
+			}
+		}
+		return true;
+	}
+
 	public static void blockChanged(ClientLevel level, BlockPos pos, BlockState oldState, BlockState newState) {
 		if (current == null || current.level != level) {
 			return;
 		}
 		BlockLooks looks = BlockLooks.get();
-		int oldId = Block.BLOCK_STATE_REGISTRY.getId(oldState);
-		int newId = Block.BLOCK_STATE_REGISTRY.getId(newState);
-		if (looks != null && oldId >= 0 && newId >= 0 && looks.sameLook(oldId, newId)) {
+		// Only a change no side shows: the snapshot is kept for every facing the map can turn to.
+		if (looks != null && sameFromEverySide(looks, oldState, newState)) {
 			return;
 		}
 		if (DEBUG_CHANGES) {
@@ -185,6 +337,10 @@ public final class MapSession {
 		}
 		int cx = pos.getX() >> 4;
 		int cz = pos.getZ() >> 4;
+		if (SubLevels.holds(level, cx, cz)) {
+			SubLevels.edited(cx, cz);
+			return;
+		}
 		int surface = current.visibleFromSky(pos) ? MapLevel.CHANGED_SURFACE : 0;
 		int[] box = {pos.getX(), pos.getY(), pos.getZ(), pos.getX(), pos.getY(), pos.getZ(), surface};
 		current.schedule(cx, cz, CHANGE_DELAY_MS, box);
@@ -214,7 +370,11 @@ public final class MapSession {
 		if (!Copycats.INSTALLED || current == null || current.level != level) {
 			return;
 		}
-		ChunkSnapshot snapshot = current.map.chunk(pos.getX() >> 4, pos.getZ() >> 4);
+		if (SubLevels.holds(level, pos.getX() >> 4, pos.getZ() >> 4)) {
+			SubLevels.edited(pos.getX() >> 4, pos.getZ() >> 4);
+			return;
+		}
+		ChunkSnapshot snapshot = current.map.worldChunk(pos.getX() >> 4, pos.getZ() >> 4);
 		if (snapshot == null || Copycats.material(level.getBlockEntity(pos)) == snapshot.copycatMaterial(pos.getX(), pos.getY(), pos.getZ())) {
 			return;
 		}
@@ -231,23 +391,49 @@ public final class MapSession {
 	 * own work (a torch placed, a wall opened, a roof closed). Cave slices draw light, and so do
 	 * spawn spots, so the surface re-bakes too while they're on.
 	 */
-	public static void lightSectionChanged(ClientChunkCache source, SectionPos section) {
+	public static void lightSectionChanged(ClientChunkCache source, SectionPos section, boolean blockLight) {
 		if (current != null && current.level.getChunkSource() == source) {
 			int x0 = section.minBlockX();
 			int y0 = section.minBlockY();
 			int z0 = section.minBlockZ();
 			int surface = current.map.spawnSpots() || current.map.roofless() ? MapLevel.CHANGED_SURFACE_LIGHT : 0;
+			if (blockLight && current.keepsBlockLight() && current.reachesSurface(section.x(), section.z(), y0 + 15)) {
+				surface |= MapLevel.CHANGED_BLOCK_LIGHT;
+			}
 			current.schedule(section.x(), section.z(), CHANGE_DELAY_MS, new int[] {x0, y0, z0, x0 + 15, y0 + 15, z0 + 15, surface});
 		}
 	}
 
-	public static void lightUpdated(ClientLevel level, int chunkX, int chunkZ) {
+	/**
+	 * Server light for a chunk was applied; {@code blockLight} has a bit for each light section
+	 * (from one below the world's lowest) whose block light it sent.
+	 */
+	public static void lightUpdated(ClientLevel level, int chunkX, int chunkZ, java.util.BitSet blockLight) {
 		if (current != null && current.level == level) {
 			int x0 = chunkX << 4;
 			int z0 = chunkZ << 4;
 			int surface = current.map.spawnSpots() || current.map.roofless() ? MapLevel.CHANGED_SURFACE_LIGHT : 0;
+			int highest = blockLight.length() - 1;
+			if (highest >= 0 && current.keepsBlockLight()
+				&& current.reachesSurface(chunkX, chunkZ, ((level.getMinSection() - 1 + highest) << 4) + 15)) {
+				surface |= MapLevel.CHANGED_BLOCK_LIGHT;
+			}
 			current.schedule(chunkX, chunkZ, CHANGE_DELAY_MS, new int[] {x0, level.getMinBuildHeight(), z0, x0 + 15, (level.getMaxBuildHeight() - 1), z0 + 15, surface});
 		}
+	}
+
+	/**
+	 * Whether a block light change reaching up to {@code top} in this chunk can show in the sky view:
+	 * up to its lowest visible surface or higher. A torch placed deep in a mine can't.
+	 */
+	private boolean reachesSurface(int chunkX, int chunkZ, int top) {
+		dev.diorama.data.ChunkSnapshot chunk = this.map.worldChunk(chunkX, chunkZ);
+		return chunk == null || top >= chunk.floorY;
+	}
+
+	/** Whether this dimension's sky view keeps its block light, for the night: it isn't under a roof, and its time moves. */
+	private boolean keepsBlockLight() {
+		return !this.map.roofless() && !this.level.dimensionType().hasFixedTime();
 	}
 
 	/**
@@ -278,6 +464,14 @@ public final class MapSession {
 	 * {x0, y0, z0, x1, y1, z1, visibleFromSky}; null means the whole chunk is new.
 	 */
 	private void schedule(int chunkX, int chunkZ, long delayMs, int @Nullable [] box) {
+		// The chunks a Create Aeronautics ship keeps its blocks in aren't land: the ship is drawn where it flies.
+		if (SubLevels.holds(this.level, chunkX, chunkZ)) {
+			// A chunk of a ship arriving: the ship is read again with it.
+			if (box == null) {
+				SubLevels.edited(chunkX, chunkZ);
+			}
+			return;
+		}
 		long key = ChunkSnapshot.key(chunkX, chunkZ);
 		long due = System.currentTimeMillis() + delayMs;
 		Pending p = this.pending.get(key);
@@ -310,13 +504,13 @@ public final class MapSession {
 	private int ticks;
 
 	/** Queues any loaded chunk the map hasn't seen, in case its load event was missed. */
-	private void sweepLoadedChunks(LocalPlayer player) {
+	private void sweepLoadedChunks(Entity viewer) {
 		int radius = mc().options.renderDistance().get() + 2;
-		int pcx = player.blockPosition().getX() >> 4;
-		int pcz = player.blockPosition().getZ() >> 4;
+		int pcx = viewer.blockPosition().getX() >> 4;
+		int pcz = viewer.blockPosition().getZ() >> 4;
 		for (int cx = pcx - radius; cx <= pcx + radius; cx++) {
 			for (int cz = pcz - radius; cz <= pcz + radius; cz++) {
-				if (this.map.chunk(cx, cz) == null && !this.pending.containsKey(ChunkSnapshot.key(cx, cz))
+				if (this.map.worldChunk(cx, cz) == null && !this.pending.containsKey(ChunkSnapshot.key(cx, cz))
 					&& this.level.getChunkSource().getChunk(cx, cz, ChunkStatus.FULL, false) != null) {
 					this.schedule(cx, cz, 0, null);
 				}
@@ -325,13 +519,13 @@ public final class MapSession {
 	}
 
 	private void resnapshotLoaded() {
-		LocalPlayer player = mc().player;
-		if (player == null) {
+		Entity viewer = viewer();
+		if (viewer == null) {
 			return;
 		}
 		int radius = mc().options.renderDistance().get() + 2;
-		int pcx = player.blockPosition().getX() >> 4;
-		int pcz = player.blockPosition().getZ() >> 4;
+		int pcx = viewer.blockPosition().getX() >> 4;
+		int pcz = viewer.blockPosition().getZ() >> 4;
 		for (int cx = pcx - radius; cx <= pcx + radius; cx++) {
 			for (int cz = pcz - radius; cz <= pcz + radius; cz++) {
 				if (this.level.getChunkSource().getChunk(cx, cz, ChunkStatus.FULL, false) != null) {
@@ -345,17 +539,76 @@ public final class MapSession {
 		return Minecraft.getInstance();
 	}
 
+	/**
+	 * Starts or stops drawing from the save: filling the map in, with the setting, and redrawing what
+	 * a map remembers, which every map needs, but only as far as it remembers without the setting.
+	 */
+	private void updateSavedChunks(Minecraft mc) {
+		boolean fill = Settings.get().mapSavedChunks && this.mainMap;
+		boolean singleplayer = mc.getSingleplayerServer() != null;
+		if (this.relight == null) {
+			this.relight = singleplayer && SavedChunkImport.needsRelight(this.map, this.level);
+		}
+		// Only for the relighting: done once it has gone through the save.
+		if (this.relight && !fill && this.map.memory() == null && this.savedChunks != null && this.savedChunks.idle()) {
+			this.relight = false;
+		}
+		// On a server with Diorama, the land it shares, which only fills in.
+		boolean on = singleplayer ? fill || this.map.memory() != null || this.relight : fill && ShareClient.sharing();
+		if (on && this.savedChunks == null) {
+			this.savedChunks = singleplayer
+				? SavedChunkImport.start(this.map, this.level, this.savedPortals::addAll)
+				: SavedChunkImport.startShared(this.map, this.level, this.savedPortals::addAll);
+			if (this.savedChunks == null) {
+				return;
+			}
+		} else if (!on && this.savedChunks != null) {
+			this.savedChunks.stop();
+			this.savedChunks = null;
+		}
+		if (this.savedChunks != null) {
+			this.savedChunks.onlyRemembered(!fill);
+		}
+	}
+
+	/** Whether ground drawn before tiles kept their block light is waiting to be drawn again from the save; null before it's checked. */
+	private @Nullable Boolean relight;
+
+	/** What's filling the map in from the save, or null if nothing is. */
+	public @Nullable SavedChunkImport savedChunks() {
+		return this.savedChunks;
+	}
+
 	private void tickSession(Minecraft mc) {
-		LocalPlayer player = mc.player;
-		if (player != null && this.ticks++ % 40 == 0) {
-			this.sweepLoadedChunks(player);
+		this.updateSavedChunks(mc);
+		Entity viewer = viewer();
+		if (viewer != null && this.ticks++ % 40 == 0) {
+			this.sweepLoadedChunks(viewer);
 		}
 		if (this.ticks % 600 == 0) {
 			this.map.saveSeen();
+			if (this.seenBiomes != null) {
+				this.seenBiomes.save();
+			}
 		}
-		int playerChunkX = player == null ? 0 : player.blockPosition().getX() >> 4;
-		int playerChunkZ = player == null ? 0 : player.blockPosition().getZ() >> 4;
+		int playerChunkX = viewer == null ? 0 : viewer.blockPosition().getX() >> 4;
+		int playerChunkZ = viewer == null ? 0 : viewer.blockPosition().getZ() >> 4;
 		long now = System.currentTimeMillis();
+		boolean fog = ServerRules.fogOfWar(this.level.dimension() == Level.NETHER, this.map.roofless());
+		String dimension = this.level.dimension().location().toString();
+		// Under fog of war only what the player has seen shows, and these aren't that.
+		WaypointStore pins = fog ? null : WaypointStore.get();
+		List<Portals.Spot> saved = new ArrayList<>();
+		for (Portals.Spot spot; (spot = this.savedPortals.poll()) != null; ) {
+			saved.add(spot);
+		}
+		if (pins != null) {
+			Portals.add(saved, dimension, pins, this.map.roof());
+			if (viewer != null && this.ticks % 20 == 0) {
+				BlockPos at = viewer.blockPosition();
+				Portals.playerAt(at.getX(), at.getY(), at.getZ(), dimension, pins, this.map.world());
+			}
+		}
 		int budget = SNAPSHOTS_PER_TICK;
 		Iterator<Map.Entry<Long, Pending>> it = this.pending.entrySet().iterator();
 		while (it.hasNext() && budget > 0) {
@@ -368,26 +621,40 @@ public final class MapSession {
 			long key = entry.getKey();
 			int cx = (int) (key >> 32);
 			int cz = (int) key;
-			if (this.level.getChunkSource().getChunk(cx, cz, ChunkStatus.FULL, false) instanceof LevelChunk chunk) {
-				boolean known = this.map.chunk(cx, cz) != null;
-				this.map.put(ChunkSnapshot.take(chunk, this.level), known ? p.box : null, playerChunkX, playerChunkZ);
+			// Through Object: where getChunk already returns a LevelChunk, Java 17 (the 1.20.1 jar's)
+			// refuses an instanceof pattern that can't fail.
+			Object loaded = this.level.getChunkSource().getChunk(cx, cz, ChunkStatus.FULL, false);
+			if (loaded instanceof LevelChunk chunk) {
+				boolean known = this.map.worldChunk(cx, cz) != null;
+				ChunkSnapshot snapshot = ChunkSnapshot.take(chunk, this.level);
+				this.map.put(snapshot, known ? p.box : null, playerChunkX, playerChunkZ);
+				if (this.seenBiomes != null) {
+					this.seenBiomes.record(chunk);
+				}
+				if (pins != null) {
+					Portals.chunkSeen(snapshot, dimension, pins, this.map.world());
+				}
 				budget--;
 			}
 		}
-		boolean fog = ServerRules.fogOfWar(this.level.dimension() == Level.NETHER);
 		if (Diorama.DEBUG && fog != this.map.fogOfWar()) {
 			Diorama.LOGGER.info("Fog of war {}; underground={}", fog, this.underground);
 		}
 		this.map.setFogOfWar(fog);
 		Settings settings = Settings.get();
+		this.map.setDepthCaves(settings.legibleCaves);
 		boolean spawnSpots = settings.spawnSpots != Settings.SpawnSpots.OFF;
 		boolean overlays = settings.chunkGrid || settings.slimeChunks || spawnSpots;
 		this.map.setOverlays(overlays ? new Overlays(this.slimeSeed(), spawnSpots) : null);
 		this.map.update();
-		if (player != null) {
-			this.updateUnderground(player);
-			if (this.underground) {
-				this.updateSight(player);
+		this.crafts.tick(viewer, this.ticks);
+		if (viewer != null) {
+			this.updateUnderground(viewer);
+			if (!this.underground) {
+				this.caveLayer = TileKey.SURFACE;
+			} else {
+				this.updateCaveLayer(viewer);
+				this.updateSight(viewer);
 			}
 		}
 	}
@@ -397,9 +664,9 @@ public final class MapSession {
 	private @Nullable CaveSight sight;
 
 	/** Marks the blocks the player can see (see {@link CaveSight}) when their eyes move to a new block. */
-	private void updateSight(LocalPlayer player) {
+	private void updateSight(Entity viewer) {
 		BlockLooks looks = BlockLooks.get();
-		BlockPos eye = BlockPos.containing(player.getEyePosition());
+		BlockPos eye = BlockPos.containing(viewer.getEyePosition());
 		if (looks == null || eye.equals(this.lastSightOrigin) && this.sightCooldown-- > 0) {
 			return;
 		}
@@ -408,7 +675,7 @@ public final class MapSession {
 		if (this.sight == null) {
 			this.sight = new CaveSight(this.level);
 		}
-		int[] box = this.sight.spread(looks, player.getEyePosition(), this.map.seen());
+		int[] box = this.sight.spread(looks, viewer.getEyePosition(), this.map.seen());
 		if (Diorama.DEBUG) {
 			Diorama.LOGGER.info("Sight from {}: visited {}, newly seen box {}", eye, this.sight.visited(), java.util.Arrays.toString(box));
 		}
@@ -419,12 +686,12 @@ public final class MapSession {
 
 	private static final Direction[] DIRECTIONS = Direction.values();
 
-	private void updateUnderground(LocalPlayer player) {
+	private void updateUnderground(Entity viewer) {
 		if (this.level.dimensionType().hasCeiling()) {
 			this.underground = true;
 			return;
 		}
-		BlockPos eye = BlockPos.containing(player.getEyePosition());
+		BlockPos eye = BlockPos.containing(viewer.getEyePosition());
 		int sky = this.level.getBrightness(LightLayer.SKY, eye);
 		boolean covered = !this.level.canSeeSky(eye);
 		// Separate thresholds so walking along a cave mouth doesn't flip the map back and forth.
@@ -435,21 +702,67 @@ public final class MapSession {
 		}
 	}
 
+	/** Surface biomes of the land seen on a server; null in singleplayer. */
+	public @Nullable SeenBiomes seenBiomes() {
+		return this.seenBiomes;
+	}
+
 	public MapLevel map() {
 		return this.map;
+	}
+
+	public Crafts crafts() {
+		return this.crafts;
+	}
+
+	public Lights lights() {
+		return this.lights;
 	}
 
 	public boolean isUnderground() {
 		return this.underground;
 	}
 
-	/** The cave slice for a player standing at {@code feetY}: a few blocks above their head. */
+	/** The cave slice for a player standing at {@code feetY}: 2 to 5 blocks above their head, so ground a step or two up still shows. */
 	public static int caveLayerFor(double feetY) {
-		return Math.floorDiv(Mth.floor(feetY) + 5, 4) * 4;
+		return Math.floorDiv(Mth.floor(feetY) + 7, 4) * 4;
 	}
 
 	/** The layer the minimap should show right now. */
-	public int autoLayer(LocalPlayer player) {
-		return this.underground ? caveLayerFor(player.getY()) : TileKey.SURFACE;
+	public int autoLayer(Entity viewer) {
+		if (!this.underground) {
+			return TileKey.SURFACE;
+		}
+		// A roof overhead isn't the same as being in a cave. Unless the player asks for caves
+		// anyway, keep the surface view until there's real rock above them.
+		if (Settings.get().preferSurface && this.depthToSky(BlockPos.containing(viewer.getEyePosition())) < MIN_CAVE_DEPTH) {
+			return TileKey.SURFACE;
+		}
+		return this.caveLayer(viewer);
+	}
+
+	/** The cave slice for where the viewer is, as the minimap shows it underground. */
+	public int caveLayer(Entity viewer) {
+		return this.caveLayer == TileKey.SURFACE ? caveLayerFor(viewer.getY()) : this.caveLayer;
+	}
+
+	/** Follows the player down at once, but up only once the cut comes within a block of their head, so a jump doesn't swap the slice. */
+	private void updateCaveLayer(Entity viewer) {
+		int wanted = caveLayerFor(viewer.getY());
+		if (this.caveLayer == TileKey.SURFACE || wanted < this.caveLayer || this.caveLayer <= Mth.floor(viewer.getY()) + 2) {
+			this.caveLayer = wanted;
+		}
+	}
+
+	/** Blocks between the eye and the first place open to the sky, or more than {@link #MAX_SKY_DEPTH}. */
+	private int depthToSky(BlockPos eye) {
+		BlockPos.MutableBlockPos pos = new BlockPos.MutableBlockPos();
+		int top = Math.min((this.level.getMaxBuildHeight() - 1), eye.getY() + MAX_SKY_DEPTH);
+		for (int y = eye.getY(); y <= top; y++) {
+			if (this.level.getBrightness(LightLayer.SKY, pos.set(eye.getX(), y, eye.getZ())) >= 15) {
+				return y - eye.getY();
+			}
+		}
+		return MAX_SKY_DEPTH + 1;
 	}
 }

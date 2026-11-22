@@ -5,10 +5,9 @@ import dev.diorama.render.gpu.MapCanvas;
 import dev.diorama.render.gpu.MapTexture;
 import dev.diorama.render.gpu.Sampling;
 import java.util.HashMap;
-import java.util.HashSet;
 import java.util.Iterator;
+import java.util.LinkedHashMap;
 import java.util.Map;
-import java.util.Set;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
@@ -28,15 +27,26 @@ public final class Markers {
 	});
 	private static final Map<Long, MapTexture> ARROWS = new HashMap<>();
 	private static final Map<Long, CompletableFuture<int[]>> DRAWING = new HashMap<>();
-	private static final Set<Long> STARTED = new HashSet<>();
+	/**
+	 * The sizes and colours with textures, the one drawn longest ago first. Only the last few are
+	 * kept: the minimap's, the map's and its button's, and not one for every step the size slider
+	 * was dragged over.
+	 */
+	private static final LinkedHashMap<Long, Boolean> STYLES = new LinkedHashMap<>(8, 0.75F, true);
+	private static final int STYLES_KEPT = 4;
 
 	private Markers() {
 	}
 
 	/**
 	 * The player arrow at a screen point: the voxel arrow from {@link ArrowArt}, centred on the
-	 * player's spot. {@code yawDegrees} is Minecraft's yaw: 0 faces south, 90 faces west.
+	 * player's spot. {@code yawDegrees} is Minecraft's yaw: 0 faces south, 90 faces west, on a map
+	 * facing north; see {@link #onMap}.
 	 */
+	public static float onMap(float yawDegrees) {
+		return yawDegrees - 90 * Projection.facing().turns;
+	}
+
 	public static void player(GuiGraphics graphics, float x, float y, float yawDegrees, float size) {
 		int heading = Math.floorMod(Math.round(yawDegrees / (360.0F / HEADINGS)), HEADINGS);
 		dev.diorama.Settings settings = dev.diorama.Settings.get();
@@ -61,7 +71,8 @@ public final class Markers {
 		double cos = Projection.cos();
 		// The colour's index takes three bits above the size; the key times HEADINGS still fits a long.
 		long style = ((long) (colour & 7) << 12 | Math.round(size * 4) & 0xFFF) << 40 | Math.round(sin * 10000) << 20 | Math.round(cos * 10000);
-		if (STARTED.add(style)) {
+		if (STYLES.put(style, true) == null) {
+			forgetOldest();
 			for (int i = 0; i < HEADINGS; i++) {
 				int h = (heading + i) % HEADINGS;
 				double yaw = h * 360.0 / HEADINGS;
@@ -85,6 +96,24 @@ public final class Markers {
 			}
 		}
 		return ARROWS.get(style * HEADINGS + heading);
+	}
+
+	/** Frees the textures of the style drawn longest ago, past the few kept. */
+	private static void forgetOldest() {
+		Iterator<Long> oldest = STYLES.keySet().iterator();
+		while (STYLES.size() > STYLES_KEPT && oldest.hasNext()) {
+			long style = oldest.next();
+			oldest.remove();
+			DRAWING.keySet().removeIf(key -> key / HEADINGS == style);
+			Iterator<Map.Entry<Long, MapTexture>> textures = ARROWS.entrySet().iterator();
+			while (textures.hasNext()) {
+				Map.Entry<Long, MapTexture> entry = textures.next();
+				if (entry.getKey() / HEADINGS == style) {
+					entry.getValue().close();
+					textures.remove();
+				}
+			}
+		}
 	}
 
 	private static void upload(long key) {

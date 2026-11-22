@@ -501,6 +501,48 @@ public final class SystemEvents {
                   );
                }
             }
+         } else if (TitleDefinitions.isTheRealHatter(player)) {
+            boolean wasHatter = data.isTheRealHatter();
+            data.setTheRealHatter(true);
+            if (!wasHatter || data.equippedTitle().isEmpty()) {
+               data.setEquippedTitle("the_mad_hatter");
+               AwakeningSystemMod.sync(player);
+               player.playNotifySound(SoundEvents.UI_TOAST_CHALLENGE_COMPLETE, SoundSource.PLAYERS, 1.2F, 1.2F);
+               player.playNotifySound(SoundEvents.PLAYER_LEVELUP, SoundSource.PLAYERS, 1.0F, 1.3F);
+               player.connection.send(new ClientboundSetTitlesAnimationPacket(10, 80, 20));
+               player.connection.send(new ClientboundSetTitleTextPacket(Component.translatable("awakening_system.title.the_mad_hatter_unlocked.title")));
+               player.connection.send(new ClientboundSetSubtitleTextPacket(Component.translatable("awakening_system.title.the_mad_hatter_unlocked.subtitle")));
+               if (!wasHatter) {
+                  AwakeningSystemMod.notify(
+                     player,
+                     "awakening_system.notification.the_mad_hatter_title.title",
+                     "awakening_system.notification.the_mad_hatter_title.message",
+                     -16711936,
+                     new Object[0]
+                  );
+               }
+            }
+         } else if (TitleDefinitions.isWraith(player)) {
+            boolean wasWraith = data.isWraith();
+            data.setWraith(true);
+            if (!wasWraith || data.equippedTitle().isEmpty()) {
+               data.setEquippedTitle("orthax");
+               AwakeningSystemMod.sync(player);
+               player.playNotifySound(SoundEvents.UI_TOAST_CHALLENGE_COMPLETE, SoundSource.PLAYERS, 1.2F, 1.2F);
+               player.playNotifySound(SoundEvents.PLAYER_LEVELUP, SoundSource.PLAYERS, 1.0F, 1.3F);
+               player.connection.send(new ClientboundSetTitlesAnimationPacket(10, 80, 20));
+               player.connection.send(new ClientboundSetTitleTextPacket(Component.translatable("awakening_system.title.orthax_unlocked.title")));
+               player.connection.send(new ClientboundSetSubtitleTextPacket(Component.translatable("awakening_system.title.orthax_unlocked.subtitle")));
+               if (!wasWraith) {
+                  AwakeningSystemMod.notify(
+                     player,
+                     "awakening_system.notification.orthax_title.title",
+                     "awakening_system.notification.orthax_title.message",
+                     -11141121,
+                     new Object[0]
+                  );
+               }
+            }
          } else if ((
                data.conqueredRankerTower()
                   || data.conqueredNineTribulationsPagoda()
@@ -643,21 +685,23 @@ public final class SystemEvents {
             String masterTag = "shadow_master_" + player.getUUID();
 
             for (ServerLevel sLevel : player.getServer().getAllLevels()) {
-               for (Entity ent : sLevel.getAllEntities()) {
-                  if (ent instanceof Mob m) {
-                     if (!m.getTags().contains(masterTag) && !m.getTags().contains("shadow_soldier")) {
-                        if (ent instanceof CompanionEntity comp && player.getUUID().equals(comp.getOwnerUUID())) {
-                           comp.setTarget(null);
-                           comp.setLastHurtByMob(null);
-                        }
-                     } else {
-                        if (m.getTarget() != null && m.getTarget().getUUID().equals(player.getUUID())) {
-                           m.setTarget(null);
-                        }
+               List<Mob> levelMobs = new ArrayList<>();
+               for (Mob m : sLevel.getEntities(EntityTypeTest.forClass(Mob.class), mob -> true)) {
+                  levelMobs.add(m);
+               }
+               for (Mob m : levelMobs) {
+                  if (!m.getTags().contains(masterTag) && !m.getTags().contains("shadow_soldier")) {
+                     if (m instanceof CompanionEntity comp && player.getUUID().equals(comp.getOwnerUUID())) {
+                        comp.setTarget(null);
+                        comp.setLastHurtByMob(null);
+                     }
+                  } else {
+                     if (m.getTarget() != null && m.getTarget().getUUID().equals(player.getUUID())) {
+                        m.setTarget(null);
+                     }
 
-                        if (m.getLastHurtByMob() != null && m.getLastHurtByMob().getUUID().equals(player.getUUID())) {
-                           m.setLastHurtByMob(null);
-                        }
+                     if (m.getLastHurtByMob() != null && m.getLastHurtByMob().getUUID().equals(player.getUUID())) {
+                        m.setLastHurtByMob(null);
                      }
                   }
                }
@@ -780,6 +824,24 @@ public final class SystemEvents {
                || player.getPersistentData().contains("dungeon_preserved_inventory", 9)
          )) {
          event.setCanceled(true);
+         return;
+      }
+
+      if (event.getSource() != null && event.getSource().getEntity() instanceof ServerPlayer killer) {
+         SystemData kData = data(killer);
+         if (kData != null && ("creator".equals(kData.equippedTitle()) || "the_mad_hatter".equals(kData.equippedTitle()))) {
+            for (net.minecraft.world.entity.item.ItemEntity itemEntity : new java.util.ArrayList<>(event.getDrops())) {
+               ItemStack stack = itemEntity.getItem();
+               if (!stack.isEmpty()) {
+                  ItemStack extra = stack.copy();
+                  net.minecraft.world.entity.item.ItemEntity extraEntity = new net.minecraft.world.entity.item.ItemEntity(
+                     itemEntity.level(), itemEntity.getX(), itemEntity.getY(), itemEntity.getZ(), extra
+                  );
+                  extraEntity.setDefaultPickUpDelay();
+                  event.getDrops().add(extraEntity);
+               }
+            }
+         }
       }
    }
 
@@ -854,21 +916,23 @@ public final class SystemEvents {
             String masterTag = "shadow_master_" + player.getUUID();
 
             for (ServerLevel sLevel : player.getServer().getAllLevels()) {
-               for (Entity ent : sLevel.getAllEntities()) {
-                  if (ent instanceof Mob m) {
-                     if (!m.getTags().contains(masterTag) && !m.getTags().contains("shadow_soldier")) {
-                        if (ent instanceof CompanionEntity comp && player.getUUID().equals(comp.getOwnerUUID())) {
-                           comp.setTarget(null);
-                           comp.setLastHurtByMob(null);
-                        }
-                     } else {
-                        if (m.getTarget() != null && m.getTarget().getUUID().equals(player.getUUID())) {
-                           m.setTarget(null);
-                        }
+               List<Mob> levelMobs = new ArrayList<>();
+               for (Mob m : sLevel.getEntities(EntityTypeTest.forClass(Mob.class), mob -> true)) {
+                  levelMobs.add(m);
+               }
+               for (Mob m : levelMobs) {
+                  if (!m.getTags().contains(masterTag) && !m.getTags().contains("shadow_soldier")) {
+                     if (m instanceof CompanionEntity comp && player.getUUID().equals(comp.getOwnerUUID())) {
+                        comp.setTarget(null);
+                        comp.setLastHurtByMob(null);
+                     }
+                  } else {
+                     if (m.getTarget() != null && m.getTarget().getUUID().equals(player.getUUID())) {
+                        m.setTarget(null);
+                     }
 
-                        if (m.getLastHurtByMob() != null && m.getLastHurtByMob().getUUID().equals(player.getUUID())) {
-                           m.setLastHurtByMob(null);
-                        }
+                     if (m.getLastHurtByMob() != null && m.getLastHurtByMob().getUUID().equals(player.getUUID())) {
+                        m.setLastHurtByMob(null);
                      }
                   }
                }
@@ -1119,21 +1183,23 @@ public final class SystemEvents {
             String masterTag = "shadow_master_" + player.getUUID();
 
             for (ServerLevel sLevel : player.getServer().getAllLevels()) {
-               for (Entity ent : sLevel.getAllEntities()) {
-                  if (ent instanceof Mob m) {
-                     if (!m.getTags().contains(masterTag) && !m.getTags().contains("shadow_soldier")) {
-                        if (ent instanceof CompanionEntity comp && player.getUUID().equals(comp.getOwnerUUID())) {
-                           comp.setTarget(null);
-                           comp.setLastHurtByMob(null);
-                        }
-                     } else {
-                        if (m.getTarget() != null && m.getTarget().getUUID().equals(player.getUUID())) {
-                           m.setTarget(null);
-                        }
+               List<Mob> levelMobs = new ArrayList<>();
+               for (Mob m : sLevel.getEntities(EntityTypeTest.forClass(Mob.class), mob -> true)) {
+                  levelMobs.add(m);
+               }
+               for (Mob m : levelMobs) {
+                  if (!m.getTags().contains(masterTag) && !m.getTags().contains("shadow_soldier")) {
+                     if (m instanceof CompanionEntity comp && player.getUUID().equals(comp.getOwnerUUID())) {
+                        comp.setTarget(null);
+                        comp.setLastHurtByMob(null);
+                     }
+                  } else {
+                     if (m.getTarget() != null && m.getTarget().getUUID().equals(player.getUUID())) {
+                        m.setTarget(null);
+                     }
 
-                        if (m.getLastHurtByMob() != null && m.getLastHurtByMob().getUUID().equals(player.getUUID())) {
-                           m.setLastHurtByMob(null);
-                        }
+                     if (m.getLastHurtByMob() != null && m.getLastHurtByMob().getUUID().equals(player.getUUID())) {
+                        m.setLastHurtByMob(null);
                      }
                   }
                }
@@ -1256,9 +1322,13 @@ public final class SystemEvents {
 
          for (ServerLevel level : player.getServer().getAllLevels()) {
             if (level != newLevel) {
+               List<Mob> toTeleport = new ArrayList<>();
                for (Mob soldier : level.getEntities(
                   EntityTypeTest.forClass(Mob.class), m -> m.isAlive() && m.getTags().contains("shadow_soldier") && m.getTags().contains(masterTag)
                )) {
+                  toTeleport.add(soldier);
+               }
+               for (Mob soldier : toTeleport) {
                   Vec3 safePos = TeleportHelper.findSafeTeleportPos(newLevel, soldier, player.getX(), player.getY(), player.getZ(), player.position());
                   soldier.teleportTo(newLevel, safePos.x, safePos.y, safePos.z, Set.of(), soldier.getYRot(), soldier.getXRot());
                }
@@ -1272,9 +1342,13 @@ public final class SystemEvents {
          String masterTag = "shadow_master_" + player.getUUID();
 
          for (ServerLevel level : player.getServer().getAllLevels()) {
+            List<Mob> toDismiss = new ArrayList<>();
             for (Mob soldier : level.getEntities(
                EntityTypeTest.forClass(Mob.class), m -> m.isAlive() && m.getTags().contains("shadow_soldier") && m.getTags().contains(masterTag)
             )) {
+               toDismiss.add(soldier);
+            }
+            for (Mob soldier : toDismiss) {
                level.sendParticles(ParticleTypes.SOUL_FIRE_FLAME, soldier.getX(), soldier.getY() + 0.5, soldier.getZ(), 20, 0.3, 0.4, 0.3, 0.05);
                level.sendParticles(ParticleTypes.SMOKE, soldier.getX(), soldier.getY() + 0.5, soldier.getZ(), 20, 0.3, 0.4, 0.3, 0.02);
                soldier.discard();
@@ -5044,6 +5118,10 @@ public final class SystemEvents {
             var4 = true;
          }
 
+         if (!var4 && ("creator".equals(data(player).equippedTitle()) || "the_mad_hatter".equals(data(player).equippedTitle()))) {
+            var4 = true;
+         }
+
          if (var4 && event.getOrb() != null) {
             int extra = event.getOrb().getValue();
             if (extra > 0) {
@@ -6322,7 +6400,10 @@ public final class SystemEvents {
             player.removeEffect(MobEffects.JUMP);
          }
 
-         if (hasFlightArmor) {
+         boolean isHatterFlight = "the_mad_hatter".equals(data.equippedTitle());
+         boolean isCreatorFlight = "creator".equals(data.equippedTitle()) || TitleDefinitions.isCreator(player);
+         boolean isOrthaxFlight = "orthax".equals(data.equippedTitle()) || TitleDefinitions.isWraith(player);
+         if (hasFlightArmor || isHatterFlight || isCreatorFlight || isOrthaxFlight) {
             if (!player.getAbilities().mayfly) {
                player.getAbilities().mayfly = true;
                player.onUpdateAbilities();
@@ -6332,7 +6413,12 @@ public final class SystemEvents {
             if (player.getAbilities().flying) {
                player.resetFallDistance();
                if (player.tickCount % 3 == 0 && player.level() instanceof ServerLevel slx) {
-                  if (hasPrimordialSet) {
+                  if (isCreatorFlight || isOrthaxFlight) {
+                     // Sin particulas molestas para el Creador ni Orthax
+                  } else if (isHatterFlight) {
+                     slx.sendParticles(ParticleTypes.ENCHANT, player.getX(), player.getY() + 0.1, player.getZ(), 2, 0.2, 0.05, 0.2, 0.02);
+                     slx.sendParticles(ParticleTypes.WITCH, player.getX(), player.getY() + 0.1, player.getZ(), 1, 0.15, 0.05, 0.15, 0.01);
+                  } else if (hasPrimordialSet) {
                      slx.sendParticles(ParticleTypes.REVERSE_PORTAL, player.getX(), player.getY() + 0.1, player.getZ(), 3, 0.2, 0.05, 0.2, -0.05);
                      slx.sendParticles(ParticleTypes.DRAGON_BREATH, player.getX(), player.getY() + 0.1, player.getZ(), 2, 0.15, 0.05, 0.15, 0.02);
                   } else if (hasCelestialSet) {
@@ -8498,11 +8584,57 @@ public final class SystemEvents {
    }
 
    public static Component getDantianRealmComponent(int realm) {
-      return Component.translatable("awakening_system.cultivation.realm." + Math.max(0, Math.min(9, realm)));
+      return Component.translatable("awakening_system.cultivation.realm." + Math.max(0, Math.min(14, realm)));
+   }
+
+   public static Component getDantianRealmShortComponent(int realm) {
+      return Component.translatable("awakening_system.cultivation.realm.short." + Math.max(0, Math.min(14, realm)));
    }
 
    public static String getDantianRealmName(int realm) {
       return getDantianRealmComponent(realm).getString();
+   }
+
+   public static Component getRequiredPillComponent(int targetRealm) {
+      return switch (targetRealm) {
+         case 2 -> Component.translatable("item.awakening_system.foundation_building_pill");
+         case 3, 4, 5 -> Component.translatable("item.awakening_system.realm_breakthrough_pill");
+         case 6, 7, 8, 9 -> Component.translatable("item.awakening_system.soul_transformation_pill");
+         case 10, 11, 12 -> Component.translatable("item.awakening_system.nine_revolutions_pill");
+         case 13, 14 -> Component.translatable("item.awakening_system.primordial_rebirth_pill");
+         default -> Component.translatable("awakening_system.screen.cultivation.realm_pill_none");
+      };
+   }
+
+   public static int getTribulationStrikes(int targetRealm) {
+      return switch (targetRealm) {
+         case 2 -> 3;
+         case 3 -> 6;
+         case 4 -> 9;
+         case 5 -> 12;
+         case 6 -> 15;
+         case 7 -> 18;
+         case 8 -> 27;
+         case 9 -> 36;
+         case 10 -> 45;
+         case 11 -> 54;
+         case 12 -> 63;
+         case 13 -> 72;
+         case 14 -> 81;
+         default -> 0;
+      };
+   }
+
+   public static int getRealmBaseStats(int realm) {
+      if (realm <= 9) return realm * 10;
+      return switch (realm) {
+         case 10 -> 140;
+         case 11 -> 240;
+         case 12 -> 400;
+         case 13 -> 650;
+         case 14 -> 1000;
+         default -> 100 + (realm - 9) * 150;
+      };
    }
 
    public static void spawnShockwaveRing(ServerLevel level, double x, double y, double z, ParticleOptions particle, double radius, int count, double speed) {
@@ -12800,6 +12932,215 @@ public final class SystemEvents {
       }
    }
 
+   public static int deploySquad(ServerPlayer player, int squadId) {
+      if (!(player.level() instanceof ServerLevel sl)) {
+         return 0;
+      }
+      SystemData data = data(player);
+      List<CompoundTag> toDeploy = new ArrayList<>();
+      java.util.Iterator<CompoundTag> iter = data.getStoredShadowArmy().iterator();
+      while (iter.hasNext()) {
+         CompoundTag tag = iter.next();
+         int sq = tag.contains("SquadId") ? tag.getInt("SquadId") : 0;
+         if (sq == squadId) {
+            toDeploy.add(tag);
+            iter.remove();
+         }
+      }
+      if (toDeploy.isEmpty()) {
+         AwakeningSystemMod.notify(
+            player,
+            "awakening_system.notification.squad_empty.title",
+            "awakening_system.notification.squad_empty.desc",
+            -35226,
+            new Object[]{data.getShadowSquadName(squadId)}
+         );
+         return 0;
+      }
+
+      int total = toDeploy.size();
+      double px = player.getX();
+      double py = player.getY();
+      double pz = player.getZ();
+
+      for (int i = 0; i < total; i++) {
+         CompoundTag shadowTag = toDeploy.get(i);
+         double radius;
+         int ringCap;
+         int indexInRing;
+         if (i < 8) {
+            radius = 3.5;
+            ringCap = 8;
+            indexInRing = i;
+         } else if (i < 24) {
+            radius = 6.5;
+            ringCap = 16;
+            indexInRing = i - 8;
+         } else if (i < 48) {
+            radius = 9.5;
+            ringCap = 24;
+            indexInRing = i - 24;
+         } else {
+            radius = 12.5;
+            ringCap = Math.max(1, total - 48);
+            indexInRing = i - 48;
+         }
+
+         double angle = (2.0 * Math.PI / ringCap) * indexInRing + Math.toRadians(player.getYRot() + 180.0F);
+         double sx = px + Math.sin(angle) * radius;
+         double sz = pz - Math.cos(angle) * radius;
+         double sy = py;
+
+         net.minecraft.core.BlockPos targetPos = new net.minecraft.core.BlockPos((int)Math.floor(sx), (int)Math.floor(sy), (int)Math.floor(sz));
+         if (!sl.getBlockState(targetPos).isAir()) {
+            sy = sl.getHeight(net.minecraft.world.level.levelgen.Heightmap.Types.MOTION_BLOCKING_NO_LEAVES, (int)Math.floor(sx), (int)Math.floor(sz));
+         }
+
+         summonShadowFromTag(player, shadowTag, sx, sy, sz);
+
+         sl.sendParticles(ParticleTypes.SOUL_FIRE_FLAME, sx, sy + 0.5, sz, 18, 0.3, 0.4, 0.3, 0.05);
+         sl.sendParticles(ParticleTypes.SMOKE, sx, sy + 0.5, sz, 20, 0.3, 0.4, 0.3, 0.02);
+         sl.sendParticles(ParticleTypes.SCULK_SOUL, sx, sy + 0.8, sz, 5, 0.2, 0.3, 0.2, 0.03);
+      }
+
+      sl.playSound(null, px, py, pz, SoundEvents.WITHER_SPAWN, SoundSource.PLAYERS, 0.8F, 1.4F);
+      sl.playSound(null, px, py, pz, SoundEvents.SOUL_ESCAPE, SoundSource.PLAYERS, 1.0F, 0.9F);
+
+      AwakeningSystemMod.notify(
+         player,
+         "awakening_system.notification.squad_deployed.title",
+         "awakening_system.notification.squad_deployed.desc",
+         -6723841,
+         new Object[]{data.getShadowSquadName(squadId), String.valueOf(total)}
+      );
+      AwakeningSystemMod.sync(player);
+      return total;
+   }
+
+   public static int recallSquad(ServerPlayer player, int squadId) {
+      if (!(player.level() instanceof ServerLevel sl)) {
+         return 0;
+      }
+      SystemData data = data(player);
+      String masterTag = "shadow_master_" + player.getUUID();
+      List<Mob> soldiers = sl.getEntitiesOfClass(
+         Mob.class,
+         player.getBoundingBox().inflate(128.0),
+         m -> m.isAlive() && m.getTags().contains("shadow_soldier") && m.getTags().contains(masterTag) && m.getPersistentData().getInt("shadow_squad_id") == squadId
+      );
+      if (soldiers.isEmpty()) {
+         AwakeningSystemMod.notify(
+            player,
+            "awakening_system.notification.squad_none_active.title",
+            "awakening_system.notification.squad_none_active.desc",
+            -35226,
+            new Object[]{data.getShadowSquadName(squadId)}
+         );
+         return 0;
+      }
+
+      int count = 0;
+      for (Mob soldier : soldiers) {
+         String typeKey = EntityType.getKey(soldier.getType()).toString();
+         if (typeKey.toLowerCase(Locale.ROOT).contains("celestial_dragon")) {
+            soldier.discard();
+         } else {
+            CompoundTag tag = new CompoundTag();
+            tag.putString("MobEntityTypeId", typeKey);
+            String sName = soldier.getCustomName() != null ? soldier.getCustomName().getString() : soldier.getType().getDescription().getString();
+            tag.putString("MobName", sName);
+            tag.putFloat("Health", soldier.getHealth());
+            tag.putFloat("MaxHealth", soldier.getMaxHealth());
+            tag.putInt("ShadowRank", soldier.getPersistentData().getInt("shadow_rank"));
+            tag.putInt("ShadowKills", soldier.getPersistentData().getInt("shadow_kills"));
+            tag.putInt("RpgMobLevel", soldier.getPersistentData().getInt("rpg_mob_level"));
+            tag.putInt("SquadId", squadId);
+            if (soldier.getPersistentData().contains("shadow_original_max_hp")) {
+               tag.putDouble("OriginalMaxHp", soldier.getPersistentData().getDouble("shadow_original_max_hp"));
+            } else {
+               tag.putDouble("OriginalMaxHp", (double)soldier.getMaxHealth());
+            }
+            if (soldier.getPersistentData().contains("shadow_original_dmg")) {
+               tag.putDouble("OriginalDmg", soldier.getPersistentData().getDouble("shadow_original_dmg"));
+            }
+            if (soldier.getPersistentData().contains("shadow_original_armor")) {
+               tag.putDouble("OriginalArmor", soldier.getPersistentData().getDouble("shadow_original_armor"));
+            }
+            if (soldier.getPersistentData().contains("shadow_original_toughness")) {
+               tag.putDouble("OriginalToughness", soldier.getPersistentData().getDouble("shadow_original_toughness"));
+            }
+            if (soldier.getPersistentData().contains("shadow_original_kb")) {
+               tag.putDouble("OriginalKb", soldier.getPersistentData().getDouble("shadow_original_kb"));
+            }
+            if (soldier.getPersistentData().contains("shadow_original_speed")) {
+               tag.putDouble("OriginalSpeed", soldier.getPersistentData().getDouble("shadow_original_speed"));
+            }
+            try {
+               CompoundTag nbt = new CompoundTag();
+               soldier.saveWithoutId(nbt);
+               tag.put("SavedEntityNbt", nbt);
+            } catch (Throwable ignored) {}
+
+            String bName = soldier.getPersistentData().getString("shadow_base_name");
+            if (bName == null || bName.isEmpty()) {
+               bName = soldier.getType().getDescription().getString();
+            }
+            tag.putString("ShadowBaseName", bName);
+
+            CompoundTag eqTag = new CompoundTag();
+            for (EquipmentSlot slot : EquipmentSlot.values()) {
+               ItemStack it = soldier.getItemBySlot(slot);
+               if (!it.isEmpty()) {
+                  eqTag.put(slot.getName(), it.saveOptional(soldier.registryAccess()));
+               }
+            }
+            tag.put("Equipment", eqTag);
+            IceAndFireCompat.captureMobData(soldier, tag);
+
+            data.storeShadow(tag);
+            sl.sendParticles(ParticleTypes.SOUL_FIRE_FLAME, soldier.getX(), soldier.getY() + 0.5, soldier.getZ(), 20, 0.3, 0.4, 0.3, 0.05);
+            sl.sendParticles(ParticleTypes.SMOKE, soldier.getX(), soldier.getY() + 0.5, soldier.getZ(), 25, 0.3, 0.5, 0.3, 0.02);
+            soldier.discard();
+            count++;
+         }
+      }
+
+      sl.playSound(null, player.getX(), player.getY(), player.getZ(), SoundEvents.ENDERMAN_TELEPORT, SoundSource.PLAYERS, 1.0F, 0.8F);
+      AwakeningSystemMod.notify(
+         player,
+         "awakening_system.notification.squad_recalled.title",
+         "awakening_system.notification.squad_recalled.desc",
+         -6723841,
+         new Object[]{data.getShadowSquadName(squadId), String.valueOf(count)}
+      );
+      AwakeningSystemMod.sync(player);
+      return count;
+   }
+
+   public static int deployAllArmy(ServerPlayer player) {
+      if (!(player.level() instanceof ServerLevel sl)) return 0;
+      SystemData data = data(player);
+      if (data.storedShadowCount() <= 0) {
+         AwakeningSystemMod.notify(
+            player,
+            "awakening_system.notification.shadow_no_souls.title",
+            "awakening_system.notification.shadow_no_souls.desc",
+            -35226,
+            new Object[0]
+         );
+         return 0;
+      }
+      int total = 0;
+      for (int sq = 0; sq < SystemData.SQUAD_COUNT; sq++) {
+         total += deploySquad(player, sq);
+      }
+      return total;
+   }
+
+   public static int recallAllArmy(ServerPlayer player) {
+      return storePlayerShadows(player);
+   }
+
    private static void tickShadowSoldiers(MinecraftServer server) {
       if (server.getTickCount() % 20 == 0) {
          for (ServerPlayer player : server.getPlayerList().getPlayers()) {
@@ -13010,6 +13351,10 @@ public final class SystemEvents {
          expMultiplier *= 2.0;
       }
 
+      if ("creator".equals(data.equippedTitle()) || "the_mad_hatter".equals(data.equippedTitle())) {
+         expMultiplier *= 2.0;
+      }
+
       int finalExp = Math.max(1, (int)Math.round(amount * expMultiplier));
       if (data.addExperience(finalExp)) {
          AwakeningSystemMod.notify(
@@ -13173,6 +13518,26 @@ public final class SystemEvents {
             "awakening_system.notification.daily_complete.message",
             -11470213,
             new Object[0]
+         );
+         AwakeningSystemMod.sync(player);
+         return true;
+      }
+      return false;
+   }
+
+   public static boolean claimHunterCommission(ServerPlayer player) {
+      if (player == null) return false;
+      SystemData data = data(player);
+      if (data == null) return false;
+      boolean claimed = data.claimHunterDailyReward(player);
+      if (claimed) {
+         player.playNotifySound((SoundEvent)ModSounds.SYSTEM_QUEST_COMPLETE.value(), SoundSource.PLAYERS, 1.0F, 1.0F);
+         AwakeningSystemMod.notify(
+            player,
+            "awakening_system.notification.hunter_commission_claimed.title",
+            "awakening_system.notification.hunter_commission_claimed.message",
+            -10138,
+            new Object[]{data.evaluatedRank()}
          );
          AwakeningSystemMod.sync(player);
          return true;

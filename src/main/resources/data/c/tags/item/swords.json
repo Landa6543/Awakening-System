@@ -1,0 +1,11 @@
+{
+    "replace": false,
+    "values": [
+        "#c:tools/swords",
+        "#c:daggers",
+        "awakening_system:blue_monsoon",
+        "awakening_system:ennios_roar",
+        "awakening_system:phantomblade",
+        "awakening_system:crimson_shadow"
+    ]
+}

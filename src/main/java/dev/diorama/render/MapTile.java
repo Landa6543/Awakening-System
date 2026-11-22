@@ -1,10 +1,14 @@
 package dev.diorama.render;
 
+import dev.diorama.Claims;
 import dev.diorama.Projection;
+import dev.diorama.bake.BlockLight;
 import dev.diorama.bake.Mipmaps;
 import dev.diorama.bake.Overlays;
 import dev.diorama.bake.TileImage;
+import dev.diorama.bake.TileSurface;
 import dev.diorama.render.gpu.MapTexture;
+import java.util.concurrent.CompletableFuture;
 import org.jspecify.annotations.Nullable;
 
 /** A baked tile on the GPU, plus the coverage the fog reads. Render thread only. */
@@ -14,16 +18,65 @@ public final class MapTile {
 	/** {@link Overlays} bits per pixel from the bakes that recorded them, or null. */
 	private byte @Nullable [] info;
 	private @Nullable MapTexture overlay;
+	/** The tile's {@link BlockLight}, null where it has none (caves, or saved before it was kept). */
+	private byte @Nullable [] blockLight;
+	/** The block light on the GPU in red, for night; null while the tile has no light anywhere. */
+	private @Nullable MapTexture light;
 	/** The overlay bits the overlay texture shows, or -1 when it has to be drawn again. */
 	private int overlayShown = -1;
 	private boolean empty = true;
 	long lastDrawn;
+	/** Land claims drawn over the tile, or null where it shows none. */
+	private @Nullable MapTexture claims;
+	/** The claims {@link #claims} shows, or null before they're first painted. */
+	Claims.@Nullable Snapshot claimsPainted;
+	/** Goes up whenever the tile's pixels change, as the ground the claims are painted on may move. */
+	int pixelsRevision;
+	/** When {@link #pixelsRevision} last went up. */
+	long pixelsChanged;
+	/** The {@link #pixelsRevision} {@link #claims} was painted for. */
+	int claimsRevision;
+	/** The ground under the tile's pixels, for lights and crafts; see {@link MapLevel#surface}. */
+	@Nullable TileSurface surface;
+	@Nullable CompletableFuture<@Nullable TileSurface> surfacePending;
+	/** The tile pixels (x0, y0, x1, y1) {@link #surfacePending} covers. */
+	int @Nullable [] surfacePendingArea;
+	/** Goes up whenever pixels {@link #surface} or {@link #surfacePending} covers change. */
+	int surfaceChanges;
+	/** When {@link #surfacePending} was last started, and when lights last asked for the surface. */
+	long surfaceStarted;
+	long surfaceAsked;
+	/** All the tile pixels (x0, y0, x1, y1) lights asked for lately, as lights apart share a tile, and since when. */
+	int @Nullable [] surfaceWanted;
+	long surfaceWantedSince;
+
+	/** Notes a re-bake for the surface, if it changes pixels the surface covers. */
+	private void surfaceChanged(TileImage image) {
+		if (image.isFull()) {
+			this.surfaceChanges++;
+			return;
+		}
+		int edge = TileImage.BLOCK;
+		for (TileImage.Patch patch : image.patches()) {
+			int x0 = patch.blockX() * edge;
+			int y0 = patch.blockY() * edge;
+			int[] area = this.surfacePendingArea;
+			if (this.surface != null && this.surface.touches(x0, y0, x0 + edge, y0 + edge)
+				|| this.surfacePending != null && x0 < area[2] && area[0] < x0 + edge && y0 < area[3] && area[1] < y0 + edge) {
+				this.surfaceChanges++;
+				return;
+			}
+		}
+	}
 
 	void upload(TileImage image) {
+		this.surfaceChanged(image);
 		if (image.isFull()) {
 			this.coverage = image.coverage();
 			this.info = image.info();
 			this.overlayShown = -1;
+			// Its own copy: patches write into it, and the bake's array is also the saved tile's.
+			this.blockLight = image.blockLight() == null ? null : image.blockLight().clone();
 			this.empty = isEmpty(this.coverage);
 			if (this.empty) {
 				this.close();
@@ -34,6 +87,7 @@ public final class MapTile {
 			for (int level = 0; level < Mipmaps.LEVELS; level++) {
 				this.texture.write(level, 0, 0, size >> level, image.mips()[level]);
 			}
+			this.uploadLight();
 			return;
 		}
 		if (this.coverage == null) {
@@ -70,6 +124,57 @@ public final class MapTile {
 				this.patchInfo(patch);
 			}
 		}
+		this.patchLight(image);
+	}
+
+	/** Copies the patches' light into the tile's, then puts it on the GPU again: it's small. */
+	private void patchLight(TileImage image) {
+		boolean changed = false;
+		int edge = TileImage.BLOCK / BlockLight.SCALE;
+		for (TileImage.Patch patch : image.patches()) {
+			byte[] light = patch.blockLight();
+			if (light == null) {
+				continue;
+			}
+			if (this.blockLight == null) {
+				this.blockLight = new byte[BlockLight.EDGE * BlockLight.EDGE];
+			}
+			for (int y = 0; y < edge; y++) {
+				System.arraycopy(light, y * edge, this.blockLight, (patch.blockY() * edge + y) * BlockLight.EDGE + patch.blockX() * edge, edge);
+			}
+			changed = true;
+		}
+		if (changed) {
+			this.uploadLight();
+		}
+	}
+
+	/** Puts the tile's block light on the GPU, or frees it where there's none. */
+	private void uploadLight() {
+		if (!BlockLight.any(this.blockLight)) {
+			if (this.light != null) {
+				this.light.close();
+				this.light = null;
+			}
+			return;
+		}
+		if (this.light == null) {
+			this.light = MapTexture.create("diorama light", BlockLight.EDGE, Mipmaps.LEVELS);
+		}
+		byte[][] mips = BlockLight.mips(this.blockLight, Mipmaps.LEVELS);
+		for (int level = 0; level < Mipmaps.LEVELS; level++) {
+			byte[] values = mips[level];
+			int[] pixels = new int[values.length];
+			for (int i = 0; i < values.length; i++) {
+				pixels[i] = 0xFF000000 | values[i] & 0xFF;
+			}
+			this.light.write(level, 0, 0, BlockLight.EDGE >> level, pixels);
+		}
+	}
+
+	/** The block light texture to draw this tile at night with, or null if it has no light. */
+	public @Nullable MapTexture light() {
+		return this.texture == null ? null : this.light;
 	}
 
 	private void patchInfo(TileImage.Patch patch) {
@@ -136,6 +241,27 @@ public final class MapTile {
 		return 0;
 	}
 
+	/** Shows freshly painted claims, or none: {@code painted} drawn on the pixels of {@code revision}. */
+	void paintClaims(int @Nullable [] pixels, Claims.Snapshot painted, int revision) {
+		this.claimsPainted = painted;
+		this.claimsRevision = revision;
+		if (pixels == null) {
+			if (this.claims != null) {
+				this.claims.close();
+				this.claims = null;
+			}
+			return;
+		}
+		if (this.claims == null) {
+			this.claims = MapTexture.create("diorama claims", Projection.TILE_PIXELS, 1);
+		}
+		this.claims.write(0, 0, 0, Projection.TILE_PIXELS, pixels);
+	}
+
+	public @Nullable MapTexture claims() {
+		return this.texture == null ? null : this.claims;
+	}
+
 	/** Creates the GPU texture if needed; true if it was just created. */
 	private boolean ensureTexture(TileImage image) {
 		if (this.texture != null) {
@@ -162,6 +288,11 @@ public final class MapTile {
 		return (c[cellY * Projection.COVERAGE_CELLS + cellX] & 0xFF) / 255.0F;
 	}
 
+	/** The {@link BlockLight} value at (lx, ly), {@link BlockLight#EDGE} a side, or -1 if this tile has none. For tests. */
+	public int blockLightAt(int lx, int ly) {
+		return this.blockLight == null ? -1 : this.blockLight[ly * BlockLight.EDGE + lx] & 0xFF;
+	}
+
 	/** The overlay bits recorded for one pixel, or -1 if this tile has none. For tests. */
 	public int overlayBits(int px, int py) {
 		return this.info == null ? -1 : this.info[py * Projection.TILE_PIXELS + px] & 0xFF;
@@ -172,9 +303,22 @@ public final class MapTile {
 	}
 
 	void close() {
+		if (this.surfacePending != null) {
+			this.surfacePending.cancel(false);
+			this.surfacePending = null;
+		}
+		if (this.claims != null) {
+			this.claims.close();
+			this.claims = null;
+		}
+		this.claimsPainted = null;
 		if (this.overlay != null) {
 			this.overlay.close();
 			this.overlay = null;
+		}
+		if (this.light != null) {
+			this.light.close();
+			this.light = null;
 		}
 		if (this.texture != null) {
 			this.texture.close();
