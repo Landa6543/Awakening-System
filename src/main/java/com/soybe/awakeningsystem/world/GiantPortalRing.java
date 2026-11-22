@@ -57,6 +57,37 @@ public final class GiantPortalRing {
         return base.above(R - SUNK);
     }
 
+    /**
+     * The ground at a column: the first block from the sky that stops movement, leaves ignored. (The "_WG"
+     * heightmaps exist only while a chunk is being made; on a finished chunk they read as the bottom of the world.)
+     */
+    public static BlockPos ground(ServerLevel level, BlockPos column) {
+        level.getChunk(column.getX() >> 4, column.getZ() >> 4);
+        return level.getHeightmapPos(Heightmap.Types.MOTION_BLOCKING_NO_LEAVES, column);
+    }
+
+    /** The ground under the whole ring: its lowest point across the opening, so no corner hangs in the air. */
+    public static BlockPos siteGround(ServerLevel level, BlockPos column, Direction facing) {
+        Direction right = facing.getClockWise();
+        int y = Integer.MAX_VALUE;
+        for (int u = -R + T; u <= R - T; u += 6)
+            for (int w = -DEPTH; w <= DEPTH; w += DEPTH)
+                y = Math.min(y, ground(level, column.offset(right.getStepX() * u + facing.getStepX() * w, 0,
+                        right.getStepZ() * u + facing.getStepZ() * w)).getY());
+        return new BlockPos(column.getX(), y, column.getZ());
+    }
+
+    /** Clears trees and hills from the ring's place and the ground in front of and behind it. */
+    public static void clearSite(ServerLevel level, BlockPos base, Direction facing) {
+        Direction right = facing.getClockWise();
+        for (int u = -R - 2; u <= R + 2; u++)
+            for (int w = -DEPTH - 6; w <= DEPTH + 6; w++)
+                for (int y = 0; y <= R * 2; y++) {
+                    BlockPos q = base.offset(right.getStepX() * u + facing.getStepX() * w, y, right.getStepZ() * u + facing.getStepZ() * w);
+                    if (!level.getBlockState(q).isAir()) level.setBlock(q, Blocks.AIR.defaultBlockState(), 2);
+                }
+    }
+
     // a point of the ring's own space: u along the face (right), v up, w through the opening
     private BlockPos at(int u, int v, int w) {
         Direction right = facing.getClockWise();
@@ -145,7 +176,7 @@ public final class GiantPortalRing {
         for (int i = 0; i < 9; i++) {
             int u = rand.nextInt(R * 2 + 1) - R;
             int w = (rand.nextBoolean() ? 1 : -1) * (DEPTH + 2 + rand.nextInt(10));
-            BlockPos ground = level.getHeightmapPos(Heightmap.Types.WORLD_SURFACE_WG, at(u, 0, w));
+            BlockPos ground = ground(level, at(u, 0, w));
             int sx = 2 + rand.nextInt(4), sy = 1 + rand.nextInt(3), sz = 2 + rand.nextInt(3);
             for (int x = 0; x < sx; x++)
                 for (int y = 0; y < sy; y++)
@@ -208,7 +239,7 @@ public final class GiantPortalRing {
         ServerLevel level = src.getLevel();
         Direction facing = src.getEntity() != null ? src.getEntity().getDirection() : Direction.NORTH;
         // in front of the player, far enough to see it whole, its foot on the ground
-        BlockPos at = level.getHeightmapPos(Heightmap.Types.WORLD_SURFACE_WG, BlockPos.containing(src.getPosition()).relative(facing, R + 20));
+        BlockPos at = ground(level, BlockPos.containing(src.getPosition()).relative(facing, R + 20));
         build(level, at, facing, repaired);
         src.sendSuccess(() -> Component.translatable(repaired ? "awakening_system.giant_portal.built_repaired" : "awakening_system.giant_portal.built_ruined",
                 at.getX(), at.getY(), at.getZ()), true);

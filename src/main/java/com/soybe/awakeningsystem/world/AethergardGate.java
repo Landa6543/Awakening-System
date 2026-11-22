@@ -49,13 +49,14 @@ public final class AethergardGate {
     // ---- the twin ring in Aethelgard
 
     public static final class Data extends SavedData {
-        boolean landingBuilt;
+        boolean landingBuilt, onSurface;
         Direction facing = Direction.NORTH;
         BlockPos base = BlockPos.ZERO;
 
         static Data load(CompoundTag tag, HolderLookup.Provider registries) {
             Data d = new Data();
             d.landingBuilt = tag.getBoolean("Built");
+            d.onSurface = tag.getBoolean("OnSurface");
             d.base = net.minecraft.nbt.NbtUtils.readBlockPos(tag, "Base").orElse(BlockPos.ZERO);
             d.facing = Direction.from2DDataValue(tag.getInt("Facing"));
             return d;
@@ -64,6 +65,7 @@ public final class AethergardGate {
         @Override
         public CompoundTag save(CompoundTag tag, HolderLookup.Provider registries) {
             tag.putBoolean("Built", landingBuilt);
+            tag.putBoolean("OnSurface", onSurface);
             tag.put("Base", net.minecraft.nbt.NbtUtils.writeBlockPos(base));
             tag.putInt("Facing", facing.get2DDataValue());
             return tag;
@@ -77,24 +79,30 @@ public final class AethergardGate {
     /** Builds the twin ring on dry land near the realm's centre, facing like Teyvat's, the first time it is needed. */
     private static void ensureLanding(ServerLevel aether, Direction facing) {
         Data d = data(aether);
-        if (d.landingBuilt) return;
-        // the first spot along the east road from 0,0 that is land, not sea
+        if (d.landingBuilt && d.onSurface) return;
         BlockPos ground = null;
+        if (d.landingBuilt) {
+            // built before the ground was read right: it stays unless it stands buried
+            BlockPos here = GiantPortalRing.siteGround(aether, d.base, d.facing);
+            if (here.getY() <= d.base.getY() + 6) {
+                d.onSurface = true;
+                d.setDirty();
+                return;
+            }
+            ground = here;
+        }
+        // the first spot along the east road from 0,0 that is land, not sea
         for (int step = 0; step < 40 && ground == null; step++) {
-            BlockPos probe = aether.getHeightmapPos(net.minecraft.world.level.levelgen.Heightmap.Types.WORLD_SURFACE_WG, new BlockPos(step * 64, 0, 0));
+            BlockPos probe = GiantPortalRing.ground(aether, new BlockPos(step * 64, 0, 0));
             if (aether.getBlockState(probe.below()).getFluidState().isEmpty() && probe.getY() > aether.getSeaLevel()) ground = probe;
         }
-        if (ground == null) ground = aether.getHeightmapPos(net.minecraft.world.level.levelgen.Heightmap.Types.WORLD_SURFACE_WG, BlockPos.ZERO);
+        if (ground == null) ground = GiantPortalRing.ground(aether, BlockPos.ZERO);
+        ground = GiantPortalRing.siteGround(aether, ground, facing);
         // the opening and the ground round the ring's foot cleared of trees and hills
-        Direction right = facing.getClockWise();
-        for (int u = -GiantPortalRing.R - 2; u <= GiantPortalRing.R + 2; u++)
-            for (int w = -GiantPortalRing.DEPTH - 6; w <= GiantPortalRing.DEPTH + 6; w++)
-                for (int y = 0; y <= GiantPortalRing.R * 2; y++) {
-                    BlockPos q = ground.offset(right.getStepX() * u + facing.getStepX() * w, y, right.getStepZ() * u + facing.getStepZ() * w);
-                    if (!aether.getBlockState(q).isAir()) aether.setBlock(q, Blocks.AIR.defaultBlockState(), 2);
-                }
+        GiantPortalRing.clearSite(aether, ground, facing);
         GiantPortalRing.build(aether, ground, facing, true);
         d.landingBuilt = true;
+        d.onSurface = true;
         d.facing = facing;
         d.base = ground;
         d.setDirty();

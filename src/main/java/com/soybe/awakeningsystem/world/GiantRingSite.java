@@ -50,6 +50,8 @@ public final class GiantRingSite {
         BlockPos base;
         Direction facing = Direction.NORTH;
         boolean built, repaired;
+        /** False for rings raised before the ground was read right (they may stand buried in a cave). */
+        boolean onSurface;
         /** What has been given to the altar so far, by item id. */
         final java.util.Map<String, Integer> given = new java.util.HashMap<>();
 
@@ -59,6 +61,7 @@ public final class GiantRingSite {
             d.facing = Direction.from2DDataValue(tag.getInt("Facing"));
             d.built = tag.getBoolean("Built");
             d.repaired = tag.getBoolean("Repaired");
+            d.onSurface = tag.getBoolean("OnSurface");
             CompoundTag g = tag.getCompound("Given");
             for (String k : g.getAllKeys()) d.given.put(k, g.getInt(k));
             return d;
@@ -70,6 +73,7 @@ public final class GiantRingSite {
             tag.putInt("Facing", facing.get2DDataValue());
             tag.putBoolean("Built", built);
             tag.putBoolean("Repaired", repaired);
+            tag.putBoolean("OnSurface", onSurface);
             CompoundTag g = new CompoundTag();
             given.forEach(g::putInt);
             tag.put("Given", g);
@@ -112,20 +116,30 @@ public final class GiantRingSite {
         ServerLevel teyvat = event.getServer().getLevel(TeyvatWorldManager.TEYVAT_WORLD);
         if (teyvat == null || teyvat.players().isEmpty()) return;
         Data d = site(teyvat);
-        if (d.built) return;
+        if (d.built && d.onSurface) return;
         for (ServerPlayer p : teyvat.players()) {
             double dx = p.getX() - d.base.getX(), dz = p.getZ() - d.base.getZ();
             if (dx * dx + dz * dz > (double) SIGHT * SIGHT) continue;
-            raise(teyvat, d);
+            if (d.built) {
+                // raised before the ground was read right: if it stands buried, it rises again on the surface
+                BlockPos ground = GiantPortalRing.siteGround(teyvat, d.base, d.facing);
+                if (ground.getY() > d.base.getY() + 6) raise(teyvat, d);
+                else {
+                    d.onSurface = true;
+                    d.setDirty();
+                }
+            } else raise(teyvat, d);
             return;
         }
     }
 
     /** Raises the ruin on the ground at its site, with its altar. */
     private static void raise(ServerLevel teyvat, Data d) {
-        BlockPos ground = teyvat.getHeightmapPos(Heightmap.Types.WORLD_SURFACE_WG, d.base);
+        BlockPos ground = GiantPortalRing.siteGround(teyvat, d.base, d.facing);
         d.base = ground;
-        GiantPortalRing.build(teyvat, ground, d.facing, false);
+        d.onSurface = true;
+        GiantPortalRing.clearSite(teyvat, ground, d.facing);
+        GiantPortalRing.build(teyvat, ground, d.facing, d.repaired);
         placeAltar(teyvat, ground, d.facing);
         d.built = true;
         d.setDirty();
@@ -133,7 +147,7 @@ public final class GiantRingSite {
     }
 
     private static void placeAltar(ServerLevel level, BlockPos base, Direction facing) {
-        BlockPos a = level.getHeightmapPos(Heightmap.Types.WORLD_SURFACE_WG, altar(base, facing));
+        BlockPos a = GiantPortalRing.ground(level, altar(base, facing));
         for (int x = -1; x <= 1; x++)
             for (int z = -1; z <= 1; z++) level.setBlock(a.offset(x, -1, z), Blocks.CHISELED_STONE_BRICKS.defaultBlockState(), 2);
         level.setBlock(a, Blocks.LODESTONE.defaultBlockState(), 3);
@@ -207,7 +221,7 @@ public final class GiantRingSite {
         ServerLevel teyvat = server.getLevel(TeyvatWorldManager.TEYVAT_WORLD);
         if (teyvat == null) return Component.translatable("awakening_system.giant_portal.no_teyvat");
         Data d = site(teyvat);
-        if (!d.built) raise(teyvat, d);
+        if (!d.built || !d.onSurface) raise(teyvat, d);
         GiantPortalRing.build(teyvat, d.base, d.facing, true);
         d.repaired = true;
         d.setDirty();
