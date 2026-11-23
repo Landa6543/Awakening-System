@@ -1275,7 +1275,7 @@
   "awakening_system.boss.shadow_monarch.domain_taunt": "§8§l[ABYSSAL MONARCH] §5This realm belongs to me! Let darkness devour your souls!",
   "awakening_system.boss.shadow_monarch.phase2_taunt": "§8§l[ABYSSAL MONARCH] §d§lDid you think you had cornered Death itself? KNEEL BEFORE THE TRUE SOVEREIGN!",
   "awakening_system.boss.statue_of_god.name": "Statue of God (Cartenon Temple)",
-  "awakening_system.boss.world_boss_title": "%s[WORLD BOSS - Lv. %s] §f%s",
+  "awakening_system.boss.world_boss_title": "%s[Lv. %s] §f%s",
   "awakening_system.boss.yggdrasil_treant.custom_name": "§2§lAncient Yggdrasil Treant",
   "awakening_system.boss.yggdrasil_treant.name": "§2§lAncient Yggdrasil Treant §7- §aGuardian of the Roots",
   "awakening_system.bounty.abyssal_commander": "Abgrundal Commander Elimination",

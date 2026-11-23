@@ -91,6 +91,7 @@ public class BeruBossEntity extends Monster implements GeoEntity {
         boolean hurt = super.doHurtTarget(target);
         if (hurt && target instanceof LivingEntity) {
             setAttackState((byte) 1, 8);
+            this.playSound(ModSounds.ANT_SOLDIER_ATTACK.get(), 1.4F, 0.75F + this.random.nextFloat() * 0.1F);
         }
         return hurt;
     }
@@ -235,6 +236,9 @@ public class BeruBossEntity extends Monster implements GeoEntity {
                     isDiving = true;
                     sl.playSound(null, this.getX(), this.getY(), this.getZ(),
                             SoundEvents.ENDER_DRAGON_FLAP, SoundSource.HOSTILE, 2.0F, 1.2F);
+                    // the ant king's screech as he takes off
+                    sl.playSound(null, this.getX(), this.getY(), this.getZ(),
+                            ModSounds.ANT_SOLDIER_SCREECH.get(), SoundSource.HOSTILE, 2.2F, 0.7F);
                 }
 
                 if (isDiving && this.getDeltaMovement().y < -0.2D) {
@@ -303,12 +307,18 @@ public class BeruBossEntity extends Monster implements GeoEntity {
 
     @Override
     protected SoundEvent getAmbientSound() {
-        return ModSounds.COMPANION_BERU_AMBIENT.get();
+        // the Ant King sounds like his ants, only deeper (the old sounds were too generic)
+        return ModSounds.ANT_SOLDIER_AMBIENT.get();
+    }
+
+    @Override
+    public float getVoicePitch() {
+        return 0.72F + this.random.nextFloat() * 0.08F;
     }
 
     @Override
     protected SoundEvent getHurtSound(DamageSource damageSource) {
-        return ModSounds.COMPANION_BERU_HURT.get();
+        return ModSounds.ANT_SOLDIER_HURT.get();
     }
 
     @Override

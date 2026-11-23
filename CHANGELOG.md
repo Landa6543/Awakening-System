@@ -735,6 +735,8 @@ Sistema dinámico de eventos de temporada integrando consumibles gastronómicos 
 * **Velocidad por Agilidad:** al pasar el ratón por el interruptor ahora se ve cuánta velocidad te da en ese momento. Con la Agilidad en su valor inicial (5) es +0%: hay que subir puntos de Agilidad para notarla.
 * **Título "Conquistador Supremo del Sistema":** ya no se da al matar el primer jefe ni al llegar al nivel 40. Ahora pide conquistar la Torre de Rankers, la Pagoda de las Nueve Tribulaciones, la Secta de Sangre y el Laberinto de Yggdrasil; quien lo tenía sin cumplirlo lo pierde al entrar.
 * **Comando `/setclass <clase> [jugador]`** (admins y creador): cambia de clase al momento, a una clase base o a una evolución, para probar las clases.
+* **Jefes:** el nombre ya no dice "WORLD BOSS" (el marco de jefe ya lo indica); queda solo el nivel y el nombre, como "[Lv. 150] Beru, the Ant King".
+* **Beru, el Rey Hormiga:** suena como sus hormigas pero más grave, con chillido al alzar el vuelo y al golpear, en vez de los sonidos genéricos de antes.
 * **Corregido:** la vista de las gafas del título de Creador se quedaba puesta después de quitarte el título; ahora solo funciona con el título equipado.
 * **Gacha de las Umas, como en la serie:** el cajón de salida se pinta de plata, oro o arcoíris según la rareza antes de abrirse, tiembla mientras espera y a veces sube de color con un destello justo antes de abrir. En la tienda de Paimon, el precio de los destinos muestra la Protogema de verdad.
 * **Niveles mínimos por mundo:** de los 2000 niveles, las criaturas de Isekai nunca bajan de nivel 300, las de Murim de 600 y las de Teyvat de 1000 (siguen subiendo con el jugador por encima de eso). Los slimes de Teyvat ya no pierden el nivel del nombre al recibir su elemento.
