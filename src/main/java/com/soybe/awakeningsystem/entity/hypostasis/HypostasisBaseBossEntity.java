@@ -329,6 +329,20 @@ public abstract class HypostasisBaseBossEntity extends Monster {
         if (this.level() instanceof ServerLevel sl) {
             cleanupRevivalObjects(sl);
             dropBossLoot(sl);
+            // the arena's two chests (its saved file came with food in them) hold a boss's reward instead
+            BlockPos.MutableBlockPos m = new BlockPos.MutableBlockPos();
+            for (int dx = -18; dx <= 18; dx++)
+                for (int dz = -18; dz <= 18; dz++)
+                    for (int dy = -12; dy <= 6; dy++) {
+                        m.set(this.getBlockX() + dx, this.getBlockY() + dy, this.getBlockZ() + dz);
+                        if (sl.getBlockEntity(m) instanceof net.minecraft.world.level.block.entity.ChestBlockEntity chest) {
+                            chest.clearContent();
+                            com.soybe.awakeningsystem.world.TeyvatWorldGenManager.populateShrineChestLoot(sl, m.immutable(), sl.getRandom());
+                            if (com.soybe.awakeningsystem.SystemItems.TEYVAT_SHRINE_KEY.isBound())
+                                chest.setItem(7, new net.minecraft.world.item.ItemStack(com.soybe.awakeningsystem.SystemItems.TEYVAT_SHRINE_KEY.get()));
+                            chest.setChanged();
+                        }
+                    }
             // a boss of tens of thousands of health also hands a key for the locked chests of the shrines
             if (com.soybe.awakeningsystem.SystemItems.TEYVAT_SHRINE_KEY.isBound()) {
                 for (net.minecraft.world.entity.player.Player p : sl.getPlayers(pl -> pl.distanceToSqr(this) < 1600.0D)) {

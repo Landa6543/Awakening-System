@@ -95,6 +95,17 @@ public final class TeyvatStructureManager {
 
                 template.placeInWorld(level, origin, origin, settings, level.getRandom(), 2);
 
+                // the Hypostasis arenas' saved chests came full of food: they stay empty until the boss falls,
+                // then they get its reward (HypostasisBaseBossEntity.die)
+                if (name.contains("hypos")) {
+                    net.minecraft.core.Vec3i size = template.getSize();
+                    for (int dx = 0; dx < size.getX(); dx++)
+                        for (int dy = 0; dy < size.getY(); dy++)
+                            for (int dz = 0; dz < size.getZ(); dz++)
+                                if (level.getBlockEntity(origin.offset(dx, dy, dz)) instanceof net.minecraft.world.level.block.entity.ChestBlockEntity chest)
+                                    chest.clearContent();
+                }
+
                 if (name.contains("shrine_of_depths")) {
                     net.minecraft.core.Vec3i size = template.getSize();
                     for (int dx = 0; dx < size.getX(); dx++) {
