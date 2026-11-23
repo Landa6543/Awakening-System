@@ -808,6 +808,19 @@ public final class SpiralAbyssManager {
         level.setBlock(center.above(3), Blocks.AIR.defaultBlockState(), 2);
         level.setBlock(center.above(4), Blocks.AIR.defaultBlockState(), 2);
 
+        // defence chambers start from the Monolith itself, asleep (as in the Spiral Abyss); the others from the key
+        if (session.currentChamber == 1) {
+            LeyLineMonolithEntity dormant = ModEntities.LEY_LINE_MONOLITH.get().create(level);
+            if (dormant != null) {
+                dormant.setActive(false);
+                dormant.moveTo(center.getX() + 0.5, center.getY() + 1.0, center.getZ() + 0.5, 0.0F, 0.0F);
+                dormant.setCustomName(Component.translatable("awakening_system.msg.start_challenge_chamber", String.valueOf(session.currentChamber)));
+                dormant.setCustomNameVisible(true);
+                level.addFreshEntity(dormant);
+                session.challengeKeyEntityId = dormant.getUUID();
+                return;
+            }
+        }
         AbyssChallengeKeyEntity keyEntity = ModEntities.ABYSS_CHALLENGE_KEY.get().create(level);
         if (keyEntity != null) {
             keyEntity.moveTo(center.getX() + 0.5, center.getY() + 1.0, center.getZ() + 0.5, 0.0F, 0.0F);
@@ -837,6 +850,11 @@ public final class SpiralAbyssManager {
      * Dispara la activación de la Llave de Desafío invocada desde la entidad AbyssChallengeKeyEntity.
      */
     public static boolean triggerChallengeKey(ServerPlayer player, AbyssChallengeKeyEntity keyEntity) {
+        return triggerActivator(player);
+    }
+
+    /** The chamber's starter (the key, or the sleeping Monolith) was touched: the fight begins. */
+    public static boolean triggerActivator(ServerPlayer player) {
         AbyssSession session = ACTIVE_SESSIONS.get(player.getUUID());
         if (session == null || session.state != SessionState.WAITING_FOR_TRIGGER) return false;
 
@@ -888,9 +906,12 @@ public final class SpiralAbyssManager {
 
         cleanUpChamberDecorations(level, session);
 
+        // the key vanishes; a sleeping Monolith stays and wakes up (it is the one to defend)
+        LeyLineMonolithEntity awakened = null;
         if (session.challengeKeyEntityId != null) {
             var keyEnt = level.getEntity(session.challengeKeyEntityId);
-            if (keyEnt != null) keyEnt.discard();
+            if (keyEnt instanceof LeyLineMonolithEntity m && session.currentChamber == 1) awakened = m;
+            else if (keyEnt != null) keyEnt.discard();
             session.challengeKeyEntityId = null;
         }
         BlockPos center = session.arenaCenter;
@@ -903,15 +924,21 @@ public final class SpiralAbyssManager {
         boolean twoHalves = isTwoHalvesFloor(session.floorNumber);
         session.isMonolithChamber = (session.currentChamber == 1);
         session.monolithSpawned = false;
+        if (!session.isMonolithChamber && awakened != null) awakened.discard();
         if (session.isMonolithChamber) {
-            LeyLineMonolithEntity monolith = ModEntities.LEY_LINE_MONOLITH.get().create(level);
+            LeyLineMonolithEntity monolith = awakened != null ? awakened : ModEntities.LEY_LINE_MONOLITH.get().create(level);
             if (monolith != null) {
-                monolith.moveTo(center.getX() + 0.5, center.getY() + 1.0, center.getZ() + 0.5, 0.0F, 0.0F);
+                boolean isNew = monolith != awakened;
+                monolith.setActive(true);
+                monolith.setCustomName(Component.translatable("entity.awakening_system.ley_line_monolith.full"));
+                if (isNew) monolith.moveTo(center.getX() + 0.5, center.getY() + 1.0, center.getZ() + 0.5, 0.0F, 0.0F);
                 if (monolith.getAttribute(Attributes.MAX_HEALTH) != null) {
                     monolith.getAttribute(Attributes.MAX_HEALTH).setBaseValue(session.monolithMaxHp);
                     monolith.setHealth(session.monolithMaxHp);
                 }
-                level.addFreshEntity(monolith);
+                if (isNew) level.addFreshEntity(monolith);
+                else level.playSound(null, monolith.getX(), monolith.getY() + 1.5, monolith.getZ(),
+                        net.minecraft.sounds.SoundEvents.BEACON_ACTIVATE, net.minecraft.sounds.SoundSource.PLAYERS, 1.2F, 1.2F);
                 session.monolithEntityId = monolith.getUUID();
                 session.monolithSpawned = true;
             }

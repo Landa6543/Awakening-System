@@ -1,9 +1,9 @@
 package com.soybe.awakeningsystem.entity.client;
 
 import com.mojang.blaze3d.vertex.PoseStack;
-import com.mojang.blaze3d.vertex.VertexConsumer;
 import com.soybe.awakeningsystem.AwakeningSystemMod;
 import com.soybe.awakeningsystem.entity.LeyLineMonolithEntity;
+import net.minecraft.client.renderer.LightTexture;
 import net.minecraft.client.renderer.MultiBufferSource;
 import net.minecraft.client.renderer.RenderType;
 import net.minecraft.client.renderer.entity.EntityRenderer;
@@ -11,12 +11,12 @@ import net.minecraft.client.renderer.entity.EntityRendererProvider;
 import net.minecraft.client.renderer.texture.OverlayTexture;
 import net.minecraft.resources.ResourceLocation;
 
-/**
- * Renderizador 3D para el Monolito de las Líneas Ley de Genshin Impact.
- */
+/** Draws the Monolith; once the challenge starts its gold lines glow (the _glow texture, drawn full bright). */
 public class LeyLineMonolithRenderer extends EntityRenderer<LeyLineMonolithEntity> {
     private static final ResourceLocation MONOLITH_TEXTURE =
             ResourceLocation.fromNamespaceAndPath(AwakeningSystemMod.MOD_ID, "textures/entity/abyss/ley_line_monolith.png");
+    private static final ResourceLocation GLOW_TEXTURE =
+            ResourceLocation.fromNamespaceAndPath(AwakeningSystemMod.MOD_ID, "textures/entity/abyss/ley_line_monolith_glow.png");
 
     private final LeyLineMonolithModel model;
 
@@ -31,15 +31,15 @@ public class LeyLineMonolithRenderer extends EntityRenderer<LeyLineMonolithEntit
                        PoseStack poseStack, MultiBufferSource buffer, int packedLight) {
         poseStack.pushPose();
         // models are made with y growing downwards: turned the right way up and standing on the floor
-        // (it was drawn upside down, half under the floor), a little larger than a man
         poseStack.scale(-1.25F, -1.25F, 1.25F);
         poseStack.translate(0.0F, -1.501F, 0.0F);
 
         float ageInTicks = (float) entity.tickCount + partialTicks;
         this.model.setupAnim(entity, 0.0F, 0.0F, ageInTicks, 0.0F, 0.0F);
-
-        VertexConsumer vertexConsumer = buffer.getBuffer(RenderType.entityCutoutNoCull(this.getTextureLocation(entity)));
-        this.model.renderToBuffer(poseStack, vertexConsumer, packedLight, OverlayTexture.NO_OVERLAY);
+        this.model.renderToBuffer(poseStack, buffer.getBuffer(RenderType.entityCutoutNoCull(MONOLITH_TEXTURE)), packedLight, OverlayTexture.NO_OVERLAY);
+        if (entity.isActive()) {
+            this.model.renderToBuffer(poseStack, buffer.getBuffer(RenderType.eyes(GLOW_TEXTURE)), LightTexture.FULL_BRIGHT, OverlayTexture.NO_OVERLAY);
+        }
 
         poseStack.popPose();
         super.render(entity, entityYaw, partialTicks, poseStack, buffer, packedLight);

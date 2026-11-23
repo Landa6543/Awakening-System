@@ -11,79 +11,54 @@ import net.minecraft.resources.ResourceLocation;
 import net.minecraft.util.Mth;
 
 /**
- * Modelo 3D Canónico del Monolito de las Líneas Ley de Genshin Impact.
- * Consta de un pedestal rúnico de piedra antigua, un obelisco levitante central,
- * anillos rúnicos exteriores flotantes que giran en direcciones opuestas y
- * fragmentos de cristal en la cúspide.
+ * The Ley Line Monolith of the defence chambers, in the Spiral Abyss style: a tapered teal crystal framed with
+ * gold lines, on a stepped slate base ringed by jagged rocks. The gold lights up when the challenge starts
+ * (see the glow layer in the renderer). Built by our own generator (MakeAbyssPieces).
  */
 public class LeyLineMonolithModel extends HierarchicalModel<LeyLineMonolithEntity> {
     public static final ModelLayerLocation LAYER_LOCATION = new ModelLayerLocation(
             ResourceLocation.fromNamespaceAndPath(AwakeningSystemMod.MOD_ID, "ley_line_monolith"), "main");
 
     private final ModelPart root;
-    private final ModelPart pedestal;
-    private final ModelPart obelisk;
-    private final ModelPart core;
-    private final ModelPart ringLower;
-    private final ModelPart ringUpper;
-    private final ModelPart crystals;
+    private final ModelPart crystal;
 
     public LeyLineMonolithModel(ModelPart root) {
         this.root = root;
-        this.pedestal = root.getChild("pedestal");
-        this.obelisk = root.getChild("obelisk");
-        this.core = this.obelisk.getChild("core");
-        this.ringLower = root.getChild("ring_lower");
-        this.ringUpper = root.getChild("ring_upper");
-        this.crystals = root.getChild("crystals");
+        this.crystal = root.getChild("crystal");
     }
 
     public static LayerDefinition createBodyLayer() {
         MeshDefinition mesh = new MeshDefinition();
         PartDefinition root = mesh.getRoot();
 
-        PartDefinition pedestal = root.addOrReplaceChild("pedestal", CubeListBuilder.create()
-                .texOffs(0, 0).addBox(-12.0F, -2.0F, -12.0F, 24.0F, 2.0F, 24.0F, new CubeDeformation(0.0F))
-                .texOffs(0, 28).addBox(-10.0F, -4.0F, -10.0F, 20.0F, 2.0F, 20.0F, new CubeDeformation(0.0F))
-                .texOffs(0, 52).addBox(-7.0F, -7.0F, -7.0F, 14.0F, 3.0F, 14.0F, new CubeDeformation(0.0F))
-                .texOffs(0, 72).addBox(-9.0F, -6.0F, -9.0F, 3.0F, 4.0F, 3.0F, new CubeDeformation(0.0F))
-                .texOffs(0, 72).addBox(6.0F, -6.0F, -9.0F, 3.0F, 4.0F, 3.0F, new CubeDeformation(0.0F))
-                .texOffs(0, 72).addBox(-9.0F, -6.0F, 6.0F, 3.0F, 4.0F, 3.0F, new CubeDeformation(0.0F))
-                .texOffs(0, 72).addBox(6.0F, -6.0F, 6.0F, 3.0F, 4.0F, 3.0F, new CubeDeformation(0.0F)),
-                PartPose.offset(0.0F, 24.0F, 0.0F));
-
-        PartDefinition obelisk = root.addOrReplaceChild("obelisk", CubeListBuilder.create()
-                .texOffs(58, 52).addBox(-5.0F, -16.0F, -5.0F, 10.0F, 16.0F, 10.0F, new CubeDeformation(0.0F))
-                .texOffs(0, 80).addBox(-4.0F, -30.0F, -4.0F, 8.0F, 14.0F, 8.0F, new CubeDeformation(0.0F))
-                .texOffs(34, 80).addBox(-2.5F, -36.0F, -2.5F, 5.0F, 6.0F, 5.0F, new CubeDeformation(0.0F))
-                .texOffs(64, 0).addBox(-1.0F, -26.0F, -7.0F, 2.0F, 20.0F, 14.0F, new CubeDeformation(0.0F))
-                .texOffs(96, 0).addBox(-7.0F, -26.0F, -1.0F, 14.0F, 20.0F, 2.0F, new CubeDeformation(0.0F)),
-                PartPose.offset(0.0F, 8.0F, 0.0F));
-
-        obelisk.addOrReplaceChild("core", CubeListBuilder.create()
-                .texOffs(42, 94).addBox(-3.0F, -22.0F, -3.0F, 6.0F, 12.0F, 6.0F, new CubeDeformation(0.0F)),
-                PartPose.ZERO);
-
-        root.addOrReplaceChild("ring_lower", CubeListBuilder.create()
-                .texOffs(60, 94).addBox(-8.0F, -1.0F, -10.0F, 16.0F, 2.0F, 2.0F, new CubeDeformation(0.0F))
-                .texOffs(60, 94).addBox(-8.0F, -1.0F, 8.0F, 16.0F, 2.0F, 2.0F, new CubeDeformation(0.0F))
-                .texOffs(68, 100).addBox(-10.0F, -1.0F, -6.0F, 2.0F, 2.0F, 12.0F, new CubeDeformation(0.0F))
-                .texOffs(68, 100).addBox(8.0F, -1.0F, -6.0F, 2.0F, 2.0F, 12.0F, new CubeDeformation(0.0F)),
-                PartPose.offset(0.0F, 6.0F, 0.0F));
-
-        root.addOrReplaceChild("ring_upper", CubeListBuilder.create()
-                .texOffs(0, 106).addBox(-6.0F, -1.0F, -8.0F, 12.0F, 2.0F, 2.0F, new CubeDeformation(0.0F))
-                .texOffs(0, 106).addBox(-6.0F, -1.0F, 6.0F, 12.0F, 2.0F, 2.0F, new CubeDeformation(0.0F))
-                .texOffs(0, 112).addBox(-8.0F, -1.0F, -5.0F, 2.0F, 2.0F, 10.0F, new CubeDeformation(0.0F))
-                .texOffs(0, 112).addBox(6.0F, -1.0F, -5.0F, 2.0F, 2.0F, 10.0F, new CubeDeformation(0.0F)),
-                PartPose.offset(0.0F, -10.0F, 0.0F));
-
-        root.addOrReplaceChild("crystals", CubeListBuilder.create()
-                .texOffs(26, 112).addBox(5.0F, -10.0F, 0.0F, 2.0F, 5.0F, 2.0F, new CubeDeformation(0.0F))
-                .texOffs(26, 112).addBox(-7.0F, -10.0F, 0.0F, 2.0F, 5.0F, 2.0F, new CubeDeformation(0.0F))
-                .texOffs(26, 112).addBox(0.0F, -10.0F, 5.0F, 2.0F, 5.0F, 2.0F, new CubeDeformation(0.0F))
-                .texOffs(26, 112).addBox(0.0F, -10.0F, -7.0F, 2.0F, 5.0F, 2.0F, new CubeDeformation(0.0F)),
-                PartPose.offset(0.0F, -20.0F, 0.0F));
+        PartDefinition base = root.addOrReplaceChild("base", CubeListBuilder.create()
+                .texOffs(0, 0).addBox(-11F, -2F, -11F, 22F, 2F, 22F)
+                .texOffs(0, 24).addBox(-9F, -4F, -9F, 18F, 2F, 18F)
+                .texOffs(0, 61).addBox(-7F, -5F, -7F, 14F, 1F, 14F),
+                PartPose.offsetAndRotation(0F, 24F, 0F, 0F, 0F, 0F));
+        // jagged rocks round the foot, leaning outwards
+        float lean = -0.38397244F;
+        float[][] big = {{-7F, -7F, 0.7853982F}, {7F, -7F, -0.7853982F}, {-7F, 7F, 2.3561945F}, {7F, 7F, -2.3561945F}};
+        for (int i = 0; i < big.length; i++) {
+            base.addOrReplaceChild("spike" + i, CubeListBuilder.create()
+                    .texOffs(0, 76).addBox(-2.5F, -9F, -1F, 5F, 9F, 2F),
+                    PartPose.offsetAndRotation(big[i][0], -4F, big[i][1], lean, big[i][2], 0F));
+        }
+        float[][] small = {{0F, -9F, 0F}, {0F, 9F, 3.1415927F}, {-9F, 0F, 1.5707964F}, {9F, 0F, -1.5707964F}};
+        for (int i = 0; i < small.length; i++) {
+            base.addOrReplaceChild("spike" + (i + 4), CubeListBuilder.create()
+                    .texOffs(50, 76).addBox(-1.5F, -6F, -1F, 3F, 6F, 2F),
+                    PartPose.offsetAndRotation(small[i][0], -4F, small[i][1], lean, small[i][2], 0F));
+        }
+        root.addOrReplaceChild("crystal", CubeListBuilder.create()
+                .texOffs(72, 24).addBox(-6F, -6F, -6F, 12F, 6F, 12F)
+                .texOffs(0, 44).addBox(-5.5F, -12F, -5.5F, 11F, 6F, 11F)
+                .texOffs(44, 44).addBox(-5F, -18F, -5F, 10F, 6F, 10F)
+                .texOffs(56, 61).addBox(-4.5F, -24F, -4.5F, 9F, 6F, 9F)
+                .texOffs(92, 61).addBox(-4F, -28F, -4F, 8F, 4F, 8F)
+                .texOffs(14, 76).addBox(-4.5F, -30F, -4.5F, 9F, 2F, 9F)
+                .texOffs(60, 76).addBox(-2F, -32F, -2F, 4F, 2F, 4F),
+                PartPose.offsetAndRotation(0F, 19F, 0F, 0F, 0F, 0F));
 
         return LayerDefinition.create(mesh, 128, 128);
     }
@@ -97,20 +72,7 @@ public class LeyLineMonolithModel extends HierarchicalModel<LeyLineMonolithEntit
     public void setupAnim(LeyLineMonolithEntity entity, float limbSwing, float limbSwingAmount,
                           float ageInTicks, float netHeadYaw, float headPitch) {
         this.root().getAllParts().forEach(ModelPart::resetPose);
-
-        float floatOffset = Mth.sin(ageInTicks * 0.05F) * 1.8F;
-        this.obelisk.y = 8.0F + floatOffset;
-
-        this.ringLower.yRot = ageInTicks * 0.035F;
-        this.ringLower.y = 6.0F + floatOffset * 0.5F;
-
-        this.ringUpper.yRot = -ageInTicks * 0.045F;
-        this.ringUpper.xRot = 0.10F * Mth.sin(ageInTicks * 0.03F);
-        this.ringUpper.y = -10.0F + floatOffset * 0.7F;
-
-        this.core.yRot = ageInTicks * 0.08F;
-
-        this.crystals.yRot = ageInTicks * 0.05F;
-        this.crystals.y = -20.0F + floatOffset + Mth.cos(ageInTicks * 0.07F) * 1.2F;
+        // once awake, the crystal lifts a little off its base and breathes
+        if (entity.isActive()) this.crystal.y = 18.4F + Mth.sin(ageInTicks * 0.06F) * 0.4F;
     }
 }

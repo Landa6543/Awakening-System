@@ -11,56 +11,74 @@ import net.minecraft.resources.ResourceLocation;
 import net.minecraft.util.Mth;
 
 /**
- * Modelo 3D Canónico de la Llave Roja de Desafío / Espada del Abismo de Genshin Impact.
- * Consta de un pedestal rúnico de obsidiana, una espada ceremonial carmesí levitante
- * y un dial orbital giratorio con nodos rúnicos cardinales.
+ * The challenge key of the "defeat the enemies" chambers, in the Spiral Abyss style: a floating red staff with a
+ * frame round its middle, a horned head whose horns sweep up and curl in, and a blue wire cube turning over it.
+ * Built by our own generator (MakeAbyssPieces).
  */
 public class AbyssChallengeKeyModel extends HierarchicalModel<AbyssChallengeKeyEntity> {
     public static final ModelLayerLocation LAYER_LOCATION = new ModelLayerLocation(
             ResourceLocation.fromNamespaceAndPath(AwakeningSystemMod.MOD_ID, "abyss_challenge_key"), "main");
 
     private final ModelPart root;
-    private final ModelPart pedestal;
-    private final ModelPart sword;
-    private final ModelPart dial;
+    private final ModelPart staff;
+    private final ModelPart cube;
 
     public AbyssChallengeKeyModel(ModelPart root) {
         this.root = root;
-        this.pedestal = root.getChild("pedestal");
-        this.sword = root.getChild("sword");
-        this.dial = root.getChild("dial");
+        this.staff = root.getChild("staff");
+        this.cube = root.getChild("cube");
     }
 
     public static LayerDefinition createBodyLayer() {
         MeshDefinition mesh = new MeshDefinition();
         PartDefinition root = mesh.getRoot();
 
-        PartDefinition pedestal = root.addOrReplaceChild("pedestal", CubeListBuilder.create()
-                .texOffs(0, 0).addBox(-7.0F, -2.0F, -7.0F, 14.0F, 2.0F, 14.0F, new CubeDeformation(0.0F))
-                .texOffs(0, 18).addBox(-5.0F, -4.0F, -5.0F, 10.0F, 2.0F, 10.0F, new CubeDeformation(0.0F))
-                .texOffs(0, 31).addBox(-3.0F, -5.0F, -3.0F, 6.0F, 1.0F, 6.0F, new CubeDeformation(0.0F)),
-                PartPose.offset(0.0F, 24.0F, 0.0F));
+        PartDefinition staff = root.addOrReplaceChild("staff", CubeListBuilder.create()
+                .texOffs(0, 0).addBox(-1F, -28F, -1F, 2F, 22F, 2F)
+                .texOffs(0, 24).addBox(-1.5F, -7F, -1.5F, 3F, 2F, 3F)
+                .texOffs(8, 0).addBox(-4F, -17F, -1F, 1F, 8F, 2F)
+                .texOffs(8, 0).addBox(3F, -17F, -1F, 1F, 8F, 2F)
+                .texOffs(0, 29).addBox(-4F, -18F, -1F, 8F, 1F, 2F)
+                .texOffs(0, 29).addBox(-4F, -10F, -1F, 8F, 1F, 2F)
+                .texOffs(22, 0).addBox(-2F, -33F, -1F, 4F, 5F, 2F)
+                .texOffs(12, 24).addBox(-1.5F, -36F, -1F, 3F, 3F, 2F)
+                .texOffs(22, 24).addBox(-1F, -32F, -1.5F, 2F, 2F, 3F)
+                .texOffs(52, 0).addBox(-0.5F, -41F, -0.5F, 1F, 5F, 1F),
+                PartPose.offset(0F, 24F, 0F));
 
-        PartDefinition sword = root.addOrReplaceChild("sword", CubeListBuilder.create()
-                .texOffs(32, 18).addBox(-1.5F, -24.0F, -1.5F, 3.0F, 3.0F, 3.0F, new CubeDeformation(0.0F))
-                .texOffs(46, 18).addBox(-1.0F, -21.0F, -1.0F, 2.0F, 6.0F, 2.0F, new CubeDeformation(0.0F))
-                .texOffs(0, 40).addBox(-7.0F, -15.0F, -1.5F, 14.0F, 2.0F, 3.0F, new CubeDeformation(0.0F))
-                .texOffs(36, 40).addBox(-2.0F, -16.0F, -2.0F, 4.0F, 4.0F, 4.0F, new CubeDeformation(0.0F))
-                .texOffs(0, 47).addBox(-3.0F, -13.0F, -1.0F, 6.0F, 6.0F, 2.0F, new CubeDeformation(0.0F))
-                .texOffs(18, 47).addBox(-2.5F, -7.0F, -1.0F, 5.0F, 8.0F, 2.0F, new CubeDeformation(0.0F))
-                .texOffs(34, 47).addBox(-1.5F, 1.0F, -0.5F, 3.0F, 4.0F, 1.0F, new CubeDeformation(0.0F)),
-                PartPose.offset(0.0F, 8.0F, 0.0F));
+        for (int sgn : new int[]{-1, 1}) {
+            String side = sgn < 0 ? "_left" : "_right";
+            PartDefinition horn = staff.addOrReplaceChild("horn" + side, CubeListBuilder.create()
+                    .texOffs(32, 24).addBox(sgn < 0 ? -9F : 0F, -1.5F, -1F, 9F, 3F, 2F),
+                    PartPose.offsetAndRotation(sgn * 1.5F, -30F, 0F, 0F, 0F, sgn * -0.6981317F));
+            PartDefinition tip = horn.addOrReplaceChild("tip" + side, CubeListBuilder.create()
+                    .texOffs(14, 0).addBox(-1F, -6F, -1F, 2F, 6F, 2F),
+                    PartPose.offsetAndRotation(sgn * 8.5F, -0.5F, 0F, 0F, 0F, sgn * 0.08726646F));
+            tip.addOrReplaceChild("hook" + side, CubeListBuilder.create()
+                    .texOffs(54, 24).addBox(-0.5F, -3F, -0.5F, 1F, 3F, 1F),
+                    PartPose.offsetAndRotation(0F, -6F, 0F, 0F, 0F, sgn * -0.7853982F));
+            staff.addOrReplaceChild("inner" + side, CubeListBuilder.create()
+                    .texOffs(20, 29).addBox(sgn < 0 ? -6F : 0F, -1F, -0.5F, 6F, 2F, 1F),
+                    PartPose.offsetAndRotation(sgn * 1.5F, -28F, 0F, 0F, 0F, sgn * -0.34906584F));
+            staff.addOrReplaceChild("curl" + side, CubeListBuilder.create()
+                    .texOffs(34, 29).addBox(sgn < 0 ? -4F : 0F, 0F, -0.5F, 4F, 1F, 1F),
+                    PartPose.offsetAndRotation(sgn * 2F, -28F, 0F, 0F, 0F, sgn * 0.61086524F));
+        }
 
-        PartDefinition dial = root.addOrReplaceChild("dial", CubeListBuilder.create()
-                .texOffs(0, 57).addBox(-6.0F, -0.5F, -7.0F, 12.0F, 1.0F, 1.0F, new CubeDeformation(0.0F))
-                .texOffs(0, 57).addBox(-6.0F, -0.5F, 6.0F, 12.0F, 1.0F, 1.0F, new CubeDeformation(0.0F))
-                .texOffs(28, 52).addBox(-7.0F, -0.5F, -5.0F, 1.0F, 1.0F, 10.0F, new CubeDeformation(0.0F))
-                .texOffs(28, 52).addBox(6.0F, -0.5F, -5.0F, 1.0F, 1.0F, 10.0F, new CubeDeformation(0.0F))
-                .texOffs(52, 52).addBox(-1.0F, -1.5F, -7.5F, 2.0F, 3.0F, 2.0F, new CubeDeformation(0.0F))
-                .texOffs(52, 52).addBox(-1.0F, -1.5F, 5.5F, 2.0F, 3.0F, 2.0F, new CubeDeformation(0.0F))
-                .texOffs(52, 52).addBox(-7.5F, -1.5F, -1.0F, 2.0F, 3.0F, 2.0F, new CubeDeformation(0.0F))
-                .texOffs(52, 52).addBox(5.5F, -1.5F, -1.0F, 2.0F, 3.0F, 2.0F, new CubeDeformation(0.0F)),
-                PartPose.offset(0.0F, 9.0F, 0.0F));
+        root.addOrReplaceChild("cube", CubeListBuilder.create()
+                .texOffs(44, 29).addBox(-4F, -4F, -4F, 8F, 1F, 1F)
+                .texOffs(44, 29).addBox(-4F, -4F, 3F, 8F, 1F, 1F)
+                .texOffs(44, 29).addBox(-4F, 3F, -4F, 8F, 1F, 1F)
+                .texOffs(44, 29).addBox(-4F, 3F, 3F, 8F, 1F, 1F)
+                .texOffs(34, 0).addBox(-4F, -3F, -4F, 1F, 6F, 1F)
+                .texOffs(34, 0).addBox(-4F, -3F, 3F, 1F, 6F, 1F)
+                .texOffs(34, 0).addBox(3F, -3F, -4F, 1F, 6F, 1F)
+                .texOffs(34, 0).addBox(3F, -3F, 3F, 1F, 6F, 1F)
+                .texOffs(38, 0).addBox(-4F, -4F, -3F, 1F, 1F, 6F)
+                .texOffs(38, 0).addBox(-4F, 3F, -3F, 1F, 1F, 6F)
+                .texOffs(38, 0).addBox(3F, -4F, -3F, 1F, 1F, 6F)
+                .texOffs(38, 0).addBox(3F, 3F, -3F, 1F, 1F, 6F),
+                PartPose.offset(0F, -22F, 0F));
 
         return LayerDefinition.create(mesh, 64, 64);
     }
@@ -74,13 +92,12 @@ public class AbyssChallengeKeyModel extends HierarchicalModel<AbyssChallengeKeyE
     public void setupAnim(AbyssChallengeKeyEntity entity, float limbSwing, float limbSwingAmount,
                           float ageInTicks, float netHeadYaw, float headPitch) {
         this.root().getAllParts().forEach(ModelPart::resetPose);
-
-        float hover = Mth.sin(ageInTicks * 0.08F) * 1.5F;
-        this.sword.y = 8.0F + hover;
-        this.sword.yRot = ageInTicks * 0.035F;
-
-        this.dial.y = 9.0F + hover;
-        this.dial.yRot = -ageInTicks * 0.05F;
-        this.dial.xRot = 0.08F * Mth.sin(ageInTicks * 0.04F);
+        float hover = Mth.sin(ageInTicks * 0.08F) * 1.2F;
+        this.staff.y = 24.0F + hover;
+        // the cube tumbles slowly over the head
+        this.cube.y = -22.0F + hover;
+        this.cube.yRot = ageInTicks * 0.04F;
+        this.cube.xRot = 0.6F + Mth.sin(ageInTicks * 0.03F) * 0.25F;
+        this.cube.zRot = 0.6F;
     }
 }

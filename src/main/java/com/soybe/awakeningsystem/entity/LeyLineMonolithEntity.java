@@ -30,6 +30,48 @@ public class LeyLineMonolithEntity extends LivingEntity {
     private int aggroPulseCooldown = 20;
     private int invulnTicks = 0;
 
+    /**
+     * Asleep, the Monolith is what starts a defence chamber (touch or strike it, as in the Spiral Abyss): it
+     * cannot be hurt and its gold lines are dark. Awake, the gold glows and the chamber's foes come for it.
+     */
+    private static final net.minecraft.network.syncher.EntityDataAccessor<Boolean> ACTIVE =
+            net.minecraft.network.syncher.SynchedEntityData.defineId(LeyLineMonolithEntity.class, net.minecraft.network.syncher.EntityDataSerializers.BOOLEAN);
+
+    @Override
+    protected void defineSynchedData(net.minecraft.network.syncher.SynchedEntityData.Builder builder) {
+        super.defineSynchedData(builder);
+        builder.define(ACTIVE, true);
+    }
+
+    public boolean isActive() {
+        return this.entityData.get(ACTIVE);
+    }
+
+    public void setActive(boolean active) {
+        this.entityData.set(ACTIVE, active);
+    }
+
+    @Override
+    public net.minecraft.world.InteractionResult interact(net.minecraft.world.entity.player.Player player, net.minecraft.world.InteractionHand hand) {
+        if (!isActive() && !this.level().isClientSide && player instanceof net.minecraft.server.level.ServerPlayer sp) {
+            com.soybe.awakeningsystem.abyss.SpiralAbyssManager.triggerActivator(sp);
+            return net.minecraft.world.InteractionResult.SUCCESS;
+        }
+        return super.interact(player, hand);
+    }
+
+    @Override
+    public void addAdditionalSaveData(net.minecraft.nbt.CompoundTag tag) {
+        super.addAdditionalSaveData(tag);
+        tag.putBoolean("MonolithActive", isActive());
+    }
+
+    @Override
+    public void readAdditionalSaveData(net.minecraft.nbt.CompoundTag tag) {
+        super.readAdditionalSaveData(tag);
+        if (tag.contains("MonolithActive")) setActive(tag.getBoolean("MonolithActive"));
+    }
+
     public LeyLineMonolithEntity(EntityType<? extends LivingEntity> entityType, Level level) {
         super(entityType, level);
         this.setCustomName(Component.translatable("entity.awakening_system.ley_line_monolith.full"));
@@ -104,6 +146,13 @@ public class LeyLineMonolithEntity extends LivingEntity {
 
     @Override
     public boolean hurt(DamageSource source, float amount) {
+        if (!isActive()) {
+            // asleep: a player's blow wakes it and starts the chamber; nothing else touches it
+            if (!this.level().isClientSide && source.getEntity() instanceof net.minecraft.server.level.ServerPlayer sp) {
+                com.soybe.awakeningsystem.abyss.SpiralAbyssManager.triggerActivator(sp);
+            }
+            return false;
+        }
         if (source.getEntity() instanceof net.minecraft.world.entity.player.Player ||
             source.getDirectEntity() instanceof net.minecraft.world.entity.player.Player) {
             return false;
@@ -178,7 +227,7 @@ public class LeyLineMonolithEntity extends LivingEntity {
         }
 
         // no particles round it any more: they hid the fight (its rings and core move on the model instead)
-        if (!this.level().isClientSide) {
+        if (!this.level().isClientSide && isActive()) {
             this.aggroPulseCooldown--;
             if (this.aggroPulseCooldown <= 0) {
                 this.aggroPulseCooldown = 20;
