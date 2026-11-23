@@ -737,6 +737,14 @@ Sistema dinámico de eventos de temporada integrando consumibles gastronómicos 
 * **Comando `/setclass <clase> [jugador]`** (admins y creador): cambia de clase al momento, a una clase base o a una evolución, para probar las clases.
 * **Jefes:** el nombre ya no dice "WORLD BOSS" (el marco de jefe ya lo indica); queda solo el nivel y el nombre, como "[Lv. 150] Beru, the Ant King".
 * **Beru, el Rey Hormiga:** suena como sus hormigas pero más grave, con chillido al alzar el vuelo y al golpear, en vez de los sonidos genéricos de antes.
+* **Escala de daño de las armas por mundo:** las armas especiales siguen el orden de los mundos.
+  * Overworld (las de Solo Leveling y las básicas): 10 a 18.
+  * Torre de Rankers (Lambent Light, Dark Repulser, Elucidator, Espina Trascendente): 21 a 26.
+  * Isekai (Martillo de Adamantita, Mandoble de Valter, Espada Sagrada de Asrahan, Guadaña del Dragón Negro): 30 a 38.
+  * Murim (Feijian de Jade, Espada Voladora, Guandao del Dragón Astral, Espada del Demonio Celestial, Espada que Sacude el Cielo, Espada de Flor de Ciruelo): 42 a 52.
+  * Teyvat (armas de Genshin y del gacha según sus estrellas, Báculo de Homa, Espada de Protogema): 55 a 68.
+  * Únicas: Guadaña del Caballero del Terror 72, Mandoble del Vacío 75, La Doncella 80.
+  * **Mandoble del Creador: 100**, siempre el arma más fuerte del juego.
 * **Corregido:** la vista de las gafas del título de Creador se quedaba puesta después de quitarte el título; ahora solo funciona con el título equipado.
 * **Gacha de las Umas, como en la serie:** el cajón de salida se pinta de plata, oro o arcoíris según la rareza antes de abrirse, tiembla mientras espera y a veces sube de color con un destello justo antes de abrir. En la tienda de Paimon, el precio de los destinos muestra la Protogema de verdad.
 * **Niveles mínimos por mundo:** de los 2000 niveles, las criaturas de Isekai nunca bajan de nivel 300, las de Murim de 600 y las de Teyvat de 1000 (siguen subiendo con el jugador por encima de eso). Los slimes de Teyvat ya no pierden el nivel del nombre al recibir su elemento.
