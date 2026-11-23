@@ -523,6 +523,7 @@
   "awakening_system.agility_speed.toggle.current": "Сейчас: +%s%% к скорости передвижения (вкладывайте очки в Ловкость).",
   "awakening_system.command.setclass.unknown": "Неизвестный класс: %s",
   "awakening_system.command.setclass.done": "%s теперь %s",
+  "awakening_system.shadow.squad_default": "Отряд %s",
   "awakening_system.agility_speed.toggle.hint": "Нажмите для переключения.",
   "awakening_system.agility_speed.toggle.title": "Бонус скорости (Ловкость)",
   "awakening_system.alchemy.fire_active": "§a🔥 Духовное Пламя: АКТИВНО §7(Готово к трансмутации)",

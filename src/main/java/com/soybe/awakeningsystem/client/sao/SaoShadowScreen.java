@@ -77,7 +77,7 @@ public class SaoShadowScreen extends SaoWindow {
         List<CompoundTag> army = d.getStoredShadowArmy();
         for (int i = 0; i < army.size(); i++) {
             CompoundTag t = army.get(i);
-            int sq = t.contains("SquadId") ? t.getInt("SquadId") : 0;
+            int sq = t.contains("SquadId") ? t.getInt("SquadId") : -1;
             if (squad == -1 || sq == squad) out.add(new Entry(i, t));
         }
         return out;
@@ -167,7 +167,7 @@ public class SaoShadowScreen extends SaoWindow {
             g.pose().scale(0.75F, 0.75F, 1);
             g.drawString(this.font, key("kills").getString() + " " + t.getInt("ShadowKills"), 0, 0, alpha(GREY, a), false);
             g.pose().popPose();
-            int cur = t.contains("SquadId") ? t.getInt("SquadId") : 0;
+            int cur = t.contains("SquadId") ? t.getInt("SquadId") : -1;
             for (int s = 0; s < 4; s++)
                 softButton(g, pillX(s), ry + 4, 20, 14, Component.literal(ROMAN[s]), s == cur, mouseX, mouseY, a);
         }

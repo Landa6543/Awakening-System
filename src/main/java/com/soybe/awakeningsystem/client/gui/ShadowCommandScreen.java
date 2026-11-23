@@ -23,7 +23,7 @@ public class ShadowCommandScreen extends Screen {
     private static final int W = 380;
     private static final int H = 240;
 
-    private int selectedSquad = 0;
+    private int selectedSquad = -1;   // opens on "All": new shadows are in no squad yet
     private int scrollOffset = 0;
     private EditBox renameBox;
     private boolean isRenaming = false;
@@ -298,7 +298,7 @@ public class ShadowCommandScreen extends Screen {
             List<CompoundTag> army = data.getStoredShadowArmy();
             for (int idx = 0; idx < army.size(); idx++) {
                 CompoundTag tag = army.get(idx);
-                int sq = tag.contains("SquadId") ? tag.getInt("SquadId") : 0;
+                int sq = tag.contains("SquadId") ? tag.getInt("SquadId") : -1;
                 if (selectedSquad == -1 || sq == selectedSquad) {
                     squadShadows.add(new ShadowEntry(idx, tag));
                 }
@@ -358,7 +358,7 @@ public class ShadowCommandScreen extends Screen {
                 g.drawString(font, statsStr, listX + 6, iy + 14, 0xAAAAAA);
 
                 // 4 Custom Squad Pills: [ I ] [ II ] [ III ] [ IV ]
-                int currentMobSquad = sTag.contains("SquadId") ? sTag.getInt("SquadId") : 0;
+                int currentMobSquad = sTag.contains("SquadId") ? sTag.getInt("SquadId") : -1;
                 for (int sqTarget = 0; sqTarget < 4; sqTarget++) {
                     int sqX = squadBtnBaseX + sqTarget * 22;
                     int sqY = iy + 4;
@@ -460,6 +460,7 @@ public class ShadowCommandScreen extends Screen {
                     renameBox.setVisible(true);
                     SystemData d = getSystemData();
                     renameBox.setValue(d != null ? d.getShadowSquadName(selectedSquad) : "");
+                    // (an empty name puts the default one back)
                     renameBox.setFocused(true);
                     AwakeningSystemClient.playUiSound(ModSounds.SYSTEM_CLICK.value(), 1.0F, 1.2F);
                     return true;
@@ -493,7 +494,7 @@ public class ShadowCommandScreen extends Screen {
                 List<CompoundTag> army = data.getStoredShadowArmy();
                 for (int idx = 0; idx < army.size(); idx++) {
                     CompoundTag tag = army.get(idx);
-                    int sq = tag.contains("SquadId") ? tag.getInt("SquadId") : 0;
+                    int sq = tag.contains("SquadId") ? tag.getInt("SquadId") : -1;
                     if (selectedSquad == -1 || sq == selectedSquad) {
                         squadShadows.add(new ShadowEntry(idx, tag));
                     }
@@ -516,15 +517,17 @@ public class ShadowCommandScreen extends Screen {
                         int sqH = 15;
                         if (mouseX >= sqX && mouseX < sqX + sqW && mouseY >= sqY && mouseY < sqY + sqH) {
                             int currentSq = entry.tag().contains("SquadId") ? entry.tag().getInt("SquadId") : 0;
-                            if (sqTarget != currentSq) {
+                            {
+                                // clicking the squad it is already in takes it out of every squad
+                                int target = sqTarget == currentSq ? -1 : sqTarget;
                                 PacketDistributor.sendToServer(new ManageShadowSquadPayload(
                                         ManageShadowSquadPayload.ACTION_MOVE_SHADOW,
-                                        sqTarget,
+                                        target,
                                         entry.globalIndex(),
                                         ""
                                 ));
-                                data.setShadowSquad(entry.globalIndex(), sqTarget);
-                                entry.tag().putInt("SquadId", sqTarget);
+                                data.setShadowSquad(entry.globalIndex(), target);
+                                entry.tag().putInt("SquadId", target);
                                 AwakeningSystemClient.playUiSound(ModSounds.SYSTEM_CLICK.value(), 1.0F, 1.2F);
                                 return true;
                             }

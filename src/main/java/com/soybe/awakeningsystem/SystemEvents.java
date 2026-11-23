@@ -12941,7 +12941,7 @@ public final class SystemEvents {
       java.util.Iterator<CompoundTag> iter = data.getStoredShadowArmy().iterator();
       while (iter.hasNext()) {
          CompoundTag tag = iter.next();
-         int sq = tag.contains("SquadId") ? tag.getInt("SquadId") : 0;
+         int sq = tag.contains("SquadId") ? tag.getInt("SquadId") : -1;
          if (sq == squadId) {
             toDeploy.add(tag);
             iter.remove();
@@ -12953,7 +12953,7 @@ public final class SystemEvents {
             "awakening_system.notification.squad_empty.title",
             "awakening_system.notification.squad_empty.desc",
             -35226,
-            new Object[]{data.getShadowSquadName(squadId)}
+            new Object[]{data.squadNameComponent(squadId)}
          );
          return 0;
       }
@@ -13011,7 +13011,7 @@ public final class SystemEvents {
          "awakening_system.notification.squad_deployed.title",
          "awakening_system.notification.squad_deployed.desc",
          -6723841,
-         new Object[]{data.getShadowSquadName(squadId), String.valueOf(total)}
+         new Object[]{data.squadNameComponent(squadId), String.valueOf(total)}
       );
       AwakeningSystemMod.sync(player);
       return total;
@@ -13034,7 +13034,7 @@ public final class SystemEvents {
             "awakening_system.notification.squad_none_active.title",
             "awakening_system.notification.squad_none_active.desc",
             -35226,
-            new Object[]{data.getShadowSquadName(squadId)}
+            new Object[]{data.squadNameComponent(squadId)}
          );
          return 0;
       }
@@ -13111,7 +13111,7 @@ public final class SystemEvents {
          "awakening_system.notification.squad_recalled.title",
          "awakening_system.notification.squad_recalled.desc",
          -6723841,
-         new Object[]{data.getShadowSquadName(squadId), String.valueOf(count)}
+         new Object[]{data.squadNameComponent(squadId), String.valueOf(count)}
       );
       AwakeningSystemMod.sync(player);
       return count;

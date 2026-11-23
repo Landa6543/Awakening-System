@@ -274,6 +274,7 @@
   "awakening_system.agility_speed.toggle.current": "Right now: +%s%% movement speed (put points in Agility to raise it).",
   "awakening_system.command.setclass.unknown": "Unknown class: %s",
   "awakening_system.command.setclass.done": "%s is now %s",
+  "awakening_system.shadow.squad_default": "Squad %s",
   "awakening_system.agility_speed.toggle.hint": "Click to toggle.",
   "awakening_system.agility_speed.toggle.title": "Agility Movement Geschwindigkeit Bonus",
   "awakening_system.alchemy.fire_active": "§a🔥 Spiritual Flame: ACTIVE §7(Ready to transmute)",

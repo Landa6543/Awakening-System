@@ -523,6 +523,7 @@
   "awakening_system.agility_speed.toggle.current": "Agora: +%s%% de velocidade de movimento (coloque pontos em Agilidade para aumentar).",
   "awakening_system.command.setclass.unknown": "Classe desconhecida: %s",
   "awakening_system.command.setclass.done": "%s agora é %s",
+  "awakening_system.shadow.squad_default": "Esquadrão %s",
   "awakening_system.agility_speed.toggle.hint": "Clique para alternar.",
   "awakening_system.agility_speed.toggle.title": "Bônus de Velocidade de Movimento da Agilidade",
   "awakening_system.alchemy.fire_active": "§a🔥 Chama Espiritual: ATIVA §7(Pronta para transmutar)",

@@ -196,10 +196,7 @@ public final class SystemData implements INBTSerializable<CompoundTag> {
     private final java.util.List<CompoundTag> storedShadowArmy = new java.util.ArrayList<>();
     public static final int SQUAD_COUNT = 4;
     private final String[] shadowSquadNames = new String[]{
-            "Escuadrón 1",
-            "Escuadrón 2",
-            "Escuadrón 3",
-            "Escuadrón 4"
+            "", "", "", ""   // "": the default name, "Squad N" in the player's language
     };
 
     private final java.util.List<String> equippedActiveSkills = new java.util.ArrayList<>(java.util.List.of("", "", "", "", ""));
@@ -901,16 +898,26 @@ public final class SystemData implements INBTSerializable<CompoundTag> {
         return base + rankBonus + intBonus + classBonus;
     }
 
+    /** The name the player gave the squad, or "" while it keeps its default one. */
+    public String getCustomSquadName(int squadId) {
+        return squadId >= 0 && squadId < shadowSquadNames.length && shadowSquadNames[squadId] != null ? shadowSquadNames[squadId] : "";
+    }
+
+    /** The squad's name to show: the player's, or "Squad N" in the game's language. */
+    public net.minecraft.network.chat.Component squadNameComponent(int squadId) {
+        String custom = getCustomSquadName(squadId);
+        return custom.isEmpty() ? net.minecraft.network.chat.Component.translatable("awakening_system.shadow.squad_default", squadId + 1)
+                : net.minecraft.network.chat.Component.literal(custom);
+    }
+
+    /** The squad's name as text (on the client, in the player's language). */
     public String getShadowSquadName(int squadId) {
-        if (squadId >= 0 && squadId < shadowSquadNames.length) {
-            return shadowSquadNames[squadId];
-        }
-        return "Squad " + (squadId + 1);
+        return squadNameComponent(squadId).getString();
     }
 
     public void setShadowSquadName(int squadId, String name) {
-        if (squadId >= 0 && squadId < shadowSquadNames.length && name != null && !name.trim().isEmpty()) {
-            shadowSquadNames[squadId] = name.trim();
+        if (squadId >= 0 && squadId < shadowSquadNames.length && name != null) {
+            shadowSquadNames[squadId] = name.trim();   // empty: back to the default name
         }
     }
 
@@ -921,7 +928,7 @@ public final class SystemData implements INBTSerializable<CompoundTag> {
     public java.util.List<CompoundTag> getShadowsInSquad(int squadId) {
         java.util.List<CompoundTag> list = new java.util.ArrayList<>();
         for (CompoundTag tag : storedShadowArmy) {
-            int sq = tag.contains("SquadId") ? tag.getInt("SquadId") : 0;
+            int sq = tag.contains("SquadId") ? tag.getInt("SquadId") : -1;
             if (sq == squadId) {
                 list.add(tag);
             }
@@ -932,14 +939,15 @@ public final class SystemData implements INBTSerializable<CompoundTag> {
     public int getShadowCountInSquad(int squadId) {
         int count = 0;
         for (CompoundTag tag : storedShadowArmy) {
-            int sq = tag.contains("SquadId") ? tag.getInt("SquadId") : 0;
+            int sq = tag.contains("SquadId") ? tag.getInt("SquadId") : -1;
             if (sq == squadId) count++;
         }
         return count;
     }
 
     public void setShadowSquad(int shadowIndex, int targetSquadId) {
-        if (shadowIndex >= 0 && shadowIndex < storedShadowArmy.size() && targetSquadId >= 0 && targetSquadId < SQUAD_COUNT) {
+        // -1: in no squad (only in "All")
+        if (shadowIndex >= 0 && shadowIndex < storedShadowArmy.size() && targetSquadId >= -1 && targetSquadId < SQUAD_COUNT) {
             storedShadowArmy.get(shadowIndex).putInt("SquadId", targetSquadId);
         }
     }
@@ -951,7 +959,7 @@ public final class SystemData implements INBTSerializable<CompoundTag> {
                 return;
             }
             if (!shadowTag.contains("SquadId")) {
-                shadowTag.putInt("SquadId", 0);
+                shadowTag.putInt("SquadId", -1);   // a new shadow is in no squad until the player puts it in one
             }
             storedShadowArmy.add(shadowTag);
         }
@@ -3166,6 +3174,7 @@ public final class SystemData implements INBTSerializable<CompoundTag> {
             squadNamesTag.add(net.minecraft.nbt.StringTag.valueOf(sName));
         }
         tag.put("shadow_squad_names", squadNamesTag);
+        tag.putBoolean("shadow_squads_v2", true);
         tag.putBoolean("conquered_ranker_tower", conqueredRankerTower);
         tag.putInt("saved_tower_floor", savedTowerFloor);
         tag.putBoolean("conquered_nine_tribulations_pagoda", conqueredNineTribulationsPagoda);
@@ -3528,13 +3537,20 @@ public final class SystemData implements INBTSerializable<CompoundTag> {
                 }
             }
         }
+        if (!tag.getBoolean("shadow_squads_v2")) {
+            // before, every shadow went to squad I on its own: those come out of it, so the player picks their squad
+            for (CompoundTag s : storedShadowArmy) {
+                if (!s.contains("SquadId") || s.getInt("SquadId") == 0) s.putInt("SquadId", -1);
+            }
+        }
         if (tag.contains("shadow_squad_names", net.minecraft.nbt.Tag.TAG_LIST)) {
             net.minecraft.nbt.ListTag squadNamesTag = tag.getList("shadow_squad_names", net.minecraft.nbt.Tag.TAG_STRING);
             for (int i = 0; i < Math.min(shadowSquadNames.length, squadNamesTag.size()); i++) {
                 String loadedName = squadNamesTag.getString(i);
                 if (loadedName.contains("Ground") || loadedName.contains("Heavy") || loadedName.contains("Aerial") || loadedName.contains("Royal Guard")
-                        || loadedName.contains("Alfa") || loadedName.contains("Beta") || loadedName.contains("Vanguardia")) {
-                    shadowSquadNames[i] = "Escuadrón " + (i + 1);
+                        || loadedName.contains("Alfa") || loadedName.contains("Beta") || loadedName.contains("Vanguardia")
+                        || loadedName.equals("Escuadrón " + (i + 1)) || loadedName.equals("Squad " + (i + 1))) {
+                    shadowSquadNames[i] = "";   // an old default name: back to the default, in the game's language
                 } else {
                     shadowSquadNames[i] = loadedName;
                 }
