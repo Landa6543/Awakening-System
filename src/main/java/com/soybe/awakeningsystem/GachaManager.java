@@ -1172,6 +1172,41 @@ public final class GachaManager {
         int action = payload.actionType();
         int pack = payload.packId();
 
+        if (action == 11) {
+            // the Tracen Clover shop: 0 a Tracen ticket (10), 1 150 carats (8), 2 a 4-star prize of the banner (40),
+            // 3 a 5-star Genshin weapon (200, the "spark")
+            int[] costs = {10, 8, 40, 200};
+            if (pack < 0 || pack >= costs.length || !SystemItems.CLOVER_SPARK.isBound()) return;
+            int cost = costs[pack];
+            int held = 0;
+            for (ItemStack st : player.getInventory().items) if (st.is(SystemItems.CLOVER_SPARK.get())) held += st.getCount();
+            if (held < cost) {
+                player.displayClientMessage(Component.translatable("awakening_system.gacha.clover_shop.not_enough", cost), true);
+                player.playNotifySound(SoundEvents.VILLAGER_NO, SoundSource.PLAYERS, 0.9F, 1.0F);
+                return;
+            }
+            int left = cost;
+            for (ItemStack st : player.getInventory().items) {
+                if (left <= 0) break;
+                if (!st.is(SystemItems.CLOVER_SPARK.get())) continue;
+                int take = Math.min(left, st.getCount());
+                st.shrink(take);
+                left -= take;
+            }
+            ItemStack prize = switch (pack) {
+                case 0 -> SystemItems.GACHA_TICKET.isBound() ? new ItemStack(SystemItems.GACHA_TICKET.get()) : ItemStack.EMPTY;
+                case 1 -> ItemStack.EMPTY;
+                case 2 -> roll4StarReward(1, player.serverLevel().getDayTime());
+                default -> rollStandardWeapon5Star();
+            };
+            if (pack == 1) data.addCarats(150);
+            if (!prize.isEmpty() && !player.getInventory().add(prize)) player.drop(prize, false);
+            player.displayClientMessage(Component.translatable("awakening_system.gacha.clover_shop.bought",
+                    pack == 1 ? Component.translatable("awakening_system.gacha.clover_shop.item1") : prize.getHoverName()), true);
+            player.playNotifySound(pack == 3 ? SoundEvents.UI_TOAST_CHALLENGE_COMPLETE : SoundEvents.PLAYER_LEVELUP, SoundSource.PLAYERS, 1.0F, 1.2F);
+            AwakeningSystemMod.sync(player);
+            return;
+        }
         if (action == 10) {
             // fates bought with primogems, 160 each: 0/1 = 1/10 Intertwined, 2/3 = 1/10 Acquaint
             if (pack < 0 || pack > 3) return;

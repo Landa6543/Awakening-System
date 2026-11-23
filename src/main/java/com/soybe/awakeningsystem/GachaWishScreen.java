@@ -542,6 +542,8 @@ public final class GachaWishScreen extends Screen {
             default -> {
                 if (showHistoryModal) {
                     renderHistoryModal(graphics, mX, mY);
+                } else if (showCloverModal) {
+                    renderCloverModal(graphics, mX, mY);
                 } else if (showShopModal) {
                     renderShopModal(graphics, mX, mY);
                 } else if (showTopUpModal) {
@@ -1612,7 +1614,7 @@ public final class GachaWishScreen extends Screen {
         int shopH = 26;
         graphics.fill(shopX, bottomY, shopX + shopW, bottomY + shopH, hoverShop ? 0xFF4A1F52 : 0xDD28102E);
         graphics.renderOutline(shopX, bottomY, shopW, shopH, hoverShop ? 0xFFDA70D6 : 0xFF5C246B);
-        renderCenteredFittedText(graphics, "✦ " + Component.translatable("awakening_system.gacha.btn.shop").getString(), shopX + shopW / 2, bottomY + 8, shopW - 6, hoverShop ? 0xFFFFFF : 0xE1BEE7);
+        renderCenteredFittedText(graphics, (activeBanner == BANNER_UMA ? "☘ " + Component.translatable("awakening_system.gacha.clover_shop.btn").getString() : "✦ " + Component.translatable("awakening_system.gacha.btn.shop").getString()), shopX + shopW / 2, bottomY + 8, shopW - 6, hoverShop ? 0xFFFFFF : 0xE1BEE7);
 
         if (activeBanner == 0) {
             boolean hoverPath = isPathBtnHover(mouseX, mouseY);
@@ -2444,6 +2446,81 @@ public final class GachaWishScreen extends Screen {
         if (hoverTooltip != null) {
             graphics.renderComponentTooltip(this.font, hoverTooltip, mouseX, mouseY);
         }
+    }
+
+    // ---- the Tracen Clover shop (on the Uma banner): what the clovers from every Uma scout buy
+
+    private boolean showCloverModal;
+    private static final int CLOVER_W = 420, CLOVER_H = 236;
+    /** Prices in clovers: a Tracen ticket, 150 carats, a 4-star prize of the banner, a 5-star Genshin weapon. */
+    private static final int[] CLOVER_COSTS = {10, 8, 40, 200};
+
+    private int cloverCount() {
+        return getClientItemCount(SystemItems.CLOVER_SPARK.isBound() ? SystemItems.CLOVER_SPARK.get() : null);
+    }
+
+    private int[] cloverRow(int i) {
+        int mX = getVirtW() / 2 - CLOVER_W / 2, mY = getVirtH() / 2 - CLOVER_H / 2;
+        return new int[]{mX + 14, mY + 40 + i * 46, CLOVER_W - 28, 40};
+    }
+
+    private void renderCloverModal(GuiGraphics g, int mouseX, int mouseY) {
+        g.fill(0, 0, getVirtW(), getVirtH(), 0xEE05070E);
+        int mX = getVirtW() / 2 - CLOVER_W / 2, mY = getVirtH() / 2 - CLOVER_H / 2;
+        g.fillGradient(mX, mY, mX + CLOVER_W, mY + CLOVER_H, 0xFF0E2216, 0xFF163A24);
+        g.renderOutline(mX, mY, CLOVER_W, CLOVER_H, 0xFF6BDB8A);
+        g.renderOutline(mX + 2, mY + 2, CLOVER_W - 4, CLOVER_H - 4, 0x33FFFFFF);
+        g.drawString(this.font, "☘ " + Component.translatable("awakening_system.gacha.clover_shop.title").getString(), mX + 14, mY + 12, 0xFF8CF5A8, false);
+        ItemStack clover = SystemItems.CLOVER_SPARK.isBound() ? new ItemStack(SystemItems.CLOVER_SPARK.get()) : ItemStack.EMPTY;
+        String have = String.valueOf(cloverCount());
+        int hx = mX + CLOVER_W - 44 - this.font.width(have);
+        if (!clover.isEmpty()) g.renderItem(clover, hx - 18, mY + 8);
+        g.drawString(this.font, have, hx, mY + 12, 0xFFFFFFFF, false);
+        boolean hoverClose = mouseX >= mX + CLOVER_W - 22 && mouseX <= mX + CLOVER_W - 8 && mouseY >= mY + 8 && mouseY <= mY + 22;
+        g.drawString(this.font, hoverClose ? "§c[X]" : "§7[X]", mX + CLOVER_W - 22, mY + 10, 0xFFFFFF, false);
+
+        ItemStack[] icons = {
+                SystemItems.GACHA_TICKET.isBound() ? new ItemStack(SystemItems.GACHA_TICKET.get()) : ItemStack.EMPTY,
+                SystemItems.CARAT.isBound() ? new ItemStack(SystemItems.CARAT.get()) : ItemStack.EMPTY,
+                new ItemStack(net.minecraft.world.item.Items.AMETHYST_SHARD),
+                SystemItems.SKYWARD_BLADE.isBound() ? new ItemStack(SystemItems.SKYWARD_BLADE.get()) : new ItemStack(net.minecraft.world.item.Items.NETHERITE_SWORD)
+        };
+        for (int i = 0; i < 4; i++) {
+            int[] r = cloverRow(i);
+            boolean can = cloverCount() >= CLOVER_COSTS[i];
+            boolean hover = mouseX >= r[0] && mouseX <= r[0] + r[2] && mouseY >= r[1] && mouseY <= r[1] + r[3];
+            g.fill(r[0], r[1], r[0] + r[2], r[1] + r[3], hover && can ? 0xFF1E4A2E : 0xFF12301E);
+            g.renderOutline(r[0], r[1], r[2], r[3], can ? (hover ? 0xFFFFFFFF : 0xFF3FA866) : 0xFF2E4A38);
+            if (!icons[i].isEmpty()) g.renderItem(icons[i], r[0] + 8, r[1] + 12);
+            g.drawString(this.font, Component.translatable("awakening_system.gacha.clover_shop.item" + i).getString(), r[0] + 32, r[1] + 7, 0xFFFFFFFF, false);
+            g.drawString(this.font, Component.translatable("awakening_system.gacha.clover_shop.desc" + i).getString(), r[0] + 32, r[1] + 21, 0xFF9FC8AE, false);
+            String price = CLOVER_COSTS[i] + " ☘";
+            g.drawString(this.font, price, r[0] + r[2] - 10 - this.font.width(price), r[1] + 14, can ? 0xFF8CF5A8 : 0xFF7A6A6A, false);
+        }
+    }
+
+    private boolean clickCloverModal(double mouseX, double mouseY) {
+        int mX = getVirtW() / 2 - CLOVER_W / 2, mY = getVirtH() / 2 - CLOVER_H / 2;
+        boolean close = mouseX >= mX + CLOVER_W - 24 && mouseX <= mX + CLOVER_W - 6 && mouseY >= mY + 6 && mouseY <= mY + 24;
+        boolean outside = mouseX < mX || mouseX > mX + CLOVER_W || mouseY < mY || mouseY > mY + CLOVER_H;
+        if (close || outside) {
+            showCloverModal = false;
+            Minecraft.getInstance().getSoundManager().play(SimpleSoundInstance.forUI(SoundEvents.UI_BUTTON_CLICK, 0.9F));
+            return true;
+        }
+        for (int i = 0; i < 4; i++) {
+            int[] r = cloverRow(i);
+            if (mouseX >= r[0] && mouseX <= r[0] + r[2] && mouseY >= r[1] && mouseY <= r[1] + r[3]) {
+                if (cloverCount() >= CLOVER_COSTS[i]) {
+                    PacketDistributor.sendToServer(new GachaTopUpPayload(11, i));
+                    Minecraft.getInstance().getSoundManager().play(SimpleSoundInstance.forUI(SoundEvents.AMETHYST_BLOCK_CHIME, 1.2F));
+                } else {
+                    Minecraft.getInstance().getSoundManager().play(SimpleSoundInstance.forUI(SoundEvents.VILLAGER_NO, 1.0F));
+                }
+                return true;
+            }
+        }
+        return true;
     }
 
     /** The shop window's height: room at the bottom for the row of fates bought with primogems. */
@@ -4478,6 +4555,9 @@ public final class GachaWishScreen extends Screen {
             return true;
         }
 
+        if (showCloverModal) {
+            return clickCloverModal(mouseX, mouseY);
+        }
         if (showShopModal) {
             int mW = 500;
             int mH = SHOP_H;
@@ -4713,7 +4793,8 @@ public final class GachaWishScreen extends Screen {
         }
 
         if (isShopBtnHover(mouseX, mouseY)) {
-            showShopModal = true;
+            if (activeBanner == BANNER_UMA) showCloverModal = true;
+            else showShopModal = true;
             Minecraft.getInstance().getSoundManager().play(SimpleSoundInstance.forUI(SoundEvents.UI_BUTTON_CLICK, 1.1F));
             return true;
         }
@@ -4959,10 +5040,11 @@ public final class GachaWishScreen extends Screen {
 
     @Override
     public boolean keyPressed(int keyCode, int scanCode, int modifiers) {
-        if (showHistoryModal || showShopModal || showPathModal || showTopUpModal || showNewsModal) {
+        if (showHistoryModal || showShopModal || showCloverModal || showPathModal || showTopUpModal || showNewsModal) {
             if (keyCode == 256) {
                 showHistoryModal = false;
                 showShopModal = false;
+                showCloverModal = false;
                 showTopUpModal = false;
                 showPathModal = false;
                 showNewsModal = false;
