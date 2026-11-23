@@ -43,6 +43,7 @@ import java.util.Map;
 import java.util.Optional;
 import java.util.Random;
 
+@net.neoforged.fml.common.EventBusSubscriber(modid = com.soybe.awakeningsystem.AwakeningSystemMod.MOD_ID)
 public final class SeriesStructureWorldGen {
     private SeriesStructureWorldGen() {}
 
@@ -855,6 +856,7 @@ public final class SeriesStructureWorldGen {
                 BlockPos airPos = new BlockPos(pos.getX(), airY, pos.getZ());
                 boolean ok = TeyvatStructureManager.placeNbtStructure(level, airPos, "jade_chamber", -32, 0, -32);
                 if (ok) {
+                    tidyJadeChamber(level, airPos);
                     recordPlaced(level, "teyvat_jade_chamber", airPos);
                     SeriesStructureBuilder.spawnNpcIfAbsent(level, airPos.offset(0, 1, 2), com.soybe.awakeningsystem.entity.ModEntities.SERIES_NPC.get(), com.soybe.awakeningsystem.entity.NpcProfile.RAIDEN_SHOGUN);
                     SeriesStructureBuilder.spawnNpcIfAbsent(level, airPos.offset(3, 1, -2), com.soybe.awakeningsystem.entity.ModEntities.SERIES_NPC.get(), com.soybe.awakeningsystem.entity.NpcProfile.ACHERON);
@@ -2091,6 +2093,55 @@ public final class SeriesStructureWorldGen {
         return true;
     }
 
+    /** Jade Chambers already tidied in this run of the server (the tidy-up walks the whole structure). */
+    private static final java.util.Set<BlockPos> TIDIED_JADE = java.util.concurrent.ConcurrentHashMap.newKeySet();
+
+    /**
+     * The Jade Chamber (Ningguang's palace in the sky), 65x73x65 from (pos - 32, pos.y, pos - 32): takes out the
+     * command block and the player heads its saved file had, and fills its empty barrels with a reward.
+     */
+    public static void tidyJadeChamber(ServerLevel level, BlockPos pos) {
+        if (!TIDIED_JADE.add(pos.immutable())) return;
+        BlockPos.MutableBlockPos m = new BlockPos.MutableBlockPos();
+        var rand = net.minecraft.util.RandomSource.create(pos.asLong());
+        for (int x = -32; x <= 32; x++)
+            for (int z = -32; z <= 32; z++)
+                for (int y = 0; y < 73; y++) {
+                    m.set(pos.getX() + x, pos.getY() + y, pos.getZ() + z);
+                    var state = level.getBlockState(m);
+                    if (state.isAir()) continue;
+                    if (state.is(net.minecraft.world.level.block.Blocks.COMMAND_BLOCK) || state.is(net.minecraft.world.level.block.Blocks.CHAIN_COMMAND_BLOCK)
+                            || state.is(net.minecraft.world.level.block.Blocks.REPEATING_COMMAND_BLOCK)
+                            || state.is(net.minecraft.world.level.block.Blocks.PLAYER_HEAD) || state.is(net.minecraft.world.level.block.Blocks.PLAYER_WALL_HEAD)) {
+                        level.setBlock(m, net.minecraft.world.level.block.Blocks.AIR.defaultBlockState(), 2);
+                    } else if (level.getBlockEntity(m) instanceof net.minecraft.world.level.block.entity.BarrelBlockEntity barrel && barrel.isEmpty()) {
+                        barrel.setItem(0, new net.minecraft.world.item.ItemStack(com.soybe.awakeningsystem.SystemItems.PRIMOGEM.get(), 20 + rand.nextInt(21)));
+                        barrel.setItem(1, new net.minecraft.world.item.ItemStack(net.minecraft.world.item.Items.GOLD_INGOT, 4 + rand.nextInt(6)));
+                        barrel.setItem(2, new net.minecraft.world.item.ItemStack(net.minecraft.world.item.Items.EMERALD, 3 + rand.nextInt(5)));
+                        if (rand.nextInt(3) == 0) barrel.setItem(3, new net.minecraft.world.item.ItemStack(net.minecraft.world.item.Items.DIAMOND, 1 + rand.nextInt(2)));
+                        if (rand.nextInt(4) == 0 && com.soybe.awakeningsystem.SystemItems.TEYVAT_SHRINE_KEY.isBound())
+                            barrel.setItem(4, new net.minecraft.world.item.ItemStack(com.soybe.awakeningsystem.SystemItems.TEYVAT_SHRINE_KEY.get()));
+                        barrel.setChanged();
+                    }
+                }
+    }
+
+    /** No creatures spawn on their own inside the Jade Chamber (it filled with slimes). */
+    @net.neoforged.bus.api.SubscribeEvent
+    public static void noSpawnsInJadeChamber(net.neoforged.neoforge.event.entity.living.FinalizeSpawnEvent event) {
+        if (event.getSpawnType() != net.minecraft.world.entity.MobSpawnType.NATURAL || !(event.getLevel().getLevel() instanceof ServerLevel level)) return;
+        if (level.getServer() == null) return;
+        double ex = event.getX(), ey = event.getY(), ez = event.getZ();
+        for (Map.Entry<String, BlockPos> e : SeriesStructureData.get(level.getServer()).getAll().entrySet()) {
+            if (!e.getKey().startsWith("teyvat_jade_chamber")) continue;
+            BlockPos p = e.getValue();
+            if (Math.abs(ex - p.getX()) <= 34 && Math.abs(ez - p.getZ()) <= 34 && ey >= p.getY() - 2 && ey <= p.getY() + 75) {
+                event.setSpawnCancelled(true);
+                return;
+            }
+        }
+    }
+
     public static void checkAndEnsureNpcsPresent(MinecraftServer server) {
         if (server == null) return;
         SeriesStructureData data = SeriesStructureData.get(server);
@@ -2145,6 +2196,7 @@ public final class SeriesStructureWorldGen {
                         SeriesStructureBuilder.spawnNpcIfAbsent(level, spots[0], com.soybe.awakeningsystem.entity.ModEntities.SERIES_NPC.get(), com.soybe.awakeningsystem.entity.NpcProfile.HOSHIMI_MIYABI);
                         SeriesStructureBuilder.spawnNpcIfAbsent(level, spots[1], com.soybe.awakeningsystem.entity.ModEntities.SERIES_NPC.get(), com.soybe.awakeningsystem.entity.NpcProfile.ELLEN_JOE);
                     } else if (key.startsWith("teyvat_jade_chamber")) {
+                        tidyJadeChamber(level, sPos);   // once per server run: worlds made before the fix get cleaned too
                         SeriesStructureBuilder.spawnNpcIfAbsent(level, new BlockPos(cx, cy + 1, cz + 2), com.soybe.awakeningsystem.entity.ModEntities.SERIES_NPC.get(), com.soybe.awakeningsystem.entity.NpcProfile.RAIDEN_SHOGUN);
                         SeriesStructureBuilder.spawnNpcIfAbsent(level, new BlockPos(cx + 3, cy + 1, cz - 2), com.soybe.awakeningsystem.entity.ModEntities.SERIES_NPC.get(), com.soybe.awakeningsystem.entity.NpcProfile.ACHERON);
                     } else if (key.startsWith("teyvat_windrise_tree")) {

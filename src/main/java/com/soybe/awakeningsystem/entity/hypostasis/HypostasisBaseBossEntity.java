@@ -138,6 +138,10 @@ public abstract class HypostasisBaseBossEntity extends Monster {
 
         int state = getBossState();
         switch (state) {
+            case STATE_DEFEATED -> {
+                // a boss already left stuck as "defeated" (from before this fix) finally dies
+                if (this.isAlive()) this.hurt(this.damageSources().genericKill(), 9999.0F);
+            }
             case STATE_PROTECTED -> {
                 hoverTowards(target, 2.5D, 0.06D);
 
@@ -287,6 +291,11 @@ public abstract class HypostasisBaseBossEntity extends Monster {
     public boolean hurt(DamageSource source, float amount) {
         int state = getBossState();
 
+        // defeated (its revival objects broken): the finishing blow it deals itself must go through; it used to be
+        // turned away like any other, and the boss stayed alive with a sliver of health for ever
+        if (state == STATE_DEFEATED && source.is(net.minecraft.world.damagesource.DamageTypes.GENERIC_KILL)) {
+            return super.hurt(source, amount);
+        }
         if (state == STATE_REVIVAL || state == STATE_DEFEATED) {
             if (this.level() instanceof ServerLevel sl) {
                 sl.playSound(null, this.getX(), this.getY(), this.getZ(), SoundEvents.SHIELD_BLOCK, SoundSource.HOSTILE, 1.0F, 1.5F);
