@@ -320,6 +320,13 @@ public abstract class HypostasisBaseBossEntity extends Monster {
         if (this.level() instanceof ServerLevel sl) {
             cleanupRevivalObjects(sl);
             dropBossLoot(sl);
+            // a boss of tens of thousands of health also hands a key for the locked chests of the shrines
+            if (com.soybe.awakeningsystem.SystemItems.TEYVAT_SHRINE_KEY.isBound()) {
+                for (net.minecraft.world.entity.player.Player p : sl.getPlayers(pl -> pl.distanceToSqr(this) < 1600.0D)) {
+                    net.minecraft.world.item.ItemStack key = new net.minecraft.world.item.ItemStack(com.soybe.awakeningsystem.SystemItems.TEYVAT_SHRINE_KEY.get());
+                    if (!p.getInventory().add(key)) p.drop(key, false);
+                }
+            }
         }
     }
 

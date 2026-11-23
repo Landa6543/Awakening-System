@@ -136,7 +136,7 @@ public class CreatorClaymoreItem extends SwordItem implements AwakeningWeaponIte
     @Override
     public boolean hurtEnemy(ItemStack stack, LivingEntity target, LivingEntity attacker) {
         if (attacker.level() instanceof ServerLevel sl) {
-            sl.sendParticles(com.soybe.awakeningsystem.particle.ModParticles.STRIKE_CLEAVE.get(), target.getX(), target.getY() + 1.0D, target.getZ(), 1, 0, 0, 0, 0);
+            // (no orange cleave mark on every hit any more: it covered the target)
             sl.playSound(null, target.getX(), target.getY(), target.getZ(), com.soybe.awakeningsystem.ModSounds.CULTIVATOR_SLASH.get(), SoundSource.PLAYERS, 1.6F, 0.7F);
             com.soybe.awakeningsystem.CameraShakePayload.sendToNearby(sl, target.getX(), target.getY(), target.getZ(), 20.0D, 0.35F, 5);
 

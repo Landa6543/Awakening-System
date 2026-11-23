@@ -6115,7 +6115,8 @@ public final class SystemEvents {
             }
          }
 
-         if (player.tickCount % 40 == 0 && (data.dantianRealm() > 0 || data.getOpenedMeridiansCount() > 0)) {
+         // qi only comes from cultivating (meditating, pills, fights...): no longer just for being alive
+         if (false && player.tickCount % 40 == 0 && (data.dantianRealm() > 0 || data.getOpenedMeridiansCount() > 0)) {
             float zoneDensity = getZoneQiDensity(player);
             int openM = data.getOpenedMeridiansCount();
             int passiveQi = 1 + data.dantianRealm() / 2 + (openM >= 12 ? 3 : (openM >= 6 ? 2 : (openM > 0 ? 1 : 0)));

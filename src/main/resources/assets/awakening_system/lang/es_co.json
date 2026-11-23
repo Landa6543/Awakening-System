@@ -1307,7 +1307,7 @@
   "awakening_system.boss.shadow_monarch.domain_taunt": "§8§l[MONARCA DEL ABISMO] §5¡Este reino me pertenece! ¡Que la oscuridad devore vuestras almas!",
   "awakening_system.boss.shadow_monarch.phase2_taunt": "§8§l[MONARCA DEL ABISMO] §d§l¿Creísteis que habíais acorralado a la Muerte? ¡ARRODÍLLATE ANTE EL VERDADERO SOBERANO!",
   "awakening_system.boss.statue_of_god.name": "Estatua del Dios (Templo Cartenon)",
-  "awakening_system.boss.world_boss_title": "%s[Nv. %s] §f%s",
+  "awakening_system.boss.world_boss_title": "%1$s§f%3$s",
   "awakening_system.boss.yggdrasil_treant.custom_name": "§2§lTreant Ancestral de Yggdrasil",
   "awakening_system.boss.yggdrasil_treant.name": "§2§lTreant Ancestral de Yggdrasil §7- §aGuardián de las Raíces",
   "awakening_system.bounty.abyssal_commander": "Eliminación de Comandantes Abisales",
