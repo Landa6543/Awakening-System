@@ -51,6 +51,16 @@ public class AbyssChallengeKeyEntity extends LivingEntity {
         return false;
     }
 
+    /** Nothing moves it, not even the skills that throw everything into the air. */
+    @Override
+    public void setDeltaMovement(Vec3 motion) {
+        super.setDeltaMovement(Vec3.ZERO);
+    }
+
+    @Override
+    public void knockback(double strength, double x, double z) {
+    }
+
     /** Solid, like a block: the chamber's creatures walk round it instead of crowding onto it. */
     @Override
     public boolean canBeCollidedWith() {

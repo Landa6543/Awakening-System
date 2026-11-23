@@ -745,6 +745,7 @@ Sistema dinámico de eventos de temporada integrando consumibles gastronómicos 
   * Teyvat (armas de Genshin y del gacha según sus estrellas, Báculo de Homa, Espada de Protogema): 55 a 68.
   * Únicas: Guadaña del Caballero del Terror 72, Mandoble del Vacío 75, La Doncella 80.
   * **Mandoble del Creador: 100**, siempre el arma más fuerte del juego.
+* **Abismo, Monolito y Llave:** ya no salen volando con habilidades que lanzan todo al aire (como la del Mandoble del Creador), y esa habilidad ya no golpea al Monolito, la Llave, tus sombras ni tus mascotas. El Monolito tiene textura nueva, más orgánica: piedra vieja con musgo y raíces, vetas de energía turquesa que recorren el obelisco, un núcleo que brilla, anillos de raíces con hojas y semillas de cristal.
 * **Corregido:** la vista de las gafas del título de Creador se quedaba puesta después de quitarte el título; ahora solo funciona con el título equipado.
 * **Gacha de las Umas, como en la serie:** el cajón de salida se pinta de plata, oro o arcoíris según la rareza antes de abrirse, tiembla mientras espera y a veces sube de color con un destello justo antes de abrir. En la tienda de Paimon, el precio de los destinos muestra la Protogema de verdad.
 * **Niveles mínimos por mundo:** de los 2000 niveles, las criaturas de Isekai nunca bajan de nivel 300, las de Murim de 600 y las de Teyvat de 1000 (siguen subiendo con el jugador por encima de eso). Los slimes de Teyvat ya no pierden el nivel del nombre al recibir su elemento.

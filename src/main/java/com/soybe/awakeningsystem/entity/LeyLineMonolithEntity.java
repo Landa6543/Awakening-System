@@ -79,6 +79,19 @@ public class LeyLineMonolithEntity extends LivingEntity {
         this.xRotO = 0;
     }
 
+    /**
+     * Nothing moves it: skills that throw everything around (the Creator Claymore sends all up into the air)
+     * used to launch the Monolith too.
+     */
+    @Override
+    public void setDeltaMovement(Vec3 motion) {
+        super.setDeltaMovement(Vec3.ZERO);
+    }
+
+    @Override
+    public void knockback(double strength, double x, double z) {
+    }
+
     @Override
     public boolean isPushedByFluid() {
         return false;

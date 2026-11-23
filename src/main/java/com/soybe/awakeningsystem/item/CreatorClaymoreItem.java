@@ -92,7 +92,14 @@ public class CreatorClaymoreItem extends SwordItem implements AwakeningWeaponIte
             AABB cataclysmArea = sp.getBoundingBox().inflate(18.0D, 6.0D, 18.0D);
             int hitCount = 0;
             for (LivingEntity nearby : sl.getEntitiesOfClass(LivingEntity.class, cataclysmArea)) {
-                if (nearby != sp && (nearby instanceof Enemy || nearby != player)) {
+                // the Abyss' Monolith and key, armour stands and the player's own allies are left alone
+                boolean spared = nearby instanceof com.soybe.awakeningsystem.entity.LeyLineMonolithEntity
+                        || nearby instanceof com.soybe.awakeningsystem.entity.AbyssChallengeKeyEntity
+                        || nearby instanceof net.minecraft.world.entity.decoration.ArmorStand
+                        || nearby.getTags().contains("shadow_soldier") || nearby.getTags().contains("companion")
+                        || nearby.getTags().contains("abyss_friendly")
+                        || (nearby instanceof net.minecraft.world.entity.TamableAnimal pet && sp.getUUID().equals(pet.getOwnerUUID()));
+                if (nearby != sp && !spared) {
                     nearby.hurt(nearby.damageSources().playerAttack(sp), 160.0F);
 
                     Vec3 dir = sp.position().subtract(nearby.position()).normalize().scale(1.0D);
