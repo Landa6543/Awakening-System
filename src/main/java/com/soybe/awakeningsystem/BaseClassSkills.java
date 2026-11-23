@@ -123,7 +123,89 @@ public final class BaseClassSkills {
                 sl.sendParticles(ParticleTypes.CLOUD, c.x, c.y, c.z, 25, 0.5, 0.5, 0.5, 0.15);
                 sl.playSound(null, player.blockPosition(), SoundEvents.GENERIC_EXPLODE.value(), SoundSource.PLAYERS, 0.6F, 1.6F);
             }
+            case "ne_shadow_extraction" -> extractOneShadow(player, data, mult);
             default -> {}
+        }
+    }
+
+    /**
+     * The Necromancer's extraction: one soul at a time, the one the player is looking at (within 10 blocks).
+     * The Shadow Monarch's "Arise" is the big one, every soul around at once.
+     */
+    private static void extractOneShadow(ServerPlayer player, SystemData data, float mult) {
+        ServerLevel sl = player.serverLevel();
+        Vec3 eye = player.getEyePosition();
+        Vec3 look = player.getLookAngle();
+        com.soybe.awakeningsystem.entity.ShadowSoulEntity best = null;
+        double bestScore = -1;
+        for (var soul : sl.getEntitiesOfClass(com.soybe.awakeningsystem.entity.ShadowSoulEntity.class, player.getBoundingBox().inflate(10.0),
+                s -> s.isAlive() && (s.getOwnerUUID() == null || s.getOwnerUUID().equals(player.getUUID())))) {
+            Vec3 to = soul.position().add(0, 0.5, 0).subtract(eye);
+            double dist = to.length();
+            double dot = dist < 0.01 ? 1.0 : to.scale(1.0 / dist).dot(look);
+            if (dot < 0.55 && dist > 2.5) continue;
+            double score = dot * 10.0 - dist * 0.3;
+            if (score > bestScore) {
+                bestScore = score;
+                best = soul;
+            }
+        }
+        if (best == null) {
+            AwakeningSystemMod.notify(player, "awakening_system.notification.shadow_no_souls.title",
+                    "awakening_system.notification.shadow_no_souls.desc", -35226);
+            return;
+        }
+        String typeId = best.getMobEntityTypeId().toLowerCase(java.util.Locale.ROOT);
+        if (typeId.contains("ophanim")) {
+            player.displayClientMessage(net.minecraft.network.chat.Component.translatable("awakening_system.shadow.cannot_extract_celestial_angel"), true);
+            best.discard();
+            return;
+        }
+        if (typeId.contains("celestial_dragon")) {
+            player.displayClientMessage(net.minecraft.network.chat.Component.translatable("awakening_system.shadow.cannot_extract_celestial_dragon"), true);
+            best.discard();
+            return;
+        }
+        int mobTier = 3;
+        if (typeId.contains("boss") || typeId.contains("dragon") || typeId.contains("wither") || typeId.contains("warden")
+                || typeId.contains("baran") || typeId.contains("igris")) mobTier = 9;
+        else if (typeId.contains("golem") || typeId.contains("ravager") || typeId.contains("evoker")) mobTier = 6;
+        // the same odds as the Monarch's first form, a little better with the skill's rank
+        double chance = data.intelligence() * 0.35 + data.willpower() * 0.35 - mobTier * 6.0 + 35.0 + (mult - 1.0F) * 20.0;
+        chance = Math.max(15.0, Math.min(95.0, chance));
+        sl.playSound(null, player.blockPosition(), ModSounds.SHADOW_EXTRACT.get(), SoundSource.PLAYERS, 1.1F, 1.1F);
+        // a thread of shadow from the hand to the soul
+        Vec3 hand = player.position().add(0, 1.2, 0);
+        Vec3 at = best.position().add(0, 0.4, 0);
+        for (int i = 0; i <= 16; i++) {
+            Vec3 p = hand.lerp(at, i / 16.0);
+            sl.sendParticles(ParticleTypes.SCULK_SOUL, p.x, p.y, p.z, 1, 0.03, 0.03, 0.03, 0.0);
+        }
+        if (player.getRandom().nextDouble() * 100.0 >= chance) {
+            int attempt = best.getExtractionAttempts() + 1;
+            best.incrementExtractionAttempts();
+            if (attempt >= 3) {
+                sl.sendParticles(ParticleTypes.LARGE_SMOKE, best.getX(), best.getY() + 0.5, best.getZ(), 30, 0.4, 0.4, 0.4, 0.05);
+                sl.playSound(null, best.blockPosition(), SoundEvents.WITHER_HURT, SoundSource.PLAYERS, 0.9F, 0.7F);
+                player.displayClientMessage(net.minecraft.network.chat.Component.translatable("awakening_system.shadow.arise_final_fail", best.getMobNameComponent()), true);
+                best.discard();
+            } else {
+                sl.sendParticles(ParticleTypes.SCULK_SOUL, best.getX(), best.getY() + 0.4, best.getZ(), 20, 0.3, 0.3, 0.3, 0.05);
+                sl.playSound(null, best.blockPosition(), SoundEvents.SOUL_ESCAPE.value(), SoundSource.PLAYERS, 1.0F, 0.9F);
+                best.setCustomName(net.minecraft.network.chat.Component.translatable("awakening_system.shadow.soul_name_attempts", best.getMobNameComponent(), attempt, 3));
+                player.displayClientMessage(net.minecraft.network.chat.Component.translatable("awakening_system.shadow.arise_attempt_fail", attempt, best.getMobNameComponent()), true);
+            }
+            return;
+        }
+        var name = best.getMobNameComponent();
+        SystemEvents.summonShadowFromSoul(player, best);
+        best.discard();
+        player.displayClientMessage(net.minecraft.network.chat.Component.translatable("awakening_system.shadow.arise_chat_success", name), true);
+        // soul harvest: each soul taken feeds the Necromancer
+        if (has(player, "ne_soul_harvest")) {
+            player.heal(4.0F);
+            data.restoreEnergy(10);
+            sl.sendParticles(ParticleTypes.SOUL, player.getX(), player.getY() + 1.0, player.getZ(), 12, 0.4, 0.6, 0.4, 0.02);
         }
     }
 

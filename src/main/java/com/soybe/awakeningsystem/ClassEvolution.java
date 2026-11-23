@@ -29,7 +29,7 @@ import java.util.*;
 import java.util.function.Supplier;
 
 /**
- * Six simple base classes that evolve into the advanced classes. A player picks a base class at level 50; at level
+ * Seven simple base classes that evolve into the advanced classes. A player picks a base class at level 50; at level
  * {@link #EVOLVE_LEVEL} a trial opens (beat the base class's trial boss), and after winning it the player picks
  * one of the base class's evolutions. An evolved player keeps the base class's web and what was learnt in it.
  * Players who already had an advanced class are evolved already: their base class is worked out from the class.
@@ -49,7 +49,10 @@ public final class ClassEvolution {
             new Base("base_warrior", "wa_power_slash", "wa_battle_spirit", 0xFFFF7043,
                     List.of("sword_saint", "colossal_berserker", "beast_monarch"), com.soybe.awakeningsystem.entity.ModEntities.IGRIS_BOSS),
             new Base("base_assassin", "as_shadow_dash", "as_backstab", 0xFF26C6DA,
-                    List.of("void_assassin", "shadow_monarch"), com.soybe.awakeningsystem.entity.ModEntities.BERU_BOSS),
+                    List.of("void_assassin"), com.soybe.awakeningsystem.entity.ModEntities.BERU_BOSS),
+            // the Shadow Monarch comes from the Necromancer, as in Solo Leveling (its trial is Igris, from the job change)
+            new Base("base_necromancer", "ne_shadow_extraction", "ne_soul_harvest", 0xFF9966FF,
+                    List.of("shadow_monarch"), com.soybe.awakeningsystem.entity.ModEntities.IGRIS_BOSS),
             new Base("base_tank", "ta_provoke", "ta_sturdy", 0xFF90A4AE,
                     List.of("iron_bastion", "dragon_monarch"), com.soybe.awakeningsystem.entity.ModEntities.JADE_GUARDIAN_BOSS),
             new Base("base_mage", "ma_mana_bolt", "ma_mana_flow", 0xFF7C4DFF,
@@ -80,6 +83,21 @@ public final class ClassEvolution {
         if (isBase(n)) return n;
         for (Base b : BASES) if (b.evolutions().contains(n)) return b.id();
         return null;
+    }
+
+    /**
+     * The player's base class. A Shadow Monarch who evolved from the Assassin (before the Necromancer existed)
+     * keeps the Assassin's web, with what was learnt in it.
+     */
+    public static String baseOf(SystemData data) {
+        if (data == null) return null;
+        String base = baseOf(data.hunterClass());
+        if ("base_necromancer".equals(base) && !data.skills().containsKey("ne_shadow_extraction")
+                && (data.skills().containsKey("as_shadow_dash")
+                    || data.treeNodes().stream().anyMatch(n -> n.startsWith("base_assassin_")))) {
+            return "base_assassin";
+        }
+        return base;
     }
 
     /** All the base classes' own skill ids (the start actives and the passives). */

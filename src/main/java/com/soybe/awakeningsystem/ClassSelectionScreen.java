@@ -96,7 +96,8 @@ public final class ClassSelectionScreen extends Screen {
             new ClassOption("base_tank", "Awakening System", "Base class", 0xFF90A4AE, "ta_provoke", 0),
             new ClassOption("base_mage", "Awakening System", "Base class", 0xFF7C4DFF, "ma_mana_bolt", 1),
             new ClassOption("base_healer", "Awakening System", "Base class", 0xFF69F0AE, "he_mend", 1),
-            new ClassOption("base_cultivator", "Awakening System", "Base class", 0xFFE040FB, "cu_qi_palm", 2)
+            new ClassOption("base_cultivator", "Awakening System", "Base class", 0xFFE040FB, "cu_qi_palm", 2),
+            new ClassOption("base_necromancer", "Awakening System", "Base class", 0xFF9966FF, "ne_shadow_extraction", 2)
     );
 
     /** Every class one can choose at level 50, for the full-dive class choice: the base classes. */

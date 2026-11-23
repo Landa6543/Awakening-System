@@ -393,14 +393,14 @@ public final class ClassSkillTreeScreen extends Screen {
     private boolean viewBase;
 
     private static boolean evolved(SystemData d) {
-        String base = ClassEvolution.baseOf(d.hunterClass());
+        String base = ClassEvolution.baseOf(d);
         return base != null && !base.equals(ClassSkillTree.normalizeClassId(d.hunterClass()));
     }
 
     /** The web shown: the class's own, or its base class's when that tab is on. */
     private ClassSkillTree.Tree shownTree(SystemData d) {
         if (d == null || !d.hasHunterClass()) return null;
-        String base = ClassEvolution.baseOf(d.hunterClass());
+        String base = ClassEvolution.baseOf(d);
         if (viewBase && base != null) return ClassSkillTree.getTree(base);
         return ClassSkillTree.getTree(d.hunterClass());
     }

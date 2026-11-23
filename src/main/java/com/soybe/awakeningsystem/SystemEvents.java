@@ -2453,7 +2453,8 @@ public final class SystemEvents {
             }
          }
 
-         boolean hasShadowMonarch = data.hasHunterClass() && "shadow_monarch".equals(data.hunterClass())
+         // the Necromancer (the base class that becomes the Shadow Monarch) also leaves souls to extract
+         boolean hasShadowMonarch = data.hasHunterClass() && ("shadow_monarch".equals(data.hunterClass()) || "base_necromancer".equals(data.hunterClass()))
             || data.skills().containsKey("unique_absolute_extraction");
          if (hasShadowMonarch
             && (IceAndFireCompat.isHostileOrExtractable(event.getEntity()) || com.soybe.awakeningsystem.compat.ArmageddonCompatHandler.isArmageddonEntity(event.getEntity()))
@@ -4481,7 +4482,7 @@ public final class SystemEvents {
             Entity target = event.getTarget();
             if (IceAndFireCompat.isExtractableCorpse(target)) {
                SystemData data = data(player);
-               boolean hasShadowMonarch = data.hasHunterClass() && "shadow_monarch".equals(data.hunterClass())
+               boolean hasShadowMonarch = data.hasHunterClass() && ("shadow_monarch".equals(data.hunterClass()) || "base_necromancer".equals(data.hunterClass()))
                   || data.skills().containsKey("unique_absolute_extraction");
                if (hasShadowMonarch) {
                   boolean emptyHand = player.getMainHandItem().isEmpty();
@@ -9506,7 +9507,7 @@ public final class SystemEvents {
                int will = data.willpower();
                int per = data.perception();
                switch (skillId) {
-                  case "wa_power_slash", "as_shadow_dash", "ta_provoke", "ma_mana_bolt", "he_mend", "cu_qi_palm":
+                  case "wa_power_slash", "as_shadow_dash", "ta_provoke", "ma_mana_bolt", "he_mend", "cu_qi_palm", "ne_shadow_extraction":
                      BaseClassSkills.activate(player, data, skillId, treeSkillMult);
                      break;
                   case "pocket_dimension_doorway": {
@@ -13615,6 +13616,7 @@ public final class SystemEvents {
             case "base_mage" -> "Mage";
             case "base_healer" -> "Healer";
             case "base_cultivator" -> "Cultivator";
+            case "base_necromancer" -> "Necromancer";
             default -> hunterClass;
          };
          AwakeningSystemMod.notify(

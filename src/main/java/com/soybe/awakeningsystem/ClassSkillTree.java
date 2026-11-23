@@ -342,7 +342,7 @@ public final class ClassSkillTree {
         if (data == null || !data.hasHunterClass()) return List.of();
         String cls = normalizeClassId(data.hunterClass());
         List<Tree> out = new ArrayList<>(2);
-        String base = ClassEvolution.baseOf(cls);
+        String base = ClassEvolution.baseOf(data);
         if (base != null && !base.equals(cls)) {
             Tree b = getTree(base);
             if (b != null) out.add(b);

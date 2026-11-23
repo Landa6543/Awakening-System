@@ -35,7 +35,7 @@ public class ShadowSoulRenderer extends EntityRenderer<ShadowSoulEntity> {
             if (data != null) {
                 for (int i = 0; i < 5; i++) {
                     String sk = data.getEquippedActiveSkill(i);
-                    if ("shadow_monarch".equals(sk) || "unique_absolute_extraction".equals(sk)) {
+                    if ("shadow_monarch".equals(sk) || "unique_absolute_extraction".equals(sk) || "ne_shadow_extraction".equals(sk)) {
                         KeyMapping km = switch (i) {
                             case 0 -> AwakeningSystemClient.ACTIVATE_SKILL;
                             case 1 -> AwakeningSystemClient.SKILL_SLOT_2;

@@ -76,13 +76,13 @@ public class SaoClassTreeScreen extends SaoWindow {
     /** The web shown: the class's own, or its base class's when that tab is on. */
     private ClassSkillTree.Tree shownTree(SystemData d) {
         if (!d.hasHunterClass()) return null;
-        String base = com.soybe.awakeningsystem.ClassEvolution.baseOf(d.hunterClass());
+        String base = com.soybe.awakeningsystem.ClassEvolution.baseOf(d);
         if (viewBase && base != null) return ClassSkillTree.getTree(base);
         return ClassSkillTree.getTree(d.hunterClass());
     }
 
     private boolean evolved(SystemData d) {
-        String base = com.soybe.awakeningsystem.ClassEvolution.baseOf(d.hunterClass());
+        String base = com.soybe.awakeningsystem.ClassEvolution.baseOf(d);
         return base != null && !base.equals(ClassSkillTree.normalizeClassId(d.hunterClass()));
     }
 
