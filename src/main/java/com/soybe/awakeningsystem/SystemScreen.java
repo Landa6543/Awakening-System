@@ -3021,6 +3021,10 @@ public final class SystemScreen extends Screen {
                     .withStyle(ChatFormatting.GOLD, ChatFormatting.BOLD),
                 Component.translatable(agiSpeed ? "awakening_system.agility_speed.toggle.enabled" : "awakening_system.agility_speed.toggle.disabled")
                     .withStyle(ChatFormatting.GRAY),
+                // what it gives right now (same formula as SystemAttributeEffects): with no points in Agility it is +0%
+                Component.translatable("awakening_system.agility_speed.toggle.current",
+                        String.format(java.util.Locale.ROOT, "%.0f", agiSpeed ? 50.0D * (1.0D - Math.exp(-Math.max(0, d.agility() - SystemData.ATTR_BASE) / 40.0D)) : 0.0D))
+                    .withStyle(ChatFormatting.AQUA),
                 Component.translatable("awakening_system.agility_speed.toggle.hint")
                     .withStyle(ChatFormatting.DARK_GRAY, ChatFormatting.ITALIC)
             );

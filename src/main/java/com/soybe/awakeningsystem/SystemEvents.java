@@ -543,19 +543,17 @@ public final class SystemEvents {
                   );
                }
             }
-         } else if ((
-               data.conqueredRankerTower()
-                  || data.conqueredNineTribulationsPagoda()
-                  || data.conqueredBloodSect()
-                  || data.conqueredYggdrasilLabyrinth()
-                  || data.bossKills() >= 1
-                  || data.level() >= 40
-            )
-            && data.equippedTitle().isEmpty()) {
+         } else if (TitleDefinitions.conqueredEverything(data) && data.equippedTitle().isEmpty()) {
             data.setEquippedTitle("mod_conqueror");
             AwakeningSystemMod.sync(player);
             player.playNotifySound(SoundEvents.UI_TOAST_CHALLENGE_COMPLETE, SoundSource.PLAYERS, 1.2F, 1.0F);
             player.sendSystemMessage(Component.translatable("awakening_system.title.mod_conqueror_unlocked"));
+         }
+         // the title used to be handed out at the first boss or level 40: whoever has it without earning it loses it
+         if ("mod_conqueror".equals(data.equippedTitle()) && !data.isCreator() && !TitleDefinitions.conqueredEverything(data)) {
+            data.setEquippedTitle("");
+            SystemAttributeEffects.apply(player);
+            AwakeningSystemMod.sync(player);
          }
 
          AwakeningSystemMod.syncAllBadgesToPlayer(player);

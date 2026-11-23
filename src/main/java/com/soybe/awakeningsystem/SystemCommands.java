@@ -897,6 +897,23 @@ public final class SystemCommands {
                 .then(Commands.argument("capital", StringArgumentType.word())
                         .executes(context -> warpTeyvatCapital(context.getSource(), StringArgumentType.getString(context, "capital")))));
 
+        // /setclass <class>: change the hunter class at once (to test the classes), for admins and the creator
+        dispatcher.register(Commands.literal("setclass")
+                .requires(source -> hasAdminOrCreatorPermission(source))
+                .then(Commands.argument("class", StringArgumentType.word())
+                        .suggests((context, builder) -> {
+                            for (ClassEvolution.Base b : ClassEvolution.bases()) {
+                                builder.suggest(b.id());
+                                for (String evo : b.evolutions()) builder.suggest(evo);
+                            }
+                            return builder.buildFuture();
+                        })
+                        .executes(context -> setClassCommand(context.getSource(), context.getSource().getPlayerOrException(),
+                                StringArgumentType.getString(context, "class")))
+                        .then(Commands.argument("target", EntityArgument.player())
+                                .executes(context -> setClassCommand(context.getSource(), EntityArgument.getPlayer(context, "target"),
+                                        StringArgumentType.getString(context, "class"))))));
+
         dispatcher.register(Commands.literal("resetprogress")
                 .executes(context -> {
                     if (context.getSource().getEntity() instanceof ServerPlayer sp) {
@@ -1315,6 +1332,30 @@ public final class SystemCommands {
             return 1;
         }
         return 0;
+    }
+
+    /**
+     * Puts the player in a class right away: a base class (with its starting skill) or an evolution (the trial
+     * counts as passed). What was learnt in other classes' webs stays, so going back keeps it.
+     */
+    private static int setClassCommand(CommandSourceStack source, ServerPlayer target, String cls) {
+        String id = cls.toLowerCase(java.util.Locale.ROOT);
+        boolean known = false;
+        for (ClassEvolution.Base b : ClassEvolution.bases()) {
+            if (b.id().equals(id) || b.evolutions().contains(id)) known = true;
+        }
+        if (!known) {
+            source.sendFailure(Component.translatable("awakening_system.command.setclass.unknown", cls));
+            return 0;
+        }
+        SystemData data = SystemEvents.data(target);
+        data.setHunterClass(id);
+        if (!ClassEvolution.isBase(id)) data.setEvolutionTrialPassed(true);
+        SystemEvents.grantClassStart(data, id);
+        SystemAttributeEffects.apply(target);
+        AwakeningSystemMod.sync(target);
+        source.sendSuccess(() -> Component.translatable("awakening_system.command.setclass.done", target.getDisplayName(), id), true);
+        return 1;
     }
 
     private static int resetPlayer(CommandSourceStack source, ServerPlayer target) {

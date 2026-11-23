@@ -335,6 +335,12 @@ public final class TitleDefinitions {
             new Definition("absolute_god_challenger", "awakening_system.title.absolute_god_challenger", "", SkillDefinitions.Rarity.MYTHIC, "awakening_system.title.bonus.unique")
     );
 
+    /** The Supreme System Conqueror's condition: the Ranker Tower, the Pagoda, the Blood Sect and the Labyrinth, all of them. */
+    public static boolean conqueredEverything(SystemData data) {
+        return data.conqueredRankerTower() && data.conqueredNineTribulationsPagoda()
+                && data.conqueredBloodSect() && data.conqueredYggdrasilLabyrinth();
+    }
+
     public static List<Definition> availableDefinitions(SystemData data) {
         List<Definition> result = new ArrayList<>();
         for (Definition title : TITLES) {
@@ -352,10 +358,8 @@ public final class TitleDefinitions {
             if (title.id().equals("pokemon_master") && !data.isTomcraft() && !data.isCreator()) continue;
             if (title.id().equals("the_mad_hatter") && !data.isTheRealHatter() && !data.isCreator()) continue;
             if (title.id().equals("orthax") && !data.isWraith() && !data.isCreator()) continue;
-            if (title.id().equals("mod_conqueror") && !data.isCreator()
-                    && !data.conqueredRankerTower() && !data.conqueredNineTribulationsPagoda()
-                    && !data.conqueredBloodSect() && !data.conqueredYggdrasilLabyrinth()
-                    && data.bossKills() < 1 && data.level() < 40) {
+            // a mythic title: only for who conquered every great trial (it used to come with the first boss or level 40)
+            if (title.id().equals("mod_conqueror") && !data.isCreator() && !conqueredEverything(data)) {
                 continue;
             }
             if (title.id().startsWith("eclipse_")) {
