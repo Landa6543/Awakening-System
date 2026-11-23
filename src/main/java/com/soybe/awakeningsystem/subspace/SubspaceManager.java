@@ -417,13 +417,59 @@ public final class SubspaceManager {
         }
     }
 
+    /**
+     * Reads the chests of the player's plot into the stored list, wherever the player is. The chests in the
+     * plot and the list must always hold the same things: before, the menu opened from outside the plot only
+     * changed the list, the chests kept their copy, and the next visit or upgrade read the chests back and
+     * duplicated everything taken out meanwhile.
+     */
+    public static void pullFromWorld(ServerPlayer player) {
+        ServerLevel level = getSubspaceLevel(player.getServer());
+        if (level != null) syncWorldToSubspace(level, player);
+    }
+
+    /** Writes the stored list into the chests of the player's plot, wherever the player is. */
+    public static void pushToWorld(ServerPlayer player) {
+        ServerLevel level = getSubspaceLevel(player.getServer());
+        if (level != null) syncSubspaceToWorld(level, player);
+    }
+
+    /** Puts a reward into the Subspace and into the plot's chests at once; returns what did not fit. */
+    public static ItemStack addReward(ServerPlayer player, ItemStack stack) {
+        pullFromWorld(player);
+        ItemStack leftover = SystemEvents.data(player).addToSubspace(stack);
+        pushToWorld(player);
+        return leftover;
+    }
+
+    /**
+     * Stacks bigger than their normal size (storage mods with stack upgrades keep those in their chests)
+     * are split back into normal stacks in the player's inventory; what does not fit drops at their feet.
+     */
+    public static void splitOversizedStacks(ServerPlayer player) {
+        var inv = player.getInventory();
+        java.util.List<ItemStack> extra = new java.util.ArrayList<>();
+        for (int i = 0; i < inv.items.size(); i++) {
+            ItemStack s = inv.items.get(i);
+            int max = s.getMaxStackSize();
+            while (!s.isEmpty() && s.getCount() > max) {
+                extra.add(s.split(Math.min(max, s.getCount() - max)));
+            }
+        }
+        ItemStack carried = player.containerMenu.getCarried();
+        while (!carried.isEmpty() && carried.getCount() > carried.getMaxStackSize()) {
+            extra.add(carried.split(Math.min(carried.getMaxStackSize(), carried.getCount() - carried.getMaxStackSize())));
+        }
+        for (ItemStack e : extra) {
+            if (!inv.add(e) && !e.isEmpty()) player.drop(e, false);
+        }
+    }
+
     public static void openSubspace(ServerPlayer player) {
         try {
             SystemData data = SystemEvents.data(player);
 
-            if (player.serverLevel().dimension().equals(SUBSPACE_REALM)) {
-                syncWorldToSubspace(player.serverLevel(), player);
-            }
+            pullFromWorld(player);
 
             int chestCount = Math.max(2, data.subspaceChestCount());
             int unlockedSlots = Math.max(54, data.subspaceUnlockedSlots());
@@ -501,6 +547,7 @@ public final class SubspaceManager {
         if (player.containerMenu instanceof SubspaceMenu sm) {
             sm.broadcastChanges();
         }
+        pushToWorld(player);
         com.soybe.awakeningsystem.AwakeningSystemMod.sync(player);
 
         player.playNotifySound(SoundEvents.ENDER_CHEST_OPEN, SoundSource.PLAYERS, 0.8F, 1.6F);

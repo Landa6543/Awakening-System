@@ -127,7 +127,7 @@ public final class GachaManager {
             return;
         }
 
-        ItemStack leftover = data.addToSubspace(remaining);
+        ItemStack leftover = com.soybe.awakeningsystem.subspace.SubspaceManager.addReward(player, remaining);
         if (sentToSubspace != null && sentToSubspace.length > 0) sentToSubspace[0] = true;
         if (subspaceCounter != null && subspaceCounter.length > 0) subspaceCounter[0]++;
 

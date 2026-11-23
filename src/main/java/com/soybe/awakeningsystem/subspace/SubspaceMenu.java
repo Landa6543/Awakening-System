@@ -120,12 +120,31 @@ public class SubspaceMenu extends AbstractContainerMenu {
         super.removed(player);
         this.container.stopOpen(player);
         if (player instanceof net.minecraft.server.level.ServerPlayer sp && sp.server != null) {
-            net.minecraft.server.level.ServerLevel sl = sp.server.getLevel(SubspaceManager.SUBSPACE_REALM);
-            if (sl != null && sp.serverLevel().dimension().equals(SubspaceManager.SUBSPACE_REALM)) {
-                SubspaceManager.syncSubspaceToWorld(sl, sp);
-            }
+            // the plot's chests follow what was done in the menu, also when it was opened from outside the plot
+            SubspaceManager.pushToWorld(sp);
+            SubspaceManager.splitOversizedStacks(sp);
             com.soybe.awakeningsystem.AwakeningSystemMod.sync(sp);
         }
+    }
+
+    /**
+     * Number-key swaps would move a whole oversized stack (more than 64, from storage mods with stack
+     * upgrades) into the hotbar; only a normal stack goes, the rest stays in the Subspace.
+     */
+    @Override
+    public void clicked(int slotId, int button, net.minecraft.world.inventory.ClickType clickType, Player player) {
+        if (clickType == net.minecraft.world.inventory.ClickType.SWAP && slotId >= 0 && slotId < SUBSPACE_SLOTS) {
+            Slot slot = this.slots.get(slotId);
+            ItemStack inSlot = slot.getItem();
+            if (inSlot.getCount() > inSlot.getMaxStackSize()) {
+                if (button >= 0 && button < 9 && player.getInventory().getItem(button).isEmpty()) {
+                    player.getInventory().setItem(button, slot.remove(inSlot.getMaxStackSize()));
+                    slot.setChanged();
+                }
+                return;
+            }
+        }
+        super.clicked(slotId, button, clickType, player);
     }
 
     public Container getContainer() {
@@ -181,7 +200,11 @@ public class SubspaceMenu extends AbstractContainerMenu {
         @Override
         public ItemStack remove(int amount) {
             int idx = getGlobalIndex();
-            return (idx >= 0 && idx < this.container.getContainerSize()) ? this.container.removeItem(idx, amount) : ItemStack.EMPTY;
+            if (idx < 0 || idx >= this.container.getContainerSize()) return ItemStack.EMPTY;
+            // a click never takes more than a normal stack, even from an oversized one (storage mods' upgrades)
+            ItemStack current = this.container.getItem(idx);
+            if (!current.isEmpty()) amount = Math.min(amount, current.getMaxStackSize());
+            return this.container.removeItem(idx, amount);
         }
 
         @Override

@@ -346,7 +346,9 @@ public class GachaCapsuleItem extends Item {
             return;
         }
 
-        ItemStack leftover = data.addToSubspace(remaining);
+        ItemStack leftover = player instanceof net.minecraft.server.level.ServerPlayer sp
+                ? com.soybe.awakeningsystem.subspace.SubspaceManager.addReward(sp, remaining)
+                : data.addToSubspace(remaining);
         player.sendSystemMessage(Component.translatable("awakening_system.msg.system_your_inventory_was_full_reward", String.valueOf(rewardStack.getHoverName().getString())));
         player.playNotifySound(SoundEvents.CHEST_OPEN, SoundSource.PLAYERS, 0.8f, 1.2f);
         com.soybe.awakeningsystem.AwakeningSystemMod.sync(player);
