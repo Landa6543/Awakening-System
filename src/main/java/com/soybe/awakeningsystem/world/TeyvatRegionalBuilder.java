@@ -377,59 +377,156 @@ public final class TeyvatRegionalBuilder {
      * 4. Choza Mística y Árbol de Aranara (Sumeru Dharma Forest).
      * Refugio botánico con setas gigantes luminiscentes, madera de selva y enredaderas.
      */
+    /** Where Miyabi (in the house, up on the platform) and Ellen (by the foot of the stairs) stand. */
+    public static BlockPos[] treehouseNpcSpots(BlockPos origin) {
+        int cx = origin.getX(), cy = origin.getY(), cz = origin.getZ();
+        return new BlockPos[]{new BlockPos(cx - 2, cy + 6, cz + 2), new BlockPos(cx - 4, cy + 1, cz + 7)};
+    }
+
+    /**
+     * The tree house of the forest: a great jungle tree whose trunk holds up a planked platform with a railing,
+     * a small wooden house round the trunk (door, windows, lanterns, a chest with its reward), a leafy crown with
+     * glowing shroomlights, and a stair from the ground. Built in code on the ground it finds (it used to be a
+     * saved copy of a dirt box, with its floor four blocks up: the characters came out inside the dirt and the
+     * chest that was filled was not the one that existed).
+     */
     public static void buildAranaraTreehouse(ServerLevel level, BlockPos origin) {
         int cx = origin.getX();
         int cy = origin.getY();
         int cz = origin.getZ();
+        int floor = cy + 5;   // the platform's planks; one walks on top of them
 
-        if (TeyvatStructureManager.placeNbtStructure(level, origin, "aranara_treehouse", -6, 0, -6)) {
-            BlockPos chestPos = new BlockPos(cx, cy + 1, cz - 2);
-            BlockEntity be = level.getBlockEntity(chestPos);
-            if (be instanceof Container c) {
-                c.setItem(0, new ItemStack(SystemItems.PRIMOGEM.get(), 60));
-                c.setItem(1, SystemItems.coin(250));
-                c.setItem(2, new ItemStack(Items.EMERALD, 4));
-            }
-            SeriesStructureBuilder.spawnNpcIfAbsent(level, new BlockPos(cx, cy + 1, cz), ModEntities.SERIES_NPC.get(), NpcProfile.HOSHIMI_MIYABI);
-            return;
+        BlockState log = Blocks.JUNGLE_LOG.defaultBlockState();
+        BlockState wood = Blocks.JUNGLE_WOOD.defaultBlockState();
+        BlockState planks = Blocks.JUNGLE_PLANKS.defaultBlockState();
+        BlockState stripped = Blocks.STRIPPED_JUNGLE_LOG.defaultBlockState();
+        BlockState leaves = Blocks.JUNGLE_LEAVES.defaultBlockState().setValue(net.minecraft.world.level.block.LeavesBlock.PERSISTENT, true);
+        BlockState air = Blocks.AIR.defaultBlockState();
+
+        // ground: grassy and level under the whole place, everything above it cleared
+        buildAdaptiveFoundation(level, cx - 8, cx + 9, cz - 8, cz + 9, cy,
+                Blocks.GRASS_BLOCK.defaultBlockState(), Blocks.DIRT.defaultBlockState());
+        for (int x = cx - 8; x <= cx + 9; x++)
+            for (int z = cz - 8; z <= cz + 9; z++)
+                for (int y = cy + 1; y <= cy + 20; y++) level.setBlock(new BlockPos(x, y, z), air, 2);
+
+        // the trunk (2x2) with roots spreading at its foot
+        for (int y = cy + 1; y <= floor + 9; y++)
+            for (int dx = 0; dx <= 1; dx++)
+                for (int dz = 0; dz <= 1; dz++) level.setBlock(new BlockPos(cx + dx, y, cz + dz), log, 2);
+        int[][] roots = {{-1, 0}, {-1, 1}, {2, 0}, {2, 1}, {0, -1}, {1, -1}, {0, 2}, {1, 2}};
+        for (int[] r : roots) {
+            level.setBlock(new BlockPos(cx + r[0], cy + 1, cz + r[1]), wood, 2);
+            if ((r[0] + r[1]) % 2 == 0) level.setBlock(new BlockPos(cx + r[0], cy + 2, cz + r[1]), wood, 2);
         }
 
-        buildAdaptiveFoundation(level, cx - 6, cx + 6, cz - 6, cz + 6, cy,
-                Blocks.MOSS_BLOCK.defaultBlockState(), Blocks.DIRT.defaultBlockState());
+        // the platform, roughly round, held by four posts
+        for (int x = -5; x <= 6; x++)
+            for (int z = -5; z <= 6; z++) {
+                double d = Math.hypot(x - 0.5, z - 0.5);
+                if (d <= 6.2 && !(x >= 0 && x <= 1 && z >= 0 && z <= 1)) level.setBlock(new BlockPos(cx + x, floor, cz + z), planks, 2);
+            }
+        int[][] posts = {{-4, -4}, {5, -4}, {-4, 5}, {5, 5}};
+        for (int[] p : posts) for (int y = cy + 1; y < floor; y++) level.setBlock(new BlockPos(cx + p[0], y, cz + p[1]), stripped, 2);
 
-        for (int y = 1; y <= 7; y++) {
-            for (int x = -3; x <= 3; x++) {
-                for (int z = -3; z <= 3; z++) {
-                    if (Math.abs(x) == 3 || Math.abs(z) == 3) {
-                        level.setBlock(new BlockPos(cx + x, cy + y, cz + z), Blocks.JUNGLE_WOOD.defaultBlockState(), 2);
-                    } else {
-                        level.setBlock(new BlockPos(cx + x, cy + y, cz + z), Blocks.AIR.defaultBlockState(), 2);
+        // the house round the trunk: walls of planks with log corners, a door south, windows east and west
+        int x0 = cx - 3, x1 = cx + 4, z0 = cz - 3, z1 = cz + 4;
+        for (int y = floor + 1; y <= floor + 4; y++)
+            for (int x = x0; x <= x1; x++)
+                for (int z = z0; z <= z1; z++) {
+                    boolean edge = x == x0 || x == x1 || z == z0 || z == z1;
+                    if (!edge) continue;
+                    boolean corner = (x == x0 || x == x1) && (z == z0 || z == z1);
+                    level.setBlock(new BlockPos(x, y, z), corner ? stripped : planks, 2);
+                }
+        for (int y = floor + 1; y <= floor + 2; y++) {
+            level.setBlock(new BlockPos(cx, y, z1), air, 2);                      // the door
+            level.setBlock(new BlockPos(cx + 1, y, z1), air, 2);
+        }
+        for (int z = cz; z <= cz + 1; z++) {                                       // windows
+            level.setBlock(new BlockPos(x0, floor + 2, z), Blocks.GLASS_PANE.defaultBlockState(), 3);
+            level.setBlock(new BlockPos(x1, floor + 2, z), Blocks.GLASS_PANE.defaultBlockState(), 3);
+        }
+        // the roof, a step out, then the leafy crown over everything
+        for (int x = x0 - 1; x <= x1 + 1; x++)
+            for (int z = z0 - 1; z <= z1 + 1; z++) {
+                if (x >= cx && x <= cx + 1 && z >= cz && z <= cz + 1) continue;
+                level.setBlock(new BlockPos(x, floor + 5, z), Blocks.JUNGLE_SLAB.defaultBlockState(), 2);
+            }
+        for (int x = -6; x <= 7; x++)
+            for (int z = -6; z <= 7; z++)
+                for (int y = 6; y <= 11; y++) {
+                    double d = Math.sqrt((x - 0.5) * (x - 0.5) + (z - 0.5) * (z - 0.5) + (y - 8.5) * (y - 8.5) * 2.2);
+                    BlockPos p = new BlockPos(cx + x, floor + y, cz + z);
+                    if (d <= 6.4 && level.getBlockState(p).isAir()) {
+                        boolean light = ((x * 7 + z * 13 + y * 5) & 15) == 0;
+                        level.setBlock(p, light ? Blocks.SHROOMLIGHT.defaultBlockState() : leaves, 2);
                     }
                 }
+        // vines hanging off the crown
+        for (int[] v : new int[][]{{-6, 1}, {7, 0}, {1, -6}, {0, 7}, {-4, -4}, {5, 5}}) {
+            for (int y = floor + 5; y >= floor + 2; y--) {
+                BlockPos p = new BlockPos(cx + v[0], y, cz + v[1]);
+                if (!level.getBlockState(p).isAir()) break;
+                level.setBlock(p, Blocks.CAVE_VINES_PLANT.defaultBlockState().setValue(net.minecraft.world.level.block.CaveVines.BERRIES, (y & 1) == 0), 2);
             }
         }
 
-        level.setBlock(new BlockPos(cx, cy + 1, cz + 3), Blocks.AIR.defaultBlockState(), 2);
-        level.setBlock(new BlockPos(cx, cy + 2, cz + 3), Blocks.AIR.defaultBlockState(), 2);
-
-        for (int x = -4; x <= 4; x++) {
-            for (int z = -4; z <= 4; z++) {
-                level.setBlock(new BlockPos(cx + x, cy + 8, cz + z), Blocks.MOSS_BLOCK.defaultBlockState(), 2);
-                level.setBlock(new BlockPos(cx + x, cy + 9, cz + z), Blocks.JUNGLE_LEAVES.defaultBlockState(), 2);
+        // the railing round the platform's edge, open where the stair arrives
+        for (int x = -5; x <= 6; x++)
+            for (int z = -5; z <= 6; z++) {
+                BlockPos fp = new BlockPos(cx + x, floor, cz + z);
+                if (!level.getBlockState(fp).is(Blocks.JUNGLE_PLANKS)) continue;
+                boolean rim = false;
+                for (int[] n : new int[][]{{1, 0}, {-1, 0}, {0, 1}, {0, -1}})
+                    if (!level.getBlockState(fp.offset(n[0], 0, n[1])).is(Blocks.JUNGLE_PLANKS)
+                            && !level.getBlockState(fp.offset(n[0], 0, n[1])).is(BlockTags.LOGS)) rim = true;
+                BlockPos above = fp.above();
+                if (rim && level.getBlockState(above).isAir() && !(x == -5 && (z == 1 || z == 2))) {
+                    level.setBlock(above, Blocks.JUNGLE_FENCE.defaultBlockState(), 3);
+                }
             }
-        }
-        level.setBlock(new BlockPos(cx, cy + 7, cz), Blocks.SHROOMLIGHT.defaultBlockState(), 2);
 
-        BlockPos chestPos = new BlockPos(cx, cy + 1, cz - 2);
-        level.setBlock(chestPos, Blocks.CHEST.defaultBlockState(), 2);
+        // the stair up the west side: five steps climbing north, the last level with the platform beside it
+        for (int k = 1; k <= 5; k++) {
+            level.setBlock(new BlockPos(cx - 6, cy + k, cz + 6 - k), Blocks.JUNGLE_STAIRS.defaultBlockState()
+                    .setValue(net.minecraft.world.level.block.StairBlock.FACING, net.minecraft.core.Direction.NORTH), 2);
+            for (int y = cy + 1; y < cy + k; y++) level.setBlock(new BlockPos(cx - 6, y, cz + 6 - k), planks, 2);
+        }
+
+        // inside: a lantern, a bed of moss, flowers in pots and the chest
+        level.setBlock(new BlockPos(cx - 2, floor + 1, cz - 2), Blocks.MOSS_CARPET.defaultBlockState(), 2);
+        level.setBlock(new BlockPos(cx + 3, floor + 1, cz + 3), Blocks.POTTED_AZURE_BLUET.defaultBlockState(), 2);
+        level.setBlock(new BlockPos(cx - 2, floor + 1, cz + 3), Blocks.POTTED_BLUE_ORCHID.defaultBlockState(), 2);
+        level.setBlock(new BlockPos(cx + 3, floor + 4, cz - 2), Blocks.LANTERN.defaultBlockState()
+                .setValue(net.minecraft.world.level.block.LanternBlock.HANGING, true), 2);
+        level.setBlock(new BlockPos(cx - 2, floor + 4, cz + 3), Blocks.LANTERN.defaultBlockState()
+                .setValue(net.minecraft.world.level.block.LanternBlock.HANGING, true), 2);
+        BlockPos chestPos = new BlockPos(cx + 3, floor + 1, cz - 2);
+        level.setBlock(chestPos, Blocks.CHEST.defaultBlockState()
+                .setValue(net.minecraft.world.level.block.ChestBlock.FACING, net.minecraft.core.Direction.WEST), 2);
         BlockEntity be = level.getBlockEntity(chestPos);
         if (be instanceof Container c) {
             c.setItem(0, new ItemStack(SystemItems.PRIMOGEM.get(), 60));
             c.setItem(1, SystemItems.coin(250));
             c.setItem(2, new ItemStack(Items.EMERALD, 4));
+            c.setItem(3, new ItemStack(Items.GLOW_BERRIES, 8));
+            c.setItem(4, new ItemStack(Items.JUNGLE_SAPLING, 2));
         }
 
-        SeriesStructureBuilder.spawnNpcIfAbsent(level, new BlockPos(cx, cy + 1, cz), ModEntities.SERIES_NPC.get(), NpcProfile.HOSHIMI_MIYABI);
+        // lanterns on the posts below the platform, flowers and mushrooms on the ground
+        for (int[] p : posts) level.setBlock(new BlockPos(cx + p[0], cy + 1, cz + p[1]).offset(p[0] > 0 ? 1 : -1, 0, 0), Blocks.LANTERN.defaultBlockState(), 2);
+        BlockState[] flowers = {Blocks.BLUE_ORCHID.defaultBlockState(), Blocks.AZURE_BLUET.defaultBlockState(), Blocks.FERN.defaultBlockState(),
+                Blocks.RED_MUSHROOM.defaultBlockState(), Blocks.OXEYE_DAISY.defaultBlockState()};
+        for (int x = -8; x <= 9; x++)
+            for (int z = -8; z <= 9; z++) {
+                BlockPos p = new BlockPos(cx + x, cy + 1, cz + z);
+                if (level.getBlockState(p).isAir() && ((x * 31 + z * 17) % 7 == 0)) level.setBlock(p, flowers[Math.floorMod(x + z, flowers.length)], 2);
+            }
+
+        BlockPos[] spots = treehouseNpcSpots(origin);
+        SeriesStructureBuilder.spawnNpcIfAbsent(level, spots[0], ModEntities.SERIES_NPC.get(), NpcProfile.HOSHIMI_MIYABI);
+        SeriesStructureBuilder.spawnNpcIfAbsent(level, spots[1], ModEntities.SERIES_NPC.get(), NpcProfile.ELLEN_JOE);
     }
 
     /**

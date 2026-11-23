@@ -2140,8 +2140,10 @@ public final class SeriesStructureWorldGen {
                         SeriesStructureBuilder.spawnNpcIfAbsent(level, new BlockPos(cx, cy + 1, cz + 2), com.soybe.awakeningsystem.entity.ModEntities.SERIES_NPC.get(), com.soybe.awakeningsystem.entity.NpcProfile.ZHONGLI);
                         SeriesStructureBuilder.spawnNpcIfAbsent(level, new BlockPos(cx + 2, cy + 1, cz - 2), com.soybe.awakeningsystem.entity.ModEntities.SERIES_NPC.get(), com.soybe.awakeningsystem.entity.NpcProfile.HUTAO);
                     } else if (key.startsWith("teyvat_treehouses")) {
-                        SeriesStructureBuilder.spawnNpcIfAbsent(level, new BlockPos(cx, cy + 1, cz + 4), com.soybe.awakeningsystem.entity.ModEntities.SERIES_NPC.get(), com.soybe.awakeningsystem.entity.NpcProfile.HOSHIMI_MIYABI);
-                        SeriesStructureBuilder.spawnNpcIfAbsent(level, new BlockPos(cx + 4, cy + 1, cz), com.soybe.awakeningsystem.entity.ModEntities.SERIES_NPC.get(), com.soybe.awakeningsystem.entity.NpcProfile.ELLEN_JOE);
+                        // the same open spots the tree house was built with (before, these were inside its walls)
+                        BlockPos[] spots = TeyvatRegionalBuilder.treehouseNpcSpots(sPos);
+                        SeriesStructureBuilder.spawnNpcIfAbsent(level, spots[0], com.soybe.awakeningsystem.entity.ModEntities.SERIES_NPC.get(), com.soybe.awakeningsystem.entity.NpcProfile.HOSHIMI_MIYABI);
+                        SeriesStructureBuilder.spawnNpcIfAbsent(level, spots[1], com.soybe.awakeningsystem.entity.ModEntities.SERIES_NPC.get(), com.soybe.awakeningsystem.entity.NpcProfile.ELLEN_JOE);
                     } else if (key.startsWith("teyvat_jade_chamber")) {
                         SeriesStructureBuilder.spawnNpcIfAbsent(level, new BlockPos(cx, cy + 1, cz + 2), com.soybe.awakeningsystem.entity.ModEntities.SERIES_NPC.get(), com.soybe.awakeningsystem.entity.NpcProfile.RAIDEN_SHOGUN);
                         SeriesStructureBuilder.spawnNpcIfAbsent(level, new BlockPos(cx + 3, cy + 1, cz - 2), com.soybe.awakeningsystem.entity.ModEntities.SERIES_NPC.get(), com.soybe.awakeningsystem.entity.NpcProfile.ACHERON);
