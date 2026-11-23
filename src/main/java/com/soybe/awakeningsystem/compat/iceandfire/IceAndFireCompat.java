@@ -418,6 +418,8 @@ public final class IceAndFireCompat {
             CompoundTag customData = new CompoundTag();
             if (mobNbt.contains("Stage")) customData.putInt("Stage", mobNbt.getInt("Stage"));
             if (mobNbt.contains("DragonAge")) customData.putInt("DragonAge", mobNbt.getInt("DragonAge"));
+            if (mobNbt.contains("AgeTicks")) customData.putInt("AgeTicks", mobNbt.getInt("AgeTicks"));   // Ice and Fire's dragon age
+            if (mobNbt.contains("Age")) customData.putInt("Age", mobNbt.getInt("Age"));
             if (mobNbt.contains("Variant")) customData.putInt("Variant", mobNbt.getInt("Variant"));
             if (mobNbt.contains("Gender")) customData.putBoolean("Gender", mobNbt.getBoolean("Gender"));
             if (mobNbt.contains("Color")) customData.putInt("Color", mobNbt.getInt("Color"));
@@ -436,7 +438,13 @@ public final class IceAndFireCompat {
         if (mob == null || sourceTag == null || !sourceTag.contains("ModdedMobData")) return;
         try {
             CompoundTag customData = sourceTag.getCompound("ModdedMobData");
-            mob.readAdditionalSaveData(customData);
+            // merged over what the creature already has (its full saved data was read just before): reading this
+            // short list on its own reset everything it does not hold, and Ice and Fire dragons lost their age and
+            // came back as hatchlings (or with another stage than the one extracted)
+            CompoundTag current = new CompoundTag();
+            mob.saveWithoutId(current);
+            current.merge(customData);
+            mob.readAdditionalSaveData(current);
             mob.getPersistentData().putBoolean("ModelDead", false);
             mob.getPersistentData().remove("DeadProg");
         } catch (Throwable ignored) {}
