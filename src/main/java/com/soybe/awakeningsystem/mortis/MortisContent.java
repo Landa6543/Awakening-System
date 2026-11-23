@@ -35,7 +35,8 @@ public final class MortisContent {
     @SubscribeEvent
     public static void register(RegisterEvent event) {
         event.register(Registries.ENTITY_TYPE, helper -> {
-            WALKING_JUREL = EntityType.Builder.of(WalkingJurelEntity::new, MobCategory.CREATURE)
+            // a water creature: they also live (and spawn) in the sea, and walk out to dance at the cans
+            WALKING_JUREL = EntityType.Builder.of(WalkingJurelEntity::new, MobCategory.WATER_CREATURE)
                     .sized(0.7F, 1.25F).eyeHeight(1.0F).clientTrackingRange(10).build("walking_jurel");
             helper.register(id("walking_jurel"), WALKING_JUREL);
         });
@@ -49,6 +50,14 @@ public final class MortisContent {
             COOKED_JUREL = new Item(new Item.Properties().food(new net.minecraft.world.food.FoodProperties.Builder().nutrition(6).saturationModifier(0.7F).build()));
             helper.register(id("cooked_jurel"), COOKED_JUREL);
         });
+    }
+
+    /** Sea jurels spawn in ocean water (the oceans come from the biome modifier jurel_spawns). */
+    @SubscribeEvent
+    public static void spawnPlacements(net.neoforged.neoforge.event.entity.RegisterSpawnPlacementsEvent event) {
+        event.register(WALKING_JUREL, net.minecraft.world.entity.SpawnPlacementTypes.IN_WATER,
+                net.minecraft.world.level.levelgen.Heightmap.Types.MOTION_BLOCKING_NO_LEAVES, WalkingJurelEntity::canSpawnInSea,
+                net.neoforged.neoforge.event.entity.RegisterSpawnPlacementsEvent.Operation.REPLACE);
     }
 
     @SubscribeEvent

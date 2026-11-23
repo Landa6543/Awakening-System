@@ -151,11 +151,11 @@ public final class TitleDefinitions {
 
     public static boolean hasGogglesBuff(net.minecraft.world.entity.player.Player player) {
         if (player == null) return false;
-        if (isCreator(player) || isWraith(player)) return true;
+        // only while the title is worn: being the creator (or Orthax) is not enough, or the goggles view
+        // stayed on for them whatever other title they put on
         try {
             SystemData data = SystemEvents.data(player);
             if (data != null) {
-                if (data.isCreator() || data.isWraith()) return true;
                 String title = data.equippedTitle();
                 return "creator".equals(title) || "orthax".equals(title);
             }

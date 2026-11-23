@@ -330,6 +330,21 @@ public final class SanMortisCan {
             if (changed) setDirty();
         }
 
+        /** The nearest can to a place, within a range of blocks, or null. */
+        public static BlockPos nearest(ServerLevel level, BlockPos at, int range) {
+            BlockPos best = null;
+            double bestD = (double) range * range;
+            for (long l : of(level).bases) {
+                BlockPos b = BlockPos.of(l);
+                double d = b.distSqr(at);
+                if (d < bestD) {
+                    bestD = d;
+                    best = b;
+                }
+            }
+            return best;
+        }
+
         /**
          * A can told about by one of its jurels (their home is the middle of its foot): cans built before the
          * list existed were never on it, so a pickaxe could break them.
