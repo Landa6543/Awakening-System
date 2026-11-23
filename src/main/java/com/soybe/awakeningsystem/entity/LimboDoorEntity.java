@@ -241,7 +241,12 @@ public class LimboDoorEntity extends Entity implements GeoEntity {
         this.level().playSound(null, this.getX(), this.getY(), this.getZ(),
                 SoundEvents.BEACON_ACTIVATE, SoundSource.BLOCKS, 1.2F, 1.1F);
 
-        LimboWorldManager.returnFromLimbo(player);
+        // the way out waits until the server is between ticks: leaving the world in the middle of its own turn
+        // can crash a server (as it did leaving the Penalty Zone)
+        player.setPortalCooldown(40);
+        com.soybe.awakeningsystem.penalty.PenaltyZoneManager.later(player.getServer(), () -> {
+            if (LimboWorldManager.isLimboDimension(player.level())) LimboWorldManager.returnFromLimbo(player);
+        });
     }
 
     @Override

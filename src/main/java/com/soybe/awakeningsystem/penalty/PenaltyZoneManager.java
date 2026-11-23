@@ -124,6 +124,16 @@ public final class PenaltyZoneManager {
         player.addEffect(new MobEffectInstance(MobEffects.CONFUSION, 60, 0));
     }
 
+    /**
+     * Runs the step once the server is between ticks. Taking a player to another world while a world is moving
+     * its creatures (a worm's bite or a worm's death happen right then) crashes the server. server.execute()
+     * does not wait when called from the server thread itself (it runs at once), so the task is queued instead.
+     */
+    public static void later(MinecraftServer server, Runnable step) {
+        if (server == null) return;
+        server.tell(new net.minecraft.server.TickTask(server.getTickCount(), step));
+    }
+
     public static void onSandwormKilled(ServerLevel level, ServerPlayer player) {
         if (player == null) return;
         PenaltySession session = ACTIVE_SESSIONS.get(player.getUUID());
@@ -136,7 +146,7 @@ public final class PenaltyZoneManager {
             if (session.wormsKilled >= WORMS_REQUIRED_FOR_EARLY_ESCAPE && player.getServer() != null) {
                 // after this tick: the worm may have been killed while the world was moving its creatures,
                 // and taking the player to another world right then breaks that
-                player.getServer().execute(() -> {
+                later(player.getServer(), () -> {
                     if (ACTIVE_SESSIONS.containsKey(player.getUUID()) && isInPenaltyZone(player)) completePenaltyZone(player, true);
                 });
             }
@@ -220,7 +230,9 @@ public final class PenaltyZoneManager {
             }
         }
         for (ServerPlayer player : survived) {
-            if (ACTIVE_SESSIONS.containsKey(player.getUUID())) completePenaltyZone(player, false);
+            later(server, () -> {
+                if (ACTIVE_SESSIONS.containsKey(player.getUUID()) && isInPenaltyZone(player)) completePenaltyZone(player, false);
+            });
         }
     }
 

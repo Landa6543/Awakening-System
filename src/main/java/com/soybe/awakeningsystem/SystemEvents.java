@@ -863,7 +863,9 @@ public final class SystemEvents {
             player.setHealth(player.getMaxHealth());
             data.setMana(data.maxMana());
             player.invulnerableTime = 60;
-            LimboWorldManager.teleportToLimbo(player);
+            // not in the middle of the respawn itself: once the server is between ticks
+            final ServerPlayer respawned = player;
+            com.soybe.awakeningsystem.penalty.PenaltyZoneManager.later(player.getServer(), () -> LimboWorldManager.teleportToLimbo(respawned));
             player.sendSystemMessage(Component.translatable("awakening_system.limbo.dungeon_death_rescue"));
             refreshPlayer(player);
             return;
@@ -1960,7 +1962,13 @@ public final class SystemEvents {
       if (event.getEntity() instanceof ServerPlayer sp) {
          if (com.soybe.awakeningsystem.penalty.PenaltyZoneManager.isInPenaltyZone(sp)) {
             event.setCanceled(true);
-            com.soybe.awakeningsystem.penalty.PenaltyZoneManager.failPenaltyZone(sp);
+            // alive again right away; the trip out waits until the server is between ticks (a worm killed the
+            // player while the world was moving its creatures, and leaving the world right then crashed the server)
+            sp.setHealth(sp.getMaxHealth());
+            sp.invulnerableTime = 80;
+            com.soybe.awakeningsystem.penalty.PenaltyZoneManager.later(sp.getServer(), () -> {
+               if (com.soybe.awakeningsystem.penalty.PenaltyZoneManager.isInPenaltyZone(sp)) com.soybe.awakeningsystem.penalty.PenaltyZoneManager.failPenaltyZone(sp);
+            });
             return;
          }
 
@@ -1980,9 +1988,12 @@ public final class SystemEvents {
             sp.fallDistance = 0.0F;
             sp.setDeltaMovement(0.0, 0.0, 0.0);
             sp.invulnerableTime = 60;
-            DungeonManager.exitDungeonSilently(sp);
-            LimboWorldManager.teleportToLimbo(sp);
-            sp.sendSystemMessage(Component.translatable("awakening_system.limbo.dungeon_death_rescue"));
+            // the trip to Limbo waits until the server is between ticks (same crash as the Penalty Zone)
+            com.soybe.awakeningsystem.penalty.PenaltyZoneManager.later(sp.getServer(), () -> {
+               DungeonManager.exitDungeonSilently(sp);
+               LimboWorldManager.teleportToLimbo(sp);
+               sp.sendSystemMessage(Component.translatable("awakening_system.limbo.dungeon_death_rescue"));
+            });
             return;
          }
       }
