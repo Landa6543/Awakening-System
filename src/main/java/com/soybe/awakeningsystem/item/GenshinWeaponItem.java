@@ -34,7 +34,11 @@ import net.minecraft.core.component.DataComponents;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.item.component.CustomData;
+import net.neoforged.bus.api.SubscribeEvent;
+import net.neoforged.fml.common.EventBusSubscriber;
+import net.neoforged.neoforge.event.AnvilUpdateEvent;
 
+@EventBusSubscriber(modid = AwakeningSystemMod.MOD_ID)
 public class GenshinWeaponItem extends SwordItem implements AwakeningWeaponItem {
 
     public enum WeaponType {
@@ -123,20 +127,21 @@ public class GenshinWeaponItem extends SwordItem implements AwakeningWeaponItem 
             return InteractionResultHolder.fail(stack);
         }
         if (!level.isClientSide() && player instanceof ServerPlayer sp) {
-            if (sp.isShiftKeyDown()) {
+            if (hand == InteractionHand.MAIN_HAND && sp.isShiftKeyDown()) {
                 ItemStack offHand = sp.getOffhandItem();
                 if (offHand.getItem() instanceof GenshinWeaponItem other && other.getWeaponType() == this.weaponType) {
                     int currentRank = getRefinement(stack);
                     if (currentRank >= 5) {
-                        sp.displayClientMessage(Component.translatable("item.awakening_system.genshin_weapon.max_refinement"), true);
+                        sp.displayClientMessage(Component.translatable("item.awakening_system.genshin_weapon.max_refinement"), false);
                         return InteractionResultHolder.fail(stack);
                     }
-                    int costMora = (weaponType.stars == 5 ? 30000 : 15000) * currentRank;
+                    int costMora = (weaponType.stars >= 5 ? 30000 : 15000) * currentRank;
                     SystemData data = SystemEvents.data(sp);
                     if (data.mora() >= costMora) {
                         data.spendMora(costMora);
+                        int otherRank = getRefinement(offHand);
                         offHand.shrink(1);
-                        int nextRank = currentRank + 1;
+                        int nextRank = Math.min(5, currentRank + otherRank);
                         setRefinement(stack, nextRank);
 
                         ServerLevel sl = (ServerLevel) level;
@@ -148,7 +153,7 @@ public class GenshinWeaponItem extends SwordItem implements AwakeningWeaponItem 
                         sp.displayClientMessage(Component.translatable("item.awakening_system.genshin_weapon.refinement_success", Component.translatable(stack.getDescriptionId()), nextRank, String.format(java.util.Locale.US, "%,d", costMora)), false);
                         return InteractionResultHolder.consume(stack);
                     } else {
-                        sp.displayClientMessage(Component.translatable("item.awakening_system.genshin_weapon.insufficient_mora", String.format(java.util.Locale.US, "%,d", costMora), (currentRank + 1)), true);
+                        sp.displayClientMessage(Component.translatable("item.awakening_system.genshin_weapon.insufficient_mora", String.format(java.util.Locale.US, "%,d", costMora), (currentRank + 1)), false);
                         return InteractionResultHolder.consume(stack);
                     }
                 }
@@ -579,6 +584,11 @@ public class GenshinWeaponItem extends SwordItem implements AwakeningWeaponItem 
                     SoundSource.PLAYERS, 1.3F, 1.2F);
             com.soybe.awakeningsystem.CameraShakePayload.sendToNearby(sl, target.getX(), target.getY(), target.getZ(), 16.0D, 0.25F, 4);
 
+            int rank = getRefinement(stack);
+            if (rank > 1) {
+                target.hurt(attacker.damageSources().playerAttack(player), (rank - 1) * 4.0F);
+            }
+
             switch (weaponType) {
                 case ENGULFING_LIGHTNING -> {
                     target.hurt(attacker.damageSources().magic(), 4.0F);
@@ -761,5 +771,23 @@ public class GenshinWeaponItem extends SwordItem implements AwakeningWeaponItem 
                  THE_FLUTE, THE_BLACK_SWORD, BLACK_TASSEL, HERTA_HAMMER, DOMAIN_OF_SANCTION -> true;
             default -> false;
         };
+    }
+
+    @SubscribeEvent
+    public static void onAnvilUpdate(AnvilUpdateEvent event) {
+        ItemStack left = event.getLeft();
+        ItemStack right = event.getRight();
+        if (left.getItem() instanceof GenshinWeaponItem gLeft
+                && right.getItem() instanceof GenshinWeaponItem gRight
+                && gLeft.getWeaponType() == gRight.getWeaponType()) {
+            int currentRank = getRefinement(left);
+            if (currentRank >= 5) return;
+            int nextRank = Math.min(5, currentRank + getRefinement(right));
+            ItemStack out = left.copy();
+            setRefinement(out, nextRank);
+            event.setOutput(out);
+            event.setCost((gLeft.weaponType.stars >= 5 ? 8 : 4) * currentRank);
+            event.setMaterialCost(1);
+        }
     }
 }

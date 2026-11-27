@@ -907,6 +907,12 @@ public final class RuinGateManager {
     private static final Map<UUID, Long> LEFT_AT = new HashMap<>();
     private static final int REENTRY_DELAY = 100;
 
+    public static void clearAll() {
+        SESSIONS.clear();
+        TOUCHED.clear();
+        LEFT_AT.clear();
+    }
+
     /** A standing spot near {@code from} at least three blocks from any Ruin Portal block. */
     private static Vec3 clearOfPortals(ServerLevel level, Vec3 from) {
         BlockPos origin = BlockPos.containing(from);

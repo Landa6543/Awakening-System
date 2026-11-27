@@ -14,6 +14,8 @@ public record ManageShadowSquadPayload(int action, int squadId, int shadowIndex,
     public static final int ACTION_RECALL_ALL = 3;
     public static final int ACTION_RENAME_SQUAD = 4;
     public static final int ACTION_MOVE_SHADOW = 5;
+    public static final int ACTION_SELECT_SQUAD = 6;
+    public static final int ACTION_DELETE_SHADOW = 7;
 
     public static final Type<ManageShadowSquadPayload> TYPE = new Type<>(ResourceLocation.fromNamespaceAndPath(AwakeningSystemMod.MOD_ID, "manage_shadow_squad"));
     public static final StreamCodec<ByteBuf, ManageShadowSquadPayload> STREAM_CODEC = StreamCodec.composite(

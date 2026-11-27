@@ -78,16 +78,12 @@ public class BountyBoardBlock extends HorizontalDirectionalBlock {
     }
 
     public static final List<BountyTemplate> ALL_BOUNTIES = List.of(
-            new BountyTemplate("awakening_system.bounty.flower_gathering", "F", "collect_flower", 10, 450, 500, 1),
             new BountyTemplate("awakening_system.bounty.slime_hunt", "F", "isekai_slime", 6, 500, 600, 1),
             new BountyTemplate("awakening_system.bounty.goblin_scout_hunt", "F", "goblin_scout", 6, 600, 750, 1),
-            new BountyTemplate("awakening_system.bounty.wild_wood_gathering", "F", "collect_wood", 16, 550, 650, 1),
-            new BountyTemplate("awakening_system.bounty.fresh_wheat_harvest", "F", "collect_wheat", 16, 500, 600, 1),
             new BountyTemplate("awakening_system.bounty.cave_bat_purge", "F", "bat_hunt", 5, 520, 620, 1),
             new BountyTemplate("awakening_system.bounty.wild_wolf_hunt", "F", "isekai_wolf", 4, 600, 700, 1),
             new BountyTemplate("awakening_system.bounty.mana_feather_gathering", "F", "collect_feather", 8, 580, 700, 1),
             new BountyTemplate("awakening_system.bounty.skeleton_bone_salvage", "F", "collect_bone", 8, 620, 750, 1),
-            new BountyTemplate("awakening_system.bounty.forest_berry_harvest", "F", "collect_berries", 16, 480, 580, 1),
 
             new BountyTemplate("awakening_system.bounty.giant_slime_cull", "E", "giant_slime", 3, 800, 1000, 2),
             new BountyTemplate("awakening_system.bounty.goblin_patrol", "E", "goblin_scout", 10, 950, 1200, 2),
@@ -96,7 +92,6 @@ public class BountyBoardBlock extends HorizontalDirectionalBlock {
             new BountyTemplate("awakening_system.bounty.mana_pork_supply", "E", "collect_mana_pork", 6, 950, 1250, 2),
             new BountyTemplate("awakening_system.bounty.drowned_shore_purge", "E", "drowned_hunt", 8, 900, 1150, 2),
             new BountyTemplate("awakening_system.bounty.leather_procurement", "E", "collect_leather", 10, 880, 1100, 2),
-            new BountyTemplate("awakening_system.bounty.bamboo_stalk_harvest", "E", "collect_bamboo", 24, 820, 1050, 2),
             new BountyTemplate("awakening_system.bounty.hilichurl_patrol", "E", "hilichurl_hunt", 6, 1000, 1300, 2),
             new BountyTemplate("awakening_system.bounty.forest_spider_clearing", "E", "isekai_spider", 8, 880, 1150, 2),
 
@@ -105,7 +100,6 @@ public class BountyBoardBlock extends HorizontalDirectionalBlock {
             new BountyTemplate("awakening_system.bounty.skeleton_patrol", "D", "isekai_skeleton", 8, 1300, 1600, 3),
             new BountyTemplate("awakening_system.bounty.beholder_recon", "D", "isekai_beholder", 4, 1450, 1800, 3),
             new BountyTemplate("awakening_system.bounty.gold_prospecting", "D", "collect_gold", 8, 1350, 1700, 3),
-            new BountyTemplate("awakening_system.bounty.mana_wool_procurement", "D", "collect_mana_wool", 8, 1400, 1750, 3),
             new BountyTemplate("awakening_system.bounty.creeper_volatile_purge", "D", "creeper_hunt", 6, 1500, 1900, 3),
             new BountyTemplate("awakening_system.bounty.frost_elf_ambush", "D", "frost_elf", 4, 1550, 2000, 3),
             new BountyTemplate("awakening_system.bounty.redstone_excavation", "D", "collect_redstone", 16, 1300, 1650, 3),

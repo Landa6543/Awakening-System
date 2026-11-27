@@ -44,11 +44,38 @@ public class CustomTierFurnaceBlockEntity extends BaseContainerBlockEntity imple
     public static final int DATA_COOKING_TOTAL_TIME = 3;
     public static final int DATA_AUGMENT_GUI = 4;
     public static final int DATA_AUGMENT_TYPE = 5;
-    public static final int DATA_COUNT = 6;
+    public static final int DATA_SIDE_TOP = 6;
+    public static final int DATA_SIDE_BOTTOM = 7;
+    public static final int DATA_SIDE_FRONT = 8;
+    public static final int DATA_SIDE_BACK = 9;
+    public static final int DATA_SIDE_LEFT = 10;
+    public static final int DATA_SIDE_RIGHT = 11;
+    public static final int DATA_AUTO_INPUT = 12;
+    public static final int DATA_AUTO_OUTPUT = 13;
+    public static final int DATA_REDSTONE_MODE = 14;
+    public static final int DATA_COUNT = 15;
 
+    // Side IO modes: 0=None, 1=Input, 2=Output, 3=Fuel, 4=Input/Output
+    public static final int MODE_NONE = 0;
+    public static final int MODE_INPUT = 1;
+    public static final int MODE_OUTPUT = 2;
+    public static final int MODE_FUEL = 3;
+    public static final int MODE_IO = 4;
+
+    // Relative sides: 0=TOP, 1=BOTTOM, 2=FRONT, 3=BACK, 4=LEFT, 5=RIGHT
+    private final int[] sideConfig = new int[]{MODE_INPUT, MODE_OUTPUT, MODE_NONE, MODE_FUEL, MODE_FUEL, MODE_FUEL};
+    private int autoInput = 0;
+    private int autoOutput = 0;
+    // 0=Ignored, 1=Low (no redstone), 2=High (redstone required)
+    private int redstoneMode = 0;
+    private int autoIoCooldown = 0;
+
+    private static final int[] SLOTS_NONE = new int[0];
     private static final int[] SLOTS_UP = new int[]{SLOT_INPUT};
     private static final int[] SLOTS_DOWN = new int[]{SLOT_RESULT, SLOT_FUEL};
     private static final int[] SLOTS_HORIZONTAL = new int[]{SLOT_FUEL};
+    private static final int[] SLOTS_RESULT_ONLY = new int[]{SLOT_RESULT};
+    private static final int[] SLOTS_IO = new int[]{SLOT_INPUT, SLOT_RESULT};
 
     private final FurnaceTier tier;
     private NonNullList<ItemStack> items = NonNullList.withSize(TOTAL_SLOTS, ItemStack.EMPTY);
@@ -116,6 +143,11 @@ public class CustomTierFurnaceBlockEntity extends BaseContainerBlockEntity imple
                 case DATA_COOKING_TOTAL_TIME -> CustomTierFurnaceBlockEntity.this.cookingTotalTime;
                 case DATA_AUGMENT_GUI -> CustomTierFurnaceBlockEntity.this.showAugmentGui;
                 case DATA_AUGMENT_TYPE -> CustomTierFurnaceBlockEntity.this.getAugmentType();
+                case DATA_SIDE_TOP, DATA_SIDE_BOTTOM, DATA_SIDE_FRONT, DATA_SIDE_BACK, DATA_SIDE_LEFT, DATA_SIDE_RIGHT ->
+                        CustomTierFurnaceBlockEntity.this.sideConfig[index - DATA_SIDE_TOP];
+                case DATA_AUTO_INPUT -> CustomTierFurnaceBlockEntity.this.autoInput;
+                case DATA_AUTO_OUTPUT -> CustomTierFurnaceBlockEntity.this.autoOutput;
+                case DATA_REDSTONE_MODE -> CustomTierFurnaceBlockEntity.this.redstoneMode;
                 default -> 0;
             };
         }
@@ -128,6 +160,11 @@ public class CustomTierFurnaceBlockEntity extends BaseContainerBlockEntity imple
                 case DATA_COOKING_PROGRESS -> CustomTierFurnaceBlockEntity.this.cookingProgress = value;
                 case DATA_COOKING_TOTAL_TIME -> CustomTierFurnaceBlockEntity.this.cookingTotalTime = value;
                 case DATA_AUGMENT_GUI -> CustomTierFurnaceBlockEntity.this.showAugmentGui = value;
+                case DATA_SIDE_TOP, DATA_SIDE_BOTTOM, DATA_SIDE_FRONT, DATA_SIDE_BACK, DATA_SIDE_LEFT, DATA_SIDE_RIGHT ->
+                        CustomTierFurnaceBlockEntity.this.sideConfig[index - DATA_SIDE_TOP] = value;
+                case DATA_AUTO_INPUT -> CustomTierFurnaceBlockEntity.this.autoInput = value;
+                case DATA_AUTO_OUTPUT -> CustomTierFurnaceBlockEntity.this.autoOutput = value;
+                case DATA_REDSTONE_MODE -> CustomTierFurnaceBlockEntity.this.redstoneMode = value;
             }
         }
 
@@ -176,6 +213,15 @@ public class CustomTierFurnaceBlockEntity extends BaseContainerBlockEntity imple
         if (tag.contains("ShowAugmentGui")) {
             this.showAugmentGui = tag.getInt("ShowAugmentGui");
         }
+        if (tag.contains("SideConfig", Tag.TAG_INT_ARRAY)) {
+            int[] arr = tag.getIntArray("SideConfig");
+            for (int i = 0; i < Math.min(arr.length, 6); i++) {
+                this.sideConfig[i] = Math.max(0, Math.min(4, arr[i]));
+            }
+        }
+        this.autoInput = tag.getInt("AutoInput");
+        this.autoOutput = tag.getInt("AutoOutput");
+        this.redstoneMode = tag.getInt("RedstoneMode");
         if (tag.contains("InstalledAugment", Tag.TAG_COMPOUND) && this.items.get(SLOT_AUGMENT_RED).isEmpty()) {
             ItemStack legacyAug = ItemStack.parse(registries, tag.getCompound("InstalledAugment")).orElse(ItemStack.EMPTY);
             if (!legacyAug.isEmpty()) {
@@ -192,6 +238,10 @@ public class CustomTierFurnaceBlockEntity extends BaseContainerBlockEntity imple
         tag.putInt("CookTimeTotal", this.cookingTotalTime);
         tag.putInt("LitDuration", this.litDuration);
         tag.putInt("ShowAugmentGui", this.showAugmentGui);
+        tag.putIntArray("SideConfig", this.sideConfig);
+        tag.putInt("AutoInput", this.autoInput);
+        tag.putInt("AutoOutput", this.autoOutput);
+        tag.putInt("RedstoneMode", this.redstoneMode);
         if (!this.items.get(SLOT_AUGMENT_RED).isEmpty()) {
             tag.put("InstalledAugment", this.items.get(SLOT_AUGMENT_RED).save(registries));
         }
@@ -213,6 +263,15 @@ public class CustomTierFurnaceBlockEntity extends BaseContainerBlockEntity imple
             be.litTime--;
         }
 
+        if ((be.autoInput == 1 || be.autoOutput == 1) && ++be.autoIoCooldown >= 5) {
+            be.autoIoCooldown = 0;
+            if (be.processAutoIO(level, pos, state)) {
+                stateChanged = true;
+            }
+        }
+
+        boolean redstoneAllows = be.isRedstoneAllowed(level, pos);
+
         ItemStack fuelStack = be.items.get(SLOT_FUEL);
         ItemStack inputStack = be.items.get(SLOT_INPUT);
         boolean hasInput = !inputStack.isEmpty();
@@ -222,7 +281,7 @@ public class CustomTierFurnaceBlockEntity extends BaseContainerBlockEntity imple
         int effectiveCookTime = (targetType != 0) ? Math.max(1, baseCookTime / 2) : baseCookTime;
         be.cookingTotalTime = effectiveCookTime;
 
-        if (be.isLit() || (hasFuel && hasInput)) {
+        if (redstoneAllows && (be.isLit() || (hasFuel && hasInput))) {
             RecipeHolder<?> recipe = hasInput ? be.getCurrentRecipe(level, inputStack) : null;
             int maxStackSize = be.getMaxStackSize();
 
@@ -364,28 +423,115 @@ public class CustomTierFurnaceBlockEntity extends BaseContainerBlockEntity imple
         return EventHooks.getItemBurnTime(fuel, defaultTime, RecipeType.SMELTING);
     }
 
+    private boolean isRedstoneAllowed(Level level, BlockPos pos) {
+        if (this.redstoneMode == 1) {
+            return !level.hasNeighborSignal(pos);
+        }
+        if (this.redstoneMode == 2) {
+            return level.hasNeighborSignal(pos);
+        }
+        return true;
+    }
+
+    private int getRelativeSideIndex(Direction worldSide, BlockState state) {
+        if (worldSide == Direction.UP) return 0; // TOP
+        if (worldSide == Direction.DOWN) return 1; // BOTTOM
+        Direction facing = state.hasProperty(CustomTierFurnaceBlock.FACING)
+                ? state.getValue(CustomTierFurnaceBlock.FACING)
+                : Direction.NORTH;
+        if (worldSide == facing) return 2; // FRONT
+        if (worldSide == facing.getOpposite()) return 3; // BACK
+        if (worldSide == facing.getClockWise()) return 4; // LEFT
+        return 5; // RIGHT
+    }
+
+    private boolean processAutoIO(Level level, BlockPos pos, BlockState state) {
+        boolean changed = false;
+        for (Direction dir : Direction.values()) {
+            int rel = getRelativeSideIndex(dir, state);
+            int mode = this.sideConfig[rel];
+            if (mode == MODE_NONE) continue;
+
+            BlockPos neighborPos = pos.relative(dir);
+            net.neoforged.neoforge.items.IItemHandler neighbor = level.getCapability(
+                    net.neoforged.neoforge.capabilities.Capabilities.ItemHandler.BLOCK,
+                    neighborPos, dir.getOpposite());
+            if (neighbor == null) continue;
+
+            if (this.autoInput == 1 && (mode == MODE_INPUT || mode == MODE_IO || mode == MODE_FUEL)) {
+                int targetSlot = (mode == MODE_FUEL) ? SLOT_FUEL : SLOT_INPUT;
+                ItemStack current = this.items.get(targetSlot);
+                if (current.getCount() < current.getMaxStackSize() || current.isEmpty()) {
+                    for (int s = 0; s < neighbor.getSlots(); s++) {
+                        ItemStack inNeighbor = neighbor.getStackInSlot(s);
+                        if (inNeighbor.isEmpty()) continue;
+                        if (targetSlot == SLOT_FUEL && getBurnDuration(inNeighbor) <= 0) continue;
+                        if (!current.isEmpty() && !ItemStack.isSameItemSameComponents(current, inNeighbor)) continue;
+                        int space = (current.isEmpty() ? inNeighbor.getMaxStackSize() : current.getMaxStackSize() - current.getCount());
+                        if (space <= 0) break;
+                        ItemStack extracted = neighbor.extractItem(s, Math.min(64, space), false);
+                        if (!extracted.isEmpty()) {
+                            if (current.isEmpty()) {
+                                this.items.set(targetSlot, extracted);
+                            } else {
+                                current.grow(extracted.getCount());
+                            }
+                            changed = true;
+                            break;
+                        }
+                    }
+                }
+            }
+
+            if (this.autoOutput == 1 && (mode == MODE_OUTPUT || mode == MODE_IO)) {
+                ItemStack outStack = this.items.get(SLOT_RESULT);
+                if (!outStack.isEmpty()) {
+                    ItemStack remaining = net.neoforged.neoforge.items.ItemHandlerHelper.insertItemStacked(neighbor, outStack.copy(), false);
+                    if (remaining.getCount() != outStack.getCount()) {
+                        this.items.set(SLOT_RESULT, remaining);
+                        changed = true;
+                    }
+                }
+            }
+        }
+        return changed;
+    }
+
     @Override
     public int[] getSlotsForFace(Direction side) {
-        if (side == Direction.DOWN) {
-            return SLOTS_DOWN;
-        }
-        if (side == Direction.UP) {
-            return SLOTS_UP;
-        }
-        return SLOTS_HORIZONTAL;
+        int rel = getRelativeSideIndex(side, getBlockState());
+        return switch (this.sideConfig[rel]) {
+            case MODE_INPUT -> SLOTS_UP;
+            case MODE_OUTPUT -> SLOTS_RESULT_ONLY;
+            case MODE_FUEL -> SLOTS_HORIZONTAL;
+            case MODE_IO -> SLOTS_IO;
+            default -> SLOTS_NONE;
+        };
     }
 
     @Override
     public boolean canPlaceItemThroughFace(int index, ItemStack itemStack, @Nullable Direction direction) {
+        if (direction != null) {
+            int rel = getRelativeSideIndex(direction, getBlockState());
+            int mode = this.sideConfig[rel];
+            if (index == SLOT_INPUT && mode != MODE_INPUT && mode != MODE_IO) return false;
+            if (index == SLOT_FUEL && mode != MODE_FUEL) return false;
+            if (index != SLOT_INPUT && index != SLOT_FUEL) return false;
+        }
         return this.canPlaceItem(index, itemStack);
     }
 
     @Override
     public boolean canTakeItemThroughFace(int index, ItemStack stack, Direction direction) {
-        if (direction == Direction.DOWN && index == SLOT_FUEL) {
-            return stack.is(Items.WATER_BUCKET) || stack.is(Items.BUCKET);
+        int rel = getRelativeSideIndex(direction, getBlockState());
+        int mode = this.sideConfig[rel];
+        if (index == SLOT_RESULT) {
+            return mode == MODE_OUTPUT || mode == MODE_IO;
         }
-        return index == SLOT_RESULT;
+        if (index == SLOT_FUEL && (stack.is(Items.WATER_BUCKET) || stack.is(Items.BUCKET))) {
+            return mode == MODE_OUTPUT || mode == MODE_FUEL || mode == MODE_IO;
+        }
+        return false;
     }
 
     @Override

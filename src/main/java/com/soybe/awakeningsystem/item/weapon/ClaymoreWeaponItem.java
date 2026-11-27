@@ -31,7 +31,7 @@ public class ClaymoreWeaponItem extends SwordItem {
             // Mecánica activa de Mandoble: Impacto demoledor con aturdimiento / lentitud pesada
             target.addEffect(new net.minecraft.world.effect.MobEffectInstance(net.minecraft.world.effect.MobEffects.MOVEMENT_SLOWDOWN, 40, 1));
             sl.playSound(null, target.getX(), target.getY(), target.getZ(),
-                    net.minecraft.sounds.SoundEvents.ANVIL_LAND, net.minecraft.sounds.SoundSource.PLAYERS, 0.35F, 1.6F);
+                    net.minecraft.sounds.SoundEvents.PLAYER_ATTACK_STRONG, net.minecraft.sounds.SoundSource.PLAYERS, 0.7F, 0.85F);
         }
         return super.hurtEnemy(stack, target, attacker);
     }

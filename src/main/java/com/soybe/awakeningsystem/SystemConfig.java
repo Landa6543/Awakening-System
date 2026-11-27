@@ -16,6 +16,7 @@ public final class SystemConfig {
     public static final ModConfigSpec.BooleanValue ACTIVE_SKILLS_ENABLED;
     public static final ModConfigSpec.IntValue DAILY_LOGIN_BONUS_COINS;
     public static final ModConfigSpec.IntValue DAILY_LOGIN_BONUS_EXP;
+    public static final ModConfigSpec.BooleanValue PASSIVE_QI_ENABLED;
 
     public static final ModConfigSpec.BooleanValue MOB_SCALING_ENABLED;
     public static final ModConfigSpec.IntValue MOB_SCALING_BLOCKS_PER_TIER;
@@ -67,6 +68,9 @@ public final class SystemConfig {
         DAILY_LOGIN_BONUS_EXP = builder.comment("EXP awarded upon first daily login")
                 .defineInRange("daily_login_bonus_exp", 50, 0, 1000);
 
+        PASSIVE_QI_ENABLED = builder.comment("Enable passive Qi regeneration for cultivators with open meridians or Dantian (default: false, requiring active meditation or pills)")
+                .define("passive_qi_enabled", false);
+
         builder.pop();
 
         builder.comment("Distance-Based Mob Scaling Settings").push("mob_scaling");
@@ -101,6 +105,13 @@ public final class SystemConfig {
         builder.pop();
 
         SPEC = builder.build();
+    }
+
+    public static void setPassiveQiEnabled(boolean enabled) {
+        PASSIVE_QI_ENABLED.set(enabled);
+        try {
+            SPEC.save();
+        } catch (Throwable ignored) {}
     }
 
     private SystemConfig() {}

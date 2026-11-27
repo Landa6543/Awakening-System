@@ -234,11 +234,14 @@ public class ShadowInfantryEntity extends Monster {
                     var aabb = new net.minecraft.world.phys.AABB(pendingDecoyPos.x - 3.0D, pendingDecoyPos.y - 1.0D, pendingDecoyPos.z - 3.0D,
                             pendingDecoyPos.x + 3.0D, pendingDecoyPos.y + 3.0D, pendingDecoyPos.z + 3.0D);
                     var victims = sl.getEntitiesOfClass(LivingEntity.class, aabb,
-                            e -> e != this && !e.getTags().contains("shadow_soldier") && !e.getType().equals(this.getType()));
+                            e -> e != this
+                                    && !e.getTags().contains("shadow_soldier")
+                                    && !e.getType().equals(this.getType())
+                                    && (!this.isFriendlyShadow() || (!(e instanceof Player) && !com.soybe.awakeningsystem.guild.GuildEventHandler.areAlliesOrSameGuild(this, e))));
                     double currentAtk = this.getAttributeValue(Attributes.ATTACK_DAMAGE);
                     float decoyDmg = (float) Math.max(2.5D, currentAtk * 0.9D);
                     for (var v : victims) {
-                        v.hurt(this.damageSources().magic(), decoyDmg);
+                        v.hurt(this.damageSources().indirectMagic(this, this), decoyDmg);
                         v.addEffect(new net.minecraft.world.effect.MobEffectInstance(net.minecraft.world.effect.MobEffects.DARKNESS, 60, 0));
                     }
                     pendingDecoyPos = null;
@@ -274,9 +277,11 @@ public class ShadowInfantryEntity extends Monster {
                         }
                         double rangedAtk = this.getAttributeValue(Attributes.ATTACK_DAMAGE);
                         float waveDmg = (float) Math.max(2.0D, rangedAtk * 0.8D);
-                        target.hurt(this.damageSources().magic(), waveDmg);
-                        target.addEffect(new net.minecraft.world.effect.MobEffectInstance(net.minecraft.world.effect.MobEffects.MOVEMENT_SLOWDOWN, 60, 1));
-                        target.addEffect(new net.minecraft.world.effect.MobEffectInstance(net.minecraft.world.effect.MobEffects.DARKNESS, 50, 0));
+                        if (!this.isFriendlyShadow() || (!(target instanceof Player) && !com.soybe.awakeningsystem.guild.GuildEventHandler.areAlliesOrSameGuild(this, target))) {
+                            target.hurt(this.damageSources().indirectMagic(this, this), waveDmg);
+                            target.addEffect(new net.minecraft.world.effect.MobEffectInstance(net.minecraft.world.effect.MobEffects.MOVEMENT_SLOWDOWN, 60, 1));
+                            target.addEffect(new net.minecraft.world.effect.MobEffectInstance(net.minecraft.world.effect.MobEffects.DARKNESS, 50, 0));
+                        }
                     }
                 }
 

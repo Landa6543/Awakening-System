@@ -174,10 +174,10 @@ public final class TeyvatWorldGenManager {
             }
             tag.put("NamedStructures", ns);
 
-            long[] arr = new long[evaluatedChunks.size()];
-            int idx = 0;
-            for (Long l : evaluatedChunks) {
-                arr[idx++] = l;
+            java.util.List<Long> evalSnap = new java.util.ArrayList<>(evaluatedChunks);
+            long[] arr = new long[evalSnap.size()];
+            for (int i = 0; i < evalSnap.size(); i++) {
+                arr[i] = evalSnap.get(i);
             }
             tag.putLongArray("EvaluatedChunks", arr);
             tag.putBoolean("ArrivalPlazaBuilt", arrivalPlazaBuilt);
@@ -188,12 +188,14 @@ public final class TeyvatWorldGenManager {
 
         private static void savePosList(CompoundTag tag, String key, List<BlockPos> list) {
             ListTag lt = new ListTag();
-            for (BlockPos p : list) {
-                CompoundTag ct = new CompoundTag();
-                ct.putInt("X", p.getX());
-                ct.putInt("Y", p.getY());
-                ct.putInt("Z", p.getZ());
-                lt.add(ct);
+            synchronized (list) {
+                for (BlockPos p : list) {
+                    CompoundTag ct = new CompoundTag();
+                    ct.putInt("X", p.getX());
+                    ct.putInt("Y", p.getY());
+                    ct.putInt("Z", p.getZ());
+                    lt.add(ct);
+                }
             }
             tag.put(key, lt);
         }

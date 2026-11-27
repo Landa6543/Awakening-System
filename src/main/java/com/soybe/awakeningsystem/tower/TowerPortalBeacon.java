@@ -43,6 +43,8 @@ public final class TowerPortalBeacon {
 
     @SubscribeEvent
     public static void tick(ServerTickEvent.Post event) {
+        // Desactivado: el haz tipo faro fue eliminado por peticion del usuario
+        if (true) return;
         var server = event.getServer();
         if (server.getTickCount() % 10 != 0) return;
         for (ServerPlayer sp : server.getPlayerList().getPlayers()) {

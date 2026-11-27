@@ -30,7 +30,7 @@ public class ShadowSoulEntity extends Entity {
 
     private String mobEntityTypeId = "minecraft:zombie";
     private UUID ownerUUID = null;
-    private int lifeTicks = 1200;
+    private int lifeTicks = 28800;
     private int extractionAttempts = 0;
     private int shadowRank = 0;
     private int rpgMobLevel = 1;

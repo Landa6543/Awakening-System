@@ -146,6 +146,7 @@ public final class SystemScreen extends Screen {
     private int progressScroll;
     private int rankingScroll;
     private int missionScroll;
+    private int missionDailyScrollY = 0;
     private int sellScroll;
     private int shopMode = 0;
     private String shopCategory = "all";
@@ -468,6 +469,7 @@ public final class SystemScreen extends Screen {
             int pillH = 12;
             if (mouseX >= pillX && mouseX < pillX + pillW && mouseY >= pillY && mouseY < pillY + pillH) {
                 AwakeningSystemClient.playUiSound(ModSounds.SYSTEM_CLICK.value(), 1.0F, 1.2F);
+                data().setAgilitySpeedEnabled(!data().agilitySpeedEnabled());
                 AwakeningSystemClient.toggleAgilitySpeed();
                 return true;
             }
@@ -762,7 +764,12 @@ public final class SystemScreen extends Screen {
             int cardW = W - 52;
 
             if (missionSubTab == 0) {
-                int cardY = top + 98;
+                if (mouseY < top + 96 || mouseY >= top + 264) {
+                    return true;
+                }
+                int maxDailyScroll = d.isAscensionQuestActive() ? 24 : 0;
+                int scrollY = Math.max(0, Math.min(maxDailyScroll, missionDailyScrollY));
+                int cardY = top + 98 - scrollY;
                 int colW = 154;
                 int c1X = cardX + 10;
                 int c2X = cardX + cardW - 10 - colW;
@@ -824,11 +831,11 @@ public final class SystemScreen extends Screen {
                 }
 
                 // Hunter Commission Claim Button (Asociacion de Cazadores)
-                int hCardY = top + 177;
+                int hCardY = top + 177 - scrollY;
                 if (d.isDailyHunterComplete() && !d.isDailyHunterClaimed()) {
                     int hBtnX = cardX + cardW - 132;
-                    int hBtnY = hCardY + 62;
-                    if (mouseX >= hBtnX && mouseX < hBtnX + 126 && mouseY >= hBtnY && mouseY < hBtnY + 16) {
+                    int hBtnY = hCardY + 59;
+                    if (mouseX >= hBtnX && mouseX < hBtnX + 126 && mouseY >= hBtnY && mouseY < hBtnY + 15) {
                         AwakeningSystemClient.claimHunterCommission();
                         return true;
                     }
@@ -1305,9 +1312,7 @@ public final class SystemScreen extends Screen {
                             return true;
                         }
 
-                        for (int b = 0; b < shopBuyAmount; b++) {
-                            AwakeningSystemClient.buyShopItem(selectedShopEntry.id());
-                        }
+                        AwakeningSystemClient.buyShopItem(selectedShopEntry.id(), shopBuyAmount);
                         AwakeningSystemClient.playUiSound(ModSounds.SYSTEM_COINS.value(), 1.0F, 1.0F);
                         return true;
                     }
@@ -1811,8 +1816,13 @@ public final class SystemScreen extends Screen {
             return true;
         }
         if (tab == 2 && mouseX >= left + 20 && mouseX < left + W - 20 && mouseY >= top + 78 && mouseY < top + 264) {
-            int maxScroll = Math.max(0, activeMissions(data()).size() - 4);
-            missionScroll = Math.max(0, Math.min(maxScroll, missionScroll - (int) Math.signum(verticalAmount)));
+            if (missionSubTab == 0) {
+                int maxDailyScroll = data().isAscensionQuestActive() ? 24 : 0;
+                missionDailyScrollY = Math.max(0, Math.min(maxDailyScroll, missionDailyScrollY - (int) Math.signum(verticalAmount) * 12));
+            } else {
+                int maxScroll = Math.max(0, activeMissions(data()).size() - 4);
+                missionScroll = Math.max(0, Math.min(maxScroll, missionScroll - (int) Math.signum(verticalAmount)));
+            }
             return true;
         }
         if (tab == 3 && mouseX >= left + 20 && mouseX < left + W - 20 && mouseY >= top + 78 && mouseY < top + 264) {
@@ -3994,10 +4004,16 @@ public final class SystemScreen extends Screen {
         int cardW = W - 52;
 
         if (missionSubTab == 0) {
+            int maxDailyScroll = d.isAscensionQuestActive() ? 24 : 0;
+            missionDailyScrollY = Math.max(0, Math.min(maxDailyScroll, missionDailyScrollY));
+            int scrollY = missionDailyScrollY;
+
+            enableScissorScaled(g, left + 20, top + 96, left + W - 20, top + 264);
+
             // ═══════════════════════════════════════════════════════════════
             // 1. TARJETA: SOLO LEVELING - ENTRENAMIENTO DEL MONARCA
             // ═══════════════════════════════════════════════════════════════
-            int cardY = top + 98;
+            int cardY = top + 98 - scrollY;
             int cardH = 75;
             g.fill(cardX, cardY, cardX + cardW, cardY + cardH, sys30 ? 0x500E261E : (sys20 ? 0x50160926 : 0x500C1925));
             g.fill(cardX, cardY, cardX + cardW, cardY + 1, (sys30 || sys20) ? 0x80FFD700 : 0x8070E8FF);
@@ -4157,7 +4173,7 @@ public final class SystemScreen extends Screen {
             // ═══════════════════════════════════════════════════════════════
             // 2. TARJETA: ASOCIACIÓN DE CAZADORES - COMISIÓN DIARIA POR RANGO
             // ═══════════════════════════════════════════════════════════════
-            int hCardY = top + 177;
+            int hCardY = top + 177 - scrollY;
             int hCardH = 84;
             g.fill(cardX, hCardY, cardX + cardW, hCardY + hCardH, sys30 ? 0x500E261E : (sys20 ? 0x50160926 : 0x500C1925));
             g.fill(cardX, hCardY, cardX + cardW, hCardY + 1, (sys30 || sys20) ? 0x80FFD700 : 0x8070E8FF);
@@ -4256,6 +4272,44 @@ public final class SystemScreen extends Screen {
                 int claimTagX = cardX + cardW - 132;
                 drawAutoScaledCentered(g, Component.translatable("awakening_system.screen.missions.hunter_salary_claimed"), claimTagX + 63, hCardY + 62, 0xFF50FA7B, 126);
             }
+
+            // Prueba de Ascenso de Rango activa (debajo de la comisión diaria)
+            if (d.isAscensionQuestActive()) {
+                int ascY = hCardY + 86;
+                int ascH = 22;
+                g.fill(cardX, ascY, cardX + cardW, ascY + ascH, 0x60101826);
+                g.fill(cardX, ascY, cardX + cardW, ascY + 1, d.isAscensionCompleted() ? 0xFF70FF9A : 0xFFFFD700);
+                g.fill(cardX, ascY + ascH - 1, cardX + cardW, ascY + ascH, 0x60000000);
+                String targetRank = d.ascensionTargetRank() == null || d.ascensionTargetRank().isEmpty() ? "?" : d.ascensionTargetRank();
+                int prog = d.ascensionProgress();
+                int target = Math.max(1, d.ascensionTarget());
+                Component ascLabel = d.isAscensionCompleted()
+                        ? Component.translatable("awakening_system.screen.missions.ascension_completed", targetRank, prog, target)
+                        : Component.translatable("awakening_system.screen.missions.ascension_active", targetRank, prog, target);
+                drawClipped(g, ascLabel, cardX + 8, ascY + 3, 0xFFFFFFFF, cardW - 16);
+                int aBarX = cardX + 8;
+                int aBarY = ascY + 14;
+                int aBarW = cardW - 16;
+                int aBarH = 5;
+                float aRatio = Math.max(0.0F, Math.min(1.0F, (float) prog / (float) target));
+                g.fill(aBarX, aBarY, aBarX + aBarW, aBarY + aBarH, 0xFF0A141E);
+                int aFill = (int) (aBarW * aRatio);
+                if (aFill > 0) {
+                    g.fill(aBarX, aBarY, aBarX + aFill, aBarY + aBarH, d.isAscensionCompleted() ? 0xFF50FA7B : 0xFFFFB82E);
+                }
+            }
+
+            g.disableScissor();
+
+            if (maxDailyScroll > 0) {
+                int sbX = cardX + cardW + 3;
+                int sbY = top + 98;
+                int sbH = 164;
+                g.fill(sbX, sbY, sbX + 3, sbY + sbH, 0x400A141E);
+                int thumbH = Math.max(24, (int) (sbH * 0.78F));
+                int thumbY = sbY + (int) ((sbH - thumbH) * ((float) scrollY / (float) maxDailyScroll));
+                g.fill(sbX, thumbY, sbX + 3, thumbY + thumbH, 0xAA00E5FF);
+            }
         } else {
             // ═══════════════════════════════════════════════════════════════
             // SUBPESTAÑA 1: ESCENARIO ACTIVO DE ORV (OMNISCIENT READER / DOKKAEBI)
@@ -4331,6 +4385,13 @@ public final class SystemScreen extends Screen {
         if (missionTooltip != null) {
             g.renderComponentTooltip(font, missionTooltip, mouseX, mouseY);
         }
+    }
+
+    private static String formatCompactCoins(long coins) {
+        if (coins >= 1_000_000_000L) return String.format(java.util.Locale.US, "%.1fB", coins / 1_000_000_000.0);
+        if (coins >= 1_000_000L) return String.format(java.util.Locale.US, "%.1fM", coins / 1_000_000.0);
+        if (coins >= 1_000L) return String.format(java.util.Locale.US, "%.1fK", coins / 1_000.0);
+        return String.valueOf(coins);
     }
 
     private Component getHunterCommissionTitle(String rank) {
@@ -4565,7 +4626,7 @@ public final class SystemScreen extends Screen {
             g.drawCenteredString(font, gachaComp, gachaX + gachaW / 2, subTabY + 5, gachaHovered ? 0xFFFFFFFF : 0xFFFFD700);
         }
 
-        Component balance = Component.translatable("awakening_system.screen.shop.balance_short", d.coins());
+        Component balance = Component.translatable("awakening_system.screen.shop.balance_short", formatCompactCoins(d.coins()));
         int balW = font.width(balance);
         int balX = left + W - 24 - balW;
         int minBalX = sys40 ? (gachaX + gachaW + 16) : (p2pX + p2pW + 16);
@@ -5003,7 +5064,7 @@ public final class SystemScreen extends Screen {
             // the rank, and the System version too when that is what still locks it
             g.drawString(font, "[" + reqRank + "]" + (tierLeft > 0 ? " 🔒" + tierLeft + ".0" : ""), catPanelX + 26, entryY + 14, rankColor);
 
-            Component priceComp = Component.literal("" + entry.cost());
+            Component priceComp = Component.literal(formatCompactCoins(entry.cost()));
             boolean canAfford = d.coins() >= entry.cost();
             int priceColor = !unlocked ? 0xFF666666 : (canAfford ? 0xFFFFD866 : 0xFFFF7666);
             int priceW = font.width(priceComp);
@@ -5152,7 +5213,7 @@ public final class SystemScreen extends Screen {
                 drawBorder(g, rightX + 6, ctrlY, rightW - 12, 20, btnBorder);
 
                 Component boxBtnText = !unlocked ? Component.translatable("awakening_system.screen.shop.btn_locked")
-                        : (canAfford ? Component.translatable("awakening_system.screen.shop.btn_open", totalCost) : Component.translatable("awakening_system.screen.shop.btn_insufficient"));
+                        : (canAfford ? Component.translatable("awakening_system.screen.shop.btn_open", formatCompactCoins(totalCost)) : Component.translatable("awakening_system.screen.shop.btn_insufficient"));
                 g.drawCenteredString(font, boxBtnText, rightX + rightW / 2, ctrlY + 6, !unlocked ? 0xFFFF7666 : (canAfford ? 0xFFFFFFFF : 0xFFFF7666));
             } else {
                 // Selector de Cantidad: [-] [x1] [+]
@@ -5249,7 +5310,7 @@ public final class SystemScreen extends Screen {
             int allBtnX = left + 341;
             int allBtnW = 60;
 
-            String priceStr = "+" + entry.unitPrice() + (entry.amount() > 1 ? " /" + entry.amount() : "");
+            String priceStr = "+" + formatCompactCoins(entry.unitPrice()) + (entry.amount() > 1 ? " /" + entry.amount() : "");
             Component priceComp = Component.literal(priceStr);
             int priceW = font.width(priceComp);
             int priceX = vBtnX - 6 - priceW;

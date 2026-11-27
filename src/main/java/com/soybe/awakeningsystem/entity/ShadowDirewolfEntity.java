@@ -74,7 +74,7 @@ public class ShadowDirewolfEntity extends TamableAnimal implements PlayerRideabl
         this.goalSelector.addGoal(1, new FloatGoal(this));
         this.goalSelector.addGoal(2, new SitWhenOrderedToGoal(this));
         this.goalSelector.addGoal(3, new MeleeAttackGoal(this, 1.35D, true));
-        this.goalSelector.addGoal(4, new FollowOwnerGoal(this, 1.25D, 9.0F, 2.5F));
+        this.goalSelector.addGoal(4, new FollowOwnerGoal(this, 1.25D, 20.0F, 4.0F));
         this.goalSelector.addGoal(5, new BreedGoal(this, 1.0D));
         this.goalSelector.addGoal(6, new WaterAvoidingRandomStrollGoal(this, 0.85D));
         this.goalSelector.addGoal(7, new LookAtPlayerGoal(this, Player.class, 8.0F));

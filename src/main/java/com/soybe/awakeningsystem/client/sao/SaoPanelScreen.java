@@ -31,7 +31,7 @@ public class SaoPanelScreen extends Screen {
 
     private static final String[] ATTRS = {"strength", "vitality", "agility", "perception", "intelligence", "willpower"};
     private static final String[] ATTR_NAMES = {"Strength", "Vitality", "Agility", "Perception", "Intelligence", "Willpower"};
-    private static final int PW = 330, PH = 206, HEADER = 22, ROW = 20;
+    private static final int PW = 330, PH = 224, HEADER = 22, ROW = 20;
 
     private final Screen parent;
     private final Section section;
@@ -253,13 +253,17 @@ public class SaoPanelScreen extends Screen {
     private float slotY() { return top() + HEADER + 44; }
 
     private void renderSkills(GuiGraphics g, int x, int y, int mouseX, int mouseY, float a) {
-        // active / passive switch
-        for (int i = 0; i < 2; i++) {
+        // active / passive switch + shadows shortcut
+        for (int i = 0; i < 3; i++) {
             int tx = x + 12 + i * 78, ty = y + HEADER + 7;
-            boolean on = (i == 1) == passives;
-            g.fillGradient(tx, ty, tx + 74, ty + 14, alpha(on ? 0xFFF7B52A : 0xFFF4F4F6, a), alpha(on ? 0xFFE29400 : 0xFFDCDCE0, a));
-            Component lbl = i == 0 ? tr("actives", "Active") : tr("passives", "Passive");
-            g.drawString(this.font, lbl, tx + 37 - this.font.width(lbl) / 2, ty + 3, alpha(on ? WHITE : GREY, a), false);
+            boolean on = (i == 0 && !passives) || (i == 1 && passives);
+            boolean hov = in(mouseX, mouseY, tx, ty, 74, 14);
+            int cTop = on ? 0xFFF7B52A : (i == 2 && hov ? 0xFF5A4B7A : (i == 2 ? 0xFF3E3557 : 0xFFF4F4F6));
+            int cBot = on ? 0xFFE29400 : (i == 2 && hov ? 0xFF473A63 : (i == 2 ? 0xFF2D2642 : 0xFFDCDCE0));
+            g.fillGradient(tx, ty, tx + 74, ty + 14, alpha(cTop, a), alpha(cBot, a));
+            Component lbl = i == 0 ? tr("actives", "Active")
+                    : (i == 1 ? tr("passives", "Passive") : Component.translatable("awakening_system.screen.tab.shadows"));
+            g.drawString(this.font, lbl, tx + 37 - this.font.width(lbl) / 2, ty + 3, alpha(on || i == 2 ? WHITE : GREY, a), false);
         }
         // equipped slots
         for (int s = 0; s < maxSlots(); s++) {
@@ -445,6 +449,19 @@ public class SaoPanelScreen extends Screen {
         g.drawString(this.font, num, x + PW - 38 - this.font.width(num), hy + 16, alpha(GREY, a), false);
         if (d.isDailyHunterClaimed()) g.drawString(this.font, tr("done", "Completed today"), x + 14, hy + 32, alpha(0xFF4FA84A, a), false);
         else if (d.isDailyHunterComplete()) claimButton(g, x + PW - 112, hy + 30, mouseX, mouseY, a);
+
+        if (d.isAscensionQuestActive()) {
+            int ay = hy + 48;
+            g.fill(x + 10, ay - 4, x + PW - 10, ay - 3, alpha(0xFFC9C9CE, a));
+            String targetRank = d.ascensionTargetRank() == null || d.ascensionTargetRank().isEmpty() ? "?" : d.ascensionTargetRank();
+            int prog = d.ascensionProgress();
+            int ascTarget = Math.max(1, d.ascensionTarget());
+            Component ascLabel = d.isAscensionCompleted()
+                    ? Component.translatable("awakening_system.screen.missions.ascension_completed", targetRank, prog, ascTarget)
+                    : Component.translatable("awakening_system.screen.missions.ascension_active", targetRank, prog, ascTarget);
+            g.drawString(this.font, ascLabel, x + 14, ay, alpha(GREY_DARK, a), false);
+            bar(g, x + 14, ay + 12, PW - 28, 6, prog / (float) ascTarget, d.isAscensionCompleted() ? 0xFF4FA84A : ORANGE, a);
+        }
     }
 
     // ── Artifacts ────────────────────────────────────────────────────────────
@@ -1728,6 +1745,11 @@ public class SaoPanelScreen extends Screen {
                         click();
                         return true;
                     }
+                }
+                if (in(mx, my, x + 12 + 2 * 78, y + HEADER + 7, 74, 14)) {
+                    click();
+                    Minecraft.getInstance().setScreen(new SaoShadowScreen(this));
+                    return true;
                 }
                 for (int s = 0; s < slots(); s++) {
                     if (inCircle(mx, my, slotX(s), slotY(), 12) && !equipped(s).isEmpty()) {

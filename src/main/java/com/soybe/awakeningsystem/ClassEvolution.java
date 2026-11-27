@@ -216,7 +216,7 @@ public final class ClassEvolution {
                 }
             }
             boolean late = now > DEADLINE.get(owner);
-            boolean gone = player == null || boss == null || !boss.isAlive() || player.distanceToSqr(boss) > 128 * 128;
+            boolean gone = player == null || boss == null || !boss.isAlive() || player.level() != boss.level() || player.distanceToSqr(boss) > 128 * 128;
             if (late || gone) {
                 endTrial(owner, server, true);
                 if (player != null) {

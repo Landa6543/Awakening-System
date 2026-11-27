@@ -39,19 +39,19 @@ public final class UmaLootUpgradeTable {
 
         if (originalItem.getItem() instanceof CasinoChipItem chip) {
             int payoutCount = Math.max(1, (int) Math.round(originalCount * odds));
-            results.add(new ItemStack(chip, payoutCount));
+            addSplitStacks(results, chip, payoutCount);
             return new UpgradeResult(results, Component.translatable("awakening_system.uma.loot.chips_win", odds, payoutCount, chip.getTier().getDisplayName()));
         }
 
         if (SystemItems.MORA != null && originalItem.is(SystemItems.MORA.get())) {
             int payoutCount = Math.max(1, (int) Math.round(originalCount * odds));
-            results.add(new ItemStack(SystemItems.MORA.get(), payoutCount));
+            addSplitStacks(results, SystemItems.MORA.get(), payoutCount);
             return new UpgradeResult(results, Component.translatable("awakening_system.uma.loot.mora_win", payoutCount, winningUma.getDisplayName()));
         }
 
         if (SystemItems.AWAKENING_COIN != null && originalItem.is(SystemItems.AWAKENING_COIN.get())) {
             int payoutCount = Math.max(1, (int) Math.round(originalCount * odds));
-            results.add(new ItemStack(SystemItems.AWAKENING_COIN.get(), payoutCount));
+            addSplitStacks(results, SystemItems.AWAKENING_COIN.get(), payoutCount);
             return new UpgradeResult(results, Component.translatable("awakening_system.uma.loot.coins_win", payoutCount));
         }
 
@@ -80,7 +80,7 @@ public final class UmaLootUpgradeTable {
             int payoutCount = Math.min(64, (int) Math.round(originalCount * odds));
             results.add(new ItemStack(originalItem.getItem(), payoutCount));
             if (SystemItems.MORA != null) {
-                results.add(new ItemStack(SystemItems.MORA.get(), 500));
+                addSplitStacks(results, SystemItems.MORA.get(), 500);
             }
             return new UpgradeResult(results, Component.translatable("awakening_system.uma.loot.sigil_win", payoutCount));
         }
@@ -91,9 +91,18 @@ public final class UmaLootUpgradeTable {
         results.add(duplicated);
 
         if (SystemItems.MORA != null) {
-            results.add(new ItemStack(SystemItems.MORA.get(), 250));
+            addSplitStacks(results, SystemItems.MORA.get(), 250);
         }
-
         return new UpgradeResult(results, Component.translatable("awakening_system.uma.loot.default_win", multipliedCount, originalItem.getHoverName()));
+    }
+
+    private static void addSplitStacks(List<ItemStack> results, net.minecraft.world.item.Item item, int totalCount) {
+        int maxStack = Math.max(1, Math.min(64, item.getDefaultMaxStackSize()));
+        int remaining = Math.max(1, totalCount);
+        while (remaining > 0) {
+            int batch = Math.min(maxStack, remaining);
+            results.add(new ItemStack(item, batch));
+            remaining -= batch;
+        }
     }
 }

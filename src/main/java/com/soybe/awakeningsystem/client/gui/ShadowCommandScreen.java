@@ -194,7 +194,7 @@ public class ShadowCommandScreen extends Screen {
             );
             activeDeployedTotal = activeMobs.size();
             for (Mob m : activeMobs) {
-                if (m.getPersistentData().getInt("shadow_squad_id") == selectedSquad) {
+                if (selectedSquad >= 0 && AwakeningSystemClient.getShadowSquadId(m.getId()) == selectedSquad) {
                     activeInSquad++;
                 }
             }
@@ -342,8 +342,8 @@ public class ShadowCommandScreen extends Screen {
                 String levelStr = mobLvl > 0 ? "§e[Lv. " + mobLvl + "] " : "";
                 String fullMobTitle = levelStr + "§f" + mobName;
 
-                // 4 Custom Squad Pills on right: [ I ] [ II ] [ III ] [ IV ]
-                int squadBtnBaseX = listX + listW - 96;
+                // 4 Custom Squad Pills on right: [ I ] [ II ] [ III ] [ IV ] + [ X ] delete
+                int squadBtnBaseX = listX + listW - 114;
                 int maxNameW = Math.max(20, squadBtnBaseX - nameX - 6);
                 String displayTitle = font.plainSubstrByWidth(fullMobTitle, maxNameW);
                 g.drawString(font, displayTitle, nameX, iy + 4, 0xFFFFFF);
@@ -375,6 +375,12 @@ public class ShadowCommandScreen extends Screen {
                     int textCol = isCurrent ? 0xFF00FFFF : (hovSq ? 0xFFFFFFFF : 0xFF7A8B9E);
                     g.drawCenteredString(font, SQUAD_ROMAN[sqTarget], sqX + sqW / 2, sqY + 4, textCol);
                 }
+                int delX = squadBtnBaseX + 90;
+                int delY = iy + 4;
+                boolean hovDel = mX >= delX && mX < delX + 16 && mY >= delY && mY < delY + 15;
+                g.fill(delX, delY, delX + 16, delY + 15, hovDel ? 0xFF7A1C1C : 0xFF2B1216);
+                g.renderOutline(delX, delY, 16, 15, hovDel ? 0xFFFF5555 : 0xFF6E252A);
+                g.drawCenteredString(font, "✕", delX + 8, delY + 4, hovDel ? 0xFFFFFFFF : 0xFFFF6666);
             }
 
             // Scrollbar
@@ -441,6 +447,9 @@ public class ShadowCommandScreen extends Screen {
                 int tx = left + 14 + tabIndex * (tabW + tabSpacing);
                 if (mouseX >= tx && mouseX < tx + tabW && mouseY >= tabY && mouseY < tabY + 18) {
                     selectedSquad = i;
+                    PacketDistributor.sendToServer(new ManageShadowSquadPayload(
+                            ManageShadowSquadPayload.ACTION_SELECT_SQUAD, i, 0, ""
+                    ));
                     scrollOffset = 0;
                     isRenaming = false;
                     renameBox.setVisible(false);
@@ -508,7 +517,7 @@ public class ShadowCommandScreen extends Screen {
 
                     ShadowEntry entry = squadShadows.get(itemIdx);
                     int iy = listY + 2 + i * itemH;
-                    int squadBtnBaseX = listX + listW - 96;
+                    int squadBtnBaseX = listX + listW - 114;
 
                     for (int sqTarget = 0; sqTarget < 4; sqTarget++) {
                         int sqX = squadBtnBaseX + sqTarget * 22;
@@ -516,7 +525,7 @@ public class ShadowCommandScreen extends Screen {
                         int sqW = 20;
                         int sqH = 15;
                         if (mouseX >= sqX && mouseX < sqX + sqW && mouseY >= sqY && mouseY < sqY + sqH) {
-                            int currentSq = entry.tag().contains("SquadId") ? entry.tag().getInt("SquadId") : 0;
+                            int currentSq = entry.tag().contains("SquadId") ? entry.tag().getInt("SquadId") : -1;
                             {
                                 // clicking the squad it is already in takes it out of every squad
                                 int target = sqTarget == currentSq ? -1 : sqTarget;
@@ -532,6 +541,21 @@ public class ShadowCommandScreen extends Screen {
                                 return true;
                             }
                         }
+                    }
+                    int delX = squadBtnBaseX + 90;
+                    int delY = iy + 4;
+                    if (mouseX >= delX && mouseX < delX + 16 && mouseY >= delY && mouseY < delY + 15) {
+                        PacketDistributor.sendToServer(new ManageShadowSquadPayload(
+                                ManageShadowSquadPayload.ACTION_DELETE_SHADOW,
+                                0,
+                                entry.globalIndex(),
+                                ""
+                        ));
+                        if (entry.globalIndex() >= 0 && entry.globalIndex() < army.size()) {
+                            army.remove(entry.globalIndex());
+                        }
+                        AwakeningSystemClient.playUiSound(ModSounds.SYSTEM_CLICK.value(), 1.0F, 0.7F);
+                        return true;
                     }
                 }
             }

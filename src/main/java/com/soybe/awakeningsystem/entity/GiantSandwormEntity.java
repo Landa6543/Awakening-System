@@ -138,6 +138,10 @@ public class GiantSandwormEntity extends Monster {
 
     public void rebuildParts() {
         if (level().isClientSide) return;
+        // whatever is left of the old body goes first (some parts may have unloaded with their land)
+        if (this.head != null && !this.head.isRemoved()) this.head.discard();
+        for (GiantSandwormBodyPart old : this.bodyParts) if (!old.isRemoved()) old.discard();
+        this.bodyParts.clear();
 
         this.head = new GiantSandwormHeadPart(ModEntities.GIANT_SANDWORM_HEAD.get(), level());
         this.head.initOwner(this);
@@ -213,7 +217,8 @@ public class GiantSandwormEntity extends Monster {
             return;
         }
         if (!level().isClientSide) {
-            if (this.head == null || this.bodyParts.isEmpty()) {
+            // (parts are never saved: after an unload they are gone and are built again here)
+            if (this.head == null || this.head.isRemoved() || this.bodyParts.isEmpty() || this.bodyParts.get(0).isRemoved()) {
                 this.rebuildParts();
             }
 
@@ -559,14 +564,18 @@ public class GiantSandwormEntity extends Monster {
     @Override
     public void remove(RemovalReason reason) {
         super.remove(reason);
-        this.cleanupParts();
+        // its parts go with it only when it is really gone (killed, discarded). When its land is unloading (the
+        // last player left the desert), removing other creatures in the middle of that crashed the server; the
+        // parts are never saved, so they simply go with the land
+        if (reason.shouldDestroy()) this.cleanupParts();
+        else this.bossEvent.removeAllPlayers();
     }
 
     /** Also when it leaves the world without being killed (its land unloaded, the server stopping): no bar left behind. */
     @Override
     public void onRemovedFromLevel() {
         super.onRemovedFromLevel();
-        this.cleanupParts();
+        this.bossEvent.removeAllPlayers();
     }
 
     private void cleanupParts() {

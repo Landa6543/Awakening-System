@@ -165,10 +165,10 @@ public final class PenaltyZoneManager {
             return;
         }
 
-        // Clean up any session whose player logged out, left the dimension, or is in Creative/Spectator
+        // Clean up any session whose player logged out or left the dimension
         for (UUID uuid : new java.util.ArrayList<>(ACTIVE_SESSIONS.keySet())) {
             ServerPlayer sp = server.getPlayerList().getPlayer(uuid);
-            if (sp == null || !sp.level().dimension().equals(PENALTY_ZONE) || sp.isCreative() || sp.isSpectator()) {
+            if (sp == null || !sp.level().dimension().equals(PENALTY_ZONE)) {
                 PenaltySession session = ACTIVE_SESSIONS.remove(uuid);
                 if (session != null && session.bossBar != null) {
                     session.bossBar.removeAllPlayers();
@@ -180,14 +180,6 @@ public final class PenaltyZoneManager {
         // through this world's own list of players changed the list under the loop and crashed the game
         java.util.List<ServerPlayer> survived = new java.util.ArrayList<>();
         for (ServerPlayer player : new java.util.ArrayList<>(penaltyLevel.players())) {
-            if (player.isCreative() || player.isSpectator()) {
-                PenaltySession s = ACTIVE_SESSIONS.remove(player.getUUID());
-                if (s != null && s.bossBar != null) {
-                    s.bossBar.removeAllPlayers();
-                }
-                continue;
-            }
-
             PenaltySession session = ACTIVE_SESSIONS.computeIfAbsent(player.getUUID(), uuid -> {
                 PenaltySession s = new PenaltySession();
                 s.bossBar = new ServerBossEvent(

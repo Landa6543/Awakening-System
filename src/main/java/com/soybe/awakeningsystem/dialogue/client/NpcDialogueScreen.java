@@ -428,10 +428,13 @@ public class NpcDialogueScreen extends Screen {
             int viewportTop = viewportBottom - viewportH;
 
             int totalH = choices.size() * itemH;
+            int maxScroll = Math.max(0, totalH - viewportH);
+            choiceScrollOffset = Math.max(0, Math.min(maxScroll, choiceScrollOffset));
             int curY = totalH <= viewportH ? viewportBottom - totalH : viewportTop - choiceScrollOffset;
 
             for (int i = 0; i < choices.size(); i++) {
                 int y = curY + i * itemH;
+                if (y + CHOICE_MIN_H < viewportTop || y > viewportBottom) continue;
                 if (mouseX >= choiceX && mouseX <= choiceX + choiceW && mouseY >= y && mouseY <= y + CHOICE_MIN_H) {
                     playButtonClickSound();
                     DialogueChoice clickedChoice = choices.get(i);

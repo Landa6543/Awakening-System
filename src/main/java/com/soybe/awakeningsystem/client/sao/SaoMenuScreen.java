@@ -207,11 +207,17 @@ public class SaoMenuScreen extends Screen {
         SaoHolo.end(g);
         // the player model is drawn flat, where its box on the turned card shows on screen
         if (entityPending && minecraft.player != null) {
+            com.mojang.blaze3d.systems.RenderSystem.clear(org.lwjgl.opengl.GL11.GL_DEPTH_BUFFER_BIT, Minecraft.ON_OSX);
             int x1 = Math.round(entX1), y1 = Math.round(entY1), x2 = Math.round(entX2), y2 = Math.round(entY2);
             net.minecraft.client.gui.screens.inventory.InventoryScreen.renderEntityInInventoryFollowsMouse(
                     g, x1, y1, x2, y2, Math.max(20, Math.round(46 * (y2 - y1) / 108.0F)), 0.0625F, realX, realY, minecraft.player);
         }
-        if (hoverTip != null) g.renderTooltip(this.font, hoverTip, realX, realY);
+        if (hoverTip != null) {
+            g.pose().pushPose();
+            g.pose().translate(0.0F, 0.0F, 400.0F);
+            g.renderTooltip(this.font, hoverTip, realX, realY);
+            g.pose().popPose();
+        }
     }
 
     private boolean opened;
@@ -294,9 +300,16 @@ public class SaoMenuScreen extends Screen {
         g.pose().scale(0.75F, 0.75F, 1.0F);
         g.drawString(this.font, stats, 0, 0, soft, false);
         g.drawString(this.font, stats2, 0, 11, soft, false);
-        String coins = "⛃ " + d.coins();   // "831 G" at this size read as "831 6"
+        String coins = "⛃ " + formatCompactCoins(d.coins());   // "831 G" at this size read as "831 6"
         g.drawString(this.font, coins, Math.round((w - 20) / 0.75F) - this.font.width(coins), 11, alpha(ORANGE_DARK, a), false);
         g.pose().popPose();
+    }
+
+    private static String formatCompactCoins(long v) {
+        if (v >= 1_000_000_000L) return String.format(java.util.Locale.ROOT, "%.1fB", v / 1_000_000_000.0D);
+        if (v >= 1_000_000L) return String.format(java.util.Locale.ROOT, "%.1fM", v / 1_000_000.0D);
+        if (v >= 1_000L) return String.format(java.util.Locale.ROOT, "%.1fK", v / 1_000.0D);
+        return String.valueOf(v);
     }
 
     private void bar(GuiGraphics g, int x, int y, int w, String label, int value, int max, int color, float a) {

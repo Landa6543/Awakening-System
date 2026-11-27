@@ -61,15 +61,19 @@ public final class PhysicalRouletteManager {
             new ItemStack(Items.IRON_INGOT, 8)
     };
 
-    public static ItemStack getCandidate(int index) {
+    public static ItemStack getCandidate(int index, int worldTier) {
         List<ItemStack> pool = new ArrayList<>();
-        if (SystemItems.IMMORTAL_DRAGON_SCALE.isBound()) pool.add(new ItemStack(SystemItems.IMMORTAL_DRAGON_SCALE.get(), 2));
-        if (SystemItems.CELESTIAL_DRAGON_PEARL.isBound()) pool.add(new ItemStack(SystemItems.CELESTIAL_DRAGON_PEARL.get()));
-        if (SystemItems.THOUSAND_YEAR_GINSENG.isBound()) pool.add(new ItemStack(SystemItems.THOUSAND_YEAR_GINSENG.get(), 2));
-        if (SystemItems.SNOW_LOTUS.isBound()) pool.add(new ItemStack(SystemItems.SNOW_LOTUS.get(), 2));
+        if (worldTier >= 2 && SystemItems.IMMORTAL_DRAGON_SCALE.isBound()) pool.add(new ItemStack(SystemItems.IMMORTAL_DRAGON_SCALE.get(), 2));
+        if (worldTier >= 4 && SystemItems.CELESTIAL_DRAGON_PEARL.isBound()) pool.add(new ItemStack(SystemItems.CELESTIAL_DRAGON_PEARL.get()));
+        if (worldTier >= 3 && SystemItems.THOUSAND_YEAR_GINSENG.isBound()) pool.add(new ItemStack(SystemItems.THOUSAND_YEAR_GINSENG.get(), 2));
+        if (worldTier >= 3 && SystemItems.SNOW_LOTUS.isBound()) pool.add(new ItemStack(SystemItems.SNOW_LOTUS.get(), 2));
         if (SystemItems.AWAKENING_COIN.isBound()) pool.add(new ItemStack(SystemItems.AWAKENING_COIN.get(), 64));
         pool.addAll(Arrays.asList(DEFAULT_CANDIDATES));
         return pool.get(Math.floorMod(index, pool.size()));
+    }
+
+    public static ItemStack getCandidate(int index) {
+        return getCandidate(index, 1);
     }
 
     public static boolean hasActiveSpin(UUID playerId) {
@@ -223,16 +227,17 @@ public final class PhysicalRouletteManager {
     }
 
     private static ItemStack rollWinningLoot(ServerPlayer player) {
+        int worldTier = com.soybe.awakeningsystem.config.CustomLootConfigManager.getWorldTier(player.level());
         int roll = player.getRandom().nextInt(100);
 
         if (roll < 2) {
             // gacha weapons stay in the gacha: a purchasable roulette must not hand them out
             return new ItemStack(Items.NETHERITE_INGOT, 2);
         } else if (roll < 4) {
-            if (SystemItems.CELESTIAL_DRAGON_PEARL.isBound()) return new ItemStack(SystemItems.CELESTIAL_DRAGON_PEARL.get());
+            if (worldTier >= 4 && SystemItems.CELESTIAL_DRAGON_PEARL.isBound()) return new ItemStack(SystemItems.CELESTIAL_DRAGON_PEARL.get());
             return new ItemStack(Items.ENCHANTED_GOLDEN_APPLE, 2);
         } else if (roll < 6) {
-            if (SystemItems.IMMORTAL_DRAGON_SCALE.isBound()) return new ItemStack(SystemItems.IMMORTAL_DRAGON_SCALE.get(), 2);
+            if (worldTier >= 2 && SystemItems.IMMORTAL_DRAGON_SCALE.isBound()) return new ItemStack(SystemItems.IMMORTAL_DRAGON_SCALE.get(), 2);
             return new ItemStack(Items.NETHERITE_BLOCK, 1);
         } else if (roll < 8) {
 
@@ -242,10 +247,10 @@ public final class PhysicalRouletteManager {
             return new ItemStack(Items.NETHERITE_INGOT, 2);
         }
         else if (roll < 14) {
-            if (SystemItems.THOUSAND_YEAR_GINSENG.isBound()) return new ItemStack(SystemItems.THOUSAND_YEAR_GINSENG.get(), 2);
+            if (worldTier >= 3 && SystemItems.THOUSAND_YEAR_GINSENG.isBound()) return new ItemStack(SystemItems.THOUSAND_YEAR_GINSENG.get(), 2);
             return new ItemStack(Items.DIAMOND_BLOCK, 2);
         } else if (roll < 18) {
-            if (SystemItems.SNOW_LOTUS.isBound()) return new ItemStack(SystemItems.SNOW_LOTUS.get(), 2);
+            if (worldTier >= 3 && SystemItems.SNOW_LOTUS.isBound()) return new ItemStack(SystemItems.SNOW_LOTUS.get(), 2);
             return new ItemStack(Items.GOLDEN_APPLE, 4);
         } else if (roll < 22) {
             if (SystemItems.RUNE_STONE_RULERS_AUTHORITY.isBound()) return new ItemStack(SystemItems.RUNE_STONE_RULERS_AUTHORITY.get());

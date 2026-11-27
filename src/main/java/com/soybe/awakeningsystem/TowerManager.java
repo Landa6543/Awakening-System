@@ -480,34 +480,15 @@ public final class TowerManager {
 
         ServerPlayer player = level.getServer().getPlayerList().getPlayer(session.playerId);
 
-        double championHp;
-        if (floor <= 10) {
-            championHp = 80.0D + (floor * 15.0D);
-        } else if (floor <= 20) {
-            championHp = 230.0D + ((floor - 10) * 25.0D);
-        } else if (floor <= 50) {
-            championHp = 480.0D + ((floor - 20) * 35.0D);
-        } else if (floor <= 80) {
-            championHp = 1530.0D + ((floor - 50) * 45.0D);
-        } else if (floor < 100) {
-            championHp = 2880.0D + ((floor - 80) * 60.0D);
-        } else {
-            championHp = 6500.0D;
-        }
+        // Escalado progresivo oculto del Piso 1 al Piso 100 hasta alcanzar estadísticas de Nivel 300 (mínimo de Isekai)
+        double progress = Math.max(0.0D, Math.min(1.0D, (floor - 1) / 99.0D));
+        double championHp = (floor >= 100) ? 15000.0D : (220.0D + progress * 6780.0D);
+        double championDmg = (floor >= 100) ? 65.0D : (12.0D + progress * 48.0D);
+        double championArmor = Math.min(30.0D, 8.0D + progress * 22.0D);
 
-        double championDmg = 5.0D + (floor * 0.35D);
-        double championArmor = Math.min(30.0D, 2.0D + (floor * 0.28D));
-
-        double minionHp;
-        if (floor <= 10) {
-            minionHp = 20.0D + (floor * 5.0D);
-        } else if (floor <= 50) {
-            minionHp = 70.0D + ((floor - 10) * 10.0D);
-        } else {
-            minionHp = 470.0D + ((floor - 50) * 15.0D);
-        }
-        double minionDmg = 3.0D + (floor * 0.20D);
-        double minionArmor = Math.min(24.0D, 1.0D + (floor * 0.22D));
+        double minionHp = 80.0D + (progress * 1920.0D);
+        double minionDmg = 8.0D + (progress * 37.0D);
+        double minionArmor = Math.min(26.0D, 6.0D + (progress * 20.0D));
 
         if (floor == 100) {
             session.bossEvent = new ServerBossEvent(
@@ -528,7 +509,7 @@ public final class TowerManager {
             boss.getPersistentData().putBoolean("TowerChampion", true);
             boss.getPersistentData().putBoolean("TowerMob", true);
             boss.getPersistentData().putInt("TowerFloor", 100);
-            boss.getPersistentData().putInt("rpg_mob_level", 150);
+            boss.getPersistentData().putInt("rpg_mob_level", 300);
             configureTowerMobAI(boss, session, player);
             level.addFreshEntity(boss);
             session.enemyUUIDs.add(boss.getUUID());
@@ -539,11 +520,11 @@ public final class TowerManager {
                 guard.setPos(origin.getX() + Math.cos(ang) * 8.0D, origin.getY() + 1.0D, origin.getZ() + Math.sin(ang) * 8.0D);
                 guard.setCustomName(Component.translatable("awakening_system.tower.divine_guardian"));
                 guard.setCustomNameVisible(true);
-                applyAttributes(guard, 1200.0D, 24.0D, 20.0D);
+                applyAttributes(guard, 3600.0D, 45.0D, 26.0D);
                 guard.getPersistentData().putBoolean("TowerMinion", true);
                 guard.getPersistentData().putBoolean("TowerMob", true);
                 guard.getPersistentData().putInt("TowerFloor", 100);
-                guard.getPersistentData().putInt("rpg_mob_level", 130);
+                guard.getPersistentData().putInt("rpg_mob_level", 300);
                 configureTowerMobAI(guard, session, player);
                 level.addFreshEntity(guard);
                 session.enemyUUIDs.add(guard.getUUID());
@@ -666,7 +647,7 @@ public final class TowerManager {
             champion.getPersistentData().putBoolean("TowerChampion", true);
             champion.getPersistentData().putBoolean("TowerMob", true);
             champion.getPersistentData().putInt("TowerFloor", floor);
-            int internalLevel = Math.min(150, Math.max(15, 15 + (int) Math.round(floor * 1.35D)));
+            int internalLevel = Math.min(300, Math.max(35, 35 + (int) Math.round((floor - 1) * (265.0D / 99.0D))));
             champion.getPersistentData().putInt("rpg_mob_level", internalLevel);
             champion.setPos(origin.getX() + 0.5D, origin.getY() + 1.0D, origin.getZ() + 0.5D);
             champion.setCustomNameVisible(true);
@@ -736,7 +717,7 @@ public final class TowerManager {
             minion.getPersistentData().putBoolean("TowerMinion", true);
             minion.getPersistentData().putBoolean("TowerMob", true);
             minion.getPersistentData().putInt("TowerFloor", floor);
-            int internalLevel = Math.min(140, Math.max(10, 10 + (int) Math.round(floor * 1.25D)));
+            int internalLevel = Math.min(300, Math.max(25, 25 + (int) Math.round((floor - 1) * (275.0D / 99.0D))));
             minion.getPersistentData().putInt("rpg_mob_level", internalLevel);
             minion.setPos(x, y, z);
             applyAttributes(minion, hp, dmg, armor);

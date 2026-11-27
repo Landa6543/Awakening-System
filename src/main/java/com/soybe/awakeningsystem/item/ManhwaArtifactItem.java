@@ -60,7 +60,8 @@ public class ManhwaArtifactItem extends Item {
                 return true;
             }
         }
-        return false;
+        return com.soybe.awakeningsystem.compat.CuriosCompat.hasEquippedPredicate(player,
+                stack -> stack.getItem() instanceof ManhwaArtifactItem mai && mai.getArtifactType() == type);
     }
 
     @Override

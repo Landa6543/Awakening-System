@@ -56,7 +56,7 @@ public final class MutantWardenContent {
      * instead, never more than one near the same place.
      */
     public static LivingEntity maybeTowerWarden(ServerLevel level, int floor, RandomSource rand, BlockPos around) {
-        if (floor < 16 || floor > 19 || rand.nextFloat() > 0.07F) return null;
+        if (floor != 10 || rand.nextFloat() > 0.07F) return null;
         if (!level.getEntitiesOfClass(MutantWardenEntity.class, new AABB(around).inflate(96.0D)).isEmpty()) return null;
         return MUTANT_WARDEN.create(level);
     }

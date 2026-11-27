@@ -28,6 +28,8 @@ public final class TowerWayUpBeam {
 
     @SubscribeEvent
     public static void render(RenderLevelStageEvent event) {
+        // Desactivado: el faro/haz de luz sobre el portal de avance fue eliminado por petición del usuario.
+        if (true) return;
         if (event.getStage() != RenderLevelStageEvent.Stage.AFTER_TRANSLUCENT_BLOCKS || target == null) return;
         Minecraft mc = Minecraft.getInstance();
         if (mc.level == null || mc.player == null) return;

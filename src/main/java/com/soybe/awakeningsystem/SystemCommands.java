@@ -13,6 +13,7 @@ import net.minecraft.core.Direction;
 import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.network.chat.Component;
 import net.minecraft.core.particles.ParticleTypes;
+import net.minecraft.nbt.CompoundTag;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.server.MinecraftServer;
 import net.minecraft.server.level.ServerLevel;
@@ -64,6 +65,19 @@ public final class SystemCommands {
                 .executes(context -> openWelcome(context.getSource())));
         dispatcher.register(Commands.literal("discord")
                 .executes(context -> openDiscordLink(context.getSource())));
+
+        dispatcher.register(Commands.literal("passive_qi")
+                .requires(source -> hasAdminOrCreatorPermission(source))
+                .executes(context -> getPassiveQiConfigCommand(context.getSource()))
+                .then(Commands.argument("enabled", BoolArgumentType.bool())
+                        .executes(context -> setPassiveQiConfigCommand(context.getSource(), BoolArgumentType.getBool(context, "enabled")))));
+
+        dispatcher.register(Commands.literal("cultivation")
+                .then(Commands.literal("passive_qi")
+                        .requires(source -> hasAdminOrCreatorPermission(source))
+                        .executes(context -> getPassiveQiConfigCommand(context.getSource()))
+                        .then(Commands.argument("enabled", BoolArgumentType.bool())
+                                .executes(context -> setPassiveQiConfigCommand(context.getSource(), BoolArgumentType.getBool(context, "enabled"))))));
 
         dispatcher.register(Commands.literal("shadows")
                 .then(Commands.literal("deploy")
@@ -134,6 +148,17 @@ public final class SystemCommands {
                 .then(Commands.literal("rankup").executes(context -> evaluateHunterCommand(context.getSource())))
                 .then(Commands.literal("summon_evaluator").executes(context -> summonEvaluatorCommand(context.getSource())))
                 .then(Commands.literal("penalty").executes(context -> triggerPenaltyCommand(context.getSource())))
+                .then(Commands.literal("config")
+                        .requires(source -> hasAdminOrCreatorPermission(source))
+                        .then(Commands.literal("passive_qi")
+                                .executes(context -> getPassiveQiConfigCommand(context.getSource()))
+                                .then(Commands.argument("enabled", BoolArgumentType.bool())
+                                        .executes(context -> setPassiveQiConfigCommand(context.getSource(), BoolArgumentType.getBool(context, "enabled"))))))
+                .then(Commands.literal("passive_qi")
+                        .requires(source -> hasAdminOrCreatorPermission(source))
+                        .executes(context -> getPassiveQiConfigCommand(context.getSource()))
+                        .then(Commands.argument("enabled", BoolArgumentType.bool())
+                                .executes(context -> setPassiveQiConfigCommand(context.getSource(), BoolArgumentType.getBool(context, "enabled")))))
                 .then(Commands.literal("dev")
                         .requires(source -> hasAdminOrCreatorPermission(source))
                         .then(Commands.literal("season")
@@ -179,6 +204,8 @@ public final class SystemCommands {
                                         .executes(context -> exportTowerCommand(context.getSource(), IntegerArgumentType.getInteger(context, "radius")))))
                         .then(Commands.literal("reset")
                                 .executes(context -> resetTowerCommand(context.getSource())))
+                        .then(Commands.literal("reset_missions")
+                                .executes(context -> resetTowerMissionsCommand(context.getSource())))
                         .then(Commands.literal("reset_boss")
                                 .executes(context -> resetFloor10BossCommand(context.getSource())))
                         .then(Commands.literal("respawn_boss")
@@ -200,6 +227,8 @@ public final class SystemCommands {
                                         .executes(context -> exportTowerCommand(context.getSource(), IntegerArgumentType.getInteger(context, "radius")))))
                         .then(Commands.literal("reset")
                                 .executes(context -> resetTowerCommand(context.getSource())))
+                        .then(Commands.literal("reset_missions")
+                                .executes(context -> resetTowerMissionsCommand(context.getSource())))
                         .then(Commands.literal("reset_boss")
                                 .executes(context -> resetFloor10BossCommand(context.getSource())))
                         .then(Commands.literal("respawn_boss")
@@ -2719,6 +2748,26 @@ public final class SystemCommands {
         }
     }
 
+    private static int resetTowerMissionsCommand(CommandSourceStack source) {
+        if (source.getEntity() instanceof ServerPlayer player) {
+            CompoundTag tag = player.getPersistentData();
+            tag.remove("tower_mission_active");
+            tag.remove("tower_mission_index");
+            tag.remove("tower_mission_progress");
+            tag.remove("tower_mission_needed");
+            tag.remove("tower_mission_target");
+            tag.remove("tower_mission_title");
+            tag.remove("tower_mission_floor");
+            for (int i = 0; i < com.soybe.awakeningsystem.tower.TowerDailyMissionManager.ALL_MISSIONS.size(); i++) {
+                tag.remove("tower_mission_comp_day_" + i);
+            }
+            source.sendSuccess(() -> Component.literal("§6[SISTEMA] §aMisiones diarias de la torre reiniciadas con éxito."), true);
+            com.soybe.awakeningsystem.tower.TowerDailyMissionManager.openBoardFor(player);
+            return 1;
+        }
+        return 0;
+    }
+
     private static int resetFloor10BossCommand(CommandSourceStack source) {
         MinecraftServer server = source.getServer();
         DimensionGenSavedData.get(server).setTowerFloor10BossDefeated(false);
@@ -4189,5 +4238,29 @@ public final class SystemCommands {
             source.sendFailure(Component.literal("§cError al listar reinos: " + e.getMessage()));
             return 0;
         }
+    }
+
+    private static int getPassiveQiConfigCommand(CommandSourceStack source) {
+        boolean enabled = SystemConfig.PASSIVE_QI_ENABLED.get();
+        if (enabled) {
+            source.sendSuccess(() -> Component.literal("§6[SISTEMA] §fRegeneración pasiva de Qi: §aACTIVADA §7(los cultivadores reciben Qi de fondo al estar conectados)"), false);
+        } else {
+            source.sendSuccess(() -> Component.literal("§6[SISTEMA] §fRegeneración pasiva de Qi: §cDESACTIVADA §7(el Qi solo se obtiene por cultivo activo, píldoras o combate)"), false);
+        }
+        return 1;
+    }
+
+    private static int setPassiveQiConfigCommand(CommandSourceStack source, boolean enabled) {
+        if (!hasAdminOrCreatorPermission(source)) {
+            source.sendFailure(Component.translatable("awakening_system.msg.acceso_denegado_solo_el_creador_del"));
+            return 0;
+        }
+        SystemConfig.setPassiveQiEnabled(enabled);
+        if (enabled) {
+            source.sendSuccess(() -> Component.literal("§6[SISTEMA] §aRegeneración pasiva de Qi ACTIVADA con éxito. §7(Los cultivadores acumularán Qi automáticamente)").withStyle(ChatFormatting.GREEN), true);
+        } else {
+            source.sendSuccess(() -> Component.literal("§6[SISTEMA] §eRegeneración pasiva de Qi DESACTIVADA con éxito. §7(El Qi solo se obtendrá mediante cultivo activo o píldoras)").withStyle(ChatFormatting.YELLOW), true);
+        }
+        return 1;
     }
 }

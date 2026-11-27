@@ -129,9 +129,16 @@ public class ClandestineCashierBlockEntity extends BlockEntity {
         this.stockChips -= toWithdraw;
         setChanged();
 
-        ItemStack stack = new ItemStack(SystemItems.CASINO_CHIP_BLACK.get(), toWithdraw);
-        if (!player.getInventory().add(stack)) {
-            player.drop(stack, false);
+        var chipItem = SystemItems.CASINO_CHIP_BLACK.get();
+        int maxStack = Math.max(1, Math.min(64, chipItem.getDefaultMaxStackSize()));
+        int remaining = toWithdraw;
+        while (remaining > 0) {
+            int batch = Math.min(maxStack, remaining);
+            ItemStack stack = new ItemStack(chipItem, batch);
+            if (!player.getInventory().add(stack)) {
+                player.drop(stack, false);
+            }
+            remaining -= batch;
         }
         return toWithdraw;
     }
@@ -139,7 +146,12 @@ public class ClandestineCashierBlockEntity extends BlockEntity {
     public long withdrawCollectedMora(ServerPlayer player) {
         long mora = this.collectedMora;
         if (mora > 0) {
-            SystemEvents.data(player).addMora((int) mora);
+            long remaining = mora;
+            while (remaining > 0) {
+                int chunk = (int) Math.min(Integer.MAX_VALUE, remaining);
+                SystemEvents.data(player).addMora(chunk);
+                remaining -= chunk;
+            }
             this.collectedMora = 0L;
             setChanged();
             AwakeningSystemMod.sync(player);

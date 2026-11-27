@@ -92,6 +92,7 @@ public final class AwakeningSystemMod {
         ATTACHMENTS.register(modBus);
         ITEMS.register(modBus);
         FEATURES.register(modBus);
+        com.soybe.awakeningsystem.worldgen.AwakeningStructures.register(modBus);
         com.soybe.awakeningsystem.item.ModArmorMaterials.ARMOR_MATERIALS.register(modBus);
         ModSounds.SOUND_EVENTS.register(modBus);
         com.soybe.awakeningsystem.particle.ModParticles.PARTICLE_TYPES.register(modBus);
@@ -142,7 +143,7 @@ public final class AwakeningSystemMod {
             NeoForge.EVENT_BUS.addListener(AwakeningSystemClient::onComputeCameraAngles);
             NeoForge.EVENT_BUS.addListener(AwakeningSystemClient::onRenderNameTag);
             NeoForge.EVENT_BUS.addListener(AwakeningSystemClient::registerClientCommands);
-            NeoForge.EVENT_BUS.addListener(AwakeningSystemClient::onMouseButtonPre);
+            NeoForge.EVENT_BUS.addListener(net.neoforged.bus.api.EventPriority.HIGHEST, AwakeningSystemClient::onMouseButtonPre);
             NeoForge.EVENT_BUS.addListener(AwakeningSystemClient::onItemTooltip);
             NeoForge.EVENT_BUS.addListener(AwakeningSystemClient::onClientEntityJoinLevel);
             NeoForge.EVENT_BUS.addListener(AwakeningSystemClient::onScreenOpening);
@@ -325,7 +326,7 @@ public final class AwakeningSystemMod {
         registrar.playToServer(BuyShopItemPayload.TYPE, BuyShopItemPayload.STREAM_CODEC,
                 (payload, context) -> context.enqueueWork(() -> {
                     if (context.player() instanceof net.minecraft.server.level.ServerPlayer player
-                            && SystemEvents.buyShopItem(player, payload.entryId())) {
+                            && SystemEvents.buyShopItem(player, payload.entryId(), payload.quantity())) {
                         AwakeningSystemMod.sync(player);
                     }
                 }));
@@ -938,6 +939,7 @@ public final class AwakeningSystemMod {
         SystemData data = SystemEvents.data(player);
         switch (payload.action()) {
             case com.soybe.awakeningsystem.network.ManageShadowSquadPayload.ACTION_DEPLOY_SQUAD -> {
+                SystemEvents.setSelectedShadowSquad(player, payload.squadId());
                 SystemEvents.deploySquad(player, payload.squadId());
             }
             case com.soybe.awakeningsystem.network.ManageShadowSquadPayload.ACTION_RECALL_SQUAD -> {
@@ -956,6 +958,17 @@ public final class AwakeningSystemMod {
             case com.soybe.awakeningsystem.network.ManageShadowSquadPayload.ACTION_MOVE_SHADOW -> {
                 data.setShadowSquad(payload.shadowIndex(), payload.squadId());
                 AwakeningSystemMod.sync(player);
+            }
+            case com.soybe.awakeningsystem.network.ManageShadowSquadPayload.ACTION_SELECT_SQUAD -> {
+                SystemEvents.setSelectedShadowSquad(player, payload.squadId());
+            }
+            case com.soybe.awakeningsystem.network.ManageShadowSquadPayload.ACTION_DELETE_SHADOW -> {
+                var army = data.getStoredShadowArmy();
+                int idx = payload.shadowIndex();
+                if (idx >= 0 && idx < army.size()) {
+                    army.remove(idx);
+                    AwakeningSystemMod.sync(player);
+                }
             }
         }
     }

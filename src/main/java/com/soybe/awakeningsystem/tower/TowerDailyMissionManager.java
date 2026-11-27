@@ -42,10 +42,10 @@ public final class TowerDailyMissionManager {
                 1500, 1200, 5, new ItemStack(Items.CRYING_OBSIDIAN, 4), "Obsidiana Llorosa");
 
         register(1, 1,
-                "Cimentación de Pizarra Profunda",
-                "Los arquitectos de la asociación de cazadores requieren muestras sólidas de pizarra de la base de la torre para estabilizar la barrera exterior contra el flujo salvaje de Shinsu.",
-                "collect_deepslate", "Pizarra Profunda", 16,
-                1200, 1000, 3, new ItemStack(Items.POLISHED_DEEPSLATE, 8), "Pizarra Pulida");
+                "Trofeos de Cadáveres de la Torre",
+                "Los exploradores de la primera planta necesitan confirmar la purga de los no-muertos que rondan los pasillos inferiores. Recolecta restos de las criaturas abatidas.",
+                "collect_rotten_flesh", "Carne Podrida", 16,
+                1200, 1000, 3, new ItemStack(Items.BONE, 6), "Huesos de Centinela");
 
         register(2, 2,
                 "Juicio Ígneo: Efigies de Evankhell",
@@ -54,10 +54,10 @@ public final class TowerDailyMissionManager {
                 2200, 1800, 8, new ItemStack(Items.BLAZE_ROD, 4), "Varas Llameantes");
 
         register(3, 2,
-                "Brasas del Horno Abisal",
-                "Se solicita una remesa de ladrillos y brasas forjadas en el calor del segundo piso para abastecer a los herreros rúnicos del campamento.",
-                "collect_nether_bricks", "Ladrillos del Nether", 12,
-                1800, 1500, 5, new ItemStack(Items.MAGMA_BLOCK, 6), "Bloques de Magma");
+                "Núcleos de Magma de Evankhell",
+                "Las criaturas ígneas del segundo piso concentran su calor en núcleos de magma puro. Entrega estas muestras a los alquimistas del campamento.",
+                "collect_magma_cream", "Cremas de Magma", 6,
+                1800, 1500, 5, new ItemStack(Items.BLAZE_POWDER, 6), "Polvo de Blaze");
 
         register(4, 3,
                 "El Ojo Vigilante del Océano de Shinsu",
@@ -66,10 +66,10 @@ public final class TowerDailyMissionManager {
                 3000, 2500, 10, new ItemStack(Items.PRISMARINE_SHARD, 8), "Esquirlas de Prismarina");
 
         register(5, 3,
-                "Gemas de la Marea Resonante",
-                "Los alquimistas de la torre precisan prismarina pulida imbuida con la presión acuática del Piso 3 para fabricar elixires de respiración de Shinsu.",
-                "collect_prismarine", "Bloques de Prismarina", 8,
-                2500, 2000, 7, new ItemStack(Items.SEA_LANTERN, 4), "Linternas Marinas");
+                "Fragmentos de Bestia Marina",
+                "Los alquimistas de la torre precisan esquirlas arrancadas a las bestias acuáticas del Piso 3 para fabricar elixires de respiración de Shinsu.",
+                "collect_prismarine_shard", "Esquirlas de Prismarina", 10,
+                2500, 2000, 7, new ItemStack(Items.PRISMARINE_CRYSTALS, 6), "Cristales de Prismarina");
 
         register(6, 4,
                 "Duelo de la Corona: Colosos de Piedra",
@@ -90,10 +90,10 @@ public final class TowerDailyMissionManager {
                 4600, 4000, 15, new ItemStack(Items.CRYING_OBSIDIAN, 6), "Obsidiana Resonante");
 
         register(9, 5,
-                "Ecos Púrpuras del Vacío",
-                "Los monolitos del quinto piso desprenden resonancias púrpuras. Recolecta fragmentos de purpur de alta densidad para las cámaras de teletransporte.",
-                "collect_purpur", "Bloques de Purpur", 12,
-                4000, 3500, 12, new ItemStack(Items.PURPUR_PILLAR, 6), "Pilares de Purpur");
+                "Perlas del Vacío Resonante",
+                "Las criaturas del vacío en el quinto piso dejan tras de sí perlas cargadas de Shinsu espacial. Recolecta varias para calibrar los portales.",
+                "collect_ender_pearl", "Perlas de Ender", 6,
+                4000, 3500, 12, new ItemStack(Items.ENDER_EYE, 2), "Ojos de Ender");
 
         // --- PISOS 6 A 10 (TIER INTERMEDIO) ---
         register(10, 6,
@@ -103,9 +103,9 @@ public final class TowerDailyMissionManager {
                 5500, 4800, 18, new ItemStack(Items.PACKED_ICE, 12), "Hielo Compacto Rúnico");
 
         register(11, 6,
-                "Piedras de Andesita Glacial",
-                "Se necesitan bloques densos de andesita del sexto piso para apuntalar las vías congeladas del ferrocarril antes del próximo convoy.",
-                "collect_andesite", "Andesita Pulida", 16,
+                "Lágrimas de Escarcha del Expreso",
+                "Los espectros helados del sexto piso condensan su esencia en lágrimas cristalinas. Tráelas al campamento para forjar amuletos térmicos.",
+                "collect_ghast_tear", "Lágrimas de Ghast", 4,
                 4800, 4200, 14, new ItemStack(Items.AMETHYST_SHARD, 6), "Esquirlas de Amatista");
 
         register(12, 7,
@@ -127,10 +127,10 @@ public final class TowerDailyMissionManager {
                 8000, 7200, 25, new ItemStack(Items.FIRE_CHARGE, 6), "Cargas Ígneas Arcanas");
 
         register(15, 8,
-                "Obsidiana de Corazón Incandescente",
-                "Mina y entrega bloques de obsidiana llorosa capaces de soportar las altísimas temperaturas del octavo piso.",
-                "collect_crying_obsidian", "Obsidiana Llorosa Pura", 8,
-                7000, 6200, 20, new ItemStack(Items.POLISHED_BLACKSTONE_BRICKS, 8), "Ladrillos Negros Pulidos");
+                "Pólvora Ígnea de Centinelas",
+                "Los autómatas explosivos del octavo piso almacenan pólvora arcana de alto rendimiento. Elimínalos y entrega el botín al gremio.",
+                "collect_gunpowder", "Pólvora Arcana", 12,
+                7000, 6200, 20, new ItemStack(Items.BLAZE_ROD, 4), "Varas de Blaze");
 
         register(16, 9,
                 "Avatares del Alto Rango",
@@ -152,10 +152,10 @@ public final class TowerDailyMissionManager {
 
         // --- PISOS 12 A 20 (TIER AVANZADO) ---
         register(19, 12,
-                "Incursión en los Bosques Luminiscentes",
-                "En el piso 12, hongos arcanos gigantes iluminan la oscuridad. Cosecha lámparas naturales para iluminar los campamentos base de la asociación.",
-                "collect_shroomlight", "Hongos Luminiscentes (Shroomlight)", 8,
-                7500, 6500, 20, new ItemStack(Items.GLOWSTONE, 8), "Piedra Brillante");
+                "Ojos de Acechador Oscuro",
+                "En la oscuridad del piso 12 acechan depredadores venenosos. Consigue sus ojos como prueba de cacería para los alquimistas de la asociación.",
+                "collect_spider_eye", "Ojos de Araña", 10,
+                7500, 6500, 20, new ItemStack(Items.FERMENTED_SPIDER_EYE, 4), "Ojos Fermentados");
 
         register(20, 15,
                 "Asalto a la Fortaleza de Cristal",
@@ -345,7 +345,18 @@ public final class TowerDailyMissionManager {
     }
 
     public static long getCurrentWorldDay(Level level) {
-        return level.getDayTime() / 24000L;
+        if (level == null) return 0L;
+        return Math.max(0L, level.getDayTime() / 24000L);
+    }
+
+    public static boolean isMissionCompletedToday(CompoundTag tag, int missionIndex, long currentDay) {
+        if (tag == null) return false;
+        String key = "tower_mission_comp_day_" + missionIndex;
+        if (!tag.contains(key)) return false;
+        long compDay = tag.getLong(key);
+        // Si compDay <= 0 (por ejemplo el valor por defecto 0L de NBT cuando no existe o datos residuales), no es completado
+        if (compDay <= 0) return false;
+        return compDay == (currentDay + 1);
     }
 
     public static boolean isMissionLockedForPlayer(Player player, TowerMissionTemplate template) {
@@ -384,18 +395,17 @@ public final class TowerDailyMissionManager {
     }
 
     private static boolean matchesCollectionTarget(ItemStack stack, String targetType) {
-        String path = BuiltInRegistries.ITEM.getKey(stack.getItem()).getPath();
         return switch (targetType) {
-            case "collect_deepslate" -> path.contains("deepslate");
-            case "collect_nether_bricks" -> path.contains("nether_brick");
-            case "collect_prismarine" -> path.contains("prismarine");
+            case "collect_rotten_flesh" -> stack.is(Items.ROTTEN_FLESH);
+            case "collect_magma_cream" -> stack.is(Items.MAGMA_CREAM);
+            case "collect_prismarine_shard" -> stack.is(Items.PRISMARINE_SHARD);
             case "collect_gold" -> stack.is(Items.GOLD_INGOT) || stack.is(Items.RAW_GOLD);
-            case "collect_purpur" -> path.contains("purpur");
-            case "collect_andesite" -> path.contains("andesite");
+            case "collect_ender_pearl" -> stack.is(Items.ENDER_PEARL);
+            case "collect_ghast_tear" -> stack.is(Items.GHAST_TEAR);
             case "collect_bone" -> stack.is(Items.BONE);
-            case "collect_crying_obsidian" -> stack.is(Items.CRYING_OBSIDIAN);
+            case "collect_gunpowder" -> stack.is(Items.GUNPOWDER);
             case "collect_quartz" -> stack.is(Items.QUARTZ);
-            case "collect_shroomlight" -> stack.is(Items.SHROOMLIGHT);
+            case "collect_spider_eye" -> stack.is(Items.SPIDER_EYE);
             case "collect_blaze_rod" -> stack.is(Items.BLAZE_ROD);
             default -> false;
         };
@@ -439,7 +449,7 @@ public final class TowerDailyMissionManager {
         boolean[] completedToday = new boolean[DAILY_OFFERS_COUNT];
         for (int i = 0; i < DAILY_OFFERS_COUNT; i++) {
             int gIdx = dailyIndices[i];
-            completedToday[i] = tag.getLong("tower_mission_comp_day_" + gIdx) == currentDay;
+            completedToday[i] = isMissionCompletedToday(tag, gIdx, currentDay);
         }
 
         PacketDistributor.sendToPlayer(player, new OpenTowerMissionBoardPayload(
@@ -473,7 +483,7 @@ public final class TowerDailyMissionManager {
         long currentDay = getCurrentWorldDay(player.level());
 
         // Comprobar si ya la completó hoy
-        if (tag.getLong("tower_mission_comp_day_" + missionIndex) == currentDay) {
+        if (isMissionCompletedToday(tag, missionIndex, currentDay)) {
             player.sendSystemMessage(Component.translatable("awakening_system.msg.ya_has_completado_este_contrato_de"));
             player.playNotifySound(SoundEvents.VILLAGER_NO, SoundSource.PLAYERS, 1.0F, 1.0F);
             return;
@@ -529,10 +539,10 @@ public final class TowerDailyMissionManager {
             }
         }
 
-        // Marcar completada
+        // Marcar completada (almacenando currentDay + 1 para que el valor sea siempre >= 1)
         long currentDay = getCurrentWorldDay(player.level());
         tag.putBoolean("tower_mission_active", false);
-        tag.putLong("tower_mission_comp_day_" + missionIndex, currentDay);
+        tag.putLong("tower_mission_comp_day_" + missionIndex, currentDay + 1);
 
         // Otorgar Recompensas: Monedas, EXP, Gemas y Materiales
         SystemData data = SystemEvents.data(player);

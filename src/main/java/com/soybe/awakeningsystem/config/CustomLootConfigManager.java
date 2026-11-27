@@ -235,18 +235,67 @@ public final class CustomLootConfigManager {
         }
     }
 
+    public static int getWorldTier(net.minecraft.world.level.Level level) {
+        if (level == null) return 1;
+        String path = level.dimension().location().getPath().toLowerCase(java.util.Locale.ROOT);
+        if (path.contains("teyvat") || path.contains("celestial")) return 4;
+        if (path.contains("murim") || path.contains("pagoda")) return 3;
+        if (path.contains("isekai")) return 2;
+        return 1;
+    }
+
+    public static int getItemWorldTier(String itemId) {
+        if (itemId == null) return 1;
+        String id = itemId.toLowerCase(java.util.Locale.ROOT);
+        if (id.contains("celestial_ingot") || id.contains("primordial_ingot")
+                || id.contains("celestial_dragon_") || id.contains("pill_reincarnation")
+                || id.contains("death_king_clock") || id.contains("astral_crystal_scale")
+                || id.contains("primordial_jade") || id.contains("mistsplitter")
+                || id.contains("staff_of_homa") || id.contains("mora")
+                || id.contains("refined_white_iron")) {
+            return 4;
+        }
+        if (id.contains("spirit_qi_") || id.contains("ginseng") || id.contains("snow_lotus")
+                || id.contains("dragon_fruit") || id.contains("spirit_grass")
+                || id.contains("pill_bone") || id.contains("pill_qi")
+                || id.contains("murim_") || id.contains("plum_blossom")
+                || id.contains("sky_demon") || id.contains("asrahan")
+                || id.contains("black_dragon_scythe") || id.contains("spirit_jade")
+                || id.contains("astral_ingot")) {
+            return 3;
+        }
+        if (id.contains("mithril") || id.contains("adamantite")
+                || id.contains("elucidator") || id.contains("dark_repulser")
+                || id.contains("transcendent_thorn") || id.contains("immortal_dragon_scale")) {
+            return 2;
+        }
+        return 1;
+    }
+
     public static ItemStack getRouletteSlotItem(int slot, RandomSource rand) {
+        return getRouletteSlotItem(slot, rand, 1);
+    }
+
+    public static ItemStack getRouletteSlotItem(int slot, RandomSource rand, int worldTier) {
         init();
         int s = Math.floorMod(slot, 8);
         List<LootItem> items = ROULETTE_SLOTS.get(s);
         if (items != null && !items.isEmpty()) {
-            LootItem chosen = pickWeighted(items, rand);
-            if (chosen != null) {
-                ItemStack stack = resolveStack(chosen, rand);
-                if (!stack.isEmpty()) return stack;
+            List<LootItem> eligible = new ArrayList<>();
+            for (LootItem li : items) {
+                if (getItemWorldTier(li.itemId) <= worldTier) {
+                    eligible.add(li);
+                }
+            }
+            if (!eligible.isEmpty()) {
+                LootItem chosen = pickWeighted(eligible, rand);
+                if (chosen != null) {
+                    ItemStack stack = resolveStack(chosen, rand);
+                    if (!stack.isEmpty()) return stack;
+                }
             }
         }
-        return RouletteAltarBlockEntity.getDefaultFallbackItem(s);
+        return RouletteAltarBlockEntity.getDefaultFallbackItem(s, worldTier);
     }
 
     private static void loadChestConfig(File file) {

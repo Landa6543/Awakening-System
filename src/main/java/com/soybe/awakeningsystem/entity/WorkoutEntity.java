@@ -245,7 +245,7 @@ public class WorkoutEntity extends Entity implements GeoEntity {
             player.displayClientMessage(
                     Component.literal("§a[+" + repsEarned + "] ").append(
                             Component.translatable("awakening_system.workout.actionbar", nameComp, current, target)
-                    ).append(Component.literal(" §e(⚡ Bonus de Atributo)")),
+                    ).append(Component.translatable("awakening_system.workout.attr_bonus")),
                     true
             );
         } else {

@@ -91,7 +91,7 @@ public class SaoShadowScreen extends SaoWindow {
             for (Mob m : mc.level.getEntitiesOfClass(Mob.class, mc.player.getBoundingBox().inflate(128.0),
                     m -> m.isAlive() && m.getTags().contains("shadow_soldier") && m.getTags().contains(master))) {
                 all++;
-                if (m.getPersistentData().getInt("shadow_squad_id") == squad) mine++;
+                if (squad >= 0 && com.soybe.awakeningsystem.AwakeningSystemClient.getShadowSquadId(m.getId()) == squad) mine++;
             }
         }
         return new int[]{all, mine};
@@ -142,8 +142,10 @@ public class SaoShadowScreen extends SaoWindow {
         scroll = Math.min(scroll, max);
         int ly = listY();
         if (list.isEmpty()) {
-            g.drawCenteredString(this.font, key("no_shadows"), x + pw / 2, ly + 30, alpha(GREY, a));
-            g.drawCenteredString(this.font, key("no_shadows_sub"), x + pw / 2, ly + 44, alpha(GREY_LIGHT, a));
+            Component empty1 = key("no_shadows");
+            Component empty2 = key("no_shadows_sub");
+            g.drawString(this.font, empty1, x + (pw - this.font.width(empty1)) / 2, ly + 30, alpha(GREY_DARK, a), false);
+            g.drawString(this.font, empty2, x + (pw - this.font.width(empty2)) / 2, ly + 44, alpha(GREY, a), false);
         }
         for (int r = 0; r < ROWS && scroll + r < list.size(); r++) {
             Entry e = list.get(scroll + r);
@@ -153,7 +155,7 @@ public class SaoShadowScreen extends SaoWindow {
             card(g, x + 12, ry, rw, ROW_H - 3, hot, a);
             ShadowRank rank = ShadowRank.byLevel(t.contains("ShadowRank") ? t.getInt("ShadowRank") : 0);
             String rk = Component.translatable(rank.getLangKey()).getString();
-            g.drawString(this.font, rk, x + 18, ry + 4, alpha(0xFF000000 | rank.getColor(), a), false);
+            g.drawString(this.font, rk, x + 18, ry + 4, alpha(saoRankColor(rank), a), false);
             String name = t.contains("ShadowBaseName") ? t.getString("ShadowBaseName") : t.contains("MobName") ? t.getString("MobName") : "Shadow";
             int lvl = t.getInt("RpgMobLevel");
             String title = (lvl > 0 ? tr("level", "Lv. %s", lvl).getString() + "  " : "") + name;
@@ -169,7 +171,10 @@ public class SaoShadowScreen extends SaoWindow {
             g.pose().popPose();
             int cur = t.contains("SquadId") ? t.getInt("SquadId") : -1;
             for (int s = 0; s < 4; s++)
-                softButton(g, pillX(s), ry + 4, 20, 14, Component.literal(ROMAN[s]), s == cur, mouseX, mouseY, a);
+                softButton(g, pillX(s), ry + 4, 18, 14, Component.literal(ROMAN[s]), s == cur, mouseX, mouseY, a);
+            boolean hovDel = in(mouseX, mouseY, delX(), ry + 4, 16, 14);
+            g.fill(delX(), ry + 4, delX() + 16, ry + 18, alpha(hovDel ? 0xFFD94A4A : 0xFFEAEAEF, a));
+            g.drawCenteredString(this.font, "✕", delX() + 8, ry + 7, alpha(hovDel ? 0xFFFFFFFF : 0xFFC04040, a));
         }
         scrollBar(g, x + pw - 12, ly, ROWS * ROW_H - 3, list.size(), ROWS, a);
 
@@ -181,8 +186,23 @@ public class SaoShadowScreen extends SaoWindow {
         softButton(g, x + 12 + 3 * (bw + 4), by, bw, 18, key("recall_all"), false, mouseX, mouseY, a);
     }
 
+    private static int saoRankColor(ShadowRank rank) {
+        return switch (rank) {
+            case GRAND_MARSHAL -> 0xFFB86B00;
+            case COMMANDER -> 0xFFC02828;
+            case KNIGHT -> 0xFF7B2CBF;
+            case ELITE -> 0xFF1D6FA5;
+            case SOLDIER -> 0xFF2B6CB0;
+            default -> 0xFF4A5568;
+        };
+    }
+
     private int pillX(int s) {
-        return left() + pw - 16 - 4 * 22 + s * 22;
+        return left() + pw - 36 - 4 * 20 + s * 20;
+    }
+
+    private int delX() {
+        return left() + pw - 32;
     }
 
     private void send(int action, int target, int index, String text) {
@@ -208,6 +228,7 @@ public class SaoShadowScreen extends SaoWindow {
                 scroll = 0;
                 renaming = false;
                 nameBox.setVisible(false);
+                send(ManageShadowSquadPayload.ACTION_SELECT_SQUAD, i, 0, "");
                 SaoSounds.click();
                 return true;
             }
@@ -231,15 +252,23 @@ public class SaoShadowScreen extends SaoWindow {
         for (int r = 0; r < ROWS && scroll + r < list.size(); r++) {
             Entry e = list.get(scroll + r);
             int ry = ly + r * ROW_H;
-            int cur = e.tag().contains("SquadId") ? e.tag().getInt("SquadId") : 0;
+            int cur = e.tag().contains("SquadId") ? e.tag().getInt("SquadId") : -1;
             for (int s = 0; s < 4; s++) {
-                if (s != cur && in(mx, my, pillX(s), ry + 4, 20, 14)) {
+                if (s != cur && in(mx, my, pillX(s), ry + 4, 18, 14)) {
                     send(ManageShadowSquadPayload.ACTION_MOVE_SHADOW, s, e.index(), "");
                     d.setShadowSquad(e.index(), s);
                     e.tag().putInt("SquadId", s);
                     SaoSounds.click();
                     return true;
                 }
+            }
+            if (in(mx, my, delX(), ry + 4, 16, 14)) {
+                send(ManageShadowSquadPayload.ACTION_DELETE_SHADOW, 0, e.index(), "");
+                if (e.index() >= 0 && e.index() < d.getStoredShadowArmy().size()) {
+                    d.getStoredShadowArmy().remove(e.index());
+                }
+                SaoSounds.back();
+                return true;
             }
         }
         int by = btnY(), bw = btnW(), target = Math.max(0, squad);

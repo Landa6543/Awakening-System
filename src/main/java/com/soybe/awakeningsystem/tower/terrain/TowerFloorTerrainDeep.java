@@ -67,18 +67,25 @@ final class TowerFloorTerrainDeep {
     private static final int VOLCANO_CELL = 72;
 
     private static int volcanicHeight(int x, int z) {
-        int h = 34 + (int) Math.round(10 * n(6, x, z, 0.008, 3) + 4 * n(6, x - 50, z, 0.04, 2));
+        int h = 34 + (int) Math.round(8 * n(6, x, z, 0.008, 3) + 3 * n(6, x - 50, z, 0.04, 2));
         int ci = Math.floorDiv(x, VOLCANO_CELL), cj = Math.floorDiv(z, VOLCANO_CELL);
         for (int a = ci - 1; a <= ci + 1; a++)
             for (int b = cj - 1; b <= cj + 1; b++) {
                 if (hash(6, a, b, 1) > 0.5) continue;
                 double vx = a * VOLCANO_CELL + 20 + hash(6, a, b, 2) * 32, vz = b * VOLCANO_CELL + 20 + hash(6, a, b, 3) * 32;
-                double r = 18 + hash(6, a, b, 4) * 10, d = Math.sqrt((x - vx) * (x - vx) + (z - vz) * (z - vz));
-                int peak = 34 + (int) (hash(6, a, b, 5) * 16);
+                double r = 22 + hash(6, a, b, 4) * 10, d = Math.sqrt((x - vx) * (x - vx) + (z - vz) * (z - vz));
+                int peak = 26 + (int) (hash(6, a, b, 5) * 14);
+                double rimR = 5.5;
                 if (d < r) {
-                    double f = 1.0 - d / r;
-                    int cone = (int) (peak * Math.pow(f, 1.3));
-                    if (d < 4.5) cone = peak - 6;                                  // the crater
+                    int cone;
+                    if (d >= rimR) {
+                        double f = 1.0 - (d - rimR) / (r - rimR);
+                        cone = (int) Math.round(peak * Math.pow(f, 1.35));
+                    } else {
+                        // Smooth natural crater depression inside the rim (no vertical chimney jump)
+                        double depth = (rimR - d) / rimR;
+                        cone = peak - (int) Math.round(depth * 6.0);
+                    }
                     h = Math.max(h, 34 + cone);
                 }
             }
@@ -91,13 +98,17 @@ final class TowerFloorTerrainDeep {
             for (int b = cj - 1; b <= cj + 1; b++) {
                 if (hash(6, a, b, 1) > 0.5) continue;
                 double vx = a * VOLCANO_CELL + 20 + hash(6, a, b, 2) * 32, vz = b * VOLCANO_CELL + 20 + hash(6, a, b, 3) * 32;
-                if ((x - vx) * (x - vx) + (z - vz) * (z - vz) < 4.5 * 4.5) return true;
+                if ((x - vx) * (x - vx) + (z - vz) * (z - vz) < 4.2 * 4.2) return true;
             }
         return false;
     }
 
+    private static double magmaRiverDist(int x, int z) {
+        return Math.abs(n(6, x + 3000, z, 0.006, 2));
+    }
+
     private static boolean magmaRiver(int x, int z) {
-        return Math.abs(n(6, x + 3000, z, 0.006, 2)) < 0.025;
+        return magmaRiverDist(x, z) < 0.024;
     }
 
     // floor 7: dunes and mesas
@@ -206,8 +217,19 @@ final class TowerFloorTerrainDeep {
                 int x = x0 + dx, z = z0 + dz;
                 int fl = height(floor, x, z);
                 int roof = floor == 5 ? caveRoof(x, z) : 116 + (int) Math.round(5 * n(6, x + 900, z, 0.01, 2));
-                boolean river = floor == 6 && magmaRiver(x, z) && !volcanoCrater(x, z);
                 boolean crater = floor == 6 && volcanoCrater(x, z);
+                double rDist = floor == 6 ? magmaRiverDist(x, z) : 1.0;
+                boolean river = floor == 6 && !crater && rDist < 0.024 && fl <= 42;
+                int lavaLevel = 31;
+                if (floor == 6 && !crater && fl <= 42) {
+                    if (river) {
+                        fl = lavaLevel;
+                    } else if (rDist < 0.042) {
+                        // Smoothly slope banks down toward the lava river level
+                        double t = (rDist - 0.024) / (0.042 - 0.024);
+                        fl = Math.min(fl, lavaLevel + 1 + (int) Math.round(t * Math.max(0, fl - (lavaLevel + 1))));
+                    }
+                }
                 for (int y = 0; y <= 127; y++) {
                     BlockState s;
                     if (y <= 1 || y >= 126) s = Blocks.BEDROCK.defaultBlockState();
@@ -215,8 +237,10 @@ final class TowerFloorTerrainDeep {
                     else if (y >= roof) s = floor == 5 ? (hash(5, x, z, y) < 0.012 ? Blocks.VERDANT_FROGLIGHT.defaultBlockState() : (y < roof + 3 ? Blocks.STONE.defaultBlockState() : Blocks.DEEPSLATE.defaultBlockState()))
                             : (hash(6, x, z, y) < 0.01 ? Blocks.SHROOMLIGHT.defaultBlockState() : Blocks.BLACKSTONE.defaultBlockState());
                     else s = Blocks.AIR.defaultBlockState();
-                    if (river && y == fl) s = Blocks.LAVA.defaultBlockState();
-                    if (crater && y > fl - 3 && y <= fl) s = Blocks.LAVA.defaultBlockState();
+                    if (river && y >= lavaLevel - 1 && y <= lavaLevel) s = Blocks.LAVA.defaultBlockState();
+                    if (river && y == lavaLevel - 2) s = Blocks.MAGMA_BLOCK.defaultBlockState();
+                    if (crater && y > fl - 3 && y <= fl - 1) s = Blocks.LAVA.defaultBlockState();
+                    if (crater && y == fl) s = Blocks.AIR.defaultBlockState();
                     chunk.setBlockState(p.set(x, y, z), s, false);
                 }
             }

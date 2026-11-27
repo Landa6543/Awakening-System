@@ -77,10 +77,30 @@ public final class SubspaceManager {
         return 80;
     }
 
+    private static int getEffectivePlotOriginX(ServerPlayer player) {
+        if (player != null && player.serverLevel().dimension().equals(SUBSPACE_REALM)) {
+            return (int) (Math.round(player.getX() / 512.0D) * 512L);
+        }
+        return getPlotOriginX(player);
+    }
+
+    private static int getEffectivePlotOriginZ(ServerPlayer player) {
+        if (player != null && player.serverLevel().dimension().equals(SUBSPACE_REALM)) {
+            return (int) (Math.round(player.getZ() / 512.0D) * 512L);
+        }
+        return getPlotOriginZ(player);
+    }
+
     public static boolean isExcludedStoragePath(String path) {
         if (path == null) return true;
-        return path.contains("ender") || path.contains("crafting") || path.contains("furnace")
+        return path.contains("ender") || path.contains("crafting") || path.contains("workbench")
+                || path.contains("table") || path.contains("anvil") || path.contains("smithing")
+                || path.contains("grindstone") || path.contains("stonecutter") || path.contains("loom")
+                || path.contains("cartography") || path.contains("enchant") || path.contains("furnace")
                 || path.contains("blast") || path.contains("smoker") || path.contains("brewing")
+                || path.contains("cauldron") || path.contains("composter") || path.contains("campfire")
+                || path.contains("forge") || path.contains("smelter") || path.contains("kiln")
+                || path.contains("oven") || path.contains("beacon")
                 || path.contains("hopper") || path.contains("dispenser") || path.contains("dropper")
                 || path.contains("crafter") || path.contains("jukebox") || path.contains("lectern")
                 || path.contains("bookshelf") || path.contains("roulette") || path.contains("plushie")
@@ -88,8 +108,66 @@ public final class SubspaceManager {
                 || path.contains("spawner");
     }
 
+    public static boolean isAllowedSubspaceUtilityBlock(BlockState state, Level level, BlockPos pos) {
+        if (state == null) return false;
+        if (state.is(Blocks.CRAFTING_TABLE) || state.is(Blocks.SMITHING_TABLE)
+                || state.is(Blocks.ANVIL) || state.is(Blocks.CHIPPED_ANVIL) || state.is(Blocks.DAMAGED_ANVIL)
+                || state.is(Blocks.FURNACE) || state.is(Blocks.BLAST_FURNACE) || state.is(Blocks.SMOKER)
+                || state.is(Blocks.STONECUTTER) || state.is(Blocks.GRINDSTONE) || state.is(Blocks.LOOM)
+                || state.is(Blocks.CARTOGRAPHY_TABLE) || state.is(Blocks.ENCHANTING_TABLE)
+                || state.is(Blocks.BOOKSHELF) || state.is(Blocks.CHISELED_BOOKSHELF) || state.is(Blocks.LECTERN)
+                || state.is(Blocks.BREWING_STAND) || state.is(Blocks.CAULDRON) || state.is(Blocks.WATER_CAULDRON)
+                || state.is(Blocks.LAVA_CAULDRON) || state.is(Blocks.POWDER_SNOW_CAULDRON)
+                || state.is(Blocks.COMPOSTER) || state.is(Blocks.CAMPFIRE) || state.is(Blocks.SOUL_CAMPFIRE)
+                || state.is(Blocks.ENDER_CHEST) || state.is(Blocks.BEACON) || state.is(Blocks.JUKEBOX)
+                || state.is(Blocks.NOTE_BLOCK)
+                || state.is(Blocks.END_ROD) || state.is(Blocks.LADDER)
+                || state.is(Blocks.SCAFFOLDING)
+                || state.getBlock() instanceof net.minecraft.world.level.block.BedBlock
+                || state.getBlock() instanceof net.minecraft.world.level.block.TorchBlock
+                || state.getBlock() instanceof net.minecraft.world.level.block.LanternBlock) {
+            return true;
+        }
+
+        ResourceLocation id = BuiltInRegistries.BLOCK.getKey(state.getBlock());
+        if (id != null) {
+            String path = id.getPath().toLowerCase(java.util.Locale.ROOT);
+            if (path.contains("crafting") || path.contains("workbench") || path.contains("smithing")
+                    || path.contains("anvil") || path.contains("furnace") || path.contains("blast")
+                    || path.contains("smoker") || path.contains("stonecutter") || path.contains("grindstone")
+                    || path.contains("loom") || path.contains("cartography") || path.contains("enchant")
+                    || path.contains("brewing") || path.contains("cauldron") || path.contains("campfire")
+                    || path.contains("forge") || path.contains("table") || path.contains("beacon")
+                    || path.contains("lantern") || path.contains("torch") || path.contains("bookshelf")) {
+                return true;
+            }
+        }
+
+        if (level != null && pos != null) {
+            BlockEntity be = level.getBlockEntity(pos);
+            if (be instanceof AbstractFurnaceBlockEntity || be instanceof BrewingStandBlockEntity
+                    || be instanceof EnchantingTableBlockEntity || be instanceof EnderChestBlockEntity
+                    || be instanceof BeaconBlockEntity) {
+                return true;
+            }
+        }
+
+        return false;
+    }
+
     public static boolean isStorageBlock(net.minecraft.world.level.block.entity.BlockEntity be, Level level) {
         if (be == null || be.isRemoved()) return false;
+        if (be instanceof net.minecraft.world.level.block.entity.EnderChestBlockEntity) return false;
+        if (be instanceof net.minecraft.world.level.block.entity.ChestBlockEntity
+                || be instanceof net.minecraft.world.level.block.entity.BarrelBlockEntity
+                || be instanceof net.minecraft.world.level.block.entity.ShulkerBoxBlockEntity) {
+            return true;
+        }
+
+        ResourceLocation blockId = BuiltInRegistries.BLOCK.getKey(be.getBlockState().getBlock());
+        if (blockId != null && isExcludedStoragePath(blockId.getPath().toLowerCase(java.util.Locale.ROOT))) {
+            return false;
+        }
 
         if (be instanceof net.minecraft.world.level.block.entity.AbstractFurnaceBlockEntity
                 || be instanceof net.minecraft.world.level.block.entity.BrewingStandBlockEntity
@@ -104,7 +182,10 @@ public final class SubspaceManager {
         }
 
         String className = be.getClass().getName().toLowerCase(java.util.Locale.ROOT);
-        if (className.contains("roulette") || className.contains("plushie") || className.contains("pool")) {
+        if (className.contains("roulette") || className.contains("plushie") || className.contains("pool")
+                || className.contains("furnace") || className.contains("craft") || className.contains("anvil")
+                || className.contains("smith") || className.contains("forge") || className.contains("table")
+                || className.contains("enchant")) {
             return false;
         }
 
@@ -255,7 +336,7 @@ public final class SubspaceManager {
         for (int cx = minChunkX; cx <= maxChunkX; cx++) {
             for (int cz = minChunkZ; cz <= maxChunkZ; cz++) {
                 net.minecraft.world.level.chunk.LevelChunk chunk = level.getChunk(cx, cz);
-                if (chunk != null) {
+                if (chunk != null && !chunk.getBlockEntities().isEmpty()) {
                     List<net.minecraft.world.level.block.entity.BlockEntity> snapshot;
                     try {
                         snapshot = new java.util.ArrayList<>(chunk.getBlockEntities().values());
@@ -266,8 +347,7 @@ public final class SubspaceManager {
                         if (be != null && !be.isRemoved()) {
                             BlockPos pos = be.getBlockPos();
                             if (pos.getX() >= ox - radius && pos.getX() <= ox + radius &&
-                                    pos.getZ() >= oz - radius && pos.getZ() <= oz + radius &&
-                                    pos.getY() >= oy - 5 && pos.getY() <= oy + 40) {
+                                    pos.getZ() >= oz - radius && pos.getZ() <= oz + radius) {
                                 if (isStorageBlock(be, level)) {
                                     chestEntities.add(be);
                                 }
@@ -300,14 +380,19 @@ public final class SubspaceManager {
     }
 
     public static void reconcileSubspaceStorage(List<Container> containers, SystemData data) {
+        reconcileSubspaceStorage(containers, data, false);
+    }
+
+    public static void reconcileSubspaceStorage(List<Container> containers, SystemData data, boolean allowInitialMigration) {
         net.minecraft.core.NonNullList<ItemStack> items = data.getSubspaceItems();
 
-        // Determinar si los cofres físicos acaban de ser generados por primera vez y están 100% vacíos
-        boolean allPhysicalEmpty = true;
-        for (Container chest : containers) {
-            if (!chest.isEmpty()) {
-                allPhysicalEmpty = false;
-                break;
+        boolean allPhysicalEmpty = allowInitialMigration;
+        if (allPhysicalEmpty) {
+            for (Container chest : containers) {
+                if (!chest.isEmpty()) {
+                    allPhysicalEmpty = false;
+                    break;
+                }
             }
         }
 
@@ -320,12 +405,9 @@ public final class SubspaceManager {
                 ItemStack physicalStack = chest.getItem(s);
 
                 if (allPhysicalEmpty && !virtualStack.isEmpty()) {
-                    // Migración / restauración inicial exclusiva tras generar un cofre nuevo vacío
                     chest.setItem(s, virtualStack.copy());
                     changed = true;
-                } else {
-                    // El estado físico en el cofre es la fuente de verdad absoluta.
-                    // Si el jugador extrae un ítem, el slot virtual se vacía inmediatamente para erradicar cualquier duplicación.
+                } else if (!containers.isEmpty()) {
                     if (globalIndex < items.size()) {
                         items.set(globalIndex, physicalStack.isEmpty() ? ItemStack.EMPTY : physicalStack.copy());
                     }
@@ -340,11 +422,14 @@ public final class SubspaceManager {
 
     public static void syncWorldToSubspace(ServerLevel level, ServerPlayer player) {
         try {
-            int ox = getPlotOriginX(player);
-            int oz = getPlotOriginZ(player);
+            int ox = getEffectivePlotOriginX(player);
+            int oz = getEffectivePlotOriginZ(player);
             int oy = getPlotOriginY();
 
             List<Container> containers = getPlotChestContainers(level, ox, oy, oz);
+            if (containers.isEmpty() && player.serverLevel().dimension().equals(SUBSPACE_REALM)) {
+                containers = getPlotChestContainers(level, player.getBlockX(), oy, player.getBlockZ());
+            }
             int totalPhysicalSlots = 0;
             for (Container c : containers) {
                 totalPhysicalSlots += c.getContainerSize();
@@ -363,22 +448,32 @@ public final class SubspaceManager {
 
             data.ensureSubspaceCapacity(Math.max(54, unlockedSlots));
 
+            // Solo sobrescribir la lista virtual si realmente se encontraron cofres en la parcela
+            int nonEmptyCount = 0;
             if (!containers.isEmpty()) {
                 net.minecraft.core.NonNullList<ItemStack> items = data.getSubspaceItems();
                 int globalIndex = 0;
                 for (Container chest : containers) {
                     int cSize = chest.getContainerSize();
                     for (int s = 0; s < cSize; s++) {
+                        ItemStack st = chest.getItem(s);
+                        if (!st.isEmpty()) nonEmptyCount++;
                         if (globalIndex < items.size()) {
-                            items.set(globalIndex, chest.getItem(s).copy());
+                            items.set(globalIndex, st.copy());
                         }
                         globalIndex++;
                     }
                 }
-                while (globalIndex < unlockedSlots && globalIndex < items.size()) {
+                while (globalIndex < items.size()) {
                     items.set(globalIndex, ItemStack.EMPTY);
                     globalIndex++;
                 }
+            }
+            AwakeningSystemMod.LOGGER.info("[SubspaceSync] pull player={} dim={} pos={} plot=({}, {}) containers={} slots={} nonEmpty={}",
+                    player.getName().getString(), player.serverLevel().dimension().location(),
+                    player.blockPosition(), ox, oz, containers.size(), totalPhysicalSlots, nonEmptyCount);
+            if (player.containerMenu instanceof SubspaceMenu sm) {
+                sm.broadcastChanges();
             }
             AwakeningSystemMod.sync(player);
         } catch (Throwable t) {
@@ -388,15 +483,26 @@ public final class SubspaceManager {
 
     public static void syncSubspaceToWorld(ServerLevel level, ServerPlayer player) {
         try {
-            int ox = getPlotOriginX(player);
-            int oz = getPlotOriginZ(player);
+            int ox = getEffectivePlotOriginX(player);
+            int oz = getEffectivePlotOriginZ(player);
             int oy = getPlotOriginY();
 
             List<Container> containers = getPlotChestContainers(level, ox, oy, oz);
+            if (containers.isEmpty() && player.serverLevel().dimension().equals(SUBSPACE_REALM)) {
+                containers = getPlotChestContainers(level, player.getBlockX(), oy, player.getBlockZ());
+            }
+            if (containers.isEmpty()) {
+                AwakeningSystemMod.LOGGER.info("[SubspaceSync] push player={} dim={} pos={} plot=({}, {}) containers=0",
+                        player.getName().getString(), player.serverLevel().dimension().location(),
+                        player.blockPosition(), ox, oz);
+                return;
+            }
+
             SystemData data = SystemEvents.data(player);
             net.minecraft.core.NonNullList<ItemStack> items = data.getSubspaceItems();
 
             int globalIndex = 0;
+            int changedChests = 0;
             for (Container chest : containers) {
                 int cSize = chest.getContainerSize();
                 boolean changed = false;
@@ -410,8 +516,12 @@ public final class SubspaceManager {
                 }
                 if (changed) {
                     chest.setChanged();
+                    changedChests++;
                 }
             }
+            AwakeningSystemMod.LOGGER.info("[SubspaceSync] push player={} dim={} pos={} plot=({}, {}) containers={} changedChests={}",
+                    player.getName().getString(), player.serverLevel().dimension().location(),
+                    player.blockPosition(), ox, oz, containers.size(), changedChests);
         } catch (Throwable t) {
             AwakeningSystemMod.LOGGER.error("Error al sincronizar Subespacio a mundo", t);
         }
@@ -588,10 +698,12 @@ public final class SubspaceManager {
         player.teleportTo(subspaceLevel, originX + 0.5D, originY + 1.0D, originZ - 2.5D, 0.0F, 0.0F);
         player.fallDistance = 0.0F;
 
+        boolean structureFreshlyCreated = false;
         // Si la estructura construida es inferior al nivel alcanzado o el área está vacía, construirla/actualizarla
         if (data.subspaceBuiltLevel() < data.subspaceLevel()) {
             regenerateSubspaceStructure(player, subspaceLevel);
             data.setSubspaceBuiltLevel(data.subspaceLevel());
+            structureFreshlyCreated = true;
             AwakeningSystemMod.sync(player);
         } else {
             BlockPos centerBelow = new BlockPos(originX, originY - 1, originZ);
@@ -599,6 +711,7 @@ public final class SubspaceManager {
             if (subspaceLevel.getBlockState(centerBelow).isAir() && subspaceLevel.getBlockState(centerPos).isAir()) {
                 ensureSubspaceStructure(subspaceLevel, originX, originY, originZ, data.subspaceLevel());
                 data.setSubspaceBuiltLevel(data.subspaceLevel());
+                structureFreshlyCreated = true;
                 AwakeningSystemMod.sync(player);
             }
         }
@@ -615,7 +728,7 @@ public final class SubspaceManager {
             data.setSubspaceUnlockedSlots(unlockedSlots);
             data.ensureSubspaceCapacity(unlockedSlots);
         }
-        reconcileSubspaceStorage(containers, data);
+        reconcileSubspaceStorage(containers, data, structureFreshlyCreated);
 
         // Purgar rigurosamente cualquier item tirado en el suelo dentro de la parcela al entrar
         net.minecraft.world.phys.AABB entryArea = new net.minecraft.world.phys.AABB(
@@ -737,6 +850,9 @@ public final class SubspaceManager {
     }
 
     public static void clearBedrockBelow(ServerLevel level, int ox, int oz, int radius) {
+        if (level == null || level.dimension().equals(SUBSPACE_REALM)) {
+            return;
+        }
         try {
             BlockPos.MutableBlockPos mpos = new BlockPos.MutableBlockPos();
             int minY = level.getMinBuildHeight();
@@ -835,8 +951,8 @@ public final class SubspaceManager {
 
         SystemData data = SystemEvents.data(player);
         int lvl = data.subspaceLevel();
-        int ox = getPlotOriginX(player);
-        int oz = getPlotOriginZ(player);
+        int ox = getEffectivePlotOriginX(player);
+        int oz = getEffectivePlotOriginZ(player);
         int oy = getPlotOriginY();
 
         int cleanRadius = 24; // Amplio para cubrir completamente todos los niveles de estructura (hasta 25x25)
@@ -852,16 +968,28 @@ public final class SubspaceManager {
             }
         }
 
-        // 1. Sincronizar primero cualquier ítem que esté en cofres del mundo al SystemData del jugador
-        // para asegurar que nada se pierda antes de la regeneración
-        try {
-            syncWorldToSubspace(level, player);
-        } catch (Throwable t) {
-            AwakeningSystemMod.LOGGER.error("Error sincronizando items previos de subespacio", t);
+        // 1. Respaldar TODOS los cofres, hornos, mesas y bloques utilitarios del jugador antes de regenerar
+        record SavedPlotBlock(BlockPos pos, BlockState state, CompoundTag beTag) {}
+        java.util.List<SavedPlotBlock> savedBlocks = new java.util.ArrayList<>();
+        BlockPos.MutableBlockPos mpos = new BlockPos.MutableBlockPos();
+        for (int dx = -cleanRadius; dx <= cleanRadius; dx++) {
+            for (int dz = -cleanRadius; dz <= cleanRadius; dz++) {
+                for (int y = oy - 6; y <= oy + 26; y++) {
+                    mpos.set(ox + dx, y, oz + dz);
+                    BlockState st = level.getBlockState(mpos);
+                    if (st.isAir()) continue;
+                    BlockEntity be = level.getBlockEntity(mpos);
+                    boolean isStorage = (be != null && isStorageBlock(be, level)) || isStorageBlockState(st, level, mpos);
+                    boolean isUtility = isAllowedSubspaceUtilityBlock(st, level, mpos);
+                    if (isStorage || isUtility) {
+                        CompoundTag tag = (be != null) ? be.saveWithFullMetadata(level.registryAccess()) : null;
+                        savedBlocks.add(new SavedPlotBlock(mpos.immutable(), st, tag));
+                    }
+                }
+            }
         }
 
-        // 2. Limpieza segura y 100% anti-duplicación de la parcela previa
-        BlockPos.MutableBlockPos mpos = new BlockPos.MutableBlockPos();
+        // 2. Limpieza segura de la parcela previa (sin soltar ítems al suelo)
         for (int dx = -cleanRadius; dx <= cleanRadius; dx++) {
             for (int dz = -cleanRadius; dz <= cleanRadius; dz++) {
                 for (int y = oy - 6; y <= oy + 26; y++) {
@@ -883,14 +1011,10 @@ public final class SubspaceManager {
                                 }
                             }
                         } catch (Throwable ignored) {}
-
-                        // Remover la entidad de bloque ANTES de reemplazar el bloque por aire
-                        // Esto garantiza que Containers.dropContentsOnDestroy no encuentre la entidad y no suelte ítems
                         level.removeBlockEntity(mpos);
                     }
 
                     if (!level.getBlockState(mpos).isAir()) {
-                        // Flag 50 = UPDATE_CLIENTS (2) | UPDATE_SUPPRESS_DROPS (32) | UPDATE_KNOWN_SHAPE (16)
                         level.setBlock(mpos, Blocks.AIR.defaultBlockState(), 50);
                     }
                 }
@@ -910,6 +1034,48 @@ public final class SubspaceManager {
         // 3. Colocar la nueva estructura del nivel correspondiente
         ensureSubspaceStructure(level, ox, oy, oz, lvl);
 
+        // 3b. Restaurar todos los cofres, hornos, mesas y bloques utilitarios del jugador en sus posiciones exactas
+        for (SavedPlotBlock saved : savedBlocks) {
+            BlockPos targetPos = saved.pos();
+            BlockState existing = level.getBlockState(targetPos);
+            boolean canOverwrite = existing.isAir()
+                    || isStorageBlockState(existing, level, targetPos)
+                    || isAllowedSubspaceUtilityBlock(existing, level, targetPos);
+            if (!canOverwrite) {
+                // Si una pared de la nueva estructura ocupa ese punto, buscar el espacio libre más cercano en la sala
+                BlockPos fallback = null;
+                for (int r = 1; r <= 12 && fallback == null; r++) {
+                    for (int fx = -r; fx <= r && fallback == null; fx++) {
+                        for (int fz = -r; fz <= r && fallback == null; fz++) {
+                            BlockPos cand = new BlockPos(ox + fx, targetPos.getY(), oz + fz);
+                            if (level.getBlockState(cand).isAir() && !level.getBlockState(cand.below()).isAir()) {
+                                fallback = cand;
+                            }
+                        }
+                    }
+                }
+                if (fallback != null) {
+                    targetPos = fallback;
+                }
+            }
+            BlockEntity oldBe = level.getBlockEntity(targetPos);
+            if (oldBe != null) {
+                level.removeBlockEntity(targetPos);
+            }
+            level.setBlock(targetPos, saved.state(), 2);
+            if (saved.beTag() != null) {
+                CompoundTag tagCopy = saved.beTag().copy();
+                tagCopy.putInt("x", targetPos.getX());
+                tagCopy.putInt("y", targetPos.getY());
+                tagCopy.putInt("z", targetPos.getZ());
+                BlockEntity restoredBe = BlockEntity.loadStatic(targetPos, saved.state(), tagCopy, level.registryAccess());
+                if (restoredBe != null) {
+                    level.setBlockEntity(restoredBe);
+                    restoredBe.setChanged();
+                }
+            }
+        }
+
         // Purgar de nuevo cualquier entidad de ítem que pudiera haberse generado al colocar la estructura
         for (net.minecraft.world.entity.item.ItemEntity itemEntity : level.getEntitiesOfClass(net.minecraft.world.entity.item.ItemEntity.class, plotArea)) {
             itemEntity.discard();
@@ -919,9 +1085,11 @@ public final class SubspaceManager {
         player.teleportTo(level, ox + 0.5D, oy + 1.0D, oz - 2.5D, 0.0F, 0.0F);
         player.fallDistance = 0.0F;
 
-        // 5. Sincronizar y reconciliar contenedores nuevos
+        // 5. Sincronizar contenedores preservados (solo migrar desde lista virtual si no había cofres guardados)
         List<Container> containers = getPlotChestContainers(level, ox, oy, oz);
-        reconcileSubspaceStorage(containers, data);
+        if (savedBlocks.isEmpty()) {
+            reconcileSubspaceStorage(containers, data, true);
+        }
         syncWorldToSubspace(level, player);
 
         // Purgar por tercera vez cualquier ItemEntity residual

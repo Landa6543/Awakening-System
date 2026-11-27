@@ -135,7 +135,9 @@ public final class GuildEventHandler {
         } else if (areAlliesOrSameGuild(player, shadowMob)) {
             allianceType = 2; // Aliado de gremio o alianza
         }
-        PacketDistributor.sendToPlayer(player, new SyncShadowAlliancePayload(shadowMob.getId(), allianceType));
+        int squadId = shadowMob.getPersistentData().contains("shadow_squad_id")
+                ? shadowMob.getPersistentData().getInt("shadow_squad_id") : -1;
+        PacketDistributor.sendToPlayer(player, new SyncShadowAlliancePayload(shadowMob.getId(), allianceType, squadId));
     }
 
     @SubscribeEvent

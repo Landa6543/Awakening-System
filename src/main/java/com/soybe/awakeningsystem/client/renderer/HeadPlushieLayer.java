@@ -65,7 +65,16 @@ public class HeadPlushieLayer<T extends LivingEntity, M extends EntityModel<T> &
         } else if (headStack.getItem() instanceof BlockItem bi) {
             String path = BuiltInRegistries.BLOCK.getKey(bi.getBlock()).getPath();
             var tribute = PlushieBlockEntityRenderer.TRIBUTES.get(path);
-            ResourceLocation chibiTexture = tribute != null ? tribute.fallbackTexture() : PlushieBlockEntityRenderer.CHIBI_SKIN_PLUSHIES.get(path);
+            ResourceLocation chibiTexture;
+            if (tribute != null) {
+                var profile = new ResolvableProfile(
+                        java.util.Optional.of(tribute.name()),
+                        java.util.Optional.of(tribute.uuid()),
+                        new com.mojang.authlib.properties.PropertyMap());
+                chibiTexture = CustomPlayerPlushieRenderer.resolveLiveSkin(profile, tribute.fallbackTexture());
+            } else {
+                chibiTexture = PlushieBlockEntityRenderer.CHIBI_SKIN_PLUSHIES.get(path);
+            }
 
             if (chibiTexture != null) {
                 renderChibiHeadWithTexture(chibiTexture, poseStack, bufferSource, packedLight, headScale);
@@ -109,58 +118,7 @@ public class HeadPlushieLayer<T extends LivingEntity, M extends EntityModel<T> &
     }
 
     private void renderCustomPlushieHead(ItemStack stack, LivingEntity entity, PoseStack poseStack, MultiBufferSource bufferSource, int packedLight, float scale) {
-        ResolvableProfile profile = stack.get(DataComponents.PROFILE);
-        ResourceLocation skinTexture = null;
-
-        if (profile != null) {
-            String profileName = profile.name().orElse("");
-            UUID profileId = profile.id().orElse(null);
-
-            var localPlayer = Minecraft.getInstance().player;
-            if (localPlayer != null && ((profileId != null && profileId.equals(localPlayer.getUUID()))
-                    || (!profileName.isEmpty() && profileName.equalsIgnoreCase(localPlayer.getGameProfile().getName())))) {
-                skinTexture = localPlayer.getSkin().texture();
-            }
-
-            if (skinTexture == null) {
-                if (profileName.equalsIgnoreCase("LanderAlo")) {
-                    skinTexture = LANDER_TEXTURE;
-                } else if (profileName.equalsIgnoreCase("Schvis") || (profileId != null && profileId.equals(CustomPlayerPlushieBlock.SCHVIS_UUID))) {
-                    skinTexture = ResourceLocation.fromNamespaceAndPath(AwakeningSystemMod.MOD_ID, "textures/block/schvisplushie.png");
-                } else if (profileName.toLowerCase().startsWith("techidna") || (profileId != null && profileId.equals(CustomPlayerPlushieBlock.TECHIDNA_UUID))) {
-                    skinTexture = ResourceLocation.fromNamespaceAndPath(AwakeningSystemMod.MOD_ID, "textures/block/techidnaplushie.png");
-                } else if (profileName.toLowerCase().startsWith("tomcraft") || (profileId != null && profileId.equals(CustomPlayerPlushieBlock.TOMCRAFT_UUID))) {
-                    skinTexture = ResourceLocation.fromNamespaceAndPath(AwakeningSystemMod.MOD_ID, "textures/block/tomcraftplushie.png");
-                } else if (profileName.equalsIgnoreCase("Nandachan") || (profileId != null && profileId.equals(CustomPlayerPlushieBlock.NANDACHAN_UUID))) {
-                    skinTexture = ResourceLocation.fromNamespaceAndPath(AwakeningSystemMod.MOD_ID, "textures/block/nandachanplushie.png");
-                } else if (profileName.equalsIgnoreCase("MisticPotato") || profileName.equalsIgnoreCase("Potato") || (profileId != null && profileId.equals(CustomPlayerPlushieBlock.MISTIC_POTATO_UUID))) {
-                    skinTexture = ResourceLocation.fromNamespaceAndPath(AwakeningSystemMod.MOD_ID, "textures/block/misticpotatoplushie.png");
-                }
-            }
-
-            if (skinTexture == null) {
-                try {
-                    var insecureSkin = Minecraft.getInstance().getSkinManager().getInsecureSkin(profile.gameProfile());
-                    if (insecureSkin != null && insecureSkin.texture() != null) {
-                        skinTexture = insecureSkin.texture();
-                    }
-                } catch (Exception e) {
-                    AwakeningSystemMod.LOGGER.debug("Failed to retrieve insecure skin for profile: {}", e.getMessage(), e);
-                }
-            }
-        }
-
-        if (skinTexture == null) {
-            var localPlayer = Minecraft.getInstance().player;
-            if (localPlayer != null) {
-                skinTexture = localPlayer.getSkin().texture();
-            } else if (profile != null && profile.id().isPresent()) {
-                skinTexture = DefaultPlayerSkin.get(profile.id().get()).texture();
-            } else {
-                skinTexture = DefaultPlayerSkin.getDefaultTexture();
-            }
-        }
-
+        ResourceLocation skinTexture = CustomPlayerPlushieRenderer.resolveLiveSkin(stack.get(DataComponents.PROFILE));
         renderChibiHeadWithTexture(skinTexture, poseStack, bufferSource, packedLight, scale);
     }
 

@@ -7,6 +7,49 @@
 
 ---
 
+## 🛠️ Correcciones Recientes, Balance y Rendimiento (Actualización 0.3.5)
+* **Anti-Duplicación, Sincronización y Preservación del Subespacio (`SubspaceManager`, `SystemEvents`):**
+  * Sincronización bidireccional segura y no destructiva entre los cofres físicos de la parcela y `SystemData` al abrir/cerrar cofres en `subspace_realm` (`onSubspaceContainerClose`), abrir el menú del Sistema y cambiar de dimensión (`onDimensionChange`).
+  * `isStorageBlock` acepta siempre `ChestBlockEntity`, `BarrelBlockEntity` y `ShulkerBoxBlockEntity`, con detección ampliada a radio `96` y respaldo en la posición actual del jugador dentro de `subspace_realm`.
+  * Al mejorar o regenerar la estructura del Subespacio (`regenerateSubspaceStructure`), ahora se respaldan y restauran **todos** los cofres, hornos, mesas y bloques utilitarios del jugador con su `BlockState` y NBT completo, evitando pérdida de cofres o loot.
+* **Cultivo de Qi y Meditación (`SystemEvents`):**
+  * El cultivo de Qi se **desbloquea** al visitar el mundo Murim (`awakening_system:murim`); una vez desbloqueado se puede cultivar en el Overworld, Subespacio y demás dimensiones (manteniendo los multiplicadores de densidad por zona/dimensión), pero queda bloqueado dentro de la Torre (`ranker_tower` y `tower_floor_*`).
+  * Corregido el bug por el cual agacharse al volar (`flying` / `isFallFlying`) activaba la meditación en el aire; ahora requiere estar en el suelo o en el agua sin volar.
+  * Traducción completa al inglés y español de los avisos de cultivo y del bonus de entrenamiento (`+ Attribute Bonus` / `+ Bonus de Atributo`).
+* **Interfaz del Sistema, Modo SAO, Tienda y Diálogos (`SystemScreen`, `SaoPanelScreen`, `NpcDialogueScreen`):**
+  * Añadido scroll vertical con rueda del ratón, recorte `enableScissorScaled` y barra lateral en `MISSIONS -> DAILY` para visualizar completa la `Prueba de Rango` (`Rank Trial`) localizada.
+  * Añadida la barra de `Prueba de Rango` en la pestaña de misiones diarias del modo SAO (`SaoPanelScreen`).
+  * Precios y saldos abreviados en formato compacto (`K`, `M`, `B`) en toda la Tienda del Sistema (catálogo de compra, botones de cofres, listado de venta y saldo).
+  * Corregido el botón `ON/OFF` de velocidad de Agilidad en `ATTRIBUTES // CORE` con actualización visual inmediata en cliente.
+  * Corregida la selección con mouse en `NpcDialogueScreen` aplicando el mismo clamp de scroll y filtrando clics a opciones visibles.
+* **Tablón de Misiones de la Torre (`TowerDailyMissionManager`, `TowerMissionBoardScreen`):**
+  * Reemplazadas las misiones de recolección de bloques aleatorios por trofeos y drops de criaturas de la Torre (Carne Podrida, Cremas de Magma, Esquirlas de Prismarina, Perlas de Ender, Lágrimas de Ghast, Pólvora, Ojos de Araña).
+  * Traducción completa EN/ES de toda la interfaz del tablón, el expediente modal, los botones y las 36 misiones de la Torre.
+  * Corregido el sonido de denegación (`VILLAGER_NO`) al hacer clic fuera del botón de bloqueo y oscurecido el fondo detrás del expediente modal.
+* **Piso 6 de la Torre y Balance de Combate (`TowerFloorTerrainDeep`, `GreatTowerWorldManager`, `RpgLevelZoneManager`):**
+  * Rediseñados los volcanes del Piso 6 con conos naturales y calderas suaves (sin chimeneas cilíndricas), ríos de lava a nivel plano constante (`Y=31`) con orillas suavizadas y limpieza ampliada de líquidos alrededor del spawn.
+  * Rebalanceado el escalado de vida (`hpMultiplier`) y daño (`ATTACK_DAMAGE`, tope aumentado de `65` a `220`) de todos los enemigos en `RpgLevelZoneManager` manteniendo el escalado dinámico por nivel del jugador/zona.
+* **Zona de Penalización (`PenaltyZoneManager`):**
+  * Corregido el temporizador de 5 minutos (`ServerBossEvent`) para que sea visible también en modo Creativo/Espectador dentro de `penalty_zone`.
+* **Texturas:**
+  * Nuevas texturas `16x16` para `raw_ignite.png`, `raw_verdanite.png`, `raw_orichalcum.png`, `raw_lumenite.png` y `eridanium_block.png`; restauradas las texturas originales de `celestial_waypoint` y cofres del Sistema.
+* **Ejército de Sombras, Escuadrones y Combate (`SystemEvents`, `BaseClassSkills`, `RpgLevelZoneManager`, `SaoShadowScreen`, `ShadowCommandScreen`):**
+  * Escalado de Sombras igual que los enemigos según el nivel RPG del mob/jugador (`RpgLevelZoneManager`), manteniendo sus bonificadores de Rango de Sombra.
+  * Las habilidades AoE y a distancia de sombras aliadas (`ShadowInfantryEntity`, `ShadowMonarchBossEntity`) ya no dañan ni aplican efectos negativos al dueño o aliados.
+  * Ampliado el rango de alejamiento antes de teletransporte a `120` bloques en `tickShadowSoldiers` y mayor distancia de seguimiento en `ShadowDirewolfEntity`.
+  * Preservado el escuadrón (`SquadId` / `shadow_squad_id`) al desplegar y guardar sombras; sincronizado el escuadrón al cliente (`SyncShadowAlliancePayload`) para mostrar el conteo real "en combate"; tecla `V` invoca únicamente sombras del escuadrón seleccionado (también en `ne_shadow_extraction`); añadido botón rojo `✕` para eliminar sombras no deseadas.
+* **Armas con Epic Fight, Tienda y Curios (`AwakeningSystemMod`, `AwakeningSystemClient`, `BuyShopItemPayload`, `CuriosCompat`, `ManhwaArtifactItem`):**
+  * `onMouseButtonPre` registrado con `EventPriority.HIGHEST` para que las habilidades de clic derecho de armas funcionen con Epic Fight, incluso llevando tótems en mano secundaria o apuntando a bloques no interactivos.
+  * Compras en cantidad (`16`/`64`) agrupadas en un solo paquete `BuyShopItemPayload`, eliminando el lag y el sonido superpuesto.
+  * Compatibilidad con Curios (`ring`, `necklace`, `curio`) para `demon_monarch_ring`, `king_slayer_necklace` y `link_ring` con detección activa de efectos (`CuriosCompat.hasEquippedPredicate`), y corregido el nombre de `demon_monarch_ring` (*Anillo del Monarca Demonio* / *Demon Monarch Ring*).
+* **Torre, Subespacio, Modo SAO y Rendimiento (`GreatTowerWorldManager`, `MutantWardenContent`, `SubspaceManager`, `SaoPanelScreen`, `SaoMenuScreen`):**
+  * Quitados los Discípulos de Monte Hua del Piso 17 (reemplazados por Discípulos de la Secta Sangrienta) y restringido `MutantWardenEntity` al Piso 10 (piso del Warden/Sculk).
+  * En `SubspaceManager`: radio de escaneo de cofres reducido de `96` a `32`, omitido `clearBedrockBelow` en `subspace_realm` y excluida la piedra luminosa estructural al mejorar a Nivel 2.
+  * En modo SAO: ampliado `SaoPanelScreen` (`PH = 224`) para `Prueba de Rango`, añadido botón `Sombras` en `Habilidades`, y en `SaoMenuScreen` abreviadas las monedas (`K`/`M`/`B`), corregido el `Z` de tooltips y limpiado `GL_DEPTH_BUFFER_BIT` para que la skin del jugador sea siempre visible.
+  * Optimizaciones de FPS/TPS: caché de `ResolvableProfile` en peluches tributo, filtro de distancia previo en `onRenderNameTag` y salto del tick de `ElementalReactionManager` sin auras/textos activos.
+
+---
+
 ## 💬 Motor de Diálogos Cinematográficos RPG (Inspirado en Saints & Dragons)
 Implementación integral de un sistema de diálogos interactivos cinematográficos con diseño holográfico de *Solo Leveling*:
 * **Giro Cinemático de Cámara (`beginCameraTurnToSpeaker`):** Al iniciar conversación con un NPC, la cámara del jugador rota suavemente hacia el rostro del interlocutor mediante interpolación cúbica fluida (`easeInOutCubic`, 260ms) sin pausar el juego ni distorsionar los shaders del mundo.
@@ -21,7 +64,7 @@ Implementación integral de un sistema de diálogos interactivos cinematográfic
 
 ---
 
-## 🎖️ NPC Evaluador de la Asociación (Woo Jin-Chul) & Ascenso de Rango
+## 🎖️ NPC Evaluador de la Asociación & Ascenso de Rango
 * **Entidad `hunter_evaluator`:** Inspector oficial de la Asociación de Cazadores con modelo bípedo y traje formal.
 * **Evaluación de Maná Oficial:**
   * Detecta si el jugador ha llegado al límite de nivel de su rango (`isEvaluationPending`).
@@ -35,7 +78,7 @@ Implementación integral de un sistema de diálogos interactivos cinematográfic
   * Silenciado el sonido genérico de interacción repetitiva.
 * **Venta del Rastreador de la Asociación:** Posibilidad de adquirir el `hunter_association_tracker` por 100 Monedas directamente desde el diálogo.
 * **Comando y Huevo Generador:**
-  * Comando `/system summon_evaluator` para invocar al Inspector Woo Jin-Chul en la posición actual.
+  * Comando `/system summon_evaluator` para invocar al Inspector de la Asociación en la posición actual.
   * Objeto `hunter_evaluator_spawn_egg` registrado en pestaña creativa.
 
 ---

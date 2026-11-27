@@ -148,6 +148,7 @@ public final class AwakeningSystemClient {
     public record ShadowEmergenceData(long startTimeMs, long durationMs, double x, double y, double z, float height) {}
     public static final java.util.Set<Integer> SHADOW_SOLDIER_IDS = java.util.concurrent.ConcurrentHashMap.newKeySet();
     public static final java.util.Map<Integer, Byte> SHADOW_ALLIANCE_MAP = new java.util.concurrent.ConcurrentHashMap<>();
+    public static final java.util.Map<Integer, Integer> SHADOW_SQUAD_MAP = new java.util.concurrent.ConcurrentHashMap<>();
     public static final java.util.Set<Integer> NON_SHADOW_ENTITY_IDS = java.util.concurrent.ConcurrentHashMap.newKeySet();
     public static final java.util.Set<Integer> CONFIGURED_SHADOW_TEAM_IDS = java.util.concurrent.ConcurrentHashMap.newKeySet();
     public static final java.util.Map<Integer, ShadowEmergenceData> SHADOW_EMERGENCE_MAP = new java.util.concurrent.ConcurrentHashMap<>();
@@ -156,6 +157,11 @@ public final class AwakeningSystemClient {
         if (payload == null) return;
         SHADOW_SOLDIER_IDS.add(payload.entityId());
         SHADOW_ALLIANCE_MAP.put(payload.entityId(), payload.allianceType());
+        SHADOW_SQUAD_MAP.put(payload.entityId(), payload.squadId());
+    }
+
+    public static int getShadowSquadId(int entityId) {
+        return SHADOW_SQUAD_MAP.getOrDefault(entityId, -1);
     }
 
     public static byte getShadowAlliance(int entityId) {
@@ -960,6 +966,28 @@ public final class AwakeningSystemClient {
         if (SystemItems.SIDERITE_BOOTS.isBound()) {
             event.registerItem(sideriteArmorExt, SystemItems.SIDERITE_BOOTS.get());
         }
+
+        net.neoforged.neoforge.client.extensions.common.IClientItemExtensions plushieExt = new net.neoforged.neoforge.client.extensions.common.IClientItemExtensions() {
+            private com.soybe.awakeningsystem.client.renderer.PlushieItemRenderer plushieRenderer;
+
+            @Override
+            public net.minecraft.client.renderer.BlockEntityWithoutLevelRenderer getCustomRenderer() {
+                if (this.plushieRenderer == null) {
+                    this.plushieRenderer = new com.soybe.awakeningsystem.client.renderer.PlushieItemRenderer();
+                }
+                return this.plushieRenderer;
+            }
+        };
+
+        if (SystemItems.CUSTOM_PLAYER_PLUSHIE.isBound()) {
+            event.registerItem(plushieExt, SystemItems.CUSTOM_PLAYER_PLUSHIE.get());
+        }
+        for (String tributeId : com.soybe.awakeningsystem.client.renderer.PlushieBlockEntityRenderer.TRIBUTES.keySet()) {
+            var holder = SystemItems.PLUSHIE_ITEMS.get(tributeId);
+            if (holder != null && holder.isBound()) {
+                event.registerItem(plushieExt, holder.get());
+            }
+        }
     }
 
     public static void onClientEntityJoinLevel(net.neoforged.neoforge.event.entity.EntityJoinLevelEvent event) {
@@ -1193,12 +1221,14 @@ public final class AwakeningSystemClient {
                 while (it.hasNext()) {
                     int sid = it.next();
                     net.minecraft.world.entity.Entity ent = minecraft.level.getEntity(sid);
-                    if (ent == null || !ent.isAlive()) {
+                    if (ent != null && !ent.isAlive()) {
                         it.remove();
                         CONFIGURED_SHADOW_TEAM_IDS.remove(sid);
                         SHADOW_ALLIANCE_MAP.remove(sid);
+                        SHADOW_SQUAD_MAP.remove(sid);
                         continue;
                     }
+                    if (ent == null) continue;
                     if (ent instanceof net.minecraft.world.entity.LivingEntity living) {
                         if (minecraft.player != null && minecraft.player.distanceToSqr(living) > 40.0D * 40.0D) continue;
                         double px = living.getX() + (living.getRandom().nextDouble() - 0.5D) * living.getBbWidth() * 0.9D;
@@ -1511,13 +1541,37 @@ public final class AwakeningSystemClient {
                     if (mc.player.isShiftKeyDown()) {
                         event.setCanceled(true);
                         activateWeaponSkill();
-                    } else if (mainHasWeapon && mc.player.getOffhandItem().isEmpty() && (mc.hitResult == null || mc.hitResult.getType() != net.minecraft.world.phys.HitResult.Type.BLOCK)) {
+                    } else if (mainHasWeapon && !isInteractiveBlockHit(mc) && !isUsableOffhandItem(mc.player.getOffhandItem(), mc.player)) {
                         event.setCanceled(true);
                         activateWeaponSkill();
                     }
                 }
             }
         }
+    }
+
+    private static boolean isInteractiveBlockHit(Minecraft mc) {
+        if (!(mc.hitResult instanceof net.minecraft.world.phys.BlockHitResult bhr)
+                || mc.hitResult.getType() != net.minecraft.world.phys.HitResult.Type.BLOCK
+                || mc.level == null) {
+            return false;
+        }
+        var state = mc.level.getBlockState(bhr.getBlockPos());
+        if (state.getMenuProvider(mc.level, bhr.getBlockPos()) != null) return true;
+        var block = state.getBlock();
+        return block instanceof net.minecraft.world.level.block.DoorBlock
+                || block instanceof net.minecraft.world.level.block.TrapDoorBlock
+                || block instanceof net.minecraft.world.level.block.ButtonBlock
+                || block instanceof net.minecraft.world.level.block.LeverBlock
+                || block instanceof net.minecraft.world.level.block.BedBlock
+                || block instanceof net.minecraft.world.level.block.FenceGateBlock;
+    }
+
+    private static boolean isUsableOffhandItem(net.minecraft.world.item.ItemStack offStack, net.minecraft.world.entity.player.Player player) {
+        if (offStack.isEmpty()) return false;
+        if (offStack.getItem() instanceof net.minecraft.world.item.BlockItem) return true;
+        if (offStack.getUseAnimation() != net.minecraft.world.item.UseAnim.NONE) return true;
+        return offStack.getUseDuration(player) > 0;
     }
 
     public static void activateSkillSlot(int slot) {
@@ -1586,7 +1640,11 @@ public final class AwakeningSystemClient {
     }
 
     public static void buyShopItem(String entryId) {
-        PacketDistributor.sendToServer(new BuyShopItemPayload(entryId));
+        buyShopItem(entryId, 1);
+    }
+
+    public static void buyShopItem(String entryId, int quantity) {
+        PacketDistributor.sendToServer(new BuyShopItemPayload(entryId, Math.max(1, quantity)));
     }
 
     public static void sellShopItem(String entryId, boolean sellAll) {
@@ -2565,11 +2623,12 @@ public final class AwakeningSystemClient {
             }
 
             // Renderizado de nivel de mob percibido individualmente para criaturas salvajes sin nombre
+            SystemData clientData = mc.player.getData(AwakeningSystemMod.PLAYER_SYSTEM);
+            int deadeyeLevel = (clientData != null && clientData.isSkillEnabled("deadeye")) ? clientData.skills().getOrDefault("deadeye", 0) : 0;
+            double maxDistSq = 576.0D + (deadeyeLevel * 300.0D);
+            if (mc.getCameraEntity() != null && mob.distanceToSqr(mc.getCameraEntity()) > maxDistSq) return;
+
             if (mob instanceof net.minecraft.world.entity.monster.Enemy || mob.getTags().contains("rpg_scaled") || RpgLevelZoneManager.isEligibleForRpgScaling(mob)) {
-                SystemData clientData = mc.player.getData(AwakeningSystemMod.PLAYER_SYSTEM);
-                int deadeyeLevel = (clientData != null && clientData.isSkillEnabled("deadeye")) ? clientData.skills().getOrDefault("deadeye", 0) : 0;
-                double maxDistSq = 576.0D + (deadeyeLevel * 300.0D);
-                if (mc.getCameraEntity() != null && mob.distanceToSqr(mc.getCameraEntity()) > maxDistSq) return;
 
                 int clientLevel = clientData != null ? Math.max(1, clientData.level()) : 1;
                 int perceivedLevel = getPerceivedMobLevel(mob, clientLevel);

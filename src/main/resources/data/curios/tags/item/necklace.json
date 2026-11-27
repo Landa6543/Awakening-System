@@ -1,4 +1,7 @@
 {
   "replace": false,
-  "values": ["awakening_system:link_ring"]
+  "values": [
+    "awakening_system:link_ring",
+    "awakening_system:king_slayer_necklace"
+  ]
 }

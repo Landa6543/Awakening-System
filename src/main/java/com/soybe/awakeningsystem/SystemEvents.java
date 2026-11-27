@@ -51,6 +51,7 @@ import com.soybe.awakeningsystem.entity.DragonBodyPart;
 import com.soybe.awakeningsystem.entity.ElectroRegisvineEntity;
 import com.soybe.awakeningsystem.entity.ElementalDemonKingBossEntity;
 import com.soybe.awakeningsystem.entity.ElementalLordBossEntity;
+import com.soybe.awakeningsystem.entity.FrostarmLawachurlEntity;
 import com.soybe.awakeningsystem.entity.GoblinShamanEntity;
 import com.soybe.awakeningsystem.entity.GreatSnowboarKingBossEntity;
 import com.soybe.awakeningsystem.entity.IgrisBossEntity;
@@ -68,11 +69,16 @@ import com.soybe.awakeningsystem.entity.PaimonEntity;
 import com.soybe.awakeningsystem.entity.PerpetualMechanicalArrayBossEntity;
 import com.soybe.awakeningsystem.entity.PyroRegisvineEntity;
 import com.soybe.awakeningsystem.entity.RhodeiaOceanidBossEntity;
+import com.soybe.awakeningsystem.entity.RuinGuardEntity;
+import com.soybe.awakeningsystem.entity.RuinHunterEntity;
 import com.soybe.awakeningsystem.entity.RuinSerpentBossEntity;
 import com.soybe.awakeningsystem.entity.SeriesNpcEntity;
 import com.soybe.awakeningsystem.entity.ShadowMonarchBossEntity;
 import com.soybe.awakeningsystem.entity.ShadowSoulEntity;
 import com.soybe.awakeningsystem.entity.StatueOfGodEntity;
+import com.soybe.awakeningsystem.entity.StonehideLawachurlEntity;
+import com.soybe.awakeningsystem.entity.ThunderhelmLawachurlEntity;
+import com.soybe.awakeningsystem.entity.WildfireEntity;
 import com.soybe.awakeningsystem.entity.YggdrasilTreantBossEntity;
 import com.soybe.awakeningsystem.entity.hypostasis.HypostasisBaseBossEntity;
 import com.soybe.awakeningsystem.fable.FableDefinitions;
@@ -1087,6 +1093,7 @@ public final class SystemEvents {
       PagodaTrialManager.clearAll();
       PhysicalRouletteManager.clearAll();
       SpiralAbyssManager.clearAll();
+      com.soybe.awakeningsystem.world.RuinGateManager.clearAll();
       SeriesStructureWorldGen.clearCache();
       TeyvatWorldGenManager.clearCache();
       ElementalReactionManager.clearAll();
@@ -1122,8 +1129,10 @@ public final class SystemEvents {
           com.soybe.awakeningsystem.world.SideriteMeteorManager.tick(server);
          tickShadowSoldiers(server);
 
-         for (ServerLevel sl : server.getAllLevels()) {
-            ElementalReactionManager.tickServer(sl);
+         if (ElementalReactionManager.hasActiveState()) {
+            for (ServerLevel sl : server.getAllLevels()) {
+               ElementalReactionManager.tickServer(sl);
+            }
          }
 
          if (server.getTickCount() % 40 == 0) {
@@ -1135,8 +1144,23 @@ public final class SystemEvents {
    }
 
    @SubscribeEvent
+   public static void onSubspaceContainerClose(net.neoforged.neoforge.event.entity.player.PlayerContainerEvent.Close event) {
+      if (event.getEntity() instanceof ServerPlayer sp
+            && sp.serverLevel().dimension().equals(SubspaceManager.SUBSPACE_REALM)
+            && !(event.getContainer() instanceof com.soybe.awakeningsystem.subspace.SubspaceMenu)) {
+         SubspaceManager.syncWorldToSubspace(sp.serverLevel(), sp);
+      }
+   }
+
+   @SubscribeEvent
    public static void onDimensionChange(PlayerChangedDimensionEvent event) {
       if (event.getEntity() instanceof ServerPlayer player) {
+         if (event.getFrom().equals(SubspaceManager.SUBSPACE_REALM) && player.getServer() != null) {
+            ServerLevel subLevel = player.getServer().getLevel(SubspaceManager.SUBSPACE_REALM);
+            if (subLevel != null) {
+               SubspaceManager.syncWorldToSubspace(subLevel, player);
+            }
+         }
          if (event.getFrom().equals(com.soybe.awakeningsystem.penalty.PenaltyZoneManager.PENALTY_ZONE)) {
             com.soybe.awakeningsystem.penalty.PenaltyZoneManager.onPlayerLeftPenaltyZone(player);
          }
@@ -1441,7 +1465,7 @@ public final class SystemEvents {
                            );
                         }
                      );
-               } else if (!spxx.hasPermissions(2)) {
+               } else if (!SubspaceManager.isAllowedSubspaceUtilityBlock(placed, spxx.serverLevel(), event.getPos()) && !spxx.hasPermissions(2)) {
                   event.setCanceled(true);
                   spxx.displayClientMessage(Component.translatable("awakening_system.msg.subespacio_el_subespacio_es_estrictamente_para"), true);
                   return;
@@ -1552,6 +1576,12 @@ public final class SystemEvents {
                && spawnType != MobSpawnType.COMMAND
                && spawnType != MobSpawnType.MOB_SUMMONED
                && spawnType != MobSpawnType.TRIGGERED) {
+               int towerFloor = GreatTowerWorldManager.getFloorForPos(sl, BlockPos.containing(event.getX(), event.getY(), event.getZ()));
+               if ((towerFloor == 5 || towerFloor == 11 || towerFloor == 15 || towerFloor == 21 || towerFloor == 25)
+                  && event.getEntity() instanceof net.minecraft.world.entity.monster.Enemy) {
+                  event.setSpawnCancelled(true);
+                  return;
+               }
                String namespace = BuiltInRegistries.ENTITY_TYPE.getKey(event.getEntity().getType()).getNamespace();
                if (!namespace.equals("awakening_system") && event.getEntity().getType() != EntityType.WARDEN) {
                   event.setSpawnCancelled(true);
@@ -2826,12 +2856,29 @@ public final class SystemEvents {
 
          checkAchievements(player, data);
          applyCompatibilityCombatSkills(player, data);
-         long day = player.level().getDayTime() / 24000L;
+         long day = player.server != null && player.server.overworld() != null
+            ? player.server.overworld().getDayTime() / 24000L
+            : player.level().getDayTime() / 24000L;
          updateDailyProgress(player, data, day, 1, 1);
          if (data.completeDaily(player.level().getGameTime())) {
             AwakeningSystemMod.notify(
                player, "awakening_system.notification.daily_complete.title", "awakening_system.notification.daily_complete.message", -9377537, new Object[0]
             );
+         }
+
+         // Progreso de la Comisión Diaria de la Asociación de Cazadores (Limpieza Perimetral / Caza de Jefes)
+         boolean isHunterTarget = (isHostileMob || isBoss || event.getEntity().getTags().contains("dungeon_mob") || event.getEntity().getTags().contains("tower_mob"))
+            && !(event.getEntity() instanceof ServerPlayer);
+         if (isHunterTarget) {
+            boolean justCompleted = data.recordHunterKill(day, isBoss);
+            if (justCompleted) {
+               player.playNotifySound(SoundEvents.UI_TOAST_CHALLENGE_COMPLETE, SoundSource.PLAYERS, 1.0F, 1.2F);
+               player.displayClientMessage(
+                  Component.translatable("awakening_system.screen.missions.hunter_salary_ready")
+                     .withStyle(ChatFormatting.GOLD, ChatFormatting.BOLD),
+                  true
+               );
+            }
          }
 
          data.recordAwakeningCombat();
@@ -2861,18 +2908,36 @@ public final class SystemEvents {
             }
          }
 
+         String customNameStr = entity.getCustomName() != null ? entity.getCustomName().getString().toUpperCase(Locale.ROOT) : "";
          boolean isSubjefe = entity.getTags().contains("dungeon_miniboss")
             || entity.getTags().contains("dungeon_chamber_boss")
             || entity.getTags().contains("dungeon_guardian")
-            || entity.getCustomName() != null
-               && (
-                  entity.getCustomName().getString().contains("[MINIJEFE]")
-                     || entity.getCustomName().getString().contains("[GUARDIÁN]")
-                     || entity.getCustomName().getString().contains("[JEFE DE CÁMARA]")
-               );
+            || entity.getTags().contains("miniboss")
+            || entity.getPersistentData().getBoolean("is_miniboss")
+            || entity.getPersistentData().getBoolean("IsMiniBoss")
+            || customNameStr.contains("[MINIJEFE]")
+            || customNameStr.contains("[MINIBOSS]")
+            || customNameStr.contains("[MINICHEFE]")
+            || customNameStr.contains("[МИНИ-БОСС]")
+            || customNameStr.contains("[GUARDIÁN]")
+            || customNameStr.contains("[GUARDIAN]")
+            || customNameStr.contains("[JEFE DE CÁMARA]")
+            || customNameStr.contains("[CHAMBER BOSS]");
+
          if (isSubjefe) {
+            // Drop Sanctuary / Dungeon Key (guaranteed 100% on miniboss kill)
+            if (SystemItems.DUNGEON_KEY != null && SystemItems.DUNGEON_KEY.isBound()) {
+               ItemStack keyStack = new ItemStack(SystemItems.DUNGEON_KEY.get(), 1);
+               ItemEntity dropped = entity.spawnAtLocation(keyStack);
+               if (dropped != null) {
+                  dropped.setGlowingTag(true);
+                  dropped.setExtendedLifetime();
+               }
+            }
+
             if (session != null) {
                session.minibossesDefeated++;
+               session.dungeonKeysDropped++;
                if (session.minibossesDefeated >= 2 && !session.bossBarrierOpen) {
                   session.openBossBarrierDirectly(level);
                } else if (level.getServer() != null) {
@@ -2883,70 +2948,135 @@ public final class SystemEvents {
                      }
                   }
                }
-            } else {
-               entity.spawnAtLocation(new ItemStack((ItemLike)SystemItems.DUNGEON_KEY.get(), 1));
+            }
+         } else if (session != null && !session.bossBarrierOpen && rand.nextFloat() < 0.035F) {
+            // Rare chance (3.5%) for regular dungeon mobs to drop a dungeon key if boss barrier is still locked
+            if (SystemItems.DUNGEON_KEY != null && SystemItems.DUNGEON_KEY.isBound()) {
+               ItemEntity dropped = entity.spawnAtLocation(new ItemStack(SystemItems.DUNGEON_KEY.get(), 1));
+               if (dropped != null) {
+                  dropped.setGlowingTag(true);
+                  dropped.setExtendedLifetime();
+               }
+               session.dungeonKeysDropped++;
+               if (level.getServer() != null) {
+                  for (ServerPlayer sp : session.getAllPlayers(level.getServer())) {
+                     if (sp != null) {
+                        sp.playNotifySound(SoundEvents.EXPERIENCE_ORB_PICKUP, SoundSource.PLAYERS, 1.2F, 1.4F);
+                        sp.sendSystemMessage(Component.translatable("awakening_system.dungeon.key_dropped"));
+                     }
+                  }
+               }
             }
          }
       }
 
-      if (entity.getPersistentData().getBoolean("is_overworld_miniboss")) {
-         entity.spawnAtLocation(new ItemStack((ItemLike)SystemItems.OVERWORLD_DUNGEON_KEY.get(), 1));
-      } else {
-         String dim = level.dimension().location().getPath().toLowerCase(Locale.ROOT);
-         if (dim.contains("nether")) {
-            if (entity instanceof WitherBoss) {
-               entity.spawnAtLocation(new ItemStack((ItemLike)SystemItems.NETHER_FLAME_KEY.get(), 1));
-            } else if ((entity instanceof WitherSkeleton || entity instanceof Blaze || entity instanceof PiglinBrute || entity instanceof Ghast)
-               && rand.nextFloat() < 0.08F) {
-               entity.spawnAtLocation(new ItemStack((ItemLike)SystemItems.NETHER_FLAME_KEY.get(), 1));
+      if (entity.getPersistentData().getBoolean("is_overworld_miniboss") || entity.getTags().contains("overworld_miniboss")) {
+         if (SystemItems.OVERWORLD_DUNGEON_KEY != null && SystemItems.OVERWORLD_DUNGEON_KEY.isBound()) {
+            ItemEntity dropped = entity.spawnAtLocation(new ItemStack(SystemItems.OVERWORLD_DUNGEON_KEY.get(), 1));
+            if (dropped != null) {
+               dropped.setGlowingTag(true);
+               dropped.setExtendedLifetime();
             }
-         } else if (dim.contains("end")) {
-            if (entity instanceof EnderDragon) {
-               entity.spawnAtLocation(new ItemStack((ItemLike)SystemItems.END_VOID_KEY.get(), 1));
-               if (entity.getServer() != null) {
-                  for (ServerPlayer sp : entity.getServer().getPlayerList().getPlayers()) {
-                     if (sp.level().dimension().equals(Level.END) || sp.distanceToSqr(entity) < 160000.0) {
-                        data(sp).setEnderDragonDefeated(true);
-                        sp.displayClientMessage(Component.translatable("awakening_system.progression.dragon_defeated_unlocked"), false);
-                        sp.playNotifySound(SoundEvents.UI_TOAST_CHALLENGE_COMPLETE, SoundSource.PLAYERS, 1.0F, 1.0F);
-                     }
+         }
+      }
+
+      String dim = level.dimension().location().getPath().toLowerCase(Locale.ROOT);
+      if (dim.contains("nether")) {
+         if (entity instanceof WitherBoss || (entity instanceof WildfireEntity wf && wf.isMiniBoss())) {
+            if (SystemItems.NETHER_FLAME_KEY != null && SystemItems.NETHER_FLAME_KEY.isBound()) {
+               ItemEntity dropped = entity.spawnAtLocation(new ItemStack(SystemItems.NETHER_FLAME_KEY.get(), 1));
+               if (dropped != null) {
+                  dropped.setGlowingTag(true);
+                  dropped.setExtendedLifetime();
+               }
+            }
+         } else if ((entity instanceof WitherSkeleton || entity instanceof Blaze || entity instanceof PiglinBrute || entity instanceof Ghast)
+            && rand.nextFloat() < 0.08F) {
+            if (SystemItems.NETHER_FLAME_KEY != null && SystemItems.NETHER_FLAME_KEY.isBound()) {
+               entity.spawnAtLocation(new ItemStack(SystemItems.NETHER_FLAME_KEY.get(), 1));
+            }
+         }
+      } else if (dim.contains("end")) {
+         if (entity instanceof EnderDragon) {
+            if (SystemItems.END_VOID_KEY != null && SystemItems.END_VOID_KEY.isBound()) {
+               ItemEntity dropped = entity.spawnAtLocation(new ItemStack(SystemItems.END_VOID_KEY.get(), 1));
+               if (dropped != null) {
+                  dropped.setGlowingTag(true);
+                  dropped.setExtendedLifetime();
+               }
+            }
+            if (entity.getServer() != null) {
+               for (ServerPlayer sp : entity.getServer().getPlayerList().getPlayers()) {
+                  if (sp.level().dimension().equals(Level.END) || sp.distanceToSqr(entity) < 160000.0) {
+                     data(sp).setEnderDragonDefeated(true);
+                     sp.displayClientMessage(Component.translatable("awakening_system.progression.dragon_defeated_unlocked"), false);
+                     sp.playNotifySound(SoundEvents.UI_TOAST_CHALLENGE_COMPLETE, SoundSource.PLAYERS, 1.0F, 1.0F);
                   }
                }
-            } else if (entity instanceof Shulker) {
-               if (rand.nextFloat() < 0.25F) {
-                  entity.spawnAtLocation(new ItemStack((ItemLike)SystemItems.END_VOID_KEY.get(), 1));
+            }
+         } else if (entity instanceof Shulker) {
+            if (rand.nextFloat() < 0.25F && SystemItems.END_VOID_KEY != null && SystemItems.END_VOID_KEY.isBound()) {
+               entity.spawnAtLocation(new ItemStack(SystemItems.END_VOID_KEY.get(), 1));
+            }
+         } else if (entity instanceof EnderMan && rand.nextFloat() < 0.03F && SystemItems.END_VOID_KEY != null && SystemItems.END_VOID_KEY.isBound()) {
+            entity.spawnAtLocation(new ItemStack(SystemItems.END_VOID_KEY.get(), 1));
+         }
+      } else if (dim.contains("isekai")) {
+         if (entity instanceof YggdrasilTreantBossEntity || entity instanceof ElementalDemonKingBossEntity || entity instanceof ElementalLordBossEntity) {
+            if (SystemItems.ISEKAI_MANA_KEY != null && SystemItems.ISEKAI_MANA_KEY.isBound()) {
+               ItemEntity dropped = entity.spawnAtLocation(new ItemStack(SystemItems.ISEKAI_MANA_KEY.get(), 1));
+               if (dropped != null) {
+                  dropped.setGlowingTag(true);
+                  dropped.setExtendedLifetime();
                }
-            } else if (entity instanceof EnderMan && rand.nextFloat() < 0.03F) {
-               entity.spawnAtLocation(new ItemStack((ItemLike)SystemItems.END_VOID_KEY.get(), 1));
             }
-         } else if (dim.contains("isekai")) {
-            if (entity instanceof YggdrasilTreantBossEntity || entity instanceof ElementalDemonKingBossEntity || entity instanceof ElementalLordBossEntity) {
-               entity.spawnAtLocation(new ItemStack((ItemLike)SystemItems.ISEKAI_MANA_KEY.get(), 1));
-            } else if ((entity instanceof GoblinShamanEntity || entity instanceof BeastmanWarriorEntity) && rand.nextFloat() < 0.12F) {
-               entity.spawnAtLocation(new ItemStack((ItemLike)SystemItems.ISEKAI_MANA_KEY.get(), 1));
+         } else if ((entity instanceof GoblinShamanEntity || entity instanceof BeastmanWarriorEntity) && rand.nextFloat() < 0.12F) {
+            if (SystemItems.ISEKAI_MANA_KEY != null && SystemItems.ISEKAI_MANA_KEY.isBound()) {
+               entity.spawnAtLocation(new ItemStack(SystemItems.ISEKAI_MANA_KEY.get(), 1));
             }
-         } else if (dim.contains("murim")) {
-            if (entity instanceof JadeGuardianBossEntity
-               || entity instanceof BloodPatriarchBossEntity
-               || entity instanceof CelestialDragonEntity
-               || entity instanceof AncientCelestialDragonBossEntity) {
-               entity.spawnAtLocation(new ItemStack((ItemLike)SystemItems.MURIM_DAO_KEY.get(), 1));
-            } else if ((entity instanceof DemonicCultivatorEntity || entity instanceof JiangshiEntity || entity instanceof JadeArmoredBeastEntity)
-               && rand.nextFloat() < 0.12F) {
-               entity.spawnAtLocation(new ItemStack((ItemLike)SystemItems.MURIM_DAO_KEY.get(), 1));
+         }
+      } else if (dim.contains("murim")) {
+         if (entity instanceof JadeGuardianBossEntity
+            || entity instanceof BloodPatriarchBossEntity
+            || entity instanceof CelestialDragonEntity
+            || entity instanceof AncientCelestialDragonBossEntity) {
+            if (SystemItems.MURIM_DAO_KEY != null && SystemItems.MURIM_DAO_KEY.isBound()) {
+               ItemEntity dropped = entity.spawnAtLocation(new ItemStack(SystemItems.MURIM_DAO_KEY.get(), 1));
+               if (dropped != null) {
+                  dropped.setGlowingTag(true);
+                  dropped.setExtendedLifetime();
+               }
             }
-         } else if (dim.contains("teyvat")
-            && (
-               entity instanceof HypostasisBaseBossEntity
-                  || entity instanceof PyroRegisvineEntity
-                  || entity instanceof CryoRegisvineEntity
-                  || entity instanceof ElectroRegisvineEntity
-                  || entity instanceof GreatSnowboarKingBossEntity
-                  || entity instanceof RhodeiaOceanidBossEntity
-                  || entity instanceof PerpetualMechanicalArrayBossEntity
-                  || entity instanceof RuinSerpentBossEntity
-            )) {
-            entity.spawnAtLocation(new ItemStack((ItemLike)SystemItems.TEYVAT_SHRINE_KEY.get(), 1));
+         } else if ((entity instanceof DemonicCultivatorEntity || entity instanceof JiangshiEntity || entity instanceof JadeArmoredBeastEntity)
+            && rand.nextFloat() < 0.12F) {
+            if (SystemItems.MURIM_DAO_KEY != null && SystemItems.MURIM_DAO_KEY.isBound()) {
+               entity.spawnAtLocation(new ItemStack(SystemItems.MURIM_DAO_KEY.get(), 1));
+            }
+         }
+      } else if (dim.contains("teyvat")) {
+         if (entity instanceof HypostasisBaseBossEntity
+            || entity instanceof PyroRegisvineEntity
+            || entity instanceof CryoRegisvineEntity
+            || entity instanceof ElectroRegisvineEntity
+            || entity instanceof GreatSnowboarKingBossEntity
+            || entity instanceof RhodeiaOceanidBossEntity
+            || entity instanceof PerpetualMechanicalArrayBossEntity
+            || entity instanceof RuinSerpentBossEntity) {
+            if (SystemItems.TEYVAT_SHRINE_KEY != null && SystemItems.TEYVAT_SHRINE_KEY.isBound()) {
+               ItemEntity dropped = entity.spawnAtLocation(new ItemStack(SystemItems.TEYVAT_SHRINE_KEY.get(), 1));
+               if (dropped != null) {
+                  dropped.setGlowingTag(true);
+                  dropped.setExtendedLifetime();
+               }
+            }
+         } else if ((entity instanceof StonehideLawachurlEntity
+            || entity instanceof FrostarmLawachurlEntity
+            || entity instanceof ThunderhelmLawachurlEntity
+            || entity instanceof RuinGuardEntity
+            || entity instanceof RuinHunterEntity) && rand.nextFloat() < 0.20F) {
+            if (SystemItems.TEYVAT_SHRINE_KEY != null && SystemItems.TEYVAT_SHRINE_KEY.isBound()) {
+               entity.spawnAtLocation(new ItemStack(SystemItems.TEYVAT_SHRINE_KEY.get(), 1));
+            }
          }
       }
    }
@@ -3043,8 +3173,36 @@ public final class SystemEvents {
       }
    }
 
+   private static boolean isPlayerAllyEntity(LivingEntity e) {
+      if (e == null) return false;
+      if (e.getTags().contains("shadow_soldier") || e instanceof CompanionEntity) return true;
+      return e instanceof net.minecraft.world.entity.TamableAnimal ta && ta.isTame();
+   }
+
+   private static boolean isDungeonOrGateEnemyPair(LivingEntity a, LivingEntity b) {
+      if (a == null || b == null || a == b) return false;
+      if (!(a instanceof Mob) || !(b instanceof Mob)) return false;
+      if (isPlayerAllyEntity(a) || isPlayerAllyEntity(b)) return false;
+      var dim = a.level().dimension();
+      String path = dim.location().getPath();
+      return dim.equals(DungeonManager.DUNGEON_REALM)
+         || dim.equals(TowerManager.RANKER_TOWER)
+         || dim.equals(PagodaTrialManager.PAGODA_REALM)
+         || path.contains("dungeon")
+         || path.contains("ruin")
+         || path.contains("abyss");
+   }
+
    @SubscribeEvent
    public static void onLivingChangeTarget(LivingChangeTargetEvent event) {
+      if (event.getNewAboutToBeSetTarget() instanceof Mob newTarget
+            && isDungeonOrGateEnemyPair(newTarget, event.getEntity())) {
+         event.setNewAboutToBeSetTarget(null);
+         if (event.getEntity() instanceof Mob m) {
+            m.setTarget(null);
+         }
+         return;
+      }
       if (event.getNewAboutToBeSetTarget() instanceof Player p) {
          if (com.soybe.awakeningsystem.tombstone.TombstoneManager.isGhostMode(p)) {
             event.setNewAboutToBeSetTarget(null);
@@ -4198,7 +4356,8 @@ public final class SystemEvents {
 
          SystemData data = data(player);
          boolean before = data.skills().containsKey("enduring_flesh");
-         int gained = data.learn("survival", 2);
+         int survGain = Math.max(2, (int)Math.min(10, event.getNewDamage() / 3.0F));
+         int gained = data.learn("survival", survGain);
          data.recordStatistic("damage_taken", (int)Math.ceil(event.getNewDamage()));
          int habitFleshLvl = data.recordHabitDamage((int)Math.ceil(event.getNewDamage()));
          if (habitFleshLvl > 0) {
@@ -4647,6 +4806,11 @@ public final class SystemEvents {
    @SubscribeEvent
    public static void onLivingIncomingDamage(LivingIncomingDamageEvent event) {
       if (event.getEntity() instanceof Player player && com.soybe.awakeningsystem.tombstone.TombstoneManager.isGhostMode(player)) {
+         event.setCanceled(true);
+         return;
+      }
+      if (event.getSource().getEntity() instanceof LivingEntity attacker
+            && isDungeonOrGateEnemyPair(event.getEntity(), attacker)) {
          event.setCanceled(true);
          return;
       }
@@ -5250,7 +5414,25 @@ public final class SystemEvents {
 
       double horizontalDist = Math.sqrt(dx * dx + dz * dz);
       // Filtro anti-teleport y microjitter (umbral de 0.001 para capturar cualquier paso y máx 8.0 bloques/tick)
-      if (horizontalDist >= 0.001 && horizontalDist <= 8.0) {
+      boolean validStep = horizontalDist >= 0.001 && horizontalDist <= 8.0;
+
+      BlockState belowState = player.level().getBlockState(player.getBlockPosBelowThatAffectsMyMovement());
+      ResourceLocation belowId = BuiltInRegistries.BLOCK.getKey(belowState.getBlock());
+      boolean onCreateBelt = belowId != null
+         && "create".equals(belowId.getNamespace())
+         && (belowId.getPath().contains("belt") || belowId.getPath().contains("conveyor"));
+
+      if (onCreateBelt) {
+         if (player.isSprinting()) {
+            // Cinta de correr (treadmill): da progreso 2x incluso corriendo en el sitio
+            horizontalDist = Math.max(validStep ? horizontalDist : 0.0, 0.28) * 2.0;
+            validStep = true;
+         } else if (validStep) {
+            horizontalDist *= 2.0;
+         }
+      }
+
+      if (validStep) {
          double accum = nbt.getDouble("daily_run_accum") + horizontalDist;
          if (accum >= 1.0) {
             int meters = (int) accum;
@@ -5986,6 +6168,7 @@ public final class SystemEvents {
 
             if (GreatTowerWorldManager.isGreatTowerDimension(player.serverLevel())) {
                GreatTowerWorldManager.syncBorderToPlayer(player);
+               GreatTowerWorldManager.tickFloorSpawns(player);
             }
          }
 
@@ -6126,8 +6309,8 @@ public final class SystemEvents {
             }
          }
 
-         // qi only comes from cultivating (meditating, pills, fights...): no longer just for being alive
-         if (false && player.tickCount % 40 == 0 && (data.dantianRealm() > 0 || data.getOpenedMeridiansCount() > 0)) {
+         // Passive Qi regeneration: configurable via SystemConfig.PASSIVE_QI_ENABLED (default: false, requiring active meditation or pills)
+         if (SystemConfig.PASSIVE_QI_ENABLED.get() && player.tickCount % 40 == 0 && (data.dantianRealm() > 0 || data.getOpenedMeridiansCount() > 0)) {
             float zoneDensity = getZoneQiDensity(player);
             int openM = data.getOpenedMeridiansCount();
             int passiveQi = 1 + data.dantianRealm() / 2 + (openM >= 12 ? 3 : (openM >= 6 ? 2 : (openM > 0 ? 1 : 0)));
@@ -6169,9 +6352,20 @@ public final class SystemEvents {
             changed = true;
          }
 
+         boolean hasMurimUnlocked = data.hasVisitedDimension(MurimWorldManager.MURIM_WORLD.location().toString())
+                 || data.hasVisitedDimension("awakening_system:murim")
+                 || player.level().dimension().equals(MurimWorldManager.MURIM_WORLD);
+         boolean isBlockedCultivationDim = isTowerDimension(player.level())
+                 || !hasMurimUnlocked;
          boolean isLotusMounted = player.getVehicle() instanceof MeditationSeatEntity;
-         boolean isSneakMeditating = !isLotusMounted && player.isShiftKeyDown() && player.getDeltaMovement().lengthSqr() < 0.005;
-         if (!isLotusMounted && !isSneakMeditating) {
+         boolean isSneakMeditating = !isLotusMounted
+                 && !isBlockedCultivationDim
+                 && player.isShiftKeyDown()
+                 && (player.onGround() || player.isInWater())
+                 && !player.getAbilities().flying
+                 && !player.isFallFlying()
+                 && player.getDeltaMovement().lengthSqr() < 0.005;
+         if (isBlockedCultivationDim || (!isLotusMounted && !isSneakMeditating)) {
             player.getPersistentData().putInt("murim_meditation_ticks", 0);
          } else {
             int medTicks = player.getPersistentData().getInt("murim_meditation_ticks") + 1;
@@ -6842,6 +7036,11 @@ public final class SystemEvents {
    }
 
    public static boolean buyShopItem(ServerPlayer player, String entryId) {
+      return buyShopItem(player, entryId, 1);
+   }
+
+   public static boolean buyShopItem(ServerPlayer player, String entryId, int quantity) {
+      int qty = Math.max(1, Math.min(64, quantity));
       if ("system_roulette".equals(entryId)) {
          SystemData data = data(player);
          long currentDay = player.level().getDayTime() / 24000L;
@@ -6891,33 +7090,40 @@ public final class SystemEvents {
          if (entry != null && ShopDefinitions.isAvailable(entry)) {
             SystemData data = data(player);
             if (ShopDefinitions.isUnlocked(entry, data)) {
-               if (!data.spendCoins(entry.cost())) {
+               boolean isBox = ShopDefinitions.isBoxId(entryId);
+               int purchaseQty = isBox ? 1 : qty;
+               long totalCostLong = (long) entry.cost() * (long) purchaseQty;
+               int totalCost = totalCostLong > Integer.MAX_VALUE ? Integer.MAX_VALUE : (int) totalCostLong;
+               if (totalCostLong > Integer.MAX_VALUE || !data.spendCoins(totalCost)) {
                   AwakeningSystemMod.notify(
                      player, "awakening_system.notification.shop.error_title", "awakening_system.notification.shop.insufficient", -35226, new Object[0]
                   );
                   return false;
                } else {
                   grantFable(player, "first_trade");
-                  if (!ShopDefinitions.isBoxId(entryId)) {
-                     ItemStack stack = ShopDefinitions.createStack(entry);
-                     if (stack.isEmpty()) {
-                        data.addCoins(entry.cost());
+                  if (!isBox) {
+                     ItemStack sampleStack = ShopDefinitions.createStack(entry);
+                     if (sampleStack.isEmpty()) {
+                        data.addCoins(totalCost);
                         AwakeningSystemMod.notify(
                            player, "awakening_system.notification.shop.error_title", "awakening_system.notification.shop.unavailable", -35226, new Object[0]
                         );
                         AwakeningSystemMod.sync(player);
                         return false;
                      } else {
-                        if (!player.getInventory().add(stack)) {
-                           player.drop(stack, false);
+                        for (int q = 0; q < purchaseQty; q++) {
+                           ItemStack give = q == 0 ? sampleStack : sampleStack.copy();
+                           if (!player.getInventory().add(give)) {
+                              player.drop(give, false);
+                           }
                         }
 
                         player.containerMenu.broadcastChanges();
-                        data.recordPurchase(entry.cost());
+                        data.recordPurchase(totalCost);
                         checkAchievements(player, data);
                         String boughtItemName = (entry.nameKey() != null && entry.nameKey().startsWith("awakening_system."))
                                 ? entry.nameKey()
-                                : (!stack.isEmpty() ? stack.getHoverName().getString() : entry.nameKey());
+                                : (!sampleStack.isEmpty() ? sampleStack.getHoverName().getString() : entry.nameKey());
                         AwakeningSystemMod.notify(
                            player,
                            "awakening_system.notification.shop.title",
@@ -7776,6 +7982,14 @@ public final class SystemEvents {
       }
    }
 
+   private static boolean isTowerDimension(Level level) {
+      if (level == null) return false;
+      String path = level.dimension().location().getPath();
+      return level.dimension().equals(TowerManager.RANKER_TOWER)
+            || path.startsWith("tower_floor_")
+            || path.equals("ranker_tower");
+   }
+
    public static void handleCultivationAction(ServerPlayer player, String action, int targetIndex) {
       SystemData data = data(player);
       if (data.isAnySystemUpdating()) {
@@ -7794,6 +8008,16 @@ public final class SystemEvents {
                player.displayClientMessage(Component.translatable("awakening_system.cultivation.stopped"), true);
                player.playNotifySound(SoundEvents.CHEST_CLOSE, SoundSource.PLAYERS, 0.8F, 1.2F);
             } else {
+               boolean hasMurim = data.hasVisitedDimension(MurimWorldManager.MURIM_WORLD.location().toString())
+                       || data.hasVisitedDimension("awakening_system:murim");
+               if (!hasMurim && !player.level().dimension().equals(MurimWorldManager.MURIM_WORLD)) {
+                  player.displayClientMessage(Component.translatable("awakening_system.cultivation.murim_unlock_required"), true);
+                  return;
+               }
+               if (isTowerDimension(player.level())) {
+                  player.displayClientMessage(Component.translatable("awakening_system.cultivation.no_tower"), true);
+                  return;
+               }
                if (!player.onGround() && !player.isInWater()) {
                   player.displayClientMessage(Component.translatable("awakening_system.cultivation.must_be_grounded"), true);
                   return;
@@ -9484,7 +9708,8 @@ public final class SystemEvents {
                }
             }
 
-            boolean isStoringShadows = player.isShiftKeyDown() && ("shadow_monarch".equals(skillId) || "unique_absolute_extraction".equals(skillId));
+            boolean isStoringShadows = player.isShiftKeyDown()
+               && ("shadow_monarch".equals(skillId) || "unique_absolute_extraction".equals(skillId) || "ne_shadow_extraction".equals(skillId));
             if (isStoringShadows) {
                int stored = storePlayerShadows(player);
                if (stored <= 0) {
@@ -12374,6 +12599,10 @@ public final class SystemEvents {
          shadowMob.setPos(defeated.getX(), defeated.getY(), defeated.getZ());
          shadowMob.addTag("shadow_soldier");
          shadowMob.addTag("shadow_master_" + master.getUUID());
+         shadowMob.addTag("rpg_scaled");
+         int defeatedLvl = defeated.getPersistentData().getInt("rpg_mob_level");
+         int effectiveLvl = Math.max(defeatedLvl, Math.max(1, data(master).level()));
+         shadowMob.getPersistentData().putInt("rpg_mob_level", effectiveLvl);
          String mobName = defeated.getCustomName() != null ? defeated.getCustomName().getString() : defeated.getType().getDescription().getString();
          shadowMob.setCustomName(Component.translatable("awakening_system.msg.sombra", String.valueOf(mobName)));
          shadowMob.setCustomNameVisible(true);
@@ -12399,6 +12628,8 @@ public final class SystemEvents {
 
    public static void applyShadowRankStats(Mob shadowMob, ShadowRank rank) {
       if (shadowMob != null && rank != null) {
+         int rpgLevel = shadowMob.getPersistentData().getInt("rpg_mob_level");
+
          AttributeInstance maxHpAttr = shadowMob.getAttribute(Attributes.MAX_HEALTH);
          if (maxHpAttr != null) {
             double baseHp = shadowMob.getPersistentData().contains("shadow_original_max_hp")
@@ -12406,7 +12637,8 @@ public final class SystemEvents {
                : maxHpAttr.getBaseValue();
             if (baseHp < 1.0) baseHp = maxHpAttr.getBaseValue();
             shadowMob.getPersistentData().putDouble("shadow_original_max_hp", baseHp);
-            maxHpAttr.setBaseValue(Math.max(baseHp, baseHp * rank.getHealthMultiplier()));
+            double scaledBaseHp = rpgLevel > 0 ? baseHp * RpgLevelZoneManager.getHpMultiplier(rpgLevel) : baseHp;
+            maxHpAttr.setBaseValue(Math.max(scaledBaseHp, scaledBaseHp * rank.getHealthMultiplier()));
             if (shadowMob.getHealth() > 0.0F) {
                shadowMob.setHealth(shadowMob.getMaxHealth());
             }
@@ -12419,25 +12651,35 @@ public final class SystemEvents {
                : dmgAttr.getBaseValue();
             if (baseDmg < 1.0) baseDmg = dmgAttr.getBaseValue();
             shadowMob.getPersistentData().putDouble("shadow_original_dmg", baseDmg);
-            dmgAttr.setBaseValue(baseDmg + rank.getBonusAttackDamage());
+            double scaledBaseDmg = rpgLevel > 0 ? RpgLevelZoneManager.getScaledAttackDamage(baseDmg, rpgLevel) : baseDmg;
+            dmgAttr.setBaseValue(scaledBaseDmg + rank.getBonusAttackDamage());
          }
 
          AttributeInstance armorAttr = shadowMob.getAttribute(Attributes.ARMOR);
-         if (armorAttr != null && shadowMob.getPersistentData().contains("shadow_original_armor")) {
-            double baseArmor = shadowMob.getPersistentData().getDouble("shadow_original_armor");
-            armorAttr.setBaseValue(Math.max(armorAttr.getBaseValue(), baseArmor));
+         if (armorAttr != null) {
+            double baseArmor = shadowMob.getPersistentData().contains("shadow_original_armor")
+               ? shadowMob.getPersistentData().getDouble("shadow_original_armor")
+               : armorAttr.getBaseValue();
+            double scaledArmor = rpgLevel > 0 ? Math.max(baseArmor, RpgLevelZoneManager.getArmorForLevel(rpgLevel)) : baseArmor;
+            armorAttr.setBaseValue(Math.max(armorAttr.getBaseValue(), scaledArmor));
          }
 
          AttributeInstance toughAttr = shadowMob.getAttribute(Attributes.ARMOR_TOUGHNESS);
-         if (toughAttr != null && shadowMob.getPersistentData().contains("shadow_original_toughness")) {
-            double baseTough = shadowMob.getPersistentData().getDouble("shadow_original_toughness");
-            toughAttr.setBaseValue(Math.max(toughAttr.getBaseValue(), baseTough));
+         if (toughAttr != null) {
+            double baseTough = shadowMob.getPersistentData().contains("shadow_original_toughness")
+               ? shadowMob.getPersistentData().getDouble("shadow_original_toughness")
+               : toughAttr.getBaseValue();
+            double scaledTough = rpgLevel > 0 ? Math.max(baseTough, RpgLevelZoneManager.getToughnessForLevel(rpgLevel)) : baseTough;
+            toughAttr.setBaseValue(Math.max(toughAttr.getBaseValue(), scaledTough));
          }
 
          AttributeInstance kbAttr = shadowMob.getAttribute(Attributes.KNOCKBACK_RESISTANCE);
-         if (kbAttr != null && shadowMob.getPersistentData().contains("shadow_original_kb")) {
-            double baseKb = shadowMob.getPersistentData().getDouble("shadow_original_kb");
-            kbAttr.setBaseValue(Math.max(kbAttr.getBaseValue(), baseKb));
+         if (kbAttr != null) {
+            double baseKb = shadowMob.getPersistentData().contains("shadow_original_kb")
+               ? shadowMob.getPersistentData().getDouble("shadow_original_kb")
+               : kbAttr.getBaseValue();
+            double scaledKb = rpgLevel > 0 ? Math.max(baseKb, RpgLevelZoneManager.getKbResForLevel(rpgLevel)) : baseKb;
+            kbAttr.setBaseValue(Math.max(kbAttr.getBaseValue(), scaledKb));
          }
 
          AttributeInstance speedAttr = shadowMob.getAttribute(Attributes.MOVEMENT_SPEED);
@@ -12661,9 +12903,14 @@ public final class SystemEvents {
             }
 
             int mobLvl = tag.contains("RpgMobLevel") ? tag.getInt("RpgMobLevel") : 0;
+            int squadId = tag.contains("SquadId") ? tag.getInt("SquadId") : -1;
             shadowMob.getPersistentData().putInt("shadow_rank", rankLvl);
             shadowMob.getPersistentData().putInt("shadow_kills", kills);
             shadowMob.getPersistentData().putString("shadow_base_name", baseName);
+            shadowMob.getPersistentData().putInt("shadow_squad_id", squadId);
+            if (squadId >= 0) {
+               shadowMob.addTag("shadow_squad_" + squadId);
+            }
             if (mobLvl > 0) shadowMob.getPersistentData().putInt("rpg_mob_level", mobLvl);
             if (tag.contains("OriginalMaxHp")) shadowMob.getPersistentData().putDouble("shadow_original_max_hp", tag.getDouble("OriginalMaxHp"));
             if (tag.contains("OriginalDmg")) shadowMob.getPersistentData().putDouble("shadow_original_dmg", tag.getDouble("OriginalDmg"));
@@ -12696,6 +12943,11 @@ public final class SystemEvents {
    }
 
    public static void setupShadowMob(ServerLevel sl, ServerPlayer master, Mob shadowMob) {
+      int masterLvl = master != null ? Math.max(1, data(master).level()) : 1;
+      int currentLvl = shadowMob.getPersistentData().getInt("rpg_mob_level");
+      int effectiveLvl = Math.max(currentLvl, masterLvl);
+      shadowMob.getPersistentData().putInt("rpg_mob_level", effectiveLvl);
+      shadowMob.addTag("rpg_scaled");
       int rankLvl = shadowMob.getPersistentData().getInt("shadow_rank");
       ShadowRank rank = ShadowRank.byLevel(rankLvl);
       applyShadowRankStats(shadowMob, rank);
@@ -12844,7 +13096,8 @@ public final class SystemEvents {
                   tag.putFloat("MaxHealth", soldier.getMaxHealth());
                   tag.putInt("ShadowRank", soldier.getPersistentData().getInt("shadow_rank"));
                   tag.putInt("ShadowKills", soldier.getPersistentData().getInt("shadow_kills"));
-                   tag.putInt("RpgMobLevel", soldier.getPersistentData().getInt("rpg_mob_level"));
+                  tag.putInt("RpgMobLevel", soldier.getPersistentData().getInt("rpg_mob_level"));
+                  tag.putInt("SquadId", soldier.getPersistentData().contains("shadow_squad_id") ? soldier.getPersistentData().getInt("shadow_squad_id") : -1);
                    if (soldier.getPersistentData().contains("shadow_original_max_hp")) {
                       tag.putDouble("OriginalMaxHp", soldier.getPersistentData().getDouble("shadow_original_max_hp"));
                    } else {
@@ -12909,34 +13162,76 @@ public final class SystemEvents {
       }
    }
 
+   private static final Map<UUID, Integer> SELECTED_SHADOW_SQUAD = new ConcurrentHashMap<>();
+
+   public static void setSelectedShadowSquad(ServerPlayer player, int squadId) {
+      if (player != null) {
+         SELECTED_SHADOW_SQUAD.put(player.getUUID(), Math.max(-1, Math.min(SystemData.SQUAD_COUNT - 1, squadId)));
+      }
+   }
+
+   public static int getSelectedShadowSquad(ServerPlayer player) {
+      return player == null ? -1 : SELECTED_SHADOW_SQUAD.getOrDefault(player.getUUID(), -1);
+   }
+
    public static int deployPlayerShadows(ServerPlayer player, int maxCount) {
       if (player.level() instanceof ServerLevel sl) {
          SystemData data = data(player);
          if (data.storedShadowCount() <= 0) {
             return 0;
          } else {
+            int selectedSquad = getSelectedShadowSquad(player);
             int toDeploy = Math.min(maxCount, data.storedShadowCount());
+            int deployed = 0;
 
             for (int i = 0; i < toDeploy; i++) {
-               CompoundTag shadowTag = data.popStoredShadow();
+               CompoundTag shadowTag = null;
+               if (selectedSquad >= 0) {
+                  var army = data.getStoredShadowArmy();
+                  for (int idx = army.size() - 1; idx >= 0; idx--) {
+                     CompoundTag candidate = army.get(idx);
+                     int sq = candidate.contains("SquadId") ? candidate.getInt("SquadId") : -1;
+                     if (sq == selectedSquad) {
+                        shadowTag = army.remove(idx);
+                        break;
+                     }
+                  }
+               }
+               if (shadowTag == null) {
+                  if (selectedSquad >= 0) {
+                     break;
+                  }
+                  shadowTag = data.popStoredShadow();
+               }
                if (shadowTag != null) {
                   double angle = Math.toRadians(player.getYRot() + 180.0F + (i % 3 - 1) * 35.0F);
                   double sx = player.getX() + Math.sin(angle) * 2.0;
                   double sz = player.getZ() - Math.cos(angle) * 2.0;
                   summonShadowFromTag(player, shadowTag, sx, player.getY(), sz);
+                  deployed++;
                }
             }
 
+            if (deployed == 0 && selectedSquad >= 0) {
+               AwakeningSystemMod.notify(
+                  player,
+                  "awakening_system.notification.squad_empty.title",
+                  "awakening_system.notification.squad_empty.desc",
+                  -35226,
+                  new Object[]{data.squadNameComponent(selectedSquad)}
+               );
+               return 0;
+            }
             sl.playSound(null, player.getX(), player.getY(), player.getZ(), SoundEvents.WITHER_SHOOT, SoundSource.PLAYERS, 1.0F, 1.2F);
             AwakeningSystemMod.notify(
                player,
                "awakening_system.notification.shadow_deployed.title",
                "awakening_system.notification.shadow_deployed.desc",
                -6723841,
-               new Object[]{String.valueOf(toDeploy)}
+               new Object[]{String.valueOf(deployed)}
             );
             AwakeningSystemMod.sync(player);
-            return toDeploy;
+            return deployed;
          }
       } else {
          return 0;
@@ -13169,7 +13464,7 @@ public final class SystemEvents {
 
                   for (Mob soldier : soldiers) {
                      double distSq = soldier.distanceToSqr(player);
-                     if (distSq > 3600.0) {
+                     if (distSq > 14400.0) {
                         double angle = Math.toRadians(player.getYRot() + 180.0F + (soldier.getId() % 5 - 2) * 25.0F);
                         double tx = player.getX() + Math.sin(angle) * 2.5;
                         double tz = player.getZ() - Math.cos(angle) * 2.5;
@@ -13500,8 +13795,39 @@ public final class SystemEvents {
             default -> 50;
          };
          int exp = 200;
+         int attrPts = switch (scenario) {
+            case "abyssal_conquest" -> 3;
+            case "depth_expedition", "survival_trial" -> 2;
+            default -> 1;
+         };
          data.addCoins(coins);
+         data.addAttributePoints(attrPts);
          awardExperience(player, data, exp);
+
+         String preferredFable = switch (scenario) {
+            case "depth_expedition" -> "miner_depths";
+            case "abyssal_conquest" -> "dungeon_initiate";
+            case "survival_trial" -> "iron_will";
+            default -> "first_blood_hunter";
+         };
+         boolean grantedFable = grantFable(player, preferredFable);
+         if (!grantedFable) {
+            for (var fable : com.soybe.awakeningsystem.fable.FableDefinitions.getAll()) {
+               if (!data.hasFable(fable.id())
+                     && (fable.grade() == com.soybe.awakeningsystem.fable.FableDefinitions.Grade.HISTORICAL
+                        || fable.grade() == com.soybe.awakeningsystem.fable.FableDefinitions.Grade.LEGENDARY)) {
+                  grantedFable = grantFable(player, fable.id());
+                  if (grantedFable) break;
+               }
+            }
+         }
+         if (!grantedFable && SystemItems.FABLE_SCROLL.isBound()) {
+            ItemStack scroll = new ItemStack(SystemItems.FABLE_SCROLL.get());
+            if (!player.getInventory().add(scroll)) {
+               player.drop(scroll, false);
+            }
+         }
+
          data.advanceToNextScenario();
          AwakeningSystemMod.notify(
             player,

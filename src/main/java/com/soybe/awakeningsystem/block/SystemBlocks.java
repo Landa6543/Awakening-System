@@ -1964,7 +1964,8 @@ public final class SystemBlocks {
             "ventiplushie", "xianglingplushie", "xiaoplushie", "xingqiuplushie", "xinyanplushie", "yaemikoplushie",
             "yanfeiplushie", "yelanplushie", "yoimiyaplushie", "yunjinplushie", "zhongliplushie",
             "amiyaplushie", "kaltsitplushie", "chenplushie", "shirokoplushie", "arisplushie", "hinaplushie",
-            "landeraloplushie", "schvisplushie", "techidnaplushie", "tomcraftplushie", "nandachanplushie", "misticpotatoplushie"
+            "landeraloplushie", "schvisplushie", "techidnaplushie", "tomcraftplushie", "nandachanplushie", "misticpotatoplushie",
+            "therealhatterplushie", "57is_wraithplushie"
     };
 
     public static final DeferredHolder<Block, CustomPlayerPlushieBlock> CUSTOM_PLAYER_PLUSHIE = BLOCKS.register(

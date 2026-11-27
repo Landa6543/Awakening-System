@@ -332,7 +332,7 @@ public final class GreatTowerWorldManager {
             int spawnZ = layout.returnZ();
             int advX = layout.advanceX();
             int advZ = layout.advanceZ();
-            if (targetFloor != 20) {
+            if (targetFloor != 20 && !com.soybe.awakeningsystem.tower.terrain.TowerFloorTerrain.isCustom(targetFloor)) {
                // never arrive (or find the way up) in the middle of the sea
                int[] r = landNear(targetLevel, targetFloor * 2, spawnX, spawnZ);
                int[] a = landNear(targetLevel, targetFloor * 2 + 1, advX, advZ);
@@ -631,12 +631,12 @@ public final class GreatTowerWorldManager {
       BlockState canopy = floor == 6 ? Blocks.POLISHED_BLACKSTONE.defaultBlockState() : pillarBlock;
       BlockState parapet = floor == 6 ? Blocks.POLISHED_BLACKSTONE_BRICKS.defaultBlockState() : floorBlock;
 
-      for (int dx = -4; dx <= 4; dx++) {
-         for (int dz = -4; dz <= 4; dz++) {
-            for (int vy = groundY; vy <= Math.min(level.getMaxBuildHeight() - 5, groundY + 28); vy++) {
+      for (int dx = -6; dx <= 6; dx++) {
+         for (int dz = -6; dz <= 6; dz++) {
+            for (int vy = Math.max(level.getMinBuildHeight() + 1, groundY - 2); vy <= Math.min(level.getMaxBuildHeight() - 5, groundY + 28); vy++) {
                mPos.set(x + dx, vy, z + dz);
                if (level.getBlockState(mPos).liquid()) {
-                  level.setBlock(mPos, air, 2);
+                  level.setBlock(mPos, vy < groundY ? floorBlock : air, 2);
                }
             }
 
@@ -704,12 +704,12 @@ public final class GreatTowerWorldManager {
       BlockState canopy = floor == 6 ? Blocks.POLISHED_BLACKSTONE.defaultBlockState() : pillarBlock;
       BlockState parapet = floor == 6 ? Blocks.POLISHED_BLACKSTONE_BRICKS.defaultBlockState() : floorBlock;
 
-      for (int dx = -4; dx <= 4; dx++) {
-         for (int dz = -4; dz <= 4; dz++) {
-            for (int vy = groundY; vy <= Math.min(level.getMaxBuildHeight() - 5, groundY + 28); vy++) {
+      for (int dx = -6; dx <= 6; dx++) {
+         for (int dz = -6; dz <= 6; dz++) {
+            for (int vy = Math.max(level.getMinBuildHeight() + 1, groundY - 2); vy <= Math.min(level.getMaxBuildHeight() - 5, groundY + 28); vy++) {
                mPos.set(x + dx, vy, z + dz);
                if (level.getBlockState(mPos).liquid()) {
-                  level.setBlock(mPos, air, 2);
+                  level.setBlock(mPos, vy < groundY ? floorBlock : air, 2);
                }
             }
 
@@ -896,7 +896,7 @@ public final class GreatTowerWorldManager {
    }
 
    private static void populateChunkMobs(ServerLevel level, ChunkAccess chunk, int floor) {
-      if (floor == 11 || floor == 21 || floor == 25) return;   // the towns and the mining cavern have no monsters
+      if (floor == 5 || floor == 11 || floor == 15 || floor == 21 || floor == 25) return;   // the towns and the mining caverns have no monsters
       ChunkPos cPos = chunk.getPos();
       int cx = cPos.getMiddleBlockX();
       int cz = cPos.getMiddleBlockZ();
@@ -914,14 +914,19 @@ public final class GreatTowerWorldManager {
             e -> e.isAlive() && BuiltInRegistries.ENTITY_TYPE.getKey(e.getType()).getNamespace().equals("awakening_system")
          ).size();
 
-      if (nearbyCount < 3 && level.random.nextFloat() < 0.60F) {
-         int sy = findSafeGroundY(level, cx, cz, floor == 5 || floor == 15 ? 32 : 64);
-         BlockPos spawnPos = new BlockPos(cx, sy, cz);
-         if (!level.getBlockState(spawnPos.below()).liquid() && !level.getBlockState(spawnPos).liquid()) {
-            LivingEntity mob = createFloorMob(level, floor, level.random);
-            if (mob != null) {
-               mob.moveTo((double)cx + 0.5, (double)sy, (double)cz + 0.5, level.random.nextFloat() * 360.0F, 0.0F);
-               level.addFreshEntity(mob);
+      if (nearbyCount < 8 && level.random.nextFloat() < 0.70F) {
+         int packSize = 2 + level.random.nextInt(3);
+         for (int p = 0; p < packSize; p++) {
+            int ox = cx + level.random.nextInt(7) - 3;
+            int oz = cz + level.random.nextInt(7) - 3;
+            int sy = findSafeGroundY(level, ox, oz, floor == 5 || floor == 15 ? 32 : 64);
+            BlockPos spawnPos = new BlockPos(ox, sy, oz);
+            if (!level.getBlockState(spawnPos.below()).liquid() && !level.getBlockState(spawnPos).liquid()) {
+               LivingEntity mob = createFloorMob(level, floor, level.random);
+               if (mob != null) {
+                  mob.moveTo((double)ox + 0.5, (double)sy, (double)oz + 0.5, level.random.nextFloat() * 360.0F, 0.0F);
+                  level.addFreshEntity(mob);
+               }
             }
          }
       }
@@ -1183,41 +1188,124 @@ public static void processSectorChunk(ServerLevel level, ChunkAccess chunk) {
       if (level != null && centerPos != null) {
          if (floor == 10) {
             ensureFloor10Spawns(level, centerPos);
-         } else if (floor != 11 && floor != 21) {
+         } else if (floor != 5 && floor != 11 && floor != 21) {
             if (floor != 15 && floor != 25) {
                if (floor == 20) {
                   ensureFloor20Boss(level);
                } else {
-
                   int nearbyCount = level.getEntitiesOfClass(
                         Mob.class,
-                        new AABB(centerPos).inflate(64.0),
+                        new AABB(centerPos).inflate(96.0),
                         e -> e.isAlive() && BuiltInRegistries.ENTITY_TYPE.getKey(e.getType()).getNamespace().equals("awakening_system")
                      )
                      .size();
-                  if (nearbyCount < 6) {
-                     int toSpawn = Math.min(3, 6 - nearbyCount);
+                  if (nearbyCount < 20) {
                      RandomSource rand = level.random;
+                     int numPacks = 6;
+                     for (int pack = 0; pack < numPacks && nearbyCount < 24; pack++) {
+                        double angle = (pack * (Math.PI * 2.0 / numPacks)) + (rand.nextDouble() * 0.4 - 0.2);
+                        double dist = 28.0 + rand.nextDouble() * 45.0;
+                        int packCenterX = centerPos.getX() + (int)(Math.cos(angle) * dist);
+                        int packCenterZ = centerPos.getZ() + (int)(Math.sin(angle) * dist);
+                        packCenterX = Math.max(-305, Math.min(305, packCenterX));
+                        packCenterZ = Math.max(-305, Math.min(305, packCenterZ));
 
-                     for (int i = 0; i < toSpawn; i++) {
-                        double angle = rand.nextDouble() * Math.PI * 2.0;
-                        double dist = 38.0 + rand.nextDouble() * 26.0;
-                        int sx = centerPos.getX() + (int)(Math.cos(angle) * dist);
-                        int sz = centerPos.getZ() + (int)(Math.sin(angle) * dist);
-                        sx = Math.max(-310, Math.min(310, sx));
-                        sz = Math.max(-310, Math.min(310, sz));
-                        int sy = findSafeGroundY(level, sx, sz, centerPos.getY());
-                        BlockPos spawnPos = new BlockPos(sx, sy, sz);
-                        if (!level.getBlockState(spawnPos.below()).liquid() && !level.getBlockState(spawnPos).liquid()) {
-                           // now and then the Mutant Warden takes a spawn on the upper floors
-                           LivingEntity mob = com.soybe.awakeningsystem.entity.mutant.MutantWardenContent.maybeTowerWarden(level, floor, rand, centerPos);
-                           if (mob == null) mob = createFloorMob(level, floor, rand);
-                           if (mob != null) {
-                              mob.moveTo((double)sx + 0.5, (double)sy, (double)sz + 0.5, rand.nextFloat() * 360.0F, 0.0F);
-                              level.addFreshEntity(mob);
+                        FloorLayout layout = getLayout(floor);
+                        if (Math.hypot(packCenterX - layout.returnX(), packCenterZ - layout.returnZ()) < 20.0) continue;
+                        if (Math.hypot(packCenterX - layout.advanceX(), packCenterZ - layout.advanceZ()) < 20.0) continue;
+
+                        int packSize = 3 + rand.nextInt(2);
+                        for (int m = 0; m < packSize; m++) {
+                           int sx = packCenterX + rand.nextInt(5) - 2;
+                           int sz = packCenterZ + rand.nextInt(5) - 2;
+                           sx = Math.max(-308, Math.min(308, sx));
+                           sz = Math.max(-308, Math.min(308, sz));
+                           int sy = findSafeGroundY(level, sx, sz, centerPos.getY());
+                           BlockPos spawnPos = new BlockPos(sx, sy, sz);
+                           if (!level.getBlockState(spawnPos.below()).liquid() && !level.getBlockState(spawnPos).liquid()) {
+                              LivingEntity mob = com.soybe.awakeningsystem.entity.mutant.MutantWardenContent.maybeTowerWarden(level, floor, rand, centerPos);
+                              if (mob == null) mob = createFloorMob(level, floor, rand);
+                              if (mob != null) {
+                                 mob.moveTo((double)sx + 0.5, (double)sy, (double)sz + 0.5, rand.nextFloat() * 360.0F, 0.0F);
+                                 level.addFreshEntity(mob);
+                                 nearbyCount++;
+                              }
                            }
                         }
                      }
+                  }
+               }
+            }
+         }
+      }
+   }
+
+   public static void tickFloorSpawns(ServerPlayer player) {
+      if (player == null || player.isSpectator()) return;
+      ServerLevel level = player.serverLevel();
+      if (level == null || !isGreatTowerDimension(level)) return;
+      if (player.tickCount % 80 != 0) return;
+
+      int floor = getFloorForPos(level, player.blockPosition());
+      if (floor < TOWER_FLOORS.length && floor != 10 && floor != 20) {
+         FloorLayout lay = getLayout(floor);
+         int ax = lay.advanceX();
+         int az = lay.advanceZ();
+         if (!com.soybe.awakeningsystem.tower.terrain.TowerFloorTerrain.isCustom(floor)) {
+            int[] a = landNear(level, floor * 2 + 1, ax, az);
+            ax = a[0];
+            az = a[1];
+         }
+         int ay = findSafeGroundY(level, ax, az, floor == 5 || floor == 15 ? 32 : 64);
+         int gx = ax - lay.advanceFacing().getStepX() * 2;
+         int gz = az - lay.advanceFacing().getStepZ() * 2;
+         if (level.hasChunk(gx >> 4, gz >> 4) && !(level.getBlockState(new BlockPos(gx, ay, gz)).getBlock() instanceof AscensionPortalBlock)) {
+            buildThemedAdvancePavilion(level, floor, ax, ay, az, lay.advanceFacing());
+            com.soybe.awakeningsystem.tower.TowerPortalBeacon.remember(floor, new BlockPos(ax, ay, az));
+         }
+      }
+      if (floor == 5 || floor == 10 || floor == 11 || floor == 15 || floor == 20 || floor == 21 || floor == 25) {
+         return;
+      }
+
+      FloorLayout layout = getLayout(floor);
+      BlockPos pos = player.blockPosition();
+
+      int nearbyCount = level.getEntitiesOfClass(
+            Mob.class,
+            player.getBoundingBox().inflate(80.0),
+            e -> e.isAlive() && BuiltInRegistries.ENTITY_TYPE.getKey(e.getType()).getNamespace().equals("awakening_system")
+      ).size();
+
+      if (nearbyCount < 16) {
+         RandomSource rand = level.random;
+         int packs = 1 + rand.nextInt(2);
+         for (int p = 0; p < packs && nearbyCount < 20; p++) {
+            double angle = rand.nextDouble() * Math.PI * 2.0;
+            double dist = 32.0 + rand.nextDouble() * 32.0;
+            int px = pos.getX() + (int)(Math.cos(angle) * dist);
+            int pz = pos.getZ() + (int)(Math.sin(angle) * dist);
+            px = Math.max(-305, Math.min(305, px));
+            pz = Math.max(-305, Math.min(305, pz));
+
+            if (Math.hypot(px - layout.returnX(), pz - layout.returnZ()) < 20.0) continue;
+            if (Math.hypot(px - layout.advanceX(), pz - layout.advanceZ()) < 20.0) continue;
+
+            int packSize = 2 + rand.nextInt(3);
+            for (int m = 0; m < packSize; m++) {
+               int mx = px + rand.nextInt(5) - 2;
+               int mz = pz + rand.nextInt(5) - 2;
+               if (!level.hasChunk(mx >> 4, mz >> 4)) continue;
+
+               int my = findSafeGroundY(level, mx, mz, pos.getY());
+               BlockPos spawnPos = new BlockPos(mx, my, mz);
+               if (!level.getBlockState(spawnPos.below()).liquid() && !level.getBlockState(spawnPos).liquid() && level.getBlockState(spawnPos).isAir()) {
+                  LivingEntity mob = com.soybe.awakeningsystem.entity.mutant.MutantWardenContent.maybeTowerWarden(level, floor, rand, pos);
+                  if (mob == null) mob = createFloorMob(level, floor, rand);
+                  if (mob != null) {
+                     mob.moveTo((double)mx + 0.5, (double)my, (double)mz + 0.5, rand.nextFloat() * 360.0F, 0.0F);
+                     level.addFreshEntity(mob);
+                     nearbyCount++;
                   }
                }
             }
@@ -1397,8 +1485,8 @@ public static void processSectorChunk(ServerLevel level, ChunkAccess chunk) {
             yield r < 0.4F
                ? new WhiteThunderTigerEntity((EntityType)ModEntities.WHITE_THUNDER_TIGER.get(), level)
                : (
-                  r < 0.75F
-                     ? new MountHuaDiscipleEntity((EntityType)ModEntities.MOUNT_HUA_DISCIPLE.get(), level)
+                  r < 0.70F
+                     ? new BloodSectDiscipleEntity((EntityType)ModEntities.BLOOD_SECT_DISCIPLE.get(), level)
                      : new DemonicCultivatorEntity((EntityType)ModEntities.DEMONIC_CULTIVATOR.get(), level)
                );
          }

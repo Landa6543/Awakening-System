@@ -50,6 +50,8 @@ public class CustomPlayerPlushieBlock extends BaseEntityBlock {
     public static final java.util.UUID TOMCRAFT_UUID = java.util.UUID.fromString("e846a525-b14a-4f6a-963e-bf8d2f2db519");
     public static final java.util.UUID NANDACHAN_UUID = java.util.UUID.fromString("21115ef9-68a9-4612-ac2c-2b27d7527849");
     public static final java.util.UUID MISTIC_POTATO_UUID = java.util.UUID.fromString("936dab1b-f931-45b7-9f6d-e9ad2430e66a");
+    public static final java.util.UUID THE_REAL_HATTER_UUID = java.util.UUID.fromString("70951c84-8372-4b7a-bbe1-601cf695f09c");
+    public static final java.util.UUID WRAITH_57IS_UUID = java.util.UUID.fromString("04c2e786-7ca4-4cea-b4b6-04679d65edbb");
 
     public static ResolvableProfile resolveNamedProfile(String name) {
         if ("Dev".equalsIgnoreCase(name) || "LanderAlo".equalsIgnoreCase(name)) {
@@ -69,6 +71,12 @@ public class CustomPlayerPlushieBlock extends BaseEntityBlock {
         }
         if ("MisticPotato".equalsIgnoreCase(name) || "Mistic_Potato".equalsIgnoreCase(name) || "Potato".equalsIgnoreCase(name)) {
             return new ResolvableProfile(java.util.Optional.of("MisticPotato"), java.util.Optional.of(MISTIC_POTATO_UUID), new com.mojang.authlib.properties.PropertyMap());
+        }
+        if ("TheRealHatter".equalsIgnoreCase(name)) {
+            return new ResolvableProfile(java.util.Optional.of("TheRealHatter"), java.util.Optional.of(THE_REAL_HATTER_UUID), new com.mojang.authlib.properties.PropertyMap());
+        }
+        if ("57IS_Wraith".equalsIgnoreCase(name)) {
+            return new ResolvableProfile(java.util.Optional.of("57IS_Wraith"), java.util.Optional.of(WRAITH_57IS_UUID), new com.mojang.authlib.properties.PropertyMap());
         }
         if (StringUtil.isValidPlayerName(name)) {
             return new ResolvableProfile(java.util.Optional.of(name), java.util.Optional.empty(), new com.mojang.authlib.properties.PropertyMap());

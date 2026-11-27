@@ -150,9 +150,7 @@ public class DemonicCultivatorEntity extends Monster {
     protected void dropCustomDeathLoot(net.minecraft.server.level.ServerLevel level, DamageSource damageSource, boolean recentlyHit) {
         super.dropCustomDeathLoot(level, damageSource, recentlyHit);
 
-        if (SystemItems.SKY_DEMON_SWORD != null && SystemItems.SKY_DEMON_SWORD.isBound()) {
-            this.spawnAtLocation(new ItemStack(SystemItems.SKY_DEMON_SWORD.get(), 1));
-        } else {
+        if (this.random.nextFloat() < 0.15F) {
             this.spawnAtLocation(new ItemStack(Items.IRON_SWORD, 1));
         }
         this.spawnAtLocation(new ItemStack(Items.BLAZE_POWDER, 1 + this.random.nextInt(2)));

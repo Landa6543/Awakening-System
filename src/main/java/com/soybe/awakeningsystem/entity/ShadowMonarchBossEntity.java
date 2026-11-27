@@ -180,10 +180,14 @@ public class ShadowMonarchBossEntity extends Monster {
                 }
                 if (domainTicks % 20 == 0 && this.level() instanceof net.minecraft.server.level.ServerLevel sl) {
                     var domainAabb = this.getBoundingBox().inflate(8.5D, 3.0D, 8.5D);
+                    boolean isAllyShadow = this.getTags().contains("shadow_soldier");
                     var victims = sl.getEntitiesOfClass(LivingEntity.class, domainAabb,
-                            e -> e != this && !e.getTags().contains("shadow_soldier") && !e.getType().equals(this.getType()));
+                            e -> e != this
+                                    && !e.getTags().contains("shadow_soldier")
+                                    && !e.getType().equals(this.getType())
+                                    && (!isAllyShadow || (!(e instanceof Player) && !com.soybe.awakeningsystem.guild.GuildEventHandler.areAlliesOrSameGuild(this, e))));
                     for (var v : victims) {
-                        v.hurt(this.damageSources().magic(), 7.0F);
+                        v.hurt(this.damageSources().indirectMagic(this, this), 7.0F);
                         v.addEffect(new MobEffectInstance(MobEffects.WITHER, 60, 1));
                         v.addEffect(new MobEffectInstance(MobEffects.DARKNESS, 60, 0));
                         v.addEffect(new MobEffectInstance(MobEffects.MOVEMENT_SLOWDOWN, 60, 1));

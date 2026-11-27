@@ -3328,32 +3328,32 @@ public final class SystemItems {
     public static final DeferredHolder<Item, Item> MANA_CRYSTAL_SHARD_E = AwakeningSystemMod.ITEMS.register("mana_crystal_shard_e",
             () -> new ManaCrystalShardItem(ManaCrystalShardItem.CrystalRank.E));
     public static final DeferredHolder<Item, Item> MANA_CRYSTAL_CLUSTER_E_ITEM = AwakeningSystemMod.ITEMS.register("mana_crystal_cluster_e",
-            () -> new ManaCrystalClusterBlockItem(SystemBlocks.MANA_CRYSTAL_CLUSTER_E.get(), ManaCrystalShardItem.CrystalRank.E, 600));
+            () -> new ManaCrystalClusterBlockItem(SystemBlocks.MANA_CRYSTAL_CLUSTER_E.get(), ManaCrystalShardItem.CrystalRank.E, 1500));
 
     public static final DeferredHolder<Item, Item> MANA_CRYSTAL_SHARD_D = AwakeningSystemMod.ITEMS.register("mana_crystal_shard_d",
             () -> new ManaCrystalShardItem(ManaCrystalShardItem.CrystalRank.D));
     public static final DeferredHolder<Item, Item> MANA_CRYSTAL_CLUSTER_D_ITEM = AwakeningSystemMod.ITEMS.register("mana_crystal_cluster_d",
-            () -> new ManaCrystalClusterBlockItem(SystemBlocks.MANA_CRYSTAL_CLUSTER_D.get(), ManaCrystalShardItem.CrystalRank.D, 2500));
+            () -> new ManaCrystalClusterBlockItem(SystemBlocks.MANA_CRYSTAL_CLUSTER_D.get(), ManaCrystalShardItem.CrystalRank.D, 5000));
 
     public static final DeferredHolder<Item, Item> MANA_CRYSTAL_SHARD_C = AwakeningSystemMod.ITEMS.register("mana_crystal_shard_c",
             () -> new ManaCrystalShardItem(ManaCrystalShardItem.CrystalRank.C));
     public static final DeferredHolder<Item, Item> MANA_CRYSTAL_CLUSTER_C_ITEM = AwakeningSystemMod.ITEMS.register("mana_crystal_cluster_c",
-            () -> new ManaCrystalClusterBlockItem(SystemBlocks.MANA_CRYSTAL_CLUSTER_C.get(), ManaCrystalShardItem.CrystalRank.C, 10000));
+            () -> new ManaCrystalClusterBlockItem(SystemBlocks.MANA_CRYSTAL_CLUSTER_C.get(), ManaCrystalShardItem.CrystalRank.C, 15000));
 
     public static final DeferredHolder<Item, Item> MANA_CRYSTAL_SHARD_B = AwakeningSystemMod.ITEMS.register("mana_crystal_shard_b",
             () -> new ManaCrystalShardItem(ManaCrystalShardItem.CrystalRank.B));
     public static final DeferredHolder<Item, Item> MANA_CRYSTAL_CLUSTER_B_ITEM = AwakeningSystemMod.ITEMS.register("mana_crystal_cluster_b",
-            () -> new ManaCrystalClusterBlockItem(SystemBlocks.MANA_CRYSTAL_CLUSTER_B.get(), ManaCrystalShardItem.CrystalRank.B, 50000));
+            () -> new ManaCrystalClusterBlockItem(SystemBlocks.MANA_CRYSTAL_CLUSTER_B.get(), ManaCrystalShardItem.CrystalRank.B, 40000));
 
     public static final DeferredHolder<Item, Item> MANA_CRYSTAL_SHARD_A = AwakeningSystemMod.ITEMS.register("mana_crystal_shard_a",
             () -> new ManaCrystalShardItem(ManaCrystalShardItem.CrystalRank.A));
     public static final DeferredHolder<Item, Item> MANA_CRYSTAL_CLUSTER_A_ITEM = AwakeningSystemMod.ITEMS.register("mana_crystal_cluster_a",
-            () -> new ManaCrystalClusterBlockItem(SystemBlocks.MANA_CRYSTAL_CLUSTER_A.get(), ManaCrystalShardItem.CrystalRank.A, 250000));
+            () -> new ManaCrystalClusterBlockItem(SystemBlocks.MANA_CRYSTAL_CLUSTER_A.get(), ManaCrystalShardItem.CrystalRank.A, 100000));
 
     public static final DeferredHolder<Item, Item> MANA_CRYSTAL_SHARD_S = AwakeningSystemMod.ITEMS.register("mana_crystal_shard_s",
             () -> new ManaCrystalShardItem(ManaCrystalShardItem.CrystalRank.S));
     public static final DeferredHolder<Item, Item> MANA_CRYSTAL_CLUSTER_S_ITEM = AwakeningSystemMod.ITEMS.register("mana_crystal_cluster_s",
-            () -> new ManaCrystalClusterBlockItem(SystemBlocks.MANA_CRYSTAL_CLUSTER_S.get(), ManaCrystalShardItem.CrystalRank.S, 1000000));
+            () -> new ManaCrystalClusterBlockItem(SystemBlocks.MANA_CRYSTAL_CLUSTER_S.get(), ManaCrystalShardItem.CrystalRank.S, 250000));
 
     public static final DeferredHolder<Item, Item> MANA_CRYSTAL_SHARD_EX = AwakeningSystemMod.ITEMS.register("mana_crystal_shard_ex",
             () -> new ManaCrystalShardItem(ManaCrystalShardItem.CrystalRank.EX));

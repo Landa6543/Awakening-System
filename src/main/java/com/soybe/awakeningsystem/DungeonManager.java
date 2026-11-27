@@ -4389,7 +4389,7 @@ public final class DungeonManager {
                   if (session.enemyUUIDs != null && !session.enemyUUIDs.isEmpty()) {
                      boolean changed = session.enemyUUIDs.removeIf(uuid -> {
                         Entity ent = level.getEntity(uuid);
-                        return ent == null || !ent.isAlive() || ent.isRemoved();
+                        return ent != null && (!ent.isAlive() || ent.isRemoved());
                      });
                      if (changed && session.bossEvent != null) {
                         int remaining = session.enemyUUIDs.size();

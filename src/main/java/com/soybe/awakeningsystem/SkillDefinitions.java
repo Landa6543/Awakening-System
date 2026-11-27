@@ -127,28 +127,21 @@ public final class SkillDefinitions {
     }
 
     public static String affinity(String skillId) {
+        if (skillId == null) return "combat";
         if (skillId.endsWith("_evolution")) skillId = skillId.substring(0, skillId.length() - 10);
         return switch (skillId) {
-            case "stone_strike", "combat_instinct", "seismic_roar" -> "combat";
-            case "enduring_flesh", "deep_breath", "fire_ward" -> "vitality";
-            case "windrunner", "shadow_step", "dimensional_blink" -> "agility";
-            case "ore_sense", "artisan_hand" -> "mining";
-            case "green_thumb", "alchemist_eye" -> "gathering";
-            case "magnetic_pull", "deadeye", "guardian_stance" -> "support";
-            case "blaze_ignition", "bloodthirst" -> "combat";
-            case "spectral_shift", "phoenix_rebirth" -> "vitality";
-            case "piercing_shot", "web_snare", "kinetic_blast", "tidal_surge" -> "combat";
-            case "shadow_monarch" -> "combat";
-            case "rulers_authority", "asrahan_mana_blade", "electrification", "nano_blade_overdrive" -> "combat";
-            case "dragon_dive", "black_fire_wave" -> "combat";
-            case "isekai_predator", "isekai_dimensional_slash", "isekai_dragon_roar", "isekai_mana_burst" -> "combat";
-            case "shonen_infinite_void", "shonen_getsuga_tensho", "shonen_conquerors_haki", "shonen_zoltraak", "shonen_rasenshuriken" -> "combat";
-            case "caregiver_blessing", "fourth_wall", "estate_workmanship", "nano_healing" -> "support";
-            case "blue_dragon_scales", "dragon_sense", "iron_will" -> "vitality";
-            case "death_king_rewind" -> "vitality";
-            case "system_core", "beast_bond", "cataclysm_breaker", "twilight_attunement",
-                    "aether_ascension", "deep_dark_resonance", "adventurer_instinct",
-                    "eclipse_edge", "eclipse_core" -> "integration";
+            case "stone_strike", "ore_sense", "artisan_hand", "estate_workmanship" -> "mining";
+            case "enduring_flesh", "deep_breath", "fire_ward", "spectral_shift", "phoenix_rebirth", "death_king_rewind", "iron_will", "caregiver_blessing", "fourth_wall", "nano_healing", "unique_fourth_wall_infinite" -> "survival";
+            case "windrunner", "shadow_step", "dimensional_blink", "dragon_dive", "aether_ascension" -> "mobility";
+            case "deadeye", "piercing_shot" -> "ranged";
+            case "guardian_stance", "blue_dragon_scales" -> "protection";
+            case "green_thumb", "web_snare" -> "nature";
+            case "alchemist_eye" -> "alchemy";
+            case "dragon_sense" -> "perception";
+            case "tidal_surge", "twilight_attunement", "deep_dark_resonance" -> "depth";
+            case "blaze_ignition", "black_fire_wave" -> "fire";
+            case "eclipse_edge", "eclipse_core" -> "eclipse";
+            case "rulers_authority", "system_core", "magnetic_pull", "unique_rulers_authority_prime" -> "system";
             default -> "combat";
         };
     }

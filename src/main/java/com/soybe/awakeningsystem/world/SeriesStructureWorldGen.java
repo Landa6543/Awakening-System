@@ -1092,25 +1092,15 @@ public final class SeriesStructureWorldGen {
     private static final java.util.Set<Long> EVALUATED_CHUNKS = new java.util.HashSet<>();
 
     public static void onChunkLoaded(ServerLevel level, net.minecraft.world.level.ChunkPos pos) {
-        if (level == null || !level.dimension().equals(Level.OVERWORLD)) return;
-        int cx = pos.x;
-        int cz = pos.z;
-        long chunkKey = net.minecraft.world.level.ChunkPos.asLong(cx, cz);
-        if (EVALUATED_CHUNKS.contains(chunkKey)) return;
-
-        if (isRegionTargetChunk(level, cx, cz)) {
-            if (areAllChunksLoaded(level, cx, cz)) {
-                EVALUATED_CHUNKS.add(chunkKey);
-                SeriesStructureData data = SeriesStructureData.get(level.getServer());
-                attemptNaturalGeneration(level, cx, cz, data);
-            }
-        }
+        // Las estructuras de exploración ahora se generan por worldgen oficial (AwakeningStructures)
     }
 
     public static void tickNaturalGeneration(MinecraftServer server) {
         if (server == null) return;
         SeriesStructureBuilder.returnExpelledNpcs(server);
         checkAndEnsureNpcsPresent(server);
+        com.soybe.awakeningsystem.worldgen.AwakeningStructures.drainPendingBuilds(server);
+        if (true) return;
 
         ServerLevel level = server.overworld();
         if (level == null) return;
@@ -2152,8 +2142,17 @@ public final class SeriesStructureWorldGen {
             ServerLevel level = player.serverLevel();
             BlockPos playerPos = player.blockPosition();
 
+            String playerDimPath = level.dimension().location().getPath();
             for (Map.Entry<String, BlockPos> entry : all.entrySet()) {
                 String key = entry.getKey();
+                if (key.contains("#")) {
+                    String[] parts = key.split("#");
+                    if (parts.length >= 2 && !parts[1].equals(playerDimPath)) {
+                        continue;
+                    }
+                } else if (!"overworld".equals(playerDimPath)) {
+                    continue;
+                }
                 BlockPos sPos = entry.getValue();
 
                 if (sPos.distSqr(playerPos) <= 64.0 * 64.0) {

@@ -12,11 +12,10 @@ import java.util.List;
 public final class OtherMaps {
 	private OtherMaps() {}
 
-	/** Mod ids of the other maps and minimaps. */
+	/** Mod ids of the other maps and minimaps. (ftbchunks excluded so chunk claiming coexists with Awakening System / Diorama map) */
 	private static final List<String> MAP_MODS = List.of(
 			"journeymap",
 			"xaerominimap", "xaerominimapfair", "xaeroworldmap",
-			"ftbchunks",
 			"voxelmap",
 			"antiqueatlas",
 			"map_atlases",

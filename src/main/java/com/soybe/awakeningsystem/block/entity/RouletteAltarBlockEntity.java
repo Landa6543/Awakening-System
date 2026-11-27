@@ -73,9 +73,10 @@ public class RouletteAltarBlockEntity extends BlockEntity implements GeoBlockEnt
 
     public void populateSlotsFresh() {
         RandomSource rand = level != null ? level.random : RandomSource.create();
+        int worldTier = com.soybe.awakeningsystem.config.CustomLootConfigManager.getWorldTier(this.level);
 
         for (int i = 0; i < 8; i++) {
-            slotItems.set(i, com.soybe.awakeningsystem.config.CustomLootConfigManager.getRouletteSlotItem(i, rand));
+            slotItems.set(i, com.soybe.awakeningsystem.config.CustomLootConfigManager.getRouletteSlotItem(i, rand, worldTier));
         }
 
         setChanged();
@@ -93,19 +94,37 @@ public class RouletteAltarBlockEntity extends BlockEntity implements GeoBlockEnt
         if (!slotItems.get(s).isEmpty()) {
             return slotItems.get(s);
         }
-        return getDefaultFallbackItem(s);
+        return getDefaultFallbackItem(s, com.soybe.awakeningsystem.config.CustomLootConfigManager.getWorldTier(this.level));
     }
 
     public static ItemStack getDefaultFallbackItem(int slot) {
+        return getDefaultFallbackItem(slot, 1);
+    }
+
+    public static ItemStack getDefaultFallbackItem(int slot, int worldTier) {
         return switch (Math.floorMod(slot, 8)) {
             case 0 -> new ItemStack(Items.NETHERITE_INGOT, 2);   // gacha weapons stay in the gacha
-            case 1 -> SystemItems.CELESTIAL_INGOT.isBound() ? new ItemStack(SystemItems.CELESTIAL_INGOT.get(), 2) : new ItemStack(Items.NETHER_STAR, 2);
-            case 2 -> SystemItems.MITHRIL_INGOT.isBound() ? new ItemStack(SystemItems.MITHRIL_INGOT.get(), 4) : new ItemStack(Items.NETHERITE_INGOT, 4);
-            case 3 -> SystemItems.SHADOW_APPLE.isBound() ? new ItemStack(SystemItems.SHADOW_APPLE.get(), 2) : new ItemStack(Items.ENCHANTED_GOLDEN_APPLE, 2);
-            case 4 -> SystemItems.SPIRIT_QI_CARROT.isBound() ? new ItemStack(SystemItems.SPIRIT_QI_CARROT.get(), 8) : new ItemStack(Items.GOLDEN_CARROT, 16);
-            case 5 -> SystemItems.SOUL_ALLOY_INGOT.isBound() ? new ItemStack(SystemItems.SOUL_ALLOY_INGOT.get(), 4) : new ItemStack(Items.DIAMOND_BLOCK, 2);
-            case 6 -> SystemItems.ROULETTE_TOKEN.isBound() ? new ItemStack(SystemItems.ROULETTE_TOKEN.get(), 3) : new ItemStack(Items.ENDER_PEARL, 16);
-            default -> SystemItems.AWAKENING_COIN.isBound() ? new ItemStack(SystemItems.AWAKENING_COIN.get(), 64) : new ItemStack(Items.EMERALD_BLOCK, 4);
+            case 1 -> (worldTier >= 4 && SystemItems.CELESTIAL_INGOT.isBound())
+                    ? new ItemStack(SystemItems.CELESTIAL_INGOT.get(), 2)
+                    : new ItemStack(Items.NETHER_STAR, 2);
+            case 2 -> (worldTier >= 2 && SystemItems.MITHRIL_INGOT.isBound())
+                    ? new ItemStack(SystemItems.MITHRIL_INGOT.get(), 4)
+                    : new ItemStack(Items.NETHERITE_INGOT, 4);
+            case 3 -> SystemItems.SHADOW_APPLE.isBound()
+                    ? new ItemStack(SystemItems.SHADOW_APPLE.get(), 2)
+                    : new ItemStack(Items.ENCHANTED_GOLDEN_APPLE, 2);
+            case 4 -> (worldTier >= 3 && SystemItems.SPIRIT_QI_CARROT.isBound())
+                    ? new ItemStack(SystemItems.SPIRIT_QI_CARROT.get(), 8)
+                    : new ItemStack(Items.GOLDEN_CARROT, 16);
+            case 5 -> SystemItems.SOUL_ALLOY_INGOT.isBound()
+                    ? new ItemStack(SystemItems.SOUL_ALLOY_INGOT.get(), 4)
+                    : new ItemStack(Items.DIAMOND_BLOCK, 2);
+            case 6 -> SystemItems.ROULETTE_TOKEN.isBound()
+                    ? new ItemStack(SystemItems.ROULETTE_TOKEN.get(), 3)
+                    : new ItemStack(Items.ENDER_PEARL, 16);
+            default -> SystemItems.AWAKENING_COIN.isBound()
+                    ? new ItemStack(SystemItems.AWAKENING_COIN.get(), 64)
+                    : new ItemStack(Items.EMERALD_BLOCK, 4);
         };
     }
 

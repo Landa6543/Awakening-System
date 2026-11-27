@@ -424,6 +424,10 @@ public final class ElementalReactionManager {
     /**
      * Ciclo de actualización en el servidor para las auras activas y limpieza de textos de combate.
      */
+    public static boolean hasActiveState() {
+        return !ACTIVE_AURAS.isEmpty() || !FLOATING_TEXT_DESPAWNS.isEmpty();
+    }
+
     public static void clearAll() {
         ACTIVE_AURAS.clear();
         FLOATING_TEXT_DESPAWNS.clear();

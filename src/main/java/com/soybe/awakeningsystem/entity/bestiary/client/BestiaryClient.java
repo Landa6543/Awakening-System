@@ -107,6 +107,9 @@ public final class BestiaryClient {
 
         @Override
         public ResourceLocation getTextureLocation(SonrisaEntity e) {
+            if (ShadowSkins.isShadow(e)) {
+                return ShadowSkins.pick(e, TEXTURE);
+            }
             return ShadowSkins.pick(e, e.mouth(1.0F) > 0.5F ? TEXTURE : CLOSED);
         }
 

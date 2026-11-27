@@ -151,6 +151,10 @@ public final class BaseClassSkills {
             }
         }
         if (best == null) {
+            if (data.storedShadowCount() > 0) {
+                SystemEvents.deployPlayerShadows(player, 2);
+                return;
+            }
             AwakeningSystemMod.notify(player, "awakening_system.notification.shadow_no_souls.title",
                     "awakening_system.notification.shadow_no_souls.desc", -35226);
             return;

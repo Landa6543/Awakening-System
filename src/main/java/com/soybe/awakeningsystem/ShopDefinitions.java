@@ -48,7 +48,7 @@ public final class ShopDefinitions {
             new Entry("box_mythic", "awakening_system:box_mythic", 50000, 1, "awakening_system.shop.item.box_mythic", "boxes", "", 2, "awakening_system:isekai", 100),
             new Entry("box_primordial", "awakening_system:box_primordial", 130000, 1, "awakening_system.shop.item.box_primordial", "boxes", "", 4, "awakening_system:teyvat_world", 130),
             new Entry("plushies_lootbox", "awakening_system:plushieslootbox", 5000, 1, "awakening_system.shop.item.plushieslootbox", "boxes"),
-            new Entry("roulette_token", "awakening_system:roulette_token", 10000, 1, "item.awakening_system.roulette_token", "boxes", 1, 20),
+            new Entry("roulette_token", "awakening_system:roulette_token", 35000, 1, "item.awakening_system.roulette_token", "boxes", 1, 55),
             new Entry("dungeon_key", "awakening_system:dungeon_key", 4500, 1, "awakening_system.shop.item.dungeon_key", "boxes"),
             new Entry("overworld_dungeon_key", "awakening_system:overworld_dungeon_key", 5500, 1, "item.awakening_system.overworld_dungeon_key", "boxes"),
             new Entry("nether_flame_key", "awakening_system:nether_flame_key", 8500, 1, "item.awakening_system.nether_flame_key", "boxes", "", 1, "minecraft:the_nether"),
@@ -58,7 +58,7 @@ public final class ShopDefinitions {
             new Entry("murim_dao_key", "awakening_system:murim_dao_key", 4500, 1, "item.awakening_system.murim_dao_key", "boxes", "", 3, "awakening_system:murim"),
             new Entry("ranker_tower_ticket", "awakening_system:ranker_tower_ticket", 5000, 1, "item.awakening_system.ranker_tower_ticket", "boxes"),
             new Entry("ranker_return_scroll", "awakening_system:ranker_return_scroll", 2500, 1, "item.awakening_system.ranker_return_scroll", "boxes"),
-            new Entry("roulette_altar", "awakening_system:roulette_altar", 85000, 1, "block.awakening_system.roulette_altar", "equipment", 1, 25),
+            new Entry("roulette_altar", "awakening_system:roulette_altar", 450000, 1, "block.awakening_system.roulette_altar", "equipment", 1, 75),
             new Entry("christmas_tree", "awakening_system:christmas_tree", 2500, 1, "block.awakening_system.christmas_tree", "boxes", 1, 1),
             new Entry("death_king_clock", "awakening_system:death_king_clock", 2800, 1, "awakening_system.shop.item.death_king_clock", "equipment", 2, 30),
 

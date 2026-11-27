@@ -86,7 +86,12 @@ public class SonrisaEntity extends Monster {
         super.customServerAiStep();
         LivingEntity t = this.getTarget();
         boolean prey = t != null && t.isAlive();
-        if (!isAwake()) {
+        if (this.getTags().contains("shadow_soldier")) {
+            if (!isAwake()) {
+                this.entityData.set(AWAKE, true);
+            }
+            sleepTimer = 0;
+        } else if (!isAwake()) {
             // just a rock: no moving, no turning
             this.getNavigation().stop();
             this.setYRot(this.yRotO);

@@ -25,7 +25,7 @@ public class CustomTierFurnaceMenu extends AbstractContainerMenu {
     public static final int AUGMENT_BLUE_SLOT = 5;
 
     public static final int SLOT_COUNT = 6;
-    public static final int DATA_COUNT = 6;
+    public static final int DATA_COUNT = CustomTierFurnaceBlockEntity.DATA_COUNT;
     private static final int INV_SLOT_START = 6;
     private static final int INV_SLOT_END = 33;
     private static final int USE_ROW_SLOT_START = 33;
@@ -98,11 +98,56 @@ public class CustomTierFurnaceMenu extends AbstractContainerMenu {
         return this.data.get(CustomTierFurnaceBlockEntity.DATA_AUGMENT_TYPE);
     }
 
+    public int getSideConfig(int relSide) {
+        if (relSide < 0 || relSide > 5) return 0;
+        return this.data.get(CustomTierFurnaceBlockEntity.DATA_SIDE_TOP + relSide);
+    }
+
+    public boolean isAutoInput() {
+        return this.data.get(CustomTierFurnaceBlockEntity.DATA_AUTO_INPUT) == 1;
+    }
+
+    public boolean isAutoOutput() {
+        return this.data.get(CustomTierFurnaceBlockEntity.DATA_AUTO_OUTPUT) == 1;
+    }
+
+    public int getRedstoneMode() {
+        return this.data.get(CustomTierFurnaceBlockEntity.DATA_REDSTONE_MODE);
+    }
+
     @Override
     public boolean clickMenuButton(Player player, int id) {
         if (id == 0) {
             boolean open = isAugmentGuiOpen();
             setAugmentGuiOpen(!open);
+            return true;
+        }
+        if (id >= 10 && id <= 15) {
+            int dataIdx = CustomTierFurnaceBlockEntity.DATA_SIDE_TOP + (id - 10);
+            int next = (this.data.get(dataIdx) + 1) % 5;
+            this.data.set(dataIdx, next);
+            this.container.setChanged();
+            return true;
+        }
+        if (id == 16) {
+            this.data.set(CustomTierFurnaceBlockEntity.DATA_AUTO_INPUT, isAutoInput() ? 0 : 1);
+            this.container.setChanged();
+            return true;
+        }
+        if (id == 17) {
+            this.data.set(CustomTierFurnaceBlockEntity.DATA_AUTO_OUTPUT, isAutoOutput() ? 0 : 1);
+            this.container.setChanged();
+            return true;
+        }
+        if (id == 18) {
+            int next = (getRedstoneMode() + 1) % 3;
+            this.data.set(CustomTierFurnaceBlockEntity.DATA_REDSTONE_MODE, next);
+            this.container.setChanged();
+            return true;
+        }
+        if (id >= 19 && id <= 21) {
+            this.data.set(CustomTierFurnaceBlockEntity.DATA_REDSTONE_MODE, id - 19);
+            this.container.setChanged();
             return true;
         }
         return super.clickMenuButton(player, id);

@@ -57,6 +57,12 @@ public class GiantSandwormBodyPart extends Entity {
         return distance < 65536.0D;
     }
 
+    /** Never saved with the land: the worm builds its parts again when it comes back. */
+    @Override
+    public boolean shouldBeSaved() {
+        return false;
+    }
+
     public boolean removeWhenFarAway(double distanceToClosestPlayer) {
         return false;
     }

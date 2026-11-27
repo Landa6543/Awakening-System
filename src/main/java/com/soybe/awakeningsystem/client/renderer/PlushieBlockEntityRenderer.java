@@ -24,7 +24,15 @@ import java.util.UUID;
 
 public class PlushieBlockEntityRenderer implements BlockEntityRenderer<PlushieBlockEntity> {
 
-    public record TributeInfo(String name, UUID uuid, ResourceLocation fallbackTexture) {}
+    public record TributeInfo(String name, UUID uuid, ResourceLocation fallbackTexture,
+                              net.minecraft.world.item.component.ResolvableProfile profile) {
+        public TributeInfo(String name, UUID uuid, ResourceLocation fallbackTexture) {
+            this(name, uuid, fallbackTexture, new net.minecraft.world.item.component.ResolvableProfile(
+                    java.util.Optional.of(name),
+                    java.util.Optional.of(uuid),
+                    new com.mojang.authlib.properties.PropertyMap()));
+        }
+    }
 
     public static final Map<String, TributeInfo> TRIBUTES = Map.of(
             "landeraloplushie", new TributeInfo("LanderAlo", UUID.fromString("9c6e2002-2a3d-4a19-bc57-ecd32c1f129d"),
@@ -38,7 +46,11 @@ public class PlushieBlockEntityRenderer implements BlockEntityRenderer<PlushieBl
             "nandachanplushie", new TributeInfo("Nandachan", UUID.fromString("21115ef9-68a9-4612-ac2c-2b27d7527849"),
                     ResourceLocation.fromNamespaceAndPath(AwakeningSystemMod.MOD_ID, "textures/block/nandachanplushie.png")),
             "misticpotatoplushie", new TributeInfo("MisticPotato", UUID.fromString("936dab1b-f931-45b7-9f6d-e9ad2430e66a"),
-                    ResourceLocation.fromNamespaceAndPath(AwakeningSystemMod.MOD_ID, "textures/block/misticpotatoplushie.png"))
+                    ResourceLocation.fromNamespaceAndPath(AwakeningSystemMod.MOD_ID, "textures/block/misticpotatoplushie.png")),
+            "therealhatterplushie", new TributeInfo("TheRealHatter", UUID.fromString("70951c84-8372-4b7a-bbe1-601cf695f09c"),
+                    net.minecraft.client.resources.DefaultPlayerSkin.get(UUID.fromString("70951c84-8372-4b7a-bbe1-601cf695f09c")).texture()),
+            "57is_wraithplushie", new TributeInfo("57IS_Wraith", UUID.fromString("04c2e786-7ca4-4cea-b4b6-04679d65edbb"),
+                    net.minecraft.client.resources.DefaultPlayerSkin.get(UUID.fromString("04c2e786-7ca4-4cea-b4b6-04679d65edbb")).texture())
     );
 
     public static final Map<String, ResourceLocation> CHIBI_SKIN_PLUSHIES = Map.of(
@@ -63,7 +75,12 @@ public class PlushieBlockEntityRenderer implements BlockEntityRenderer<PlushieBl
 
         String blockId = BuiltInRegistries.BLOCK.getKey(state.getBlock()).getPath();
         TributeInfo tribute = TRIBUTES.get(blockId);
-        ResourceLocation chibiTexture = tribute != null ? tribute.fallbackTexture() : CHIBI_SKIN_PLUSHIES.get(blockId);
+        ResourceLocation chibiTexture;
+        if (tribute != null) {
+            chibiTexture = CustomPlayerPlushieRenderer.resolveLiveSkin(tribute.profile(), tribute.fallbackTexture());
+        } else {
+            chibiTexture = CHIBI_SKIN_PLUSHIES.get(blockId);
+        }
 
         poseStack.pushPose();
 

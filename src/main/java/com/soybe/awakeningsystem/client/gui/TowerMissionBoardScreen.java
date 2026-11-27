@@ -172,15 +172,15 @@ public final class TowerMissionBoardScreen extends Screen {
         g.blit(BOARD_BG, left, top, 0, 0, boardW, boardH, 560, 340);
 
         // 2. Placa Superior
-        drawCleanCentered(g, "TABLON DIARIO DE LA TORRE DEL RANKER", left + boardW / 2, top + 11, 0xFFFFD700);
+        drawCleanCentered(g, Component.translatable("awakening_system.tower_board.title").getString(), left + boardW / 2, top + 11, 0xFFFFD700);
 
         boolean hasEntered = payload.playerSavedFloor() > 0;
         String statusStr;
         if (!hasEntered) {
-            statusStr = "Dia " + payload.currentDay() + " del Ciclo  |  Sin Ingreso a la Torre (Aspirante sin Registro)";
+            statusStr = Component.translatable("awakening_system.tower_board.status_unregistered", payload.currentDay() + 1).getString();
             drawCleanCentered(g, statusStr, left + boardW / 2, top + 23, 0xFFE08888);
         } else {
-            statusStr = "Dia " + payload.currentDay() + " del Ciclo  |  Piso Maximo Desbloqueado: Piso " + payload.playerSavedFloor();
+            statusStr = Component.translatable("awakening_system.tower_board.status_registered", payload.currentDay() + 1, payload.playerSavedFloor()).getString();
             drawCleanCentered(g, statusStr, left + boardW / 2, top + 23, 0xFFD0C0A0);
         }
 
@@ -200,7 +200,7 @@ public final class TowerMissionBoardScreen extends Screen {
             renderActiveMissionStatusBar(g, left, top + 296, boardW, mX, mY, hasEntered);
         } else {
             // the whole board dims behind the dossier, header included, so nothing peeks out from under it
-            g.fill(left, top, left + boardW, top + boardH, 0xD8000000);
+            g.fill(left, top, left + boardW, top + boardH, 0xEE000000);
 
             if (selectedSlot >= 0 && selectedSlot < TowerDailyMissionManager.DAILY_OFFERS_COUNT && dailyIndices != null && selectedSlot < dailyIndices.length) {
                 renderDossierModal(g, left, top, boardW, boardH, dailyIndices[selectedSlot], selectedSlot, mX, mY, hasEntered);
@@ -234,31 +234,31 @@ public final class TowerMissionBoardScreen extends Screen {
 
         // Si NO ha ingresado a la torre, no muestra nombres de piso ni títulos
         if (!hasEntered) {
-            drawCleanCentered(g, "[ CLASIFICADO ]", cx, y + 17, 0xFF8A1515);
-            drawCleanCentered(g, "Contrato Sellado", cx, y + 30, 0xFF2A1A0A);
-            drawCleanCentered(g, "Sin Registro en Torre", cx, y + 43, 0xFF553820);
+            drawCleanCentered(g, Component.translatable("awakening_system.tower_board.classified_tag").getString(), cx, y + 17, 0xFF8A1515);
+            drawCleanCentered(g, Component.translatable("awakening_system.tower_board.sealed_contract").getString(), cx, y + 30, 0xFF2A1A0A);
+            drawCleanCentered(g, Component.translatable("awakening_system.tower_board.no_tower_record").getString(), cx, y + 43, 0xFF553820);
             drawCleanCentered(g, "??? C | ??? XP", cx, y + 56, 0xFF7A5830);
-            drawCleanCentered(g, "+??? Gemas", cx, y + 68, 0xFF4A6B3A);
+            drawCleanCentered(g, Component.translatable("awakening_system.tower_board.unknown_gems").getString(), cx, y + 68, 0xFF4A6B3A);
 
             // Botón bloqueado limpio
             g.fill(x + 5, y + 83, x + w - 5, y + 99, 0xDD7A1515);
-            drawCleanCentered(g, "BLOQUEADO", cx, y + 87, 0xFFFFFFFF);
+            drawCleanCentered(g, Component.translatable("awakening_system.tower_board.btn_locked").getString(), cx, y + 87, 0xFFFFFFFF);
             return;
         }
 
         // Si el jugador YA ingresó a la torre:
         int floorColor = isLocked ? 0xFF8A1515 : (item.floor() >= 50 ? 0xFF5A1C6A : (item.floor() >= 10 ? 0xFF154870 : 0xFF1B5E20));
-        drawCleanCentered(g, "[ PISO " + item.floor() + " ]", cx, y + 17, floorColor);
+        drawCleanCentered(g, Component.translatable("awakening_system.tower_board.floor_tag", item.floor()).getString(), cx, y + 17, floorColor);
 
         // Título limpio sin negrita
-        String title = item.title();
+        String title = trMissionTitle(item);
         if (this.font.width(title) > w - 10) {
             title = this.font.plainSubstrByWidth(title, w - 16) + "..";
         }
         drawCleanCentered(g, title, cx, y + 30, 0xFF1A1A1A);
 
         // Objetivo
-        String target = item.targetName() + " x" + item.targetCount();
+        String target = trMissionTarget(item) + " x" + item.targetCount();
         if (this.font.width(target) > w - 10) {
             target = this.font.plainSubstrByWidth(target, w - 16) + "..";
         }
@@ -268,7 +268,7 @@ public final class TowerMissionBoardScreen extends Screen {
         String rew1 = formatRewardAmount(item.coins()) + " C | " + formatRewardAmount(item.exp()) + " XP";
         drawAutoScaledCleanCentered(g, rew1, cx, y + 56, 0xFF8A5A10, w - 12);
 
-        String rew2 = "+" + item.crystalReward().getCount() + " Crist. Maná";
+        String rew2 = Component.translatable("awakening_system.tower_board.crystals_short", item.crystalReward().getCount()).getString();
         drawAutoScaledCleanCentered(g, rew2, cx, y + 68, 0xFF1E6E28, w - 12);
 
         // Insignia inferior
@@ -279,16 +279,16 @@ public final class TowerMissionBoardScreen extends Screen {
 
         if (isLocked) {
             g.fill(btnX, btnY, btnX + btnW, btnY + btnH, 0xDD7A1515);
-            drawCleanCentered(g, "BLOQUEADO", cx, btnY + 4, 0xFFFFFFFF);
+            drawCleanCentered(g, Component.translatable("awakening_system.tower_board.btn_locked").getString(), cx, btnY + 4, 0xFFFFFFFF);
         } else if (isActive) {
             g.fill(btnX, btnY, btnX + btnW, btnY + btnH, 0xDD154870);
             drawCleanCentered(g, "(" + payload.activeProgress() + "/" + payload.activeNeeded() + ")", cx, btnY + 4, 0xFFFFFFFF);
         } else if (isCompleted) {
             g.fill(btnX, btnY, btnX + btnW, btnY + btnH, 0xDD1B5E20);
-            drawCleanCentered(g, "COMPLETADA", cx, btnY + 4, 0xFFFFFFFF);
+            drawCleanCentered(g, Component.translatable("awakening_system.tower_board.btn_completed").getString(), cx, btnY + 4, 0xFFFFFFFF);
         } else {
             g.fill(btnX, btnY, btnX + btnW, btnY + btnH, hovered ? 0xFFC08020 : 0xDD8A5816);
-            drawCleanCentered(g, hovered ? "EXAMINAR" : "DISPONIBLE", cx, btnY + 4, 0xFFFFFFFF);
+            drawCleanCentered(g, Component.translatable(hovered ? "awakening_system.tower_board.btn_inspect" : "awakening_system.tower_board.btn_available").getString(), cx, btnY + 4, 0xFFFFFFFF);
         }
     }
 
@@ -297,16 +297,14 @@ public final class TowerMissionBoardScreen extends Screen {
         int barW = boardW - 48;
 
         if (!hasEntered) {
-            drawCleanCentered(g, "No tienes registro en la Torre. Ingresa a la Torre para habilitar tus contratos diarios.", barX + barW / 2, y + 8, 0xFFE0A080);
+            drawCleanCentered(g, Component.translatable("awakening_system.tower_board.unregistered_hint").getString(), barX + barW / 2, y + 8, 0xFFE0A080);
             return;
         }
 
         if (payload.hasActiveMission() && payload.activeIndex() >= 0 && payload.activeIndex() < TowerDailyMissionManager.ALL_MISSIONS.size()) {
             TowerMissionTemplate activeTemplate = TowerDailyMissionManager.ALL_MISSIONS.get(payload.activeIndex());
 
-            String text = "Mision Activa: " + activeTemplate.title() +
-                    "  |  Piso: " + activeTemplate.floor() +
-                    "  |  Progreso: " + payload.activeProgress() + "/" + payload.activeNeeded();
+            String text = Component.translatable("awakening_system.tower_board.active_bar", trMissionTitle(activeTemplate), activeTemplate.floor(), payload.activeProgress(), payload.activeNeeded()).getString();
             g.drawString(this.font, text, barX + 12, y + 8, 0xFFFFFFFF, false);
 
             if (payload.activeReadyToClaim()) {
@@ -317,10 +315,10 @@ public final class TowerMissionBoardScreen extends Screen {
                 boolean hov = (selectedSlot == -1) && (mX >= btnX && mX <= btnX + btnW && mY >= btnY && mY <= btnY + btnH);
 
                 g.fill(btnX, btnY, btnX + btnW, btnY + btnH, hov ? 0xFF00C050 : 0xFF008835);
-                drawCleanCentered(g, "RECLAMAR RECOMPENSA", btnX + btnW / 2, btnY + 5, 0xFFFFFFFF);
+                drawCleanCentered(g, Component.translatable("awakening_system.tower_board.btn_claim").getString(), btnX + btnW / 2, btnY + 5, 0xFFFFFFFF);
             }
         } else {
-            drawCleanCentered(g, "No tienes ninguna mision activa de la torre. Haz clic sobre cualquier pergamino para examinar.", barX + barW / 2, y + 8, 0xFFFFE090);
+            drawCleanCentered(g, Component.translatable("awakening_system.tower_board.no_active_hint").getString(), barX + barW / 2, y + 8, 0xFFFFE090);
         }
     }
 
@@ -347,13 +345,13 @@ public final class TowerMissionBoardScreen extends Screen {
         int cx = dosX + dosW / 2;
 
         if (!hasEntered) {
-            drawCleanCentered(g, "EXPEDIENTE CLASIFICADO", cx, dosY + 15, 0xFF8A1515);
-            drawCleanCentered(g, "Aspirante sin Registro en la Torre", cx, dosY + 28, 0xFF4A3018);
-            drawCleanCentered(g, "Acceso Restringido", cx, dosY + 42, 0xFF201205);
+            drawCleanCentered(g, Component.translatable("awakening_system.tower_board.dossier_classified").getString(), cx, dosY + 15, 0xFF8A1515);
+            drawCleanCentered(g, Component.translatable("awakening_system.tower_board.dossier_unregistered").getString(), cx, dosY + 28, 0xFF4A3018);
+            drawCleanCentered(g, Component.translatable("awakening_system.tower_board.dossier_restricted").getString(), cx, dosY + 42, 0xFF201205);
 
             g.fill(dosX + 22, dosY + 54, dosX + dosW - 22, dosY + 55, 0xFF8B6B4A);
 
-            String lore = "Para tener acceso a los contratos oficiales de la Torre del Ranker y examinar los objetivos clasificados, debes ingresar al menos una vez al Piso 1 para formalizar tu registro de cazador.";
+            String lore = Component.translatable("awakening_system.tower_board.dossier_unregistered_desc").getString();
             List<FormattedCharSequence> lines = this.font.split(Component.literal(lore), dosW - 44);
             int curY = dosY + 70;
             for (FormattedCharSequence line : lines) {
@@ -366,7 +364,7 @@ public final class TowerMissionBoardScreen extends Screen {
             int btnX = dosX + (dosW - btnW) / 2;
             int btnY = dosY + 248;
             g.fill(btnX, btnY, btnX + btnW, btnY + btnH, 0xFF7A1515);
-            drawCleanCentered(g, "REQUIERE INGRESAR A LA TORRE", cx, btnY + 7, 0xFFFFFFFF);
+            drawCleanCentered(g, Component.translatable("awakening_system.tower_board.btn_requires_tower").getString(), cx, btnY + 7, 0xFFFFFFFF);
             return;
         }
 
@@ -376,15 +374,15 @@ public final class TowerMissionBoardScreen extends Screen {
         boolean isCompleted = payload.completedToday() != null && slotIdx < payload.completedToday().length && payload.completedToday()[slotIdx];
         boolean hov = mX >= (dosX + 40) && mX <= (dosX + dosW - 40) && mY >= (dosY + 252) && mY <= (dosY + 276);
 
-        drawCleanCentered(g, "EXPEDIENTE DE MISION DE LA TORRE", cx, dosY + 14, 0xFF8A1515);
-        drawCleanCentered(g, "Piso Asignado: Planta " + item.floor() + " de la Torre", cx, dosY + 26, 0xFF4A3018);
-        drawCleanCentered(g, item.title(), cx, dosY + 40, 0xFF201205);
+        drawCleanCentered(g, Component.translatable("awakening_system.tower_board.dossier_title").getString(), cx, dosY + 14, 0xFF8A1515);
+        drawCleanCentered(g, Component.translatable("awakening_system.tower_board.dossier_floor", item.floor()).getString(), cx, dosY + 26, 0xFF4A3018);
+        drawCleanCentered(g, trMissionTitle(item), cx, dosY + 40, 0xFF201205);
 
         // Línea divisoria
         g.fill(dosX + 22, dosY + 52, dosX + dosW - 22, dosY + 53, 0xFF8B6B4A);
 
         // Lore narrativo
-        List<FormattedCharSequence> lines = this.font.split(Component.literal(item.narrative()), dosW - 44);
+        List<FormattedCharSequence> lines = this.font.split(Component.literal(trMissionNarrative(item)), dosW - 44);
         int curY = dosY + 58;
         for (FormattedCharSequence line : lines) {
             g.drawString(this.font, line, dosX + 22, curY, 0xFF2C1E12, false);
@@ -394,22 +392,21 @@ public final class TowerMissionBoardScreen extends Screen {
         // Sección de objetivos
         curY = Math.max(curY + 6, dosY + 124);
         g.fill(dosX + 20, curY, dosX + dosW - 20, curY + 38, 0x224A3018);
-        drawCleanCentered(g, "OBJETIVO DEL CONTRATO", cx, curY + 4, 0xFF6E3C18);
-        drawCleanCentered(g, "Objetivo: " + item.targetName() + " x" + item.targetCount(), cx, curY + 15, 0xFF152A4A);
-        drawCleanCentered(g, "Lugar: Piso " + item.floor() + " de la Torre del Ranker", cx, curY + 26, 0xFF1D3D22);
+        drawCleanCentered(g, Component.translatable("awakening_system.tower_board.dossier_objective_hdr").getString(), cx, curY + 4, 0xFF6E3C18);
+        drawCleanCentered(g, Component.translatable("awakening_system.tower_board.dossier_objective", trMissionTarget(item), item.targetCount()).getString(), cx, curY + 15, 0xFF152A4A);
+        drawCleanCentered(g, Component.translatable("awakening_system.tower_board.dossier_location", item.floor()).getString(), cx, curY + 26, 0xFF1D3D22);
 
         // Sección de recompensas
         curY += 44;
         g.fill(dosX + 20, curY, dosX + dosW - 20, curY + 44, 0x222E5E28);
-        drawCleanCentered(g, "RECOMPENSAS GARANTIZADAS", cx, curY + 4, 0xFF1E5E28);
-        drawCleanCentered(g, "Monedas: " + item.coins() + "  |  EXP: +" + item.exp(), cx, curY + 16, 0xFF4A3515);
+        drawCleanCentered(g, Component.translatable("awakening_system.tower_board.dossier_rewards_hdr").getString(), cx, curY + 4, 0xFF1E5E28);
+        drawCleanCentered(g, Component.translatable("awakening_system.tower_board.dossier_rewards_coins", item.coins(), item.exp()).getString(), cx, curY + 16, 0xFF4A3515);
         net.minecraft.world.item.ItemStack crystals = item.crystalReward();
         net.minecraft.world.item.ItemStack material = item.materialReward();
-        // each reward on its own short line, so nothing runs past the parchment
         String rank = net.minecraft.core.registries.BuiltInRegistries.ITEM.getKey(crystals.getItem()).getPath().replace("mana_crystal_shard_", "").toUpperCase(java.util.Locale.ROOT);
-        String line2 = "Cristales de Mana " + rank + " x" + crystals.getCount()
-                + (material.isEmpty() ? "" : "  |  " + item.rewardMaterialName() + " x" + material.getCount());
-        if (this.font.width(line2) > dosW - 70) line2 = "Cristales " + rank + " x" + crystals.getCount() + (material.isEmpty() ? "" : "  |  +" + material.getCount() + " material");
+        String line2 = Component.translatable("awakening_system.tower_board.dossier_crystals", rank, crystals.getCount()).getString()
+                + (material.isEmpty() ? "" : "  |  " + trMissionMaterial(item) + " x" + material.getCount());
+        if (this.font.width(line2) > dosW - 70) line2 = Component.translatable("awakening_system.tower_board.dossier_crystals_short", rank, crystals.getCount()).getString() + (material.isEmpty() ? "" : "  |  +" + material.getCount() + " mat.");
         drawCleanCentered(g, line2, cx, curY + 28, 0xFF1F4430);
 
         g.renderItem(crystals, dosX + 24, curY + 14);
@@ -423,24 +420,24 @@ public final class TowerMissionBoardScreen extends Screen {
 
         if (isLocked) {
             g.fill(btnX, btnY, btnX + btnW, btnY + btnH, 0xFF7A1515);
-            drawCleanCentered(g, "PISO BLOQUEADO (Requiere Piso " + item.floor() + ")", cx, btnY + 7, 0xFFFFFFFF);
+            drawCleanCentered(g, Component.translatable("awakening_system.tower_board.btn_floor_locked", item.floor()).getString(), cx, btnY + 7, 0xFFFFFFFF);
         } else if (isCompleted) {
             g.fill(btnX, btnY, btnX + btnW, btnY + btnH, 0xFF404040);
-            drawCleanCentered(g, "CONTRATO COMPLETADO HOY", cx, btnY + 7, 0xFFE0E0E0);
+            drawCleanCentered(g, Component.translatable("awakening_system.tower_board.btn_completed_today").getString(), cx, btnY + 7, 0xFFE0E0E0);
         } else if (isActive) {
             if (payload.activeReadyToClaim()) {
                 g.fill(btnX, btnY, btnX + btnW, btnY + btnH, hov ? 0xFF00AA44 : 0xFF00772E);
-                drawCleanCentered(g, "RECLAMAR RECOMPENSA", cx, btnY + 7, 0xFFFFFFFF);
+                drawCleanCentered(g, Component.translatable("awakening_system.tower_board.btn_claim").getString(), cx, btnY + 7, 0xFFFFFFFF);
             } else {
                 g.fill(btnX, btnY, btnX + btnW, btnY + btnH, 0xFF154870);
-                drawCleanCentered(g, "EN CURSO (" + payload.activeProgress() + "/" + payload.activeNeeded() + ")", cx, btnY + 7, 0xFFFFFFFF);
+                drawCleanCentered(g, Component.translatable("awakening_system.tower_board.btn_in_progress", payload.activeProgress(), payload.activeNeeded()).getString(), cx, btnY + 7, 0xFFFFFFFF);
             }
         } else if (payload.hasActiveMission()) {
             g.fill(btnX, btnY, btnX + btnW, btnY + btnH, 0xFF554433);
-            drawCleanCentered(g, "TIENES OTRO CONTRATO EN CURSO", cx, btnY + 7, 0xFFCCCCCC);
+            drawCleanCentered(g, Component.translatable("awakening_system.tower_board.btn_another_active").getString(), cx, btnY + 7, 0xFFCCCCCC);
         } else {
             g.fill(btnX, btnY, btnX + btnW, btnY + btnH, hov ? 0xFFC88210 : 0xFF945F07);
-            drawCleanCentered(g, "ACEPTAR ESTE CONTRATO", cx, btnY + 7, 0xFFFFFFFF);
+            drawCleanCentered(g, Component.translatable("awakening_system.tower_board.btn_accept").getString(), cx, btnY + 7, 0xFFFFFFFF);
         }
     }
 
@@ -474,7 +471,13 @@ public final class TowerMissionBoardScreen extends Screen {
             }
 
             if (!hasEntered) {
-                playDenySound();
+                int btnW = 230;
+                int btnH = 22;
+                int btnX = dosX + (dosW - btnW) / 2;
+                int btnY = dosY + 248;
+                if (mX >= btnX && mX <= btnX + btnW && mY >= btnY && mY <= btnY + btnH) {
+                    playDenySound();
+                }
                 return true;
             }
 
@@ -542,6 +545,26 @@ public final class TowerMissionBoardScreen extends Screen {
         }
 
         return super.mouseClicked(mouseX, mouseY, button);
+    }
+
+    private static String trMissionTitle(TowerMissionTemplate m) {
+        String key = "awakening_system.tower_mission." + m.id() + ".title";
+        return net.minecraft.client.resources.language.I18n.exists(key) ? Component.translatable(key).getString() : m.title();
+    }
+
+    private static String trMissionNarrative(TowerMissionTemplate m) {
+        String key = "awakening_system.tower_mission." + m.id() + ".narrative";
+        return net.minecraft.client.resources.language.I18n.exists(key) ? Component.translatable(key).getString() : m.narrative();
+    }
+
+    private static String trMissionTarget(TowerMissionTemplate m) {
+        String key = "awakening_system.tower_mission." + m.id() + ".target";
+        return net.minecraft.client.resources.language.I18n.exists(key) ? Component.translatable(key).getString() : m.targetName();
+    }
+
+    private static String trMissionMaterial(TowerMissionTemplate m) {
+        String key = "awakening_system.tower_mission." + m.id() + ".material";
+        return net.minecraft.client.resources.language.I18n.exists(key) ? Component.translatable(key).getString() : m.rewardMaterialName();
     }
 
     private static String formatRewardAmount(int val) {

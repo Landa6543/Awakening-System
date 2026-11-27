@@ -638,10 +638,10 @@ public class ColossalSculkWardenEntity extends Monster implements GeoEntity {
     @Override
     protected void dropCustomDeathLoot(ServerLevel level, DamageSource damageSource, boolean recentlyHit) {
         super.dropCustomDeathLoot(level, damageSource, recentlyHit);
-        spawnAtLocation(new ItemStack(SystemItems.MANA_CRYSTAL_SHARD_S.get(), 15 + random.nextInt(11)));
-        spawnAtLocation(new ItemStack(SystemItems.MANA_CRYSTAL_CLUSTER_S_ITEM.get(), 2 + random.nextInt(3)));
-        spawnAtLocation(new ItemStack(SystemItems.MANA_CRYSTAL_SHARD_A.get(), 25 + random.nextInt(16)));
-        spawnAtLocation(new ItemStack(SystemItems.MANA_CRYSTAL_CLUSTER_A_ITEM.get(), 4 + random.nextInt(4)));
+        spawnAtLocation(new ItemStack(SystemItems.MANA_CRYSTAL_SHARD_C.get(), 6 + random.nextInt(5)));
+        spawnAtLocation(new ItemStack(SystemItems.MANA_CRYSTAL_CLUSTER_C_ITEM.get(), 1 + random.nextInt(2)));
+        spawnAtLocation(new ItemStack(SystemItems.MANA_CRYSTAL_SHARD_B.get(), 2 + random.nextInt(3)));
+        spawnAtLocation(new ItemStack(SystemItems.MANA_CRYSTAL_CLUSTER_B_ITEM.get(), 1));
         spawnAtLocation(new ItemStack(Items.ECHO_SHARD, 8));
         spawnAtLocation(new ItemStack(Blocks.SCULK_CATALYST, 3));
         spawnAtLocation(new ItemStack(Blocks.SCULK_SHRIEKER, 2));

@@ -325,6 +325,40 @@ public final class RpgLevelZoneManager {
         RpgLevelZoneManager.applyMobLevelAttributes(mob, mobLevel, false);
     }
 
+    public static double getHpMultiplier(int mobLevel) {
+        if (mobLevel <= 20) return 1.0 + (double) mobLevel * 0.15;
+        if (mobLevel <= 60) return 4.0 + (double) (mobLevel - 20) * 0.14;
+        if (mobLevel <= 100) return 9.6 + (double) (mobLevel - 60) * 0.12;
+        return 14.4 + (double) (mobLevel - 100) * 0.10;
+    }
+
+    public static double getScaledAttackDamage(double baseDmg, int mobLevel) {
+        double dmgMultiplier;
+        if (mobLevel <= 20) {
+            dmgMultiplier = 1.0 + (double) mobLevel * 0.045;
+        } else if (mobLevel <= 60) {
+            dmgMultiplier = 1.90 + (double) (mobLevel - 20) * 0.035;
+        } else if (mobLevel <= 100) {
+            dmgMultiplier = 3.30 + (double) (mobLevel - 60) * 0.025;
+        } else {
+            dmgMultiplier = 4.30 + (double) (mobLevel - 100) * 0.015;
+        }
+        double flatDmg = Math.min(60.0, (double) mobLevel * 0.35);
+        return Math.min(220.0, baseDmg * dmgMultiplier + flatDmg);
+    }
+
+    public static double getArmorForLevel(int mobLevel) {
+        return Math.min(26.0, (double) mobLevel * 0.3);
+    }
+
+    public static double getToughnessForLevel(int mobLevel) {
+        return mobLevel >= 20 ? Math.min(16.0, (double) (mobLevel - 15) * 0.22) : 0.0;
+    }
+
+    public static double getKbResForLevel(int mobLevel) {
+        return Math.min(0.7, (double) mobLevel * 0.008);
+    }
+
     public static void applyMobLevelAttributes(Mob mob, int mobLevel, boolean preserveHpRatio) {
         AttributeInstance speedAttr;
         AttributeInstance kbAttr;
@@ -354,19 +388,7 @@ public final class RpgLevelZoneManager {
         String originalName = mob.getPersistentData().getString("rpg_orig_name");
         mob.getPersistentData().putInt("rpg_mob_level", mobLevel);
 
-        double hpMultiplier;
-        if (mobLevel <= 20) {
-            hpMultiplier = 1.0 + (double)mobLevel * 0.08;
-        } else if (mobLevel <= 60) {
-            hpMultiplier = 2.6 + (double)(mobLevel - 20) * 0.06;
-        } else if (mobLevel <= 100) {
-            hpMultiplier = 5.0 + (double)(mobLevel - 60) * 0.04;
-        } else {
-            // past level 100 health keeps climbing steadily, so high-level monsters are real fights
-            // (a zombie: ~610 HP at level 500, ~2400 at level 2000)
-            hpMultiplier = 6.6 + (double)(mobLevel - 100) * 0.06;
-        }
-        double newHp = baseHp * hpMultiplier;
+        double newHp = baseHp * getHpMultiplier(mobLevel);
         AttributeInstance maxHpAttr = mob.getAttribute(Attributes.MAX_HEALTH);
         if (maxHpAttr != null) {
             if (preserveHpRatio) {
@@ -379,31 +401,16 @@ public final class RpgLevelZoneManager {
             }
         }
         if ((attackAttr = mob.getAttribute(Attributes.ATTACK_DAMAGE)) != null && baseDmg > 0.0) {
-            double dmgMultiplier;
-            if (mobLevel <= 20) {
-                dmgMultiplier = 1.0 + (double)mobLevel * 0.015;
-            } else if (mobLevel <= 60) {
-                dmgMultiplier = 1.30 + (double)(mobLevel - 20) * 0.010;
-            } else if (mobLevel <= 100) {
-                dmgMultiplier = 1.70 + (double)(mobLevel - 60) * 0.006;
-            } else {
-                dmgMultiplier = 1.94 + (double)(mobLevel - 100) * 0.003;
-            }
-            double flatDmg = Math.min(18.0, (double)mobLevel * 0.12);
-            double finalDmg = Math.min(65.0, baseDmg * dmgMultiplier + flatDmg);
-            attackAttr.setBaseValue(finalDmg);
+            attackAttr.setBaseValue(getScaledAttackDamage(baseDmg, mobLevel));
         }
         if ((armorAttr = mob.getAttribute(Attributes.ARMOR)) != null) {
-            double armor = Math.min(26.0, (double)mobLevel * 0.3);
-            armorAttr.setBaseValue(Math.max(armorAttr.getBaseValue(), armor));
+            armorAttr.setBaseValue(Math.max(armorAttr.getBaseValue(), getArmorForLevel(mobLevel)));
         }
         if ((toughAttr = mob.getAttribute(Attributes.ARMOR_TOUGHNESS)) != null && mobLevel >= 20) {
-            double toughness = Math.min(16.0, (double)(mobLevel - 15) * 0.22);
-            toughAttr.setBaseValue(Math.max(toughAttr.getBaseValue(), toughness));
+            toughAttr.setBaseValue(Math.max(toughAttr.getBaseValue(), getToughnessForLevel(mobLevel)));
         }
         if ((kbAttr = mob.getAttribute(Attributes.KNOCKBACK_RESISTANCE)) != null) {
-            double kbRes = Math.min(0.7, (double)mobLevel * 0.008);
-            kbAttr.setBaseValue(Math.max(kbAttr.getBaseValue(), kbRes));
+            kbAttr.setBaseValue(Math.max(kbAttr.getBaseValue(), getKbResForLevel(mobLevel)));
         }
         if ((speedAttr = mob.getAttribute(Attributes.MOVEMENT_SPEED)) != null && mobLevel >= 25) {
             double speedBonus = Math.min(0.06, (double)(mobLevel - 20) * 0.001);

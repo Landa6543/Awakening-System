@@ -22,6 +22,32 @@ public final class CuriosCompat {
         return CURIOS_LOADED;
     }
 
+    public static boolean hasEquippedPredicate(LivingEntity entity, java.util.function.Predicate<net.minecraft.world.item.ItemStack> predicate) {
+        if (!CURIOS_LOADED || entity == null || predicate == null) {
+            return false;
+        }
+        try {
+            Class<?> apiClass = Class.forName("top.theillusivec4.curios.api.CuriosApi");
+            Method getInvMethod = apiClass.getMethod("getCuriosInventory", LivingEntity.class);
+            Object opt = getInvMethod.invoke(null, entity);
+            if (opt instanceof Optional<?> optional && optional.isPresent()) {
+                Object handler = optional.get();
+                Object itemHandler = handler.getClass().getMethod("getEquippedCurios").invoke(handler);
+                if (itemHandler != null) {
+                    int slots = (int) itemHandler.getClass().getMethod("getSlots").invoke(itemHandler);
+                    Method getStackMethod = itemHandler.getClass().getMethod("getStackInSlot", int.class);
+                    for (int i = 0; i < slots; i++) {
+                        net.minecraft.world.item.ItemStack stack = (net.minecraft.world.item.ItemStack) getStackMethod.invoke(itemHandler, i);
+                        if (stack != null && !stack.isEmpty() && predicate.test(stack)) {
+                            return true;
+                        }
+                    }
+                }
+            }
+        } catch (Throwable ignored) {}
+        return false;
+    }
+
     public static CompoundTag saveCurios(LivingEntity entity) {
         if (!CURIOS_LOADED || entity == null) {
             return new CompoundTag();

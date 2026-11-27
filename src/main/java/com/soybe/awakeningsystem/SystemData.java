@@ -1120,7 +1120,51 @@ public final class SystemData implements INBTSerializable<CompoundTag> {
 
     public int skillProgress(String skill) { return skillProgress.getOrDefault(skill, 0); }
     public int skillProgressRequired(String skill) { return skills.getOrDefault(skill, 1) * 100; }
-    public int affinity(String affinity) { return affinities.getOrDefault(affinity, 0); }
+    public int affinity(String affinity) {
+        if (affinity == null) return 0;
+        int val = affinities.getOrDefault(affinity, 0);
+        // Fallback for habit / innate skills so that if a player reaches level 5 in a skill,
+        // their affinity reflects their mastery and meets the evolution threshold (250):
+        if ("survival".equalsIgnoreCase(affinity) || "vitality".equalsIgnoreCase(affinity)) {
+            val = Math.max(val, affinities.getOrDefault("survival", 0));
+            int fleshLvl = skills.getOrDefault("enduring_flesh", 0);
+            if (fleshLvl >= 5) {
+                val = Math.max(val, 250);
+            } else if (fleshLvl > 0) {
+                val = Math.max(val, fleshLvl * 50);
+            }
+        } else if ("mobility".equalsIgnoreCase(affinity) || "agility".equalsIgnoreCase(affinity)) {
+            val = Math.max(val, affinities.getOrDefault("mobility", 0));
+            int windLvl = skills.getOrDefault("windrunner", 0);
+            if (windLvl >= 5) {
+                val = Math.max(val, 250);
+            } else if (windLvl > 0) {
+                val = Math.max(val, windLvl * 50);
+            }
+        } else if ("combat".equalsIgnoreCase(affinity)) {
+            int combatLvl = skills.getOrDefault("combat_instinct", 0);
+            if (combatLvl >= 5) {
+                val = Math.max(val, 250);
+            } else if (combatLvl > 0) {
+                val = Math.max(val, combatLvl * 50);
+            }
+        } else if ("mining".equalsIgnoreCase(affinity)) {
+            int oreLvl = skills.getOrDefault("ore_sense", 0);
+            if (oreLvl >= 5) {
+                val = Math.max(val, 250);
+            } else if (oreLvl > 0) {
+                val = Math.max(val, oreLvl * 50);
+            }
+        } else if ("ranged".equalsIgnoreCase(affinity)) {
+            int deadLvl = skills.getOrDefault("deadeye", 0);
+            if (deadLvl >= 5) {
+                val = Math.max(val, 250);
+            } else if (deadLvl > 0) {
+                val = Math.max(val, deadLvl * 50);
+            }
+        }
+        return val;
+    }
     public int repetition(String affinity) { return repeatedActions.getOrDefault(affinity, 0); }
     public boolean isEvolved(String skill) { return skills.getOrDefault(skill, 0) >= SKILL_EVOLVED_LEVEL; }
     public int evolutionCooldownSeconds(String skill, long gameTime) {
@@ -1139,7 +1183,9 @@ public final class SystemData implements INBTSerializable<CompoundTag> {
                 || activeCooldownSeconds(skill, gameTime) > 0 || energy < cost) return false;
         if (cost > 0) energy -= cost;
         boolean isNoCooldown = isUtility || "shadow_monarch".equals(skill) || "unique_absolute_extraction".equals(skill);
-        if (!isNoCooldown) {
+        if ("ne_shadow_extraction".equals(skill)) {
+            activeCooldowns.put(skill, gameTime + 20L);
+        } else if (!isNoCooldown) {
             activeCooldowns.put(skill, gameTime + ACTIVE_SKILL_COOLDOWN_TICKS);
         } else {
             activeCooldowns.remove(skill);
@@ -1519,10 +1565,12 @@ public final class SystemData implements INBTSerializable<CompoundTag> {
         addExperience(1000 + level * 50);
         addCoins(1000 + level * 25);
 
-        // 4. Mystery Blessed Loot Box & Dungeon Portal Key
-        ItemStack box = new ItemStack(SystemItems.LOCKED_TREASURE_CHEST.get());
-        if (!player.getInventory().add(box)) {
-            player.drop(box, false);
+        // 4. Guild Loot Bag & Dungeon Portal Key
+        if (SystemItems.GUILD_LOOT_BAG.isBound()) {
+            ItemStack bag = LootBagItem.of(lootBagTierForRank(evaluatedRank()));
+            if (!player.getInventory().add(bag)) {
+                player.drop(bag, false);
+            }
         }
         if (SystemItems.DUNGEON_KEY.isBound()) {
             ItemStack dungeonKey = new ItemStack(SystemItems.DUNGEON_KEY.get());
@@ -1532,6 +1580,19 @@ public final class SystemData implements INBTSerializable<CompoundTag> {
         }
 
         return true;
+    }
+
+    public static int lootBagTierForRank(String rank) {
+        if (rank == null) return 1;
+        return switch (rank.toUpperCase(java.util.Locale.ROOT)) {
+            case "EX", "ABSOLUTE_GOD", "LIMITLESS", "SINGULARITY", "ASTRAL_DEITY", "TIMELESS_MONARCH",
+                 "CHAOS_SOVEREIGN", "ABSOLUTE_CREATOR", "SUPREME_CREATOR", "ABSOLUTE", "ABSOLUTE_BEING" -> 6;
+            case "S", "S+", "SS", "SSS" -> 5;
+            case "A", "A+" -> 4;
+            case "B", "B+" -> 3;
+            case "C", "C+", "D", "D+" -> 2;
+            default -> 1;
+        };
     }
 
     // ── Hunter Association Daily Commission (Comisión Diaria por Rango) ──
@@ -1606,7 +1667,13 @@ public final class SystemData implements INBTSerializable<CompoundTag> {
         int attrPts = rankIdx >= 6 ? 3 : (rankIdx >= 3 ? 2 : 1);
         this.attributePoints += attrPts;
 
-        // 4. La bolsa de botin de la Asociacion la entrega SystemEvents.claimHunterCommission
+        // 4. Bolsa de botín de la Asociación según el rango
+        if (SystemItems.GUILD_LOOT_BAG.isBound()) {
+            ItemStack bag = LootBagItem.of(lootBagTierForRank(rank));
+            if (!player.getInventory().add(bag)) {
+                player.drop(bag, false);
+            }
+        }
 
         // Si es Rango B o superior, llave de calabozo extra
         if (rankIdx >= 4 && SystemItems.OVERWORLD_DUNGEON_KEY.isBound()) {
